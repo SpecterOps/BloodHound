@@ -37,16 +37,15 @@ import (
 type ParameterKey string
 
 const (
-	PasswordExpirationWindow      ParameterKey = "auth.password_expiration_window"
-	SessionTTLHours               ParameterKey = "auth.session_ttl_hours"
-	Neo4jConfigs                  ParameterKey = "neo4j.configuration"
-	CitrixRDPSupportKey           ParameterKey = "analysis.citrix_rdp_support"
-	PruneTTL                      ParameterKey = "prune.ttl"
-	ReconciliationKey             ParameterKey = "analysis.reconciliation"
-	ScheduledAnalysis             ParameterKey = "analysis.scheduled"
-	SupportAccountProvisioningKey ParameterKey = "auth.support_account_provisioning"
-	ClientMetricsKey              ParameterKey = "pipeline.client_metrics"
-	APITokenExpiration            ParameterKey = "auth.api_token_expiration"
+	PasswordExpirationWindow ParameterKey = "auth.password_expiration_window"
+	SessionTTLHours          ParameterKey = "auth.session_ttl_hours"
+	Neo4jConfigs             ParameterKey = "neo4j.configuration"
+	CitrixRDPSupportKey      ParameterKey = "analysis.citrix_rdp_support"
+	PruneTTL                 ParameterKey = "prune.ttl"
+	ReconciliationKey        ParameterKey = "analysis.reconciliation"
+	ScheduledAnalysis        ParameterKey = "analysis.scheduled"
+	ClientMetricsKey         ParameterKey = "pipeline.client_metrics"
+	APITokenExpiration       ParameterKey = "auth.api_token_expiration"
 
 	// The below keys are not intended to be user updatable, so should not be added to IsValidKey
 	TrustedProxiesConfig                ParameterKey = "http.trusted_proxies"
@@ -58,6 +57,7 @@ const (
 	APITokens                           ParameterKey = "auth.api_tokens"
 	TimeoutLimit                        ParameterKey = "api.timeout_limit"
 	EnvironmentTargetedAccessControlKey ParameterKey = "auth.environment_targeted_access_control"
+	SupportAccountProvisioningKey       ParameterKey = "auth.support_account_provisioning"
 )
 
 const (
@@ -94,7 +94,7 @@ func (s *Parameter) Map(value any) error {
 
 func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, ScheduledAnalysis, SupportAccountProvisioningKey, ClientMetricsKey, APITokenExpiration:
+	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, ScheduledAnalysis, ClientMetricsKey, APITokenExpiration:
 		return true
 	default:
 		return false
@@ -104,7 +104,7 @@ func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 // IsProtectedKey These keys should not be updatable by users
 func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens, EnvironmentTargetedAccessControlKey:
+	case TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens, EnvironmentTargetedAccessControlKey, SupportAccountProvisioningKey:
 		return true
 	default:
 		return false
@@ -592,14 +592,14 @@ func GetEnvironmentTargetedAccessControlParameters(ctx context.Context, service 
 
 type SupportAccountProvisioningParameters struct {
 	// Setting disabled as false means that you are explicitly opting into the feature
-	Disabled   bool          `json:"disabled,omitempty"`
+	Enabled    bool          `json:"enabled,omitempty"`
 	SessionTTL time.Duration `json:"session_ttl,omitempty"`
 }
 
 func (s *SupportAccountProvisioningParameters) UnmarshalJSON(data []byte) error {
 	pDb := struct {
 		SessionTTL string `json:"session_ttl,omitempty"`
-		Disabled   bool   `json:"disabled,omitempty"`
+		Enabled    bool   `json:"enabled,omitempty"`
 	}{}
 
 	if err := json.Unmarshal(data, &pDb); err != nil {
@@ -609,7 +609,7 @@ func (s *SupportAccountProvisioningParameters) UnmarshalJSON(data []byte) error 
 			return err
 		} else {
 			s.SessionTTL = duration.ToDuration()
-			s.Disabled = pDb.Disabled
+			s.Enabled = pDb.Enabled
 		}
 
 		return nil
@@ -618,7 +618,7 @@ func (s *SupportAccountProvisioningParameters) UnmarshalJSON(data []byte) error 
 
 func GetSupportAccountProvisioningParameters(ctx context.Context, service ParameterService) SupportAccountProvisioningParameters {
 	result := SupportAccountProvisioningParameters{
-		Disabled:   false,
+		Enabled:    true,
 		SessionTTL: time.Hour * 2,
 	}
 
@@ -653,7 +653,7 @@ func GetClientMetricsParameter(ctx context.Context, service ParameterService) Cl
 
 type APITokenExpirationParameter struct {
 	Enabled          bool `json:"enabled"`
-	ExpirationPeriod int  `json:"expiration_period" validate:"min=1,max=365"`
+	ExpirationPeriod int  `json:"expiration_period" validate:"integer,min=1,max=365"`
 }
 
 func GetAPITokenExpirationParameter(ctx context.Context, service ParameterService) APITokenExpirationParameter {

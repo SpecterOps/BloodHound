@@ -565,3 +565,17 @@ RETURN p\nLIMIT 1000`,
         ],
     },
 ];
+
+export const UncommonSearches: CommonSearchType[] = [
+    {
+        subheader: 'Browser Limit Test',
+        category: categoryAD,
+        queries: [
+            {
+                name: 'Query Parse Error',
+                description: '',
+                query: `match (n) return n limit 8316`,
+            },
+        ],
+    },
+];

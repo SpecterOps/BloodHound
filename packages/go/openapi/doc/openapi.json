@@ -1345,7 +1345,7 @@
         "parameters": [
           {
             "name": "user_id",
-            "description": "Provide a user id to filter tokens by. This filter is only honored for Admin users.",
+            "description": "Provide a `user_id` to filter tokens by. Admin users may filter by any `user_id`. Non-admin users may only filter by their own `user_id` using `eq`.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.uuid"
@@ -13854,7 +13854,7 @@
       "post": {
         "operationId": "DeleteBloodHoundDatabase",
         "summary": "Delete your BloodHound data",
-        "description": "Wipes your BloodHound data permanently. Specify the data to delete in the request body. Possible data includes collected graph data, custom high value selectors, file ingest history, and data quality history.",
+        "description": "Wipes your BloodHound data permanently. Specify the data to delete in the request body. Possible data includes collected graph data, relationships of specific types, custom high value selectors, file ingest history, and data quality history.",
         "tags": [
           "Database",
           "Community",
@@ -13868,6 +13868,12 @@
                 "properties": {
                   "deleteCollectedGraphData": {
                     "type": "boolean"
+                  },
+                  "deleteRelationships": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   },
                   "deleteFileIngestHistory": {
                     "type": "boolean"
@@ -19828,7 +19834,7 @@
       },
       "api.params.predicate.filter.uuid": {
         "type": "string",
-        "format": "uuid",
+        "pattern": "^((eq|neq):)?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
         "description": "Filter results by column string-formatted uuid value. Valid filter predicates are `eq`, `neq`.\n"
       },
       "api.requests.user.update": {

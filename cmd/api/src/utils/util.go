@@ -28,6 +28,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
@@ -37,6 +38,7 @@ var (
 	ErrInvalidCollectorVersion    = errors.New("invalid collector version string")
 	ErrRecommendSharphoundVersion = errors.New("please upgrade to sharphound v2.0.3 or above")
 	ErrInvalidClientType          = errors.New("invalid client type")
+	ErrInvalidUUID                = errors.New("invalid UUID")
 	azurehoundVersionRegex        = regexp.MustCompile(`^azurehound/v?([0-9]+)\.([0-9]+)\.([0-9]+)$`)
 	openhoundVersionRegex         = regexp.MustCompile(`^openhound/v?([0-9]+)\.([0-9]+)\.([0-9]+)$`)
 	sharphoundVersionRegex        = regexp.MustCompile(`^sharphound/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)$`)
@@ -268,6 +270,16 @@ func HeaderMatches(headers http.Header, key string, target ...string) bool {
 		}
 	}
 	return false
+}
+
+// ParseUUID parses a string into a uuid.UUID and returns an ErrInvalidUUID
+// error if the string is not a valid UUID.
+func ParseUUID(s string) (uuid.UUID, error) {
+	parsedUUID, err := uuid.FromString(s)
+	if err != nil {
+		return uuid.UUID{}, fmt.Errorf("%w: %w", ErrInvalidUUID, err)
+	}
+	return parsedUUID, nil
 }
 
 func IsValidEmail(maybeEmail string) bool {

@@ -55,8 +55,8 @@ func setupRoleAssignments() azure.RoleAssignments {
 
 	return azure.RoleAssignments{
 		// user2 has no roles! this is intentional
-		Principals: graph.NewNodeSet(user, user2, group, app).KindSet(),
-		RoleMap:    roleMap,
+		TenantPrincipals: graph.NewNodeSet(user, user2, group, app).KindSet(),
+		RoleMap:          roleMap,
 	}
 }
 
@@ -67,12 +67,6 @@ func TestRoleAssignments_NodeHasRole(t *testing.T) {
 	assert.True(t, assignments.NodeHasRole(group.ID, azschema.ReportsReaderRole))
 	assert.True(t, assignments.NodeHasRole(group.ID, azschema.HelpdeskAdministratorRole))
 	assert.False(t, assignments.NodeHasRole(group.ID, azschema.PartnerTier1SupportRole))
-}
-
-func TestRoleAssignments_UsersWithoutRoles(t *testing.T) {
-	assignments := setupRoleAssignments()
-	assert.False(t, assignments.UsersWithoutRoles().Contains(uint64(user.ID)))
-	assert.True(t, assignments.UsersWithoutRoles().Contains(uint64(user2.ID)))
 }
 
 func TestRoleAssignments_NodesWithRole(t *testing.T) {

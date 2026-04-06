@@ -26,8 +26,7 @@ get:
     - Enterprise
   parameters:
     - name: user_id
-      description: Provide a user id to filter tokens by. This filter is only honored
-        for Admin users.
+      description: Provide a `user_id` to filter tokens by. Admin users may filter by any `user_id`. Non-admin users may only filter by their own `user_id` using `eq`.
       in: query
       schema:
         $ref: './../schemas/api.params.predicate.filter.uuid.yaml'

@@ -27,6 +27,15 @@ const testDropdownOptions = [
 const onChange = vi.fn();
 
 describe('DropdownSelector', () => {
+    beforeEach(() => {
+        vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+
+    afterEach(() => {
+        vi.runAllTimers();
+        vi.useRealTimers();
+    });
+
     it('renders a primary button as expected', async () => {
         const user = userEvent.setup();
         const screen = await act(async () => {
