@@ -53,15 +53,17 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
                 className={cn(BadgeVariants({ size, hasIcon: !!icon }), className)}
                 style={{
                     borderColor: color,
-                    backgroundColor,
+                    backgroundColor: backgroundColor,
                 }}>
-                {icon && <span className={iconClassName}>{icon}</span>}
+                {icon && (
+                    <span style={{ color }} className={iconClassName}>
+                        {icon}
+                    </span>
+                )}
                 <span className={labelClassName}>{label}</span>
             </div>
         );
     }
 );
-
-Badge.displayName = 'Badge';
 
 export { Badge };
