@@ -62,7 +62,7 @@ func TestADCSESC1(t *testing.T) {
 			harness.ADCSESC1Harness.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC1")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC1")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -176,7 +176,7 @@ func TestADCSESC1(t *testing.T) {
 			harness.ADCSESC1HarnessAuthUsers.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC1 Authenticated Users")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC1 Authenticated Users")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -227,7 +227,7 @@ func TestGoldenCert(t *testing.T) {
 		harness.ADCSGoldenCertHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - Golden Cert")
+		operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - Golden Cert")
 
 		_, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 		require.Nil(t, err)
@@ -283,7 +283,7 @@ func TestIssuedSignedBy(t *testing.T) {
 		harness.IssuedSignedByHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - IssuedSignedBy")
+		operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - IssuedSignedBy")
 
 		if rootCertAuthorities, err := FetchNodesByKind(context.Background(), db, ad.RootCA); err != nil {
 			t.Logf("failed fetching rootCA nodes: %v", err)
@@ -389,7 +389,7 @@ func TestEnterpriseCAFor(t *testing.T) {
 		harness.EnterpriseCAForHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - EnterpriseCAFor")
+		operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - EnterpriseCAFor")
 
 		if enterpriseCertAuthorities, err := FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
 			t.Logf("failed fetching enterpriseCA nodes: %v", err)
@@ -441,7 +441,7 @@ func TestTrustedForNTAuth(t *testing.T) {
 		},
 		func(harness integration.HarnessDetails, db graph.Database) {
 			// post `TrustedForNTAuth` edges
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - TrustedForNTAuth")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - TrustedForNTAuth")
 
 			if err := PostTrustedForNTAuth(context.Background(), db, operation); err != nil {
 				t.Logf("failed post processing for %s: %v", ad.TrustedForNTAuth.String(), err)
@@ -583,7 +583,7 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 			harness.EnrollOnBehalfOfHarness3.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - EnrollOnBehalfOf 3")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - EnrollOnBehalfOf 3")
 
 			_, _, _, _, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -626,7 +626,7 @@ func TestADCSESC3(t *testing.T) {
 			harness.ESC3Harness1.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC3")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC3")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -677,7 +677,7 @@ func TestADCSESC3(t *testing.T) {
 			harness.ESC3Harness2.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC3")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC3")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -740,7 +740,7 @@ func TestADCSESC3(t *testing.T) {
 			harness.ESC3Harness3.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC3")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC3")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -802,7 +802,7 @@ func TestADCSESC4(t *testing.T) {
 			harness.ESC4Template1.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC4 template 1")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC4 template 1")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -867,7 +867,7 @@ func TestADCSESC4(t *testing.T) {
 			harness.ESC4Template2.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC4 template 2")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC4 template 2")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -937,7 +937,7 @@ func TestADCSESC4(t *testing.T) {
 			harness.ESC4Template3.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC4 template 3")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC4 template 3")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -988,7 +988,7 @@ func TestADCSESC4(t *testing.T) {
 			harness.ESC4Template4.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC4 template 4")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC4 template 4")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -1043,7 +1043,7 @@ func TestADCSESC4Composition(t *testing.T) {
 		harness.ESC4Template1.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC4 template 1")
+		operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC4 template 1")
 
 		localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 		require.Nil(t, err)
@@ -1268,7 +1268,7 @@ func TestADCSESC9a(t *testing.T) {
 			harness.ESC9aPrincipalHarness.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9a")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9a")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -1320,7 +1320,7 @@ func TestADCSESC9a(t *testing.T) {
 			harness.ESC9aHarness1.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9a")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9a")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -1369,7 +1369,7 @@ func TestADCSESC9a(t *testing.T) {
 			harness.ESC9aHarness2.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9a")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9a")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -1419,7 +1419,7 @@ func TestADCSESC9a(t *testing.T) {
 			harness.ESC9aHarness2.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9a")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9a")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -1469,7 +1469,7 @@ func TestADCSESC9a(t *testing.T) {
 			harness.ESC9aHarnessVictim.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9a")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9a")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -1517,7 +1517,7 @@ func TestADCSESC9a(t *testing.T) {
 			harness.ESC9aHarnessECA.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9a")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9a")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -1592,7 +1592,7 @@ func TestADCSESC9a(t *testing.T) {
 			harness.ESC9aHarnessDC1.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9a")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9a")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -1642,7 +1642,7 @@ func TestADCSESC9a(t *testing.T) {
 			harness.ESC9aHarnessDC2.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9a")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9a")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -1689,7 +1689,7 @@ func TestADCSESC9a(t *testing.T) {
 			harness.ESC9aHarnessAuthUsers.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9A Authenticated Users")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9A Authenticated Users")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -1743,7 +1743,7 @@ func TestADCSESC9b(t *testing.T) {
 			harness.ESC9bPrincipalHarness.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9b")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9b")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -1795,7 +1795,7 @@ func TestADCSESC9b(t *testing.T) {
 			harness.ESC9bHarness1.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9b")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9b")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -1843,7 +1843,7 @@ func TestADCSESC9b(t *testing.T) {
 			harness.ESC9bHarness2.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9b")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9b")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -1892,7 +1892,7 @@ func TestADCSESC9b(t *testing.T) {
 			harness.ESC9bHarnessVictim.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9b")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9b")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -1941,7 +1941,7 @@ func TestADCSESC9b(t *testing.T) {
 			harness.ESC9bHarnessECA.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9b")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9b")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -2020,7 +2020,7 @@ func TestADCSESC9b(t *testing.T) {
 			harness.ESC9bHarnessDC1.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9b")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9b")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -2070,7 +2070,7 @@ func TestADCSESC9b(t *testing.T) {
 			harness.ESC9bHarnessDC2.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9b")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC9b")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -2119,7 +2119,7 @@ func TestADCSESC6a(t *testing.T) {
 			harness.ESC6aHarnessPrincipalEdges.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6a")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6a")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -2168,7 +2168,7 @@ func TestADCSESC6a(t *testing.T) {
 			harness.ESC6aHarnessECA.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6a")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6a")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -2216,7 +2216,7 @@ func TestADCSESC6a(t *testing.T) {
 			harness.ESC6aHarnessTemplate1.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6a")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6a")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -2318,7 +2318,7 @@ func TestADCSESC6a(t *testing.T) {
 			harness.ESC6aHarnessTemplate2.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6a")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6a")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -2372,7 +2372,7 @@ func TestADCSESC6b(t *testing.T) {
 			harness.ESC6bTemplate1Harness.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6b template 1")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6b template 1")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -2476,7 +2476,7 @@ func TestADCSESC6b(t *testing.T) {
 			harness.ESC6bECAHarness.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6b eca")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6b eca")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -2525,7 +2525,7 @@ func TestADCSESC6b(t *testing.T) {
 			harness.ESC6bPrincipalEdgesHarness.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6b principal edges")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6b principal edges")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -2574,7 +2574,7 @@ func TestADCSESC6b(t *testing.T) {
 			harness.ESC6bTemplate2Harness.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6b")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6b")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -2629,7 +2629,7 @@ func TestADCSESC6b(t *testing.T) {
 			harness.ESC6bHarnessDC1.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6b")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6b")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -2678,7 +2678,7 @@ func TestADCSESC6b(t *testing.T) {
 			harness.ESC6bHarnessDC2.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6b")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6b")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -2727,7 +2727,7 @@ func TestADCSESC10a(t *testing.T) {
 			harness.ESC10aPrincipalHarness.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10a")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10a")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -2780,7 +2780,7 @@ func TestADCSESC10a(t *testing.T) {
 			harness.ESC10aHarness1.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10a")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10a")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -2830,7 +2830,7 @@ func TestADCSESC10a(t *testing.T) {
 			harness.ESC10aHarness2.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10a")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10a")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -2881,7 +2881,7 @@ func TestADCSESC10a(t *testing.T) {
 			harness.ESC10aHarnessECA.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10a")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10a")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -2961,7 +2961,7 @@ func TestADCSESC10a(t *testing.T) {
 			harness.ESC10aHarnessVictim.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10a")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10a")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -3010,7 +3010,7 @@ func TestADCSESC10a(t *testing.T) {
 			harness.ESC10aHarnessDC1.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10a")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10a")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -3059,7 +3059,7 @@ func TestADCSESC10a(t *testing.T) {
 			harness.ESC10aHarnessDC2.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10a")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10a")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -3109,7 +3109,7 @@ func TestADCSESC13(t *testing.T) {
 			harness.ESC13Harness1.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC13")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC13")
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
@@ -3176,7 +3176,7 @@ func TestADCSESC13(t *testing.T) {
 			harness.ESC13Harness2.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC13")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC13")
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
@@ -3248,7 +3248,7 @@ func TestADCSESC13(t *testing.T) {
 			harness.ESC13HarnessECA.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC13")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC13")
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
@@ -3341,7 +3341,7 @@ func TestADCSESC10b(t *testing.T) {
 			harness.ESC10bPrincipalHarness.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10b")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10b")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -3392,7 +3392,7 @@ func TestADCSESC10b(t *testing.T) {
 			harness.ESC10bHarness1.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10b")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10b")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -3441,7 +3441,7 @@ func TestADCSESC10b(t *testing.T) {
 			harness.ESC10bHarness2.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10b")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10b")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -3490,7 +3490,7 @@ func TestADCSESC10b(t *testing.T) {
 			harness.ESC10bHarnessECA.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10b")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10b")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -3571,7 +3571,7 @@ func TestADCSESC10b(t *testing.T) {
 			harness.ESC10bHarnessVictim.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10b")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10b")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -3620,7 +3620,7 @@ func TestADCSESC10b(t *testing.T) {
 			harness.ESC10bHarnessDC1.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10b")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10b")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -3669,7 +3669,7 @@ func TestADCSESC10b(t *testing.T) {
 			harness.ESC10bHarnessDC2.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10b")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC10b")
 
 			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
@@ -3717,7 +3717,7 @@ func TestExtendedByPolicyBinding(t *testing.T) {
 		harness.ExtendedByPolicyHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		operation := ops.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ExtendedByPolicy")
+		operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ExtendedByPolicy")
 
 		certTemplates, err := FetchNodesByKind(context.Background(), db, ad.CertTemplate)
 		require.Nil(t, err)

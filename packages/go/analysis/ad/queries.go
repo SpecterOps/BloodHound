@@ -18,7 +18,6 @@ package ad
 
 import (
 	"context"
-
 	"log/slog"
 	"slices"
 	"time"
@@ -26,6 +25,7 @@ import (
 	"github.com/RoaringBitmap/roaring/v2/roaring64"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/analysis/tiering"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -1327,7 +1327,7 @@ func FetchEntityGroupMembership(tx graph.Transaction, root *graph.Node, skip, li
 
 func FetchInboundADEntityControllerPaths(ctx context.Context, db graph.Database, node *graph.Node) (graph.PathSet, error) {
 	var (
-		traversalInstance = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInstance = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		collector         = traversal.NewPathCollector()
 	)
 
@@ -1353,7 +1353,7 @@ func FetchInboundADEntityControllerPaths(ctx context.Context, db graph.Database,
 
 func FetchInboundADEntityControllers(ctx context.Context, db graph.Database, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 	var (
-		traversalInstance = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInstance = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		collector         = traversal.NewNodeCollector()
 	)
 
@@ -1374,7 +1374,7 @@ func FetchInboundADEntityControllers(ctx context.Context, db graph.Database, nod
 
 func FetchOutboundADEntityControlPaths(ctx context.Context, db graph.Database, node *graph.Node) (graph.PathSet, error) {
 	var (
-		traversalInstance = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInstance = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		collector         = traversal.NewPathCollector()
 	)
 
@@ -1395,7 +1395,7 @@ func FetchOutboundADEntityControlPaths(ctx context.Context, db graph.Database, n
 
 func FetchOutboundADEntityControl(ctx context.Context, db graph.Database, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 	var (
-		traversalInstance = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInstance = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		collector         = traversal.NewNodeCollector()
 	)
 
@@ -1477,7 +1477,7 @@ func FetchGroupMemberPaths(tx graph.Transaction, node *graph.Node) (graph.PathSe
 func FetchGroupMembers(ctx context.Context, db graph.Database, root *graph.Node, skip, limit int) (graph.NodeSet, error) {
 	collector := traversal.NewNodeCollector()
 
-	if err := traversal.New(db, analysis.MaximumDatabaseParallelWorkers).BreadthFirst(ctx, traversal.Plan{
+	if err := traversal.New(db, post.MaximumDatabaseParallelWorkers).BreadthFirst(ctx, traversal.Plan{
 		Root: root,
 		Driver: traversal.LightweightDriver(
 			graph.DirectionInbound,

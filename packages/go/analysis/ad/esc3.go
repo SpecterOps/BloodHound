@@ -24,8 +24,6 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
-	analysisOps "github.com/specterops/bloodhound/packages/go/analysis/ops"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -164,7 +162,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 	return nil
 }
 
-func PostEnrollOnBehalfOf(cache ADCSCache, operation analysisOps.StatTrackedOperation[post.EnsureRelationshipJob]) error {
+func PostEnrollOnBehalfOf(cache ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob]) error {
 	versionOneTemplates := make([]*graph.Node, 0)
 	versionTwoTemplates := make([]*graph.Node, 0)
 	for _, node := range cache.GetCertTemplates() {
@@ -535,7 +533,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		startNode  *graph.Node
 		startNodes = graph.NodeSet{}
 
-		traversalInst            = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst            = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		paths                    = graph.PathSet{}
 		path1CandidateSegments   = map[graph.ID][]*graph.PathSegment{}
 		path2CandidateSegments   = map[graph.ID][]*graph.PathSegment{}

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package ops
+package post
 
 import (
 	"context"
@@ -22,7 +22,6 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/dawgs/graph"
@@ -30,10 +29,10 @@ import (
 	"github.com/specterops/dawgs/query"
 )
 
-func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.Kinds, targetRelationships graph.Kinds) (*post.AtomicPostProcessingStats, error) {
+func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.Kinds, targetRelationships graph.Kinds) (*AtomicPostProcessingStats, error) {
 	var (
 		relationshipIDs []graph.ID
-		stats           = post.NewAtomicPostProcessingStats()
+		stats           = NewAtomicPostProcessingStats()
 		operationName   = fmt.Sprintf("Delete %v post-processed relationships", strings.Join(targetRelationships.Strings(), ", "))
 	)
 

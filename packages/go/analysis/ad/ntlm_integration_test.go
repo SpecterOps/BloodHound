@@ -43,7 +43,7 @@ func TestPostNTLMRelayADCS(t *testing.T) {
 		harness.NTLMCoerceAndRelayNTLMToADCS.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		operation := ops.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToADCS")
+		operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToADCS")
 		localGroupData, _, _, _, err := fetchNTLMPrereqs(db)
 		require.NoError(t, err)
 		ntlmCache, err := NewNTLMCache(context.Background(), db, localGroupData)
@@ -90,7 +90,7 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 		harness.NTLMCoerceAndRelayNTLMToADCS.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		operation := ops.NewPostRelationshipOperation(context.Background(), db, "NTLM Composition Test - CoerceAndRelayNTLMToADCS")
+		operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM Composition Test - CoerceAndRelayNTLMToADCS")
 		localGroupData, _, _, _, err := fetchNTLMPrereqs(db)
 		require.NoError(t, err)
 		ntlmCache, err := NewNTLMCache(context.Background(), db, localGroupData)
@@ -147,7 +147,7 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 			harness.NTLMCoerceAndRelayNTLMToSMB.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToSMB")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToSMB")
 
 			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
 			require.NoError(t, err)
@@ -223,7 +223,7 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 			harness.NTLMCoerceAndRelayNTLMToSMBSelfRelay.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "NTLM - CoerceAndRelayNTLMToSMB - Relay To Self")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM - CoerceAndRelayNTLMToSMB - Relay To Self")
 
 			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
 			require.NoError(t, err)
@@ -275,7 +275,7 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 		harness.NTLMCoerceAndRelayNTLMToSMB.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		operation := ops.NewPostRelationshipOperation(context.Background(), db, "NTLM Composition Test - CoerceAndRelayNTLMToSMB")
+		operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM Composition Test - CoerceAndRelayNTLMToSMB")
 
 		grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
 		require.NoError(t, err)
@@ -347,7 +347,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 			harness.NTLMCoerceAndRelayNTLMToLDAP.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAP")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAP")
 
 			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
 			require.NoError(t, err)
@@ -424,7 +424,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 			harness.NTLMCoerceAndRelayNTLMToLDAPS.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAPS")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAPS")
 
 			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
 			require.NoError(t, err)
@@ -500,7 +500,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 			harness.NTLMCoerceAndRelayToLDAPSSelfRelay.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAPS - Self Relay")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAPS - Self Relay")
 
 			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
 			require.NoError(t, err)
@@ -555,7 +555,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 			harness.NTLMCoerceAndRelayToLDAPSelfRelay.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := ops.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAP - Self Relay")
+			operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAP - Self Relay")
 
 			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
 			require.NoError(t, err)

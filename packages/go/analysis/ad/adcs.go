@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/specterops/bloodhound/packages/go/analysis/ops"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
@@ -62,7 +61,7 @@ func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 	} else if step2Stats, err := postADCSPreProcessStep2(ctx, db, cache); err != nil {
 		return &post.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed adcs pre-processing step 2: %w", err)
 	} else {
-		operation := ops.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
+		operation := post.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
 
 		operation.Stats.Merge(step1Stats)
 		operation.Stats.Merge(step2Stats)
@@ -86,7 +85,7 @@ func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 
 // postADCSPreProcessStep1 processes the edges that are not dependent on any other post-processed edges
 func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities, certTemplates []*graph.Node) (*post.AtomicPostProcessingStats, error) {
-	operation := ops.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 1")
+	operation := post.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 1")
 	// TODO clean up the operation.Done() calls below
 
 	if err := PostTrustedForNTAuth(ctx, db, operation); err != nil {
@@ -108,7 +107,7 @@ func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseC
 
 // postADCSPreProcessStep2 Processes the edges that are dependent on those processed in postADCSPreProcessStep1
 func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache ADCSCache) (*post.AtomicPostProcessingStats, error) {
-	operation := ops.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 2")
+	operation := post.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 2")
 
 	if err := PostEnrollOnBehalfOf(cache, operation); err != nil {
 		operation.Done()
@@ -118,7 +117,7 @@ func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache ADCSC
 	}
 }
 
-func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, targetDomains *graph.NodeSet, localGroupData *LocalGroupData, cache ADCSCache, operation ops.StatTrackedOperation[post.EnsureRelationshipJob]) {
+func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, targetDomains *graph.NodeSet, localGroupData *LocalGroupData, cache ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob]) {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		if err := PostGoldenCert(ctx, tx, outC, enterpriseCA, targetDomains); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(

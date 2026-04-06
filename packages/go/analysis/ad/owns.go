@@ -21,7 +21,6 @@ import (
 	"errors"
 	"log/slog"
 
-	analysisOps "github.com/specterops/bloodhound/packages/go/analysis/ops"
 	"github.com/specterops/dawgs/algo"
 	"github.com/specterops/dawgs/util/channels"
 
@@ -47,7 +46,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, localGroupDat
 		attr.Scope("process"),
 	)()
 
-	operation := analysisOps.NewPostRelationshipOperation(ctx, db, "PostOwnsAndWriteOwner")
+	operation := post.NewPostRelationshipOperation(ctx, db, "PostOwnsAndWriteOwner")
 
 	// Get the dSHeuristics values for all domains
 	if dsHeuristicsCache, anyEnforced, err := GetDsHeuristicsCache(ctx, db); err != nil {

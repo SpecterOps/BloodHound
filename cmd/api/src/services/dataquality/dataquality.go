@@ -26,8 +26,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/nan"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -79,7 +79,7 @@ func adGraphStats(ctx context.Context, db graph.Database) (model.ADDataQualitySt
 						operation = ops.StartNewOperation[any](ops.OperationContext{
 							Parent:     ctx,
 							DB:         db,
-							NumReaders: analysis.MaximumDatabaseParallelWorkers,
+							NumReaders: post.MaximumDatabaseParallelWorkers,
 						})
 						mutex = &sync.Mutex{}
 					)
@@ -315,7 +315,7 @@ func azureGraphStats(ctx context.Context, db graph.Database) (model.AzureDataQua
 						operation = ops.StartNewOperation[any](ops.OperationContext{
 							Parent:     ctx,
 							DB:         db,
-							NumReaders: analysis.MaximumDatabaseParallelWorkers,
+							NumReaders: post.MaximumDatabaseParallelWorkers,
 							NumWriters: 0,
 						})
 						mutex = &sync.Mutex{}

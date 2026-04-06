@@ -25,7 +25,6 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
-	analysisOps "github.com/specterops/bloodhound/packages/go/analysis/ops"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
@@ -141,7 +140,7 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 	)()
 
 	var (
-		operation = analysisOps.NewPostRelationshipOperation(ctx, db, "PostNTLM")
+		operation = post.NewPostRelationshipOperation(ctx, db, "PostNTLM")
 		// compositionChannel      = make(chan analysis.CompositionInfo)
 	)
 
@@ -241,7 +240,7 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 		domainNode *graph.Node
 		startNodes = graph.NodeSet{}
 
-		traversalInst      = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst      = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		paths              = graph.PathSet{}
 		candidateSegments  = map[graph.ID][]*graph.PathSegment{}
 		path1EnterpriseCAs = cardinality.NewBitmap64()
@@ -396,7 +395,7 @@ func coerceAndRelayNTLMtoADCSPath2Pattern(domainID graph.ID, enterpriseCAs cardi
 		))
 }
 
-func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysisOps.StatTrackedOperation[post.EnsureRelationshipJob], ntlmCache NTLMCache) error {
+func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob], ntlmCache NTLMCache) error {
 	for _, outerDomain := range adcsCache.GetDomains() {
 		for _, outerEnterpriseCA := range adcsCache.GetEnterpriseCertAuthorities() {
 			domain := outerDomain

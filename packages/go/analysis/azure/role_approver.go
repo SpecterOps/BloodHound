@@ -19,7 +19,6 @@ import (
 	"context"
 	"log/slog"
 
-	analysisOps "github.com/specterops/bloodhound/packages/go/analysis/ops"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -56,7 +55,7 @@ func CreateApproverEdge(
 	ctx context.Context,
 	db graph.Database,
 	tenantNode *graph.Node,
-	operation analysisOps.StatTrackedOperation[post.EnsureRelationshipJob],
+	operation post.StatTrackedOperation[post.EnsureRelationshipJob],
 ) error {
 	// Extract the tenant's objectid to match against AZRole tenantid properties
 	tenantObjectID, err := tenantNode.Properties.Get(common.ObjectID.String()).String()

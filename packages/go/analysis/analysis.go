@@ -30,7 +30,6 @@ import (
 
 const (
 	NodeKindUnknown                = "Unknown"
-	MaximumDatabaseParallelWorkers = 6
 )
 
 type CompositionCounter struct {

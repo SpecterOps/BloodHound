@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"log/slog"
 
-	analysisOps "github.com/specterops/bloodhound/packages/go/analysis/ops"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
@@ -72,7 +71,7 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 	}
 
 	// Spin up a new parallel operation to speed up processing
-	operation := analysisOps.NewPostRelationshipOperation(ctx, db, "Hybrid Attack Paths Post Processing")
+	operation := post.NewPostRelationshipOperation(ctx, db, "Hybrid Attack Paths Post Processing")
 
 	err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		var (

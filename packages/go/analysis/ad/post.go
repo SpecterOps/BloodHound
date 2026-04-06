@@ -23,7 +23,6 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
-	analysisOps "github.com/specterops/bloodhound/packages/go/analysis/ops"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
@@ -52,7 +51,7 @@ func PostSyncLAPSPassword(ctx context.Context, db graph.Database, localGroupData
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &post.AtomicPostProcessingStats{}, err
 	} else {
-		operation := analysisOps.NewPostRelationshipOperation(ctx, db, "SyncLAPSPassword Post Processing")
+		operation := post.NewPostRelationshipOperation(ctx, db, "SyncLAPSPassword Post Processing")
 		for _, domain := range domainNodes {
 			innerDomain := domain
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
@@ -96,7 +95,7 @@ func PostDCSync(ctx context.Context, db graph.Database, localGroupData *LocalGro
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &post.AtomicPostProcessingStats{}, err
 	} else {
-		operation := analysisOps.NewPostRelationshipOperation(ctx, db, "DCSync Post Processing")
+		operation := post.NewPostRelationshipOperation(ctx, db, "DCSync Post Processing")
 
 		for _, domain := range domainNodes {
 			innerDomain := domain
@@ -139,7 +138,7 @@ func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*post.Atomi
 		return &post.AtomicPostProcessingStats{}, err
 	}
 
-	operation := analysisOps.NewPostRelationshipOperation(ctx, db, "ProtectAdminGroups Post Processing")
+	operation := post.NewPostRelationshipOperation(ctx, db, "ProtectAdminGroups Post Processing")
 
 	for _, domain := range domainNodes {
 
@@ -184,7 +183,7 @@ func PostHasTrustKeys(ctx context.Context, db graph.Database) (*post.AtomicPostP
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &post.AtomicPostProcessingStats{}, err
 	} else {
-		operation := analysisOps.NewPostRelationshipOperation(ctx, db, "HasTrustKeys Post Processing")
+		operation := post.NewPostRelationshipOperation(ctx, db, "HasTrustKeys Post Processing")
 		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 			for _, domain := range domainNodes {
 				if netbios, err := domain.Properties.Get(ad.NetBIOS.String()).String(); err != nil {
@@ -866,7 +865,7 @@ func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, nt
 		return &aggregateStats, err
 	} else if err := LinkWellKnownNodes(ctx, db); err != nil {
 		return &aggregateStats, err
-	} else if deleteTransitEdgesStats, err := analysisOps.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, ad.PostProcessedRelationships()); err != nil {
+	} else if deleteTransitEdgesStats, err := post.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, ad.PostProcessedRelationships()); err != nil {
 		return &aggregateStats, err
 	} else if localGroupData, err := FetchLocalGroupData(ctx, db); err != nil {
 		return &aggregateStats, err

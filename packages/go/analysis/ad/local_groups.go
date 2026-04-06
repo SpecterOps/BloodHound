@@ -22,8 +22,6 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
-	"github.com/specterops/bloodhound/packages/go/analysis/ops"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
@@ -72,7 +70,7 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 	go func() {
 		defer postWG.Done()
 
-		relProperties := ops.NewPropertiesWithLastSeen()
+		relProperties := post.NewPropertiesWithLastSeen()
 
 		if err := graphDB.BatchOperation(ctx, func(batch graph.Batch) error {
 			for {
@@ -131,7 +129,7 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 		}(workerID)
 	}
 
-	for workerID := 0; workerID < analysis.MaximumDatabaseParallelWorkers; workerID++ {
+	for workerID := 0; workerID < post.MaximumDatabaseParallelWorkers; workerID++ {
 		workerWG.Add(1)
 
 		go func(workerID int) {
@@ -237,7 +235,7 @@ func PostLocalGroups(parentCtx context.Context, graphDB graph.Database, localGro
 	go func() {
 		defer postWG.Done()
 
-		relProperties := ops.NewPropertiesWithLastSeen()
+		relProperties := post.NewPropertiesWithLastSeen()
 
 		if err := graphDB.BatchOperation(ctx, func(batch graph.Batch) error {
 			for {
@@ -300,7 +298,7 @@ func PostLocalGroups(parentCtx context.Context, graphDB graph.Database, localGro
 		}(workerID)
 	}
 
-	for workerID := 0; workerID < analysis.MaximumDatabaseParallelWorkers; workerID += 1 {
+	for workerID := 0; workerID < post.MaximumDatabaseParallelWorkers; workerID += 1 {
 		fetchWG.Add(1)
 
 		go func(workerID int) {
