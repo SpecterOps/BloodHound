@@ -18,9 +18,10 @@ import { faClose, faDownload, faExpand, faSearch } from '@fortawesome/free-solid
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button, Input, InputProps } from 'doodle-ui';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
+import ExportConfirmDialog from './ExportConfirmDialog';
 import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
 
 const ICON_CLASSES = 'cursor-pointer bg-slate-200 p-2 h-4 w-4 rounded-full dark:text-black';
@@ -33,7 +34,7 @@ type TableControlsProps<TData, TValue> = {
     resultsCount?: number;
     tableName?: string;
     className?: string;
-    onDownloadClick?: () => void;
+    onDownloadClick?: (columns: 'all' | 'selected') => void;
     onExpandClick?: () => void;
     onCloseClick?: () => void;
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
@@ -56,6 +57,8 @@ const TableControls = <TData, TValue>({
     onChangePinnedColumns,
     onResetColumnSize,
 }: TableControlsProps<TData, TValue>) => {
+    const [isExportConfirmOpen, setIsExportConfirmOpen] = useState(false);
+
     const parsedColumns: ManageColumnsComboBoxOption[] = useMemo(
         () =>
             columns?.map((columnDef: ColumnDef<TData, TValue>) => ({
@@ -68,6 +71,15 @@ const TableControls = <TData, TValue>({
 
     const DISABLED_CLASSNAME = 'pointer-events-none *:dark:text-neutral-500 *:text-neutral-400';
     const noResults = !resultsCount;
+
+    const handleCancelExport = () => {
+        setIsExportConfirmOpen(false);
+    };
+    const handleConfirmExport = (columns: 'all' | 'selected') => {
+        onDownloadClick && onDownloadClick(columns);
+        setIsExportConfirmOpen(false);
+    };
+
     return (
         <div className={cn('flex p-3 justify-between relative', className)}>
             <div>
@@ -95,7 +107,7 @@ const TableControls = <TData, TValue>({
                 {onDownloadClick && (
                     <button
                         aria-disabled={noResults}
-                        onClick={onDownloadClick}
+                        onClick={() => setIsExportConfirmOpen(true)}
                         data-testid='download-button'
                         aria-label='Download CSV'
                         className={cn({ [DISABLED_CLASSNAME]: noResults })}>
@@ -134,6 +146,11 @@ const TableControls = <TData, TValue>({
                     </Button>
                 )}
             </div>
+            <ExportConfirmDialog
+                open={isExportConfirmOpen}
+                onCancel={handleCancelExport}
+                onConfirm={handleConfirmExport}
+            />
         </div>
     );
 };

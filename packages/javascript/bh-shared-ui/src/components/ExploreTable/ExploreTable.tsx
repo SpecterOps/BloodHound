@@ -90,7 +90,6 @@ const ExploreTable = ({
 
     const exploreTableData = useMemo(() => getExploreTableData(graphData), [graphData]);
     const shimmedColumns = useMemo(() => shimGraphSpecificKeys(selectedColumns), [selectedColumns]);
-    console.log(Object.keys(selectedColumns));
 
     const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount, columnOrder, setColumnOrder } =
         useExploreTableRowsAndColumns({
@@ -143,29 +142,32 @@ const ExploreTable = ({
 
     useAddKeyBinding(handleKeydown);
 
-    const handleDownloadClick = useCallback(() => {
-        try {
-            const nodes = exploreTableData?.nodes;
-            if (nodes) {
-                const nodeValues = Object.values(nodes)?.map((node) => {
-                    const nodeClone = Object.assign({}, node);
-                    const flattenedNodeClone = Object.assign(nodeClone, node.properties);
+    const handleDownloadClick = useCallback(
+        (columns: 'all' | 'selected') => {
+            try {
+                const nodes = exploreTableData?.nodes;
+                if (nodes) {
+                    const nodeValues = Object.values(nodes)?.map((node) => {
+                        const nodeClone = Object.assign({}, node);
+                        const flattenedNodeClone = Object.assign(nodeClone, node.properties);
 
-                    delete flattenedNodeClone.properties;
-                    return flattenedNodeClone;
-                });
-                const csv = json2csv(nodeValues, {
-                    keys: Object.keys(selectedColumns),
-                    emptyFieldValue: '',
-                    preventCsvInjection: true,
-                });
+                        delete flattenedNodeClone.properties;
+                        return flattenedNodeClone;
+                    });
+                    const csv = json2csv(nodeValues, {
+                        keys: columns === 'all' ? exploreTableData.node_keys : Object.keys(selectedColumns),
+                        emptyFieldValue: '',
+                        preventCsvInjection: true,
+                    });
 
-                fileDownload(csv, 'nodes.csv');
+                    fileDownload(csv, 'nodes.csv');
+                }
+            } catch (err) {
+                console.error('Failed to export CSV:', err);
             }
-        } catch (err) {
-            console.error('Failed to export CSV:', err);
-        }
-    }, [exploreTableData, selectedColumns]);
+        },
+        [exploreTableData, selectedColumns]
+    );
 
     const handleSetColumnPinning = useCallback(
         (pinnedCols: NonNullable<DataTableProps['columnPinning']>) => {
