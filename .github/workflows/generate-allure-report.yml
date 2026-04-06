@@ -26,21 +26,21 @@ jobs:
   call-run-ui-unit-tests:
     uses: ./.github/workflows/run-ui-tests.yml
   generate-allure-report:
-    needs: 
+    needs:
       - call-run-go-unit-tests
       - call-run-ui-unit-tests
     runs-on: ubuntu-latest
 
     steps:
       - name: Get Allure history
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # ratchet:actions/checkout@v4
         continue-on-error: true
         with:
           ref: gh-pages
           path: gh-pages
-    
+
       - name: Download Go Allure Results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # ratchet:actions/download-artifact@v4
         with:
           merge-multiple: true
           name: allure-results-go
@@ -49,7 +49,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download UI Allure Results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # ratchet:actions/download-artifact@v4
         with:
           merge-multiple: true
           name: allure-results-ui
@@ -58,8 +58,8 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build test report
-      # Pinning a specific sha v1.13
-      # https://docs.github.com/en/enterprise-cloud@latest/actions/reference/security/secure-use#using-third-party-actions
+        # Pinning a specific sha v1.13
+        # https://docs.github.com/en/enterprise-cloud@latest/actions/reference/security/secure-use#using-third-party-actions
         uses: simple-elf/allure-report-action@53ebb757a2097edc77c53ecef4d454fc2f2f774c
         with:
           gh_pages: gh-pages
