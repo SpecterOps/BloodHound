@@ -13,36 +13,55 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { cn } from '../utils';
 
-interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
+const BadgeVariants = cva(
+    'inline-flex items-center justify-center rounded border bg-neutral-light-3 dark:bg-neutral-dark-3 text-neutral-dark-1 dark:text-white border-neutral-light-5 dark:border-neutral-dark-5',
+    {
+        variants: {
+            size: {
+                small: 'h-6 px-1 font-medium min-w-14 w-14',
+                medium: 'h-8 px-2 text-base min-w-16',
+            },
+            hasIcon: {
+                true: 'pr-3',
+            },
+        },
+        defaultVariants: {
+            size: 'medium',
+        },
+    }
+);
+
+interface BadgeProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof BadgeVariants> {
     label: string;
+    labelClassName?: string;
     icon?: React.ReactNode;
+    iconClassName?: string;
     color?: string;
     backgroundColor?: string;
 }
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
-    ({ label, icon, color, backgroundColor, className, ...rest }, ref) => {
+    ({ label, labelClassName, icon, iconClassName, color, backgroundColor, size, className, ...rest }, ref) => {
         return (
             <div
                 ref={ref}
                 {...rest}
-                className={cn([
-                    'inline-flex items-center justify-center rounded min-w-16 h-8 p-2 bg-neutral-light-3 dark:bg-neutral-dark-3 text-neutral-dark-1 dark:text-white border border-neutral-light-5 dark:border-neutral-dark-5',
-                    icon && 'pr-3',
-                    className,
-                ])}
+                className={cn(BadgeVariants({ size, hasIcon: !!icon }), className)}
                 style={{
                     borderColor: color,
-                    backgroundColor: backgroundColor,
+                    backgroundColor,
                 }}>
-                {icon && <span style={{ color }}>{icon}</span>}
-                {label}
+                {icon && <span className={iconClassName}>{icon}</span>}
+                <span className={labelClassName}>{label}</span>
             </div>
         );
     }
 );
+
+Badge.displayName = 'Badge';
 
 export { Badge };
