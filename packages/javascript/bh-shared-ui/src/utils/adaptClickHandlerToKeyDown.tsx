@@ -24,13 +24,8 @@ import { KeyboardEvent, KeyboardEventHandler } from 'react';
  */
 export function adaptClickHandlerToKeyDown(handler?: KeyboardEventHandler<HTMLElement>) {
     return (event: KeyboardEvent<HTMLElement>) => {
-        if (handler) {
-            if (event.key === 'Enter' || event.key === ' ') {
-                // Prevent space from scrolling page
-                if (event.key === ' ') event.preventDefault();
-
-                handler(event);
-            }
+        if (event.key === 'Enter' || event.key === ' ') {
+            handler?.(event);
         }
     };
 }
