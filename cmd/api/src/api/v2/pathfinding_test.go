@@ -88,17 +88,16 @@ func TestResources_GetPathfindingResult(t *testing.T) {
 				},
 			},
 			{
-				Name: "GetValidDisplayKindsError",
+				Name: "GetDisplayGraphSchemaNodeKindsError",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 				},
 				Setup: func() {
-					mockDb.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
-					mockDb.EXPECT().GetCustomNodeKindsMap(gomock.Any())
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewPathSet(), nil)
+					mockDb.EXPECT().GetDisplayGraphSchemaNodeKinds(gomock.Any()).Return(nil, errors.New("database error"))
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -111,11 +110,11 @@ func TestResources_GetPathfindingResult(t *testing.T) {
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 				},
 				Setup: func() {
-					mockDb.EXPECT().GetValidDisplayKinds(gomock.Any())
-					mockDb.EXPECT().GetCustomNodeKindsMap(gomock.Any())
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewPathSet(), nil)
+					mockDb.EXPECT().GetDisplayGraphSchemaNodeKinds(gomock.Any())
+					mockDb.EXPECT().GetCustomNodeKindsMap(gomock.Any())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -1245,7 +1244,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
+					mockDB.EXPECT().GetDisplayGraphSchemaNodeKinds(gomock.Any())
 					mockGraph.EXPECT().
 						SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
 						Return(graph.NewNodeSet(), nil)
@@ -1256,7 +1255,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 				},
 			},
 			{
-				Name: "Error -- GetValidDisplayKindsError",
+				Name: "Error -- GetDisplayGraphSchemaNodeKindsError",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "query", "some query")
 					apitest.AddQueryParam(input, "type", "fuzzy")
@@ -1266,7 +1265,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
+					mockDB.EXPECT().GetDisplayGraphSchemaNodeKinds(gomock.Any()).Return(nil, errors.New("database error"))
 
 					nodeSet := graph.NewNodeSet()
 					personNode := &graph.Node{
@@ -1298,7 +1297,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
+					mockDB.EXPECT().GetDisplayGraphSchemaNodeKinds(gomock.Any())
 
 					nodeSet := graph.NewNodeSet()
 					personNode := &graph.Node{
@@ -1333,7 +1332,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
 						Return(appcfg.FeatureFlag{Enabled: false}, nil)
-					mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
+					mockDB.EXPECT().GetDisplayGraphSchemaNodeKinds(gomock.Any())
 					mockGraph.EXPECT().
 						SearchByNameOrObjectID(gomock.Any(), false, "some query", queries.SearchTypeFuzzy).
 						Return(graph.NewNodeSet(), nil)
@@ -1364,7 +1363,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 					}
 
 					nodeSet.Add(personNode)
-					mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
+					mockDB.EXPECT().GetDisplayGraphSchemaNodeKinds(gomock.Any())
 					mockGraph.EXPECT().
 						SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
 						Return(nodeSet, nil)
@@ -1402,7 +1401,7 @@ func TestResources_GetSearchResult_ETAC(t *testing.T) {
 				mockDB.EXPECT().
 					GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)
-				mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
+				mockDB.EXPECT().GetDisplayGraphSchemaNodeKinds(gomock.Any())
 				mockGraph.EXPECT().
 					SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
 					Return(graph.NewNodeSet(), nil)
@@ -1458,7 +1457,7 @@ func TestResources_GetSearchResult_ETAC(t *testing.T) {
 				}
 				nodeSet.Add(accessibleNode)
 				nodeSet.Add(hiddenNode)
-				mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
+				mockDB.EXPECT().GetDisplayGraphSchemaNodeKinds(gomock.Any())
 				mockGraph.EXPECT().
 					SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
 					Return(nodeSet, nil)
