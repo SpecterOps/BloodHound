@@ -30,7 +30,13 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/dawgs/graph"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
@@ -246,4 +252,31 @@ func TestTransaction(t *testing.T) {
 		}, &sql.TxOptions{ReadOnly: true})
 		require.Error(t, err)
 	})
+}
+
+func TestGetNodeKindDisplayLabel(t *testing.T) {
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
+	require.NoError(t, err)
+	// Create 2 OG display kinds
+	nodeKindDis, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, "TestKindDis", extension.ID, "", "", true, "", "")
+	require.NoError(t, err)
+	nodeKindNoDis, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, "TestKindNoDis", extension.ID, "", "", false, "", "")
+	require.NoError(t, err)
+
+	primaryNodeKinds, err := testSuite.BHDatabase.GetValidDisplayKinds(testSuite.Context)
+	require.NoError(t, err)
+
+	assert.Equal(t, ad.Entity.String(), model.GetNodeKindDisplayLabel(primaryNodeKinds, graph.PrepareNode(graph.NewProperties(), ad.Entity)), "should return base kind if no other valid kinds are present")
+	assert.Equal(t, ad.User.String(), model.GetNodeKindDisplayLabel(primaryNodeKinds, graph.PrepareNode(graph.NewProperties(), ad.Entity, ad.User)), "should return valid AD kind when base and kind are present")
+	assert.Equal(t, ad.Group.String(), model.GetNodeKindDisplayLabel(primaryNodeKinds, graph.PrepareNode(graph.NewProperties(), ad.Entity, ad.Group, ad.LocalGroup)), "should return valid kind other than LocalGroup if one is present")
+	assert.Equal(t, ad.LocalGroup.String(), model.GetNodeKindDisplayLabel(primaryNodeKinds, graph.PrepareNode(graph.NewProperties(), ad.Entity, ad.LocalGroup)), "should return LocalGroup if no other valid kinds are present")
+	assert.Equal(t, azure.Group.String(), model.GetNodeKindDisplayLabel(primaryNodeKinds, graph.PrepareNode(graph.NewProperties(), azure.Entity, azure.Group)), "should return valid Azure kind when base and kind are present")
+	assert.Equal(t, analysis.NodeKindUnknown, model.GetNodeKindDisplayLabel(primaryNodeKinds, graph.PrepareNode(graph.NewProperties(), graph.StringKind("unsupported"))), "should return Unknown when only an unsupported kind is present")
+	assert.Equal(t, ad.Entity.String(), model.GetNodeKindDisplayLabel(primaryNodeKinds, graph.PrepareNode(graph.NewProperties(), ad.Entity, graph.StringKind("unsupported"))), "should return valid kind if one is present even if an unsupported kind is also present")
+	assert.Equal(t, analysis.NodeKindUnknown, model.GetNodeKindDisplayLabel(primaryNodeKinds, graph.PrepareNode(graph.NewProperties())), "should return Unknown if no node has no kinds on it")
+	assert.Equal(t, nodeKindDis.Name, model.GetNodeKindDisplayLabel(primaryNodeKinds, graph.PrepareNode(graph.NewProperties(), nodeKindDis.ToKind())), "should return open graph kind if it is a display kind")
+	assert.Equal(t, analysis.NodeKindUnknown, model.GetNodeKindDisplayLabel(primaryNodeKinds, graph.PrepareNode(graph.NewProperties(), nodeKindNoDis.ToKind())), "should return unknown kind if open graph kind is not a display kind and has no base")
 }

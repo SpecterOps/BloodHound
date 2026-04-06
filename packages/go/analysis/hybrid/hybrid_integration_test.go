@@ -23,7 +23,6 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
-	"github.com/specterops/bloodhound/packages/go/analysis/ops"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"

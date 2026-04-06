@@ -27,7 +27,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	adSchema "github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
-	azureSchema "github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
@@ -132,7 +131,7 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 				SyncedToEntraUserRelationship := post.EnsureRelationshipJob{
 					FromID: adUser,
 					ToID:   azUser,
-					Kind:   azureSchema.SyncedToEntraUser,
+					Kind:   azure.SyncedToEntraUser,
 				}
 
 				if !channels.Submit(ctx, outC, SyncedToEntraUserRelationship) {
@@ -170,11 +169,11 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 // hasOnPremUser takes a node and returns the OnPremID as a string, whether the node has an onPrem user defined as a bool
 // and any errors in negotiation of the required properties
 func hasOnPremUser(node *graph.Node) (string, bool, error) {
-	if onPremSyncEnabled, err := node.Properties.Get(azureSchema.OnPremSyncEnabled.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
+	if onPremSyncEnabled, err := node.Properties.Get(azure.OnPremSyncEnabled.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
 		return "", false, nil
 	} else if err != nil {
 		return "", false, err
-	} else if onPremID, err := node.Properties.Get(azureSchema.OnPremID.String()).String(); errors.Is(err, graph.ErrPropertyNotFound) {
+	} else if onPremID, err := node.Properties.Get(azure.OnPremID.String()).String(); errors.Is(err, graph.ErrPropertyNotFound) {
 		return onPremID, false, nil
 	} else if err != nil {
 		return onPremID, false, err
@@ -188,8 +187,8 @@ func fetchEntraUsers(tx graph.Transaction, root *graph.Node) (graph.NodeSet, err
 	return ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
 			query.InIDs(query.StartID(), root.ID),
-			query.Kind(query.Relationship(), azureSchema.Contains),
-			query.KindIn(query.End(), azureSchema.User),
+			query.Kind(query.Relationship(), azure.Contains),
+			query.KindIn(query.End(), azure.User),
 		)
 	}))
 }

@@ -22,32 +22,29 @@ import (
 	"context"
 	"testing"
 
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/packages/go/analysis"
-	"github.com/specterops/bloodhound/packages/go/analysis/ops"
+	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
-
-	"github.com/specterops/dawgs/ops"
-	"github.com/specterops/dawgs/query"
-
-	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
-
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func FetchADCSPrereqs(db graph.Database) (*LocalGroupData, []*graph.Node, []*graph.Node, []*graph.Node, ADCSCache, error) {
-	if localGroupData, err := FetchLocalGroupData(context.Background(), db); err != nil {
-		return nil, nil, nil, nil, ADCSCache{}, err
+func FetchADCSPrereqs(db graph.Database) (*adAnalysis.LocalGroupData, []*graph.Node, []*graph.Node, []*graph.Node, adAnalysis.ADCSCache, error) {
+	if localGroupData, err := adAnalysis.FetchLocalGroupData(context.Background(), db); err != nil {
+		return nil, nil, nil, nil, adAnalysis.ADCSCache{}, err
 	} else {
-		cache := NewADCSCache()
-		if enterpriseCertAuthorities, err := FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
-			return nil, nil, nil, nil, ADCSCache{}, err
-		} else if certTemplates, err := FetchNodesByKind(context.Background(), db, ad.CertTemplate); err != nil {
-			return nil, nil, nil, nil, ADCSCache{}, err
+		cache := adAnalysis.NewADCSCache()
+		if enterpriseCertAuthorities, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
+			return nil, nil, nil, nil, adAnalysis.ADCSCache{}, err
+		} else if certTemplates, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.CertTemplate); err != nil {
+			return nil, nil, nil, nil, adAnalysis.ADCSCache{}, err
 		} else {
 			cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
 			return localGroupData, cache.GetEnterpriseCertAuthorities(), cache.GetCertTemplates(), cache.GetDomains(), cache, nil
@@ -79,7 +76,7 @@ func TestADCSESC1(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC1(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC1(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC1.String(), err)
 					}
 					return nil
@@ -128,7 +125,7 @@ func TestADCSESC1(t *testing.T) {
 				}).First(); err != nil {
 					t.Fatalf("error fetching esc1 domain 2 edges in integration test; %v", err)
 				} else {
-					comp, err := GetADCSESC1EdgeComposition(context.Background(), db, edge)
+					comp, err := adAnalysis.GetADCSESC1EdgeComposition(context.Background(), db, edge)
 					assert.Nil(t, err)
 
 					domain2Nodes := comp.AllNodes()
@@ -151,7 +148,7 @@ func TestADCSESC1(t *testing.T) {
 				}).First(); err != nil {
 					t.Fatalf("error fetching esc1 edges in integration test; %v", err)
 				} else {
-					comp, err := GetADCSESC1EdgeComposition(context.Background(), db, edge)
+					comp, err := adAnalysis.GetADCSESC1EdgeComposition(context.Background(), db, edge)
 					assert.Nil(t, err)
 
 					domain3Nodes := comp.AllNodes()
@@ -193,7 +190,7 @@ func TestADCSESC1(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC1(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC1(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC1.String(), err)
 					}
 					return nil
@@ -244,7 +241,7 @@ func TestGoldenCert(t *testing.T) {
 			}
 
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				if err := PostGoldenCert(ctx, tx, outC, innerEnterpriseCA, targetDomains); err != nil {
+				if err := adAnalysis.PostGoldenCert(ctx, tx, outC, innerEnterpriseCA, targetDomains); err != nil {
 					t.Logf("failed post processing for %s: %v", ad.GoldenCert.String(), err)
 				}
 				return nil
@@ -285,13 +282,13 @@ func TestIssuedSignedBy(t *testing.T) {
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - IssuedSignedBy")
 
-		if rootCertAuthorities, err := FetchNodesByKind(context.Background(), db, ad.RootCA); err != nil {
+		if rootCertAuthorities, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.RootCA); err != nil {
 			t.Logf("failed fetching rootCA nodes: %v", err)
-		} else if enterpriseCertAuthorities, err := FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
+		} else if enterpriseCertAuthorities, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
 			t.Logf("failed fetching enterpriseCA nodes: %v", err)
-		} else if aiaCertAuthorities, err := FetchNodesByKind(context.Background(), db, ad.AIACA); err != nil {
+		} else if aiaCertAuthorities, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.AIACA); err != nil {
 			t.Logf("failed fetching AIACA nodes: %v", err)
-		} else if err := PostIssuedSignedBy(operation, enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities); err != nil {
+		} else if err := adAnalysis.PostIssuedSignedBy(operation, enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities); err != nil {
 			t.Logf("failed post processing for %s: %v", ad.IssuedSignedBy.String(), err)
 		}
 
@@ -391,9 +388,9 @@ func TestEnterpriseCAFor(t *testing.T) {
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - EnterpriseCAFor")
 
-		if enterpriseCertAuthorities, err := FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
+		if enterpriseCertAuthorities, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
 			t.Logf("failed fetching enterpriseCA nodes: %v", err)
-		} else if err := PostEnterpriseCAFor(operation, enterpriseCertAuthorities); err != nil {
+		} else if err := adAnalysis.PostEnterpriseCAFor(operation, enterpriseCertAuthorities); err != nil {
 			t.Logf("failed post processing for %s: %v", ad.EnterpriseCAFor.String(), err)
 		}
 
@@ -443,7 +440,7 @@ func TestTrustedForNTAuth(t *testing.T) {
 			// post `TrustedForNTAuth` edges
 			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - TrustedForNTAuth")
 
-			if err := PostTrustedForNTAuth(context.Background(), db, operation); err != nil {
+			if err := adAnalysis.PostTrustedForNTAuth(context.Background(), db, operation); err != nil {
 				t.Logf("failed post processing for %s: %v", ad.TrustedForNTAuth.String(), err)
 			}
 
@@ -478,7 +475,7 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 			harness.EnrollOnBehalfOfHarness1.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			certTemplates, err := FetchNodesByKind(context.Background(), db, ad.CertTemplate)
+			certTemplates, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
 			v1Templates := make([]*graph.Node, 0)
 			v2Templates := make([]*graph.Node, 0)
 
@@ -495,7 +492,7 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 			require.Nil(t, err)
 
 			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-				results, err := EnrollOnBehalfOfVersionOne(tx, v1Templates, certTemplates, harness.EnrollOnBehalfOfHarness1.Domain1)
+				results, err := adAnalysis.EnrollOnBehalfOfVersionOne(tx, v1Templates, certTemplates, harness.EnrollOnBehalfOfHarness1.Domain1)
 				require.Nil(t, err)
 
 				require.Len(t, results, 3)
@@ -522,7 +519,7 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 			})
 
 			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-				results, err := EnrollOnBehalfOfVersionTwo(tx, v2Templates, certTemplates, harness.EnrollOnBehalfOfHarness1.Domain1)
+				results, err := adAnalysis.EnrollOnBehalfOfVersionTwo(tx, v2Templates, certTemplates, harness.EnrollOnBehalfOfHarness1.Domain1)
 				require.Nil(t, err)
 
 				require.Len(t, results, 0)
@@ -538,7 +535,7 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 			harness.EnrollOnBehalfOfHarness2.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			certTemplates, err := FetchNodesByKind(context.Background(), db, ad.CertTemplate)
+			certTemplates, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
 			v1Templates := make([]*graph.Node, 0)
 			v2Templates := make([]*graph.Node, 0)
 
@@ -555,7 +552,7 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 			require.Nil(t, err)
 
 			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-				results, err := EnrollOnBehalfOfVersionOne(tx, v1Templates, certTemplates, harness.EnrollOnBehalfOfHarness2.Domain2)
+				results, err := adAnalysis.EnrollOnBehalfOfVersionOne(tx, v1Templates, certTemplates, harness.EnrollOnBehalfOfHarness2.Domain2)
 				require.Nil(t, err)
 
 				require.Len(t, results, 0)
@@ -563,7 +560,7 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 			})
 
 			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-				results, err := EnrollOnBehalfOfVersionTwo(tx, v2Templates, certTemplates, harness.EnrollOnBehalfOfHarness2.Domain2)
+				results, err := adAnalysis.EnrollOnBehalfOfVersionTwo(tx, v2Templates, certTemplates, harness.EnrollOnBehalfOfHarness2.Domain2)
 				require.Nil(t, err)
 
 				require.Len(t, results, 1)
@@ -588,7 +585,7 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 			_, _, _, _, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			if err := PostEnrollOnBehalfOf(cache, operation); err != nil {
+			if err := adAnalysis.PostEnrollOnBehalfOf(cache, operation); err != nil {
 				t.Logf("failed post processing for %s: %v", ad.EnrollOnBehalfOf.String(), err)
 			}
 			err = operation.Done()
@@ -643,7 +640,7 @@ func TestADCSESC3(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC3(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC3(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC3.String(), err)
 					}
 					return nil
@@ -694,7 +691,7 @@ func TestADCSESC3(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC3(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC3(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC3.String(), err)
 					}
 					return nil
@@ -720,7 +717,7 @@ func TestADCSESC3(t *testing.T) {
 				}).First(); err != nil {
 					t.Fatalf("error fetching esc3 edges in integration test; %v", err)
 				} else {
-					comp, err := GetADCSESC3EdgeComposition(context.Background(), db, edge)
+					comp, err := adAnalysis.GetADCSESC3EdgeComposition(context.Background(), db, edge)
 					assert.Nil(t, err)
 					assert.Equal(t, 8, len(comp.AllNodes()))
 					assert.False(t, comp.AllNodes().Contains(harness.ESC3Harness2.User2))
@@ -757,7 +754,7 @@ func TestADCSESC3(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC3(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC3(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC3.String(), err)
 					}
 					return nil
@@ -783,7 +780,7 @@ func TestADCSESC3(t *testing.T) {
 				}).First(); err != nil {
 					t.Fatalf("error fetching esc3 edges in integration test; %v", err)
 				} else {
-					comp, err := GetADCSESC3EdgeComposition(context.Background(), db, edge)
+					comp, err := adAnalysis.GetADCSESC3EdgeComposition(context.Background(), db, edge)
 					assert.Nil(t, err)
 					assert.Equal(t, 7, len(comp.AllNodes()))
 					assert.False(t, comp.AllNodes().Contains(harness.ESC3Harness3.User2))
@@ -819,7 +816,7 @@ func TestADCSESC4(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC4(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC4(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
 					}
 					return nil
@@ -884,7 +881,7 @@ func TestADCSESC4(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC4(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC4(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
 					}
 					return nil
@@ -954,7 +951,7 @@ func TestADCSESC4(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC4(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC4(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
 					}
 					return nil
@@ -1005,7 +1002,7 @@ func TestADCSESC4(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC4(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC4(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
 					}
 					return nil
@@ -1060,7 +1057,7 @@ func TestADCSESC4Composition(t *testing.T) {
 			}
 
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				if err := PostADCSESC4(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+				if err := adAnalysis.PostADCSESC4(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 					t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
 				}
 				return nil
@@ -1080,7 +1077,7 @@ func TestADCSESC4Composition(t *testing.T) {
 				}).First(); err != nil {
 				t.Fatalf("error fetching esc4 edge in integration test: %v", err)
 			} else {
-				composition, err := GetADCSESC4EdgeComposition(context.Background(), db, edge)
+				composition, err := adAnalysis.GetADCSESC4EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
 
 				nodes := composition.AllNodes()
@@ -1110,7 +1107,7 @@ func TestADCSESC4Composition(t *testing.T) {
 					}).First(); err != nil {
 					t.Fatalf("error fetching esc4 edge in integration test: %v", err)
 				} else {
-					composition, err := GetADCSESC4EdgeComposition(context.Background(), db, edge)
+					composition, err := adAnalysis.GetADCSESC4EdgeComposition(context.Background(), db, edge)
 					require.Nil(t, err)
 
 					nodes := composition.AllNodes()
@@ -1150,7 +1147,7 @@ func TestADCSESC4Composition(t *testing.T) {
 				}).First(); err != nil {
 				t.Fatalf("error fetching esc4 edge in integration test: %v", err)
 			} else {
-				composition, err := GetADCSESC4EdgeComposition(context.Background(), db, edge)
+				composition, err := adAnalysis.GetADCSESC4EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
 
 				nodes := composition.AllNodes()
@@ -1190,7 +1187,7 @@ func TestADCSESC4Composition(t *testing.T) {
 				}).First(); err != nil {
 				t.Fatalf("error fetching esc4 edge in integration test: %v", err)
 			} else {
-				composition, err := GetADCSESC4EdgeComposition(context.Background(), db, edge)
+				composition, err := adAnalysis.GetADCSESC4EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
 
 				nodes := composition.AllNodes()
@@ -1230,7 +1227,7 @@ func TestADCSESC4Composition(t *testing.T) {
 				}).First(); err != nil {
 				t.Fatalf("error fetching esc4 edge in integration test: %v", err)
 			} else {
-				composition, err := GetADCSESC4EdgeComposition(context.Background(), db, edge)
+				composition, err := adAnalysis.GetADCSESC4EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
 
 				nodes := composition.AllNodes()
@@ -1285,7 +1282,7 @@ func TestADCSESC9a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC9a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC9a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
 					}
 					return nil
@@ -1337,7 +1334,7 @@ func TestADCSESC9a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC9a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC9a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
 					}
 					return nil
@@ -1386,7 +1383,7 @@ func TestADCSESC9a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC9a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC9a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
 					}
 					return nil
@@ -1436,7 +1433,7 @@ func TestADCSESC9a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC9a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC9a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
 					}
 					return nil
@@ -1486,7 +1483,7 @@ func TestADCSESC9a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC9a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC9a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
 					}
 					return nil
@@ -1534,7 +1531,7 @@ func TestADCSESC9a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC9a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC9a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
 					}
 					return nil
@@ -1565,7 +1562,7 @@ func TestADCSESC9a(t *testing.T) {
 					assert.Equal(t, 1, len(results))
 					edge := results[0]
 
-					if edgeComp, err := GetEdgeCompositionPath(context.Background(), db, edge); err != nil {
+					if edgeComp, err := adAnalysis.GetEdgeCompositionPath(context.Background(), db, edge); err != nil {
 						t.Fatalf("error getting edge composition for esc9: %v", err)
 					} else {
 						nodes := edgeComp.AllNodes().Slice()
@@ -1609,7 +1606,7 @@ func TestADCSESC9a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC9a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC9a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
 					}
 					return nil
@@ -1659,7 +1656,7 @@ func TestADCSESC9a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC9a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC9a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
 					}
 					return nil
@@ -1706,7 +1703,7 @@ func TestADCSESC9a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC9a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC9a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
 					}
 					return nil
@@ -1760,7 +1757,7 @@ func TestADCSESC9b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC9b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC9b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC9b.String(), err)
 					}
 					return nil
@@ -1812,7 +1809,7 @@ func TestADCSESC9b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC9b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC9b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC9b.String(), err)
 					}
 					return nil
@@ -1860,7 +1857,7 @@ func TestADCSESC9b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC9b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC9b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC9b.String(), err)
 					}
 					return nil
@@ -1909,7 +1906,7 @@ func TestADCSESC9b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC9b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC9b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC9b.String(), err)
 					}
 					return nil
@@ -1958,7 +1955,7 @@ func TestADCSESC9b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC9b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC9b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC9b.String(), err)
 					}
 					return nil
@@ -1989,7 +1986,7 @@ func TestADCSESC9b(t *testing.T) {
 					assert.Equal(t, 1, len(results))
 					edge := results[0]
 
-					if composition, err := GetEdgeCompositionPath(context.Background(), db, edge); err != nil {
+					if composition, err := adAnalysis.GetEdgeCompositionPath(context.Background(), db, edge); err != nil {
 						t.Fatalf("error getting edge composition for esc9: %v", err)
 					} else {
 						names := []string{}
@@ -2037,7 +2034,7 @@ func TestADCSESC9b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC9b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC9b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC9b.String(), err)
 					}
 					return nil
@@ -2087,7 +2084,7 @@ func TestADCSESC9b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC9b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC9b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC9b.String(), err)
 					}
 					return nil
@@ -2136,7 +2133,7 @@ func TestADCSESC6a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC6a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC6a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6a.String(), err)
 					}
 					return nil
@@ -2185,7 +2182,7 @@ func TestADCSESC6a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC6a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC6a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6a.String(), err)
 					}
 					return nil
@@ -2233,7 +2230,7 @@ func TestADCSESC6a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC6a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC6a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6a.String(), err)
 					}
 					return nil
@@ -2265,7 +2262,7 @@ func TestADCSESC6a(t *testing.T) {
 				}).First(); err != nil {
 					t.Fatalf("error fetching esc6a edges in integration test; %v", err)
 				} else {
-					composition, err := GetADCSESC6EdgeComposition(context.Background(), db, edge)
+					composition, err := adAnalysis.GetADCSESC6EdgeComposition(context.Background(), db, edge)
 					require.Nil(t, err)
 					names := []string{}
 					for _, node := range composition.AllNodes() {
@@ -2290,7 +2287,7 @@ func TestADCSESC6a(t *testing.T) {
 				}).First(); err != nil {
 					t.Fatalf("error fetching esc6a edges in integration test; %v", err)
 				} else {
-					composition, err := GetADCSESC6EdgeComposition(context.Background(), db, edge)
+					composition, err := adAnalysis.GetADCSESC6EdgeComposition(context.Background(), db, edge)
 					require.Nil(t, err)
 					names := []string{}
 					for _, node := range composition.AllNodes() {
@@ -2335,7 +2332,7 @@ func TestADCSESC6a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC6a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC6a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6a.String(), err)
 					}
 					return nil
@@ -2389,7 +2386,7 @@ func TestADCSESC6b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC6b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC6b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6b.String(), err)
 					}
 					return nil
@@ -2425,7 +2422,7 @@ func TestADCSESC6b(t *testing.T) {
 					}).First(); err != nil {
 					t.Fatalf("error fetching esc6b edge in integration test: %v", err)
 				} else {
-					composition, err := GetADCSESC6EdgeComposition(context.Background(), db, edge)
+					composition, err := adAnalysis.GetADCSESC6EdgeComposition(context.Background(), db, edge)
 					require.Nil(t, err)
 
 					require.Equal(t, 8, len(composition.AllNodes()))
@@ -2450,7 +2447,7 @@ func TestADCSESC6b(t *testing.T) {
 					}).First(); err != nil {
 					t.Fatalf("error fetching esc6b edge in integration test: %v", err)
 				} else {
-					composition, err := GetADCSESC6EdgeComposition(context.Background(), db, edge)
+					composition, err := adAnalysis.GetADCSESC6EdgeComposition(context.Background(), db, edge)
 					require.Nil(t, err)
 
 					require.Equal(t, 8, len(composition.AllNodes()))
@@ -2493,7 +2490,7 @@ func TestADCSESC6b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC6b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC6b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6b.String(), err)
 					}
 					return nil
@@ -2542,7 +2539,7 @@ func TestADCSESC6b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC6b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC6b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6b.String(), err)
 					}
 					return nil
@@ -2591,7 +2588,7 @@ func TestADCSESC6b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC6b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC6b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6b.String(), err)
 					}
 					return nil
@@ -2646,7 +2643,7 @@ func TestADCSESC6b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC6b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC6b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6b.String(), err)
 					}
 					return nil
@@ -2695,7 +2692,7 @@ func TestADCSESC6b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC6b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC6b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6b.String(), err)
 					}
 					return nil
@@ -2744,7 +2741,7 @@ func TestADCSESC10a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC10a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC10a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10a.String(), err)
 					}
 					return nil
@@ -2797,7 +2794,7 @@ func TestADCSESC10a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC10a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC10a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10a.String(), err)
 					}
 					return nil
@@ -2847,7 +2844,7 @@ func TestADCSESC10a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC10a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC10a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10a.String(), err)
 					}
 					return nil
@@ -2898,7 +2895,7 @@ func TestADCSESC10a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC10a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC10a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10a.String(), err)
 					}
 					return nil
@@ -2930,7 +2927,7 @@ func TestADCSESC10a(t *testing.T) {
 					assert.Equal(t, 1, len(results))
 					edge := results[0]
 
-					if composition, err := GetEdgeCompositionPath(context.Background(), db, edge); err != nil {
+					if composition, err := adAnalysis.GetEdgeCompositionPath(context.Background(), db, edge); err != nil {
 						t.Fatalf("error getting edge composition for esc10a: %v", err)
 					} else {
 						names := []string{}
@@ -2978,7 +2975,7 @@ func TestADCSESC10a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC10a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC10a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10a.String(), err)
 					}
 					return nil
@@ -3027,7 +3024,7 @@ func TestADCSESC10a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC10a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC10a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10a.String(), err)
 					}
 					return nil
@@ -3076,7 +3073,7 @@ func TestADCSESC10a(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC10a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC10a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10a.String(), err)
 					}
 					return nil
@@ -3125,7 +3122,7 @@ func TestADCSESC13(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC13(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC13(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC13.String(), err)
 					} else {
 						return nil
@@ -3192,7 +3189,7 @@ func TestADCSESC13(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC13(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC13(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC13.String(), err)
 					} else {
 						return nil
@@ -3264,7 +3261,7 @@ func TestADCSESC13(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC13(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC13(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC13.String(), err)
 					} else {
 						return nil
@@ -3313,7 +3310,7 @@ func TestADCSESC13(t *testing.T) {
 					assert.Equal(t, 1, len(results))
 					edge := results[0]
 
-					if edgeComp, err := GetEdgeCompositionPath(context.Background(), db, edge); err != nil {
+					if edgeComp, err := adAnalysis.GetEdgeCompositionPath(context.Background(), db, edge); err != nil {
 						t.Fatalf("error getting edge composition for esc13: %v", err)
 					} else {
 						nodes := edgeComp.AllNodes().Slice()
@@ -3358,7 +3355,7 @@ func TestADCSESC10b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC10b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC10b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10b.String(), err)
 					}
 					return nil
@@ -3409,7 +3406,7 @@ func TestADCSESC10b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC10b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC10b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10b.String(), err)
 					}
 					return nil
@@ -3458,7 +3455,7 @@ func TestADCSESC10b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC10b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC10b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10b.String(), err)
 					}
 					return nil
@@ -3507,7 +3504,7 @@ func TestADCSESC10b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC10b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC10b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10b.String(), err)
 					}
 					return nil
@@ -3539,7 +3536,7 @@ func TestADCSESC10b(t *testing.T) {
 					assert.Equal(t, 1, len(results))
 					edge := results[0]
 
-					if composition, err := GetEdgeCompositionPath(context.Background(), db, edge); err != nil {
+					if composition, err := adAnalysis.GetEdgeCompositionPath(context.Background(), db, edge); err != nil {
 						t.Fatalf("error getting edge composition for esc10b: %v", err)
 					} else {
 						names := []string{}
@@ -3588,7 +3585,7 @@ func TestADCSESC10b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC10b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC10b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10b.String(), err)
 					}
 					return nil
@@ -3637,7 +3634,7 @@ func TestADCSESC10b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC10b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC10b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10b.String(), err)
 					}
 					return nil
@@ -3686,7 +3683,7 @@ func TestADCSESC10b(t *testing.T) {
 				}
 
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := PostADCSESC10b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+					if err := adAnalysis.PostADCSESC10b(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10b.String(), err)
 					}
 					return nil
@@ -3719,10 +3716,10 @@ func TestExtendedByPolicyBinding(t *testing.T) {
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ExtendedByPolicy")
 
-		certTemplates, err := FetchNodesByKind(context.Background(), db, ad.CertTemplate)
+		certTemplates, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
 		require.Nil(t, err)
 
-		if err := PostExtendedByPolicyBinding(operation, certTemplates); err != nil {
+		if err := adAnalysis.PostExtendedByPolicyBinding(operation, certTemplates); err != nil {
 			t.Fatalf("failed post processing for %s: %v", ad.ExtendedByPolicy.String(), err)
 		}
 
