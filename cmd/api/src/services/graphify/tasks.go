@@ -188,20 +188,20 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.Ingest
 					if errors.As(err, &graphifyError) {
 						for _, graphifyErr := range graphifyError.Errors {
 							if ok := errors.As(graphifyErr, &resolutionErr); ok {
+								// Resolution errors are data quality issues. They are surfaced to the user via
+								// UserDataErrs but must not trigger a batch rollback.
 								fileData[i].UserDataErrs = append(fileData[i].UserDataErrs, resolutionErr.Error())
 							} else {
 								fileData[i].Errors = append(fileData[i].Errors, graphifyErr.Error())
+								errs.Add(graphifyErr)
 							}
 						}
 					} else {
 						fileData[i].Errors = append(fileData[i].Errors, err.Error())
+						errs.Add(err)
 					}
-
-					errs.Add(err) // graphifyErrorBuilder at fn scope
-					continue      // keep ingesting the rest
 				}
 			}
-
 			return errs.Build()
 		})
 	}
