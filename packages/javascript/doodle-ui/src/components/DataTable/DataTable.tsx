@@ -512,6 +512,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                 //column level prop to enable drag and drop
                                                 //set in columnDef meta: {enableDragging: boolean}
                                                 const isColDraggingEnabled =
+                                                    enableDragAndDrop &&
                                                     cell.column.columnDef.meta?.enableDragging !== false;
 
                                                 const cellContent = (
