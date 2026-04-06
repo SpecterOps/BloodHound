@@ -71,6 +71,9 @@ func TestIsValidClientVersion(t *testing.T) {
 	_, err = utils.IsValidClientVersion("azurehound/0.0.0-rcfoo")
 	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
+	_, err = utils.IsValidClientVersion("azurehound/0.0.0-alpha")
+	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
+
 	sharpHoundversion, err := utils.IsValidClientVersion("sharphound/2.0.3.0")
 	require.Nil(t, err)
 	require.Equal(t, utils.ClientTypeSharpHound, sharpHoundversion.ClientType)
@@ -94,6 +97,9 @@ func TestIsValidClientVersion(t *testing.T) {
 	require.ErrorIs(t, err, utils.ErrInvalidSharpHoundVersion)
 
 	_, err = utils.IsValidClientVersion("sharphound/2.0.3.0-rcfoo")
+	require.ErrorIs(t, err, utils.ErrInvalidSharpHoundVersion)
+
+	_, err = utils.IsValidClientVersion("sharphound/2.0.3.0-alpha")
 	require.ErrorIs(t, err, utils.ErrInvalidSharpHoundVersion)
 
 	_, err = utils.IsValidClientVersion("sharphound/2.0.2.0")
@@ -126,6 +132,9 @@ func TestIsValidClientVersion(t *testing.T) {
 	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
 	_, err = utils.IsValidClientVersion("openhound/0.0.0-rcfoo")
+	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
+
+	_, err = utils.IsValidClientVersion("openhound/0.0.0-alpha")
 	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
 	_, err = utils.IsValidClientVersion("openhound/1X0Y1")
@@ -231,6 +240,9 @@ func TestParseClientVersion(t *testing.T) {
 	version, err = utils.ParseClientVersion("azurehound/v1.0.1-rcfoo")
 	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
 
+	version, err = utils.ParseClientVersion("azurehound/v1.0.1-alpha")
+	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
+
 	version, err = utils.ParseClientVersion("openhound/v1.0.1")
 	require.Nil(t, err)
 	require.Equal(t, utils.ClientTypeOpenHound, version.ClientType)
@@ -256,6 +268,12 @@ func TestParseClientVersion(t *testing.T) {
 
 	version, err = utils.ParseClientVersion("openhound/v1.0.1-rcfoo")
 	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
+
+	version, err = utils.ParseClientVersion("openhound/v1.0.1-alpha")
+	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
+
+	version, err = utils.ParseClientVersion("sharphound/2.0.6.0-alpha")
+	require.Equal(t, utils.ErrInvalidSharpHoundVersion, err)
 
 	version, err = utils.ParseClientVersion("teststring")
 

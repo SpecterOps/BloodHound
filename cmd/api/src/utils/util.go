@@ -24,10 +24,10 @@ import (
 	"net/http"
 	"net/mail"
 	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
@@ -39,9 +39,6 @@ var (
 	ErrRecommendSharphoundVersion = errors.New("please upgrade to sharphound v2.0.3 or above")
 	ErrInvalidClientType          = errors.New("invalid client type")
 	ErrInvalidUUID                = errors.New("invalid UUID")
-	azurehoundVersionRegex        = regexp.MustCompile(`^azurehound/v?([0-9]+)\.([0-9]+)\.([0-9]+)(?:(?:-(rc[0-9]+))|(?:\+(docker)))?$`)
-	openhoundVersionRegex         = regexp.MustCompile(`^openhound/v?([0-9]+)\.([0-9]+)\.([0-9]+)(?:-(rc[0-9]+))?$`)
-	sharphoundVersionRegex        = regexp.MustCompile(`^sharphound/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)(?:-(rc[0-9]+))?$`)
 )
 
 type ClientType int
@@ -97,54 +94,48 @@ func ParseClientVersion(userAgent string) (ClientVersion, error) {
 
 func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
 	var (
-		version               = ClientVersion{Major: 0, Minor: 0, Patch: 0, Extra: 0, Prerelease: "", BuildMetadata: ""}
-		collectorVersionRegex *regexp.Regexp
-		versionMatches        []string
+		err           error
+		parsedVersion *semver.Version
+		rawVersion    string
+		version       = ClientVersion{Major: 0, Minor: 0, Patch: 0, Extra: 0, Prerelease: "", BuildMetadata: ""}
 	)
 
 	if strings.HasPrefix(userAgent, "azurehound") {
 		version.ClientType = ClientTypeAzureHound
-		collectorVersionRegex = azurehoundVersionRegex
+		rawVersion = strings.TrimPrefix(userAgent, "azurehound/")
 	} else if strings.HasPrefix(userAgent, "openhound") {
 		version.ClientType = ClientTypeOpenHound
-		collectorVersionRegex = openhoundVersionRegex
+		rawVersion = strings.TrimPrefix(userAgent, "openhound/")
 	} else {
 		return ClientVersion{}, ErrInvalidClientType
 	}
 
-	if match := collectorVersionRegex.MatchString(userAgent); !match {
+	if rawVersion == userAgent || rawVersion == "" {
+		return version, ErrInvalidCollectorVersion
+	} else if parsedVersion, err = parseSemverVersion(rawVersion); err != nil {
+		return version, ErrInvalidCollectorVersion
+	} else if !isValidCollectorSemver(parsedVersion, version.ClientType) {
 		return version, ErrInvalidCollectorVersion
 	} else {
-		versionMatches = collectorVersionRegex.FindStringSubmatch(userAgent)
-		if major, err := strconv.Atoi(versionMatches[1]); err != nil {
-			return version, err
-		} else if minor, err := strconv.Atoi(versionMatches[2]); err != nil {
-			return version, err
-		} else if patch, err := strconv.Atoi(versionMatches[3]); err != nil {
-			return version, err
-		} else {
-			version.Major = major
-			version.Minor = minor
-			version.Patch = patch
-			version.Extra = 0
-			if version.ClientType == ClientTypeAzureHound {
-				if len(versionMatches) > 4 {
-					version.Prerelease = versionMatches[4]
-				}
-				if len(versionMatches) > 5 {
-					version.BuildMetadata = versionMatches[5]
-				}
-			} else if version.ClientType == ClientTypeOpenHound && len(versionMatches) > 4 {
-				version.Prerelease = versionMatches[4]
-			}
-			return version, nil
-		}
+		version.Major = int(parsedVersion.Major())
+		version.Minor = int(parsedVersion.Minor())
+		version.Patch = int(parsedVersion.Patch())
+		version.Extra = 0
+		version.Prerelease = parsedVersion.Prerelease()
+		version.BuildMetadata = parsedVersion.Metadata()
+		return version, nil
 	}
 }
 
 func ParseSharpHoundVersion(userAgent string) (ClientVersion, error) {
 	var (
-		version = ClientVersion{
+		err             error
+		extra           int
+		parsedVersion   *semver.Version
+		prereleasePart  string
+		rawVersion      string
+		sharpHoundParts []string
+		version         = ClientVersion{
 			ClientType:    ClientTypeSharpHound,
 			Major:         0,
 			Minor:         0,
@@ -153,31 +144,89 @@ func ParseSharpHoundVersion(userAgent string) (ClientVersion, error) {
 			Prerelease:    "",
 			BuildMetadata: "",
 		}
-		sharpHoundVersionRegex = sharphoundVersionRegex
 	)
-	if match := sharpHoundVersionRegex.MatchString(userAgent); !match {
+
+	rawVersion = strings.TrimPrefix(userAgent, "sharphound/")
+	if rawVersion == userAgent || rawVersion == "" {
+		return version, ErrInvalidSharpHoundVersion
+	}
+
+	sharpHoundParts = strings.Split(rawVersion, ".")
+	if len(sharpHoundParts) != 4 {
+		return version, ErrInvalidSharpHoundVersion
+	}
+
+	sharpHoundParts[3], prereleasePart, _ = strings.Cut(sharpHoundParts[3], "-")
+
+	if extra, err = strconv.Atoi(sharpHoundParts[3]); err != nil {
+		return version, ErrInvalidSharpHoundVersion
+	}
+
+	if parsedVersion, err = parseSemverVersion(strings.Join(sharpHoundParts[:3], ".") + buildPrereleaseSuffix(prereleasePart)); err != nil {
+		return version, ErrInvalidSharpHoundVersion
+	} else if !isValidSharpHoundSemver(parsedVersion) {
 		return version, ErrInvalidSharpHoundVersion
 	} else {
-		versionMatches := sharpHoundVersionRegex.FindStringSubmatch(userAgent)
-		if major, err := strconv.Atoi(versionMatches[1]); err != nil {
-			return version, err
-		} else if minor, err := strconv.Atoi(versionMatches[2]); err != nil {
-			return version, err
-		} else if patch, err := strconv.Atoi(versionMatches[3]); err != nil {
-			return version, err
-		} else if extra, err := strconv.Atoi(versionMatches[4]); err != nil {
-			return version, err
-		} else {
-			version.Major = major
-			version.Minor = minor
-			version.Patch = patch
-			version.Extra = extra
-			if len(versionMatches) > 5 {
-				version.Prerelease = versionMatches[5]
-			}
-			return version, nil
-		}
+		version.Major = int(parsedVersion.Major())
+		version.Minor = int(parsedVersion.Minor())
+		version.Patch = int(parsedVersion.Patch())
+		version.Extra = extra
+		version.Prerelease = parsedVersion.Prerelease()
+		return version, nil
 	}
+}
+
+func buildPrereleaseSuffix(prerelease string) string {
+	if prerelease == "" {
+		return ""
+	}
+
+	return "-" + prerelease
+}
+
+func isValidCollectorSemver(parsedVersion *semver.Version, clientType ClientType) bool {
+	if !isValidRCPrerelease(parsedVersion.Prerelease()) {
+		return false
+	}
+
+	if clientType == ClientTypeAzureHound {
+		if parsedVersion.Prerelease() != "" && parsedVersion.Metadata() != "" {
+			return false
+		}
+
+		return parsedVersion.Metadata() == "" || parsedVersion.Metadata() == "docker"
+	}
+
+	return parsedVersion.Metadata() == ""
+}
+
+func isValidRCPrerelease(prerelease string) bool {
+	if prerelease == "" {
+		return true
+	}
+
+	if !strings.HasPrefix(prerelease, "rc") {
+		return false
+	}
+
+	prereleaseNumber := strings.TrimPrefix(prerelease, "rc")
+	if prereleaseNumber == "" {
+		return false
+	}
+
+	if _, err := strconv.Atoi(prereleaseNumber); err != nil {
+		return false
+	}
+
+	return true
+}
+
+func isValidSharpHoundSemver(parsedVersion *semver.Version) bool {
+	return isValidRCPrerelease(parsedVersion.Prerelease()) && parsedVersion.Metadata() == ""
+}
+
+func parseSemverVersion(rawVersion string) (*semver.Version, error) {
+	return semver.StrictNewVersion(strings.TrimPrefix(rawVersion, "v"))
 }
 
 type JsonResult struct {
