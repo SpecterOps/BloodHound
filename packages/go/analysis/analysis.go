@@ -18,10 +18,8 @@ package analysis
 
 import (
 	"context"
-	"fmt"
 	"sync/atomic"
 
-	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -49,16 +47,6 @@ func NewCompositionCounter() CompositionCounter {
 	return CompositionCounter{
 		counter: atomic.Int64{},
 	}
-}
-
-func ParseKind(rawKind string) (graph.Kind, error) {
-	for kind := range graphschema.ValidKinds {
-		if kind.String() == rawKind {
-			return kind, nil
-		}
-	}
-
-	return nil, fmt.Errorf("unknown kind %s", rawKind)
 }
 
 func nodeByIndexedKindProperty(property, value string, kind graph.Kind) graph.Criteria {
