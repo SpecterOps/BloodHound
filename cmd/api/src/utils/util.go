@@ -39,9 +39,9 @@ var (
 	ErrRecommendSharphoundVersion = errors.New("please upgrade to sharphound v2.0.3 or above")
 	ErrInvalidClientType          = errors.New("invalid client type")
 	ErrInvalidUUID                = errors.New("invalid UUID")
-	azurehoundVersionRegex        = regexp.MustCompile(`^azurehound/v?([0-9]+)\.([0-9]+)\.([0-9]+)$`)
-	openhoundVersionRegex         = regexp.MustCompile(`^openhound/v?([0-9]+)\.([0-9]+)\.([0-9]+)$`)
-	sharphoundVersionRegex        = regexp.MustCompile(`^sharphound/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)$`)
+	azurehoundVersionRegex        = regexp.MustCompile(`^azurehound/v?([0-9]+)\.([0-9]+)\.([0-9]+)(?:(?:-(rc[0-9]+))|(?:\+(docker)))?$`)
+	openhoundVersionRegex         = regexp.MustCompile(`^openhound/v?([0-9]+)\.([0-9]+)\.([0-9]+)(?:-(rc[0-9]+))?$`)
+	sharphoundVersionRegex        = regexp.MustCompile(`^sharphound/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)(?:-(rc[0-9]+))?$`)
 )
 
 type ClientType int
@@ -53,11 +53,13 @@ const (
 )
 
 type ClientVersion struct {
-	ClientType ClientType
-	Major      int
-	Minor      int
-	Patch      int
-	Extra      int
+	ClientType    ClientType
+	Major         int
+	Minor         int
+	Patch         int
+	Extra         int
+	Prerelease    string
+	BuildMetadata string
 }
 
 // IsValidClientVersion checks the version from a user agent to ensure it's a valid UserAgent and that
@@ -95,8 +97,9 @@ func ParseClientVersion(userAgent string) (ClientVersion, error) {
 
 func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
 	var (
-		version               = ClientVersion{Major: 0, Minor: 0, Patch: 0, Extra: 0}
+		version               = ClientVersion{Major: 0, Minor: 0, Patch: 0, Extra: 0, Prerelease: "", BuildMetadata: ""}
 		collectorVersionRegex *regexp.Regexp
+		versionMatches        []string
 	)
 
 	if strings.HasPrefix(userAgent, "azurehound") {
@@ -112,7 +115,7 @@ func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
 	if match := collectorVersionRegex.MatchString(userAgent); !match {
 		return version, ErrInvalidCollectorVersion
 	} else {
-		versionMatches := collectorVersionRegex.FindStringSubmatch(userAgent)
+		versionMatches = collectorVersionRegex.FindStringSubmatch(userAgent)
 		if major, err := strconv.Atoi(versionMatches[1]); err != nil {
 			return version, err
 		} else if minor, err := strconv.Atoi(versionMatches[2]); err != nil {
@@ -124,6 +127,16 @@ func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
 			version.Minor = minor
 			version.Patch = patch
 			version.Extra = 0
+			if version.ClientType == ClientTypeAzureHound {
+				if len(versionMatches) > 4 {
+					version.Prerelease = versionMatches[4]
+				}
+				if len(versionMatches) > 5 {
+					version.BuildMetadata = versionMatches[5]
+				}
+			} else if version.ClientType == ClientTypeOpenHound && len(versionMatches) > 4 {
+				version.Prerelease = versionMatches[4]
+			}
 			return version, nil
 		}
 	}
@@ -132,11 +145,13 @@ func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
 func ParseSharpHoundVersion(userAgent string) (ClientVersion, error) {
 	var (
 		version = ClientVersion{
-			ClientType: ClientTypeSharpHound,
-			Major:      0,
-			Minor:      0,
-			Patch:      0,
-			Extra:      0,
+			ClientType:    ClientTypeSharpHound,
+			Major:         0,
+			Minor:         0,
+			Patch:         0,
+			Extra:         0,
+			Prerelease:    "",
+			BuildMetadata: "",
 		}
 		sharpHoundVersionRegex = sharphoundVersionRegex
 	)
@@ -157,6 +172,9 @@ func ParseSharpHoundVersion(userAgent string) (ClientVersion, error) {
 			version.Minor = minor
 			version.Patch = patch
 			version.Extra = extra
+			if len(versionMatches) > 5 {
+				version.Prerelease = versionMatches[5]
+			}
 			return version, nil
 		}
 	}
