@@ -63,7 +63,7 @@ export const useSearch = (keyword: string, type: string | undefined) => {
 export const getKeywordAndTypeValues = (inputValue = ''): { keyword: string; type: string | undefined } => {
     const splitValue = inputValue.split(':');
 
-    let keyword = '';
+    let keyword: string;
     let type: string | undefined = undefined;
 
     if (splitValue.length > 1) {
