@@ -25,6 +25,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/peterldowns/pgtestdb"
 	"gorm.io/gorm"
 
@@ -49,6 +50,7 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 		ctx      = context.Background()
 		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
 		gormDB   *gorm.DB
+		dbPool   *pgxpool.Pool
 		db       *database.BloodhoundDB
 		err      error
 	)
@@ -60,10 +62,10 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 
 	// #region Setup for dbs
 
-	gormDB, err = database.OpenDatabase(cfg.Database)
+	gormDB, dbPool, err = database.OpenDatabase(cfg.Database)
 	require.NoError(t, err)
 
-	db = database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), config.Configuration{})
+	db = database.NewBloodhoundDB(gormDB, dbPool, auth.NewIdentityResolver(), config.Configuration{})
 
 	err = db.Migrate(ctx)
 	require.NoError(t, err)

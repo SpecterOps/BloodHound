@@ -61,10 +61,10 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 	cfg.Database.Connection = connConf.URL()
 	// #region Setup for dbs
 
-	gormDB, err := database.OpenDatabase(cfg.Database)
+	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
 	require.NoError(t, err)
 
-	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), cfg)
+	db := database.NewBloodhoundDB(gormDB, dbPool, auth.NewIdentityResolver(), cfg)
 
 	err = db.Migrate(ctx)
 	require.NoError(t, err)

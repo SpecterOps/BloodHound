@@ -117,10 +117,10 @@ func setupIntegrationTest(t *testing.T) IntegrationTestSuite {
 	err = graphDB.AssertSchema(ctx, schema())
 	require.NoError(t, err)
 
-	gormDB, err := database.OpenDatabase(cfg.Database)
+	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
 	require.NoError(t, err)
 
-	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), cfg)
+	db := database.NewBloodhoundDB(gormDB, dbPool, auth.NewIdentityResolver(), cfg)
 	require.NoError(t, db.Migrate(ctx))
 	require.NoError(t, db.PopulateExtensionData(ctx))
 

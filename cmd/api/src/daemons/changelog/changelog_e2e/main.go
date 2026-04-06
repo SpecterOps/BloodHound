@@ -99,13 +99,13 @@ func newHarness() *Harness {
 		os.Exit(1)
 	}
 
-	gormDB, err := database.OpenDatabase(cfg.Database)
+	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
 	if err != nil {
 		slog.Error("Failed to open", attr.Error(err))
 		os.Exit(1)
 	}
 
-	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), cfg)
+	db := database.NewBloodhoundDB(gormDB, dbPool, auth.NewIdentityResolver(), cfg)
 
 	// Attempt to truncate but don't care about the error
 	dawgsDB.Run(

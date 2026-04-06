@@ -158,12 +158,12 @@ func (s *CommunityGraphService) TeardownService(ctx context.Context) {
 }
 
 func (s *CommunityGraphService) InitializeService(ctx context.Context, cfg config.Configuration, graphDB graph.Database) error {
-	gormDB, err := database.OpenDatabase(cfg.Database)
+	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
 	if err != nil {
 		return fmt.Errorf("error opening database: %w", err)
 	}
 
-	s.db = database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), config.Configuration{})
+	s.db = database.NewBloodhoundDB(gormDB, dbPool, auth.NewIdentityResolver(), config.Configuration{})
 
 	if s.db != nil {
 		err := s.db.Wipe(ctx)

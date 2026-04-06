@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
@@ -188,6 +189,7 @@ type BloodhoundDB struct {
 	db         *gorm.DB
 	idResolver auth.IdentityResolver // TODO: this really needs to be elsewhere. something something separation of concerns
 	config     config.Configuration
+	pool       *pgxpool.Pool
 }
 
 func (s *BloodhoundDB) Close(ctx context.Context) {
@@ -196,6 +198,7 @@ func (s *BloodhoundDB) Close(ctx context.Context) {
 	} else if err := sqlDBRef.Close(); err != nil {
 		slog.ErrorContext(ctx, "Failed closing database", attr.Error(err))
 	}
+	s.pool.Close() // pgxpool must be closed seperately
 }
 
 func (s *BloodhoundDB) preload(associations []string) *gorm.DB {
@@ -216,8 +219,8 @@ func (s *BloodhoundDB) Scope(scopeFuncs ...ScopeFunc) *gorm.DB {
 	return s.db.Scopes(scopes...)
 }
 
-func NewBloodhoundDB(db *gorm.DB, idResolver auth.IdentityResolver, cfg config.Configuration) *BloodhoundDB {
-	return &BloodhoundDB{db: db, idResolver: idResolver, config: cfg}
+func NewBloodhoundDB(db *gorm.DB, pool *pgxpool.Pool, idResolver auth.IdentityResolver, cfg config.Configuration) *BloodhoundDB {
+	return &BloodhoundDB{db: db, pool: pool, idResolver: idResolver, config: cfg}
 }
 
 // Transaction executes the given function within a database transaction.
@@ -228,11 +231,11 @@ func NewBloodhoundDB(db *gorm.DB, idResolver auth.IdentityResolver, cfg config.C
 // Optional sql.TxOptions can be provided to configure isolation level and read-only mode.
 func (s *BloodhoundDB) Transaction(ctx context.Context, fn func(tx *BloodhoundDB) error, opts ...*sql.TxOptions) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		return fn(NewBloodhoundDB(tx, s.idResolver, s.config))
+		return fn(NewBloodhoundDB(tx, s.pool, s.idResolver, s.config))
 	}, opts...)
 }
 
-func OpenDatabase(cfg drivers.DatabaseConfiguration) (*gorm.DB, error) {
+func OpenDatabase(cfg drivers.DatabaseConfiguration) (*gorm.DB, *pgxpool.Pool, error) {
 	gormConfig := &gorm.Config{
 		Logger: &GormLogAdapter{
 			SlowQueryErrorThreshold: time.Second * 30,
@@ -241,15 +244,15 @@ func OpenDatabase(cfg drivers.DatabaseConfiguration) (*gorm.DB, error) {
 	}
 	pool, err := pg.NewPool(cfg)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	dbPool := stdlib.OpenDBFromPool(pool)
 
 	if db, err := gorm.Open(postgres.New(postgres.Config{Conn: dbPool}), gormConfig); err != nil {
-		return nil, err
+		return nil, nil, err
 	} else {
-		return db, nil
+		return db, pool, nil
 	}
 }
 

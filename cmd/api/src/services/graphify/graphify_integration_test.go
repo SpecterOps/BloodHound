@@ -71,10 +71,10 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 	pool, err := pg.NewPool(cfg.Database)
 	require.NoError(t, err)
 
-	gormDB, err := database.OpenDatabase(cfg.Database)
+	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
 	require.NoError(t, err)
 
-	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), config.Configuration{})
+	db := database.NewBloodhoundDB(gormDB, dbPool, auth.NewIdentityResolver(), config.Configuration{})
 
 	graphDB, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
 		GraphQueryMemoryLimit: 1024 * 1024 * 1024 * 2,
