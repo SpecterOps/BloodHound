@@ -223,7 +223,8 @@ func isValidRCPrerelease(prerelease string) bool {
 		return false
 	}
 
-	if _, err := strconv.Atoi(prereleaseNumber); err != nil {
+	num, err := strconv.Atoi(prereleaseNumber)
+	if err != nil || num < 1 {
 		return false
 	}
 
