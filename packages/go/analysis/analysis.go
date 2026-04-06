@@ -18,7 +18,19 @@ package analysis
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"log/slog"
 
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dataquality"
+	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
+	azureAnalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -107,4 +119,79 @@ func ExpandGroupMembershipPaths(tx graph.Transaction, candidates graph.NodeSet) 
 	}
 
 	return groupMemberPaths, nil
+}
+
+var (
+	ErrAnalysisFailed             = errors.New("analysis failed")
+	ErrAnalysisPartiallyCompleted = errors.New("analysis partially completed")
+)
+
+// TODO Cleanup tieringEnabled after Tiering GA
+func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration) error {
+	var (
+		collectedErrors []error
+		tieringEnabled  = appcfg.GetTieringEnabled(ctx, db)
+	)
+
+	var (
+		adFailed           = false
+		azureFailed        = false
+		agiFailed          = false
+		agtPartiallyFailed = false
+		dataQualityFailed  = false
+	)
+	// TODO: Cleanup #ADCSFeatureFlag after full launch.
+	if adcsFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureAdcs); err != nil {
+		collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving ADCS feature flag: %w", err))
+	} else if ntlmFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureNTLMPostProcessing); err != nil {
+		collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving NTLM Post Processing feature flag: %w", err))
+	} else if stats, err := adAnalysis.Post(ctx, graphDB, appcfg.GetCitrixRDPSupport(ctx, db), ntlmFlag.Enabled, adcsFlag.Enabled); err != nil {
+		collectedErrors = append(collectedErrors, fmt.Errorf("error during ad post: %w", err))
+		adFailed = true
+	} else {
+		stats.LogStats()
+	}
+
+	if stats, err := azureAnalysis.Post(ctx, graphDB); err != nil {
+		collectedErrors = append(collectedErrors, fmt.Errorf("error during azure post: %w", err))
+		azureFailed = true
+	} else {
+		stats.LogStats()
+	}
+
+	if errs := TagAssetGroupsAndTierZero(ctx, db, graphDB); len(errs) > 0 {
+		for _, err := range errs {
+			collectedErrors = append(collectedErrors, fmt.Errorf("tagging asset groups and tier zero failed: %w", err))
+		}
+
+		if ContainsOnlyCypherSelectorErrors(errs) {
+			agtPartiallyFailed = true
+		}
+	}
+
+	if !tieringEnabled {
+		if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB, model.GetNodeKindDisplayLabel); err != nil {
+			collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
+			agiFailed = true
+		}
+	}
+
+	if err := dataquality.SaveDataQuality(ctx, db, graphDB); err != nil {
+		collectedErrors = append(collectedErrors, fmt.Errorf("error saving data quality stat: %v", err))
+		dataQualityFailed = true
+	}
+
+	if len(collectedErrors) > 0 {
+		for _, err := range collectedErrors {
+			slog.ErrorContext(ctx, "Analysis error encountered", attr.Error(err))
+		}
+	}
+
+	if adFailed && azureFailed && agiFailed && dataQualityFailed {
+		return ErrAnalysisFailed
+	} else if adFailed || azureFailed || agiFailed || agtPartiallyFailed || dataQualityFailed {
+		return ErrAnalysisPartiallyCompleted
+	}
+
+	return nil
 }
