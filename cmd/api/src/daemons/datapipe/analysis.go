@@ -24,6 +24,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dataquality"
@@ -85,7 +86,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 	}
 
 	if !tieringEnabled {
-		if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB, analysis.GetNodeKindDisplayLabel); err != nil {
+		if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB, model.GetNodeKindDisplayLabel); err != nil {
 			collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
 			agiFailed = true
 		}

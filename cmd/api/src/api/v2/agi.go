@@ -34,7 +34,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -534,7 +533,7 @@ func parseAGMembersFromNodes(validPrimaryKinds graphschema.ValidPrimaryKinds, no
 		agMember := api.AssetGroupMember{
 			AssetGroupID: assetGroupID,
 			ObjectID:     memberObjectId,
-			PrimaryKind:  analysis.GetNodeKindDisplayLabel(validPrimaryKinds, node),
+			PrimaryKind:  model.GetNodeKindDisplayLabel(validPrimaryKinds, node),
 			Kinds:        node.Kinds.Strings(),
 			Name:         memberName,
 			CustomMember: isCustomMember,

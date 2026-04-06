@@ -1104,7 +1104,7 @@ func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {
 			nodeEntry.Name = name
 		}
 
-		nodeEntry.Label = analysis.GetNodeKindDisplayLabel(nil, node)
+		nodeEntry.Label = model.GetNodeKindDisplayLabel(nil, node)
 		nodeEntry.Kinds = node.Kinds.Strings()
 
 		renderedNodes = append(renderedNodes, nodeEntry)

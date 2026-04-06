@@ -20,7 +20,6 @@ import (
 	"maps"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -38,7 +37,7 @@ func NodeToBloodHoundGraph(graphSchemaNodeValidDisplayKinds model.GraphSchemaNod
 	// Add custom node kinds to valid primary kinds
 	maps.Copy(validPrimaryKinds, customNodeKinds.ValidKinds())
 	var (
-		nodeKindLabel       = analysis.GetNodeKindDisplayLabel(validPrimaryKinds, node)
+		nodeKindLabel       = model.GetNodeKindDisplayLabel(validPrimaryKinds, node)
 		name, _             = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
 		bloodHoundGraphNode = BloodHoundGraphNode{
 			BloodHoundGraphItem: &BloodHoundGraphItem{

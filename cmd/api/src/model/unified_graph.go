@@ -19,12 +19,20 @@ package model
 import (
 	"time"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/tiering"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
+
+func GetNodeKindDisplayLabel(validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.Node) string {
+	return GetNodeKind(validPrimaryKinds, node).String()
+}
+
+// GetNodeKind - returns the primary kind of the node.
+func GetNodeKind(validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.Node) graph.Kind {
+	return graphschema.PrimaryNodeKind(validPrimaryKinds, node.Kinds)
+}
 
 // UnifiedGraphWPropertyKeys
 type UnifiedGraphWPropertyKeys struct {
@@ -86,7 +94,7 @@ func FromDAWGSNode(validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.
 	// only generic-ingested nodes have the PrimaryKind property set to control what icon the UI displays.
 	kind := primaryKind
 	if kind == "" {
-		kind = analysis.GetNodeKind(validPrimaryKinds, node).String()
+		kind = GetNodeKind(validPrimaryKinds, node).String()
 	}
 
 	var properties map[string]any
