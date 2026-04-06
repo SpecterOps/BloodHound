@@ -129,6 +129,7 @@ func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
 				return query.And(
 					query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), suffix),
 					query.Not(query.KindIn(query.Node(), ad.Group, ad.LocalGroup)),
+					query.KindIn(query.Node(), ad.Entity),
 				)
 			})); err != nil && !graph.IsErrNotFound(err) {
 				return err
