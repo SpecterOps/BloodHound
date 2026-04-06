@@ -17,13 +17,15 @@
 package migration
 
 import (
+	"context"
 	"fmt"
 	"io/fs"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/pressly/goose"
+	"github.com/pressly/goose/v3"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"gorm.io/gorm"
@@ -251,9 +253,17 @@ func (s *Migrator) ExecuteNewMigrations() error {
 		// Optionally: drop legacy migrations table
 	}
 
-	// Run goose migrations (works for both new and old customers now)
-	if err := goose.Up(s.SqlDB, "migrations"); err != nil {
+	provider, err := goose.NewProvider(
+		goose.DialectPostgres,
+		s.SqlDB,
+		os.DirFS("/migrations"),
+	)
+	if err != nil {
+		fmt.Errorf("failed to create goose provider: %w", err)
 		return err
+	}
+	if _, err := provider.Up(context.Background()); err != nil {
+		return fmt.Errorf("failed to execute up migrations: %w", err)
 	}
 
 	return nil
