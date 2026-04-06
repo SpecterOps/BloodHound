@@ -21,7 +21,6 @@ import { Badge, Tabs, TabsList, TabsTrigger } from 'doodle-ui';
 import React, { FC, Suspense } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams, useRoleBasedFiltering } from '../../hooks';
-
 import {
     ROUTE_PZ_CERTIFICATIONS,
     ROUTE_PZ_HISTORY,
