@@ -35,7 +35,7 @@ var (
 	EkuCertRequestAgent = "1.3.6.1.4.1.311.20.2.1"
 )
 
-func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroupData, adcsEnabled bool) (*post.AtomicPostProcessingStats, ADCSCache, error) {
+func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (*post.AtomicPostProcessingStats, ADCSCache, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,

@@ -839,7 +839,7 @@ func FetchRemoteDesktopUsersBitmapForComputerWithURA(canRDPData *CanRDPComputerD
 	return rdpEntities, nil
 }
 
-func Post(ctx context.Context, db graph.Database, citrixEnabled, ntlmEnabled, adscEnabled bool) (*post.AtomicPostProcessingStats, error) {
+func Post(ctx context.Context, db graph.Database, citrixEnabled, ntlmEnabled bool) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -873,7 +873,7 @@ func Post(ctx context.Context, db graph.Database, citrixEnabled, ntlmEnabled, ad
 		return &aggregateStats, err
 	} else if canRDPStats, err := PostCanRDP(ctx, db, localGroupData, true, citrixEnabled); err != nil {
 		return &aggregateStats, err
-	} else if adcsStats, adcsCache, err := PostADCS(ctx, db, localGroupData, adscEnabled); err != nil {
+	} else if adcsStats, adcsCache, err := PostADCS(ctx, db, localGroupData); err != nil {
 		return &aggregateStats, err
 	} else if ownsStats, err := PostOwnsAndWriteOwner(ctx, db, localGroupData); err != nil {
 		return &aggregateStats, err
