@@ -989,7 +989,7 @@ func (s *GraphQuery) runMaybeCachedEntityQuery(ctx context.Context, node *graph.
 	return result, nil
 }
 
-func (s *GraphQuery) runListQuery(ctx context.Context, node *graph.Node, params EntityQueryParameters, cacheEnabled bool) ([]model.PagedNodeListEntry, int, error) {
+func (s *GraphQuery) runListQuery(ctx context.Context, validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.Node, params EntityQueryParameters, cacheEnabled bool) ([]model.PagedNodeListEntry, int, error) {
 	var (
 		skip  = params.Skip
 		limit = params.Limit
@@ -1004,7 +1004,7 @@ func (s *GraphQuery) runListQuery(ctx context.Context, node *graph.Node, params 
 			limit = result.Len() - skip
 		}
 
-		return fromGraphNodes(graph.NewNodeSet(nodeSetToOrderedSlice(result)[skip : skip+limit]...)), result.Len(), nil
+		return fromGraphNodes(validPrimaryKinds, graph.NewNodeSet(nodeSetToOrderedSlice(result)[skip:skip+limit]...)), result.Len(), nil
 	}
 }
 
@@ -1049,7 +1049,7 @@ func (s *GraphQuery) GetEntityResults(ctx context.Context, validPrimaryKinds mod
 	case model.DataTypeGraph:
 		return s.runPathQuery(ctx, validPrimaryKinds, customNodeKinds, node, params.PathDelegate)
 	case model.DataTypeList:
-		return s.runListQuery(ctx, node, params, cacheEnabled)
+		return s.runListQuery(ctx, validPrimaryKinds, node, params, cacheEnabled)
 	case model.DataTypeCount:
 		return s.runCountQuery(ctx, node, params, cacheEnabled)
 	default:
@@ -1057,7 +1057,7 @@ func (s *GraphQuery) GetEntityResults(ctx context.Context, validPrimaryKinds mod
 	}
 }
 
-func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {
+func fromGraphNodes(validPrimaryKinds graphschema.ValidPrimaryKinds, nodes graph.NodeSet) []model.PagedNodeListEntry {
 	renderedNodes := make([]model.PagedNodeListEntry, 0, nodes.Len())
 
 	for _, node := range nodes {
@@ -1104,7 +1104,7 @@ func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {
 			nodeEntry.Name = name
 		}
 
-		nodeEntry.Label = model.GetNodeKindDisplayLabel(nil, node)
+		nodeEntry.Label = model.GetNodeKindDisplayLabel(validPrimaryKinds, node)
 		nodeEntry.Kinds = node.Kinds.Strings()
 
 		renderedNodes = append(renderedNodes, nodeEntry)
