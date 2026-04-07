@@ -37,3 +37,7 @@ allOf:
         type: string
         format: date-time
         readOnly: true
+      created_by:
+        readOnly: true
+        allOf:
+          - $ref: './null.uuid.yaml'

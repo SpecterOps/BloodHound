@@ -19,7 +19,7 @@
 ALTER TABLE auth_tokens
   ADD COLUMN IF NOT EXISTS created_by text;
 
--- Add the foreign key if it doesn't already exist
+-- Create fk_auth_tokens_created_by to auth_tokens referencing users.id if it doesn't exist
 DO $$
   BEGIN
     IF NOT EXISTS (
