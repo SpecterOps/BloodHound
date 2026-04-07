@@ -111,13 +111,3 @@ VALUES ('auth.api_token_expiration',
         current_timestamp,
         current_timestamp)
 ON CONFLICT DO NOTHING;
-
--- Add column to allow deletion of relationships by kind
-ALTER TABLE analysis_request_switch ADD COLUMN IF NOT EXISTS delete_relationships text [] DEFAULT ARRAY []::text [];
-
--- Update the 'auth_tokens' table adding created_by column
-ALTER TABLE auth_tokens
-  ADD COLUMN IF NOT EXISTS created_by text,
-  ADD CONSTRAINT fk_auth_tokens_created_by
-    FOREIGN KEY (created_by)
-      REFERENCES users(id);
