@@ -19,12 +19,12 @@ import * as React from 'react';
 import { cn } from '../utils';
 
 const linkVariants = cva(
-    'inline-flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-ring rounded-sm',
+    'inline-flex items-center rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-ring',
     {
         variants: {
             variant: {
                 styled: 'text-link underline underline-offset-1 decoration-secondary-variant-2 hover:text-link hover:decoration-link dark:no-underline dark:hover:underline',
-                unstyled: 'text-inherit no-underline hover:no-underline',
+                unstyled: 'text-inherit no-underline',
             },
         },
         defaultVariants: {
@@ -33,20 +33,20 @@ const linkVariants = cva(
     }
 );
 
-type BaseProps = Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'children'> & VariantProps<typeof linkVariants>;
+type LinkProps = Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'children' | 'href'> &
+    VariantProps<typeof linkVariants> & {
+        children: string;
+        href: string;
+    };
 
-type LinkProps = BaseProps & {
-    children: string;
-};
-
-const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(({ className, variant, children, ...props }, ref) => {
-    return (
-        <a ref={ref} aria-label={children} className={cn(linkVariants({ variant }), className)} {...props}>
-            {children}
-        </a>
-    );
-});
+export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
+    ({ className, variant, children, href, ...props }, ref) => {
+        return (
+            <a ref={ref} href={href} className={cn(linkVariants({ variant }), className)} {...props}>
+                {children}
+            </a>
+        );
+    }
+);
 
 Link.displayName = 'Link';
-
-export { Link };
