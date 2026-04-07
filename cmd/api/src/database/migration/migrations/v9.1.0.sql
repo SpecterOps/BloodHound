@@ -1,10 +1,8 @@
--- Add column to allow deletion of relationships by kind
-ALTER TABLE analysis_request_switch ADD COLUMN IF NOT EXISTS delete_relationships text [] DEFAULT ARRAY []::text [];
-
 -- Update the 'auth_tokens' table adding created_by column
 ALTER TABLE auth_tokens
   ADD COLUMN IF NOT EXISTS created_by text;
 
+-- Add the foreign key if it doesn't already exist
 DO $$
   BEGIN
     IF NOT EXISTS (
