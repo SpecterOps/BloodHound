@@ -67,6 +67,7 @@ func FetchWellKnownTierZeroEntities(ctx context.Context, db graph.Database, doma
 				return query.And(
 					// Make sure we have the Group or User label. This should cover the case for URA as well as filter out all the other localgroups
 					query.KindIn(query.Node(), ad.Group, ad.User),
+					query.KindIn(query.Node(), ad.Entity),
 					query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), wellKnownSIDSuffix),
 					query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSID),
 				)
