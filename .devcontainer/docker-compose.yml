@@ -15,16 +15,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 services:
-  # devcontainer entrypoint
   app:
-    image: mcr.microsoft.com/devcontainers/base:bullseye
+    image: mcr.microsoft.com/devcontainers/base:bookworm
     volumes:
-      # Update this to wherever you want VS Code to mount the folder of your project
       - ../..:/workspaces:cached
       - devcontainer-storage:/home/vscode
     command: sleep infinity
-    ports:
-      - 80:80
+    environment:
+      - WEB_PORT=127.0.0.1:8088
 
 volumes:
   devcontainer-storage:
