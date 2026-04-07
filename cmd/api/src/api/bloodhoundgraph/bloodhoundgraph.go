@@ -163,6 +163,7 @@ func (s *BloodHoundGraphNode) SetFontIcon(nodeKind string, schemaNodeKinds model
 		}
 		s.Color = nodeKindConfig.IconColor
 	} else if schemalessNodeKindConfig, ok := schemalessNodeKinds[nodeKind]; ok {
+		s.Data["nodetype"] = nodeKind
 		s.FontIcon = &BloodHoundGraphFontIcon{
 			Text: fmt.Sprintf("%s%s", fontAwesomePrefix, schemalessNodeKindConfig.Icon.Name),
 		}

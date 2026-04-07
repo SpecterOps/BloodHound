@@ -131,7 +131,7 @@ func TestSetFontIcon(t *testing.T) {
 		assert.Nil(t, node.FontIcon)
 	})
 
-	t.Run("sets font icon and color for custom node kind", func(t *testing.T) {
+	t.Run("sets font icon, color, and node type for custom node kind", func(t *testing.T) {
 		customNodeKindsMap := model.CustomNodeKindMap{
 			"CustomWidget": model.CustomNodeKindConfig{
 				Icon: model.CustomNodeIcon{
@@ -154,5 +154,6 @@ func TestSetFontIcon(t *testing.T) {
 		assert.Equal(t, "fas fa-cogs", node.FontIcon.Text)
 		assert.Equal(t, "#FF5733", node.Color)
 		assert.Empty(t, node.Image)
+		assert.Equal(t, "CustomWidget", node.Data["nodetype"])
 	})
 }
