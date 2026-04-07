@@ -13,11 +13,11 @@
     "start": "yarn workspace bloodhound-ui start",
     "preview": "yarn workspace bloodhound-ui preview",
     "build": "yarn workspace bloodhound-ui build",
-    "test": "yarn workspaces foreach -ptv run test run",
-    "check-types": "yarn workspaces foreach --exclude eslint-plugin-sx-props -ptv run check-types",
-    "lint": "yarn workspaces foreach --exclude eslint-plugin-sx-props -ptv run lint",
-    "format": "yarn workspaces foreach --exclude eslint-plugin-sx-props -ptv run format",
-    "check-format": "yarn workspaces foreach --exclude eslint-plugin-sx-props -ptv run check-format"
+    "test": "yarn workspaces foreach -Apt run test run",
+    "check-types": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run check-types",
+    "lint": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run lint",
+    "format": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run format",
+    "check-format": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run check-format"
   },
   "packageManager": "yarn@4.13.0",
   "devDependencies": {
