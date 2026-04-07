@@ -1,0 +1,45 @@
+{
+    "metadata": {},
+    "graph": {
+        "nodes": [
+            {
+                "id": "TESTNODE1",
+                "kinds": ["User"]
+            },
+            {
+                "id": "TESTNODE2",
+                "kinds": ["User"]
+            }
+        ],
+        "edges": [
+            {
+                "start": {
+                    "match_by": "id",
+                    "value": "TESTNODE1"
+                },
+                "end": {
+                    "match_by": "id",
+                    "value": "TESTNODE2"
+                },
+                "kind": "THIS_EDGE_GETS_CREATED"
+            },
+            {
+                "start": {
+                    "match_by": "id",
+                    "value": "1"
+                },
+                "end": {
+                    "match_by": "property",
+                    "property_matchers": [
+                        {
+                            "key": "username",
+                            "operator": "equals",
+                            "value": "alice.smith"
+                        }
+                    ]
+                },
+                "kind": "THIS_EDGE_FAILS"
+            }
+        ]
+    }
+}
