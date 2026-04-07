@@ -241,8 +241,18 @@ func (s *Migrator) ExecuteExtensionDataPopulation() error {
 	return nil
 }
 
+// ExecuteNewMigrations runs all necessary migrations for a deployment using goose.
+// It begins by checking if a legacy migrations table exists to determine the deployment type.
+//
+// If the deployment is existing (has legacy migrations table), we bootstrap goose by
+// seeding the goose_db_version table with the baseline migration marked as applied,
+// then drop the legacy migrations table.
+//
+// If the deployment is new, goose will run the baseline migration to create the schema.
+//
+// Once bootstrap is complete (if needed), we run goose to apply any pending migrations.
 func (s *Migrator) ExecuteNewMigrations() error {
-	// Check for legacy migrations table
+	// Check for legacy migrations table (old customers)
 	if hasLegacyTable, err := s.HasMigrationTable(); err != nil {
 		return fmt.Errorf("failed to check if migration table exists: %w", err)
 	} else if hasLegacyTable {
@@ -250,7 +260,11 @@ func (s *Migrator) ExecuteNewMigrations() error {
 		if err := s.bootstrapGoose(); err != nil {
 			return err
 		}
-		// Optionally: drop legacy migrations table
+
+		// Drop legacy migrations table
+		if err := s.dropLegacyMigrationTable(); err != nil {
+			return err
+		}
 	}
 
 	provider, err := goose.NewProvider(
@@ -259,8 +273,7 @@ func (s *Migrator) ExecuteNewMigrations() error {
 		os.DirFS("/migrations"),
 	)
 	if err != nil {
-		fmt.Errorf("failed to create goose provider: %w", err)
-		return err
+		return fmt.Errorf("failed to create goose provider: %w", err)
 	}
 	if _, err := provider.Up(context.Background()); err != nil {
 		return fmt.Errorf("failed to execute up migrations: %w", err)
@@ -270,7 +283,6 @@ func (s *Migrator) ExecuteNewMigrations() error {
 }
 
 func (s *Migrator) bootstrapGoose() error {
-
 	result := s.DB.Exec(`
         CREATE TABLE IF NOT EXISTS goose_db_version (
             id SERIAL PRIMARY KEY,
@@ -284,4 +296,10 @@ func (s *Migrator) bootstrapGoose() error {
         ON CONFLICT DO NOTHING;
     `)
 	return result.Error
+}
+
+func (s *Migrator) dropLegacyMigrationTable() error {
+	slog.Info("Dropping legacy migrations table")
+	_, err := s.SqlDB.Exec(`DROP TABLE IF EXISTS migrations;`)
+	return err
 }
