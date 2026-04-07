@@ -498,7 +498,11 @@ func convertAzureManagementGroupOwner(raw json.RawMessage, converted *ConvertedA
 func convertAzureManagementGroupContributor(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
 	var data models.ManagementGroupContributors
 	if err := json.Unmarshal(raw, &data); err != nil {
-		slog.Error(fmt.Sprintf(SerialError, "azure management group contributor", err))
+		slog.Error(
+			SerialError,
+			slog.String("type", "management group contributor"),
+			attr.Error(err),
+		)
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureManagementGroupContributorToRels(data)...)
 	}
@@ -563,7 +567,11 @@ func convertAzureResourceGroupOwner(raw json.RawMessage, converted *ConvertedAzu
 func convertAzureResourceGroupContributor(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
 	var data models.ResourceGroupContributors
 	if err := json.Unmarshal(raw, &data); err != nil {
-		slog.Error(fmt.Sprintf(SerialError, "azure resource group contributor", err))
+		slog.Error(
+			SerialError,
+			slog.String("type", "resource group contributor"),
+			attr.Error(err),
+		)
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureResourceGroupContributorToRels(data)...)
 	}
@@ -677,7 +685,11 @@ func convertAzureSubscriptionOwner(raw json.RawMessage, converted *ConvertedAzur
 func convertAzureSubscriptionContributor(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
 	var data models.SubscriptionContributors
 	if err := json.Unmarshal(raw, &data); err != nil {
-		slog.Error(fmt.Sprintf(SerialError, "azure subscription contributor", err))
+		slog.Error(
+			SerialError,
+			slog.String("type", "subscription contributor"),
+			attr.Error(err),
+		)
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureSubscriptionContributorToRels(data)...)
 	}
