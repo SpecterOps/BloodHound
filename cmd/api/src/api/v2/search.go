@@ -53,7 +53,7 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no associated user found with request", request), response)
 		return
-	} else if ShouldFilterForETAC(s.DogTags, user) {
+	} else if ShouldFilterForETAC(request.Context(), s.OpenFeatureClient, user) {
 		etacAllowedList = ExtractEnvironmentIDsFromUser(&user)
 	}
 

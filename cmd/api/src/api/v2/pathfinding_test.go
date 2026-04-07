@@ -32,7 +32,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/featureflag"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -126,11 +126,11 @@ func TestResources_GetPathfindingResult(t *testing.T) {
 
 func TestResources_GetShortestPath(t *testing.T) {
 	var (
-		mockCtrl       = gomock.NewController(t)
-		mockGraph      = mocks_graph.NewMockGraph(mockCtrl)
-		mockDB         = mocks.NewMockDatabase(mockCtrl)
-		dogTagsService = dogtags.NewTestService(dogtags.TestOverrides{})
-		resources      = v2.Resources{GraphQuery: mockGraph, DB: mockDB, DogTags: dogTagsService}
+		mockCtrl          = gomock.NewController(t)
+		mockGraph         = mocks_graph.NewMockGraph(mockCtrl)
+		mockDB            = mocks.NewMockDatabase(mockCtrl)
+		openFeatureClient = featureflag.NewTestClient(featureflag.TestFlags{})
+		resources         = v2.Resources{GraphQuery: mockGraph, DB: mockDB, OpenFeatureClient: openFeatureClient}
 
 		user    = setupUser()
 		userCtx = setupUserCtx(user)
@@ -979,16 +979,12 @@ func TestResources_GetShortestPath_ETAC(t *testing.T) {
 		expectedMocks      func(mockDB *mocks.MockDatabase, mockGraph *mocks_graph.MockGraph)
 		expectedStatusCode int
 		assertBody         func(t *testing.T, body string)
-		dogTagsOverrides   dogtags.TestOverrides
+		etacEnabled        bool
 		user               model.User
 	}{
 		{
-			name: "FilterETACGraph",
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
-				},
-			},
+			name:        "FilterETACGraph",
+			etacEnabled: true,
 			user: model.User{
 				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
 					{
@@ -1063,11 +1059,7 @@ func TestResources_GetShortestPath_ETAC(t *testing.T) {
 				"end_node":           "1",
 				"relationship_kinds": "in:GenericWrite",
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
-				},
-			},
+			etacEnabled: true,
 			expectedMocks: func(mockDB *mocks.MockDatabase, mockGraph *mocks_graph.MockGraph) {
 				mockDB.EXPECT().
 					GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
@@ -1119,13 +1111,13 @@ func TestResources_GetShortestPath_ETAC(t *testing.T) {
 		t.Run(tc.name, func(tt *testing.T) {
 
 			var (
-				mockCtrl       = gomock.NewController(tt)
-				mockDB         = mocks.NewMockDatabase(mockCtrl)
-				mockGraph      = mocks_graph.NewMockGraph(mockCtrl)
-				dogTagsService = dogtags.NewTestService(tc.dogTagsOverrides)
-				resources      = v2.Resources{GraphQuery: mockGraph, DB: mockDB, DogTags: dogTagsService}
-				endpoint       = "/api/v2/resource/get-shortest-path"
-				ctx            = setupUserCtx(tc.user)
+				mockCtrl          = gomock.NewController(tt)
+				mockDB            = mocks.NewMockDatabase(mockCtrl)
+				mockGraph         = mocks_graph.NewMockGraph(mockCtrl)
+				openFeatureClient = featureflag.NewTestClient(featureflag.TestFlags{ETACEnabled: tc.etacEnabled})
+				resources         = v2.Resources{GraphQuery: mockGraph, DB: mockDB, OpenFeatureClient: openFeatureClient}
+				endpoint          = "/api/v2/resource/get-shortest-path"
+				ctx               = setupUserCtx(tc.user)
 			)
 			defer mockCtrl.Finish()
 
@@ -1157,7 +1149,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks_graph.NewMockGraph(mockCtrl)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDB, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDB, OpenFeatureClient: featureflag.NewTestClient(featureflag.TestFlags{})}
 		user      = setupUser()
 		userCtx   = setupUserCtx(user)
 	)
@@ -1386,7 +1378,7 @@ func TestResources_GetSearchResult_ETAC(t *testing.T) {
 		expectedMocks      func(mockDB *mocks.MockDatabase, mockGraph *mocks_graph.MockGraph)
 		expectedStatusCode int
 		assertBody         func(t *testing.T, body string)
-		dogTagsOverrides   dogtags.TestOverrides
+		etacEnabled        bool
 		user               model.User
 	}{
 		{
@@ -1414,11 +1406,7 @@ func TestResources_GetSearchResult_ETAC(t *testing.T) {
 			assertBody: func(t *testing.T, body string) {
 
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
-				},
-			},
+			etacEnabled: true,
 		},
 		{
 			name: "Success -- ETAC enabled,user has limited access",
@@ -1471,11 +1459,7 @@ func TestResources_GetSearchResult_ETAC(t *testing.T) {
 				assert.Contains(t, body, "** Hidden Computer Object **")
 				assert.NotContains(t, body, "restricted")
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
-				},
-			},
+			etacEnabled: true,
 		},
 	}
 
@@ -1484,13 +1468,13 @@ func TestResources_GetSearchResult_ETAC(t *testing.T) {
 		t.Run(tc.name, func(tt *testing.T) {
 
 			var (
-				mockCtrl       = gomock.NewController(tt)
-				mockDB         = mocks.NewMockDatabase(mockCtrl)
-				mockGraph      = mocks_graph.NewMockGraph(mockCtrl)
-				dogTagsService = dogtags.NewTestService(tc.dogTagsOverrides)
-				resources      = v2.Resources{GraphQuery: mockGraph, DB: mockDB, DogTags: dogTagsService}
-				endpoint       = "/api/v2/graph-search"
-				ctx            = setupUserCtx(tc.user)
+				mockCtrl          = gomock.NewController(tt)
+				mockDB            = mocks.NewMockDatabase(mockCtrl)
+				mockGraph         = mocks_graph.NewMockGraph(mockCtrl)
+				openFeatureClient = featureflag.NewTestClient(featureflag.TestFlags{ETACEnabled: tc.etacEnabled})
+				resources         = v2.Resources{GraphQuery: mockGraph, DB: mockDB, OpenFeatureClient: openFeatureClient}
+				endpoint          = "/api/v2/graph-search"
+				ctx               = setupUserCtx(tc.user)
 			)
 			defer mockCtrl.Finish()
 

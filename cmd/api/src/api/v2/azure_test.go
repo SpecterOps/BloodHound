@@ -30,7 +30,7 @@ import (
 	mocks_db "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/featureflag"
 	"github.com/specterops/bloodhound/packages/go/analysis/azure"
 	azure_schema "github.com/specterops/bloodhound/packages/go/graphschema/azure"
 
@@ -59,12 +59,12 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name             string
-		buildRequest     func() *http.Request
-		setupMocks       func(t *testing.T, mock *mock)
-		user             model.User
-		dogTagsOverrides dogtags.TestOverrides
-		expected         expected
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		user         model.User
+		etacEnabled  bool
+		expected     expected
 	}
 
 	tt := []testData{
@@ -361,11 +361,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 				responseBody:   `{"count":0,"limit":1,"skip":0,"data":[]}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
-				},
-			},
+			etacEnabled: true,
 			user: model.User{
 				AllEnvironments: true,
 			},
@@ -399,11 +395,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 				responseBody:   `{"count":0,"limit":1,"skip":0,"data":[]}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
-				},
-			},
+			etacEnabled: true,
 			user: model.User{
 				AllEnvironments: false,
 				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
@@ -440,11 +432,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
-				},
-			},
+			etacEnabled: true,
 			user: model.User{
 				AllEnvironments: false,
 				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
@@ -479,10 +467,10 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
-				Graph:      mocks.mockGraphDB,
-				GraphQuery: mocks.mockGraphQuery,
-				DB:         mocks.mockDatabase,
-				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
+				Graph:             mocks.mockGraphDB,
+				GraphQuery:        mocks.mockGraphQuery,
+				DB:                mocks.mockDatabase,
+				OpenFeatureClient: featureflag.NewTestClient(featureflag.TestFlags{ETACEnabled: testCase.etacEnabled}),
 			}
 
 			response := httptest.NewRecorder()
@@ -1190,12 +1178,12 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name             string
-		buildRequest     func() *http.Request
-		setupMocks       func(t *testing.T, mock *mock)
-		user             model.User
-		dogTagsOverrides dogtags.TestOverrides
-		expected         expected
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		user         model.User
+		etacEnabled  bool
+		expected     expected
 	}
 
 	tt := []testData{
@@ -1360,11 +1348,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 				responseBody:   `{"data":{"isOwnedObject":false, "isTierZero":false, "kind":"","props":null,"active_assignments":0,"approvers":0, "kinds":null, "pim_assignments":0}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
-				},
-			},
+			etacEnabled: true,
 			user: model.User{
 				AllEnvironments: true,
 			},
@@ -1399,11 +1383,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 				responseBody:   `{"data":{"isOwnedObject":false, "isTierZero":false, "kind":"","props":null,"active_assignments":0,"approvers":0, "kinds":null, "pim_assignments":0}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
-				},
-			},
+			etacEnabled: true,
 			user: model.User{
 				AllEnvironments: false,
 				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
@@ -1439,11 +1419,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
-				},
-			},
+			etacEnabled: true,
 			user: model.User{
 				AllEnvironments: false,
 				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
@@ -1478,10 +1454,10 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
-				Graph:      mocks.mockGraphDB,
-				GraphQuery: mocks.mockGraphQuery,
-				DB:         mocks.mockDatabase,
-				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
+				Graph:             mocks.mockGraphDB,
+				GraphQuery:        mocks.mockGraphQuery,
+				DB:                mocks.mockDatabase,
+				OpenFeatureClient: featureflag.NewTestClient(featureflag.TestFlags{ETACEnabled: testCase.etacEnabled}),
 			}
 
 			response := httptest.NewRecorder()

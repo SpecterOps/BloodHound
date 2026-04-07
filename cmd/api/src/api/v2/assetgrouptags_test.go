@@ -45,6 +45,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/featureflag"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -1380,6 +1381,7 @@ func TestResources_UpdateAssetGroupTag(t *testing.T) {
 			DogTags: dogtags.NewTestService(dogtags.TestOverrides{
 				Bools: map[dogtags.BoolDogTag]bool{dogtags.PZ_MULTI_TIER_ANALYSIS: true},
 			}),
+			OpenFeatureClient: featureflag.NewTestClient(featureflag.TestFlags{}),
 		}
 		userCtx = setupUserCtx(setupUser())
 

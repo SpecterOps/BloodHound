@@ -124,7 +124,7 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	}
 
 	// Etac DogTags
-	if ShouldFilterForETAC(s.DogTags, user) {
+	if ShouldFilterForETAC(request.Context(), s.OpenFeatureClient, user) {
 		filteredResponse, err := filterETACGraph(graphResponse, user)
 		if err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering graph for ETAC", request), response)

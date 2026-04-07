@@ -28,7 +28,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/featureflag"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
@@ -56,11 +56,11 @@ func TestResources_CypherQuery(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name             string
-		buildRequest     func() *http.Request
-		setupMocks       func(t *testing.T, mock *mock)
-		expected         expected
-		dogTagsOverrides dogtags.TestOverrides
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
+		etacEnabled  bool
 	}
 
 	tt := []testData{
@@ -487,11 +487,7 @@ func TestResources_CypherQuery(t *testing.T) {
 					Literals: graph.Literals{},
 				}, nil)
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
-				},
-			},
+			etacEnabled: true,
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   `{"data":{"edges":[{"kind":"","label":"","lastSeen":"0001-01-01T00:00:00Z","source":"source","target":""}],"literals":[], "node_keys":["key"],"nodes":{"1":{"isOwnedObject":false,"isTierZero":false,"kind":"","kinds":null,"label":"label","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"key":"value"}}}}}`,
@@ -567,11 +563,7 @@ func TestResources_CypherQuery(t *testing.T) {
 					Literals: graph.Literals{},
 				}, nil)
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
-				},
-			},
+			etacEnabled: true,
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   `{"data":{"edges":[{"kind":"","label":"","lastSeen":"0001-01-01T00:00:00Z","source":"source","target":"1"},{"kind":"HIDDEN","label":"** Hidden Edge **","lastSeen":"0001-01-01T00:00:00Z","source":"source","target":"2"},{"kind":"HIDDEN","label":"** Hidden Edge **","lastSeen":"0001-01-01T00:00:00Z","source":"2","target":"1"}],"literals":[],"node_keys":["domainsid"],"nodes":{"1":{"isOwnedObject":false,"isTierZero":false,"kind":"","kinds":["kinds"],"label":"label","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"domainsid":"testenv"}},"2":{"hidden":true,"isOwnedObject":false,"isTierZero":false,"kind":"HIDDEN","kinds":[],"label":"** Hidden kinds Object **","lastSeen":"0001-01-01T00:00:00Z","objectId":"HIDDEN"},"source":{"isOwnedObject":false,"isTierZero":false,"kind":"","kinds":["kinds"],"label":"labelSource","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"domainsid":"testenv"}}}}}`,
@@ -637,11 +629,7 @@ func TestResources_CypherQuery(t *testing.T) {
 					Literals: graph.Literals{},
 				}, nil)
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
-				},
-			},
+			etacEnabled: true,
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   `{"data":{"nodes":{"1":{"hidden":true,"isOwnedObject":false,"isTierZero":false,"kind":"HIDDEN","kinds":[],"label":"** Hidden kinds Object **","lastSeen":"0001-01-01T00:00:00Z","objectId":"HIDDEN"},"2":{"hidden":true,"isOwnedObject":false,"isTierZero":false,"kind":"HIDDEN","kinds":[],"label":"** Hidden kinds Object **","lastSeen":"0001-01-01T00:00:00Z","objectId":"HIDDEN"}},"edges":[{"source":"source","target":"1","label":"** Hidden Edge **","kind":"HIDDEN","lastSeen":"0001-01-01T00:00:00Z"}],"literals":[]}}`,
@@ -663,10 +651,10 @@ func TestResources_CypherQuery(t *testing.T) {
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
-				GraphQuery: mocks.mockGraphQuery,
-				DB:         mocks.mockDatabase,
-				Authorizer: auth.NewAuthorizer(mocks.mockDatabase),
-				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
+				GraphQuery:        mocks.mockGraphQuery,
+				DB:                mocks.mockDatabase,
+				Authorizer:        auth.NewAuthorizer(mocks.mockDatabase),
+				OpenFeatureClient: featureflag.NewTestClient(featureflag.TestFlags{ETACEnabled: testCase.etacEnabled}),
 			}
 
 			response := httptest.NewRecorder()

@@ -188,7 +188,7 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 				return edge.Source + edge.Kind + edge.Target
 			})
 
-			if ShouldFilterForETAC(s.DogTags, user) {
+			if ShouldFilterForETAC(request.Context(), s.OpenFeatureClient, user) {
 				if filteredGraph, err := filterETACGraph(graphResponse, user); err != nil {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering graph for ETAC", request), response)
 					return
@@ -300,7 +300,7 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 			}
 
 			// ETAC DogTags filtering
-			if ShouldFilterForETAC(s.DogTags, user) {
+			if ShouldFilterForETAC(request.Context(), s.OpenFeatureClient, user) {
 				accessList := ExtractEnvironmentIDsFromUser(&user)
 				filteredGraph, err = filterSearchResultMap(bhGraph, accessList)
 				if err != nil {

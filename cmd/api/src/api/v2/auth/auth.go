@@ -28,6 +28,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
+	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/pkg/errors"
 	"github.com/pquerna/otp/totp"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -41,7 +42,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/featureflag"
 	"github.com/specterops/bloodhound/cmd/api/src/services/oidc"
 	"github.com/specterops/bloodhound/cmd/api/src/services/saml"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
@@ -67,10 +68,10 @@ type ManagementResource struct {
 	OIDC                       oidc.Service
 	SAML                       saml.Service
 	GraphQuery                 queries.Graph
-	DogTags                    dogtags.Service
+	OpenFeatureClient          *openfeature.Client
 }
 
-func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator, graphQuery queries.Graph, dogTagsService dogtags.Service) ManagementResource {
+func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator, graphQuery queries.Graph, openFeatureClient *openfeature.Client) ManagementResource {
 	return ManagementResource{
 		config:                     authConfig,
 		secretDigester:             authConfig.Crypto.Argon2.NewDigester(),
@@ -81,7 +82,7 @@ func NewManagementResource(authConfig config.Configuration, db database.Database
 		OIDC:                       &oidc.Client{},
 		SAML:                       &saml.Client{},
 		GraphQuery:                 graphQuery,
-		DogTags:                    dogTagsService,
+		OpenFeatureClient:          openFeatureClient,
 	}
 }
 
@@ -381,11 +382,11 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 			}
 		}
 
-		// ETAC DogTags
+		// ETAC feature flag
 		// This is to handle an edge case where GORM defaults this value to false on user creation
 		// Once ETAC is available to GA, this can be removed
 		userTemplate.AllEnvironments = true
-		if etacEnabled := s.DogTags.GetFlagAsBool(dogtags.ETAC_ENABLED); etacEnabled {
+		if etacEnabled, _ := s.OpenFeatureClient.BooleanValue(request.Context(), featureflag.ETACEnabled, false, openfeature.EvaluationContext{}); etacEnabled {
 			// Access to all environments will be denied by default
 			// The migration sets the default for all_environments to true, which will enable all users to have access to all environments until ETAC is explicitly enabled
 			userTemplate.AllEnvironments = false
@@ -518,8 +519,8 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			user.Roles = roles
 		}
 
-		// ETAC DogTags
-		if etacEnabled := s.DogTags.GetFlagAsBool(dogtags.ETAC_ENABLED); etacEnabled {
+		// ETAC feature flag
+		if etacEnabled, _ := s.OpenFeatureClient.BooleanValue(request.Context(), featureflag.ETACEnabled, false, openfeature.EvaluationContext{}); etacEnabled {
 			// Use the request's roles if it is being sent, otherwise use the user's current role to determine if an ETAC list may be applied
 			effectiveRoles := user.Roles
 			if updateUserRequest.Roles != nil {

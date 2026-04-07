@@ -33,7 +33,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	graphMocks "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/featureflag"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -49,7 +49,7 @@ func TestResources_SearchHandler(t *testing.T) {
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = graphMocks.NewMockGraph(mockCtrl)
 		mockDB    = dbMocks.NewMockDatabase(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDB, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDB, OpenFeatureClient: featureflag.NewTestClient(featureflag.TestFlags{})}
 		userCtx   = setupUserCtx(model.User{PrincipalName: "user"})
 	)
 
@@ -249,7 +249,7 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 		expectedMocks      func(mockDB *dbMocks.MockDatabase, mockGraph *graphMocks.MockGraph)
 		expectedStatusCode int
 		assertBody         func(t *testing.T, body string)
-		dogTagsOverrides   dogtags.TestOverrides
+		etacEnabled        bool
 		user               model.User
 	}{
 		{
@@ -276,11 +276,7 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 			assertBody: func(t *testing.T, body string) {
 
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
-				},
-			},
+			etacEnabled: true,
 		},
 		{
 			name: "Success -- ETAC Feature Flag On User all_environments = true",
@@ -303,11 +299,7 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 			assertBody: func(t *testing.T, body string) {
 
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
-				},
-			},
+			etacEnabled: true,
 		},
 		{
 			name: "Fail -- ETAC Feature Flag On, No User",
@@ -321,11 +313,7 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 			assertBody: func(t *testing.T, body string) {
 				assert.Contains(t, body, "no associated user found with request")
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
-				},
-			},
+			etacEnabled: true,
 		},
 	}
 
@@ -333,12 +321,12 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(tt *testing.T) {
 			var (
-				mockCtrl       = gomock.NewController(tt)
-				mockDB         = dbMocks.NewMockDatabase(mockCtrl)
-				mockGraph      = graphMocks.NewMockGraph(mockCtrl)
-				dogTagsService = dogtags.NewTestService(tc.dogTagsOverrides)
-				resources      = v2.Resources{GraphQuery: mockGraph, DB: mockDB, DogTags: dogTagsService}
-				endpoint       = "/api/v2/search"
+				mockCtrl          = gomock.NewController(tt)
+				mockDB            = dbMocks.NewMockDatabase(mockCtrl)
+				mockGraph         = graphMocks.NewMockGraph(mockCtrl)
+				openFeatureClient = featureflag.NewTestClient(featureflag.TestFlags{ETACEnabled: tc.etacEnabled})
+				resources         = v2.Resources{GraphQuery: mockGraph, DB: mockDB, OpenFeatureClient: openFeatureClient}
+				endpoint          = "/api/v2/search"
 			)
 			defer mockCtrl.Finish()
 

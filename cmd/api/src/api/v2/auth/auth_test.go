@@ -52,7 +52,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/featureflag"
 	"github.com/specterops/bloodhound/cmd/api/src/test/must"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
@@ -1768,11 +1768,7 @@ func TestCreateUser_ETAC(t *testing.T) {
 			// case-specific mocks
 			tc.expectMocks(mockDB, tc.goodUser, mockGraphDB)
 
-			resources.DogTags = dogtags.NewTestService(dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
-				},
-			})
+			resources.OpenFeatureClient = featureflag.NewTestClient(featureflag.TestFlags{ETACEnabled: true})
 
 			// request/response
 			ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
@@ -3132,11 +3128,7 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 
 			ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 
-			resources.DogTags = dogtags.NewTestService(dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
-				},
-			})
+			resources.OpenFeatureClient = featureflag.NewTestClient(featureflag.TestFlags{ETACEnabled: true})
 
 			// create user first
 			createInput := v2.CreateUserRequest{

@@ -57,6 +57,7 @@ const (
 	APITokens                           ParameterKey = "auth.api_tokens"
 	TimeoutLimit                        ParameterKey = "api.timeout_limit"
 	EnvironmentTargetedAccessControlKey ParameterKey = "auth.environment_targeted_access_control"
+	APIKeyExpirationSupportKey          ParameterKey = "auth.api_key_expiration_support"
 	SupportAccountProvisioningKey       ParameterKey = "auth.support_account_provisioning"
 )
 
@@ -104,7 +105,7 @@ func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 // IsProtectedKey These keys should not be updatable by users
 func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens, EnvironmentTargetedAccessControlKey, SupportAccountProvisioningKey:
+	case TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens, EnvironmentTargetedAccessControlKey, APIKeyExpirationSupportKey, SupportAccountProvisioningKey:
 		return true
 	default:
 		return false
@@ -155,6 +156,8 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &TimeoutLimitParameter{}
 	case EnvironmentTargetedAccessControlKey:
 		v = &EnvironmentTargetedAccessControlParameters{}
+	case APIKeyExpirationSupportKey:
+		v = &APIKeyExpirationSupportParameters{}
 	case SupportAccountProvisioningKey:
 		v = &SupportAccountProvisioningParameters{}
 	case ClientMetricsKey:
@@ -584,6 +587,26 @@ func GetEnvironmentTargetedAccessControlParameters(ctx context.Context, service 
 	} else if err = etacParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid environment targeted access control configuration supplied; returning default values",
 			slog.String("parameter_key", string(EnvironmentTargetedAccessControlKey)),
+			attr.Error(err))
+	}
+
+	return result
+}
+
+type APIKeyExpirationSupportParameters struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func GetAPIKeyExpirationSupportParameters(ctx context.Context, service ParameterService) APIKeyExpirationSupportParameters {
+	result := APIKeyExpirationSupportParameters{
+		Enabled: false,
+	}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, APIKeyExpirationSupportKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch API key expiration support configuration; returning default values")
+	} else if err = cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid API key expiration support configuration supplied; returning default values",
+			slog.String("parameter_key", string(APIKeyExpirationSupportKey)),
 			attr.Error(err))
 	}
 

@@ -18,6 +18,7 @@ package v2
 
 import (
 	"github.com/gorilla/schema"
+	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
@@ -118,6 +119,7 @@ type Resources struct {
 	FileService                fs.Service
 	OpenGraphSchemaService     OpenGraphSchemaService
 	DogTags                    dogtags.Service
+	OpenFeatureClient          *openfeature.Client
 }
 
 func NewResources(
@@ -132,6 +134,7 @@ func NewResources(
 	ingestSchema upload.IngestSchema,
 	dogtagsService dogtags.Service,
 	openGraphSchemaService OpenGraphSchemaService,
+	openFeatureClient *openfeature.Client,
 ) Resources {
 	return Resources{
 		Decoder:                    schema.NewDecoder(),
@@ -148,5 +151,6 @@ func NewResources(
 		FileService:                &fs.Client{},
 		DogTags:                    dogtagsService,
 		OpenGraphSchemaService:     openGraphSchemaService,
+		OpenFeatureClient:          openFeatureClient,
 	}
 }
