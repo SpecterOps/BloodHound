@@ -107,7 +107,6 @@
         "react": "18.x",
         "react-dom": "18.x"
     },
-    "packageManager": "yarn@3.5.1",
     "exports": {
         ".": "./dist/index.js",
         "./FileIngest": "./dist/FileIngest.js",

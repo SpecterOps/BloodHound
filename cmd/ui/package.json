@@ -112,7 +112,6 @@
         "vitest-canvas-mock": "^0.3.3",
         "whatwg-fetch": "^3.6.2"
     },
-    "packageManager": "yarn@3.5.0",
     "msw": {
         "workerDirectory": "public"
     }

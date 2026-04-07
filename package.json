@@ -19,7 +19,7 @@
     "format": "yarn workspaces foreach --exclude eslint-plugin-sx-props -ptv run format",
     "check-format": "yarn workspaces foreach --exclude eslint-plugin-sx-props -ptv run check-format"
   },
-  "packageManager": "yarn@3.5.1",
+  "packageManager": "yarn@4.13.0",
   "devDependencies": {
     "all-contributors-cli": "^6.26.1",
     "prettier": "^3.2.5",
