@@ -46,13 +46,13 @@ const RadioItem = React.forwardRef<React.ElementRef<typeof RadioGroupPrimitive.I
                 value={value}
                 ref={ref}
                 className={cn(
-                    'w-4 h-4 rounded rounded-full border border-neutral-5 hover:border-secondary active:border-primary-variant mr-3 relative data-[disabled]:border-neutral-4 data-[disabled]:bg-neutral-2 peer',
+                    'w-4 h-4 rounded rounded-full border border-neutral-5 dark:border-neutral-light-5 hover:border-secondary dark:hover:border-secondary-variant-2 active:border-primary-variant mr-3 relative data-[disabled]:border-neutral-4 data-[disabled]:bg-neutral-2 peer',
                     className
                 )}
                 {...props}>
                 <RadioGroupPrimitive.Indicator
                     className={cn(
-                        'bg-primary w-2 h-2 rounded rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
+                        'bg-primary dark:bg-secondary-variant-2 w-2 h-2 rounded rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
                     )}
                 />
             </RadioGroupPrimitive.Item>
