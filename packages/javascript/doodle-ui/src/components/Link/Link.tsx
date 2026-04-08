@@ -18,12 +18,15 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { cn } from '../utils';
 
+const styledLinkClasses =
+    'text-link underline underline-offset-1 decoration-secondary-variant-2 hover:text-link hover:decoration-link dark:no-underline dark:hover:underline';
+
 const linkVariants = cva(
     'inline-flex items-center rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-ring',
     {
         variants: {
             variant: {
-                styled: 'text-link underline underline-offset-1 decoration-secondary-variant-2 hover:text-link hover:decoration-link dark:no-underline dark:hover:underline',
+                styled: styledLinkClasses,
                 unstyled: 'text-inherit no-underline',
             },
         },
@@ -33,17 +36,24 @@ const linkVariants = cva(
     }
 );
 
-type LinkProps = Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'children' | 'href'> &
+export type LinkProps = Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'children' | 'href' | 'target' | 'rel'> &
     VariantProps<typeof linkVariants> & {
         children: string;
         href: string;
     };
 
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
-    ({ className, variant, children, href, ...props }, ref) => {
+    ({ className, variant = 'styled', children, href, ...props }, ref) => {
         return (
-            <a ref={ref} href={href} className={cn(linkVariants({ variant }), className)} {...props}>
+            <a
+                ref={ref}
+                href={href}
+                target='_blank'
+                rel='noopener noreferrer'
+                className={cn(linkVariants({ variant }), className)}
+                {...props}>
                 {children}
+                <span className='sr-only'> (opens in a new tab)</span>
             </a>
         );
     }
