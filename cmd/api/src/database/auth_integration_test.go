@@ -26,6 +26,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	bhctx "github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
@@ -96,6 +97,15 @@ func initAndCreateUser(t *testing.T) (database.Database, model.User) {
 	}
 
 	return nil, model.User{}
+}
+
+func createAuthContext(user model.User) context.Context {
+	authenticatedBHCtx := &bhctx.Context{
+		AuthCtx: auth.Context{
+			Owner: user,
+		},
+	}
+	return bhctx.Set(context.Background(), authenticatedBHCtx)
 }
 
 func TestDatabase_Installation(t *testing.T) {
@@ -345,6 +355,7 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 		ctx          = context.Background()
 		dbInst, user = initAndCreateUser(t)
 		clientId     = uuid.Must(uuid.NewV4())
+		authCtx      = createAuthContext(user)
 	)
 
 	// Create the Auth Token Expiration Parameter
@@ -385,7 +396,7 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 
 		// Iterate and Create Auth Tokens for Testing
 		for _, token := range tokens {
-			_, err := dbInst.CreateAuthToken(ctx, token)
+			_, err := dbInst.CreateAuthToken(authCtx, token)
 			require.NoError(t, err)
 		}
 
@@ -445,7 +456,7 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 
 		// Iterate and Create Auth Tokens for Testing
 		for _, token := range tokens {
-			_, err := dbInst.CreateAuthToken(ctx, token)
+			_, err := dbInst.CreateAuthToken(authCtx, token)
 			require.NoError(t, err)
 		}
 
@@ -473,6 +484,7 @@ func TestDatabase_DeleteExpiredAuthTokens(t *testing.T) {
 	var (
 		ctx          = context.Background()
 		dbInst, user = initAndCreateUser(t)
+		authCtx      = createAuthContext(user)
 		clientId     = uuid.Must(uuid.NewV4())
 		tokens       = []model.AuthToken{
 			model.AuthToken{
@@ -518,7 +530,7 @@ func TestDatabase_DeleteExpiredAuthTokens(t *testing.T) {
 
 	// Iterate and Create Auth Tokens for Testing
 	for _, token := range tokens {
-		_, creationErr := dbInst.CreateAuthToken(ctx, token)
+		_, creationErr := dbInst.CreateAuthToken(authCtx, token)
 		require.NoError(t, creationErr)
 	}
 
@@ -538,6 +550,7 @@ func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {
 	var (
 		ctx          = context.Background()
 		dbInst, user = initAndCreateUser(t)
+		authCtx      = createAuthContext(user)
 		expectedName = "test"
 		token        = model.AuthToken{
 			UserID:     database.NullUUID(user.ID),
@@ -547,7 +560,7 @@ func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {
 		}
 	)
 
-	if newToken, err := dbInst.CreateAuthToken(ctx, token); err != nil {
+	if newToken, err := dbInst.CreateAuthToken(authCtx, token); err != nil {
 		t.Fatalf("Failed to create auth token: %v", err)
 	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateAuthToken, "id", newToken.ID.String()); err != nil {
 		t.Fatalf("Failed to validate CreateAuthToken audit logs:\n%v", err)
@@ -574,6 +587,7 @@ func TestDatabase_DeleteAllAuthTokens(t *testing.T) {
 	var (
 		ctx          = context.Background()
 		testDB, user = initAndCreateUser(t)
+		authCtx      = createAuthContext(user)
 		testClientID = uuid.Must(uuid.NewV4())
 		token1       = model.AuthToken{
 			UserID:     database.NullUUID(user.ID),
@@ -608,7 +622,7 @@ func TestDatabase_DeleteAllAuthTokens(t *testing.T) {
 	// Setup: create and fetch multiple tokens
 	testTokens := []model.AuthToken{token1, token2, clientToken1}
 	for _, token := range testTokens {
-		_, err := testDB.CreateAuthToken(ctx, token)
+		_, err := testDB.CreateAuthToken(authCtx, token)
 		require.NoError(t, err, "Failed to create auth token")
 	}
 
