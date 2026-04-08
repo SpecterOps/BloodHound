@@ -487,7 +487,7 @@ func TestEntityDetails(t *testing.T) {
 		testContext = integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 		dbInst      = integration.SetupDB(t)
 	)
-	validPrimaryKinds, err := dbInst.GetDisplayNodeGraphKinds(testContext.Context())
+	validPrimaryKinds, err := dbInst.GetValidDisplayKinds(testContext.Context())
 	require.NoError(t, err)
 
 	t.Run("ApplicationEntityDetails", func(t *testing.T) {
