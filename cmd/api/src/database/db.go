@@ -268,7 +268,7 @@ func (s *BloodhoundDB) Wipe(ctx context.Context) error {
 
 func (s *BloodhoundDB) Migrate(ctx context.Context) error {
 	// Run the migrator
-	if err := migration.NewMigrator(s.db.WithContext(ctx)).ExecuteStepwiseMigrations(); err != nil {
+	if err := migration.NewMigrator(s.db.WithContext(ctx)).ExecuteNewMigrations(); err != nil {
 		slog.ErrorContext(ctx, "Error during SQL database migration phase", attr.Error(err))
 		return err
 	}

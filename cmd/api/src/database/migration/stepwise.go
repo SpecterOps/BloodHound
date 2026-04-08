@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -270,7 +269,7 @@ func (s *Migrator) ExecuteNewMigrations() error {
 	provider, err := goose.NewProvider(
 		goose.DialectPostgres,
 		s.SqlDB,
-		os.DirFS("/migrations"),
+		s.GooseFS,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create goose provider: %w", err)
@@ -278,7 +277,11 @@ func (s *Migrator) ExecuteNewMigrations() error {
 	if _, err := provider.Up(context.Background()); err != nil {
 		return fmt.Errorf("failed to execute up migrations: %w", err)
 	}
-
+	slog.Info(
+		"Successfully ran goose migrations",
+		slog.String("fn", "ExecuteNewMigrations"),
+		slog.String("db version", string(goose.DialectPostgres)),
+	)
 	return nil
 }
 

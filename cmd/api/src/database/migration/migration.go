@@ -50,11 +50,13 @@ type Migrator struct {
 	ExtensionsData []Source
 	DB             *gorm.DB
 	SqlDB          *sql.DB
+	GooseFS        fs.FS
 }
 
 // NewMigrator returns a new Migrator with the FossMigrations Source predefined.
 func NewMigrator(db *gorm.DB) *Migrator {
 	sqlDB, _ := db.DB()
+	fossMigrationsSubFS, _ := fs.Sub(FossMigrations, "migrations")
 	return &Migrator{
 		Sources: []Source{
 			{FileSystem: FossMigrations, Directory: "migrations"},
@@ -62,7 +64,8 @@ func NewMigrator(db *gorm.DB) *Migrator {
 		ExtensionsData: []Source{
 			{FileSystem: ExtensionMigrations, Directory: "extensions"},
 		},
-		DB:    db,
-		SqlDB: sqlDB,
+		GooseFS: fossMigrationsSubFS,
+		DB:      db,
+		SqlDB:   sqlDB,
 	}
 }
