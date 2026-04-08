@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { useCallback, useMemo } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import {
     certificationsPath,
@@ -31,66 +32,94 @@ import {
 export const usePZPathParams = () => {
     const location = useLocation();
     const { zoneId = '', labelId, ruleId, memberId } = useParams();
-    const tagId = labelId === undefined ? zoneId : labelId;
 
-    const hasLabelId = labelId !== undefined;
-    const hasZoneId = zoneId !== '';
+    const derivedValues = useMemo(() => {
+        const tagId = labelId === undefined ? zoneId : labelId;
 
-    const isPrivilegeZonesPage = location.pathname.includes(privilegeZonesPath);
-    const isCertificationsPage = location.pathname.includes(certificationsPath);
-    const isSummaryPage = location.pathname.includes(summaryPath);
-    const isDetailsPage = location.pathname.includes(detailsPath);
-    const isHistoryPage = location.pathname.includes(historyPath);
-    const isLabelPage = location.pathname.includes(`/${privilegeZonesPath}/${labelsPath}`);
-    const isZonePage = location.pathname.includes(`/${privilegeZonesPath}/${zonesPath}`);
+        const hasLabelId = labelId !== undefined;
+        const hasZoneId = zoneId !== '';
 
-    const tagType: 'labels' | 'zones' = isLabelPage ? 'labels' : 'zones';
-    const tagTypeDisplay: 'Label' | 'Zone' = isLabelPage ? 'Label' : 'Zone';
-    const tagTypeDisplayPlural: 'Labels' | 'Zones' = isLabelPage ? 'Labels' : 'Zones';
+        const isPrivilegeZonesPage = location.pathname.includes(privilegeZonesPath);
+        const isCertificationsPage = location.pathname.includes(certificationsPath);
+        const isSummaryPage = location.pathname.includes(summaryPath);
+        const isDetailsPage = location.pathname.includes(detailsPath);
+        const isHistoryPage = location.pathname.includes(historyPath);
+        const isLabelPage = location.pathname.includes(`/${privilegeZonesPath}/${labelsPath}`);
+        const isZonePage = location.pathname.includes(`/${privilegeZonesPath}/${zonesPath}`);
 
-    const tagEditLink = (tagId: number | string, type?: typeof tagType) =>
-        `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${savePath}`;
-    const ruleEditLink = (tagId: number | string, ruleId: number | string, type?: typeof tagType) =>
-        `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${rulesPath}/${ruleId}/${savePath}`;
-    const tagCreateLink = (type?: typeof tagType) => `/${privilegeZonesPath}/${type ?? tagType}/${savePath}`;
-    const ruleCreateLink = (tagId: number | string, type?: typeof tagType) =>
-        `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${rulesPath}/${savePath}`;
+        const tagType: 'labels' | 'zones' = isLabelPage ? 'labels' : 'zones';
+        const tagTypeDisplay: 'Label' | 'Zone' = isLabelPage ? 'Label' : 'Zone';
+        const tagTypeDisplayPlural: 'Labels' | 'Zones' = isLabelPage ? 'Labels' : 'Zones';
 
-    const tagSummaryLink = (tagId: number | string, type?: typeof tagType) =>
-        `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${summaryPath}`;
+        return {
+            tagId,
+            hasLabelId,
+            hasZoneId,
+            isPrivilegeZonesPage,
+            isCertificationsPage,
+            isSummaryPage,
+            isDetailsPage,
+            isHistoryPage,
+            isLabelPage,
+            isZonePage,
+            tagType,
+            tagTypeDisplay,
+            tagTypeDisplayPlural,
+        };
+    }, [location.pathname, zoneId, labelId]);
 
-    const tagDetailsLink = (tagId: number | string, type?: typeof tagType) =>
-        `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${detailsPath}`;
-    const ruleDetailsLink = (tagId: number | string, ruleId: number | string, type?: typeof tagType) =>
-        `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${rulesPath}/${ruleId}/${detailsPath}`;
-    const objectDetailsLink = (
-        tagId: number | string,
-        objectId: number | string,
-        ruleId?: number | string,
-        type?: typeof tagType
-    ) =>
-        ruleId
-            ? `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${rulesPath}/${ruleId}/${objectsPath}/${objectId}/${detailsPath}`
-            : `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${objectsPath}/${objectId}/${detailsPath}`;
+    const { tagType } = derivedValues;
+
+    const tagEditLink = useCallback(
+        (tagId: number | string, type?: typeof tagType) =>
+            `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${savePath}`,
+        [tagType]
+    );
+    const ruleEditLink = useCallback(
+        (tagId: number | string, ruleId: number | string, type?: typeof tagType) =>
+            `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${rulesPath}/${ruleId}/${savePath}`,
+        [tagType]
+    );
+    const tagCreateLink = useCallback(
+        (type?: typeof tagType) => `/${privilegeZonesPath}/${type ?? tagType}/${savePath}`,
+        [tagType]
+    );
+    const ruleCreateLink = useCallback(
+        (tagId: number | string, type?: typeof tagType) =>
+            `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${rulesPath}/${savePath}`,
+        [tagType]
+    );
+
+    const tagSummaryLink = useCallback(
+        (tagId: number | string, type?: typeof tagType) =>
+            `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${summaryPath}`,
+        [tagType]
+    );
+
+    const tagDetailsLink = useCallback(
+        (tagId: number | string, type?: typeof tagType) =>
+            `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${detailsPath}`,
+        [tagType]
+    );
+    const ruleDetailsLink = useCallback(
+        (tagId: number | string, ruleId: number | string, type?: typeof tagType) =>
+            `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${rulesPath}/${ruleId}/${detailsPath}`,
+        [tagType]
+    );
+    const objectDetailsLink = useCallback(
+        (tagId: number | string, objectId: number | string, ruleId?: number | string, type?: typeof tagType) =>
+            ruleId
+                ? `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${rulesPath}/${ruleId}/${objectsPath}/${objectId}/${detailsPath}`
+                : `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${objectsPath}/${objectId}/${detailsPath}`,
+        [tagType]
+    );
 
     return {
-        tagId,
+        ...derivedValues,
         zoneId,
         labelId,
         ruleId,
         memberId,
-        hasLabelId,
-        hasZoneId,
-        isLabelPage,
-        isZonePage,
-        isPrivilegeZonesPage,
-        isCertificationsPage,
-        isHistoryPage,
-        isSummaryPage,
-        isDetailsPage,
-        tagType,
-        tagTypeDisplay,
-        tagTypeDisplayPlural,
         tagEditLink,
         tagCreateLink,
         ruleCreateLink,
