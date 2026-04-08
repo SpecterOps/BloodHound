@@ -1764,19 +1764,19 @@ func (mr *MockDatabaseMockRecorder) GetDatapipeStatus(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDatapipeStatus", reflect.TypeOf((*MockDatabase)(nil).GetDatapipeStatus), ctx)
 }
 
-// GetDisplayNodeGraphKinds mocks base method.
-func (m *MockDatabase) GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error) {
+// GetDisplayGraphSchemaNodeKinds mocks base method.
+func (m *MockDatabase) GetDisplayGraphSchemaNodeKinds(ctx context.Context) (model.GraphSchemaNodeKindMap, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDisplayNodeGraphKinds", ctx)
-	ret0, _ := ret[0].(map[graph.Kind]bool)
+	ret := m.ctrl.Call(m, "GetDisplayGraphSchemaNodeKinds", ctx)
+	ret0, _ := ret[0].(model.GraphSchemaNodeKindMap)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetDisplayNodeGraphKinds indicates an expected call of GetDisplayNodeGraphKinds.
-func (mr *MockDatabaseMockRecorder) GetDisplayNodeGraphKinds(ctx any) *gomock.Call {
+// GetDisplayGraphSchemaNodeKinds indicates an expected call of GetDisplayGraphSchemaNodeKinds.
+func (mr *MockDatabaseMockRecorder) GetDisplayGraphSchemaNodeKinds(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDisplayNodeGraphKinds", reflect.TypeOf((*MockDatabase)(nil).GetDisplayNodeGraphKinds), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDisplayGraphSchemaNodeKinds", reflect.TypeOf((*MockDatabase)(nil).GetDisplayGraphSchemaNodeKinds), ctx)
 }
 
 // GetEnvironmentByEnvironmentKindId mocks base method.
@@ -2689,6 +2689,21 @@ func (m *MockDatabase) GetUserToken(ctx context.Context, userId, tokenId uuid.UU
 func (mr *MockDatabaseMockRecorder) GetUserToken(ctx, userId, tokenId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserToken", reflect.TypeOf((*MockDatabase)(nil).GetUserToken), ctx, userId, tokenId)
+}
+
+// GetValidDisplayKinds mocks base method.
+func (m *MockDatabase) GetValidDisplayKinds(ctx context.Context) (map[graph.Kind]bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetValidDisplayKinds", ctx)
+	ret0, _ := ret[0].(map[graph.Kind]bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetValidDisplayKinds indicates an expected call of GetValidDisplayKinds.
+func (mr *MockDatabaseMockRecorder) GetValidDisplayKinds(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetValidDisplayKinds", reflect.TypeOf((*MockDatabase)(nil).GetValidDisplayKinds), ctx)
 }
 
 // HasAnalysisRequest mocks base method.
