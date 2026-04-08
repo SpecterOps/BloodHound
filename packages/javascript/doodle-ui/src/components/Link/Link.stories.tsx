@@ -69,7 +69,7 @@ export const Unstyled: Story = {
 export const InText: Story = {
     name: 'In text',
     render: (args) => (
-        <p className='text-sm text-neutral-dark-1'>
+        <p className='text-sm text-neutral-dark-1 dark:text-white'>
             Read the <Link {...args} /> for more details.
         </p>
     ),
@@ -96,7 +96,7 @@ export const InText: Story = {
           `,
             },
             source: {
-                code: `<p className='text-sm text-neutral-dark-1'>
+                code: `<p className='text-sm text-neutral-dark-1 dark:text-white'>
     Read the{' '}
     <Link href='https://example.com'>documentation</Link>{' '}
     for more details.
