@@ -288,6 +288,7 @@ func azureGraphStats(ctx context.Context, db graph.Database) (model.AzureDataQua
 		return stats, aggregation, fmt.Errorf("could not generate new UUID: %w", err)
 	} else {
 		runID = newUUID.String()
+		aggregation.RunID = runID
 	}
 
 	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
