@@ -132,21 +132,7 @@ ALTER TABLE ONLY migrations ADD CONSTRAINT migrations_pkey PRIMARY KEY (id);`
 }
 
 func (s *Migrator) RequiresMigration() (bool, error) {
-	// check if migration table exists to determine type of manifest to generate
-	if hasTable, err := s.HasMigrationTable(); err != nil {
-		return false, fmt.Errorf("failed to check if migration table exists: %w", err)
-	} else if !hasTable {
-		// no migration table, assume this is new installation and requires migration
-		return true, nil
-	}
-
-	if lastMigration, err := s.LatestMigration(); err != nil {
-		return false, fmt.Errorf("could not get latest migration: %w", err)
-	} else if manifest, err := s.GenerateManifestAfterVersion(lastMigration.Version()); err != nil {
-		return false, fmt.Errorf("failed to generate migration manifest from previous version: %w", err)
-	} else {
-		return len(manifest.VersionTable) > 0, nil
-	}
+	return true, nil
 }
 
 // ExecuteStepwiseMigrations will run all necessary migrations for a deployment.
@@ -165,7 +151,7 @@ func (s *Migrator) ExecuteStepwiseMigrations() error {
 		manifest      Manifest
 		lastMigration model.Migration
 	)
-
+	fmt.Println("============ ExecuteNewMigrations ENTERED ============")
 	// check if migration table exists to determine type of manifest to generate
 	if hasTable, err := s.HasMigrationTable(); err != nil {
 		return fmt.Errorf("failed to check if migration table exists: %w", err)
@@ -252,16 +238,14 @@ func (s *Migrator) ExecuteExtensionDataPopulation() error {
 // Once bootstrap is complete (if needed), we run goose to apply any pending migrations.
 func (s *Migrator) ExecuteNewMigrations() error {
 	// Check for legacy migrations table (old customers)
-	if hasLegacyTable, err := s.HasMigrationTable(); err != nil {
+	hasLegacyTable, err := s.HasMigrationTable()
+	if err != nil {
 		return fmt.Errorf("failed to check if migration table exists: %w", err)
-	} else if hasLegacyTable {
+	}
+	fmt.Println("-------------hasLegacyTable----------------")
+	if hasLegacyTable {
 		// Seed goose_db_version so baseline is skipped
 		if err := s.bootstrapGoose(); err != nil {
-			return err
-		}
-
-		// Drop legacy migrations table
-		if err := s.dropLegacyMigrationTable(); err != nil {
 			return err
 		}
 	}
@@ -278,6 +262,14 @@ func (s *Migrator) ExecuteNewMigrations() error {
 	if _, err := provider.Up(context.Background()); err != nil {
 		return fmt.Errorf("failed to execute up migrations: %w", err)
 	}
+
+	// Only drop legacy table AFTER goose succeeds
+	// This ensures we can retry bootstrap on failure
+	if hasLegacyTable {
+		if err := s.dropLegacyMigrationTable(); err != nil {
+			return err
+		}
+	}
 	slog.Info(
 		"Successfully ran goose migrations",
 		slog.String("fn", "ExecuteNewMigrations"),
@@ -287,22 +279,25 @@ func (s *Migrator) ExecuteNewMigrations() error {
 }
 
 func (s *Migrator) bootstrapGoose() error {
+	fmt.Println("----------------bootstrap goose----------------")
+	// Use goose's actual table schema and ensure version 1 (baseline) is marked as applied
 	result := s.DB.Exec(`
         CREATE TABLE IF NOT EXISTS goose_db_version (
             id SERIAL PRIMARY KEY,
-            version_id BIGINT NOT NULL,
+            version_id BIGINT NOT NULL UNIQUE,
             is_applied BOOLEAN NOT NULL,
             tstamp TIMESTAMP DEFAULT now()
         );
 
         INSERT INTO goose_db_version (version_id, is_applied)
-        VALUES (00000000000000, true)
-        ON CONFLICT DO NOTHING;
+        VALUES (1, true)
+        ON CONFLICT (version_id) DO NOTHING;
     `)
 	return result.Error
 }
 
 func (s *Migrator) dropLegacyMigrationTable() error {
+	fmt.Println("------------drop migrations------------")
 	slog.Info("Dropping legacy migrations table")
 	_, err := s.SqlDB.Exec(`DROP TABLE IF EXISTS migrations;`)
 	return err
