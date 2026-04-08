@@ -17,4 +17,5 @@
 export * from './constants';
 export { default as DropdownSelector } from './DropdownSelector';
 export { default as DropdownTrigger } from './DropdownTrigger';
+export { default as DropdownTriggerContents } from './DropdownTriggerContents';
 export * from './types';
