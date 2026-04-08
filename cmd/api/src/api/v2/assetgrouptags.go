@@ -32,6 +32,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/lib/pq"
+	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
@@ -41,7 +42,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/featureflag"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
@@ -690,7 +691,7 @@ func (s *Resources) UpdateAssetGroupTag(response http.ResponseWriter, request *h
 			} else if tag.Position.ValueOrZero() == 1 {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "tier zero analysis_enabled cannot be modified", request), response)
 				return
-			} else if !s.DogTags.GetFlagAsBool(dogtags.PZ_MULTI_TIER_ANALYSIS) {
+			} else if multiTierEnabled, _ := s.OpenFeatureClient.BooleanValue(request.Context(), featureflag.PZMultiTierAnalysis, false, openfeature.EvaluationContext{}); !multiTierEnabled {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "multi-tier analysis is not enabled for privilege zones", request), response)
 				return
 			}

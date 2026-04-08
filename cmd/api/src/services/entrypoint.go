@@ -38,7 +38,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+
 	"github.com/specterops/bloodhound/cmd/api/src/services/featureflag"
 	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
@@ -82,16 +82,7 @@ func PreMigrationDaemons(ctx context.Context, cfg config.Configuration, connecti
 
 func Entrypoint(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) ([]daemons.Daemon, error) {
 
-	dogtagsService := dogtags.NewDefaultService()
 
-	slog.InfoContext(ctx, "DogTags provider initialized",
-		slog.String("namespace", "dogtags"),
-		slog.String("provider", dogtagsService.ProviderName()))
-
-	flags := dogtagsService.GetAllDogTags()
-	slog.InfoContext(ctx, "DogTags Configuration",
-		slog.String("namespace", "dogtags"),
-		slog.Any("flags", flags))
 
 	if !cfg.DisableMigrations {
 		if err := bootstrap.MigrateDB(ctx, cfg, connections.RDMS, config.NewDefaultAdminConfiguration); err != nil {
@@ -149,7 +140,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		openFeatureClient := featureflag.NewClient()
 
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator, connections.RDMS)
-		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dogtagsService, openGraphSchemaService, openFeatureClient)
+		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, openGraphSchemaService, openFeatureClient)
 
 		// Set neo4j batch and flush sizes
 		neo4jParameters := appcfg.GetNeo4jParameters(ctx, connections.RDMS)

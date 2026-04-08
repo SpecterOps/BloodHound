@@ -123,7 +123,7 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	// Etac DogTags
+	// ETAC filtering
 	if ShouldFilterForETAC(request.Context(), s.OpenFeatureClient, user) {
 		filteredResponse, err := filterETACGraph(graphResponse, user)
 		if err != nil {

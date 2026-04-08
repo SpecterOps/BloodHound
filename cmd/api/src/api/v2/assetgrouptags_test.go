@@ -44,7 +44,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/featureflag"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
@@ -70,7 +69,6 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 		resourcesInst = v2.Resources{
 			DB:         mockDB,
 			GraphQuery: mockGraphDb,
-			DogTags:    dogtags.NewDefaultService(),
 		}
 	)
 
@@ -351,7 +349,6 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 		resourcesInst = v2.Resources{
 			DB:         mockDB,
 			GraphQuery: mockGraphDb,
-			DogTags:    dogtags.NewDefaultService(),
 		}
 		user          = setupUser()
 		userCtx       = setupUserCtx(user)
@@ -886,7 +883,6 @@ func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
 		resourcesInst = v2.Resources{
 			DB:         mockDB,
 			GraphQuery: mockGraphDb,
-			DogTags:    dogtags.NewDefaultService(),
 		}
 		user    = setupUser()
 		userCtx = setupUserCtx(user)
@@ -1233,7 +1229,6 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 		resourcesInst = v2.Resources{
 			DB:         mockDB,
 			GraphQuery: mockGraphDb,
-			DogTags:    dogtags.NewDefaultService(),
 		}
 	)
 	defer mockCtrl.Finish()
@@ -1376,12 +1371,9 @@ func TestResources_UpdateAssetGroupTag(t *testing.T) {
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
 		mockGraphDB   = graphmocks.NewMockDatabase(mockCtrl)
 		resourcesInst = v2.Resources{
-			DB:    mockDB,
-			Graph: mockGraphDB,
-			DogTags: dogtags.NewTestService(dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{dogtags.PZ_MULTI_TIER_ANALYSIS: true},
-			}),
-			OpenFeatureClient: featureflag.NewTestClient(featureflag.TestFlags{}),
+			DB:                mockDB,
+			Graph:             mockGraphDB,
+			OpenFeatureClient: featureflag.NewTestClient(featureflag.TestFlags{PZMultiTierAnalysis: true}),
 		}
 		userCtx = setupUserCtx(setupUser())
 
@@ -1721,7 +1713,6 @@ func TestResources_DeleteAssetGroupTagSelector(t *testing.T) {
 		resourcesInst = v2.Resources{
 			DB:         mockDB,
 			GraphQuery: mockGraphDb,
-			DogTags:    dogtags.NewDefaultService(),
 		}
 		user    = setupUser()
 		userCtx = setupUserCtx(user)
@@ -2021,7 +2012,6 @@ func TestResources_GetAssetGroupTagMemberInfo(t *testing.T) {
 		resourcesInst = v2.Resources{
 			DB:         mockDB,
 			GraphQuery: mockGraphDb,
-			DogTags:    dogtags.NewDefaultService(),
 		}
 		testNode = &graph.Node{
 			ID:           0,
@@ -3924,7 +3914,6 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
 		resourcesInst = v2.Resources{
 			DB:      mockDB,
-			DogTags: dogtags.NewDefaultService(),
 		}
 
 		expectedHistoryRecs = []model.AssetGroupHistory{

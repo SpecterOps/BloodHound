@@ -418,6 +418,24 @@ type TieringParameters struct {
 	MultiTierAnalysisEnabled bool `json:"multi_tier_analysis_enabled,omitempty"`
 }
 
+func GetTieringParameters(ctx context.Context, service ParameterService) TieringParameters {
+	result := TieringParameters{
+		TierLimit:                1,
+		LabelLimit:               0,
+		MultiTierAnalysisEnabled: false,
+	}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, TierManagementParameterKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch tiering configuration; returning default values")
+	} else if err = cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid tiering configuration supplied; returning default values",
+			slog.String("parameter_key", string(TierManagementParameterKey)),
+			attr.Error(err))
+	}
+
+	return result
+}
+
 type AGTParameters struct {
 	DAWGsWorkerLimit     int `json:"dawgs_worker_limit,omitempty"`
 	ExpansionWorkerLimit int `json:"expansion_worker_limit,omitempty"`

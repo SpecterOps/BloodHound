@@ -299,7 +299,7 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 				bhGraph[node.ID.String()] = bloodhoundgraph.NodeToBloodHoundGraph(validPrimaryKinds, customNodeKinds, node)
 			}
 
-			// ETAC DogTags filtering
+			// ETAC filtering
 			if ShouldFilterForETAC(request.Context(), s.OpenFeatureClient, user) {
 				accessList := ExtractEnvironmentIDsFromUser(&user)
 				filteredGraph, err = filterSearchResultMap(bhGraph, accessList)

@@ -35,6 +35,9 @@ import (
 const (
 	ETACEnabled             = "FEATURE_ETAC_ENABLED"
 	APIKeyExpirationEnabled = "FEATURE_API_KEY_EXPIRATION_ENABLED"
+	PZMultiTierAnalysis     = "FEATURE_PZ_MULTI_TIER_ANALYSIS"
+	PZTierLimit             = "FEATURE_PZ_TIER_LIMIT"
+	PZLabelLimit            = "FEATURE_PZ_LABEL_LIMIT"
 )
 
 // SetupProvider initializes the OpenFeature SDK with the from-env provider.
@@ -55,6 +58,9 @@ func NewClient() *openfeature.Client {
 type TestFlags struct {
 	ETACEnabled             bool
 	APIKeyExpirationEnabled bool
+	PZMultiTierAnalysis     bool
+	PZTierLimit             int64
+	PZLabelLimit            int64
 }
 
 func boolVariant(enabled bool) string {
@@ -75,12 +81,25 @@ func boolFlag(enabled bool) memprovider.InMemoryFlag {
 	}
 }
 
+func intFlag(value int64) memprovider.InMemoryFlag {
+	return memprovider.InMemoryFlag{
+		State:          memprovider.Enabled,
+		DefaultVariant: "value",
+		Variants: map[string]any{
+			"value": value,
+		},
+	}
+}
+
 // NewTestClient creates an OpenFeature client backed by an InMemoryProvider for use in tests.
 // It registers a uniquely named provider to avoid conflicts between parallel tests.
 func NewTestClient(flags TestFlags) *openfeature.Client {
 	provider := memprovider.NewInMemoryProvider(map[string]memprovider.InMemoryFlag{
 		ETACEnabled:             boolFlag(flags.ETACEnabled),
 		APIKeyExpirationEnabled: boolFlag(flags.APIKeyExpirationEnabled),
+		PZMultiTierAnalysis:     boolFlag(flags.PZMultiTierAnalysis),
+		PZTierLimit:             intFlag(flags.PZTierLimit),
+		PZLabelLimit:            intFlag(flags.PZLabelLimit),
 	})
 
 	name := fmt.Sprintf("test-%p", &provider)
