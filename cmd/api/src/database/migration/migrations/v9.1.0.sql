@@ -16,6 +16,7 @@
 
 
 -- Update the 'auth_tokens' table adding created_by column
+-- As of current, we don't have a way to backfill the data, so we are leaving this field optional for now
 ALTER TABLE auth_tokens
   ADD COLUMN IF NOT EXISTS created_by text;
 

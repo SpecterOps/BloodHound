@@ -398,7 +398,10 @@ func (s *BloodhoundDB) CreateAuthToken(ctx context.Context, authToken model.Auth
 		}
 	}
 
-	if user, isUser := auth.GetUserFromAuthCtx(bhctx.Get(ctx).AuthCtx); isUser {
+	if user, isUser := auth.GetUserFromAuthCtx(bhctx.Get(ctx).AuthCtx); !isUser {
+		slog.Error("failed to look up user from auth context")
+		return model.AuthToken{}, errors.New("user is not authenticated")
+	} else {
 		authToken.CreatedBy = uuid.NullUUID{UUID: user.ID, Valid: true}
 	}
 
