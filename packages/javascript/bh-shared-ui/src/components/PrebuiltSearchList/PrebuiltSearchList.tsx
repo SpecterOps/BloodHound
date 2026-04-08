@@ -31,20 +31,11 @@ interface PrebuiltSearchListProps {
 }
 
 const useStyles = makeStyles((theme) => ({
-    header: {
-        color: theme.palette?.color.primary,
-        backgroundColor: theme.palette?.neutral.tertiary,
-        paddingLeft: '8px',
-        paddingRight: '8px',
-        fontWeight: 'bold',
-    },
     subheader: {
         color: theme.palette?.color.primary,
         backgroundColor: theme.palette?.neutral.tertiary,
         paddingLeft: '8px',
         paddingRight: '8px',
-        //fontWeight: 'bold',
-        fontSize: '14px',
     },
     selected: {
         backgroundColor: theme.palette?.neutral.quaternary,
@@ -97,7 +88,9 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                     {Object.entries(groupedQueries).map(([category, queryData]) => (
                         <div key={category} className='relative'>
                             {category && !!queryData[0].queries.length && (
-                                <div className={`${styles.header} sticky top-0 z-[1] py-2`}>{category}</div>
+                                <div className={`${styles.subheader} font-bold sticky top-0 z-[1] py-2`}>
+                                    {category}
+                                </div>
                             )}
                             {queryData.map((queryItem, i) => {
                                 const { subheader, queries } = queryItem;
