@@ -39,9 +39,6 @@ interface RadioGroupItemProps extends React.ComponentPropsWithoutRef<typeof Radi
     value: string;
 }
 
-// const indicatorStyle = 'w-4 h-4 rounded rounded-full border';
-// const focusStyles = 'outline outline-2 -outline-offset-2 outline-primary';
-
 const RadioItem = React.forwardRef<React.ElementRef<typeof RadioGroupPrimitive.Item>, RadioGroupItemProps>(
     ({ className, label, value, ...props }, ref) => (
         <div className='flex items-center mb-1 px-1 rounded-md focus-within:outline focus-within:outline-2 focus-within:outline-secondary'>
