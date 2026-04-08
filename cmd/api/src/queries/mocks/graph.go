@@ -167,7 +167,7 @@ func (mr *MockGraphMockRecorder) FetchNodesByObjectIDsAndKinds(ctx, kinds any, o
 }
 
 // GetADEntityQueryResult mocks base method.
-func (m *MockGraph) GetADEntityQueryResult(ctx context.Context, primaryNodeKinds graphschema.ValidPrimaryKinds, customNodeKinds model.CustomNodeKindMap, params queries.EntityQueryParameters, cacheEnabled bool) (any, int, error) {
+func (m *MockGraph) GetADEntityQueryResult(ctx context.Context, primaryNodeKinds model.GraphSchemaNodeKindMap, customNodeKinds model.CustomNodeKindMap, params queries.EntityQueryParameters, cacheEnabled bool) (any, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetADEntityQueryResult", ctx, primaryNodeKinds, customNodeKinds, params, cacheEnabled)
 	ret0, _ := ret[0].(any)
@@ -213,7 +213,7 @@ func (mr *MockGraphMockRecorder) GetAllShortestPathsWithOpenGraph(ctx, startNode
 }
 
 // GetAssetGroupComboNode mocks base method.
-func (m *MockGraph) GetAssetGroupComboNode(ctx context.Context, primaryNodeKinds graphschema.ValidPrimaryKinds, owningObjectID, assetGroupTag string) (map[string]any, error) {
+func (m *MockGraph) GetAssetGroupComboNode(ctx context.Context, primaryNodeKinds model.GraphSchemaNodeKindMap, owningObjectID, assetGroupTag string) (map[string]any, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAssetGroupComboNode", ctx, primaryNodeKinds, owningObjectID, assetGroupTag)
 	ret0, _ := ret[0].(map[string]any)
