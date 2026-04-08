@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { faExternalLink } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { cn } from '../utils';
@@ -40,19 +42,25 @@ export type LinkProps = Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'chi
     VariantProps<typeof linkVariants> & {
         children: string;
         href: string;
+        allowReferrer?: boolean;
     };
 
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
-    ({ className, variant = 'styled', children, href, ...props }, ref) => {
+    ({ className, variant = 'styled', children, href, allowReferrer = false, ...props }, ref) => {
         return (
             <a
                 ref={ref}
                 href={href}
                 target='_blank'
-                rel='noopener noreferrer'
+                rel={`noopener ${allowReferrer ? '' : 'noreferrer'}`}
                 className={cn(linkVariants({ variant }), className)}
                 {...props}>
-                {children}
+                {children}{' '}
+                <FontAwesomeIcon
+                    icon={faExternalLink}
+                    aria-hidden='true'
+                    className='ml-0.5 shrink-0 text-[0.85em] align-baseline'
+                />
                 <span className='sr-only'> (opens in a new tab)</span>
             </a>
         );
