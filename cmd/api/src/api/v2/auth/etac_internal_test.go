@@ -17,9 +17,57 @@
 package auth
 
 import (
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestHasValidRolesForETAC(t *testing.T) {
-	//todo
+	rolesTemplate := auth.Roles()
+
+	readOnly := model.Role{
+		Name:        rolesTemplate[auth.RoleReadOnly].Name,
+		Description: rolesTemplate[auth.RoleReadOnly].Description,
+		Permissions: rolesTemplate[auth.RoleReadOnly].Permissions,
+		Serial:      model.Serial{},
+	}
+
+	uploadOnly := model.Role{
+		Name:        rolesTemplate[auth.RoleUploadOnly].Name,
+		Description: rolesTemplate[auth.RoleUploadOnly].Description,
+		Permissions: rolesTemplate[auth.RoleUploadOnly].Permissions,
+		Serial:      model.Serial{},
+	}
+
+	auditor := model.Role{
+		Name:        rolesTemplate[auth.RoleAuditor].Name,
+		Description: rolesTemplate[auth.RoleAuditor].Description,
+		Permissions: rolesTemplate[auth.RoleAuditor].Permissions,
+		Serial:      model.Serial{},
+	}
+
+	user := model.Role{
+		Name:        rolesTemplate[auth.RoleUser].Name,
+		Description: rolesTemplate[auth.RoleUser].Description,
+		Permissions: rolesTemplate[auth.RoleUser].Permissions,
+		Serial:      model.Serial{},
+	}
+
+	powerUser := model.Role{
+		Name:        rolesTemplate[auth.RolePowerUser].Name,
+		Description: rolesTemplate[auth.RolePowerUser].Description,
+		Permissions: rolesTemplate[auth.RolePowerUser].Permissions,
+		Serial:      model.Serial{},
+	}
+
+	administrator := model.Role{
+		Name:        rolesTemplate[auth.RoleAdministrator].Name,
+		Description: rolesTemplate[auth.RoleAdministrator].Description,
+		Permissions: rolesTemplate[auth.RoleAdministrator].Permissions,
+		Serial:      model.Serial{},
+	}
+	
+	require.True(t, hasValidRolesForETAC(model.Roles{readOnly, uploadOnly, user}))
+	require.False(t, hasValidRolesForETAC(model.Roles{administrator, auditor, powerUser}))
 }
