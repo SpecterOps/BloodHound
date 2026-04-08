@@ -83,9 +83,10 @@ func graphRelatedEntityType(request *http.Request, db database.Database, graphDb
 
 	customNodeKinds, err := db.GetCustomNodeKindsMap(ctx)
 	if err != nil {
-		slog.Error("Unable to fetch custom nodes from database; will fall back to defaults")
+		slog.Warn("Unable to fetch custom nodes from database; will fall back to defaults")
 	}
-	validPrimaryKinds, err := db.GetDisplayNodeGraphKinds(request.Context())
+
+	validPrimaryKinds, err := db.GetDisplayGraphSchemaNodeKinds(request.Context())
 	if err != nil {
 		return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching valid primary kinds: %v", err), request)
 	}
@@ -349,7 +350,7 @@ func (s *Resources) GetAZRelatedEntities(ctx context.Context, response http.Resp
 		} else {
 			api.WriteJSONResponse(ctx, data, http.StatusOK, response)
 		}
-	} else if validPrimaryKinds, err := s.DB.GetDisplayNodeGraphKinds(request.Context()); err != nil {
+	} else if validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		if nodes, count, err := listRelatedEntityType(ctx, s.Graph, validPrimaryKinds, relatedEntityType, objectID, skip, limit); err != nil {
@@ -369,7 +370,7 @@ func (s *Resources) GetAZRelatedEntities(ctx context.Context, response http.Resp
 }
 
 func GetAZEntityInformation(ctx context.Context, db database.Database, graphDb graph.Database, entityType, objectID string, hydrateCounts bool) (any, error) {
-	validPrimaryKinds, err := db.GetDisplayNodeGraphKinds(ctx)
+	validPrimaryKinds, err := db.GetValidDisplayKinds(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching valid primary kinds: %v", err)
 	}
