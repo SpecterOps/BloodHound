@@ -17,10 +17,11 @@
 package auth
 
 import (
+	"testing"
+
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestHasValidRolesForETAC(t *testing.T) {
@@ -67,7 +68,7 @@ func TestHasValidRolesForETAC(t *testing.T) {
 		Permissions: rolesTemplate[auth.RoleAdministrator].Permissions,
 		Serial:      model.Serial{},
 	}
-	
+
 	require.True(t, hasValidRolesForETAC(model.Roles{readOnly, uploadOnly, user}))
 	require.False(t, hasValidRolesForETAC(model.Roles{administrator, auditor, powerUser}))
 }

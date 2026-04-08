@@ -128,5 +128,12 @@ WHERE id IN (
 
 -- Make opengraph_extension_management user updatable
 UPDATE feature_flags
-SET user_updatable = true
+SET user_updatable = true,
+updated_at = current_timestamp
 WHERE key = 'opengraph_extension_management';
+
+-- Set client_bearer_auth feature flag to default to enabled
+UPDATE feature_flags
+SET enabled = true,
+updated_at = current_timestamp
+WHERE key = 'client_bearer_auth';
