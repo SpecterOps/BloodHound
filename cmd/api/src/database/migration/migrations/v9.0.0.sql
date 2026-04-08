@@ -125,3 +125,8 @@ WHERE id IN (
   JOIN roles r ON ur.role_id = r.id
   WHERE r.name = 'Auditor'
 );
+
+-- Make opengraph_extension_management user updatable
+UPDATE feature_flags
+SET user_updatable = true
+WHERE key = 'opengraph_extension_management';
