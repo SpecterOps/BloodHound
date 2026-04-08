@@ -97,3 +97,33 @@ func TestVersion_900_Migration(t *testing.T) {
 		})
 	})
 }
+
+func TestVersion_910_Migration(t *testing.T) {
+	t.Run("Migration_v9.1.0 Success", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.Version910_Migration_Harness.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, db graph.Database) {
+			err := migrations.Version_910_Migration(context.Background(), db)
+			require.Nil(t, err)
+
+			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+				nodes, err := ops.FetchNodes(tx.Nodes())
+				require.Nil(t, err)
+
+				for _, node := range nodes {
+					switch node.ID {
+					case harness.Version910_Migration_Harness.ADNode.ID:
+						require.True(t, node.Kinds.ContainsOneOf(ad.Group))
+					case harness.Version910_Migration_Harness.AZNode.ID:
+						require.False(t, node.Kinds.ContainsOneOf(ad.Group))
+					case harness.Version910_Migration_Harness.OGNode.ID:
+						require.False(t, node.Kinds.ContainsOneOf(ad.Group))
+					}
+				}
+				return nil
+			})
+		})
+	})
+}

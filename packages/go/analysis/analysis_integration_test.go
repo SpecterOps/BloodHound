@@ -134,7 +134,7 @@ func TestGetNodeKindDisplayLabel(t *testing.T) {
 	nodeKindNoDis, err := testSuite.db.CreateGraphSchemaNodeKind(testSuite.ctx, "TestKindNoDis", extension.ID, "", "", false, "", "")
 	require.NoError(t, err)
 
-	primaryNodeKinds, err := testSuite.db.GetDisplayNodeGraphKinds(testSuite.ctx)
+	primaryNodeKinds, err := testSuite.db.GetValidDisplayKinds(testSuite.ctx)
 	require.NoError(t, err)
 
 	assert.Equal(t, ad.Entity.String(), analysis.GetNodeKindDisplayLabel(primaryNodeKinds, graph.PrepareNode(graph.NewProperties(), ad.Entity)), "should return base kind if no other valid kinds are present")
