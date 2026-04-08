@@ -586,6 +586,8 @@ github.com/specterops/dawgs v0.4.15-0.20260402163740-dbad3d7db6eb h1:IpyK2ylPJC2
 github.com/specterops/dawgs v0.4.15-0.20260402163740-dbad3d7db6eb/go.mod h1:cI80bqP3LlMKGpanwOdUd4B1qVgXIbiRFbjn1du3XkA=
 github.com/specterops/dawgs v0.4.15-0.20260402174031-591a278064ab h1:JkuMCvoMZpcOQQZRHUweftBCW4bLBExZpRQL+wuxTCQ=
 github.com/specterops/dawgs v0.4.15-0.20260402174031-591a278064ab/go.mod h1:NsBXECVvKjwcu6GrYhBWZtTJB9yMGeckqgw7Wj48CE8=
+github.com/specterops/dawgs v0.4.16-0.20260408002613-5d447932b368 h1:wYatbeSvQI4vxeoDM6i0hH7H2gD9yKHmmsE73ka2XLc=
+github.com/specterops/dawgs v0.4.16-0.20260408002613-5d447932b368/go.mod h1:LFdNuTvXU+lqqwZz3rNNuzjn3GSucPcWphhXE8nV7p4=
 github.com/spf13/afero v1.15.0 h1:b/YBCLWAJdFWJTN9cLhiXXcD7mzKn9Dm86dNnfyQw1I=
 github.com/spf13/afero v1.15.0/go.mod h1:NC2ByUVxtQs4b3sIUphxK0NioZnmxgyCrfzeuq8lxMg=
 github.com/spf13/cast v1.10.0 h1:h2x0u2shc1QuLHfxi+cTJvs30+ZAHOGRic8uyGTDWxY=
