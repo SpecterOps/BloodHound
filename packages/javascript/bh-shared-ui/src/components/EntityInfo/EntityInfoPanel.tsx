@@ -19,7 +19,7 @@ import { Badge } from 'doodle-ui';
 import React, { HTMLProps } from 'react';
 import useRoleBasedFiltering from '../../hooks/useRoleBasedFiltering';
 import { SelectedNode } from '../../types';
-import { EntityInfoDataTableProps, NoEntitySelectedMessage, cn, getEntityName } from '../../utils';
+import { EntityInfoDataTableProps, cn, getEntityName } from '../../utils';
 import { ObjectInfoPanelContextProvider } from '../../views/Explore/providers/ObjectInfoPanelProvider';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
@@ -45,7 +45,6 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
     additionalTables,
     priorityTables,
     DataTable,
-    showPlaceholderMessage = false,
     showFilteringBanner = false,
 }) => {
     const isRoleBasedFiltering = useRoleBasedFiltering();
@@ -65,27 +64,23 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
                     label='Role-based access filtering applied'
                 />
             )}
-            <div className='bg-neutral-2 pointer-events-auto rounded-lg shadow-outer-1'>
-                <Header name={getEntityName(selectedNode)} nodeType={selectedNode?.type} />
-            </div>
-            <div className='bg-neutral-2 mt-2 mb-1 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded-lg shadow-outer-1'>
-                {selectedNode ? (
-                    <EntityInfoContent
-                        DataTable={DataTable}
-                        id={selectedNode.id}
-                        nodeType={selectedNode.type}
-                        databaseId={selectedNode.graphId}
-                        priorityTables={priorityTables}
-                        additionalTables={additionalTables}
-                    />
-                ) : (
-                    <p className='text-sm'>
-                        {showPlaceholderMessage
-                            ? 'Select an object to view the associated information'
-                            : NoEntitySelectedMessage}
-                    </p>
-                )}
-            </div>
+            {selectedNode && (
+                <>
+                    <div className='bg-neutral-2 pointer-events-auto rounded-lg shadow-outer-1'>
+                        <Header name={getEntityName(selectedNode)} nodeType={selectedNode?.type} />
+                    </div>
+                    <div className='bg-neutral-2 mt-2 mb-1 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded-lg shadow-outer-1'>
+                        <EntityInfoContent
+                            DataTable={DataTable}
+                            id={selectedNode.id}
+                            nodeType={selectedNode.type}
+                            databaseId={selectedNode.graphId}
+                            priorityTables={priorityTables}
+                            additionalTables={additionalTables}
+                        />
+                    </div>
+                </>
+            )}
         </div>
     );
 };
