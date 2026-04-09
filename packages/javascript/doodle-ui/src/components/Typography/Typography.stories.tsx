@@ -67,8 +67,7 @@ export const TypographyComponent: Story = {
  *  > h4: 'h4'<br>
  *  > h5: 'h5'<br>
  *  > h6: 'h6'<br>
- *  > subtitle1: 'h6'<br>
- *  > subtitle2: 'h6'<br>
+ *  > subtitle: 'h6'<br>
  *  > body1: 'p'<br>
  *  > body2: 'p'<br>
  *  > caption: 'span'<br>
@@ -83,7 +82,7 @@ export const Variants: Story = {
 
         const headings = Object.keys(variantMapping).map((variant, i) => {
             return (
-                <Typography variant={variant as Variant} className='mb-8' key={variant}>
+                <Typography variant={variant as Variant} className='mb-4' key={variant}>
                     {variant}. {i < 6 ? shortText : longText}
                 </Typography>
             );
