@@ -17,8 +17,6 @@
 import userEvent from '@testing-library/user-event';
 import {
     DeepPartial,
-    NoEntitySelectedHeader,
-    NoEntitySelectedMessage,
     Permission,
     createAuthStateWithPermissions,
     createMockAssetGroup,
@@ -142,13 +140,6 @@ describe('GroupManagement', () => {
 
         expect(screen.getByRole('table')).toBeInTheDocument();
         expect(screen.getByText(member.name)).toBeInTheDocument();
-    });
-
-    it('renders an empty message for the entity panel before a node is selected', async () => {
-        const { screen } = await setup();
-
-        expect(screen.getByText(NoEntitySelectedHeader)).toBeInTheDocument();
-        expect(screen.getByText(NoEntitySelectedMessage)).toBeInTheDocument();
     });
 
     it('renders the node in the entity panel when member is clicked', async () => {

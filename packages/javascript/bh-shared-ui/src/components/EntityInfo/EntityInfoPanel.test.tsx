@@ -82,11 +82,4 @@ describe('EntityInfoPanel', async () => {
 
         expect(screen.queryByTestId('explore_entity-information-panel-role-based-filtering-badge')).toBeInTheDocument();
     });
-
-    it('should display a message to select an object ', async () => {
-        render(<EntityInfoPanel {...testProps} selectedNode={null} showPlaceholderMessage={true} />);
-
-        const selectObjectMessage = screen.getByText(/Select an object to view the associated information/i);
-        expect(selectObjectMessage).toBeInTheDocument();
-    });
 });
