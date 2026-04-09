@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
 	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"
 )
 
@@ -179,4 +180,45 @@ func TestDeleteData_All(t *testing.T) {
 	sourceKinds, err := testSuite.BHDatabase.GetSourceKinds(ctx)
 	require.NoError(t, err)
 	require.Len(t, sourceKinds, 2)
+}
+
+// TestPartialIngest verifies that when a batch contains one resolvable edge and one unresolvable
+// edge, the resolvable edge is still committed and the resolution failure is surfaced as a
+// UserDataErr rather than a fatal error that rolls back the batch.
+func TestPartialIngest(t *testing.T) {
+	var (
+		ctx = context.Background()
+
+		fixturesPath = path.Join("fixtures", "OpenGraphJSON", "raw")
+
+		testSuite = setupIntegrationTestSuite(t, fixturesPath)
+	)
+
+	defer teardownIntegrationTestSuite(t, &testSuite)
+	ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
+
+	fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{
+		StoredFileName: path.Join(testSuite.WorkDir, "oneGoodOneInvalidRel.json"),
+		FileType:       model.FileTypeJson,
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, len(fileData))
+
+	require.Empty(t, fileData[0].Errors, "no fatal errors expected; resolution failures must not abort the batch")
+	require.Len(t, fileData[0].UserDataErrs, 1, "expected one resolution error for the unresolvable property_match")
+
+	// Verify that the edge for the existing endpoints was created despite the failing edge existing in the same batch.
+	var edgeCount int
+	err = testSuite.GraphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		return tx.Relationships().Filterf(func() graph.Criteria {
+			return query.Kind(query.Relationship(), graph.StringKind("THIS_EDGE_GETS_CREATED"))
+		}).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
+			for range cursor.Chan() {
+				edgeCount++
+			}
+			return cursor.Error()
+		})
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, edgeCount, "THIS_EDGE_GETS_CREATED was not created")
 }

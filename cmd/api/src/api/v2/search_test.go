@@ -111,7 +111,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, nil)
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+					mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -127,7 +127,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, errors.New("database error"))
-					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+					mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10).
 						Return(nil, nil)
@@ -158,7 +158,7 @@ func TestResources_SearchHandler(t *testing.T) {
 								}),
 							},
 						}, nil)
-					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+					mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
 
 				},
 				Test: func(output apitest.Output) {
@@ -176,7 +176,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 					mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, nil)
-					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+					mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, errors.New("graph error"))
@@ -187,7 +187,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				},
 			},
 			{
-				Name: "GetDisplayNodeGraphKindsError",
+				Name: "GetValidDisplayKindsError",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "q", "search value")
 					apitest.SetContext(input, userCtx)
@@ -195,7 +195,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 					mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, nil)
-					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+					mockDB.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -211,7 +211,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 					mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, nil)
-					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+					mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), "search value", 0, 10).
 						Return(nil, nil)
@@ -230,7 +230,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, nil)
-					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+					mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10).
 						Return(nil, nil)
@@ -267,7 +267,7 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 			expectedMocks: func(mockDB *dbMocks.MockDatabase, mockGraph *graphMocks.MockGraph) {
 				mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, nil)
-				mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mockGraph.EXPECT().
 					SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10).
 					Return(nil, nil)
@@ -294,7 +294,7 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 			expectedMocks: func(mockDB *dbMocks.MockDatabase, mockGraph *graphMocks.MockGraph) {
 				mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, nil)
-				mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mockGraph.EXPECT().
 					SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10).
 					Return(nil, nil)

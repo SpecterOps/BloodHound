@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/cypher/models/cypher"
 	"github.com/specterops/dawgs/graph"
@@ -373,6 +374,92 @@ func TestLinkWellKnownNodes(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
+}
+
+// This test ensures that only AD nodes are given the ad.Group kind when they have an object ID matching one of the well-known suffixes
+func TestFixWellKnownNodeTypes(t *testing.T) {
+	adNodeData := graph.Node{
+		Kinds: graph.Kinds{
+			ad.Entity,
+		},
+		Properties: graph.AsProperties(graph.PropertyMap{
+			common.ObjectID: wellknown.DomainAdminsGroupSIDSuffix.PrependPrefix("Test AD Node"),
+		}),
+	}
+	azNodeData := graph.Node{
+		Kinds: graph.Kinds{
+			azure.Entity,
+		},
+		Properties: graph.AsProperties(graph.PropertyMap{
+			common.ObjectID: wellknown.DomainAdminsGroupSIDSuffix.PrependPrefix("Test AZ Node"),
+		}),
+	}
+	ogNodeData := graph.Node{
+		Kinds: graph.Kinds{
+			graph.StringKind("OGBaseKind"),
+		},
+		Properties: graph.AsProperties(graph.PropertyMap{
+			common.ObjectID: wellknown.DomainAdminsGroupSIDSuffix.PrependPrefix("Test OG Node"),
+		}),
+	}
+
+	ctx := context.Background()
+
+	graphDB := integration.OpenGraphDB(t, graphschema.DefaultGraphSchema())
+	defer graphDB.Close(ctx)
+
+	var (
+		adNode *graph.Node
+		azNode *graph.Node
+		ogNode *graph.Node
+	)
+
+	err := graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		if adNode, err = tx.CreateNode(adNodeData.Properties, adNodeData.Kinds...); err != nil {
+			return err
+		} else if azNode, err = tx.CreateNode(azNodeData.Properties, azNodeData.Kinds...); err != nil {
+			return err
+		} else if ogNode, err = tx.CreateNode(ogNodeData.Properties, ogNodeData.Kinds...); err != nil {
+			return err
+		}
+		return nil
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, adNode)
+	require.NotNil(t, azNode)
+	require.NotNil(t, ogNode)
+
+	err = adAnalysis.FixWellKnownNodeTypes(ctx, graphDB)
+	require.NoError(t, err)
+
+	var (
+		adResult *graph.Node
+		azResult *graph.Node
+		ogResult *graph.Node
+	)
+
+	err = graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		if adResult, err = tx.Nodes().Filter(query.Equals(query.NodeID(), adNode.ID)).First(); err != nil {
+			return err
+		} else if azResult, err = tx.Nodes().Filter(query.Equals(query.NodeID(), azNode.ID)).First(); err != nil {
+			return err
+		} else if ogResult, err = tx.Nodes().Filter(query.Equals(query.NodeID(), ogNode.ID)).First(); err != nil {
+			return err
+		}
+		return nil
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, adResult)
+	require.NotNil(t, azResult)
+	require.NotNil(t, ogResult)
+
+	require.True(t, adResult.Kinds.ContainsOneOf(ad.Group))
+	require.False(t, azResult.Kinds.ContainsOneOf(ad.Group))
+	require.False(t, ogResult.Kinds.ContainsOneOf(ad.Group))
 }
 
 func fetchNode(
