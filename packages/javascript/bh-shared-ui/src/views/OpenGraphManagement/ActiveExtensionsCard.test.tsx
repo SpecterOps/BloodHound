@@ -29,7 +29,9 @@ import {
 } from './ActiveExtensionsCard';
 
 const addNotificationSpy = vi.hoisted(() => vi.fn());
-const checkPermissionMock = vi.fn(() => true);
+const { checkPermissionMock } = vi.hoisted(() => ({
+    checkPermissionMock: vi.fn(() => true),
+}));
 
 vi.mock('../../providers', async () => {
     const actual = await vi.importActual('../../providers');

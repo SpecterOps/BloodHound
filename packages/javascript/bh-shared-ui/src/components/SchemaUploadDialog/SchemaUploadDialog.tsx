@@ -42,9 +42,14 @@ export const SchemaUploadDialog = () => {
 
     // Dragging a file into the window displays the dialog. The normal global file upload drag and drop behavior is
     // disabled for the OpenGraph Management page
-    useExecuteOnFileDrag(() => setDialogOpen(true), {
-        acceptedTypes: ['application/json'],
-    });
+    useExecuteOnFileDrag(
+        () => {
+            if (hasUploadPermission) setDialogOpen(true);
+        },
+        {
+            acceptedTypes: ['application/json'],
+        }
+    );
 
     return (
         <Dialog
