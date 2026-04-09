@@ -61,7 +61,7 @@ export const useAPITokenExpirationConfiguration = () => {
 
     return {
         enabled: apiTokenExpirationConfig?.enabled ?? false,
-        expiration_period: apiTokenExpirationConfig?.expiration_period ?? "365",
+        expiration_period: apiTokenExpirationConfig?.expiration_period ?? '365',
     };
 };
 
