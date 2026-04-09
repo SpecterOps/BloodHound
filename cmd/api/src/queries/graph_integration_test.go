@@ -22,11 +22,9 @@ import (
 	"context"
 	"os"
 	"path"
-	"reflect"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
 
@@ -74,10 +72,9 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 		expectedTypeExplanation   string
 	}
 	var (
-		testSuite          = setupGraphDb(t)
-		graphQuery         = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
-		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
-		testTable          = []testData{
+		testSuite  = setupGraphDb(t)
+		graphQuery = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
+		testTable  = []testData{
 			{
 				name:                      "Exact Match",
 				queryString:               "USER NUMBER ONE",
@@ -86,7 +83,7 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 				expectedResults:           1,
 				expectedResultExplanation: "There should be one exact match returned",
 				shouldMatchUser:           true,
-				matchUserField:            "Name",
+				matchUserField:            common.Name.String(),
 			},
 			{
 				name:                      "Fuzzy Match",
@@ -144,29 +141,25 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 				includeOpenGraphNodes:     false,
 				expectedResultExplanation: "Only one user can match exactly one Object ID",
 				shouldMatchUser:           true,
-				matchUserField:            "ObjectID",
+				matchUserField:            common.ObjectID.String(),
 			},
 		}
 	)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
-	validPrimaryKinds, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(testSuite.Context)
-	require.NoError(t, err)
-
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, validPrimaryKinds, customNodeKindsMap, nil, testCase.inputArguments, testCase.queryString, 0, 10)
+			results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, testCase.inputArguments, testCase.queryString, 0, 10)
 			require.Nil(t, err)
 			require.Equal(t, testCase.expectedResults, len(results), testCase.expectedResultExplanation)
 			if testCase.shouldMatchUser {
-				expectedUser := results[0]
-				value := reflect.ValueOf(expectedUser)
-				require.Equal(t, value.FieldByName(testCase.matchUserField).String(), testCase.queryString)
+				expectedUserPropertyMap := results[0].Properties.Map
+				require.Equal(t, expectedUserPropertyMap[testCase.matchUserField], testCase.queryString)
 			}
 			if testCase.shouldMatchType {
 				for _, result := range results {
-					require.Equal(t, testCase.expectedType, result.Type, testCase.expectedTypeExplanation)
+					require.True(t, result.Kinds.ContainsOneOf(graph.StringKind(testCase.expectedType)), testCase.expectedTypeExplanation)
 				}
 			}
 		})
@@ -196,7 +189,7 @@ func TestSearchByNameOrObjectId(t *testing.T) {
 				expectedResults:           1,
 				expectedResultExplanation: "There should be one exact match returned",
 				shouldMatchUser:           true,
-				matchUserField:            "name",
+				matchUserField:            common.Name.String(),
 			},
 			{
 				name:                      "Fuzzy Match",
@@ -233,7 +226,7 @@ func TestSearchByNameOrObjectId(t *testing.T) {
 				expectedResults:           1,
 				expectedResultExplanation: "Only one user can match exactly one Object ID",
 				shouldMatchUser:           true,
-				matchUserField:            "objectid",
+				matchUserField:            common.ObjectID.String(),
 			},
 			{
 				name:                      "Exact Match OpenGraph Node",
@@ -243,7 +236,7 @@ func TestSearchByNameOrObjectId(t *testing.T) {
 				expectedResults:           1,
 				expectedResultExplanation: "There should be one exact match returned",
 				shouldMatchUser:           true,
-				matchUserField:            "name",
+				matchUserField:            common.Name.String(),
 			},
 		}
 	)
@@ -273,7 +266,7 @@ func TestGetEntityResults(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
 	require.Nil(t, err)
 
-	validPrimaryKinds, err := dbInst.GetDisplayNodeGraphKinds(context.Background())
+	validPrimaryKinds, err := dbInst.GetDisplayGraphSchemaNodeKinds(context.Background())
 	require.NoError(t, err)
 
 	testContext.SetupActiveDirectory()
@@ -310,7 +303,7 @@ func TestGetEntityResults_QueryShorterThanSlowQueryThreshold(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
 	require.Nil(t, err)
 
-	validPrimaryKinds, err := dbInst.GetDisplayNodeGraphKinds(context.Background())
+	validPrimaryKinds, err := dbInst.GetDisplayGraphSchemaNodeKinds(context.Background())
 	require.NoError(t, err)
 
 	testContext.SetupActiveDirectory()
@@ -352,7 +345,7 @@ func TestGetPrimaryNodeKindCounts(t *testing.T) {
 		graphQuery := queries.GraphQuery{
 			Graph: db,
 		}
-		validPrimaryKinds, err := dbInst.GetDisplayNodeGraphKinds(testCtx)
+		validPrimaryKinds, err := dbInst.GetValidDisplayKinds(testCtx)
 		require.NoError(t, err)
 
 		results, err := graphQuery.GetPrimaryNodeKindCounts(context.Background(), validPrimaryKinds, ad.Entity)
@@ -386,7 +379,7 @@ func TestGetEntityResults_Cache(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 2})
 	require.Nil(t, err)
 
-	validPrimaryKinds, err := dbInst.GetDisplayNodeGraphKinds(context.Background())
+	validPrimaryKinds, err := dbInst.GetDisplayGraphSchemaNodeKinds(context.Background())
 	require.NoError(t, err)
 
 	testContext.SetupActiveDirectory()
@@ -433,7 +426,7 @@ func TestGetAssetGroupComboNode(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testContext.SetupActiveDirectory()
 
-	primaryNodeKinds, err := dbInst.GetDisplayNodeGraphKinds(context.Background())
+	primaryNodeKinds, err := dbInst.GetDisplayGraphSchemaNodeKinds(context.Background())
 	require.NoError(t, err)
 
 	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
@@ -904,7 +897,7 @@ func TestRawCypherQuery(t *testing.T) {
 	)
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
-	validPrimaryKinds, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(context.Background())
+	validPrimaryKinds, err := testSuite.BHDatabase.GetValidDisplayKinds(context.Background())
 	require.NoError(t, err)
 
 	t.Run("Test return nodes", func(t *testing.T) {

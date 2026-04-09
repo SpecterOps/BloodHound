@@ -130,7 +130,7 @@ const useExploreTableRowsAndColumns = ({
                         />
                     );
                 },
-                size: isSmallColumn(key, bestGuessAtDataType) ? 100 : 250,
+                size: isSmallColumn(key, bestGuessAtDataType) ? 136 : 250,
                 cell: (info) => {
                     const value = info.getValue();
 

@@ -17,6 +17,7 @@
 package v2
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -67,9 +68,21 @@ func (s Resources) SetApplicationConfiguration(response http.ResponseWriter, req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Configuration parameter %s is not valid.", parameter.Key), request), response)
 	} else if errs := parameter.Validate(); errs != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
-	} else if err = s.DB.SetConfigurationParameter(request.Context(), parameter); err != nil {
+	} else if !checkApiKeyExpirationParamAvailable(request.Context(), parameter, s.DB) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, fmt.Sprintf("Configuration parameter %s is not available.", parameter.Key), request), response)
+	} else if err := s.DB.SetConfigurationParameter(request.Context(), parameter); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), appConfig, http.StatusOK, response)
 	}
+}
+
+func checkApiKeyExpirationParamAvailable(ctx context.Context, param appcfg.Parameter, flag appcfg.GetFlagByKeyer) bool {
+	if param.Key == appcfg.APITokenExpiration {
+		if f, err := flag.GetFlagByKey(ctx, appcfg.FeatureAPIKeyExpirationSupport); err != nil || !f.Enabled {
+			return false
+		}
+	}
+
+	return true
 }

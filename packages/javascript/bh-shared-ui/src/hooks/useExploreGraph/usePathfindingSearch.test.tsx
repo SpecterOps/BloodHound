@@ -28,6 +28,13 @@ const server = setupServer(
         const searchTerm = url.searchParams.get('q');
 
         return res(ctx.json({ data: [{ name: searchTerm, objectid: searchTerm }] }));
+    }),
+    rest.get('/api/v2/graphs/kinds', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
     })
 );
 

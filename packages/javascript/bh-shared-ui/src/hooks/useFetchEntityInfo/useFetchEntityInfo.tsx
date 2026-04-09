@@ -19,7 +19,7 @@ import { useQuery, UseQueryResult } from 'react-query';
 import { apiClient } from '../../utils/api';
 import { entityInformationEndpoints } from '../../utils/content';
 import { getNodeByDatabaseIdCypher } from '../../utils/entityInfoDisplay';
-import { validateNodeType } from '../useSearch/useSearch';
+import { validateNodeType } from './utils';
 
 export type FetchEntityInfoParams = {
     objectId: string;

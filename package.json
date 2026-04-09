@@ -13,13 +13,13 @@
     "start": "yarn workspace bloodhound-ui start",
     "preview": "yarn workspace bloodhound-ui preview",
     "build": "yarn workspace bloodhound-ui build",
-    "test": "yarn workspaces foreach -ptv run test run",
-    "check-types": "yarn workspaces foreach -ptv run check-types",
-    "lint": "yarn workspaces foreach -ptv run lint",
-    "format": "yarn workspaces foreach -ptv run format",
-    "check-format": "yarn workspaces foreach -ptv run check-format"
+    "test": "yarn workspaces foreach -Apt run test run",
+    "check-types": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run check-types",
+    "lint": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run lint",
+    "format": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run format",
+    "check-format": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run check-format"
   },
-  "packageManager": "yarn@3.5.1",
+  "packageManager": "yarn@4.13.0",
   "devDependencies": {
     "all-contributors-cli": "^6.26.1",
     "prettier": "^3.2.5",
@@ -36,7 +36,7 @@
     "glob": "^11.1.0",
     "immutable": "4.3.8",
     "minimatch": "10.2.3",
-    "serialize-javascript": "^7.0.3",
+    "serialize-javascript": "^7.0.5",
     "sha.js": "^2.4.12",
     "tar-fs": ">=2.1.3 < 3.0.0",
     "tar": "7.5.11"

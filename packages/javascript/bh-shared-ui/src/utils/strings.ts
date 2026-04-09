@@ -17,3 +17,13 @@
 /** Represents a string literal type that can be widened to string, keeping intellisense for literal values */
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type LiteralUnion<T extends string> = T | (string & {});
+// Allows to truncate text and add an ellipsis
+export const truncateText = (
+    text: string | undefined,
+    maxChars: number = 20,
+    trailingChars: string = '...'
+): string | undefined => {
+    if (!text) return;
+    if (text.length <= maxChars) return text;
+    return text.slice(0, maxChars) + trailingChars;
+};

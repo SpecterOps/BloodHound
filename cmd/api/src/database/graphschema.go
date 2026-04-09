@@ -23,6 +23,7 @@ import (
 
 	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/dawgs/graph"
 	"gorm.io/gorm"
 )
@@ -37,6 +38,7 @@ type OpenGraphSchema interface {
 	CreateGraphSchemaNodeKind(ctx context.Context, name string, extensionId int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.GraphSchemaNodeKind, error)
 	GetGraphSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.GraphSchemaNodeKind, error)
 	GetGraphSchemaNodeKinds(ctx context.Context, nodeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error)
+	GetDisplayGraphSchemaNodeKinds(ctx context.Context) (model.GraphSchemaNodeKindMap, error)
 	UpdateGraphSchemaNodeKind(ctx context.Context, schemaNodeKind model.GraphSchemaNodeKind) (model.GraphSchemaNodeKind, error)
 	UpdateGraphSchemaNodeKindIconById(ctx context.Context, kindId int32, icon model.CustomNodeIcon) (model.GraphSchemaNodeKind, error)
 	DeleteGraphSchemaNodeKind(ctx context.Context, schemaNodeKindId int32) error
@@ -80,10 +82,11 @@ type OpenGraphSchema interface {
 	DeleteRemediation(ctx context.Context, findingId int32) error
 
 	CreatePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) (model.SchemaEnvironmentPrincipalKind, error)
+	GetPrincipalKindsGraphKinds(ctx context.Context) (graph.Kinds, error)
 	GetPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error)
 	DeletePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error
 
-	GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error)
+	GetValidDisplayKinds(ctx context.Context) (map[graph.Kind]bool, error)
 }
 
 const (
@@ -353,6 +356,27 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 			}
 		}
 		return schemaNodeKinds, totalRowCount, nil
+	}
+}
+
+// GetDisplayGraphSchemaNodeKinds - returns a map of display kinds where the key is the node kind name and the value is the entire schema node kind row.
+// An empty map will be returned if no valid node kinds exist. An error will be returned if encountered.
+func (s *BloodhoundDB) GetDisplayGraphSchemaNodeKinds(ctx context.Context) (model.GraphSchemaNodeKindMap, error) {
+
+	if displaySchemaNodeKinds, _, err := s.GetGraphSchemaNodeKinds(ctx, model.Filters{"is_display_kind": []model.Filter{
+		{
+			Operator:    model.Equals,
+			Value:       "true",
+			SetOperator: model.FilterAnd,
+		},
+	}}, model.Sort{}, 0, 0); err != nil {
+		return nil, err
+	} else {
+		var displayKindsNodes = model.GraphSchemaNodeKindMap{}
+		for _, schemaNodeKind := range displaySchemaNodeKinds {
+			displayKindsNodes[schemaNodeKind.Name] = schemaNodeKind
+		}
+		return displayKindsNodes, nil
 	}
 }
 
@@ -1173,6 +1197,41 @@ func (s *BloodhoundDB) GetPrincipalKindsByEnvironmentId(ctx context.Context, env
 	return envPrincipalKinds, nil
 }
 
+func (s *BloodhoundDB) GetPrincipalKindsGraphKinds(ctx context.Context) (graph.Kinds, error) {
+	var (
+		principalKinds []model.Kind
+		whereClause    string
+	)
+
+	// When FF is disabled, we want to limit to just builtin environment principal kinds
+	if flag, err := s.GetFlagByKey(ctx, appcfg.FeatureOpenGraphFindings); err != nil {
+		return nil, err
+	} else if !flag.Enabled {
+		if envs, err := s.GetEnvironmentsFiltered(ctx, model.Filters{"is_builtin": []model.Filter{{Operator: model.Equals, Value: "true"}}}); err != nil {
+			return nil, err
+		} else {
+			var envIds []string
+			for _, env := range envs {
+				envIds = append(envIds, strconv.Itoa(int(env.ID)))
+			}
+			whereClause = fmt.Sprintf("WHERE pk.environment_id IN (%s)", strings.Join(envIds, ","))
+		}
+	}
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT k.id, k.name
+		FROM %s pk
+		JOIN %s k ON k.id = pk.principal_kind
+		%s`, model.SchemaEnvironmentPrincipalKind{}.TableName(), model.Kind{}.TableName(), whereClause)).Scan(&principalKinds); result.Error != nil {
+		return nil, CheckError(result)
+	}
+
+	var graphPrincipalKinds graph.Kinds
+	for _, kind := range principalKinds {
+		graphPrincipalKinds = append(graphPrincipalKinds, kind.ToKind())
+	}
+	return graphPrincipalKinds, nil
+}
+
 func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error {
 	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`
 		DELETE FROM %s
@@ -1186,24 +1245,14 @@ func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId in
 	return nil
 }
 
-// GetDisplayNodeGraphKinds - returns a map of all node kinds that are display kinds.
+// GetValidDisplayKinds - returns a map of all node kinds that are display kinds.
 // An empty map will be returned if no valid node kinds exist. An error will be returned if encountered.
-func (s *BloodhoundDB) GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error) {
+func (s *BloodhoundDB) GetValidDisplayKinds(ctx context.Context) (map[graph.Kind]bool, error) {
 
-	if displaySchemaNodeKinds, _, err := s.GetGraphSchemaNodeKinds(ctx, model.Filters{"is_display_kind": []model.Filter{
-		{
-			Operator:    model.Equals,
-			Value:       "true",
-			SetOperator: model.FilterAnd,
-		},
-	}}, model.Sort{}, 0, 0); err != nil {
+	if displaySchemaNodeKinds, err := s.GetDisplayGraphSchemaNodeKinds(ctx); err != nil {
 		return nil, err
 	} else {
-		var displayKinds = make(map[graph.Kind]bool)
-		for _, schemaNodeKind := range displaySchemaNodeKinds {
-			displayKinds[graph.StringKind(schemaNodeKind.Name)] = true
-		}
-		return displayKinds, nil
+		return displaySchemaNodeKinds.ToKindsMap(), nil
 	}
 }
 

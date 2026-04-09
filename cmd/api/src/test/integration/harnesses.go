@@ -9917,6 +9917,18 @@ func (s *Version900_Migration_Harness) Setup(graphTestContext *GraphTestContext)
 	graphTestContext.UpdateNode(s.Computer2)
 }
 
+type Version910_Migration_Harness struct {
+	ADNode *graph.Node
+	AZNode *graph.Node
+	OGNode *graph.Node
+}
+
+func (s *Version910_Migration_Harness) Setup(graphTestContext *GraphTestContext) {
+	s.ADNode = graphTestContext.NewActiveDirectoryGroup("ADNode", RandomDomainSID())
+	s.AZNode = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{}), azure.Entity, ad.Group)
+	s.OGNode = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{}), graph.StringKind("OGBaseKind"), ad.Group)
+}
+
 type ACLInheritanceHarness struct {
 	Domain1 *graph.Node
 	Domain2 *graph.Node
@@ -10253,5 +10265,6 @@ type HarnessDetails struct {
 	AZPIMRolesHarness                               AZPIMRolesHarness
 	Version730_Migration                            Version730_Migration_Harness
 	Version900_Migration_Harness                    Version900_Migration_Harness
+	Version910_Migration_Harness                    Version910_Migration_Harness
 	ACLInheritanceHarness                           ACLInheritanceHarness
 }

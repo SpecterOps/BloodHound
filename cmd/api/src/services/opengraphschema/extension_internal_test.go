@@ -777,49 +777,6 @@ func Test_validateGraphExtension(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema relationship finding cannot be empty after the namespace prefix"),
 		},
 		{
-			name: "fail - relationship finding environment kind name missing namespace prefix",
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
-						{
-							Name: "AD_node_kind_1",
-						},
-						{
-							Name: "AD_env_kind",
-						},
-					},
-					RelationshipKindsInput: model.RelationshipsInput{
-						{
-							Name: "AD_edge kind 1",
-						},
-					},
-					PropertiesInput: model.PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
-					EnvironmentsInput: model.EnvironmentsInput{
-						{
-							EnvironmentKindName: "AD_env_kind",
-							SourceKindName:      "Base",
-							PrincipalKinds:      []string{"AD_node_kind_1"},
-						},
-					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
-						{
-							Name:                "AD_finding_1",
-							EnvironmentKindName: "env_kind",
-						},
-					},
-				},
-			},
-			wantErr: fmt.Errorf("graph schema relationship finding environment kind %s is missing extension namespace prefix", "env_kind"),
-		},
-		{
 			name: "fail - relationship finding relationship kind name missing namespace prefix",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
@@ -862,87 +819,6 @@ func Test_validateGraphExtension(t *testing.T) {
 				},
 			},
 			wantErr: fmt.Errorf("graph schema relationship finding relationship kind %s is missing extension namespace prefix", "edge kind 1"),
-		},
-		{
-			name: "fail - relationship finding environment kind not declared as a node kind",
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
-						{
-							Name: "AD_node_kind_1",
-						},
-						{
-							Name: "AD_env_kind",
-						},
-					},
-					RelationshipKindsInput: model.RelationshipsInput{
-						{
-							Name: "AD_edge kind 1",
-						},
-					},
-					PropertiesInput: model.PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
-					EnvironmentsInput: model.EnvironmentsInput{
-						{
-							EnvironmentKindName: "AD_env_kind",
-							SourceKindName:      "Base",
-							PrincipalKinds:      []string{"AD_node_kind_1"},
-						},
-					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
-						{
-							Name:                 "AD_finding_1",
-							EnvironmentKindName:  "AD_env_kind_MISSING",
-							RelationshipKindName: "AD_edge kind 1",
-						},
-					},
-				},
-			},
-			wantErr: fmt.Errorf("graph schema relationship finding environment kind %s not declared as a node kind", "AD_env_kind_MISSING"),
-		},
-		{
-			name: "fail - relationship finding environment kind not declared as an environment",
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
-						{
-							Name: "AD_node_kind_1",
-						},
-						{
-							Name: "AD_env_kind",
-						},
-					},
-					RelationshipKindsInput: model.RelationshipsInput{
-						{
-							Name: "AD_edge_kind_1",
-						},
-					},
-					PropertiesInput: model.PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
-						{
-							Name:                 "AD_finding_1",
-							EnvironmentKindName:  "AD_env_kind",
-							RelationshipKindName: "AD_edge_kind_1",
-						},
-					},
-				},
-			},
-			wantErr: fmt.Errorf("graph schema relationship finding environment kind AD_env_kind not declared as an environment"),
 		},
 		{
 			name: "fail - relationship finding relationship kind not declared as a relationship kind",

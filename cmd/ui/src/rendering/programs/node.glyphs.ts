@@ -14,6 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+/* eslint-disable no-useless-assignment */
+/* stop strict complaints about `i` from eslint */
+
 /**
  * Sigma.js WebGL Renderer Node Program
  * =====================================
