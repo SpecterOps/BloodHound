@@ -51,6 +51,29 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 	}
 }
 
+func Version_910_Migration(ctx context.Context, db graph.Database) error {
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove AD Group kind from non-AD nodes")()
+
+	criteria := query.And(
+		query.Not(query.KindIn(query.Node(), ad.Entity)),
+		query.KindIn(query.Node(), ad.Group),
+	)
+
+	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		if nodes, err := ops.FetchNodes(tx.Nodes().Filter(criteria)); err != nil {
+			return err
+		} else {
+			for _, node := range nodes {
+				node.DeleteKinds(ad.Group)
+				if err := tx.UpdateNode(node); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+}
+
 func Version_900_Migration(ctx context.Context, db graph.Database) error {
 	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove environment_id property from nodes and reassign to environmentid property")()
 
@@ -614,5 +637,9 @@ var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 9, Minor: 0, Patch: 0},
 		Execute: Version_900_Migration,
+	},
+	{
+		Version: version.Version{Major: 9, Minor: 1, Patch: 0},
+		Execute: Version_910_Migration,
 	},
 }
