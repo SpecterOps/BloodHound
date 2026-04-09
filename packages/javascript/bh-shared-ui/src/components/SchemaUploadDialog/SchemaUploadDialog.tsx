@@ -25,7 +25,9 @@ import {
     DialogTrigger,
 } from 'doodle-ui';
 import { useState } from 'react';
-import { useExecuteOnFileDrag } from '../../hooks';
+import { useExecuteOnFileDrag, usePermissions } from '../../hooks';
+import { Permission } from '../../utils';
+import { ConditionalTooltip } from '../ConditionalTooltip';
 import FileDrop from '../FileDrop';
 import FileStatusListItem from '../FileStatusListItem';
 import { FileStatus } from '../FileUploadDialog';
@@ -34,6 +36,9 @@ import { useSchemaUploadHandlers } from './useSchemaUploadHandlers';
 export const SchemaUploadDialog = () => {
     const [dialogOpen, setDialogOpen] = useState<boolean>(false);
     const { file, uploadProgress, handleFileDrop, handleUpload, resetDialog } = useSchemaUploadHandlers();
+
+    const { checkPermission } = usePermissions();
+    const hasUploadPermission = checkPermission(Permission.OPENGRAPH_WRITE);
 
     // Dragging a file into the window displays the dialog. The normal global file upload drag and drop behavior is
     // disabled for the OpenGraph Management page
@@ -45,14 +50,19 @@ export const SchemaUploadDialog = () => {
         <Dialog
             open={dialogOpen}
             onOpenChange={(open) => {
+                if (!hasUploadPermission) return;
                 if (open) resetDialog();
                 setDialogOpen(open);
             }}>
-            <DialogTrigger asChild>
-                <Button className='self-start' variant='secondary'>
-                    Upload File
-                </Button>
-            </DialogTrigger>
+            <ConditionalTooltip condition={!hasUploadPermission} tooltip='You do not have permission to upload files.'>
+                <DialogTrigger asChild>
+                    <span className='self-start' tabIndex={!hasUploadPermission ? 0 : undefined}>
+                        <Button variant='secondary' disabled={!hasUploadPermission}>
+                            Upload File
+                        </Button>
+                    </span>
+                </DialogTrigger>
+            </ConditionalTooltip>
             <DialogContent>
                 <DialogTitle>Upload Schema Files</DialogTitle>
                 <DialogDescription className='sr-only'>
@@ -60,7 +70,7 @@ export const SchemaUploadDialog = () => {
                 </DialogDescription>
                 <FileDrop
                     onDrop={handleFileDrop}
-                    disabled={!!file}
+                    disabled={!!file || !hasUploadPermission}
                     multiple={false}
                     icon={faCubes}
                     accept={['application/json']}
