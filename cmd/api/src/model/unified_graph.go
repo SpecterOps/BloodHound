@@ -25,15 +25,6 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-func GetNodeKindDisplayLabel(validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.Node) string {
-	return GetNodeKind(validPrimaryKinds, node).String()
-}
-
-// GetNodeKind - returns the primary kind of the node.
-func GetNodeKind(validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.Node) graph.Kind {
-	return graphschema.PrimaryNodeKind(validPrimaryKinds, node.Kinds)
-}
-
 // UnifiedGraphWPropertyKeys
 type UnifiedGraphWPropertyKeys struct {
 	NodeKeys []string               `json:"node_keys,omitempty"`
@@ -94,7 +85,7 @@ func FromDAWGSNode(validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.
 	// only generic-ingested nodes have the PrimaryKind property set to control what icon the UI displays.
 	kind := primaryKind
 	if kind == "" {
-		kind = GetNodeKind(validPrimaryKinds, node).String()
+		kind = graphschema.GetNodeKind(validPrimaryKinds, node).String()
 	}
 
 	var properties map[string]any

@@ -24,13 +24,13 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dataquality"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	azureAnalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -168,7 +168,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 	}
 
 	if !tieringEnabled {
-		if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB, model.GetNodeKindDisplayLabel); err != nil {
+		if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB, graphschema.GetNodeKindDisplayLabel); err != nil {
 			collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
 			agiFailed = true
 		}

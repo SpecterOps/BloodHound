@@ -24,6 +24,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 	"gorm.io/gorm"
 )
@@ -86,7 +87,7 @@ type OpenGraphSchema interface {
 	GetPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error)
 	DeletePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error
 
-	GetValidDisplayKinds(ctx context.Context) (map[graph.Kind]bool, error)
+	GetValidDisplayKinds(ctx context.Context) (graphschema.ValidPrimaryKinds, error)
 }
 
 const (
@@ -362,7 +363,6 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 // GetDisplayGraphSchemaNodeKinds - returns a map of display kinds where the key is the node kind name and the value is the entire schema node kind row.
 // An empty map will be returned if no valid node kinds exist. An error will be returned if encountered.
 func (s *BloodhoundDB) GetDisplayGraphSchemaNodeKinds(ctx context.Context) (model.GraphSchemaNodeKindMap, error) {
-
 	if displaySchemaNodeKinds, _, err := s.GetGraphSchemaNodeKinds(ctx, model.Filters{"is_display_kind": []model.Filter{
 		{
 			Operator:    model.Equals,
@@ -1247,8 +1247,7 @@ func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId in
 
 // GetValidDisplayKinds - returns a map of all node kinds that are display kinds.
 // An empty map will be returned if no valid node kinds exist. An error will be returned if encountered.
-func (s *BloodhoundDB) GetValidDisplayKinds(ctx context.Context) (map[graph.Kind]bool, error) {
-
+func (s *BloodhoundDB) GetValidDisplayKinds(ctx context.Context) (graphschema.ValidPrimaryKinds, error) {
 	if displaySchemaNodeKinds, err := s.GetDisplayGraphSchemaNodeKinds(ctx); err != nil {
 		return nil, err
 	} else {

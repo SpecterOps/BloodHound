@@ -17,7 +17,6 @@
 package azure
 
 import (
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/analysis/tiering"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
@@ -80,7 +79,7 @@ func FromGraphNodes(primaryNodeKinds graphschema.ValidPrimaryKinds, nodes []*gra
 // FromGraphNode takes a *graph.Node and converts it to serializable node struct.
 func FromGraphNode(primaryNodeKinds graphschema.ValidPrimaryKinds, node *graph.Node) Node {
 	return Node{
-		Kind:          model.GetNodeKindDisplayLabel(primaryNodeKinds, node),
+		Kind:          graphschema.GetNodeKindDisplayLabel(primaryNodeKinds, node),
 		Kinds:         node.Kinds.Strings(),
 		IsTierZero:    tiering.IsTierZero(node),
 		IsOwnedObject: tiering.IsOwned(node),

@@ -533,7 +533,7 @@ func parseAGMembersFromNodes(validPrimaryKinds graphschema.ValidPrimaryKinds, no
 		agMember := api.AssetGroupMember{
 			AssetGroupID: assetGroupID,
 			ObjectID:     memberObjectId,
-			PrimaryKind:  model.GetNodeKindDisplayLabel(validPrimaryKinds, node),
+			PrimaryKind:  graphschema.GetNodeKindDisplayLabel(validPrimaryKinds, node),
 			Kinds:        node.Kinds.Strings(),
 			Name:         memberName,
 			CustomMember: isCustomMember,

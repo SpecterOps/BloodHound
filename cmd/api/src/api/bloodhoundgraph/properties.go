@@ -17,7 +17,6 @@
 package bloodhoundgraph
 
 import (
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/analysis/tiering"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
@@ -36,7 +35,7 @@ func getNodeDisplayProperties(validPrimaryKinds graphschema.ValidPrimaryKinds, t
 	}
 
 	// Set the legacy node type
-	properties["nodetype"] = model.GetNodeKindDisplayLabel(validPrimaryKinds, target)
+	properties["nodetype"] = graphschema.GetNodeKindDisplayLabel(validPrimaryKinds, target)
 
 	// Append the kinds for pz glyph
 	properties["kinds"] = target.Kinds.Strings()
@@ -46,7 +45,7 @@ func getNodeDisplayProperties(validPrimaryKinds graphschema.ValidPrimaryKinds, t
 
 func SetAssetGroupPropertiesForNode(validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.Node) *graph.Node {
 	node.Properties.Set("category", "Asset Groups")
-	node.Properties.Set("type", model.GetNodeKindDisplayLabel(validPrimaryKinds, node))
+	node.Properties.Set("type", graphschema.GetNodeKindDisplayLabel(validPrimaryKinds, node))
 	node.Properties.Set("level", 0)
 	return node
 }

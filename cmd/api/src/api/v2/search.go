@@ -103,7 +103,7 @@ func graphNodeToSearchResult(node *graph.Node, validPrimaryKinds graphschema.Val
 		objectID, _          = node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 		distinguishedName, _ = node.Properties.GetOrDefault(ad.DistinguishedName.String(), "").String()
 		systemTags, _        = node.Properties.GetOrDefault(common.SystemTags.String(), "").String()
-		kindLabel            = model.GetNodeKindDisplayLabel(validPrimaryKinds, node)
+		kindLabel            = graphschema.GetNodeKindDisplayLabel(validPrimaryKinds, node)
 	)
 
 	return model.SearchResult{

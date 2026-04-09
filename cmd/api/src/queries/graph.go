@@ -1053,7 +1053,7 @@ func (s *GraphQuery) GetEntityResults(ctx context.Context, validPrimaryKinds mod
 	case model.DataTypeGraph:
 		return s.runPathQuery(ctx, validPrimaryKinds, customNodeKinds, node, params.PathDelegate)
 	case model.DataTypeList:
-		return s.runListQuery(ctx, validPrimaryKinds, node, params, cacheEnabled)
+		return s.runListQuery(ctx, validPrimaryKinds.ToKindsMap(), node, params, cacheEnabled)
 	case model.DataTypeCount:
 		return s.runCountQuery(ctx, node, params, cacheEnabled)
 	default:
@@ -1108,7 +1108,7 @@ func fromGraphNodes(validPrimaryKinds graphschema.ValidPrimaryKinds, nodes graph
 			nodeEntry.Name = name
 		}
 
-		nodeEntry.Label = model.GetNodeKindDisplayLabel(validPrimaryKinds, node)
+		nodeEntry.Label = graphschema.GetNodeKindDisplayLabel(validPrimaryKinds, node)
 		nodeEntry.Kinds = node.Kinds.Strings()
 
 		renderedNodes = append(renderedNodes, nodeEntry)

@@ -100,3 +100,12 @@ func PrimaryNodeKind(validPrimaryKinds ValidPrimaryKinds, kinds graph.Kinds) gra
 		return resultKind
 	}
 }
+
+func GetNodeKindDisplayLabel(validPrimaryKinds ValidPrimaryKinds, node *graph.Node) string {
+	return GetNodeKind(validPrimaryKinds, node).String()
+}
+
+// GetNodeKind - returns the primary kind of the node.
+func GetNodeKind(validPrimaryKinds ValidPrimaryKinds, node *graph.Node) graph.Kind {
+	return PrimaryNodeKind(validPrimaryKinds, node.Kinds)
+}

@@ -37,7 +37,7 @@ func NodeToBloodHoundGraph(graphSchemaNodeValidDisplayKinds model.GraphSchemaNod
 	// Add custom node kinds to valid primary kinds
 	maps.Copy(validPrimaryKinds, customNodeKinds.ValidKinds())
 	var (
-		nodeKindLabel       = model.GetNodeKindDisplayLabel(validPrimaryKinds, node)
+		nodeKindLabel       = graphschema.GetNodeKindDisplayLabel(validPrimaryKinds, node)
 		name, _             = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
 		bloodHoundGraphNode = BloodHoundGraphNode{
 			BloodHoundGraphItem: &BloodHoundGraphItem{
