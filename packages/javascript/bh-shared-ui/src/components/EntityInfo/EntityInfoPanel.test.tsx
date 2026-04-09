@@ -19,7 +19,7 @@ import { render, screen } from '../../test-utils';
 
 import { AzureNodeKind } from '../../graphSchema';
 import { useRoleBasedFiltering } from '../../hooks';
-import { allSections } from '../../utils';
+import { allSections, NoEntitySelectedHeader } from '../../utils';
 import { ObjectInfoPanelContext } from '../../views';
 import EntityInfoPanel, { EntityInfoPanelProps } from './EntityInfoPanel';
 
@@ -81,5 +81,14 @@ describe('EntityInfoPanel', async () => {
         );
 
         expect(screen.queryByTestId('explore_entity-information-panel-role-based-filtering-badge')).toBeInTheDocument();
+    });
+
+    it('should display a none selected header and a message to select an object ', async () => {
+        render(<EntityInfoPanel {...testProps} selectedNode={null} showPlaceholderMessage={true} />);
+
+        const entityHeaderTitle = screen.getByText(NoEntitySelectedHeader);
+        const selectObjectMessage = screen.getByText(/Select an object to view the associated information/i);
+        expect(entityHeaderTitle).toBeInTheDocument();
+        expect(selectObjectMessage).toBeInTheDocument();
     });
 });
