@@ -59,7 +59,7 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
             <Tooltip tooltip={name} contentProps={{ side: 'bottom' }}>
                 <h6
                     data-testid='explore_entity-information-panel_header-text'
-                    className='truncate px-2 leading-10 grow'>
+                    className='truncate pl-2 pr-4 leading-10 grow'>
                     {name}
                 </h6>
             </Tooltip>
