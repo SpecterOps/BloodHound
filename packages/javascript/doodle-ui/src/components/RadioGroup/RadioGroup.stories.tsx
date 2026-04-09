@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import type { Meta, StoryObj } from '@storybook/react';
+import { useState } from 'react';
 import { RadioGroup, RadioItem } from './RadioGroup';
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
@@ -36,15 +37,17 @@ type Story = StoryObj<typeof meta>;
 export const Story: Story = {
     args: {},
     render: () => {
+        const [radioValue, setRadioValue] = useState('a');
         return (
-            <div>
-                <RadioGroup>
+            <>
+                <code className='mb-4 p-2 bg-slate-200 rounded block'>Value = {radioValue}</code>
+                <RadioGroup value={radioValue} onValueChange={(value) => setRadioValue(value)}>
                     <RadioItem value='a' label='Value a' />
                     <RadioItem value='b' label='Value b' />
                     <RadioItem value='c' label='Value c' />
                     <RadioItem value='d' label='Disabled' disabled />
                 </RadioGroup>
-            </div>
+            </>
         );
     },
 };
