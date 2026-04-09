@@ -280,7 +280,9 @@ func (s *Migrator) ExecuteNewMigrations() error {
 
 func (s *Migrator) bootstrapGoose() error {
 	fmt.Println("----------------bootstrap goose----------------")
-	// Use goose's actual table schema and ensure version 1 (baseline) is marked as applied
+	// Use goose's actual table schema and mark baseline migrations as applied
+	// Version 1 = FOSS baseline (00000000000001_init.sql)
+	// Version 2 = BHE baseline (00000000000002_init.sql)
 	result := s.DB.Exec(`
         CREATE TABLE IF NOT EXISTS goose_db_version (
             id SERIAL PRIMARY KEY,
@@ -290,7 +292,7 @@ func (s *Migrator) bootstrapGoose() error {
         );
 
         INSERT INTO goose_db_version (version_id, is_applied)
-        VALUES (1, true)
+        VALUES (1, true), (2, true)
         ON CONFLICT (version_id) DO NOTHING;
     `)
 	return result.Error
