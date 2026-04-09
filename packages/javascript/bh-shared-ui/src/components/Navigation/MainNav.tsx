@@ -33,7 +33,7 @@ const isExpandedStorageKey = 'isNavExpanded';
 
 export const MainNavLogo: FC<{ data: MainNavLogoDataObject }> = ({ data }) => {
     return (
-        <div className='pt-2 overflow-hidden' data-testid='global_nav-home'>
+        <div className='flex-none basis-10 m-2 mt-4 mb-6 overflow-hidden' data-testid='global_nav-home'>
             <AppLink to={data.project.route}>{data.project.icon}</AppLink>
         </div>
     );
@@ -57,14 +57,14 @@ const MainNavListItem: FC<{
     const isSubNavVisible = subNav && isSubNavOpen;
 
     // Handles nav item text color and background with hover/active interactions
-    const navItemContainerClasses = cn('h-10 text-xl px-2 rounded overflow-hidden flex items-center cursor-pointer', {
+    const navItemContainerClasses = cn('text-xl rounded flex items-center cursor-pointer', {
         'text-primary dark:text-[#8D8BF8] bg-neutral-4': isActiveRoute || isActiveSubNavRoute,
         'group hover:text-primary-variant hover:dark:text-[#7B78FD] hover:bg-neutral-3 dark:hover:bg-[#1A1A1A]':
             !isActiveRoute && !isActiveSubNavRoute,
     });
 
     // Full width ensures that even clicking white space activates menu item
-    const navItemClasses = 'w-full flex items-center gap-x-2 group-hover:cursor-pointer';
+    const navItemClasses = 'h-10 w-full px-2 flex items-center gap-x-2 group-hover:cursor-pointer';
 
     const labelElement = (
         <span className='whitespace-nowrap flex items-center gap-x-2'>
@@ -127,13 +127,15 @@ const MainNavListItem: FC<{
     );
 };
 
-const MainNavFooter: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
+const MainNavFooter: FC<{
+    /** Object containing image props */
+    image: MainNavLogoDataObject['specterOps']['image'];
+}> = ({ image }) => {
     const { data: apiVersionResponse, isSuccess } = useApiVersion();
     const apiVersion = isSuccess && apiVersionResponse?.server_version;
-    const logoImage = mainNavData.logo.specterOps.image;
 
     return (
-        <div className='py-3 text-xs overflow-hidden'>
+        <div className='py-3 text-xs'>
             {/* Container div keeps footer content centered */}
             <div className='flex flex-col w-[264px] items-center gap-2'>
                 {/* App version */}
@@ -143,11 +145,11 @@ const MainNavFooter: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 <div className='flex items-center gap-1' data-testid='global_nav-powered-by'>
                     powered by
                     <img
-                        src={logoImage.imageUrl}
-                        alt={logoImage.altText}
-                        height={logoImage.dimensions.height}
-                        width={logoImage.dimensions.width}
-                        className={logoImage.classes}
+                        src={image.imageUrl}
+                        alt={image.altText}
+                        height={image.dimensions.height}
+                        width={image.dimensions.width}
+                        className={image.classes}
                     />
                 </div>
             </div>
@@ -182,56 +184,59 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     const handleToggleNav = () => setIsExpanded(!isExpanded);
 
     return (
-        <nav
-            className={cn(
-                'flex flex-col w-nav-width h-full p-2 font-medium shadow-md z-nav print:hidden',
-                'transition-all duration-300 ease-in',
-                'bg-[#F2F2F2] dark:bg-[#1F1F1F]',
-                { 'w-nav-width-expanded': isExpanded }
-            )}>
-            {/* Bloodhound logo */}
-            <MainNavLogo data={mainNavData.logo} />
-
+        <>
             {/* Nav expand/collapse button */}
-            <div className='text-right z-navToggle'>
-                <Button
-                    aria-expanded={isExpanded}
-                    aria-label='Toggle Navigation'
-                    // Negative right margin allows button to hover outside nav bar bounds
-                    className={cn(
-                        'w-6 h-6 -mr-5 border-none',
-                        'text-[#121212] dark:text-white',
-                        'bg-neutral-4 dark:bg-neutral-5',
-                        'hover:bg-[#B2B8BE] dark:hover:bg-neutral-3',
-                        'active:ring-0 active:bg-[#C0C6CB] dark:active:bg-neutral-2',
-                        'focus:text-[#121212] dark:focus:text-white',
-                        'focus:ring-2 focus:ring-offset-2 focus:ring-secondary dark:focus:ring-offset-[#1F1F1F]',
-                        { 'rotate-180': isExpanded }
-                    )}
-                    onClick={handleToggleNav}
-                    variant='icon'>
-                    <FontAwesomeIcon icon={faCaretRight} />
-                </Button>
-            </div>
+            <Button
+                aria-expanded={isExpanded}
+                aria-label='Toggle Navigation'
+                // Negative right margin allows button to hover outside nav bar bounds
+                className={cn(
+                    'absolute top-14 w-6 h-6 border-none z-navToggle',
+                    'transition-all duration-300 ease-in',
+                    'text-[#121212] dark:text-white',
+                    'bg-neutral-4 dark:bg-neutral-5',
+                    'hover:bg-[#B2B8BE] dark:hover:bg-neutral-3',
+                    'active:ring-0 active:bg-[#C0C6CB] dark:active:bg-neutral-2',
+                    'focus:text-[#121212] dark:focus:text-white',
+                    'focus:ring-2 focus:ring-offset-2 focus:ring-secondary dark:focus:ring-offset-[#1F1F1F]',
+                    {
+                        'rotate-180 left-[16.75rem]': isExpanded,
+                        'left-[2.75rem]': !isExpanded,
+                    }
+                )}
+                onClick={handleToggleNav}
+                variant='icon'>
+                <FontAwesomeIcon icon={faCaretRight} />
+            </Button>
 
-            {/* Nav menu top and bottom lists of items */}
-            <ul className='flex flex-col gap-4' data-testid='global_nav-primary-list'>
-                {mainNavData.primaryList.map((item: MainNavDataListItem) => (
-                    <MainNavListItem item={item} isExpanded={isExpanded} key={item.testId} />
-                ))}
-            </ul>
+            <nav
+                className={cn(
+                    'flex flex-col flex-none font-medium shadow-md z-nav print:hidden overflow-hidden',
+                    'transition-all duration-300 ease-in',
+                    'bg-[#F2F2F2] dark:bg-[#1F1F1F]',
+                    { 'basis-nav-width': !isExpanded, 'basis-nav-width-expanded': isExpanded }
+                )}>
+                {/* Bloodhound logo */}
+                <MainNavLogo data={mainNavData.logo} />
 
-            {/* Spacer to push footer to bottom */}
-            <div className='flex-1' />
+                <div className='flex flex-col h-full mx-2 overflow-x-hidden overflow-y-auto'>
+                    {/* Nav menu top and bottom lists of items */}
+                    <ul className='flex flex-col flex-grow gap-2' data-testid='global_nav-primary-list'>
+                        {mainNavData.primaryList.map((item: MainNavDataListItem) => (
+                            <MainNavListItem item={item} isExpanded={isExpanded} key={item.testId} />
+                        ))}
+                    </ul>
 
-            <ul className='flex flex-col gap-4' data-testid='global_nav-secondary-list'>
-                {mainNavData.secondaryList.map((item: MainNavDataListItem) => (
-                    <MainNavListItem item={item} isExpanded={isExpanded} key={item.testId} />
-                ))}
-            </ul>
+                    <ul className='flex flex-col gap-2 mt-2' data-testid='global_nav-secondary-list'>
+                        {mainNavData.secondaryList.map((item: MainNavDataListItem) => (
+                            <MainNavListItem item={item} isExpanded={isExpanded} key={item.testId} />
+                        ))}
+                    </ul>
 
-            <MainNavFooter mainNavData={mainNavData} />
-        </nav>
+                    <MainNavFooter image={mainNavData.logo.specterOps.image} />
+                </div>
+            </nav>
+        </>
     );
 };
 
