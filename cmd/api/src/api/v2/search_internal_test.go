@@ -120,7 +120,7 @@ func Test_filterAndFormatSearchResults(t *testing.T) {
 		input = []*graph.Node{
 			{Properties: inputNodeProps},
 		}
-		validPrimaryKinds graphschema.ValidPrimaryKinds
+		validPrimaryKinds = make(graphschema.ValidPrimaryKinds)
 	)
 	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", "font-awesome")
 
@@ -145,7 +145,7 @@ func Test_filterAndFormatSearchResults_default(t *testing.T) {
 		expectedObjectId          = graphschema.DefaultMissingObjectId
 		expectedDistinguishedName = ""
 
-		validPrimaryKinds graphschema.ValidPrimaryKinds
+		validPrimaryKinds = make(graphschema.ValidPrimaryKinds)
 	)
 	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", "font-awesome")
 
@@ -167,9 +167,9 @@ func Test_filterAndFormatSearchResults_includeOpenGraphNodes(t *testing.T) {
 			{Kinds: []graph.Kind{graph.StringKind("OtherKind"), graph.StringKind(customKind)},
 				Properties: inputNodeProps},
 		}
-		validPrimaryKinds graphschema.ValidPrimaryKinds
+		validPrimaryKinds = make(graphschema.ValidPrimaryKinds)
 	)
-	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", "font-awesome")
+	validPrimaryKinds.Add("CustomKind", "person-half-dress", "ff91af", "font-awesome")
 
 	actual := filterAndFormatSearchResults(input, nil, validPrimaryKinds)
 
@@ -203,7 +203,7 @@ func Test_filterAndFormatSearchResults_filterEnvironments(t *testing.T) {
 
 		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
 
-		validPrimaryKinds graphschema.ValidPrimaryKinds
+		validPrimaryKinds = make(graphschema.ValidPrimaryKinds)
 	)
 	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", "font-awesome")
 
@@ -244,7 +244,7 @@ func Test_filterAndFormatSearchResults_filterEnvironmentsEmpty(t *testing.T) {
 
 		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
 
-		validPrimaryKinds graphschema.ValidPrimaryKinds
+		validPrimaryKinds = make(graphschema.ValidPrimaryKinds)
 	)
 	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", "font-awesome")
 
@@ -278,7 +278,7 @@ func Test_filterAndFormatSearchResults_filterEnvironments_domainSIDFail(t *testi
 		}
 
 		input             = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
-		validPrimaryKinds graphschema.ValidPrimaryKinds
+		validPrimaryKinds = make(graphschema.ValidPrimaryKinds)
 	)
 	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", "font-awesome")
 
@@ -312,7 +312,7 @@ func Test_filterAndFormatSearchResults_filterEnvironments_tenantIDFail(t *testin
 
 		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
 
-		validPrimaryKinds graphschema.ValidPrimaryKinds
+		validPrimaryKinds = make(graphschema.ValidPrimaryKinds)
 	)
 	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", "font-awesome")
 
@@ -346,7 +346,7 @@ func Test_filterAndFormatSearchResults_filterEnvironmentsOG(t *testing.T) {
 
 		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
 
-		validPrimaryKinds graphschema.ValidPrimaryKinds
+		validPrimaryKinds = make(graphschema.ValidPrimaryKinds)
 	)
 	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", "font-awesome")
 

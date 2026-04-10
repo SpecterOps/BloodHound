@@ -29,6 +29,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
@@ -63,7 +64,7 @@ func TestResources_CypherQuery(t *testing.T) {
 		dogTagsOverrides dogtags.TestOverrides
 	}
 
-	validPrimaryKinds := map[graph.Kind]bool{graph.StringKind("KindA"): true}
+	validPrimaryKinds := graphschema.ValidPrimaryKinds{graph.StringKind("KindA"): graphschema.DisplayKind{}}
 
 	tt := []testData{
 		{

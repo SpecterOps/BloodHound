@@ -38,9 +38,9 @@ var (
 	ValidKinds = buildValidKinds()
 )
 
-func buildValidKinds() map[graph.Kind]bool {
+func buildValidKinds() ValidPrimaryKinds {
 	var (
-		validKinds = make(map[graph.Kind]bool)
+		validKinds = make(ValidPrimaryKinds)
 		kindSlices = []graph.Kinds{
 			ad.NodeKinds(),
 			ad.Relationships(),
@@ -53,7 +53,7 @@ func buildValidKinds() map[graph.Kind]bool {
 
 	for _, kindSlice := range kindSlices {
 		for _, kind := range kindSlice {
-			validKinds[kind] = true
+			validKinds[kind] = DisplayKind{}
 		}
 	}
 
@@ -99,7 +99,8 @@ func PrimaryNodeKind(validPrimaryKinds ValidPrimaryKinds, kinds graph.Kinds) gra
 	)
 
 	if validPrimaryKinds == nil {
-		slog.Error("PrimaryNodeKind: validPrimaryKinds is nil")
+		slog.Warn("PrimaryNodeKind: validPrimaryKinds is nil")
+		validPrimaryKinds = ValidKinds
 	}
 
 	for _, kind := range kinds {
