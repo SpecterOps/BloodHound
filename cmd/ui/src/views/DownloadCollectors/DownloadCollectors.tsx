@@ -16,7 +16,6 @@
 
 import { Alert, Box, Paper, Skeleton, Typography } from '@mui/material';
 import { CollectorCardList, DocumentationLinks, PageWithTitle, apiClient } from 'bh-shared-ui';
-import { RadioGroup, RadioItem } from 'doodle-ui';
 import { CommunityCollectorType } from 'js-client-library';
 import fileDownload from 'js-file-download';
 import { useState } from 'react';
@@ -164,18 +163,6 @@ const DownloadCollectors = () => {
                         />
                     )}
                 </Box>
-            </div>
-            <div className='border border-lime-500 mt-16 p-8'>
-                <div className='mb-4'>Value = {radioValue}</div>
-                <RadioGroup
-                    className='border inline-block'
-                    value={radioValue}
-                    onValueChange={(value) => setRadioValue(value)}>
-                    <RadioItem value='a' label='Value a stuff and things' />
-                    <RadioItem value='b' label='Value b' />
-                    <RadioItem value='c' label='Value c' />
-                    <RadioItem value='d' label='Disabled' disabled />
-                </RadioGroup>
             </div>
         </PageWithTitle>
     );
