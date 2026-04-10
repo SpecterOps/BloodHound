@@ -270,6 +270,7 @@ func (s *Migrator) ExecuteNewMigrations() error {
 		goose.DialectPostgres,
 		s.SqlDB,
 		s.GooseFS,
+		goose.WithAllowOutofOrder(true),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create goose provider: %w", err)
