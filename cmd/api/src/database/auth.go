@@ -31,7 +31,6 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	bhctx "github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -396,13 +395,6 @@ func (s *BloodhoundDB) CreateAuthToken(ctx context.Context, authToken model.Auth
 		if authToken.ExpiresAt.Time.Before(time.Now()) || authToken.ExpiresAt.Time.After(expirationDate) {
 			authToken.ExpiresAt = sql.NullTime{Time: expirationDate, Valid: true}
 		}
-	}
-
-	if user, isUser := auth.GetUserFromAuthCtx(bhctx.Get(ctx).AuthCtx); !isUser {
-		slog.Error("Failed to look up user from auth context")
-		return model.AuthToken{}, errors.New("user is not authenticated")
-	} else {
-		authToken.CreatedBy = uuid.NullUUID{UUID: user.ID, Valid: true}
 	}
 
 	return authToken, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {

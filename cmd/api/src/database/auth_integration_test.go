@@ -372,6 +372,7 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 				Unique: model.Unique{
 					ID: uuid.Must(uuid.NewV4()),
 				},
+				CreatedBy: database.NullUUID(user.ID),
 			},
 			model.AuthToken{
 				UserID:     database.NullUUID(user.ID),
@@ -382,6 +383,7 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 				Unique: model.Unique{
 					ID: uuid.Must(uuid.NewV4()),
 				},
+				CreatedBy: database.NullUUID(user.ID),
 			},
 			model.AuthToken{
 				ClientID:   database.NullUUID(clientId),
@@ -391,6 +393,7 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 				Unique: model.Unique{
 					ID: uuid.Must(uuid.NewV4()),
 				},
+				CreatedBy: database.NullUUID(user.ID),
 			},
 		}
 
@@ -434,6 +437,7 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 				Unique: model.Unique{
 					ID: uuid.Must(uuid.NewV4()),
 				},
+				CreatedBy: database.NullUUID(user.ID),
 			},
 			model.AuthToken{
 				ClientID:   database.NullUUID(clientId),
@@ -444,6 +448,7 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 				Unique: model.Unique{
 					ID: uuid.Must(uuid.NewV4()),
 				},
+				CreatedBy: database.NullUUID(user.ID),
 			},
 		}
 
@@ -495,6 +500,7 @@ func TestDatabase_DeleteExpiredAuthTokens(t *testing.T) {
 				Unique: model.Unique{
 					ID: uuid.Must(uuid.NewV4()),
 				},
+				CreatedBy: database.NullUUID(user.ID),
 			},
 			model.AuthToken{
 				UserID:     database.NullUUID(user.ID),
@@ -505,6 +511,7 @@ func TestDatabase_DeleteExpiredAuthTokens(t *testing.T) {
 				Unique: model.Unique{
 					ID: uuid.Must(uuid.NewV4()),
 				},
+				CreatedBy: database.NullUUID(user.ID),
 			},
 			model.AuthToken{
 				UserID:     database.NullUUID(user.ID),
@@ -515,6 +522,7 @@ func TestDatabase_DeleteExpiredAuthTokens(t *testing.T) {
 				Unique: model.Unique{
 					ID: uuid.Must(uuid.NewV4()),
 				},
+				CreatedBy: database.NullUUID(user.ID),
 			},
 			model.AuthToken{
 				ClientID:   database.NullUUID(clientId),
@@ -524,6 +532,7 @@ func TestDatabase_DeleteExpiredAuthTokens(t *testing.T) {
 				Unique: model.Unique{
 					ID: uuid.Must(uuid.NewV4()),
 				},
+				CreatedBy: database.NullUUID(user.ID),
 			},
 		}
 	)
@@ -557,6 +566,7 @@ func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {
 			Key:        "key",
 			HmacMethod: "fake",
 			Name:       null.StringFrom(expectedName),
+			CreatedBy:  database.NullUUID(user.ID),
 		}
 	)
 
@@ -597,6 +607,7 @@ func TestDatabase_DeleteAllAuthTokens(t *testing.T) {
 			Unique: model.Unique{
 				ID: uuid.Must(uuid.NewV4()),
 			},
+			CreatedBy: database.NullUUID(user.ID),
 		}
 		token2 = model.AuthToken{
 			UserID:     database.NullUUID(user.ID),
@@ -606,6 +617,7 @@ func TestDatabase_DeleteAllAuthTokens(t *testing.T) {
 			Unique: model.Unique{
 				ID: uuid.Must(uuid.NewV4()),
 			},
+			CreatedBy: database.NullUUID(user.ID),
 		}
 		clientToken1 = model.AuthToken{
 			ClientID:   database.NullUUID(testClientID),
@@ -615,6 +627,7 @@ func TestDatabase_DeleteAllAuthTokens(t *testing.T) {
 			Unique: model.Unique{
 				ID: uuid.Must(uuid.NewV4()),
 			},
+			CreatedBy: database.NullUUID(user.ID),
 		}
 		numTestTokens = 3
 	)
