@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -4528,14 +4529,16 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 }
 
 func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
-	assertContainsDisplayKind := func(t *testing.T, got map[graph.Kind]bool, name string) {
+	assertContainsDisplayKind := func(t *testing.T, got graphschema.ValidPrimaryKinds, name string) {
 		t.Helper()
-		assert.True(t, got[graph.StringKind(name)], "expected display kind %s to be present in result", name)
+		_, ok := got[graph.StringKind(name)]
+		assert.True(t, ok, "expected display kind %s to be present in result", name)
 	}
 
-	assertDoesNotContainDisplayKind := func(t *testing.T, got map[graph.Kind]bool, name string) {
+	assertDoesNotContainDisplayKind := func(t *testing.T, got graphschema.ValidPrimaryKinds, name string) {
 		t.Helper()
-		assert.False(t, got[graph.StringKind(name)], "expected kind %s to not be present in result", name)
+		_, ok := got[graph.StringKind(name)]
+		assert.False(t, ok, "expected kind %s to not be present in result", name)
 	}
 
 	tests := []struct {

@@ -266,7 +266,7 @@ func TestGetEntityResults(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
 	require.Nil(t, err)
 
-	validPrimaryKinds, err := dbInst.GetDisplayGraphSchemaNodeKinds(context.Background())
+	validPrimaryKinds, err := dbInst.GetValidDisplayKinds(context.Background())
 	require.NoError(t, err)
 
 	testContext.SetupActiveDirectory()
@@ -303,7 +303,7 @@ func TestGetEntityResults_QueryShorterThanSlowQueryThreshold(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
 	require.Nil(t, err)
 
-	validPrimaryKinds, err := dbInst.GetDisplayGraphSchemaNodeKinds(context.Background())
+	validPrimaryKinds, err := dbInst.GetValidDisplayKinds(context.Background())
 	require.NoError(t, err)
 
 	testContext.SetupActiveDirectory()
@@ -379,7 +379,7 @@ func TestGetEntityResults_Cache(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 2})
 	require.Nil(t, err)
 
-	validPrimaryKinds, err := dbInst.GetDisplayGraphSchemaNodeKinds(context.Background())
+	validPrimaryKinds, err := dbInst.GetValidDisplayKinds(context.Background())
 	require.NoError(t, err)
 
 	testContext.SetupActiveDirectory()
