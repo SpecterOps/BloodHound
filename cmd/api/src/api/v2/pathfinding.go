@@ -57,12 +57,10 @@ func (s Resources) GetPathfindingResult(response http.ResponseWriter, request *h
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: end_node", request), response)
 	} else if paths, err := s.GraphQuery.GetAllShortestPaths(request.Context(), startNodeObjectID, endNodeObjectID, nil); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error: %v", err), request), response)
-	} else if validPrimaryKinds, err := s.DB.GetDisplayGraphSchemaNodeKinds(request.Context()); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if customNodeKinds, err := s.DB.GetCustomNodeKindsMap(request.Context()); err != nil {
+	} else if validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		api.WriteBasicResponse(request.Context(), bloodhoundgraph.PathSetToBloodHoundGraph(validPrimaryKinds, customNodeKinds, paths), http.StatusOK, response)
+		api.WriteBasicResponse(request.Context(), bloodhoundgraph.PathSetToBloodHoundGraph(validPrimaryKinds, paths), http.StatusOK, response)
 	}
 }
 
@@ -286,16 +284,12 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 			api.HandleDatabaseError(request, response, err)
 		} else if nodes, err := s.GraphQuery.SearchByNameOrObjectID(request.Context(), openGraphSearchFeatureFlag.Enabled, searchValue, searchType); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error getting search results: %v", err), request), response)
-		} else if validPrimaryKinds, err := s.DB.GetDisplayGraphSchemaNodeKinds(request.Context()); err != nil {
+		} else if validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
-			var customNodeKinds model.CustomNodeKindMap
-			if customNodeKinds, err = s.DB.GetCustomNodeKindsMap(request.Context()); err != nil {
-				slog.Warn("Unable to fetch custom nodes from database; will fall back to defaults")
-			}
 			bhGraph := make(map[string]bloodhoundgraph.BloodHoundGraphNode)
 			for _, node := range nodes {
-				bhGraph[node.ID.String()] = bloodhoundgraph.NodeToBloodHoundGraph(validPrimaryKinds, customNodeKinds, node)
+				bhGraph[node.ID.String()] = bloodhoundgraph.NodeToBloodHoundGraph(validPrimaryKinds, node)
 			}
 
 			// ETAC DogTags filtering

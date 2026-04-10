@@ -17,9 +17,6 @@
 package bloodhoundgraph
 
 import (
-	"maps"
-
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -32,10 +29,7 @@ const (
 	defaultRelationshipColor   = "3a5464"
 )
 
-func NodeToBloodHoundGraph(graphSchemaNodeValidDisplayKinds model.GraphSchemaNodeKindMap, customNodeKinds model.CustomNodeKindMap, node *graph.Node) BloodHoundGraphNode {
-	validPrimaryKinds := graphSchemaNodeValidDisplayKinds.ToKindsMap()
-	// Add custom node kinds to valid primary kinds
-	maps.Copy(validPrimaryKinds, customNodeKinds.ValidKinds())
+func NodeToBloodHoundGraph(validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.Node) BloodHoundGraphNode {
 	var (
 		nodeKindLabel       = graphschema.GetNodeKindDisplayLabel(validPrimaryKinds, node)
 		name, _             = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
@@ -56,7 +50,7 @@ func NodeToBloodHoundGraph(graphSchemaNodeValidDisplayKinds model.GraphSchemaNod
 		}
 	)
 
-	bloodHoundGraphNode.SetFontIcon(nodeKindLabel, graphSchemaNodeValidDisplayKinds, customNodeKinds)
+	bloodHoundGraphNode.SetFontIcon(nodeKindLabel, validPrimaryKinds)
 
 	return bloodHoundGraphNode
 }
@@ -84,7 +78,7 @@ func RelationshipToBloodHoundGraph(rel *graph.Relationship) BloodHoundGraphLink 
 	}
 }
 
-func PathSetToBloodHoundGraph(graphSchemaNodeValidDisplayKinds model.GraphSchemaNodeKindMap, customNodeKinds model.CustomNodeKindMap, paths graph.PathSet) map[string]any {
+func PathSetToBloodHoundGraph(graphSchemaNodeValidDisplayKinds graphschema.ValidPrimaryKinds, paths graph.PathSet) map[string]any {
 	result := make(map[string]any)
 
 	for _, path := range paths.Paths() {
@@ -94,7 +88,7 @@ func PathSetToBloodHoundGraph(graphSchemaNodeValidDisplayKinds model.GraphSchema
 	}
 
 	for _, node := range paths.AllNodes() {
-		result[node.ID.String()] = NodeToBloodHoundGraph(graphSchemaNodeValidDisplayKinds, customNodeKinds, node)
+		result[node.ID.String()] = NodeToBloodHoundGraph(graphSchemaNodeValidDisplayKinds, node)
 	}
 
 	return result

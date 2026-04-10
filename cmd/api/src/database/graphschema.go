@@ -40,7 +40,6 @@ type OpenGraphSchema interface {
 	CreateGraphSchemaNodeKind(ctx context.Context, name string, extensionId int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.GraphSchemaNodeKind, error)
 	GetGraphSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.GraphSchemaNodeKind, error)
 	GetGraphSchemaNodeKinds(ctx context.Context, nodeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error)
-	GetDisplayGraphSchemaNodeKinds(ctx context.Context) (model.GraphSchemaNodeKindMap, error)
 	UpdateGraphSchemaNodeKind(ctx context.Context, schemaNodeKind model.GraphSchemaNodeKind) (model.GraphSchemaNodeKind, error)
 	UpdateGraphSchemaNodeKindIconById(ctx context.Context, kindId int32, icon model.CustomNodeIcon) (model.GraphSchemaNodeKind, error)
 	DeleteGraphSchemaNodeKind(ctx context.Context, schemaNodeKindId int32) error
@@ -358,26 +357,6 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 			}
 		}
 		return schemaNodeKinds, totalRowCount, nil
-	}
-}
-
-// GetDisplayGraphSchemaNodeKinds - returns a map of display kinds where the key is the node kind name and the value is the entire schema node kind row.
-// An empty map will be returned if no valid node kinds exist. An error will be returned if encountered.
-func (s *BloodhoundDB) GetDisplayGraphSchemaNodeKinds(ctx context.Context) (model.GraphSchemaNodeKindMap, error) {
-	if displaySchemaNodeKinds, _, err := s.GetGraphSchemaNodeKinds(ctx, model.Filters{"is_display_kind": []model.Filter{
-		{
-			Operator:    model.Equals,
-			Value:       "true",
-			SetOperator: model.FilterAnd,
-		},
-	}}, model.Sort{}, 0, 0); err != nil {
-		return nil, err
-	} else {
-		var displayKindsNodes = model.GraphSchemaNodeKindMap{}
-		for _, schemaNodeKind := range displaySchemaNodeKinds {
-			displayKindsNodes[schemaNodeKind.Name] = schemaNodeKind
-		}
-		return displayKindsNodes, nil
 	}
 }
 
@@ -1354,13 +1333,53 @@ func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId in
 	return nil
 }
 
-// GetValidDisplayKinds - returns a map of all node kinds that are display kinds.
-// An empty map will be returned if no valid node kinds exist. An error will be returned if encountered.
+// GetValidDisplayKinds - returns a map of all node kinds that are display kinds, this pulls from both custom_node_kinds(schemaless)
+// and schema_node_kinds to create a single source of truth for all valid node kinds
 func (s *BloodhoundDB) GetValidDisplayKinds(ctx context.Context) (graphschema.ValidPrimaryKinds, error) {
-	if displaySchemaNodeKinds, err := s.GetDisplayGraphSchemaNodeKinds(ctx); err != nil {
+	if displaySchemaNodeKinds, _, err := s.GetGraphSchemaNodeKinds(ctx, model.Filters{"is_display_kind": []model.Filter{
+		{
+			Operator:    model.Equals,
+			Value:       "true",
+			SetOperator: model.FilterAnd,
+		},
+	}}, model.Sort{}, 0, 0); err != nil {
+		return nil, err
+	} else if customNodeKinds, err := s.GetCustomNodeKinds(ctx, nil); err != nil {
 		return nil, err
 	} else {
-		return displaySchemaNodeKinds.ToKindsMap(), nil
+		var customNames []string
+		var customKindsByName = make(map[string]model.CustomNodeKind)
+		for _, kind := range customNodeKinds {
+			customNames = append(customNames, kind.KindName)
+			customKindsByName[kind.KindName] = kind
+		}
+		// Until work is complete to ensure custom_node_kinds are properly kind backed, this will filter out invalid kinds
+		if kinds, err := s.GetKindsByNames(ctx, customNames...); err != nil {
+			return nil, err
+		} else {
+			var validPrimaryKinds = make(graphschema.ValidPrimaryKinds)
+			for _, kind := range kinds {
+				customKind := customKindsByName[kind.Name]
+				validPrimaryKinds[kind.ToKind()] = graphschema.DisplayKind{
+					Name: kind.Name,
+					Icon: graphschema.DisplayKindIcon{
+						Name:  customKind.Config.Icon.Name,
+						Type:  customKind.Config.Icon.Type,
+						Color: customKind.Config.Icon.Color,
+					},
+				}
+			}
+			for _, kind := range displaySchemaNodeKinds {
+				validPrimaryKinds[kind.ToKind()] = graphschema.DisplayKind{
+					Name: kind.Name,
+					Icon: graphschema.DisplayKindIcon{
+						Name:  kind.Icon,
+						Color: kind.IconColor,
+					},
+				}
+			}
+			return validPrimaryKinds, nil
+		}
 	}
 }
 

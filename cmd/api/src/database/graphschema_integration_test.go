@@ -59,9 +59,9 @@ func registerAndGetKind(t *testing.T, testSuite IntegrationTestSuite, name strin
 func getKindByName(t *testing.T, testSuite IntegrationTestSuite, name string) model.Kind {
 	t.Helper()
 	// Create Kind by name from DAWGS Kind Table
-	kind, err := testSuite.BHDatabase.GetKindByName(testSuite.Context, name)
+	kind, err := testSuite.BHDatabase.GetKindsByNames(testSuite.Context, name)
 	require.NoError(t, err, "unexpected error occurred when getting kind by name")
-	return kind
+	return kind[0]
 }
 
 func createTestEnvironment(t *testing.T, testSuite IntegrationTestSuite, extensionID int32, envKindID int32, sourceKindID int32) model.SchemaEnvironment {

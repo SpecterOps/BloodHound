@@ -17,6 +17,8 @@
 package graphschema
 
 import (
+	"log/slog"
+
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -58,7 +60,29 @@ func buildValidKinds() map[graph.Kind]bool {
 	return validKinds
 }
 
-type ValidPrimaryKinds map[graph.Kind]bool
+type DisplayKindIcon struct {
+	Type  string
+	Name  string
+	Color string
+}
+
+type DisplayKind struct {
+	Name string
+	Icon DisplayKindIcon
+}
+
+type ValidPrimaryKinds map[graph.Kind]DisplayKind
+
+func (s ValidPrimaryKinds) Add(kindName, iconName, iconColor, iconType string) {
+	s[graph.StringKind(kindName)] = DisplayKind{
+		Name: kindName,
+		Icon: DisplayKindIcon{
+			Type:  iconType,
+			Name:  iconName,
+			Color: iconColor,
+		},
+	}
+}
 
 // PrimaryNodeKind - tests if the provided kinds contain a primary or meta kind.
 //
@@ -75,7 +99,7 @@ func PrimaryNodeKind(validPrimaryKinds ValidPrimaryKinds, kinds graph.Kinds) gra
 	)
 
 	if validPrimaryKinds == nil {
-		validPrimaryKinds = ValidKinds
+		slog.Error("PrimaryNodeKind: validPrimaryKinds is nil")
 	}
 
 	for _, kind := range kinds {
@@ -89,7 +113,7 @@ func PrimaryNodeKind(validPrimaryKinds ValidPrimaryKinds, kinds graph.Kinds) gra
 			if resultKind == UnknownKind {
 				resultKind = kind
 			}
-		} else if validPrimaryKinds[kind] {
+		} else if _, ok := validPrimaryKinds[kind]; ok {
 			return kind
 		}
 	}

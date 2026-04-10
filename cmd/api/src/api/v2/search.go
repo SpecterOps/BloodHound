@@ -20,8 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
-	"maps"
 	"net/http"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -44,8 +42,6 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		searchQuery     = queryParams.Get("q")
 		nodeTypes       = queryParams["type"]
 		ctx             = request.Context()
-		err             error
-		customNodeKinds model.CustomNodeKindMap
 		etacAllowedList []string
 	)
 
@@ -54,10 +50,6 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		return
 	} else if ShouldFilterForETAC(s.DogTags, user) {
 		etacAllowedList = ExtractEnvironmentIDsFromUser(&user)
-	}
-
-	if customNodeKinds, err = s.DB.GetCustomNodeKindsMap(request.Context()); err != nil {
-		slog.Warn("Unable to fetch custom nodes from database; will fall back to defaults")
 	}
 
 	if searchQuery == "" {
@@ -73,24 +65,18 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 	} else if nodes, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, searchableNodeKinds, searchQuery, skip, limit); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error: %v", err), request), response)
 	} else {
-		result := filterAndFormatSearchResults(nodes, etacAllowedList, validPrimaryKinds, customNodeKinds)
+		result := filterAndFormatSearchResults(nodes, etacAllowedList, validPrimaryKinds)
 
 		api.WriteBasicResponse(request.Context(), result, http.StatusOK, response)
 	}
 }
 
-func filterAndFormatSearchResults(nodes []*graph.Node, etacAllowedList []string, validPrimaryKinds graphschema.ValidPrimaryKinds, customNodeKinds model.CustomNodeKindMap) []model.SearchResult {
-	var (
-		results    []model.SearchResult
-		validKinds = customNodeKinds.ValidKinds()
-	)
-
-	// Add custom node kinds to valid primary kinds
-	maps.Copy(validKinds, validPrimaryKinds)
+func filterAndFormatSearchResults(nodes []*graph.Node, etacAllowedList []string, validPrimaryKinds graphschema.ValidPrimaryKinds) []model.SearchResult {
+	var results []model.SearchResult
 
 	for _, node := range nodes {
 		if !nodeGatedByETAC(etacAllowedList, node) {
-			results = append(results, graphNodeToSearchResult(node, validKinds))
+			results = append(results, graphNodeToSearchResult(node, validPrimaryKinds))
 		}
 	}
 
