@@ -47,6 +47,10 @@ type CustomNodeKind struct {
 	Config           CustomNodeKindConfig `json:"config"`
 }
 
+func (s CustomNodeKind) TableName() string {
+	return "custom_node_kinds"
+}
+
 func (s CustomNodeKind) AuditData() AuditData {
 	return AuditData{
 		"id":     s.ID,
