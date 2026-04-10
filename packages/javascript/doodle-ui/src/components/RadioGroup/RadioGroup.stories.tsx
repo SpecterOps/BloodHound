@@ -40,13 +40,13 @@ export const Story: Story = {
         const [radioValue, setRadioValue] = useState('a');
         return (
             <>
-                <code className='mb-4 p-2 bg-slate-200 dark:bg-slate-700 rounded block'>Value = {radioValue}</code>
                 <RadioGroup value={radioValue} onValueChange={(value) => setRadioValue(value)} {...args}>
                     <RadioItem value='a' label='Value a' />
                     <RadioItem value='b' label='Value b' />
                     <RadioItem value='c' label='Value c' />
                     <RadioItem value='d' label='Disabled' disabled />
                 </RadioGroup>
+                <code className='mt-12 p-2 bg-slate-200 dark:bg-slate-700 rounded block'>value = {radioValue}</code>
             </>
         );
     },

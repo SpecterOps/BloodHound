@@ -24,7 +24,12 @@ interface RadioGroupProps extends React.ComponentPropsWithoutRef<typeof RadioGro
 }
 
 /**
- * Description for RadioGroup
+ * Implementation:
+ *
+ * `<RadioGroup  value={}  onValueChange={(value) =>  doStuff(value)}>...`
+ *
+ * Props:
+ * - row?: boolean -- optional prop to display radio items horizontally
  */
 
 const RadioGroup = React.forwardRef<React.ElementRef<typeof RadioGroupPrimitive.Root>, RadioGroupProps>(
@@ -43,12 +48,12 @@ interface RadioGroupItemProps extends React.ComponentPropsWithoutRef<typeof Radi
 
 const RadioItem = React.forwardRef<React.ElementRef<typeof RadioGroupPrimitive.Item>, RadioGroupItemProps>(
     ({ className, label, value, ...props }, ref) => (
-        <div className='flex items-center mb-1 px-1 mr-4 rounded-md focus-within:outline focus-within:outline-2 focus-within:outline-secondary'>
+        <div className='flex items-center mb-1 px-1 mr-4 rounded-md [&:has(:focus-visible)]:ring-2 [&:has(:focus-visible)]:ring-secondary '>
             <RadioGroupPrimitive.Item
                 value={value}
                 ref={ref}
                 className={cn(
-                    'w-4 h-4 rounded rounded-full border border-neutral-5 dark:border-neutral-light-5 hover:border-secondary dark:hover:border-secondary-variant-2 active:border-primary-variant mr-3 relative data-[disabled]:border-neutral-4 data-[disabled]:bg-neutral-2 peer',
+                    'w-4 h-4 rounded rounded-full border border-neutral-5 dark:border-neutral-light-5 hover:border-secondary dark:hover:border-secondary-variant-2 active:border-primary-variant mr-2 relative data-[disabled]:border-neutral-4 data-[disabled]:bg-neutral-2 peer',
                     className
                 )}
                 {...props}>
