@@ -28,12 +28,10 @@ const meta = {
     tags: ['autodocs'],
     // More on argTypes: https://storybook.js.org/docs/api/argtypes
     argTypes: {
-        size: { options: ['small', 'medium', 'large'], control: 'select' },
         label: { control: 'text' },
         labelPosition: { options: ['left', 'right'], control: 'select' },
     },
     args: {
-        size: 'medium',
         labelPosition: 'right',
     },
 } satisfies Meta<typeof Switch>;
@@ -77,39 +75,35 @@ export const Base: Story = {
     },
 };
 
-export const Disabled: Story = {
-    args: {
-        disabled: true,
-    },
-};
-
 export const DefaultChecked: Story = {
     args: {
         defaultChecked: true,
     },
 };
 
-export const Small: Story = {
+export const Disabled: Story = {
     args: {
-        size: 'small',
+        disabled: true,
     },
 };
 
-export const Large: Story = {
+export const DisabledChecked: Story = {
     args: {
-        size: 'large',
+        disabled: true,
+        defaultChecked: true,
+        label: 'Label',
     },
 };
 
 export const Labeled: Story = {
     args: {
-        label: 'Muted',
+        label: 'Label',
     },
 };
 
 export const LeftLabeled: Story = {
     args: {
-        label: 'Muted',
+        label: 'Label',
         labelPosition: 'left',
     },
 };
