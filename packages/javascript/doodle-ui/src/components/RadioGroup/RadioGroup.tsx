@@ -49,21 +49,23 @@ interface RadioGroupItemProps extends React.ComponentPropsWithoutRef<typeof Radi
 const RadioItem = React.forwardRef<React.ElementRef<typeof RadioGroupPrimitive.Item>, RadioGroupItemProps>(
     ({ className, label, value, ...props }, ref) => (
         <div className='flex items-center mb-1 px-1 mr-4 rounded-md [&:has(:focus-visible)]:ring-2 [&:has(:focus-visible)]:ring-secondary '>
-            <RadioGroupPrimitive.Item
-                value={value}
-                ref={ref}
-                className={cn(
-                    'w-4 h-4 rounded rounded-full border border-neutral-5 dark:border-neutral-light-5 hover:border-secondary dark:hover:border-secondary-variant-2 active:border-primary-variant mr-2 relative data-[disabled]:border-neutral-4 data-[disabled]:bg-neutral-2 peer',
-                    className
-                )}
-                {...props}>
-                <RadioGroupPrimitive.Indicator
+            <Label className='font-normal cursor-pointer flex items-center'>
+                <RadioGroupPrimitive.Item
+                    value={value}
+                    ref={ref}
                     className={cn(
-                        'bg-primary dark:bg-secondary-variant-2 w-2 h-2 rounded rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
+                        'w-4 h-4 rounded rounded-full border border-neutral-5 dark:border-neutral-light-5 hover:border-secondary dark:hover:border-secondary-variant-2 active:border-primary-variant mr-2 relative data-[disabled]:border-neutral-4 data-[disabled]:bg-neutral-2 peer',
+                        className
                     )}
-                />
-            </RadioGroupPrimitive.Item>
-            <Label className='font-normal'>{label}</Label>
+                    {...props}>
+                    <RadioGroupPrimitive.Indicator
+                        className={cn(
+                            'bg-primary dark:bg-secondary-variant-2 w-2 h-2 rounded rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
+                        )}
+                    />
+                </RadioGroupPrimitive.Item>
+                <span>{label}</span>
+            </Label>
         </div>
     )
 );
