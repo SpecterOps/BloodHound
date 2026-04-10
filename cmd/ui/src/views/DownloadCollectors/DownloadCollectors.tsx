@@ -18,7 +18,6 @@ import { Alert, Box, Paper, Skeleton, Typography } from '@mui/material';
 import { CollectorCardList, DocumentationLinks, PageWithTitle, apiClient } from 'bh-shared-ui';
 import { CommunityCollectorType } from 'js-client-library';
 import fileDownload from 'js-file-download';
-import { useState } from 'react';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { useGetCollectorsByType } from 'src/hooks/useCollectors';
 import { useAppDispatch } from 'src/store';
@@ -69,8 +68,6 @@ const DownloadCollectors = () => {
                 );
             });
     };
-
-    const [radioValue, setRadioValue] = useState('a');
 
     /* Implementation */
     return (
