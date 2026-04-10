@@ -14,20 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package datapipe
+package analysis
 
 import (
 	"context"
-
 	"log/slog"
 	"sync"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	commonanalysis "github.com/specterops/bloodhound/packages/go/analysis"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	azureAnalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -200,7 +199,7 @@ func parallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 			}
 		}()
 
-		for workerID := 0; workerID < commonanalysis.MaximumDatabaseParallelWorkers; workerID++ {
+		for workerID := 0; workerID < post.MaximumDatabaseParallelWorkers; workerID++ {
 			writerWG.Add(1)
 
 			go func(workerID int) {

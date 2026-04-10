@@ -16,7 +16,7 @@
 
 //go:build integration
 
-package datapipe
+package analysis
 
 import (
 	"context"

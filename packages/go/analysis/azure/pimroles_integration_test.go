@@ -22,9 +22,9 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
-	azureAnalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
+	"github.com/specterops/bloodhound/packages/go/analysis/azure"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
-	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	graphAzure "github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
@@ -40,15 +40,15 @@ func TestAzurePIMRolesAZRoleApprover(t *testing.T) {
 		harness.AZPIMRolesHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		stats, err := azureAnalysis.CreateAZRoleApproverEdge(testContext.Context(), db)
+		stats, err := azure.CreateAZRoleApproverEdge(testContext.Context(), db)
 		require.NoError(t, err)
 
 		require.NotNil(t, stats)
 		require.NotEmpty(t, stats.RelationshipsCreated)
-		assert.Equal(t, int32(10), *stats.RelationshipsCreated[azure.AZRoleApprover])
+		assert.Equal(t, int32(10), *stats.RelationshipsCreated[graphAzure.AZRoleApprover])
 
 		db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
-			results, err := ops.FetchRelationships(tx.Relationships().Filter(query.Kind(query.Relationship(), azure.AZRoleApprover)))
+			results, err := ops.FetchRelationships(tx.Relationships().Filter(query.Kind(query.Relationship(), graphAzure.AZRoleApprover)))
 			require.NoError(t, err)
 
 			assert.Equal(t, len(results), 10)
