@@ -19,15 +19,17 @@ import React from 'react';
 import { Label } from '../Label/Label';
 import { cn } from '../utils';
 
-interface RadioGroupProps extends React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root> {}
+interface RadioGroupProps extends React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root> {
+    row?: boolean;
+}
 
 /**
  * Description for RadioGroup
  */
 
 const RadioGroup = React.forwardRef<React.ElementRef<typeof RadioGroupPrimitive.Root>, RadioGroupProps>(
-    ({ className, children, ...props }, ref) => (
-        <RadioGroupPrimitive.Root ref={ref} className={cn(className)} {...props}>
+    ({ className, children, row, ...props }, ref) => (
+        <RadioGroupPrimitive.Root ref={ref} className={cn(row ? 'flex' : '', className)} {...props}>
             {children}
         </RadioGroupPrimitive.Root>
     )
@@ -41,7 +43,7 @@ interface RadioGroupItemProps extends React.ComponentPropsWithoutRef<typeof Radi
 
 const RadioItem = React.forwardRef<React.ElementRef<typeof RadioGroupPrimitive.Item>, RadioGroupItemProps>(
     ({ className, label, value, ...props }, ref) => (
-        <div className='flex items-center mb-1 px-1 rounded-md focus-within:outline focus-within:outline-2 focus-within:outline-secondary'>
+        <div className='flex items-center mb-1 px-1 mr-4 rounded-md focus-within:outline focus-within:outline-2 focus-within:outline-secondary'>
             <RadioGroupPrimitive.Item
                 value={value}
                 ref={ref}

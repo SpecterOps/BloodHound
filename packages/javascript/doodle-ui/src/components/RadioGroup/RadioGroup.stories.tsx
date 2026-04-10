@@ -17,31 +17,31 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { RadioGroup, RadioItem } from './RadioGroup';
 
-// More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
     title: 'Components/RadioGroup',
     component: RadioGroup,
     parameters: {
         layout: 'centered',
     },
-    // This story will not appear in Storybook's sidebar or docs page: https://storybook.js.org/docs/writing-stories/tags
     tags: ['autodocs'],
-    // More on argTypes: https://storybook.js.org/docs/api/argtypes
-    argTypes: {},
-    args: {},
+    argTypes: {
+        row: {
+            description: 'Applies horizontal layout',
+            control: 'boolean',
+        },
+    },
 } satisfies Meta<typeof RadioGroup>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Story: Story = {
-    args: {},
-    render: () => {
+    render: (args) => {
         const [radioValue, setRadioValue] = useState('a');
         return (
             <>
                 <code className='mb-4 p-2 bg-slate-200 dark:bg-slate-700 rounded block'>Value = {radioValue}</code>
-                <RadioGroup value={radioValue} onValueChange={(value) => setRadioValue(value)}>
+                <RadioGroup value={radioValue} onValueChange={(value) => setRadioValue(value)} {...args}>
                     <RadioItem value='a' label='Value a' />
                     <RadioItem value='b' label='Value b' />
                     <RadioItem value='c' label='Value c' />
