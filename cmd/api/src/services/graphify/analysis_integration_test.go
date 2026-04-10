@@ -24,7 +24,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
+	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
 	"github.com/stretchr/testify/require"
 )
@@ -47,7 +47,7 @@ func TestVersion5Analysis(t *testing.T) {
 	err = generic.WriteGraphToDatabase(testSuite.GraphDB, &expected)
 	require.NoError(t, err)
 
-	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
+	err = analysis.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
 	require.NoError(t, err)
 
 	expected, err = generic.LoadGraphFromFile(os.DirFS(analysisFilePath), "analyzed.json")
@@ -74,7 +74,7 @@ func TestVersion6ADCSAnalysis(t *testing.T) {
 	err = generic.WriteGraphToDatabase(testSuite.GraphDB, &expected)
 	require.NoError(t, err)
 
-	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
+	err = analysis.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
 	require.NoError(t, err)
 
 	expected, err = generic.LoadGraphFromFile(os.DirFS(analysisFilePath), "analyzed.json")
@@ -101,7 +101,7 @@ func TestVersion6AllAnalysis(t *testing.T) {
 	err = generic.WriteGraphToDatabase(testSuite.GraphDB, &expected)
 	require.NoError(t, err)
 
-	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
+	err = analysis.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
 	require.NoError(t, err)
 
 	expected, err = generic.LoadGraphFromFile(os.DirFS(analysisFilePath), "analyzed.json")
@@ -128,7 +128,7 @@ func TestVersion6Analysis(t *testing.T) {
 	err = generic.WriteGraphToDatabase(testSuite.GraphDB, &expected)
 	require.NoError(t, err)
 
-	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
+	err = analysis.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
 	require.NoError(t, err)
 
 	expected, err = generic.LoadGraphFromFile(os.DirFS(analysisFilePath), "analyzed.json")
@@ -155,7 +155,7 @@ func TestFederatedIdentityCredentialAnalysis(t *testing.T) {
 	err = generic.WriteGraphToDatabase(testSuite.GraphDB, &expected)
 	require.NoError(t, err)
 
-	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
+	err = analysis.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
 	require.NoError(t, err)
 
 	expected, err = generic.LoadGraphFromFile(os.DirFS(analysisFilePath), "analyzed.json")

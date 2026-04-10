@@ -26,9 +26,9 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/test"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/harnesses"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
+	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -3710,7 +3710,7 @@ func initHarnessNodeProperties(c *GraphTestContext, nodeMap map[string]*graph.No
 
 func initHarnessRelationships(c *GraphTestContext, nodeMap map[string]*graph.Node, relationships []harnesses.Relationship) {
 	for _, relationship := range relationships {
-		if kind, err := analysis.ParseKind(relationship.Kind); err != nil {
+		if kind, err := ein.ParseKind(relationship.Kind); err != nil {
 			c.testCtx.Errorf("invalid relationship kind: %s", kind)
 			continue
 		} else if asserting, ok := relationship.Properties["asserted"]; !ok {
