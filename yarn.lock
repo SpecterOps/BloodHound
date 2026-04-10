@@ -10169,7 +10169,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^7.3.0"
     "@typescript-eslint/parser": "npm:^7.3.0"
     "@vitest/coverage-v8": "npm:^3.2.4"
-    axios: "npm:^1.12.0"
+    axios: "npm:1.15.0"
     eslint: "npm:^9.26.0"
     eslint-config-prettier: "npm:^9.1.0"
     globals: "npm:^17.4.0"

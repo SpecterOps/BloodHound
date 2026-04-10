@@ -17,6 +17,7 @@
     "types": "./dist/index.d.ts",
     "license": "Apache-2.0",
     "scripts": {
+        "audit": "yarn npm audit --recursive",
         "dev": "yarn storybook",
         "build": "tsc && vite build && yarn build:styles",
         "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",

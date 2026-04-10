@@ -13,6 +13,7 @@
     "start": "yarn workspace bloodhound-ui start",
     "preview": "yarn workspace bloodhound-ui preview",
     "build": "yarn workspace bloodhound-ui build",
+    "audit": "yarn npm audit --recursive --all --severity high --environment production",
     "test": "yarn workspaces foreach -Apt run test run",
     "check-types": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run check-types",
     "lint": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run lint",
