@@ -78,6 +78,9 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
 
     const formattedObjectFields: EntityField[] = formatObjectInfoFields(data?.properties);
 
+    console.log('FORMATTED FIELDS!!!');
+    console.log(JSON.stringify(formattedObjectFields));
+
     const handleSourceNodeSelected = (sourceNode: SearchValue) => {
         setExploreParams({ primarySearch: sourceNode.objectid, searchType: 'node' });
     };
@@ -85,6 +88,8 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
     return (
         <EntityInfoCollapsibleSection onChange={handleOnChange} isExpanded={isObjectInfoPanelOpen} label={sectionLabel}>
             <FieldsContainer>
+                // BUG! this is not taking in the formattedFields, so there is no keyprop, so the object ID is getting
+                formatted as a datetime.
                 <BasicObjectInfoFields
                     nodeType={nodeType}
                     handleSourceNodeSelected={handleSourceNodeSelected}

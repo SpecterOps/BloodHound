@@ -289,6 +289,7 @@ export const formatPrimitive = (
     kind?: EntityPropertyKind,
     keyprop?: string
 ): string => {
+    console.log('WHAT IS THIS TYPE?!' + value + ': ' + typeof value);
     switch (typeof value) {
         case 'number': {
             return formatNumber(value, kind, keyprop);
@@ -297,7 +298,9 @@ export const formatPrimitive = (
             return formatBoolean(value);
         }
         case 'string':
+            console.log(keyprop);
             if (!keyprop || DATE_FIELDS.includes(keyprop)) {
+                console.log('FORMATTING ' + value + ' AS A DATE ');
                 return formatDateString(value);
             }
 
