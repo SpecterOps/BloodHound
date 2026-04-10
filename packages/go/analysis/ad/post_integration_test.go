@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build integration
+//go:build serial_integration
 
-package analysis_test
+package ad_test
 
 import (
 	"context"
@@ -25,16 +25,85 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/test"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/packages/go/analysis"
-	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
+	"github.com/specterops/bloodhound/packages/go/analysis/ad"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
-	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	graphAd "github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func FetchCanRDPData(ctx context.Context, graphDB graph.Database) (*adAnalysis.CanRDPData, error) {
-	if localGroupData, err := adAnalysis.FetchLocalGroupData(ctx, graphDB); err != nil {
+func TestCrossProduct(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.DatabaseTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.ShortcutHarness.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, graphDB graph.Database, tx graph.Transaction) {
+		firstSet := []*graph.Node{testContext.Harness.ShortcutHarness.Group1}
+		secondSet := []*graph.Node{testContext.Harness.ShortcutHarness.Group2}
+
+		excludedGroups, err := ad.FetchLocalGroupData(context.Background(), graphDB)
+		require.NoError(t, err)
+
+		results := ad.CalculateCrossProductNodeSets(excludedGroups, firstSet, secondSet)
+		require.Truef(t, results.Contains(harness.ShortcutHarness.Group3.ID.Uint64()), "missing id %d", harness.ShortcutHarness.Group3.ID.Uint64())
+	})
+}
+
+func TestCrossProductAuthUsers(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.DatabaseTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.ShortcutHarnessAuthUsers.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, graphDB graph.Database, tx graph.Transaction) {
+		firstSet := []*graph.Node{testContext.Harness.ShortcutHarnessAuthUsers.Group1}
+		secondSet := []*graph.Node{testContext.Harness.ShortcutHarnessAuthUsers.Group2}
+
+		excludedGroups, err := ad.FetchLocalGroupData(context.Background(), graphDB)
+		require.NoError(t, err)
+
+		results := ad.CalculateCrossProductNodeSets(excludedGroups, firstSet, secondSet)
+		require.True(t, results.Contains(harness.ShortcutHarnessAuthUsers.Group2.ID.Uint64()))
+	})
+}
+
+func TestCrossProductEveryone(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.DatabaseTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.ShortcutHarnessEveryone.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, graphDB graph.Database, tx graph.Transaction) {
+		firstSet := []*graph.Node{testContext.Harness.ShortcutHarnessEveryone.Group1}
+		secondSet := []*graph.Node{testContext.Harness.ShortcutHarnessEveryone.Group2}
+
+		excludedGroups, err := ad.FetchLocalGroupData(context.Background(), graphDB)
+		require.NoError(t, err)
+
+		results := ad.CalculateCrossProductNodeSets(excludedGroups, firstSet, secondSet)
+		require.True(t, results.Contains(harness.ShortcutHarnessEveryone.Group2.ID.Uint64()))
+	})
+}
+
+func TestCrossProductEveryone2(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.DatabaseTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.ShortcutHarnessEveryone2.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, graphDB graph.Database, tx graph.Transaction) {
+		firstSet := []*graph.Node{testContext.Harness.ShortcutHarnessEveryone2.Group1}
+		secondSet := []*graph.Node{testContext.Harness.ShortcutHarnessEveryone2.Group2}
+
+		excludedGroups, err := ad.FetchLocalGroupData(context.Background(), graphDB)
+		require.NoError(t, err)
+
+		results := ad.CalculateCrossProductNodeSets(excludedGroups, firstSet, secondSet)
+		require.True(t, results.Contains(harness.ShortcutHarnessEveryone2.Group1.ID.Uint64()))
+		require.True(t, results.Contains(harness.ShortcutHarnessEveryone2.Group2.ID.Uint64()))
+	})
+}
+
+func FetchCanRDPData(ctx context.Context, graphDB graph.Database) (*ad.CanRDPData, error) {
+	if localGroupData, err := ad.FetchLocalGroupData(ctx, graphDB); err != nil {
 		return nil, err
 	} else {
 		return localGroupData.FetchCanRDPData(ctx, graphDB)
@@ -54,7 +123,7 @@ func TestFetchRDPEnsureNoDescent(t *testing.T) {
 			rdpComputerData, err := canRDPData.FetchCanRDPComputerData(tx, harness.RDPB.Computer.ID)
 			require.Nil(t, err)
 
-			rdpEnabledEntityIDBitmap, err := adAnalysis.FetchCanRDPEntityBitmapForComputer(rdpComputerData, false, false)
+			rdpEnabledEntityIDBitmap, err := ad.FetchCanRDPEntityBitmapForComputer(rdpComputerData, false, false)
 			require.Nil(t, err)
 
 			// We should expect all groups that have the RIL incoming privilege to the computer
@@ -80,7 +149,7 @@ func TestFetchCanRDPEntityBitmapForComputer(t *testing.T) {
 			rdpComputerData, err := canRDPData.FetchCanRDPComputerData(tx, harness.RDP.Computer.ID)
 			require.Nil(t, err)
 
-			rdpEnabledEntityIDBitmap, err := adAnalysis.FetchCanRDPEntityBitmapForComputer(rdpComputerData, true, false)
+			rdpEnabledEntityIDBitmap, err := ad.FetchCanRDPEntityBitmapForComputer(rdpComputerData, true, false)
 			require.Nil(t, err)
 
 			// We should expect all entities that have the RIL incoming privilege to the computer
@@ -110,7 +179,7 @@ func TestFetchCanRDPEntityBitmapForComputer(t *testing.T) {
 			rdpComputerData, err := canRDPData.FetchCanRDPComputerData(tx, harness.RDP.Computer.ID)
 			require.Nil(t, err)
 
-			rdpEnabledEntityIDBitmap, err := adAnalysis.FetchCanRDPEntityBitmapForComputer(rdpComputerData, false, false)
+			rdpEnabledEntityIDBitmap, err := ad.FetchCanRDPEntityBitmapForComputer(rdpComputerData, false, false)
 			require.Nil(t, err)
 
 			require.True(t, rdpEnabledEntityIDBitmap.Contains(harness.RDP.IrshadUser.ID.Uint64()))
@@ -134,7 +203,7 @@ func TestFetchCanRDPEntityBitmapForComputer(t *testing.T) {
 
 		// Create a RemoteInteractiveLogonRight relationship from the RDP local group to the computer to test our most common case
 		require.Nil(t, db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
-			_, err := tx.CreateRelationshipByIDs(harness.RDP.RDPLocalGroup.ID, harness.RDP.Computer.ID, ad.RemoteInteractiveLogonRight, graph.NewProperties())
+			_, err := tx.CreateRelationshipByIDs(harness.RDP.RDPLocalGroup.ID, harness.RDP.Computer.ID, graphAd.RemoteInteractiveLogonRight, graph.NewProperties())
 			return err
 		}))
 
@@ -147,7 +216,7 @@ func TestFetchCanRDPEntityBitmapForComputer(t *testing.T) {
 			rdpComputerData, err := canRDPData.FetchCanRDPComputerData(tx, harness.RDP.Computer.ID)
 			require.Nil(t, err)
 
-			rdpEnabledEntityIDBitmap, err := adAnalysis.FetchCanRDPEntityBitmapForComputer(rdpComputerData, false, false)
+			rdpEnabledEntityIDBitmap, err := ad.FetchCanRDPEntityBitmapForComputer(rdpComputerData, false, false)
 			require.Nil(t, err)
 
 			require.Equal(t, 6, int(rdpEnabledEntityIDBitmap.Cardinality()))
@@ -178,7 +247,7 @@ func TestFetchCanRDPEntityBitmapForComputerWithCitrix(t *testing.T) {
 			rdpComputerData, err := canRDPData.FetchCanRDPComputerData(tx, harness.RDPHarnessWithCitrix.Computer.ID)
 			require.Nil(t, err)
 
-			rdpEnabledEntityIDBitmap, err := adAnalysis.FetchCanRDPEntityBitmapForComputer(rdpComputerData, true, true)
+			rdpEnabledEntityIDBitmap, err := ad.FetchCanRDPEntityBitmapForComputer(rdpComputerData, true, true)
 			require.Nil(t, err)
 
 			// We should expect the intersection of members of `Direct Access Users`, with entities that have the RIL privilege to the computer
@@ -197,7 +266,7 @@ func TestFetchCanRDPEntityBitmapForComputerWithCitrix(t *testing.T) {
 			rdpComputerData, err := canRDPData.FetchCanRDPComputerData(tx, harness.RDPHarnessWithCitrix.Computer.ID)
 			require.Nil(t, err)
 
-			rdpEnabledEntityIDBitmap, err := adAnalysis.FetchCanRDPEntityBitmapForComputer(rdpComputerData, false, true)
+			rdpEnabledEntityIDBitmap, err := ad.FetchCanRDPEntityBitmapForComputer(rdpComputerData, false, true)
 			require.Nil(t, err)
 
 			require.Equalf(t, 5, int(rdpEnabledEntityIDBitmap.Cardinality()), "members %v", rdpEnabledEntityIDBitmap.Slice())
@@ -214,7 +283,7 @@ func TestFetchCanRDPEntityBitmapForComputerWithCitrix(t *testing.T) {
 
 		// Create a RemoteInteractiveLogonRight relationship from the RDP local group to the computer to test our most common case
 		require.Nil(t, db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
-			_, err := tx.CreateRelationshipByIDs(harness.RDPHarnessWithCitrix.RDPLocalGroup.ID, harness.RDPHarnessWithCitrix.Computer.ID, ad.RemoteInteractiveLogonRight, graph.NewProperties())
+			_, err := tx.CreateRelationshipByIDs(harness.RDPHarnessWithCitrix.RDPLocalGroup.ID, harness.RDPHarnessWithCitrix.Computer.ID, graphAd.RemoteInteractiveLogonRight, graph.NewProperties())
 			return err
 		}))
 
@@ -226,7 +295,7 @@ func TestFetchCanRDPEntityBitmapForComputerWithCitrix(t *testing.T) {
 			rdpComputerData, err := canRDPData.FetchCanRDPComputerData(tx, harness.RDPHarnessWithCitrix.Computer.ID)
 			require.Nil(t, err)
 
-			rdpEnabledEntityIDBitmap, err := adAnalysis.FetchCanRDPEntityBitmapForComputer(rdpComputerData, true, true)
+			rdpEnabledEntityIDBitmap, err := ad.FetchCanRDPEntityBitmapForComputer(rdpComputerData, true, true)
 			require.Nil(t, err)
 
 			// We should expect the cross product of members of `Direct Access Users,` `Remote Desktop Users`, and entities with RIL privileges to
@@ -253,10 +322,10 @@ func TestFetchACLInheritancePath(t *testing.T) {
 		startId := harness.ACLInheritanceHarness.User1.ID
 		endId := harness.ACLInheritanceHarness.Computer1.ID
 
-		edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.GenericAll)
+		edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, graphAd.GenericAll)
 		test.RequireNilErr(t, err)
 
-		pathSet, err := adAnalysis.FetchACLInheritancePath(testContext.Context(), db, edge)
+		pathSet, err := ad.FetchACLInheritancePath(testContext.Context(), db, edge)
 		test.RequireNilErr(t, err)
 
 		nodesInPath := pathSet.AllNodes()
@@ -272,10 +341,10 @@ func TestFetchACLInheritancePath(t *testing.T) {
 		startId = harness.ACLInheritanceHarness.Group2.ID
 		endId = harness.ACLInheritanceHarness.Computer2.ID
 
-		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.ReadLAPSPassword)
+		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, graphAd.ReadLAPSPassword)
 		test.RequireNilErr(t, err)
 
-		pathSet, err = adAnalysis.FetchACLInheritancePath(testContext.Context(), db, edge)
+		pathSet, err = ad.FetchACLInheritancePath(testContext.Context(), db, edge)
 		test.RequireNilErr(t, err)
 
 		nodesInPath = pathSet.AllNodes()
@@ -290,10 +359,10 @@ func TestFetchACLInheritancePath(t *testing.T) {
 		startId = harness.ACLInheritanceHarness.User2.ID
 		endId = harness.ACLInheritanceHarness.Computer1.ID
 
-		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.GenericAll)
+		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, graphAd.GenericAll)
 		test.RequireNilErr(t, err)
 
-		pathSet, err = adAnalysis.FetchACLInheritancePath(testContext.Context(), db, edge)
+		pathSet, err = ad.FetchACLInheritancePath(testContext.Context(), db, edge)
 		test.RequireNilErr(t, err)
 
 		assert.Len(t, pathSet.AllNodes(), 0)
@@ -302,10 +371,10 @@ func TestFetchACLInheritancePath(t *testing.T) {
 		startId = harness.ACLInheritanceHarness.User3.ID
 		endId = harness.ACLInheritanceHarness.Computer1.ID
 
-		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.GenericAll)
+		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, graphAd.GenericAll)
 		test.RequireNilErr(t, err)
 
-		pathSet, err = adAnalysis.FetchACLInheritancePath(testContext.Context(), db, edge)
+		pathSet, err = ad.FetchACLInheritancePath(testContext.Context(), db, edge)
 		test.RequireNilErr(t, err)
 
 		assert.Len(t, pathSet.AllNodes(), 0)
@@ -314,10 +383,10 @@ func TestFetchACLInheritancePath(t *testing.T) {
 		startId = harness.ACLInheritanceHarness.Group1.ID
 		endId = harness.ACLInheritanceHarness.OU2.ID
 
-		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.GenericWrite)
+		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, graphAd.GenericWrite)
 		test.RequireNilErr(t, err)
 
-		pathSet, err = adAnalysis.FetchACLInheritancePath(testContext.Context(), db, edge)
+		pathSet, err = ad.FetchACLInheritancePath(testContext.Context(), db, edge)
 		test.RequireNilErr(t, err)
 
 		assert.Len(t, pathSet.AllNodes(), 0)
@@ -326,10 +395,10 @@ func TestFetchACLInheritancePath(t *testing.T) {
 		startId = harness.ACLInheritanceHarness.Group3.ID
 		endId = harness.ACLInheritanceHarness.Computer3.ID
 
-		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.ReadLAPSPassword)
+		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, graphAd.ReadLAPSPassword)
 		test.RequireNilErr(t, err)
 
-		pathSet, err = adAnalysis.FetchACLInheritancePath(testContext.Context(), db, edge)
+		pathSet, err = ad.FetchACLInheritancePath(testContext.Context(), db, edge)
 		test.RequireNilErr(t, err)
 
 		assert.Len(t, pathSet.AllNodes(), 0)

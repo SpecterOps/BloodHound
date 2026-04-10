@@ -14,16 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package analysis
+package post
 
 import (
 	"context"
 	"time"
 
-	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
+)
+
+const (
+	MaximumDatabaseParallelWorkers = 6
 )
 
 func NewPropertiesWithLastSeen() *graph.Properties {
@@ -34,14 +37,14 @@ func NewPropertiesWithLastSeen() *graph.Properties {
 }
 
 type StatTrackedOperation[T any] struct {
-	Stats     post.AtomicPostProcessingStats
+	Stats     AtomicPostProcessingStats
 	Operation *ops.Operation[T]
 }
 
-func NewPostRelationshipOperation(ctx context.Context, db graph.Database, operationName string) StatTrackedOperation[post.EnsureRelationshipJob] {
-	operation := StatTrackedOperation[post.EnsureRelationshipJob]{}
+func NewPostRelationshipOperation(ctx context.Context, db graph.Database, operationName string) StatTrackedOperation[EnsureRelationshipJob] {
+	operation := StatTrackedOperation[EnsureRelationshipJob]{}
 	operation.NewOperation(ctx, db)
-	operation.Operation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan post.EnsureRelationshipJob) error {
+	operation.Operation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan EnsureRelationshipJob) error {
 		relProp := NewPropertiesWithLastSeen()
 
 		for nextJob := range inC {
@@ -69,7 +72,7 @@ func NewPostRelationshipOperation(ctx context.Context, db graph.Database, operat
 }
 
 func (s *StatTrackedOperation[T]) NewOperation(ctx context.Context, db graph.Database) {
-	s.Stats = post.NewAtomicPostProcessingStats()
+	s.Stats = NewAtomicPostProcessingStats()
 	s.Operation = ops.StartNewOperation[T](ops.OperationContext{
 		Parent:     ctx,
 		DB:         db,

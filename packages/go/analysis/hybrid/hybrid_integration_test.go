@@ -23,8 +23,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
-	"github.com/specterops/bloodhound/packages/go/analysis"
-	"github.com/specterops/bloodhound/packages/go/analysis/hybrid"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -48,9 +47,9 @@ func TestHybridAttackPaths(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
+				operation := post.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-				if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
+				if _, err := PostHybrid(context.Background(), db); err != nil {
 					t.Fatalf("failed post processing for hybrid attack paths: %v", err)
 				}
 				operation.Done()
@@ -73,9 +72,9 @@ func TestHybridAttackPaths(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
+				operation := post.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-				if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
+				if _, err := PostHybrid(context.Background(), db); err != nil {
 					t.Fatalf("failed post processing for hybrid attack paths: %v", err)
 				}
 				operation.Done()
@@ -97,9 +96,9 @@ func TestHybridAttackPaths(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
+				operation := post.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-				if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
+				if _, err := PostHybrid(context.Background(), db); err != nil {
 					t.Fatalf("failed post processing for hybrid attack paths: %v", err)
 				}
 				operation.Done()
@@ -121,9 +120,9 @@ func TestHybridAttackPaths(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
+				operation := post.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-				if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
+				if _, err := PostHybrid(context.Background(), db); err != nil {
 					t.Fatalf("failed post processing for hybrid attack paths: %v", err)
 				}
 				operation.Done()
@@ -146,9 +145,9 @@ func TestHybridAttackPaths(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
+				operation := post.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-				if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
+				if _, err := PostHybrid(context.Background(), db); err != nil {
 					t.Fatalf("failed post processing for hybrid attack paths: %v", err)
 				}
 				operation.Done()
@@ -170,9 +169,9 @@ func TestHybridAttackPaths(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
+				operation := post.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-				if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
+				if _, err := PostHybrid(context.Background(), db); err != nil {
 					t.Fatalf("failed post processing for hybrid attack paths: %v", err)
 				}
 				operation.Done()
