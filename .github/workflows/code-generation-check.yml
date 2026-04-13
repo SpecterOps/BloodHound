@@ -17,9 +17,13 @@
 name: Code Generation Check
 
 on:
-  push:
+  pull_request:
     branches:
-      - BED-6802
+      - main
+      - "stage/**"
+    types:
+      - opened
+      - synchronize
 
 jobs:
   code-generation-check:
