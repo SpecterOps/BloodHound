@@ -23,6 +23,7 @@ import { cn, formatPotentiallyUnknownLabel } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import ExportConfirmDialog from './ExportConfirmDialog';
 import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
+import { ExportColumns } from './explore-table-utils';
 
 const ICON_CLASSES = 'cursor-pointer bg-slate-200 p-2 h-4 w-4 rounded-full dark:text-black';
 
@@ -34,7 +35,7 @@ type TableControlsProps<TData, TValue> = {
     resultsCount?: number;
     tableName?: string;
     className?: string;
-    onDownloadClick?: (columns: 'all' | 'selected') => void;
+    onDownloadClick?: (columns: ExportColumns) => void;
     onExpandClick?: () => void;
     onCloseClick?: () => void;
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
@@ -75,7 +76,7 @@ const TableControls = <TData, TValue>({
     const handleCancelExport = () => {
         setIsExportConfirmOpen(false);
     };
-    const handleConfirmExport = (columns: 'all' | 'selected') => {
+    const handleConfirmExport = (columns: ExportColumns) => {
         onDownloadClick && onDownloadClick(columns);
         setIsExportConfirmOpen(false);
     };

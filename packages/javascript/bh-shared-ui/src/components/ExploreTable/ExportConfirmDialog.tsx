@@ -5,10 +5,12 @@ import {
     DialogContent,
     DialogDescription,
     DialogTitle,
-    Switch,
+    RadioGroup,
+    RadioItem,
     VisuallyHidden,
 } from 'doodle-ui';
 import { FC, useState } from 'react';
+import { ExportColumns } from './explore-table-utils';
 
 type ExportConfirmDialogProps = {
     open: boolean;
@@ -17,7 +19,7 @@ type ExportConfirmDialogProps = {
 };
 
 const ExportConfirmDialog: FC<ExportConfirmDialogProps> = ({ open, onCancel, onConfirm }) => {
-    const [exportAllColumns, setExportAllColumns] = useState(false);
+    const [exportColumns, setExportColumns] = useState<ExportColumns>('all');
 
     return (
         <Dialog open={open}>
@@ -30,17 +32,16 @@ const ExportConfirmDialog: FC<ExportConfirmDialogProps> = ({ open, onCancel, onC
                 </VisuallyHidden>
 
                 <div className='mb-3'>
-                    <Switch
-                        label={exportAllColumns ? 'All Columns' : 'Selected Columns'}
-                        checked={exportAllColumns}
-                        size='large'
-                        onCheckedChange={() => setExportAllColumns((prev) => !prev)}></Switch>
+                    <RadioGroup value={exportColumns} onValueChange={(val) => setExportColumns(val as ExportColumns)}>
+                        <RadioItem value='all' label='All Columns'></RadioItem>
+                        <RadioItem value='selected' label='Selected Columns'></RadioItem>
+                    </RadioGroup>
                 </div>
                 <DialogActions>
                     <Button onClick={onCancel} variant={'secondary'}>
                         Cancel
                     </Button>
-                    <Button onClick={() => onConfirm(exportAllColumns ? 'all' : 'selected')} variant={'primary'}>
+                    <Button onClick={() => onConfirm(exportColumns)} variant={'primary'}>
                         Confirm
                     </Button>
                 </DialogActions>

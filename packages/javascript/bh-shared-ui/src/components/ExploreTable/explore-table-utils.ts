@@ -31,6 +31,7 @@ export const makeStoreMapFromColumnOptions = (columnOptions: ManageColumnsComboB
 
 export type NodeClickInfo = { id: string; x: number; y: number };
 export type MungedTableRowWithId = GraphNodeSpreadWithProperties & { id: string };
+export type ExportColumns = 'all' | 'selected';
 
 export const DEFAULT_EXPLORE_TABLE_COLUMN_KEYS = [
     'kind',
