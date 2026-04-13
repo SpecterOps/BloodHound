@@ -48,6 +48,9 @@ type PermissionSet struct {
 	GraphDBRead   model.Permission
 	GraphDBWrite  model.Permission
 
+	OpenGraphRead  model.Permission
+	OpenGraphWrite model.Permission
+
 	SavedQueriesRead  model.Permission
 	SavedQueriesWrite model.Permission
 
@@ -74,6 +77,8 @@ func (s PermissionSet) All() model.Permissions {
 		s.GraphDBMutate,
 		s.GraphDBRead,
 		s.GraphDBWrite,
+		s.OpenGraphRead,
+		s.OpenGraphWrite,
 		s.SavedQueriesRead,
 		s.SavedQueriesWrite,
 		s.AuthReadUsers,
@@ -110,6 +115,9 @@ func Permissions() PermissionSet {
 		GraphDBMutate: model.NewPermission("graphdb", "Mutate"),
 		GraphDBRead:   model.NewPermission("graphdb", "Read"),
 		GraphDBWrite:  model.NewPermission("graphdb", "Write"),
+
+		OpenGraphRead:  model.NewPermission("opengraph", "Read"),
+		OpenGraphWrite: model.NewPermission("opengraph", "Write"),
 
 		SavedQueriesRead:  model.NewPermission("saved_queries", "Read"),
 		SavedQueriesWrite: model.NewPermission("saved_queries", "Write"),
