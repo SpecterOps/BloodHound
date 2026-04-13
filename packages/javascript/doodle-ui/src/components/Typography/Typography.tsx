@@ -9,18 +9,17 @@ import { DEFAULT_VARIANT, Variant, variantMapping } from './utils';
 export const TypographyVariants = cva('', {
     variants: {
         variant: {
-            h1: 'text-4xl font-bold leading-[2.5rem] tracking-normal',
-            h2: 'text-2xl font-bold leading-[2rem] tracking-normal',
-            h3: 'text-xl font-bold leading-[1.75rem] tracking-normal',
-            h4: 'text-xl font-normal leading-[1.75rem] tracking-normal',
-            h5: 'text-lg font-bold leading-[1.5rem] tracking-normal',
-            h6: 'text-lg font-normal leading-[1.5rem] tracking-normal',
+            h1: 'text-3xl font-bold leading-[2rem] tracking-normal',
+            h2: 'text-2xl font-medium leading-[1.75rem] tracking-normal',
+            h3: 'text-[1.375rem] font-medium leading-[1.5rem] tracking-normal',
+            h4: 'text-xl font-medium leading-[1.5rem] tracking-normal',
+            h5: 'text-lg font-bold leading-[1.5rem] tracking-[.25px]',
+            h6: 'text-base font-bold leading-[1.5rem] tracking-[.25px]',
             body1: 'text-base font-normal leading-[1.5rem] tracking-normal',
-            body2: 'text-sm font-normal leading-[1.25rem] tracking-normal',
-            caption: 'text-xs font-normal leading-[1.25rem] tracking-normal',
-            subtitle: 'text-[.8125rem] font-normal leading-[1rem] tracking-normal',
-            subtitle1: 'text-[.8125rem] font-normal leading-[1rem] tracking-normal',
-            subtitle2: 'text-sm font-normal leading-[1.57rem] tracking-normal',
+            body2: 'text-sm font-normal leading-[1.375rem] tracking-normal',
+            subtitle1: 'text-[.938rem] font-normal leading-[1.5rem] tracking-[.25px]',
+            subtitle2: 'text-[.8125rem] font-medium leading-[1.375rem] tracking-[.25px]',
+            caption: 'text-xs font-normal leading-[1.25rem] tracking-[.25px]',
         },
     },
     defaultVariants: {

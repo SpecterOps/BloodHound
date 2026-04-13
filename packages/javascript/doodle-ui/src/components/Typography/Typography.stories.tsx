@@ -67,7 +67,8 @@ export const TypographyComponent: Story = {
  *  > h4: 'h4'<br>
  *  > h5: 'h5'<br>
  *  > h6: 'h6'<br>
- *  > subtitle: 'h6'<br>
+ *  > subtitle1: 'h6'<br>
+ *  > subtitle2: 'h6'<br>
  *  > body1: 'p'<br>
  *  > body2: 'p'<br>
  *  > caption: 'span'<br>
