@@ -4,6 +4,7 @@ import {
     DialogActions,
     DialogContent,
     DialogDescription,
+    DialogPortal,
     DialogTitle,
     RadioGroup,
     RadioItem,
@@ -22,30 +23,34 @@ const ExportConfirmDialog: FC<ExportConfirmDialogProps> = ({ open, onCancel, onC
     const [exportColumns, setExportColumns] = useState<ExportColumns>('all');
 
     return (
-        <Dialog open={open}>
-            <DialogContent maxWidth='sm'>
-                <DialogTitle>Download Table</DialogTitle>
-                <VisuallyHidden asChild>
-                    <DialogDescription>
-                        Download table content. You can choose to export all columns or selected columns only.
-                    </DialogDescription>
-                </VisuallyHidden>
+        <Dialog open={open} onOpenChange={() => onCancel()}>
+            <DialogPortal>
+                <DialogContent maxWidth='sm'>
+                    <DialogTitle>Download Table</DialogTitle>
+                    <VisuallyHidden asChild>
+                        <DialogDescription>
+                            Download table content. You can choose to export all columns or selected columns only.
+                        </DialogDescription>
+                    </VisuallyHidden>
 
-                <div className='mb-3'>
-                    <RadioGroup value={exportColumns} onValueChange={(val) => setExportColumns(val as ExportColumns)}>
-                        <RadioItem value='all' label='All Columns'></RadioItem>
-                        <RadioItem value='selected' label='Selected Columns'></RadioItem>
-                    </RadioGroup>
-                </div>
-                <DialogActions>
-                    <Button onClick={onCancel} variant={'secondary'}>
-                        Cancel
-                    </Button>
-                    <Button onClick={() => onConfirm(exportColumns)} variant={'primary'}>
-                        Confirm
-                    </Button>
-                </DialogActions>
-            </DialogContent>
+                    <div className='mb-3'>
+                        <RadioGroup
+                            value={exportColumns}
+                            onValueChange={(val) => setExportColumns(val as ExportColumns)}>
+                            <RadioItem value='all' label='All Columns'></RadioItem>
+                            <RadioItem value='selected' label='Selected Columns'></RadioItem>
+                        </RadioGroup>
+                    </div>
+                    <DialogActions>
+                        <Button onClick={onCancel} variant={'secondary'}>
+                            Cancel
+                        </Button>
+                        <Button onClick={() => onConfirm(exportColumns)} variant={'primary'}>
+                            Confirm
+                        </Button>
+                    </DialogActions>
+                </DialogContent>
+            </DialogPortal>
         </Dialog>
     );
 };
