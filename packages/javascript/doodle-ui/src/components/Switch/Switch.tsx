@@ -20,37 +20,33 @@ import { forwardRef } from 'react';
 import { cn } from '../utils';
 
 const switchWrapperStyles = cva(
-    'inline-flex items-center rounded-sm focus-within:ring-2 focus-within:ring-secondary focus-within:ring-offset-2'
+    'inline-flex items-center rounded-sm py-1 px-0.5 gap-2 focus-within:ring-2 focus-within:ring-secondary'
 );
 
 const switchRootStyles = cva(
-    'group flex h-3 w-6 items-center rounded-3xl bg-neutral-dark-5 transition-all ease-in-out data-[state=checked]:bg-primary disabled:cursor-not-allowed disabled:bg-[#616161] disabled:data-[state=checked]:bg-[#616161] dark:bg-neutral-light-5 dark:data-[state=checked]:bg-primary outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0'
+    'group flex h-3 w-6 items-center rounded-3xl transition-all ease-in-out bg-neutral-dark-5 dark:bg-[#fff] data-[state=checked]:bg-primary dark:data-[state=checked]:bg-[#A1A0FF] dark:disabled:data-[state=checked]:bg-[#A6A6A6] disabled:cursor-not-allowed disabled:bg-[#616161] disabled:data-[state=checked]:bg-[#616161] outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0'
 );
 
 const switchThumbStyles = cva(
-    'h-2.5 w-2.5 translate-x-px rounded-full bg-neutral-light-2 shadow-outer-1 transition-all ease-in-out data-[state=checked]:translate-x-[13px] disabled:bg-neutral-5 group-data-[disabled]:bg-neutral-5 group-data-[disabled]:data-[state=checked]:bg-neutral-5 focus-visible:outline-none focus-visible:ring-0'
+    'h-2.5 w-2.5 translate-x-px rounded-full shadow-outer-1 transition-all ease-in-out bg-neutral-light-2 dark:bg-black data-[state=checked]:translate-x-[13px] disabled:bg-neutral-5 group-data-[disabled]:bg-neutral-5 group-data-[disabled]:data-[state=checked]:bg-neutral-5 focus-visible:outline-none focus-visible:ring-0'
 );
 
-const LabelVariants = cva(
-    // 'text-base text-neutral-dark-5 transition-all ease-in-out hover:cursor-pointer dark:text-white',
-    'text-base text-neutral-dark-5 transition-all ease-in-out dark:text-white',
-    {
-        variants: {
-            position: {
-                left: 'mr-3',
-                right: 'ml-3',
-            },
-            disabled: {
-                true: 'cursor-not-allowed text-neutral-5 dark:text-neutral-5',
-                false: 'hover:cursor-pointer',
-            },
+const LabelVariants = cva('text-base text-neutral-dark-5 transition-all ease-in-out px-0.5 dark:text-white', {
+    variants: {
+        position: {
+            left: 'mr-2',
+            right: 'ml-2',
         },
-        defaultVariants: {
-            position: 'right',
-            disabled: false,
+        disabled: {
+            true: 'cursor-not-allowed text-neutral-5 dark:text-neutral-5',
+            false: 'hover:cursor-pointer',
         },
-    }
-);
+    },
+    defaultVariants: {
+        position: 'right',
+        disabled: false,
+    },
+});
 
 type SwitchProps = React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root> & {
     label?: string;
@@ -63,7 +59,7 @@ const Switch = forwardRef<React.ElementRef<typeof SwitchPrimitives.Root>, Switch
         const switchId = React.useId();
 
         return (
-            <div className={switchWrapperStyles()}>
+            <div className={cn(switchWrapperStyles(), label && 'py-0')}>
                 {labelPosition === 'left' && label && (
                     <label className={LabelVariants({ position: 'left', disabled })} htmlFor={switchId}>
                         {label}

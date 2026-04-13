@@ -21,9 +21,6 @@ import { Switch } from './Switch';
 const meta = {
     title: 'Components/Switch',
     component: Switch,
-    parameters: {
-        layout: 'centered',
-    },
     // This component will have an automatically generated Autodocs entry: https://storybook.js.org/docs/writing-docs/autodocs
     tags: ['autodocs'],
     // More on argTypes: https://storybook.js.org/docs/api/argtypes
@@ -34,12 +31,31 @@ const meta = {
     args: {
         labelPosition: 'right',
     },
+    parameters: {
+        layout: 'centered',
+        docs: {
+            description: {
+                component: `
+The Switch component represents a binary on/off control.
+
+By default, the switch is rendered in an unchecked (off) state and can be toggled by user interaction (click or keyboard). When a label is provided, it is associated to the control for improved accessibility and can be positioned to the left or right.
+
+When disabled, the switch is non-interactive and cannot be toggled. Visual styles indicate the disabled state for both the switch and its label.
+
+Use this component for immediate state changes, such as enabling features or toggling settings.
+        `,
+            },
+        },
+    },
 } satisfies Meta<typeof Switch>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Base: Story = {
+export const Default: Story = {
+    args: {
+        defaultChecked: false,
+    },
     play: async ({ canvasElement, step }) => {
         const canvas = within(canvasElement);
         const switchButton = await canvas.findByRole('switch');
@@ -75,9 +91,22 @@ export const Base: Story = {
     },
 };
 
-export const DefaultChecked: Story = {
+export const Checked: Story = {
     args: {
         defaultChecked: true,
+    },
+};
+
+export const Labeled: Story = {
+    args: {
+        label: 'Label',
+    },
+};
+
+export const LeftLabeled: Story = {
+    args: {
+        label: 'Label',
+        labelPosition: 'left',
     },
 };
 
@@ -92,18 +121,5 @@ export const DisabledChecked: Story = {
         disabled: true,
         defaultChecked: true,
         label: 'Label',
-    },
-};
-
-export const Labeled: Story = {
-    args: {
-        label: 'Label',
-    },
-};
-
-export const LeftLabeled: Story = {
-    args: {
-        label: 'Label',
-        labelPosition: 'left',
     },
 };
