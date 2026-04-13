@@ -15,11 +15,51 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { GraphData } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render } from '../../../test-utils';
+import { cypherTestResponse } from '../../../mocks/factories/explore';
+import { render, waitFor } from '../../../test-utils';
 import { mockCodemirrorLayoutMethods } from '../../../utils';
 import CypherSearch from './CypherSearch';
+
+const mockClearSelectedItem = vi.fn(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('selectedItem');
+    url.searchParams.delete('expandedPanelSections');
+    window.history.replaceState({}, '', url.toString());
+});
+
+vi.mock('../../../hooks', async () => {
+    const actual = await vi.importActual('../../../hooks');
+
+    return {
+        ...actual,
+        useExploreSelectedItem: () => ({
+            clearSelectedItem: mockClearSelectedItem,
+            selectedItem: '123',
+        }),
+    };
+});
+
+const CYPHER_SEARCH_ROUTE = '?searchType=cypher&cypherSearch=bWF0Y2ggKG4pIHJldHVybiBuIGxpbWl0IDEw';
+
+const multiNodeGraphResponse = cypherTestResponse;
+
+const singleNodeGraphResponse = {
+    data: {
+        nodes: { '108': cypherTestResponse.data.nodes['108'] },
+        edges: [],
+    },
+};
+
+// edges must be non-empty when nodes is empty to avoid an empty response error
+const zeroNodeGraphResponse = {
+    data: {
+        nodes: {},
+        edges: [{ source: '1', target: '2', label: 'HasSession', kind: 'HasSession', lastSeen: '2023-01-01' }],
+    },
+};
 
 const CYPHER = 'match (n) return n limit 5';
 const INCOMPLETE_CYPHER = 'match (n:';
@@ -32,12 +72,11 @@ describe('CypherSearch', () => {
         setCypherQuery: vi.fn(),
         performSearch: testPerformSearch,
     };
-    const setup = async (state = testState) => {
+    const setup = async (state = testState, route = '/', disableQueryLimit = false) => {
         const autoRun = true;
         const handleAutoRun = () => {};
         const testOnRunSearchClick = vi.fn();
         const handleDisableQueryLimit = () => {};
-        const disableQueryLimit = false;
 
         const screen = render(
             <CypherSearch
@@ -46,7 +85,8 @@ describe('CypherSearch', () => {
                 setAutoRun={handleAutoRun}
                 disableQueryLimit={disableQueryLimit}
                 setDisableQueryLimit={handleDisableQueryLimit}
-            />
+            />,
+            { route }
         );
         const user = userEvent.setup();
 
@@ -122,7 +162,11 @@ describe('CypherSearch', () => {
         server.listen();
     });
     beforeEach(mockCodemirrorLayoutMethods);
-    afterEach(vi.restoreAllMocks);
+    afterEach(() => {
+        vi.restoreAllMocks();
+        server.resetHandlers();
+        mockClearSelectedItem.mockClear();
+    });
     afterAll(() => {
         server.close();
     });
@@ -171,5 +215,108 @@ describe('CypherSearch', () => {
         await user.keyboard('{Alt>}s{/Alt}');
 
         expect(screen.queryByTestId('save-query-dialog')).toBeInTheDocument();
+    });
+
+    describe('Minimize explorer page elements when multiple nodes are returned', () => {
+        // node '108' is T1_TONYMONTANA@PHANTOM.CORP — a real node from the mock cypher response
+        const cypherSearchState = { ...testState, cypherQuery: CYPHER };
+        const cypherSearchRoute = `${CYPHER_SEARCH_ROUTE}&selectedItem=108`;
+
+        const mockCypherEndpoint = (response: { data: GraphData }) => {
+            server.use(rest.post('/api/v2/graphs/cypher', (_req, res, ctx) => res(ctx.json(response))));
+        };
+
+        it('closes saved queries panel and entity info panel when a cypher query returns multiple nodes', async () => {
+            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute, true);
+
+            const toggleButton = screen.getByTestId('common-queries-toggle');
+            await user.click(toggleButton);
+
+            await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
+
+            await waitFor(() => expect(screen.getByText(/chevron-down/i)).toBeInTheDocument());
+            expect(mockClearSelectedItem).not.toHaveBeenCalled();
+
+            mockCypherEndpoint(multiNodeGraphResponse);
+            await user.click(screen.getByRole('button', { name: /run cypher query/i }));
+
+            // Saved queries panel is closed
+            await waitFor(() => {
+                expect(screen.queryByText(/chevron-down/i)).not.toBeInTheDocument();
+                expect(screen.queryByText(/chevron-up/i)).toBeInTheDocument();
+            });
+
+            // Entity info panel is closed
+            expect(mockClearSelectedItem).toHaveBeenCalled();
+        });
+
+        it('does not close saved queries panel or entity info panel when search returns zero nodes', async () => {
+            mockCypherEndpoint(singleNodeGraphResponse);
+            // selectedItem in URL simulates a previously selected node (entity info panel open)
+            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute, true);
+
+            const toggleButton = screen.getByTestId('common-queries-toggle');
+            await user.click(toggleButton);
+
+            await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
+
+            await waitFor(() => expect(screen.getByText(/chevron-down/i)).toBeInTheDocument());
+            expect(mockClearSelectedItem).not.toHaveBeenCalled();
+
+            mockCypherEndpoint(zeroNodeGraphResponse);
+            await user.click(screen.getByRole('button', { name: /run cypher query/i }));
+
+            await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
+
+            // Saved queries panel stayed open
+            expect(screen.queryByText(/chevron-down/i)).toBeInTheDocument();
+            expect(screen.queryByText(/chevron-up/i)).not.toBeInTheDocument();
+
+            // Entity info panel stayed open
+            expect(mockClearSelectedItem).not.toHaveBeenCalled();
+            await waitFor(() => expect(window.location.search).toContain('selectedItem='));
+        });
+
+        it('does not close saved queries panel or entity info panel when search returns one node', async () => {
+            mockCypherEndpoint(singleNodeGraphResponse);
+            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute, true);
+
+            const toggleButton = screen.getByTestId('common-queries-toggle');
+            await user.click(toggleButton);
+
+            await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
+
+            await waitFor(() => expect(screen.getByText(/chevron-down/i)).toBeInTheDocument());
+            expect(mockClearSelectedItem).not.toHaveBeenCalled();
+
+            mockCypherEndpoint(singleNodeGraphResponse);
+            await user.click(screen.getByRole('button', { name: /run cypher query/i }));
+
+            await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
+
+            // Saved queries panel stayed open
+            expect(screen.queryByText(/chevron-down/i)).toBeInTheDocument();
+            expect(screen.queryByText(/chevron-up/i)).not.toBeInTheDocument();
+
+            // Entity info panel stayed open
+            expect(mockClearSelectedItem).not.toHaveBeenCalled();
+            await waitFor(() => expect(window.location.search).toContain('selectedItem='));
+        });
+
+        it('allows user to reopen saved queries panel after auto-close', async () => {
+            mockCypherEndpoint(multiNodeGraphResponse);
+
+            const { screen, user } = await setup(testState, CYPHER_SEARCH_ROUTE);
+
+            await user.click(screen.getByTestId('common-queries-toggle'));
+
+            const toggleButton = screen.getByTestId('common-queries-toggle');
+
+            await waitFor(() => expect(toggleButton.querySelector('[data-icon="chevron-up"]')).toBeInTheDocument());
+
+            await user.click(toggleButton);
+
+            expect(toggleButton.querySelector('[data-icon="chevron-down"]')).toBeInTheDocument();
+        });
     });
 });

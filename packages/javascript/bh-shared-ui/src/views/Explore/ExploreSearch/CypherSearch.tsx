@@ -27,6 +27,7 @@ import { graphSchema } from '../../../constants';
 import {
     useCreateSavedQuery,
     useExploreGraph,
+    useExploreSelectedItem,
     useFeatureFlag,
     useKeybindings,
     usePermissions,
@@ -35,6 +36,7 @@ import {
     useUpdateQueryPermissions,
     useUpdateSavedQuery,
 } from '../../../hooks';
+import { isGraphResponse } from '../../../hooks/useExploreGraph/queries/utils';
 import { useGraphKinds } from '../../../hooks/useGraphKinds';
 import { useNotifications } from '../../../providers';
 import { Permission, cn } from '../../../utils';
@@ -92,7 +94,16 @@ const CypherSearchInner = ({
     const { checkPermission } = usePermissions();
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
-    const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph();
+    const { clearSelectedItem } = useExploreSelectedItem();
+
+    const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph({
+        onSuccess: (data) => {
+            if (isGraphResponse(data) && Object.keys(data.data.nodes || {}).length > 1) {
+                setShowCommonQueries(false);
+                clearSelectedItem();
+            }
+        },
+    });
 
     const timeoutLimitEnabled = useTimeoutLimitConfiguration();
 
@@ -157,6 +168,7 @@ const CypherSearchInner = ({
     const handleToggleCommonQueries = () => {
         setShowCommonQueries((v) => !v);
     };
+
     const updateQueryPermissions = (id: number) => {
         if (permissions?.public && !isPublic && sharedIds.length) {
             const localSharedIds = [...sharedIds];
