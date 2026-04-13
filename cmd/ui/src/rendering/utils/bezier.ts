@@ -87,7 +87,12 @@ export const bezier = {
     },
 
     getLineLength: (start: Coordinates, end: Coordinates): number => {
-        return Math.sqrt((end.x - start.x) * (end.x - start.x) + (end.y - start.y) * (end.y - start.y));
+        const distanceSquared = bezier.getDistanceSquared(start, end);
+        return Math.sqrt(distanceSquared);
+    },
+
+    getDistanceSquared: (start: Coordinates, end: Coordinates): number => {
+        return (end.x - start.x) * (end.x - start.x) + (end.y - start.y) * (end.y - start.y);
     },
 
     calculateCurveHeight: (

@@ -158,6 +158,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
                     newData.control = control;
                     newData.controlInViewport = sigma.framedGraphToViewport(control);
+                    newData.correctionRatio = (sigma as any).correctionRatio / sigma.getCamera().getState().ratio;
                 }
             }
         },

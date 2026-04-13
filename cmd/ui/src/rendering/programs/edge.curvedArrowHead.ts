@@ -23,14 +23,13 @@
  */
 import { AbstractEdgeProgram } from 'sigma/rendering/webgl/programs/common/edge';
 import { RenderParams } from 'sigma/rendering/webgl/programs/common/program';
-import { Coordinates, NodeDisplayData } from 'sigma/types';
+import { NodeDisplayData } from 'sigma/types';
 import { floatColor } from 'sigma/utils';
 import { CurvedEdgeDisplayData } from 'src/rendering/programs/edge.curvedArrow';
 import { fragmentShaderSource } from 'src/rendering/shaders/edge.arrowHead.frag';
 import { vertexShaderSource } from 'src/rendering/shaders/edge.arrowHead.vert';
 import { bezier } from 'src/rendering/utils/bezier';
 import { getNodeRadius } from 'src/rendering/utils/utils';
-import { EdgeDirection } from 'src/utils';
 
 const POINTS = 3,
     ATTRIBUTES = 9,
@@ -151,36 +150,67 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
             return;
         }
 
-        let start, end: Coordinates;
-        if (data.direction === EdgeDirection.BACKWARDS) {
-            start = { x: targetData.x, y: targetData.y };
-            end = { x: sourceData.x, y: sourceData.y };
-        } else {
-            start = { x: sourceData.x, y: sourceData.y };
-            end = { x: targetData.x, y: targetData.y };
-        }
-
         const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
         const thickness = data.size || 1;
         const radius = getNodeRadius(targetData.highlighted, inverseSqrtZoomRatio, targetData.size);
         const color = floatColor(data.color);
 
         // We are going to try and approximate the intersection here
-        const height = bezier.calculateCurveHeight(data.groupSize, data.groupPosition);
-        let adjustedHeight = 0;
+        const height = bezier.calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
+        const control = bezier.getControlAtMidpoint(height, sourceData, targetData);
 
+        const sqrtZoomRatio = 1 / inverseSqrtZoomRatio;
+        const correctionRatio = data.correctionRatio || 1;
+        const graphSpaceRadius = targetData.size * 2.0 * correctionRatio * sqrtZoomRatio;
+        const graphSpaceArrowHeadLength = thickness * 6 * correctionRatio * sqrtZoomRatio;
+
+        let dx: number, dy: number;
         if (height !== 0) {
-            const distanceBetweenNodes = bezier.getLineLength(start, end);
-            const adjustmentFactor = this.calculateAdjustmentFactor(distanceBetweenNodes);
-            adjustedHeight = Math.abs(height) - adjustmentFactor;
+            let low = 0.5;
+            let mid = 0.75;
+            let high = 1;
+
+            for (let i = 0; i < 10; i++) {
+                mid = (low + high) / 2;
+                const coords = bezier.getCoordinatesAlongQuadraticBezier(sourceData, targetData, control, mid);
+                const distanceSquared = bezier.getDistanceSquared(coords, targetData);
+
+                if (distanceSquared > graphSpaceRadius * graphSpaceRadius) {
+                    low = mid;
+                } else {
+                    high = mid;
+                }
+            }
+
+            const intersection = bezier.getCoordinatesAlongQuadraticBezier(sourceData, targetData, control, mid);
+
+            let low2 = 0.5;
+            let mid2 = mid + low2 * 0.5;
+            let high2 = mid;
+
+            for (let i = 0; i < 10; i++) {
+                mid2 = (low2 + high2) / 2;
+                const coords = bezier.getCoordinatesAlongQuadraticBezier(sourceData, targetData, control, mid2);
+                const distanceSquared = bezier.getDistanceSquared(coords, intersection);
+
+                if (distanceSquared > graphSpaceArrowHeadLength * graphSpaceArrowHeadLength) {
+                    low2 = mid2;
+                } else {
+                    high2 = mid2;
+                }
+            }
+
+            const endpoint = bezier.getCoordinatesAlongQuadraticBezier(sourceData, targetData, control, mid2);
+
+            dx = intersection.x - endpoint.x;
+            dy = intersection.y - endpoint.y;
+        } else {
+            dx = targetData.x - sourceData.x;
+            dy = targetData.y - sourceData.y;
         }
 
-        if (height < 0) {
-            adjustedHeight *= -1;
-        }
-
-        const control = bezier.getControlAtMidpoint(adjustedHeight, start, end);
-        const normal = bezier.getNormals(control, targetData);
+        const len = 1 / Math.sqrt(dx * dx + dy * dy);
+        const normal = { x: dx * len, y: dy * len };
 
         const vOffset = {
             x: normal.x * thickness,
