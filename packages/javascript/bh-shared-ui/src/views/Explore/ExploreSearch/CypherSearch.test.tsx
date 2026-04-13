@@ -53,7 +53,6 @@ const singleNodeGraphResponse = {
     },
 };
 
-// edges must be non-empty when nodes is empty to avoid an empty response error
 const zeroNodeGraphResponse = {
     data: {
         nodes: {},
@@ -234,17 +233,18 @@ describe('CypherSearch', () => {
 
             await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
 
-            await waitFor(() => expect(screen.getByText(/chevron-down/i)).toBeInTheDocument());
+            await waitFor(() =>
+                expect(screen.getByTestId('common-queries-toggle')).toHaveAttribute('aria-expanded', 'true')
+            );
             expect(mockClearSelectedItem).not.toHaveBeenCalled();
 
             mockCypherEndpoint(multiNodeGraphResponse);
             await user.click(screen.getByRole('button', { name: /run cypher query/i }));
 
             // Saved queries panel is closed
-            await waitFor(() => {
-                expect(screen.queryByText(/chevron-down/i)).not.toBeInTheDocument();
-                expect(screen.queryByText(/chevron-up/i)).toBeInTheDocument();
-            });
+            await waitFor(() =>
+                expect(screen.getByTestId('common-queries-toggle')).toHaveAttribute('aria-expanded', 'false')
+            );
 
             // Entity info panel is closed
             expect(mockClearSelectedItem).toHaveBeenCalled();
@@ -260,7 +260,9 @@ describe('CypherSearch', () => {
 
             await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
 
-            await waitFor(() => expect(screen.getByText(/chevron-down/i)).toBeInTheDocument());
+            await waitFor(() =>
+                expect(screen.getByTestId('common-queries-toggle')).toHaveAttribute('aria-expanded', 'true')
+            );
             expect(mockClearSelectedItem).not.toHaveBeenCalled();
 
             mockCypherEndpoint(zeroNodeGraphResponse);
@@ -269,8 +271,7 @@ describe('CypherSearch', () => {
             await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
 
             // Saved queries panel stayed open
-            expect(screen.queryByText(/chevron-down/i)).toBeInTheDocument();
-            expect(screen.queryByText(/chevron-up/i)).not.toBeInTheDocument();
+            expect(screen.getByTestId('common-queries-toggle')).toHaveAttribute('aria-expanded', 'true');
 
             // Entity info panel stayed open
             expect(mockClearSelectedItem).not.toHaveBeenCalled();
@@ -286,7 +287,9 @@ describe('CypherSearch', () => {
 
             await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
 
-            await waitFor(() => expect(screen.getByText(/chevron-down/i)).toBeInTheDocument());
+            await waitFor(() =>
+                expect(screen.getByTestId('common-queries-toggle')).toHaveAttribute('aria-expanded', 'true')
+            );
             expect(mockClearSelectedItem).not.toHaveBeenCalled();
 
             mockCypherEndpoint(singleNodeGraphResponse);
@@ -295,8 +298,7 @@ describe('CypherSearch', () => {
             await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
 
             // Saved queries panel stayed open
-            expect(screen.queryByText(/chevron-down/i)).toBeInTheDocument();
-            expect(screen.queryByText(/chevron-up/i)).not.toBeInTheDocument();
+            expect(screen.getByTestId('common-queries-toggle')).toHaveAttribute('aria-expanded', 'true');
 
             // Entity info panel stayed open
             expect(mockClearSelectedItem).not.toHaveBeenCalled();
@@ -304,19 +306,20 @@ describe('CypherSearch', () => {
         });
 
         it('allows user to reopen saved queries panel after auto-close', async () => {
-            mockCypherEndpoint(multiNodeGraphResponse);
-
-            const { screen, user } = await setup(testState, CYPHER_SEARCH_ROUTE);
-
-            await user.click(screen.getByTestId('common-queries-toggle'));
+            mockCypherEndpoint(singleNodeGraphResponse);
+            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute, true);
 
             const toggleButton = screen.getByTestId('common-queries-toggle');
+            await user.click(toggleButton);
+            await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
+            await waitFor(() => expect(toggleButton).toHaveAttribute('aria-expanded', 'true'));
 
-            await waitFor(() => expect(toggleButton.querySelector('[data-icon="chevron-up"]')).toBeInTheDocument());
+            mockCypherEndpoint(multiNodeGraphResponse);
+            await user.click(screen.getByRole('button', { name: /run cypher query/i }));
+            await waitFor(() => expect(toggleButton).toHaveAttribute('aria-expanded', 'false'));
 
             await user.click(toggleButton);
-
-            expect(toggleButton.querySelector('[data-icon="chevron-down"]')).toBeInTheDocument();
+            expect(toggleButton).toHaveAttribute('aria-expanded', 'true');
         });
     });
 });
