@@ -124,7 +124,7 @@ const ExploreSearchCombobox: React.FC<{
                         {disabledText ? (
                             <ListItem
                                 dense
-                                className='text-gray-500'
+                                className='text-[#616161] dark:text-[#868686]' // To do: Tokenize when available
                                 {...getItemProps({
                                     disabled: true,
                                     'aria-disabled': true,
@@ -132,6 +132,7 @@ const ExploreSearchCombobox: React.FC<{
                                     item: {
                                         objectid: '',
                                     },
+                                    style: { opacity: 0.6 },
                                 })}>
                                 <ListItemText primary={disabledText} />
                             </ListItem>

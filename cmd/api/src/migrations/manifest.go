@@ -25,8 +25,8 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/version"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -49,6 +49,29 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 	} else {
 		return version.GetVersion().GreaterThan(currentMigration), nil
 	}
+}
+
+func Version_910_Migration(ctx context.Context, db graph.Database) error {
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove AD Group kind from non-AD nodes")()
+
+	criteria := query.And(
+		query.Not(query.KindIn(query.Node(), ad.Entity)),
+		query.KindIn(query.Node(), ad.Group),
+	)
+
+	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		if nodes, err := ops.FetchNodes(tx.Nodes().Filter(criteria)); err != nil {
+			return err
+		} else {
+			for _, node := range nodes {
+				node.DeleteKinds(ad.Group)
+				if err := tx.UpdateNode(node); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
 }
 
 func Version_900_Migration(ctx context.Context, db graph.Database) error {
@@ -337,7 +360,7 @@ func Version_513_Migration(ctx context.Context, db graph.Database) error {
 		),
 	)
 
-	if nodes, err := ops.ParallelFetchNodes(ctx, db, targetCriteria, analysis.MaximumDatabaseParallelWorkers); err != nil {
+	if nodes, err := ops.ParallelFetchNodes(ctx, db, targetCriteria, post.MaximumDatabaseParallelWorkers); err != nil {
 		return err
 	} else if err := db.BatchOperation(ctx, func(batch graph.Batch) error {
 		for _, node := range nodes {
@@ -614,5 +637,9 @@ var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 9, Minor: 0, Patch: 0},
 		Execute: Version_900_Migration,
+	},
+	{
+		Version: version.Version{Major: 9, Minor: 1, Patch: 0},
+		Execute: Version_910_Migration,
 	},
 }

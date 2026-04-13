@@ -18,7 +18,6 @@ package agi
 
 import (
 	"context"
-
 	"log/slog"
 	"slices"
 	"strings"
@@ -68,7 +67,7 @@ func FetchAssetGroupNodes(tx graph.Transaction, assetGroupTag string, isSystemGr
 
 type agiGetter interface {
 	GetAllAssetGroups(ctx context.Context, order string, filter model.SQLFilter) (model.AssetGroups, error)
-	GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error)
+	GetValidDisplayKinds(ctx context.Context) (graphschema.ValidPrimaryKinds, error)
 	CreateAssetGroupCollection(ctx context.Context, collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
 }
 
@@ -77,7 +76,7 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db agiGetter, graphD
 
 	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
 		return err
-	} else if validPrimaryKinds, err := db.GetDisplayNodeGraphKinds(ctx); err != nil {
+	} else if validPrimaryKinds, err := db.GetValidDisplayKinds(ctx); err != nil {
 		return err
 	} else {
 		return graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {

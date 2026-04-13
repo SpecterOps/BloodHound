@@ -22,6 +22,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -105,6 +106,16 @@ type GraphSchemaNodeKind struct {
 	IsDisplayKind     bool   // indicates if this kind should supersede others and be displayed
 	Icon              string // font-awesome icon for the registered node kind
 	IconColor         string // icon hex color
+}
+
+type GraphSchemaNodeKindMap map[string]GraphSchemaNodeKind
+
+func (s GraphSchemaNodeKindMap) ToKindsMap() graphschema.ValidPrimaryKinds {
+	var kindsMap = make(graphschema.ValidPrimaryKinds)
+	for _, schemaNodeKind := range s {
+		kindsMap[schemaNodeKind.ToKind()] = true
+	}
+	return kindsMap
 }
 
 func (s GraphSchemaNodeKind) ToKind() graph.Kind {

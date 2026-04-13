@@ -266,7 +266,7 @@ func TestGetEntityResults(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
 	require.Nil(t, err)
 
-	validPrimaryKinds, err := dbInst.GetDisplayNodeGraphKinds(context.Background())
+	validPrimaryKinds, err := dbInst.GetDisplayGraphSchemaNodeKinds(context.Background())
 	require.NoError(t, err)
 
 	testContext.SetupActiveDirectory()
@@ -303,7 +303,7 @@ func TestGetEntityResults_QueryShorterThanSlowQueryThreshold(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
 	require.Nil(t, err)
 
-	validPrimaryKinds, err := dbInst.GetDisplayNodeGraphKinds(context.Background())
+	validPrimaryKinds, err := dbInst.GetDisplayGraphSchemaNodeKinds(context.Background())
 	require.NoError(t, err)
 
 	testContext.SetupActiveDirectory()
@@ -345,7 +345,7 @@ func TestGetPrimaryNodeKindCounts(t *testing.T) {
 		graphQuery := queries.GraphQuery{
 			Graph: db,
 		}
-		validPrimaryKinds, err := dbInst.GetDisplayNodeGraphKinds(testCtx)
+		validPrimaryKinds, err := dbInst.GetValidDisplayKinds(testCtx)
 		require.NoError(t, err)
 
 		results, err := graphQuery.GetPrimaryNodeKindCounts(context.Background(), validPrimaryKinds, ad.Entity)
@@ -379,7 +379,7 @@ func TestGetEntityResults_Cache(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 2})
 	require.Nil(t, err)
 
-	validPrimaryKinds, err := dbInst.GetDisplayNodeGraphKinds(context.Background())
+	validPrimaryKinds, err := dbInst.GetDisplayGraphSchemaNodeKinds(context.Background())
 	require.NoError(t, err)
 
 	testContext.SetupActiveDirectory()
@@ -426,7 +426,7 @@ func TestGetAssetGroupComboNode(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testContext.SetupActiveDirectory()
 
-	primaryNodeKinds, err := dbInst.GetDisplayNodeGraphKinds(context.Background())
+	primaryNodeKinds, err := dbInst.GetDisplayGraphSchemaNodeKinds(context.Background())
 	require.NoError(t, err)
 
 	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
@@ -897,7 +897,7 @@ func TestRawCypherQuery(t *testing.T) {
 	)
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
-	validPrimaryKinds, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(context.Background())
+	validPrimaryKinds, err := testSuite.BHDatabase.GetValidDisplayKinds(context.Background())
 	require.NoError(t, err)
 
 	t.Run("Test return nodes", func(t *testing.T) {
