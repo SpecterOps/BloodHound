@@ -110,8 +110,6 @@ export const FieldsContainer: React.FC<PropsWithChildren> = ({ children }) => {
 export const Field: React.FC<EntityField> = (entityField) => {
     const { label, value, keyprop } = entityField;
 
-    console.log(keyprop);
-
     try {
         if (
             value === undefined ||
@@ -125,8 +123,6 @@ export const Field: React.FC<EntityField> = (entityField) => {
     }
 
     const formattedValue = format(entityField);
-
-    console.log(formattedValue);
 
     let content: React.ReactNode;
     if (typeof formattedValue === 'string') {
@@ -168,8 +164,6 @@ export const Field: React.FC<EntityField> = (entityField) => {
 
 export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }): JSX.Element => {
     const filteredFields = filterNegatedFields(fields);
-
-    console.log('FILTERED FELDS' + JSON.stringify(filteredFields));
 
     return (
         <>
