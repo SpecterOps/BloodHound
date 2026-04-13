@@ -78,16 +78,9 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (prop
         <>
             {basicObjectFields.map((field) => {
                 const value = props[field];
-                if (value === undefined) return null; // <Field /> doesnt support undefined values
+                if (value === undefined) return null; // <Field /> doesn't support undefined values
 
-                return (
-                    <Field
-                        key={field}
-                        label={`${formatPotentiallyUnknownLabel(field) ?? field}:`}
-                        value={value}
-                        //    keyprop={}
-                    />
-                );
+                return <Field key={field} label={`${formatPotentiallyUnknownLabel(field) ?? field}:`} value={value} />;
             })}
             {props.handleSourceNodeSelected && (
                 <>
