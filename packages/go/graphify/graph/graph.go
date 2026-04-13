@@ -30,12 +30,13 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -162,7 +163,7 @@ func (s *CommunityGraphService) InitializeService(ctx context.Context, connectio
 		return fmt.Errorf("error opening database: %w", err)
 	}
 
-	s.db = database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
+	s.db = database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), config.Configuration{})
 
 	if s.db != nil {
 		err := s.db.Wipe(ctx)
@@ -191,7 +192,7 @@ func (s *CommunityGraphService) Ingest(ctx context.Context, batch *graphify.Inge
 }
 
 func (s *CommunityGraphService) RunAnalysis(ctx context.Context, graphDB graph.Database) error {
-	return datapipe.RunAnalysisOperations(ctx, s.db, graphDB, config.Configuration{})
+	return analysis.RunAnalysisOperations(ctx, s.db, graphDB, config.Configuration{})
 }
 
 // Run generate command
@@ -425,7 +426,7 @@ func ingestData(ctx context.Context, service GraphService, filepaths []string, d
 
 	for _, filepath := range filepaths {
 		err := database.BatchOperation(ctx, func(batch graph.Batch) error {
-			ingestCtx := graphify.NewIngestContext(ctx, graphify.WithIngestTime(ingestTime), graphify.WithBatchUpdater(batch))
+			ingestCtx := graphify.NewIngestContext(ctx, graphify.WithIngestTime(ingestTime), graphify.WithBatchUpdater(batch), graphify.WithEndpointResolver(endpoint.NewResolver(database)))
 
 			file, err := os.Open(filepath)
 			if err != nil {
@@ -446,12 +447,8 @@ func ingestData(ctx context.Context, service GraphService, filepaths []string, d
 		}
 	}
 
-	if len(errs) > 0 {
-		var errStrings []string
-		for _, err := range errs {
-			errStrings = append(errStrings, err.Error())
-		}
-		slog.WarnContext(ctx, "Errors occurred while ingesting files", slog.Any("errors", errStrings))
+	for _, err := range errs {
+		slog.WarnContext(ctx, "Error occurred while ingesting files", attr.Error(err))
 	}
 
 	return nil

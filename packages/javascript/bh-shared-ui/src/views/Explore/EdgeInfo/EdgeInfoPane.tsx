@@ -13,9 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Badge } from '@bloodhoundenterprise/doodleui';
 import { faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Badge } from 'doodle-ui';
 import React, { HTMLProps } from 'react';
 import useRoleBasedFiltering from '../../../hooks/useRoleBasedFiltering';
 import { cn } from '../../../utils';

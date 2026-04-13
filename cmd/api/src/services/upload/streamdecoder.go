@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"reflect"
 	"strings"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
@@ -373,20 +372,6 @@ func formatAggregateErrors(errs []validationError) string {
 	return sb.String()
 }
 
-func isHomogeneousArray(arr []any) bool {
-	if len(arr) == 0 {
-		return true
-	}
-
-	firstType := reflect.TypeOf(arr[0])
-	for _, v := range arr[1:] {
-		if reflect.TypeOf(v) != firstType {
-			return false
-		}
-	}
-	return true
-}
-
 // ReadZippedFile - Util Function to help read zipped files
 func ReadZippedFile(zf *zip.File) ([]byte, error) {
 	f, err := zf.Open()
@@ -458,14 +443,6 @@ func (v *validator) validateArray(arrayName string, schema *jsonschema.Schema) {
 			}
 		} else if err := schema.Validate(item); err != nil {
 			v.reportValidation(index, formatSchemaValidationError(arrayName, index, err))
-		}
-
-		if props, ok := item["properties"].(map[string]any); ok {
-			for key, val := range props {
-				if arr, ok := val.([]any); ok && !isHomogeneousArray(arr) {
-					v.reportValidation(index, fmt.Sprintf("%s[%d] schema validation error. properties[\"%s\"] contains a mixed-type array", arrayName, index, key))
-				}
-			}
 		}
 
 		if len(v.validationErrors) >= v.maxErrors || len(v.criticalErrors) > 0 {

@@ -67,8 +67,10 @@ type PersistedState = {
             autoRunQueries: GlobalViewState['autoRunQueries'];
             notifications: GlobalViewState['notifications'];
             exploreLayout: GlobalViewState['exploreLayout'];
-            selectedExploreTableColumns: GlobalViewState['selectedExploreTableColumns'];
             isExploreTableSelected: GlobalViewState['isExploreTableSelected'];
+            selectedExploreTableColumns: GlobalViewState['selectedExploreTableColumns'];
+            pinnedExploreTableColumns?: string[];
+            timeoutSetting: GlobalViewState['timeoutSetting'];
         };
     };
 };
@@ -115,8 +117,10 @@ store.subscribe(
                     autoRunQueries: state.global.view.autoRunQueries,
                     notifications: [],
                     exploreLayout: state.global.view.exploreLayout,
-                    selectedExploreTableColumns: state.global.view.selectedExploreTableColumns,
                     isExploreTableSelected: state.global.view.isExploreTableSelected,
+                    selectedExploreTableColumns: state.global.view.selectedExploreTableColumns,
+                    pinnedExploreTableColumns: state.global.view.pinnedExploreTableColumns,
+                    timeoutSetting: state.global.view.timeoutSetting,
                 },
             },
         });

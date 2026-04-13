@@ -29,6 +29,7 @@ const (
 	AzureGraphPrefix           = "az"
 	DefaultMissingName         = "NO NAME"
 	DefaultMissingObjectId     = "NO OBJECT ID"
+	EnvironmentIDKey           = "environmentid"
 )
 
 func ActiveDirectoryGraphName(suffix string) string {
@@ -67,6 +68,10 @@ func CombinedGraphSchema(name string) graph.Graph {
 			},
 			{
 				Field: azure.TenantID.String(),
+				Type:  graph.BTreeIndex,
+			},
+			{
+				Field: EnvironmentIDKey,
 				Type:  graph.BTreeIndex,
 			},
 		},

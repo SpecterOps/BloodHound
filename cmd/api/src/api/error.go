@@ -27,6 +27,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 const (
@@ -72,7 +73,6 @@ const (
 	ErrorResponseUserDuplicateEmail                                  = "email must be unique"
 	ErrorResponseDetailsUniqueViolation                              = "unique constraint was violated"
 	ErrorResponseDetailsNotImplemented                               = "All good things to those who wait. Not implemented."
-	ErrorResponseUnknownUser                                         = "unknown user"
 	ErrorResponseAssetGroupTagExceededNameLimit                      = "asset group tag name is limited to 250 characters"
 	ErrorResponseAssetGroupTagDuplicateKindName                      = "asset group tag name must be unique"
 	ErrorResponseAssetGroupTagSelectorDuplicateName                  = "asset group tag selector name must be unique"
@@ -95,6 +95,10 @@ const (
 
 	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"
 	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"
+)
+
+var (
+	ErrorResponseUnknownUser = errors.New("unknown user")
 )
 
 const (
@@ -153,7 +157,7 @@ func HandleDatabaseError(request *http.Request, response http.ResponseWriter, er
 	} else if errors.Is(err, context.DeadlineExceeded) {
 		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusInternalServerError, ErrorResponseRequestTimeout, request), response)
 	} else {
-		slog.Error(fmt.Sprintf("Unexpected database error: %v", err))
+		slog.Error("Unexpected database error", attr.Error(err))
 		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusInternalServerError, ErrorResponseDetailsInternalServerError, request), response)
 	}
 }
@@ -164,7 +168,7 @@ func FormatDatabaseError(err error) error {
 	if errors.Is(err, database.ErrNotFound) {
 		return errors.New(ErrorResponseDetailsResourceNotFound)
 	} else {
-		slog.Error(fmt.Sprintf("Unexpected database error: %v", err))
+		slog.Error("Unexpected database error", attr.Error(err))
 		return errors.New(ErrorResponseDetailsInternalServerError)
 	}
 }

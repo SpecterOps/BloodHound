@@ -18,11 +18,11 @@ package ad
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"sync"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
@@ -32,7 +32,7 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, localGroupData *LocalGroupData, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
+func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
 	results := cardinality.NewBitmap64()
 	if publishedCertTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
@@ -40,7 +40,12 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 		ecaEnrollers := cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
 		for _, certTemplate := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForEsc1(certTemplate); err != nil {
-				slog.WarnContext(ctx, fmt.Sprintf("Error validating cert template %d: %v", certTemplate.ID, err))
+				slog.WarnContext(
+					ctx,
+					"Error validating cert template",
+					slog.Uint64("cert_template_id", uint64(certTemplate.ID)),
+					attr.Error(err),
+				)
 				continue
 			} else if !valid {
 				continue
@@ -52,7 +57,7 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 
 	results.Each(func(value uint64) bool {
 		for _, domain := range targetDomains.Slice() {
-			channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+			channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
 				Kind:   ad.ADCSESC1,
@@ -176,7 +181,7 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		startNode  *graph.Node
 		startNodes = graph.NodeSet{}
 
-		traversalInst      = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst      = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		paths              = graph.PathSet{}
 		candidateSegments  = map[graph.ID][]*graph.PathSegment{}
 		path1EnterpriseCAs = cardinality.NewBitmap64()
@@ -283,16 +288,30 @@ func getGoldenCertEdgeComposition(tx graph.Transaction, edge *graph.Relationship
 			query.KindIn(query.End(), ad.EnterpriseCA),
 			query.KindIn(query.Relationship(), ad.HostsCAService),
 		))); err != nil {
-			slog.Error(fmt.Sprintf("Error getting hostscaservice edge to enterprise ca for computer %d : %v", startNode.ID, err))
+			slog.Error(
+				"Error getting hostscaservice edge to enterprise ca for computer",
+				slog.Uint64("start_node_id", uint64(startNode.ID)),
+				attr.Error(err),
+			)
 		} else {
 			for _, ecaPath := range ecaPaths {
 				eca := ecaPath.Terminal()
 				if chainToRootCAPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, eca, targetDomainNode); err != nil {
-					slog.Error(fmt.Sprintf("Error getting eca %d path to domain %d: %v", eca.ID, targetDomainNode.ID, err))
+					slog.Error(
+						"Error getting enterprise ca path to domain",
+						slog.Uint64("enterprise_ca", uint64(eca.ID)),
+						slog.Uint64("target_domain_id", uint64(targetDomainNode.ID)),
+						attr.Error(err),
+					)
 				} else if chainToRootCAPaths.Len() == 0 {
 					continue
 				} else if trustedForAuthPaths, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, eca, targetDomainNode); err != nil {
-					slog.Error(fmt.Sprintf("Error getting eca %d path to domain %d via trusted for auth: %v", eca.ID, targetDomainNode.ID, err))
+					slog.Error(
+						"Error getting enterprise ca path to domain via trusted for auth",
+						slog.Uint64("enterprise_ca", uint64(eca.ID)),
+						slog.Uint64("target_domain_id", uint64(targetDomainNode.ID)),
+						attr.Error(err),
+					)
 				} else if trustedForAuthPaths.Len() == 0 {
 					continue
 				} else {

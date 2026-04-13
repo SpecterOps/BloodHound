@@ -167,6 +167,7 @@ type Configuration struct {
 	RecreateDefaultAdmin            bool                      `json:"recreate_default_admin"`
 	EnableUserAnalytics             bool                      `json:"enable_user_analytics"`
 	ForceDownloadEmbeddedCollectors bool                      `json:"force_download_embedded_collectors"`
+	EnableAuditLogStdout            bool                      `json:"enable_audit_log_stdout"`
 }
 
 func (s Configuration) TempDirectory() string {
@@ -249,13 +250,13 @@ func SetValuesFromEnv(varPrefix string, target any, env []string) error {
 				cfgKeyPath := strings.TrimPrefix(key, formattedPrefix)
 
 				if err := SetValue(target, cfgKeyPath, valueStr); errors.Is(err, ErrInvalidConfigurationPath) {
-					slog.Warn(fmt.Sprintf("%s", err))
+					slog.Warn("Invalid configuration path", attr.Error(err))
 				} else if err != nil {
 					return err
 				}
 			}
 		} else {
-			slog.Error(fmt.Sprintf("Invalid key/value pair: %+v", kvParts))
+			slog.Error("Invalid key/value pair", slog.String("kv_parts", strings.Join(kvParts, "=")))
 		}
 	}
 
@@ -266,11 +267,11 @@ func getConfiguration(path string, defaultConfigFunc func() (Configuration, erro
 	if hasCfgFile, err := HasConfigurationFile(path); err != nil {
 		return Configuration{}, err
 	} else if hasCfgFile {
-		slog.Info(fmt.Sprintf("Reading configuration found at %s", path))
+		slog.Info("Reading configuration found at", slog.String("path", path))
 
 		return ReadConfigurationFile(path)
 	} else {
-		slog.Info(fmt.Sprintf("No configuration file found at %s. Returning defaults.", path))
+		slog.Info("No configuration file found, returning defaults", slog.String("path", path))
 
 		return defaultConfigFunc()
 	}
@@ -312,13 +313,13 @@ func (s Configuration) SaveCollectorManifests() (CollectorManifests, error) {
 	manifests := CollectorManifests{}
 
 	if azureHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), azureHoundCollector)); err != nil {
-		slog.Error(fmt.Sprintf("Error generating AzureHound manifest file: %s", err))
+		slog.Error("Error generating AzureHound manifest file", attr.Error(err))
 	} else {
 		manifests[azureHoundCollector] = azureHoundManifest
 	}
 
 	if sharpHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), sharpHoundCollector)); err != nil {
-		slog.Error(fmt.Sprintf("Error generating SharpHound manifest file: %s", err))
+		slog.Error("Error generating SharpHound manifest file", attr.Error(err))
 	} else {
 		manifests[sharpHoundCollector] = sharpHoundManifest
 	}

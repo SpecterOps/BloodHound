@@ -44,7 +44,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/oidc"
 	"github.com/specterops/bloodhound/cmd/api/src/services/saml"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/crypto"
 )
 
@@ -291,6 +293,9 @@ func (s ManagementResource) ListUsers(response http.ResponseWriter, request *htt
 			}
 		}
 
+		// Additional filtering to exclude support accounts
+		queryFilters.AddFilter(model.QueryParameterFilter{Name: "support_account", Operator: model.Equals, Value: "false"})
+
 		// ignoring the error here as this would've failed at ParseQueryParameterFilters before getting here
 		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
@@ -329,7 +334,11 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 				return
 			} else if secretDigest, err := s.secretDigester.Digest(createUserRequest.Secret); err != nil {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("Error while attempting to digest secret for user: %v", err))
+				slog.ErrorContext(
+					request.Context(),
+					"Error while attempting to digest secret for user",
+					attr.Error(err),
+				)
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 				return
 			} else {
@@ -352,7 +361,12 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SAML Provider ID must be a number: %v", err.Error()), request), response)
 				return
 			} else if samlProvider, err := s.db.GetSAMLProvider(request.Context(), samlProviderID); err != nil {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("Error while attempting to fetch SAML provider %s: %v", createUserRequest.SAMLProviderID, err))
+				slog.ErrorContext(
+					request.Context(),
+					"Error while attempting to fetch SAML provider",
+					slog.String("saml_provider_id", createUserRequest.SAMLProviderID),
+					attr.Error(err),
+				)
 				api.HandleDatabaseError(request, response, err)
 				return
 			} else {
@@ -628,7 +642,11 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 
 		passwordExpiration := appcfg.GetPasswordExpiration(request.Context(), s.db)
 		if secretDigest, err := s.secretDigester.Digest(setUserSecretRequest.Secret); err != nil {
-			slog.ErrorContext(request.Context(), fmt.Sprintf("Error while attempting to digest secret for user: %v", err))
+			slog.ErrorContext(
+				request.Context(),
+				"Error while attempting to digest secret for user",
+				attr.Error(err),
+			)
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		} else {
 			authSecret.UserID = targetUser.ID
@@ -676,9 +694,10 @@ func (s ManagementResource) ExpireUserAuthSecret(response http.ResponseWriter, r
 
 func (s ManagementResource) ListAuthTokens(response http.ResponseWriter, request *http.Request) {
 	var (
-		order         []string
-		authTokens    = model.AuthTokens{}
-		sortByColumns = request.URL.Query()[api.QueryParameterSortBy]
+		order           []string
+		authTokens      = model.AuthTokens{}
+		validatedUserID uuid.UUID
+		sortByColumns   = request.URL.Query()[api.QueryParameterSortBy]
 	)
 
 	for _, column := range sortByColumns {
@@ -725,18 +744,34 @@ func (s ManagementResource) ListAuthTokens(response http.ResponseWriter, request
 			}
 		}
 
-		// Only show the user their tokens unless they have permission to manage other users
+		if queryFilters.IsFiltered("user_id") {
+			parsedUUID, err := utils.ParseUUID(queryFilters["user_id"][0].Value)
+			if err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+				return
+			}
+			validatedUserID = parsedUUID
+		}
+
+		// allow filtering by user_id (model.AuthToken.UserID) only if users have permission to manage other users
+		// (non-admin roles are restricted to filtering by their own model.AuthToken.UserID)
 		bhCtx := ctx.FromRequest(request)
 		if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); isUser {
 			if !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
-				if queryFilters.IsFiltered("user_id") {
-					if len(queryFilters["user_id"]) > 0 && queryFilters["user_id"][0].Value != user.ID.String() {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "only admins are able to filter tokens by user_id", request), response)
+				if queryFilters.IsFiltered("user_id") && len(queryFilters["user_id"]) > 0 {
+					if validatedUserID != user.ID {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "filtering tokens by another user's user_id requires admin privileges", request), response)
 						return
 					}
-				} else {
-					queryFilters.AddFilter(model.QueryParameterFilter{Name: "user_id", Operator: model.Equals, Value: user.ID.String()})
+					// non-admin users may only use the eq operator when filtering by their own user_id
+					if queryFilters["user_id"][0].Operator != model.Equals {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "non-admin users may only apply the eq operator when filtering by user_id", request), response)
+						return
+					}
+					delete(queryFilters, "user_id")
 				}
+				// in all other cases, add a filter with user_id derived from the context
+				queryFilters.AddFilter(model.QueryParameterFilter{Name: "user_id", Operator: model.Equals, Value: user.ID.String()})
 			}
 		}
 
@@ -829,11 +864,23 @@ func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, reques
 		if err := s.db.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 			// We want to keep err scoped because response trumps this error
 			if errors.Is(err, database.ErrNotFound) {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("resource not found: %v", err))
+				slog.ErrorContext(
+					request.Context(),
+					"Resource not found",
+					attr.Error(err),
+				)
 			} else if errors.Is(err, context.DeadlineExceeded) {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("context deadline exceeded: %v", err))
+				slog.ErrorContext(
+					request.Context(),
+					"Context deadline exceeded",
+					attr.Error(err),
+				)
 			} else {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("unexpected database error: %v", err))
+				slog.ErrorContext(
+					request.Context(),
+					"Unexpected database error",
+					attr.Error(err),
+				)
 			}
 		}
 	}

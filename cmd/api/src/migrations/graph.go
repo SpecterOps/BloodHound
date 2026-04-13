@@ -24,6 +24,7 @@ import (
 	"sort"
 
 	"github.com/specterops/bloodhound/cmd/api/src/version"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -88,16 +89,32 @@ func GetMigrationData(ctx context.Context, db graph.Database) (version.Version, 
 
 		return err
 	}); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Unable to fetch migration data from graph: %v", err))
+		slog.WarnContext(
+			ctx,
+			"Unable to fetch migration data from graph",
+			attr.Error(err),
+		)
 		return currentMigration, ErrNoMigrationData
 	} else if major, err := node.Properties.Get("Major").Int(); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Unable to get Major property from migration data node: %v", err))
+		slog.WarnContext(
+			ctx,
+			"Unable to get Major property from migration data node",
+			attr.Error(err),
+		)
 		return currentMigration, ErrNoMigrationData
 	} else if minor, err := node.Properties.Get("Minor").Int(); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("unable to get Minor property from migration data node: %v", err))
+		slog.WarnContext(
+			ctx,
+			"Unable to get Minor property from migration data node",
+			attr.Error(err),
+		)
 		return currentMigration, ErrNoMigrationData
 	} else if patch, err := node.Properties.Get("Patch").Int(); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("unable to get Patch property from migration data node: %v", err))
+		slog.WarnContext(
+			ctx,
+			"Unable to get Patch property from migration data node",
+			attr.Error(err),
+		)
 		return currentMigration, ErrNoMigrationData
 	} else {
 		currentMigration.Major = major
@@ -169,14 +186,23 @@ func (s *GraphMigrator) executeMigrations(ctx context.Context, originalVersion v
 		if nextVersion.GreaterThan(mostRecentVersion) {
 			versionMigrations := migrationsByVersion[nextVersion]
 			for _, nextMigration := range versionMigrations {
-				slog.InfoContext(ctx, fmt.Sprintf("Graph migration version %s is greater than current version %s", nextMigration.Version, mostRecentVersion))
+				slog.InfoContext(
+					ctx,
+					"Graph migration version is greater than current version",
+					slog.String("migration_version", nextMigration.Version.String()),
+					slog.String("most_recent_version", mostRecentVersion.String()),
+				)
 
 				if err := nextMigration.Execute(ctx, s.db); err != nil {
 					return fmt.Errorf("migration version %s failed: %w", nextMigration.Version.String(), err)
 				}
 			}
 
-			slog.InfoContext(ctx, fmt.Sprintf("Graph migration version %s executed successfully", nextVersion))
+			slog.InfoContext(
+				ctx,
+				"Graph migration executed successfully",
+				slog.String("next_version", nextVersion.String()),
+			)
 			mostRecentVersion = nextVersion
 		}
 	}
@@ -205,7 +231,11 @@ func (s *GraphMigrator) ExecuteStepwiseMigrations(ctx context.Context, migration
 		if errors.Is(err, ErrNoMigrationData) {
 			currentVersion := version.GetVersion()
 
-			slog.InfoContext(ctx, fmt.Sprintf("This is a new graph database. Creating a migration entry for GraphDB version %s", currentVersion))
+			slog.InfoContext(
+				ctx,
+				"This is a new graph database. Creating a migration entry for GraphDB version",
+				slog.String("current_version", currentVersion.String()),
+			)
 			return CreateMigrationData(ctx, s.db, currentMigration)
 		} else {
 			return fmt.Errorf("unable to get graph db migration data: %w", err)

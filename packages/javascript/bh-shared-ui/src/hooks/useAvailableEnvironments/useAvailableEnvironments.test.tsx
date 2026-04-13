@@ -62,24 +62,24 @@ describe('useAvailableEnvironments', () => {
         it('returns the full environment for the environmentid passed', async () => {
             const actual = renderHook(() => useSelectedEnvironment(fakeDomainA.id));
 
-            await waitFor(() => expect(actual.result.current.data).toEqual(fakeDomainA));
+            await waitFor(() => expect(actual.result.current.environment).toEqual(fakeDomainA));
         });
         it('returns the full environment of the environmentId found in the search params', async () => {
             const url = `/test?environmentId=${fakeDomainA.id}`;
             const actual = renderHook(() => useSelectedEnvironment(fakeDomainA.id), { route: url });
 
-            await waitFor(() => expect(actual.result.current.data).toEqual(fakeDomainA));
+            await waitFor(() => expect(actual.result.current.environment).toEqual(fakeDomainA));
         });
         it('returns undefined if environmentId searched for is not found', async () => {
             const fakeEnvId = 'nonexistent';
             const actual = renderHook(() => useSelectedEnvironment(fakeEnvId));
 
-            await waitFor(() => expect(actual.result.current.data).toBeUndefined());
+            await waitFor(() => expect(actual.result.current.environment).toBeUndefined());
 
             const url = `/test?environmentId=${fakeEnvId}`;
             const actual2 = renderHook(() => useSelectedEnvironment(), { route: url });
 
-            await waitFor(() => expect(actual2.result.current.data).toBeUndefined());
+            await waitFor(() => expect(actual2.result.current.environment).toBeUndefined());
         });
     });
 });

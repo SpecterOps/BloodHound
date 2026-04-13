@@ -13,10 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { createColumnHelper, DataTable } from '@bloodhoundenterprise/doodleui';
 import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tooltip } from '@mui/material';
+import { createColumnHelper, DataTable } from 'doodle-ui';
 import isEmpty from 'lodash/isEmpty';
 import React, {
     useCallback,
@@ -130,7 +130,7 @@ const useExploreTableRowsAndColumns = ({
                         />
                     );
                 },
-                size: isSmallColumn(key, bestGuessAtDataType) ? 100 : 250,
+                size: isSmallColumn(key, bestGuessAtDataType) ? 136 : 250,
                 cell: (info) => {
                     const value = info.getValue();
 
@@ -174,6 +174,10 @@ const useExploreTableRowsAndColumns = ({
                         />
                     </div>
                 ),
+                meta: {
+                    label: 'Action Menu',
+                    enableDragging: false,
+                },
             }),
         [handleKebabMenuClick]
     );
@@ -220,12 +224,27 @@ const useExploreTableRowsAndColumns = ({
         [kebabColumDefinition, selectedColumnDefinitions]
     ) as DataTableProps['columns'];
 
+    const columnOrderArr = useMemo(() => tableColumns.map((c) => c.id ?? ''), [tableColumns]);
+
+    // avoids race condition between columnOrder and columnOrderArr
+    // https://react.dev/reference/react/useState#storing-information-from-previous-renders
+    const [prevColumnOrderArr, setPrevColumnOrderArr] = useState<string[]>(columnOrderArr);
+    const [columnOrder, setColumnOrder] = useState<string[]>(columnOrderArr);
+
+    if (prevColumnOrderArr !== columnOrderArr) {
+        setPrevColumnOrderArr(columnOrderArr);
+        setColumnOrder(columnOrderArr);
+    }
+
     return {
         rows,
         columnOptionsForDropdown: allColumnDefinitions,
         tableColumns,
         sortedFilteredRows,
         resultsCount: rows.length,
+        columnOrderArr,
+        columnOrder,
+        setColumnOrder,
     };
 };
 

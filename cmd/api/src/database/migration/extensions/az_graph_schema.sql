@@ -91,9 +91,9 @@ BEGIN
 		SELECT genscript_upsert_kind(v_environment_kind_name) INTO retrieved_environment_kind_id;
 	END IF;
 
-	SELECT sk.id INTO retrieved_source_kind_id FROM source_kinds sk JOIN kind k ON sk.kind_id = k.id WHERE k.name = v_source_kind_name;
+	SELECT id INTO retrieved_source_kind_id FROM kind WHERE kind.name = v_source_kind_name;
 	IF retrieved_source_kind_id IS NULL THEN
-		SELECT genscript_upsert_source_kind(v_source_kind_name) INTO retrieved_source_kind_id;
+		SELECT genscript_upsert_kind(v_source_kind_name) INTO retrieved_source_kind_id;
 	END IF;
 
 	IF NOT EXISTS (SELECT id FROM schema_environments se WHERE se.schema_extension_id = v_extension_id) THEN
@@ -155,6 +155,7 @@ BEGIN
 	PERFORM genscript_upsert_kind('AZWebApp');
 	PERFORM genscript_upsert_kind('AZLogicApp');
 	PERFORM genscript_upsert_kind('AZAutomationAccount');
+	PERFORM genscript_upsert_kind('AZFederatedIdentityCredential');
 
 	-- Insert Relationship Kinds
 	PERFORM genscript_upsert_kind('AZAvereContributor');
@@ -206,27 +207,29 @@ BEGIN
 	PERFORM genscript_upsert_kind('SyncedToEntraUser');
 	PERFORM genscript_upsert_kind('AZRoleEligible');
 	PERFORM genscript_upsert_kind('AZRoleApprover');
+	PERFORM genscript_upsert_kind('AZAuthenticatesTo');
 
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZBase', 'AZBase', '', false, '', '');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZVMScaleSet', 'AZVMScaleSet', '', true, 'fa-server', '#007CD0');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZApp', 'AZApp', '', true, 'fa-window-restore', '#03FC84');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZRole', 'AZRole', '', true, 'fa-clipboard-list', '#ED8537');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZDevice', 'AZDevice', '', true, 'fa-desktop', '#B18FCF');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZFunctionApp', 'AZFunctionApp', '', true, 'fa-bolt', '#F4BA44');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZGroup', 'AZGroup', '', true, 'fa-users', '#F57C9B');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZKeyVault', 'AZKeyVault', '', true, 'fa-lock', '#ED658C');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZManagementGroup', 'AZManagementGroup', '', true, 'fa-sitemap', '#BD93D8');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZResourceGroup', 'AZResourceGroup', '', true, 'fa-cube', '#89BD9E');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZServicePrincipal', 'AZServicePrincipal', '', true, 'fa-robot', '#C1D6D6');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZSubscription', 'AZSubscription', '', true, 'fa-key', '#D2CCA1');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZTenant', 'AZTenant', '', true, 'fa-cloud', '#54F2F2');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZUser', 'AZUser', '', true, 'fa-user', '#34D2EB');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZVM', 'AZVM', '', true, 'fa-desktop', '#F9ADA0');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZManagedCluster', 'AZManagedCluster', '', true, 'fa-cubes', '#326CE5');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZContainerRegistry', 'AZContainerRegistry', '', true, 'fa-box-open', '#0885D7');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZWebApp', 'AZWebApp', '', true, 'fa-object-group', '#4696E9');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZLogicApp', 'AZLogicApp', '', true, 'fa-sitemap', '#9EE047');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZAutomationAccount', 'AZAutomationAccount', '', true, 'fa-cog', '#F4BA44');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZVMScaleSet', 'AZVMScaleSet', '', true, 'server', '#007CD0');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZApp', 'AZApp', '', true, 'window-restore', '#03FC84');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZRole', 'AZRole', '', true, 'clipboard-list', '#ED8537');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZDevice', 'AZDevice', '', true, 'desktop', '#B18FCF');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZFunctionApp', 'AZFunctionApp', '', true, 'bolt', '#F4BA44');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZGroup', 'AZGroup', '', true, 'users', '#F57C9B');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZKeyVault', 'AZKeyVault', '', true, 'lock', '#ED658C');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZManagementGroup', 'AZManagementGroup', '', true, 'sitemap', '#BD93D8');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZResourceGroup', 'AZResourceGroup', '', true, 'cube', '#89BD9E');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZServicePrincipal', 'AZServicePrincipal', '', true, 'robot', '#C1D6D6');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZSubscription', 'AZSubscription', '', true, 'key', '#D2CCA1');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZTenant', 'AZTenant', '', true, 'cloud', '#54F2F2');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZUser', 'AZUser', '', true, 'user', '#34D2EB');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZVM', 'AZVM', '', true, 'desktop', '#F9ADA0');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZManagedCluster', 'AZManagedCluster', '', true, 'cubes', '#326CE5');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZContainerRegistry', 'AZContainerRegistry', '', true, 'box-open', '#0885D7');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZWebApp', 'AZWebApp', '', true, 'object-group', '#4696E9');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZLogicApp', 'AZLogicApp', '', true, 'sitemap', '#9EE047');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZAutomationAccount', 'AZAutomationAccount', '', true, 'cog', '#F4BA44');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZFederatedIdentityCredential', 'AZFederatedIdentityCredential', '', true, 'key', '#FFEE8C');
 
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAvereContributor', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZContains', '', true);
@@ -277,6 +280,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'SyncedToEntraUser', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRoleEligible', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRoleApprover', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAuthenticatesTo', '', true);
 
 	PERFORM genscript_upsert_source_kind('AZBase');
 	PERFORM genscript_upsert_kind('AZTenant');

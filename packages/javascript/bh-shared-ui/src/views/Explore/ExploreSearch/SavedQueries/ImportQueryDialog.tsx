@@ -23,7 +23,7 @@ import {
     DialogPortal,
     DialogTitle,
     VisuallyHidden,
-} from '@bloodhoundenterprise/doodleui';
+} from 'doodle-ui';
 import { ErrorResponse } from 'js-client-library';
 import { useEffect, useState } from 'react';
 import FileDrop from '../../../../components/FileDrop';

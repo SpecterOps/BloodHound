@@ -27,3 +27,5 @@ properties:
     type: boolean
   schema_name:
     type: string
+  is_builtin:
+    type: boolean

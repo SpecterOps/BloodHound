@@ -45,6 +45,9 @@ const server = setupServer(
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(ctx.status(200));
     }),
+    rest.get('/api/v2/config', (_req, res, ctx) => {
+        return res(ctx.status(200), ctx.json({ data: [] }));
+    }),
     rest.get('/api/v2/custom-nodes', (req, res, ctx) => {
         return res(ctx.status(200));
     })
@@ -441,6 +444,7 @@ const WrappedExploreTable = () => {
         label: true,
         objectId: true,
     });
+    const handleChangedPinnedColumns = () => {};
 
     return (
         <ExploreTable
@@ -454,6 +458,7 @@ const WrappedExploreTable = () => {
             onKebabMenuClick={(row) => {
                 kebabCallbackSpy(row);
             }}
+            onChangePinnedColumns={handleChangedPinnedColumns}
         />
     );
 };

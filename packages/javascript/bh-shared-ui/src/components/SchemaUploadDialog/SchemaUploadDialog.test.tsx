@@ -16,13 +16,16 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { QueryClient } from 'react-query';
+import { extensionsKeys } from '../../hooks';
 import { withoutErrorLogging } from '../../mocks';
-import { render } from '../../test-utils';
+import { render, waitFor } from '../../test-utils';
 import { SchemaUploadDialog } from './SchemaUploadDialog';
 
 const testFile = new File([JSON.stringify({ value: 'test' })], 'test.json', { type: 'application/json' });
 
 const addNotificationMock = vi.fn();
+const checkPermissionMock = vi.fn().mockReturnValue(true);
 
 vi.mock('../../providers', async () => {
     const actual = await vi.importActual('../../providers');
@@ -31,6 +34,17 @@ vi.mock('../../providers', async () => {
         useNotifications: () => {
             return { addNotification: addNotificationMock };
         },
+    };
+});
+
+vi.mock('../../hooks/usePermissions', async () => {
+    const actual = await vi.importActual('../../hooks');
+    return {
+        ...actual,
+        usePermissions: () => ({
+            checkPermission: checkPermissionMock,
+            isSuccess: true,
+        }),
     };
 });
 
@@ -72,6 +86,7 @@ beforeAll(() => {
 afterEach(() => {
     server.resetHandlers();
     addNotificationMock.mockClear();
+    checkPermissionMock.mockReturnValue(true);
 });
 afterAll(() => {
     server.close();
@@ -83,6 +98,26 @@ describe('SchemaUploadDialog', () => {
         const screen = render(<SchemaUploadDialog />);
         const button = screen.getByRole('button', { name: 'Upload File' });
         expect(button).toBeInTheDocument();
+    });
+
+    it('disables the upload file button when the user does not have the opengraph write permission', () => {
+        checkPermissionMock.mockReturnValue(false);
+
+        const screen = render(<SchemaUploadDialog />);
+
+        expect(screen.getByRole('button', { name: 'Upload File' })).toBeDisabled();
+    });
+
+    it('does not open the dialog when the user does not have the opengraph write permission', async () => {
+        checkPermissionMock.mockReturnValue(false);
+
+        const screen = render(<SchemaUploadDialog />);
+        const user = userEvent.setup();
+
+        expect(screen.getByRole('button', { name: 'Upload File' })).toBeDisabled();
+
+        await user.click(screen.getByRole('button', { name: 'Upload File' }));
+        expect(screen.queryByRole('dialog', { name: 'Upload Schema Files' })).not.toBeInTheDocument();
     });
 
     it('opens the dialog when the button is clicked', async () => {
@@ -126,6 +161,57 @@ describe('SchemaUploadDialog', () => {
 
         expect(await screen.findByText('100%')).toBeInTheDocument();
         expect(await screen.findByRole('button', { name: 'Complete' })).toBeInTheDocument();
+    });
+
+    it('displays a completion of 100% and adds a "Close" button that closes the dialog after a successful upload', async () => {
+        const screen = render(<SchemaUploadDialog />);
+        const user = userEvent.setup();
+
+        await user.click(screen.getByRole('button', { name: 'Upload File' }));
+        const fileInput = screen.getByTestId('ingest-file-upload');
+        await user.upload(fileInput, testFile);
+        await user.click(screen.getByRole('button', { name: 'Upload' }));
+
+        expect(await screen.findByText('100%')).toBeInTheDocument();
+        expect(await screen.findByRole('button', { name: 'Close' })).toBeInTheDocument();
+    });
+
+    it('adds a "Close" button that closes the dialog after a failed upload', async () => {
+        server.use(rest.put('/api/v2/extensions', (req, res, ctx) => res(ctx.status(400))));
+
+        const screen = render(<SchemaUploadDialog />);
+        const user = userEvent.setup();
+
+        await user.click(screen.getByRole('button', { name: 'Upload File' }));
+        const fileInput = screen.getByTestId('ingest-file-upload');
+        await user.upload(fileInput, testFile);
+        await user.click(screen.getByRole('button', { name: 'Upload' }));
+
+        expect(await screen.findByText('Failed to Upload')).toBeInTheDocument();
+        expect(await screen.findByRole('button', { name: 'Close' })).toBeInTheDocument();
+    });
+
+    it('invalidates the extensions query after a successful upload', async () => {
+        const queryClient = new QueryClient({
+            defaultOptions: {
+                queries: {
+                    retry: false,
+                },
+            },
+        });
+        const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries');
+        const screen = render(<SchemaUploadDialog />, { queryClient });
+        const user = userEvent.setup();
+
+        await user.click(screen.getByRole('button', { name: 'Upload File' }));
+        await user.upload(screen.getByTestId('ingest-file-upload'), testFile);
+        await user.click(screen.getByRole('button', { name: 'Upload' }));
+
+        await screen.findByRole('button', { name: 'Complete' });
+
+        await waitFor(() => {
+            expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: extensionsKeys.all });
+        });
     });
 
     it('On unsuccessful upload, notifies with an error and displays a retry button', async () => {

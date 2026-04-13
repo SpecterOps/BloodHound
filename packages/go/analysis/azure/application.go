@@ -18,33 +18,30 @@ package azure
 
 import (
 	"context"
-	"fmt"
+
 	"log/slog"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
 
-func NewApplicationDetails(node *graph.Node) ApplicationDetails {
-	return ApplicationDetails{
-		Node: FromGraphNode(node),
-	}
-}
-
-func ApplicationEntityDetails(ctx context.Context, db graph.Database, objectID string, hydrateCounts bool) (ApplicationDetails, error) {
+func ApplicationEntityDetails(ctx context.Context, db graph.Database, validPrimaryKinds graphschema.ValidPrimaryKinds, objectID string, hydrateCounts bool) (ApplicationDetails, error) {
 	var details ApplicationDetails
 
 	return details, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
 			return err
 		} else {
-			details = NewApplicationDetails(node)
+			details.Node = FromGraphNode(validPrimaryKinds, node)
 			if servicePrincipalID, err := getAppServicePrincipalID(tx, node); err != nil {
 				return err
 			} else {
 				details.Properties[azure.ServicePrincipalID.String()] = servicePrincipalID
 			}
+
 			if hydrateCounts {
 				if details, err = PopulateApplicationEntityDetailsCounts(tx, node, details); err != nil {
 					return err
@@ -61,12 +58,20 @@ func getAppServicePrincipalID(tx graph.Transaction, node *graph.Node) (string, e
 		return "", err
 	} else if appServicePrincipals.Len() == 0 {
 		// Don't want this to break the function, but we'll want to know about it
-		slog.Error(fmt.Sprintf("Application node %d has no service principals attached", node.ID))
+		slog.Error(
+			"Application node has no service principals attached",
+			slog.Uint64("node_id", uint64(node.ID)),
+		)
 	} else {
 		servicePrincipal := appServicePrincipals.Pick()
 
 		if servicePrincipalID, err = servicePrincipal.Properties.Get(common.ObjectID.String()).String(); err != nil {
-			slog.Error(fmt.Sprintf("Failed to marshal the object ID of node %d while fetching the service principal ID of application node %d: %v", servicePrincipal.ID, node.ID, err))
+			slog.Error(
+				"Failed to marshal object ID while fetching the service principal ID of application",
+				slog.Uint64("service_principal_id", uint64(servicePrincipal.ID)),
+				slog.Uint64("node_id", uint64(node.ID)),
+				attr.Error(err),
+			)
 		}
 	}
 	return servicePrincipalID, nil
@@ -78,6 +83,12 @@ func PopulateApplicationEntityDetailsCounts(tx graph.Transaction, node *graph.No
 		return details, err
 	} else {
 		details.InboundObjectControl = inboundObjectControl.Len()
+	}
+
+	if identityCredentials, err := FetchApplicationFederatedIdentityCredentials(tx, node); err != nil {
+		return details, err
+	} else {
+		details.FederatedIdentityCredentials = identityCredentials.Len()
 	}
 
 	return details, nil

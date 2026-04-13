@@ -23,7 +23,8 @@ import (
 
 	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/dawgs/cypher/models"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 	"gorm.io/gorm"
 )
@@ -38,7 +39,9 @@ type OpenGraphSchema interface {
 	CreateGraphSchemaNodeKind(ctx context.Context, name string, extensionId int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.GraphSchemaNodeKind, error)
 	GetGraphSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.GraphSchemaNodeKind, error)
 	GetGraphSchemaNodeKinds(ctx context.Context, nodeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error)
+	GetDisplayGraphSchemaNodeKinds(ctx context.Context) (model.GraphSchemaNodeKindMap, error)
 	UpdateGraphSchemaNodeKind(ctx context.Context, schemaNodeKind model.GraphSchemaNodeKind) (model.GraphSchemaNodeKind, error)
+	UpdateGraphSchemaNodeKindIconById(ctx context.Context, kindId int32, icon model.CustomNodeIcon) (model.GraphSchemaNodeKind, error)
 	DeleteGraphSchemaNodeKind(ctx context.Context, schemaNodeKindId int32) error
 
 	CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error)
@@ -65,7 +68,7 @@ type OpenGraphSchema interface {
 	DeleteEnvironment(ctx context.Context, environmentId int32) error
 
 	CreateSchemaFinding(ctx context.Context, findingType model.SchemaFindingType, extensionId, kindId, environmentId int32, name, displayName string) (model.SchemaFinding, error)
-	GetSchemaFindings(ctx context.Context, filters model.Filters) ([]model.SchemaFinding, error)
+	GetSchemaFindings(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) ([]model.SchemaFinding, int, error)
 	GetSchemaFindingsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaFinding, error)
 	GetSchemaFindingById(ctx context.Context, findingId int32) (model.SchemaFinding, error)
 	GetSchemaFindingByName(ctx context.Context, name string) (model.SchemaFinding, error)
@@ -80,10 +83,11 @@ type OpenGraphSchema interface {
 	DeleteRemediation(ctx context.Context, findingId int32) error
 
 	CreatePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) (model.SchemaEnvironmentPrincipalKind, error)
+	GetPrincipalKindsGraphKinds(ctx context.Context) (graph.Kinds, error)
 	GetPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error)
 	DeletePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error
 
-	GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error)
+	GetValidDisplayKinds(ctx context.Context) (graphschema.ValidPrimaryKinds, error)
 }
 
 const (
@@ -217,7 +221,6 @@ func (s *BloodhoundDB) UpdateGraphSchemaExtension(ctx context.Context, extension
 // DeleteGraphSchemaExtension deletes an existing Graph Schema Extension based on the extension ID.
 // It returns an error if the extension does not exist. Built-In Extensions will return an error if there
 // is an attempt to delete it.
-// Source Kinds are deactivated only if they don't reference any other extensions environment.
 func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extensionId int32) error {
 	var (
 		schemaExtension model.GraphSchemaExtension
@@ -229,8 +232,6 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 				"id": extensionId,
 			},
 		}
-
-		sourceKindIds []int32
 	)
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
@@ -246,39 +247,11 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 			return model.ErrGraphExtensionBuiltIn
 		}
 
-		// Get all source_kind_ids from this extension's environments BEFORE deleting it
-		if result := tx.Raw(fmt.Sprintf(`
-			SELECT DISTINCT source_kind_id
-			FROM %s
-			WHERE schema_extension_id = ?
-		`, model.SchemaEnvironment{}.TableName()), extensionId).Scan(&sourceKindIds); result.Error != nil {
-			return fmt.Errorf("failed to get source kinds: %w", result.Error)
-		}
-
 		// Delete the extension
 		if result := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaExtension.TableName()), extensionId); result.Error != nil {
 			return CheckError(result)
 		} else if result.RowsAffected == 0 {
 			return ErrNotFound
-		}
-
-		// Deactivate source_kinds that are only referenced by this extension
-		if len(sourceKindIds) > 0 {
-			if result := tx.Exec(fmt.Sprintf(`
-				UPDATE source_kinds AS sk
-				SET active = false
-				FROM %s k
-				WHERE sk.kind_id = k.id
-				AND sk.id = ANY(?)
-				AND k.name NOT IN ('Base', 'AZBase')
-				AND NOT EXISTS (
-					SELECT 1
-					FROM %s se
-					WHERE se.source_kind_id = sk.id
-				)
-			`, model.Kind{}.TableName(), model.SchemaEnvironment{}.TableName()), pq.Array(sourceKindIds)); result.Error != nil {
-				return fmt.Errorf("failed to deactivate source kinds: %w", result.Error)
-			}
 		}
 
 		return nil
@@ -327,32 +300,38 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 		aliasedSorts    = make(model.Sort, 0, len(sort))
 
 		nodeKindColumnAliases = map[string]string{
-			"extension_id":    "nk.schema_extension_id",
-			"name":            "k.name",
-			"id":              "nk.id",
-			"display_name":    "nk.display_name",
-			"description":     "nk.description",
-			"is_display_kind": "nk.is_display_kind",
-			"icon":            "nk.icon",
-			"icon_color":      "nk.icon_color",
-			"created_at":      "nk.created_at",
-			"updated_at":      "nk.updated_at",
-			"deleted_at":      "nk.deleted_at",
+			"schema_extension_id": "nk.schema_extension_id",
+			"name":                "k.name",
+			"id":                  "nk.id",
+			"display_name":        "nk.display_name",
+			"description":         "nk.description",
+			"is_display_kind":     "nk.is_display_kind",
+			"icon":                "nk.icon",
+			"icon_color":          "nk.icon_color",
+			"created_at":          "nk.created_at",
+			"updated_at":          "nk.updated_at",
+			"deleted_at":          "nk.deleted_at",
 		}
 	)
 
-	for filterColumn, filter := range filters {
-		aliasedColumn, ok := nodeKindColumnAliases[filterColumn]
-		if !ok {
-			aliasedColumn = filterColumn
+	if len(filters) > 0 {
+		for filterColumn, filter := range filters {
+			aliasedColumn, ok := nodeKindColumnAliases[filterColumn]
+			if !ok {
+				aliasedColumn = filterColumn
+			}
+			aliasedFilters[aliasedColumn] = filter
 		}
-		aliasedFilters[aliasedColumn] = filter
 	}
-	for _, sortItem := range sort {
-		if aliasedColumn, ok := nodeKindColumnAliases[sortItem.Column]; ok {
-			sortItem.Column = aliasedColumn
+	if len(sort) > 0 {
+		for _, sortItem := range sort {
+			if aliasedColumn, ok := nodeKindColumnAliases[sortItem.Column]; ok {
+				sortItem.Column = aliasedColumn
+			}
+			aliasedSorts = append(aliasedSorts, sortItem)
 		}
-		aliasedSorts = append(aliasedSorts, sortItem)
+	} else {
+		aliasedSorts = append(aliasedSorts, model.SortItem{Column: "nk.id", Direction: model.AscendingSortDirection})
 	}
 
 	if filterAndPagination, err := parseFiltersAndPagination(aliasedFilters, aliasedSorts, skip, limit); err != nil {
@@ -378,6 +357,26 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 			}
 		}
 		return schemaNodeKinds, totalRowCount, nil
+	}
+}
+
+// GetDisplayGraphSchemaNodeKinds - returns a map of display kinds where the key is the node kind name and the value is the entire schema node kind row.
+// An empty map will be returned if no valid node kinds exist. An error will be returned if encountered.
+func (s *BloodhoundDB) GetDisplayGraphSchemaNodeKinds(ctx context.Context) (model.GraphSchemaNodeKindMap, error) {
+	if displaySchemaNodeKinds, _, err := s.GetGraphSchemaNodeKinds(ctx, model.Filters{"is_display_kind": []model.Filter{
+		{
+			Operator:    model.Equals,
+			Value:       "true",
+			SetOperator: model.FilterAnd,
+		},
+	}}, model.Sort{}, 0, 0); err != nil {
+		return nil, err
+	} else {
+		var displayKindsNodes = model.GraphSchemaNodeKindMap{}
+		for _, schemaNodeKind := range displaySchemaNodeKinds {
+			displayKindsNodes[schemaNodeKind.Name] = schemaNodeKind
+		}
+		return displayKindsNodes, nil
 	}
 }
 
@@ -415,6 +414,28 @@ func (s *BloodhoundDB) UpdateGraphSchemaNodeKind(ctx context.Context, schemaNode
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return model.GraphSchemaNodeKind{}, fmt.Errorf("%w: %s", model.ErrDuplicateSchemaNodeKindName, schemaNodeKind.Name)
 		}
+		return model.GraphSchemaNodeKind{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.GraphSchemaNodeKind{}, ErrNotFound
+	}
+	return schemaNodeKind, nil
+}
+
+// UpdateGraphSchemaNodeKindIconByKindId - updates the icon name and color for a row in the schema_node_kinds table based on the provided id. It will return an
+// error if the target schema node kind does not exist.
+func (s *BloodhoundDB) UpdateGraphSchemaNodeKindIconById(ctx context.Context, id int32, icon model.CustomNodeIcon) (model.GraphSchemaNodeKind, error) {
+	var schemaNodeKind model.GraphSchemaNodeKind
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		WITH updated_row AS (
+			UPDATE %s
+			SET icon = ?, icon_color = ?, updated_at = NOW()
+			WHERE id = ?
+			RETURNING id, kind_id, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+		)
+		SELECT updated_row.id, k.name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+		FROM updated_row
+		JOIN %s k ON k.id = updated_row.kind_id`,
+		model.GraphSchemaNodeKind{}.TableName(), model.Kind{}.TableName()), icon.Name, icon.Color, id).Scan(&schemaNodeKind); result.Error != nil {
 		return model.GraphSchemaNodeKind{}, CheckError(result)
 	} else if result.RowsAffected == 0 {
 		return model.GraphSchemaNodeKind{}, ErrNotFound
@@ -627,7 +648,7 @@ func (s *BloodhoundDB) GetGraphSchemaRelationshipKindsWithSchemaName(ctx context
 	if filterAndPagination, err := parseFiltersAndPagination(relationshipKindFilters, sort, skip, limit); err != nil {
 		return schemaRelationshipKinds, 0, err
 	} else {
-		sqlStr := fmt.Sprintf(`SELECT edge.id, k.name, edge.description, edge.is_traversable, schema.name as schema_name
+		sqlStr := fmt.Sprintf(`SELECT edge.id, k.name, edge.description, edge.is_traversable, schema.name as schema_name, schema.is_builtin
 									FROM %s edge JOIN %s schema ON edge.schema_extension_id = schema.id JOIN %s k ON edge.kind_id = k.id %s %s %s`,
 			model.GraphSchemaRelationshipKind{}.TableName(),
 			model.GraphSchemaExtension{}.TableName(),
@@ -730,9 +751,34 @@ func (s *BloodhoundDB) CreateEnvironment(ctx context.Context, extensionId int32,
 // Common use case: filter by schema_extension_id to get all environments for a specific extension.
 // Example: filters := model.Filters{"se.schema_extension_id": []model.Filter{{Operator: model.Equals, Value: "1"}}}
 func (s *BloodhoundDB) GetEnvironmentsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaEnvironment, error) {
-	var result []model.SchemaEnvironment
+	var (
+		result         []model.SchemaEnvironment
+		aliasedFilters = make(model.Filters, len(filters))
 
-	sqlFilter, err := buildSQLFilter(filters)
+		envKindColumnAliases = map[string]string{
+			"id":                  "se.id",
+			"schema_extension_id": "se.schema_extension_id",
+			"is_builtin":          "ext.is_builtin",
+			"name":                "k.name",
+			"environment_kind_id": "se.environment_kind_id",
+			"source_kind":         "se.source_kind_id",
+			"created_at":          "se.created_at",
+			"updated_at":          "se.updated_at",
+			"deleted_at":          "se.deleted_at",
+		}
+	)
+
+	if len(filters) > 0 {
+		for filterColumn, filter := range filters {
+			aliasedColumn, ok := envKindColumnAliases[filterColumn]
+			if !ok {
+				aliasedColumn = filterColumn
+			}
+			aliasedFilters[aliasedColumn] = filter
+		}
+	}
+
+	sqlFilter, err := buildSQLFilter(aliasedFilters)
 	if err != nil {
 		return nil, err
 	}
@@ -848,43 +894,52 @@ func (s *BloodhoundDB) CreateSchemaFinding(ctx context.Context, findingType mode
 	return finding, nil
 }
 
-func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filters) ([]model.SchemaFinding, error) {
+// GetSchemaFindings - retrieves schema findings filtered and sorted by the given criteria. If sorting is not provided,
+// it will default to name ascending.
+func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) ([]model.SchemaFinding, int, error) {
 	var (
-		findings    []model.SchemaFinding
-		whereClause string
+		findings       []model.SchemaFinding
+		aliasedFilters = make(model.Filters, len(filters))
+		aliasedSorts   = make(model.Sort, 0, len(sort))
+
+		schemaFindingsColumnAliases = map[string]string{
+			"extension_id":   "sf.schema_extension_id",
+			"extension_name": "se.name",
+			"id":             "sf.id",
+			"name":           "sf.name",
+			"type":           "sf.type",
+			"is_builtin":     "se.is_builtin",
+			"kind":           "k.name",
+			"display_name":   "sf.display_name",
+			"created_at":     "sf.created_at",
+		}
 	)
 
 	if len(filters) > 0 {
-		aliasedFilters := make(model.Filters)
-
 		for filterColumn, filter := range filters {
-			var aliasedColumn string
-			switch filterColumn {
-			case "extension_id":
-				aliasedColumn = "sf.schema_extension_id"
-			case "extension_name":
-				aliasedColumn = "se.name"
-			case "id":
-				aliasedColumn = "sf.id"
-			case "name":
-				aliasedColumn = "sf.name"
-			case "subtype":
-				aliasedColumn = "sfs.subtype"
-			case "type":
-				aliasedColumn = "sf.type"
-			default:
-				aliasedColumn = filterColumn
+			if aliasedColumn, ok := schemaFindingsColumnAliases[filterColumn]; ok {
+				aliasedFilters[aliasedColumn] = filter
+			} else {
+				aliasedFilters[filterColumn] = filter
 			}
-			aliasedFilters[aliasedColumn] = filter
-		}
-		if filter, err := model.BuildSQLFilter(aliasedFilters, models.EmptyOptional[string]()); err != nil {
-			return nil, err
-		} else {
-			whereClause = "WHERE " + filter.SQLString
 		}
 	}
+	if len(sort) > 0 {
+		for _, sortItem := range sort {
+			if aliasedColumn, ok := schemaFindingsColumnAliases[sortItem.Column]; ok {
+				aliasedSorts = append(aliasedSorts, model.SortItem{Column: aliasedColumn, Direction: sortItem.Direction})
+			} else {
+				aliasedSorts = append(aliasedSorts, sortItem)
+			}
+		}
+	} else {
+		aliasedSorts = append(aliasedSorts, model.SortItem{Column: "sf.name", Direction: model.AscendingSortDirection})
+	}
 
-	sqlStr := fmt.Sprintf(`
+	if filterAndPagination, err := parseFiltersAndPagination(aliasedFilters, aliasedSorts, skip, limit); err != nil {
+		return nil, 0, err
+	} else {
+		sqlStr := fmt.Sprintf(`
 		SELECT sf.id, sf.type, sf.schema_extension_id, sf.kind_id, environment_id, sf.name, sf.display_name, sf.created_at,
 		       se.id, se.name, se.display_name, se.version, se.is_builtin, se.namespace, se.created_at,
 		       k.name,
@@ -895,41 +950,60 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 	    LEFT JOIN %s sfs on sfs.schema_finding_id = sf.id
 	    %s
 	    GROUP BY sf.id, se.id, k.name
-		ORDER BY sf.name
-	    `, model.SchemaFinding{}.TableName(), model.GraphSchemaExtension{}.TableName(), model.Kind{}.TableName(), model.SchemaFindingsSubtype{}.TableName(), whereClause)
+	     %s %s`,
+			model.SchemaFinding{}.TableName(), model.GraphSchemaExtension{}.TableName(), model.Kind{}.TableName(), model.SchemaFindingsSubtype{}.TableName(), filterAndPagination.WhereClause, filterAndPagination.OrderSql, filterAndPagination.SkipLimit)
 
-	if rows, err := s.db.WithContext(ctx).Raw(sqlStr).Rows(); err != nil {
-		return nil, err
-	} else {
-		defer rows.Close()
+		if rows, err := s.db.WithContext(ctx).Raw(sqlStr, filterAndPagination.Filter.params...).Rows(); err != nil {
+			return nil, 0, err
+		} else {
+			defer rows.Close()
 
-		for rows.Next() {
-			var (
-				finding  model.SchemaFinding
-				kindName string
-				subtypes pq.StringArray
-			)
-			if err := rows.Scan(
-				&finding.ID, &finding.Type, &finding.SchemaExtensionId, &finding.KindId, &finding.EnvironmentId, &finding.Name, &finding.DisplayName, &finding.CreatedAt,
-				&finding.Extension.ID, &finding.Extension.Name, &finding.Extension.DisplayName, &finding.Extension.Version, &finding.Extension.IsBuiltin, &finding.Extension.Namespace, &finding.Extension.CreatedAt,
-				&kindName,
-				&subtypes,
-			); err != nil {
-				return nil, err
-			} else {
-				finding.Kind = graph.StringKind(kindName)
-				finding.Subtypes = subtypes
-				findings = append(findings, finding)
+			for rows.Next() {
+				var (
+					finding  model.SchemaFinding
+					kindName string
+					subtypes pq.StringArray
+				)
+				if err := rows.Scan(
+					&finding.ID, &finding.Type, &finding.SchemaExtensionId, &finding.KindId, &finding.EnvironmentId, &finding.Name, &finding.DisplayName, &finding.CreatedAt,
+					&finding.Extension.ID, &finding.Extension.Name, &finding.Extension.DisplayName, &finding.Extension.Version, &finding.Extension.IsBuiltin, &finding.Extension.Namespace, &finding.Extension.CreatedAt,
+					&kindName,
+					&subtypes,
+				); err != nil {
+					return nil, 0, err
+				} else {
+					finding.Kind = graph.StringKind(kindName)
+					finding.Subtypes = subtypes
+					findings = append(findings, finding)
+				}
 			}
+			var totalCount int
+			if limit > 0 || skip > 0 {
+				countSqlStr := fmt.Sprintf(`
+					SELECT COUNT(*) FROM (
+						SELECT sf.id
+						FROM %s sf
+						JOIN %s se ON sf.schema_extension_id = se.id
+						JOIN %s k ON sf.kind_id = k.id
+						LEFT JOIN %s sfs on sfs.schema_finding_id = sf.id
+						%s
+						GROUP BY sf.id, se.id, k.name
+					) subq`,
+					model.SchemaFinding{}.TableName(), model.GraphSchemaExtension{}.TableName(), model.Kind{}.TableName(), model.SchemaFindingsSubtype{}.TableName(), filterAndPagination.WhereClause)
+				if countResult := s.db.WithContext(ctx).Raw(countSqlStr, filterAndPagination.Filter.params...).Scan(&totalCount); countResult.Error != nil {
+					return nil, 0, CheckError(countResult)
+				}
+			} else {
+				totalCount = len(findings)
+			}
+			return findings, totalCount, nil
 		}
-
-		return findings, nil
 	}
 }
 
 // GetSchemaFindingById - retrieves a schema finding by id.
 func (s *BloodhoundDB) GetSchemaFindingById(ctx context.Context, findingId int32) (model.SchemaFinding, error) {
-	if findings, err := s.GetSchemaFindings(ctx, model.Filters{"id": []model.Filter{{Value: strconv.Itoa(int(findingId)), Operator: model.Equals}}}); err != nil {
+	if findings, _, err := s.GetSchemaFindings(ctx, model.Filters{"id": []model.Filter{{Value: strconv.Itoa(int(findingId)), Operator: model.Equals}}}, model.Sort{}, 0, 0); err != nil {
 		return model.SchemaFinding{}, err
 	} else if len(findings) == 0 {
 		return model.SchemaFinding{}, ErrNotFound
@@ -940,7 +1014,7 @@ func (s *BloodhoundDB) GetSchemaFindingById(ctx context.Context, findingId int32
 
 // GetSchemaFindingByName - retrieves a schema finding by finding name.
 func (s *BloodhoundDB) GetSchemaFindingByName(ctx context.Context, name string) (model.SchemaFinding, error) {
-	if findings, err := s.GetSchemaFindings(ctx, model.Filters{"name": []model.Filter{{Value: name, Operator: model.Equals}}}); err != nil {
+	if findings, _, err := s.GetSchemaFindings(ctx, model.Filters{"name": []model.Filter{{Value: name, Operator: model.Equals}}}, model.Sort{}, 0, 0); err != nil {
 		return model.SchemaFinding{}, err
 	} else if len(findings) == 0 {
 		return model.SchemaFinding{}, ErrNotFound
@@ -951,7 +1025,8 @@ func (s *BloodhoundDB) GetSchemaFindingByName(ctx context.Context, name string) 
 
 // GetSchemaFindingsByExtensionId - returns all findings by extension id.
 func (s *BloodhoundDB) GetSchemaFindingsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaFinding, error) {
-	return s.GetSchemaFindings(ctx, model.Filters{"extension_id": []model.Filter{{Value: strconv.Itoa(int(extensionId)), Operator: model.Equals}}})
+	findings, _, err := s.GetSchemaFindings(ctx, model.Filters{"extension_id": []model.Filter{{Value: strconv.Itoa(int(extensionId)), Operator: model.Equals}}}, model.Sort{}, 0, 0)
+	return findings, err
 }
 
 // DeleteSchemaFinding - deletes a schema finding by id.
@@ -1122,6 +1197,41 @@ func (s *BloodhoundDB) GetPrincipalKindsByEnvironmentId(ctx context.Context, env
 	return envPrincipalKinds, nil
 }
 
+func (s *BloodhoundDB) GetPrincipalKindsGraphKinds(ctx context.Context) (graph.Kinds, error) {
+	var (
+		principalKinds []model.Kind
+		whereClause    string
+	)
+
+	// When FF is disabled, we want to limit to just builtin environment principal kinds
+	if flag, err := s.GetFlagByKey(ctx, appcfg.FeatureOpenGraphFindings); err != nil {
+		return nil, err
+	} else if !flag.Enabled {
+		if envs, err := s.GetEnvironmentsFiltered(ctx, model.Filters{"is_builtin": []model.Filter{{Operator: model.Equals, Value: "true"}}}); err != nil {
+			return nil, err
+		} else {
+			var envIds []string
+			for _, env := range envs {
+				envIds = append(envIds, strconv.Itoa(int(env.ID)))
+			}
+			whereClause = fmt.Sprintf("WHERE pk.environment_id IN (%s)", strings.Join(envIds, ","))
+		}
+	}
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT k.id, k.name
+		FROM %s pk
+		JOIN %s k ON k.id = pk.principal_kind
+		%s`, model.SchemaEnvironmentPrincipalKind{}.TableName(), model.Kind{}.TableName(), whereClause)).Scan(&principalKinds); result.Error != nil {
+		return nil, CheckError(result)
+	}
+
+	var graphPrincipalKinds graph.Kinds
+	for _, kind := range principalKinds {
+		graphPrincipalKinds = append(graphPrincipalKinds, kind.ToKind())
+	}
+	return graphPrincipalKinds, nil
+}
+
 func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error {
 	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`
 		DELETE FROM %s
@@ -1135,24 +1245,13 @@ func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId in
 	return nil
 }
 
-// GetDisplayNodeGraphKinds - returns a map of all node kinds that are display kinds.
+// GetValidDisplayKinds - returns a map of all node kinds that are display kinds.
 // An empty map will be returned if no valid node kinds exist. An error will be returned if encountered.
-func (s *BloodhoundDB) GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error) {
-
-	if displaySchemaNodeKinds, _, err := s.GetGraphSchemaNodeKinds(ctx, model.Filters{"is_display_kind": []model.Filter{
-		{
-			Operator:    model.Equals,
-			Value:       "true",
-			SetOperator: model.FilterAnd,
-		},
-	}}, model.Sort{}, 0, 0); err != nil {
+func (s *BloodhoundDB) GetValidDisplayKinds(ctx context.Context) (graphschema.ValidPrimaryKinds, error) {
+	if displaySchemaNodeKinds, err := s.GetDisplayGraphSchemaNodeKinds(ctx); err != nil {
 		return nil, err
 	} else {
-		var displayKinds = make(map[graph.Kind]bool)
-		for _, schemaNodeKind := range displaySchemaNodeKinds {
-			displayKinds[graph.StringKind(schemaNodeKind.Name)] = true
-		}
-		return displayKinds, nil
+		return displaySchemaNodeKinds.ToKindsMap(), nil
 	}
 }
 

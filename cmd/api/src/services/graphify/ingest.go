@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/ein"
@@ -64,7 +65,11 @@ type IngestContext struct {
 	Manager ChangeManager
 	// Stats tracks the number of nodes and relationships processed during ingestion
 	Stats *IngestStats
-
+	// ID of the Job that is being ingested
+	JobId int64
+	// EndpointResolver is the endpoint matching strategy to be used when looking up
+	// entities for relationship creation
+	EndpointResolver *endpoint.Resolver
 	// RetainIngestedFiles determines if the service should clean up working files after ingest
 	RetainIngestedFiles bool
 }
@@ -108,9 +113,21 @@ func WithChangeManager(manager ChangeManager) IngestOption {
 	}
 }
 
+func WithEndpointResolver(resolver *endpoint.Resolver) IngestOption {
+	return func(s *IngestContext) {
+		s.EndpointResolver = resolver
+	}
+}
+
 func WithBatchUpdater(batchUpdater BatchUpdater) IngestOption {
 	return func(s *IngestContext) {
 		s.Batch = batchUpdater
+	}
+}
+
+func WithJobId(jobId int64) IngestOption {
+	return func(s *IngestContext) {
+		s.JobId = jobId
 	}
 }
 
@@ -265,10 +282,6 @@ func IngestAzureData(batch *IngestContext, converted ConvertedAzureData) error {
 	errs := errorlist.NewBuilder()
 
 	if err := IngestNodes(batch, azure.Entity, converted.NodeProps); err != nil {
-		errs.Add(err)
-	}
-
-	if err := IngestNodes(batch, ad.Entity, converted.OnPremNodes); err != nil {
 		errs.Add(err)
 	}
 

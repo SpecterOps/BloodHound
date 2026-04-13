@@ -19,8 +19,10 @@ package model
 import (
 	"errors"
 	"slices"
+	"strconv"
 	"time"
 
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -97,7 +99,6 @@ type GraphSchemaNodeKinds []GraphSchemaNodeKind
 // GraphSchemaNodeKind - represents a node kind for an extension
 type GraphSchemaNodeKind struct {
 	Serial
-
 	Name              string
 	SchemaExtensionId int32  // indicates which extension this node kind belongs to
 	DisplayName       string // can be different from name but usually isn't other than Base/Entity
@@ -105,6 +106,16 @@ type GraphSchemaNodeKind struct {
 	IsDisplayKind     bool   // indicates if this kind should supersede others and be displayed
 	Icon              string // font-awesome icon for the registered node kind
 	IconColor         string // icon hex color
+}
+
+type GraphSchemaNodeKindMap map[string]GraphSchemaNodeKind
+
+func (s GraphSchemaNodeKindMap) ToKindsMap() graphschema.ValidPrimaryKinds {
+	var kindsMap = make(graphschema.ValidPrimaryKinds)
+	for _, schemaNodeKind := range s {
+		kindsMap[schemaNodeKind.ToKind()] = true
+	}
+	return kindsMap
 }
 
 func (s GraphSchemaNodeKind) ToKind() graph.Kind {
@@ -175,6 +186,17 @@ const (
 	SchemaFindingTypeList         SchemaFindingType = 2
 )
 
+func (s SchemaFindingType) String() string {
+	switch s {
+	case SchemaFindingTypeRelationship:
+		return "relationship"
+	case SchemaFindingTypeList:
+		return "list"
+	default:
+		return "invalid enumeration case: " + strconv.Itoa(int(s))
+	}
+}
+
 // SchemaFinding represents an individual finding (e.g., T0WriteOwner, T0ADCSESC1, T0DCSync)
 type SchemaFinding struct {
 	ID                int32
@@ -239,6 +261,32 @@ func (SchemaFinding) TableName() string {
 	return "schema_findings"
 }
 
+func (s SchemaFinding) IsSortable(column string) bool {
+	switch column {
+	case "name",
+		"display_name",
+		"type",
+		"id",
+		"created_at":
+		return true
+	default:
+		return false
+	}
+}
+
+func (SchemaFinding) ValidFilters() map[string][]FilterOperator {
+	return map[string][]FilterOperator{
+		"name":           {Equals, NotEquals, ApproximatelyEquals},
+		"display_name":   {Equals, NotEquals, ApproximatelyEquals},
+		"id":             {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"created_at":     {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"extension_name": {Equals, NotEquals, ApproximatelyEquals},
+		"extension_id":   {Equals, NotEquals},
+		"is_builtin":     {Equals, NotEquals},
+		"kind":           {Equals, NotEquals},
+	}
+}
+
 type SchemaFindingsSubtype struct {
 	SchemaFindingId int32
 	Subtype         string
@@ -290,6 +338,7 @@ type GraphSchemaRelationshipKindWithNamedSchema struct {
 	Description   string `json:"description"`
 	IsTraversable bool   `json:"is_traversable"`
 	SchemaName    string `json:"schema_name"`
+	IsBuiltin     bool   `json:"is_builtin"`
 }
 
 type GraphSchemaRelationshipKindsWithNamedSchema []GraphSchemaRelationshipKindWithNamedSchema
@@ -326,6 +375,13 @@ type ExtensionInput struct {
 	DisplayName string
 	Version     string
 	Namespace   string // the required extension prefix for node and edge kind names
+}
+
+func (s ExtensionInput) GetDisplayName() string {
+	if s.DisplayName != "" {
+		return s.DisplayName
+	}
+	return s.Name
 }
 
 type PropertiesInput []PropertyInput

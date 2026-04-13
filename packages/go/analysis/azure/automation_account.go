@@ -19,23 +19,18 @@ package azure
 import (
 	"context"
 
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 )
 
-func NewAutomationAccountEntityDetails(node *graph.Node) AutomationAccountDetails {
-	return AutomationAccountDetails{
-		Node: FromGraphNode(node),
-	}
-}
-
-func AutomationAccountEntityDetails(ctx context.Context, db graph.Database, objectID string, hydrateCounts bool) (AutomationAccountDetails, error) {
+func AutomationAccountEntityDetails(ctx context.Context, db graph.Database, validPrimaryKinds graphschema.ValidPrimaryKinds, objectID string, hydrateCounts bool) (AutomationAccountDetails, error) {
 	var details AutomationAccountDetails
 
 	return details, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
 			return err
 		} else {
-			details = NewAutomationAccountEntityDetails(node)
+			details.Node = FromGraphNode(validPrimaryKinds, node)
 			if hydrateCounts {
 				details, err = PopulateAutomationAccountEntityDetailsCounts(tx, node, details)
 			}

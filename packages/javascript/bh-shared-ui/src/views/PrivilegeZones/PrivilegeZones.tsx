@@ -14,11 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
+import { faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { CircularProgress } from '@mui/material';
+import { Badge, Tabs, TabsList, TabsTrigger } from 'doodle-ui';
 import React, { FC, Suspense } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
-import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../hooks';
+import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams, useRoleBasedFiltering } from '../../hooks';
 import {
     ROUTE_PZ_CERTIFICATIONS,
     ROUTE_PZ_HISTORY,
@@ -78,6 +80,8 @@ const PrivilegeZones: FC = () => {
     const { savePaths, Summary, Certification, defaultPath } = usePZContext();
     const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
 
+    const isRoleBasedFiltering = useRoleBasedFiltering();
+
     const childRoutes: Routable[] = [
         ...detailsPaths.map((path) => {
             return { path, component: Details, authenticationRequired: true, navigation: true };
@@ -111,8 +115,18 @@ const PrivilegeZones: FC = () => {
     return (
         <main>
             <div className='h-dvh min-w-full px-8'>
-                <h1 className='text-4xl font-bold pt-8'>Zone Builder</h1>
-                <div className='flex flex-col h-[calc(100%-12rem)]'>
+                <div className='flex items-center justify-between pt-8'>
+                    <h1 className='text-4xl font-bold'>Zone Builder</h1>
+                    {isRoleBasedFiltering && (
+                        <Badge
+                            data-testid='privilege-zones_etac-filtering-badge'
+                            className='justify-start text-sm text-neutral-dark-1 bg-[#F8EEFD] dark:bg-[#472E54] dark:text-neutral-light-1 border-0'
+                            icon={<FontAwesomeIcon icon={faEyeSlash} className='mr-2' />}
+                            label='Role-based access filtering applied'
+                        />
+                    )}
+                </div>
+                <div className='flex flex-col h-[calc(100%-10rem)]'>
                     <Tabs
                         defaultValue={zonesPath}
                         value={tabValue}

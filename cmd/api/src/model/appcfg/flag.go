@@ -45,7 +45,8 @@ const (
 	FeatureOpenGraphFindings            = "opengraph_findings"
 	FeatureClientBearerAuth             = "client_bearer_auth"
 	FeatureOpenGraphExtensionManagement = "opengraph_extension_management"
-	FeatureOGCollectorPlatformSupport   = "opengraph_collector_platform_support"
+	FeatureOpenHoundSupport             = "openhound_support"
+	FeatureAPIKeyExpirationSupport      = "api_key_expiration_support"
 )
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be
@@ -110,5 +111,15 @@ func (s FeatureFlag) AuditData() model.AuditData {
 		"name":    s.Name,
 		"key":     s.Key,
 		"enabled": s.Enabled,
+	}
+}
+
+// GetOpenHoundEnabled returns true if the OpenHound Support feature flag is enabled.
+func GetOpenHoundEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+	if openHoundFlag, err := service.GetFlagByKey(ctx, FeatureOpenHoundSupport); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch openhound support flag; returning false")
+		return false
+	} else {
+		return openHoundFlag.Enabled
 	}
 }

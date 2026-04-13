@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DataTable } from '@bloodhoundenterprise/doodleui';
+import { DataTable, ScrollArea } from 'doodle-ui';
 import fileDownload from 'js-file-download';
 import { json2csv } from 'json-2-csv';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
@@ -22,7 +22,7 @@ import { useAddKeyBinding, useExploreGraph, useExploreSelectedItem, useToggle } 
 import { cn } from '../../utils';
 import TableControls from './TableControls';
 import {
-    DEFAULT_PINNED_COLUMN_KEYS,
+    DEFAULT_EXPLORE_TABLE_COLUMN_KEYS,
     ExploreTableProps,
     MungedTableRowWithId,
     createColumnStateFromKeys,
@@ -65,7 +65,9 @@ const ExploreTable = ({
     onClose,
     onKebabMenuClick,
     onManageColumnsChange,
+    onChangePinnedColumns,
     selectedColumns = defaultColumns,
+    pinnedColumns,
 }: ExploreTableProps) => {
     const { data: graphData } = useExploreGraph();
     const { selectedItem, setSelectedItem, clearSelectedItem } = useExploreSelectedItem();
@@ -89,19 +91,23 @@ const ExploreTable = ({
     const exploreTableData = useMemo(() => getExploreTableData(graphData), [graphData]);
     const shimmedColumns = useMemo(() => shimGraphSpecificKeys(selectedColumns), [selectedColumns]);
 
-    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount } = useExploreTableRowsAndColumns({
-        onKebabMenuClick,
-        searchInput,
-        selectedColumns: shimmedColumns,
-        exploreTableData,
-    });
+    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount, columnOrder, setColumnOrder } =
+        useExploreTableRowsAndColumns({
+            onKebabMenuClick,
+            searchInput,
+            selectedColumns: shimmedColumns,
+            exploreTableData,
+        });
 
-    // Just a hardcoded list of pinned columns for now
-    const [columnPinning, setColumnPinning] = useState<NonNullable<DataTableProps['columnPinning']>>({
-        left: DEFAULT_PINNED_COLUMN_KEYS,
-    });
+    const effectivePinnedColumns = pinnedColumns ?? DEFAULT_EXPLORE_TABLE_COLUMN_KEYS;
 
-    const leftPinnedColumns = columnPinning.left && createColumnStateFromKeys(columnPinning.left);
+    const columnPinning = useMemo(() => {
+        return {
+            left: effectivePinnedColumns,
+        };
+    }, [effectivePinnedColumns]);
+
+    const leftPinnedColumns = createColumnStateFromKeys(effectivePinnedColumns);
 
     const searchInputProps = useMemo(
         () => ({
@@ -162,11 +168,18 @@ const ExploreTable = ({
         }
     }, [exploreTableData]);
 
+    const handleSetColumnPinning = useCallback(
+        (pinnedCols: NonNullable<DataTableProps['columnPinning']>) => {
+            onChangePinnedColumns?.(pinnedCols.left ?? []);
+        },
+        [onChangePinnedColumns]
+    );
+
     return (
         <div
             data-testid='explore-table-container-wrapper'
             className={cn(
-                'dark:bg-neutral-dark-5 absolute z-10 bottom-4 left-4 right-4 bg-neutral-light-2 rounded-lg',
+                'dark:bg-neutral-dark-5 absolute z-10 bottom-4 left-4 right-4 bg-neutral-light-2 rounded-lg shadow-outer-1 border',
                 {
                     'h-1/2': !isExpanded,
                     'h-[calc(100%-72px)]': isExpanded,
@@ -181,31 +194,38 @@ const ExploreTable = ({
                     onDownloadClick={handleDownloadClick}
                     onExpandClick={toggleIsExpanded}
                     onManageColumnsChange={onManageColumnsChange}
+                    onChangePinnedColumns={onChangePinnedColumns}
                     onCloseClick={onClose}
                     onResetColumnSize={handleResetColumnSize}
                     tableName='Results'
                     resultsCount={resultsCount}
                     SearchInputProps={searchInputProps}
                 />
-                <MemoDataTable
-                    className='overflow-auto'
-                    TableHeaderProps={tableHeaderProps}
-                    TableHeadProps={tableHeadProps}
-                    TableProps={tableProps}
-                    TableCellProps={tableCellProps}
-                    columnPinning={columnPinning}
-                    onColumnPinningChange={setColumnPinning}
-                    onRowClick={handleRowClick}
-                    selectedRow={selectedItem || undefined}
-                    data={sortedFilteredRows}
-                    columns={tableColumns as DataTableProps['columns']}
-                    tableOptions={tableOptions}
-                    virtualizationOptions={virtualizationOptions}
-                    columnSizing={columnSizing}
-                    onColumnSizingChange={setColumnSizing}
-                    growLastColumn
-                    enableResizing
-                />
+                <ScrollArea>
+                    <MemoDataTable
+                        TableHeaderProps={tableHeaderProps}
+                        TableHeadProps={tableHeadProps}
+                        TableProps={tableProps}
+                        TableCellProps={tableCellProps}
+                        columnPinning={columnPinning}
+                        setColumnPinning={handleSetColumnPinning}
+                        onRowClick={handleRowClick}
+                        selectedRow={selectedItem || undefined}
+                        data={sortedFilteredRows}
+                        columns={tableColumns as DataTableProps['columns']}
+                        tableOptions={tableOptions}
+                        virtualizationOptions={virtualizationOptions}
+                        columnSizing={columnSizing}
+                        onColumnSizingChange={setColumnSizing}
+                        columnOrder={columnOrder}
+                        onColumnOrderChange={(newOrder) => {
+                            setColumnOrder(newOrder);
+                        }}
+                        growLastColumn
+                        enableResizing
+                        enableDragAndDrop
+                    />
+                </ScrollArea>
             </div>
         </div>
     );

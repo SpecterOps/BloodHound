@@ -15,8 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Environment } from 'js-client-library';
+import { useMemo } from 'react';
 import { useQuery, UseQueryOptions } from 'react-query';
 import { apiClient } from '../../utils/api';
+import { getOpenGraphEnvironmentInfo } from '../../utils/environments';
 import { EnvironmentQueryParams, useEnvironmentParams } from '../useEnvironmentParams';
 
 export const availableEnvironmentKeys = {
@@ -42,7 +44,7 @@ export function useAvailableEnvironments<T = Environment[]>(options?: QueryOptio
 
 export const useSelectedEnvironment = (
     environmentId?: Environment['id'] | null,
-    options?: Omit<QueryOptions<Environment>, 'select'>
+    options?: QueryOptions<Environment>
 ) => {
     const { environmentId: environmentIdParam, environmentAggregation, setEnvironmentParams } = useEnvironmentParams();
     const searchedEnvironmentId = environmentId ?? environmentIdParam;
@@ -53,6 +55,12 @@ export const useSelectedEnvironment = (
         enabled: !!searchedEnvironmentId,
         ...options,
     });
+
+    const environmentInfo = useMemo(() => {
+        if (!environmentQuery.data) return;
+
+        return getOpenGraphEnvironmentInfo(environmentQuery.data.type);
+    }, [environmentQuery.data]);
 
     const setEnvironment = (environmentId: EnvironmentQueryParams['environmentId']) => {
         setEnvironmentParams({ environmentId, environmentAggregation: null });
@@ -66,6 +74,7 @@ export const useSelectedEnvironment = (
         ...environmentQuery,
         environment: environmentQuery.data,
         environmentAggregation,
+        environmentInfo,
         setEnvironment,
         setEnvironmentAggregation,
     };

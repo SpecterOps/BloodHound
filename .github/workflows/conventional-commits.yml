@@ -29,8 +29,4 @@ on:
 jobs:
   conventional-commit-check:
     name: Check conventional commit formatting
-    uses: SpecterOps/BloodHound/.github/workflows/reusable.conventional-commits.yml@main
-    secrets:
-      JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
-      JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
-      JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+    uses: SpecterOps/BloodHound/.github/workflows/reusable.conventional-commits.yml@main # ratchet:exclude

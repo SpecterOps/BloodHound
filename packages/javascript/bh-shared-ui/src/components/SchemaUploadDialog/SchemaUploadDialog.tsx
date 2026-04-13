@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { faCubes } from '@fortawesome/free-solid-svg-icons';
 import {
     Button,
     Dialog,
@@ -22,10 +23,11 @@ import {
     DialogDescription,
     DialogTitle,
     DialogTrigger,
-} from '@bloodhoundenterprise/doodleui';
-import { faCubes } from '@fortawesome/free-solid-svg-icons';
+} from 'doodle-ui';
 import { useState } from 'react';
-import { useExecuteOnFileDrag } from '../../hooks';
+import { useExecuteOnFileDrag, usePermissions } from '../../hooks';
+import { Permission } from '../../utils';
+import { ConditionalTooltip } from '../ConditionalTooltip';
 import FileDrop from '../FileDrop';
 import FileStatusListItem from '../FileStatusListItem';
 import { FileStatus } from '../FileUploadDialog';
@@ -35,24 +37,37 @@ export const SchemaUploadDialog = () => {
     const [dialogOpen, setDialogOpen] = useState<boolean>(false);
     const { file, uploadProgress, handleFileDrop, handleUpload, resetDialog } = useSchemaUploadHandlers();
 
+    const { checkPermission } = usePermissions();
+    const hasUploadPermission = checkPermission(Permission.OPENGRAPH_WRITE);
+
     // Dragging a file into the window displays the dialog. The normal global file upload drag and drop behavior is
     // disabled for the OpenGraph Management page
-    useExecuteOnFileDrag(() => setDialogOpen(true), {
-        acceptedTypes: ['application/json'],
-    });
+    useExecuteOnFileDrag(
+        () => {
+            if (hasUploadPermission) setDialogOpen(true);
+        },
+        {
+            acceptedTypes: ['application/json'],
+        }
+    );
 
     return (
         <Dialog
             open={dialogOpen}
             onOpenChange={(open) => {
+                if (!hasUploadPermission) return;
                 if (open) resetDialog();
                 setDialogOpen(open);
             }}>
-            <DialogTrigger asChild>
-                <Button className='self-start' variant='secondary'>
-                    Upload File
-                </Button>
-            </DialogTrigger>
+            <ConditionalTooltip condition={!hasUploadPermission} tooltip='You do not have permission to upload files.'>
+                <DialogTrigger asChild>
+                    <span className='self-start' tabIndex={!hasUploadPermission ? 0 : undefined}>
+                        <Button variant='secondary' disabled={!hasUploadPermission}>
+                            Upload File
+                        </Button>
+                    </span>
+                </DialogTrigger>
+            </ConditionalTooltip>
             <DialogContent>
                 <DialogTitle>Upload Schema Files</DialogTitle>
                 <DialogDescription className='sr-only'>
@@ -60,7 +75,7 @@ export const SchemaUploadDialog = () => {
                 </DialogDescription>
                 <FileDrop
                     onDrop={handleFileDrop}
-                    disabled={!!file}
+                    disabled={!!file || !hasUploadPermission}
                     multiple={false}
                     icon={faCubes}
                     accept={['application/json']}
@@ -75,17 +90,24 @@ export const SchemaUploadDialog = () => {
                     />
                 )}
                 <DialogActions>
-                    <DialogClose asChild>
-                        <Button variant='tertiary'>Cancel</Button>
-                    </DialogClose>
                     {file?.status === FileStatus.FAILURE || file?.status === FileStatus.DONE ? (
-                        <DialogClose asChild>
-                            <Button>Complete</Button>
-                        </DialogClose>
+                        <>
+                            <DialogClose asChild>
+                                <Button variant='tertiary'>Close</Button>
+                            </DialogClose>
+                            <DialogClose asChild>
+                                <Button>Complete</Button>
+                            </DialogClose>
+                        </>
                     ) : (
-                        <Button disabled={!file || file.status === FileStatus.UPLOADING} onClick={handleUpload}>
-                            Upload
-                        </Button>
+                        <>
+                            <DialogClose asChild>
+                                <Button variant='tertiary'>Cancel</Button>
+                            </DialogClose>
+                            <Button disabled={!file || file.status === FileStatus.UPLOADING} onClick={handleUpload}>
+                                Upload
+                            </Button>
+                        </>
                     )}
                 </DialogActions>
             </DialogContent>

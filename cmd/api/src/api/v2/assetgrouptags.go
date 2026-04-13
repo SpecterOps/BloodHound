@@ -35,7 +35,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
-	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -43,8 +42,10 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
+	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -60,6 +61,17 @@ const (
 	includeProperties = true
 	excludeProperties = false
 )
+
+func maybeAddEnvironmentIdFilter(filters []graph.Criteria, environmentIds []string) []graph.Criteria {
+	if len(environmentIds) > 0 {
+		return append(filters, query.Or(
+			query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
+			query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
+			query.In(query.NodeProperty(graphschema.EnvironmentIDKey), environmentIds),
+		))
+	}
+	return filters
+}
 
 type AssetGroupTagView struct {
 	model.AssetGroupTag
@@ -422,8 +434,7 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 	var (
 		queryParams = request.URL.Query()
 
-		assetTagIdStr  = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
-		environmentIds = queryParams[api.QueryParameterEnvironments]
+		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 
 		selectorQueryFilter      = make(model.QueryParameterFilterMap)
 		selectorSeedsQueryFilter = make(model.QueryParameterFilterMap)
@@ -513,12 +524,8 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 								query.KindIn(query.Node(), assetGroupTag.ToKind()),
 								query.InIDs(query.NodeID(), nodeIds...),
 							}
-							if len(environmentIds) > 0 {
-								filters = append(filters, query.Or(
-									query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
-									query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
-								))
-							}
+
+							filters = maybeAddEnvironmentIdFilter(filters, queryParams[api.QueryParameterEnvironments])
 
 							if count, err := s.GraphQuery.CountFilteredNodes(request.Context(), query.And(filters...)); err != nil {
 								api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
@@ -756,22 +763,17 @@ type GetAssetGroupMemberCountsResponse struct {
 }
 
 func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWriter, request *http.Request) {
-	environmentIds := request.URL.Query()[api.QueryParameterEnvironments]
-
 	if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
+	} else if validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else {
 		filters := []graph.Criteria{}
-		if len(environmentIds) > 0 {
-			filters = append(filters, query.Or(
-				query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
-				query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
-			))
-		}
+		filters = maybeAddEnvironmentIdFilter(filters, request.URL.Query()[api.QueryParameterEnvironments])
 
-		primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind(), filters...)
+		primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), validPrimaryKinds, tag.ToKind(), filters...)
 		if err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return
@@ -801,8 +803,8 @@ type AssetGroupMember struct {
 }
 
 // Used to minimize the response shape to just the necessary member display fields
-func nodeToAssetGroupMember(node *graph.Node, includeProperties bool) AssetGroupMember {
-	primaryKind, displayName, objectId, envId := model.GetAssetGroupMemberProperties(node)
+func nodeToAssetGroupMember(validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.Node, includeProperties bool) AssetGroupMember {
+	primaryKind, displayName, objectId, envId := model.GetAssetGroupMemberProperties(validPrimaryKinds, node)
 
 	member := AssetGroupMember{
 		NodeId:        node.ID,
@@ -865,8 +867,10 @@ func (s *Resources) GetAssetGroupTagMemberInfo(response http.ResponseWriter, req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else if node, err := queries.Graph.FetchNodeByGraphId(s.GraphQuery, request.Context(), graph.ID(memberID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
+	} else if validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else {
-		groupMember := nodeToAssetGroupMember(node, includeProperties)
+		groupMember := nodeToAssetGroupMember(validPrimaryKinds, node, includeProperties)
 		groupMember.AssetGroupTagId = assetGroupTagID
 		api.WriteBasicResponse(request.Context(), MemberInfoResponse{Member: memberInfo{groupMember, selectors}}, http.StatusOK, response)
 	}
@@ -880,7 +884,6 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 	var (
 		members        = []AssetGroupMember{}
 		queryParams    = request.URL.Query()
-		environmentIds = queryParams[api.QueryParameterEnvironments]
 		queryFilterMap = make(model.QueryParameterFilterMap)
 	)
 
@@ -919,13 +922,7 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 		filters := []graph.Criteria{
 			query.KindIn(query.Node(), assetGroupTag.ToKind()),
 		}
-
-		if len(environmentIds) > 0 {
-			filters = append(filters, query.Or(
-				query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
-				query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
-			))
-		}
+		filters = maybeAddEnvironmentIdFilter(filters, queryParams[api.QueryParameterEnvironments])
 
 		// Bespoke build the filter for the graph db due to complexity
 		if graphDbFilters, err := buildAssetGroupMembersByTagGraphDbFilters(request.Context(), s.DB, queryFilterMap); err != nil {
@@ -939,9 +936,11 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting members: %v", err), request), response)
 		} else if count, err := s.GraphQuery.CountFilteredNodes(request.Context(), query.And(filters...)); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
+		} else if validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+			api.HandleDatabaseError(request, response, err)
 		} else {
 			for _, node := range nodes {
-				groupMember := nodeToAssetGroupMember(node, excludeProperties)
+				groupMember := nodeToAssetGroupMember(validPrimaryKinds, node, excludeProperties)
 				groupMember.AssetGroupTagId = assetGroupTag.ID
 				members = append(members, groupMember)
 			}
@@ -988,7 +987,7 @@ func buildAssetGroupMembersByTagGraphDbFilters(ctx context.Context, db database.
 						return filters, err
 					} else {
 						for _, kind := range sourceKinds {
-							sourceKindsMap[kind.Name.String()] = true
+							sourceKindsMap[kind.Name] = true
 						}
 					}
 				}
@@ -1153,9 +1152,11 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting members: %v", err), request), response)
 			} else if count, err := s.GraphQuery.CountFilteredNodes(request.Context(), query.And(filters...)); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
+			} else if validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+				api.HandleDatabaseError(request, response, err)
 			} else {
 				for _, node := range nodes {
-					member := nodeToAssetGroupMember(node, false)
+					member := nodeToAssetGroupMember(validPrimaryKinds, node, false)
 					member.AssetGroupTagId = assetGroupTag.ID
 					member.Source = sourceByNodeId[node.ID]
 					members = append(members, member)
@@ -1203,12 +1204,14 @@ func (s *Resources) PreviewSelectors(response http.ResponseWriter, request *http
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if expansion, err := validateAssetGroupExpansionMethodWithFallback(body.Expansion); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if nodes, errs := datapipe.FetchNodesFromSeeds(request.Context(), appcfg.GetAGTParameters(request.Context(), s.DB), s.Graph, body.Seeds, expansion, limit); len(errs) > 0 {
+	} else if nodes, errs := analysis.FetchNodesFromSeeds(request.Context(), appcfg.GetAGTParameters(request.Context(), s.DB), s.Graph, body.Seeds, expansion, limit); len(errs) > 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+	} else if validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else {
 		for _, node := range nodes {
 			if node.Node != nil {
-				member := nodeToAssetGroupMember(node.Node, excludeProperties)
+				member := nodeToAssetGroupMember(validPrimaryKinds, node.Node, excludeProperties)
 				member.Source = node.Source
 
 				members = append(members, member)
@@ -1304,9 +1307,12 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 		} else if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty(common.Name.String()), Direction: query.SortDirectionAscending}}, nodeFilter, 0, AssetGroupTagDefaultLimit); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting members: %v", err), request), response)
 			return
+		} else if validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
 		} else {
 			for _, node := range nodes {
-				groupMember := nodeToAssetGroupMember(node, excludeProperties)
+				groupMember := nodeToAssetGroupMember(validPrimaryKinds, node, excludeProperties)
 				for _, kind := range node.Kinds {
 					// Find the first valid kind for this search type and attribute it to this member
 					if tagId, ok := tagIdByKind[kind]; ok {
@@ -1437,6 +1443,8 @@ func (s *Resources) GetAssetGroupSelectorMemberCountsByKind(response http.Respon
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "selector is not part of asset group tag", request), response)
 	} else if selector.DisabledAt.Valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "selector is disabled", request), response)
+	} else if validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else {
 		if len(environmentIds) > 0 {
 			sqlFilter.SQLString += " AND node_environment_id in ?"
@@ -1457,7 +1465,7 @@ func (s *Resources) GetAssetGroupSelectorMemberCountsByKind(response http.Respon
 				nodeIds = append(nodeIds, node.NodeId)
 			}
 
-			if primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind(),
+			if primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), validPrimaryKinds, tag.ToKind(),
 				query.InIDs(query.NodeID(), nodeIds...)); err != nil {
 				api.HandleDatabaseError(request, response, err)
 			} else {

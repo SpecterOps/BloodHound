@@ -29,6 +29,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
@@ -57,7 +58,7 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 	gormDB, err = database.OpenDatabase(connConf.URL())
 	require.NoError(t, err)
 
-	db = database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
+	db = database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), config.Configuration{})
 
 	err = db.Migrate(ctx)
 	require.NoError(t, err)
@@ -151,30 +152,12 @@ func TestExtensions_GetOnStartExtensionData(t *testing.T) {
 		require.Len(t, schemaEnvironments, 1)
 		schemaEnvironment := schemaEnvironments[0]
 
-		// Validate Source Kinds Exist
-		sourceKind, err := testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, int(schemaEnvironment.SourceKindId))
-		require.NoError(t, err)
-		require.NotNil(t, sourceKind)
-		validateSourceKind(t, extension.Name, sourceKind.Name.String())
-
 		// Validate Environment Kinds Exist
 		environmentKind, err := testSuite.BHDatabase.GetKindsByIDs(testSuite.Context, schemaEnvironment.EnvironmentKindId)
 		require.NoError(t, err)
 		validateEnvironmentKind(t, extension.Name, environmentKind[0].Name)
 	}
 
-}
-
-func validateSourceKind(t *testing.T, extensionName, sourceKindName string) {
-	t.Helper()
-	switch extensionName {
-	case "AD":
-		require.Equal(t, "Base", sourceKindName)
-	case "AZ":
-		require.Equal(t, "AZBase", sourceKindName)
-	default:
-		t.Fatalf("Invalid extension name %s", extensionName)
-	}
 }
 
 func validateEnvironmentKind(t *testing.T, extensionName, environmentKindName string) {

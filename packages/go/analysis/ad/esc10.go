@@ -18,11 +18,11 @@ package ad
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"sync"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/cardinality"
@@ -33,7 +33,7 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, localGroupData *LocalGroupData, eca *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
+func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, eca *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
 	if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID); len(ecaEnrollers) == 0 {
@@ -43,21 +43,38 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC10(template, false); err != nil {
-				slog.WarnContext(ctx, fmt.Sprintf("Error validating cert template %d: %v", template.ID, err))
+				slog.WarnContext(
+					ctx,
+					"Error validating cert template",
+					slog.Uint64("cert_template_id", uint64(template.ID)),
+					attr.Error(err),
+				)
 				continue
 			} else if !valid {
 				continue
 			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
-				slog.DebugContext(ctx, fmt.Sprintf("Failed to retrieve enrollers for cert template %d from cache", template.ID))
+				slog.DebugContext(
+					ctx,
+					"Failed to retrieve enrollers for cert template from cache",
+					slog.Uint64("cert_template_id", uint64(template.ID)),
+				)
 				continue
 			} else {
 				victimBitmap := getVictimBitmap(localGroupData, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecialEnrollers(template.ID), cache.GetEnterpriseCAHasSpecialEnrollers(eca.ID))
 
 				if filteredVictims, err := filterUserDNSResults(tx, victimBitmap, template); err != nil {
-					slog.WarnContext(ctx, fmt.Sprintf("Error filtering users from victims for esc9a: %v", err))
+					slog.WarnContext(
+						ctx,
+						"Error filtering users from victims for esc10a",
+						attr.Error(err),
+					)
 					continue
 				} else if attackers, err := FetchAttackersForEscalations9and10(tx, filteredVictims, false); err != nil {
-					slog.WarnContext(ctx, fmt.Sprintf("Error getting start nodes for esc10a attacker nodes: %v", err))
+					slog.WarnContext(
+						ctx,
+						"Error getting start nodes for esc10a attacker nodes",
+						attr.Error(err),
+					)
 					continue
 				} else {
 					results.Or(graph.NodeIDsToDuplex(attackers))
@@ -68,7 +85,7 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 		results.Each(func(value uint64) bool {
 			for _, domain := range targetDomains.Slice() {
 				if cache.HasUPNCertMappingInForest(domain.ID.Uint64()) {
-					channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+					channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 						FromID: graph.ID(value),
 						ToID:   domain.ID,
 						Kind:   ad.ADCSESC10a,
@@ -81,7 +98,7 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 	return nil
 }
 
-func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, localGroupData *LocalGroupData, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
+func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
 	if publishedCertTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(enterpriseCA.ID); len(ecaEnrollers) == 0 {
@@ -91,18 +108,31 @@ func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- analy
 
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC10(template, true); err != nil {
-				slog.WarnContext(ctx, fmt.Sprintf("Error validating cert template %d: %v", template.ID, err))
+				slog.WarnContext(
+					ctx,
+					"Error validating cert template",
+					slog.Uint64("cert_template_id", uint64(template.ID)),
+					attr.Error(err),
+				)
 				continue
 			} else if !valid {
 				continue
 			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
-				slog.DebugContext(ctx, fmt.Sprintf("Failed to retrieve enrollers for cert template %d from cache", template.ID))
+				slog.DebugContext(
+					ctx,
+					"Failed to retrieve enrollers for cert template from cache",
+					slog.Uint64("cert_template_id", uint64(template.ID)),
+				)
 				continue
 			} else {
 				victimBitmap := getVictimBitmap(localGroupData, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecialEnrollers(template.ID), cache.GetEnterpriseCAHasSpecialEnrollers(enterpriseCA.ID))
 
 				if attackers, err := FetchAttackersForEscalations9and10(tx, victimBitmap, true); err != nil {
-					slog.WarnContext(ctx, fmt.Sprintf("Error getting start nodes for esc10b attacker nodes: %v", err))
+					slog.WarnContext(
+						ctx,
+						"Error getting start nodes for esc10b attacker nodes",
+						attr.Error(err),
+					)
 					continue
 				} else {
 					results.Or(graph.NodeIDsToDuplex(attackers))
@@ -113,7 +143,7 @@ func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- analy
 		results.Each(func(value uint64) bool {
 			for _, domain := range targetDomains.Slice() {
 				if cache.HasUPNCertMappingInForest(domain.ID.Uint64()) {
-					channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+					channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 						FromID: graph.ID(value),
 						ToID:   domain.ID,
 						Kind:   ad.ADCSESC10b,
@@ -294,7 +324,7 @@ func GetADCSESC10EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		startNode *graph.Node
 		endNode   *graph.Node
 
-		traversalInst          = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst          = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		paths                  = graph.PathSet{}
 		path1CandidateSegments = map[graph.ID][]*graph.PathSegment{}
 		victimCANodes          = map[graph.ID][]graph.ID{}

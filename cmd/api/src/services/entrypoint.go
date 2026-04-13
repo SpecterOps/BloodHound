@@ -41,6 +41,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
@@ -51,7 +52,7 @@ func ConnectPostgres(cfg config.Configuration) (*database.BloodhoundDB, error) {
 	if db, err := database.OpenDatabase(cfg.Database.PostgreSQLConnectionString()); err != nil {
 		return nil, fmt.Errorf("error while attempting to create database connection: %w", err)
 	} else {
-		return database.NewBloodhoundDB(db, auth.NewIdentityResolver()), nil
+		return database.NewBloodhoundDB(db, auth.NewIdentityResolver(), cfg), nil
 	}
 }
 
@@ -153,7 +154,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 
 		// Trigger analysis on first start
 		if err := connections.RDMS.RequestAnalysis(ctx, "init"); err != nil {
-			slog.WarnContext(ctx, fmt.Sprintf("failed to request init analysis: %v", err))
+			slog.WarnContext(ctx, "Failed to request init analysis", attr.Error(err))
 		}
 
 		return []daemons.Daemon{

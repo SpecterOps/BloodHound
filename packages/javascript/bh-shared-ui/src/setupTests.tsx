@@ -19,8 +19,6 @@
 import matchers from '@testing-library/jest-dom/matchers';
 import { expect } from 'vitest';
 //@ts-ignore
-import React from 'react';
-//@ts-ignore
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import 'whatwg-fetch';
 
@@ -55,6 +53,12 @@ beforeEach(() => {
     vi.clearAllMocks();
 });
 
+afterEach(() => {
+    // Some of our radix components set "pointer-events: none" (such as Dialog), which in some cases does not get cleaned
+    // up correctly: https://github.com/radix-ui/primitives/issues/1241#issuecomment-2589438039
+    document.body.style.pointerEvents = '';
+});
+
 // See https://fontawesome.com/v5.15/how-to-use/on-the-web/using-with/react#unit-testing for more information
 vi.mock('@fortawesome/react-fontawesome', () => ({
     FontAwesomeIcon: vi.fn((props) => {
@@ -70,3 +74,7 @@ const ResizeObserverMock = vi.fn(() => ({
     disconnect: vi.fn(),
 }));
 vi.stubGlobal('ResizeObserver', ResizeObserverMock);
+
+if (typeof window.URL.createObjectURL === 'undefined') {
+    window.URL.createObjectURL = vi.fn();
+}

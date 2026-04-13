@@ -19,11 +19,11 @@ package ad
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"sync"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
@@ -33,33 +33,33 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, localGroupData *LocalGroupData, eca *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
+func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, eca *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
 	if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else {
 		ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID)
 		for _, template := range publishedCertTemplates {
 			if isValid, err := isCertTemplateValidForESC13(template); errors.Is(err, graph.ErrPropertyNotFound) {
-				slog.WarnContext(ctx, fmt.Sprintf("Checking esc13 cert template PostADCSESC13: %v", err))
+				slog.WarnContext(ctx, "Checking esc13 cert template PostADCSESC13", attr.Error(err))
 			} else if err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error checking esc13 cert template PostADCSESC13: %v", err))
+				slog.ErrorContext(ctx, "Error checking esc13 cert template PostADCSESC13", attr.Error(err))
 			} else if !isValid {
 				continue
 			} else if groupNodes, err := getCertTemplateGroupLinks(template, tx); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error getting cert template group links: %v", err))
+				slog.ErrorContext(ctx, "Error getting cert template group links", attr.Error(err))
 			} else if len(groupNodes) == 0 {
 				continue
 			} else {
 				controlBitmap := CalculateCrossProductNodeSets(localGroupData, ecaEnrollers, cache.GetCertTemplateEnrollers(template.ID))
 				if filtered, err := filterUserDNSResults(tx, controlBitmap, template); err != nil {
-					slog.WarnContext(ctx, fmt.Sprintf("Error filtering users from victims for esc13: %v", err))
+					slog.WarnContext(ctx, "Error filtering users from victims for esc13", attr.Error(err))
 					continue
 				} else {
 					for _, group := range groupNodes.Slice() {
 						for _, domain := range targetDomains.Slice() {
 							if groupIsContainedOrTrusted(tx, group, domain) {
 								filtered.Each(func(value uint64) bool {
-									channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+									channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 										FromID: graph.ID(value),
 										ToID:   group.ID,
 										Kind:   ad.ADCSESC13,
@@ -114,7 +114,7 @@ func groupIsContainedOrTrusted(tx graph.Transaction, group, domain *graph.Node) 
 	)
 
 	if err := ops.Traversal(tx, traversalPlan, pathVisitor); err != nil {
-		slog.Debug(fmt.Sprintf("groupIsContainedOrTrusted traversal error: %v", err))
+		slog.Debug("GroupIsContainedOrTrusted traversal error", attr.Error(err))
 	}
 
 	return matchFound
@@ -194,7 +194,7 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		endNode    *graph.Node
 		startNodes = graph.NodeSet{}
 
-		traversalInst          = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst          = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		paths                  = graph.PathSet{}
 		path1CandidateSegments = map[graph.ID][]*graph.PathSegment{}
 		path1EnterpriseCAs     = cardinality.NewBitmap64()

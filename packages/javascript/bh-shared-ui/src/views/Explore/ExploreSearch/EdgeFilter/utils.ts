@@ -16,9 +16,6 @@
 import { EdgeType } from 'js-client-library';
 import { BUILTIN_EDGE_CATEGORIES, Category, Subcategory } from './edgeCategories';
 
-// these are the schema types that should be ignored from the API in favor of our built-in categories
-export const BUILTIN_TYPES = ['ad', 'az'];
-
 /**
  *  Maps from our API EdgeType format to a single Category type that can be consumed by our edge filter dialog
  */
@@ -48,7 +45,7 @@ export const mapEdgeTypesToCategory = (edgeTypes: EdgeType[], categoryName: stri
  * Removes all built-in and non-traversable edges from a list of edge types
  */
 export const filterUnneededTypes = (data: EdgeType[] | undefined): EdgeType[] | undefined => {
-    return data?.filter((edge) => !BUILTIN_TYPES.includes(edge.schema_name) && edge.is_traversable);
+    return data?.filter((edge) => !edge.is_builtin && edge.is_traversable);
 };
 
 /**

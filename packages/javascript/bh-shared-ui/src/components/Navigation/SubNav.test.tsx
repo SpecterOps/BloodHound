@@ -25,7 +25,13 @@ describe('SubNav', () => {
             path: '/administration/test-nav-item-path',
         };
 
-        render(<SubNav sections={[{ title: testSectionTitle, items: [testNavItem] }]} />);
+        render(
+            <SubNav
+                close={() => {}}
+                isExpanded={false}
+                sections={[{ title: testSectionTitle, items: [testNavItem] }]}
+            />
+        );
         expect(screen.getByRole('navigation')).toBeInTheDocument();
         expect(screen.getByText(testSectionTitle)).toBeInTheDocument();
         expect(screen.getByText(testNavItem.label)).toBeInTheDocument();
@@ -64,7 +70,7 @@ describe('SubNav', () => {
             },
         ];
 
-        render(<SubNav sections={testSections} />);
+        render(<SubNav close={() => {}} isExpanded={false} sections={testSections} />);
         expect(screen.getByRole('navigation')).toBeInTheDocument();
         expect(screen.getAllByRole('link')).toHaveLength(9);
         for (const section of testSections) {

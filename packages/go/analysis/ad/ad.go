@@ -67,6 +67,7 @@ func FetchWellKnownTierZeroEntities(ctx context.Context, db graph.Database, doma
 				return query.And(
 					// Make sure we have the Group or User label. This should cover the case for URA as well as filter out all the other localgroups
 					query.KindIn(query.Node(), ad.Group, ad.User),
+					query.KindIn(query.Node(), ad.Entity),
 					query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), wellKnownSIDSuffix),
 					query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSID),
 				)
@@ -129,6 +130,7 @@ func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
 				return query.And(
 					query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), suffix),
 					query.Not(query.KindIn(query.Node(), ad.Group, ad.LocalGroup)),
+					query.KindIn(query.Node(), ad.Entity),
 				)
 			})); err != nil && !graph.IsErrNotFound(err) {
 				return err
@@ -197,9 +199,17 @@ func grabDomainInformation(tx graph.Transaction) (map[string]string, error) {
 	}).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 		for node := range cursor.Chan() {
 			if domainObjectID, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-				slog.Error(fmt.Sprintf("Domain node %d does not have a valid object ID", node.ID))
+				slog.Error(
+					"Domain node does not have a valid object ID",
+					slog.Uint64("node_id", uint64(node.ID)),
+					attr.Error(err),
+				)
 			} else if domainName, err := node.Properties.Get(common.Name.String()).String(); err != nil {
-				slog.Error(fmt.Sprintf("Domain node %d does not have a valid name", node.ID))
+				slog.Error(
+					"Domain node does not have a valid name",
+					slog.Uint64("node_id", uint64(node.ID)),
+					attr.Error(err),
+				)
 			} else {
 				domainNamesByObjectID[domainObjectID] = domainName
 			}
@@ -237,11 +247,12 @@ func LinkWellKnownNodes(ctx context.Context, db graph.Database) error {
 
 	for _, domain := range domains {
 		if err := linkWellKnownNodesForDomain(ctx, db, domain, domains.Slice(), newProperties); err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf(
-				"Error linking well-known nodes for domain %d: %v",
-				domain.ID,
-				err,
-			))
+			slog.ErrorContext(
+				ctx,
+				"Error linking well-known nodes for domain",
+				slog.Uint64("domain_id", uint64(domain.ID)),
+				attr.Error(err),
+			)
 			errors.Add(fmt.Errorf("failed linking well-known nodes for domain %d: %w", domain.ID, err))
 		}
 	}
@@ -252,7 +263,12 @@ func LinkWellKnownNodes(ctx context.Context, db graph.Database) error {
 func linkWellKnownNodesForDomain(ctx context.Context, db graph.Database, domain *graph.Node, _ []*graph.Node, newProperties *graph.Properties) error {
 	domainSid, domainName, err := nodeprops.ReadDomainIDandNameAsString(domain)
 	if err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error getting domain sid or name for domain %d: %v", domain.ID, err))
+		slog.ErrorContext(
+			ctx,
+			"Error getting domain sid or name for domain",
+			slog.Uint64("domain_id", uint64(domain.ID)),
+			attr.Error(err),
+		)
 		return err
 	}
 

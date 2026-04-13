@@ -36,32 +36,61 @@ func TestIsValidClientVersion(t *testing.T) {
 		err error
 	)
 
-	err = utils.IsValidClientVersion("azurehound/0.0.0")
+	azureHoundVersion, err := utils.IsValidClientVersion("azurehound/0.0.0")
 	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeAzureHound, azureHoundVersion.ClientType)
+	require.Equal(t, 0, azureHoundVersion.Major)
+	require.Equal(t, 0, azureHoundVersion.Minor)
+	require.Equal(t, 0, azureHoundVersion.Patch)
 
-	err = utils.IsValidClientVersion("sharphound/2.0.3.0")
+	sharpHoundversion, err := utils.IsValidClientVersion("sharphound/2.0.3.0")
 	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeSharpHound, sharpHoundversion.ClientType)
+	require.Equal(t, 2, sharpHoundversion.Major)
+	require.Equal(t, 0, sharpHoundversion.Minor)
+	require.Equal(t, 3, sharpHoundversion.Patch)
+	require.Equal(t, 0, sharpHoundversion.Extra)
 
-	err = utils.IsValidClientVersion("sharphound/2.0.2.0")
+	_, err = utils.IsValidClientVersion("sharphound/2X0Y3Z0")
+	require.NotNil(t, err)
+	require.ErrorIs(t, err, utils.ErrInvalidSharpHoundVersion)
+
+	_, err = utils.IsValidClientVersion("sharphound/2.0.2.0")
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrRecommendSharphoundVersion)
 
-	err = utils.IsValidClientVersion("sharphound/1.9.3.0")
+	_, err = utils.IsValidClientVersion("sharphound/1.9.3.0")
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrRecommendSharphoundVersion)
+
+	openHoundVersion, err := utils.IsValidClientVersion("openhound/0.0.0")
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeOpenHound, openHoundVersion.ClientType)
+	require.Equal(t, 0, openHoundVersion.Major)
+	require.Equal(t, 0, openHoundVersion.Minor)
+	require.Equal(t, 0, openHoundVersion.Patch)
+
+	_, err = utils.IsValidClientVersion("openhound/1X0Y1")
+	require.NotNil(t, err)
+	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
 	// Unknown client type
-	err = utils.IsValidClientVersion("unknown/0.0.0")
+	_, err = utils.IsValidClientVersion("unknown/0.0.0")
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrInvalidClientType)
 
 	// Valid client type, no version
-	err = utils.IsValidClientVersion("azurehound")
+	_, err = utils.IsValidClientVersion("azurehound")
 	require.NotNil(t, err)
-	require.ErrorIs(t, err, utils.ErrInvalidAzureHoundVersion)
+	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
+
+	// Valid client type, no version
+	_, err = utils.IsValidClientVersion("openhound")
+	require.NotNil(t, err)
+	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
 	// Invalid UA
-	err = utils.IsValidClientVersion("garbage")
+	_, err = utils.IsValidClientVersion("garbage")
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrInvalidClientType)
 }
@@ -100,6 +129,14 @@ func TestParseClientVersion(t *testing.T) {
 	require.Equal(t, 1, version.Patch)
 	require.Equal(t, 0, version.Extra)
 
+	version, err = utils.ParseClientVersion("openhound/v1.0.1")
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeOpenHound, version.ClientType)
+	require.Equal(t, 1, version.Major)
+	require.Equal(t, 0, version.Minor)
+	require.Equal(t, 1, version.Patch)
+	require.Equal(t, 0, version.Extra)
+
 	version, err = utils.ParseClientVersion("teststring")
 
 	require.Equal(t, utils.ErrInvalidClientType, err)
@@ -110,7 +147,11 @@ func TestParseClientVersion(t *testing.T) {
 
 	version, err = utils.ParseClientVersion("azurehound/abc")
 
-	require.Equal(t, utils.ErrInvalidAzureHoundVersion, err)
+	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
+
+	version, err = utils.ParseClientVersion("openhound/abc")
+
+	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
 
 	//This is the Eli test
 	version, err = utils.ParseClientVersion("v2.-5.:biohazard_sign:")
@@ -241,6 +282,33 @@ func TestHeaderMatches(t *testing.T) {
 	if !utils.HeaderMatches(header, headers.ContentType.String(), mediatypes.ApplicationJson.String()) {
 		t.Fatalf("Expected content type %s to match %s", mediatypes.ApplicationJson.String(), mediatypes.ApplicationJson.String())
 	}
+}
+
+func TestParseUUID(t *testing.T) {
+	t.Run("valid lowercase UUID returns parsed value", func(t *testing.T) {
+		result, err := utils.ParseUUID("c0de600d-c0de-600d-c0de-600dc0de600d")
+		require.NoError(t, err)
+		require.Equal(t, "c0de600d-c0de-600d-c0de-600dc0de600d", result.String())
+	})
+
+	t.Run("valid uppercase UUID is normalized", func(t *testing.T) {
+		lower, _ := utils.ParseUUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+		upper, err := utils.ParseUUID("6BA7B810-9DAD-11D1-80B4-00C04FD430C8")
+		require.NoError(t, err)
+		require.Equal(t, lower, upper)
+	})
+
+	t.Run("invalid string returns ErrInvalidUUID", func(t *testing.T) {
+		_, err := utils.ParseUUID("random-random")
+		require.Error(t, err)
+		require.ErrorIs(t, err, utils.ErrInvalidUUID)
+	})
+
+	t.Run("empty string returns ErrInvalidUUID", func(t *testing.T) {
+		_, err := utils.ParseUUID("")
+		require.Error(t, err)
+		require.ErrorIs(t, err, utils.ErrInvalidUUID)
+	})
 }
 
 func TestIsValidEmail(t *testing.T) {

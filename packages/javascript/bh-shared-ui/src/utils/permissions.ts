@@ -34,6 +34,7 @@ export enum Permission {
     SAVED_QUERIES_READ,
     SAVED_QUERIES_WRITE,
     WIPE_DB,
+    OPENGRAPH_WRITE,
 }
 
 export type PermissionDefinition = {
@@ -69,10 +70,6 @@ export const PERMISSIONS: PermissionDefinitions = {
     [Permission.AUTH_CREATE_TOKEN]: {
         authority: 'auth',
         name: 'CreateToken',
-    },
-    [Permission.AUTH_MANAGE_APPLICATION_CONFIGURATIONS]: {
-        authority: 'auth',
-        name: 'ManageAppConfig',
     },
     [Permission.AUTH_MANAGE_PROVIDERS]: {
         authority: 'auth',
@@ -125,5 +122,9 @@ export const PERMISSIONS: PermissionDefinitions = {
     [Permission.WIPE_DB]: {
         authority: 'db',
         name: 'Wipe',
+    },
+    [Permission.OPENGRAPH_WRITE]: {
+        authority: 'opengraph',
+        name: 'Write',
     },
 };

@@ -13,14 +13,14 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button, Checkbox, Label } from '@bloodhoundenterprise/doodleui';
 import { faChevronCircleRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
+import { Button, Checkbox, Label } from 'doodle-ui';
 import { UpdateUserQueryRequest } from 'js-client-library';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useQuery } from 'react-query';
+import { UncommonSearches } from '../../../commonSearchesAGT';
 import { AppIcon } from '../../../components';
 import ProcessingIndicator from '../../../components/Animations';
 import { graphSchema } from '../../../constants';
@@ -31,11 +31,13 @@ import {
     useKeybindings,
     usePermissions,
     useQueryPermissions,
+    useTimeoutLimitConfiguration,
     useUpdateQueryPermissions,
     useUpdateSavedQuery,
 } from '../../../hooks';
+import { useGraphKinds } from '../../../hooks/useGraphKinds';
 import { useNotifications } from '../../../providers';
-import { Permission, apiClient, cn } from '../../../utils';
+import { Permission, cn } from '../../../utils';
 import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
 import { SavedQueriesProvider, useSavedQueriesContext } from '../providers';
 import CommonSearches from './SavedQueries/CommonSearches';
@@ -49,10 +51,14 @@ const CypherSearchInner = ({
     cypherSearchState,
     autoRun,
     setAutoRun,
+    disableQueryLimit,
+    setDisableQueryLimit,
 }: {
     cypherSearchState: CypherSearchState;
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
+    disableQueryLimit: boolean;
+    setDisableQueryLimit: (timeoutSetting: boolean) => void;
 }) => {
     const { selectedQuery, saveAction, showSaveQueryDialog, setSelected, setSaveAction, setShowSaveQueryDialog } =
         useSavedQueriesContext();
@@ -72,21 +78,27 @@ const CypherSearchInner = ({
     const [isPublic, setIsPublic] = useState(false);
     const [saveUpdatePending, setSaveUpdatePending] = useState(false);
 
+    const [hasQueryParseError, setHasQueryParseError] = useState(false);
+    const cypherEditorRef = useRef<CypherEditor | null>(null);
+    const getCypherValueOnLoadRef = useRef(false);
+
     const createSavedQueryMutation = useCreateSavedQuery();
     const updateSavedQueryMutation = useUpdateSavedQuery();
     const updateQueryPermissionsMutation = useUpdateQueryPermissions();
-    const kindsQuery = useQuery({
-        queryKey: ['graph-kinds'],
-        queryFn: ({ signal }) => apiClient.getKinds({ signal }).then((res) => res.data.data.kinds),
-    });
+
+    const kindsQuery = useGraphKinds();
+
     const { addNotification } = useNotifications();
     const { checkPermission } = usePermissions();
-
-    const cypherEditorRef = useRef<CypherEditor | null>(null);
-    const getCypherValueOnLoadRef = useRef(false);
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
-    const { isFetching: cypherSearchIsRunning } = useExploreGraph();
+    const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph();
+
+    const timeoutLimitEnabled = useTimeoutLimitConfiguration();
+
+    const handleDisableQueryTimeoutChange = (checked: boolean) => {
+        setDisableQueryLimit(checked);
+    };
 
     useLayoutEffect(() => {
         if (cypherEditorRef.current?.cypherEditor) {
@@ -107,9 +119,26 @@ const CypherSearchInner = ({
     }, [cypherQuery, setSelected]);
 
     const handleCypherSearch = () => {
+        // Pre-emptive check for performance impacting query errors
+        if (
+            UncommonSearches.some((search) =>
+                search.queries.some((query) => cypherQuery.toLowerCase().includes(query.query.toLocaleLowerCase()))
+            )
+        ) {
+            setHasQueryParseError(true);
+            return;
+        } else {
+            setHasQueryParseError(false);
+        }
+
         if (cypherQuery) {
             performSearch();
+            // If the user has toggled the query timeout limit, we need to allow them to re run the query to refetch the graph data
+            if (disableQueryLimit) {
+                refetch();
+            }
         }
+
         setMessageState((prev) => ({
             ...prev,
             showMessage: false,
@@ -249,8 +278,6 @@ const CypherSearchInner = ({
         KeyS: showSaveQueryDialog ? handleCloseSaveQueryDialog : handleClickSave,
     });
 
-    const buttonText = cypherSearchIsRunning ? 'Running' : 'Run';
-
     return (
         <>
             <div className='flex flex-col h-full' data-testid='cypher-search-section'>
@@ -270,7 +297,7 @@ const CypherSearchInner = ({
                 <div className='bg-[#f4f4f4] dark:bg-[#222222] p-4 rounded-lg shadow-outer-1'>
                     <div className='flex items-center justify-between mb-2'>
                         <CypherSearchMessage messageState={messageState} setMessageState={setMessageState} />
-                        <div className='flex items-center gap-4 whitespace-nowrap pr-2'>
+                        <div className='flex items-center whitespace-nowrap gap-2 pr-2'>
                             <Checkbox
                                 id='auto-run-selected-query'
                                 checked={autoRun}
@@ -288,11 +315,11 @@ const CypherSearchInner = ({
                             tabIndex={0}
                             onKeyDown={adaptClickHandlerToKeyDown(setFocusOnCypherEditor)}
                             onClick={setFocusOnCypherEditor}
-                            className='flex-1'>
+                            className='cursor-default flex-1'>
                             <CypherEditor
                                 ref={cypherEditorRef}
                                 className={cn(
-                                    '[&_.cm-content]:saturate-200 flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg',
+                                    '[&_.cm-content]:saturate-200 flex grow flex-col cursor-text border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg',
                                     showCommonQueries && '[@media(min-height:720px)]:max-h-[20lvh]'
                                 )}
                                 value={cypherQuery}
@@ -314,57 +341,79 @@ const CypherSearchInner = ({
                                 placeholder='Cypher Query'
                                 tooltipAbsolute={false}
                             />
+                            {hasQueryParseError && (
+                                <img
+                                    src={`${import.meta.env.BASE_URL}/img/query-parse-error.png`}
+                                    alt='parse-error-image'></img>
+                            )}
                         </div>
                     </div>
-                    <div className='flex gap-2 mt-2 justify-end shrink-0'>
-                        {checkPermission(Permission.GRAPH_DB_WRITE) && privilegeZonesEnabled && (
-                            <TagToZoneLabel cypherQuery={cypherSearchState.cypherQuery}></TagToZoneLabel>
-                        )}
-                        <Button
-                            variant='secondary'
-                            onClick={handleClickSave}
-                            aria-label='Save query'
-                            size={'small'}
-                            className='rounded-r-none'>
-                            <div className='flex items-center'>
-                                <p className='ml-2 text-base'>Save </p>
-                            </div>
-                        </Button>
-                        <SaveQueryActionMenu saveAs={handleSaveAs} />
 
-                        <Button asChild variant='secondary' size={'small'} className='px-1.5'>
-                            <a
-                                href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
-                                rel='noreferrer'
-                                target='_blank'
-                                aria-label='Learn more about cypher'
-                                className='group'>
-                                <div>
-                                    <AppIcon.Info size={24} />
+                    <div className='flex gap-2 mt-2 shrink-0 justify-between'>
+                        <div className='flex align-center justify-start ml-1'>
+                            {timeoutLimitEnabled === false && (
+                                <div className='flex items-center justify-between'>
+                                    <div className='flex items-center gap-2 whitespace-nowrap pr-2'>
+                                        <Checkbox
+                                            id='disable-query-timeout'
+                                            checked={disableQueryLimit}
+                                            onCheckedChange={handleDisableQueryTimeoutChange}
+                                        />
+                                        <Label htmlFor='disable-query-timeout' className='font-normal cursor-pointer'>
+                                            Disable query timeout
+                                        </Label>
+                                    </div>
                                 </div>
-                            </a>
-                        </Button>
+                            )}
+                        </div>
 
-                        <Button
-                            onClick={handleCypherSearch}
-                            size={'small'}
-                            disabled={cypherSearchIsRunning}
-                            aria-label='Run cypher query'
-                            className={cn({
-                                'bg-slate-600 max-w-[83px] hover:bg-slate-700': cypherSearchIsRunning,
-                            })}>
-                            <div className='flex items-center transition-all animate-in fade-in-10'>
-                                {cypherSearchIsRunning ? (
-                                    <ProcessingIndicator title={buttonText} className='text-base' />
-                                ) : (
-                                    <>
-                                        <p className='text-base'>{buttonText}</p>
-                                        <FontAwesomeIcon size='lg' icon={faChevronCircleRight} className='ml-2' />
-                                    </>
-                                )}
-                            </div>
-                        </Button>
-                        <div className='flex justify-center items-center'></div>
+                        <div className='flex gap-2 justify-end'>
+                            {checkPermission(Permission.GRAPH_DB_WRITE) && privilegeZonesEnabled && (
+                                <TagToZoneLabel cypherQuery={cypherSearchState.cypherQuery}></TagToZoneLabel>
+                            )}
+                            <Button
+                                variant='secondary'
+                                onClick={handleClickSave}
+                                aria-label='Save query'
+                                size={'small'}
+                                className='rounded-r-none'>
+                                <div className='flex items-center'>
+                                    <p className='ml-2 text-base'>Save </p>
+                                </div>
+                            </Button>
+                            <SaveQueryActionMenu saveAs={handleSaveAs} />
+
+                            <Button asChild variant='secondary' size={'small'} className='px-1.5'>
+                                <a
+                                    href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
+                                    rel='noreferrer'
+                                    target='_blank'
+                                    aria-label='Learn more about cypher'
+                                    className='group'>
+                                    <div>
+                                        <AppIcon.Info size={24} />
+                                    </div>
+                                </a>
+                            </Button>
+
+                            <Button
+                                onClick={handleCypherSearch}
+                                size={'small'}
+                                disabled={cypherSearchIsRunning}
+                                aria-label='Run cypher query'
+                                className='max-w-[83px]'>
+                                <div className='flex items-center transition-all animate-in fade-in-10 '>
+                                    {cypherSearchIsRunning ? (
+                                        <ProcessingIndicator title='Running' className='text-base' />
+                                    ) : (
+                                        <>
+                                            <p className='text-base'>Run</p>
+                                            <FontAwesomeIcon size='lg' icon={faChevronCircleRight} className='ml-2' />
+                                        </>
+                                    )}
+                                </div>
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -391,14 +440,24 @@ const CypherSearch = ({
     cypherSearchState,
     autoRun,
     setAutoRun,
+    disableQueryLimit,
+    setDisableQueryLimit,
 }: {
     cypherSearchState: CypherSearchState;
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
+    disableQueryLimit: boolean;
+    setDisableQueryLimit: (timeoutSetting: boolean) => void;
 }) => {
     return (
         <SavedQueriesProvider>
-            <CypherSearchInner cypherSearchState={cypherSearchState} autoRun={autoRun} setAutoRun={setAutoRun} />
+            <CypherSearchInner
+                cypherSearchState={cypherSearchState}
+                autoRun={autoRun}
+                setAutoRun={setAutoRun}
+                disableQueryLimit={disableQueryLimit}
+                setDisableQueryLimit={setDisableQueryLimit}
+            />
         </SavedQueriesProvider>
     );
 };

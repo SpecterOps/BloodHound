@@ -62,10 +62,6 @@ export const knownEnvironmentTypes = ['active-directory', 'azure'] as const;
 
 export type KnownEnvironmentType = (typeof knownEnvironmentTypes)[number];
 
-export const isKnownEnvironmentType = (type?: string): type is KnownEnvironmentType => {
-    return knownEnvironmentTypes.includes(type as KnownEnvironmentType);
-};
-
 export type Environment = {
     // `string & {}` is a hack to make this a string literal type that can be widened to string if needed
     // Needed because environment types can be provided by the user
@@ -181,6 +177,7 @@ export type AuthToken = TimestampFields & {
     last_access: string;
     name: string;
     user_id: string;
+    expires_at: string | null;
 };
 
 export type ListAuthTokensResponse = BasicResponse<{ tokens: AuthToken[] }>;
@@ -323,6 +320,7 @@ export type EdgeType = {
     description: string;
     is_traversable: boolean;
     schema_name: string;
+    is_builtin: boolean;
 };
 
 export type GetEdgeTypesResponse = BasicResponse<EdgeType[]>;
@@ -360,3 +358,18 @@ export type Extension = {
 };
 
 export type GetExtensionsResponse = BasicResponse<{ extensions: Extension[] }>;
+
+export type FindingSchema = {
+    id: number;
+    name: string;
+    display_name: string;
+    type: string;
+    environment_id: number;
+    extension_id: number;
+    kind: string;
+    subtypes: string[];
+    is_builtin: boolean;
+    created_at: string;
+};
+
+export type FindingSchemaResponse = PaginatedResponse<{ findings: FindingSchema[] }>;

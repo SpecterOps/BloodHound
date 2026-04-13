@@ -28,22 +28,28 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
 
 var (
 	ErrInvalidSharpHoundVersion   = errors.New("invalid sharphound version string")
-	ErrInvalidAzureHoundVersion   = errors.New("invalid azurehound version string")
+	ErrInvalidCollectorVersion    = errors.New("invalid collector version string")
 	ErrRecommendSharphoundVersion = errors.New("please upgrade to sharphound v2.0.3 or above")
 	ErrInvalidClientType          = errors.New("invalid client type")
+	ErrInvalidUUID                = errors.New("invalid UUID")
+	azurehoundVersionRegex        = regexp.MustCompile(`^azurehound/v?([0-9]+)\.([0-9]+)\.([0-9]+)$`)
+	openhoundVersionRegex         = regexp.MustCompile(`^openhound/v?([0-9]+)\.([0-9]+)\.([0-9]+)$`)
+	sharphoundVersionRegex        = regexp.MustCompile(`^sharphound/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)$`)
 )
 
 type ClientType int
 
 const (
-	ClientTypeSharpHound ClientType = 0
-	ClientTypeAzureHound ClientType = 1
+	ClientTypeSharpHound ClientType = 1
+	ClientTypeAzureHound ClientType = 2
+	ClientTypeOpenHound  ClientType = 3
 )
 
 type ClientVersion struct {
@@ -55,29 +61,31 @@ type ClientVersion struct {
 }
 
 // IsValidClientVersion checks the version from a user agent to ensure it's a valid UserAgent and that
-// the version of the client is not EOL (currently SHS v1.x and SHS < v2.0.3). Returns an error if invalid
-// and nil if valid
-func IsValidClientVersion(userAgent string) error {
+// the version of the client is not EOL (currently SHS v1.x and SHS < v2.0.3).
+// Returns the parsed ClientVersion and an error when invalid.
+func IsValidClientVersion(userAgent string) (ClientVersion, error) {
 	if version, err := ParseClientVersion(userAgent); err != nil {
-		return fmt.Errorf("error parsing client version: %w", err)
+		return version, fmt.Errorf("error parsing client version: %w", err)
 	} else if version.ClientType == ClientTypeAzureHound {
-		return nil
+		return version, nil
+	} else if version.ClientType == ClientTypeOpenHound {
+		return version, nil
 	} else if version.ClientType == ClientTypeSharpHound {
 		if version.Major < 2 {
-			return fmt.Errorf("sharphound v1.x detected: %w", ErrRecommendSharphoundVersion)
+			return version, fmt.Errorf("sharphound v1.x detected: %w", ErrRecommendSharphoundVersion)
 		} else if version.Major == 2 && version.Minor == 0 && version.Patch < 3 {
-			return fmt.Errorf("sharphound v2.0.2 or lower detected: %w", ErrRecommendSharphoundVersion)
+			return version, fmt.Errorf("sharphound v2.0.2 or lower detected: %w", ErrRecommendSharphoundVersion)
 		} else {
-			return nil
+			return version, nil
 		}
 	} else { // unknown client type
-		return ErrInvalidClientType
+		return version, ErrInvalidClientType
 	}
 }
 
 func ParseClientVersion(userAgent string) (ClientVersion, error) {
-	if strings.HasPrefix(userAgent, "azurehound") {
-		return ParseAzurehoundVersion(userAgent)
+	if strings.HasPrefix(userAgent, "azurehound") || strings.HasPrefix(userAgent, "openhound") {
+		return ParseCollectorVersion(userAgent)
 	} else if strings.HasPrefix(userAgent, "sharphound") {
 		return ParseSharpHoundVersion(userAgent)
 	} else {
@@ -85,24 +93,31 @@ func ParseClientVersion(userAgent string) (ClientVersion, error) {
 	}
 }
 
-func ParseAzurehoundVersion(userAgent string) (ClientVersion, error) {
-	version := ClientVersion{
-		ClientType: ClientTypeAzureHound,
-		Major:      0,
-		Minor:      0,
-		Patch:      0,
-		Extra:      0,
-	}
-	rgx := regexp.MustCompile("azurehound/v?([0-9]+).([0-9]+).([0-9]+)")
-	if match := rgx.MatchString(userAgent); !match {
-		return version, ErrInvalidAzureHoundVersion
+func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
+	var (
+		version               = ClientVersion{Major: 0, Minor: 0, Patch: 0, Extra: 0}
+		collectorVersionRegex *regexp.Regexp
+	)
+
+	if strings.HasPrefix(userAgent, "azurehound") {
+		version.ClientType = ClientTypeAzureHound
+		collectorVersionRegex = azurehoundVersionRegex
+	} else if strings.HasPrefix(userAgent, "openhound") {
+		version.ClientType = ClientTypeOpenHound
+		collectorVersionRegex = openhoundVersionRegex
 	} else {
-		rs := rgx.FindStringSubmatch(userAgent)
-		if major, err := strconv.Atoi(rs[1]); err != nil {
+		return ClientVersion{}, ErrInvalidClientType
+	}
+
+	if match := collectorVersionRegex.MatchString(userAgent); !match {
+		return version, ErrInvalidCollectorVersion
+	} else {
+		versionMatches := collectorVersionRegex.FindStringSubmatch(userAgent)
+		if major, err := strconv.Atoi(versionMatches[1]); err != nil {
 			return version, err
-		} else if minor, err := strconv.Atoi(rs[2]); err != nil {
+		} else if minor, err := strconv.Atoi(versionMatches[2]); err != nil {
 			return version, err
-		} else if patch, err := strconv.Atoi(rs[3]); err != nil {
+		} else if patch, err := strconv.Atoi(versionMatches[3]); err != nil {
 			return version, err
 		} else {
 			version.Major = major
@@ -115,25 +130,27 @@ func ParseAzurehoundVersion(userAgent string) (ClientVersion, error) {
 }
 
 func ParseSharpHoundVersion(userAgent string) (ClientVersion, error) {
-	version := ClientVersion{
-		ClientType: ClientTypeSharpHound,
-		Major:      0,
-		Minor:      0,
-		Patch:      0,
-		Extra:      0,
-	}
-	rgx := regexp.MustCompile("sharphound/([0-9]+).([0-9]+).([0-9]+).([0-9]+)")
-	if match := rgx.MatchString(userAgent); !match {
+	var (
+		version = ClientVersion{
+			ClientType: ClientTypeSharpHound,
+			Major:      0,
+			Minor:      0,
+			Patch:      0,
+			Extra:      0,
+		}
+		sharpHoundVersionRegex = sharphoundVersionRegex
+	)
+	if match := sharpHoundVersionRegex.MatchString(userAgent); !match {
 		return version, ErrInvalidSharpHoundVersion
 	} else {
-		rs := rgx.FindStringSubmatch(userAgent)
-		if major, err := strconv.Atoi(rs[1]); err != nil {
+		versionMatches := sharpHoundVersionRegex.FindStringSubmatch(userAgent)
+		if major, err := strconv.Atoi(versionMatches[1]); err != nil {
 			return version, err
-		} else if minor, err := strconv.Atoi(rs[2]); err != nil {
+		} else if minor, err := strconv.Atoi(versionMatches[2]); err != nil {
 			return version, err
-		} else if patch, err := strconv.Atoi(rs[3]); err != nil {
+		} else if patch, err := strconv.Atoi(versionMatches[3]); err != nil {
 			return version, err
-		} else if extra, err := strconv.Atoi(rs[4]); err != nil {
+		} else if extra, err := strconv.Atoi(versionMatches[4]); err != nil {
 			return version, err
 		} else {
 			version.Major = major
@@ -253,6 +270,16 @@ func HeaderMatches(headers http.Header, key string, target ...string) bool {
 		}
 	}
 	return false
+}
+
+// ParseUUID parses a string into a uuid.UUID and returns an ErrInvalidUUID
+// error if the string is not a valid UUID.
+func ParseUUID(s string) (uuid.UUID, error) {
+	parsedUUID, err := uuid.FromString(s)
+	if err != nil {
+		return uuid.UUID{}, fmt.Errorf("%w: %w", ErrInvalidUUID, err)
+	}
+	return parsedUUID, nil
 }
 
 func IsValidEmail(maybeEmail string) bool {

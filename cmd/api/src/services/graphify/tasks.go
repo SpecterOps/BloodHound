@@ -28,6 +28,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/bomenc"
@@ -179,35 +180,45 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.Ingest
 				}
 
 				if err := processSingleFile(ic.Ctx, data, ic, readOpts); err != nil {
-					var graphifyError errorlist.Error
+					var (
+						graphifyError errorlist.Error
+						resolutionErr endpoint.ResolutionError
+					)
 
-					if ok := errors.As(err, &graphifyError); ok {
-						var userDataErr IngestUserDataError
+					if errors.As(err, &graphifyError) {
 						for _, graphifyErr := range graphifyError.Errors {
-							if ok := errors.As(graphifyErr, &userDataErr); ok {
-								fileData[i].UserDataErrs = append(fileData[i].UserDataErrs, userDataErr.Error())
+							if ok := errors.As(graphifyErr, &resolutionErr); ok {
+								// Resolution errors are data quality issues. They are surfaced to the user via
+								// UserDataErrs but must not trigger a batch rollback.
+								fileData[i].UserDataErrs = append(fileData[i].UserDataErrs, resolutionErr.Error())
 							} else {
 								fileData[i].Errors = append(fileData[i].Errors, graphifyErr.Error())
+								errs.Add(graphifyErr)
 							}
 						}
 					} else {
 						fileData[i].Errors = append(fileData[i].Errors, err.Error())
+						errs.Add(err)
 					}
-					errs.Add(err) // graphifyErrorBuilder at fn scope
-					continue      // keep ingesting the rest
 				}
 			}
-
 			return errs.Build()
 		})
 	}
 }
 
-func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.Time, useChangelog bool) *IngestContext {
-	opts := []IngestOption{WithIngestTime(ingestTime)}
+func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.Time, useChangelog bool, jobId int64) *IngestContext {
+	opts := []IngestOption{
+		WithIngestTime(ingestTime),
+		WithEndpointResolver(s.endpointResolver),
+	}
 
 	if useChangelog {
 		opts = append(opts, WithChangeManager(s.changeManager))
+	}
+
+	if jobId > 0 {
+		opts = append(opts, WithJobId(jobId))
 	}
 
 	return NewIngestContext(ctx, opts...)
@@ -294,7 +305,7 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 	}
 
 	for _, task := range tasks {
-		ingestCtx := s.NewIngestContext(s.ctx, time.Now().UTC(), flagChangeLogEnabled)
+		ingestCtx := s.NewIngestContext(s.ctx, time.Now().UTC(), flagChangeLogEnabled, task.JobId.ValueOrZero())
 		fileData, err := s.ProcessIngestFile(ingestCtx, task)
 
 		switch {

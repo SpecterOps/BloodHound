@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { EdgeType } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { renderHook, waitFor } from '../../../../test-utils';
@@ -21,7 +22,7 @@ import { useEdgeCategories } from './useEdgeCategories';
 import { getEdgeListFromCategory } from './utils';
 
 const server = setupServer(
-    rest.get('/api/v2/graph-schema/edges', async (req, res, ctx) => {
+    rest.get('/api/v2/extensions-edges', async (req, res, ctx) => {
         return res(
             ctx.json({
                 data: [],
@@ -45,7 +46,7 @@ describe('useEdgeCategories', async () => {
         const testEdges = [...edgeSchemaA, ...edgeSchemaB];
 
         server.use(
-            rest.get('/api/v2/graph-schema/edges', (req, res, ctx) => {
+            rest.get('/api/v2/extensions-edges', (req, res, ctx) => {
                 return res(
                     ctx.json({
                         data: testEdges,
@@ -70,7 +71,7 @@ describe('useEdgeCategories', async () => {
         const testEdges = [...edgeSchemaA, ...edgeSchemaB, ...edgeSchemaBuiltin];
 
         server.use(
-            rest.get('/api/v2/graph-schema/edges', (req, res, ctx) => {
+            rest.get('/api/v2/extensions-edges', (req, res, ctx) => {
                 return res(
                     ctx.json({
                         data: testEdges,
@@ -96,7 +97,7 @@ describe('useEdgeCategories', async () => {
         const testEdges = [...edgeSchemaA, ...edgeSchemaB, ...edgeSchemaBuiltin];
 
         server.use(
-            rest.get('/api/v2/graph-schema/edges', (req, res, ctx) => {
+            rest.get('/api/v2/extensions-edges', (req, res, ctx) => {
                 return res(
                     ctx.json({
                         data: testEdges,
@@ -127,13 +128,14 @@ const createOpenGraphFeatureFlag = (enabled: boolean = false) => {
 };
 
 // all these edges are traversable and should be present in the OpenGraph edge category
-const edgeSchemaA = [
+const edgeSchemaA: EdgeType[] = [
     {
         id: 1,
         name: 'SchemaA_EdgeA',
         description: '',
         is_traversable: true,
         schema_name: 'SchemaA',
+        is_builtin: false,
     },
     {
         id: 2,
@@ -141,6 +143,7 @@ const edgeSchemaA = [
         description: '',
         is_traversable: true,
         schema_name: 'SchemaA',
+        is_builtin: false,
     },
     {
         id: 3,
@@ -148,6 +151,7 @@ const edgeSchemaA = [
         description: '',
         is_traversable: true,
         schema_name: 'SchemaA',
+        is_builtin: false,
     },
     {
         id: 4,
@@ -155,6 +159,7 @@ const edgeSchemaA = [
         description: '',
         is_traversable: true,
         schema_name: 'SchemaA',
+        is_builtin: false,
     },
     {
         id: 5,
@@ -162,17 +167,19 @@ const edgeSchemaA = [
         description: '',
         is_traversable: true,
         schema_name: 'SchemaA',
+        is_builtin: false,
     },
 ];
 
 // this group of edges includes two non-traversable edges that should not appear in the resulting OpenGraph category
-const edgeSchemaB = [
+const edgeSchemaB: EdgeType[] = [
     {
         id: 6,
         name: 'SchemaB_EdgeA',
         description: '',
         is_traversable: true,
         schema_name: 'SchemaB',
+        is_builtin: false,
     },
     {
         id: 7,
@@ -180,6 +187,7 @@ const edgeSchemaB = [
         description: '',
         is_traversable: true,
         schema_name: 'SchemaB',
+        is_builtin: false,
     },
     {
         id: 8,
@@ -187,6 +195,7 @@ const edgeSchemaB = [
         description: '',
         is_traversable: true,
         schema_name: 'SchemaB',
+        is_builtin: false,
     },
     {
         id: 9,
@@ -194,6 +203,7 @@ const edgeSchemaB = [
         description: '',
         is_traversable: false,
         schema_name: 'SchemaB',
+        is_builtin: false,
     },
     {
         id: 10,
@@ -201,17 +211,19 @@ const edgeSchemaB = [
         description: '',
         is_traversable: false,
         schema_name: 'SchemaE',
+        is_builtin: false,
     },
 ];
 
 // these edges are part of the built-in schema and should be overridden by the hardcoded edge categories in edgeCategories.ts
-const edgeSchemaBuiltin = [
+const edgeSchemaBuiltin: EdgeType[] = [
     {
         id: 11,
         name: 'AdEdge_ShouldntAppear',
         description: '',
         is_traversable: true,
         schema_name: 'ad',
+        is_builtin: true,
     },
     {
         id: 12,
@@ -219,5 +231,6 @@ const edgeSchemaBuiltin = [
         description: '',
         is_traversable: true,
         schema_name: 'az',
+        is_builtin: true,
     },
 ];

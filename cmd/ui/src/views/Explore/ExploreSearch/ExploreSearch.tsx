@@ -35,7 +35,7 @@ import {
     usePathfindingSearch,
 } from 'bh-shared-ui';
 import React, { useState } from 'react';
-import { setAutoRunQueries } from 'src/ducks/global/actions';
+import { setAutoRunQueries, setTimeoutSetting } from 'src/ducks/global/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 const useStyles = makeStyles((theme) => ({
@@ -168,12 +168,14 @@ const ExploreSearch: React.FC = () => {
         dispatch(setAutoRunQueries(autoRun));
     };
 
+    // disable query timeout
+    const disableTimeout = useAppSelector((state) => state.global.view.timeoutSetting);
+    const handleDisableTimeoutChange = (disableTimeout: boolean) => {
+        dispatch(setTimeoutSetting(disableTimeout));
+    };
+
     return (
-        <div
-            data-testid='explore_search-container'
-            className={cn('h-full min-h-0 w-[410px] flex gap-4 flex-col rounded', {
-                'w-[600px]': activeTab === 'cypher' && showSearchWidget,
-            })}>
+        <div data-testid='explore_search-container' className='h-full min-h-0 w-[600px] flex gap-4 flex-col rounded'>
             <div
                 className='h-10 w-full flex gap-1 rounded-lg shadow-outer-1 pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'
                 data-testid='explore_search-container_header'>
@@ -227,6 +229,8 @@ const ExploreSearch: React.FC = () => {
                             cypherSearchState={cypherSearchState}
                             autoRun={autoRun}
                             setAutoRun={handleAutoRunChange}
+                            disableQueryLimit={disableTimeout}
+                            setDisableQueryLimit={handleDisableTimeoutChange}
                         />,
                         /* eslint-enable react/jsx-key */
                     ]}

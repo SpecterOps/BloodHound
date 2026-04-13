@@ -39,7 +39,9 @@ export enum ConfigurationKey {
     Tiering = 'analysis.tiering',
     TimeoutLimit = 'api.timeout_limit',
     APITokens = 'auth.api_tokens',
+    APITokenExpiration = 'auth.api_token_expiration',
     ScheduledAnalysis = 'analysis.scheduled',
+    SupportAccountProvisioning = 'auth.support_account_provisioning',
 }
 
 export type PasswordExpirationConfiguration = {
@@ -110,6 +112,21 @@ export type APITokensConfiguration = {
     };
 };
 
+export type APITokenExpirationConfiguration = {
+    key: ConfigurationKey.APITokenExpiration;
+    value: {
+        enabled: boolean;
+        expiration_period: string;
+    };
+};
+
+export type SupportAccountConfiguration = {
+    key: ConfigurationKey.SupportAccountProvisioning;
+    value: {
+        enabled: boolean;
+    };
+};
+
 export type ConfigurationPayload =
     | PasswordExpirationConfiguration
     | Neo4jConfiguration
@@ -118,8 +135,10 @@ export type ConfigurationPayload =
     | PruneTTLConfiguration
     | TieringConfiguration
     | APITokensConfiguration
+    | APITokenExpirationConfiguration
     | ScheduledAnalysisConfiguration
-    | TimeoutLimitConfiguration;
+    | TimeoutLimitConfiguration
+    | SupportAccountConfiguration;
 
 export const getConfigurationFromKey = (config: GetConfigurationResponse | undefined, key: ConfigurationKey) => {
     return config?.data.find((c) => c.key === key);
@@ -197,6 +216,15 @@ export const parseAPITokensConfiguration = (
     return config?.key === key ? config : undefined;
 };
 
+export const parseAPITokenExpirationConfiguration = (
+    response: GetConfigurationResponse | undefined
+): ConfigurationWithMetadata<APITokenExpirationConfiguration> | undefined => {
+    const key = ConfigurationKey.APITokenExpiration;
+    const config = getConfigurationFromKey(response, key);
+
+    return config?.key === key ? config : undefined;
+};
+
 export const parseScheduledAnalysisConfiguration = (
     response: GetConfigurationResponse | undefined
 ): ConfigurationWithMetadata<ScheduledAnalysisConfiguration> | undefined => {
@@ -204,4 +232,13 @@ export const parseScheduledAnalysisConfiguration = (
     const config = getConfigurationFromKey(response, key);
 
     return config?.key === key ? config : undefined;
+};
+
+export const parseSupportAccountConfiguration = (
+    response: GetConfigurationResponse | undefined
+): ConfigurationWithMetadata<SupportAccountConfiguration> | undefined => {
+    const key = ConfigurationKey.SupportAccountProvisioning;
+    const config = getConfigurationFromKey(response, key);
+
+    return config?.key == key ? config : undefined;
 };

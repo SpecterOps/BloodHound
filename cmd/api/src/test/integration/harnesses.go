@@ -26,9 +26,9 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/test"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/harnesses"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
+	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -3710,7 +3710,7 @@ func initHarnessNodeProperties(c *GraphTestContext, nodeMap map[string]*graph.No
 
 func initHarnessRelationships(c *GraphTestContext, nodeMap map[string]*graph.Node, relationships []harnesses.Relationship) {
 	for _, relationship := range relationships {
-		if kind, err := analysis.ParseKind(relationship.Kind); err != nil {
+		if kind, err := ein.ParseKind(relationship.Kind); err != nil {
 			c.testCtx.Errorf("invalid relationship kind: %s", kind)
 			continue
 		} else if asserting, ok := relationship.Properties["asserted"]; !ok {
@@ -9793,6 +9793,23 @@ func (s *IngestRelationships) Setup(graphTestContext *GraphTestContext) {
 	s.ExistingRel = graphTestContext.NewRelationship(s.Node1, s.Node2, graph.StringKind("existing_edge_kind"))
 }
 
+type IngestRelationshipsUppercaseInvariant struct {
+	Node1 *graph.Node
+	Node2 *graph.Node
+}
+
+func (s *IngestRelationshipsUppercaseInvariant) Setup(graphTestContext *GraphTestContext) {
+	s.Node1 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "ABC",
+		common.Name:     "computer a",
+	}), graph.StringKind("Computer"))
+
+	s.Node2 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "DEF",
+		common.Name:     "computer b",
+	}), graph.StringKind("Computer"))
+}
+
 type GenericIngest struct {
 	Node1 *graph.Node
 	Node2 *graph.Node
@@ -9881,6 +9898,35 @@ func (s *Version730_Migration_Harness) Setup(graphTestContext *GraphTestContext)
 	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domain1Sid)
 	s.Computer2.Properties.Set(ad.SMBSigning.String(), false)
 	graphTestContext.UpdateNode(s.Computer1)
+}
+
+type Version900_Migration_Harness struct {
+	Computer1 *graph.Node
+	Computer2 *graph.Node
+}
+
+func (s *Version900_Migration_Harness) Setup(graphTestContext *GraphTestContext) {
+	domain1Sid := RandomDomainSID()
+
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
+	s.Computer1.Properties.Set("environment_id", "ENV-001")
+	graphTestContext.UpdateNode(s.Computer1)
+
+	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domain1Sid)
+	s.Computer2.Properties.Set("environment_id", "ENV-001")
+	graphTestContext.UpdateNode(s.Computer2)
+}
+
+type Version910_Migration_Harness struct {
+	ADNode *graph.Node
+	AZNode *graph.Node
+	OGNode *graph.Node
+}
+
+func (s *Version910_Migration_Harness) Setup(graphTestContext *GraphTestContext) {
+	s.ADNode = graphTestContext.NewActiveDirectoryGroup("ADNode", RandomDomainSID())
+	s.AZNode = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{}), azure.Entity, ad.Group)
+	s.OGNode = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{}), graph.StringKind("OGBaseKind"), ad.Group)
 }
 
 type ACLInheritanceHarness struct {
@@ -10215,7 +10261,10 @@ type HarnessDetails struct {
 	GenericIngest                                   GenericIngest
 	ResolveEndpointsByName                          ResolveEndpointsByName
 	IngestRelationships                             IngestRelationships
+	IngestRelationshipsUppercaseInvariant           IngestRelationshipsUppercaseInvariant
 	AZPIMRolesHarness                               AZPIMRolesHarness
 	Version730_Migration                            Version730_Migration_Harness
+	Version900_Migration_Harness                    Version900_Migration_Harness
+	Version910_Migration_Harness                    Version910_Migration_Harness
 	ACLInheritanceHarness                           ACLInheritanceHarness
 }

@@ -28,14 +28,14 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	authctx "github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	"github.com/specterops/dawgs/graph"
 )
 
 //go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/graphschemaextensions.go -package=mocks . OpenGraphSchemaService
@@ -43,6 +43,8 @@ type OpenGraphSchemaService interface {
 	UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error)
 	ListExtensions(ctx context.Context) (model.GraphSchemaExtensions, error)
 	DeleteExtension(ctx context.Context, extensionID int32) error
+	GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx context.Context, onlyBuiltin bool) (graph.Kinds, map[string]string, error)
+	GetSchemaFindings(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) ([]model.SchemaFinding, int, error)
 }
 
 type GraphExtensionPayload struct {
@@ -115,16 +117,7 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 		graphExtensionPayload GraphExtensionPayload
 	)
 
-	// feature flag is checked as part of middleware
-	if user, isUser := auth.GetUserFromAuthCtx(authctx.FromRequest(request).AuthCtx); !isUser {
-		var errMessage = "No associated user found"
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusUnauthorized, errMessage, request), response)
-		return
-	} else if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
-		var errMessage = "user does not have sufficient permissions to create or update an extension"
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, errMessage, request), response)
-		return
-	} else if request.Body == nil {
+	if request.Body == nil {
 		var errMessage = "open graph extension payload cannot be empty"
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, errMessage, request), response)
 		return
@@ -157,7 +150,11 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 		case strings.Contains(err.Error(), model.ErrGraphDBRefreshKinds.Error()):
 			fallthrough
 		default:
-			slog.WarnContext(ctx, err.Error())
+			slog.WarnContext(
+				ctx,
+				"Error updating open graph schema",
+				attr.Error(err),
+			)
 			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		}
 	} else if updated {
@@ -271,12 +268,7 @@ func (s Resources) ListExtensions(response http.ResponseWriter, request *http.Re
 		ctx = request.Context()
 	)
 
-	// feature flag is checked as part of middleware
-	if user, isUser := auth.GetUserFromAuthCtx(authctx.FromRequest(request).AuthCtx); !isUser {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusUnauthorized, "No associated user found", request), response)
-	} else if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, "user does not have sufficient permissions to view extensions", request), response)
-	} else if extensions, err := s.OpenGraphSchemaService.ListExtensions(ctx); err != nil {
+	if extensions, err := s.OpenGraphSchemaService.ListExtensions(ctx); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		return
 	} else {
@@ -300,12 +292,7 @@ func (s Resources) DeleteExtension(response http.ResponseWriter, request *http.R
 		extensionID = mux.Vars(request)[api.URIPathVariableExtensionID]
 	)
 
-	// feature flag is checked as part of middleware
-	if user, isUser := auth.GetUserFromAuthCtx(authctx.FromRequest(request).AuthCtx); !isUser {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusUnauthorized, "No associated user found", request), response)
-	} else if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, "user does not have sufficient permissions to delete an extension", request), response)
-	} else if extID, err := strconv.ParseInt(extensionID, 10, 32); err != nil {
+	if extID, err := strconv.ParseInt(extensionID, 10, 32); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if err := s.OpenGraphSchemaService.DeleteExtension(ctx, int32(extID)); err != nil {
 		if errors.Is(err, database.ErrNotFound) {

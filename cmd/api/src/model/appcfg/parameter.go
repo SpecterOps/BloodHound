@@ -30,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/dawgs/drivers/neo4j"
 )
 
@@ -43,6 +44,8 @@ const (
 	PruneTTL                 ParameterKey = "prune.ttl"
 	ReconciliationKey        ParameterKey = "analysis.reconciliation"
 	ScheduledAnalysis        ParameterKey = "analysis.scheduled"
+	ClientMetricsKey         ParameterKey = "pipeline.client_metrics"
+	APITokenExpiration       ParameterKey = "auth.api_token_expiration"
 
 	// The below keys are not intended to be user updatable, so should not be added to IsValidKey
 	TrustedProxiesConfig                ParameterKey = "http.trusted_proxies"
@@ -54,6 +57,7 @@ const (
 	APITokens                           ParameterKey = "auth.api_tokens"
 	TimeoutLimit                        ParameterKey = "api.timeout_limit"
 	EnvironmentTargetedAccessControlKey ParameterKey = "auth.environment_targeted_access_control"
+	SupportAccountProvisioningKey       ParameterKey = "auth.support_account_provisioning"
 )
 
 const (
@@ -90,7 +94,7 @@ func (s *Parameter) Map(value any) error {
 
 func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, ScheduledAnalysis:
+	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, ScheduledAnalysis, ClientMetricsKey, APITokenExpiration:
 		return true
 	default:
 		return false
@@ -100,7 +104,7 @@ func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 // IsProtectedKey These keys should not be updatable by users
 func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens, EnvironmentTargetedAccessControlKey:
+	case TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens, EnvironmentTargetedAccessControlKey, SupportAccountProvisioningKey:
 		return true
 	default:
 		return false
@@ -151,6 +155,12 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &TimeoutLimitParameter{}
 	case EnvironmentTargetedAccessControlKey:
 		v = &EnvironmentTargetedAccessControlParameters{}
+	case SupportAccountProvisioningKey:
+		v = &SupportAccountProvisioningParameters{}
+	case ClientMetricsKey:
+		v = &ClientMetricsParameter{}
+	case APITokenExpiration:
+		v = &APITokenExpirationParameter{}
 	default:
 		return utils.Errors{errors.New("invalid key")}
 	}
@@ -240,7 +250,7 @@ func GetPasswordExpiration(ctx context.Context, service ParameterService) time.D
 		return DefaultPasswordExpirationWindow
 	} else if err := cfg.Map(&expiration); err != nil {
 		slog.WarnContext(ctx, "Invalid password expiration configuration supplied; returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(PasswordExpirationWindow)))
 		return DefaultPasswordExpirationWindow
 	}
@@ -265,7 +275,7 @@ func GetNeo4jParameters(ctx context.Context, service ParameterService) Neo4jPara
 		slog.WarnContext(ctx, "Failed to fetch neo4j configuration; returning default values")
 	} else if err = neo4jParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid neo4j configuration supplied; returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(Neo4jConfigs)))
 	}
 
@@ -285,7 +295,7 @@ func GetCitrixRDPSupport(ctx context.Context, service ParameterService) bool {
 		slog.WarnContext(ctx, "Failed to fetch CitrixRDPSupport configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid CitrixRDPSupport configuration supplied, returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(CitrixRDPSupportKey)))
 	}
 
@@ -335,7 +345,7 @@ func GetPruneTTLParameters(ctx context.Context, service ParameterService) PruneT
 		slog.WarnContext(ctx, "Failed to fetch prune TTL configuration; returning default values")
 	} else if err = pruneTTLParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid prune TTL configuration supplied; returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(PruneTTL)))
 	}
 
@@ -355,7 +365,7 @@ func GetReconciliationParameter(ctx context.Context, service ParameterService) b
 		slog.WarnContext(ctx, "Failed to fetch reconciliation configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid reconciliation configuration supplied, returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(ReconciliationKey)))
 	}
 
@@ -392,7 +402,7 @@ func GetTrustedProxiesParameters(ctx context.Context, service ParameterService) 
 		slog.WarnContext(ctx, "Failed to fetch trusted proxies configuration; returning default values")
 	} else if err = trustedProxiesParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid trusted proxies configuration supplied; returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(TrustedProxiesConfig)))
 	}
 
@@ -422,7 +432,7 @@ func GetAGTParameters(ctx context.Context, service ParameterService) AGTParamete
 		slog.WarnContext(ctx, "Failed to fetch agt configuration; returning default values")
 	} else if err = agtParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid agt configuration supplied; returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(AGTParameterKey)))
 	}
 
@@ -495,7 +505,7 @@ func GetStaleClientUpdatedLogic(ctx context.Context, service ParameterService) b
 		slog.WarnContext(ctx, "Failed to fetch StaleClientLogic configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid StaleClientLogic configuration supplied. returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(StaleClientUpdatedLogicKey)))
 	}
 
@@ -517,7 +527,7 @@ func ShouldRetainIngestedFiles(ctx context.Context, service ParameterService) bo
 		slog.WarnContext(ctx, "Failed to fetch ShouldRetainIngestedFiles configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid ShouldRetainIngestedFiles configuration supplied, returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(RetainIngestedFilesKey)))
 	}
 
@@ -535,7 +545,7 @@ func GetTimeoutLimitParameter(ctx context.Context, service ParameterService) boo
 		slog.WarnContext(ctx, "Failed to fetch timeout limit configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid timeout limit configuration supplied, returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(TimeoutLimit)))
 	}
 
@@ -553,7 +563,7 @@ func GetAPITokensParameter(ctx context.Context, service ParameterService) bool {
 		slog.WarnContext(ctx, "Failed to fetch API tokens configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid API tokens configuration supplied, returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(APITokens)))
 	}
 
@@ -572,7 +582,93 @@ func GetEnvironmentTargetedAccessControlParameters(ctx context.Context, service 
 	if etacParametersCfg, err := service.GetConfigurationParameter(ctx, EnvironmentTargetedAccessControlKey); err != nil {
 		slog.WarnContext(ctx, "Failed to fetch environment targeted access control configuration; returning default values")
 	} else if err = etacParametersCfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Invalid environment targeted access control configuration supplied; returning default values %+v", err))
+		slog.WarnContext(ctx, "Invalid environment targeted access control configuration supplied; returning default values",
+			slog.String("parameter_key", string(EnvironmentTargetedAccessControlKey)),
+			attr.Error(err))
+	}
+
+	return result
+}
+
+type SupportAccountProvisioningParameters struct {
+	// Setting disabled as false means that you are explicitly opting into the feature
+	Enabled    bool          `json:"enabled,omitempty"`
+	SessionTTL time.Duration `json:"session_ttl,omitempty"`
+}
+
+func (s *SupportAccountProvisioningParameters) UnmarshalJSON(data []byte) error {
+	pDb := struct {
+		SessionTTL string `json:"session_ttl,omitempty"`
+		Enabled    bool   `json:"enabled,omitempty"`
+	}{}
+
+	if err := json.Unmarshal(data, &pDb); err != nil {
+		return fmt.Errorf("error unmarshaling data for SupportAccountProvisioningParameters: %w", err)
+	} else {
+		if duration, err := iso8601.FromString(pDb.SessionTTL); err != nil {
+			return err
+		} else {
+			s.SessionTTL = duration.ToDuration()
+			s.Enabled = pDb.Enabled
+		}
+
+		return nil
+	}
+}
+
+func GetSupportAccountProvisioningParameters(ctx context.Context, service ParameterService) SupportAccountProvisioningParameters {
+	result := SupportAccountProvisioningParameters{
+		Enabled:    true,
+		SessionTTL: time.Hour * 2,
+	}
+
+	if jitParametersCfg, err := service.GetConfigurationParameter(ctx, SupportAccountProvisioningKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch support account provisioning configuration; returning default values")
+	} else if err = jitParametersCfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid support account provisioning configuration supplied; returning default values",
+			attr.Error(err))
+	}
+
+	return result
+}
+
+type ClientMetricsParameter struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func GetClientMetricsParameter(ctx context.Context, service ParameterService) ClientMetricsParameter {
+	result := ClientMetricsParameter{
+		Enabled: false,
+	}
+
+	if clientMetricsCfg, err := service.GetConfigurationParameter(ctx, ClientMetricsKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch client metrics configuration; returning default values")
+	} else if err = clientMetricsCfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid client metrics configuration supplied; returning default values",
+			attr.Error(err))
+	}
+
+	return result
+}
+
+type APITokenExpirationParameter struct {
+	Enabled          bool `json:"enabled"`
+	ExpirationPeriod int  `json:"expiration_period" validate:"integer,min=1,max=365"`
+}
+
+func GetAPITokenExpirationParameter(ctx context.Context, service ParameterService) APITokenExpirationParameter {
+	result := APITokenExpirationParameter{Enabled: false, ExpirationPeriod: 90}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, APITokenExpiration); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch API tokens expiration configuration; returning default values.")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid API tokens expiration configuration supplied, returning default values.",
+			attr.Error(err))
+	} else if result.ExpirationPeriod <= 0 || result.ExpirationPeriod > 365 {
+		slog.WarnContext(ctx, "Invalid API token expiration period supplied, returning default values.",
+			slog.Int("invalid_expiration_period", result.ExpirationPeriod),
+			slog.String("parameter_key", string(APITokenExpiration)))
+		result.ExpirationPeriod = 90
 	}
 
 	return result

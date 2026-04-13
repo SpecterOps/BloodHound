@@ -138,6 +138,8 @@ export type NodeParams = {
     highlighted?: boolean;
     image?: string;
     label?: string;
+    source?: string;
+    kind?: string;
     glyphs?: Glyph[];
     forceLabel?: boolean;
     hidden?: boolean;
@@ -156,6 +158,7 @@ export enum EdgeDirection {
 
 export type EdgeParams = {
     size: number;
+    color?: string;
     type: string;
     label: string;
     exploreGraphId: string;

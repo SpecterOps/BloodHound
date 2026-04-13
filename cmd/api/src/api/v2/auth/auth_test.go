@@ -1181,7 +1181,7 @@ func TestManagementResource_ListUsers_DBError(t *testing.T) {
 
 	endpoint := "/api/v2/auth/users"
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllUsers(gomock.Any(), "first_name desc, last_name", model.SQLFilter{}).Return(model.Users{}, fmt.Errorf("foo"))
+	mockDB.EXPECT().GetAllUsers(gomock.Any(), "first_name desc, last_name", model.SQLFilter{SQLString: "support_account = false"}).Return(model.Users{}, fmt.Errorf("foo"))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -1224,7 +1224,7 @@ func TestManagementResource_ListUsers(t *testing.T) {
 	}
 
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllUsers(gomock.Any(), "first_name desc, last_name", model.SQLFilter{}).Return(model.Users{user1, user2}, nil)
+	mockDB.EXPECT().GetAllUsers(gomock.Any(), "first_name desc, last_name", model.SQLFilter{SQLString: "support_account = false"}).Return(model.Users{user1, user2}, nil)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -1269,7 +1269,16 @@ func TestManagementResource_ListUsers_Filtered(t *testing.T) {
 	}
 
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllUsers(gomock.Any(), "", model.SQLFilter{SQLString: "first_name = 'a'"}).Return(model.Users{user1}, nil)
+	mockDB.EXPECT().GetAllUsers(gomock.Any(), "", gomock.Cond(func(sqlFilter model.SQLFilter) bool {
+		if !assert.Contains(t, sqlFilter.SQLString, "first_name = 'a'") {
+			return false
+		}
+		if !assert.Contains(t, sqlFilter.SQLString, "support_account = false") {
+			return false
+		}
+
+		return true
+	})).Return(model.Users{user1}, nil)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -3690,6 +3699,150 @@ func TestManagementResource_ListAuthTokens_Filtered(t *testing.T) {
 	}
 }
 
+func TestManagementResource_ListAuthTokens_UserIDFilter(t *testing.T) {
+	var (
+		nonAdminUser = model.User{
+			PrincipalName: "User1",
+			Unique:        model.Unique{ID: must.NewUUIDv4()},
+		}
+		otherUser = model.User{
+			PrincipalName: "User2",
+			Unique:        model.Unique{ID: must.NewUUIDv4()},
+		}
+		adminUser = model.User{
+			PrincipalName: "User3",
+			Unique:        model.Unique{ID: must.NewUUIDv4()},
+		}
+		endpoint = "/api/v2/auth/tokens"
+	)
+
+	testCases := []struct {
+		name           string
+		userIDParam    string
+		isUserAdmin    bool
+		mockSetup      func(t *testing.T, mockDB *mocks.MockDatabase)
+		expectedStatus int
+	}{
+		{
+			name:           "Failure: non-admin eq filtering by foreign user_id returns 403",
+			userIDParam:    "eq:" + otherUser.ID.String(),
+			isUserAdmin:    false,
+			mockSetup:      func(t *testing.T, mockDatabase *mocks.MockDatabase) {},
+			expectedStatus: http.StatusForbidden,
+		},
+		{
+			name:           "Failure: non-admin neq filtering by foreign user_id returns 403",
+			userIDParam:    "neq:" + otherUser.ID.String(),
+			isUserAdmin:    false,
+			mockSetup:      func(t *testing.T, mockDatabase *mocks.MockDatabase) {},
+			expectedStatus: http.StatusForbidden,
+		},
+		{
+			name:           "Failure: non-admin neq filtering by own user_id returns 403",
+			userIDParam:    "neq:" + nonAdminUser.ID.String(),
+			isUserAdmin:    false,
+			mockSetup:      func(t *testing.T, mockDatabase *mocks.MockDatabase) {},
+			expectedStatus: http.StatusForbidden,
+		},
+		{
+			name:        "Success: non-admin eq filtering by own user_id is normalized to derive user_id from context",
+			userIDParam: "eq:" + nonAdminUser.ID.String(),
+			isUserAdmin: false,
+			mockSetup: func(t *testing.T, mockDatabase *mocks.MockDatabase) {
+				mockDatabase.EXPECT().GetAllAuthTokens(
+					gomock.Any(),
+					"",
+					model.SQLFilter{SQLString: "user_id = '" + nonAdminUser.ID.String() + "'"},
+				).Return(model.AuthTokens{}, nil)
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "Failure: non-admin filtering by invalid UUID returns 400",
+			userIDParam:    "eq:bad-uuid",
+			isUserAdmin:    false,
+			mockSetup:      func(t *testing.T, mockDatabase *mocks.MockDatabase) {},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:        "Success: non-admin filtering by uppercase UUID is normalized",
+			userIDParam: "eq:" + strings.ToUpper(nonAdminUser.ID.String()),
+			isUserAdmin: false,
+			mockSetup: func(t *testing.T, mockDatabase *mocks.MockDatabase) {
+				mockDatabase.EXPECT().GetAllAuthTokens(
+					gomock.Any(),
+					"",
+					model.SQLFilter{SQLString: "user_id = '" + nonAdminUser.ID.String() + "'"},
+				).Return(model.AuthTokens{}, nil)
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "Failure: admin filtering by invalid UUID returns 400",
+			userIDParam:    "eq:bad-uuid",
+			isUserAdmin:    true,
+			mockSetup:      func(t *testing.T, mockDatabase *mocks.MockDatabase) {},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:        "Success: admin eq filtering by foreign user_id succeeds",
+			userIDParam: "eq:" + nonAdminUser.ID.String(),
+			isUserAdmin: true,
+			mockSetup: func(t *testing.T, mockDatabase *mocks.MockDatabase) {
+				mockDatabase.EXPECT().GetAllAuthTokens(
+					gomock.Any(),
+					"",
+					model.SQLFilter{SQLString: "user_id = '" + nonAdminUser.ID.String() + "'"},
+				).Return(model.AuthTokens{}, nil)
+			},
+			expectedStatus: http.StatusOK,
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				mockCtrl             = gomock.NewController(t)
+				resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
+			)
+			defer mockCtrl.Finish()
+
+			tt.mockSetup(t, mockDB)
+
+			requestContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+			bhCtx := ctx.Get(requestContext)
+			bhCtx.AuthCtx.Owner = nonAdminUser
+			if tt.isUserAdmin {
+				bhCtx.AuthCtx.Owner = adminUser
+				bhCtx.AuthCtx.PermissionOverrides = authz.PermissionOverrides{
+					Enabled: true,
+					Permissions: model.Permissions{
+						authz.Permissions().AuthManageUsers,
+					},
+				}
+			}
+			_, isUser := authz.GetUserFromAuthCtx(bhCtx.AuthCtx)
+			require.True(t, isUser)
+
+			req, err := http.NewRequestWithContext(requestContext, http.MethodGet, endpoint, nil)
+			require.NoError(t, err)
+
+			queryParams := url.Values{}
+			queryParams.Add("user_id", tt.userIDParam)
+			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+			req.URL.RawQuery = queryParams.Encode()
+
+			router := mux.NewRouter()
+			router.HandleFunc(endpoint, resources.ListAuthTokens).Methods(http.MethodGet)
+
+			responseRecorder := httptest.NewRecorder()
+			router.ServeHTTP(responseRecorder, req)
+
+			require.Equal(t, tt.expectedStatus, responseRecorder.Code)
+		})
+	}
+}
+
 func defaultDigestAuthSecretWithTOTP(t *testing.T, value, totpSecret string) *model.AuthSecret {
 	authSecret := defaultDigestAuthSecret(t, value)
 	authSecret.TOTPSecret = totpSecret
@@ -4026,6 +4179,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					Key:        "key",
 					HmacMethod: "hmac-sha2-256",
 					LastAccess: time.Time{},
+					ExpiresAt:  sql.NullTime{},
 					Unique: model.Unique{
 						ID: uuid.FromStringOrNil("id"),
 						Basic: model.Basic{
@@ -4042,7 +4196,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"hmac_method":"hmac-sha2-256","id":"00000000-0000-0000-0000-000000000000","key":"key","last_access":"0001-01-01T00:00:00Z","name":"name","updated_at":"0001-01-01T00:00:00Z","user_id":null}}`,
+				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"hmac_method":"hmac-sha2-256","id":"00000000-0000-0000-0000-000000000000","key":"key","last_access":"0001-01-01T00:00:00Z","name":"name","updated_at":"0001-01-01T00:00:00Z","user_id":null,"expires_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}}`,
 			},
 		},
 	}

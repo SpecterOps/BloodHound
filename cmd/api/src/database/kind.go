@@ -17,6 +17,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -26,6 +27,7 @@ import (
 type Kind interface {
 	GetKindByName(ctx context.Context, name string) (model.Kind, error)
 	GetKindsByIDs(ctx context.Context, ids ...int32) ([]model.Kind, error)
+	UpsertKind(ctx context.Context, name string) (model.Kind, error)
 }
 
 func (s *BloodhoundDB) GetKindByName(ctx context.Context, name string) (model.Kind, error) {
@@ -77,4 +79,16 @@ func (s *BloodhoundDB) GetKindsByIDs(ctx context.Context, ids ...int32) ([]model
 	}
 
 	return kinds, nil
+}
+
+// UpsertKind Since this function inserts into the kinds table, the business logic calling this func
+// must also call the DAWGS RefreshKinds function to ensure the kinds are reloaded into the in memory kind map.
+func (s *BloodhoundDB) UpsertKind(ctx context.Context, name string) (model.Kind, error) {
+	var kind model.Kind
+	if name == "" {
+		return kind, errors.New("invalid kind name")
+	}
+
+	result := s.db.WithContext(ctx).Raw("SELECT id, name FROM upsert_kind(?)", name).Scan(&kind)
+	return kind, CheckError(result)
 }

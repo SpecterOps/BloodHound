@@ -18,8 +18,10 @@ package v2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net/http"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -29,7 +31,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -44,22 +45,19 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		nodeTypes       = queryParams["type"]
 		ctx             = request.Context()
 		err             error
+		customNodeKinds model.CustomNodeKindMap
 		etacAllowedList []string
-		customNodeKinds []model.CustomNodeKind
 	)
 
 	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no associated user found with request", request), response)
 		return
-	} else {
-		// ETAC DogTags
-		if ShouldFilterForETAC(s.DogTags, user) {
-			etacAllowedList = ExtractEnvironmentIDsFromUser(&user)
-		}
+	} else if ShouldFilterForETAC(s.DogTags, user) {
+		etacAllowedList = ExtractEnvironmentIDsFromUser(&user)
 	}
 
-	if customNodeKinds, err = s.DB.GetCustomNodeKinds(request.Context()); err != nil {
-		slog.Error("Unable to fetch custom nodes from database; will fall back to defaults")
+	if customNodeKinds, err = s.DB.GetCustomNodeKindsMap(request.Context()); err != nil {
+		slog.Warn("Unable to fetch custom nodes from database; will fall back to defaults")
 	}
 
 	if searchQuery == "" {
@@ -68,21 +66,91 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid query parameter: %v", err), request), response)
 	} else if openGraphSearchFeatureFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureOpenGraphSearch); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if nodeKinds, err := getNodeKinds(openGraphSearchFeatureFlag.Enabled, nodeTypes...); err != nil {
+	} else if validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if searchableNodeKinds, err := getSearchableNodeKinds(openGraphSearchFeatureFlag.Enabled, validPrimaryKinds, graph.StringsToKinds(nodeTypes)); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid type parameter", request), response)
-	} else if result, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, nodeKinds, searchQuery, openGraphSearchFeatureFlag.Enabled, skip, limit, etacAllowedList, createCustomNodeKindMap(customNodeKinds)); err != nil {
+	} else if nodes, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, searchableNodeKinds, searchQuery, skip, limit); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error: %v", err), request), response)
 	} else {
+		result := filterAndFormatSearchResults(nodes, etacAllowedList, validPrimaryKinds, customNodeKinds)
+
 		api.WriteBasicResponse(request.Context(), result, http.StatusOK, response)
 	}
 }
 
-// getNodeKinds preserves legacy parseKinds behavior when the OpenGraphSearch feature flag is disabled.
-func getNodeKinds(openGraphSearchEnabled bool, nodeTypes ...string) (graph.Kinds, error) {
-	if !openGraphSearchEnabled && len(nodeTypes) == 0 {
-		return analysis.ParseKinds(ad.Entity.String(), azure.Entity.String())
+func filterAndFormatSearchResults(nodes []*graph.Node, etacAllowedList []string, validPrimaryKinds graphschema.ValidPrimaryKinds, customNodeKinds model.CustomNodeKindMap) []model.SearchResult {
+	var (
+		results    []model.SearchResult
+		validKinds = customNodeKinds.ValidKinds()
+	)
+
+	// Add custom node kinds to valid primary kinds
+	maps.Copy(validKinds, validPrimaryKinds)
+
+	for _, node := range nodes {
+		if !nodeGatedByETAC(etacAllowedList, node) {
+			results = append(results, graphNodeToSearchResult(node, validKinds))
+		}
+	}
+
+	return results
+}
+
+func graphNodeToSearchResult(node *graph.Node, validPrimaryKinds graphschema.ValidPrimaryKinds) model.SearchResult {
+	var (
+		name, _              = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
+		objectID, _          = node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
+		distinguishedName, _ = node.Properties.GetOrDefault(ad.DistinguishedName.String(), "").String()
+		systemTags, _        = node.Properties.GetOrDefault(common.SystemTags.String(), "").String()
+		kindLabel            = graphschema.GetNodeKindDisplayLabel(validPrimaryKinds, node)
+	)
+
+	return model.SearchResult{
+		ObjectID:          objectID,
+		Type:              kindLabel,
+		Name:              name,
+		DistinguishedName: distinguishedName,
+		SystemTags:        systemTags,
+	}
+}
+
+// getSearchableNodeKinds returns the kinds that should be searched based on the OpenGraphSearch feature flag and the valid primary kinds.
+func getSearchableNodeKinds(openGraphSearchEnabled bool, validPrimaryKinds graphschema.ValidPrimaryKinds, typeParams graph.Kinds) (graph.Kinds, error) {
+	var (
+		searchableKinds                graph.Kinds
+		validKinds                     graphschema.ValidPrimaryKinds
+		emptyParams                    = len(typeParams) == 0
+		invalidParamError              = fmt.Errorf("no valid primary kinds found for search types: %v", typeParams)
+		kindsShouldNotBeConstrained    = emptyParams && openGraphSearchEnabled
+		kindsConstrainedToDefaultKinds = emptyParams && !openGraphSearchEnabled
+	)
+
+	if kindsShouldNotBeConstrained {
+		return nil, nil
+	} else if kindsConstrainedToDefaultKinds {
+		return graph.Kinds{ad.Entity, azure.Entity}, nil
 	} else {
-		return analysis.ParseKinds(nodeTypes...)
+
+		if openGraphSearchEnabled {
+			// only assign validKinds if OpenGraphSearch is enabled
+			// otherwise we pass nil to PrimaryNodeKind to emulate the old behavior
+			validKinds = validPrimaryKinds
+		}
+
+		for _, kind := range typeParams {
+			kind := graphschema.PrimaryNodeKind(validKinds, graph.Kinds{kind})
+
+			if !kind.Is(graphschema.UnknownKind) {
+				searchableKinds = searchableKinds.Add(kind)
+			}
+		}
+
+		if len(searchableKinds) == 0 {
+			return nil, invalidParamError
+		}
+
+		return searchableKinds, nil
 	}
 }
 
@@ -95,10 +163,16 @@ func (s *Resources) ListAvailableEnvironments(response http.ResponseWriter, requ
 		return
 	}
 
-	filterResult, err := BuildEnvironmentFilter(ctx, s.DB, request)
+	filterResult, err := BuildEnvironmentFilter(ctx, s.DB, s.OpenGraphSchemaService, request)
 	if err != nil {
-		api.HandleDatabaseError(request, response, err)
-		return
+		switch {
+		case errors.Is(err, ErrInvalidQueryParameters):
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+			return
+		default:
+			api.HandleDatabaseError(request, response, err)
+			return
+		}
 	}
 
 	// Fetch and filter domain nodes
@@ -179,43 +253,29 @@ type EnvironmentFilterResult struct {
 	KindToDisplayName map[string]string
 }
 
+// ErrInvalidQueryParameters is an error that is used to wrap other errors when the query parameters are invalid
+var ErrInvalidQueryParameters = fmt.Errorf("invalid query parameters")
+
 // BuildEnvironmentFilter constructs the graph filter criteria based on environments and feature flags.
-func BuildEnvironmentFilter(ctx context.Context, db database.Database, request *http.Request) (EnvironmentFilterResult, error) {
+func BuildEnvironmentFilter(ctx context.Context, db database.Database, openGraphSchemaService OpenGraphSchemaService, request *http.Request) (EnvironmentFilterResult, error) {
 	var result EnvironmentFilterResult
-
-	// Fetch schema environments
-	environments, err := db.GetEnvironments(ctx)
-	if err != nil {
-		return result, err
-	}
-
-	// Build environment kind mappings
-	environmentKinds := make([]graph.Kind, len(environments))
-	kindToDisplayName := make(map[string]string, len(environments))
-	for i, env := range environments {
-		environmentKinds[i] = graph.StringKind(env.EnvironmentKindName)
-		kindToDisplayName[env.EnvironmentKindName] = env.SchemaExtensionDisplayName
-	}
 
 	// Check OpenGraph findings feature flag
 	openGraphFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureOpenGraphFindings)
 	if err != nil {
 		return result, err
-	}
-
-	builtinEnvironmentKinds := []graph.Kind{ad.Domain, azure.Tenant}
-
-	if openGraphFlag.Enabled {
-		builtinEnvironmentKinds = append(builtinEnvironmentKinds, environmentKinds...)
-	}
-
-	// Build base filter criteria
-	filterCriteria, err := model.EnvironmentSelectors{}.GetFilterCriteria(request, builtinEnvironmentKinds)
-	if err != nil {
+		// Fetch schema environments and extension display names
+	} else if environmentKinds, envKindToExtensionDisplayName, err := openGraphSchemaService.GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx, !openGraphFlag.Enabled); err != nil {
 		return result, err
-	}
+	} else {
+		// Build base filter criteria
+		filterCriteria, err := model.EnvironmentSelectors{}.GetFilterCriteria(request, environmentKinds)
+		if err != nil {
+			return result, fmt.Errorf("%w: %w", ErrInvalidQueryParameters, err)
+		}
 
-	result.FilterCriteria = filterCriteria
-	result.KindToDisplayName = kindToDisplayName
-	return result, nil
+		result.FilterCriteria = filterCriteria
+		result.KindToDisplayName = envKindToExtensionDisplayName
+		return result, nil
+	}
 }

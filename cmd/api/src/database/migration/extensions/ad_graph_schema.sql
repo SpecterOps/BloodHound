@@ -91,9 +91,9 @@ BEGIN
 		SELECT genscript_upsert_kind(v_environment_kind_name) INTO retrieved_environment_kind_id;
 	END IF;
 
-	SELECT sk.id INTO retrieved_source_kind_id FROM source_kinds sk JOIN kind k ON sk.kind_id = k.id WHERE k.name = v_source_kind_name;
+	SELECT id INTO retrieved_source_kind_id FROM kind WHERE kind.name = v_source_kind_name;
 	IF retrieved_source_kind_id IS NULL THEN
-		SELECT genscript_upsert_source_kind(v_source_kind_name) INTO retrieved_source_kind_id;
+		SELECT genscript_upsert_kind(v_source_kind_name) INTO retrieved_source_kind_id;
 	END IF;
 
 	IF NOT EXISTS (SELECT id FROM schema_environments se WHERE se.schema_extension_id = v_extension_id) THEN
@@ -241,21 +241,21 @@ BEGIN
 	PERFORM genscript_upsert_kind('ProtectAdminGroups');
 
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Base', 'Base', '', false, '', '');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'User', 'User', '', true, 'fa-user', '#17E625');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Computer', 'Computer', '', true, 'fa-desktop', '#E67873');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Group', 'Group', '', true, 'fa-users', '#DBE617');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'GPO', 'GPO', '', true, 'fa-list', '#998EFD');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'OU', 'OU', '', true, 'fa-sitemap', '#FFAA00');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Container', 'Container', '', true, 'fa-box', '#F79A78');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Domain', 'Domain', '', true, 'fa-globe', '#17E6B9');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'User', 'User', '', true, 'user', '#17E625');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Computer', 'Computer', '', true, 'desktop', '#E67873');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Group', 'Group', '', true, 'users', '#DBE617');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'GPO', 'GPO', '', true, 'list', '#998EFD');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'OU', 'OU', '', true, 'sitemap', '#FFAA00');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Container', 'Container', '', true, 'box', '#F79A78');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Domain', 'Domain', '', true, 'globe', '#17E6B9');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'ADLocalGroup', 'ADLocalGroup', '', false, '', '');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'ADLocalUser', 'ADLocalUser', '', false, '', '');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AIACA', 'AIACA', '', true, 'fa-arrows-left-right-to-line', '#9769F0');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'RootCA', 'RootCA', '', true, 'fa-landmark', '#6968E8');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'EnterpriseCA', 'EnterpriseCA', '', true, 'fa-building', '#4696E9');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'NTAuthStore', 'NTAuthStore', '', true, 'fa-store', '#D575F5');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'CertTemplate', 'CertTemplate', '', true, 'fa-id-card', '#B153F3');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'IssuancePolicy', 'IssuancePolicy', '', true, 'fa-clipboard-check', '#99B2DD');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AIACA', 'AIACA', '', true, 'arrows-left-right-to-line', '#9769F0');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'RootCA', 'RootCA', '', true, 'landmark', '#6968E8');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'EnterpriseCA', 'EnterpriseCA', '', true, 'building', '#4696E9');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'NTAuthStore', 'NTAuthStore', '', true, 'store', '#D575F5');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'CertTemplate', 'CertTemplate', '', true, 'id-card', '#B153F3');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'IssuancePolicy', 'IssuancePolicy', '', true, 'clipboard-check', '#99B2DD');
 
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'Owns', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'GenericAll', '', true);

@@ -25,10 +25,25 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
 	schemamocks "github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema/mocks"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
+
+func baseSimpleGraphExtensionInput() model.GraphExtensionInput {
+	return model.GraphExtensionInput{
+		ExtensionInput: model.ExtensionInput{
+			Name:        "Test extension",
+			DisplayName: "Test extension",
+			Version:     "v1.0.0",
+			Namespace:   "DEFAULT",
+		},
+		NodeKindsInput: model.NodesInput{{
+			Name: "DEFAULT_node kind 1",
+		}},
+	}
+}
 
 // TestOpenGraphSchemaService_UpsertGraphSchemaExtension -
 func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
@@ -67,31 +82,13 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			name: "fail - UpsertOpenGraphExtension error",
 			fields: fields{
 				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
-					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
-						ExtensionInput: model.ExtensionInput{
-							Name:      "Test extension",
-							Version:   "1.0.0",
-							Namespace: "DEFAULT",
-						},
-						NodeKindsInput: model.NodesInput{{
-							Name: "DEFAULT_node kind 1",
-						}},
-					}).Return(false, fmt.Errorf("test error"))
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), baseSimpleGraphExtensionInput()).Return(false, fmt.Errorf("test error"))
 				},
 				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {},
 			},
 			args: args{
-				ctx: context.Background(),
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "DEFAULT",
-					},
-					NodeKindsInput: model.NodesInput{{
-						Name: "DEFAULT_node kind 1",
-					}},
-				},
+				ctx:            context.Background(),
+				graphExtension: baseSimpleGraphExtensionInput(),
 			},
 			wantErr:     fmt.Errorf("test error"),
 			wantUpdated: false,
@@ -100,31 +97,13 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			name: "fail - duplicate namespace", // duplicate namespaces are not caught during validation and will be returned as an error from UpsertOpenGraphExtension
 			fields: fields{
 				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
-					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
-						ExtensionInput: model.ExtensionInput{
-							Name:      "Test extension",
-							Version:   "1.0.0",
-							Namespace: "DEFAULT",
-						},
-						NodeKindsInput: model.NodesInput{{
-							Name: "DEFAULT_node kind 1",
-						}},
-					}).Return(false, fmt.Errorf("%w: DEFAULT", model.ErrDuplicateGraphSchemaExtensionNamespace))
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), baseSimpleGraphExtensionInput()).Return(false, fmt.Errorf("%w: DEFAULT", model.ErrDuplicateGraphSchemaExtensionNamespace))
 				},
 				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {},
 			},
 			args: args{
-				ctx: context.Background(),
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "DEFAULT",
-					},
-					NodeKindsInput: model.NodesInput{{
-						Name: "DEFAULT_node kind 1",
-					}},
-				},
+				ctx:            context.Background(),
+				graphExtension: baseSimpleGraphExtensionInput(),
 			},
 			wantErr:     fmt.Errorf("%w: %v", model.ErrGraphExtensionValidation, fmt.Errorf("%w: %s", model.ErrDuplicateGraphSchemaExtensionNamespace, "DEFAULT")),
 			wantUpdated: false,
@@ -133,33 +112,15 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			name: "fail - graph kinds refresh error",
 			fields: fields{
 				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
-					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
-						ExtensionInput: model.ExtensionInput{
-							Name:      "Test extension",
-							Version:   "1.0.0",
-							Namespace: "DEFAULT",
-						},
-						NodeKindsInput: model.NodesInput{{
-							Name: "DEFAULT_node kind 1",
-						}},
-					}).Return(false, nil)
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), baseSimpleGraphExtensionInput()).Return(false, nil)
 				},
 				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
 					mock.EXPECT().RefreshKinds(gomock.Any()).Return(fmt.Errorf("test error"))
 				},
 			},
 			args: args{
-				ctx: context.Background(),
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "DEFAULT",
-					},
-					NodeKindsInput: model.NodesInput{{
-						Name: "DEFAULT_node kind 1",
-					}},
-				},
+				ctx:            context.Background(),
+				graphExtension: baseSimpleGraphExtensionInput(),
 			},
 			wantErr:     model.ErrGraphDBRefreshKinds,
 			wantUpdated: false,
@@ -170,9 +131,10 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
 					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
 						ExtensionInput: model.ExtensionInput{
-							Name:      "Test extension",
-							Version:   "1.0.0",
-							Namespace: "DEFAULT",
+							Name:        "Test extension",
+							DisplayName: "Test extension",
+							Version:     "v1.0.0",
+							Namespace:   "DEFAULT",
 						},
 						NodeKindsInput: model.NodesInput{
 							{
@@ -225,9 +187,10 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 				ctx: context.Background(),
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "DEFAULT",
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "DEFAULT",
 					},
 					NodeKindsInput: model.NodesInput{
 						{
@@ -281,9 +244,10 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
 					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
 						ExtensionInput: model.ExtensionInput{
-							Name:      "Test extension",
-							Version:   "1.0.0",
-							Namespace: "DEFAULT",
+							Name:        "Test extension",
+							DisplayName: "Test extension",
+							Version:     "v1.0.0",
+							Namespace:   "DEFAULT",
 						},
 						NodeKindsInput: model.NodesInput{
 							{
@@ -336,9 +300,10 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 				ctx: context.Background(),
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "DEFAULT",
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "DEFAULT",
 					},
 					NodeKindsInput: model.NodesInput{
 						{
@@ -647,6 +612,246 @@ func TestOpenGraphSchemaService_DeleteExtension(t *testing.T) {
 				assert.EqualError(t, err, tt.expected.err.Error())
 			} else {
 				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(t *testing.T) {
+	t.Parallel()
+
+	type mocks struct {
+		mockOpenGraphSchema *schemamocks.MockOpenGraphSchemaRepository
+		mockGraphDB         *schemamocks.MockGraphDBKindRepository
+	}
+	type args struct {
+		ctx         context.Context
+		onlyBuiltin bool
+	}
+	type expected struct {
+		graphKinds     graph.Kinds
+		displayNameMap map[string]string
+		err            error
+	}
+	tests := []struct {
+		name       string
+		setupMocks func(t *testing.T, m *mocks)
+		expected   expected
+		args       args
+	}{
+		{
+			name: "fail - internal error",
+			setupMocks: func(t *testing.T, m *mocks) {
+				m.mockOpenGraphSchema.EXPECT().GetEnvironmentsFiltered(gomock.Any(), model.Filters{}).Return(nil, errors.New("error"))
+			},
+			expected: expected{
+				err: errors.New("error"),
+			},
+			args: args{
+				ctx: context.Background(),
+			},
+		},
+		{
+			name: "success - builtin",
+			setupMocks: func(t *testing.T, m *mocks) {
+				m.mockOpenGraphSchema.EXPECT().GetEnvironmentsFiltered(gomock.Any(), model.Filters{"is_builtin": []model.Filter{{Operator: model.Equals, Value: "true", SetOperator: model.FilterAnd}}}).Return([]model.SchemaEnvironment{
+					{
+						EnvironmentKindName:        "Domain",
+						SchemaExtensionDisplayName: "AD",
+					},
+					{
+						EnvironmentKindName:        "Tenant",
+						SchemaExtensionDisplayName: "Azure",
+					},
+				}, nil)
+			},
+			expected: expected{
+				graphKinds: graph.Kinds{
+					graph.StringKind("Domain"),
+					graph.StringKind("Tenant"),
+				},
+				displayNameMap: map[string]string{
+					"Domain": "AD",
+					"Tenant": "Azure",
+				},
+			},
+			args: args{
+				ctx:         context.Background(),
+				onlyBuiltin: true,
+			},
+		},
+		{
+			name: "success - all",
+			setupMocks: func(t *testing.T, m *mocks) {
+				m.mockOpenGraphSchema.EXPECT().GetEnvironmentsFiltered(gomock.Any(), model.Filters{}).Return([]model.SchemaEnvironment{
+					{
+						EnvironmentKindName:        "Domain",
+						SchemaExtensionDisplayName: "AD",
+					},
+					{
+						EnvironmentKindName:        "Tenant",
+						SchemaExtensionDisplayName: "Azure",
+					},
+				}, nil)
+			},
+			expected: expected{
+				graphKinds: graph.Kinds{
+					graph.StringKind("Domain"),
+					graph.StringKind("Tenant"),
+				},
+				displayNameMap: map[string]string{
+					"Domain": "AD",
+					"Tenant": "Azure",
+				},
+			},
+			args: args{
+				ctx: context.Background(),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			m := &mocks{
+				mockOpenGraphSchema: schemamocks.NewMockOpenGraphSchemaRepository(ctrl),
+				mockGraphDB:         schemamocks.NewMockGraphDBKindRepository(ctrl),
+			}
+
+			tt.setupMocks(t, m)
+
+			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, m.mockGraphDB)
+
+			if envKinds, envKindToExtensionDisplayName, err := service.GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(tt.args.ctx, tt.args.onlyBuiltin); tt.expected.err != nil {
+				assert.EqualError(t, err, tt.expected.err.Error())
+			} else {
+				assert.Equalf(t, tt.expected.graphKinds, envKinds, "GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(%v, %v)", tt.args.ctx, tt.args.onlyBuiltin)
+				assert.Equalf(t, tt.expected.displayNameMap, envKindToExtensionDisplayName, "GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(%v, %v)", tt.args.ctx, tt.args.onlyBuiltin)
+			}
+		})
+	}
+}
+
+func TestOpenGraphSchemaService_GetSchemaFindings(t *testing.T) {
+	t.Parallel()
+
+	type mocks struct {
+		mockOpenGraphSchema *schemamocks.MockOpenGraphSchemaRepository
+	}
+	type args struct {
+		ctx     context.Context
+		filters model.Filters
+		sort    model.Sort
+		skip    int
+		limit   int
+	}
+	type expected struct {
+		findings []model.SchemaFinding
+		count    int
+		err      error
+	}
+	tests := []struct {
+		name       string
+		args       args
+		setupMocks func(t *testing.T, m *mocks)
+		expected   expected
+	}{
+		{
+			name: "Error: repository error propagates to caller",
+			args: args{
+				ctx:     context.Background(),
+				filters: model.Filters{},
+				sort:    model.Sort{},
+				skip:    0,
+				limit:   100,
+			},
+			setupMocks: func(t *testing.T, m *mocks) {
+				t.Helper()
+				m.mockOpenGraphSchema.EXPECT().
+					GetSchemaFindings(gomock.Any(), model.Filters{}, model.Sort{}, 0, 100).
+					Return(nil, 0, errors.New("database error"))
+			},
+			expected: expected{
+				findings: nil,
+				count:    0,
+				err:      errors.New("database error"),
+			},
+		},
+		{
+			name: "Success: returns empty findings",
+			args: args{
+				ctx:     context.Background(),
+				filters: model.Filters{},
+				sort:    model.Sort{},
+				skip:    0,
+				limit:   100,
+			},
+			setupMocks: func(t *testing.T, m *mocks) {
+				t.Helper()
+				m.mockOpenGraphSchema.EXPECT().
+					GetSchemaFindings(gomock.Any(), model.Filters{}, model.Sort{}, 0, 100).
+					Return([]model.SchemaFinding{}, 0, nil)
+			},
+			expected: expected{
+				findings: []model.SchemaFinding{},
+				count:    0,
+				err:      nil,
+			},
+		},
+		{
+			name: "Success: returns findings and count",
+			args: args{
+				ctx:     context.Background(),
+				filters: model.Filters{},
+				sort:    model.Sort{},
+				skip:    0,
+				limit:   100,
+			},
+			setupMocks: func(t *testing.T, m *mocks) {
+				t.Helper()
+				m.mockOpenGraphSchema.EXPECT().
+					GetSchemaFindings(gomock.Any(), model.Filters{}, model.Sort{}, 0, 100).
+					Return([]model.SchemaFinding{
+						{
+							Name:        "test-finding",
+							DisplayName: "Test Finding",
+							Type:        model.SchemaFindingTypeRelationship,
+						},
+					}, 1, nil)
+			},
+			expected: expected{
+				findings: []model.SchemaFinding{
+					{
+						Name:        "test-finding",
+						DisplayName: "Test Finding",
+						Type:        model.SchemaFindingTypeRelationship,
+					},
+				},
+				count: 1,
+				err:   nil,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			m := &mocks{
+				mockOpenGraphSchema: schemamocks.NewMockOpenGraphSchemaRepository(ctrl),
+			}
+
+			tt.setupMocks(t, m)
+
+			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, nil)
+
+			if findings, count, err := service.GetSchemaFindings(tt.args.ctx, tt.args.filters, tt.args.sort, tt.args.skip, tt.args.limit); tt.expected.err != nil {
+				assert.EqualError(t, err, tt.expected.err.Error())
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected.findings, findings)
+				assert.Equal(t, tt.expected.count, count)
 			}
 		})
 	}

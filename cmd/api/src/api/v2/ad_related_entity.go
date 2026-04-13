@@ -50,25 +50,33 @@ func (s *Resources) handleAdRelatedEntityQuery(response http.ResponseWriter, req
 
 	if params, err := queries.BuildEntityQueryParams(request, queryName, pathDelegate, listDelegate); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.FmtErrorResponseDetailsBadQueryParameters, err), request), response)
-	} else if hasAccess, err := CheckUserHasAccessToNodeById(request.Context(), s.DB, s.GraphQuery, s.DogTags, user, params.ObjectID, ad.Entity); err != nil {
+	} else if hasAccess, err := CheckUserHasAccessToNodeById(request.Context(), s.GraphQuery, s.DogTags, user, params.ObjectID, ad.Entity); err != nil {
 		slog.ErrorContext(request.Context(), "Error checking if user has access to node for ETAC", attr.Error(err))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if !hasAccess {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
 	} else if entityPanelCachingFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureEntityPanelCaching); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if results, count, err := s.GraphQuery.GetADEntityQueryResult(request.Context(), params, entityPanelCachingFlag.Enabled); err != nil {
-		if errors.Is(err, queries.ErrGraphUnsupported) || errors.Is(err, queries.ErrUnsupportedDataType) {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.FmtErrorResponseDetailsBadQueryParameters, err), request), response)
-		} else if errors.Is(err, ops.ErrGraphQueryMemoryLimit) {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "calculating the request results exceeded memory limitations due to the volume of objects involved", request), response)
-		} else {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "an unknown error occurred during the request", request), response)
-		}
-	} else if params.RequestedType == model.DataTypeGraph {
-		api.WriteJSONResponse(request.Context(), results, http.StatusOK, response)
+	} else if validPrimaryKinds, err := s.DB.GetDisplayGraphSchemaNodeKinds(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else {
-		api.WriteResponseWrapperWithPagination(request.Context(), results, params.Limit, params.Skip, count, http.StatusOK, response)
+		customNodeKinds, err := s.DB.GetCustomNodeKindsMap(request.Context())
+		if err != nil {
+			slog.Warn("Unable to fetch custom nodes from database; will fall back to defaults")
+		}
+		if results, count, err := s.GraphQuery.GetADEntityQueryResult(request.Context(), validPrimaryKinds, customNodeKinds, params, entityPanelCachingFlag.Enabled); err != nil {
+			if errors.Is(err, queries.ErrGraphUnsupported) || errors.Is(err, queries.ErrUnsupportedDataType) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.FmtErrorResponseDetailsBadQueryParameters, err), request), response)
+			} else if errors.Is(err, ops.ErrGraphQueryMemoryLimit) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "calculating the request results exceeded memory limitations due to the volume of objects involved", request), response)
+			} else {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "an unknown error occurred during the request", request), response)
+			}
+		} else if params.RequestedType == model.DataTypeGraph {
+			api.WriteJSONResponse(request.Context(), results, http.StatusOK, response)
+		} else {
+			api.WriteResponseWrapperWithPagination(request.Context(), results, params.Limit, params.Skip, count, http.StatusOK, response)
+		}
 	}
 }
 

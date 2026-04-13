@@ -31,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/daemons"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/services"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/lab"
 	"github.com/specterops/dawgs/graph"
 )
@@ -89,7 +90,7 @@ func NewCustomApiFixture(cfgFixture *lab.Fixture[config.Configuration]) *lab.Fix
 	})
 
 	if err := lab.SetDependency(fixture, cfgFixture); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("BHApiFixture dependency error: %v", err))
+		slog.ErrorContext(ctx, "BHApiFixture dependency error", attr.Error(err))
 		os.Exit(1)
 	}
 

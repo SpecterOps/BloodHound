@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Input, InputProps } from '@bloodhoundenterprise/doodleui';
 import { faClose, faDownload, faExpand, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ColumnDef } from '@tanstack/react-table';
+import { Button, Input, InputProps } from 'doodle-ui';
 import { useMemo } from 'react';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
@@ -37,6 +37,7 @@ type TableControlsProps<TData, TValue> = {
     onExpandClick?: () => void;
     onCloseClick?: () => void;
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
+    onChangePinnedColumns?: (columns: string[]) => void;
     onResetColumnSize?: () => void;
 };
 
@@ -52,6 +53,7 @@ const TableControls = <TData, TValue>({
     onCloseClick,
     onExpandClick,
     onManageColumnsChange,
+    onChangePinnedColumns,
     onResetColumnSize,
 }: TableControlsProps<TData, TValue>) => {
     const parsedColumns: ManageColumnsComboBoxOption[] = useMemo(
@@ -117,6 +119,7 @@ const TableControls = <TData, TValue>({
                         allColumns={parsedColumns}
                         selectedColumns={selectedColumns}
                         onChange={onManageColumnsChange}
+                        onChangePinnedColumns={onChangePinnedColumns}
                         onResetColumnSize={onResetColumnSize}
                     />
                 )}

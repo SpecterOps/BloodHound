@@ -25,6 +25,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -46,15 +47,12 @@ func createTestNodeKind(t *testing.T, testSuite IntegrationTestSuite, name strin
 	return nodeKind
 }
 
-func registerAndGetSourceKind(t *testing.T, testSuite IntegrationTestSuite, name string) database.SourceKind {
+func registerAndGetKind(t *testing.T, testSuite IntegrationTestSuite, name string) model.Kind {
 	t.Helper()
-	// Register source kind with input arguments
-	err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind(name))
-	require.NoError(t, err, "unexpected error occurred when registering source kind")
-	// Retrieve registered source kind
-	sourceKind, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, name)
-	require.NoError(t, err, "unexpected error occurred when retrieving source kind")
-	return sourceKind
+	// Register kind with input arguments
+	kind, err := testSuite.BHDatabase.UpsertKind(testSuite.Context, name)
+	require.NoError(t, err, "unexpected error occurred when registering kind")
+	return kind
 }
 
 func getKindByName(t *testing.T, testSuite IntegrationTestSuite, name string) model.Kind {
@@ -588,7 +586,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				createdSourceKindNode := createTestNodeKind(t, testSuite, "Source_Kind_1", createdExtension.ID, "Source Kind 1", "a source kind", false, "", "")
 
 				envKind := getKindByName(t, testSuite, createdEnvironmentNode.Name)
-				sourceKind := registerAndGetSourceKind(t, testSuite, createdSourceKindNode.Name)
+				sourceKind := registerAndGetKind(t, testSuite, createdSourceKindNode.Name)
 
 				// Create Environment
 				_, err := testSuite.BHDatabase.CreateEnvironment(testSuite.Context, createdExtension.ID, envKind.ID, int32(sourceKind.ID))
@@ -597,10 +595,6 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				// Delete extension
 				err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, createdExtension.ID)
 				require.NoError(t, err, "unexpected error occurred when deleting extension")
-
-				// Validate Source Kind has been deactivated (no longer able to retrieve)
-				_, err = testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, sourceKind.ID)
-				assert.ErrorIs(t, err, database.ErrNotFound)
 			},
 		},
 		{
@@ -617,8 +611,8 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 
 				environmentKind1 := getKindByName(t, testSuite, createdEnvironmentNode1.Name)
 				environmentKind2 := getKindByName(t, testSuite, createdEnvironmentNode2.Name)
-				retrievedSourceKindA := registerAndGetSourceKind(t, testSuite, createdSourceKindNode1.Name)
-				retrievedSourceKindB := registerAndGetSourceKind(t, testSuite, createdSourceKindNodeB.Name)
+				retrievedSourceKindA := registerAndGetKind(t, testSuite, createdSourceKindNode1.Name)
+				retrievedSourceKindB := registerAndGetKind(t, testSuite, createdSourceKindNodeB.Name)
 
 				// Create Environment 1 with Source Kind 1
 				_, err := testSuite.BHDatabase.CreateEnvironment(testSuite.Context, createdExtension.ID, environmentKind1.ID, int32(retrievedSourceKindA.ID))
@@ -631,13 +625,6 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				// Delete Extension
 				err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, createdExtension.ID)
 				require.NoError(t, err, "unexpected error occurred when deleting extension")
-
-				// Validate Source Kind has been deactivated (no longer able to retrieve) for both Source Kinds A & B
-				_, err = testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, retrievedSourceKindA.ID)
-				assert.ErrorIs(t, err, database.ErrNotFound)
-
-				_, err = testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, retrievedSourceKindB.ID)
-				assert.ErrorIs(t, err, database.ErrNotFound)
 			},
 		},
 		{
@@ -653,7 +640,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 
 				environmentKind1 := getKindByName(t, testSuite, createdEnvironmentNode1.Name)
 				environmentKind2 := getKindByName(t, testSuite, createdEnvironmentNode2.Name)
-				sourceKind := registerAndGetSourceKind(t, testSuite, createdSourceKindNode.Name)
+				sourceKind := registerAndGetKind(t, testSuite, createdSourceKindNode.Name)
 
 				// Create Environment for Extension 1 using same Source Kind
 				_, err := testSuite.BHDatabase.CreateEnvironment(testSuite.Context, createdExtension1.ID, environmentKind1.ID, int32(sourceKind.ID))
@@ -666,12 +653,6 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				// Delete Extension 1
 				err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, createdExtension1.ID)
 				require.NoError(t, err, "unexpected error occurred when deleting exension")
-
-				// Validate Source Kind has NOT been deactivated
-				retrievedSourceKind, err := testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, sourceKind.ID)
-				assert.NoError(t, err, "unexpected error occurred when retrieving source kind by id")
-				// Retrieved Source Kind should still exist and be same Source Kind retrieved above
-				assert.Equal(t, retrievedSourceKind, sourceKind)
 			},
 		},
 	}
@@ -1323,6 +1304,47 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 
 			// Run test assertions
 			testCase.assert(t, testSuite, testCase.args)
+		})
+	}
+}
+
+func TestDatabase_UpdateGraphSchemaNodeKindIconById(t *testing.T) {
+	tests := []struct {
+		name   string
+		assert func(t *testing.T, testSuite IntegrationTestSuite)
+	}{
+		{
+			name: "Success: update schema node kind icon",
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
+				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
+				createdNodeKind := createTestNodeKind(t, testSuite, "Test Kind 1", extension.ID, "Test_Kind_1", "Test Kind 1", true, "user", "#17E625")
+
+				updatedNodeKind, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKindIconById(testSuite.Context, createdNodeKind.ID, model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#3a0b138c"})
+				require.NoError(t, err, "unexpected error occurred when updating node kind icon")
+
+				// Retrieve Node Kind 1
+				nodeKindWithChanges, err := testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, createdNodeKind.ID)
+				require.NoError(t, err, "unexpected error occurred when retrieving node kind")
+
+				// Validate updated fields
+				assert.Equal(t, updatedNodeKind.Icon, nodeKindWithChanges.Icon)
+				assert.Equal(t, updatedNodeKind.IconColor, nodeKindWithChanges.IconColor)
+			},
+		}, {
+			name: "Error: failed to update schema node kind icon that does not exist",
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
+				_, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKindIconById(testSuite.Context, 12345, model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#3a0b138c"})
+				require.EqualError(t, err, database.ErrNotFound.Error())
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := setupIntegrationTestSuite(t)
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			// Run test assertions
+			testCase.assert(t, testSuite)
 		})
 	}
 }
@@ -2547,7 +2569,8 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 				if rk.Name == want.Name &&
 					rk.Description == want.Description &&
 					rk.IsTraversable == want.IsTraversable &&
-					rk.SchemaName == want.SchemaName {
+					rk.SchemaName == want.SchemaName &&
+					rk.IsBuiltin == want.IsBuiltin {
 
 					// Additional validations for the found item
 					assert.Greater(t, rk.ID, int32(0), "RelationshipKind %v - ID is invalid", rk.Name)
@@ -2567,7 +2590,8 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 				if rk.Name == want.Name &&
 					rk.Description == want.Description &&
 					rk.IsTraversable == want.IsTraversable &&
-					rk.SchemaName == want.SchemaName {
+					rk.SchemaName == want.SchemaName &&
+					rk.IsBuiltin == want.IsBuiltin {
 
 					assert.Failf(t, "Unexpected relationship kind found", "Relationship kind %v should not be present", want.Name)
 				}
@@ -2616,6 +2640,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
@@ -2623,6 +2648,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind2.Name,
 					Description:   edgeKind2.Description,
 					IsTraversable: edgeKind2.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 
 				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
@@ -2631,6 +2657,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind3.Name,
 					Description:   edgeKind3.Description,
 					IsTraversable: edgeKind3.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind4.ID,
@@ -2638,6 +2665,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind4.Name,
 					Description:   edgeKind4.Description,
 					IsTraversable: edgeKind4.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 
 				// Validate edge kinds are as expected
@@ -2681,6 +2709,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
@@ -2688,6 +2717,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind2.Name,
 					Description:   edgeKind2.Description,
 					IsTraversable: edgeKind2.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 
 				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
@@ -2696,6 +2726,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind3.Name,
 					Description:   edgeKind3.Description,
 					IsTraversable: edgeKind3.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind4.ID,
@@ -2703,6 +2734,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind4.Name,
 					Description:   edgeKind4.Description,
 					IsTraversable: edgeKind4.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 
 				// Validate edge kinds are as expected
@@ -2771,6 +2803,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
@@ -2778,6 +2811,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind2.Name,
 					Description:   edgeKind2.Description,
 					IsTraversable: edgeKind2.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 
 				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
@@ -2786,6 +2820,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind3.Name,
 					Description:   edgeKind3.Description,
 					IsTraversable: edgeKind3.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind4.ID,
@@ -2793,6 +2828,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind4.Name,
 					Description:   edgeKind4.Description,
 					IsTraversable: edgeKind4.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 
 				// Validate edge kinds are as expected
@@ -2838,6 +2874,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
@@ -2845,6 +2882,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind2.Name,
 					Description:   edgeKind2.Description,
 					IsTraversable: edgeKind2.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 
 				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
@@ -2853,6 +2891,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind3.Name,
 					Description:   edgeKind3.Description,
 					IsTraversable: edgeKind3.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind4.ID,
@@ -2860,6 +2899,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind4.Name,
 					Description:   edgeKind4.Description,
 					IsTraversable: edgeKind4.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 
 				// Validate edge kinds are as expected
@@ -2898,6 +2938,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
@@ -2905,6 +2946,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind2.Name,
 					Description:   edgeKind2.Description,
 					IsTraversable: edgeKind2.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 
 				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
@@ -2913,6 +2955,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind3.Name,
 					Description:   edgeKind3.Description,
 					IsTraversable: edgeKind3.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind4.ID,
@@ -2920,6 +2963,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind4.Name,
 					Description:   edgeKind4.Description,
 					IsTraversable: edgeKind4.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 
 				// Validate edge kinds are as expected
@@ -2958,6 +3002,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
@@ -2965,6 +3010,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind2.Name,
 					Description:   edgeKind2.Description,
 					IsTraversable: edgeKind2.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 
 				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
@@ -2973,6 +3019,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind3.Name,
 					Description:   edgeKind3.Description,
 					IsTraversable: edgeKind3.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind4.ID,
@@ -2980,6 +3027,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind4.Name,
 					Description:   edgeKind4.Description,
 					IsTraversable: edgeKind4.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 
 				// Validate edge kinds are as expected
@@ -3049,6 +3097,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 
 				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
@@ -3057,6 +3106,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind2.Name,
 					Description:   edgeKind2.Description,
 					IsTraversable: edgeKind2.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 
 				// Assert total is as expected
@@ -3193,7 +3243,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
 				nodeKind := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 				envKind := getKindByName(t, testSuite, nodeKind.Name)
-				sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 
 				environment := model.SchemaEnvironment{
 					SchemaExtensionId: extension.ID,
@@ -3218,7 +3268,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
 				nodeKind := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 				envKind := getKindByName(t, testSuite, nodeKind.Name)
-				sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 
 				environment := model.SchemaEnvironment{
 					SchemaExtensionId: extension.ID,
@@ -3261,7 +3311,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				extension1 := createTestExtension(t, testSuite, "test_extension_1", "test_extension_1", "1.0.0", "Test_A")
 				extension2 := createTestExtension(t, testSuite, "test_extension_2", "test_extension_2", "1.0.0", "Test_B")
-				sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 				nodeKind1 := createTestNodeKind(t, testSuite, "nodeKind1", extension1.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 				nodeKind2 := createTestNodeKind(t, testSuite, "nodeKind2", extension2.ID, "Node Kind 2", "Test description", false, "fa-test", "#000000")
 				environmentKind1 := getKindByName(t, testSuite, nodeKind1.Name)
@@ -3294,7 +3344,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				extension1 := createTestExtension(t, testSuite, "test_extension_1", "test_extension_1", "1.0.0", "Test_A")
 				extension2 := createTestExtension(t, testSuite, "test_extension_2", "test_extension_2", "1.0.0", "Test_B")
-				sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 				nodeKind1 := createTestNodeKind(t, testSuite, "nodeKind1", extension1.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 				nodeKind2 := createTestNodeKind(t, testSuite, "nodeKind2", extension2.ID, "Node Kind B", "Test description", false, "fa-test", "#000000")
 				environmentKind1 := getKindByName(t, testSuite, nodeKind1.Name)
@@ -3325,7 +3375,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 			name: "Success: get environment by environment kind id",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
-				sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 				nodeKind := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 				envKind := getKindByName(t, testSuite, nodeKind.Name)
 
@@ -3357,7 +3407,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
 				nodeKind := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 				envKind := getKindByName(t, testSuite, nodeKind.Name)
-				sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 
 				environment := model.SchemaEnvironment{
 					SchemaExtensionId: extension.ID,
@@ -3391,7 +3441,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				extension := createTestExtension(t, testSuite, "test_extension_1", "test_extension_1", "1.0.0", "Test1")
 				nodeKind1 := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 				nodeKind2 := createTestNodeKind(t, testSuite, "nodeKind2", extension.ID, "Node Kind B", "Test description", false, "fa-test", "#000000")
-				sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 				environmentKind1 := getKindByName(t, testSuite, nodeKind1.Name)
 				environmentKind2 := getKindByName(t, testSuite, nodeKind2.Name)
 
@@ -3434,8 +3484,8 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				extension := createTestExtension(t, testSuite, "test_extension_1", "test_extension_1", "1.0.0", "Test1")
 				nodeKind1 := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 				nodeKind2 := createTestNodeKind(t, testSuite, "nodeKind2", extension.ID, "Node Kind B", "Test description", false, "fa-test", "#000000")
-				sourceKindA := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
-				sourceKindB := registerAndGetSourceKind(t, testSuite, "Source_Kind_2")
+				sourceKindA := registerAndGetKind(t, testSuite, "Source_Kind_1")
+				sourceKindB := registerAndGetKind(t, testSuite, "Source_Kind_2")
 				environmentKind1 := getKindByName(t, testSuite, nodeKind1.Name)
 				environmentKind2 := getKindByName(t, testSuite, nodeKind2.Name)
 
@@ -3478,7 +3528,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
 				nodeKind := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 				envKind := getKindByName(t, testSuite, nodeKind.Name)
-				sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 
 				environment := model.SchemaEnvironment{
 					SchemaExtensionId: extension.ID,
@@ -3558,7 +3608,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 		extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
 		nodeKind := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 		envKind := getKindByName(t, testSuite, nodeKind.Name)
-		sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+		sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 		environment := createTestEnvironment(t, testSuite, extension.ID, envKind.ID, int32(sourceKind.ID))
 		return extension, environment
 	}
@@ -3730,7 +3780,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				createdEnvironmentNode := createTestNodeKind(t, testSuite, "TGSE_Environment 1", createdExtension.ID, "Environment 1", "an environment kind", false, "", "")
 				createdSourceKindNode := createTestNodeKind(t, testSuite, "Source_Kind_1", createdExtension.ID, "Source Kind 1", "a source kind", false, "", "")
 				envKind := getKindByName(t, testSuite, createdEnvironmentNode.Name)
-				sourceKind := registerAndGetSourceKind(t, testSuite, createdSourceKindNode.Name)
+				sourceKind := registerAndGetKind(t, testSuite, createdSourceKindNode.Name)
 				createdEnvironment := createTestEnvironment(t, testSuite, createdExtension.ID, envKind.ID, int32(sourceKind.ID))
 
 				createdEdgeKind := createTestRelationshipKind(t, testSuite, "TGSE_Edge_1", createdExtension.ID, "an edge kind", true)
@@ -3810,7 +3860,7 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 		extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
 		nodeKind := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 		envKind := getKindByName(t, testSuite, nodeKind.Name)
-		sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+		sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 		environment := createTestEnvironment(t, testSuite, extension.ID, envKind.ID, int32(sourceKind.ID))
 		return createTestFinding(t, testSuite, model.SchemaFinding{
 			SchemaExtensionId: extension.ID,
@@ -4069,7 +4119,7 @@ func TestDatabase_PrincipalKinds_CRUD(t *testing.T) {
 		extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
 		nodeKind := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 		envKind := getKindByName(t, testSuite, nodeKind.Name)
-		sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+		sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 		return createTestEnvironment(t, testSuite, extension.ID, envKind.ID, int32(sourceKind.ID))
 	}
 
@@ -4205,7 +4255,7 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 	extension := createTestExtension(t, testSuite, "CascadeTestExtension", "Cascade Test Extension", "v1.0.0", "CTE")
 	nodeKind := createTestNodeKind(t, testSuite, "CascadeTestNodeKind", extension.ID, "Cascade Test Node Kind", "Test description", false, "fa-test", "#000000")
 	dawgsEnvKind := getKindByName(t, testSuite, "CascadeTestNodeKind")
-	sourceKind := registerAndGetSourceKind(t, testSuite, "CascadeTestSourceKind")
+	sourceKind := registerAndGetKind(t, testSuite, "CascadeTestSourceKind")
 	property, err := testSuite.BHDatabase.CreateGraphSchemaProperty(testSuite.Context, extension.ID, "cascade_test_property", "Cascade Test Property", "string", "Test description")
 	require.NoError(t, err, "unexpected error occurred when creating property")
 
@@ -4251,10 +4301,6 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 	principalKinds, err := testSuite.BHDatabase.GetPrincipalKindsByEnvironmentId(testSuite.Context, environment.ID)
 	assert.NoError(t, err)
 	assert.Len(t, principalKinds, 0, "principal kinds should have been cascade deleted")
-
-	// Validate Source Kind has been de-activated
-	_, err = testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, sourceKind.ID)
-	assert.ErrorIs(t, err, database.ErrNotFound, "source kind should have been deactivated")
 }
 
 func TestDatabase_GetSchemaFindings(t *testing.T) {
@@ -4308,9 +4354,10 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 
 	t.Run("returns all schema findings", func(t *testing.T) {
 		// Retrieve all findings
-		findings, err := testSuite.BHDatabase.GetSchemaFindings(testCtx, nil)
+		findings, totalFindings, err := testSuite.BHDatabase.GetSchemaFindings(testCtx, nil, model.Sort{}, 0, 0)
 		require.NoError(t, err)
-		require.Equal(t, len(findings), 7)
+		require.Len(t, findings, 7)
+		require.Equal(t, totalFindings, 7)
 
 		for i, f := range findings {
 			expectedFinding := expectedFindings[i]
@@ -4326,9 +4373,10 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 	})
 
 	t.Run("returns schema findings filtered by extension name", func(t *testing.T) {
-		findings, err := testSuite.BHDatabase.GetSchemaFindings(testCtx, model.Filters{"extension_name": []model.Filter{{Value: ext2.Name, Operator: model.Equals}}})
+		findings, totalFindings, err := testSuite.BHDatabase.GetSchemaFindings(testCtx, model.Filters{"extension_name": []model.Filter{{Value: ext2.Name, Operator: model.Equals}}}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
-		require.Equal(t, len(findings), 3)
+		require.Len(t, findings, 3)
+		require.Equal(t, totalFindings, 3)
 
 		for _, f := range findings {
 			for _, expectedFinding := range expectedFindings {
@@ -4347,10 +4395,10 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 	})
 
 	t.Run("returns schema findings filtered by subtype", func(t *testing.T) {
-		findings, err := testSuite.BHDatabase.GetSchemaFindings(testCtx, model.Filters{"subtype": []model.Filter{{Value: testSubtype, Operator: model.Equals}}})
+		findings, totalFindings, err := testSuite.BHDatabase.GetSchemaFindings(testCtx, model.Filters{"subtype": []model.Filter{{Value: testSubtype, Operator: model.Equals}}}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
-		require.Equal(t, len(findings), 4)
-
+		require.Len(t, findings, 4)
+		require.Equal(t, totalFindings, 4)
 		for _, f := range findings {
 			for _, expectedFinding := range expectedFindings {
 				if expectedFinding.Name == f.Name {
@@ -4406,6 +4454,76 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("sorting by name ascending returns findings in alphabetical order", func(t *testing.T) {
+		findings, totalFindings, err := testSuite.BHDatabase.GetSchemaFindings(
+			testCtx,
+			nil,
+			model.Sort{{Column: "name", Direction: model.AscendingSortDirection}},
+			0, 0,
+		)
+		require.NoError(t, err)
+		assert.Equal(t, 7, totalFindings, "expected total count of 7")
+		require.Len(t, findings, 7)
+		assert.Equal(t, "F_0", findings[0].Name, "expected F_0 to be first when sorted ascending by name")
+		assert.Equal(t, "F_6", findings[6].Name, "expected F_6 to be last when sorted ascending by name")
+	})
+
+	t.Run("sorting by name descending returns findings in reverse alphabetical order", func(t *testing.T) {
+		findings, totalFindings, err := testSuite.BHDatabase.GetSchemaFindings(
+			testCtx,
+			nil,
+			model.Sort{{Column: "name", Direction: model.DescendingSortDirection}},
+			0, 0,
+		)
+		require.NoError(t, err)
+		assert.Equal(t, 7, totalFindings, "expected total count of 7")
+		require.Len(t, findings, 7)
+		assert.Equal(t, "F_6", findings[0].Name, "expected F_6 to be first when sorted descending by name")
+		assert.Equal(t, "F_0", findings[6].Name, "expected F_0 to be last when sorted descending by name")
+	})
+
+	t.Run("pagination: limit restricts returned findings but total reflects all matches", func(t *testing.T) {
+		findings, totalFindings, err := testSuite.BHDatabase.GetSchemaFindings(
+			testCtx,
+			nil,
+			model.Sort{{Column: "name", Direction: model.AscendingSortDirection}},
+			0, 3,
+		)
+		require.NoError(t, err)
+		assert.Len(t, findings, 3, "expected 3 findings due to limit of 3")
+		assert.Equal(t, 7, totalFindings, "expected total count of 7 regardless of limit")
+		assert.Equal(t, "F_0", findings[0].Name, "expected first finding to be F_0 with limit=3")
+		assert.Equal(t, "F_1", findings[1].Name, "expected second finding to be F_1 with limit=3")
+		assert.Equal(t, "F_2", findings[2].Name, "expected third finding to be F_2 with limit=3")
+	})
+
+	t.Run("pagination: skip offsets returned findings but total reflects all matches", func(t *testing.T) {
+		findings, totalFindings, err := testSuite.BHDatabase.GetSchemaFindings(
+			testCtx,
+			nil,
+			model.Sort{{Column: "name", Direction: model.AscendingSortDirection}},
+			2, 0,
+		)
+		require.NoError(t, err)
+		assert.Len(t, findings, 5, "expected 5 findings after skipping first 2")
+		assert.Equal(t, 7, totalFindings, "expected total count of 7 regardless of skip")
+		assert.Equal(t, "F_2", findings[0].Name, "expected first finding after skip=2 to be F_2")
+	})
+
+	t.Run("pagination: skip and limit applied together", func(t *testing.T) {
+		findings, totalFindings, err := testSuite.BHDatabase.GetSchemaFindings(
+			testCtx,
+			nil,
+			model.Sort{{Column: "name", Direction: model.AscendingSortDirection}},
+			2, 2,
+		)
+		require.NoError(t, err)
+		assert.Len(t, findings, 2, "expected 2 findings with skip=2 and limit=2")
+		assert.Equal(t, 7, totalFindings, "expected total count of 7 regardless of skip and limit")
+		assert.Equal(t, "F_2", findings[0].Name, "expected first finding with skip=2,limit=2 to be F_2")
+		assert.Equal(t, "F_3", findings[1].Name, "expected second finding with skip=2,limit=2 to be F_3")
+	})
 }
 
 func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
@@ -4426,7 +4544,7 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 		{
 			name: "Success: returns display kinds",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
-				baseline, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(testSuite.Context)
+				baseline, err := testSuite.BHDatabase.GetValidDisplayKinds(testSuite.Context)
 				require.NoError(t, err, "unexpected error occurred when getting baseline display kinds")
 
 				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
@@ -4435,7 +4553,7 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 				createTestNodeKind(t, testSuite, "Display_Kind_1", extension.ID, "Display Kind 1", "a display kind", true, "icon", "blue")
 				createTestNodeKind(t, testSuite, "Display_Kind_2", extension.ID, "Display Kind 2", "a display kind", true, "icon", "red")
 
-				displayKinds, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(testSuite.Context)
+				displayKinds, err := testSuite.BHDatabase.GetValidDisplayKinds(testSuite.Context)
 				assert.NoError(t, err, "unexpected error occurred when retrieving display kinds")
 
 				// Both new display kinds should appear in the result
@@ -4450,7 +4568,7 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 		{
 			name: "Success: does not include non-display kinds",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
-				baseline, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(testSuite.Context)
+				baseline, err := testSuite.BHDatabase.GetValidDisplayKinds(testSuite.Context)
 				require.NoError(t, err, "unexpected error occurred when getting baseline display kinds")
 
 				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
@@ -4459,7 +4577,7 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 				createTestNodeKind(t, testSuite, "Display_Kind_1", extension.ID, "Display Kind 1", "a display kind", true, "icon", "blue")
 				createTestNodeKind(t, testSuite, "Non_Display_Kind_1", extension.ID, "Non Display Kind 1", "a non-display kind", false, "", "")
 
-				displayKinds, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(testSuite.Context)
+				displayKinds, err := testSuite.BHDatabase.GetValidDisplayKinds(testSuite.Context)
 				assert.NoError(t, err, "unexpected error occurred when retrieving display kinds")
 
 				// Only the display kind should appear, not the non-display kind
@@ -4480,4 +4598,80 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 			testCase.assert(t, testSuite)
 		})
 	}
+}
+
+func TestDatabase_GetPrincipalKindsGraphKinds(t *testing.T) {
+	// builtinPrincipalKindNames are the principal kinds seeded by PopulateExtensionData
+	// AD: User, Computer | Azure: AZUser, AZVM, AZServicePrincipal
+	var builtinPrincipalKindNames = []string{"User", "Computer", "AZUser", "AZVM", "AZServicePrincipal"}
+
+	setOpenGraphFindingsFlag := func(t *testing.T, testSuite IntegrationTestSuite, enabled bool) {
+		t.Helper()
+		flag, err := testSuite.BHDatabase.GetFlagByKey(testSuite.Context, appcfg.FeatureOpenGraphFindings)
+		require.NoError(t, err)
+		flag.Enabled = enabled
+		require.NoError(t, testSuite.BHDatabase.SetFlag(testSuite.Context, flag))
+	}
+
+	setupNonBuiltinPrincipalKind := func(t *testing.T, testSuite IntegrationTestSuite) string {
+		t.Helper()
+		// Create a non-builtin extension, environment, and principal kind
+		extension := createTestExtension(t, testSuite, "test_og_extension", "Test OG Extension", "1.0.0", "TestOG")
+		nodeKind := createTestNodeKind(t, testSuite, "OG_User", extension.ID, "OG User", "An opengraph user kind", false, "fa-user", "#123456")
+		envKind := getKindByName(t, testSuite, nodeKind.Name)
+		sourceKind := registerAndGetKind(t, testSuite, "OG_Source")
+		environment := createTestEnvironment(t, testSuite, extension.ID, envKind.ID, int32(sourceKind.ID))
+
+		// Register OG_User as a principal kind on this environment
+		_, err := testSuite.BHDatabase.CreatePrincipalKind(testSuite.Context, environment.ID, envKind.ID)
+		require.NoError(t, err)
+		return nodeKind.Name
+	}
+
+	containsKindName := func(kinds graph.Kinds, name string) bool {
+		for _, kind := range kinds {
+			if kind.String() == name {
+				return true
+			}
+		}
+		return false
+	}
+
+	t.Run("Flag enabled: returns all principal kinds including non-builtin", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		nonBuiltinKindName := setupNonBuiltinPrincipalKind(t, testSuite)
+		setOpenGraphFindingsFlag(t, testSuite, true)
+
+		principalKinds, err := testSuite.BHDatabase.GetPrincipalKindsGraphKinds(testSuite.Context)
+		require.NoError(t, err)
+
+		// Should contain all builtin principal kinds
+		for _, builtinName := range builtinPrincipalKindNames {
+			assert.True(t, containsKindName(principalKinds, builtinName), "expected builtin principal kind %s to be present", builtinName)
+		}
+		// Should also contain the non-builtin principal kind
+		assert.True(t, containsKindName(principalKinds, nonBuiltinKindName), "expected non-builtin principal kind %s to be present when flag is enabled", nonBuiltinKindName)
+	})
+
+	t.Run("Flag disabled: returns only builtin principal kinds", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		nonBuiltinKindName := setupNonBuiltinPrincipalKind(t, testSuite)
+		setOpenGraphFindingsFlag(t, testSuite, false)
+
+		principalKinds, err := testSuite.BHDatabase.GetPrincipalKindsGraphKinds(testSuite.Context)
+		require.NoError(t, err)
+
+		require.Len(t, principalKinds, 5)
+
+		// Should contain all builtin principal kinds
+		for _, builtinName := range builtinPrincipalKindNames {
+			assert.True(t, containsKindName(principalKinds, builtinName), "expected builtin principal kind %s to be present", builtinName)
+		}
+		// Should NOT contain the non-builtin principal kind
+		assert.False(t, containsKindName(principalKinds, nonBuiltinKindName), "expected non-builtin principal kind %s to be excluded when flag is disabled", nonBuiltinKindName)
+	})
 }

@@ -17,6 +17,7 @@
 package model
 
 import (
+	"database/sql"
 	"fmt"
 	"net/url"
 	"time"
@@ -151,6 +152,7 @@ type AuthToken struct {
 	Key        string        `json:"key,omitempty"`
 	HmacMethod string        `json:"hmac_method"`
 	LastAccess time.Time     `json:"last_access"`
+	ExpiresAt  sql.NullTime  `json:"expires_at"`
 
 	Unique
 }
@@ -162,6 +164,7 @@ func (s AuthToken) AuditData() AuditData {
 		"client_id":   s.ClientID,
 		"name":        s.Name,
 		"last_access": s.LastAccess,
+		"expires_at":  s.ExpiresAt,
 	}
 }
 
@@ -174,6 +177,7 @@ func (s AuthToken) StripKey() AuthToken {
 		LastAccess: s.LastAccess,
 		Unique:     s.Unique,
 		Name:       s.Name,
+		ExpiresAt:  s.ExpiresAt,
 	}
 }
 
@@ -185,7 +189,8 @@ func (s AuthTokens) IsSortable(column string) bool {
 		"last_access",
 		"created_at",
 		"updated_at",
-		"deleted_at":
+		"deleted_at",
+		"expires_at":
 		return true
 	default:
 		return false
@@ -203,6 +208,7 @@ func (s AuthTokens) ValidFilters() map[string][]FilterOperator {
 		"created_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"updated_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"deleted_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"expires_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 	}
 }
 
@@ -443,6 +449,9 @@ type User struct {
 	AllEnvironments                  bool                               `json:"all_environments"`
 	EnvironmentTargetedAccessControl []EnvironmentTargetedAccessControl `json:"environment_targeted_access_control"`
 
+	// SupportAccount should never be settable by a user. It is used to determine if a user is a support account.
+	SupportAccount bool `json:"-"`
+
 	// EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users.
 	// This value is automatically set to true for Bloodhound Community Edition in the patchEULAAcceptance and CreateUser functions.
 	EULAAccepted bool `json:"eula_accepted"`
@@ -553,9 +562,10 @@ func UserSessionAssociations() []string {
 type SessionAuthProvider int
 
 const (
-	SessionAuthProviderSecret SessionAuthProvider = 0
-	SessionAuthProviderSAML   SessionAuthProvider = 1
-	SessionAuthProviderOIDC   SessionAuthProvider = 2
+	SessionAuthProviderSecret      SessionAuthProvider = 0
+	SessionAuthProviderSAML        SessionAuthProvider = 1
+	SessionAuthProviderOIDC        SessionAuthProvider = 2
+	SessionAuthProviderBearerToken SessionAuthProvider = 3
 )
 
 func (s SessionAuthProvider) String() string {
@@ -566,6 +576,8 @@ func (s SessionAuthProvider) String() string {
 		return "SAML"
 	case SessionAuthProviderOIDC:
 		return "OIDC"
+	case SessionAuthProviderBearerToken:
+		return "Bearer Token"
 	default:
 		return "Unknown"
 	}
