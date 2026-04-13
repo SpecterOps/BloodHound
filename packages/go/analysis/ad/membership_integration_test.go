@@ -16,7 +16,7 @@
 
 //go:build integration
 
-package analysis_test
+package ad_test
 
 import (
 	"context"
@@ -24,7 +24,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/test"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
-	analysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
+	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/algo"
@@ -42,8 +42,8 @@ func TestRealizeNodeKindDuplexMap(t *testing.T) {
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		var (
 			domainNode                    = testContext.FindNode(query.Equals(query.NodeProperty("name"), "DomainA"))
-			impactMap, impactErr          = analysis.FetchPathMembers(context.Background(), db, domainNode.ID, graph.DirectionInbound)
-			impactKindMap, realizationErr = analysis.NodeDuplexByKinds(context.Background(), db, impactMap)
+			impactMap, impactErr          = adAnalysis.FetchPathMembers(context.Background(), db, domainNode.ID, graph.DirectionInbound)
+			impactKindMap, realizationErr = adAnalysis.NodeDuplexByKinds(context.Background(), db, impactMap)
 		)
 
 		require.Nil(t, impactErr)
@@ -66,7 +66,7 @@ func TestAnalyzeExposure(t *testing.T) {
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		var (
 			domainNode     = testContext.FindNode(query.Equals(query.NodeProperty("name"), "DomainA"))
-			impactMap, err = analysis.FetchPathMembers(context.Background(), db, domainNode.ID, graph.DirectionInbound)
+			impactMap, err = adAnalysis.FetchPathMembers(context.Background(), db, domainNode.ID, graph.DirectionInbound)
 		)
 
 		require.Nil(t, err)

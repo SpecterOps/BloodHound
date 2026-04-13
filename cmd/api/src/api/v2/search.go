@@ -31,7 +31,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -104,7 +103,7 @@ func graphNodeToSearchResult(node *graph.Node, validPrimaryKinds graphschema.Val
 		objectID, _          = node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 		distinguishedName, _ = node.Properties.GetOrDefault(ad.DistinguishedName.String(), "").String()
 		systemTags, _        = node.Properties.GetOrDefault(common.SystemTags.String(), "").String()
-		kindLabel            = analysis.GetNodeKindDisplayLabel(validPrimaryKinds, node)
+		kindLabel            = graphschema.GetNodeKindDisplayLabel(validPrimaryKinds, node)
 	)
 
 	return model.SearchResult{

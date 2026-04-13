@@ -29,6 +29,9 @@ import {
 } from './ActiveExtensionsCard';
 
 const addNotificationSpy = vi.hoisted(() => vi.fn());
+const { checkPermissionMock } = vi.hoisted(() => ({
+    checkPermissionMock: vi.fn(() => true),
+}));
 
 vi.mock('../../providers', async () => {
     const actual = await vi.importActual('../../providers');
@@ -36,6 +39,17 @@ vi.mock('../../providers', async () => {
         ...actual,
         useNotifications: () => ({
             addNotification: addNotificationSpy,
+        }),
+    };
+});
+
+vi.mock('../../hooks', async () => {
+    const actual = await vi.importActual('../../hooks');
+    return {
+        ...actual,
+        usePermissions: () => ({
+            checkPermission: checkPermissionMock,
+            isSuccess: true,
         }),
     };
 });
@@ -67,9 +81,14 @@ const mockDeleteResponse: AxiosResponse<void> = {
 };
 
 beforeAll(() => server.listen());
+beforeEach(() => {
+    checkPermissionMock.mockImplementation(() => true);
+});
 afterEach(() => {
-    server.resetHandlers();
     vi.restoreAllMocks();
+    server.resetHandlers();
+    addNotificationSpy.mockClear();
+    checkPermissionMock.mockClear();
 });
 afterAll(() => server.close());
 
@@ -89,7 +108,7 @@ describe('ActiveExtensionsCard', () => {
 
     it('displays an error message while fetching fails', async () => {
         server.use(
-            rest.get(`/api/v2/extensions`, (req, res, ctx) => {
+            rest.get(`/api/v2/extensions`, (_req, res, ctx) => {
                 return res(ctx.status(500));
             })
         );
@@ -245,6 +264,14 @@ describe('ActiveExtensionsCard', () => {
         expect(customExtensionDeleteButton).not.toBeDisabled();
     });
 
+    it('disables delete button for user without correct permissions', async () => {
+        checkPermissionMock.mockReturnValue(false);
+        render(<ActiveExtensionsCard />);
+
+        const customExtensionDeleteButton = await screen.findByLabelText('Delete Custom Extension');
+        expect(customExtensionDeleteButton).toBeDisabled();
+    });
+
     it('disables confirm button until extension name is typed correctly', async () => {
         const user = userEvent.setup();
 
@@ -328,7 +355,7 @@ describe('ActiveExtensionsCard', () => {
     });
 
     it('shows error notification when deletion fails', async () => {
-        server.use(rest.delete(`/api/v2/extensions/:id`, (_req, res, ctx) => res.once(ctx.status(500))));
+        server.use(rest.delete(`/api/v2/extensions/:id`, (_req, res, ctx) => res(ctx.status(500))));
 
         const user = userEvent.setup();
         render(<ActiveExtensionsCard />);

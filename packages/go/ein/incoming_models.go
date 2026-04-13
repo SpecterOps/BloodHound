@@ -17,7 +17,6 @@
 package ein
 
 import (
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/graph"
 )
@@ -32,7 +31,7 @@ const (
 )
 
 func parseADKind(rawKindStr string) graph.Kind {
-	if kind, err := analysis.ParseKind(rawKindStr); err != nil {
+	if kind, err := ParseKind(rawKindStr); err != nil {
 		// TODO: Figure out a logging strategy for this since the context is wrapped in a very tight loop. It is
 		//       possible that careless logging here may flood application logs and potentially DOS centralized
 		//       logging infrastructure.
