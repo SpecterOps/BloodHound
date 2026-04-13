@@ -18,11 +18,9 @@ package ad
 
 import (
 	"context"
-
 	"log/slog"
 	"sync"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -262,7 +260,7 @@ func findPathsToDomainThroughCertTemplateWithGenericAll(
 ) (map[graph.ID][]*graph.PathSegment, cardinality.Duplex[uint64], error) {
 
 	var (
-		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		lock          = &sync.Mutex{}
 
 		certTemplateSegments = map[graph.ID][]*graph.PathSegment{}
@@ -381,7 +379,7 @@ func traversalToDomainThroughCertTemplate(
 ) (map[graph.ID][]*graph.PathSegment, cardinality.Duplex[uint64], error) {
 
 	var (
-		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		lock          = &sync.Mutex{}
 
 		certTemplateSegments = map[graph.ID][]*graph.PathSegment{}
@@ -448,7 +446,7 @@ func findPathsToDomainThroughCertTemplateWithBothPKIFlags(
 ) (map[graph.ID][]*graph.PathSegment, cardinality.Duplex[uint64], error) {
 
 	var (
-		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		lock          = &sync.Mutex{}
 
 		certTemplateSegments = map[graph.ID][]*graph.PathSegment{}
@@ -543,7 +541,7 @@ func findPathToDomainThroughEnterpriseCAsTrustedForNTAuth(
 	error,
 ) {
 	var (
-		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		lock          = &sync.Mutex{}
 
 		enrollAndNTAuthECASegments = map[graph.ID][]*graph.PathSegment{}

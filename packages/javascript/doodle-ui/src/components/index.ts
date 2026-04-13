@@ -16,6 +16,7 @@ export * from './Label';
 export * from './Pagination';
 export * from './Popover';
 export * from './RadialGauge';
+export * from './RadioGroup';
 export * from './RiskBadge';
 export * from './ScrollArea';
 export * from './Select';

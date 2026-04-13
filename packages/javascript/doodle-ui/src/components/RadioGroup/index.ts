@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,28 +13,4 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-package ein
-
-import (
-	"fmt"
-
-	"github.com/specterops/bloodhound/packages/go/graphschema"
-	"github.com/specterops/dawgs/graph"
-)
-
-const (
-	SerialError           = "error deserializing %s: %v"
-	ExtractError          = "failed to extract owner id/type from directory object: %v"
-	AccessAllowedCallback = "AccessAllowedCallback"
-)
-
-func ParseKind(rawKind string) (graph.Kind, error) {
-	for kind := range graphschema.ValidKinds {
-		if kind.String() == rawKind {
-			return kind, nil
-		}
-	}
-
-	return nil, fmt.Errorf("unknown kind %s", rawKind)
-}
+export * from './RadioGroup';

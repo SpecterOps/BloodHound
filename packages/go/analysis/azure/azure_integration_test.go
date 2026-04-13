@@ -23,19 +23,16 @@ import (
 	"slices"
 	"testing"
 
-	schema "github.com/specterops/bloodhound/packages/go/graphschema"
-
-	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
-	"github.com/specterops/bloodhound/packages/go/graphschema/common"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
-	azureanalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
+	"github.com/specterops/bloodhound/packages/go/analysis/azure"
+	schema "github.com/specterops/bloodhound/packages/go/graphschema"
+	graphAzure "github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFetchEntityByObjectID(t *testing.T) {
@@ -44,7 +41,7 @@ func TestFetchEntityByObjectID(t *testing.T) {
 		harness.AZBaseHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		node, err := azureanalysis.FetchEntityByObjectID(tx, testContext.NodeObjectID(harness.AZBaseHarness.Application))
+		node, err := azure.FetchEntityByObjectID(tx, testContext.NodeObjectID(harness.AZBaseHarness.Application))
 
 		require.Nil(t, err)
 		assert.Equal(t, harness.AZBaseHarness.Application.ID, node.ID)
@@ -57,10 +54,10 @@ func TestEntityRoles(t *testing.T) {
 		harness.AZBaseHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		roles, err := azureanalysis.FetchEntityRoles(tx, harness.AZBaseHarness.User, 0, 0)
+		roles, err := azure.FetchEntityRoles(tx, harness.AZBaseHarness.User, 0, 0)
 
 		require.Nil(t, err)
-		assert.ElementsMatch(t, harness.AZBaseHarness.Nodes.Get(azure.Role).IDs(), roles.ContainingNodeKinds(azure.Role).IDs())
+		assert.ElementsMatch(t, harness.AZBaseHarness.Nodes.Get(graphAzure.Role).IDs(), roles.ContainingNodeKinds(graphAzure.Role).IDs())
 	})
 }
 
@@ -90,13 +87,13 @@ func TestTraverseNodePaths(t *testing.T) {
 			Root:      harness.AZBaseHarness.User,
 			Direction: graph.DirectionOutbound,
 			BranchQuery: func() graph.Criteria {
-				return query.Kind(query.Relationship(), azure.HasRole)
+				return query.Kind(query.Relationship(), graphAzure.HasRole)
 			},
 		}); err != nil {
 			t.Fatal(err)
 		} else {
-			numRoles := harness.AZBaseHarness.Nodes.Count(azure.Role)
-			assert.Equal(t, harness.AZBaseHarness.Nodes.Get(azure.Role).Len(), paths.Len())
+			numRoles := harness.AZBaseHarness.Nodes.Count(graphAzure.Role)
+			assert.Equal(t, harness.AZBaseHarness.Nodes.Get(graphAzure.Role).Len(), paths.Len())
 
 			// Add one to the number of roles since the user is included in the result set
 			require.EqualValues(t, numRoles+1, paths.AllNodes().Len())
@@ -110,10 +107,10 @@ func TestAzureEntityRoles(t *testing.T) {
 		harness.AZBaseHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		if roles, err := azureanalysis.FetchEntityRoles(tx, harness.AZBaseHarness.User, 0, 0); err != nil {
+		if roles, err := azure.FetchEntityRoles(tx, harness.AZBaseHarness.User, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
-			assert.ElementsMatch(t, harness.AZBaseHarness.Nodes.Get(azure.Role).IDs(), roles.IDs())
+			assert.ElementsMatch(t, harness.AZBaseHarness.Nodes.Get(graphAzure.Role).IDs(), roles.IDs())
 		}
 	})
 }
@@ -124,10 +121,10 @@ func TestAzureEntityGroupMembership(t *testing.T) {
 		harness.AZBaseHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		if groupPaths, err := azureanalysis.FetchEntityGroupMembershipPaths(tx, harness.AZBaseHarness.User); err != nil {
+		if groupPaths, err := azure.FetchEntityGroupMembershipPaths(tx, harness.AZBaseHarness.User); err != nil {
 			t.Fatal(err)
 		} else {
-			assert.ElementsMatch(t, harness.AZBaseHarness.UserFirstDegreeGroups.IDs(), groupPaths.AllNodes().ContainingNodeKinds(azure.Group).IDs())
+			assert.ElementsMatch(t, harness.AZBaseHarness.UserFirstDegreeGroups.IDs(), groupPaths.AllNodes().ContainingNodeKinds(graphAzure.Group).IDs())
 		}
 	})
 }
@@ -139,19 +136,19 @@ func TestAZMGApplicationReadWriteAll(t *testing.T) {
 		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-		if outboundAbusableAppRoleAssignments, err := azureanalysis.FetchAbusableAppRoleAssignments(tx, harness.AZMGApplicationReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
+		if outboundAbusableAppRoleAssignments, err := azure.FetchAbusableAppRoleAssignments(tx, harness.AZMGApplicationReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, outboundAbusableAppRoleAssignments.Contains(harness.AZMGApplicationReadWriteAllHarness.MicrosoftGraph))
 		}
 
-		if inboundAbusableAppRoleAssignments, err := azureanalysis.FetchAbusableAppRoleAssignments(tx, harness.AZMGApplicationReadWriteAllHarness.MicrosoftGraph, graph.DirectionInbound, 0, 0); err != nil {
+		if inboundAbusableAppRoleAssignments, err := azure.FetchAbusableAppRoleAssignments(tx, harness.AZMGApplicationReadWriteAllHarness.MicrosoftGraph, graph.DirectionInbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, inboundAbusableAppRoleAssignments.Contains(harness.AZMGApplicationReadWriteAllHarness.ServicePrincipal))
 		}
 
-		if outboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGApplicationReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
+		if outboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGApplicationReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, outboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGApplicationReadWriteAllHarness.MicrosoftGraph))
@@ -159,30 +156,30 @@ func TestAZMGApplicationReadWriteAll(t *testing.T) {
 			assert.True(t, outboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGApplicationReadWriteAllHarness.ServicePrincipalB))
 		}
 
-		if inboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGApplicationReadWriteAllHarness.MicrosoftGraph, graph.DirectionInbound, 0, 0); err != nil {
+		if inboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGApplicationReadWriteAllHarness.MicrosoftGraph, graph.DirectionInbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, inboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGApplicationReadWriteAllHarness.ServicePrincipal))
 		}
 
-		if inboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGApplicationReadWriteAllHarness.Application, graph.DirectionInbound, 0, 0); err != nil {
+		if inboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGApplicationReadWriteAllHarness.Application, graph.DirectionInbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, inboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGApplicationReadWriteAllHarness.ServicePrincipal))
 		}
 
-		if inboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGApplicationReadWriteAllHarness.ServicePrincipalB, graph.DirectionInbound, 0, 0); err != nil {
+		if inboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGApplicationReadWriteAllHarness.ServicePrincipalB, graph.DirectionInbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, inboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGApplicationReadWriteAllHarness.ServicePrincipal))
 		}
 
-		if outboundAppRoleAssignmentTransitPaths, err := azureanalysis.FetchAppRoleAssignmentsTransitPaths(tx, harness.AZMGApplicationReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound); err != nil {
+		if outboundAppRoleAssignmentTransitPaths, err := azure.FetchAppRoleAssignmentsTransitPaths(tx, harness.AZMGApplicationReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound); err != nil {
 			t.Fatal(err)
 		} else {
 			for _, path := range outboundAppRoleAssignmentTransitPaths.Paths() {
 				for _, edge := range path.Edges {
-					assert.Subset(t, []graph.Kind{azure.AZMGAddOwner, azure.AZMGAddSecret}, []graph.Kind{edge.Kind})
+					assert.Subset(t, []graph.Kind{graphAzure.AZMGAddOwner, graphAzure.AZMGAddSecret}, []graph.Kind{edge.Kind})
 				}
 			}
 		}
@@ -197,36 +194,36 @@ func TestAZMGAppRoleManagementReadWriteAll(t *testing.T) {
 		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-		if outboundAbusableAppRoleAssignments, err := azureanalysis.FetchAbusableAppRoleAssignments(tx, harness.AZMGAppRoleManagementReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
+		if outboundAbusableAppRoleAssignments, err := azure.FetchAbusableAppRoleAssignments(tx, harness.AZMGAppRoleManagementReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, outboundAbusableAppRoleAssignments.Contains(harness.AZMGAppRoleManagementReadWriteAllHarness.MicrosoftGraph))
 		}
 
-		if inboundAbusableAppRoleAssignments, err := azureanalysis.FetchAbusableAppRoleAssignments(tx, harness.AZMGAppRoleManagementReadWriteAllHarness.MicrosoftGraph, graph.DirectionInbound, 0, 0); err != nil {
+		if inboundAbusableAppRoleAssignments, err := azure.FetchAbusableAppRoleAssignments(tx, harness.AZMGAppRoleManagementReadWriteAllHarness.MicrosoftGraph, graph.DirectionInbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, inboundAbusableAppRoleAssignments.Contains(harness.AZMGAppRoleManagementReadWriteAllHarness.ServicePrincipal))
 		}
 
-		if outboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGAppRoleManagementReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
+		if outboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGAppRoleManagementReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, outboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGAppRoleManagementReadWriteAllHarness.Tenant))
 		}
 
-		if inboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGAppRoleManagementReadWriteAllHarness.Tenant, graph.DirectionInbound, 0, 0); err != nil {
+		if inboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGAppRoleManagementReadWriteAllHarness.Tenant, graph.DirectionInbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, inboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGAppRoleManagementReadWriteAllHarness.ServicePrincipal))
 		}
 
-		if outboundAppRoleAssignmentTransitPaths, err := azureanalysis.FetchAppRoleAssignmentsTransitPaths(tx, harness.AZMGAppRoleManagementReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound); err != nil {
+		if outboundAppRoleAssignmentTransitPaths, err := azure.FetchAppRoleAssignmentsTransitPaths(tx, harness.AZMGAppRoleManagementReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound); err != nil {
 			t.Fatal(err)
 		} else {
 			for _, path := range outboundAppRoleAssignmentTransitPaths.Paths() {
 				for _, edge := range path.Edges {
-					assert.Equal(t, azure.AZMGGrantAppRoles, edge.Kind)
+					assert.Equal(t, graphAzure.AZMGGrantAppRoles, edge.Kind)
 				}
 			}
 		}
@@ -241,36 +238,36 @@ func TestAZMGDirectoryReadWriteAll(t *testing.T) {
 		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-		if outboundAbusableAppRoleAssignments, err := azureanalysis.FetchAbusableAppRoleAssignments(tx, harness.AZMGDirectoryReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
+		if outboundAbusableAppRoleAssignments, err := azure.FetchAbusableAppRoleAssignments(tx, harness.AZMGDirectoryReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, outboundAbusableAppRoleAssignments.Contains(harness.AZMGDirectoryReadWriteAllHarness.MicrosoftGraph))
 		}
 
-		if inboundAbusableAppRoleAssignments, err := azureanalysis.FetchAbusableAppRoleAssignments(tx, harness.AZMGDirectoryReadWriteAllHarness.MicrosoftGraph, graph.DirectionInbound, 0, 0); err != nil {
+		if inboundAbusableAppRoleAssignments, err := azure.FetchAbusableAppRoleAssignments(tx, harness.AZMGDirectoryReadWriteAllHarness.MicrosoftGraph, graph.DirectionInbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, inboundAbusableAppRoleAssignments.Contains(harness.AZMGDirectoryReadWriteAllHarness.ServicePrincipal))
 		}
 
-		if outboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGDirectoryReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
+		if outboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGDirectoryReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, outboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGDirectoryReadWriteAllHarness.Group))
 		}
 
-		if inboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGDirectoryReadWriteAllHarness.Group, graph.DirectionInbound, 0, 0); err != nil {
+		if inboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGDirectoryReadWriteAllHarness.Group, graph.DirectionInbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, inboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGDirectoryReadWriteAllHarness.ServicePrincipal))
 		}
 
-		if outboundAppRoleAssignmentTransitPaths, err := azureanalysis.FetchAppRoleAssignmentsTransitPaths(tx, harness.AZMGDirectoryReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound); err != nil {
+		if outboundAppRoleAssignmentTransitPaths, err := azure.FetchAppRoleAssignmentsTransitPaths(tx, harness.AZMGDirectoryReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound); err != nil {
 			t.Fatal(err)
 		} else {
 			for _, path := range outboundAppRoleAssignmentTransitPaths.Paths() {
 				for _, edge := range path.Edges {
-					assert.Subset(t, []graph.Kind{azure.AZMGAddOwner, azure.AZMGAddMember}, []graph.Kind{edge.Kind})
+					assert.Subset(t, []graph.Kind{graphAzure.AZMGAddOwner, graphAzure.AZMGAddMember}, []graph.Kind{edge.Kind})
 				}
 			}
 		}
@@ -285,36 +282,36 @@ func TestAZMGGroupReadWriteAll(t *testing.T) {
 		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-		if outboundAbusableAppRoleAssignments, err := azureanalysis.FetchAbusableAppRoleAssignments(tx, harness.AZMGGroupReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
+		if outboundAbusableAppRoleAssignments, err := azure.FetchAbusableAppRoleAssignments(tx, harness.AZMGGroupReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, outboundAbusableAppRoleAssignments.Contains(harness.AZMGGroupReadWriteAllHarness.MicrosoftGraph))
 		}
 
-		if inboundAbusableAppRoleAssignments, err := azureanalysis.FetchAbusableAppRoleAssignments(tx, harness.AZMGGroupReadWriteAllHarness.MicrosoftGraph, graph.DirectionInbound, 0, 0); err != nil {
+		if inboundAbusableAppRoleAssignments, err := azure.FetchAbusableAppRoleAssignments(tx, harness.AZMGGroupReadWriteAllHarness.MicrosoftGraph, graph.DirectionInbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, inboundAbusableAppRoleAssignments.Contains(harness.AZMGGroupReadWriteAllHarness.ServicePrincipal))
 		}
 
-		if outboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGGroupReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
+		if outboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGGroupReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, outboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGGroupReadWriteAllHarness.Group))
 		}
 
-		if inboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGGroupReadWriteAllHarness.Group, graph.DirectionInbound, 0, 0); err != nil {
+		if inboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGGroupReadWriteAllHarness.Group, graph.DirectionInbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, inboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGGroupReadWriteAllHarness.ServicePrincipal))
 		}
 
-		if outboundAppRoleAssignmentTransitPaths, err := azureanalysis.FetchAppRoleAssignmentsTransitPaths(tx, harness.AZMGGroupReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound); err != nil {
+		if outboundAppRoleAssignmentTransitPaths, err := azure.FetchAppRoleAssignmentsTransitPaths(tx, harness.AZMGGroupReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound); err != nil {
 			t.Fatal(err)
 		} else {
 			for _, path := range outboundAppRoleAssignmentTransitPaths.Paths() {
 				for _, edge := range path.Edges {
-					assert.Subset(t, []graph.Kind{azure.AZMGAddOwner, azure.AZMGAddMember}, []graph.Kind{edge.Kind})
+					assert.Subset(t, []graph.Kind{graphAzure.AZMGAddOwner, graphAzure.AZMGAddMember}, []graph.Kind{edge.Kind})
 				}
 			}
 		}
@@ -329,36 +326,36 @@ func TestAZMGGroupMemberReadWriteAll(t *testing.T) {
 		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-		if outboundAbusableAppRoleAssignments, err := azureanalysis.FetchAbusableAppRoleAssignments(tx, harness.AZMGGroupMemberReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
+		if outboundAbusableAppRoleAssignments, err := azure.FetchAbusableAppRoleAssignments(tx, harness.AZMGGroupMemberReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, outboundAbusableAppRoleAssignments.Contains(harness.AZMGGroupMemberReadWriteAllHarness.MicrosoftGraph))
 		}
 
-		if inboundAbusableAppRoleAssignments, err := azureanalysis.FetchAbusableAppRoleAssignments(tx, harness.AZMGGroupMemberReadWriteAllHarness.MicrosoftGraph, graph.DirectionInbound, 0, 0); err != nil {
+		if inboundAbusableAppRoleAssignments, err := azure.FetchAbusableAppRoleAssignments(tx, harness.AZMGGroupMemberReadWriteAllHarness.MicrosoftGraph, graph.DirectionInbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, inboundAbusableAppRoleAssignments.Contains(harness.AZMGGroupMemberReadWriteAllHarness.ServicePrincipal))
 		}
 
-		if outboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGGroupMemberReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
+		if outboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGGroupMemberReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, outboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGGroupMemberReadWriteAllHarness.Group))
 		}
 
-		if inboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGGroupMemberReadWriteAllHarness.Group, graph.DirectionInbound, 0, 0); err != nil {
+		if inboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGGroupMemberReadWriteAllHarness.Group, graph.DirectionInbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, inboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGGroupMemberReadWriteAllHarness.ServicePrincipal))
 		}
 
-		if outboundAppRoleAssignmentTransitPaths, err := azureanalysis.FetchAppRoleAssignmentsTransitPaths(tx, harness.AZMGGroupMemberReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound); err != nil {
+		if outboundAppRoleAssignmentTransitPaths, err := azure.FetchAppRoleAssignmentsTransitPaths(tx, harness.AZMGGroupMemberReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound); err != nil {
 			t.Fatal(err)
 		} else {
 			for _, path := range outboundAppRoleAssignmentTransitPaths.Paths() {
 				for _, edge := range path.Edges {
-					assert.Subset(t, []graph.Kind{azure.AZMGAddOwner, azure.AZMGAddMember}, []graph.Kind{edge.Kind})
+					assert.Subset(t, []graph.Kind{graphAzure.AZMGAddOwner, graphAzure.AZMGAddMember}, []graph.Kind{edge.Kind})
 				}
 			}
 		}
@@ -373,60 +370,60 @@ func TestAZMGRoleManagementReadWriteDirectory(t *testing.T) {
 		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-		if outboundAbusableAppRoleAssignments, err := azureanalysis.FetchAbusableAppRoleAssignments(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
+		if outboundAbusableAppRoleAssignments, err := azure.FetchAbusableAppRoleAssignments(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, outboundAbusableAppRoleAssignments.Contains(harness.AZMGRoleManagementReadWriteDirectoryHarness.MicrosoftGraph))
 		}
 
-		if inboundAbusableAppRoleAssignments, err := azureanalysis.FetchAbusableAppRoleAssignments(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.MicrosoftGraph, graph.DirectionInbound, 0, 0); err != nil {
+		if inboundAbusableAppRoleAssignments, err := azure.FetchAbusableAppRoleAssignments(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.MicrosoftGraph, graph.DirectionInbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, inboundAbusableAppRoleAssignments.Contains(harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal))
 		}
 
-		if outboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
+		if outboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, outboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGRoleManagementReadWriteDirectoryHarness.Group))
 		}
 
-		if outboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
+		if outboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, outboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGRoleManagementReadWriteDirectoryHarness.Application))
 		}
 
-		if outboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
+		if outboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, outboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipalB))
 		}
 
-		if outboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
+		if outboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, outboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGRoleManagementReadWriteDirectoryHarness.Role))
 		}
 
-		if outboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
+		if outboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, outboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGRoleManagementReadWriteDirectoryHarness.MicrosoftGraph))
 		}
 
-		if inboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.Group, graph.DirectionInbound, 0, 0); err != nil {
+		if inboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.Group, graph.DirectionInbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, inboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal))
 		}
 
-		if outboundAppRoleAssignmentTransitPaths, err := azureanalysis.FetchAppRoleAssignmentsTransitPaths(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound); err != nil {
+		if outboundAppRoleAssignmentTransitPaths, err := azure.FetchAppRoleAssignmentsTransitPaths(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound); err != nil {
 			t.Fatal(err)
 		} else {
 			for _, path := range outboundAppRoleAssignmentTransitPaths.Paths() {
 				for _, edge := range path.Edges {
-					assert.Subset(t, []graph.Kind{azure.AZMGAddOwner, azure.AZMGAddSecret, azure.AZMGGrantRole}, []graph.Kind{edge.Kind})
+					assert.Subset(t, []graph.Kind{graphAzure.AZMGAddOwner, graphAzure.AZMGAddSecret, graphAzure.AZMGGrantRole}, []graph.Kind{edge.Kind})
 				}
 			}
 		}
@@ -441,36 +438,36 @@ func TestAZMGServicePrincipalEndpointReadWriteAll(t *testing.T) {
 		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-		if outboundAbusableAppRoleAssignments, err := azureanalysis.FetchAbusableAppRoleAssignments(tx, harness.AZMGServicePrincipalEndpointReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
+		if outboundAbusableAppRoleAssignments, err := azure.FetchAbusableAppRoleAssignments(tx, harness.AZMGServicePrincipalEndpointReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, outboundAbusableAppRoleAssignments.Contains(harness.AZMGServicePrincipalEndpointReadWriteAllHarness.MicrosoftGraph))
 		}
 
-		if inboundAbusableAppRoleAssignments, err := azureanalysis.FetchAbusableAppRoleAssignments(tx, harness.AZMGServicePrincipalEndpointReadWriteAllHarness.MicrosoftGraph, graph.DirectionInbound, 0, 0); err != nil {
+		if inboundAbusableAppRoleAssignments, err := azure.FetchAbusableAppRoleAssignments(tx, harness.AZMGServicePrincipalEndpointReadWriteAllHarness.MicrosoftGraph, graph.DirectionInbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, inboundAbusableAppRoleAssignments.Contains(harness.AZMGServicePrincipalEndpointReadWriteAllHarness.ServicePrincipal))
 		}
 
-		if outboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGServicePrincipalEndpointReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
+		if outboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGServicePrincipalEndpointReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, outboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGServicePrincipalEndpointReadWriteAllHarness.ServicePrincipalB))
 		}
 
-		if outboundAppRoleAssignmentTransitNodes, err := azureanalysis.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGServicePrincipalEndpointReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
+		if outboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGServicePrincipalEndpointReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
 			t.Fatal(err)
 		} else {
 			assert.True(t, outboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGServicePrincipalEndpointReadWriteAllHarness.MicrosoftGraph))
 		}
 
-		if outboundAppRoleAssignmentTransitPaths, err := azureanalysis.FetchAppRoleAssignmentsTransitPaths(tx, harness.AZMGServicePrincipalEndpointReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound); err != nil {
+		if outboundAppRoleAssignmentTransitPaths, err := azure.FetchAppRoleAssignmentsTransitPaths(tx, harness.AZMGServicePrincipalEndpointReadWriteAllHarness.ServicePrincipal, graph.DirectionOutbound); err != nil {
 			t.Fatal(err)
 		} else {
 			for _, path := range outboundAppRoleAssignmentTransitPaths.Paths() {
 				for _, edge := range path.Edges {
-					assert.Equal(t, azure.AZMGAddOwner, edge.Kind)
+					assert.Equal(t, graphAzure.AZMGAddOwner, edge.Kind)
 				}
 			}
 		}
@@ -500,13 +497,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", appObjectID)
 
-			app, err := azureanalysis.ApplicationEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, appObjectID, false)
+			app, err := azure.ApplicationEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, appObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.Application.Properties.Get(common.ObjectID.String()).Any(), app.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, app.InboundObjectControl)
 
-			app, err = azureanalysis.ApplicationEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, appObjectID, true)
+			app, err = azure.ApplicationEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, appObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, app.InboundObjectControl)
@@ -523,13 +520,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", deviceObjectID)
 
-			device, err := azureanalysis.DeviceEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, deviceObjectID, false)
+			device, err := azure.DeviceEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, deviceObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.Device.Properties.Get(common.ObjectID.String()).Any(), device.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, device.InboundObjectControl)
 
-			device, err = azureanalysis.DeviceEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, deviceObjectID, true)
+			device, err = azure.DeviceEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, deviceObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, device.InboundObjectControl)
@@ -546,13 +543,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", groupObjectID)
 
-			group, err := azureanalysis.GroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, false)
+			group, err := azure.GroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.Group.Properties.Get(common.ObjectID.String()).Any(), group.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, group.InboundObjectControl)
 
-			group, err = azureanalysis.GroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, true)
+			group, err = azure.GroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, group.InboundObjectControl)
@@ -569,13 +566,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", groupObjectID)
 
-			group, err := azureanalysis.ManagementGroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, false)
+			group, err := azure.ManagementGroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.ManagementGroup.Properties.Get(common.ObjectID.String()).Any(), group.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, group.InboundObjectControl)
 
-			group, err = azureanalysis.ManagementGroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, true)
+			group, err = azure.ManagementGroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, group.InboundObjectControl)
@@ -592,13 +589,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", groupObjectID)
 
-			group, err := azureanalysis.ResourceGroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, false)
+			group, err := azure.ResourceGroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.ResourceGroup.Properties.Get(common.ObjectID.String()).Any(), group.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, group.InboundObjectControl)
 
-			group, err = azureanalysis.ResourceGroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, true)
+			group, err = azure.ResourceGroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, group.InboundObjectControl)
@@ -615,13 +612,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", keyVaultObjectID)
 
-			keyVault, err := azureanalysis.KeyVaultEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, keyVaultObjectID, false)
+			keyVault, err := azure.KeyVaultEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, keyVaultObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.KeyVault.Properties.Get(common.ObjectID.String()).Any(), keyVault.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, keyVault.InboundObjectControl)
 
-			keyVault, err = azureanalysis.KeyVaultEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, keyVaultObjectID, true)
+			keyVault, err = azure.KeyVaultEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, keyVaultObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, keyVault.InboundObjectControl)
@@ -638,13 +635,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", roleObjectID)
 
-			role, err := azureanalysis.RoleEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, roleObjectID, false)
+			role, err := azure.RoleEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, roleObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.Role.Properties.Get(common.ObjectID.String()).Any(), role.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, role.ActiveAssignments)
 
-			role, err = azureanalysis.RoleEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, roleObjectID, true)
+			role, err = azure.RoleEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, roleObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, role.ActiveAssignments)
@@ -656,20 +653,20 @@ func TestEntityDetails(t *testing.T) {
 			return nil
 		}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-			postProcessingStats, err := azureanalysis.AppRoleAssignments(context.Background(), testContext.Graph.Database)
+			postProcessingStats, err := azure.AppRoleAssignments(context.Background(), testContext.Graph.Database)
 			assert.Nil(t, err)
-			assert.NotNil(t, postProcessingStats.RelationshipsCreated[azure.AddSecret])
-			assert.Equal(t, 4, int(*postProcessingStats.RelationshipsCreated[azure.AddSecret]))
+			assert.NotNil(t, postProcessingStats.RelationshipsCreated[graphAzure.AddSecret])
+			assert.Equal(t, 4, int(*postProcessingStats.RelationshipsCreated[graphAzure.AddSecret]))
 
 			// Validate that the AZAddSecret edges were created
 			addSecretEdges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-				return query.Kind(query.Relationship(), azure.AddSecret)
+				return query.Kind(query.Relationship(), graphAzure.AddSecret)
 			}))
 			assert.Nil(t, err)
 			assert.Len(t, addSecretEdges, 4)
 
 			for _, edge := range addSecretEdges {
-				assert.Equal(t, azure.AddSecret, edge.Kind)
+				assert.Equal(t, graphAzure.AddSecret, edge.Kind)
 				assert.True(t, slices.Contains([]graph.ID{harness.AZAddSecretHarness.AppAdminRole.ID, harness.AZAddSecretHarness.CloudAppAdminRole.ID}, edge.StartID))
 				assert.True(t, slices.Contains([]graph.ID{harness.AZAddSecretHarness.AZApp.ID, harness.AZAddSecretHarness.AZServicePrincipal.ID}, edge.EndID))
 			}
@@ -685,14 +682,14 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", servicePrincipalObjectID)
 
-			servicePrincipal, err := azureanalysis.ServicePrincipalEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, servicePrincipalObjectID, false)
+			servicePrincipal, err := azure.ServicePrincipalEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, servicePrincipalObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.ServicePrincipal.Properties.Get(common.ObjectID.String()).Any(), servicePrincipal.Properties[common.ObjectID.String()])
-			assert.Equal(t, harness.AZEntityPanelHarness.Application.Properties.Get(common.ObjectID.String()).Any(), servicePrincipal.Properties[azure.AppID.String()])
+			assert.Equal(t, harness.AZEntityPanelHarness.Application.Properties.Get(common.ObjectID.String()).Any(), servicePrincipal.Properties[graphAzure.AppID.String()])
 			assert.Equal(t, 0, servicePrincipal.InboundObjectControl)
 
-			servicePrincipal, err = azureanalysis.ServicePrincipalEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, servicePrincipalObjectID, true)
+			servicePrincipal, err = azure.ServicePrincipalEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, servicePrincipalObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, servicePrincipal.InboundObjectControl)
@@ -708,13 +705,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", subscriptionObjectID)
 
-			subscription, err := azureanalysis.SubscriptionEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, subscriptionObjectID, false)
+			subscription, err := azure.SubscriptionEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, subscriptionObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.Subscription.Properties.Get(common.ObjectID.String()).Any(), subscription.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, subscription.InboundObjectControl)
 
-			subscription, err = azureanalysis.SubscriptionEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, subscriptionObjectID, true)
+			subscription, err = azure.SubscriptionEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, subscriptionObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, subscription.InboundObjectControl)
@@ -730,13 +727,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", tenantObjectID)
 
-			tenant, err := azureanalysis.TenantEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, tenantObjectID, false)
+			tenant, err := azure.TenantEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, tenantObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.Tenant.Properties.Get(common.ObjectID.String()).Any(), tenant.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, tenant.InboundObjectControl)
 
-			tenant, err = azureanalysis.TenantEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, tenantObjectID, true)
+			tenant, err = azure.TenantEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, tenantObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, tenant.InboundObjectControl)
@@ -752,13 +749,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", userObjectID)
 
-			user, err := azureanalysis.UserEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, userObjectID, false)
+			user, err := azure.UserEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, userObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.User.Properties.Get(common.ObjectID.String()).Any(), user.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, user.OutboundObjectControl)
 
-			user, err = azureanalysis.UserEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, userObjectID, true)
+			user, err = azure.UserEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, userObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, user.OutboundObjectControl)
@@ -774,13 +771,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", vmObjectID)
 
-			vm, err := azureanalysis.VMEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, vmObjectID, false)
+			vm, err := azure.VMEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, vmObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.VM.Properties.Get(common.ObjectID.String()).Any(), vm.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, vm.InboundObjectControl)
 
-			vm, err = azureanalysis.VMEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, vmObjectID, true)
+			vm, err = azure.VMEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, vmObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, vm.InboundObjectControl)
@@ -791,7 +788,7 @@ func TestEntityDetails(t *testing.T) {
 			harness.AZInboundControlHarness.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-			paths, err := azureanalysis.FetchInboundEntityObjectControlPaths(tx, harness.AZInboundControlHarness.ControlledAZUser)
+			paths, err := azure.FetchInboundEntityObjectControlPaths(tx, harness.AZInboundControlHarness.ControlledAZUser)
 			require.Nil(t, err)
 			nodes := paths.AllNodes().IDs()
 			require.Equal(t, 8, len(nodes))
@@ -811,7 +808,7 @@ func TestEntityDetails(t *testing.T) {
 			harness.AZInboundControlHarness.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-			control, err := azureanalysis.FetchInboundEntityObjectControllers(tx, harness.AZInboundControlHarness.ControlledAZUser, 0, 0)
+			control, err := azure.FetchInboundEntityObjectControllers(tx, harness.AZInboundControlHarness.ControlledAZUser, 0, 0)
 			require.Nil(t, err)
 			nodes := control.IDs()
 			require.Equal(t, 7, len(nodes))
@@ -824,7 +821,7 @@ func TestEntityDetails(t *testing.T) {
 			require.Contains(t, nodes, harness.AZInboundControlHarness.AZUserA.ID)
 			require.Contains(t, nodes, harness.AZInboundControlHarness.AZUserB.ID)
 			require.Contains(t, nodes, harness.AZInboundControlHarness.AZTenant.ID)
-			control, err = azureanalysis.FetchInboundEntityObjectControllers(tx, harness.AZInboundControlHarness.ControlledAZUser, 0, 1)
+			control, err = azure.FetchInboundEntityObjectControllers(tx, harness.AZInboundControlHarness.ControlledAZUser, 0, 1)
 			require.Nil(t, err)
 			require.Equal(t, 1, control.Len())
 		})
