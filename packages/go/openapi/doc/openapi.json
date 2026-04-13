@@ -19317,6 +19317,7 @@
                 "readOnly": true
               },
               "created_by": {
+                "description": "The ID of the user who created the token",
                 "readOnly": true,
                 "allOf": [
                   {
