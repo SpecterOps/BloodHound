@@ -102,7 +102,8 @@ const CypherSearchInner = ({
         onSuccess: (data) => {
             if (isGraphResponse(data) && Object.keys(data.data.nodes || {}).length > 1) {
                 clearSelectedItem();
-                onExploreMenuCollapse();
+                setShowCommonQueries(false); // collapse saved queries
+                onExploreMenuCollapse(); // collapse spc menu
             }
         },
     });

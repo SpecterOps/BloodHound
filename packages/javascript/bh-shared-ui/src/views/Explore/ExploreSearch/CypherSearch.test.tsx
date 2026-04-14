@@ -183,7 +183,7 @@ describe('CypherSearch', () => {
             server.use(rest.post('/api/v2/graphs/cypher', (_req, res, ctx) => res(ctx.json(response))));
         };
 
-        it('closes saved queries panel and entity info panel when a cypher query returns multiple nodes', async () => {
+        it('closes saved queries panel and clears selected item when a cypher query returns multiple nodes', async () => {
             const { screen, user } = await setup(cypherSearchState, cypherSearchRoute, true);
 
             const toggleButton = screen.getByTestId('common-queries-toggle');
@@ -200,6 +200,9 @@ describe('CypherSearch', () => {
             await user.click(screen.getByRole('button', { name: /run cypher query/i }));
 
             expect(mockClearSelectedItem).toHaveBeenCalled();
+            await waitFor(() =>
+                expect(screen.getByTestId('common-queries-toggle')).toHaveAttribute('aria-expanded', 'false')
+            );
             expect(mockOnExploreMenuCollapse).toHaveBeenCalled();
         });
 
