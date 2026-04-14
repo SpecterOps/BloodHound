@@ -40,30 +40,23 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
     const hiddenEdge = selectedItem?.includes('HIDDEN') && selectedItemType === 'edge';
 
     return (
-        <div className='flex justify-between items-center text-sm font-bold pr-4'>
-            {selectedItem ? (
-                <Icon
-                    className='h-10 box-border p-4 text-contrast'
-                    onClick={clearSelectedItem}
-                    tip='Clear selected item'>
-                    <FontAwesomeIcon icon={faRemove} />
-                </Icon>
-            ) : (
-                <div className='w-3' />
-            )}
-
-            {hiddenEdge && <HiddenEntityIcon />}
-
-            <h6 data-testid='explore_edge-information-pane_header-text' className='text-nowrap leading-10 grow ml-2'>
-                {name}
-            </h6>
-
+        <div className='flex justify-between items-center text-sm font-bold'>
             <Icon
                 tip='Collapse All'
                 onClick={handleCollapseAll}
-                className='h-10 box-border text-contrast'
+                className='h-10 box-border text-contrast p-4'
                 data-testid='explore_edge-information-pane_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />
+            </Icon>
+
+            {hiddenEdge && <HiddenEntityIcon />}
+
+            <h6 data-testid='explore_edge-information-pane_header-text' className='text-nowrap leading-10 grow'>
+                {name}
+            </h6>
+
+            <Icon className='h-10 box-border p-4 text-contrast' onClick={clearSelectedItem} tip='Clear selected item'>
+                <FontAwesomeIcon icon={faRemove} />
             </Icon>
         </div>
     );

@@ -22,6 +22,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -109,13 +110,12 @@ type GraphSchemaNodeKind struct {
 
 type GraphSchemaNodeKindMap map[string]GraphSchemaNodeKind
 
-func (s GraphSchemaNodeKindMap) ToKindsMap() map[graph.Kind]bool {
-	var kindsMap = make(map[graph.Kind]bool)
+func (s GraphSchemaNodeKindMap) ToKindsMap() graphschema.ValidPrimaryKinds {
+	var kindsMap = make(graphschema.ValidPrimaryKinds)
 	for _, schemaNodeKind := range s {
-		kindsMap[graph.StringKind(schemaNodeKind.Name)] = true
+		kindsMap[schemaNodeKind.ToKind()] = true
 	}
 	return kindsMap
-
 }
 
 func (s GraphSchemaNodeKind) ToKind() graph.Kind {

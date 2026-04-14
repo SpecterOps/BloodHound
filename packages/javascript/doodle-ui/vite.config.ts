@@ -18,8 +18,8 @@ import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
-
 // https://vitejs.dev/config/
+
 export default defineConfig({
     plugins: [react(), dts({ rollupTypes: true, exclude: ['**/*.stories.{ts,tsx}'] })],
     build: {
@@ -34,6 +34,7 @@ export default defineConfig({
     test: {
         globals: true,
         environment: 'jsdom',
+        setupFiles: ['./src/setupTests.ts'],
         testTimeout: 60000, // 1 minute,
         clearMocks: true,
     },

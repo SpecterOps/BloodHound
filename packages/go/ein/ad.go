@@ -23,7 +23,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -234,7 +233,7 @@ func getBaseProperties(item IngestBase, ingestTime time.Time) map[string]any {
 // This function is to support our new method of doing Owns edges and makes older data sets backwards compatible
 func convertOwnsEdgeToProperty(item IngestBase, itemProps map[string]any) {
 	for _, ace := range item.Aces {
-		if rightName, err := analysis.ParseKind(ace.RightName); err != nil {
+		if rightName, err := ParseKind(ace.RightName); err != nil {
 			continue
 		} else if rightName.Is(ad.Owns) || rightName.Is(ad.OwnsRaw) {
 			itemProps[ad.OwnerSid.String()] = ace.PrincipalSID
@@ -453,7 +452,7 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 			continue
 		}
 
-		if rightKind, err := analysis.ParseKind(ace.RightName); err != nil {
+		if rightKind, err := ParseKind(ace.RightName); err != nil {
 			slog.Error(
 				"Error during ParseACEData",
 				attr.Error(err),
@@ -665,7 +664,7 @@ func convertSPNData(spns []SPNTarget, sourceID string) []IngestibleRelationship 
 	converted := make([]IngestibleRelationship, 0, len(spns))
 
 	for _, s := range spns {
-		if kind, err := analysis.ParseKind(s.Service); err != nil {
+		if kind, err := ParseKind(s.Service); err != nil {
 			slog.Error(
 				"Error during convertSPNData",
 				attr.Error(err),

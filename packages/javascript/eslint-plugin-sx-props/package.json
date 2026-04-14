@@ -3,6 +3,7 @@
   "type": "module",
   "main": "index.cjs",
   "scripts": {
+    "audit": "yarn npm audit --recursive",
     "lint": "eslint --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "test": "echo \"Warning: no tests available for this package\""
   },

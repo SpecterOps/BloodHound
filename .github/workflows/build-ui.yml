@@ -42,17 +42,17 @@ jobs:
         run: |
           npm install --global yarn
 
-      - name: Install Deps
+      - name: Install Dependencies
         run: |
           cd cmd/ui && yarn
+
+      - name: Audit Dependencies
+        run: |
+          yarn audit
 
       - name: Run eslint
         run: |
           yarn lint
-
-      - name: Format js-client-library with Prettier
-        run: |
-          cd packages/javascript/js-client-library && yarn format && cd ../bh-shared-ui/ && yarn format && cd ../../../cmd/ui/ && yarn format
 
       - name: Run Build
         run: |
