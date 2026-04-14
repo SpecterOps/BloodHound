@@ -1970,4 +1970,5 @@ PostProcessedRelationships: [
 	CoerceAndRelayNTLMToLDAPS,
 	GPOAppliesTo,
 	CanApplyGPO,
+	HasTrustKeys,
 ]
