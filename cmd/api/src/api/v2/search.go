@@ -101,13 +101,13 @@ func graphNodeToSearchResult(node *graph.Node, primaryDisplayKinds graphschema.P
 	}
 }
 
-// getSearchableNodeKinds returns the kinds that should be searched based on the OpenGraphSearch feature flag and the valid primary kinds.
+// getSearchableNodeKinds returns the kinds that should be searched based on the OpenGraphSearch feature flag and the primary display kinds.
 func getSearchableNodeKinds(openGraphSearchEnabled bool, primaryDisplayKinds graphschema.PrimaryDisplayKinds, typeParams graph.Kinds) (graph.Kinds, error) {
 	var (
 		searchableKinds                graph.Kinds
 		validKinds                     graphschema.PrimaryDisplayKinds
 		emptyParams                    = len(typeParams) == 0
-		invalidParamError              = fmt.Errorf("no valid primary kinds found for search types: %v", typeParams)
+		invalidParamError              = fmt.Errorf("no primary display kinds found for search types: %v", typeParams)
 		kindsShouldNotBeConstrained    = emptyParams && openGraphSearchEnabled
 		kindsConstrainedToDefaultKinds = emptyParams && !openGraphSearchEnabled
 	)

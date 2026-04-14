@@ -83,7 +83,7 @@ func graphRelatedEntityType(request *http.Request, db database.Database, graphDb
 
 	primaryDisplayKinds, err := db.GetPrimaryDisplayKinds(request.Context())
 	if err != nil {
-		return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching valid primary kinds: %v", err), request)
+		return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching primary display kinds: %v", err), request)
 	}
 
 	switch relatedEntityType := azure.RelatedEntityType(entityType); relatedEntityType {
@@ -367,7 +367,7 @@ func (s *Resources) GetAZRelatedEntities(ctx context.Context, response http.Resp
 func GetAZEntityInformation(ctx context.Context, db database.Database, graphDb graph.Database, entityType, objectID string, hydrateCounts bool) (any, error) {
 	primaryDisplayKinds, err := db.GetPrimaryDisplayKinds(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching valid primary kinds: %v", err)
+		return nil, fmt.Errorf("error fetching primary display kinds: %v", err)
 	}
 
 	switch entityType {

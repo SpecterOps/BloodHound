@@ -92,7 +92,7 @@ func (s PrimaryDisplayKinds) Add(kindName, iconName, iconColor string, iconType 
 
 // PrimaryDisplayKind - tests if the provided kinds contain a primary or meta kind.
 //
-// It accepts a primaryDisplayKinds map[graph.Kind]bool that contains valid primary kinds.
+// It accepts a primaryDisplayKinds map[graph.Kind]DisplayKind that contains primary display kinds.
 // This allows devs to validate kinds against an OpenGraph extension's kinds.
 // It will return the first meta kind or the first primary kind it finds. During processing, if
 // a source kind is found it will set the base kind to the source kind. If a primary/meta kind is not
