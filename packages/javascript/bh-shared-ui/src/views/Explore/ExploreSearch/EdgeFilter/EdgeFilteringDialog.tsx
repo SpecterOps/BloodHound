@@ -204,6 +204,7 @@ const CategoryListItem = ({
                         return (
                             <SubcategoryListItem
                                 key={subcategory.name}
+                                categoryName={categoryName}
                                 checked={checked}
                                 setChecked={setChecked}
                                 subcategory={subcategory}
@@ -221,6 +222,7 @@ const CategoryListItem = ({
 };
 
 interface SubcategoryListItemProps {
+    categoryName: string;
     subcategory: Subcategory;
     checked: EdgeCheckboxType[];
     setChecked: (checked: EdgeCheckboxType[]) => void;
@@ -231,6 +233,7 @@ interface SubcategoryListItemProps {
 }
 
 const SubcategoryListItem = ({
+    categoryName,
     subcategory,
     checked,
     setChecked,
@@ -241,7 +244,8 @@ const SubcategoryListItem = ({
 }: SubcategoryListItemProps) => {
     const { name, edgeTypes } = subcategory;
 
-    const subcategoryFilter = (element: EdgeCheckboxType) => element.subcategory === name;
+    const subcategoryFilter = (element: EdgeCheckboxType) =>
+        element.category === categoryName && element.subcategory === name;
 
     const isSearching = searchQuery.trim().length > 0;
 
@@ -308,21 +312,22 @@ const EdgesView = ({ edgeTypes, checked, setChecked, searchQuery = '' }: EdgesVi
     };
 
     return (
-        <ul className='p-2 rounded-lg list-none'>
+        <ul className='p-2 rounded-lg list-none flex flex-wrap'>
             {[...edgeTypes]
                 .sort((a, b) => a.localeCompare(b))
                 .map((edgeType, index) => {
                     const edgeIsChecked = checked.find((element) => element.edgeType === edgeType)?.checked ?? false;
                     return (
-                        <li key={index} className='hover:underline'>
-                            <label className='flex items-center gap-2 cursor-pointer py-0.5'>
+                        <li key={index} className='w-1/2 min-w-0 pr-4'>
+                            <label className='flex items-start gap-2 cursor-pointer py-0.5 hover:underline'>
                                 <Checkbox
                                     aria-label={edgeType}
                                     name={edgeType}
                                     checked={edgeIsChecked}
                                     onCheckedChange={(value) => changeCheckbox(value, edgeType)}
+                                    className='mt-0.5 shrink-0'
                                 />
-                                <span className='text-sm'>
+                                <span className='text-sm break-words min-w-0'>
                                     <HighlightMatch text={edgeType} query={searchQuery} />
                                 </span>
                             </label>

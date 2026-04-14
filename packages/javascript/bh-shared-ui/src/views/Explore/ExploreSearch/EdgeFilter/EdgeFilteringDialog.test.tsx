@@ -259,4 +259,25 @@ describe('Pathfinding', () => {
             expect(position & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
         }
     });
+
+    it('subcategory with duplicate name does not show indeterminate when all its children are unchecked', async () => {
+        const user = userEvent.setup();
+
+        // "Cross Platform" exists under both AD and Azure categories
+        // Uncheck the AD category to uncheck all its children including AD's "Cross Platform"
+        const adCategoryCheckbox = screen.getByRole('checkbox', { name: 'Active Directory' });
+        await user.click(adCategoryCheckbox);
+
+        // Both "Cross Platform" subcategory checkboxes should exist
+        const crossPlatformCheckboxes = screen.getAllByRole('checkbox', { name: 'Cross Platform' });
+        expect(crossPlatformCheckboxes.length).toBe(2);
+
+        // AD's "Cross Platform" (first one) should be unchecked, not indeterminate
+        expect(crossPlatformCheckboxes[0]).not.toBeChecked();
+        expect(crossPlatformCheckboxes[0]).toHaveAttribute('data-state', 'unchecked');
+
+        // Azure's "Cross Platform" (second one) should still be checked
+        expect(crossPlatformCheckboxes[1]).toBeChecked();
+        expect(crossPlatformCheckboxes[1]).toHaveAttribute('data-state', 'checked');
+    });
 });
