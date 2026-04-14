@@ -17,10 +17,9 @@
 package bloodhoundgraph
 
 import (
-	"fmt"
+	"maps"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -31,14 +30,14 @@ const (
 	defaultNodeBackgroundColor = "rgba(255,255,255,0.9)"
 	defaultNodeFontSize        = 14
 	defaultRelationshipColor   = "3a5464"
-	fontAwesomeIconType        = "font-awesome"
-	fontAwesomePrefix          = "fas fa-"
-	defaultUnknownIcon         = "fas fa-question"
 )
 
-func NodeToBloodHoundGraph(validPrimaryKinds graphschema.ValidPrimaryKinds, customNodeKindMap model.CustomNodeKindMap, node *graph.Node) BloodHoundGraphNode {
+func NodeToBloodHoundGraph(graphSchemaNodeValidDisplayKinds model.GraphSchemaNodeKindMap, customNodeKinds model.CustomNodeKindMap, node *graph.Node) BloodHoundGraphNode {
+	validPrimaryKinds := graphSchemaNodeValidDisplayKinds.ToKindsMap()
+	// Add custom node kinds to valid primary kinds
+	maps.Copy(validPrimaryKinds, customNodeKinds.ValidKinds())
 	var (
-		nodeKindLabel       = analysis.GetNodeKindDisplayLabel(validPrimaryKinds, node)
+		nodeKindLabel       = graphschema.GetNodeKindDisplayLabel(validPrimaryKinds, node)
 		name, _             = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
 		bloodHoundGraphNode = BloodHoundGraphNode{
 			BloodHoundGraphItem: &BloodHoundGraphItem{
@@ -57,31 +56,7 @@ func NodeToBloodHoundGraph(validPrimaryKinds graphschema.ValidPrimaryKinds, cust
 		}
 	)
 
-	bloodHoundGraphNode.SetIcon(nodeKindLabel)
-	bloodHoundGraphNode.SetBackground(nodeKindLabel)
-
-	if customNodeKindMap != nil && len(node.Kinds) > 0 {
-		// Custom icon rendering is based off of the first Kind in the Kinds array with a matching icon
-		for _, kind := range node.Kinds {
-			if customNodeConfig, ok := customNodeKindMap[kind.String()]; ok {
-				bloodHoundGraphNode.SetNodeType(kind)
-
-				switch customNodeConfig.Icon.Type {
-				case fontAwesomeIconType:
-					bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
-						Text: fmt.Sprintf("%s%s", fontAwesomePrefix, customNodeConfig.Icon.Name),
-					}
-				default:
-					bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
-						Text: defaultUnknownIcon,
-					}
-				}
-
-				bloodHoundGraphNode.Color = customNodeConfig.Icon.Color
-				break
-			}
-		}
-	}
+	bloodHoundGraphNode.SetFontIcon(nodeKindLabel, graphSchemaNodeValidDisplayKinds, customNodeKinds)
 
 	return bloodHoundGraphNode
 }
@@ -109,7 +84,7 @@ func RelationshipToBloodHoundGraph(rel *graph.Relationship) BloodHoundGraphLink 
 	}
 }
 
-func PathSetToBloodHoundGraph(validPrimaryKinds graphschema.ValidPrimaryKinds, customNodeKindMap model.CustomNodeKindMap, paths graph.PathSet) map[string]any {
+func PathSetToBloodHoundGraph(graphSchemaNodeValidDisplayKinds model.GraphSchemaNodeKindMap, customNodeKinds model.CustomNodeKindMap, paths graph.PathSet) map[string]any {
 	result := make(map[string]any)
 
 	for _, path := range paths.Paths() {
@@ -119,7 +94,7 @@ func PathSetToBloodHoundGraph(validPrimaryKinds graphschema.ValidPrimaryKinds, c
 	}
 
 	for _, node := range paths.AllNodes() {
-		result[node.ID.String()] = NodeToBloodHoundGraph(validPrimaryKinds, customNodeKindMap, node)
+		result[node.ID.String()] = NodeToBloodHoundGraph(graphSchemaNodeValidDisplayKinds, customNodeKinds, node)
 	}
 
 	return result
