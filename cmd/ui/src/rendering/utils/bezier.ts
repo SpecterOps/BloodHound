@@ -132,4 +132,30 @@ export const bezier = {
         const midpoint = bezier.getMidpoint(sourceCoordinates, targetCoordinates);
         return bezier.getOffsetVertex(sourceCoordinates, targetCoordinates, midpoint, height);
     },
+
+    getIntersectionT: (
+        curveEvaluation: (t: number) => Coordinates,
+        target: Coordinates,
+        distance: number,
+        low: number,
+        high: number,
+        iterations: number = 10
+    ): number => {
+        let mid = (low + high) / 2;
+        const targetDistanceSquared = distance * distance;
+
+        for (let i = 0; i < iterations; i++) {
+            mid = (low + high) / 2;
+
+            const coords = curveEvaluation(mid);
+            const actualDistanceSquared = bezier.getDistanceSquared(coords, target);
+
+            if (actualDistanceSquared > targetDistanceSquared) {
+                low = mid;
+            } else {
+                high = mid;
+            }
+        }
+        return mid;
+    },
 };

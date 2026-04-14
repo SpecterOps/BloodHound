@@ -150,15 +150,19 @@ export const GraphEvents = forwardRef(function GraphEvents(
             if (edgeData !== null) {
                 const nodeDisplayData = getEdgeSourceAndTargetDisplayData(edgeData.source, edgeData.target, sigma);
                 if (nodeDisplayData !== null) {
-                    const sourceCoordinates = { x: nodeDisplayData.source.x, y: nodeDisplayData.source.y };
-                    const targetCoordinates = { x: nodeDisplayData.target.x, y: nodeDisplayData.target.y };
+                    const source = { x: nodeDisplayData.source.x, y: nodeDisplayData.source.y };
+                    const target = { x: nodeDisplayData.target.x, y: nodeDisplayData.target.y };
 
                     const height = calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
-                    const control = getControlAtMidpoint(height, sourceCoordinates, targetCoordinates);
+                    const control = getControlAtMidpoint(height, source, target);
 
                     newData.control = control;
                     newData.controlInViewport = sigma.framedGraphToViewport(control);
-                    newData.correctionRatio = (sigma as any).correctionRatio / sigma.getCamera().getState().ratio;
+
+                    const cameraRatio = sigma.getCamera().getState().ratio;
+                    const correctionRatio = (sigma as any).correctionRatio / cameraRatio;
+
+                    newData.correctionRatio = correctionRatio;
                 }
             }
         },

@@ -158,14 +158,43 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
             control = bezier.getControlAtMidpoint(height, start, end);
         }
 
+        const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
+        const correctionRatio = data.correctionRatio || 1;
+
+        const sqrtZoomRatio = 1 / inverseSqrtZoomRatio;
+        const graphSpaceRadius = targetData.size * 2.0 * correctionRatio;
+        const pixelsThickness = Math.max(thickness, 1.7 * sqrtZoomRatio);
+        const graphSpaceArrowLength = pixelsThickness * 3.0 * correctionRatio;
+
+        const height = bezier.calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
+
+        let clamp: number;
+        if (height !== 0) {
+            const evalCurve = (t: number) =>
+                bezier.getCoordinatesAlongQuadraticBezier(sourceData, targetData, control, t);
+
+            const tipT = bezier.getIntersectionT(evalCurve, targetData, graphSpaceRadius, 0.5, 1);
+            const tip = evalCurve(tipT);
+
+            clamp = bezier.getIntersectionT(evalCurve, tip, graphSpaceArrowLength, 0.5, tipT);
+        } else {
+            const lineLength = bezier.getLineLength(sourceData, targetData);
+            clamp = (lineLength - graphSpaceRadius - graphSpaceArrowLength) / lineLength;
+        }
+
         // 2. Get collection of points at some constant resolution distributed on quadratic curve based on
         // starting point, ending point, previously calculated control point
 
         const points = [];
 
-        for (let t = 0; t <= 1; t += RESOLUTION) {
+        for (let t = 0; t <= clamp; t += RESOLUTION) {
             const pointOnCurve = bezier.getCoordinatesAlongQuadraticBezier(start, end, control, t);
             points.push(pointOnCurve);
+        }
+
+        if (points.length < 2) {
+            for (let i = offset * STRIDE, l = i + STRIDE; i < l; i++) this.array[i] = 0;
+            return;
         }
 
         // 3. Loop through each line segment, calculate normals so we can render each segment as two triangles, then
@@ -212,6 +241,34 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
             array[i++] = -vOffset.y;
             array[i++] = -vOffset.x;
             array[i++] = color;
+            array[i++] = 0;
+        }
+
+        // Add one final point at the exact clamp position
+        const finalPoint = bezier.getCoordinatesAlongQuadraticBezier(start, end, control, clamp);
+        const finalNormal = bezier.getNormals(points[points.length - 1], finalPoint);
+        const vOffset = {
+            x: finalNormal.x * thickness,
+            y: -finalNormal.y * thickness,
+        };
+        // First point
+        array[i++] = finalPoint.x;
+        array[i++] = finalPoint.y;
+        array[i++] = vOffset.y;
+        array[i++] = vOffset.x;
+        array[i++] = color;
+        array[i++] = 0;
+
+        // First point flipped
+        array[i++] = finalPoint.x;
+        array[i++] = finalPoint.y;
+        array[i++] = -vOffset.y;
+        array[i++] = -vOffset.x;
+        array[i++] = color;
+        array[i++] = 0;
+
+        // zero out remaining buffer slots to account for arrowhead clamp
+        while (i < POINTS * ATTRIBUTES * (offset + 1)) {
             array[i++] = 0;
         }
     }
