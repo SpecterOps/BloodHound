@@ -266,17 +266,17 @@ func parseIconDefinitionFromNodeKind(nodeKind model.GraphSchemaNodeKind, existin
 		},
 	}
 
-	// preserve existing icon if provided
+	// fallback to existing icon if provided
 	if existingIcon != nil {
 		customNodeKind.Config.Icon = existingIcon.Config.Icon
-	} else {
-		if nodeKind.Icon != "" {
-			customNodeKind.Config.Icon.Name = nodeKind.Icon
-		}
+	}
 
-		if nodeKind.IconColor != "" {
-			customNodeKind.Config.Icon.Color = nodeKind.IconColor
-		}
+	if nodeKind.Icon != "" {
+		customNodeKind.Config.Icon.Name = nodeKind.Icon
+	}
+
+	if nodeKind.IconColor != "" {
+		customNodeKind.Config.Icon.Color = nodeKind.IconColor
 	}
 
 	return customNodeKind
