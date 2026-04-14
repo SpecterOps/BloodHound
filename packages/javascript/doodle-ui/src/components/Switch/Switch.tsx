@@ -48,15 +48,17 @@ const LabelVariants = cva('text-base text-neutral-dark-5 transition-all ease-in-
     },
 });
 
-type SwitchProps = React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root> & {
+type SwitchProps = Omit<React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>, 'checked'> & {
+    checked: boolean;
     label?: string;
     labelPosition?: 'left' | 'right';
 };
 
 const Switch = forwardRef<React.ElementRef<typeof SwitchPrimitives.Root>, SwitchProps>(
     ({ className, disabled, id, label, labelPosition = 'right', ...props }, ref) => {
-        const ariaLabel = label || 'switch';
-        const switchId = React.useId();
+        const ariaLabel = label ?? 'switch';
+        const generatedId = React.useId();
+        const switchId = id ?? generatedId;
 
         return (
             <div className={cn(switchWrapperStyles(), label && 'py-0')}>
@@ -68,7 +70,7 @@ const Switch = forwardRef<React.ElementRef<typeof SwitchPrimitives.Root>, Switch
 
                 <SwitchPrimitives.Root
                     ref={ref}
-                    id={id ?? switchId}
+                    id={switchId}
                     aria-label={!label ? ariaLabel : undefined}
                     className={cn(switchRootStyles(), className)}
                     disabled={disabled}

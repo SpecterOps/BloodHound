@@ -25,10 +25,28 @@ const meta = {
     tags: ['autodocs'],
     // More on argTypes: https://storybook.js.org/docs/api/argtypes
     argTypes: {
+        checked: {
+            control: 'boolean',
+            description: 'The controlled checked state of the switch.',
+            table: {
+                type: { summary: 'boolean' },
+                required: true,
+            },
+        },
+        onCheckedChange: {
+            action: 'checked changed',
+            description: 'Called when the checked state changes.',
+            table: {
+                type: { summary: '(checked: boolean) => void' },
+                required: true,
+            },
+        },
         label: { control: 'text' },
         labelPosition: { options: ['left', 'right'], control: 'select' },
     },
     args: {
+        checked: false,
+        label: 'Label',
         labelPosition: 'right',
     },
     parameters: {
@@ -54,7 +72,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
     args: {
-        defaultChecked: false,
+        checked: false,
     },
     play: async ({ canvasElement, step }) => {
         const canvas = within(canvasElement);
@@ -93,7 +111,7 @@ export const Default: Story = {
 
 export const Checked: Story = {
     args: {
-        defaultChecked: true,
+        checked: true,
     },
 };
 
@@ -110,16 +128,10 @@ export const LeftLabeled: Story = {
     },
 };
 
-export const Disabled: Story = {
-    args: {
-        disabled: true,
-    },
-};
-
 export const DisabledChecked: Story = {
     args: {
         disabled: true,
-        defaultChecked: true,
+        checked: true,
         label: 'Label',
     },
 };
