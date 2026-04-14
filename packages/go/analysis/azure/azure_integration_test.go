@@ -78,7 +78,7 @@ func TestAZAddOwner(t *testing.T) {
 		addOwnerEdges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
 			return query.Kind(query.Relationship(), graphAzure.AddOwner)
 		}))
-		assert.Nil(t, err)
+		require.NoError(t, err)
 		assert.Len(t, addOwnerEdges, 8)
 
 		type edgeKey struct {
