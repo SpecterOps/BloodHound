@@ -16,7 +16,6 @@
 
 import {
     EdgeInfoPane,
-    EntityInfoDataTable,
     EntityInfoDataTableGraphed,
     EntityInfoPanel,
     EntityKinds,
@@ -32,7 +31,7 @@ const GraphItemInformationPanel = () => {
     const { selectedItem, selectedItemQuery } = useExploreSelectedItem();
 
     if (!selectedItem || selectedItemQuery.isLoading) {
-        return <EntityInfoPanel className={defaultClasses} selectedNode={null} DataTable={EntityInfoDataTable} />;
+        return null;
     }
 
     if (selectedItemQuery.isError) {
