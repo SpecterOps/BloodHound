@@ -46,6 +46,7 @@ const WrappedDialog = () => {
             handleCancel={vi.fn()}
             handleApply={vi.fn()}
             handleUpdate={(filters) => setSelectedFilters(filters)}
+            searchClearDelay={0}
         />
     );
 };

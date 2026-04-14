@@ -16,7 +16,16 @@
 
 import { faAnglesDown, faAnglesUp, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogDescription, DialogTitle } from 'doodle-ui';
+import {
+    Button,
+    Checkbox,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogDescription,
+    DialogTitle,
+    Label,
+} from 'doodle-ui';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { SearchInput } from '../../../../components/SearchInput';
 import { BUILTIN_EDGE_CATEGORIES, Category, EdgeCheckboxType, Subcategory } from './edgeCategories';
@@ -28,6 +37,8 @@ interface EdgeFilteringDialogProps {
     handleApply: () => void;
     handleUpdate: (checked: EdgeCheckboxType[]) => void;
     handleCancel: () => void;
+    /** Delay in ms before clearing the search after apply/cancel. Set to 0 in tests. Defaults to 250. */
+    searchClearDelay?: number;
 }
 
 const EdgeFilteringDialog = ({
@@ -36,6 +47,7 @@ const EdgeFilteringDialog = ({
     handleApply,
     handleUpdate,
     handleCancel,
+    searchClearDelay = 250,
 }: EdgeFilteringDialogProps) => {
     const title = 'Path Edge Filtering';
     const description = 'Select the edge types to include in your pathfinding search.';
@@ -43,6 +55,24 @@ const EdgeFilteringDialog = ({
     const [collapseSignal, setCollapseSignal] = useState(0);
     const [expandSignal, setExpandSignal] = useState(0);
     const isSearching = searchQuery.trim().length > 0;
+    const searchClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const clearSearch = () => {
+        if (searchClearDelay > 0) {
+            // the dialog fades out on close so wait a bit before clearing the search state to avoid a flash of changing content
+            searchClearTimerRef.current = setTimeout(() => setSearchQuery(''), searchClearDelay);
+        } else {
+            setSearchQuery('');
+        }
+    };
+
+    useEffect(() => {
+        return () => {
+            if (searchClearTimerRef.current) {
+                clearTimeout(searchClearTimerRef.current);
+            }
+        };
+    }, []);
 
     return (
         <Dialog open={isOpen}>
@@ -93,10 +123,21 @@ const EdgeFilteringDialog = ({
                 </div>
 
                 <DialogActions className='flex justify-end gap-2 pt-4'>
-                    <Button variant='tertiary' onClick={handleCancel}>
+                    <Button
+                        variant='tertiary'
+                        onClick={() => {
+                            handleCancel();
+                            clearSearch();
+                        }}>
                         Cancel
                     </Button>
-                    <Button onClick={handleApply}>Apply</Button>
+                    <Button
+                        onClick={() => {
+                            handleApply();
+                            clearSearch();
+                        }}>
+                        Apply
+                    </Button>
                 </DialogActions>
             </DialogContent>
         </Dialog>
@@ -142,7 +183,7 @@ const CategoryList = ({
     }, [categories, searchQuery]);
 
     return (
-        <ul role='list'>
+        <ul>
             {filteredCategories.map((category: Category) => {
                 const { categoryName } = category;
                 return (
@@ -319,18 +360,22 @@ const EdgesView = ({ edgeTypes, checked, setChecked, searchQuery = '' }: EdgesVi
                     const edgeIsChecked = checked.find((element) => element.edgeType === edgeType)?.checked ?? false;
                     return (
                         <li key={index} className='w-1/2 min-w-0 pr-4'>
-                            <label className='flex items-start gap-2 cursor-pointer py-0.5 hover:underline'>
+                            <div className='flex items-start gap-2'>
                                 <Checkbox
+                                    id={edgeType}
                                     aria-label={edgeType}
                                     name={edgeType}
                                     checked={edgeIsChecked}
                                     onCheckedChange={(value) => changeCheckbox(value, edgeType)}
                                     className='mt-0.5 shrink-0'
                                 />
-                                <span className='text-sm break-words min-w-0'>
+                                <Label
+                                    size={'small'}
+                                    htmlFor={edgeType}
+                                    className='break-words min-w-0 w-full cursor-pointer hover:underline'>
                                     <HighlightMatch text={edgeType} query={searchQuery} />
-                                </span>
-                            </label>
+                                </Label>
+                            </div>
                         </li>
                     );
                 })}
@@ -441,7 +486,12 @@ const IndeterminateListItem = ({
                     <FontAwesomeIcon icon={isExpanded ? faChevronUp : faChevronDown} />
                 </button>
             </div>
-            {isExpanded && collapsibleContent}
+            <div
+                className='grid transition-[grid-template-rows] duration-200 ease-out'
+                aria-hidden={!isExpanded}
+                style={{ gridTemplateRows: isExpanded ? '1fr' : '0fr' }}>
+                <div className='overflow-hidden min-h-0'>{collapsibleContent}</div>
+            </div>
         </li>
     );
 };
