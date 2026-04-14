@@ -199,10 +199,6 @@ func isValidCollectorSemver(parsedVersion *semver.Version, clientType ClientType
 	}
 
 	if clientType == ClientTypeAzureHound {
-		if parsedVersion.Prerelease() != "" && parsedVersion.Metadata() != "" {
-			return false
-		}
-
 		return parsedVersion.Metadata() == "" || parsedVersion.Metadata() == "docker"
 	}
 
