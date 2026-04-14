@@ -74,7 +74,7 @@ jobs:
           go tool stbernard show -no-version
 
       - name: Fail with helpful message
-        if: failure()
+        if: failure() && steps.show.outcome == 'failure'
         run: |
           echo "::error::Code generation check failed!"
           echo ""
