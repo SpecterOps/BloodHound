@@ -140,9 +140,10 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
         const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
         const correctionRatio = data.correctionRatio || 1;
         const thickness = data.size || 1;
-        // const radius = getNodeRadius(targetData.highlighted, inverseSqrtZoomRatio, targetData.size);
         const color = floatColor(data.color);
 
+        // The magic numbers are hardcoded constants from the existing GLSL shaders for the arrowhead, they are needed here
+        // to calculate the correct arrowhead length.
         const sqrtZoomRatio = 1 / inverseSqrtZoomRatio;
         const graphSpaceRadius = targetData.size * 2.0 * correctionRatio;
         const pixelsThickness = Math.max(thickness, 1.7 * sqrtZoomRatio);
@@ -151,7 +152,13 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
         const height = bezier.calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
         const control = bezier.getControlAtMidpoint(height, sourceData, targetData);
 
+        // The following approximates two points along the curved edge via binary search -- first, the intersection between the
+        // curve and the node's edge, where the tip of the arrowhead should be placed. Then we use that point in our second
+        // search to find a point on the curve exactly one arrowhead length away, where the center of the arrowhead's base should
+        // be placed. We duplicate this behavior in our edge rendering program (to find a clamp value) rather than pass this
+        // calculation down from the reducer to prevent unneccessary curve evaluations when panning/zooming.
         let tip: Coordinates, base: Coordinates, radius: number;
+        console.log(height);
         if (height !== 0) {
             const evalCurve = (t: number) =>
                 bezier.getCoordinatesAlongQuadraticBezier(sourceData, targetData, control, t);
@@ -163,6 +170,8 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
             base = evalCurve(baseT);
             radius = 0;
         } else {
+            // If height === 0, this is the straight line in the center of an odd-numbered edge group and all our calculations are
+            // much simpler.
             tip = targetData;
             base = sourceData;
             radius = getNodeRadius(targetData.highlighted, inverseSqrtZoomRatio, targetData.size);

@@ -158,9 +158,13 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
             control = bezier.getControlAtMidpoint(height, start, end);
         }
 
+        // 2. Estimate a clamp t-value for the edge. This should cut off at the last step of RESOLUTION before the edge
+        // arrowhead's base -- we'll add a final point at the exact clamp position to close the gap
         const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
         const correctionRatio = data.correctionRatio || 1;
 
+        // The magic numbers are hardcoded constants from the existing GLSL shaders for the arrowhead, they are needed here
+        // to calculate the correct arrowhead length.
         const sqrtZoomRatio = 1 / inverseSqrtZoomRatio;
         const graphSpaceRadius = targetData.size * 2.0 * correctionRatio;
         const pixelsThickness = Math.max(thickness, 1.7 * sqrtZoomRatio);
@@ -170,6 +174,7 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
 
         let clamp: number;
         if (height !== 0) {
+            // This matches the binary search approach in the edge.curvedArrowHead program to find the approximate t at the arrow's base
             const evalCurve = (t: number) =>
                 bezier.getCoordinatesAlongQuadraticBezier(sourceData, targetData, control, t);
 
@@ -178,12 +183,14 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
 
             clamp = bezier.getIntersectionT(evalCurve, tip, graphSpaceArrowLength, 0.5, tipT);
         } else {
+            // Like in the arrowhead program, this calculation is much simpler when the edge is a straight line.
             const lineLength = bezier.getLineLength(sourceData, targetData);
             clamp = (lineLength - graphSpaceRadius - graphSpaceArrowLength) / lineLength;
         }
 
-        // 2. Get collection of points at some constant resolution distributed on quadratic curve based on
-        // starting point, ending point, previously calculated control point
+        // 3. Get collection of points at some constant resolution distributed on quadratic curve based on
+        // starting point, ending point, previously calculated control point. Only fill our buffers up to the
+        // previously calculated clamp value.
 
         const points = [];
 
@@ -197,7 +204,7 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
             return;
         }
 
-        // 3. Loop through each line segment, calculate normals so we can render each segment as two triangles, then
+        // 4. Loop through each line segment, calculate normals so we can render each segment as two triangles, then
         // add data to this.array
 
         let i = POINTS * ATTRIBUTES * offset;
@@ -244,7 +251,7 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
             array[i++] = 0;
         }
 
-        // Add one final point at the exact clamp position
+        // Add one final point at the exact clamp position. makes up any gap between the edge's last full segment and the arrowhead
         const finalPoint = bezier.getCoordinatesAlongQuadraticBezier(start, end, control, clamp);
         const finalNormal = bezier.getNormals(points[points.length - 1], finalPoint);
         const vOffset = {
