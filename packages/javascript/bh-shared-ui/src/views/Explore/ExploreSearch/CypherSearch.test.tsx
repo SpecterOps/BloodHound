@@ -23,12 +23,7 @@ import { render, waitFor } from '../../../test-utils';
 import { mockCodemirrorLayoutMethods } from '../../../utils';
 import CypherSearch from './CypherSearch';
 
-const mockClearSelectedItem = vi.fn(() => {
-    const url = new URL(window.location.href);
-    url.searchParams.delete('selectedItem');
-    url.searchParams.delete('expandedPanelSections');
-    window.history.replaceState({}, '', url.toString());
-});
+const mockClearSelectedItem = vi.fn();
 
 vi.mock('../../../hooks', async () => {
     const actual = await vi.importActual('../../../hooks');
@@ -65,6 +60,7 @@ const INCOMPLETE_CYPHER = 'match (n:';
 
 describe('CypherSearch', () => {
     const testPerformSearch = vi.fn();
+    const mockOnExploreMenuCollapse = vi.fn();
 
     const testState = {
         cypherQuery: '',
@@ -72,24 +68,20 @@ describe('CypherSearch', () => {
         performSearch: testPerformSearch,
     };
     const setup = async (state = testState, route = '/', disableQueryLimit = false) => {
-        const autoRun = true;
-        const handleAutoRun = () => {};
-        const testOnRunSearchClick = vi.fn();
-        const handleDisableQueryLimit = () => {};
-
         const screen = render(
             <CypherSearch
                 cypherSearchState={state}
-                autoRun={autoRun}
-                setAutoRun={handleAutoRun}
+                autoRun={true}
+                setAutoRun={() => {}}
                 disableQueryLimit={disableQueryLimit}
-                setDisableQueryLimit={handleDisableQueryLimit}
+                setDisableQueryLimit={() => {}}
+                onExploreMenuCollapse={mockOnExploreMenuCollapse}
             />,
             { route }
         );
         const user = userEvent.setup();
 
-        return { state, screen, user, testOnRunSearchClick };
+        return { state, screen, user };
     };
 
     const server = setupServer(
@@ -100,61 +92,27 @@ describe('CypherSearch', () => {
                 })
             );
         }),
-        rest.get('/api/v2/features', async (req, res, ctx) => {
-            return res(
-                ctx.json({
-                    data: [{ id: 1, key: 'tier_management_engine', enabled: true }],
-                })
-            );
-        }),
-        rest.get('/api/v2/config', async (req, res, ctx) => {
-            return res(
+        rest.get('/api/v2/features', (_req, res, ctx) =>
+            res(ctx.json({ data: [{ id: 1, key: 'tier_management_engine', enabled: true }] }))
+        ),
+        rest.get('/api/v2/config', (_req, res, ctx) =>
+            res(
                 ctx.json({
                     data: [
                         {
                             key: 'analysis.tiering',
                             name: 'Multi-Tier Analysis Configuration',
-                            value: {
-                                tier_limit: 3,
-                                label_limit: 10,
-                                multi_tier_analysis_enabled: true,
-                            },
+                            value: { tier_limit: 3, label_limit: 10, multi_tier_analysis_enabled: true },
                             id: 8,
                         },
                     ],
                 })
-            );
-        }),
-        rest.get('/api/v2/saved-queries', async (req, res, ctx) => {
-            return res(
-                ctx.json({
-                    data: [],
-                })
-            );
-        }),
-        rest.get('/api/v2/self', async (req, res, ctx) => {
-            return res(
-                ctx.json({
-                    data: {},
-                })
-            );
-        }),
-        rest.get('/api/v2/asset-group-tags', async (req, res, ctx) => {
-            return res(
-                ctx.json({
-                    data: [],
-                })
-            );
-        }),
-        rest.get('/api/v2/bloodhound-users-minimal', (req, res, ctx) => {
-            return res(
-                ctx.json({
-                    data: {
-                        users: [],
-                    },
-                })
-            );
-        })
+            )
+        ),
+        rest.get('/api/v2/saved-queries', (_req, res, ctx) => res(ctx.json({ data: [] }))),
+        rest.get('/api/v2/self', (_req, res, ctx) => res(ctx.json({ data: {} }))),
+        rest.get('/api/v2/asset-group-tags', (_req, res, ctx) => res(ctx.json({ data: [] }))),
+        rest.get('/api/v2/bloodhound-users-minimal', (_req, res, ctx) => res(ctx.json({ data: { users: [] } })))
     );
 
     beforeAll(() => {
@@ -165,6 +123,7 @@ describe('CypherSearch', () => {
         vi.restoreAllMocks();
         server.resetHandlers();
         mockClearSelectedItem.mockClear();
+        mockOnExploreMenuCollapse.mockClear();
     });
     afterAll(() => {
         server.close();
@@ -217,7 +176,6 @@ describe('CypherSearch', () => {
     });
 
     describe('Minimize explorer page elements when multiple nodes are returned', () => {
-        // node '108' is T1_TONYMONTANA@PHANTOM.CORP — a real node from the mock cypher response
         const cypherSearchState = { ...testState, cypherQuery: CYPHER };
         const cypherSearchRoute = `${CYPHER_SEARCH_ROUTE}&selectedItem=108`;
 
@@ -241,18 +199,12 @@ describe('CypherSearch', () => {
             mockCypherEndpoint(multiNodeGraphResponse);
             await user.click(screen.getByRole('button', { name: /run cypher query/i }));
 
-            // Saved queries panel is closed
-            await waitFor(() =>
-                expect(screen.getByTestId('common-queries-toggle')).toHaveAttribute('aria-expanded', 'false')
-            );
-
-            // Entity info panel is closed
             expect(mockClearSelectedItem).toHaveBeenCalled();
+            expect(mockOnExploreMenuCollapse).toHaveBeenCalled();
         });
 
         it('does not close saved queries panel or entity info panel when search returns zero nodes', async () => {
             mockCypherEndpoint(singleNodeGraphResponse);
-            // selectedItem in URL simulates a previously selected node (entity info panel open)
             const { screen, user } = await setup(cypherSearchState, cypherSearchRoute, true);
 
             const toggleButton = screen.getByTestId('common-queries-toggle');
@@ -270,12 +222,8 @@ describe('CypherSearch', () => {
 
             await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
 
-            // Saved queries panel stayed open
-            expect(screen.getByTestId('common-queries-toggle')).toHaveAttribute('aria-expanded', 'true');
-
-            // Entity info panel stayed open
             expect(mockClearSelectedItem).not.toHaveBeenCalled();
-            await waitFor(() => expect(window.location.search).toContain('selectedItem='));
+            expect(mockOnExploreMenuCollapse).not.toHaveBeenCalled();
         });
 
         it('does not close saved queries panel or entity info panel when search returns one node', async () => {
@@ -297,29 +245,26 @@ describe('CypherSearch', () => {
 
             await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
 
-            // Saved queries panel stayed open
             expect(screen.getByTestId('common-queries-toggle')).toHaveAttribute('aria-expanded', 'true');
-
-            // Entity info panel stayed open
             expect(mockClearSelectedItem).not.toHaveBeenCalled();
-            await waitFor(() => expect(window.location.search).toContain('selectedItem='));
+            expect(mockOnExploreMenuCollapse).not.toHaveBeenCalled();
         });
 
-        it('allows user to reopen saved queries panel after auto-close', async () => {
+        it('calls onExploreMenuCollapse again when user reopens widget and runs another multi-node query', async () => {
             mockCypherEndpoint(singleNodeGraphResponse);
             const { screen, user } = await setup(cypherSearchState, cypherSearchRoute, true);
 
-            const toggleButton = screen.getByTestId('common-queries-toggle');
-            await user.click(toggleButton);
             await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
-            await waitFor(() => expect(toggleButton).toHaveAttribute('aria-expanded', 'true'));
 
             mockCypherEndpoint(multiNodeGraphResponse);
             await user.click(screen.getByRole('button', { name: /run cypher query/i }));
-            await waitFor(() => expect(toggleButton).toHaveAttribute('aria-expanded', 'false'));
+            await waitFor(() => expect(mockOnExploreMenuCollapse).toHaveBeenCalledTimes(1));
 
-            await user.click(toggleButton);
-            expect(toggleButton).toHaveAttribute('aria-expanded', 'true');
+            mockOnExploreMenuCollapse.mockClear();
+
+            mockCypherEndpoint(multiNodeGraphResponse);
+            await user.click(screen.getByRole('button', { name: /run cypher query/i }));
+            await waitFor(() => expect(mockOnExploreMenuCollapse).toHaveBeenCalledTimes(1));
         });
     });
 });

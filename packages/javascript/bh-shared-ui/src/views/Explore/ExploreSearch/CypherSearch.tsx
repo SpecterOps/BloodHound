@@ -55,12 +55,14 @@ const CypherSearchInner = ({
     setAutoRun,
     disableQueryLimit,
     setDisableQueryLimit,
+    onExploreMenuCollapse,
 }: {
     cypherSearchState: CypherSearchState;
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
     disableQueryLimit: boolean;
     setDisableQueryLimit: (timeoutSetting: boolean) => void;
+    onExploreMenuCollapse: () => void;
 }) => {
     const { selectedQuery, saveAction, showSaveQueryDialog, setSelected, setSaveAction, setShowSaveQueryDialog } =
         useSavedQueriesContext();
@@ -99,8 +101,8 @@ const CypherSearchInner = ({
     const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph({
         onSuccess: (data) => {
             if (isGraphResponse(data) && Object.keys(data.data.nodes || {}).length > 1) {
-                setShowCommonQueries(false);
                 clearSelectedItem();
+                onExploreMenuCollapse();
             }
         },
     });
@@ -454,12 +456,14 @@ const CypherSearch = ({
     setAutoRun,
     disableQueryLimit,
     setDisableQueryLimit,
+    onExploreMenuCollapse,
 }: {
     cypherSearchState: CypherSearchState;
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
     disableQueryLimit: boolean;
     setDisableQueryLimit: (timeoutSetting: boolean) => void;
+    onExploreMenuCollapse: () => void;
 }) => {
     return (
         <SavedQueriesProvider>
@@ -469,6 +473,7 @@ const CypherSearch = ({
                 setAutoRun={setAutoRun}
                 disableQueryLimit={disableQueryLimit}
                 setDisableQueryLimit={setDisableQueryLimit}
+                onExploreMenuCollapse={onExploreMenuCollapse}
             />
         </SavedQueriesProvider>
     );
