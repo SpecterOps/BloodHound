@@ -81,7 +81,7 @@ var (
 func graphRelatedEntityType(request *http.Request, db database.Database, graphDb graph.Database, entityType, objectID string) (any, int, *api.ErrorWrapper) {
 	ctx := request.Context()
 
-	primaryDisplayKinds, err := db.GetValidDisplayKinds(request.Context())
+	primaryDisplayKinds, err := db.GetPrimaryDisplayKinds(request.Context())
 	if err != nil {
 		return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching valid primary kinds: %v", err), request)
 	}
@@ -345,7 +345,7 @@ func (s *Resources) GetAZRelatedEntities(ctx context.Context, response http.Resp
 		} else {
 			api.WriteJSONResponse(ctx, data, http.StatusOK, response)
 		}
-	} else if primaryDisplayKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+	} else if primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		if nodes, count, err := listRelatedEntityType(ctx, s.Graph, primaryDisplayKinds, relatedEntityType, objectID, skip, limit); err != nil {
@@ -365,7 +365,7 @@ func (s *Resources) GetAZRelatedEntities(ctx context.Context, response http.Resp
 }
 
 func GetAZEntityInformation(ctx context.Context, db database.Database, graphDb graph.Database, entityType, objectID string, hydrateCounts bool) (any, error) {
-	primaryDisplayKinds, err := db.GetValidDisplayKinds(ctx)
+	primaryDisplayKinds, err := db.GetPrimaryDisplayKinds(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching valid primary kinds: %v", err)
 	}

@@ -63,7 +63,7 @@ func (s *Resources) GetEdgeRelayTargets(response http.ResponseWriter, request *h
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Could not find edge matching criteria: %v", err), request), response)
 	} else if nodeSet, err := ad.GetRelayTargets(request.Context(), s.Graph, edge); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting composition for edge: %v", err), request), response)
-	} else if primaryDisplayKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+	} else if primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		unifiedGraph := model.NewUnifiedGraph()
@@ -101,7 +101,7 @@ func (s *Resources) GetEdgeComposition(response http.ResponseWriter, request *ht
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Could not find edge matching criteria: %v", err), request), response)
 	} else if pathSet, err := ad.GetEdgeCompositionPath(request.Context(), s.Graph, edge); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting composition for edge: %v", err), request), response)
-	} else if primaryDisplayKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+	} else if primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		unifiedGraph := model.NewUnifiedGraph()
@@ -137,7 +137,7 @@ func (s *Resources) GetEdgeACLInheritancePath(response http.ResponseWriter, requ
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Could not find edge matching criteria: %v", err), request), response)
 	} else if pathSet, err := ad.FetchACLInheritancePath(request.Context(), s.Graph, edge); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting ACL inheritance path for edge: %v", err), request), response)
-	} else if primaryDisplayKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+	} else if primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		unifiedGraph := model.NewUnifiedGraph()

@@ -681,7 +681,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 
 	if tags, err := db.GetAssetGroupTagForSelection(ctx); err != nil {
 		errs.Append(err)
-	} else if primaryDisplayKinds, err := db.GetValidDisplayKinds(ctx); err != nil {
+	} else if primaryDisplayKinds, err := db.GetPrimaryDisplayKinds(ctx); err != nil {
 		errs.Append(err)
 	} else {
 		agtParameters := appcfg.GetAGTParameters(ctx, db)

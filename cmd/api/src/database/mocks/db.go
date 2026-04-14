@@ -2155,6 +2155,21 @@ func (mr *MockDatabaseMockRecorder) GetPermission(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermission", reflect.TypeOf((*MockDatabase)(nil).GetPermission), ctx, id)
 }
 
+// GetPrimaryDisplayKinds mocks base method.
+func (m *MockDatabase) GetPrimaryDisplayKinds(ctx context.Context) (graphschema.PrimaryDisplayKinds, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPrimaryDisplayKinds", ctx)
+	ret0, _ := ret[0].(graphschema.PrimaryDisplayKinds)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPrimaryDisplayKinds indicates an expected call of GetPrimaryDisplayKinds.
+func (mr *MockDatabaseMockRecorder) GetPrimaryDisplayKinds(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrimaryDisplayKinds", reflect.TypeOf((*MockDatabase)(nil).GetPrimaryDisplayKinds), ctx)
+}
+
 // GetPrincipalKindsByEnvironmentId mocks base method.
 func (m *MockDatabase) GetPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error) {
 	m.ctrl.T.Helper()
@@ -2665,21 +2680,6 @@ func (m *MockDatabase) GetUserToken(ctx context.Context, userId, tokenId uuid.UU
 func (mr *MockDatabaseMockRecorder) GetUserToken(ctx, userId, tokenId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserToken", reflect.TypeOf((*MockDatabase)(nil).GetUserToken), ctx, userId, tokenId)
-}
-
-// GetValidDisplayKinds mocks base method.
-func (m *MockDatabase) GetValidDisplayKinds(ctx context.Context) (graphschema.PrimaryDisplayKinds, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetValidDisplayKinds", ctx)
-	ret0, _ := ret[0].(graphschema.PrimaryDisplayKinds)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetValidDisplayKinds indicates an expected call of GetValidDisplayKinds.
-func (mr *MockDatabaseMockRecorder) GetValidDisplayKinds(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetValidDisplayKinds", reflect.TypeOf((*MockDatabase)(nil).GetValidDisplayKinds), ctx)
 }
 
 // HasAnalysisRequest mocks base method.

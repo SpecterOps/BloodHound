@@ -103,7 +103,7 @@ func TestResources_CypherQuery(t *testing.T) {
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: false,
 				}, nil)
-				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
+				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
 				mocks.mockGraphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Eq(primaryDisplayKinds), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{
 					Nodes: map[string]model.UnifiedNode{
 						"1": {
@@ -232,7 +232,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
+				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: true,
 				}, nil)
@@ -277,7 +277,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
+				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: false,
 				}, nil)
@@ -322,7 +322,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
+				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: false,
 				}, nil)
@@ -335,7 +335,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: GetValidDisplayKindsError",
+			name: "Error: GetPrimaryDisplayKindsError",
 			buildRequest: func() *http.Request {
 				payload := &v2.CypherQueryPayload{
 					Query:             "query",
@@ -367,7 +367,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
+				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: false,
 				}, nil)
@@ -411,7 +411,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
+				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: false,
 				}, nil)
@@ -470,7 +470,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
+				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: false,
 				}, nil)
@@ -537,7 +537,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
+				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: false,
 				}, nil)
@@ -614,7 +614,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
+				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: false,
 				}, nil)

@@ -57,7 +57,7 @@ func (s Resources) GetPathfindingResult(response http.ResponseWriter, request *h
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: end_node", request), response)
 	} else if paths, err := s.GraphQuery.GetAllShortestPaths(request.Context(), startNodeObjectID, endNodeObjectID, nil); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error: %v", err), request), response)
-	} else if primaryDisplayKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+	} else if primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, paths), http.StatusOK, response)
@@ -147,7 +147,7 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: end_node", request), response)
 	} else if ogExtensionManagementFeatureFlag, err := s.DB.GetFlagByKey(requestContext, appcfg.FeatureOpenGraphExtensionManagement); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if primaryDisplayKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+	} else if primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		if onlyIncludeTraversableKinds {
@@ -284,7 +284,7 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 			api.HandleDatabaseError(request, response, err)
 		} else if nodes, err := s.GraphQuery.SearchByNameOrObjectID(request.Context(), openGraphSearchFeatureFlag.Enabled, searchValue, searchType); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error getting search results: %v", err), request), response)
-		} else if primaryDisplayKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+		} else if primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			bhGraph := make(map[string]bloodhoundgraph.BloodHoundGraphNode)

@@ -67,7 +67,7 @@ func FetchAssetGroupNodes(tx graph.Transaction, assetGroupTag string, isSystemGr
 
 type agiGetter interface {
 	GetAllAssetGroups(ctx context.Context, order string, filter model.SQLFilter) (model.AssetGroups, error)
-	GetValidDisplayKinds(ctx context.Context) (graphschema.PrimaryDisplayKinds, error)
+	GetPrimaryDisplayKinds(ctx context.Context) (graphschema.PrimaryDisplayKinds, error)
 	CreateAssetGroupCollection(ctx context.Context, collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
 }
 
@@ -76,7 +76,7 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db agiGetter, graphD
 
 	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
 		return err
-	} else if primaryDisplayKinds, err := db.GetValidDisplayKinds(ctx); err != nil {
+	} else if primaryDisplayKinds, err := db.GetPrimaryDisplayKinds(ctx); err != nil {
 		return err
 	} else {
 		return graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {

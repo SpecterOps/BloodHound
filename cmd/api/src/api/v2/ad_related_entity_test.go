@@ -87,7 +87,7 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 				mockDB.EXPECT().
 					GetFlagByKey(gomock.Any(), "entity_panel_cache").
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)
-				mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
+				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
 			Test: func(output apitest.Output) {
 				apitest.StatusCode(output, http.StatusBadRequest)
@@ -107,7 +107,7 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 				mockDB.EXPECT().
 					GetFlagByKey(gomock.Any(), "entity_panel_cache").
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)
-				mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
+				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
 			Test: func(output apitest.Output) {
 				apitest.StatusCode(output, http.StatusBadRequest)
@@ -127,7 +127,7 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 				mockDB.EXPECT().
 					GetFlagByKey(gomock.Any(), "entity_panel_cache").
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)
-				mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
+				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
 			Test: func(output apitest.Output) {
 				apitest.StatusCode(output, http.StatusInternalServerError)
@@ -147,7 +147,7 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 				mockDB.EXPECT().
 					GetFlagByKey(gomock.Any(), "entity_panel_cache").
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)
-				mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
+				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
 			Test: func(output apitest.Output) {
 				apitest.StatusCode(output, http.StatusInternalServerError)
@@ -168,7 +168,7 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 				mockDB.EXPECT().
 					GetFlagByKey(gomock.Any(), "entity_panel_cache").
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)
-				mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
+				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
 			Test: func(output apitest.Output) {
 				apitest.StatusCode(output, http.StatusOK)
@@ -195,7 +195,7 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 				mockDB.EXPECT().
 					GetFlagByKey(gomock.Any(), "entity_panel_cache").
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)
-				mockDB.EXPECT().GetValidDisplayKinds(gomock.Any())
+				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
 			Test: func(output apitest.Output) {
 				apitest.StatusCode(output, http.StatusOK)
@@ -626,7 +626,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
+				mock.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), true).Return("", 0, queries.ErrGraphUnsupported)
 			},
@@ -649,7 +649,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
+				mock.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), true).Return("", 0, ops.ErrGraphQueryMemoryLimit)
 			},
@@ -672,7 +672,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
+				mock.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), true).Return("", 0, errors.New("error"))
 			},
@@ -695,7 +695,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
+				mock.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), true).Return("results", 1, nil)
 			},
@@ -717,7 +717,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
+				mock.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), true).Return("", 1, nil)
 			},
@@ -739,7 +739,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
+				mock.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), true).Return("results", 1, nil)
 			},
@@ -776,7 +776,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 						"domainsid": "12345",
 					}),
 				}, nil)
-				mock.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
+				mock.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), true).Return("results", 1, nil)
 			},

@@ -443,7 +443,7 @@ func (s Resources) getAssetGroupMembers(response http.ResponseWriter, request *h
 		} else if assetGroupNodes, err := s.GraphQuery.GetAssetGroupNodes(request.Context(), assetGroup.Tag, assetGroup.SystemGroup); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error fetching nodes for asset group ID %v: %v", assetGroup.ID, err), request), response)
 			return agMembers, err
-		} else if primaryDisplayKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+		} else if primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return agMembers, err
 		} else if agMembers, err = parseAGMembersFromNodes(primaryDisplayKinds, assetGroupNodes, assetGroup.Selectors, int(assetGroup.ID)).SortBy(sortByColumns); err != nil {
