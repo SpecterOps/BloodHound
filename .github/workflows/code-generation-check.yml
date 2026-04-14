@@ -69,7 +69,6 @@ jobs:
 
       - name: Check for uncommitted changes
         id: show
-        continue-on-error: true
         run: |
           git update-index --skip-worktree cmd/ui/public/mockServiceWorker.js
           go tool stbernard show -no-version
