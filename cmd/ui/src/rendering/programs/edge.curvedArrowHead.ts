@@ -28,8 +28,8 @@ import { floatColor } from 'sigma/utils';
 import { CurvedEdgeDisplayData } from 'src/rendering/programs/edge.curvedArrow';
 import { fragmentShaderSource } from 'src/rendering/shaders/edge.arrowHead.frag';
 import { vertexShaderSource } from 'src/rendering/shaders/edge.arrowHead.vert';
-import { bezier } from '../utils/bezier';
-import { getNodeRadius } from '../utils/utils';
+import { bezier } from 'src/rendering/utils/bezier';
+import { getNodeRadius } from 'src/rendering/utils/utils';
 
 const POINTS = 3,
     ATTRIBUTES = 9,
@@ -158,7 +158,6 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
         // be placed. We duplicate this behavior in our edge rendering program (to find a clamp value) rather than pass this
         // calculation down from the reducer to prevent unneccessary curve evaluations when panning/zooming.
         let tip: Coordinates, base: Coordinates, radius: number;
-        console.log(height);
         if (height !== 0) {
             const evalCurve = (t: number) =>
                 bezier.getCoordinatesAlongQuadraticBezier(sourceData, targetData, control, t);
@@ -179,8 +178,15 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
 
         const dx = tip.x - base.x;
         const dy = tip.y - base.y;
+        const distSquared = dx * dx + dy * dy;
 
-        const len = 1 / Math.sqrt(dx * dx + dy * dy);
+        // Don't try to render anything if the nodes are at the same point
+        if (distSquared === 0) {
+            for (let i = offset * STRIDE, l = i + STRIDE; i < l; i++) this.array[i] = 0;
+            return;
+        }
+
+        const len = 1 / Math.sqrt(distSquared);
         const normal = { x: dx * len, y: dy * len };
 
         const vOffset = {

@@ -152,9 +152,9 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
         // 1. Calculate a control point for this edge
 
         let { control } = data;
+        const height = bezier.calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
 
         if (!control) {
-            const height = bezier.calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
             control = bezier.getControlAtMidpoint(height, start, end);
         }
 
@@ -169,8 +169,6 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
         const graphSpaceRadius = targetData.size * 2.0 * correctionRatio;
         const pixelsThickness = Math.max(thickness, 1.7 * sqrtZoomRatio);
         const graphSpaceArrowLength = pixelsThickness * 3.0 * correctionRatio;
-
-        const height = bezier.calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
 
         let clamp: number;
         if (height !== 0) {
@@ -199,6 +197,7 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
             points.push(pointOnCurve);
         }
 
+        // Prevent rendering this edge if it is short enough that there is only one point before our clamp value
         if (points.length < 2) {
             for (let i = offset * STRIDE, l = i + STRIDE; i < l; i++) this.array[i] = 0;
             return;
@@ -251,31 +250,39 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
             array[i++] = 0;
         }
 
-        // Add one final point at the exact clamp position. makes up any gap between the edge's last full segment and the arrowhead
-        const finalPoint = bezier.getCoordinatesAlongQuadraticBezier(start, end, control, clamp);
-        const finalNormal = bezier.getNormals(points[points.length - 1], finalPoint);
-        const vOffset = {
-            x: finalNormal.x * thickness,
-            y: -finalNormal.y * thickness,
-        };
-        // First point
-        array[i++] = finalPoint.x;
-        array[i++] = finalPoint.y;
-        array[i++] = vOffset.y;
-        array[i++] = vOffset.x;
-        array[i++] = color;
-        array[i++] = 0;
+        // Add one final point at the exact clamp position if we have the space. makes up any gap between the edge's
+        // last full segment and the arrowhead.
+        const bufferEnd = STRIDE * (offset + 1);
+        if (i + 12 <= bufferEnd) {
+            const finalPoint = bezier.getCoordinatesAlongQuadraticBezier(start, end, control, clamp);
+            const previousPoint = points[points.length - 1];
 
-        // First point flipped
-        array[i++] = finalPoint.x;
-        array[i++] = finalPoint.y;
-        array[i++] = -vOffset.y;
-        array[i++] = -vOffset.x;
-        array[i++] = color;
-        array[i++] = 0;
+            if (finalPoint.x !== previousPoint.x || finalPoint.y !== previousPoint.y) {
+                const finalNormal = bezier.getNormals(previousPoint, finalPoint);
+                const vOffset = {
+                    x: finalNormal.x * thickness,
+                    y: -finalNormal.y * thickness,
+                };
+                // First point
+                array[i++] = finalPoint.x;
+                array[i++] = finalPoint.y;
+                array[i++] = vOffset.y;
+                array[i++] = vOffset.x;
+                array[i++] = color;
+                array[i++] = 0;
 
-        // zero out remaining buffer slots to account for arrowhead clamp
-        while (i < POINTS * ATTRIBUTES * (offset + 1)) {
+                // First point flipped
+                array[i++] = finalPoint.x;
+                array[i++] = finalPoint.y;
+                array[i++] = -vOffset.y;
+                array[i++] = -vOffset.x;
+                array[i++] = color;
+                array[i++] = 0;
+            }
+        }
+
+        // zero out any remaining buffer slots
+        while (i < STRIDE * (offset + 1)) {
             array[i++] = 0;
         }
     }

@@ -159,6 +159,9 @@ export const GraphEvents = forwardRef(function GraphEvents(
                     newData.control = control;
                     newData.controlInViewport = sigma.framedGraphToViewport(control);
 
+                    // Pull in sigma's internal correction ratio to calculate the correct arrowhead length. Sigma also
+                    // offers a getCorrectionRatio() helper, but that appears to be returning the ratio in the
+                    // wrong coordinate system.
                     const cameraRatio = sigma.getCamera().getState().ratio;
                     const correctionRatio = (sigma as any).correctionRatio / cameraRatio;
 

@@ -26,6 +26,7 @@ import CurvedEdgeProgram from './edge.curved';
 const RESOLUTION = 0.02,
     POINTS = 2 / RESOLUTION + 2,
     ATTRIBUTES = 6,
+    CLAMP_APPROXIMATION_T = 0.91,
     STRIDE = POINTS * ATTRIBUTES;
 
 export const getControlPointsFromGroupSize = (
@@ -89,7 +90,7 @@ export default class SelfEdgeProgram extends CurvedEdgeProgram {
 
         const points = [];
 
-        for (let t = 0; t <= 1; t += RESOLUTION) {
+        for (let t = 0; t <= CLAMP_APPROXIMATION_T; t += RESOLUTION) {
             const { control2, control3 } = getControlPointsFromGroupSize(
                 data.groupPosition,
                 data.framedGraphNodeRadius * 3,
@@ -142,6 +143,10 @@ export default class SelfEdgeProgram extends CurvedEdgeProgram {
             array[i++] = -vOffset.y;
             array[i++] = -vOffset.x;
             array[i++] = color;
+            array[i++] = 0;
+        }
+        // zero out any remaining buffer slots
+        while (i < STRIDE * (offset + 1)) {
             array[i++] = 0;
         }
     }
