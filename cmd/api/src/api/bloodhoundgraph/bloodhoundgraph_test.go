@@ -79,6 +79,7 @@ func TestSetFontIcon(t *testing.T) {
 				Icon: graphschema.DisplayNodeIcon{
 					Name:  "user",
 					Color: "#17E625",
+					Type:  graphschema.DisplayNodeTypeFontAwesome,
 				},
 			},
 		}
