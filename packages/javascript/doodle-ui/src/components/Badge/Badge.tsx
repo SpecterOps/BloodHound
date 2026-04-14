@@ -21,10 +21,11 @@ interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
     icon?: React.ReactNode;
     color?: string;
     backgroundColor?: string;
+    isPdf?: boolean;
 }
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
-    ({ label, icon, color, backgroundColor, className, ...rest }, ref) => {
+    ({ label, icon, color, backgroundColor, isPdf, className, ...rest }, ref) => {
         return (
             <div
                 ref={ref}
@@ -38,8 +39,12 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
                     borderColor: color,
                     backgroundColor: backgroundColor,
                 }}>
-                {icon && <span style={{ color }}>{icon}</span>}
-                {label}
+                {icon && (
+                    <span className={isPdf ? 'badge-icon' : ''} style={{ color }}>
+                        {icon}
+                    </span>
+                )}
+                <span className={isPdf ? 'badge-label' : ''}>{label}</span>
             </div>
         );
     }
