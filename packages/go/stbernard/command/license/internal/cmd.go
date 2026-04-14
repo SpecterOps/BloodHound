@@ -148,10 +148,10 @@ func Run(env environment.Environment, args Args) error {
 			return strings.HasPrefix(relPath, igPath) || relPath == igPath
 		})
 
-		// ignore directories and paths that are in the ignore list
+		// Always prune ignored directories so filepath.Walk does not descend into them.
 		if info.IsDir() && slices.Contains(ignoreDir, info.Name()) {
 			return filepath.SkipDir
-		} else if ignorePath {
+		} else if ignorePath && !info.IsDir() {
 			// Shortcut out without skipping directory (support specific file ignores)
 			return nil
 		}

@@ -93,6 +93,17 @@ func CheckClean(cwd string, env environment.Environment) (bool, error) {
 		return false, fmt.Errorf("git status: %w", err)
 	}
 
+	statusPorcelainPlan := cmdrunner.ExecutionPlan{
+		Command: "git",
+		Args:    []string{"status", "--porcelain=v1", "--untracked-files=all"},
+		Path:    cwd,
+		Env:     env.Slice(),
+	}
+	statusResult, err := cmdrunner.Run(context.TODO(), statusPorcelainPlan)
+	if err != nil {
+		return false, fmt.Errorf("git status --porcelain=v1 --untracked-files=all: %w", err)
+	}
+
 	diffIndexPlan := cmdrunner.ExecutionPlan{
 		Command:        "git",
 		Args:           []string{"--no-pager", "diff"},
@@ -100,14 +111,18 @@ func CheckClean(cwd string, env environment.Environment) (bool, error) {
 		Env:            env.Slice(),
 		SuppressErrors: true,
 	}
-	result, err := cmdrunner.Run(context.TODO(), diffIndexPlan)
+	diffResult, err := cmdrunner.Run(context.TODO(), diffIndexPlan)
 	if err != nil {
 		return false, fmt.Errorf("git diff: %w", err)
 	}
 
-	if len(result.StandardOutput.Bytes()) > 0 {
+	if len(statusResult.StandardOutput.Bytes()) > 0 {
 		slog.Info("Repository is dirty")
-		fmt.Fprint(os.Stdout, result.StandardOutput.String())
+		if len(diffResult.StandardOutput.Bytes()) > 0 {
+			fmt.Fprint(os.Stdout, diffResult.StandardOutput.String())
+		} else {
+			fmt.Fprint(os.Stdout, statusResult.StandardOutput.String())
+		}
 		return false, nil
 	}
 

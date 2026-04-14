@@ -47,9 +47,9 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install Yarn
+      - name: Enable Corepack
         run: |
-          npm install --global yarn
+          corepack enable
 
       - name: Run stbernard deps
         run: |
@@ -75,7 +75,7 @@ jobs:
           go tool stbernard show -no-version
 
       - name: Fail with helpful message
-        if: steps.show.outcome == 'failure'
+        if: failure()
         run: |
           echo "::error::Code generation check failed!"
           echo ""
