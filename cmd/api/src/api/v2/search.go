@@ -58,38 +58,38 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid query parameter: %v", err), request), response)
 	} else if openGraphSearchFeatureFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureOpenGraphSearch); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+	} else if primaryDisplayKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if searchableNodeKinds, err := getSearchableNodeKinds(openGraphSearchFeatureFlag.Enabled, validPrimaryKinds, graph.StringsToKinds(nodeTypes)); err != nil {
+	} else if searchableNodeKinds, err := getSearchableNodeKinds(openGraphSearchFeatureFlag.Enabled, primaryDisplayKinds, graph.StringsToKinds(nodeTypes)); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid type parameter", request), response)
 	} else if nodes, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, searchableNodeKinds, searchQuery, skip, limit); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error: %v", err), request), response)
 	} else {
-		result := filterAndFormatSearchResults(nodes, etacAllowedList, validPrimaryKinds)
+		result := filterAndFormatSearchResults(nodes, etacAllowedList, primaryDisplayKinds)
 
 		api.WriteBasicResponse(request.Context(), result, http.StatusOK, response)
 	}
 }
 
-func filterAndFormatSearchResults(nodes []*graph.Node, etacAllowedList []string, validPrimaryKinds graphschema.ValidPrimaryKinds) []model.SearchResult {
+func filterAndFormatSearchResults(nodes []*graph.Node, etacAllowedList []string, primaryDisplayKinds graphschema.PrimaryDisplayKinds) []model.SearchResult {
 	var results []model.SearchResult
 
 	for _, node := range nodes {
 		if !nodeGatedByETAC(etacAllowedList, node) {
-			results = append(results, graphNodeToSearchResult(node, validPrimaryKinds))
+			results = append(results, graphNodeToSearchResult(node, primaryDisplayKinds))
 		}
 	}
 
 	return results
 }
 
-func graphNodeToSearchResult(node *graph.Node, validPrimaryKinds graphschema.ValidPrimaryKinds) model.SearchResult {
+func graphNodeToSearchResult(node *graph.Node, primaryDisplayKinds graphschema.PrimaryDisplayKinds) model.SearchResult {
 	var (
 		name, _              = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
 		objectID, _          = node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 		distinguishedName, _ = node.Properties.GetOrDefault(ad.DistinguishedName.String(), "").String()
 		systemTags, _        = node.Properties.GetOrDefault(common.SystemTags.String(), "").String()
-		kindLabel            = graphschema.GetNodeKindDisplayLabel(validPrimaryKinds, node)
+		kindLabel            = graphschema.GetNodeKindDisplayLabel(primaryDisplayKinds, node)
 	)
 
 	return model.SearchResult{
@@ -102,10 +102,10 @@ func graphNodeToSearchResult(node *graph.Node, validPrimaryKinds graphschema.Val
 }
 
 // getSearchableNodeKinds returns the kinds that should be searched based on the OpenGraphSearch feature flag and the valid primary kinds.
-func getSearchableNodeKinds(openGraphSearchEnabled bool, validPrimaryKinds graphschema.ValidPrimaryKinds, typeParams graph.Kinds) (graph.Kinds, error) {
+func getSearchableNodeKinds(openGraphSearchEnabled bool, primaryDisplayKinds graphschema.PrimaryDisplayKinds, typeParams graph.Kinds) (graph.Kinds, error) {
 	var (
 		searchableKinds                graph.Kinds
-		validKinds                     graphschema.ValidPrimaryKinds
+		validKinds                     graphschema.PrimaryDisplayKinds
 		emptyParams                    = len(typeParams) == 0
 		invalidParamError              = fmt.Errorf("no valid primary kinds found for search types: %v", typeParams)
 		kindsShouldNotBeConstrained    = emptyParams && openGraphSearchEnabled
@@ -120,12 +120,12 @@ func getSearchableNodeKinds(openGraphSearchEnabled bool, validPrimaryKinds graph
 
 		if openGraphSearchEnabled {
 			// only assign validKinds if OpenGraphSearch is enabled
-			// otherwise we pass nil to PrimaryNodeKind to emulate the old behavior
-			validKinds = validPrimaryKinds
+			// otherwise we pass nil to PrimaryDisplayKind to emulate the old behavior
+			validKinds = primaryDisplayKinds
 		}
 
 		for _, kind := range typeParams {
-			kind := graphschema.PrimaryNodeKind(validKinds, graph.Kinds{kind})
+			kind := graphschema.PrimaryDisplayKind(validKinds, graph.Kinds{kind})
 
 			if !kind.Is(graphschema.UnknownKind) {
 				searchableKinds = searchableKinds.Add(kind)

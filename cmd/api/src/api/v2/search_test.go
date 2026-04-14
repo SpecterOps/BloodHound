@@ -132,7 +132,7 @@ func TestResources_SearchHandler(t *testing.T) {
 								}),
 							},
 						}, nil)
-					mockDB.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(graphschema.ValidPrimaryKinds{
+					mockDB.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(graphschema.PrimaryDisplayKinds{
 						graph.StringKind("Person"): graphschema.DisplayKind{Name: "Person", Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "person-half-dress", Color: "#ff91af"}}}, nil)
 				},
 				Test: func(output apitest.Output) {

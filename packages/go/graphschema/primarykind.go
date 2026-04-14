@@ -38,9 +38,9 @@ var (
 	ValidKinds = buildValidKinds()
 )
 
-func buildValidKinds() ValidPrimaryKinds {
+func buildValidKinds() PrimaryDisplayKinds {
 	var (
-		validKinds = make(ValidPrimaryKinds)
+		validKinds = make(PrimaryDisplayKinds)
 		kindSlices = []graph.Kinds{
 			ad.NodeKinds(),
 			ad.Relationships(),
@@ -77,9 +77,9 @@ type DisplayKind struct {
 	Icon DisplayNodeIcon
 }
 
-type ValidPrimaryKinds map[graph.Kind]DisplayKind
+type PrimaryDisplayKinds map[graph.Kind]DisplayKind
 
-func (s ValidPrimaryKinds) Add(kindName, iconName, iconColor string, iconType DisplayNodeType) {
+func (s PrimaryDisplayKinds) Add(kindName, iconName, iconColor string, iconType DisplayNodeType) {
 	s[graph.StringKind(kindName)] = DisplayKind{
 		Name: kindName,
 		Icon: DisplayNodeIcon{
@@ -90,23 +90,23 @@ func (s ValidPrimaryKinds) Add(kindName, iconName, iconColor string, iconType Di
 	}
 }
 
-// PrimaryNodeKind - tests if the provided kinds contain a primary or meta kind.
+// PrimaryDisplayKind - tests if the provided kinds contain a primary or meta kind.
 //
-// It accepts a validPrimaryKinds map[graph.Kind]bool that contains valid primary kinds.
+// It accepts a primaryDisplayKinds map[graph.Kind]bool that contains valid primary kinds.
 // This allows devs to validate kinds against an OpenGraph extension's kinds.
 // It will return the first meta kind or the first primary kind it finds. During processing, if
 // a source kind is found it will set the base kind to the source kind. If a primary/meta kind is not
 // found, it will return the base kind which will be the "unknown" kind if no known base kinds are
 // present.
-func PrimaryNodeKind(validPrimaryKinds ValidPrimaryKinds, kinds graph.Kinds) graph.Kind {
+func PrimaryDisplayKind(primaryDisplayKinds PrimaryDisplayKinds, kinds graph.Kinds) graph.Kind {
 	var (
 		resultKind = UnknownKind
 		baseKind   = resultKind
 	)
 
-	if validPrimaryKinds == nil {
-		slog.Warn("PrimaryNodeKind: validPrimaryKinds is nil")
-		validPrimaryKinds = ValidKinds
+	if primaryDisplayKinds == nil {
+		slog.Warn("PrimaryDisplayKind: primaryDisplayKinds is nil")
+		primaryDisplayKinds = ValidKinds
 	}
 
 	for _, kind := range kinds {
@@ -120,7 +120,7 @@ func PrimaryNodeKind(validPrimaryKinds ValidPrimaryKinds, kinds graph.Kinds) gra
 			if resultKind == UnknownKind {
 				resultKind = kind
 			}
-		} else if _, ok := validPrimaryKinds[kind]; ok {
+		} else if _, ok := primaryDisplayKinds[kind]; ok {
 			return kind
 		}
 	}
@@ -132,11 +132,11 @@ func PrimaryNodeKind(validPrimaryKinds ValidPrimaryKinds, kinds graph.Kinds) gra
 	}
 }
 
-func GetNodeKindDisplayLabel(validPrimaryKinds ValidPrimaryKinds, node *graph.Node) string {
-	return GetNodeKind(validPrimaryKinds, node).String()
+func GetNodeKindDisplayLabel(primaryDisplayKinds PrimaryDisplayKinds, node *graph.Node) string {
+	return GetNodeKind(primaryDisplayKinds, node).String()
 }
 
 // GetNodeKind - returns the primary kind of the node.
-func GetNodeKind(validPrimaryKinds ValidPrimaryKinds, node *graph.Node) graph.Kind {
-	return PrimaryNodeKind(validPrimaryKinds, node.Kinds)
+func GetNodeKind(primaryDisplayKinds PrimaryDisplayKinds, node *graph.Node) graph.Kind {
+	return PrimaryDisplayKind(primaryDisplayKinds, node.Kinds)
 }

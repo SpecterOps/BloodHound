@@ -57,10 +57,10 @@ func (s Resources) GetPathfindingResult(response http.ResponseWriter, request *h
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: end_node", request), response)
 	} else if paths, err := s.GraphQuery.GetAllShortestPaths(request.Context(), startNodeObjectID, endNodeObjectID, nil); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error: %v", err), request), response)
-	} else if validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+	} else if primaryDisplayKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		api.WriteBasicResponse(request.Context(), bloodhoundgraph.PathSetToBloodHoundGraph(validPrimaryKinds, paths), http.StatusOK, response)
+		api.WriteBasicResponse(request.Context(), bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, paths), http.StatusOK, response)
 	}
 }
 
@@ -147,7 +147,7 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: end_node", request), response)
 	} else if ogExtensionManagementFeatureFlag, err := s.DB.GetFlagByKey(requestContext, appcfg.FeatureOpenGraphExtensionManagement); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+	} else if primaryDisplayKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		if onlyIncludeTraversableKinds {
@@ -175,7 +175,7 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 
 			for _, n := range paths.AllNodes() {
 				// ETAC filtering requires pulling the node's properties
-				graphResponse.Nodes[n.ID.String()] = model.FromDAWGSNode(validPrimaryKinds, n, true)
+				graphResponse.Nodes[n.ID.String()] = model.FromDAWGSNode(primaryDisplayKinds, n, true)
 			}
 
 			edges := slicesext.FlatMap(paths, func(path graph.Path) []model.UnifiedEdge {
@@ -284,12 +284,12 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 			api.HandleDatabaseError(request, response, err)
 		} else if nodes, err := s.GraphQuery.SearchByNameOrObjectID(request.Context(), openGraphSearchFeatureFlag.Enabled, searchValue, searchType); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error getting search results: %v", err), request), response)
-		} else if validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+		} else if primaryDisplayKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			bhGraph := make(map[string]bloodhoundgraph.BloodHoundGraphNode)
 			for _, node := range nodes {
-				bhGraph[node.ID.String()] = bloodhoundgraph.NodeToBloodHoundGraph(validPrimaryKinds, node)
+				bhGraph[node.ID.String()] = bloodhoundgraph.NodeToBloodHoundGraph(primaryDisplayKinds, node)
 			}
 
 			// ETAC DogTags filtering

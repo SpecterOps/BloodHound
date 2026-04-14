@@ -87,7 +87,7 @@ type OpenGraphSchema interface {
 	GetPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error)
 	DeletePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error
 
-	GetValidDisplayKinds(ctx context.Context) (graphschema.ValidPrimaryKinds, error)
+	GetValidDisplayKinds(ctx context.Context) (graphschema.PrimaryDisplayKinds, error)
 }
 
 const (
@@ -1335,7 +1335,7 @@ func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId in
 
 // GetValidDisplayKinds - returns a map of all node kinds that are display kinds, this pulls from both custom_node_kinds(schemaless)
 // and schema_node_kinds to create a single source of truth for all valid node kinds
-func (s *BloodhoundDB) GetValidDisplayKinds(ctx context.Context) (graphschema.ValidPrimaryKinds, error) {
+func (s *BloodhoundDB) GetValidDisplayKinds(ctx context.Context) (graphschema.PrimaryDisplayKinds, error) {
 	if displaySchemaNodeKinds, _, err := s.GetGraphSchemaNodeKinds(ctx, model.Filters{"is_display_kind": []model.Filter{
 		{
 			Operator:    model.Equals,
@@ -1357,10 +1357,10 @@ func (s *BloodhoundDB) GetValidDisplayKinds(ctx context.Context) (graphschema.Va
 		if kinds, err := s.GetKindsByNames(ctx, customNames...); err != nil {
 			return nil, err
 		} else {
-			var validPrimaryKinds = make(graphschema.ValidPrimaryKinds)
+			var primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
 			for _, kind := range kinds {
 				customKind := customKindsByName[kind.Name]
-				validPrimaryKinds[kind.ToKind()] = graphschema.DisplayKind{
+				primaryDisplayKinds[kind.ToKind()] = graphschema.DisplayKind{
 					Name: kind.Name,
 					Icon: graphschema.DisplayNodeIcon{
 						Name:  customKind.Config.Icon.Name,
@@ -1370,7 +1370,7 @@ func (s *BloodhoundDB) GetValidDisplayKinds(ctx context.Context) (graphschema.Va
 				}
 			}
 			for _, kind := range displaySchemaNodeKinds {
-				validPrimaryKinds[kind.ToKind()] = graphschema.DisplayKind{
+				primaryDisplayKinds[kind.ToKind()] = graphschema.DisplayKind{
 					Name: kind.Name,
 					Icon: graphschema.DisplayNodeIcon{
 						Name:  kind.Icon,
@@ -1379,7 +1379,7 @@ func (s *BloodhoundDB) GetValidDisplayKinds(ctx context.Context) (graphschema.Va
 					},
 				}
 			}
-			return validPrimaryKinds, nil
+			return primaryDisplayKinds, nil
 		}
 	}
 }

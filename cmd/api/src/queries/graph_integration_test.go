@@ -266,7 +266,7 @@ func TestGetEntityResults(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
 	require.Nil(t, err)
 
-	validPrimaryKinds, err := dbInst.GetValidDisplayKinds(context.Background())
+	primaryDisplayKinds, err := dbInst.GetValidDisplayKinds(context.Background())
 	require.NoError(t, err)
 
 	testContext.SetupActiveDirectory()
@@ -288,7 +288,7 @@ func TestGetEntityResults(t *testing.T) {
 			ListDelegate:  adAnalysis.FetchInboundADEntityControllers,
 		}
 
-		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, params, false)
+		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), primaryDisplayKinds, params, false)
 		require.Nil(t, err)
 
 		require.Equal(t, 4, count)
@@ -303,7 +303,7 @@ func TestGetEntityResults_QueryShorterThanSlowQueryThreshold(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
 	require.Nil(t, err)
 
-	validPrimaryKinds, err := dbInst.GetValidDisplayKinds(context.Background())
+	primaryDisplayKinds, err := dbInst.GetValidDisplayKinds(context.Background())
 	require.NoError(t, err)
 
 	testContext.SetupActiveDirectory()
@@ -326,7 +326,7 @@ func TestGetEntityResults_QueryShorterThanSlowQueryThreshold(t *testing.T) {
 			ListDelegate:  adAnalysis.FetchInboundADEntityControllers,
 		}
 
-		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, params, true)
+		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), primaryDisplayKinds, params, true)
 		require.Nil(t, err)
 
 		require.Equal(t, 4, count)
@@ -345,10 +345,10 @@ func TestGetPrimaryNodeKindCounts(t *testing.T) {
 		graphQuery := queries.GraphQuery{
 			Graph: db,
 		}
-		validPrimaryKinds, err := dbInst.GetValidDisplayKinds(testCtx)
+		primaryDisplayKinds, err := dbInst.GetValidDisplayKinds(testCtx)
 		require.NoError(t, err)
 
-		results, err := graphQuery.GetPrimaryNodeKindCounts(context.Background(), validPrimaryKinds, ad.Entity)
+		results, err := graphQuery.GetPrimaryNodeKindCounts(context.Background(), primaryDisplayKinds, ad.Entity)
 		require.Nil(t, err)
 
 		// While this is a very thin test, any more specificity would require constant updates each time the harness added new kind
@@ -379,7 +379,7 @@ func TestGetEntityResults_Cache(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 2})
 	require.Nil(t, err)
 
-	validPrimaryKinds, err := dbInst.GetValidDisplayKinds(context.Background())
+	primaryDisplayKinds, err := dbInst.GetValidDisplayKinds(context.Background())
 	require.NoError(t, err)
 
 	testContext.SetupActiveDirectory()
@@ -404,7 +404,7 @@ func TestGetEntityResults_Cache(t *testing.T) {
 		}
 
 		// Get results and check that an entry was added to the cache
-		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, params, true)
+		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), primaryDisplayKinds, params, true)
 		require.Nil(t, err)
 
 		require.Equal(t, 4, count)
@@ -412,7 +412,7 @@ func TestGetEntityResults_Cache(t *testing.T) {
 		require.Equal(t, 1, queryCache.Len())
 
 		// Ensure that after being cached, we get the same results
-		results, count, err = graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, params, true)
+		results, count, err = graphQuery.GetADEntityQueryResult(context.Background(), primaryDisplayKinds, params, true)
 		require.Nil(t, err)
 
 		require.Equal(t, 4, count)
@@ -897,14 +897,14 @@ func TestRawCypherQuery(t *testing.T) {
 	)
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
-	validPrimaryKinds, err := testSuite.BHDatabase.GetValidDisplayKinds(context.Background())
+	primaryDisplayKinds, err := testSuite.BHDatabase.GetValidDisplayKinds(context.Background())
 	require.NoError(t, err)
 
 	t.Run("Test return nodes", func(t *testing.T) {
 		preparedQuery, err := graphQuery.PrepareCypherQuery("match (n:User) return n", queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
 
-		results, err := graphQuery.RawCypherQuery(context.Background(), validPrimaryKinds, preparedQuery, false)
+		results, err := graphQuery.RawCypherQuery(context.Background(), primaryDisplayKinds, preparedQuery, false)
 		require.Nil(t, err)
 		require.Equal(t, 5, len(results.Nodes))
 	})
@@ -913,7 +913,7 @@ func TestRawCypherQuery(t *testing.T) {
 		preparedQuery, err := graphQuery.PrepareCypherQuery("match p = (m:Person)-[:Knows]->() return p", queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
 
-		results, err := graphQuery.RawCypherQuery(context.Background(), validPrimaryKinds, preparedQuery, false)
+		results, err := graphQuery.RawCypherQuery(context.Background(), primaryDisplayKinds, preparedQuery, false)
 		require.Nil(t, err)
 		require.Equal(t, 3, len(results.Edges))
 	})
@@ -922,7 +922,7 @@ func TestRawCypherQuery(t *testing.T) {
 		preparedQuery, err := graphQuery.PrepareCypherQuery("match (m) where m.name = 'ALICE' return m", queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
 
-		results, err := graphQuery.RawCypherQuery(context.Background(), validPrimaryKinds, preparedQuery, true)
+		results, err := graphQuery.RawCypherQuery(context.Background(), primaryDisplayKinds, preparedQuery, true)
 		require.Nil(t, err)
 		require.Equal(t, 1, len(results.Nodes))
 		require.Equal(t, "ALICE", results.Nodes["12"].Properties["name"])
@@ -932,7 +932,7 @@ func TestRawCypherQuery(t *testing.T) {
 		preparedQuery, err := graphQuery.PrepareCypherQuery("match (m) where m.name = 'ALICE' return 7-6 = 1, count(m), max(m.name)", queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
 
-		results, err := graphQuery.RawCypherQuery(context.Background(), validPrimaryKinds, preparedQuery, false)
+		results, err := graphQuery.RawCypherQuery(context.Background(), primaryDisplayKinds, preparedQuery, false)
 		require.Nil(t, err)
 		require.Equal(t, 3, len(results.Literals))
 		require.Equal(t, true, results.Literals[0].Value)
@@ -945,7 +945,7 @@ func TestRawCypherQuery(t *testing.T) {
 		preparedQuery, err := graphQuery.PrepareCypherQuery("match (m:User) return m, count(m)", queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
 
-		results, err := graphQuery.RawCypherQuery(context.Background(), validPrimaryKinds, preparedQuery, false)
+		results, err := graphQuery.RawCypherQuery(context.Background(), primaryDisplayKinds, preparedQuery, false)
 		require.Nil(t, err)
 		require.Equal(t, 5, len(results.Nodes))
 		require.Equal(t, 5, len(results.Literals))

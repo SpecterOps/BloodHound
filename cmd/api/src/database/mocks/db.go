@@ -2668,10 +2668,10 @@ func (mr *MockDatabaseMockRecorder) GetUserToken(ctx, userId, tokenId any) *gomo
 }
 
 // GetValidDisplayKinds mocks base method.
-func (m *MockDatabase) GetValidDisplayKinds(ctx context.Context) (graphschema.ValidPrimaryKinds, error) {
+func (m *MockDatabase) GetValidDisplayKinds(ctx context.Context) (graphschema.PrimaryDisplayKinds, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetValidDisplayKinds", ctx)
-	ret0, _ := ret[0].(graphschema.ValidPrimaryKinds)
+	ret0, _ := ret[0].(graphschema.PrimaryDisplayKinds)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

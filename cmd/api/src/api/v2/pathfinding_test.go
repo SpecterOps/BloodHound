@@ -1277,7 +1277,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(graphschema.ValidPrimaryKinds{
+					mockDB.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(graphschema.PrimaryDisplayKinds{
 						graph.StringKind("Person"): graphschema.DisplayKind{Name: "Person", Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "person-half-dress", Color: "#ff91af"}}}, nil)
 
 					nodeSet := graph.NewNodeSet()
@@ -1341,7 +1341,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 					}
 
 					nodeSet.Add(personNode)
-					mockDB.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(graphschema.ValidPrimaryKinds{
+					mockDB.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(graphschema.PrimaryDisplayKinds{
 						graph.StringKind("Person"): graphschema.DisplayKind{Name: "Person", Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "person-half-dress", Color: "#ff91af"}}}, nil)
 					mockGraph.EXPECT().
 						SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).

@@ -4529,13 +4529,13 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 }
 
 func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
-	assertContainsDisplayKind := func(t *testing.T, got graphschema.ValidPrimaryKinds, name string) {
+	assertContainsDisplayKind := func(t *testing.T, got graphschema.PrimaryDisplayKinds, name string) {
 		t.Helper()
 		_, ok := got[graph.StringKind(name)]
 		assert.True(t, ok, "expected display kind %s to be present in result", name)
 	}
 
-	assertDoesNotContainDisplayKind := func(t *testing.T, got graphschema.ValidPrimaryKinds, name string) {
+	assertDoesNotContainDisplayKind := func(t *testing.T, got graphschema.PrimaryDisplayKinds, name string) {
 		t.Helper()
 		_, ok := got[graph.StringKind(name)]
 		assert.False(t, ok, "expected kind %s to not be present in result", name)

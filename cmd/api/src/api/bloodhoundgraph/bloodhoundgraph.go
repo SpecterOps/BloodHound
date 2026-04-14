@@ -145,7 +145,7 @@ type BloodHoundGraphLink struct {
 	Width     int                       `json:"width,omitempty"`
 }
 
-func (s *BloodHoundGraphNode) SetFontIcon(nodeKind string, validPrimaryKinds graphschema.ValidPrimaryKinds) {
+func (s *BloodHoundGraphNode) SetFontIcon(nodeKind string, primaryDisplayKinds graphschema.PrimaryDisplayKinds) {
 	if nodeKind == metaNodeKindLabel {
 		s.Color = metaNodeColor
 		s.Image = metaImageDefault
@@ -153,7 +153,7 @@ func (s *BloodHoundGraphNode) SetFontIcon(nodeKind string, validPrimaryKinds gra
 		if tier, ok := s.Data["admintier"]; ok && tier.(int64) == 0 {
 			s.Image = metaImageTierZero
 		}
-	} else if primaryKind, ok := validPrimaryKinds[graph.StringKind(nodeKind)]; ok {
+	} else if primaryKind, ok := primaryDisplayKinds[graph.StringKind(nodeKind)]; ok {
 		s.FontIcon = &BloodHoundGraphFontIcon{
 			Text: fmt.Sprintf("%s%s", fontAwesomePrefix, primaryKind.Icon.Name),
 		}

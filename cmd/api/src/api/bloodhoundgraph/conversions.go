@@ -29,13 +29,13 @@ const (
 	defaultRelationshipColor   = "3a5464"
 )
 
-func NodeToBloodHoundGraph(validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.Node) BloodHoundGraphNode {
+func NodeToBloodHoundGraph(primaryDisplayKinds graphschema.PrimaryDisplayKinds, node *graph.Node) BloodHoundGraphNode {
 	var (
-		nodeKindLabel       = graphschema.GetNodeKindDisplayLabel(validPrimaryKinds, node)
+		nodeKindLabel       = graphschema.GetNodeKindDisplayLabel(primaryDisplayKinds, node)
 		name, _             = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
 		bloodHoundGraphNode = BloodHoundGraphNode{
 			BloodHoundGraphItem: &BloodHoundGraphItem{
-				Data: getNodeDisplayProperties(validPrimaryKinds, node),
+				Data: getNodeDisplayProperties(primaryDisplayKinds, node),
 			},
 			Size: 1,
 			Border: &BloodHoundGraphNodeBorder{
@@ -50,7 +50,7 @@ func NodeToBloodHoundGraph(validPrimaryKinds graphschema.ValidPrimaryKinds, node
 		}
 	)
 
-	bloodHoundGraphNode.SetFontIcon(nodeKindLabel, validPrimaryKinds)
+	bloodHoundGraphNode.SetFontIcon(nodeKindLabel, primaryDisplayKinds)
 
 	return bloodHoundGraphNode
 }
@@ -78,7 +78,7 @@ func RelationshipToBloodHoundGraph(rel *graph.Relationship) BloodHoundGraphLink 
 	}
 }
 
-func PathSetToBloodHoundGraph(graphSchemaNodeValidDisplayKinds graphschema.ValidPrimaryKinds, paths graph.PathSet) map[string]any {
+func PathSetToBloodHoundGraph(graphSchemaNodeValidDisplayKinds graphschema.PrimaryDisplayKinds, paths graph.PathSet) map[string]any {
 	result := make(map[string]any)
 
 	for _, path := range paths.Paths() {
