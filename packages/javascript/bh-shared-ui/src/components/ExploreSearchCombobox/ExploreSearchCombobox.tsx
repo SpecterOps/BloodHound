@@ -132,7 +132,7 @@ const ExploreSearchCombobox: React.FC<{
                                     item: {
                                         objectid: '',
                                     },
-                                    style: { opacity: 0.6 }
+                                    style: { opacity: 0.6 },
                                 })}>
                                 <ListItemText primary={disabledText} />
                             </ListItem>

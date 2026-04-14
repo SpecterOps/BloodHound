@@ -103,6 +103,12 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
     const sigmaChartRef = ref as React.MutableRefObject<SigmaChartRef | null>;
 
+    // Pull in sigma's internal correction ratio to pass to edges in our curved edge reducer. Sigma also
+    // offers a getCorrectionRatio() helper, but that appears to be returning the ratio in the
+    // incorrect coordinate system for our use case.
+    const cameraRatio = sigma.getCamera().getState().ratio;
+    const correctionRatio = (sigma as any).correctionRatio / cameraRatio;
+
     useImperativeHandle(sigmaChartRef, () => {
         return {
             zoomTo: (id: string) => {
@@ -150,26 +156,20 @@ export const GraphEvents = forwardRef(function GraphEvents(
             if (edgeData !== null) {
                 const nodeDisplayData = getEdgeSourceAndTargetDisplayData(edgeData.source, edgeData.target, sigma);
                 if (nodeDisplayData !== null) {
-                    const source = { x: nodeDisplayData.source.x, y: nodeDisplayData.source.y };
-                    const target = { x: nodeDisplayData.target.x, y: nodeDisplayData.target.y };
+                    const sourceCoordinates = { x: nodeDisplayData.source.x, y: nodeDisplayData.source.y };
+                    const targetCoordinates = { x: nodeDisplayData.target.x, y: nodeDisplayData.target.y };
 
                     const height = calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
-                    const control = getControlAtMidpoint(height, source, target);
+                    const control = getControlAtMidpoint(height, sourceCoordinates, targetCoordinates);
 
                     newData.control = control;
                     newData.controlInViewport = sigma.framedGraphToViewport(control);
-
-                    // Pull in sigma's internal correction ratio to calculate the correct arrowhead length. Sigma also
-                    // offers a getCorrectionRatio() helper, but that appears to be returning the ratio in the
-                    // wrong coordinate system.
-                    const cameraRatio = sigma.getCamera().getState().ratio;
-                    const correctionRatio = (sigma as any).correctionRatio / cameraRatio;
-
-                    newData.correctionRatio = correctionRatio;
                 }
             }
+
+            newData.correctionRatio = correctionRatio;
         },
-        [sigma, calculateCurveHeight, getControlAtMidpoint]
+        [sigma, calculateCurveHeight, getControlAtMidpoint, correctionRatio]
     );
 
     const selfEdgeReducer = useCallback(

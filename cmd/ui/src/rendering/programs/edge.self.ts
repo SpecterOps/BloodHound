@@ -26,6 +26,8 @@ import CurvedEdgeProgram from './edge.curved';
 const RESOLUTION = 0.02,
     POINTS = 2 / RESOLUTION + 2,
     ATTRIBUTES = 6,
+    // These self edges have essentially static dimensions so we can approximate the arrowhead
+    // clamp with a constant t value (instead of the approximation we use for curved edges)
     CLAMP_APPROXIMATION_T = 0.91,
     STRIDE = POINTS * ATTRIBUTES;
 
@@ -88,16 +90,17 @@ export default class SelfEdgeProgram extends CurvedEdgeProgram {
         const start = { x: sourceData.x, y: sourceData.y };
         const thickness = data.size || 1;
 
+        const { control2, control3 } = getControlPointsFromGroupSize(
+            data.groupPosition,
+            data.framedGraphNodeRadius * 3,
+            start,
+            true,
+            true
+        );
+
         const points = [];
 
         for (let t = 0; t <= CLAMP_APPROXIMATION_T; t += RESOLUTION) {
-            const { control2, control3 } = getControlPointsFromGroupSize(
-                data.groupPosition,
-                data.framedGraphNodeRadius * 3,
-                start,
-                true,
-                true
-            );
             const pointOnCurve = bezier.getCoordinatesAlongCubicBezier(start, control2, control3, start, t);
             points.push(pointOnCurve);
         }

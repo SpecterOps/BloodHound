@@ -33,7 +33,8 @@ import { getNodeRadius } from 'src/rendering/utils/utils';
 
 const POINTS = 3,
     ATTRIBUTES = 9,
-    STRIDE = POINTS * ATTRIBUTES;
+    STRIDE = POINTS * ATTRIBUTES,
+    EPSILON = 1e-10;
 
 export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
     // Locations
@@ -162,6 +163,9 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
             const evalCurve = (t: number) =>
                 bezier.getCoordinatesAlongQuadraticBezier(sourceData, targetData, control, t);
 
+            // The original straight line arrowhead shader, which we are using here, takes the target node's coordinates
+            // and a radius and projects the arrowhead out from the nodes center by distance === radius. Instead, we can
+            // pass in the tip's coordinates and set radius to 0 to bypass this projection.
             const tipT = bezier.getIntersectionT(evalCurve, targetData, graphSpaceRadius, 0.5, 1);
             tip = evalCurve(tipT);
 
@@ -169,8 +173,8 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
             base = evalCurve(baseT);
             radius = 0;
         } else {
-            // If height === 0, this is the straight line in the center of an odd-numbered edge group and all our calculations are
-            // much simpler.
+            // If height === 0, this is the straight line in the center of an odd-numbered edge group and we can project
+            // out from the node's center.
             tip = targetData;
             base = sourceData;
             radius = getNodeRadius(targetData.highlighted, inverseSqrtZoomRatio, targetData.size);
@@ -181,7 +185,7 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
         const distSquared = dx * dx + dy * dy;
 
         // Don't try to render anything if the nodes are at the same point
-        if (distSquared === 0) {
+        if (distSquared < EPSILON) {
             for (let i = offset * STRIDE, l = i + STRIDE; i < l; i++) this.array[i] = 0;
             return;
         }

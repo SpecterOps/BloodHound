@@ -282,7 +282,7 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
         }
 
         // zero out any remaining buffer slots
-        while (i < STRIDE * (offset + 1)) {
+        while (i < bufferEnd) {
             array[i++] = 0;
         }
     }
