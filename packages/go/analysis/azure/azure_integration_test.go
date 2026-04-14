@@ -70,7 +70,7 @@ func TestAZAddOwner(t *testing.T) {
 
 	//#region Verifying assertions
 	require.NoError(t, err)
-	assert.NotNil(t, postProcessingStats.RelationshipsCreated[graphAzure.AddOwner])
+	require.NotNil(t, postProcessingStats.RelationshipsCreated[graphAzure.AddOwner])
 	assert.Equal(t, 8, int(*postProcessingStats.RelationshipsCreated[graphAzure.AddOwner]))
 
 	// Validate that the AZAddOwner edges were created
