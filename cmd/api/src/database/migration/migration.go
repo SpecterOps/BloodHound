@@ -64,7 +64,7 @@ func NewMigrator(db *gorm.DB) *Migrator {
 		ExtensionsData: []Source{
 			{FileSystem: ExtensionMigrations, Directory: "extensions"},
 		},
-		GooseFS: fossMigrationsSubFS,
+		GooseFS: MergedFS(fossMigrationsSubFS),
 		DB:      db,
 		SqlDB:   sqlDB,
 	}
