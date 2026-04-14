@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
-name: Continuous Integration (CI)
+name: Build Application
 
 on:
   pull_request:
@@ -26,25 +26,36 @@ on:
       - synchronize
 
 jobs:
-  bloodhound-container-image:
-    name: Build BloodHound Container Image
-    uses: ./.github/workflows/reusable.build-container-image.yml
-    with:
-      container_image_repository_name: docker.io/specterops/bloodhound
-      build_target: bloodhound
-      image_sbom: false
-      image_provenance: false
-      build_context: .
-      build_outputs: type=image,push=false
-      dockerfile: dockerfiles/bloodhound.Dockerfile
-      image_cache_from: type=gha
-      image_cache_to: type=gha,mode=max
-      build_args: |
-        checkout_hash=${{ github.sha }}
+  build-application:
+    name: Build BloodHound Application
+    runs-on: ubuntu-latest
+    env:
+      SB_VERSION: v0.0.0-pr
 
-    secrets:
-      dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
-      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-      ghcr_account: ${{ github.actor }}
-      ghcr_token: ${{ secrets.GITHUB_TOKEN }}
-      gh_access_token: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout source code for this repository
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # ratchet:actions/checkout@v5
+
+      - name: Install Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # ratchet:actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+          check-latest: true
+
+      - name: Install Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # ratchet:actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Yarn
+        run: |
+          npm install --global yarn
+
+      - name: Run stbernard deps
+        run: |
+          go tool stbernard deps
+
+      - name: Run stbernard build
+        run: |
+          go tool stbernard build
