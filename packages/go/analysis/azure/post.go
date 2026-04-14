@@ -75,6 +75,15 @@ func AddSecretRoleIDs() []string {
 	}
 }
 
+func AddOwnerRoleIDs() []string {
+	return []string{
+		azure.HybridIdentityAdministratorRole,
+		azure.PartnerTier1SupportRole,
+		azure.PartnerTier2SupportRole,
+		azure.DirectorySynchronizationAccountsRole,
+	}
+}
+
 func HelpdeskAdministratorPasswordResetTargetRoles() []string {
 	return []string{
 		azure.ReportsReaderRole,
@@ -229,6 +238,8 @@ func AppRoleAssignments(ctx context.Context, db graph.Database) (*post.AtomicPos
 				} else if err := createAZMGServicePrincipalEndpointReadWriteAllEdges(ctx, db, operation, tenantContainsServicePrincipalRelationships); err != nil {
 					return err
 				} else if err := addSecret(operation, tenant); err != nil {
+					return err
+				} else if err := addOwner(operation, tenant); err != nil {
 					return err
 				}
 
@@ -666,6 +677,39 @@ func addSecret(operation post.StatTrackedOperation[post.EnsureRelationshipJob], 
 						FromID: role.ID,
 						ToID:   target.ID,
 						Kind:   azure.AddSecret,
+					}
+
+					if !channels.Submit(ctx, outC, nextJob) {
+						return nil
+					}
+				}
+			}
+		}
+
+		return nil
+	})
+}
+
+func addOwner(operation post.StatTrackedOperation[post.EnsureRelationshipJob], tenant *graph.Node) error {
+	return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+		if addOwnerRoles, err := TenantRoles(tx, tenant, AddOwnerRoleIDs()...); err != nil {
+			return err
+		} else if tenantAppsAndSPs, err := TenantApplicationsAndServicePrincipals(tx, tenant); err != nil {
+			return err
+		} else {
+			for _, role := range addOwnerRoles {
+				for _, target := range tenantAppsAndSPs {
+					slog.DebugContext(
+						ctx,
+						"Adding AZAddOwner edge from role to target",
+						slog.String("role_id", role.ID.String()),
+						slog.String("target_kinds", strings.Join(target.Kinds.Strings(), ",")),
+						slog.Uint64("target_id", target.ID.Uint64()),
+					)
+					nextJob := post.EnsureRelationshipJob{
+						FromID: role.ID,
+						ToID:   target.ID,
+						Kind:   azure.AddOwner,
 					}
 
 					if !channels.Submit(ctx, outC, nextJob) {
