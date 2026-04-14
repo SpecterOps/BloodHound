@@ -26,8 +26,8 @@ import (
 
 const CustomNodeIconType = "font-awesome"
 
-// UpsertOpenGraphExtension reconciles the full state of a graph extension and all of its child
-// entities (node kinds, relationship kinds, environments, and findings) against the provided input.
+// UpsertOpenGraphExtension - upserts the incoming graph extension by checking to see if the extension exists already,
+// if so, deleting it and inserting the new extension.
 //
 // Each entity set is diffed against the input: absent rows are deleted, matching rows are updated
 // in place with their IDs preserved, and new rows are created. All mutations run inside a single
@@ -257,26 +257,27 @@ func getExistingIconsMap(ctx context.Context, db *BloodhoundDB) (map[string]mode
 // custom_node_kinds and schema_node_kinds tables. If an existingIcon is provided, its name and color are
 // preserved for any fields not supplied by the node kind.
 func parseIconDefinitionFromNodeKind(nodeKind model.GraphSchemaNodeKind, existingIcon *model.CustomNodeKind) model.CustomNodeKind {
-	var customNodeKind model.CustomNodeKind
-	var customNodeIcon = model.CustomNodeIcon{Type: CustomNodeIconType}
-
-	if nodeKind.Icon != "" {
-		customNodeIcon.Name = nodeKind.Icon
-	} else if existingIcon != nil {
-		// preserve existing icon name if not provided
-		customNodeIcon.Name = existingIcon.Config.Icon.Name
+	var customNodeKind = model.CustomNodeKind{
+		KindName:         nodeKind.Name,
+		SchemaNodeKindId: &nodeKind.ID,
+		Config: model.CustomNodeKindConfig{
+			Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome},
+		},
 	}
 
-	if nodeKind.IconColor != "" {
-		customNodeIcon.Color = nodeKind.IconColor
-	} else if existingIcon != nil {
-		// preserve existing icon color if not provided
-		customNodeIcon.Color = existingIcon.Config.Icon.Color
+	// preserve existing icon if provided
+	if existingIcon != nil {
+		customNodeKind.Config.Icon = existingIcon.Config.Icon
+	} else {
+		if nodeKind.Icon != "" {
+			customNodeKind.Config.Icon.Name = nodeKind.Icon
+		}
+
+		if nodeKind.IconColor != "" {
+			customNodeKind.Config.Icon.Color = nodeKind.IconColor
+		}
 	}
 
-	customNodeKind.KindName = nodeKind.Name
-	customNodeKind.Config = model.CustomNodeKindConfig{Icon: customNodeIcon}
-	customNodeKind.SchemaNodeKindId = &nodeKind.ID
 	return customNodeKind
 
 }

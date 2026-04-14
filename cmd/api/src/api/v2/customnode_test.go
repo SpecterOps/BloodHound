@@ -112,7 +112,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 					CustomTypes: map[string]model.CustomNodeKindConfig{
 						"KindA": {
 							Icon: model.CustomNodeIcon{
-								Type:  "font-awesome",
+								Type:  model.CustomNodeKindTypeFontAwesome,
 								Name:  "coffee",
 								Color: "FFFFFF",
 							},
@@ -151,14 +151,14 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 					CustomTypes: map[string]model.CustomNodeKindConfig{
 						"KindA": {
 							Icon: model.CustomNodeIcon{
-								Type:  "font-awesome",
+								Type:  model.CustomNodeKindTypeFontAwesome,
 								Name:  "coffee",
 								Color: "#FFFFFF",
 							},
 						},
 						"KindB": {
 							Icon: model.CustomNodeIcon{
-								Type:  "font-awesome",
+								Type:  model.CustomNodeKindTypeFontAwesome,
 								Name:  "house",
 								Color: "#000",
 							},
@@ -183,7 +183,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 						KindName: "KindA",
 						Config: model.CustomNodeKindConfig{
 							Icon: model.CustomNodeIcon{
-								Type:  "font-awesome",
+								Type:  model.CustomNodeKindTypeFontAwesome,
 								Name:  "coffee",
 								Color: "#FFFFFF",
 							},
@@ -194,7 +194,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 						KindName: "KindB",
 						Config: model.CustomNodeKindConfig{
 							Icon: model.CustomNodeIcon{
-								Type:  "font-awesome",
+								Type:  model.CustomNodeKindTypeFontAwesome,
 								Name:  "house",
 								Color: "#000",
 							},
@@ -223,7 +223,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 					CustomTypes: map[string]model.CustomNodeKindConfig{
 						"": {
 							Icon: model.CustomNodeIcon{
-								Type:  "font-awesome",
+								Type:  model.CustomNodeKindTypeFontAwesome,
 								Name:  "coffee",
 								Color: "#FFFFFF",
 							},
@@ -358,7 +358,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 				payload := &v2.UpdateCustomNodeKindRequest{
 					Config: model.CustomNodeKindConfig{
 						Icon: model.CustomNodeIcon{
-							Type:  "font-awesome",
+							Type:  model.CustomNodeKindTypeFontAwesome,
 							Name:  "coffee",
 							Color: "FFFFFF",
 						},
@@ -399,7 +399,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 				payload := &v2.UpdateCustomNodeKindRequest{
 					Config: model.CustomNodeKindConfig{
 						Icon: model.CustomNodeIcon{
-							Type:  "font-awesome",
+							Type:  model.CustomNodeKindTypeFontAwesome,
 							Name:  "coffee",
 							Color: "#FFFFFF",
 						},
@@ -422,7 +422,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 					KindName: "KindA",
 					Config: model.CustomNodeKindConfig{
 						Icon: model.CustomNodeIcon{
-							Type:  "font-awesome",
+							Type:  model.CustomNodeKindTypeFontAwesome,
 							Name:  "coffee",
 							Color: "#FFFFFF",
 						},

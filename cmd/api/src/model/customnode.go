@@ -26,8 +26,6 @@ import (
 
 var ValidColorStringRegex = regexp.MustCompile("^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$")
 
-const ValidIconType = "font-awesome"
-
 type CustomNodeKinds []CustomNodeKind
 
 func (s CustomNodeKinds) AuditData() AuditData {
@@ -63,10 +61,16 @@ type CustomNodeKindConfig struct {
 	Icon CustomNodeIcon `json:"icon"`
 }
 
+type CustomNodeKindType string
+
+const (
+	CustomNodeKindTypeFontAwesome CustomNodeKindType = "font-awesome"
+)
+
 type CustomNodeIcon struct {
-	Type  string `json:"type"`
-	Name  string `json:"name"`
-	Color string `json:"color"`
+	Type  CustomNodeKindType `json:"type"`
+	Name  string             `json:"name"`
+	Color string             `json:"color"`
 }
 
 type CustomNodeKindMap map[string]CustomNodeKindConfig
@@ -89,7 +93,7 @@ func (s CustomNodeKindConfig) Value() (driver.Value, error) {
 }
 
 func (s CustomNodeKindConfig) Validate() error {
-	if s.Icon.Type != ValidIconType {
+	if s.Icon.Type != CustomNodeKindTypeFontAwesome {
 		return fmt.Errorf("invalid icon type. only Font Awesome icons are supported")
 	} else if s.Icon.Color != "" && !IsValidIconColor(s.Icon.Color) {
 		return fmt.Errorf("icon color must be a valid hexadecimal color string starting with '#' followed by 3 or 6 hex digits")

@@ -1364,7 +1364,7 @@ func (s *BloodhoundDB) GetValidDisplayKinds(ctx context.Context) (graphschema.Va
 					Name: kind.Name,
 					Icon: graphschema.DisplayKindIcon{
 						Name:  customKind.Config.Icon.Name,
-						Type:  customKind.Config.Icon.Type,
+						Type:  string(customKind.Config.Icon.Type),
 						Color: customKind.Config.Icon.Color,
 					},
 				}
@@ -1375,6 +1375,7 @@ func (s *BloodhoundDB) GetValidDisplayKinds(ctx context.Context) (graphschema.Va
 					Icon: graphschema.DisplayKindIcon{
 						Name:  kind.Icon,
 						Color: kind.IconColor,
+						Type:  string(model.CustomNodeKindTypeFontAwesome),
 					},
 				}
 			}

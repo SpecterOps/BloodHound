@@ -44,11 +44,11 @@ func TestCreateCustomNodeKinds(t *testing.T) {
 				{
 					KindName: "TestKind",
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#FFFFFF"},
+						Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "coffee", Color: "#FFFFFF"},
 					},
 				},
 			},
-			wantMap: model.CustomNodeKindMap{"TestKind": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#FFFFFF"}}},
+			wantMap: model.CustomNodeKindMap{"TestKind": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "coffee", Color: "#FFFFFF"}}},
 			wantErr: nil,
 		},
 		{
@@ -60,17 +60,17 @@ func TestCreateCustomNodeKinds(t *testing.T) {
 				{
 					KindName: "TestKindA",
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "house", Color: "#000000"},
+						Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "house", Color: "#000000"},
 					},
 				},
 				{
 					KindName: "TestKindB",
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star", Color: "#FF0000"},
+						Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "star", Color: "#FF0000"},
 					},
 				},
 			},
-			wantMap: model.CustomNodeKindMap{"TestKindA": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "house", Color: "#000000"}}, "TestKindB": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star", Color: "#FF0000"}}},
+			wantMap: model.CustomNodeKindMap{"TestKindA": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "house", Color: "#000000"}}, "TestKindB": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "star", Color: "#FF0000"}}},
 			wantErr: nil,
 		},
 
@@ -83,17 +83,17 @@ func TestCreateCustomNodeKinds(t *testing.T) {
 				{
 					KindName: "TestKindA",
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{Type: "font-awesome", Color: "#000000"},
+						Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Color: "#000000"},
 					},
 				},
 				{
 					KindName: "TestKindB",
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star"},
+						Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "star"},
 					},
 				},
 			},
-			wantMap: model.CustomNodeKindMap{"TestKindA": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Color: "#000000"}}, "TestKindB": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star"}}},
+			wantMap: model.CustomNodeKindMap{"TestKindA": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Color: "#000000"}}, "TestKindB": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "star"}}},
 			wantErr: nil,
 		},
 		{
@@ -104,7 +104,7 @@ func TestCreateCustomNodeKinds(t *testing.T) {
 					{
 						KindName: "DuplicateKind",
 						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#FFFFFF"},
+							Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "coffee", Color: "#FFFFFF"},
 						},
 					},
 				})
@@ -115,7 +115,7 @@ func TestCreateCustomNodeKinds(t *testing.T) {
 				{
 					KindName: "DuplicateKind",
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#FFFFFF"},
+						Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "coffee", Color: "#FFFFFF"},
 					},
 				},
 			},
@@ -165,13 +165,13 @@ func TestGetCustomNodeKinds(t *testing.T) {
 					{
 						KindName: "KindOne",
 						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "fire", Color: "#FF5733"},
+							Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "fire", Color: "#FF5733"},
 						},
 					},
 					{
 						KindName: "KindTwo",
 						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star", Color: "#FFFF00"},
+							Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "star", Color: "#FFFF00"},
 						},
 					},
 				})
@@ -222,7 +222,7 @@ func TestGetCustomNodeKind(t *testing.T) {
 					{
 						KindName: "RetrievableKind",
 						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "bell", Color: "#123456"},
+							Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "bell", Color: "#123456"},
 						},
 					},
 				})
@@ -270,7 +270,7 @@ func TestUpdateCustomNodeKind(t *testing.T) {
 			input: model.CustomNodeKind{
 				KindName: "NonExistentKind",
 				Config: model.CustomNodeKindConfig{
-					Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "bell", Color: "#FFFFFF"},
+					Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "bell", Color: "#FFFFFF"},
 				},
 			},
 			wantErr: database.ErrNotFound,
@@ -283,7 +283,7 @@ func TestUpdateCustomNodeKind(t *testing.T) {
 					{
 						KindName: "UpdatableKind",
 						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#FFFFFF"},
+							Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "coffee", Color: "#FFFFFF"},
 						},
 					},
 				})
@@ -293,7 +293,7 @@ func TestUpdateCustomNodeKind(t *testing.T) {
 			input: model.CustomNodeKind{
 				KindName: "UpdatableKind",
 				Config: model.CustomNodeKindConfig{
-					Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star", Color: "#000000"},
+					Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "star", Color: "#000000"},
 				},
 			},
 			want: struct {
@@ -303,7 +303,7 @@ func TestUpdateCustomNodeKind(t *testing.T) {
 				CustomNodeKind: model.CustomNodeKind{
 					KindName: "UpdatableKind",
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star", Color: "#000000"},
+						Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "star", Color: "#000000"},
 					},
 				},
 			},
@@ -324,7 +324,7 @@ func TestUpdateCustomNodeKind(t *testing.T) {
 						KindName:         "UpdatableKind",
 						SchemaNodeKindId: &schemaNodeKindID,
 						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#FFFFFF"},
+							Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "coffee", Color: "#FFFFFF"},
 						},
 					},
 				})
@@ -336,7 +336,7 @@ func TestUpdateCustomNodeKind(t *testing.T) {
 				KindName:         "UpdatableKind",
 				SchemaNodeKindId: &schemaNodeKindID,
 				Config: model.CustomNodeKindConfig{
-					Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star", Color: "#000000"},
+					Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "star", Color: "#000000"},
 				},
 			},
 			want: struct {
@@ -346,7 +346,7 @@ func TestUpdateCustomNodeKind(t *testing.T) {
 				CustomNodeKind: model.CustomNodeKind{
 					KindName: "UpdatableKind",
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star", Color: "#000000"},
+						Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "star", Color: "#000000"},
 					},
 				},
 				SchemaNodeKind: model.GraphSchemaNodeKind{
@@ -404,7 +404,7 @@ func TestDeleteCustomNodeKind(t *testing.T) {
 					{
 						KindName: "DeletableKind",
 						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "trash", Color: "#FF0000"},
+							Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "trash", Color: "#FF0000"},
 						},
 					},
 				})
