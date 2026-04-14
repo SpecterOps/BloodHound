@@ -30,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/job"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/cache"
@@ -261,10 +262,10 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 			attr.Scope("summary"),
 		)()
 
-		if err := RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg); err != nil {
-			if errors.Is(err, ErrAnalysisFailed) {
+		if err := analysis.RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg); err != nil {
+			if errors.Is(err, analysis.ErrAnalysisFailed) {
 				s.jobService.FailAnalyzedIngestJobs()
-			} else if errors.Is(err, ErrAnalysisPartiallyCompleted) {
+			} else if errors.Is(err, analysis.ErrAnalysisPartiallyCompleted) {
 				s.jobService.PartialCompleteIngestJobs()
 			}
 			return fmt.Errorf("analysis failure: %v", err)
