@@ -154,9 +154,15 @@ func (s *BloodHoundGraphNode) SetFontIcon(nodeKind string, primaryDisplayKinds g
 			s.Image = metaImageTierZero
 		}
 	} else if primaryKind, ok := primaryDisplayKinds[graph.StringKind(nodeKind)]; ok {
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: fmt.Sprintf("%s%s", fontAwesomePrefix, primaryKind.Icon.Name),
+		switch primaryKind.Icon.Type {
+		case graphschema.DisplayNodeTypeFontAwesome:
+			s.FontIcon = &BloodHoundGraphFontIcon{
+				Text: fmt.Sprintf("%s%s", fontAwesomePrefix, primaryKind.Icon.Name),
+			}
+		default:
+			s.FontIcon = &BloodHoundGraphFontIcon{Text: primaryKind.Icon.Name}
 		}
+
 		s.Color = primaryKind.Icon.Color
 	} else {
 		s.FontIcon = &BloodHoundGraphFontIcon{
