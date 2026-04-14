@@ -39,9 +39,10 @@ func TestAZAddOwner(t *testing.T) {
 	t.Parallel()
 
 	//#region Setup for test
-	var (
-		suite = setupIntegrationTestSuite(t)
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
 
+	var (
 		tenantID                = integration.RandomObjectID(t)
 		AZTenant                = NewAzureTenant(t, &suite, tenantID)
 		AZApp                   = NewAzureApplication(t, &suite, "AZApp", integration.RandomObjectID(t), tenantID)
@@ -80,18 +81,22 @@ func TestAZAddOwner(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Len(t, addOwnerEdges, 8)
 
-		expected := make(map[string]struct{}, 8)
-		expected[HybridIdentityAdminRole.ID.String()+AZApp.ID.String()] = struct{}{}
-		expected[HybridIdentityAdminRole.ID.String()+AZServicePrincipal.ID.String()] = struct{}{}
-		expected[PartnerTier1SupportRole.ID.String()+AZApp.ID.String()] = struct{}{}
-		expected[PartnerTier1SupportRole.ID.String()+AZServicePrincipal.ID.String()] = struct{}{}
-		expected[PartnerTier2SupportRole.ID.String()+AZApp.ID.String()] = struct{}{}
-		expected[PartnerTier2SupportRole.ID.String()+AZServicePrincipal.ID.String()] = struct{}{}
-		expected[DirSyncAccountsRole.ID.String()+AZApp.ID.String()] = struct{}{}
-		expected[DirSyncAccountsRole.ID.String()+AZServicePrincipal.ID.String()] = struct{}{}
+		type edgeKey struct {
+			start graph.ID
+			end   graph.ID
+		}
+		expected := make(map[edgeKey]struct{}, 8)
+		expected[edgeKey{start: HybridIdentityAdminRole.ID, end: AZApp.ID}] = struct{}{}
+		expected[edgeKey{start: HybridIdentityAdminRole.ID, end: AZServicePrincipal.ID}] = struct{}{}
+		expected[edgeKey{start: PartnerTier1SupportRole.ID, end: AZApp.ID}] = struct{}{}
+		expected[edgeKey{start: PartnerTier1SupportRole.ID, end: AZServicePrincipal.ID}] = struct{}{}
+		expected[edgeKey{start: PartnerTier2SupportRole.ID, end: AZApp.ID}] = struct{}{}
+		expected[edgeKey{start: PartnerTier2SupportRole.ID, end: AZServicePrincipal.ID}] = struct{}{}
+		expected[edgeKey{start: DirSyncAccountsRole.ID, end: AZApp.ID}] = struct{}{}
+		expected[edgeKey{start: DirSyncAccountsRole.ID, end: AZServicePrincipal.ID}] = struct{}{}
 
 		for _, edge := range addOwnerEdges {
-			key := edge.StartID.String() + edge.EndID.String()
+			key := edgeKey{start: edge.StartID, end: edge.EndID}
 			_, present := expected[key]
 			assert.True(t, present)
 			delete(expected, key)
@@ -104,8 +109,6 @@ func TestAZAddOwner(t *testing.T) {
 
 	require.NoError(t, err)
 	//#endregion
-
-	teardownIntegrationTestSuite(t, &suite)
 }
 
 func TestFetchEntityByObjectID(t *testing.T) {
