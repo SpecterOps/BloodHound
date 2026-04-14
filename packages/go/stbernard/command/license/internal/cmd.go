@@ -151,7 +151,13 @@ func Run(env environment.Environment, args Args) error {
 		// Always prune ignored directories so filepath.Walk does not descend into them.
 		if info.IsDir() && slices.Contains(ignoreDir, info.Name()) {
 			return filepath.SkipDir
-		} else if ignorePath && !info.IsDir() {
+		}
+
+		if ignorePath {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+
 			// Shortcut out without skipping directory (support specific file ignores)
 			return nil
 		}

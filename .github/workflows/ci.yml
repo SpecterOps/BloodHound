@@ -29,6 +29,9 @@ jobs:
   build-application:
     name: Build BloodHound Application
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 30
     env:
       SB_VERSION: v0.0.0-pr
 
@@ -48,9 +51,11 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install Yarn
+      - name: Enable Corepack
         run: |
-          npm install --global yarn
+          corepack enable
+          corepack install
+          yarn --version
 
       - name: Run stbernard deps
         run: |
