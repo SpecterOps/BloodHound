@@ -132,7 +132,7 @@ const UserTokenManagementDialog: React.FC<{
             } else {
                 return tokens.map((row) => {
                     const expiresAt = row.expires_at;
-                    const date = expiresAt ? DateTime.fromISO(expiresAt) : null;
+                    const date = expiresAt ? DateTime.fromISO(expiresAt.Time) : null;
                     const daysUntilExpiry = date?.isValid ? date.diff(DateTime.now(), 'days').days : null;
                     const isExpired = daysUntilExpiry !== null && daysUntilExpiry < 0;
                     const isExpiringSoon = daysUntilExpiry !== null && daysUntilExpiry >= 0 && daysUntilExpiry < 10;
