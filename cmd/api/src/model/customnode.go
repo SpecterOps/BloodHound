@@ -22,6 +22,8 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 )
 
 var ValidColorStringRegex = regexp.MustCompile("^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$")
@@ -58,20 +60,10 @@ func (s CustomNodeKind) AuditData() AuditData {
 }
 
 type CustomNodeKindConfig struct {
-	Icon CustomNodeIcon `json:"icon"`
+	Icon graphschema.DisplayNodeIcon `json:"icon"`
 }
 
 type CustomNodeKindType string
-
-const (
-	CustomNodeKindTypeFontAwesome CustomNodeKindType = "font-awesome"
-)
-
-type CustomNodeIcon struct {
-	Type  CustomNodeKindType `json:"type"`
-	Name  string             `json:"name"`
-	Color string             `json:"color"`
-}
 
 type CustomNodeKindMap map[string]CustomNodeKindConfig
 
@@ -93,7 +85,7 @@ func (s CustomNodeKindConfig) Value() (driver.Value, error) {
 }
 
 func (s CustomNodeKindConfig) Validate() error {
-	if s.Icon.Type != CustomNodeKindTypeFontAwesome {
+	if s.Icon.Type != graphschema.DisplayNodeTypeFontAwesome {
 		return fmt.Errorf("invalid icon type. only Font Awesome icons are supported")
 	} else if s.Icon.Color != "" && !IsValidIconColor(s.Icon.Color) {
 		return fmt.Errorf("icon color must be a valid hexadecimal color string starting with '#' followed by 3 or 6 hex digits")

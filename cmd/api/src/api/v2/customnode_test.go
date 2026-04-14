@@ -27,6 +27,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/headers"
 
 	"github.com/gorilla/mux"
@@ -72,7 +73,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 				payload := &v2.CreateCustomNodeRequest{
 					CustomTypes: map[string]model.CustomNodeKindConfig{
 						"KindA": {
-							Icon: model.CustomNodeIcon{
+							Icon: graphschema.DisplayNodeIcon{
 								Type:  "font-stupid",
 								Name:  "coffee",
 								Color: "#FFFFFF",
@@ -111,8 +112,8 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 				payload := &v2.CreateCustomNodeRequest{
 					CustomTypes: map[string]model.CustomNodeKindConfig{
 						"KindA": {
-							Icon: model.CustomNodeIcon{
-								Type:  model.CustomNodeKindTypeFontAwesome,
+							Icon: graphschema.DisplayNodeIcon{
+								Type:  graphschema.DisplayNodeTypeFontAwesome,
 								Name:  "coffee",
 								Color: "FFFFFF",
 							},
@@ -150,15 +151,15 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 				payload := &v2.CreateCustomNodeRequest{
 					CustomTypes: map[string]model.CustomNodeKindConfig{
 						"KindA": {
-							Icon: model.CustomNodeIcon{
-								Type:  model.CustomNodeKindTypeFontAwesome,
+							Icon: graphschema.DisplayNodeIcon{
+								Type:  graphschema.DisplayNodeTypeFontAwesome,
 								Name:  "coffee",
 								Color: "#FFFFFF",
 							},
 						},
 						"KindB": {
-							Icon: model.CustomNodeIcon{
-								Type:  model.CustomNodeKindTypeFontAwesome,
+							Icon: graphschema.DisplayNodeIcon{
+								Type:  graphschema.DisplayNodeTypeFontAwesome,
 								Name:  "house",
 								Color: "#000",
 							},
@@ -182,8 +183,8 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 						ID:       1,
 						KindName: "KindA",
 						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{
-								Type:  model.CustomNodeKindTypeFontAwesome,
+							Icon: graphschema.DisplayNodeIcon{
+								Type:  graphschema.DisplayNodeTypeFontAwesome,
 								Name:  "coffee",
 								Color: "#FFFFFF",
 							},
@@ -193,8 +194,8 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 						ID:       2,
 						KindName: "KindB",
 						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{
-								Type:  model.CustomNodeKindTypeFontAwesome,
+							Icon: graphschema.DisplayNodeIcon{
+								Type:  graphschema.DisplayNodeTypeFontAwesome,
 								Name:  "house",
 								Color: "#000",
 							},
@@ -222,8 +223,8 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 				payload := &v2.CreateCustomNodeRequest{
 					CustomTypes: map[string]model.CustomNodeKindConfig{
 						"": {
-							Icon: model.CustomNodeIcon{
-								Type:  model.CustomNodeKindTypeFontAwesome,
+							Icon: graphschema.DisplayNodeIcon{
+								Type:  graphschema.DisplayNodeTypeFontAwesome,
 								Name:  "coffee",
 								Color: "#FFFFFF",
 							},
@@ -316,7 +317,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 
 				payload := &v2.UpdateCustomNodeKindRequest{
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{
+						Icon: graphschema.DisplayNodeIcon{
 							Type:  "font-stupid",
 							Name:  "coffee",
 							Color: "#FFFFFF",
@@ -357,8 +358,8 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 
 				payload := &v2.UpdateCustomNodeKindRequest{
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{
-							Type:  model.CustomNodeKindTypeFontAwesome,
+						Icon: graphschema.DisplayNodeIcon{
+							Type:  graphschema.DisplayNodeTypeFontAwesome,
 							Name:  "coffee",
 							Color: "FFFFFF",
 						},
@@ -398,8 +399,8 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 
 				payload := &v2.UpdateCustomNodeKindRequest{
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{
-							Type:  model.CustomNodeKindTypeFontAwesome,
+						Icon: graphschema.DisplayNodeIcon{
+							Type:  graphschema.DisplayNodeTypeFontAwesome,
 							Name:  "coffee",
 							Color: "#FFFFFF",
 						},
@@ -421,8 +422,8 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 					ID:       1,
 					KindName: "KindA",
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{
-							Type:  model.CustomNodeKindTypeFontAwesome,
+						Icon: graphschema.DisplayNodeIcon{
+							Type:  graphschema.DisplayNodeTypeFontAwesome,
 							Name:  "coffee",
 							Color: "#FFFFFF",
 						},

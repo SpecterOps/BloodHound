@@ -60,23 +60,29 @@ func buildValidKinds() ValidPrimaryKinds {
 	return validKinds
 }
 
-type DisplayKindIcon struct {
-	Type  string
-	Name  string
-	Color string
+type DisplayNodeType string
+
+const (
+	DisplayNodeTypeFontAwesome DisplayNodeType = "font-awesome"
+)
+
+type DisplayNodeIcon struct {
+	Type  DisplayNodeType `json:"type"`
+	Name  string          `json:"name"`
+	Color string          `json:"color"`
 }
 
 type DisplayKind struct {
 	Name string
-	Icon DisplayKindIcon
+	Icon DisplayNodeIcon
 }
 
 type ValidPrimaryKinds map[graph.Kind]DisplayKind
 
-func (s ValidPrimaryKinds) Add(kindName, iconName, iconColor, iconType string) {
+func (s ValidPrimaryKinds) Add(kindName, iconName, iconColor string, iconType DisplayNodeType) {
 	s[graph.StringKind(kindName)] = DisplayKind{
 		Name: kindName,
-		Icon: DisplayKindIcon{
+		Icon: DisplayNodeIcon{
 			Type:  iconType,
 			Name:  iconName,
 			Color: iconColor,

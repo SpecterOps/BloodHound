@@ -122,7 +122,7 @@ func Test_filterAndFormatSearchResults(t *testing.T) {
 		}
 		validPrimaryKinds = make(graphschema.ValidPrimaryKinds)
 	)
-	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", model.CustomNodeKindTypeFontAwesome)
+	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
 
 	actual := filterAndFormatSearchResults(input, nil, validPrimaryKinds)
 
@@ -147,7 +147,7 @@ func Test_filterAndFormatSearchResults_default(t *testing.T) {
 
 		validPrimaryKinds = make(graphschema.ValidPrimaryKinds)
 	)
-	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", model.CustomNodeKindTypeFontAwesome)
+	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
 
 	actual := filterAndFormatSearchResults(input, nil, validPrimaryKinds)
 
@@ -169,7 +169,7 @@ func Test_filterAndFormatSearchResults_includeOpenGraphNodes(t *testing.T) {
 		}
 		validPrimaryKinds = make(graphschema.ValidPrimaryKinds)
 	)
-	validPrimaryKinds.Add("CustomKind", "person-half-dress", "ff91af", model.CustomNodeKindTypeFontAwesome)
+	validPrimaryKinds.Add("CustomKind", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
 
 	actual := filterAndFormatSearchResults(input, nil, validPrimaryKinds)
 
@@ -205,7 +205,7 @@ func Test_filterAndFormatSearchResults_filterEnvironments(t *testing.T) {
 
 		validPrimaryKinds = make(graphschema.ValidPrimaryKinds)
 	)
-	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", model.CustomNodeKindTypeFontAwesome)
+	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
 
 	actual := filterAndFormatSearchResults(input, []string{"54321"}, validPrimaryKinds)
 
@@ -246,7 +246,7 @@ func Test_filterAndFormatSearchResults_filterEnvironmentsEmpty(t *testing.T) {
 
 		validPrimaryKinds = make(graphschema.ValidPrimaryKinds)
 	)
-	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", model.CustomNodeKindTypeFontAwesome)
+	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
 
 	actual := filterAndFormatSearchResults(input, []string{}, validPrimaryKinds)
 
@@ -280,7 +280,7 @@ func Test_filterAndFormatSearchResults_filterEnvironments_domainSIDFail(t *testi
 		input             = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
 		validPrimaryKinds = make(graphschema.ValidPrimaryKinds)
 	)
-	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", model.CustomNodeKindTypeFontAwesome)
+	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
 
 	result := filterAndFormatSearchResults(input, []string{"54321"}, validPrimaryKinds)
 	require.Len(t, result, 0)
@@ -314,7 +314,7 @@ func Test_filterAndFormatSearchResults_filterEnvironments_tenantIDFail(t *testin
 
 		validPrimaryKinds = make(graphschema.ValidPrimaryKinds)
 	)
-	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", model.CustomNodeKindTypeFontAwesome)
+	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
 
 	result := filterAndFormatSearchResults(input, []string{"azure12345"}, validPrimaryKinds)
 	require.Len(t, result, 0)
@@ -348,7 +348,7 @@ func Test_filterAndFormatSearchResults_filterEnvironmentsOG(t *testing.T) {
 
 		validPrimaryKinds = make(graphschema.ValidPrimaryKinds)
 	)
-	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", model.CustomNodeKindTypeFontAwesome)
+	validPrimaryKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
 
 	actual := filterAndFormatSearchResults(input, []string{"og-12345"}, validPrimaryKinds)
 

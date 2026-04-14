@@ -3214,7 +3214,7 @@ func (mr *MockDatabaseMockRecorder) UpdateGraphSchemaNodeKind(ctx, schemaNodeKin
 }
 
 // UpdateGraphSchemaNodeKindIconById mocks base method.
-func (m *MockDatabase) UpdateGraphSchemaNodeKindIconById(ctx context.Context, kindId int32, icon model.CustomNodeIcon) (model.GraphSchemaNodeKind, error) {
+func (m *MockDatabase) UpdateGraphSchemaNodeKindIconById(ctx context.Context, kindId int32, icon graphschema.DisplayNodeIcon) (model.GraphSchemaNodeKind, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateGraphSchemaNodeKindIconById", ctx, kindId, icon)
 	ret0, _ := ret[0].(model.GraphSchemaNodeKind)

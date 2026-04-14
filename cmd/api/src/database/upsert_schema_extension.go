@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 )
 
 const CustomNodeIconType = "font-awesome"
@@ -261,7 +262,7 @@ func parseIconDefinitionFromNodeKind(nodeKind model.GraphSchemaNodeKind, existin
 		KindName:         nodeKind.Name,
 		SchemaNodeKindId: &nodeKind.ID,
 		Config: model.CustomNodeKindConfig{
-			Icon: model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome},
+			Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome},
 		},
 	}
 

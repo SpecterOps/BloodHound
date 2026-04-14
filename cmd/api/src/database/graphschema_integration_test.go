@@ -1321,7 +1321,7 @@ func TestDatabase_UpdateGraphSchemaNodeKindIconById(t *testing.T) {
 				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
 				createdNodeKind := createTestNodeKind(t, testSuite, "Test Kind 1", extension.ID, "Test_Kind_1", "Test Kind 1", true, "user", "#17E625")
 
-				updatedNodeKind, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKindIconById(testSuite.Context, createdNodeKind.ID, model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "coffee", Color: "#3a0b138c"})
+				updatedNodeKind, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKindIconById(testSuite.Context, createdNodeKind.ID, graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "coffee", Color: "#3a0b138c"})
 				require.NoError(t, err, "unexpected error occurred when updating node kind icon")
 
 				// Retrieve Node Kind 1
@@ -1335,7 +1335,7 @@ func TestDatabase_UpdateGraphSchemaNodeKindIconById(t *testing.T) {
 		}, {
 			name: "Error: failed to update schema node kind icon that does not exist",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
-				_, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKindIconById(testSuite.Context, 12345, model.CustomNodeIcon{Type: model.CustomNodeKindTypeFontAwesome, Name: "coffee", Color: "#3a0b138c"})
+				_, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKindIconById(testSuite.Context, 12345, graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "coffee", Color: "#3a0b138c"})
 				require.EqualError(t, err, database.ErrNotFound.Error())
 			},
 		},
