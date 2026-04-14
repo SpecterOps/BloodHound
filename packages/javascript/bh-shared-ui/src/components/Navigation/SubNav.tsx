@@ -28,14 +28,14 @@ const SubNavListItem: FC<{ item: Pick<SubNavItem, 'label' | 'path'> }> = ({ item
 
     return (
         <li
-            className={cn('mx-2 px-2 py-0.5 rounded', {
+            className={cn('mx-2 rounded', {
                 'text-primary dark:text-[#8D8BF8] bg-neutral-4': isActiveRoute,
                 'hover:text-primary-variant hover:dark:text-[#7B78FD] hover:bg-neutral-3 dark:hover:bg-[#1A1A1A]':
                     !isActiveRoute,
             })}>
             {/* Full width ensures that even clicking white space activates the link */}
             {/* Anchor uses block display instead of inline so full width works */}
-            <AppLink className='w-full block' to={path}>
+            <AppLink className='w-full block px-2 py-0.5' to={path}>
                 {label}
             </AppLink>
         </li>
@@ -77,7 +77,7 @@ const SubNav: React.FC<{
     return (
         <nav
             className={cn(
-                'bottom-28 py-2 rounded-lg cursor-default z-subNav',
+                'bottom-2 py-2 rounded-lg cursor-default z-subNav',
                 'flex flex-col gap-8 absolute shadow-md',
                 'bg-[#F2F2F2] dark:bg-[#1F1F1F]',
                 'transition-all duration-300 ease-out',
