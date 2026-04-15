@@ -968,7 +968,7 @@ VALUES ((SELECT id FROM roles WHERE roles.name = 'Administrator'),
 ON CONFLICT DO NOTHING;
 
 -- Remove the GraphDBWrite permission from the Upload-Only role
-DELETE FROM roles_permissions 
+DELETE FROM roles_permissions
 WHERE role_id = (SELECT id FROM roles WHERE roles.name = 'Upload-Only')
 AND permission_id = (SELECT id FROM permissions WHERE permissions.authority = 'graphdb' AND permissions.name = 'Write');
 
@@ -2331,7 +2331,7 @@ VALUES ('api.timeout_limit',
         current_timestamp)
   ON CONFLICT DO NOTHING;
 
--- Update Scheduled Analysis description 
+-- Update Scheduled Analysis description
 UPDATE parameters SET description = 'This configuration parameter allows setting a schedule for analysis. When enabled, analysis will run when the scheduled time arrives or when manually requested' WHERE key = 'analysis.scheduled';
 
 -- Add Namespace column to schema_extensions
@@ -2867,7 +2867,7 @@ LANGUAGE plpgsql;
 --
 -- SPDX-License-Identifier: Apache-2.0
 
--- Fix schema_findings_pkey duplicate key value violation 
+-- Fix schema_findings_pkey duplicate key value violation
 SELECT setval('schema_findings_id_seq', COALESCE(MAX(id), 1), true) FROM schema_findings;-- Copyright 2026 Specter Ops, Inc.
 --
 -- Licensed under the Apache License, Version 2.0
@@ -2965,5 +2965,51 @@ END $$
 LANGUAGE plpgsql;
 -- +goose StatementEnd
 
+-- Add API Key Expiration Support feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'api_key_expiration_support',
+        'API Key Expiration Support',
+        'Enables API Key Expiration configuration options',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
+
+-- Add API Tokens Expiration Parameter
+INSERT INTO parameters (key, name, description, value, created_at, updated_at)
+VALUES ('auth.api_token_expiration',
+        'API Token Expiration',
+        'This configuration parameter enables/disables created API tokens to expire after the set number of days.',
+        '{"enabled":false, "expiration_period":90}',
+        current_timestamp,
+        current_timestamp)
+ON CONFLICT DO NOTHING;
+
+-- Add column to allow deletion of relationships by kind
+ALTER TABLE analysis_request_switch ADD COLUMN IF NOT EXISTS delete_relationships text [] DEFAULT ARRAY []::text [];
+
+-- Auditors to have all environments access
+UPDATE users
+SET all_environments = true
+WHERE id IN (
+  SELECT u.id
+  FROM users u
+         JOIN users_roles ur ON ur.user_id = u.id
+         JOIN roles r ON ur.role_id = r.id
+  WHERE r.name = 'Auditor'
+);
+
+-- Make opengraph_extension_management user updatable
+UPDATE feature_flags
+SET user_updatable = true,
+    updated_at = current_timestamp
+WHERE key = 'opengraph_extension_management';
+
+-- Set client_bearer_auth feature flag to default to enabled
+UPDATE feature_flags
+SET enabled = true,
+    updated_at = current_timestamp
+WHERE key = 'client_bearer_auth';
 -- +goose Down
 -- Intentionally empty - baseline cannot be rolled back
