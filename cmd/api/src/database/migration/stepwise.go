@@ -90,7 +90,7 @@ func (s *Migrator) ExecuteExtensionDataPopulation() error {
 //
 // Once bootstrap is complete (if needed), we run goose to apply any pending migrations.
 func (s *Migrator) ExecuteMigrations() error {
-	// Check for legacy migrations table (old customers)
+	// Check for legacy migrations table
 	hasLegacyTable, err := s.HasMigrationTable()
 	if err != nil {
 		return fmt.Errorf("failed to check if migration table exists: %w", err)
@@ -111,12 +111,16 @@ func (s *Migrator) ExecuteMigrations() error {
 	if err != nil {
 		return fmt.Errorf("failed to create goose provider: %w", err)
 	}
+
 	if _, err := provider.Up(context.Background()); err != nil {
 		return fmt.Errorf("failed to execute up migrations: %w", err)
 	}
 
+	if err := s.populateMigrationDescription(provider); err != nil {
+		slog.Warn("Failed to populate description column", slog.Any("error", err))
+	}
+
 	// Only drop legacy table AFTER goose succeeds
-	// This ensures we can retry bootstrap on failure
 	if hasLegacyTable {
 		if err := s.dropLegacyMigrationTable(); err != nil {
 			return err
@@ -139,8 +143,12 @@ func (s *Migrator) bootstrapGoose() error {
             id SERIAL PRIMARY KEY,
             version_id BIGINT NOT NULL UNIQUE,
             is_applied BOOLEAN NOT NULL,
-            tstamp TIMESTAMP DEFAULT now()
+            tstamp TIMESTAMP DEFAULT now(),
+            description TEXT
         );
+
+        -- Add description column if it doesn't exist (for existing tables)
+        ALTER TABLE goose_db_version ADD COLUMN IF NOT EXISTS description TEXT;
 
         INSERT INTO goose_db_version (version_id, is_applied)
         VALUES (1, true), (2, true)
@@ -153,4 +161,34 @@ func (s *Migrator) dropLegacyMigrationTable() error {
 	slog.Info("Dropping legacy migrations table")
 	_, err := s.SqlDB.Exec(`DROP TABLE IF EXISTS migrations;`)
 	return err
+}
+
+func (s *Migrator) populateMigrationDescription(provider *goose.Provider) error {
+
+	if _, err := s.SqlDB.Exec(`
+        ALTER TABLE goose_db_version 
+        ADD COLUMN IF NOT EXISTS description TEXT
+    `); err != nil {
+		return err
+	}
+	sources := provider.ListSources()
+
+	for _, source := range sources {
+		filename := filepath.Base(source.Path)
+		parts := strings.SplitN(strings.TrimSuffix(filename, ".sql"), "_", 2)
+
+		var description string
+		if len(parts) > 1 {
+			description = strings.ReplaceAll(parts[1], "_", " ")
+		}
+		if _, err := s.SqlDB.Exec(`
+            UPDATE goose_db_version 
+            SET description = $1 
+            WHERE version_id = $2 AND (description IS NULL OR description = '')
+        `, description, source.Version); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
