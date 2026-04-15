@@ -14,14 +14,48 @@ import {
     MenuTrigger,
 } from './Menu';
 
-const meta: Meta<typeof Menu> = {
+const meta = {
     title: 'Components/Menu',
-    component: Menu,
-};
+    component: MenuItem,
+    tags: ['autodocs'],
+    parameters: { layout: 'centered' },
+    argTypes: {
+        icon: {
+            description: 'Icon element rendered on the left side of the item. Requires `iconLeft` to be true.',
+            control: false,
+        },
+        iconLeft: {
+            description: 'Whether to show the icon on the left side of the item.',
+            control: 'boolean',
+        },
+        secondaryMenu: {
+            description:
+                'Renders a caret-right indicator on the right edge of the item. Use `MenuSub` + `MenuSubTrigger` for functional submenus.',
+            control: 'boolean',
+        },
+        disabled: {
+            description: 'Makes the item non-interactive and applies disabled styling.',
+            control: 'boolean',
+        },
+        children: {
+            description: 'The label content of the menu item.',
+            control: 'text',
+        },
+        onSelect: {
+            description: 'Callback fired when the item is selected.',
+        },
+    },
+    args: {
+        children: 'Menu Item',
+        iconLeft: false,
+        secondaryMenu: false,
+        disabled: false,
+    },
+} satisfies Meta<typeof MenuItem>;
 
 export default meta;
 
-type Story = StoryObj<typeof Menu>;
+type Story = StoryObj<typeof meta>;
 
 const Trigger = () => (
     <MenuTrigger asChild>
