@@ -38,8 +38,12 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
                     borderColor: color,
                     backgroundColor: backgroundColor,
                 }}>
-                {icon && <span style={{ color }}>{icon}</span>}
-                {label}
+                {icon && (
+                    <span className='badge-icon' style={{ color }}>
+                        {icon}
+                    </span>
+                )}
+                <span className='badge-label'>{label}</span>
             </div>
         );
     }
