@@ -34,8 +34,9 @@ interface GraphControlsProps<T extends readonly string[]> {
     onToggleEdgeLabels: () => void;
     onSearchedNodeClick: (node: FlatNode) => void;
     isExploreTableSelected?: boolean;
+    isExploreLayoutSelected?: boolean;
     layoutOptions: T;
-    selectedLayout: T[number];
+    selectedLayout?: T[number];
     showNodeLabels: boolean;
     showEdgeLabels: boolean;
     jsonData: Record<string, any> | undefined;
@@ -50,6 +51,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         onToggleEdgeLabels,
         onSearchedNodeClick,
         isExploreTableSelected,
+        isExploreLayoutSelected,
         layoutOptions,
         selectedLayout,
         showNodeLabels,
@@ -61,7 +63,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
     const [isCurrentSearchOpen, setIsCurrentSearchOpen] = useState(false);
 
     const currentSearchAnchorElement = useRef(null);
-
+    console.log(`isExploreLayoutSelected = ${isExploreLayoutSelected}`);
     useKeybindings({
         shift: {
             Slash: () => {
@@ -82,6 +84,8 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
             if (!showEdgeLabels) onToggleEdgeLabels();
         }
     };
+
+    const isUserSelectedLayout = false;
 
     return (
         <>
@@ -135,8 +139,8 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                     {layoutOptions.map((buttonLabel) => {
                         const tableViewIsSelected = isExploreTableSelected && searchType === 'cypher';
                         const isSelected = tableViewIsSelected
-                            ? buttonLabel === 'table'
-                            : buttonLabel === selectedLayout;
+                            ? buttonLabel === 'table' && isUserSelectedLayout
+                            : buttonLabel === selectedLayout && isUserSelectedLayout;
 
                         return (
                             <MenuItem
