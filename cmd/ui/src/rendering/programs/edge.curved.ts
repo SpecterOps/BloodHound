@@ -35,6 +35,7 @@ import { bezier } from 'src/rendering/utils/bezier';
 
 const RESOLUTION = 0.02,
     POINTS = 2 / RESOLUTION + 2,
+    SEGMENTS_PER_EDGE = POINTS / 2 - 1,
     ATTRIBUTES = 6,
     STRIDE = POINTS * ATTRIBUTES;
 
@@ -302,7 +303,7 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
             indices[c++] = i + 3;
 
             // Disconnect if it is the last line segment in the curve
-            const isLastSegment = (c / 6) % (RESOLUTION - 1) === 0;
+            const isLastSegment = (c / 6) % SEGMENTS_PER_EDGE === 0;
             if (isLastSegment) i += 2;
         }
 
