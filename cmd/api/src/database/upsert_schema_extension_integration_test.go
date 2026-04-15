@@ -60,12 +60,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "Test Edge Kind 1",
 			IsTraversable: true,
 		}
-		newProperty1 = model.PropertyInput{
-			Name:        "Upsert_New_Test_Property_1",
-			DisplayName: "Test Property 1",
-			DataType:    "string",
-			Description: "Test Property 1",
-		}
 		newNodeKind2 = model.NodeInput{
 			Name:          "Upsert_New_Test_Node_Kind_2",
 			DisplayName:   "Test Node Kind 2",
@@ -78,12 +72,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Name:          "Upsert_New_Test_Edge_Kind_2",
 			Description:   "Test Edge Kind 2",
 			IsTraversable: true,
-		}
-		newProperty2 = model.PropertyInput{
-			Name:        "Upsert_New_Test_Property_2",
-			DisplayName: "Test Property 2",
-			DataType:    "string",
-			Description: "Test Property 2",
 		}
 		newNodeKind3 = model.NodeInput{
 			Name:          "Upsert_New_Test_Node_Kind_3",
@@ -98,12 +86,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "Test Edge Kind 3",
 			IsTraversable: true,
 		}
-		newProperty3 = model.PropertyInput{
-			Name:        "Upsert_New_Test_Property_3",
-			DisplayName: "Test Property 3",
-			DataType:    "string",
-			Description: "Test Property 3",
-		}
 		newNodeKind4 = model.NodeInput{
 			Name:          "Upsert_New_Test_Node_Kind_4",
 			DisplayName:   "Test Node Kind 4",
@@ -116,12 +98,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Name:          "Upsert_New_Test_Edge_Kind_4",
 			Description:   "Test Edge Kind 4",
 			IsTraversable: true,
-		}
-		newProperty4 = model.PropertyInput{
-			Name:        "Upsert_New_Test_Property_4",
-			DisplayName: "Test Property 4",
-			DataType:    "string",
-			Description: "Test Property 4",
 		}
 		newSourceNodeKind = model.NodeInput{
 			Name:          "Upsert_New_Test_Source_Kind",
@@ -207,12 +183,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "Test Edge Kind 1",
 			IsTraversable: true,
 		}
-		existingProperty1 = model.PropertyInput{
-			Name:        "Upsert_Existing_Test_Property_1",
-			DisplayName: "Property 1",
-			DataType:    "string",
-			Description: "Property 1",
-		}
 		existingNodeKind2 = model.NodeInput{
 			Name:          "Upsert_Existing_Test_Node_Kind_2",
 			DisplayName:   "Test Node Kind 2",
@@ -225,12 +195,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Name:          "Upsert_Existing_Test_Edge_Kind_2",
 			Description:   "Test Edge Kind 2",
 			IsTraversable: true,
-		}
-		existingProperty2 = model.PropertyInput{
-			Name:        "Upsert_Existing_Test_Property_2",
-			DisplayName: "Property 2",
-			DataType:    "string",
-			Description: "Property 2",
 		}
 		existingNodeKind3 = model.NodeInput{
 			Name:          "Upsert_Existing_Test_Node_Kind_3",
@@ -245,12 +209,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "Test Edge Kind 3",
 			IsTraversable: true,
 		}
-		existingProperty3 = model.PropertyInput{
-			Name:        "Upsert_Existing_Test_Property_3",
-			DisplayName: "Property 3",
-			DataType:    "string",
-			Description: "Property 3",
-		}
 		existingNodeKind4 = model.NodeInput{
 			Name:          "Upsert_Existing_Test_Node_Kind_4",
 			DisplayName:   "Test Node Kind 4",
@@ -263,12 +221,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Name:          "Upsert_Existing_Test_Edge_Kind_4",
 			Description:   "Test Edge Kind 4",
 			IsTraversable: true,
-		}
-		existingProperty4 = model.PropertyInput{
-			Name:        "Upsert_Existing_Test_Property_4",
-			DisplayName: "Property 4",
-			DataType:    "string",
-			Description: "Property 4",
 		}
 		existingEnvironmentNodeKind1 = model.NodeInput{
 			Name:          "Upsert_Existing_Environment_Kind_1",
@@ -342,12 +294,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "Test Edge Kind 4",
 			IsTraversable: true,
 		}
-		updateProperty4 = model.PropertyInput{
-			Name:        "Upsert_Update_Property_4",
-			DisplayName: "Property 4",
-			DataType:    "string",
-			Description: "Property 4",
-		}
 		updateEnvironment1 = model.EnvironmentInput{
 			EnvironmentKindName: existingEnvironmentNodeKind1.Name,
 			SourceKindName:      newSourceNodeKind.Name,
@@ -370,7 +316,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		existingNodeKinds = model.NodesInput{existingNodeKind1, existingNodeKind2, existingNodeKind3, existingNodeKind4,
 			existingEnvironmentNodeKind1, existingEnvironmentNodeKind2, existingSourceKind1}
 		existingEdgeKinds    = model.RelationshipsInput{existingEdgeKind1, existingEdgeKind2, existingEdgeKind3, existingEdgeKind4}
-		existingProperties   = model.PropertiesInput{existingProperty1, existingProperty2, existingProperty3, existingProperty4}
 		existingEnvironments = model.EnvironmentsInput{existingEnvironment1, existingEnvironment2}
 		existingFindings     = model.RelationshipFindingsInput{existingFinding1, existingFinding2}
 
@@ -380,12 +325,9 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		newNodeKinds = model.NodesInput{newNodeKind1, newNodeKind2, newNodeKind3, newNodeKind4, newEnvironmentNodeKind1,
 			newEnvironmentNodeKind2, newSourceNodeKind}
 		newEdgeKinds    = model.RelationshipsInput{newEdgeKind1, newEdgeKind2, newEdgeKind3, newEdgeKind4}
-		newProperties   = model.PropertiesInput{newProperty1, newProperty2, newProperty3, newProperty4}
 		newEnvironments = model.EnvironmentsInput{newEnvironment1, newEnvironment2}
 		newFindings     = model.RelationshipFindingsInput{newFinding1, newFinding2, newFinding3}
 
-		updateProperties = model.PropertiesInput{newProperty1, newProperty2, newProperty3,
-			newProperty4, existingProperty1, updateProperty4}
 		updateEdgeKinds = model.RelationshipsInput{newEdgeKind1, newEdgeKind2, newEdgeKind3, newEdgeKind4,
 			existingEdgeKind1, updateEdgeKind4}
 		updateNodeKinds = model.NodesInput{newNodeKind1, newNodeKind2, newNodeKind3, newNodeKind4,
@@ -454,29 +396,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			wantErr: model.ErrDuplicateSchemaRelationshipKindName,
 		},
 		{
-			name: "fail - duplicate properties",
-			fields: fields{
-				setup:    func(t *testing.T) int32 { return 0 },
-				teardown: func(t *testing.T, extensionIds []int32) {},
-			},
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput:         testExtension,
-					NodeKindsInput:         newNodeKinds,
-					RelationshipKindsInput: newEdgeKinds,
-					PropertiesInput: model.PropertiesInput{
-						{
-							Name: "DuplicateProperty",
-						},
-						{
-							Name: "DuplicateProperty",
-						},
-					},
-				},
-			},
-			wantErr: model.ErrDuplicateGraphSchemaExtensionPropertyName,
-		},
-		{
 			name: "fail - cannot modify a built-in extension",
 			fields: fields{
 				setup: func(t *testing.T) int32 {
@@ -525,7 +444,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput:         testExtension,
-					PropertiesInput:        newProperties,
 					RelationshipKindsInput: newEdgeKinds,
 					NodeKindsInput:         newNodeKinds,
 					EnvironmentsInput: model.EnvironmentsInput{
@@ -548,7 +466,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput:         testExtension,
-					PropertiesInput:        newProperties,
 					RelationshipKindsInput: newEdgeKinds,
 					NodeKindsInput:         newNodeKinds,
 					EnvironmentsInput: model.EnvironmentsInput{
@@ -573,7 +490,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput:         testExtension,
-					PropertiesInput:        newProperties,
 					RelationshipKindsInput: newEdgeKinds,
 					NodeKindsInput:         newNodeKinds,
 					EnvironmentsInput: model.EnvironmentsInput{
@@ -597,7 +513,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput:         testExtension,
-					PropertiesInput:        newProperties,
 					RelationshipKindsInput: newEdgeKinds,
 					NodeKindsInput:         newNodeKinds,
 					EnvironmentsInput: model.EnvironmentsInput{
@@ -621,7 +536,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput:         testExtension,
-					PropertiesInput:        newProperties,
 					RelationshipKindsInput: newEdgeKinds,
 					NodeKindsInput:         newNodeKinds,
 					EnvironmentsInput: model.EnvironmentsInput{
@@ -657,14 +571,12 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					ExtensionInput:         testExtension,
 					NodeKindsInput:         newNodeKinds,
 					RelationshipKindsInput: newEdgeKinds,
-					PropertiesInput:        newProperties,
 				},
 			},
 			wantGraphSchema: model.GraphExtensionInput{
 				ExtensionInput:         testExtension,
 				NodeKindsInput:         newNodeKinds,
 				RelationshipKindsInput: newEdgeKinds,
-				PropertiesInput:        newProperties,
 			},
 		},
 		{
@@ -688,7 +600,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					ExtensionInput:            testExtension,
 					NodeKindsInput:            newNodeKinds,
 					RelationshipKindsInput:    newEdgeKinds,
-					PropertiesInput:           newProperties,
 					EnvironmentsInput:         newEnvironments,
 					RelationshipFindingsInput: newFindings,
 				},
@@ -699,7 +610,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				ExtensionInput:            testExtension,
 				NodeKindsInput:            newNodeKinds,
 				RelationshipKindsInput:    newEdgeKinds,
-				PropertiesInput:           newProperties,
 				EnvironmentsInput:         newEnvironments,
 				RelationshipFindingsInput: newFindings,
 			},
@@ -727,11 +637,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					for _, edgeKind := range existingEdgeKinds {
 						_, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, edgeKind.Name,
 							createdExtension.ID, edgeKind.Description, edgeKind.IsTraversable)
-						require.NoError(t, err)
-					}
-					for _, property := range existingProperties {
-						_, err = testSuite.BHDatabase.CreateGraphSchemaProperty(testSuite.Context,
-							createdExtension.ID, property.Name, property.DisplayName, property.DataType, property.Description)
 						require.NoError(t, err)
 					}
 					for _, environment := range existingEnvironments {
@@ -772,7 +677,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput:            testExtension,
-					PropertiesInput:           updateProperties,
 					RelationshipKindsInput:    updateEdgeKinds,
 					NodeKindsInput:            updateNodeKinds,
 					EnvironmentsInput:         updateEnvironments,
@@ -784,7 +688,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			want:    true,
 			wantGraphSchema: model.GraphExtensionInput{
 				ExtensionInput:            testExtension,
-				PropertiesInput:           updateProperties,
 				RelationshipKindsInput:    updateEdgeKinds,
 				NodeKindsInput:            updateNodeKinds,
 				EnvironmentsInput:         updateEnvironments,
@@ -813,11 +716,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					for _, edgeKind := range existingEdgeKinds {
 						_, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, edgeKind.Name,
 							createdExtension.ID, edgeKind.Description, edgeKind.IsTraversable)
-						require.NoError(t, err)
-					}
-					for _, property := range existingProperties {
-						_, err = testSuite.BHDatabase.CreateGraphSchemaProperty(testSuite.Context,
-							createdExtension.ID, property.Name, property.DisplayName, property.DataType, property.Description)
 						require.NoError(t, err)
 					}
 					for _, environment := range existingEnvironments {
@@ -864,7 +762,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 						Version:     "v1.0.0",
 						Namespace:   "TWO",
 					},
-					PropertiesInput:           newProperties,
 					RelationshipKindsInput:    newEdgeKinds,
 					NodeKindsInput:            newNodeKinds,
 					EnvironmentsInput:         newEnvironments,
@@ -879,7 +776,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					Version:     "v1.0.0",
 					Namespace:   "TWO",
 				},
-				PropertiesInput:           newProperties,
 				RelationshipKindsInput:    newEdgeKinds,
 				NodeKindsInput:            newNodeKinds,
 				EnvironmentsInput:         newEnvironments,
@@ -904,7 +800,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput:         testExtension,
-					PropertiesInput:        newProperties,
 					RelationshipKindsInput: newEdgeKinds,
 					NodeKindsInput:         newNodeKinds,
 					EnvironmentsInput: model.EnvironmentsInput{
@@ -928,7 +823,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			want: false,
 			wantGraphSchema: model.GraphExtensionInput{
 				ExtensionInput:         testExtension,
-				PropertiesInput:        newProperties,
 				RelationshipKindsInput: newEdgeKinds,
 				NodeKindsInput:         newNodeKinds,
 				EnvironmentsInput: model.EnvironmentsInput{
@@ -967,7 +861,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput:         testExtension,
-					PropertiesInput:        newProperties,
 					RelationshipKindsInput: newEdgeKinds,
 					NodeKindsInput:         newNodeKinds,
 					EnvironmentsInput: model.EnvironmentsInput{newEnvironment1,
@@ -981,7 +874,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			},
 			wantGraphSchema: model.GraphExtensionInput{
 				ExtensionInput:         testExtension,
-				PropertiesInput:        newProperties,
 				RelationshipKindsInput: newEdgeKinds,
 				NodeKindsInput:         newNodeKinds,
 				EnvironmentsInput: model.EnvironmentsInput{newEnvironment1,
@@ -1013,7 +905,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					ExtensionInput:            testExtensionNoDisplayName,
 					NodeKindsInput:            newNodeKinds,
 					RelationshipKindsInput:    newEdgeKinds,
-					PropertiesInput:           newProperties,
 					EnvironmentsInput:         newEnvironments,
 					RelationshipFindingsInput: newFindings,
 				},
@@ -1029,7 +920,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				},
 				NodeKindsInput:            newNodeKinds,
 				RelationshipKindsInput:    newEdgeKinds,
-				PropertiesInput:           newProperties,
 				EnvironmentsInput:         newEnvironments,
 				RelationshipFindingsInput: newFindings,
 			},
@@ -1106,7 +996,6 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 
 		gotNodeKinds                  model.GraphSchemaNodeKinds
 		gotRelationshipKinds          model.GraphSchemaRelationshipKinds
-		gotProperties                 model.GraphSchemaProperties
 		gotSchemaEnvironments         []model.SchemaEnvironment
 		gotPrincipalKinds             model.SchemaEnvironmentPrincipalKinds
 		sourceKind                    model.Kind
@@ -1174,21 +1063,6 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		require.Equalf(t, want.RelationshipKindsInput[idx].Name, gotRelationshipKind.Name, "RelationshipKindsInput - Name mismatch")
 		require.Equalf(t, want.RelationshipKindsInput[idx].Description, gotRelationshipKind.Description, "RelationshipKindsInput - description mismatch")
 		require.Equalf(t, want.RelationshipKindsInput[idx].IsTraversable, gotRelationshipKind.IsTraversable, "RelationshipKindsInput - is_traversable mismatch")
-	}
-
-	// Test Properties
-
-	gotProperties, _, err = db.GetGraphSchemaProperties(testContext,
-		model.Filters{"schema_extension_id": []model.Filter{schemaIdFilter}}, model.Sort{}, 0, 0)
-	require.NoError(t, err)
-	require.Equalf(t, len(gotProperties), len(want.PropertiesInput), "properties - count mismatch")
-	for idx, gotProperty := range gotProperties {
-		require.Greaterf(t, gotProperty.ID, int32(0), "PropertyInput - ID is invalid")
-		require.Equalf(t, gotGraphExtension.ID, gotProperty.SchemaExtensionId, "PropertyInput - SchemaExtensionId is invalid")
-		require.Equalf(t, want.PropertiesInput[idx].Name, gotProperty.Name, "PropertyInput - Name mismatch")
-		require.Equalf(t, want.PropertiesInput[idx].Description, gotProperty.Description, "PropertyInput - description mismatch")
-		require.Equalf(t, want.PropertiesInput[idx].DataType, gotProperty.DataType, "PropertyInput - DataType mismatch")
-		require.Equalf(t, want.PropertiesInput[idx].DisplayName, gotProperty.DisplayName, "PropertyInput - display_name mismatch")
 	}
 
 	// Test Environments

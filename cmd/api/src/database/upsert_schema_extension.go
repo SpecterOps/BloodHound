@@ -64,9 +64,6 @@ func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtens
 	} else if err = bloodhoundDBTransaction.insertRelationshipKinds(ctx, createdExtension.ID,
 		graphExtensionInput.RelationshipKindsInput); err != nil {
 		return schemaExists, fmt.Errorf("failed to upsert edge kinds: %w", err)
-	} else if err = bloodhoundDBTransaction.insertProperties(ctx,
-		createdExtension.ID, graphExtensionInput.PropertiesInput); err != nil {
-		return schemaExists, fmt.Errorf("failed to upsert properties: %w", err)
 	} else if err = bloodhoundDBTransaction.upsertGraphEnvironments(ctx, createdExtension.ID,
 		graphExtensionInput.EnvironmentsInput); err != nil {
 		return schemaExists, err
@@ -102,22 +99,6 @@ func (s *BloodhoundDB) cleanupExistingExtension(ctx context.Context, extensionNa
 		}
 	}
 	return len(existingGraphExtensions) > 0, nil
-}
-
-// insertProperties - inserts a slice of new properties for the provided extension.
-func (s *BloodhoundDB) insertProperties(ctx context.Context, extensionId int32, newGraphSchemaProperties model.PropertiesInput) error {
-	var (
-		err error
-	)
-
-	for _, property := range newGraphSchemaProperties {
-		if _, err = s.CreateGraphSchemaProperty(ctx, extensionId, property.Name,
-			property.DisplayName, property.DataType, property.Description); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // insertRelationshipKinds - inserts a slice of new relationship kinds for the provided extension.
