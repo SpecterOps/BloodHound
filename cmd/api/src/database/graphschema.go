@@ -380,6 +380,20 @@ func (s *BloodhoundDB) GetDisplayGraphSchemaNodeKinds(ctx context.Context) (mode
 	}
 }
 
+// GetGraphSchemaNodeKindsByExtensionId - retrieves all node kinds belonging to the given extension.
+func (s *BloodhoundDB) GetGraphSchemaNodeKindsByExtensionId(ctx context.Context, extensionId int32) (model.GraphSchemaNodeKinds, error) {
+	if nodeKinds, _, err := s.GetGraphSchemaNodeKinds(ctx,
+		model.Filters{"schema_extension_id": []model.Filter{{
+			Operator:    model.Equals,
+			Value:       fmt.Sprintf("%d", extensionId),
+			SetOperator: model.FilterAnd,
+		}}}, model.Sort{}, 0, 0); err != nil {
+		return nil, err
+	} else {
+		return nodeKinds, nil
+	}
+}
+
 // GetGraphSchemaNodeKindById - gets a row from the schema_node_kinds table by id. It returns a model.GraphSchemaNodeKind struct populated with the data, or an error if that id does not exist.
 func (s *BloodhoundDB) GetGraphSchemaNodeKindById(ctx context.Context, schemaNodeKindId int32) (model.GraphSchemaNodeKind, error) {
 	var schemaNodeKind model.GraphSchemaNodeKind
@@ -584,6 +598,20 @@ func (s *BloodhoundDB) CreateGraphSchemaRelationshipKind(ctx context.Context, na
 		return schemaRelationshipKind, CheckError(result)
 	}
 	return schemaRelationshipKind, nil
+}
+
+// GetGraphSchemaRelationshipKindsByExtensionId - retrieves all relationship kinds belonging to the given extension.
+func (s *BloodhoundDB) GetGraphSchemaRelationshipKindsByExtensionId(ctx context.Context, extensionId int32) (model.GraphSchemaRelationshipKinds, error) {
+	if relationshipKinds, _, err := s.GetGraphSchemaRelationshipKinds(ctx,
+		model.Filters{"schema_extension_id": []model.Filter{{
+			Operator:    model.Equals,
+			Value:       fmt.Sprintf("%d", extensionId),
+			SetOperator: model.FilterAnd,
+		}}}, model.Sort{}, 0, 0); err != nil {
+		return nil, err
+	} else {
+		return relationshipKinds, nil
+	}
 }
 
 // GetGraphSchemaRelationshipKinds - returns all rows from the schema_relationship_kinds table that matches the given model.Filters. It returns a slice of model.GraphSchemaRelationshipKinds
@@ -846,6 +874,40 @@ func (s *BloodhoundDB) GetEnvironmentByEnvironmentKindId(ctx context.Context, en
 	return environments[0], nil
 }
 
+// GetEnvironmentByExtensionAndKindId - retrieves the schema environment belonging to the given extension
+// with the given environment kind. Scoping the lookup to the extension prevents cross-extension collisions
+// when multiple extensions define environments using the same environment kind.
+func (s *BloodhoundDB) GetEnvironmentByExtensionAndKindId(ctx context.Context, extensionId int32, environmentKindId int32) (model.SchemaEnvironment, error) {
+	filters := model.Filters{
+		"schema_extension_id": []model.Filter{{Operator: model.Equals, Value: fmt.Sprintf("%d", extensionId)}},
+		"environment_kind_id": []model.Filter{{Operator: model.Equals, Value: fmt.Sprintf("%d", environmentKindId)}},
+	}
+
+	if environments, err := s.GetEnvironmentsFiltered(ctx, filters); err != nil {
+		return model.SchemaEnvironment{}, err
+	} else if len(environments) == 0 {
+		return model.SchemaEnvironment{}, ErrNotFound
+	} else {
+		return environments[0], nil
+	}
+}
+
+// UpdateEnvironment - updates the source_kind_id of an existing schema environment by id.
+func (s *BloodhoundDB) UpdateEnvironment(ctx context.Context, environment model.SchemaEnvironment) (model.SchemaEnvironment, error) {
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		UPDATE %s SET source_kind_id = ?, updated_at = NOW()
+		WHERE id = ?
+		RETURNING id, schema_extension_id, environment_kind_id, source_kind_id, created_at, updated_at, deleted_at`,
+		environment.TableName()),
+		environment.SourceKindId, environment.ID).Scan(&environment); result.Error != nil {
+		return model.SchemaEnvironment{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.SchemaEnvironment{}, ErrNotFound
+	}
+
+	return environment, nil
+}
+
 // GetEnvironmentById - retrieves a schema environment by id.
 func (s *BloodhoundDB) GetEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error) {
 	var schemaEnvironment model.SchemaEnvironment
@@ -1040,6 +1102,24 @@ func (s *BloodhoundDB) DeleteSchemaFinding(ctx context.Context, findingId int32)
 	}
 
 	return nil
+}
+
+// UpdateSchemaFinding - updates the type, display_name, kind_id, and environment_id of an existing
+// schema finding by id. Type is included because findings may transition between SchemaFindingTypeRelationship
+// and SchemaFindingTypeList as extension definitions evolve.
+func (s *BloodhoundDB) UpdateSchemaFinding(ctx context.Context, finding model.SchemaFinding) (model.SchemaFinding, error) {
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		UPDATE %s SET type = ?, display_name = ?, kind_id = ?, environment_id = ?
+		WHERE id = ?
+		RETURNING id, type, schema_extension_id, kind_id, environment_id, name, display_name, created_at`,
+		finding.TableName()),
+		finding.Type, finding.DisplayName, finding.KindId, finding.EnvironmentId, finding.ID).Scan(&finding); result.Error != nil {
+		return model.SchemaFinding{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.SchemaFinding{}, ErrNotFound
+	}
+
+	return finding, nil
 }
 
 func (s *BloodhoundDB) CreateSchemaFindingSubtype(ctx context.Context, findingId int32, subtype string) error {

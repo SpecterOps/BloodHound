@@ -455,7 +455,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("environment kind 'NonExistent' not found"),
+			wantErr: fmt.Errorf("error retrieving environment kind 'NonExistent': entity not found"),
 		},
 		{
 			name: "fail - first environment has invalid principal kind",
@@ -479,7 +479,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				},
 			},
 			want:    false,
-			wantErr: fmt.Errorf("principal kind 'unknownKind' not found"),
+			wantErr: fmt.Errorf("error retrieving principal kind 'unknownKind': entity not found"),
 		},
 		{
 			name: "fail - second environment fails, first should rollback",
@@ -502,7 +502,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("environment kind 'NonExistent2' not found"),
+			wantErr: fmt.Errorf("error retrieving environment kind 'NonExistent2': entity not found"),
 		},
 		{
 			name: "fail - second environment has invalid principal kind",
@@ -525,7 +525,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("principal kind 'unknownKind' not found"),
+			wantErr: fmt.Errorf("error retrieving principal kind 'unknownKind': entity not found"),
 		},
 		{
 			name: "fail - failure in second environment's latter principal kinds",
@@ -548,7 +548,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("principal kind 'unknownKind' not found"),
+			wantErr: fmt.Errorf("error retrieving principal kind 'unknownKind': entity not found"),
 		},
 		{
 			name: "success - create new OpenGraph extension without environments",
@@ -640,25 +640,13 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 						require.NoError(t, err)
 					}
 					for _, environment := range existingEnvironments {
-						err = testSuite.BHDatabase.UpsertSchemaEnvironmentWithPrincipalKinds(testSuite.Context, createdExtension.ID,
-							environment.EnvironmentKindName, environment.SourceKindName, environment.PrincipalKinds)
+						_, err = testSuite.BHDatabase.CreateEnvironmentWithPrincipalKinds(testSuite.Context, createdExtension.ID, environment)
 						require.NoError(t, err)
 					}
 					// Create findings and remediations
 
 					for _, finding := range existingFindings {
-						var (
-							schemaFinding model.SchemaFinding
-						)
-
-						schemaFinding, err = testSuite.BHDatabase.UpsertRelationshipFinding(testSuite.Context, createdExtension.ID,
-							finding.RelationshipKindName, finding.EnvironmentKindName,
-							finding.Name, finding.DisplayName)
-						require.NoError(t, err)
-
-						_, err = testSuite.BHDatabase.CreateRemediation(testSuite.Context, schemaFinding.ID, finding.RemediationInput.ShortDescription,
-							finding.RemediationInput.LongDescription, finding.RemediationInput.ShortRemediation,
-							finding.RemediationInput.LongRemediation)
+						_, err = testSuite.BHDatabase.CreateFindingWithRemediation(testSuite.Context, createdExtension.ID, finding)
 						require.NoError(t, err)
 					}
 
@@ -719,25 +707,13 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 						require.NoError(t, err)
 					}
 					for _, environment := range existingEnvironments {
-						err = testSuite.BHDatabase.UpsertSchemaEnvironmentWithPrincipalKinds(testSuite.Context, createdExtension.ID,
-							environment.EnvironmentKindName, environment.SourceKindName, environment.PrincipalKinds)
+						_, err = testSuite.BHDatabase.CreateEnvironmentWithPrincipalKinds(testSuite.Context, createdExtension.ID, environment)
 						require.NoError(t, err)
 					}
 					// Create findings and remediations
 
 					for _, finding := range existingFindings {
-						var (
-							schemaFinding model.SchemaFinding
-						)
-
-						schemaFinding, err = testSuite.BHDatabase.UpsertRelationshipFinding(testSuite.Context, createdExtension.ID,
-							finding.RelationshipKindName, finding.EnvironmentKindName,
-							finding.Name, finding.DisplayName)
-						require.NoError(t, err)
-
-						_, err = testSuite.BHDatabase.CreateRemediation(testSuite.Context, schemaFinding.ID, finding.RemediationInput.ShortDescription,
-							finding.RemediationInput.LongDescription, finding.RemediationInput.ShortRemediation,
-							finding.RemediationInput.LongRemediation)
+						_, err = testSuite.BHDatabase.CreateFindingWithRemediation(testSuite.Context, createdExtension.ID, finding)
 						require.NoError(t, err)
 					}
 
@@ -1012,19 +988,24 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 	gotNodeKinds, _, err = db.GetGraphSchemaNodeKinds(testContext,
 		model.Filters{"schema_extension_id": []model.Filter{schemaIdFilter}}, model.Sort{}, 0, 0)
 	require.NoError(t, err)
-	require.Equalf(t, len(gotNodeKinds), len(want.NodeKindsInput), "node kind - count mismatch")
-	for idx, gotNodeKind := range gotNodeKinds {
-		require.Greaterf(t, gotNodeKind.ID, int32(0), "NodeKindsInput - ID is invalid")
-		require.Equalf(t, gotGraphExtension.ID, gotNodeKinds[idx].SchemaExtensionId, "NodeKindsInput - SchemaExtensionId is invalid")
-		require.Equalf(t, want.NodeKindsInput[idx].Name, gotNodeKind.Name, "GraphSchemaNodeKind(%v) - name mismatch", gotNodeKind.Name)
-		require.Equalf(t, want.NodeKindsInput[idx].DisplayName, gotNodeKind.DisplayName, "GraphSchemaNodeKind(%v) - display_name mismatch", gotNodeKind.DisplayName)
-		require.Equalf(t, want.NodeKindsInput[idx].Description, gotNodeKind.Description, "GraphSchemaNodeKind(%v) - description mismatch", gotNodeKind.Description)
-		require.Equalf(t, want.NodeKindsInput[idx].IsDisplayKind, gotNodeKind.IsDisplayKind, "GraphSchemaNodeKind(%v) - is_display_kind mismatch", gotNodeKind.IsDisplayKind)
-		require.Equalf(t, want.NodeKindsInput[idx].Icon, gotNodeKind.Icon, "GraphSchemaNodeKind(%v) - icon mismatch", gotNodeKind.Icon)
-		require.Equalf(t, want.NodeKindsInput[idx].IconColor, gotNodeKind.IconColor, "GraphSchemaNodeKind(%v) - icon_color mismatch", gotNodeKind.IconColor)
-		require.Equalf(t, false, gotNodeKind.CreatedAt.IsZero(), "GraphSchemaNodeKind(%v) - created_at is zero", gotNodeKind.CreatedAt.IsZero())
-		require.Equalf(t, false, gotNodeKind.UpdatedAt.IsZero(), "GraphSchemaNodeKind(%v) - updated_at is zero", gotNodeKind.UpdatedAt.IsZero())
-		require.Equalf(t, false, gotNodeKind.DeletedAt.Valid, "GraphSchemaNodeKind(%v) - deleted_at is not null", gotNodeKind.DeletedAt.Valid)
+	require.Equalf(t, len(want.NodeKindsInput), len(gotNodeKinds), "node kind - count mismatch")
+	wantNodeKindsByName := make(map[string]model.NodeInput, len(want.NodeKindsInput))
+	for _, wantNodeKind := range want.NodeKindsInput {
+		wantNodeKindsByName[wantNodeKind.Name] = wantNodeKind
+	}
+	for _, gotNodeKind := range gotNodeKinds {
+		wantNodeKind, ok := wantNodeKindsByName[gotNodeKind.Name]
+		require.Truef(t, ok, "GraphSchemaNodeKind(%v) - unexpected node kind returned", gotNodeKind.Name)
+		require.Greaterf(t, gotNodeKind.ID, int32(0), "GraphSchemaNodeKind(%v) - ID is invalid", gotNodeKind.Name)
+		require.Equalf(t, gotGraphExtension.ID, gotNodeKind.SchemaExtensionId, "GraphSchemaNodeKind(%v) - SchemaExtensionId is invalid", gotNodeKind.Name)
+		require.Equalf(t, wantNodeKind.DisplayName, gotNodeKind.DisplayName, "GraphSchemaNodeKind(%v) - display_name mismatch", gotNodeKind.Name)
+		require.Equalf(t, wantNodeKind.Description, gotNodeKind.Description, "GraphSchemaNodeKind(%v) - description mismatch", gotNodeKind.Name)
+		require.Equalf(t, wantNodeKind.IsDisplayKind, gotNodeKind.IsDisplayKind, "GraphSchemaNodeKind(%v) - is_display_kind mismatch", gotNodeKind.Name)
+		require.Equalf(t, wantNodeKind.Icon, gotNodeKind.Icon, "GraphSchemaNodeKind(%v) - icon mismatch", gotNodeKind.Name)
+		require.Equalf(t, wantNodeKind.IconColor, gotNodeKind.IconColor, "GraphSchemaNodeKind(%v) - icon_color mismatch", gotNodeKind.Name)
+		require.Falsef(t, gotNodeKind.CreatedAt.IsZero(), "GraphSchemaNodeKind(%v) - created_at is zero", gotNodeKind.Name)
+		require.Falsef(t, gotNodeKind.UpdatedAt.IsZero(), "GraphSchemaNodeKind(%v) - updated_at is zero", gotNodeKind.Name)
+		require.Falsef(t, gotNodeKind.DeletedAt.Valid, "GraphSchemaNodeKind(%v) - deleted_at is not null", gotNodeKind.Name)
 	}
 
 	// Test Custom Icons
@@ -1056,13 +1037,18 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 	gotRelationshipKinds, _, err = db.GetGraphSchemaRelationshipKinds(testContext,
 		model.Filters{"schema_extension_id": []model.Filter{schemaIdFilter}}, model.Sort{}, 0, 0)
 	require.NoError(t, err)
-	require.Equalf(t, len(gotRelationshipKinds), len(want.RelationshipKindsInput), "relationship kind - count mismatch")
-	for idx, gotRelationshipKind := range gotRelationshipKinds {
-		require.Greaterf(t, gotRelationshipKind.ID, int32(0), "RelationshipKindsInput - ID is invalid")
-		require.Equalf(t, gotGraphExtension.ID, gotRelationshipKind.SchemaExtensionId, "RelationshipKindsInput - SchemaExtensionId is invalid")
-		require.Equalf(t, want.RelationshipKindsInput[idx].Name, gotRelationshipKind.Name, "RelationshipKindsInput - Name mismatch")
-		require.Equalf(t, want.RelationshipKindsInput[idx].Description, gotRelationshipKind.Description, "RelationshipKindsInput - description mismatch")
-		require.Equalf(t, want.RelationshipKindsInput[idx].IsTraversable, gotRelationshipKind.IsTraversable, "RelationshipKindsInput - is_traversable mismatch")
+	require.Equalf(t, len(want.RelationshipKindsInput), len(gotRelationshipKinds), "relationship kind - count mismatch")
+	wantRelKindsByName := make(map[string]model.RelationshipInput, len(want.RelationshipKindsInput))
+	for _, wantRelKind := range want.RelationshipKindsInput {
+		wantRelKindsByName[wantRelKind.Name] = wantRelKind
+	}
+	for _, gotRelationshipKind := range gotRelationshipKinds {
+		wantRelKind, ok := wantRelKindsByName[gotRelationshipKind.Name]
+		require.Truef(t, ok, "GraphSchemaRelationshipKind(%v) - unexpected relationship kind returned", gotRelationshipKind.Name)
+		require.Greaterf(t, gotRelationshipKind.ID, int32(0), "GraphSchemaRelationshipKind(%v) - ID is invalid", gotRelationshipKind.Name)
+		require.Equalf(t, gotGraphExtension.ID, gotRelationshipKind.SchemaExtensionId, "GraphSchemaRelationshipKind(%v) - SchemaExtensionId is invalid", gotRelationshipKind.Name)
+		require.Equalf(t, wantRelKind.Description, gotRelationshipKind.Description, "GraphSchemaRelationshipKind(%v) - description mismatch", gotRelationshipKind.Name)
+		require.Equalf(t, wantRelKind.IsTraversable, gotRelationshipKind.IsTraversable, "GraphSchemaRelationshipKind(%v) - is_traversable mismatch", gotRelationshipKind.Name)
 	}
 
 	// Test Environments
@@ -1071,24 +1057,29 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 	require.NoError(t, err)
 
 	require.Equalf(t, len(want.EnvironmentsInput), len(gotSchemaEnvironments), "environments - count mismatch")
-	for idx, gotEnvironment := range gotSchemaEnvironments {
-		require.Greaterf(t, gotEnvironment.ID, int32(0), "EnvironmentInput - ID is invalid")
-		require.Equalf(t, gotGraphExtension.ID, gotEnvironment.SchemaExtensionId, "EnvironmentInput - SchemaExtensionId is invalid")
-		require.Equalf(t, want.EnvironmentsInput[idx].EnvironmentKindName, gotEnvironment.EnvironmentKindName, "EnvironmentInput - EnvironmentKindName mismatch")
+	wantEnvironmentsByKindName := make(map[string]model.EnvironmentInput, len(want.EnvironmentsInput))
+	for _, wantEnvironment := range want.EnvironmentsInput {
+		wantEnvironmentsByKindName[wantEnvironment.EnvironmentKindName] = wantEnvironment
+	}
+	for _, gotEnvironment := range gotSchemaEnvironments {
+		wantEnvironment, ok := wantEnvironmentsByKindName[gotEnvironment.EnvironmentKindName]
+		require.Truef(t, ok, "SchemaEnvironment(%v) - unexpected environment returned", gotEnvironment.EnvironmentKindName)
+		require.Greaterf(t, gotEnvironment.ID, int32(0), "SchemaEnvironment(%v) - ID is invalid", gotEnvironment.EnvironmentKindName)
+		require.Equalf(t, gotGraphExtension.ID, gotEnvironment.SchemaExtensionId, "SchemaEnvironment(%v) - SchemaExtensionId is invalid", gotEnvironment.EnvironmentKindName)
 		sourceKinds, err := db.GetKindsByIDs(testContext, gotEnvironment.SourceKindId)
 		require.NoError(t, err)
 		require.Len(t, sourceKinds, 1)
 		sourceKind = sourceKinds[0]
-		require.Equalf(t, want.EnvironmentsInput[idx].SourceKindName, sourceKind.Name, "EnvironmentInput - EnvironmentKindName mismatch")
+		require.Equalf(t, wantEnvironment.SourceKindName, sourceKind.Name, "SchemaEnvironment(%v) - SourceKindName mismatch", gotEnvironment.EnvironmentKindName)
 		gotPrincipalKinds, err = db.GetPrincipalKindsByEnvironmentId(testContext, gotEnvironment.ID)
 		require.NoError(t, err)
-		require.Equalf(t, len(want.EnvironmentsInput[idx].PrincipalKinds), len(gotPrincipalKinds), "PrincipalKinds - count mismatch")
+		require.Equalf(t, len(wantEnvironment.PrincipalKinds), len(gotPrincipalKinds), "SchemaEnvironment(%v) - PrincipalKinds count mismatch", gotEnvironment.EnvironmentKindName)
 		for _, gotPrincipalKind := range gotPrincipalKinds {
-			require.Equalf(t, gotEnvironment.ID, gotPrincipalKind.EnvironmentId, "PrincipalKind - EnvironmentId is invalid")
+			require.Equalf(t, gotEnvironment.ID, gotPrincipalKind.EnvironmentId, "SchemaEnvironment(%v) - PrincipalKind EnvironmentId is invalid", gotEnvironment.EnvironmentKindName)
 			dawgsPrincipalKinds, err = db.GetKindsByIDs(testContext, gotPrincipalKind.PrincipalKind)
 			require.NoError(t, err)
 			require.Len(t, dawgsPrincipalKinds, 1)
-			require.Containsf(t, want.EnvironmentsInput[idx].PrincipalKinds, dawgsPrincipalKinds[0].Name, "PrincipalKind - Name mismatch")
+			require.Containsf(t, wantEnvironment.PrincipalKinds, dawgsPrincipalKinds[0].Name, "SchemaEnvironment(%v) - PrincipalKind name mismatch", gotEnvironment.EnvironmentKindName)
 		}
 	}
 
@@ -1097,35 +1088,40 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 	require.NoError(t, err)
 
 	require.Equalf(t, len(want.RelationshipFindingsInput), len(gotSchemaRelationshipFinding), "mismatched number of findings")
-	for i, finding := range gotSchemaRelationshipFinding {
+	wantFindingsByName := make(map[string]model.RelationshipFindingInput, len(want.RelationshipFindingsInput))
+	for _, wantFinding := range want.RelationshipFindingsInput {
+		wantFindingsByName[wantFinding.Name] = wantFinding
+	}
+	for _, finding := range gotSchemaRelationshipFinding {
+		wantFinding, ok := wantFindingsByName[finding.Name]
+		require.Truef(t, ok, "SchemaFinding(%v) - unexpected finding returned", finding.Name)
+
 		// Finding
-		require.Greater(t, finding.ID, int32(0))
-		require.Equalf(t, gotGraphExtension.ID, finding.SchemaExtensionId, "RelationshipFindingInput - graph schema extension id should be greater than 0")
+		require.Greaterf(t, finding.ID, int32(0), "SchemaFinding(%v) - ID is invalid", finding.Name)
+		require.Equalf(t, gotGraphExtension.ID, finding.SchemaExtensionId, "SchemaFinding(%v) - SchemaExtensionId is invalid", finding.Name)
 
 		dawgsFindingRelationshipKinds, err = db.GetKindsByIDs(testContext, finding.KindId)
 		require.NoError(t, err)
 		require.Len(t, dawgsFindingRelationshipKinds, 1)
-		require.Equalf(t, want.RelationshipFindingsInput[i].RelationshipKindName, dawgsFindingRelationshipKinds[0].Name, "RelationshipFindingInput - relationship kind name mismatch")
+		require.Equalf(t, wantFinding.RelationshipKindName, dawgsFindingRelationshipKinds[0].Name, "SchemaFinding(%v) - relationship kind name mismatch", finding.Name)
 
 		findingEnvironment, err = db.GetEnvironmentById(testContext, finding.EnvironmentId)
 		require.NoError(t, err)
 		dawgsFindingEnvironmentKinds, err = db.GetKindsByIDs(testContext, findingEnvironment.EnvironmentKindId)
 		require.NoError(t, err)
 		require.Len(t, dawgsFindingEnvironmentKinds, 1)
-		require.Equalf(t, want.RelationshipFindingsInput[i].EnvironmentKindName, dawgsFindingEnvironmentKinds[0].Name, "RelationshipFindingInput - environment kind name mismatch")
+		require.Equalf(t, wantFinding.EnvironmentKindName, dawgsFindingEnvironmentKinds[0].Name, "SchemaFinding(%v) - environment kind name mismatch", finding.Name)
 
-		require.Equalf(t, want.RelationshipFindingsInput[i].Name, finding.Name, "RelationshipFindingInput - name mismatch")
-		require.Equalf(t, want.RelationshipFindingsInput[i].DisplayName, finding.DisplayName, "RelationshipFindingInput - display name mismatch")
+		require.Equalf(t, wantFinding.DisplayName, finding.DisplayName, "SchemaFinding(%v) - display name mismatch", finding.Name)
 
 		// Remediation
 		gotRemediation, err = db.GetRemediationByFindingId(testContext, finding.ID)
 		require.NoError(t, err)
 
-		require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.ShortRemediation, gotRemediation.ShortRemediation, "Remediation - short_remediation mismatch")
-		require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.LongRemediation, gotRemediation.LongRemediation, "Remediation - long_remediation mismatch")
-		require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.ShortDescription, gotRemediation.ShortDescription, "Remediation - short_description mismatch")
-		require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.LongDescription, gotRemediation.LongDescription, "Remediation - long_description mismatch")
-
+		require.Equalf(t, wantFinding.RemediationInput.ShortRemediation, gotRemediation.ShortRemediation, "SchemaFinding(%v) - Remediation short_remediation mismatch", finding.Name)
+		require.Equalf(t, wantFinding.RemediationInput.LongRemediation, gotRemediation.LongRemediation, "SchemaFinding(%v) - Remediation long_remediation mismatch", finding.Name)
+		require.Equalf(t, wantFinding.RemediationInput.ShortDescription, gotRemediation.ShortDescription, "SchemaFinding(%v) - Remediation short_description mismatch", finding.Name)
+		require.Equalf(t, wantFinding.RemediationInput.LongDescription, gotRemediation.LongDescription, "SchemaFinding(%v) - Remediation long_description mismatch", finding.Name)
 	}
 
 	return gotGraphExtension.ID

@@ -28,118 +28,182 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestBloodhoundDB_UpsertFinding(t *testing.T) {
+func TestCreateFindingWithRemediation(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
-		sourceKindName, relationshipKindName, environmentKind, name, displayName string
+		name                 string
+		displayName          string
+		relationshipKindName string
+		environmentKindName  string
+		remediation          model.RemediationInput
 	}
-	tests := []struct {
-		name          string
-		setupData     func(t *testing.T, db *database.BloodhoundDB) int32 // Returns extensionId
-		args          args
-		assert        func(t *testing.T, db *database.BloodhoundDB, extensionId int32)
-		expectedError string
-	}{
+	type testData struct {
+		name   string
+		args   args
+		setup  func(t *testing.T, db *database.BloodhoundDB) int32
+		assert func(t *testing.T, db *database.BloodhoundDB, finding model.SchemaFinding, err error, args args)
+	}
+
+	tt := []testData{
 		{
-			name: "Success: Update existing finding - delete and re-create",
-			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
+			name: "Success: creates finding and remediation rows with stable id",
+			args: args{
+				name:                 "TestFinding",
+				displayName:          "Test Finding",
+				relationshipKindName: "HasSession",
+				environmentKindName:  "Tag_Tier_Zero",
+				remediation: model.RemediationInput{
+					ShortDescription: "short desc",
+					LongDescription:  "long desc",
+					ShortRemediation: "short rem",
+					LongRemediation:  "long rem",
+				},
+			},
+			setup: func(t *testing.T, db *database.BloodhoundDB) int32 {
 				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0", "test_namespace_1")
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "CreateFindingExt", "Test", "v1.0.0", "test_ns")
 				require.NoError(t, err)
-
-				env, err := db.CreateEnvironment(context.Background(), ext.ID, 1, 1)
+				envInput := model.EnvironmentInput{
+					EnvironmentKindName: "Tag_Tier_Zero",
+					SourceKindName:      "Base",
+					PrincipalKinds:      []string{},
+				}
+				_, err = db.CreateEnvironmentWithPrincipalKinds(context.Background(), ext.ID, envInput)
 				require.NoError(t, err)
-
-				// Create finding
-				_, err = db.CreateSchemaFinding(context.Background(), model.SchemaFindingTypeRelationship, ext.ID, 1, env.ID, "Finding Name", "Finding Display Name")
-				require.NoError(t, err)
-
 				return ext.ID
 			},
-			args: args{
-				sourceKindName:       "Base",
-				relationshipKindName: "Tag_Tier_Zero",
-				environmentKind:      "Tag_Tier_Zero",
-				// Name triggers upsert so this needs to match the finding's name that we want to update
-				name:        "Finding Name",
-				displayName: "Updated Display Name",
-			},
-			assert: func(t *testing.T, db *database.BloodhoundDB, extensionId int32) {
+			assert: func(t *testing.T, db *database.BloodhoundDB, finding model.SchemaFinding, err error, args args) {
 				t.Helper()
-
-				finding, err := db.GetSchemaFindingByName(context.Background(), "Finding Name")
 				require.NoError(t, err)
-
-				assert.Equal(t, extensionId, finding.SchemaExtensionId)
-				assert.Equal(t, "Finding Name", finding.Name)
-				assert.Equal(t, "Updated Display Name", finding.DisplayName)
+				assert.NotZero(t, finding.ID)
+				assert.Equal(t, args.name, finding.Name)
+				assert.Equal(t, args.displayName, finding.DisplayName)
+				assert.Equal(t, model.SchemaFindingTypeRelationship, finding.Type)
 			},
 		},
 		{
-			name: "Success: Create finding when none exists",
-			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
+			name: "Error: invalid relationship kind name returns error",
+			args: args{
+				name:                 "BadFinding",
+				displayName:          "Bad Finding",
+				relationshipKindName: "KindThatDoesNotExist",
+				environmentKindName:  "Tag_Tier_Zero",
+			},
+			setup: func(t *testing.T, db *database.BloodhoundDB) int32 {
 				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt2", "Test2", "v1.0.0", "test_namespace_2")
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "CreateFindingBadKind", "Test", "v1.0.0", "test_ns2")
 				require.NoError(t, err)
-
-				_, err = db.CreateEnvironment(context.Background(), ext.ID, 1, 1)
-				require.NoError(t, err)
-
-				// No finding created since we're testing the creation workflow
 				return ext.ID
 			},
-			args: args{
-				sourceKindName:       "Base",
-				relationshipKindName: "Tag_Tier_Zero",
-				environmentKind:      "Tag_Tier_Zero",
-				name:                 "Finding",
-				displayName:          "Finding Display Name",
-			},
-			assert: func(t *testing.T, db *database.BloodhoundDB, extensionId int32) {
+			assert: func(t *testing.T, db *database.BloodhoundDB, finding model.SchemaFinding, err error, args args) {
 				t.Helper()
-
-				finding, err := db.GetSchemaFindingByName(context.Background(), "Finding")
-				require.NoError(t, err)
-
-				assert.Equal(t, extensionId, finding.SchemaExtensionId)
-				assert.Equal(t, "Finding", finding.Name)
-				assert.Equal(t, "Finding Display Name", finding.DisplayName)
+				require.Error(t, err)
+				assert.Zero(t, finding.ID)
 			},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			testSuite := setupIntegrationTestSuite(t)
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
-			extensionId := tt.setupData(t, testSuite.BHDatabase)
+			extensionId := testCase.setup(t, testSuite.BHDatabase)
+			input := model.RelationshipFindingInput{
+				Name:                 testCase.args.name,
+				DisplayName:          testCase.args.displayName,
+				RelationshipKindName: testCase.args.relationshipKindName,
+				EnvironmentKindName:  testCase.args.environmentKindName,
+				RemediationInput:     testCase.args.remediation,
+			}
 
-			var findingResponse model.SchemaFinding
-			// Wrap the call in a transaction
-			err := testSuite.BHDatabase.Transaction(context.Background(), func(tx *database.BloodhoundDB) error {
-				finding, err := tx.UpsertRelationshipFinding(
-					context.Background(),
-					extensionId,
-					tt.args.relationshipKindName,
-					tt.args.environmentKind,
-					tt.args.name,
-					tt.args.displayName,
-				)
-				findingResponse = finding
-				return err
-			})
+			finding, err := testSuite.BHDatabase.CreateFindingWithRemediation(testSuite.Context, extensionId, input)
+			testCase.assert(t, testSuite.BHDatabase, finding, err, testCase.args)
+		})
+	}
+}
 
-			if tt.expectedError != "" {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.expectedError)
-			} else {
+func TestUpdateFindingWithRemediation(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		newDisplayName       string
+		relationshipKindName string
+		environmentKindName  string
+		remediation          model.RemediationInput
+	}
+	type testData struct {
+		name   string
+		args   args
+		setup  func(t *testing.T, db *database.BloodhoundDB) (int32, model.SchemaFinding)
+		assert func(t *testing.T, db *database.BloodhoundDB, existing model.SchemaFinding, updated model.SchemaFinding, err error, args args)
+	}
+
+	tt := []testData{
+		{
+			name: "Success: updates display name and remediation, preserves id and name",
+			args: args{
+				newDisplayName:       "Updated Display",
+				relationshipKindName: "HasSession",
+				environmentKindName:  "Tag_Tier_Zero",
+				remediation: model.RemediationInput{
+					ShortDescription: "updated short",
+					LongDescription:  "updated long",
+					ShortRemediation: "updated rem short",
+					LongRemediation:  "updated rem long",
+				},
+			},
+			setup: func(t *testing.T, db *database.BloodhoundDB) (int32, model.SchemaFinding) {
+				t.Helper()
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "UpdateFindingExt", "Test", "v1.0.0", "test_ns3")
 				require.NoError(t, err)
-				assert.NotZero(t, findingResponse.ID, "Finding should have been created/updated")
+				envInput := model.EnvironmentInput{
+					EnvironmentKindName: "Tag_Tier_Zero",
+					SourceKindName:      "Base",
+					PrincipalKinds:      []string{},
+				}
+				_, err = db.CreateEnvironmentWithPrincipalKinds(context.Background(), ext.ID, envInput)
+				require.NoError(t, err)
+				createInput := model.RelationshipFindingInput{
+					Name:                 "UpdateableFinding",
+					DisplayName:          "Original Display",
+					RelationshipKindName: "HasSession",
+					EnvironmentKindName:  "Tag_Tier_Zero",
+				}
+				finding, err := db.CreateFindingWithRemediation(context.Background(), ext.ID, createInput)
+				require.NoError(t, err)
+				return ext.ID, finding
+			},
+			assert: func(t *testing.T, db *database.BloodhoundDB, existing model.SchemaFinding, updated model.SchemaFinding, err error, args args) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.Equal(t, existing.ID, updated.ID)
+				assert.Equal(t, existing.Name, updated.Name)
+				assert.Equal(t, args.newDisplayName, updated.DisplayName)
+				assert.Equal(t, model.SchemaFindingTypeRelationship, updated.Type)
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			testSuite := setupIntegrationTestSuite(t)
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			_, finding := testCase.setup(t, testSuite.BHDatabase)
+			input := model.RelationshipFindingInput{
+				Name:                 finding.Name,
+				DisplayName:          testCase.args.newDisplayName,
+				RelationshipKindName: testCase.args.relationshipKindName,
+				EnvironmentKindName:  testCase.args.environmentKindName,
+				RemediationInput:     testCase.args.remediation,
 			}
 
-			if tt.assert != nil {
-				tt.assert(t, testSuite.BHDatabase, extensionId)
-			}
+			updated, err := testSuite.BHDatabase.UpdateFindingWithRemediation(testSuite.Context, finding, input)
+			testCase.assert(t, testSuite.BHDatabase, finding, updated, err, testCase.args)
 		})
 	}
 }
