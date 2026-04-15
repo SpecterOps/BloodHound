@@ -64,8 +64,8 @@ func TestAZAddOwner(t *testing.T) {
 	NewRelationship(t, &suite, AZTenant, ConditionalAccessAdministratorRole, graphAzure.Contains)
 	//#endregion
 
-	//#region Running post processing
-	postProcessingStats, err := azure.AppRoleAssignments(context.Background(), suite.GraphDB)
+	//#region Running AZAddOwner edge post processing
+	postProcessingStats, err := azure.CreateAZAddOwnerEdge(context.Background(), suite.GraphDB)
 	//#endregion
 
 	//#region Verifying assertions

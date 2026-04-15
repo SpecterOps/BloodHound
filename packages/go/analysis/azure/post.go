@@ -239,8 +239,6 @@ func AppRoleAssignments(ctx context.Context, db graph.Database) (*post.AtomicPos
 					return err
 				} else if err := addSecret(operation, tenant); err != nil {
 					return err
-				} else if err := addOwner(operation, tenant); err != nil {
-					return err
 				}
 
 				return nil
@@ -690,8 +688,46 @@ func addSecret(operation post.StatTrackedOperation[post.EnsureRelationshipJob], 
 	})
 }
 
-func addOwner(operation post.StatTrackedOperation[post.EnsureRelationshipJob], tenant *graph.Node) error {
-	return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+var addOwnerPostProcessedEdges = graph.Kinds{
+	azure.AddOwner,
+}
+
+func CreateAZAddOwnerEdge(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
+	defer measure.ContextLogAndMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Post-processing Add Owner Role Assignments",
+		attr.Namespace("analysis"),
+		attr.Function("AddOwnerRoleAssignments"),
+		attr.Scope("process"),
+	)()
+
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, addOwnerPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	if addOwnerTracker, err := post.FetchTracker(ctx, db, addOwnerPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	} else if tenantNodes, err := FetchTenants(ctx, db); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	} else {
+		sink := post.NewFilteredRelationshipSink(ctx, "Azure Add Owner Post Processing", db, addOwnerTracker)
+		defer sink.Done()
+
+		for _, tenant := range tenantNodes {
+			if err := postAzureAddOwner(ctx, db, sink, tenant); err != nil {
+				return &post.AtomicPostProcessingStats{}, err
+			}
+		}
+
+		return sink.Stats(), nil
+	}
+}
+
+func postAzureAddOwner(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenant *graph.Node) error {
+	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if addOwnerRoles, err := TenantRoles(tx, tenant, AddOwnerRoleIDs()...); err != nil {
 			return err
 		} else if tenantAppsAndSPs, err := TenantApplicationsAndServicePrincipals(tx, tenant); err != nil {
@@ -712,8 +748,8 @@ func addOwner(operation post.StatTrackedOperation[post.EnsureRelationshipJob], t
 						Kind:   azure.AddOwner,
 					}
 
-					if !channels.Submit(ctx, outC, nextJob) {
-						return nil
+					if !sink.Submit(ctx, nextJob) {
+						return fmt.Errorf("unable to submit to channel in postAzureAddOwner")
 					}
 				}
 			}
@@ -1172,6 +1208,8 @@ func Post(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingSta
 		return &aggregateStats, err
 	} else if appRoleAssignmentStats, err := AppRoleAssignments(ctx, db); err != nil {
 		return &aggregateStats, err
+	} else if addOwnerStats, err := CreateAZAddOwnerEdge(ctx, db); err != nil {
+		return &aggregateStats, err
 	} else if hybridStats, err := hybrid.PostHybrid(ctx, db); err != nil {
 		return &aggregateStats, err
 	} else if pimRolesStats, err := CreateAZRoleApproverEdge(ctx, db); err != nil {
@@ -1179,6 +1217,7 @@ func Post(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingSta
 	} else {
 		aggregateStats.Merge(executeCommandStats)
 		aggregateStats.Merge(appRoleAssignmentStats)
+		aggregateStats.Merge(addOwnerStats)
 		aggregateStats.Merge(hybridStats)
 		aggregateStats.Merge(pimRolesStats)
 
