@@ -177,10 +177,10 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
             const evalCurve = (t: number) =>
                 bezier.getCoordinatesAlongQuadraticBezier(sourceData, targetData, control, t);
 
-            const tipT = bezier.getIntersectionT(evalCurve, targetData, graphSpaceRadius, 0.5, 1);
+            const tipT = bezier.getTAtDistance(evalCurve, targetData, graphSpaceRadius, 0.5, 1);
             const tip = evalCurve(tipT);
 
-            clamp = bezier.getIntersectionT(evalCurve, tip, graphSpaceArrowLength, 0.5, tipT);
+            clamp = bezier.getTAtDistance(evalCurve, tip, graphSpaceArrowLength, 0.5, tipT);
         } else {
             // Like in the arrowhead program, this calculation is much simpler when the edge is a straight line.
             const lineLength = bezier.getLineLength(sourceData, targetData);

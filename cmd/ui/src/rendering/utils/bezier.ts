@@ -133,7 +133,11 @@ export const bezier = {
         return bezier.getOffsetVertex(sourceCoordinates, targetCoordinates, midpoint, height);
     },
 
-    getIntersectionT: (
+    // Approximates a t-value for an arbitrary curve that lies at a specified distance from a target point, using a binary
+    // search with a set number of iterations. Depending on the curve and target, this could potentially converge to many
+    // different points along the curve, so callers should use the low and high arguments to constrain the search to a range with
+    // the desired intersection.
+    getTAtDistance: (
         curveEvaluation: (t: number) => Coordinates,
         target: Coordinates,
         distance: number,

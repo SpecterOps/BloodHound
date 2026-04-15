@@ -166,10 +166,10 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
             // The original straight line arrowhead shader, which we are using here, takes the target node's coordinates
             // and a radius and projects the arrowhead out from the nodes center by distance === radius. Instead, we can
             // pass in the tip's coordinates and set radius to 0 to bypass this projection.
-            const tipT = bezier.getIntersectionT(evalCurve, targetData, graphSpaceRadius, 0.5, 1);
+            const tipT = bezier.getTAtDistance(evalCurve, targetData, graphSpaceRadius, 0.5, 1);
             tip = evalCurve(tipT);
 
-            const baseT = bezier.getIntersectionT(evalCurve, tip, graphSpaceArrowLength, 0.5, tipT);
+            const baseT = bezier.getTAtDistance(evalCurve, tip, graphSpaceArrowLength, 0.5, tipT);
             base = evalCurve(baseT);
             radius = 0;
         } else {
