@@ -33,6 +33,7 @@ import React, { ReactNode, useMemo, useState } from 'react';
 import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments';
 import { usePZPathParams } from '../../hooks/usePZParams/usePZPathParams';
 import {
+    allEnvironmentsSelected,
     filterAndSearchEnvironments,
     getOpenGraphEnvironmentInfoMap,
     sortEnvironmentsByName,
@@ -60,7 +61,7 @@ const selectedText = (
         if (selectedDomain) {
             return selectedDomain.name;
         } else if (isPrivilegeZonesPage) {
-            return 'All Environments';
+            return allEnvironmentsSelected;
         } else {
             return 'Select Environment';
         }
