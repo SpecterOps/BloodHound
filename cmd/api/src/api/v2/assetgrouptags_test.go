@@ -47,6 +47,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
+	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -1602,7 +1603,7 @@ func TestResources_UpdateAssetGroupTag(t *testing.T) {
 						Return(updatedTag, nil)
 					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).
 						Return(paramDisabled, nil)
-					mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String(), gomock.Any())
+					mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String(), int(analysis.AnalysisStepTagging))
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -1635,7 +1636,7 @@ func TestResources_UpdateAssetGroupTag(t *testing.T) {
 						Return(updatedTag, nil)
 					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).
 						Return(paramDisabled, nil)
-					mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.Nil.String(), gomock.Any())
+					mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.Nil.String(), int(analysis.AnalysisStepTagging))
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -1666,7 +1667,7 @@ func TestResources_UpdateAssetGroupTag(t *testing.T) {
 						Return(model.AssetGroupTag{}, nil)
 					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).
 						Return(paramDisabled, nil)
-					mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.Nil.String(), gomock.Any())
+					mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.Nil.String(), int(analysis.AnalysisStepTagging))
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
