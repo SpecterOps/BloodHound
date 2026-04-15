@@ -108,7 +108,7 @@ export const usePZPathParams = () => {
     );
     const objectDetailsLink = useCallback(
         (tagId: number | string, objectId: number | string, ruleId?: number | string, type?: typeof tagType) =>
-            ruleId
+            ruleId !== undefined && ruleId !== null
                 ? `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${rulesPath}/${ruleId}/${objectsPath}/${objectId}/${detailsPath}`
                 : `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${objectsPath}/${objectId}/${detailsPath}`,
         [tagType]
