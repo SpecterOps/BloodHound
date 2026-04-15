@@ -18,13 +18,14 @@ import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { Button, Card, CardContent, CardHeader, CardTitle } from 'doodle-ui';
 import { SeedTypeCypher } from 'js-client-library';
 import { Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { useQuery } from 'react-query';
 import { useLocation } from 'react-router-dom';
-import { graphSchema } from '../../../constants';
-import { usePZPathParams } from '../../../hooks';
-import { apiClient, cn } from '../../../utils';
+import { TagLabelPrefix } from '../../../hooks/useAssetGroupTags';
+import { useCypherSchema } from '../../../hooks/useGraphKinds';
+import { usePZPathParams } from '../../../hooks/usePZParams';
+import { cn } from '../../../utils';
 import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
 import RuleFormContext from '../Save/RuleForm/RuleFormContext';
+5;
 
 const emptyFunction = () => {};
 
@@ -36,7 +37,7 @@ export const PrivilegeZonesCypherEditor: FC<{
     setStalePreview?: Dispatch<SetStateAction<boolean>>;
 }> = ({ preview = true, initialInput = '', onChange, stalePreview = false, setStalePreview = () => {} }) => {
     const [cypherQuery, setCypherQuery] = useState(initialInput);
-    const [showLabelWarning, setShowLabelWarning] = useState(initialInput?.includes(':Tag_'));
+    const [showLabelWarning, setShowLabelWarning] = useState(initialInput?.includes(`:${TagLabelPrefix}`));
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
@@ -52,12 +53,7 @@ export const PrivilegeZonesCypherEditor: FC<{
         }
     }, [preview, receivedQuery]);
 
-    const kindsQuery = useQuery({
-        queryKey: ['graph-kinds'],
-        queryFn: ({ signal }) => apiClient.getKinds({ signal }).then((res) => res.data.data.kinds),
-    });
-
-    const schema = useCallback(() => graphSchema(kindsQuery.data), [kindsQuery.data]);
+    const cypherSchema = useCypherSchema();
 
     const handleCypherSearch = useCallback(() => {
         if (preview) return;
@@ -126,7 +122,7 @@ export const PrivilegeZonesCypherEditor: FC<{
                         value={preview ? initialInput : cypherQuery}
                         onValueChanged={onValueChanged}
                         theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
-                        schema={schema()}
+                        schema={cypherSchema}
                         readOnly={preview}
                         autofocus={false}
                         placeholder='Cypher Query'

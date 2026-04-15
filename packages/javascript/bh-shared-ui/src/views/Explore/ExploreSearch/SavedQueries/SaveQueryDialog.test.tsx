@@ -17,10 +17,12 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { mockKindsHandler } from '../../../../mocks/handlers/graphKinds';
 import { act, render, screen, waitFor } from '../../../../test-utils';
 import { mockCodemirrorLayoutMethods } from '../../../../utils/testHelpers';
 import { SavedQueriesProvider } from '../../providers';
 import SaveQueryDialog from './SaveQueryDialog';
+
 const testUsers = [
     {
         principal_name: 'Ted Theodore Logan - user',
@@ -86,13 +88,7 @@ const handlers = [
             })
         );
     }),
-    rest.get('/api/v2/graphs/kinds', async (_req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {},
-            })
-        );
-    }),
+    mockKindsHandler(),
     rest.get('/api/v2/features', async (_, res, ctx) => {
         return res(
             ctx.json({

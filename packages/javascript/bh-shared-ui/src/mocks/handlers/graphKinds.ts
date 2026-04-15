@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './explore';
-export * from './graphKinds';
-export * from './initial';
-export * as zoneMocks from './privilegeZones';
+import { rest } from 'msw';
+import { createGraphKinds } from '../factories/graphKinds';
+
+export const mockKindsHandler = () =>
+    rest.get('/api/v2/graphs/kinds', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: createGraphKinds(),
+            })
+        );
+    });
