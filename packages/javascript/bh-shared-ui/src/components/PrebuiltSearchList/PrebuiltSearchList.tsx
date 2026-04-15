@@ -17,7 +17,7 @@ import { Box, Typography } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { Button } from 'doodle-ui';
 import groupBy from 'lodash/groupBy';
-import { FC, useEffect, useRef } from 'react';
+import { FC, useCallback } from 'react';
 import { QueryListSection } from '../../types';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { useSavedQueriesContext } from '../../views/Explore/providers/SavedQueriesProvider';
@@ -54,7 +54,6 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
 }) => {
     const { selectedQuery } = useSavedQueriesContext();
     const styles = useStyles();
-    const itemRef = useRef<HTMLLIElement>(null);
     const groupedQueries = groupBy(listSections, 'category');
 
     const isSelectedQuery = (name: string, id?: number) => {
@@ -69,11 +68,12 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
         return false;
     };
 
-    useEffect(() => {
-        if (selectedQuery && itemRef.current) {
-            itemRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-    }, [selectedQuery, showCommonQueries]);
+    const selectedItem = useCallback(
+        (e: HTMLLIElement | null) => {
+            if (e) e.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        },
+        [selectedQuery, showCommonQueries]
+    );
 
     return (
         <>
@@ -103,7 +103,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                         isSelectedQuery(name, id) ? styles.selected : ''
                                                     }`}
                                                     key={`${id}-${idx}`}
-                                                    ref={isSelectedQuery(name, id) ? itemRef : null}>
+                                                    ref={isSelectedQuery(name, id) ? selectedItem : null}>
                                                     <div
                                                         role='button'
                                                         tabIndex={0}
