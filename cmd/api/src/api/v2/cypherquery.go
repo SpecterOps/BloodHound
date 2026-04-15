@@ -104,7 +104,7 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	validPrimaryKinds, err := s.DB.GetDisplayNodeGraphKinds(request.Context())
+	validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context())
 	if err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return

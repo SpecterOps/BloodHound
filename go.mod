@@ -15,13 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 module github.com/specterops/bloodhound
 
-go 1.26.1
+go 1.26.2
 
 require (
 	cuelang.org/go v0.16.0
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/RoaringBitmap/roaring/v2 v2.16.0
-	github.com/bloodhoundad/azurehound/v2 v2.11.0
+	github.com/bloodhoundad/azurehound/v2 v2.12.0-rc1
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/channelmeter/iso8601duration v0.0.0-20150204201828-8da3af7a2a61
 	github.com/coreos/go-oidc/v3 v3.14.1
@@ -47,7 +47,7 @@ require (
 	github.com/prometheus/client_golang v1.22.0
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
 	github.com/shirou/gopsutil/v3 v3.24.5
-	github.com/specterops/dawgs v0.4.13
+	github.com/specterops/dawgs v0.4.15
 	github.com/stretchr/testify v1.11.1
 	github.com/teambition/rrule-go v1.8.2
 	github.com/ulule/limiter/v3 v3.11.2
@@ -131,7 +131,7 @@ require (
 	github.com/gammazero/deque v1.2.1 // indirect
 	github.com/ghostiam/protogetter v0.3.15 // indirect
 	github.com/go-critic/go-critic v0.13.0 // indirect
-	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-toolsmith/astcast v1.1.0 // indirect
 	github.com/go-toolsmith/astcopy v1.1.0 // indirect
@@ -271,7 +271,7 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	gitlab.com/bosi/decorder v0.4.2 // indirect
 	go-simpler.org/musttag v0.13.1 // indirect
-	go-simpler.org/sloglint v0.11.0 // indirect
+	go-simpler.org/sloglint v0.11.1 // indirect
 	go.augendre.info/fatcontext v0.8.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect

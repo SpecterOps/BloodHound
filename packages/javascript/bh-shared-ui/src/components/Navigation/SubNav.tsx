@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,69 +13,92 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { FC, ReactNode } from 'react';
+
+import { FC, RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { AdministrationSection } from '../../types';
+import { useOnClickOutside } from '../../hooks';
+import { SubNavItem, SubNavSection } from '../../types';
 import { cn } from '../../utils';
 import { AppLink } from './AppLink';
 
-const SubNavListTitle: FC<{ children: ReactNode }> = ({ children }) => {
-    return (
-        <li className={'flex items-center mx-2 mb-1 px-2 text-neutral-dark-1 dark:text-neutral-light-1 font-medium'}>
-            {children}
-        </li>
-    );
-};
-
-const SubNavListItem: FC<{ children: ReactNode; route?: string }> = ({ children, route }) => {
+const SubNavListItem: FC<{ item: Pick<SubNavItem, 'label' | 'path'> }> = ({ item }) => {
     const location = useLocation();
-    const isActiveRoute = route ? location.pathname.includes(route.replace(/\*/g, '')) : false;
+    const { label, path } = item;
+    const isActiveRoute = path ? location.pathname.includes(path.replace(/\*/g, '')) : false;
 
     return (
         <li
-            className={cn('h-auto flex items-center mx-2 mb-1 px-2 rounded hover:underline', {
-                'text-primary hover:text-primary bg-neutral-light-4': isActiveRoute,
-                'text-neutral-dark-1 dark:text-neutral-light-1 hover:text-secondary dark:hover:text-secondary-variant-2':
+            className={cn('mx-2 rounded', {
+                'text-primary dark:text-[#8D8BF8] bg-neutral-4': isActiveRoute,
+                'hover:text-primary-variant hover:dark:text-[#7B78FD] hover:bg-neutral-3 dark:hover:bg-[#1A1A1A]':
                     !isActiveRoute,
             })}>
-            {children}
+            {/* Full width ensures that even clicking white space activates the link */}
+            {/* Anchor uses block display instead of inline so full width works */}
+            <AppLink className='w-full block px-2 py-0.5' to={path}>
+                {label}
+            </AppLink>
         </li>
     );
 };
 
-const SubNavListItemLink: FC<{ route: string; children: ReactNode }> = ({ route, children }) => {
-    return (
-        <AppLink
-            to={{ pathname: route }}
-            className={`h-7 min-h-7 w-full flex items-center gap-x-2 text-sm whitespace-nowrap`}>
-            {children}
-        </AppLink>
-    );
+type SubNavSections = Omit<SubNavSection, 'order' | 'items'> & {
+    items: Pick<SubNavItem, 'label' | 'path'>[];
 };
 
-type SubNavSections = Omit<AdministrationSection, 'order' | 'items'> & {
-    items: Pick<AdministrationSection['items'][number], 'label' | 'path'>[];
-};
-interface SubNavProps {
+const SubNav: React.FC<{
+    /** Whether the main nav is in its expanded (wide) state; used to offset subnav position accordingly */
+    isExpanded: boolean;
+    /** Callback to close the subnav */
+    close: () => void;
+    /** The grouped sections of navigation items to render inside the subnav */
     sections: SubNavSections[];
-}
+    /** Clicking outside of subnav closes it unless trigger element was clicked; Prevents unintended reopens */
+    triggerRef?: RefObject<HTMLElement>;
+}> = ({ isExpanded, close, sections, triggerRef }) => {
+    // Handles slide-in transition
+    const [visible, setVisible] = useState(false);
 
-const SubNav: React.FC<SubNavProps> = ({ sections }) => {
+    useEffect(() => {
+        requestAnimationFrame(() => setVisible(true));
+    }, []);
+
+    const ref = useRef<HTMLDivElement>(null);
+    const handleClickOutside = useCallback(
+        (e: Event) => {
+            // trigger element excluded to prevent unintended reopens
+            if (triggerRef?.current?.contains(e.target as Node)) return;
+            close();
+        },
+        [triggerRef, close]
+    );
+    useOnClickOutside(ref, handleClickOutside);
+
     return (
         <nav
-            className='z-[nav - 1] w-subnav-width h-full flex flex-col gap-10 fixed top-0 left-nav-width bg-neutral-light-2 pt-6 border-x border-solid border-neutral-light-5 dark:bg-neutral-dark-2 overflow-x-hidden overflow-y-auto'
-            data-testid='administration-nav'>
+            className={cn(
+                'bottom-2 py-2 rounded-lg cursor-default z-subNav',
+                'flex flex-col gap-8 absolute shadow-md',
+                'bg-[#F2F2F2] dark:bg-[#1F1F1F]',
+                'transition-all duration-300 ease-out',
+                {
+                    'opacity-100': visible,
+                    'opacity-0': !visible,
+                    'left-subnav-expanded': isExpanded,
+                    'left-subnav-collapsed': !isExpanded,
+                }
+            )}
+            data-testid='sub-nav'
+            ref={ref}
+            onMouseLeave={close}>
             {sections.map((section, sectionIndex) => (
-                <ul key={sectionIndex}>
-                    <SubNavListTitle>
-                        <span>{section.title}</span>
-                    </SubNavListTitle>
+                <ul key={sectionIndex} className='flex flex-col gap-1'>
+                    {/* Section title */}
+                    <li className='px-4 text-lg font-medium'>{section.title}</li>
+
+                    {/* Section items */}
                     {section.items.map((item, itemIndex) => (
-                        <SubNavListItem key={itemIndex} route={item.path}>
-                            <SubNavListItemLink route={item.path}>
-                                <span>{item.label}</span>
-                            </SubNavListItemLink>
-                        </SubNavListItem>
+                        <SubNavListItem key={itemIndex} item={item} />
                     ))}
                 </ul>
             ))}

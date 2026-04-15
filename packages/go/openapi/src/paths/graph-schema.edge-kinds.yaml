@@ -20,9 +20,9 @@ parameters:
 get:
   operationId: ListEdgeKinds
   summary: List Edge Kinds
-  description: List all Edge Kinds across Graph Schemas
+  description: "**Experimental** - List all Edge Kinds across OpenGraph Schemas"
   tags:
-    - Graph Schema
+    - OpenGraph (Experimental)
     - Enterprise
     - Community
   parameters: 

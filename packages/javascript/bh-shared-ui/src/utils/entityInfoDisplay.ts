@@ -23,8 +23,10 @@ import { ZERO_VALUE_API_DATE } from '../constants';
 import {
     ActiveDirectoryKindProperties,
     ActiveDirectoryKindPropertiesToDisplay,
+    ActiveDirectoryNodeKind,
     AzureKindProperties,
     AzureKindPropertiesToDisplay,
+    AzureNodeKind,
     CommonKindProperties,
     CommonKindPropertiesToDisplay,
 } from '../graphSchema';
@@ -280,6 +282,8 @@ export const DATE_FIELDS = [
     'lastlogon',
     'pwdlastset',
     'lastsuccessfulsignindatetime',
+    'lastcollected',
+    'firstseen',
 ];
 
 export const formatPrimitive = (
@@ -295,7 +299,7 @@ export const formatPrimitive = (
             return formatBoolean(value);
         }
         case 'string':
-            if (!keyprop || DATE_FIELDS.includes(keyprop)) {
+            if (keyprop && DATE_FIELDS.includes(keyprop)) {
                 return formatDateString(value);
             }
 
@@ -322,4 +326,11 @@ export const format = (field: EntityField): string | string[] => {
     } else {
         return formatPrimitive(value, kind, keyprop);
     }
+};
+
+// To do: Better way to do this ?
+export const getNodeSource = (kinds: string[]): string | undefined => {
+    if (kinds.includes(AzureNodeKind.Entity)) return 'Azure';
+    if (kinds.includes(ActiveDirectoryNodeKind.Entity)) return 'Active Directory';
+    return 'OpenGraph';
 };

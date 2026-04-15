@@ -18,11 +18,10 @@ package ad
 
 import (
 	"context"
-
 	"log/slog"
 	"sync"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/cardinality"
@@ -33,7 +32,7 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, localGroupData *LocalGroupData, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
+func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
 	// 1.
 	principals := cardinality.NewBitmap64()
 	publishedTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID)
@@ -157,7 +156,7 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 
 	principals.Each(func(value uint64) bool {
 		for _, domain := range targetDomains.Slice() {
-			channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+			channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
 				Kind:   ad.ADCSESC4,
@@ -261,7 +260,7 @@ func findPathsToDomainThroughCertTemplateWithGenericAll(
 ) (map[graph.ID][]*graph.PathSegment, cardinality.Duplex[uint64], error) {
 
 	var (
-		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		lock          = &sync.Mutex{}
 
 		certTemplateSegments = map[graph.ID][]*graph.PathSegment{}
@@ -380,7 +379,7 @@ func traversalToDomainThroughCertTemplate(
 ) (map[graph.ID][]*graph.PathSegment, cardinality.Duplex[uint64], error) {
 
 	var (
-		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		lock          = &sync.Mutex{}
 
 		certTemplateSegments = map[graph.ID][]*graph.PathSegment{}
@@ -447,7 +446,7 @@ func findPathsToDomainThroughCertTemplateWithBothPKIFlags(
 ) (map[graph.ID][]*graph.PathSegment, cardinality.Duplex[uint64], error) {
 
 	var (
-		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		lock          = &sync.Mutex{}
 
 		certTemplateSegments = map[graph.ID][]*graph.PathSegment{}
@@ -542,7 +541,7 @@ func findPathToDomainThroughEnterpriseCAsTrustedForNTAuth(
 	error,
 ) {
 	var (
-		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		lock          = &sync.Mutex{}
 
 		enrollAndNTAuthECASegments = map[graph.ID][]*graph.PathSegment{}

@@ -22,6 +22,9 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+
+	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/dawgs/graph"
 )
 
 var ValidColorStringRegex = regexp.MustCompile("^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$")
@@ -66,6 +69,16 @@ type CustomNodeIcon struct {
 }
 
 type CustomNodeKindMap map[string]CustomNodeKindConfig
+
+func (s CustomNodeKindMap) ValidKinds() graphschema.ValidPrimaryKinds {
+	validKinds := make(graphschema.ValidPrimaryKinds, len(s))
+
+	for kind := range s {
+		validKinds[graph.StringKind(kind)] = true
+	}
+
+	return validKinds
+}
 
 func (s *CustomNodeKindConfig) Scan(value interface{}) error {
 	if value == nil {

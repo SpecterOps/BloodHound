@@ -18,14 +18,12 @@ package ad
 
 import (
 	"context"
-
 	"log/slog"
 	"sync"
 
-	"github.com/specterops/bloodhound/packages/go/ein"
-
-	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
@@ -35,7 +33,7 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, localGroupData *LocalGroupData, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
+func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
 	if isUserSpecifiesSanEnabledCollected, err := enterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabledCollected.String()).Bool(); err != nil {
 		return err
 	} else if !isUserSpecifiesSanEnabledCollected {
@@ -75,7 +73,7 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 				} else {
 					filteredEnrollers.Each(func(value uint64) bool {
 						for _, domain := range targetDomains.Slice() {
-							channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+							channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 								FromID: graph.ID(value),
 								ToID:   domain.ID,
 								Kind:   ad.ADCSESC6a,
@@ -90,7 +88,7 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 	return nil
 }
 
-func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, localGroupData *LocalGroupData, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
+func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
 	if isUserSpecifiesSanEnabledCollected, err := enterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabledCollected.String()).Bool(); err != nil {
 		return err
 	} else if !isUserSpecifiesSanEnabledCollected {
@@ -131,7 +129,7 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 					filteredEnrollers.Each(func(value uint64) bool {
 						for _, domain := range targetDomains.Slice() {
 							if cache.HasUPNCertMappingInForest(domain.ID.Uint64()) {
-								channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+								channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 									FromID: graph.ID(value),
 									ToID:   domain.ID,
 									Kind:   ad.ADCSESC6b,
@@ -213,7 +211,7 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		endNode    *graph.Node
 		startNodes = graph.NodeSet{}
 
-		traversalInst      = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst      = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		lock               = &sync.Mutex{}
 		paths              = graph.PathSet{}
 		path1Segments      = map[graph.ID][]*graph.PathSegment{}

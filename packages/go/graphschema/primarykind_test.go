@@ -48,6 +48,14 @@ func Test_PrimaryNodeKind(t *testing.T) {
 
 	t.Run("falls back to unknown if nothing detected", func(t *testing.T) {
 		primaryKind := PrimaryNodeKind(nil, graph.Kinds{graph.StringKind("Hero")})
-		require.Equal(t, unknownKind, primaryKind)
+		require.Equal(t, UnknownKind, primaryKind)
+	})
+
+	t.Run("returns the first valid kind in the kinds array", func(t *testing.T) {
+		primaryKind := PrimaryNodeKind(ValidPrimaryKinds{
+			graph.StringKind("Hero"):    true,
+			graph.StringKind("Villain"): true,
+		}, graph.Kinds{graph.StringKind("Hero"), graph.StringKind("Villain")})
+		require.Equal(t, graph.StringKind("Hero"), primaryKind)
 	})
 }

@@ -34,7 +34,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -444,7 +443,7 @@ func (s Resources) getAssetGroupMembers(response http.ResponseWriter, request *h
 		} else if assetGroupNodes, err := s.GraphQuery.GetAssetGroupNodes(request.Context(), assetGroup.Tag, assetGroup.SystemGroup); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error fetching nodes for asset group ID %v: %v", assetGroup.ID, err), request), response)
 			return agMembers, err
-		} else if validPrimaryKinds, err := s.DB.GetDisplayNodeGraphKinds(request.Context()); err != nil {
+		} else if validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return agMembers, err
 		} else if agMembers, err = parseAGMembersFromNodes(validPrimaryKinds, assetGroupNodes, assetGroup.Selectors, int(assetGroup.ID)).SortBy(sortByColumns); err != nil {
@@ -534,7 +533,7 @@ func parseAGMembersFromNodes(validPrimaryKinds graphschema.ValidPrimaryKinds, no
 		agMember := api.AssetGroupMember{
 			AssetGroupID: assetGroupID,
 			ObjectID:     memberObjectId,
-			PrimaryKind:  analysis.GetNodeKindDisplayLabel(validPrimaryKinds, node),
+			PrimaryKind:  graphschema.GetNodeKindDisplayLabel(validPrimaryKinds, node),
 			Kinds:        node.Kinds.Strings(),
 			Name:         memberName,
 			CustomMember: isCustomMember,

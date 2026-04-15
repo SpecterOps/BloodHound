@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AdministrationItem, AdministrationSection } from '../../types';
+import { SubNavItem, SubNavSection } from '../../types';
 
 export const getSubRoute = (parentRoute: string, childRoute: string) => {
     return childRoute.slice(parentRoute.length);
@@ -23,7 +23,7 @@ export const getSubRoute = (parentRoute: string, childRoute: string) => {
 /**
  * Takes a list of admin nav sections and returns a copy with "adminOnly" nav items removed and empty sections pruned
  */
-export const filterAdminSections = (sections: AdministrationSection[]): AdministrationSection[] => {
+export const filterAdminSections = (sections: SubNavSection[]): SubNavSection[] => {
     return sections
         .map((section) => {
             const filteredItems = section.items.filter((item) => !item.adminOnly);
@@ -38,11 +38,7 @@ export const filterAdminSections = (sections: AdministrationSection[]): Administ
 /**
  * Takes a nav section and returns a copy that has a nav item added if the title matches; the result is unmodified otherwise
  */
-export const addItemToSection = (
-    section: AdministrationSection,
-    title: string,
-    item: AdministrationItem
-): AdministrationSection => {
+export const addItemToSection = (section: SubNavSection, title: string, item: SubNavItem): SubNavSection => {
     if (section.title === title) {
         return {
             ...section,
@@ -55,6 +51,6 @@ export const addItemToSection = (
 /**
  * Flatten admin nav data to use when rendering each Route component
  */
-export const flattenRoutes = (sections: AdministrationSection[]): AdministrationItem[] => {
-    return sections.reduce<AdministrationItem[]>((acc, val) => acc.concat(val.items), []);
+export const flattenRoutes = (sections: SubNavSection[]): SubNavItem[] => {
+    return sections.reduce<SubNavItem[]>((acc, val) => acc.concat(val.items), []);
 };

@@ -35,6 +35,7 @@ import (
 	null "github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	model "github.com/specterops/bloodhound/cmd/api/src/model"
 	appcfg "github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	graphschema "github.com/specterops/bloodhound/packages/go/graphschema"
 	graph "github.com/specterops/dawgs/graph"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -882,6 +883,20 @@ func (m *MockDatabase) DeleteEnvironmentTargetedAccessControlForUser(ctx context
 func (mr *MockDatabaseMockRecorder) DeleteEnvironmentTargetedAccessControlForUser(ctx, user any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEnvironmentTargetedAccessControlForUser", reflect.TypeOf((*MockDatabase)(nil).DeleteEnvironmentTargetedAccessControlForUser), ctx, user)
+}
+
+// DeleteExpiredAuthTokens mocks base method.
+func (m *MockDatabase) DeleteExpiredAuthTokens(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteExpiredAuthTokens", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteExpiredAuthTokens indicates an expected call of DeleteExpiredAuthTokens.
+func (mr *MockDatabaseMockRecorder) DeleteExpiredAuthTokens(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteExpiredAuthTokens", reflect.TypeOf((*MockDatabase)(nil).DeleteExpiredAuthTokens), ctx)
 }
 
 // DeleteGraphSchemaExtension mocks base method.
@@ -1750,19 +1765,19 @@ func (mr *MockDatabaseMockRecorder) GetDatapipeStatus(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDatapipeStatus", reflect.TypeOf((*MockDatabase)(nil).GetDatapipeStatus), ctx)
 }
 
-// GetDisplayNodeGraphKinds mocks base method.
-func (m *MockDatabase) GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error) {
+// GetDisplayGraphSchemaNodeKinds mocks base method.
+func (m *MockDatabase) GetDisplayGraphSchemaNodeKinds(ctx context.Context) (model.GraphSchemaNodeKindMap, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDisplayNodeGraphKinds", ctx)
-	ret0, _ := ret[0].(map[graph.Kind]bool)
+	ret := m.ctrl.Call(m, "GetDisplayGraphSchemaNodeKinds", ctx)
+	ret0, _ := ret[0].(model.GraphSchemaNodeKindMap)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetDisplayNodeGraphKinds indicates an expected call of GetDisplayNodeGraphKinds.
-func (mr *MockDatabaseMockRecorder) GetDisplayNodeGraphKinds(ctx any) *gomock.Call {
+// GetDisplayGraphSchemaNodeKinds indicates an expected call of GetDisplayGraphSchemaNodeKinds.
+func (mr *MockDatabaseMockRecorder) GetDisplayGraphSchemaNodeKinds(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDisplayNodeGraphKinds", reflect.TypeOf((*MockDatabase)(nil).GetDisplayNodeGraphKinds), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDisplayGraphSchemaNodeKinds", reflect.TypeOf((*MockDatabase)(nil).GetDisplayGraphSchemaNodeKinds), ctx)
 }
 
 // GetEnvironmentByEnvironmentKindId mocks base method.
@@ -2178,6 +2193,21 @@ func (m *MockDatabase) GetPrincipalKindsByEnvironmentId(ctx context.Context, env
 func (mr *MockDatabaseMockRecorder) GetPrincipalKindsByEnvironmentId(ctx, environmentId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrincipalKindsByEnvironmentId", reflect.TypeOf((*MockDatabase)(nil).GetPrincipalKindsByEnvironmentId), ctx, environmentId)
+}
+
+// GetPrincipalKindsGraphKinds mocks base method.
+func (m *MockDatabase) GetPrincipalKindsGraphKinds(ctx context.Context) (graph.Kinds, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPrincipalKindsGraphKinds", ctx)
+	ret0, _ := ret[0].(graph.Kinds)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPrincipalKindsGraphKinds indicates an expected call of GetPrincipalKindsGraphKinds.
+func (mr *MockDatabaseMockRecorder) GetPrincipalKindsGraphKinds(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrincipalKindsGraphKinds", reflect.TypeOf((*MockDatabase)(nil).GetPrincipalKindsGraphKinds), ctx)
 }
 
 // GetPublicSavedQueries mocks base method.
@@ -2662,6 +2692,21 @@ func (mr *MockDatabaseMockRecorder) GetUserToken(ctx, userId, tokenId any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserToken", reflect.TypeOf((*MockDatabase)(nil).GetUserToken), ctx, userId, tokenId)
 }
 
+// GetValidDisplayKinds mocks base method.
+func (m *MockDatabase) GetValidDisplayKinds(ctx context.Context) (graphschema.ValidPrimaryKinds, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetValidDisplayKinds", ctx)
+	ret0, _ := ret[0].(graphschema.ValidPrimaryKinds)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetValidDisplayKinds indicates an expected call of GetValidDisplayKinds.
+func (mr *MockDatabaseMockRecorder) GetValidDisplayKinds(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetValidDisplayKinds", reflect.TypeOf((*MockDatabase)(nil).GetValidDisplayKinds), ctx)
+}
+
 // HasAnalysisRequest mocks base method.
 func (m *MockDatabase) HasAnalysisRequest(ctx context.Context) bool {
 	m.ctrl.T.Helper()
@@ -3118,6 +3163,20 @@ func (m *MockDatabase) UpdateAuthToken(ctx context.Context, authToken model.Auth
 func (mr *MockDatabaseMockRecorder) UpdateAuthToken(ctx, authToken any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthToken", reflect.TypeOf((*MockDatabase)(nil).UpdateAuthToken), ctx, authToken)
+}
+
+// UpdateAuthTokenExpiration mocks base method.
+func (m *MockDatabase) UpdateAuthTokenExpiration(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAuthTokenExpiration", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateAuthTokenExpiration indicates an expected call of UpdateAuthTokenExpiration.
+func (mr *MockDatabaseMockRecorder) UpdateAuthTokenExpiration(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthTokenExpiration", reflect.TypeOf((*MockDatabase)(nil).UpdateAuthTokenExpiration), ctx)
 }
 
 // UpdateCertificationBySelectorNode mocks base method.

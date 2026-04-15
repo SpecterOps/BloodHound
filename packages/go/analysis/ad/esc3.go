@@ -24,7 +24,7 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/cardinality"
@@ -35,7 +35,7 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, localGroupData *LocalGroupData, eca2 *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
+func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, eca2 *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
 	results := cardinality.NewBitmap64()
 	if publishedCertTemplates := cache.GetPublishedTemplateCache(eca2.ID); len(publishedCertTemplates) == 0 {
 		return nil
@@ -150,7 +150,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 
 	results.Each(func(value uint64) bool {
 		for _, domain := range targetDomains.Slice() {
-			channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+			channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
 				Kind:   ad.ADCSESC3,
@@ -162,7 +162,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 	return nil
 }
 
-func PostEnrollOnBehalfOf(cache ADCSCache, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) error {
+func PostEnrollOnBehalfOf(cache ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob]) error {
 	versionOneTemplates := make([]*graph.Node, 0)
 	versionTwoTemplates := make([]*graph.Node, 0)
 	for _, node := range cache.GetCertTemplates() {
@@ -201,7 +201,7 @@ func PostEnrollOnBehalfOf(cache ADCSCache, operation analysis.StatTrackedOperati
 				if publishedCertTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
 					return nil
 				} else {
-					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 						if results, err := EnrollOnBehalfOfVersionTwo(tx, versionTwoTemplates, publishedCertTemplates, innerDomain); err != nil {
 							return err
 						} else {
@@ -215,7 +215,7 @@ func PostEnrollOnBehalfOf(cache ADCSCache, operation analysis.StatTrackedOperati
 						}
 					})
 
-					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 						if results, err := EnrollOnBehalfOfVersionOne(tx, versionOneTemplates, publishedCertTemplates, innerDomain); err != nil {
 							return err
 						} else {
@@ -236,8 +236,8 @@ func PostEnrollOnBehalfOf(cache ADCSCache, operation analysis.StatTrackedOperati
 	return nil
 }
 
-func EnrollOnBehalfOfVersionTwo(tx graph.Transaction, versionTwoCertTemplates, publishedTemplates []*graph.Node, domainNode *graph.Node) ([]analysis.CreatePostRelationshipJob, error) {
-	results := make([]analysis.CreatePostRelationshipJob, 0)
+func EnrollOnBehalfOfVersionTwo(tx graph.Transaction, versionTwoCertTemplates, publishedTemplates []*graph.Node, domainNode *graph.Node) ([]post.EnsureRelationshipJob, error) {
+	results := make([]post.EnsureRelationshipJob, 0)
 	for _, certTemplateOne := range publishedTemplates {
 		if hasBadEku, err := certTemplateHasEku(certTemplateOne, EkuAnyPurpose); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.Warn(
@@ -296,7 +296,7 @@ func EnrollOnBehalfOfVersionTwo(tx graph.Transaction, versionTwoCertTemplates, p
 				} else if !isLinked {
 					continue
 				} else {
-					results = append(results, analysis.CreatePostRelationshipJob{
+					results = append(results, post.EnsureRelationshipJob{
 						FromID: certTemplateOne.ID,
 						ToID:   certTemplateTwo.ID,
 						Kind:   ad.EnrollOnBehalfOf,
@@ -325,8 +325,8 @@ func certTemplateHasEku(certTemplate *graph.Node, targetEkus ...string) (bool, e
 	}
 }
 
-func EnrollOnBehalfOfVersionOne(tx graph.Transaction, versionOneCertTemplates []*graph.Node, publishedTemplates []*graph.Node, domainNode *graph.Node) ([]analysis.CreatePostRelationshipJob, error) {
-	results := make([]analysis.CreatePostRelationshipJob, 0)
+func EnrollOnBehalfOfVersionOne(tx graph.Transaction, versionOneCertTemplates []*graph.Node, publishedTemplates []*graph.Node, domainNode *graph.Node) ([]post.EnsureRelationshipJob, error) {
+	results := make([]post.EnsureRelationshipJob, 0)
 
 	for _, certTemplateOne := range publishedTemplates {
 		//prefilter as much as we can first
@@ -355,7 +355,7 @@ func EnrollOnBehalfOfVersionOne(tx graph.Transaction, versionOneCertTemplates []
 				} else if !hasPath {
 					continue
 				} else {
-					results = append(results, analysis.CreatePostRelationshipJob{
+					results = append(results, post.EnsureRelationshipJob{
 						FromID: certTemplateOne.ID,
 						ToID:   certTemplateTwo.ID,
 						Kind:   ad.EnrollOnBehalfOf,
@@ -533,7 +533,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		startNode  *graph.Node
 		startNodes = graph.NodeSet{}
 
-		traversalInst            = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst            = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		paths                    = graph.PathSet{}
 		path1CandidateSegments   = map[graph.ID][]*graph.PathSegment{}
 		path2CandidateSegments   = map[graph.ID][]*graph.PathSegment{}

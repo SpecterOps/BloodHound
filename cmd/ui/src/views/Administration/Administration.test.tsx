@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -17,13 +17,7 @@
 import { createAuthStateWithPermissions } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import {
-    ROUTE_ADMINISTRATION_DATA_QUALITY,
-    ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES,
-    ROUTE_ADMINISTRATION_MANAGE_USERS,
-    ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
-} from 'src/routes/constants';
-import { act, render, screen } from 'src/test-utils';
+import { act, render } from 'src/test-utils';
 import Administration from './Administration';
 
 const server = setupServer(
@@ -66,40 +60,6 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('Administration', () => {
-    it('should render navigation links to all Administration sub-pages', async () => {
-        await act(async () => render(<Administration />));
-
-        expect(
-            screen.getByRole('link', { name: `Navigate to ${ROUTE_ADMINISTRATION_DATA_QUALITY}` })
-        ).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: `Navigate to ${ROUTE_ADMINISTRATION_DATA_QUALITY}` })).toHaveAttribute(
-            'href',
-            ROUTE_ADMINISTRATION_DATA_QUALITY
-        );
-
-        expect(
-            screen.getByRole('link', { name: `Navigate to ${ROUTE_ADMINISTRATION_MANAGE_USERS}` })
-        ).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: `Navigate to ${ROUTE_ADMINISTRATION_MANAGE_USERS}` })).toHaveAttribute(
-            'href',
-            ROUTE_ADMINISTRATION_MANAGE_USERS
-        );
-
-        expect(
-            screen.getByRole('link', { name: `Navigate to ${ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES}` })
-        ).toBeInTheDocument();
-        expect(
-            screen.getByRole('link', { name: `Navigate to ${ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES}` })
-        ).toHaveAttribute('href', ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES);
-
-        expect(
-            await screen.findByRole('link', { name: `Navigate to ${ROUTE_ADMINISTRATION_SSO_CONFIGURATION}` })
-        ).toBeInTheDocument();
-        expect(
-            screen.getByRole('link', { name: `Navigate to ${ROUTE_ADMINISTRATION_SSO_CONFIGURATION}` })
-        ).toHaveAttribute('href', ROUTE_ADMINISTRATION_SSO_CONFIGURATION);
-    });
-
     it('should redirect to nested /file-ingest route if user navigates to /', async () => {
         await act(async () => render(<Administration />));
         expect(window.location.pathname).toBe('/administration/file-ingest');

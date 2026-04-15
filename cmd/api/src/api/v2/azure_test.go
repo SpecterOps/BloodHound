@@ -155,7 +155,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
 				mocks.mockDatabase.EXPECT().GetCustomNodeKindsMap(gomock.Any())
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetDisplayGraphSchemaNodeKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(v2.ErrParameterSkip)
 			},
 			expected: expected{
@@ -165,7 +165,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: GetDisplayNodeGraphKindsError",
+			name: "Error: GetDisplayGraphSchemaNodeKindsError",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
@@ -178,7 +178,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
 				mocks.mockDatabase.EXPECT().GetCustomNodeKindsMap(gomock.Any())
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+				mocks.mockDatabase.EXPECT().GetDisplayGraphSchemaNodeKinds(gomock.Any()).Return(nil, errors.New("database error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -200,7 +200,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
 				mocks.mockDatabase.EXPECT().GetCustomNodeKindsMap(gomock.Any())
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetDisplayGraphSchemaNodeKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expected: expected{
@@ -222,7 +222,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(v2.ErrParameterSkip)
 			},
 			expected: expected{
@@ -244,7 +244,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(v2.ErrParameterRelatedEntityType)
 			},
 			expected: expected{
@@ -266,7 +266,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(ops.ErrGraphQueryMemoryLimit)
 			},
 			expected: expected{
@@ -288,7 +288,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			expected: expected{
@@ -298,7 +298,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: GetDisplayNodeGraphKindsError",
+			name: "Error: GetValidDisplayKindsError",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
@@ -310,7 +310,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -331,7 +331,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expected: expected{
@@ -353,7 +353,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mock.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mock.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expected: expected{
@@ -384,7 +384,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
-				mock.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mock.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				props := graph.AsProperties(map[string]any{
 					"tenantid": "12345",
 				})
@@ -392,11 +392,6 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 					ID:         graph.ID(16),
 					Kinds:      graph.Kinds{azure_schema.Entity, azure_schema.Role},
 					Properties: props,
-				}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "12345",
-					},
 				}, nil)
 			},
 			expected: expected{
@@ -438,11 +433,6 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 					Properties: graph.AsProperties(map[string]any{
 						"tenantid": "12345",
 					}),
-				}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "54321",
-					},
 				}, nil)
 			},
 			expected: expected{
@@ -540,7 +530,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -555,7 +545,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -570,7 +560,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -585,7 +575,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -600,7 +590,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -615,7 +605,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -630,7 +620,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -645,7 +635,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -660,7 +650,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -675,7 +665,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -690,7 +680,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -705,7 +695,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -720,7 +710,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -735,7 +725,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -750,7 +740,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -765,7 +755,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -780,7 +770,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -795,7 +785,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -810,7 +800,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -825,7 +815,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -840,7 +830,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -855,7 +845,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -870,7 +860,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -885,7 +875,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -900,7 +890,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -915,7 +905,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -930,7 +920,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -945,7 +935,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -960,7 +950,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -975,7 +965,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -990,7 +980,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -1005,7 +995,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -1020,7 +1010,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -1035,7 +1025,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -1050,7 +1040,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -1065,7 +1055,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -1080,7 +1070,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -1095,7 +1085,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -1110,7 +1100,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -1125,7 +1115,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -1140,7 +1130,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 			},
 			want: want{
 				res: nil,
@@ -1148,13 +1138,13 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: GetDisplayNodeGraphKindsError",
+			name: "Error: GetValidDisplayKindsError",
 			args: args{
 				entityType: "base",
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+				mocks.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
 			},
 			want: want{
 				res: nil,
@@ -1240,7 +1230,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mock.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
@@ -1279,7 +1269,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mock.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mock.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(graph.ErrNoResultsFound)
 			},
 			expected: expected{
@@ -1307,7 +1297,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: GetDisplayNodeGraphKindsError",
+			name: "Error: GetValidDisplayKindsError",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
@@ -1319,7 +1309,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+				mock.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -1340,7 +1330,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mock.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mock.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expected: expected{
@@ -1362,7 +1352,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mock.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mock.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expected: expected{
@@ -1392,7 +1382,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mock.mockDatabase.EXPECT().GetValidDisplayKinds(gomock.Any())
 				mock.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 
 				props := graph.AsProperties(map[string]any{
@@ -1402,11 +1392,6 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 					ID:         graph.ID(16),
 					Kinds:      graph.Kinds{azure_schema.Entity, azure_schema.Role},
 					Properties: props,
-				}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "12345",
-					},
 				}, nil)
 			},
 			expected: expected{
@@ -1447,11 +1432,6 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 					Properties: graph.AsProperties(map[string]any{
 						"tenantid": "12345",
 					}),
-				}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "54321",
-					},
 				}, nil)
 			},
 			expected: expected{

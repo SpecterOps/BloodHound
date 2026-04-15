@@ -18,66 +18,30 @@ package analysis
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"sync/atomic"
+	"log/slog"
 
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dataquality"
+	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
+	azureAnalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
-	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 )
 
 const (
-	NodeKindUnknown                = "Unknown"
-	MaximumDatabaseParallelWorkers = 6
+	NodeKindUnknown = "Unknown"
 )
-
-type CompositionCounter struct {
-	counter atomic.Int64
-}
-
-func (c *CompositionCounter) Get() int64 {
-	ret := c.counter.Load()
-	c.counter.Add(1)
-	return ret
-}
-
-func NewCompositionCounter() CompositionCounter {
-	return CompositionCounter{
-		counter: atomic.Int64{},
-	}
-}
-
-func GetNodeKindDisplayLabel(validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.Node) string {
-	return GetNodeKind(validPrimaryKinds, node).String()
-}
-
-// GetNodeKind - returns the primary kind of the node.
-func GetNodeKind(validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.Node) graph.Kind {
-	return graphschema.PrimaryNodeKind(validPrimaryKinds, node.Kinds)
-}
-
-func ParseKind(rawKind string) (graph.Kind, error) {
-	for kind := range graphschema.ValidKinds {
-		if kind.String() == rawKind {
-			return kind, nil
-		}
-	}
-
-	return nil, fmt.Errorf("unknown kind %s", rawKind)
-}
-
-func ParseKinds(rawKinds ...string) (graph.Kinds, error) {
-	if len(rawKinds) == 0 {
-		return graph.Kinds{}, nil
-	}
-
-	return slicesext.MapWithErr(rawKinds, ParseKind)
-}
 
 func nodeByIndexedKindProperty(property, value string, kind graph.Kind) graph.Criteria {
 	return query.And(
@@ -157,20 +121,75 @@ func ExpandGroupMembershipPaths(tx graph.Transaction, candidates graph.NodeSet) 
 	return groupMemberPaths, nil
 }
 
-func FromEntityToEntityWithRelationshipKind(tx graph.Transaction, target *graph.Node, relKind graph.Kind) graph.RelationshipQuery {
-	return tx.Relationships().Filterf(func() graph.Criteria {
-		filters := []graph.Criteria{
-			query.Kind(query.Start(), ad.Entity),
-			query.Kind(query.Relationship(), relKind),
-			query.Equals(query.EndID(), target.ID),
+var (
+	ErrAnalysisFailed             = errors.New("analysis failed")
+	ErrAnalysisPartiallyCompleted = errors.New("analysis partially completed")
+)
+
+// TODO Cleanup tieringEnabled after Tiering GA
+func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration) error {
+	var (
+		collectedErrors []error
+		tieringEnabled  = appcfg.GetTieringEnabled(ctx, db)
+	)
+
+	var (
+		adFailed           = false
+		azureFailed        = false
+		agiFailed          = false
+		agtPartiallyFailed = false
+		dataQualityFailed  = false
+	)
+
+	if ntlmFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureNTLMPostProcessing); err != nil {
+		collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving NTLM Post Processing feature flag: %w", err))
+	} else if stats, err := adAnalysis.Post(ctx, graphDB, appcfg.GetCitrixRDPSupport(ctx, db), ntlmFlag.Enabled); err != nil {
+		collectedErrors = append(collectedErrors, fmt.Errorf("error during ad post: %w", err))
+		adFailed = true
+	} else {
+		stats.LogStats()
+	}
+
+	if stats, err := azureAnalysis.Post(ctx, graphDB); err != nil {
+		collectedErrors = append(collectedErrors, fmt.Errorf("error during azure post: %w", err))
+		azureFailed = true
+	} else {
+		stats.LogStats()
+	}
+
+	if errs := TagAssetGroupsAndTierZero(ctx, db, graphDB); len(errs) > 0 {
+		for _, err := range errs {
+			collectedErrors = append(collectedErrors, fmt.Errorf("tagging asset groups and tier zero failed: %w", err))
 		}
 
-		return query.And(filters...)
-	})
+		if ContainsOnlyCypherSelectorErrors(errs) {
+			agtPartiallyFailed = true
+		}
+	}
+
+	if !tieringEnabled {
+		if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB, graphschema.GetNodeKindDisplayLabel); err != nil {
+			collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
+			agiFailed = true
+		}
+	}
+
+	if err := dataquality.SaveDataQuality(ctx, db, graphDB); err != nil {
+		collectedErrors = append(collectedErrors, fmt.Errorf("error saving data quality stat: %v", err))
+		dataQualityFailed = true
+	}
+
+	if len(collectedErrors) > 0 {
+		for _, err := range collectedErrors {
+			slog.ErrorContext(ctx, "Analysis error encountered", attr.Error(err))
+		}
+	}
+
+	if adFailed && azureFailed && agiFailed && dataQualityFailed {
+		return ErrAnalysisFailed
+	} else if adFailed || azureFailed || agiFailed || agtPartiallyFailed || dataQualityFailed {
+		return ErrAnalysisPartiallyCompleted
+	}
+
+	return nil
 }
-
-type PathDelegate = func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error)
-type ListDelegate = func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error)
-
-type ParallelPathDelegate = func(ctx context.Context, db graph.Database, node *graph.Node) (graph.PathSet, error)
-type ParallelListDelegate = func(ctx context.Context, db graph.Database, node *graph.Node, skip int, limit int) (graph.NodeSet, error)

@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/bloodhoundad/azurehound/v2/models"
+	azure2 "github.com/bloodhoundad/azurehound/v2/models/azure"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -126,6 +127,162 @@ func Test_ConvertAppFederatedIdentityCredential(t *testing.T) {
 			assert.Empty(t, rel.RelProps)
 		})
 	}
+}
+
+func TestConvertAzureManagementGroupContributorToRels(t *testing.T) {
+	managementGroupId := "/providers/Microsoft.Management/managementGroups/mg-group-1"
+	principalId := "abcde-12345-fghij-67890"
+
+	t.Run("creates contributor relationship when scope matches", func(t *testing.T) {
+		data := models.ManagementGroupContributors{
+			ManagementGroupId: managementGroupId,
+			Contributors: []models.ManagementGroupContributor{
+				{
+					ManagementGroupId: managementGroupId,
+					Contributor: azure2.RoleAssignment{
+						Properties: azure2.RoleAssignmentPropertiesWithScope{
+							PrincipalId: principalId,
+							Scope:       managementGroupId,
+						},
+					},
+				},
+			},
+		}
+
+		rels := ein.ConvertAzureManagementGroupContributorToRels(data)
+
+		require.Len(t, rels, 1)
+		assert.Equal(t, strings.ToUpper(principalId), rels[0].Source.Value)
+		assert.Equal(t, azure.Entity, rels[0].Source.Kind)
+		assert.Equal(t, strings.ToUpper(managementGroupId), rels[0].Target.Value)
+		assert.Equal(t, azure.ManagementGroup, rels[0].Target.Kind)
+		assert.Equal(t, azure.Contributor, rels[0].RelType)
+	})
+
+	t.Run("skips relationship when scope does not match", func(t *testing.T) {
+		data := models.ManagementGroupContributors{
+			ManagementGroupId: managementGroupId,
+			Contributors: []models.ManagementGroupContributor{
+				{
+					ManagementGroupId: managementGroupId,
+					Contributor: azure2.RoleAssignment{
+						Properties: azure2.RoleAssignmentPropertiesWithScope{
+							PrincipalId: principalId,
+							Scope:       "/providers/Microsoft.Management/managementGroups/different-mg",
+						},
+					},
+				},
+			},
+		}
+
+		rels := ein.ConvertAzureManagementGroupContributorToRels(data)
+
+		require.Len(t, rels, 0)
+	})
+}
+
+func TestConvertAzureResourceGroupContributorToRels(t *testing.T) {
+	resourceGroupId := "/subscriptions/sub-1/resourceGroups/rg-1"
+	principalId := "abcde-12345-fghij-67890"
+
+	t.Run("creates contributor relationship when scope matches", func(t *testing.T) {
+		data := models.ResourceGroupContributors{
+			ResourceGroupId: resourceGroupId,
+			Contributors: []models.ResourceGroupContributor{
+				{
+					ResourceGroupId: resourceGroupId,
+					Contributor: azure2.RoleAssignment{
+						Properties: azure2.RoleAssignmentPropertiesWithScope{
+							PrincipalId: principalId,
+							Scope:       resourceGroupId,
+						},
+					},
+				},
+			},
+		}
+
+		rels := ein.ConvertAzureResourceGroupContributorToRels(data)
+
+		require.Len(t, rels, 1)
+		assert.Equal(t, strings.ToUpper(principalId), rels[0].Source.Value)
+		assert.Equal(t, azure.Entity, rels[0].Source.Kind)
+		assert.Equal(t, strings.ToUpper(resourceGroupId), rels[0].Target.Value)
+		assert.Equal(t, azure.ResourceGroup, rels[0].Target.Kind)
+		assert.Equal(t, azure.Contributor, rels[0].RelType)
+	})
+
+	t.Run("skips relationship when scope does not match", func(t *testing.T) {
+		data := models.ResourceGroupContributors{
+			ResourceGroupId: resourceGroupId,
+			Contributors: []models.ResourceGroupContributor{
+				{
+					ResourceGroupId: resourceGroupId,
+					Contributor: azure2.RoleAssignment{
+						Properties: azure2.RoleAssignmentPropertiesWithScope{
+							PrincipalId: principalId,
+							Scope:       "/subscriptions/sub-1/resourceGroups/different-rg",
+						},
+					},
+				},
+			},
+		}
+
+		rels := ein.ConvertAzureResourceGroupContributorToRels(data)
+
+		require.Len(t, rels, 0)
+	})
+}
+
+func TestConvertAzureSubscriptionContributorToRels(t *testing.T) {
+	subscriptionId := "/subscriptions/sub-1"
+	principalId := "abcde-12345-fghij-67890"
+
+	t.Run("creates contributor relationship when scope matches", func(t *testing.T) {
+		data := models.SubscriptionContributors{
+			SubscriptionId: subscriptionId,
+			Contributors: []models.SubscriptionContributor{
+				{
+					SubscriptionId: subscriptionId,
+					Contributor: azure2.RoleAssignment{
+						Properties: azure2.RoleAssignmentPropertiesWithScope{
+							PrincipalId: principalId,
+							Scope:       subscriptionId,
+						},
+					},
+				},
+			},
+		}
+
+		rels := ein.ConvertAzureSubscriptionContributorToRels(data)
+
+		require.Len(t, rels, 1)
+		assert.Equal(t, strings.ToUpper(principalId), rels[0].Source.Value)
+		assert.Equal(t, azure.Entity, rels[0].Source.Kind)
+		assert.Equal(t, strings.ToUpper(subscriptionId), rels[0].Target.Value)
+		assert.Equal(t, azure.Subscription, rels[0].Target.Kind)
+		assert.Equal(t, azure.Contributor, rels[0].RelType)
+	})
+
+	t.Run("skips relationship when scope does not match", func(t *testing.T) {
+		data := models.SubscriptionContributors{
+			SubscriptionId: subscriptionId,
+			Contributors: []models.SubscriptionContributor{
+				{
+					SubscriptionId: subscriptionId,
+					Contributor: azure2.RoleAssignment{
+						Properties: azure2.RoleAssignmentPropertiesWithScope{
+							PrincipalId: principalId,
+							Scope:       "/subscriptions/different-sub",
+						},
+					},
+				},
+			},
+		}
+
+		rels := ein.ConvertAzureSubscriptionContributorToRels(data)
+
+		require.Len(t, rels, 0)
+	})
 }
 
 func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {

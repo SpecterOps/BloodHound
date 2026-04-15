@@ -26,9 +26,9 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/test"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/harnesses"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
+	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -3710,7 +3710,7 @@ func initHarnessNodeProperties(c *GraphTestContext, nodeMap map[string]*graph.No
 
 func initHarnessRelationships(c *GraphTestContext, nodeMap map[string]*graph.Node, relationships []harnesses.Relationship) {
 	for _, relationship := range relationships {
-		if kind, err := analysis.ParseKind(relationship.Kind); err != nil {
+		if kind, err := ein.ParseKind(relationship.Kind); err != nil {
 			c.testCtx.Errorf("invalid relationship kind: %s", kind)
 			continue
 		} else if asserting, ok := relationship.Properties["asserted"]; !ok {
@@ -9917,6 +9917,18 @@ func (s *Version900_Migration_Harness) Setup(graphTestContext *GraphTestContext)
 	graphTestContext.UpdateNode(s.Computer2)
 }
 
+type Version910_Migration_Harness struct {
+	ADNode *graph.Node
+	AZNode *graph.Node
+	OGNode *graph.Node
+}
+
+func (s *Version910_Migration_Harness) Setup(graphTestContext *GraphTestContext) {
+	s.ADNode = graphTestContext.NewActiveDirectoryGroup("ADNode", RandomDomainSID())
+	s.AZNode = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{}), azure.Entity, ad.Group)
+	s.OGNode = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{}), graph.StringKind("OGBaseKind"), ad.Group)
+}
+
 type ACLInheritanceHarness struct {
 	Domain1 *graph.Node
 	Domain2 *graph.Node
@@ -10253,5 +10265,6 @@ type HarnessDetails struct {
 	AZPIMRolesHarness                               AZPIMRolesHarness
 	Version730_Migration                            Version730_Migration_Harness
 	Version900_Migration_Harness                    Version900_Migration_Harness
+	Version910_Migration_Harness                    Version910_Migration_Harness
 	ACLInheritanceHarness                           ACLInheritanceHarness
 }
