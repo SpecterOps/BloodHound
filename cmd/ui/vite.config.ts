@@ -107,7 +107,7 @@ export default defineConfig(({ mode }) => {
             ],
         },
         build: {
-            outDir: env.BUILD_PATH || './dist',
+            outDir: './dist',
         },
     };
 });
@@ -122,8 +122,7 @@ function excludeMockServiceWorker(): Plugin {
         apply: 'build', // Only apply during build (production)
         closeBundle() {
             // Remove mockServiceWorker.js from the output directory after build
-            const outDir = process.env.BUILD_PATH || './dist';
-            const mockServiceWorkerPath = path.resolve(__dirname, outDir, 'mockServiceWorker.js');
+            const mockServiceWorkerPath = path.resolve(__dirname, 'dist', 'mockServiceWorker.js');
 
             if (fs.existsSync(mockServiceWorkerPath)) {
                 fs.unlinkSync(mockServiceWorkerPath);
