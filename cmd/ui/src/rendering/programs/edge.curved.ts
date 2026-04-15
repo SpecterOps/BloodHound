@@ -52,6 +52,7 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
     sqrtZoomRatioLocation: WebGLUniformLocation;
     correctionRatioLocation: WebGLUniformLocation;
     canUse32BitsIndices: boolean;
+    correctionRatio: number = 1;
 
     constructor(gl: WebGLRenderingContext) {
         super(gl, vertexShaderSource, fragmentShaderSource, POINTS, ATTRIBUTES);
@@ -162,14 +163,13 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
         // 2. Estimate a clamp t-value for the edge. This should cut off at the last step of RESOLUTION before the edge
         // arrowhead's base -- we'll add a final point at the exact clamp position to close the gap
         const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
-        const correctionRatio = data.correctionRatio || 1;
 
         // The magic numbers are hardcoded constants from the existing GLSL shaders for the arrowhead, they are needed here
         // to calculate the correct arrowhead length.
         const sqrtZoomRatio = 1 / inverseSqrtZoomRatio;
-        const graphSpaceRadius = targetData.size * 2.0 * correctionRatio;
+        const graphSpaceRadius = targetData.size * 2.0 * this.correctionRatio;
         const pixelsThickness = Math.max(thickness, 1.7 * sqrtZoomRatio);
-        const graphSpaceArrowLength = pixelsThickness * 3.0 * correctionRatio;
+        const graphSpaceArrowLength = pixelsThickness * 3.0 * this.correctionRatio;
 
         let clamp: number;
         if (height !== 0) {
@@ -320,6 +320,8 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
 
     render(params: RenderParams): void {
         if (this.hasNothingToRender()) return;
+
+        this.correctionRatio = params.correctionRatio;
 
         const gl = this.gl;
 

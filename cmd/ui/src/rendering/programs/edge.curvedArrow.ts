@@ -34,7 +34,6 @@ export type CurvedEdgeDisplayData = EdgeDisplayData & {
     direction?: EdgeDirection;
     control?: Coordinates;
     inverseSqrtZoomRatio?: number;
-    correctionRatio?: number;
 };
 
 const EdgeArrowProgram = createEdgeCompoundProgram([CurvedEdgeProgram, CurvedEdgeArrowHeadProgram]);

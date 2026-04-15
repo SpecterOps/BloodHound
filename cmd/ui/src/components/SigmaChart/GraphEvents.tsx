@@ -103,12 +103,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
     const sigmaChartRef = ref as React.MutableRefObject<SigmaChartRef | null>;
 
-    // Pull in sigma's internal correction ratio to pass to edges in our curved edge reducer. Sigma also
-    // offers a getCorrectionRatio() helper, but that appears to be returning the ratio in the
-    // incorrect coordinate system for our use case.
-    const cameraRatio = sigma.getCamera().getState().ratio;
-    const correctionRatio = (sigma as any).correctionRatio / cameraRatio;
-
     useImperativeHandle(sigmaChartRef, () => {
         return {
             zoomTo: (id: string) => {
@@ -166,10 +160,8 @@ export const GraphEvents = forwardRef(function GraphEvents(
                     newData.controlInViewport = sigma.framedGraphToViewport(control);
                 }
             }
-
-            newData.correctionRatio = correctionRatio;
         },
-        [sigma, calculateCurveHeight, getControlAtMidpoint, correctionRatio]
+        [sigma, calculateCurveHeight, getControlAtMidpoint]
     );
 
     const selfEdgeReducer = useCallback(

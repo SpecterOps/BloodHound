@@ -47,6 +47,8 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
     sqrtZoomRatioLocation: WebGLUniformLocation;
     correctionRatioLocation: WebGLUniformLocation;
 
+    correctionRatio: number = 1;
+
     constructor(gl: WebGLRenderingContext) {
         super(gl, vertexShaderSource, fragmentShaderSource, POINTS, ATTRIBUTES);
 
@@ -139,16 +141,15 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
         }
 
         const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
-        const correctionRatio = data.correctionRatio || 1;
         const thickness = data.size || 1;
         const color = floatColor(data.color);
 
         // The magic numbers are hardcoded constants from the existing GLSL shaders for the arrowhead, they are needed here
         // to calculate the correct arrowhead length.
         const sqrtZoomRatio = 1 / inverseSqrtZoomRatio;
-        const graphSpaceRadius = targetData.size * 2.0 * correctionRatio;
+        const graphSpaceRadius = targetData.size * 2.0 * this.correctionRatio;
         const pixelsThickness = Math.max(thickness, 1.7 * sqrtZoomRatio);
-        const graphSpaceArrowLength = pixelsThickness * 3.0 * correctionRatio;
+        const graphSpaceArrowLength = pixelsThickness * 3.0 * this.correctionRatio;
 
         const height = bezier.calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
         const control = bezier.getControlAtMidpoint(height, sourceData, targetData);
@@ -238,6 +239,8 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
 
     render(params: RenderParams): void {
         if (this.hasNothingToRender()) return;
+
+        this.correctionRatio = params.correctionRatio;
 
         const gl = this.gl;
 
