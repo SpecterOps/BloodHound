@@ -57,7 +57,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
     const itemRef = useRef<HTMLLIElement>(null);
     const groupedQueries = groupBy(listSections, 'category');
 
-    const testMatch = (name: string, id?: number) => {
+    const isSelectedQuery = (name: string, id?: number) => {
         if (!selectedQuery) return false;
 
         if (id && id === selectedQuery.id) {
@@ -69,17 +69,12 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
         return false;
     };
 
-    const scrollSelectedQuery = () => {
-        if (itemRef.current) {
-            itemRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    };
-
+    /* TODO: try and see if we can get rid of this */
     useEffect(() => {
-        if (selectedQuery) scrollSelectedQuery();
+        if (selectedQuery && itemRef.current) {
+            itemRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
     }, [selectedQuery, showCommonQueries]);
-
-    console.log(groupedQueries);
 
     return (
         <>
@@ -88,7 +83,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                     {Object.entries(groupedQueries).map(([category, queryData]) => (
                         <div key={category} className='relative'>
                             {category && !!queryData[0].queries.length && (
-                                <div className={`${styles.subheader} font-bold sticky top-0 z-[1] py-2`}>
+                                <div className={`${styles.subheader} font-bold sticky top-0 z-[2] py-2`}>
                                     {category}
                                 </div>
                             )}
@@ -97,7 +92,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                 return (
                                     <ul key={i} className='list-none'>
                                         {subheader && !!queryData[0].queries.length && (
-                                            <div className={`${styles.subheader} sticky top-0 z-[1] py-2`}>
+                                            <div className={`${styles.subheader} sticky top-9 z-[1] py-2`}>
                                                 {subheader}
                                             </div>
                                         )}
@@ -105,11 +100,11 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                             const { id, name, description, query, canEdit = false } = lineItem;
                                             return (
                                                 <li
-                                                    className={`p-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-3 dark:hover:bg-neutral-dark-3 justify-between pl-4 scroll-my-10 list-none ${
-                                                        testMatch(name, id) ? styles.selected : ''
+                                                    className={`p-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-3 dark:hover:bg-neutral-dark-3 justify-between pl-4 list-none ${
+                                                        isSelectedQuery(name, id) ? styles.selected : ''
                                                     }`}
                                                     key={`${id}-${idx}`}
-                                                    ref={testMatch(name, id) ? itemRef : null}>
+                                                    ref={isSelectedQuery(name, id) ? itemRef : null}>
                                                     <div
                                                         role='button'
                                                         tabIndex={0}
@@ -125,17 +120,6 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                         ) : (
                                                             <p className='mb-0 leading-none'>{description}</p>
                                                         )}
-
-                                                        {/*
-                                                        {category && <span className='text-xs italic'>{category}</span>}
-
-                                                        {category && subheader && (
-                                                            <span className='text-xs italic pr-1'>,</span>
-                                                        )}
-                                                        {subheader && (
-                                                            <span className='text-xs italic'>{subheader}</span>
-                                                        )}
-                                                        */}
                                                     </div>
                                                     {canEdit && typeof id === 'number' && (
                                                         <ListItemActionMenu
