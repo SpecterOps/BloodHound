@@ -21,7 +21,6 @@ import (
 	"embed"
 	"io/fs"
 
-	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"gorm.io/gorm"
 )
 
@@ -37,16 +36,8 @@ type Source struct {
 	Directory  string
 }
 
-// Migration contains information about a specific migration such as the file location, it's Source, and Version.
-type Migration struct {
-	Filename string
-	Source   fs.FS
-	Version  version.Version
-}
-
 // Migrator is the main SQL migration tool for BloodHound.
 type Migrator struct {
-	Sources        []Source
 	ExtensionsData []Source
 	DB             *gorm.DB
 	SqlDB          *sql.DB
@@ -58,9 +49,6 @@ func NewMigrator(db *gorm.DB) *Migrator {
 	sqlDB, _ := db.DB()
 	fossMigrationsSubFS, _ := fs.Sub(FossMigrations, "migrations")
 	return &Migrator{
-		Sources: []Source{
-			{FileSystem: FossMigrations, Directory: "migrations"},
-		},
 		ExtensionsData: []Source{
 			{FileSystem: ExtensionMigrations, Directory: "extensions"},
 		},

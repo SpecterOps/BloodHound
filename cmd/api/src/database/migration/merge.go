@@ -10,7 +10,7 @@ import (
 // goose flow :
 
 // Goose calls ReadDir(".") on mergedFS based off of the constructor
-// ReadDir returns DirEntry with sorted values ["001_init.sql", "002_init.sql", "005_users.sql", "v9/007_colapse.sql"]
+// ReadDir returns DirEntry with sorted values ["001_init.sql", "002_init.sql", "005_users.sql", "v9/007_collapse.sql"]
 // Goose iterates that list and calls Open("001_init.sql") which Open() returns the fs.Fs and allows goose to
 // 		view contents of the file and execute sql depending on up or down --prefixes
 
@@ -39,7 +39,7 @@ func (s *mergedFS) buildIndex() error {
 	s.pathIndex = make(map[string]indexedPath)
 	for _, filesystem := range s.filesystems {
 		// filesystem -> migrations folder specified from the constructor in migration.go
-		// dirPath "." -> start search from the root, in this case we treat the "migrations" folderas the root
+		// dirPath "." -> start search from the root, in this case we treat the "migrations" folder as the root
 		if err := s.collectEntries(filesystem, "."); err != nil {
 			return err
 		}
@@ -47,7 +47,7 @@ func (s *mergedFS) buildIndex() error {
 	return nil
 }
 
-// collectEntries recursively walks dirPath within a single filesystem,
+// CollectEntries recursively walks dirPath within a single filesystem,
 // adding each .sql file to the shared pathIndex.
 func (s *mergedFS) collectEntries(filesystem fs.FS, dirPath string) error {
 	entries, err := fs.ReadDir(filesystem, dirPath)
@@ -65,9 +65,9 @@ func (s *mergedFS) collectEntries(filesystem fs.FS, dirPath string) error {
 			// Only index if not already present — first filesystem wins.
 			if _, exists := s.pathIndex[entry.Name()]; !exists {
 				s.pathIndex[entry.Name()] = indexedPath{
-					filesystem: filesystem, // {address to bhe or foss file system} // used for s.Open func to determine which folder path to search from
+					filesystem: filesystem, // {address to bhe or foss file system with name of directory}
 					fullPath:   entryPath,  // {"timestamp_something.sql"} full relative path for goose
-					dirEntry:   entry,      // {address to directory} necessary for goose
+					dirEntry:   entry,      // {file details (permissions, byte size, timestamp file name)}
 				}
 			}
 		}
@@ -85,9 +85,6 @@ func (s *mergedFS) Open(name string) (fs.File, error) {
 		}
 	}
 
-	// Single map lookup replaces both the flat scan and recursive fallback.
-	// If the key of the file it is looking for 00001_init.sql exists then open and return to goose to execute sql
-	// from that file
 	if indexed, exists := s.pathIndex[name]; exists {
 		return indexed.filesystem.Open(indexed.fullPath)
 	}
@@ -117,15 +114,15 @@ func (s *mergedFS) ReadDir(name string) ([]fs.DirEntry, error) {
 		}
 	}
 
-	// Collect and sort names from the shared index.
-	names := make([]string, 0, len(s.pathIndex))
+	// Collect and sort file names from the shared index.
+	migrationFileNames := make([]string, 0, len(s.pathIndex))
 	for entryName := range s.pathIndex {
-		names = append(names, entryName)
+		migrationFileNames = append(migrationFileNames, entryName)
 	}
-	sort.Strings(names)
+	sort.Strings(migrationFileNames)
 
-	mergedEntries := make([]fs.DirEntry, 0, len(names))
-	for _, entryName := range names {
+	mergedEntries := make([]fs.DirEntry, 0, len(migrationFileNames))
+	for _, entryName := range migrationFileNames {
 		mergedEntries = append(mergedEntries, s.pathIndex[entryName].dirEntry)
 	}
 	return mergedEntries, nil
