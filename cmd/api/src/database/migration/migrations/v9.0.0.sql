@@ -114,3 +114,26 @@ ON CONFLICT DO NOTHING;
 
 -- Add column to allow deletion of relationships by kind
 ALTER TABLE analysis_request_switch ADD COLUMN IF NOT EXISTS delete_relationships text [] DEFAULT ARRAY []::text [];
+
+-- Auditors to have all environments access
+UPDATE users
+SET all_environments = true
+WHERE id IN (
+  SELECT u.id
+  FROM users u
+  JOIN users_roles ur ON ur.user_id = u.id
+  JOIN roles r ON ur.role_id = r.id
+  WHERE r.name = 'Auditor'
+);
+
+-- Make opengraph_extension_management user updatable
+UPDATE feature_flags
+SET user_updatable = true,
+updated_at = current_timestamp
+WHERE key = 'opengraph_extension_management';
+
+-- Set client_bearer_auth feature flag to default to enabled
+UPDATE feature_flags
+SET enabled = true,
+updated_at = current_timestamp
+WHERE key = 'client_bearer_auth';

@@ -171,13 +171,18 @@ type DatapipeStatus = {
 
 export type DatapipeStatusResponse = BasicResponse<DatapipeStatus>;
 
+export type NullTime = {
+    Time: string;
+    Valid: boolean;
+};
+
 export type AuthToken = TimestampFields & {
     hmac_method: string;
     id: string;
     last_access: string;
     name: string;
     user_id: string;
-    expires_at: string | null;
+    expires_at: NullTime | null;
 };
 
 export type ListAuthTokensResponse = BasicResponse<{ tokens: AuthToken[] }>;

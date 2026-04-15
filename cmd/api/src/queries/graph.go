@@ -40,6 +40,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/cache"
@@ -72,6 +73,9 @@ var (
 	ErrGraphUnsupported      = errors.New("type 'graph' is not supported for this endpoint")
 	ErrCypherQueryTooComplex = errors.New("cypher query is too complex and is likely to result in poor or unstable database performance")
 )
+
+type ParallelPathDelegate = func(ctx context.Context, db graph.Database, node *graph.Node) (graph.PathSet, error)
+type ParallelListDelegate = func(ctx context.Context, db graph.Database, node *graph.Node, skip int, limit int) (graph.NodeSet, error)
 
 type EntityQueryParameters struct {
 	QueryName     string
@@ -929,7 +933,7 @@ func runEntityQuery(ctx context.Context, db graph.Database, delegate any, node *
 	var result graph.NodeSet
 
 	switch typedDelegate := delegate.(type) {
-	case analysis.ListDelegate:
+	case adAnalysis.ListDelegate:
 		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			if fetchedResult, err := typedDelegate(tx, node, skip, limit); err != nil {
 				return err
@@ -942,7 +946,7 @@ func runEntityQuery(ctx context.Context, db graph.Database, delegate any, node *
 			return nil, err
 		}
 
-	case analysis.ParallelListDelegate:
+	case ParallelListDelegate:
 		if fetchedResult, err := typedDelegate(ctx, db, node, skip, limit); err != nil {
 			return nil, err
 		} else {
@@ -989,7 +993,7 @@ func (s *GraphQuery) runMaybeCachedEntityQuery(ctx context.Context, node *graph.
 	return result, nil
 }
 
-func (s *GraphQuery) runListQuery(ctx context.Context, node *graph.Node, params EntityQueryParameters, cacheEnabled bool) ([]model.PagedNodeListEntry, int, error) {
+func (s *GraphQuery) runListQuery(ctx context.Context, validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.Node, params EntityQueryParameters, cacheEnabled bool) ([]model.PagedNodeListEntry, int, error) {
 	var (
 		skip  = params.Skip
 		limit = params.Limit
@@ -1004,7 +1008,7 @@ func (s *GraphQuery) runListQuery(ctx context.Context, node *graph.Node, params 
 			limit = result.Len() - skip
 		}
 
-		return fromGraphNodes(graph.NewNodeSet(nodeSetToOrderedSlice(result)[skip : skip+limit]...)), result.Len(), nil
+		return fromGraphNodes(validPrimaryKinds, graph.NewNodeSet(nodeSetToOrderedSlice(result)[skip:skip+limit]...)), result.Len(), nil
 	}
 }
 
@@ -1020,7 +1024,7 @@ func (s *GraphQuery) runPathQuery(ctx context.Context, validPrimaryKinds model.G
 	)
 
 	switch typedDelegate := pathDelegate.(type) {
-	case analysis.PathDelegate:
+	case adAnalysis.PathDelegate:
 		err = s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			if fetchedResult, err := typedDelegate(tx, node); err != nil {
 				return err
@@ -1030,7 +1034,7 @@ func (s *GraphQuery) runPathQuery(ctx context.Context, validPrimaryKinds model.G
 
 			return nil
 		})
-	case analysis.ParallelPathDelegate:
+	case ParallelPathDelegate:
 		result, err = typedDelegate(ctx, s.Graph, node)
 	default:
 		err = fmt.Errorf("unsupported path delegate type %T", typedDelegate)
@@ -1049,7 +1053,7 @@ func (s *GraphQuery) GetEntityResults(ctx context.Context, validPrimaryKinds mod
 	case model.DataTypeGraph:
 		return s.runPathQuery(ctx, validPrimaryKinds, customNodeKinds, node, params.PathDelegate)
 	case model.DataTypeList:
-		return s.runListQuery(ctx, node, params, cacheEnabled)
+		return s.runListQuery(ctx, validPrimaryKinds.ToKindsMap(), node, params, cacheEnabled)
 	case model.DataTypeCount:
 		return s.runCountQuery(ctx, node, params, cacheEnabled)
 	default:
@@ -1057,7 +1061,7 @@ func (s *GraphQuery) GetEntityResults(ctx context.Context, validPrimaryKinds mod
 	}
 }
 
-func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {
+func fromGraphNodes(validPrimaryKinds graphschema.ValidPrimaryKinds, nodes graph.NodeSet) []model.PagedNodeListEntry {
 	renderedNodes := make([]model.PagedNodeListEntry, 0, nodes.Len())
 
 	for _, node := range nodes {
@@ -1104,7 +1108,7 @@ func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {
 			nodeEntry.Name = name
 		}
 
-		nodeEntry.Label = analysis.GetNodeKindDisplayLabel(nil, node)
+		nodeEntry.Label = graphschema.GetNodeKindDisplayLabel(validPrimaryKinds, node)
 		nodeEntry.Kinds = node.Kinds.Strings()
 
 		renderedNodes = append(renderedNodes, nodeEntry)

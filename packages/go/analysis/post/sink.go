@@ -24,7 +24,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/specterops/bloodhound/packages/go/analysis/delta"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -56,14 +55,14 @@ func newPropertiesWithFirstSeen() *graph.Properties {
 type FilteredRelationshipSink struct {
 	operationName string
 	db            graph.Database
-	edgeTracker   *delta.Tracker
+	edgeTracker   *Tracker
 	jobC          chan EnsureRelationshipJob
 	stats         AtomicPostProcessingStats
 	wg            sync.WaitGroup
 }
 
 // NewFilteredRelationshipSink creates a new filtered relationship sink initialized with a given database, delta tracker, and operation name.
-func NewFilteredRelationshipSink(ctx context.Context, operationName string, db graph.Database, deltaSubgraph *delta.Tracker) *FilteredRelationshipSink {
+func NewFilteredRelationshipSink(ctx context.Context, operationName string, db graph.Database, deltaSubgraph *Tracker) *FilteredRelationshipSink {
 	newSink := &FilteredRelationshipSink{
 		db:            db,
 		edgeTracker:   deltaSubgraph,

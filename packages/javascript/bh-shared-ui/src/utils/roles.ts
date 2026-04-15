@@ -28,7 +28,7 @@ export const Roles = {
 type RoleValue = (typeof Roles)[keyof typeof Roles];
 
 const ETAC_ROLES = [Roles.READ_ONLY, Roles.USER];
-const ADMIN_ROLES = [Roles.ADMINISTRATOR, Roles.POWER_USER];
+const ADMIN_ROLES = [Roles.ADMINISTRATOR, Roles.POWER_USER, Roles.AUDITOR];
 const DEFAULT_USER_ROLE = Roles.READ_ONLY;
 
 export const isETACRole = (roleId: number | undefined, roles?: Role[]): boolean => {

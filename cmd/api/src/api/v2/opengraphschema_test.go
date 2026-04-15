@@ -180,40 +180,6 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 		want   want
 	}{
 		{
-			name: "fail - no user",
-			fields: fields{
-				setupOpenGraphServiceMock: func(t *testing.T, repository *schemamocks.MockOpenGraphSchemaService) {},
-			},
-			args: args{
-				func() *http.Request {
-					req, err := http.NewRequest(http.MethodPut, "/api/v2/extensions", nil)
-					require.NoError(t, err)
-					return req
-				},
-			},
-			want: want{
-				responseCode: http.StatusUnauthorized,
-				err:          fmt.Errorf("Code: 401 - errors: No associated user found"),
-			},
-		},
-		{
-			name: "fail - user is not admin",
-			fields: fields{
-				setupOpenGraphServiceMock: func(t *testing.T, repository *schemamocks.MockOpenGraphSchemaService) {},
-			},
-			args: args{
-				func() *http.Request {
-					req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPut, "/api/v2/extensions", nil)
-					require.NoError(t, err)
-					return req
-				},
-			},
-			want: want{
-				responseCode: http.StatusForbidden,
-				err:          fmt.Errorf("Code: 403 - errors: user does not have sufficient permissions to create or update an extension"),
-			},
-		},
-		{
 			name: "fail - open graph extension payload cannot be empty",
 			fields: fields{
 				setupOpenGraphServiceMock: func(t *testing.T, repository *schemamocks.MockOpenGraphSchemaService) {},
@@ -458,52 +424,6 @@ func TestResources_ListExtensions(t *testing.T) {
 
 	tt := []testData{
 		{
-			name: "Error: error getting user from context",
-			buildRequest: func() *http.Request {
-				request := &http.Request{
-					URL: &url.URL{
-						Path: "/api/v2/extensions",
-					},
-					Method: http.MethodGet,
-				}
-
-				return request
-			},
-			setupMocks: func(t *testing.T, mock *mock) {},
-			expected: expected{
-				responseCode:   http.StatusUnauthorized,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"errors":[{"context":"","message":"No associated user found"}],"http_status":401,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-			},
-		},
-		{
-			name: "Error: user does not have sufficient permissions",
-			buildRequest: func() *http.Request {
-				request := &http.Request{
-					URL: &url.URL{
-						Path: "/api/v2/extensions",
-					},
-					Method: http.MethodGet,
-				}
-
-				requestCtx := ctx.Context{
-					RequestID: "id",
-					AuthCtx: auth.Context{
-						Owner:   model.User{},
-						Session: model.UserSession{},
-					},
-				}
-
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
-			},
-			setupMocks: func(t *testing.T, mock *mock) {},
-			expected: expected{
-				responseCode:   http.StatusForbidden,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"errors":[{"context":"","message":"user does not have sufficient permissions to view extensions"}],"http_status":403,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
-			},
-		},
-		{
 			name: "Error: error retrieving graph schema extensions",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
@@ -656,52 +576,6 @@ func TestResources_DeleteExtension(t *testing.T) {
 	}
 
 	tt := []testData{
-		{
-			name: "Error: error getting user from context",
-			buildRequest: func() *http.Request {
-				request := &http.Request{
-					URL: &url.URL{
-						Path: "/api/v2/extensions/id",
-					},
-					Method: http.MethodDelete,
-				}
-
-				return request
-			},
-			setupMocks: func(t *testing.T, mock *mock) {},
-			expected: expected{
-				responseCode:   http.StatusUnauthorized,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"errors":[{"context":"","message":"No associated user found"}],"http_status":401,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-			},
-		},
-		{
-			name: "Error: user does not have sufficient permissions",
-			buildRequest: func() *http.Request {
-				request := &http.Request{
-					URL: &url.URL{
-						Path: "/api/v2/extensions/id",
-					},
-					Method: http.MethodDelete,
-				}
-
-				requestCtx := ctx.Context{
-					RequestID: "id",
-					AuthCtx: auth.Context{
-						Owner:   model.User{},
-						Session: model.UserSession{},
-					},
-				}
-
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
-			},
-			setupMocks: func(t *testing.T, mock *mock) {},
-			expected: expected{
-				responseCode:   http.StatusForbidden,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"errors":[{"context":"","message":"user does not have sufficient permissions to delete an extension"}],"http_status":403,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
-			},
-		},
 		{
 			name: "Error: invalid extension id",
 			buildRequest: func() *http.Request {

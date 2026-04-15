@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
@@ -81,7 +81,7 @@ func NodeDuplexByKinds(ctx context.Context, db graph.Database, nodes cardinality
 func FetchPathMembers(ctx context.Context, db graph.Database, root graph.ID, direction graph.Direction, queryCriteria ...graph.Criteria) (cardinality.Duplex[uint64], error) {
 	traversalMap := cardinality.ThreadSafeDuplex(cardinality.NewBitmap64())
 
-	return traversalMap, traversal.New(db, analysis.MaximumDatabaseParallelWorkers).BreadthFirst(ctx, traversal.Plan{
+	return traversalMap, traversal.New(db, post.MaximumDatabaseParallelWorkers).BreadthFirst(ctx, traversal.Plan{
 		Root: graph.NewNode(root, graph.NewProperties()),
 		Driver: func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error) {
 			if nextQuery, err := newTraversalQuery(tx, segment, direction, queryCriteria...); err != nil {

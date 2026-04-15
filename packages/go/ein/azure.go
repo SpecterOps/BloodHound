@@ -746,6 +746,30 @@ func ConvertAzureManagementGroupOwnerToRels(data models.ManagementGroupOwners) [
 	return relationships
 }
 
+func ConvertAzureManagementGroupContributorToRels(data models.ManagementGroupContributors) []IngestibleRelationship {
+	relationships := make([]IngestibleRelationship, 0)
+	for _, raw := range data.Contributors {
+		if data.ManagementGroupId == raw.Contributor.Properties.Scope {
+			relationships = append(relationships, NewIngestibleRelationship(
+				IngestibleEndpoint{
+					Value: strings.ToUpper(raw.Contributor.GetPrincipalId()),
+					Kind:  azure.Entity,
+				},
+				IngestibleEndpoint{
+					Kind:  azure.ManagementGroup,
+					Value: strings.ToUpper(data.ManagementGroupId),
+				},
+				IngestibleRel{
+					RelProps: map[string]any{},
+					RelType:  azure.Contributor,
+				},
+			))
+		}
+	}
+
+	return relationships
+}
+
 func ConvertAzureManagementGroupUserAccessAdminToRels(data models.ManagementGroupUserAccessAdmins) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, 0)
 	for _, raw := range data.UserAccessAdmins {
@@ -817,6 +841,30 @@ func ConvertAzureResourceGroup(data models.ResourceGroup, ingestTime time.Time) 
 				RelType:  azure.Contains,
 			},
 		)
+}
+
+func ConvertAzureResourceGroupContributorToRels(data models.ResourceGroupContributors) []IngestibleRelationship {
+	relationships := make([]IngestibleRelationship, 0)
+	for _, raw := range data.Contributors {
+		if data.ResourceGroupId == raw.Contributor.Properties.Scope {
+			relationships = append(relationships, NewIngestibleRelationship(
+				IngestibleEndpoint{
+					Value: strings.ToUpper(raw.Contributor.Properties.PrincipalId),
+					Kind:  azure.Entity,
+				},
+				IngestibleEndpoint{
+					Kind:  azure.ResourceGroup,
+					Value: strings.ToUpper(data.ResourceGroupId),
+				},
+				IngestibleRel{
+					RelProps: map[string]any{},
+					RelType:  azure.Contributor,
+				},
+			))
+		}
+	}
+
+	return relationships
 }
 
 func ConvertAzureResourceGroupOwnerToRels(data models.ResourceGroupOwners) []IngestibleRelationship {
@@ -1206,6 +1254,30 @@ func ConvertAzureSubscriptionOwnerToRels(data models.SubscriptionOwners) []Inges
 				IngestibleRel{
 					RelProps: map[string]any{},
 					RelType:  azure.Owner,
+				},
+			))
+		}
+	}
+
+	return relationships
+}
+
+func ConvertAzureSubscriptionContributorToRels(data models.SubscriptionContributors) []IngestibleRelationship {
+	relationships := make([]IngestibleRelationship, 0)
+	for _, raw := range data.Contributors {
+		if data.SubscriptionId == raw.Contributor.Properties.Scope {
+			relationships = append(relationships, NewIngestibleRelationship(
+				IngestibleEndpoint{
+					Value: strings.ToUpper(raw.Contributor.Properties.PrincipalId),
+					Kind:  azure.Entity,
+				},
+				IngestibleEndpoint{
+					Kind:  azure.Subscription,
+					Value: strings.ToUpper(data.SubscriptionId),
+				},
+				IngestibleRel{
+					RelProps: map[string]any{},
+					RelType:  azure.Contributor,
 				},
 			))
 		}

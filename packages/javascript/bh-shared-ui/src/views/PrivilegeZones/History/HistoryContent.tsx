@@ -106,7 +106,7 @@ const HistoryContent = () => {
                         ref={scrollRef}
                         // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
                         tabIndex={0}
-                        className='overflow-y-auto mb-1'>
+                        className='overflow-y-auto mb-1 min-h-32'>
                         <DataTable
                             data={records}
                             TableHeaderProps={tableHeaderProps}
