@@ -85,8 +85,6 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         }
     };
 
-    const isUserSelectedLayout = false;
-
     return (
         <>
             <div
@@ -139,8 +137,8 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                     {layoutOptions.map((buttonLabel) => {
                         const tableViewIsSelected = isExploreTableSelected && searchType === 'cypher';
                         const isSelected = tableViewIsSelected
-                            ? buttonLabel === 'table' && isUserSelectedLayout
-                            : buttonLabel === selectedLayout && isUserSelectedLayout;
+                            ? buttonLabel === 'table' && isExploreLayoutSelected
+                            : buttonLabel === selectedLayout && isExploreLayoutSelected;
 
                         return (
                             <MenuItem

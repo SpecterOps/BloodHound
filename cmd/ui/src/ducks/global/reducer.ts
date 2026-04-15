@@ -48,6 +48,8 @@ const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewA
             draft.exploreLayout = action.exploreLayout;
         } else if (action.type === types.GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED) {
             draft.isExploreTableSelected = action.isExploreTableSelected;
+        } else if (action.type === types.GLOBAL_SET_IS_EXPLORE_LAYOUT_SELECTED) {
+            draft.isExploreLayoutSelected = action.isExploreLayoutSelected;
         } else if (action.type === types.GLOBAL_SET_AUTO_RUN_QUERIES) {
             draft.autoRunQueries = action.autoRunQueries;
         } else if (action.type === types.GLOBAL_SET_TIMEOUT_SETTING) {
