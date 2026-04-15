@@ -23,6 +23,7 @@ package integration
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"net/url"
 	"strings"
 	"testing"
@@ -155,10 +156,14 @@ func SetupTestMigrator(t *testing.T, sources ...migration.Source) (*gorm.DB, *mi
 	} else if db, err := setupPGTestDB(t, cfg); err != nil {
 		return nil, nil, fmt.Errorf("failed to setup pgtestdb: %v", err)
 	} else {
+		sqlDB, _ := db.DB()
+		fossMigrationsSubFS, _ := fs.Sub(migration.FossMigrations, "migrations")
 		OpenGraphDB(t, graphschema.DefaultGraphSchema()).Close(context.Background())
 		return db, &migration.Migrator{
-			Sources: sources,
-			DB:      db,
+			ExtensionsData: sources,
+			DB:             db,
+			SqlDB:          sqlDB,
+			GooseFS:        migration.MergedFS(fossMigrationsSubFS),
 		}, nil
 	}
 }
