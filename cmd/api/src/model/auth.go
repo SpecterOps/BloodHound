@@ -452,6 +452,7 @@ type User struct {
 	IsDisabled                       bool                               `json:"is_disabled"`
 	AllEnvironments                  bool                               `json:"all_environments"`
 	EnvironmentTargetedAccessControl []EnvironmentTargetedAccessControl `json:"environment_targeted_access_control"`
+	Preferences                      Preferences                        `json:"preferences"`
 
 	// SupportAccount should never be settable by a user. It is used to determine if a user is a support account.
 	SupportAccount bool `json:"-"`
