@@ -17,10 +17,12 @@
 package v2_test
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -34,6 +36,7 @@ import (
 	dbMocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
+	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -126,7 +129,7 @@ func TestResources_RequestAnalysis(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000", gomock.Any()).Return(errors.New("error"))
+				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000", int(analysis.AnalysisStepAll)).Return(errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -161,7 +164,7 @@ func TestResources_RequestAnalysis(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000", gomock.Any()).Return(nil)
+				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000", int(analysis.AnalysisStepAll)).Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusAccepted,
@@ -195,7 +198,7 @@ func TestResources_RequestAnalysis(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000", gomock.Any()).Return(nil)
+				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000", int(analysis.AnalysisStepAll)).Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusAccepted,
@@ -220,12 +223,82 @@ func TestResources_RequestAnalysis(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "unknown-user", gomock.Any()).Return(nil)
+				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "unknown-user", int(analysis.AnalysisStepAll)).Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusAccepted,
 				responseBody:   ``,
 				responseHeader: http.Header{},
+			},
+		},
+		{
+			name: "Success: analysis request with specific step - OK",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/analysis",
+					},
+					Method: http.MethodPut,
+					Body:   io.NopCloser(bytes.NewBufferString(`{"analysis_step":2}`)),
+				}
+
+				param := map[string]string{
+					"object_id": "id",
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner:   model.User{},
+						Session: model.UserSession{},
+					},
+				}
+
+				request = mux.SetURLVars(request, param)
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000", int(analysis.AnalysisStepTagging)).Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusAccepted,
+				responseHeader: http.Header{},
+			},
+		},
+		{
+			name: "Error: malformed JSON body - Bad Request",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/analysis",
+					},
+					Method: http.MethodPut,
+					Body:   io.NopCloser(bytes.NewBufferString(`{invalid`)),
+				}
+
+				param := map[string]string{
+					"object_id": "id",
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner:   model.User{},
+						Session: model.UserSession{},
+					},
+				}
+
+				request = mux.SetURLVars(request, param)
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"JSON malformed"}],"http_status":400,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 	}
