@@ -51,6 +51,7 @@ import { NoDataFileUploadDialogWithLinks } from 'src/components/NoDataFileUpload
 import SigmaChart from 'src/components/SigmaChart';
 import {
     setExploreLayout,
+    setIsExploreLayoutSelected,
     setIsExploreTableSelected,
     setPinnedExploreTableColumns,
     setSelectedExploreTableColumns,
@@ -86,6 +87,7 @@ const GraphView: FC = () => {
     const selectedColumns = useAppSelector((state) => state.global.view.selectedExploreTableColumns);
     const pinnedColumns = useAppSelector((state) => state.global.view.pinnedExploreTableColumns);
     const isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
+    const isExploreLayoutSelected = useAppSelector((state) => state.global.view.isExploreLayoutSelected);
 
     const customIconsQuery = useCustomNodeKinds({ select: transformIconDictionary });
 
@@ -216,17 +218,37 @@ const GraphView: FC = () => {
     };
 
     const handleLayoutChange = (layout: BaseExploreLayoutOptions) => {
-        if (layout === 'table') {
-            dispatch(setIsExploreTableSelected(true));
+        if (!layout) return;
+
+        //if already selected, deselect
+        if (layout === 'table' && isExploreTableSelected) {
+            dispatch(setIsExploreTableSelected(false));
+            //deselect - set to default
+            dispatch(setExploreLayout(defaultGraphLayout));
+            //return to default, unselected state
+            dispatch(setIsExploreLayoutSelected(false));
             return;
         }
 
-        dispatch(setExploreLayout(layout));
-        dispatch(setIsExploreTableSelected(false));
+        if (exploreLayout == layout && isExploreLayoutSelected) {
+            //deselect - set to default
+            dispatch(setExploreLayout(defaultGraphLayout));
+            //return to default, unselected state
+            dispatch(setIsExploreLayoutSelected(false));
+            return;
+        }
 
-        if (layout === 'standard') sigmaChartRef.current?.runStandardLayout();
+        if (layout === 'table') {
+            dispatch(setIsExploreTableSelected(true));
+        } else {
+            dispatch(setExploreLayout(layout));
+            dispatch(setIsExploreLayoutSelected(true));
+            dispatch(setIsExploreTableSelected(false));
 
-        if (layout === 'sequential') sigmaChartRef.current?.runSequentialLayout();
+            if (layout === 'standard') sigmaChartRef.current?.runStandardLayout();
+
+            if (layout === 'sequential') sigmaChartRef.current?.runSequentialLayout();
+        }
     };
 
     return (
@@ -250,6 +272,7 @@ const GraphView: FC = () => {
                 <ExploreSearch />
                 <GraphControls
                     isExploreTableSelected={isExploreTableSelected}
+                    isExploreLayoutSelected={isExploreLayoutSelected}
                     layoutOptions={baseGraphLayouts}
                     selectedLayout={exploreLayout ?? defaultGraphLayout}
                     onLayoutChange={handleLayoutChange}

@@ -63,7 +63,6 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
     const [isCurrentSearchOpen, setIsCurrentSearchOpen] = useState(false);
 
     const currentSearchAnchorElement = useRef(null);
-    console.log(`isExploreLayoutSelected = ${isExploreLayoutSelected}`);
     useKeybindings({
         shift: {
             Slash: () => {
