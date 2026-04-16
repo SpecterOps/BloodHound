@@ -16,7 +16,6 @@
 
 parameters:
   - $ref: "./../parameters/header.prefer.yaml"
-  - $ref: "./../parameters/query.asset-group-tag-id.yaml"
 get:
   operationId: ListAttackPathFindings
   summary: List attack path findings
@@ -88,15 +87,6 @@ get:
       in: query
       schema:
         $ref: "./../schemas/api.params.predicate.filter.string.yaml"
-    - name: Accept
-      in: header
-      description: Media type for response format. Use `text/csv` for CSV export.
-      required: false
-      schema:
-        type: string
-        enum:
-          - application/json
-          - text/csv
     - $ref: "./../parameters/query.skip.yaml"
     - $ref: "./../parameters/query.limit.yaml"
   responses:
