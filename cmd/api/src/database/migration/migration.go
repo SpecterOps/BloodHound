@@ -19,8 +19,11 @@ package migration
 import (
 	"database/sql"
 	"embed"
+	"fmt"
 	"io/fs"
+	"log/slog"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"gorm.io/gorm"
 )
 
@@ -45,9 +48,17 @@ type Migrator struct {
 }
 
 // NewMigrator returns a new Migrator with the FossMigrations Source predefined.
-func NewMigrator(db *gorm.DB) *Migrator {
-	sqlDB, _ := db.DB()
-	fossMigrationsSubFS, _ := fs.Sub(FossMigrations, "migrations")
+func NewMigrator(db *gorm.DB) (*Migrator, error) {
+	sqlDB, err := db.DB()
+	if err != nil {
+		slog.Error("failed to connect to database: %v", attr.Error(err))
+		return nil, fmt.Errorf("failed to connect to database: %v", err)
+	}
+	fossMigrationsSubFS, err := fs.Sub(FossMigrations, "migrations")
+	if err != nil {
+		slog.Error("failed to open foss migrations directory: %v", attr.Error(err))
+		return nil, fmt.Errorf("failed to open foss migrations directory: %v", err)
+	}
 	return &Migrator{
 		ExtensionsData: []Source{
 			{FileSystem: ExtensionMigrations, Directory: "extensions"},
@@ -55,5 +66,5 @@ func NewMigrator(db *gorm.DB) *Migrator {
 		GooseFS: MergedFS(fossMigrationsSubFS),
 		DB:      db,
 		SqlDB:   sqlDB,
-	}
+	}, nil
 }
