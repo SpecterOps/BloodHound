@@ -27,6 +27,7 @@ on:
 
 jobs:
   code-generation-check:
+    name: Code Generation Check
     runs-on: ubuntu-latest
 
     steps:

@@ -16,21 +16,12 @@
 
 name: Run Slow Go Tests
 
+# On workflow call ensures that it runs before CD without duplication. This will likely be better fixed when we move to the newer pipeline layout of workflows in the near future
 on:
-  workflow_run:
-    workflows:
-      - "Run Go Unit Tests"
-      - "Run UI Tests"
-    types:
-      - completed
-    branches:
-      - main
-      - "stage/**"
+  workflow_call:
 
 jobs:
   run-tests:
-    # On Sucesss execute Go integration tests
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
