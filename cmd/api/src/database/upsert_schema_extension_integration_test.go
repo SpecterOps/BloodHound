@@ -19,1110 +19,692 @@
 package database_test
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+// assertExtensionDoesNotExist asserts that no extension with the given name exists in the DB.
+func assertExtensionDoesNotExist(t *testing.T, testSuite IntegrationTestSuite, extensionName string) {
+	t.Helper()
+	_, totalRecords, err := testSuite.BHDatabase.GetGraphSchemaExtensions(testSuite.Context,
+		model.Filters{"name": []model.Filter{{
+			Operator:    model.Equals,
+			Value:       extensionName,
+			SetOperator: model.FilterAnd,
+		}}}, model.Sort{}, 0, 1)
+	require.NoError(t, err)
+	assert.Equalf(t, 0, totalRecords, "extension should not exist: %s", extensionName)
+}
+
 func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
-	testSuite := setupIntegrationTestSuite(t)
-	defer teardownIntegrationTestSuite(t, &testSuite)
+	t.Parallel()
 
-	var (
-		testExtensionName = "Test_Extension_Upsert_Test"
-		testExtension     = model.ExtensionInput{
-			Name:        testExtensionName,
-			Version:     "1.0.0",
-			DisplayName: "Test Extension",
-			Namespace:   "Upsert",
-		}
-		testExtensionNoDisplayName = model.ExtensionInput{
-			Name:      testExtensionName,
-			Version:   "1.0.0",
-			Namespace: "Upsert",
-		}
-		newNodeKind1 = model.NodeInput{
-			Name:          "Upsert_New_Test_Node_Kind_1",
-			DisplayName:   "Test Node Kind 1",
-			Description:   "a test node kind",
-			IsDisplayKind: true,
-			Icon:          "user",
-			IconColor:     "#2779F5",
-		}
-		newEdgeKind1 = model.RelationshipInput{
-			Name:          "Upsert_New_Test_Edge_Kind_1",
-			Description:   "Test Edge Kind 1",
-			IsTraversable: true,
-		}
-		newNodeKind2 = model.NodeInput{
-			Name:          "Upsert_New_Test_Node_Kind_2",
-			DisplayName:   "Test Node Kind 2",
-			Description:   "a test node kind",
-			IsDisplayKind: true,
-			Icon:          "user",
-			IconColor:     "#2779F5",
-		}
-		newEdgeKind2 = model.RelationshipInput{
-			Name:          "Upsert_New_Test_Edge_Kind_2",
-			Description:   "Test Edge Kind 2",
-			IsTraversable: true,
-		}
-		newNodeKind3 = model.NodeInput{
-			Name:          "Upsert_New_Test_Node_Kind_3",
-			DisplayName:   "Test Node Kind 3",
-			Description:   "a test node kind",
-			IsDisplayKind: true,
-			Icon:          "user",
-			IconColor:     "#2779F5",
-		}
-		newEdgeKind3 = model.RelationshipInput{
-			Name:          "Upsert_New_Test_Edge_Kind_3",
-			Description:   "Test Edge Kind 3",
-			IsTraversable: true,
-		}
-		newNodeKind4 = model.NodeInput{
-			Name:          "Upsert_New_Test_Node_Kind_4",
-			DisplayName:   "Test Node Kind 4",
-			Description:   "a test node kind",
-			IsDisplayKind: true,
-			Icon:          "user",
-			IconColor:     "#2779F5",
-		}
-		newEdgeKind4 = model.RelationshipInput{
-			Name:          "Upsert_New_Test_Edge_Kind_4",
-			Description:   "Test Edge Kind 4",
-			IsTraversable: true,
-		}
-		newSourceNodeKind = model.NodeInput{
-			Name:          "Upsert_New_Test_Source_Kind",
-			DisplayName:   "Upsert New Test Source Kind",
-			Description:   "a source kind",
-			IsDisplayKind: false,
-			Icon:          "source",
-			IconColor:     "#22b939",
-		}
-		newEnvironmentNodeKind1 = model.NodeInput{
-			Name:          "Upsert_New_Test_Environment_Kind_1",
-			DisplayName:   "Upsert New Test Environment Kind 1",
-			Description:   "an environment kind",
-			IsDisplayKind: false,
-			Icon:          "environment",
-			IconColor:     "#22b939",
-		}
-		newEnvironmentNodeKind2 = model.NodeInput{
-			Name:          "Upsert_New_Test_Environment_Kind_2",
-			DisplayName:   "Upsert New Test Environment Kind 2",
-			Description:   "an environment kind",
-			IsDisplayKind: false,
-			Icon:          "environment",
-			IconColor:     "#22b939",
-		}
-		newEnvironment1 = model.EnvironmentInput{
-			EnvironmentKindName: newEnvironmentNodeKind1.Name,
-			SourceKindName:      newSourceNodeKind.Name,
-			PrincipalKinds:      []string{newNodeKind1.Name, newNodeKind2.Name},
-		}
-		newEnvironment2 = model.EnvironmentInput{
-			EnvironmentKindName: newEnvironmentNodeKind2.Name,
-			SourceKindName:      newSourceNodeKind.Name,
-			PrincipalKinds:      []string{newNodeKind3.Name, newNodeKind4.Name},
-		}
-		newFinding1 = model.RelationshipFindingInput{
-			Name:                 "Upsert_New_Finding_1",
-			EnvironmentKindName:  newEnvironmentNodeKind1.Name,
-			DisplayName:          "Finding 1",
-			RelationshipKindName: newEdgeKind1.Name,
-			RemediationInput: model.RemediationInput{
-				ShortDescription: "a remediation",
-				LongDescription:  "a remediation but longer",
-				ShortRemediation: "do x",
-				LongRemediation:  "do x but also y",
-			},
-		}
-		newFinding2 = model.RelationshipFindingInput{
-			Name:                 "Upsert_New_Finding_2",
-			EnvironmentKindName:  newEnvironmentNodeKind1.Name,
-			DisplayName:          "Finding 2",
-			RelationshipKindName: newEdgeKind2.Name,
-			RemediationInput: model.RemediationInput{
-				ShortDescription: "a remediation",
-				LongDescription:  "a remediation but longer",
-				ShortRemediation: "do x",
-				LongRemediation:  "do x but also y",
-			},
-		}
-		newFinding3 = model.RelationshipFindingInput{
-			Name:                 "Upsert_New_Finding_3",
-			EnvironmentKindName:  newEnvironmentNodeKind2.Name,
-			DisplayName:          "Finding 3",
-			RelationshipKindName: newEdgeKind3.Name,
-			RemediationInput: model.RemediationInput{
-				ShortDescription: "a remediation",
-				LongDescription:  "a remediation but longer",
-				ShortRemediation: "do x",
-				LongRemediation:  "do x but also y",
-			},
-		}
-
-		existingNodeKind1 = model.NodeInput{
-			Name:          "Upsert_Existing_Test_Node_Kind_1",
-			DisplayName:   "Test Node Kind 1",
-			Description:   "Test Node Kind 1",
-			IsDisplayKind: true,
-			Icon:          "User",
-			IconColor:     "#F52735",
-		}
-		existingEdgeKind1 = model.RelationshipInput{
-			Name:          "Upsert_Existing_Test_Edge_Kind_1",
-			Description:   "Test Edge Kind 1",
-			IsTraversable: true,
-		}
-		existingNodeKind2 = model.NodeInput{
-			Name:          "Upsert_Existing_Test_Node_Kind_2",
-			DisplayName:   "Test Node Kind 2",
-			Description:   "Test Node Kind 2",
-			IsDisplayKind: true,
-			Icon:          "User",
-			IconColor:     "#F52735",
-		}
-		existingEdgeKind2 = model.RelationshipInput{
-			Name:          "Upsert_Existing_Test_Edge_Kind_2",
-			Description:   "Test Edge Kind 2",
-			IsTraversable: true,
-		}
-		existingNodeKind3 = model.NodeInput{
-			Name:          "Upsert_Existing_Test_Node_Kind_3",
-			DisplayName:   "Test Node Kind 3",
-			Description:   "Test Node Kind 3",
-			IsDisplayKind: true,
-			Icon:          "User",
-			IconColor:     "#F52735",
-		}
-		existingEdgeKind3 = model.RelationshipInput{
-			Name:          "Upsert_Existing_Test_Edge_Kind_3",
-			Description:   "Test Edge Kind 3",
-			IsTraversable: true,
-		}
-		existingNodeKind4 = model.NodeInput{
-			Name:          "Upsert_Existing_Test_Node_Kind_4",
-			DisplayName:   "Test Node Kind 4",
-			Description:   "Test Node Kind 4",
-			IsDisplayKind: true,
-			Icon:          "User",
-			IconColor:     "#F52735",
-		}
-		existingEdgeKind4 = model.RelationshipInput{
-			Name:          "Upsert_Existing_Test_Edge_Kind_4",
-			Description:   "Test Edge Kind 4",
-			IsTraversable: true,
-		}
-		existingEnvironmentNodeKind1 = model.NodeInput{
-			Name:          "Upsert_Existing_Environment_Kind_1",
-			DisplayName:   "Environment Kind 1",
-			Description:   "Environment Kind 1",
-			IsDisplayKind: false,
-			Icon:          "environment",
-			IconColor:     "#22b939",
-		}
-		existingEnvironmentNodeKind2 = model.NodeInput{
-			Name:          "Upsert_Existing_Environment_Kind_2",
-			DisplayName:   "Environment Kind 2",
-			Description:   "Environment Kind 2",
-			IsDisplayKind: false,
-			Icon:          "environment",
-			IconColor:     "#22b939",
-		}
-		existingSourceKind1 = model.NodeInput{
-			Name:          "Upsert_Existing_Test_Source_Kind_1",
-			DisplayName:   "Upsert Existing Test Source Kind_1",
-			Description:   "a source kind",
-			IsDisplayKind: false,
-			Icon:          "source",
-			IconColor:     "#F5E027",
-		}
-		existingEnvironment1 = model.EnvironmentInput{
-			EnvironmentKindName: existingEnvironmentNodeKind1.Name,
-			SourceKindName:      existingSourceKind1.Name,
-			PrincipalKinds:      []string{existingNodeKind1.Name, existingNodeKind2.Name},
-		}
-		existingEnvironment2 = model.EnvironmentInput{
-			EnvironmentKindName: existingEnvironmentNodeKind2.Name,
-			SourceKindName:      existingSourceKind1.Name,
-			PrincipalKinds:      []string{existingNodeKind3.Name, existingNodeKind4.Name},
-		}
-		existingFinding1 = model.RelationshipFindingInput{
-			Name:                 "Upsert_Existing_Finding_1",
-			EnvironmentKindName:  existingEnvironmentNodeKind1.Name,
-			RelationshipKindName: existingEdgeKind1.Name,
-			DisplayName:          "Existing Finding 1",
-			RemediationInput: model.RemediationInput{
-				ShortDescription: "A short description",
-				LongDescription:  "A long description",
-				ShortRemediation: "A short remediation",
-				LongRemediation:  "A long remediation",
-			},
-		}
-		existingFinding2 = model.RelationshipFindingInput{
-			Name:                 "Upsert_Existing_Finding_2",
-			EnvironmentKindName:  existingEnvironmentNodeKind2.Name,
-			RelationshipKindName: existingEdgeKind2.Name,
-			DisplayName:          "Existing Finding 2",
-			RemediationInput: model.RemediationInput{
-				ShortDescription: "A short description",
-				LongDescription:  "A long description",
-				ShortRemediation: "A long remediation",
-				LongRemediation:  "A long remediation",
-			},
-		}
-
-		updateNodeKind4 = model.NodeInput{
-			Name:          "Upsert_Update_Node_Kind_4",
-			DisplayName:   "Node Kind 4",
-			Description:   "Node Kind 4",
-			IsDisplayKind: true,
-			Icon:          "Desktop",
-			IconColor:     "#F5A327",
-		}
-		updateEdgeKind4 = model.RelationshipInput{
-			Name:          "Upsert_Update_Edge_Kind_4",
-			Description:   "Test Edge Kind 4",
-			IsTraversable: true,
-		}
-		updateEnvironment1 = model.EnvironmentInput{
-			EnvironmentKindName: existingEnvironmentNodeKind1.Name,
-			SourceKindName:      newSourceNodeKind.Name,
-			PrincipalKinds:      []string{newNodeKind1.Name, existingNodeKind1.Name, updateNodeKind4.Name},
-		}
-		updateFinding1 = model.RelationshipFindingInput{
-			Name:                 "Upsert_Update_Finding_1",
-			EnvironmentKindName:  existingEnvironmentNodeKind1.Name,
-			RelationshipKindName: updateEdgeKind4.Name,
-			DisplayName:          "Update Finding 1",
-			RemediationInput: model.RemediationInput{
-				ShortDescription: "A short description",
-				LongDescription:  "A long description",
-				ShortRemediation: "A short remediation",
-				LongRemediation:  "A long remediation",
-			},
-		}
-
-		// Used for creating an existing graph schema
-		existingNodeKinds = model.NodesInput{existingNodeKind1, existingNodeKind2, existingNodeKind3, existingNodeKind4,
-			existingEnvironmentNodeKind1, existingEnvironmentNodeKind2, existingSourceKind1}
-		existingEdgeKinds    = model.RelationshipsInput{existingEdgeKind1, existingEdgeKind2, existingEdgeKind3, existingEdgeKind4}
-		existingEnvironments = model.EnvironmentsInput{existingEnvironment1, existingEnvironment2}
-		existingFindings     = model.RelationshipFindingsInput{existingFinding1, existingFinding2}
-
-		// Used in both args and want, in doing so the SchemaExtensionId will be propagated back to the want
-		// value, this allows for equality comparisons of the SchemaExtensionId rather than just checking
-		// if it exists
-		newNodeKinds = model.NodesInput{newNodeKind1, newNodeKind2, newNodeKind3, newNodeKind4, newEnvironmentNodeKind1,
-			newEnvironmentNodeKind2, newSourceNodeKind}
-		newEdgeKinds    = model.RelationshipsInput{newEdgeKind1, newEdgeKind2, newEdgeKind3, newEdgeKind4}
-		newEnvironments = model.EnvironmentsInput{newEnvironment1, newEnvironment2}
-		newFindings     = model.RelationshipFindingsInput{newFinding1, newFinding2, newFinding3}
-
-		updateEdgeKinds = model.RelationshipsInput{newEdgeKind1, newEdgeKind2, newEdgeKind3, newEdgeKind4,
-			existingEdgeKind1, updateEdgeKind4}
-		updateNodeKinds = model.NodesInput{newNodeKind1, newNodeKind2, newNodeKind3, newNodeKind4,
-			existingNodeKind1, existingSourceKind1, newEnvironmentNodeKind1, updateNodeKind4, newSourceNodeKind}
-		updateEnvironments = model.EnvironmentsInput{newEnvironment1, updateEnvironment1}
-		updateFindings     = model.RelationshipFindingsInput{newFinding1, updateFinding1}
-	)
-
-	type fields struct {
-		setup    func(t *testing.T) int32
-		teardown func(t *testing.T, id []int32) // extensions to delete
+	type testSetupData struct {
+		input           model.GraphExtensionInput
+		wantErrContains string
+	}
+	type testCase struct {
+		name   string
+		setup  func(t *testing.T, testSuite IntegrationTestSuite) testSetupData
+		assert func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error)
 	}
 
-	type args struct {
-		graphExtension model.GraphExtensionInput
-	}
-	tests := []struct {
-		name            string
-		fields          fields
-		args            args
-		want            bool
-		wantErr         error
-		wantGraphSchema model.GraphExtensionInput
-	}{
+	tests := []testCase{
 		{
-			name: "fail - duplicate node kinds",
-			fields: fields{
-				setup:    func(t *testing.T) int32 { return 0 },
-				teardown: func(t *testing.T, extensionIds []int32) {},
-			},
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: testExtension,
-					NodeKindsInput: model.NodesInput{
-						{
-							Name: "DuplicateKind",
-						},
-						{
-							Name: "DuplicateKind",
-						},
+			name: "error_-_duplicate_node_kinds",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput: model.ExtensionInput{Name: "DupNodeKindExt", DisplayName: "Dup Node", Version: "1.0.0", Namespace: "DUP_NK"},
+						NodeKindsInput: model.NodesInput{{Name: "DuplicateKind"}, {Name: "DuplicateKind"}},
 					},
-				},
-			},
-			wantErr: model.ErrDuplicateSchemaNodeKindName,
-		},
-		{
-			name: "fail - duplicate relationship kinds",
-			fields: fields{
-				setup:    func(t *testing.T) int32 { return 0 },
-				teardown: func(t *testing.T, extensionIds []int32) {},
-			},
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: testExtension,
-					NodeKindsInput: newNodeKinds,
-					RelationshipKindsInput: model.RelationshipsInput{
-						{
-							Name: "DuplicateKind",
-						},
-						{
-							Name: "DuplicateKind",
-						},
-					},
-				},
-			},
-			wantErr: model.ErrDuplicateSchemaRelationshipKindName,
-		},
-		{
-			name: "fail - cannot modify a built-in extension",
-			fields: fields{
-				setup: func(t *testing.T) int32 {
-					t.Helper()
-					var builtInExtension = model.GraphSchemaExtension{
-						Name:        "Upsert_BuiltIn_Extension",
-						DisplayName: "Built-in Extension",
-						Version:     "1.0.0",
-						Namespace:   "TEST",
-					}
-					result := testSuite.DB.WithContext(testSuite.Context).Raw(fmt.Sprintf(`
-						INSERT INTO %s (name, display_name, version, is_builtin, namespace, created_at, updated_at)
-							  VALUES (?, ?, ?, TRUE, ?, NOW(), NOW())
-							  RETURNING id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at`,
-						builtInExtension.TableName()), builtInExtension.Name, builtInExtension.DisplayName,
-						builtInExtension.Version, builtInExtension.Namespace).Scan(&builtInExtension)
-					require.NoError(t, result.Error)
-					return builtInExtension.ID
-				},
-				teardown: func(t *testing.T, ids []int32) {
-					t.Helper()
-					for _, id := range ids {
-						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
-						assert.ErrorIs(t, err, model.ErrGraphExtensionBuiltIn)
-					}
-				},
-			},
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:        "Upsert_BuiltIn_Extension",
-						DisplayName: "Built-in Extension",
-						Version:     "1.0.0",
-						Namespace:   "TEST",
-					},
-				},
-			},
-			wantErr: model.ErrGraphExtensionBuiltIn,
-		},
-		{
-			name: "fail - first environment has invalid environment kind",
-			fields: fields{
-				setup:    func(t *testing.T) int32 { return 0 },
-				teardown: func(t *testing.T, ids []int32) {},
-			},
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput:         testExtension,
-					RelationshipKindsInput: newEdgeKinds,
-					NodeKindsInput:         newNodeKinds,
-					EnvironmentsInput: model.EnvironmentsInput{
-						{
-							EnvironmentKindName: "NonExistent",
-							SourceKindName:      newSourceNodeKind.Name,
-							PrincipalKinds:      newEnvironment1.PrincipalKinds,
-						},
-					},
-				},
-			},
-			wantErr: fmt.Errorf("error retrieving environment kind 'NonExistent': entity not found"),
-		},
-		{
-			name: "fail - first environment has invalid principal kind",
-			fields: fields{
-				setup:    func(t *testing.T) int32 { return 0 },
-				teardown: func(t *testing.T, ids []int32) {},
-			},
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput:         testExtension,
-					RelationshipKindsInput: newEdgeKinds,
-					NodeKindsInput:         newNodeKinds,
-					EnvironmentsInput: model.EnvironmentsInput{
-						{
-							EnvironmentKindName: newEnvironment1.EnvironmentKindName,
-							SourceKindName:      newSourceNodeKind.Name,
-							PrincipalKinds:      []string{"unknownKind"},
-						},
-						newEnvironment2,
-					},
-				},
-			},
-			want:    false,
-			wantErr: fmt.Errorf("error retrieving principal kind 'unknownKind': entity not found"),
-		},
-		{
-			name: "fail - second environment fails, first should rollback",
-			fields: fields{
-				setup:    func(t *testing.T) int32 { return 0 },
-				teardown: func(t *testing.T, ids []int32) {},
-			},
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput:         testExtension,
-					RelationshipKindsInput: newEdgeKinds,
-					NodeKindsInput:         newNodeKinds,
-					EnvironmentsInput: model.EnvironmentsInput{
-						newEnvironment1,
-						{
-							EnvironmentKindName: "NonExistent2",
-							SourceKindName:      newSourceNodeKind.Name,
-							PrincipalKinds:      newEnvironment2.PrincipalKinds,
-						},
-					},
-				},
-			},
-			wantErr: fmt.Errorf("error retrieving environment kind 'NonExistent2': entity not found"),
-		},
-		{
-			name: "fail - second environment has invalid principal kind",
-			fields: fields{
-				setup:    func(t *testing.T) int32 { return 0 },
-				teardown: func(t *testing.T, ids []int32) {},
-			},
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput:         testExtension,
-					RelationshipKindsInput: newEdgeKinds,
-					NodeKindsInput:         newNodeKinds,
-					EnvironmentsInput: model.EnvironmentsInput{
-						newEnvironment1,
-						{
-							EnvironmentKindName: newEnvironment2.EnvironmentKindName,
-							SourceKindName:      newSourceNodeKind.Name,
-							PrincipalKinds:      []string{"unknownKind"},
-						},
-					},
-				},
-			},
-			wantErr: fmt.Errorf("error retrieving principal kind 'unknownKind': entity not found"),
-		},
-		{
-			name: "fail - failure in second environment's latter principal kinds",
-			fields: fields{
-				setup:    func(t *testing.T) int32 { return 0 },
-				teardown: func(t *testing.T, ids []int32) {},
-			},
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput:         testExtension,
-					RelationshipKindsInput: newEdgeKinds,
-					NodeKindsInput:         newNodeKinds,
-					EnvironmentsInput: model.EnvironmentsInput{
-						newEnvironment1,
-						{
-							EnvironmentKindName: newEnvironment2.EnvironmentKindName,
-							SourceKindName:      newSourceNodeKind.Name,
-							PrincipalKinds:      []string{newNodeKind1.Name, "unknownKind"},
-						},
-					},
-				},
-			},
-			wantErr: fmt.Errorf("error retrieving principal kind 'unknownKind': entity not found"),
-		},
-		{
-			name: "success - create new OpenGraph extension without environments",
-			fields: fields{
-				setup: func(t *testing.T) int32 { return 0 },
-				teardown: func(t *testing.T, extensionIds []int32) {
-					t.Helper()
-
-					for _, id := range extensionIds {
-						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
-						require.NoError(t, err)
-
-						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
-						require.Equal(t, database.ErrNotFound, err)
-					}
-				},
-			},
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput:         testExtension,
-					NodeKindsInput:         newNodeKinds,
-					RelationshipKindsInput: newEdgeKinds,
-				},
-			},
-			wantGraphSchema: model.GraphExtensionInput{
-				ExtensionInput:         testExtension,
-				NodeKindsInput:         newNodeKinds,
-				RelationshipKindsInput: newEdgeKinds,
-			},
-		},
-		{
-			name: "success - create full OpenGraph extension",
-			fields: fields{
-				setup: func(t *testing.T) int32 { return 0 },
-				teardown: func(t *testing.T, extensionIds []int32) {
-					t.Helper()
-
-					for _, id := range extensionIds {
-						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
-						require.NoError(t, err)
-
-						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
-						require.Equal(t, database.ErrNotFound, err)
-					}
-				},
-			},
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput:            testExtension,
-					NodeKindsInput:            newNodeKinds,
-					RelationshipKindsInput:    newEdgeKinds,
-					EnvironmentsInput:         newEnvironments,
-					RelationshipFindingsInput: newFindings,
-				},
-			},
-			wantErr: nil,
-			want:    false,
-			wantGraphSchema: model.GraphExtensionInput{
-				ExtensionInput:            testExtension,
-				NodeKindsInput:            newNodeKinds,
-				RelationshipKindsInput:    newEdgeKinds,
-				EnvironmentsInput:         newEnvironments,
-				RelationshipFindingsInput: newFindings,
-			},
-		},
-		{
-			name: "success - update full OpenGraph extension",
-			fields: fields{
-				setup: func(t *testing.T) int32 {
-					t.Helper()
-					// Create a graph schema and ensure it exists
-					var (
-						createdExtension model.GraphSchemaExtension
-					)
-
-					createdExtension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, testExtension.Name, testExtension.DisplayName,
-						testExtension.Version, testExtension.Namespace)
-					require.NoError(t, err)
-
-					for _, nodeKind := range existingNodeKinds {
-						_, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nodeKind.Name,
-							createdExtension.ID, nodeKind.DisplayName, nodeKind.Description, nodeKind.IsDisplayKind,
-							nodeKind.Icon, nodeKind.IconColor)
-						require.NoError(t, err)
-					}
-					for _, edgeKind := range existingEdgeKinds {
-						_, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, edgeKind.Name,
-							createdExtension.ID, edgeKind.Description, edgeKind.IsTraversable)
-						require.NoError(t, err)
-					}
-					for _, environment := range existingEnvironments {
-						_, err = testSuite.BHDatabase.CreateEnvironmentWithPrincipalKinds(testSuite.Context, createdExtension.ID, environment)
-						require.NoError(t, err)
-					}
-					// Create findings and remediations
-
-					for _, finding := range existingFindings {
-						_, err = testSuite.BHDatabase.CreateFindingWithRemediation(testSuite.Context, createdExtension.ID, finding)
-						require.NoError(t, err)
-					}
-
-					return 0 // schema extension records will be deleted during upsert so no need to return extension for deletion
-				},
-				teardown: func(t *testing.T, extensionIds []int32) {
-					t.Helper()
-					for _, extensionId := range extensionIds {
-						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extensionId)
-						require.NoError(t, err)
-						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, extensionId)
-						require.Equal(t, database.ErrNotFound, err)
-					}
-				},
-			},
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput:            testExtension,
-					RelationshipKindsInput:    updateEdgeKinds,
-					NodeKindsInput:            updateNodeKinds,
-					EnvironmentsInput:         updateEnvironments,
-					RelationshipFindingsInput: updateFindings,
-				},
-			},
-
-			wantErr: nil,
-			want:    true,
-			wantGraphSchema: model.GraphExtensionInput{
-				ExtensionInput:            testExtension,
-				RelationshipKindsInput:    updateEdgeKinds,
-				NodeKindsInput:            updateNodeKinds,
-				EnvironmentsInput:         updateEnvironments,
-				RelationshipFindingsInput: updateFindings,
-			},
-		}, {
-			name: "success - insert new OpenGraph extension with one already present", // not update, two different extensions
-			fields: fields{
-				setup: func(t *testing.T) int32 {
-					t.Helper()
-					// Create a graph schema and ensure it exists
-					var (
-						createdExtension model.GraphSchemaExtension
-					)
-
-					createdExtension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, testExtension.Name, testExtension.DisplayName,
-						testExtension.Version, testExtension.Namespace)
-					require.NoError(t, err)
-
-					for _, nodeKind := range existingNodeKinds {
-						_, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nodeKind.Name,
-							createdExtension.ID, nodeKind.DisplayName, nodeKind.Description, nodeKind.IsDisplayKind,
-							nodeKind.Icon, nodeKind.IconColor)
-						require.NoError(t, err)
-					}
-					for _, edgeKind := range existingEdgeKinds {
-						_, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, edgeKind.Name,
-							createdExtension.ID, edgeKind.Description, edgeKind.IsTraversable)
-						require.NoError(t, err)
-					}
-					for _, environment := range existingEnvironments {
-						_, err = testSuite.BHDatabase.CreateEnvironmentWithPrincipalKinds(testSuite.Context, createdExtension.ID, environment)
-						require.NoError(t, err)
-					}
-					// Create findings and remediations
-
-					for _, finding := range existingFindings {
-						_, err = testSuite.BHDatabase.CreateFindingWithRemediation(testSuite.Context, createdExtension.ID, finding)
-						require.NoError(t, err)
-					}
-
-					return createdExtension.ID
-				},
-				teardown: func(t *testing.T, extensionIds []int32) {
-					t.Helper()
-					for _, id := range extensionIds {
-						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
-						require.NoError(t, err)
-
-						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
-						require.Equal(t, database.ErrNotFound, err)
-					}
-				},
-			},
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:        "Upsert_Test_Extension_2",
-						DisplayName: "Upsert Test Extension 2",
-						Version:     "v1.0.0",
-						Namespace:   "TWO",
-					},
-					RelationshipKindsInput:    newEdgeKinds,
-					NodeKindsInput:            newNodeKinds,
-					EnvironmentsInput:         newEnvironments,
-					RelationshipFindingsInput: newFindings,
-				},
-			},
-			want: false,
-			wantGraphSchema: model.GraphExtensionInput{
-				ExtensionInput: model.ExtensionInput{
-					Name:        "Upsert_Test_Extension_2",
-					DisplayName: "Upsert Test Extension 2",
-					Version:     "v1.0.0",
-					Namespace:   "TWO",
-				},
-				RelationshipKindsInput:    newEdgeKinds,
-				NodeKindsInput:            newNodeKinds,
-				EnvironmentsInput:         newEnvironments,
-				RelationshipFindingsInput: newFindings,
-			},
-		},
-		{
-			name: "success - environment source kind auto-registers",
-			fields: fields{
-				setup: func(t *testing.T) int32 { return 0 },
-				teardown: func(t *testing.T, extensionIds []int32) {
-					t.Helper()
-					for _, id := range extensionIds {
-						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
-						require.NoError(t, err)
-
-						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
-						require.Equal(t, database.ErrNotFound, err)
-					}
-				},
-			},
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput:         testExtension,
-					RelationshipKindsInput: newEdgeKinds,
-					NodeKindsInput:         newNodeKinds,
-					EnvironmentsInput: model.EnvironmentsInput{
-						{
-							EnvironmentKindName: newEnvironment1.EnvironmentKindName,
-							SourceKindName:      "UnregisteredSourceKind",
-							PrincipalKinds:      newEnvironment1.PrincipalKinds,
-						},
-					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
-						{
-							Name:                 newFinding1.Name,
-							DisplayName:          newFinding1.DisplayName,
-							RelationshipKindName: newFinding1.RelationshipKindName,
-							EnvironmentKindName:  newEnvironment1.EnvironmentKindName,
-							RemediationInput:     newFinding1.RemediationInput,
-						},
-					},
-				},
-			},
-			want: false,
-			wantGraphSchema: model.GraphExtensionInput{
-				ExtensionInput:         testExtension,
-				RelationshipKindsInput: newEdgeKinds,
-				NodeKindsInput:         newNodeKinds,
-				EnvironmentsInput: model.EnvironmentsInput{
-					{
-						EnvironmentKindName: newEnvironment1.EnvironmentKindName,
-						SourceKindName:      "UnregisteredSourceKind",
-						PrincipalKinds:      newEnvironment1.PrincipalKinds,
-					},
-				},
-				RelationshipFindingsInput: model.RelationshipFindingsInput{
-					{
-						Name:                 newFinding1.Name,
-						DisplayName:          newFinding1.DisplayName,
-						RelationshipKindName: newFinding1.RelationshipKindName,
-						EnvironmentKindName:  newEnvironment1.EnvironmentKindName,
-						RemediationInput:     newFinding1.RemediationInput,
-					},
-				},
-			},
-		},
-		{
-			name: "success - multiple environments with different source kinds",
-			fields: fields{
-				setup: func(t *testing.T) int32 { return 0 },
-				teardown: func(t *testing.T, extensionIds []int32) {
-					t.Helper()
-					for _, id := range extensionIds {
-						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
-						require.NoError(t, err)
-
-						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
-						require.Equal(t, database.ErrNotFound, err)
-					}
-				},
-			},
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput:         testExtension,
-					RelationshipKindsInput: newEdgeKinds,
-					NodeKindsInput:         newNodeKinds,
-					EnvironmentsInput: model.EnvironmentsInput{newEnvironment1,
-						{
-							EnvironmentKindName: newEnvironment2.EnvironmentKindName,
-							SourceKindName:      "UnregisteredSourceKind",
-							PrincipalKinds:      newEnvironment2.PrincipalKinds,
-						},
-					},
-				},
-			},
-			wantGraphSchema: model.GraphExtensionInput{
-				ExtensionInput:         testExtension,
-				RelationshipKindsInput: newEdgeKinds,
-				NodeKindsInput:         newNodeKinds,
-				EnvironmentsInput: model.EnvironmentsInput{newEnvironment1,
-					{
-						EnvironmentKindName: newEnvironment2.EnvironmentKindName,
-						SourceKindName:      "UnregisteredSourceKind",
-						PrincipalKinds:      newEnvironment2.PrincipalKinds,
-					},
-				},
-			},
-		},
-		{
-			name: "success - name is used as displayname when displayname is not provided",
-			fields: fields{
-				setup: func(t *testing.T) int32 { return 0 },
-				teardown: func(t *testing.T, extensionIds []int32) {
-					t.Helper()
-					for _, id := range extensionIds {
-						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
-						require.NoError(t, err)
-
-						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
-						require.Equal(t, database.ErrNotFound, err)
-					}
-				},
-			},
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput:            testExtensionNoDisplayName,
-					NodeKindsInput:            newNodeKinds,
-					RelationshipKindsInput:    newEdgeKinds,
-					EnvironmentsInput:         newEnvironments,
-					RelationshipFindingsInput: newFindings,
-				},
-			},
-			wantErr: nil,
-			want:    false,
-			wantGraphSchema: model.GraphExtensionInput{
-				ExtensionInput: model.ExtensionInput{
-					Name:        testExtensionNoDisplayName.Name,
-					Version:     testExtensionNoDisplayName.Version,
-					DisplayName: testExtensionNoDisplayName.Name,
-					Namespace:   testExtensionNoDisplayName.Namespace,
-				},
-				NodeKindsInput:            newNodeKinds,
-				RelationshipKindsInput:    newEdgeKinds,
-				EnvironmentsInput:         newEnvironments,
-				RelationshipFindingsInput: newFindings,
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var (
-				setupGraphExtensionId, retrievedGraphExtensionId int32
-				extensionToDelete                                = make([]int32, 0)
-			)
-			setupGraphExtensionId = tt.fields.setup(t)
-			if setupGraphExtensionId != 0 {
-				extensionToDelete = append(extensionToDelete, setupGraphExtensionId)
-			}
-
-			if got, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, tt.args.graphExtension); tt.wantErr != nil {
-				var totalRecords int
-				require.ErrorContainsf(t, err, tt.wantErr.Error(), "unexpected error upserting open graph extension")
-				// built-in extension test will still exist in the DB
-				if tt.name != "fail - cannot modify a built-in extension" {
-					_, totalRecords, err = testSuite.BHDatabase.GetGraphSchemaExtensions(testSuite.Context,
-						model.Filters{"name": []model.Filter{{ // check to see if extension exists
-							Operator:    model.Equals,
-							Value:       tt.args.graphExtension.ExtensionInput.Name,
-							SetOperator: model.FilterAnd,
-						}}}, model.Sort{}, 0, 1)
-					require.NoErrorf(t, err, "rollback was not completed and extension still exists: %s", tt.args.graphExtension.ExtensionInput.Name)
-					require.Equalf(t, 0, totalRecords, "rollback was not completed and extension still exists: %s", tt.args.graphExtension.ExtensionInput.Name)
+					wantErrContains: model.ErrDuplicateSchemaNodeKindName.Error(),
 				}
-			} else {
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				assert.ErrorContains(t, err, setupData.wantErrContains)
+				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
+			},
+		},
+		{
+			name: "error_-_duplicate_relationship_kinds",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput:         model.ExtensionInput{Name: "DupRelKindExt", DisplayName: "Dup Rel", Version: "1.0.0", Namespace: "DUP_RK"},
+						NodeKindsInput:         model.NodesInput{{Name: "DupRK_NK1", DisplayName: "NK1", IsDisplayKind: true, Icon: "user", IconColor: "#000"}},
+						RelationshipKindsInput: model.RelationshipsInput{{Name: "DuplicateKind"}, {Name: "DuplicateKind"}},
+					},
+					wantErrContains: model.ErrDuplicateSchemaRelationshipKindName.Error(),
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				assert.ErrorContains(t, err, setupData.wantErrContains)
+				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
+			},
+		},
+		{
+			name: "error_-_cannot_modify_a_built_in_extension",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				var builtInExtension = model.GraphSchemaExtension{
+					Name: "BuiltIn_Ext", DisplayName: "Built-in Extension", Version: "1.0.0", Namespace: "BUILTIN",
+				}
+				result := testSuite.DB.WithContext(testSuite.Context).Raw(fmt.Sprintf(`
+					INSERT INTO %s (name, display_name, version, is_builtin, namespace, created_at, updated_at)
+					VALUES (?, ?, ?, TRUE, ?, NOW(), NOW())
+					RETURNING id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at`,
+					builtInExtension.TableName()), builtInExtension.Name, builtInExtension.DisplayName,
+					builtInExtension.Version, builtInExtension.Namespace).Scan(&builtInExtension)
+				require.NoError(t, result.Error)
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput: model.ExtensionInput{
+							Name: "BuiltIn_Ext", DisplayName: "Built-in Extension", Version: "1.0.0", Namespace: "BUILTIN",
+						},
+					},
+					wantErrContains: model.ErrGraphExtensionBuiltIn.Error(),
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				assert.ErrorContains(t, err, setupData.wantErrContains)
+			},
+		},
+		{
+			name: "error_-_first_environment_has_invalid_environment_kind",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput:         model.ExtensionInput{Name: "BadEnvKindExt", DisplayName: "Bad Env Kind", Version: "1.0.0", Namespace: "BAD_EK"},
+						NodeKindsInput:         model.NodesInput{{Name: "BadEK_NK1", DisplayName: "NK1", IsDisplayKind: true, Icon: "user", IconColor: "#000"}, {Name: "BadEK_EnvKind", IsDisplayKind: false}},
+						RelationshipKindsInput: model.RelationshipsInput{{Name: "BadEK_RK1", IsTraversable: true}},
+						EnvironmentsInput:      model.EnvironmentsInput{{EnvironmentKindName: "NonExistent", SourceKindName: "BadEK_SrcKind", PrincipalKinds: []string{"BadEK_NK1"}}},
+					},
+					wantErrContains: "error retrieving environment kind 'NonExistent': entity not found",
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				assert.ErrorContains(t, err, setupData.wantErrContains)
+				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
+			},
+		},
+		{
+			name: "error_-_first_environment_has_invalid_principal_kind",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput:         model.ExtensionInput{Name: "BadPK1Ext", DisplayName: "Bad PK1", Version: "1.0.0", Namespace: "BAD_PK1"},
+						NodeKindsInput:         model.NodesInput{{Name: "BadPK1_NK1", DisplayName: "NK1", IsDisplayKind: true, Icon: "user", IconColor: "#000"}, {Name: "BadPK1_EnvKind1", IsDisplayKind: false}, {Name: "BadPK1_EnvKind2", IsDisplayKind: false}},
+						RelationshipKindsInput: model.RelationshipsInput{{Name: "BadPK1_RK1", IsTraversable: true}},
+						EnvironmentsInput: model.EnvironmentsInput{
+							{EnvironmentKindName: "BadPK1_EnvKind1", SourceKindName: "BadPK1_SrcKind", PrincipalKinds: []string{"unknownKind"}},
+							{EnvironmentKindName: "BadPK1_EnvKind2", SourceKindName: "BadPK1_SrcKind", PrincipalKinds: []string{"BadPK1_NK1"}},
+						},
+					},
+					wantErrContains: "error retrieving principal kind 'unknownKind': entity not found",
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				assert.ErrorContains(t, err, setupData.wantErrContains)
+				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
+			},
+		},
+		{
+			name: "error_-_second_environment_has_invalid_environment_kind",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput:         model.ExtensionInput{Name: "RollbackEnvExt", DisplayName: "Rollback Env", Version: "1.0.0", Namespace: "RB_ENV"},
+						NodeKindsInput:         model.NodesInput{{Name: "RBEnv_NK1", DisplayName: "NK1", IsDisplayKind: true, Icon: "user", IconColor: "#000"}, {Name: "RBEnv_NK2", DisplayName: "NK2", IsDisplayKind: true, Icon: "user", IconColor: "#000"}, {Name: "RBEnv_EnvKind1", IsDisplayKind: false}},
+						RelationshipKindsInput: model.RelationshipsInput{{Name: "RBEnv_RK1", IsTraversable: true}},
+						EnvironmentsInput: model.EnvironmentsInput{
+							{EnvironmentKindName: "RBEnv_EnvKind1", SourceKindName: "RBEnv_SrcKind", PrincipalKinds: []string{"RBEnv_NK1"}},
+							{EnvironmentKindName: "NonExistent2", SourceKindName: "RBEnv_SrcKind", PrincipalKinds: []string{"RBEnv_NK2"}},
+						},
+					},
+					wantErrContains: "error retrieving environment kind 'NonExistent2': entity not found",
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				assert.ErrorContains(t, err, setupData.wantErrContains)
+				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
+			},
+		},
+		{
+			name: "error_-_second_environment_has_invalid_principal_kind",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput:         model.ExtensionInput{Name: "BadPK2Ext", DisplayName: "Bad PK2", Version: "1.0.0", Namespace: "BAD_PK2"},
+						NodeKindsInput:         model.NodesInput{{Name: "BadPK2_NK1", DisplayName: "NK1", IsDisplayKind: true, Icon: "user", IconColor: "#000"}, {Name: "BadPK2_EnvKind1", IsDisplayKind: false}, {Name: "BadPK2_EnvKind2", IsDisplayKind: false}},
+						RelationshipKindsInput: model.RelationshipsInput{{Name: "BadPK2_RK1", IsTraversable: true}},
+						EnvironmentsInput: model.EnvironmentsInput{
+							{EnvironmentKindName: "BadPK2_EnvKind1", SourceKindName: "BadPK2_SrcKind", PrincipalKinds: []string{"BadPK2_NK1"}},
+							{EnvironmentKindName: "BadPK2_EnvKind2", SourceKindName: "BadPK2_SrcKind", PrincipalKinds: []string{"unknownKind"}},
+						},
+					},
+					wantErrContains: "error retrieving principal kind 'unknownKind': entity not found",
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				assert.ErrorContains(t, err, setupData.wantErrContains)
+				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
+			},
+		},
+		{
+			name: "error_-_second_environments_has unknown_latter_principal_kind",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput:         model.ExtensionInput{Name: "BadPK2bExt", DisplayName: "Bad PK2b", Version: "1.0.0", Namespace: "BAD_PK2B"},
+						NodeKindsInput:         model.NodesInput{{Name: "BadPK2b_NK1", DisplayName: "NK1", IsDisplayKind: true, Icon: "user", IconColor: "#000"}, {Name: "BadPK2b_EnvKind1", IsDisplayKind: false}, {Name: "BadPK2b_EnvKind2", IsDisplayKind: false}},
+						RelationshipKindsInput: model.RelationshipsInput{{Name: "BadPK2b_RK1", IsTraversable: true}},
+						EnvironmentsInput: model.EnvironmentsInput{
+							{EnvironmentKindName: "BadPK2b_EnvKind1", SourceKindName: "BadPK2b_SrcKind", PrincipalKinds: []string{"BadPK2b_NK1"}},
+							{EnvironmentKindName: "BadPK2b_EnvKind2", SourceKindName: "BadPK2b_SrcKind", PrincipalKinds: []string{"BadPK2b_NK1", "unknownKind"}},
+						},
+					},
+					wantErrContains: "error retrieving principal kind 'unknownKind': entity not found",
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				assert.ErrorContains(t, err, setupData.wantErrContains)
+				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
+			},
+		},
+		{
+			name: "error_-_finding_has_invalid_relationship_kind",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput:         model.ExtensionInput{Name: "BadFindingRKExt", DisplayName: "Bad Finding RK", Version: "1.0.0", Namespace: "BAD_FRK"},
+						NodeKindsInput:         model.NodesInput{{Name: "BadFRK_NK1", DisplayName: "NK1", Description: "nk", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"}, {Name: "BadFRK_EnvKind1", IsDisplayKind: false}},
+						RelationshipKindsInput: model.RelationshipsInput{{Name: "BadFRK_RK1", Description: "rk", IsTraversable: true}},
+						EnvironmentsInput:      model.EnvironmentsInput{{EnvironmentKindName: "BadFRK_EnvKind1", SourceKindName: "BadFRK_SrcKind", PrincipalKinds: []string{"BadFRK_NK1"}}},
+						RelationshipFindingsInput: model.RelationshipFindingsInput{
+							{Name: "BadFRK_Finding1", DisplayName: "Finding 1", RelationshipKindName: "NonExistentRelKind", EnvironmentKindName: "BadFRK_EnvKind1", RemediationInput: model.RemediationInput{ShortDescription: "sd", LongDescription: "ld", ShortRemediation: "sr", LongRemediation: "lr"}},
+						},
+					},
+					wantErrContains: "error retrieving relationship kind 'NonExistentRelKind'",
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				assert.ErrorContains(t, err, setupData.wantErrContains)
+				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
+			},
+		},
+		{
+			name: "error_-_finding_has_invalid_environment_kind",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput:         model.ExtensionInput{Name: "BadFindingEKExt", DisplayName: "Bad Finding EK", Version: "1.0.0", Namespace: "BAD_FEK"},
+						NodeKindsInput:         model.NodesInput{{Name: "BadFEK_NK1", DisplayName: "NK1", Description: "nk", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"}, {Name: "BadFEK_EnvKind1", IsDisplayKind: false}},
+						RelationshipKindsInput: model.RelationshipsInput{{Name: "BadFEK_RK1", Description: "rk", IsTraversable: true}},
+						EnvironmentsInput:      model.EnvironmentsInput{{EnvironmentKindName: "BadFEK_EnvKind1", SourceKindName: "BadFEK_SrcKind", PrincipalKinds: []string{"BadFEK_NK1"}}},
+						RelationshipFindingsInput: model.RelationshipFindingsInput{
+							{Name: "BadFEK_Finding1", DisplayName: "Finding 1", RelationshipKindName: "BadFEK_RK1", EnvironmentKindName: "NonExistentEnvKind", RemediationInput: model.RemediationInput{ShortDescription: "sd", LongDescription: "ld", ShortRemediation: "sr", LongRemediation: "lr"}},
+						},
+					},
+					wantErrContains: "error retrieving environment kind 'NonExistentEnvKind'",
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				assert.ErrorContains(t, err, setupData.wantErrContains)
+				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
+			},
+		},
+		{
+			name: "success_-_create_new_opengraph_extension_without_environments",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput:         model.ExtensionInput{Name: "NoEnvExt", DisplayName: "No Env Extension", Version: "1.0.0", Namespace: "NO_ENV"},
+						NodeKindsInput:         model.NodesInput{{Name: "NoEnv_NK1", DisplayName: "NK1", Description: "nk", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"}},
+						RelationshipKindsInput: model.RelationshipsInput{{Name: "NoEnv_RK1", Description: "rk", IsTraversable: true}},
+					},
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
 				require.NoError(t, err)
-				// was it updated or not
-				require.Equalf(t, tt.want, got, "UpsertOpenGraphExtension(%+v)", tt.args.graphExtension)
-				retrievedGraphExtensionId = getAndCompareGraphExtension(t, testSuite.Context, testSuite.BHDatabase, tt.args.graphExtension)
-			}
+				assert.False(t, updated)
+				assertGraphExtension(t, testSuite, setupData.input)
+			},
+		},
+		{
+			name: "success_-_create_full_opengraph_extension",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				nodeKinds := model.NodesInput{
+					{Name: "Full_NK1", DisplayName: "NK1", Description: "nk", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"},
+					{Name: "Full_NK2", DisplayName: "NK2", Description: "nk", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"},
+					{Name: "Full_EnvKind1", DisplayName: "Env Kind 1", Description: "env", IsDisplayKind: false},
+				}
+				edgeKinds := model.RelationshipsInput{
+					{Name: "Full_RK1", Description: "rk", IsTraversable: true},
+				}
+				environments := model.EnvironmentsInput{
+					{EnvironmentKindName: "Full_EnvKind1", SourceKindName: "Full_SrcKind", PrincipalKinds: []string{"Full_NK1", "Full_NK2"}},
+				}
+				findings := model.RelationshipFindingsInput{
+					{Name: "Full_Finding1", DisplayName: "Finding 1", RelationshipKindName: "Full_RK1", EnvironmentKindName: "Full_EnvKind1", RemediationInput: model.RemediationInput{ShortDescription: "sd", LongDescription: "ld", ShortRemediation: "sr", LongRemediation: "lr"}},
+				}
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput:            model.ExtensionInput{Name: "FullCreateExt", DisplayName: "Full Create", Version: "1.0.0", Namespace: "FULL_CREATE"},
+						NodeKindsInput:            nodeKinds,
+						RelationshipKindsInput:    edgeKinds,
+						EnvironmentsInput:         environments,
+						RelationshipFindingsInput: findings,
+					},
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.False(t, updated)
+				assertGraphExtension(t, testSuite, setupData.input)
+			},
+		},
+		{
+			name: "success_-_update_full_opengraph_extension",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				extensionInput := model.ExtensionInput{Name: "UpdateFullExt", DisplayName: "Update Full", Version: "1.0.0", Namespace: "UPD_FULL"}
+				existingNodeKinds := model.NodesInput{
+					{Name: "UpdFull_ExNK1", DisplayName: "ExNK1", Description: "ex", IsDisplayKind: true, Icon: "User", IconColor: "#F52735"},
+					{Name: "UpdFull_ExNK2", DisplayName: "ExNK2", Description: "ex", IsDisplayKind: true, Icon: "User", IconColor: "#F52735"},
+					{Name: "UpdFull_ExEnvKind1", DisplayName: "Ex Env 1", Description: "env", IsDisplayKind: false},
+				}
+				existingEdgeKinds := model.RelationshipsInput{
+					{Name: "UpdFull_ExRK1", Description: "ex rk", IsTraversable: true},
+				}
+				existingEnvs := model.EnvironmentsInput{
+					{EnvironmentKindName: "UpdFull_ExEnvKind1", SourceKindName: "UpdFull_ExSrcKind", PrincipalKinds: []string{"UpdFull_ExNK1"}},
+				}
+				existingFindings := model.RelationshipFindingsInput{
+					{Name: "UpdFull_ExFinding1", DisplayName: "Ex Finding 1", RelationshipKindName: "UpdFull_ExRK1", EnvironmentKindName: "UpdFull_ExEnvKind1", RemediationInput: model.RemediationInput{ShortDescription: "sd", LongDescription: "ld", ShortRemediation: "sr", LongRemediation: "lr"}},
+				}
+				_, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, model.GraphExtensionInput{
+					ExtensionInput:            extensionInput,
+					NodeKindsInput:            existingNodeKinds,
+					RelationshipKindsInput:    existingEdgeKinds,
+					EnvironmentsInput:         existingEnvs,
+					RelationshipFindingsInput: existingFindings,
+				})
+				require.NoError(t, err)
 
-			if retrievedGraphExtensionId != 0 && retrievedGraphExtensionId != setupGraphExtensionId {
-				extensionToDelete = append(extensionToDelete, retrievedGraphExtensionId)
-			}
+				// Build the update input: keeps some existing, adds new, drops stale
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput: extensionInput,
+						NodeKindsInput: model.NodesInput{
+							{Name: "UpdFull_ExNK1", DisplayName: "ExNK1 Updated", Description: "updated", IsDisplayKind: true, Icon: "User", IconColor: "#F52735"},
+							{Name: "UpdFull_NewNK3", DisplayName: "NewNK3", Description: "new", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"},
+							{Name: "UpdFull_ExEnvKind1", DisplayName: "Ex Env 1", Description: "env", IsDisplayKind: false},
+						},
+						RelationshipKindsInput: model.RelationshipsInput{
+							{Name: "UpdFull_ExRK1", Description: "ex rk updated", IsTraversable: true},
+							{Name: "UpdFull_NewRK2", Description: "new rk", IsTraversable: true},
+						},
+						EnvironmentsInput: model.EnvironmentsInput{
+							{EnvironmentKindName: "UpdFull_ExEnvKind1", SourceKindName: "UpdFull_NewSrcKind", PrincipalKinds: []string{"UpdFull_ExNK1", "UpdFull_NewNK3"}},
+						},
+						RelationshipFindingsInput: model.RelationshipFindingsInput{
+							{Name: "UpdFull_NewFinding2", DisplayName: "New Finding 2", RelationshipKindName: "UpdFull_NewRK2", EnvironmentKindName: "UpdFull_ExEnvKind1", RemediationInput: model.RemediationInput{ShortDescription: "sd2", LongDescription: "ld2", ShortRemediation: "sr2", LongRemediation: "lr2"}},
+						},
+					},
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.True(t, updated)
+				assertGraphExtension(t, testSuite, setupData.input)
+			},
+		},
+		{
+			name: "success_-_insert_new_opengraph_extension_with_one_already_present",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				// Create the first extension
+				firstExtInput := model.ExtensionInput{Name: "TwoExt_First", DisplayName: "First Ext", Version: "1.0.0", Namespace: "TWO_FIRST"}
+				firstNodeKinds := model.NodesInput{{Name: "TwoExt_NK1", DisplayName: "NK1", Description: "nk", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"}}
+				firstEdgeKinds := model.RelationshipsInput{{Name: "TwoExt_RK1", Description: "rk", IsTraversable: true}}
+				_, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, model.GraphExtensionInput{
+					ExtensionInput:         firstExtInput,
+					NodeKindsInput:         firstNodeKinds,
+					RelationshipKindsInput: firstEdgeKinds,
+				})
+				require.NoError(t, err)
 
-			tt.fields.teardown(t, extensionToDelete)
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput:         model.ExtensionInput{Name: "TwoExt_Second", DisplayName: "Second Ext", Version: "1.0.0", Namespace: "TWO_SECOND"},
+						NodeKindsInput:         model.NodesInput{{Name: "TwoExt_NK2", DisplayName: "NK2", Description: "nk", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"}},
+						RelationshipKindsInput: model.RelationshipsInput{{Name: "TwoExt_RK2", Description: "rk", IsTraversable: true}},
+					},
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.False(t, updated)
+				assertGraphExtension(t, testSuite, setupData.input)
+			},
+		},
+		{
+			name: "success_-_environment_source_kind_auto_registers",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput:         model.ExtensionInput{Name: "AutoSrcExt", DisplayName: "Auto Src", Version: "1.0.0", Namespace: "AUTO_SRC"},
+						NodeKindsInput:         model.NodesInput{{Name: "AutoSrc_NK1", DisplayName: "NK1", Description: "nk", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"}, {Name: "AutoSrc_EnvKind1", DisplayName: "Env Kind 1", IsDisplayKind: false}},
+						RelationshipKindsInput: model.RelationshipsInput{{Name: "AutoSrc_RK1", Description: "rk", IsTraversable: true}},
+						EnvironmentsInput:      model.EnvironmentsInput{{EnvironmentKindName: "AutoSrc_EnvKind1", SourceKindName: "UnregisteredSourceKind", PrincipalKinds: []string{"AutoSrc_NK1"}}},
+						RelationshipFindingsInput: model.RelationshipFindingsInput{
+							{Name: "AutoSrc_Finding1", DisplayName: "Finding 1", RelationshipKindName: "AutoSrc_RK1", EnvironmentKindName: "AutoSrc_EnvKind1", RemediationInput: model.RemediationInput{ShortDescription: "sd", LongDescription: "ld", ShortRemediation: "sr", LongRemediation: "lr"}},
+						},
+					},
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.False(t, updated)
+				assertGraphExtension(t, testSuite, setupData.input)
+			},
+		},
+		{
+			name: "success_-_multiple_environments_with_different_source_kinds",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput: model.ExtensionInput{Name: "MultiSrcExt", DisplayName: "Multi Src", Version: "1.0.0", Namespace: "MULTI_SRC"},
+						NodeKindsInput: model.NodesInput{
+							{Name: "MultiSrc_NK1", DisplayName: "NK1", Description: "nk", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"},
+							{Name: "MultiSrc_NK2", DisplayName: "NK2", Description: "nk", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"},
+							{Name: "MultiSrc_EnvKind1", DisplayName: "Env 1", IsDisplayKind: false},
+							{Name: "MultiSrc_EnvKind2", DisplayName: "Env 2", IsDisplayKind: false},
+						},
+						RelationshipKindsInput: model.RelationshipsInput{{Name: "MultiSrc_RK1", Description: "rk", IsTraversable: true}},
+						EnvironmentsInput: model.EnvironmentsInput{
+							{EnvironmentKindName: "MultiSrc_EnvKind1", SourceKindName: "MultiSrc_SrcKind1", PrincipalKinds: []string{"MultiSrc_NK1"}},
+							{EnvironmentKindName: "MultiSrc_EnvKind2", SourceKindName: "UnregisteredSourceKind2", PrincipalKinds: []string{"MultiSrc_NK2"}},
+						},
+					},
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.False(t, updated)
+				assertGraphExtension(t, testSuite, setupData.input)
+			},
+		},
+		{
+			name: "success_-_name_is_used_as_displayname_when_displayname_is_not_provided",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput:         model.ExtensionInput{Name: "NoDisplayNameExt", Version: "1.0.0", Namespace: "NO_DN"},
+						NodeKindsInput:         model.NodesInput{{Name: "NoDN_NK1", DisplayName: "NK1", Description: "nk", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"}},
+						RelationshipKindsInput: model.RelationshipsInput{{Name: "NoDN_RK1", Description: "rk", IsTraversable: true}},
+					},
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.False(t, updated)
+				assertGraphExtension(t, testSuite, setupData.input)
+			},
+		},
+		{
+			name: "success_-_preserves_existing_icon_name_and_color_when_not_provided_on_update",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				input := model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{Name: "PreserveIconExt", DisplayName: "Preserve Icon Test", Version: "v1.0.0", Namespace: "ICON_PRESERVE"},
+					NodeKindsInput: model.NodesInput{{Name: "PrsIcn_NK1", DisplayName: "Node Kind", Description: "test", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"}},
+				}
+				_, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, input)
+				require.NoError(t, err)
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput: model.ExtensionInput{Name: "PreserveIconExt", DisplayName: "Preserve Icon Test", Version: "v1.0.0", Namespace: "ICON_PRESERVE"},
+						NodeKindsInput: model.NodesInput{{Name: "PrsIcn_NK1", DisplayName: "Node Kind", Description: "test", IsDisplayKind: true, Icon: "", IconColor: ""}},
+					},
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.True(t, updated)
+
+				icons, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context, nil)
+				require.NoError(t, err)
+				var preserved *model.CustomNodeKind
+				for _, icon := range icons {
+					if icon.KindName == "PrsIcn_NK1" {
+						iconCopy := icon
+						preserved = &iconCopy
+						break
+					}
+				}
+				assert.NotNil(t, preserved, "custom node kind should still exist after update without icon fields")
+				assert.Equal(t, "user", preserved.Config.Icon.Name, "icon name should be preserved from original upsert")
+				assert.Equal(t, "#2779F5", preserved.Config.Icon.Color, "icon color should be preserved from original upsert")
+			},
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			testSuite := setupIntegrationTestSuite(t)
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			setupData := testCase.setup(t, testSuite)
+			updated, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, setupData.input)
+			testCase.assert(t, testSuite, setupData, updated, err)
 		})
 	}
 }
 
-func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *database.BloodhoundDB, want model.GraphExtensionInput) int32 {
+// assertGraphExtension retrieves and validates the full extension state against the expected input.
+func assertGraphExtension(t *testing.T, testSuite IntegrationTestSuite, want model.GraphExtensionInput) {
 	t.Helper()
-	var gotGraphExtension model.GraphSchemaExtension
 
-	extensions, totalRecords, err := db.GetGraphSchemaExtensions(testContext,
-		model.Filters{"name": []model.Filter{{ // check to see if extension exists
-			Operator:    model.Equals,
-			Value:       want.ExtensionInput.Name,
-			SetOperator: model.FilterAnd,
-		}}}, model.Sort{}, 0, 1)
+	extensions, totalRecords, err := testSuite.BHDatabase.GetGraphSchemaExtensions(testSuite.Context,
+		model.Filters{"name": []model.Filter{{Operator: model.Equals, Value: want.ExtensionInput.Name, SetOperator: model.FilterAnd}}},
+		model.Sort{}, 0, 1)
 	require.NoError(t, err)
-	// Always expect to create the extension
 	require.Equal(t, 1, totalRecords)
-	gotGraphExtension = extensions[0]
+	gotExtension := extensions[0]
 
-	// Compare Extensions
-	require.Equalf(t, want.ExtensionInput.Name, gotGraphExtension.Name, "GraphSchemaExtensionInput - name mismatch")
-	require.Equalf(t, want.ExtensionInput.GetDisplayName(), gotGraphExtension.DisplayName, "GraphSchemaExtensionInput - displayname mismatch")
-	require.Equalf(t, want.ExtensionInput.Version, gotGraphExtension.Version, "GraphSchemaExtensionInput - version mismatch")
-	require.Equalf(t, want.ExtensionInput.Namespace, gotGraphExtension.Namespace, "GraphSchemaExtensionInput - namespace mismatch")
+	assert.Equalf(t, want.ExtensionInput.Name, gotExtension.Name, "Extension - name mismatch")
+	assert.Equalf(t, want.ExtensionInput.GetDisplayName(), gotExtension.DisplayName, "Extension - displayname mismatch")
+	assert.Equalf(t, want.ExtensionInput.Version, gotExtension.Version, "Extension - version mismatch")
+	assert.Equalf(t, want.ExtensionInput.Namespace, gotExtension.Namespace, "Extension - namespace mismatch")
 
-	var (
-		schemaIdFilter = model.Filter{
-			Operator:    model.Equals,
-			Value:       strconv.FormatInt(int64(gotGraphExtension.ID), 10),
-			SetOperator: model.FilterAnd,
-		}
+	assertNodeKinds(t, testSuite, gotExtension.ID, want.NodeKindsInput)
+	assertRelationshipKinds(t, testSuite, gotExtension.ID, want.RelationshipKindsInput)
+	assertEnvironments(t, testSuite, gotExtension.ID, want.EnvironmentsInput)
+	assertFindings(t, testSuite, gotExtension.ID, want.RelationshipFindingsInput)
+}
 
-		gotNodeKinds                  model.GraphSchemaNodeKinds
-		gotRelationshipKinds          model.GraphSchemaRelationshipKinds
-		gotSchemaEnvironments         []model.SchemaEnvironment
-		gotPrincipalKinds             model.SchemaEnvironmentPrincipalKinds
-		sourceKind                    model.Kind
-		dawgsPrincipalKinds           []model.Kind
-		dawgsFindingRelationshipKinds []model.Kind
-		dawgsFindingEnvironmentKinds  []model.Kind
-		gotSchemaRelationshipFinding  []model.SchemaFinding
-		gotRemediation                model.Remediation
-		findingEnvironment            model.SchemaEnvironment
-	)
+func assertNodeKinds(t *testing.T, testSuite IntegrationTestSuite, extensionId int32, wantNodeKinds model.NodesInput) {
+	t.Helper()
 
-	// Test Node Kinds
-
-	gotNodeKinds, _, err = db.GetGraphSchemaNodeKinds(testContext,
+	schemaIdFilter := model.Filter{Operator: model.Equals, Value: strconv.FormatInt(int64(extensionId), 10), SetOperator: model.FilterAnd}
+	gotNodeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context,
 		model.Filters{"schema_extension_id": []model.Filter{schemaIdFilter}}, model.Sort{}, 0, 0)
 	require.NoError(t, err)
-	require.Equalf(t, len(want.NodeKindsInput), len(gotNodeKinds), "node kind - count mismatch")
-	wantNodeKindsByName := make(map[string]model.NodeInput, len(want.NodeKindsInput))
-	for _, wantNodeKind := range want.NodeKindsInput {
-		wantNodeKindsByName[wantNodeKind.Name] = wantNodeKind
+	assert.Equalf(t, len(wantNodeKinds), len(gotNodeKinds), "node kind - count mismatch")
+
+	wantByName := make(map[string]model.NodeInput, len(wantNodeKinds))
+	for _, wantNK := range wantNodeKinds {
+		wantByName[wantNK.Name] = wantNK
 	}
-	for _, gotNodeKind := range gotNodeKinds {
-		wantNodeKind, ok := wantNodeKindsByName[gotNodeKind.Name]
-		require.Truef(t, ok, "GraphSchemaNodeKind(%v) - unexpected node kind returned", gotNodeKind.Name)
-		require.Greaterf(t, gotNodeKind.ID, int32(0), "GraphSchemaNodeKind(%v) - ID is invalid", gotNodeKind.Name)
-		require.Equalf(t, gotGraphExtension.ID, gotNodeKind.SchemaExtensionId, "GraphSchemaNodeKind(%v) - SchemaExtensionId is invalid", gotNodeKind.Name)
-		require.Equalf(t, wantNodeKind.DisplayName, gotNodeKind.DisplayName, "GraphSchemaNodeKind(%v) - display_name mismatch", gotNodeKind.Name)
-		require.Equalf(t, wantNodeKind.Description, gotNodeKind.Description, "GraphSchemaNodeKind(%v) - description mismatch", gotNodeKind.Name)
-		require.Equalf(t, wantNodeKind.IsDisplayKind, gotNodeKind.IsDisplayKind, "GraphSchemaNodeKind(%v) - is_display_kind mismatch", gotNodeKind.Name)
-		require.Equalf(t, wantNodeKind.Icon, gotNodeKind.Icon, "GraphSchemaNodeKind(%v) - icon mismatch", gotNodeKind.Name)
-		require.Equalf(t, wantNodeKind.IconColor, gotNodeKind.IconColor, "GraphSchemaNodeKind(%v) - icon_color mismatch", gotNodeKind.Name)
-		require.Falsef(t, gotNodeKind.CreatedAt.IsZero(), "GraphSchemaNodeKind(%v) - created_at is zero", gotNodeKind.Name)
-		require.Falsef(t, gotNodeKind.UpdatedAt.IsZero(), "GraphSchemaNodeKind(%v) - updated_at is zero", gotNodeKind.Name)
-		require.Falsef(t, gotNodeKind.DeletedAt.Valid, "GraphSchemaNodeKind(%v) - deleted_at is not null", gotNodeKind.Name)
+	for _, gotNK := range gotNodeKinds {
+		wantNK, ok := wantByName[gotNK.Name]
+		assert.Truef(t, ok, "NodeKind(%v) - unexpected", gotNK.Name)
+		assert.Greaterf(t, gotNK.ID, int32(0), "NodeKind(%v) - ID invalid", gotNK.Name)
+		assert.Equalf(t, extensionId, gotNK.SchemaExtensionId, "NodeKind(%v) - SchemaExtensionId mismatch", gotNK.Name)
+		assert.Equalf(t, wantNK.DisplayName, gotNK.DisplayName, "NodeKind(%v) - display_name mismatch", gotNK.Name)
+		assert.Equalf(t, wantNK.Description, gotNK.Description, "NodeKind(%v) - description mismatch", gotNK.Name)
+		assert.Equalf(t, wantNK.IsDisplayKind, gotNK.IsDisplayKind, "NodeKind(%v) - is_display_kind mismatch", gotNK.Name)
+		assert.Equalf(t, wantNK.Icon, gotNK.Icon, "NodeKind(%v) - icon mismatch", gotNK.Name)
+		assert.Equalf(t, wantNK.IconColor, gotNK.IconColor, "NodeKind(%v) - icon_color mismatch", gotNK.Name)
+		assert.Falsef(t, gotNK.CreatedAt.IsZero(), "NodeKind(%v) - created_at is zero", gotNK.Name)
+		assert.Falsef(t, gotNK.UpdatedAt.IsZero(), "NodeKind(%v) - updated_at is zero", gotNK.Name)
+		assert.Falsef(t, gotNK.DeletedAt.Valid, "NodeKind(%v) - deleted_at is not null", gotNK.Name)
 	}
 
-	// Test Custom Icons
-
-	iconMap := make(map[string]model.CustomNodeKind)
-	icons, err := db.GetCustomNodeKinds(testContext, nil)
-	require.Nil(t, err)
+	// Custom icon assertions
+	icons, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context, nil)
+	require.NoError(t, err)
+	iconMap := make(map[string]model.CustomNodeKind, len(icons))
 	for _, icon := range icons {
 		iconMap[icon.KindName] = icon
 	}
-
-	// confirm node icon definitions in the custom node kind table match the node definitions in the graph schema node kind table
-
-	for _, gotNodeKind := range gotNodeKinds {
-		if gotNodeKind.IsDisplayKind {
-			// confirm display node kinds are in the icon map
-			icon, ok := iconMap[gotNodeKind.Name]
-			require.True(t, ok)
-			require.Equal(t, gotNodeKind.Icon, icon.Config.Icon.Name)
-			require.Equal(t, gotNodeKind.IconColor, icon.Config.Icon.Color)
+	for _, gotNK := range gotNodeKinds {
+		if gotNK.IsDisplayKind {
+			icon, ok := iconMap[gotNK.Name]
+			assert.Truef(t, ok, "NodeKind(%v) - missing custom icon", gotNK.Name)
+			assert.Equalf(t, gotNK.Icon, icon.Config.Icon.Name, "NodeKind(%v) - icon name mismatch", gotNK.Name)
+			assert.Equalf(t, gotNK.IconColor, icon.Config.Icon.Color, "NodeKind(%v) - icon color mismatch", gotNK.Name)
 		} else {
-			// confirm non-display node kinds are not in the icon map
-			_, ok := iconMap[gotNodeKind.Name]
-			require.False(t, ok)
+			_, ok := iconMap[gotNK.Name]
+			assert.Falsef(t, ok, "NodeKind(%v) - non-display kind should not have custom icon", gotNK.Name)
 		}
 	}
-	// Test Relationship Kinds
+}
 
-	gotRelationshipKinds, _, err = db.GetGraphSchemaRelationshipKinds(testContext,
+func assertRelationshipKinds(t *testing.T, testSuite IntegrationTestSuite, extensionId int32, wantRelKinds model.RelationshipsInput) {
+	t.Helper()
+
+	schemaIdFilter := model.Filter{Operator: model.Equals, Value: strconv.FormatInt(int64(extensionId), 10), SetOperator: model.FilterAnd}
+	gotRelKinds, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKinds(testSuite.Context,
 		model.Filters{"schema_extension_id": []model.Filter{schemaIdFilter}}, model.Sort{}, 0, 0)
 	require.NoError(t, err)
-	require.Equalf(t, len(want.RelationshipKindsInput), len(gotRelationshipKinds), "relationship kind - count mismatch")
-	wantRelKindsByName := make(map[string]model.RelationshipInput, len(want.RelationshipKindsInput))
-	for _, wantRelKind := range want.RelationshipKindsInput {
-		wantRelKindsByName[wantRelKind.Name] = wantRelKind
-	}
-	for _, gotRelationshipKind := range gotRelationshipKinds {
-		wantRelKind, ok := wantRelKindsByName[gotRelationshipKind.Name]
-		require.Truef(t, ok, "GraphSchemaRelationshipKind(%v) - unexpected relationship kind returned", gotRelationshipKind.Name)
-		require.Greaterf(t, gotRelationshipKind.ID, int32(0), "GraphSchemaRelationshipKind(%v) - ID is invalid", gotRelationshipKind.Name)
-		require.Equalf(t, gotGraphExtension.ID, gotRelationshipKind.SchemaExtensionId, "GraphSchemaRelationshipKind(%v) - SchemaExtensionId is invalid", gotRelationshipKind.Name)
-		require.Equalf(t, wantRelKind.Description, gotRelationshipKind.Description, "GraphSchemaRelationshipKind(%v) - description mismatch", gotRelationshipKind.Name)
-		require.Equalf(t, wantRelKind.IsTraversable, gotRelationshipKind.IsTraversable, "GraphSchemaRelationshipKind(%v) - is_traversable mismatch", gotRelationshipKind.Name)
-	}
+	assert.Equalf(t, len(wantRelKinds), len(gotRelKinds), "relationship kind - count mismatch")
 
-	// Test Environments
-	gotSchemaEnvironments, err = db.GetEnvironmentsByExtensionId(testContext,
-		gotGraphExtension.ID)
+	wantByName := make(map[string]model.RelationshipInput, len(wantRelKinds))
+	for _, wantRK := range wantRelKinds {
+		wantByName[wantRK.Name] = wantRK
+	}
+	for _, gotRK := range gotRelKinds {
+		wantRK, ok := wantByName[gotRK.Name]
+		assert.Truef(t, ok, "RelKind(%v) - unexpected", gotRK.Name)
+		assert.Greaterf(t, gotRK.ID, int32(0), "RelKind(%v) - ID invalid", gotRK.Name)
+		assert.Equalf(t, extensionId, gotRK.SchemaExtensionId, "RelKind(%v) - SchemaExtensionId mismatch", gotRK.Name)
+		assert.Equalf(t, wantRK.Description, gotRK.Description, "RelKind(%v) - description mismatch", gotRK.Name)
+		assert.Equalf(t, wantRK.IsTraversable, gotRK.IsTraversable, "RelKind(%v) - is_traversable mismatch", gotRK.Name)
+	}
+}
+
+func assertEnvironments(t *testing.T, testSuite IntegrationTestSuite, extensionId int32, wantEnvironments model.EnvironmentsInput) {
+	t.Helper()
+
+	gotEnvironments, err := testSuite.BHDatabase.GetEnvironmentsByExtensionId(testSuite.Context, extensionId)
 	require.NoError(t, err)
+	assert.Equalf(t, len(wantEnvironments), len(gotEnvironments), "environments - count mismatch")
 
-	require.Equalf(t, len(want.EnvironmentsInput), len(gotSchemaEnvironments), "environments - count mismatch")
-	wantEnvironmentsByKindName := make(map[string]model.EnvironmentInput, len(want.EnvironmentsInput))
-	for _, wantEnvironment := range want.EnvironmentsInput {
-		wantEnvironmentsByKindName[wantEnvironment.EnvironmentKindName] = wantEnvironment
+	wantByKindName := make(map[string]model.EnvironmentInput, len(wantEnvironments))
+	for _, wantEnv := range wantEnvironments {
+		wantByKindName[wantEnv.EnvironmentKindName] = wantEnv
 	}
-	for _, gotEnvironment := range gotSchemaEnvironments {
-		wantEnvironment, ok := wantEnvironmentsByKindName[gotEnvironment.EnvironmentKindName]
-		require.Truef(t, ok, "SchemaEnvironment(%v) - unexpected environment returned", gotEnvironment.EnvironmentKindName)
-		require.Greaterf(t, gotEnvironment.ID, int32(0), "SchemaEnvironment(%v) - ID is invalid", gotEnvironment.EnvironmentKindName)
-		require.Equalf(t, gotGraphExtension.ID, gotEnvironment.SchemaExtensionId, "SchemaEnvironment(%v) - SchemaExtensionId is invalid", gotEnvironment.EnvironmentKindName)
-		sourceKinds, err := db.GetKindsByIDs(testContext, gotEnvironment.SourceKindId)
+	for _, gotEnv := range gotEnvironments {
+		wantEnv, ok := wantByKindName[gotEnv.EnvironmentKindName]
+		assert.Truef(t, ok, "Environment(%v) - unexpected", gotEnv.EnvironmentKindName)
+		assert.Greaterf(t, gotEnv.ID, int32(0), "Environment(%v) - ID invalid", gotEnv.EnvironmentKindName)
+		assert.Equalf(t, extensionId, gotEnv.SchemaExtensionId, "Environment(%v) - SchemaExtensionId mismatch", gotEnv.EnvironmentKindName)
+
+		sourceKinds, err := testSuite.BHDatabase.GetKindsByIDs(testSuite.Context, gotEnv.SourceKindId)
 		require.NoError(t, err)
 		require.Len(t, sourceKinds, 1)
-		sourceKind = sourceKinds[0]
-		require.Equalf(t, wantEnvironment.SourceKindName, sourceKind.Name, "SchemaEnvironment(%v) - SourceKindName mismatch", gotEnvironment.EnvironmentKindName)
-		gotPrincipalKinds, err = db.GetPrincipalKindsByEnvironmentId(testContext, gotEnvironment.ID)
+		assert.Equalf(t, wantEnv.SourceKindName, sourceKinds[0].Name, "Environment(%v) - SourceKindName mismatch", gotEnv.EnvironmentKindName)
+
+		gotPrincipalKinds, err := testSuite.BHDatabase.GetPrincipalKindsByEnvironmentId(testSuite.Context, gotEnv.ID)
 		require.NoError(t, err)
-		require.Equalf(t, len(wantEnvironment.PrincipalKinds), len(gotPrincipalKinds), "SchemaEnvironment(%v) - PrincipalKinds count mismatch", gotEnvironment.EnvironmentKindName)
-		for _, gotPrincipalKind := range gotPrincipalKinds {
-			require.Equalf(t, gotEnvironment.ID, gotPrincipalKind.EnvironmentId, "SchemaEnvironment(%v) - PrincipalKind EnvironmentId is invalid", gotEnvironment.EnvironmentKindName)
-			dawgsPrincipalKinds, err = db.GetKindsByIDs(testContext, gotPrincipalKind.PrincipalKind)
+		assert.Equalf(t, len(wantEnv.PrincipalKinds), len(gotPrincipalKinds), "Environment(%v) - PrincipalKinds count mismatch", gotEnv.EnvironmentKindName)
+		for _, gotPK := range gotPrincipalKinds {
+			assert.Equalf(t, gotEnv.ID, gotPK.EnvironmentId, "Environment(%v) - PrincipalKind EnvironmentId mismatch", gotEnv.EnvironmentKindName)
+			principalKinds, err := testSuite.BHDatabase.GetKindsByIDs(testSuite.Context, gotPK.PrincipalKind)
 			require.NoError(t, err)
-			require.Len(t, dawgsPrincipalKinds, 1)
-			require.Containsf(t, wantEnvironment.PrincipalKinds, dawgsPrincipalKinds[0].Name, "SchemaEnvironment(%v) - PrincipalKind name mismatch", gotEnvironment.EnvironmentKindName)
+			require.Len(t, principalKinds, 1)
+			assert.Containsf(t, wantEnv.PrincipalKinds, principalKinds[0].Name, "Environment(%v) - PrincipalKind name mismatch", gotEnv.EnvironmentKindName)
 		}
 	}
+}
 
-	// Test Findings
-	gotSchemaRelationshipFinding, err = db.GetSchemaFindingsByExtensionId(testContext, gotGraphExtension.ID)
+func assertFindings(t *testing.T, testSuite IntegrationTestSuite, extensionId int32, wantFindings model.RelationshipFindingsInput) {
+	t.Helper()
+
+	gotFindings, err := testSuite.BHDatabase.GetSchemaFindingsByExtensionId(testSuite.Context, extensionId)
 	require.NoError(t, err)
+	assert.Equalf(t, len(wantFindings), len(gotFindings), "findings - count mismatch")
 
-	require.Equalf(t, len(want.RelationshipFindingsInput), len(gotSchemaRelationshipFinding), "mismatched number of findings")
-	wantFindingsByName := make(map[string]model.RelationshipFindingInput, len(want.RelationshipFindingsInput))
-	for _, wantFinding := range want.RelationshipFindingsInput {
-		wantFindingsByName[wantFinding.Name] = wantFinding
+	wantByName := make(map[string]model.RelationshipFindingInput, len(wantFindings))
+	for _, wantFinding := range wantFindings {
+		wantByName[wantFinding.Name] = wantFinding
 	}
-	for _, finding := range gotSchemaRelationshipFinding {
-		wantFinding, ok := wantFindingsByName[finding.Name]
-		require.Truef(t, ok, "SchemaFinding(%v) - unexpected finding returned", finding.Name)
+	for _, gotFinding := range gotFindings {
+		wantFinding, ok := wantByName[gotFinding.Name]
+		assert.Truef(t, ok, "Finding(%v) - unexpected", gotFinding.Name)
+		assert.Greaterf(t, gotFinding.ID, int32(0), "Finding(%v) - ID invalid", gotFinding.Name)
+		assert.Equalf(t, extensionId, gotFinding.SchemaExtensionId, "Finding(%v) - SchemaExtensionId mismatch", gotFinding.Name)
 
-		// Finding
-		require.Greaterf(t, finding.ID, int32(0), "SchemaFinding(%v) - ID is invalid", finding.Name)
-		require.Equalf(t, gotGraphExtension.ID, finding.SchemaExtensionId, "SchemaFinding(%v) - SchemaExtensionId is invalid", finding.Name)
-
-		dawgsFindingRelationshipKinds, err = db.GetKindsByIDs(testContext, finding.KindId)
+		relKinds, err := testSuite.BHDatabase.GetKindsByIDs(testSuite.Context, gotFinding.KindId)
 		require.NoError(t, err)
-		require.Len(t, dawgsFindingRelationshipKinds, 1)
-		require.Equalf(t, wantFinding.RelationshipKindName, dawgsFindingRelationshipKinds[0].Name, "SchemaFinding(%v) - relationship kind name mismatch", finding.Name)
+		require.Len(t, relKinds, 1)
+		assert.Equalf(t, wantFinding.RelationshipKindName, relKinds[0].Name, "Finding(%v) - relationship kind mismatch", gotFinding.Name)
 
-		findingEnvironment, err = db.GetEnvironmentById(testContext, finding.EnvironmentId)
+		findingEnv, err := testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, gotFinding.EnvironmentId)
 		require.NoError(t, err)
-		dawgsFindingEnvironmentKinds, err = db.GetKindsByIDs(testContext, findingEnvironment.EnvironmentKindId)
+		envKinds, err := testSuite.BHDatabase.GetKindsByIDs(testSuite.Context, findingEnv.EnvironmentKindId)
 		require.NoError(t, err)
-		require.Len(t, dawgsFindingEnvironmentKinds, 1)
-		require.Equalf(t, wantFinding.EnvironmentKindName, dawgsFindingEnvironmentKinds[0].Name, "SchemaFinding(%v) - environment kind name mismatch", finding.Name)
+		require.Len(t, envKinds, 1)
+		assert.Equalf(t, wantFinding.EnvironmentKindName, envKinds[0].Name, "Finding(%v) - environment kind mismatch", gotFinding.Name)
 
-		require.Equalf(t, wantFinding.DisplayName, finding.DisplayName, "SchemaFinding(%v) - display name mismatch", finding.Name)
+		assert.Equalf(t, wantFinding.DisplayName, gotFinding.DisplayName, "Finding(%v) - display name mismatch", gotFinding.Name)
 
-		// Remediation
-		gotRemediation, err = db.GetRemediationByFindingId(testContext, finding.ID)
+		gotRemediation, err := testSuite.BHDatabase.GetRemediationByFindingId(testSuite.Context, gotFinding.ID)
 		require.NoError(t, err)
-
-		require.Equalf(t, wantFinding.RemediationInput.ShortRemediation, gotRemediation.ShortRemediation, "SchemaFinding(%v) - Remediation short_remediation mismatch", finding.Name)
-		require.Equalf(t, wantFinding.RemediationInput.LongRemediation, gotRemediation.LongRemediation, "SchemaFinding(%v) - Remediation long_remediation mismatch", finding.Name)
-		require.Equalf(t, wantFinding.RemediationInput.ShortDescription, gotRemediation.ShortDescription, "SchemaFinding(%v) - Remediation short_description mismatch", finding.Name)
-		require.Equalf(t, wantFinding.RemediationInput.LongDescription, gotRemediation.LongDescription, "SchemaFinding(%v) - Remediation long_description mismatch", finding.Name)
+		assert.Equalf(t, wantFinding.RemediationInput.ShortRemediation, gotRemediation.ShortRemediation, "Finding(%v) - short_remediation mismatch", gotFinding.Name)
+		assert.Equalf(t, wantFinding.RemediationInput.LongRemediation, gotRemediation.LongRemediation, "Finding(%v) - long_remediation mismatch", gotFinding.Name)
+		assert.Equalf(t, wantFinding.RemediationInput.ShortDescription, gotRemediation.ShortDescription, "Finding(%v) - short_description mismatch", gotFinding.Name)
+		assert.Equalf(t, wantFinding.RemediationInput.LongDescription, gotRemediation.LongDescription, "Finding(%v) - long_description mismatch", gotFinding.Name)
 	}
-
-	return gotGraphExtension.ID
 }

@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package database
 
 import (
@@ -80,8 +81,7 @@ func (s *BloodhoundDB) buildPrincipalKindsFromNames(ctx context.Context, names [
 }
 
 // principalKindReconcileConfig returns the reconcileConfig for principal kinds.
-// Inputs are pre-resolved SchemaEnvironmentPrincipalKind structs, so getInputKey
-// is a pure field access with no DB calls. environmentId is closed over by create.
+// Inputs are pre-resolved SchemaEnvironmentPrincipalKind structs, environmentId is closed over by create.
 func (s *BloodhoundDB) principalKindReconcileConfig(environmentId int32) reconcileConfig[model.SchemaEnvironmentPrincipalKind, model.SchemaEnvironmentPrincipalKind, int32] {
 	return reconcileConfig[model.SchemaEnvironmentPrincipalKind, model.SchemaEnvironmentPrincipalKind, int32]{
 		getInputKey:    func(input model.SchemaEnvironmentPrincipalKind) int32 { return input.PrincipalKind },

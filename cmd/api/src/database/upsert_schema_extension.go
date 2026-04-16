@@ -26,9 +26,15 @@ import (
 
 const CustomNodeIconType = "font-awesome"
 
-// UpsertOpenGraphExtension performs a true upsert of the incoming graph extension.
-// It preserves existing extension and child row IDs, creating new rows, updating changed ones,
-// and deleting stale rows no longer present in the input — all within a single transaction.
+// UpsertOpenGraphExtension reconciles the full state of a graph extension and all of its child
+// entities (node kinds, relationship kinds, environments, and findings) against the provided input.
+//
+// Each entity set is diffed against the input: absent rows are deleted, matching rows are updated
+// in place with their IDs preserved, and new rows are created. All mutations run inside a single
+// transaction that rolls back on any error.
+//
+// Returns true if the extension already existed before this call, false if it was newly created.
+// Returns ErrGraphExtensionBuiltIn if the named extension is a built-in and cannot be modified.
 func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtensionInput model.GraphExtensionInput) (bool, error) {
 	var (
 		err          error
@@ -74,9 +80,8 @@ func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtens
 	}
 }
 
-// findOrCreateExtension queries for an existing extension by name. If found, updates its metadata
-// in place. If not found, creates a new extension row.
-// Returns the extension, whether it previously existed, and any error.
+// findOrCreateExtension looks up an extension by name. If one exists, its mutable metadata is
+// updated and returned with existed=true. Otherwise a new row is created and returned with existed=false.
 func (s *BloodhoundDB) findOrCreateExtension(ctx context.Context, extensionInput model.ExtensionInput) (model.GraphSchemaExtension, bool, error) {
 	if existingExtensions, _, err := s.GetGraphSchemaExtensions(ctx,
 		model.Filters{"name": []model.Filter{{

@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package database
 
 import (
@@ -26,17 +27,15 @@ import (
 func (s *BloodhoundDB) resolveFindingFKs(ctx context.Context, extensionId int32, input model.RelationshipFindingInput) (int32, int32, error) {
 	if relKind, err := s.GetKindByName(ctx, input.RelationshipKindName); err != nil {
 		return 0, 0, fmt.Errorf("error retrieving relationship kind '%s': %w", input.RelationshipKindName, err)
-	} else if envKind, err := s.GetKindByName(ctx, input.EnvironmentKindName); err != nil {
+	} else if environment, err := s.GetEnvironmentKindName(ctx, input.EnvironmentKindName); err != nil {
 		return 0, 0, fmt.Errorf("error retrieving environment kind '%s': %w", input.EnvironmentKindName, err)
-	} else if environment, err := s.GetEnvironmentByEnvironmentKindId(ctx, envKind.ID); err != nil {
-		return 0, 0, fmt.Errorf("error retrieving environment for kind %s: %w", envKind.Name, err)
 	} else {
 		return relKind.ID, environment.ID, nil
 	}
 }
 
 // applyFindingInput applies resolved FK IDs and mutable fields from input onto an existing finding,
-// returning the updated struct ready for persistence.
+// returning the updated struct.
 func applyFindingInput(existing model.SchemaFinding, relKindId, environmentId int32, input model.RelationshipFindingInput) model.SchemaFinding {
 	existing.Type = model.SchemaFindingTypeRelationship
 	existing.DisplayName = input.DisplayName

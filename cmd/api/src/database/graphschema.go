@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package database
 
 import (
@@ -874,16 +875,12 @@ func (s *BloodhoundDB) GetEnvironmentByEnvironmentKindId(ctx context.Context, en
 	return environments[0], nil
 }
 
-// GetEnvironmentByExtensionAndKindId - retrieves the schema environment belonging to the given extension
-// with the given environment kind. Scoping the lookup to the extension prevents cross-extension collisions
-// when multiple extensions define environments using the same environment kind.
-func (s *BloodhoundDB) GetEnvironmentByExtensionAndKindId(ctx context.Context, extensionId int32, environmentKindId int32) (model.SchemaEnvironment, error) {
-	filters := model.Filters{
-		"schema_extension_id": []model.Filter{{Operator: model.Equals, Value: fmt.Sprintf("%d", extensionId)}},
-		"environment_kind_id": []model.Filter{{Operator: model.Equals, Value: fmt.Sprintf("%d", environmentKindId)}},
-	}
-
-	if environments, err := s.GetEnvironmentsFiltered(ctx, filters); err != nil {
+// GetEnvironmentKindName - retrieves the schema environment whose environment kind has the
+// given name.
+func (s *BloodhoundDB) GetEnvironmentKindName(ctx context.Context, kindName string) (model.SchemaEnvironment, error) {
+	if environments, err := s.GetEnvironmentsFiltered(ctx, model.Filters{
+		"name": []model.Filter{{Operator: model.Equals, Value: kindName}},
+	}); err != nil {
 		return model.SchemaEnvironment{}, err
 	} else if len(environments) == 0 {
 		return model.SchemaEnvironment{}, ErrNotFound

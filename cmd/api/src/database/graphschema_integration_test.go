@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 //go:build integration
 
 package database_test
@@ -4724,74 +4725,6 @@ func TestUpdateEnvironment(t *testing.T) {
 
 			updated, err := testSuite.BHDatabase.UpdateEnvironment(testSuite.Context, env)
 			testCase.assert(t, testSuite, env, updated, err, testCase.want)
-		})
-	}
-}
-
-func TestGetEnvironmentByExtensionAndKindId(t *testing.T) {
-	type want struct {
-		err bool
-	}
-	type testData struct {
-		name   string
-		setup  func() (IntegrationTestSuite, model.SchemaEnvironment)
-		useEnv func(ext model.GraphSchemaExtension, env model.SchemaEnvironment) (extensionId int32, envKindId int32)
-		want   want
-		assert func(t *testing.T, testSuite IntegrationTestSuite, env model.SchemaEnvironment, result model.SchemaEnvironment, err error, want want)
-	}
-
-	tt := []testData{
-		{
-			name: "Success: retrieves environment scoped to correct extension and kind",
-			setup: func() (IntegrationTestSuite, model.SchemaEnvironment) {
-				testSuite := setupIntegrationTestSuite(t)
-				ext := createTestExtension(t, testSuite, "scoped-env-ext", "Scoped Env", "1.0", "test")
-				envKind := registerAndGetKind(t, testSuite, "ScopedEnvKind")
-				srcKind := registerAndGetKind(t, testSuite, "ScopedSrcKind")
-				env := createTestEnvironment(t, testSuite, ext.ID, int32(envKind.ID), int32(srcKind.ID))
-				return testSuite, env
-			},
-			useEnv: func(ext model.GraphSchemaExtension, env model.SchemaEnvironment) (int32, int32) {
-				return env.SchemaExtensionId, env.EnvironmentKindId
-			},
-			want: want{err: false},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, env model.SchemaEnvironment, result model.SchemaEnvironment, err error, want want) {
-				t.Helper()
-				require.NoError(t, err)
-				assert.Equal(t, env.ID, result.ID)
-				assert.Equal(t, env.EnvironmentKindId, result.EnvironmentKindId)
-				assert.Equal(t, env.SchemaExtensionId, result.SchemaExtensionId)
-			},
-		},
-		{
-			name: "Error: returns ErrNotFound for wrong extension id",
-			setup: func() (IntegrationTestSuite, model.SchemaEnvironment) {
-				testSuite := setupIntegrationTestSuite(t)
-				ext := createTestExtension(t, testSuite, "wrong-ext-env", "Wrong Ext", "1.0", "test")
-				envKind := registerAndGetKind(t, testSuite, "WrongExtEnvKind")
-				srcKind := registerAndGetKind(t, testSuite, "WrongExtSrcKind")
-				env := createTestEnvironment(t, testSuite, ext.ID, int32(envKind.ID), int32(srcKind.ID))
-				return testSuite, env
-			},
-			useEnv: func(ext model.GraphSchemaExtension, env model.SchemaEnvironment) (int32, int32) {
-				return env.SchemaExtensionId + 9999, env.EnvironmentKindId
-			},
-			want: want{err: true},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, env model.SchemaEnvironment, result model.SchemaEnvironment, err error, want want) {
-				t.Helper()
-				require.Error(t, err)
-			},
-		},
-	}
-
-	for _, testCase := range tt {
-		t.Run(testCase.name, func(t *testing.T) {
-			testSuite, env := testCase.setup()
-			defer teardownIntegrationTestSuite(t, &testSuite)
-
-			extId, envKindId := testCase.useEnv(model.GraphSchemaExtension{}, env)
-			result, err := testSuite.BHDatabase.GetEnvironmentByExtensionAndKindId(testSuite.Context, extId, envKindId)
-			testCase.assert(t, testSuite, env, result, err, testCase.want)
 		})
 	}
 }

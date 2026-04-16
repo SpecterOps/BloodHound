@@ -47,12 +47,12 @@ func TestCreateFindingWithRemediation(t *testing.T) {
 
 	tt := []testData{
 		{
-			name: "Success: creates finding and remediation rows with stable id",
+			name: "success_-_create_finding_and_remediation",
 			args: args{
 				name:                 "TestFinding",
 				displayName:          "Test Finding",
-				relationshipKindName: "HasSession",
-				environmentKindName:  "Tag_Tier_Zero",
+				relationshipKindName: "TestRelationshipKind",
+				environmentKindName:  "TestEnvKind",
 				remediation: model.RemediationInput{
 					ShortDescription: "short desc",
 					LongDescription:  "long desc",
@@ -64,9 +64,13 @@ func TestCreateFindingWithRemediation(t *testing.T) {
 				t.Helper()
 				ext, err := db.CreateGraphSchemaExtension(context.Background(), "CreateFindingExt", "Test", "v1.0.0", "test_ns")
 				require.NoError(t, err)
+				_, err = db.CreateGraphSchemaRelationshipKind(context.Background(), "TestRelationshipKind", ext.ID, "test relationship kind", false)
+				require.NoError(t, err)
+				_, err = db.CreateGraphSchemaNodeKind(context.Background(), "TestEnvKind", ext.ID, "TestEnvKind", "test environment kind", false, "", "")
+				require.NoError(t, err)
 				envInput := model.EnvironmentInput{
-					EnvironmentKindName: "Tag_Tier_Zero",
-					SourceKindName:      "Base",
+					EnvironmentKindName: "TestEnvKind",
+					SourceKindName:      "TestSourceKind",
 					PrincipalKinds:      []string{},
 				}
 				_, err = db.CreateEnvironmentWithPrincipalKinds(context.Background(), ext.ID, envInput)
@@ -79,16 +83,16 @@ func TestCreateFindingWithRemediation(t *testing.T) {
 				assert.NotZero(t, finding.ID)
 				assert.Equal(t, args.name, finding.Name)
 				assert.Equal(t, args.displayName, finding.DisplayName)
-				assert.Equal(t, model.SchemaFindingTypeRelationship, finding.Type)
+				assert.Equal(t, model.SchemaFindingTypeRelationship, finding.Type) // All findings will be relationship type for now, update once list types are available
 			},
 		},
 		{
-			name: "Error: invalid relationship kind name returns error",
+			name: "error_-_invalid_relationship_kind",
 			args: args{
 				name:                 "BadFinding",
 				displayName:          "Bad Finding",
 				relationshipKindName: "KindThatDoesNotExist",
-				environmentKindName:  "Tag_Tier_Zero",
+				environmentKindName:  "TestEnvKind",
 			},
 			setup: func(t *testing.T, db *database.BloodhoundDB) int32 {
 				t.Helper()
@@ -98,7 +102,29 @@ func TestCreateFindingWithRemediation(t *testing.T) {
 			},
 			assert: func(t *testing.T, db *database.BloodhoundDB, finding model.SchemaFinding, err error, args args) {
 				t.Helper()
-				require.Error(t, err)
+				require.ErrorContains(t, err, "error retrieving relationship kind 'KindThatDoesNotExist'")
+				assert.Zero(t, finding.ID)
+			},
+		},
+		{
+			name: "error_-_invalid_environment_kind",
+			args: args{
+				name:                 "BadEnvKindFinding",
+				displayName:          "Bad Env Kind Finding",
+				relationshipKindName: "TestRelationshipKind",
+				environmentKindName:  "KindThatDoesNotExist",
+			},
+			setup: func(t *testing.T, db *database.BloodhoundDB) int32 {
+				t.Helper()
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "CreateFindingBadEnvKind", "Test", "v1.0.0", "test_ns3")
+				require.NoError(t, err)
+				_, err = db.CreateGraphSchemaRelationshipKind(context.Background(), "TestRelationshipKind", ext.ID, "test relationship kind", false)
+				require.NoError(t, err)
+				return ext.ID
+			},
+			assert: func(t *testing.T, db *database.BloodhoundDB, finding model.SchemaFinding, err error, args args) {
+				t.Helper()
+				require.ErrorContains(t, err, "error retrieving environment kind 'KindThatDoesNotExist'")
 				assert.Zero(t, finding.ID)
 			},
 		},
@@ -143,11 +169,11 @@ func TestUpdateFindingWithRemediation(t *testing.T) {
 
 	tt := []testData{
 		{
-			name: "Success: updates display name and remediation, preserves id and name",
+			name: "success_-_update_display_name_and_remediation",
 			args: args{
 				newDisplayName:       "Updated Display",
-				relationshipKindName: "HasSession",
-				environmentKindName:  "Tag_Tier_Zero",
+				relationshipKindName: "TestRelationshipKind",
+				environmentKindName:  "TestEnvKind",
 				remediation: model.RemediationInput{
 					ShortDescription: "updated short",
 					LongDescription:  "updated long",
@@ -159,9 +185,13 @@ func TestUpdateFindingWithRemediation(t *testing.T) {
 				t.Helper()
 				ext, err := db.CreateGraphSchemaExtension(context.Background(), "UpdateFindingExt", "Test", "v1.0.0", "test_ns3")
 				require.NoError(t, err)
+				_, err = db.CreateGraphSchemaRelationshipKind(context.Background(), "TestRelationshipKind", ext.ID, "test relationship kind", false)
+				require.NoError(t, err)
+				_, err = db.CreateGraphSchemaNodeKind(context.Background(), "TestEnvKind", ext.ID, "TestEnvKind", "test environment kind", false, "", "")
+				require.NoError(t, err)
 				envInput := model.EnvironmentInput{
-					EnvironmentKindName: "Tag_Tier_Zero",
-					SourceKindName:      "Base",
+					EnvironmentKindName: "TestEnvKind",
+					SourceKindName:      "TestSourceKind",
 					PrincipalKinds:      []string{},
 				}
 				_, err = db.CreateEnvironmentWithPrincipalKinds(context.Background(), ext.ID, envInput)
@@ -169,8 +199,8 @@ func TestUpdateFindingWithRemediation(t *testing.T) {
 				createInput := model.RelationshipFindingInput{
 					Name:                 "UpdateableFinding",
 					DisplayName:          "Original Display",
-					RelationshipKindName: "HasSession",
-					EnvironmentKindName:  "Tag_Tier_Zero",
+					RelationshipKindName: "TestRelationshipKind",
+					EnvironmentKindName:  "TestEnvKind",
 				}
 				finding, err := db.CreateFindingWithRemediation(context.Background(), ext.ID, createInput)
 				require.NoError(t, err)
@@ -183,6 +213,101 @@ func TestUpdateFindingWithRemediation(t *testing.T) {
 				assert.Equal(t, existing.Name, updated.Name)
 				assert.Equal(t, args.newDisplayName, updated.DisplayName)
 				assert.Equal(t, model.SchemaFindingTypeRelationship, updated.Type)
+
+				remediation, err := db.GetRemediationByFindingId(context.Background(), updated.ID)
+				require.NoError(t, err)
+				assert.Equal(t, args.remediation.ShortDescription, remediation.ShortDescription)
+				assert.Equal(t, args.remediation.LongDescription, remediation.LongDescription)
+				assert.Equal(t, args.remediation.ShortRemediation, remediation.ShortRemediation)
+				assert.Equal(t, args.remediation.LongRemediation, remediation.LongRemediation)
+			},
+		},
+		{
+			name: "error_-_invalid_relationship_kind",
+			args: args{
+				newDisplayName:       "Updated Display",
+				relationshipKindName: "NonExistentRelKind",
+				environmentKindName:  "TestEnvKind",
+				remediation: model.RemediationInput{
+					ShortDescription: "updated short",
+					LongDescription:  "updated long",
+					ShortRemediation: "updated rem short",
+					LongRemediation:  "updated rem long",
+				},
+			},
+			setup: func(t *testing.T, db *database.BloodhoundDB) (int32, model.SchemaFinding) {
+				t.Helper()
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "UpdateFindingBadRKExt", "Test", "v1.0.0", "test_ns4")
+				require.NoError(t, err)
+				_, err = db.CreateGraphSchemaRelationshipKind(context.Background(), "TestRelationshipKind", ext.ID, "test relationship kind", false)
+				require.NoError(t, err)
+				_, err = db.CreateGraphSchemaNodeKind(context.Background(), "TestEnvKind", ext.ID, "TestEnvKind", "test environment kind", false, "", "")
+				require.NoError(t, err)
+				envInput := model.EnvironmentInput{
+					EnvironmentKindName: "TestEnvKind",
+					SourceKindName:      "TestSourceKind",
+					PrincipalKinds:      []string{},
+				}
+				_, err = db.CreateEnvironmentWithPrincipalKinds(context.Background(), ext.ID, envInput)
+				require.NoError(t, err)
+				createInput := model.RelationshipFindingInput{
+					Name:                 "UpdateBadRKFinding",
+					DisplayName:          "Original Display",
+					RelationshipKindName: "TestRelationshipKind",
+					EnvironmentKindName:  "TestEnvKind",
+				}
+				finding, err := db.CreateFindingWithRemediation(context.Background(), ext.ID, createInput)
+				require.NoError(t, err)
+				return ext.ID, finding
+			},
+			assert: func(t *testing.T, db *database.BloodhoundDB, existing model.SchemaFinding, updated model.SchemaFinding, err error, args args) {
+				t.Helper()
+				require.ErrorContains(t, err, "error retrieving relationship kind 'NonExistentRelKind'")
+				assert.Zero(t, updated.ID)
+			},
+		},
+		{
+			name: "error_-_invalid_environment_kind",
+			args: args{
+				newDisplayName:       "Updated Display",
+				relationshipKindName: "TestRelationshipKind",
+				environmentKindName:  "NonExistentEnvKind",
+				remediation: model.RemediationInput{
+					ShortDescription: "updated short",
+					LongDescription:  "updated long",
+					ShortRemediation: "updated rem short",
+					LongRemediation:  "updated rem long",
+				},
+			},
+			setup: func(t *testing.T, db *database.BloodhoundDB) (int32, model.SchemaFinding) {
+				t.Helper()
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "UpdateFindingBadEKExt", "Test", "v1.0.0", "test_ns5")
+				require.NoError(t, err)
+				_, err = db.CreateGraphSchemaRelationshipKind(context.Background(), "TestRelationshipKind", ext.ID, "test relationship kind", false)
+				require.NoError(t, err)
+				_, err = db.CreateGraphSchemaNodeKind(context.Background(), "TestEnvKind", ext.ID, "TestEnvKind", "test environment kind", false, "", "")
+				require.NoError(t, err)
+				envInput := model.EnvironmentInput{
+					EnvironmentKindName: "TestEnvKind",
+					SourceKindName:      "TestSourceKind",
+					PrincipalKinds:      []string{},
+				}
+				_, err = db.CreateEnvironmentWithPrincipalKinds(context.Background(), ext.ID, envInput)
+				require.NoError(t, err)
+				createInput := model.RelationshipFindingInput{
+					Name:                 "UpdateBadEKFinding",
+					DisplayName:          "Original Display",
+					RelationshipKindName: "TestRelationshipKind",
+					EnvironmentKindName:  "TestEnvKind",
+				}
+				finding, err := db.CreateFindingWithRemediation(context.Background(), ext.ID, createInput)
+				require.NoError(t, err)
+				return ext.ID, finding
+			},
+			assert: func(t *testing.T, db *database.BloodhoundDB, existing model.SchemaFinding, updated model.SchemaFinding, err error, args args) {
+				t.Helper()
+				require.ErrorContains(t, err, "error retrieving environment kind 'NonExistentEnvKind'")
+				assert.Zero(t, updated.ID)
 			},
 		},
 	}
