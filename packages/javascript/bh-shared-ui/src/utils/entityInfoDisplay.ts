@@ -282,6 +282,8 @@ export const DATE_FIELDS = [
     'lastlogon',
     'pwdlastset',
     'lastsuccessfulsignindatetime',
+    'lastcollected',
+    'firstseen',
 ];
 
 export const formatPrimitive = (
@@ -297,7 +299,7 @@ export const formatPrimitive = (
             return formatBoolean(value);
         }
         case 'string':
-            if (!keyprop || DATE_FIELDS.includes(keyprop)) {
+            if (keyprop && DATE_FIELDS.includes(keyprop)) {
                 return formatDateString(value);
             }
 

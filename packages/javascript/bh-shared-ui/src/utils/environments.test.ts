@@ -22,7 +22,6 @@ import {
     DEFAULT_ENVIRONMENTS_FILTER,
     filterAndSearchEnvironments,
     HIGH_THRESHOLD,
-    isEnvironmentAggregation,
     MODERATE_THRESHOLD,
 } from './environments';
 
@@ -346,18 +345,5 @@ describe('getEnvironmentAggregationIds', () => {
         ];
         const actual = getEnvironmentAggregationIds('all', testEnvironments);
         expect(actual).toEqual(expected);
-    });
-});
-
-describe('isEnvironmentAggregation', () => {
-    it('returns true when id is a environment aggregation type', () => {
-        const expected = true;
-        const actual = isEnvironmentAggregation('active-directory');
-        expect(actual).toBe(expected);
-    });
-    it('returns false when id is not an environment aggregation', () => {
-        const expected = false;
-        const actual = isEnvironmentAggregation('123');
-        expect(actual).toBe(expected);
     });
 });
