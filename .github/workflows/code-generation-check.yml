@@ -1,4 +1,4 @@
-# Copyright 2025 Specter Ops, Inc.
+# Copyright 2026 Specter Ops, Inc.
 #
 # Licensed under the Apache License, Version 2.0
 # you may not use this file except in compliance with the License.
@@ -31,9 +31,7 @@ jobs:
 
     steps:
       - name: Checkout source code for this repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # ratchet:actions/checkout@v4
-        with:
-          fetch-depth: 2
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # ratchet:actions/checkout@v5
 
       - name: Install Go
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # ratchet:actions/setup-go@v5
@@ -70,7 +68,6 @@ jobs:
       - name: Check for uncommitted changes
         id: show
         run: |
-          git update-index --skip-worktree cmd/ui/public/mockServiceWorker.js
           go tool stbernard show -no-version
 
       - name: Fail with helpful message
