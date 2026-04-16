@@ -31,7 +31,7 @@ const meta = {
             description: 'Visual style of the toggle button.',
         },
         size: {
-            options: ['default', 'sm', 'lg'],
+            options: ['sm', 'lg'],
             control: 'select',
             description: 'Size of the toggle button.',
         },
@@ -51,7 +51,7 @@ const meta = {
     args: {
         children: 'Toggle',
         variant: 'default',
-        size: 'default',
+        size: 'lg',
         disabled: false,
     },
 } satisfies Meta<typeof Toggle>;
@@ -64,16 +64,6 @@ type Story = StoryObj<typeof meta>;
  */
 export const Default: Story = {
     args: {
-        children: 'Toggle',
-    },
-};
-
-/**
- * The outline variant adds a border around the toggle button.
- */
-export const Outline: Story = {
-    args: {
-        variant: 'outline',
         children: 'Toggle',
     },
 };
