@@ -267,31 +267,44 @@ func FetchEntityRoles(tx graph.Transaction, node *graph.Node, skip, limit int) (
 
 func FetchEntityEligibleRolePaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 	return ops.TraversePaths(tx, ops.TraversalPlan{
-		Root:      node,
-		Direction: graph.DirectionOutbound,
-		BranchQuery: func() graph.Criteria {
-			return query.KindIn(query.Relationship(), azure.AZRoleEligible, azure.MemberOf)
-		},
+		Root:          node,
+		Direction:     graph.DirectionOutbound,
+		BranchQuery:   FilterEntityEligibleRoles,
 		DescentFilter: roleDescentFilter,
-		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			return segment.Node.Kinds.ContainsOneOf(azure.Role)
-		},
-	})
+		PathFilter:    RoleTerminalPathFilter})
 }
 
 func FetchEntityEligibleRoles(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
-		Root:      node,
-		Direction: graph.DirectionOutbound,
-		Skip:      skip,
-		Limit:     limit,
-		BranchQuery: func() graph.Criteria {
-			return query.KindIn(query.Relationship(), azure.AZRoleEligible, azure.MemberOf)
-		},
+		Root:          node,
+		Direction:     graph.DirectionOutbound,
+		Skip:          skip,
+		Limit:         limit,
+		BranchQuery:   FilterEntityEligibleRoles,
 		DescentFilter: roleDescentFilter,
-		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			return segment.Node.Kinds.ContainsOneOf(azure.Role)
-		},
+		PathFilter:    RoleTerminalPathFilter,
+	})
+}
+
+func FetchEntityApproverRolePaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:          node,
+		Direction:     graph.DirectionOutbound,
+		BranchQuery:   FilterRoleApprovers,
+		DescentFilter: roleDescentFilter,
+		PathFilter:    RoleTerminalPathFilter,
+	})
+}
+
+func FetchEntityApproverRoles(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:          node,
+		Direction:     graph.DirectionOutbound,
+		Skip:          skip,
+		Limit:         limit,
+		BranchQuery:   FilterRoleApprovers,
+		DescentFilter: roleDescentFilter,
+		PathFilter:    RoleTerminalPathFilter,
 	})
 }
 
@@ -369,6 +382,10 @@ func OutboundControlDescentFilter(_ *ops.TraversalContext, segment *graph.PathSe
 
 func OutboundControlPathFilter(_ *ops.TraversalContext, segment *graph.PathSegment) bool {
 	return !segment.Edge.Kind.Is(azure.MemberOf, azure.Contains)
+}
+
+func RoleTerminalPathFilter(_ *ops.TraversalContext, segment *graph.PathSegment) bool {
+	return segment.Node.Kinds.ContainsOneOf(azure.Role)
 }
 
 func FetchOutboundEntityObjectControlPaths(tx graph.Transaction, root *graph.Node) (graph.PathSet, error) {
@@ -823,9 +840,7 @@ func fetchRolesTraversalPlan(root *graph.Node) ops.TraversalPlan {
 			)
 		},
 		DescentFilter: roleDescentFilter,
-		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			return segment.Node.Kinds.ContainsOneOf(azure.Role)
-		},
+		PathFilter:    RoleTerminalPathFilter,
 	}
 }
 

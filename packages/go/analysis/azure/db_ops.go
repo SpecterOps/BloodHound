@@ -19,6 +19,7 @@ package azure
 import (
 	"context"
 	"fmt"
+	"maps"
 
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
@@ -271,6 +272,54 @@ func ListEntityEligibleRoles(ctx context.Context, db graph.Database, objectID st
 			return err
 		}
 	})
+}
+
+func ListEntityApproverRolePaths(ctx context.Context, db graph.Database, objectID string) (graph.PathSet, error) {
+	var paths graph.PathSet
+
+	return paths, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
+			return err
+		} else {
+			paths, err = FetchEntityApproverRolePaths(tx, node)
+			return err
+		}
+	})
+}
+
+func ListEntityApproverRoles(ctx context.Context, db graph.Database, objectID string, skip, limit int) (graph.NodeSet, error) {
+	var nodes graph.NodeSet
+
+	return nodes, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
+			return err
+		} else {
+			nodes, err = FetchEntityApproverRoles(tx, node, skip, limit)
+			return err
+		}
+	})
+}
+
+func ListEntityEligibleAndApproverRoles(ctx context.Context, db graph.Database, objectID string, skip, limit int) (graph.NodeSet, error) {
+	if eligibleRoles, err := ListEntityEligibleRoles(ctx, db, objectID, skip, limit); err != nil {
+		return nil, err
+	} else if approverRoles, err := ListEntityApproverRoles(ctx, db, objectID, skip, limit); err != nil {
+		return nil, err
+	} else {
+		maps.Copy(eligibleRoles, approverRoles)
+		return eligibleRoles, nil
+	}
+}
+
+func ListEntityEligibleAndApproverRolePaths(ctx context.Context, db graph.Database, objectID string) (graph.PathSet, error) {
+	if eligibleRolePaths, err := ListEntityEligibleRolePaths(ctx, db, objectID); err != nil {
+		return nil, err
+	} else if approverRolePaths, err := ListEntityApproverRolePaths(ctx, db, objectID); err != nil {
+		return nil, err
+	} else {
+		eligibleRolePaths.AddPathSet(approverRolePaths)
+		return eligibleRolePaths, nil
+	}
 }
 
 func ListEntityExecutionPrivilegePaths(ctx context.Context, db graph.Database, objectID string, direction graph.Direction) (graph.PathSet, error) {

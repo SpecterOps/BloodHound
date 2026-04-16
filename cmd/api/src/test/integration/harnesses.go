@@ -10089,6 +10089,50 @@ func (s *ACLInheritanceHarness) Setup(graphTestContext *GraphTestContext) {
 	}))
 }
 
+type AZEligibleRoleHarness struct {
+	UserDirectEligible *graph.Node
+	UserGroupEligible  *graph.Node
+	UserNoEligibility  *graph.Node
+	UserDirectApprover *graph.Node
+	UserGroupApprover  *graph.Node
+	Group              *graph.Node
+	ApproverGroup      *graph.Node
+	RoleDirect         *graph.Node
+	RoleViaGroup       *graph.Node
+	RoleDirectApprover *graph.Node
+	RoleGroupApprover  *graph.Node
+}
+
+func (s *AZEligibleRoleHarness) Setup(graphTestContext *GraphTestContext) {
+	var (
+		tenantID = RandomDomainSID()
+	)
+
+	s.RoleDirect = graphTestContext.NewAzureRole("DirectRole", RandomObjectID(graphTestContext.Context()), azure.ContributorRole, tenantID)
+	s.RoleViaGroup = graphTestContext.NewAzureRole("GroupRole", RandomObjectID(graphTestContext.Context()), azure.ContributorRole, tenantID)
+	s.RoleDirectApprover = graphTestContext.NewAzureRole("DirectApproverRole", RandomObjectID(graphTestContext.Context()), azure.ContributorRole, tenantID)
+	s.RoleGroupApprover = graphTestContext.NewAzureRole("GroupApproverRole", RandomObjectID(graphTestContext.Context()), azure.ContributorRole, tenantID)
+	s.UserDirectEligible = graphTestContext.NewAzureUser("UserDirect", "UserDirect", "", RandomObjectID(graphTestContext.Context()), "", tenantID, false)
+	s.UserGroupEligible = graphTestContext.NewAzureUser("UserGroup", "UserGroup", "", RandomObjectID(graphTestContext.Context()), "", tenantID, false)
+	s.UserNoEligibility = graphTestContext.NewAzureUser("UserNone", "UserNone", "", RandomObjectID(graphTestContext.Context()), "", tenantID, false)
+	s.UserDirectApprover = graphTestContext.NewAzureUser("UserDirectApprover", "UserDirectApprover", "", RandomObjectID(graphTestContext.Context()), "", tenantID, false)
+	s.UserGroupApprover = graphTestContext.NewAzureUser("UserGroupApprover", "UserGroupApprover", "", RandomObjectID(graphTestContext.Context()), "", tenantID, false)
+	s.Group = graphTestContext.NewAzureGroup("EligibleGroup", RandomObjectID(graphTestContext.Context()), tenantID)
+	s.ApproverGroup = graphTestContext.NewAzureGroup("ApproverGroup", RandomObjectID(graphTestContext.Context()), tenantID)
+
+	// Eligible role edges
+	graphTestContext.NewRelationship(s.UserDirectEligible, s.RoleDirect, azure.AZRoleEligible)
+
+	graphTestContext.NewRelationship(s.UserGroupEligible, s.Group, azure.MemberOf)
+	graphTestContext.NewRelationship(s.Group, s.RoleViaGroup, azure.AZRoleEligible)
+
+	// Approver role edges
+	graphTestContext.NewRelationship(s.UserDirectApprover, s.RoleDirectApprover, azure.AZRoleApprover)
+
+	graphTestContext.NewRelationship(s.UserGroupApprover, s.ApproverGroup, azure.MemberOf)
+	graphTestContext.NewRelationship(s.ApproverGroup, s.RoleGroupApprover, azure.AZRoleApprover)
+}
+
 type AZPIMRolesHarness struct {
 	TenantNode *graph.Node
 
@@ -10306,6 +10350,7 @@ type HarnessDetails struct {
 	IngestRelationships                             IngestRelationships
 	IngestRelationshipsUppercaseInvariant           IngestRelationshipsUppercaseInvariant
 	AZPIMRolesHarness                               AZPIMRolesHarness
+	AZEligibleRoleHarness                           AZEligibleRoleHarness
 	Version730_Migration                            Version730_Migration_Harness
 	Version900_Migration_Harness                    Version900_Migration_Harness
 	Version910_Migration_Harness                    Version910_Migration_Harness

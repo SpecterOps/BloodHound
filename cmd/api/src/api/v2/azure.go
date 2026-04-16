@@ -151,11 +151,11 @@ func graphRelatedEntityType(request *http.Request, db database.Database, graphDb
 			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, userRoles), userRoles.Len(), nil
 		}
 
-	case azure.RelatedEntityTypeEligibleRoles:
-		if eligibleRoles, err := azure.ListEntityEligibleRolePaths(ctx, db, objectID); err != nil {
+	case azure.RelatedEntityTypeEligibleAndApproverRoles:
+		if eligibleAndApproverRoles, err := azure.ListEntityEligibleAndApproverRolePaths(ctx, graphDb, objectID); err != nil {
 			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
 		} else {
-			return bloodhoundgraph.PathSetToBloodHoundGraph(eligibleRoles), eligibleRoles.Len(), nil
+			return bloodhoundgraph.PathSetToBloodHoundGraph(validPrimaryKinds, customNodeKinds, eligibleAndApproverRoles), eligibleAndApproverRoles.Len(), nil
 		}
 
 	case azure.RelatedEntityTypeOutboundExecutionPrivileges:
@@ -274,8 +274,8 @@ func listRelatedEntityType(ctx context.Context, db graph.Database, primaryDispla
 			return nil, 0, err
 		}
 
-	case azure.RelatedEntityTypeEligibleRoles:
-		if nodeSet, err = azure.ListEntityEligibleRoles(ctx, db, objectID, 0, 0); err != nil {
+	case azure.RelatedEntityTypeEligibleAndApproverRoles:
+		if nodeSet, err = azure.ListEntityEligibleAndApproverRoles(ctx, db, objectID, 0, 0); err != nil {
 			return nil, 0, err
 		}
 

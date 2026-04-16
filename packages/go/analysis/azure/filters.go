@@ -38,7 +38,7 @@ func FilterRoleApprovers() graph.Criteria {
 }
 
 func FilterEntityEligibleRoles() graph.Criteria {
-	return query.KindIn(query.Relationship(), azure.AZRoleEligible)
+	return query.KindIn(query.Relationship(), azure.AZRoleEligible, azure.MemberOf)
 }
 
 func FilterExecutionPrivileges() graph.Criteria {
