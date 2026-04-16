@@ -140,18 +140,20 @@ const MenuSubContent = React.forwardRef<
     React.ElementRef<typeof DropdownMenuPrimitive.SubContent>,
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubContent>
 >(({ className, ...props }, ref) => (
-    <DropdownMenuPrimitive.SubContent
-        ref={ref}
-        className={cn(
-            'z-50 min-w-[8rem] overflow-hidden rounded-md border border-neutral-light-4 bg-neutral-light-2 p-1 shadow-md',
-            'dark:border-neutral-dark-4 dark:bg-neutral-dark-2',
-            'data-[state=open]:animate-in data-[state=closed]:animate-out',
-            'data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0',
-            'data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2',
-            className
-        )}
-        {...props}
-    />
+    <DropdownMenuPrimitive.Portal>
+        <DropdownMenuPrimitive.SubContent
+            ref={ref}
+            className={cn(
+                'z-50 min-w-[8rem] overflow-hidden rounded-md border border-neutral-light-4 bg-neutral-light-2 p-1 shadow-md',
+                'dark:border-neutral-dark-4 dark:bg-neutral-dark-2',
+                'data-[state=open]:animate-in data-[state=closed]:animate-out',
+                'data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0',
+                'data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2',
+                className
+            )}
+            {...props}
+        />
+    </DropdownMenuPrimitive.Portal>
 ));
 MenuSubContent.displayName = DropdownMenuPrimitive.SubContent.displayName;
 
