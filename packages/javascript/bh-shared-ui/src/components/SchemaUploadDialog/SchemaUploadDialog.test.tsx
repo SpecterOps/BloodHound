@@ -25,6 +25,7 @@ import { SchemaUploadDialog } from './SchemaUploadDialog';
 const testFile = new File([JSON.stringify({ value: 'test' })], 'test.json', { type: 'application/json' });
 
 const addNotificationMock = vi.fn();
+const checkPermissionMock = vi.fn().mockReturnValue(true);
 
 vi.mock('../../providers', async () => {
     const actual = await vi.importActual('../../providers');
@@ -33,6 +34,17 @@ vi.mock('../../providers', async () => {
         useNotifications: () => {
             return { addNotification: addNotificationMock };
         },
+    };
+});
+
+vi.mock('../../hooks/usePermissions', async () => {
+    const actual = await vi.importActual('../../hooks');
+    return {
+        ...actual,
+        usePermissions: () => ({
+            checkPermission: checkPermissionMock,
+            isSuccess: true,
+        }),
     };
 });
 
@@ -74,6 +86,7 @@ beforeAll(() => {
 afterEach(() => {
     server.resetHandlers();
     addNotificationMock.mockClear();
+    checkPermissionMock.mockReturnValue(true);
 });
 afterAll(() => {
     server.close();
@@ -85,6 +98,26 @@ describe('SchemaUploadDialog', () => {
         const screen = render(<SchemaUploadDialog />);
         const button = screen.getByRole('button', { name: 'Upload File' });
         expect(button).toBeInTheDocument();
+    });
+
+    it('disables the upload file button when the user does not have the opengraph write permission', () => {
+        checkPermissionMock.mockReturnValue(false);
+
+        const screen = render(<SchemaUploadDialog />);
+
+        expect(screen.getByRole('button', { name: 'Upload File' })).toBeDisabled();
+    });
+
+    it('does not open the dialog when the user does not have the opengraph write permission', async () => {
+        checkPermissionMock.mockReturnValue(false);
+
+        const screen = render(<SchemaUploadDialog />);
+        const user = userEvent.setup();
+
+        expect(screen.getByRole('button', { name: 'Upload File' })).toBeDisabled();
+
+        await user.click(screen.getByRole('button', { name: 'Upload File' }));
+        expect(screen.queryByRole('dialog', { name: 'Upload Schema Files' })).not.toBeInTheDocument();
     });
 
     it('opens the dialog when the button is clicked', async () => {

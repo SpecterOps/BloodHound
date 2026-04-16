@@ -27,8 +27,9 @@ import {
 import { type Extension } from 'js-client-library';
 import { FC, useState } from 'react';
 import { AppIcon, ConditionalTooltip } from '../../components';
-import { useDeleteExtension } from '../../hooks';
+import { useDeleteExtension, usePermissions } from '../../hooks';
 import { DEFAULT_NOTIFICATION, ERROR_NOTIFICATION, useNotifications } from '../../providers';
+import { Permission } from '../../utils';
 import { cn } from '../../utils/theme';
 
 const ConfirmDeleteExtensionDialog: FC<{
@@ -79,6 +80,9 @@ export const DeleteExtensionButton: FC<{ extension: Extension }> = ({ extension 
     const deleteExtensionMutation = useDeleteExtension();
     const { addNotification } = useNotifications();
 
+    const { checkPermission } = usePermissions();
+    const hasDeletePermission = checkPermission(Permission.OPENGRAPH_WRITE);
+
     const { id: extensionId, name: extensionName, is_builtin: isUndeletable } = extension;
 
     const handleButtonClick = () => setIsDialogOpen(true);
@@ -106,13 +110,21 @@ export const DeleteExtensionButton: FC<{ extension: Extension }> = ({ extension 
 
     return (
         <div className='flex content-center justify-center'>
-            <ConditionalTooltip condition={isUndeletable} tooltip='Built-in extensions cannot be deleted.'>
+            <ConditionalTooltip
+                condition={isUndeletable || !hasDeletePermission}
+                tooltip={
+                    isUndeletable
+                        ? 'Built-in extensions cannot be deleted.'
+                        : 'You do not have permission to delete this extension.'
+                }>
                 <button
                     aria-label={`Delete ${extensionName}`}
-                    className={cn({ 'cursor-pointer': !isUndeletable, 'opacity-50 cursor-not-allowed': isUndeletable })}
+                    className={cn({
+                        'cursor-pointer': !isUndeletable && hasDeletePermission,
+                        'opacity-50 cursor-not-allowed': isUndeletable || !hasDeletePermission,
+                    })}
                     onClick={handleButtonClick}
-                    disabled={isUndeletable}
-                    title={isUndeletable ? 'This is a default extension and cannot be deleted.' : undefined}>
+                    disabled={isUndeletable || !hasDeletePermission}>
                     <AppIcon.Trash size={18} />
                 </button>
             </ConditionalTooltip>

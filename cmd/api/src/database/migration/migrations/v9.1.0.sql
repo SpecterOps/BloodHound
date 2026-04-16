@@ -13,7 +13,43 @@
 -- limitations under the License.
 --
 -- SPDX-License-Identifier: Apache-2.0
+-- Add OpenGraph Phase 2 feature flag
 
+
+-- Add OpenGraph permissions to permissions table
+INSERT INTO permissions(created_at, updated_at, authority, name)
+VALUES (
+        current_timestamp,
+        current_timestamp,
+        'opengraph',
+        'Read'
+       ),
+       (
+        current_timestamp,
+        current_timestamp,
+        'opengraph',
+        'Write'
+       )
+ON CONFLICT DO NOTHING;
+
+-- Add OpenGraph Read permissions to specific roles
+
+INSERT INTO roles_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p
+ON (p.authority, p.name) = ('opengraph', 'Read')
+WHERE r.name IN ('Administrator', 'User', 'Read-Only', 'Power User', 'Auditor')
+ON CONFLICT DO NOTHING;
+
+-- Add OpenGraph Write permissions to Admin role
+INSERT INTO roles_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p
+ON (p.authority, p.name) = ('opengraph', 'Write')
+WHERE r.name IN ('Administrator')
+ON CONFLICT DO NOTHING;
 
 -- Update the 'auth_tokens' table adding created_by column
 -- As of current, we don't have a way to backfill the data, so we are leaving this field optional for now
