@@ -116,7 +116,7 @@ export default {
     safelist: [
         {
             pattern:
-                /(bg|text|border|w)-(primary|secondary|accent|contrast|link|error|tertiary|neutral|base|headline|button|caption|eyeline|body|az|group|ou|computer|user|container|meta|domain|default|gpo|aiaca|root-ca|enterprise-ca|nt-auth-store|cert-template|issuance-policy|az-function-app)/,
+                /(bg|text|border|w|ring)-(primary|secondary|accent|contrast|link|error|tertiary|neutral|base|headline|button|caption|eyeline|body|az|group|ou|computer|user|container|meta|domain|default|gpo|aiaca|root-ca|enterprise-ca|nt-auth-store|cert-template|issuance-policy|az-function-app)/,
         },
         {
             pattern: /(w|top|left)-(0|px|[1-9][0-9]?|-[1-9][0-9]?)/, // Safelist padding values including 0, px, and positive/negative numbers

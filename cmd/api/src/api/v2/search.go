@@ -31,7 +31,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -67,7 +66,7 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid query parameter: %v", err), request), response)
 	} else if openGraphSearchFeatureFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureOpenGraphSearch); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if validPrimaryKinds, err := s.DB.GetDisplayNodeGraphKinds(request.Context()); err != nil {
+	} else if validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if searchableNodeKinds, err := getSearchableNodeKinds(openGraphSearchFeatureFlag.Enabled, validPrimaryKinds, graph.StringsToKinds(nodeTypes)); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid type parameter", request), response)
@@ -104,7 +103,7 @@ func graphNodeToSearchResult(node *graph.Node, validPrimaryKinds graphschema.Val
 		objectID, _          = node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 		distinguishedName, _ = node.Properties.GetOrDefault(ad.DistinguishedName.String(), "").String()
 		systemTags, _        = node.Properties.GetOrDefault(common.SystemTags.String(), "").String()
-		kindLabel            = analysis.GetNodeKindDisplayLabel(validPrimaryKinds, node)
+		kindLabel            = graphschema.GetNodeKindDisplayLabel(validPrimaryKinds, node)
 	)
 
 	return model.SearchResult{

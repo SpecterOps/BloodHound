@@ -13867,22 +13867,34 @@
                 "type": "object",
                 "properties": {
                   "deleteCollectedGraphData": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "When true, deletes all collected graph nodes and edges. Cannot be combined with deleteSourceKinds or deleteRelationships.\n"
+                  },
+                  "deleteSourceKinds": {
+                    "type": "array",
+                    "description": "A list of source kind IDs (from the source_kinds table) whose associated graph nodes and source kind records will be deleted. Use 0 as a special value to delete all \"sourceless\" nodes - nodes that exist in the graph but are not attributed to any source kind. Non-existent IDs will result in a 400 error.\n",
+                    "items": {
+                      "type": "integer"
+                    }
                   },
                   "deleteRelationships": {
                     "type": "array",
+                    "description": "A list of relationship kind names (e.g. \"HasSession\") whose edges will be deleted from the graph. Each value must be a valid, known relationship kind. Cannot be combined with deleteCollectedGraphData.\n",
                     "items": {
                       "type": "string"
                     }
                   },
                   "deleteFileIngestHistory": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "When true, deletes all file ingest job history records."
                   },
                   "deleteDataQualityHistory": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "When true, deletes all data quality history records."
                   },
                   "deleteAssetGroupSelectors": {
                     "type": "array",
+                    "description": "A list of asset group IDs whose custom selectors will be deleted. Triggers a re-analysis after deletion.\n",
                     "items": {
                       "type": "integer"
                     }
@@ -19315,6 +19327,15 @@
                 "type": "string",
                 "format": "date-time",
                 "readOnly": true
+              },
+              "created_by": {
+                "description": "The ID of the user who created the token",
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.uuid"
+                  }
+                ]
               }
             }
           }

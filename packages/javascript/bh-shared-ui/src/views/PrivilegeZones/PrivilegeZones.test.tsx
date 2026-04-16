@@ -18,6 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
 import { Route, Routes } from 'react-router-dom';
 import PrivilegeZones from '.';
+import { useRoleBasedFiltering } from '../../hooks';
 import zoneHandlers from '../../mocks/handlers/zoneHandlers';
 import { detailsPath, labelsPath, privilegeZonesPath, zonesPath } from '../../routes';
 import { render, screen, waitFor } from '../../test-utils';
@@ -26,6 +27,18 @@ vi.mock('react-router-dom', async () => ({
     ...(await vi.importActual<typeof import('react-router-dom')>('react-router-dom')),
     useNavigate: vi.fn,
 }));
+
+vi.mock('../../hooks/useRoleBasedFiltering');
+const mockUseRoleBasedFiltering = vi.mocked(useRoleBasedFiltering);
+
+const renderPrivilegeZones = () => {
+    render(
+        <Routes>
+            <Route path={`/${privilegeZonesPath}/*`} element={<PrivilegeZones />} />
+        </Routes>,
+        { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
+    );
+};
 
 const server = setupServer(...zoneHandlers);
 
@@ -36,13 +49,12 @@ afterAll(() => server.close());
 describe('Zone Management', async () => {
     const user = userEvent.setup();
 
+    beforeEach(() => {
+        mockUseRoleBasedFiltering.mockReturnValue(false);
+    });
+
     it('allows switching between the Zones and Labels tabs', async () => {
-        render(
-            <Routes>
-                <Route path={`/${privilegeZonesPath}/*`} element={<PrivilegeZones />} />
-            </Routes>,
-            { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
-        );
+        renderPrivilegeZones();
 
         const labelTab = await screen.findByRole('tab', { name: /Labels/i });
         const zoneTab = await screen.findByRole('tab', { name: /Zones/i });
@@ -70,5 +82,19 @@ describe('Zone Management', async () => {
             expect(window.location.pathname).toBe(`/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`);
             expect(viewTitle).toBeInTheDocument();
         });
+    });
+
+    it('should not display the ETAC role-based filtering badge when filtering is disabled', async () => {
+        mockUseRoleBasedFiltering.mockReturnValue(false);
+        renderPrivilegeZones();
+
+        expect(screen.queryByTestId('privilege-zones_etac-filtering-badge')).not.toBeInTheDocument();
+    });
+
+    it('should display the ETAC role-based filtering badge when filtering is enabled', async () => {
+        mockUseRoleBasedFiltering.mockReturnValue(true);
+        renderPrivilegeZones();
+
+        expect(screen.getByTestId('privilege-zones_etac-filtering-badge')).toBeInTheDocument();
     });
 });

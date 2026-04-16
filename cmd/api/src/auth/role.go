@@ -50,6 +50,7 @@ func Roles() map[string]RoleTemplate {
 				permissions.AuthManageSelf,
 				permissions.GraphDBRead,
 				permissions.SavedQueriesRead,
+				permissions.OpenGraphRead,
 			},
 		},
 		RoleUploadOnly: {
@@ -74,6 +75,7 @@ func Roles() map[string]RoleTemplate {
 				permissions.GraphDBRead,
 				permissions.SavedQueriesRead,
 				permissions.CollectionReadJobs,
+				permissions.OpenGraphRead,
 			},
 		},
 		RoleUser: {
@@ -88,6 +90,7 @@ func Roles() map[string]RoleTemplate {
 				permissions.GraphDBRead,
 				permissions.SavedQueriesRead,
 				permissions.SavedQueriesWrite,
+				permissions.OpenGraphRead,
 			},
 		},
 		RolePowerUser: {
@@ -109,6 +112,7 @@ func Roles() map[string]RoleTemplate {
 				permissions.SavedQueriesRead,
 				permissions.SavedQueriesWrite,
 				permissions.GraphDBMutate,
+				permissions.OpenGraphRead,
 			},
 		},
 		RoleAdministrator: {
