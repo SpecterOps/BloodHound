@@ -144,8 +144,6 @@ func (s *changelogHarness) assertNodesExistInDB(objectIDs []string, expectedCoun
 }
 
 func TestChangelogIntegration(t *testing.T) {
-	t.Parallel()
-
 	t.Run("coordinator and flag manager startup coordination", func(t *testing.T) {
 		harness := setupChangelogTest(t, defaultTestConfig())
 		defer harness.close()
@@ -233,8 +231,6 @@ func TestChangelogIntegration(t *testing.T) {
 }
 
 func TestCacheClearFunctionality(t *testing.T) {
-	t.Parallel()
-
 	t.Run("ClearCache clears active cache", func(t *testing.T) {
 		harness := setupChangelogTest(t, defaultTestConfig())
 		defer harness.close()
