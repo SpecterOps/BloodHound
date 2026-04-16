@@ -5613,6 +5613,48 @@ func (s *ShortcutHarnessEveryone2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.Everyone)
 }
 
+// ShortcutHarnessSharedMember models the scenario where a user is a member of two sub-groups that both
+// appear in the second node set, and both sub-groups are reachable through a common parent group in the
+// first node set. The shared user must not appear as an individual cross-product result because it is
+// already covered by both sub-groups.
+//
+// Graph shape:
+//
+//	SharedUser  -[MemberOf]-> SubGroup1 -[MemberOf]-> ParentGroup  (firstSet)
+//	SharedUser  -[MemberOf]-> SubGroup2 -[MemberOf]-> ParentGroup
+//	UniqueUser1 -[MemberOf]-> SubGroup1                             (secondSet contains SubGroup1, SubGroup2)
+//	UniqueUser2 -[MemberOf]-> SubGroup2
+type ShortcutHarnessSharedMember struct {
+	ParentGroup *graph.Node
+	SubGroup1   *graph.Node
+	SubGroup2   *graph.Node
+	SharedUser  *graph.Node
+	UniqueUser1 *graph.Node
+	UniqueUser2 *graph.Node
+}
+
+func (s *ShortcutHarnessSharedMember) Setup(graphTestContext *GraphTestContext) {
+	sid := RandomDomainSID()
+	s.ParentGroup = graphTestContext.NewActiveDirectoryGroup("PARENT GROUP", sid)
+	s.SubGroup1 = graphTestContext.NewActiveDirectoryGroup("SUB GROUP ONE", sid)
+	s.SubGroup2 = graphTestContext.NewActiveDirectoryGroup("SUB GROUP TWO", sid)
+	s.SharedUser = graphTestContext.NewActiveDirectoryUser("SHARED USER", sid)
+	s.UniqueUser1 = graphTestContext.NewActiveDirectoryUser("UNIQUE USER ONE", sid)
+	s.UniqueUser2 = graphTestContext.NewActiveDirectoryUser("UNIQUE USER TWO", sid)
+
+	// Both sub-groups are members of the parent group
+	graphTestContext.NewRelationship(s.SubGroup1, s.ParentGroup, ad.MemberOf)
+	graphTestContext.NewRelationship(s.SubGroup2, s.ParentGroup, ad.MemberOf)
+
+	// SharedUser is a member of both sub-groups
+	graphTestContext.NewRelationship(s.SharedUser, s.SubGroup1, ad.MemberOf)
+	graphTestContext.NewRelationship(s.SharedUser, s.SubGroup2, ad.MemberOf)
+
+	// Each unique user belongs to exactly one sub-group
+	graphTestContext.NewRelationship(s.UniqueUser1, s.SubGroup1, ad.MemberOf)
+	graphTestContext.NewRelationship(s.UniqueUser2, s.SubGroup2, ad.MemberOf)
+}
+
 type RootADHarness struct {
 	ActiveDirectoryDomainSID                string
 	ActiveDirectoryDomain                   *graph.Node
@@ -10182,6 +10224,7 @@ type HarnessDetails struct {
 	ShortcutHarnessAuthUsers                        ShortcutHarnessAuthUsers
 	ShortcutHarnessEveryone                         ShortcutHarnessEveryone
 	ShortcutHarnessEveryone2                        ShortcutHarnessEveryone2
+	ShortcutHarnessSharedMember                     ShortcutHarnessSharedMember
 	ADCSESC1Harness                                 ADCSESC1Harness
 	ADCSESC1HarnessAuthUsers                        ADCSESC1HarnessAuthUsers
 	EnrollOnBehalfOfHarness1                        EnrollOnBehalfOfHarness1
