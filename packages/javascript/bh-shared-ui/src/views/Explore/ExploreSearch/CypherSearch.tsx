@@ -461,14 +461,14 @@ const CypherSearch = ({
     setAutoRun,
     disableQueryLimit,
     setDisableQueryLimit,
-    onExploreMenuCollapse,
+    onExploreMenuCollapse = () => {},
 }: {
     cypherSearchState: CypherSearchState;
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
     disableQueryLimit: boolean;
     setDisableQueryLimit: (timeoutSetting: boolean) => void;
-    onExploreMenuCollapse: () => void;
+    onExploreMenuCollapse?: () => void;
 }) => {
     return (
         <SavedQueriesProvider>

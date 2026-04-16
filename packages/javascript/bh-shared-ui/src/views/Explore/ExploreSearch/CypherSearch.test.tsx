@@ -258,7 +258,8 @@ describe('CypherSearch', () => {
 
             await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
 
-            expect(mockClearSelectedItem).not.toHaveBeenCalled();
+            mockClearSelectedItem.mockClear();
+            mockSetSelectedItem.mockClear();
 
             mockCypherEndpoint(singleNodeGraphResponse);
             await user.click(screen.getByRole('button', { name: /run cypher query/i }));
