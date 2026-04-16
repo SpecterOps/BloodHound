@@ -17,9 +17,10 @@
 package azure
 
 import (
+	"cmp"
 	"context"
 	"fmt"
-	"maps"
+	"slices"
 
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
@@ -248,78 +249,72 @@ func ListEntityRoles(ctx context.Context, db graph.Database, objectID string, sk
 	})
 }
 
-func ListEntityEligibleRolePaths(ctx context.Context, db graph.Database, objectID string) (graph.PathSet, error) {
-	var paths graph.PathSet
-
-	return paths, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
-			return err
-		} else {
-			paths, err = FetchEntityEligibleRolePaths(tx, node)
-			return err
-		}
-	})
-}
-
-func ListEntityEligibleRoles(ctx context.Context, db graph.Database, objectID string, skip, limit int) (graph.NodeSet, error) {
-	var nodes graph.NodeSet
-
-	return nodes, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
-			return err
-		} else {
-			nodes, err = FetchEntityEligibleRoles(tx, node, skip, limit)
-			return err
-		}
-	})
-}
-
-func ListEntityApproverRolePaths(ctx context.Context, db graph.Database, objectID string) (graph.PathSet, error) {
-	var paths graph.PathSet
-
-	return paths, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
-			return err
-		} else {
-			paths, err = FetchEntityApproverRolePaths(tx, node)
-			return err
-		}
-	})
-}
-
-func ListEntityApproverRoles(ctx context.Context, db graph.Database, objectID string, skip, limit int) (graph.NodeSet, error) {
-	var nodes graph.NodeSet
-
-	return nodes, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
-			return err
-		} else {
-			nodes, err = FetchEntityApproverRoles(tx, node, skip, limit)
-			return err
-		}
-	})
-}
-
 func ListEntityEligibleAndApproverRoles(ctx context.Context, db graph.Database, objectID string, skip, limit int) (graph.NodeSet, error) {
-	if eligibleRoles, err := ListEntityEligibleRoles(ctx, db, objectID, skip, limit); err != nil {
+	var combinedNodeSet graph.NodeSet
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
+			return err
+		} else if eligibleRoles, err := FetchEntityEligibleRoles(tx, node, 0, 0); err != nil {
+			return err
+		} else if approverRoles, err := FetchEntityApproverRoles(tx, node, 0, 0); err != nil {
+			return err
+		} else {
+			combinedNodeSet = eligibleRoles
+			combinedNodeSet.AddSet(approverRoles)
+			return nil
+		}
+	}); err != nil {
 		return nil, err
-	} else if approverRoles, err := ListEntityApproverRoles(ctx, db, objectID, skip, limit); err != nil {
-		return nil, err
-	} else {
-		maps.Copy(eligibleRoles, approverRoles)
-		return eligibleRoles, nil
 	}
+
+	return paginateCombinedNodeSet(combinedNodeSet, skip, limit)
+}
+
+func paginateCombinedNodeSet(combinedNodeSet graph.NodeSet, skip int, limit int) (graph.NodeSet, error) {
+	if skip == 0 && limit == 0 {
+		return combinedNodeSet, nil
+	}
+
+	sortedNodes := combinedNodeSet.Slice()
+	slices.SortFunc(sortedNodes, func(a, b *graph.Node) int {
+		return cmp.Compare(a.ID, b.ID)
+	})
+
+	if skip >= len(sortedNodes) {
+		return graph.NewNodeSet(), nil
+	}
+
+	sortedNodes = sortedNodes[skip:]
+
+	if limit > 0 && limit < len(sortedNodes) {
+		sortedNodes = sortedNodes[:limit]
+	}
+
+	paginatedNodeSet := graph.NewNodeSet()
+	paginatedNodeSet.Add(sortedNodes...)
+
+	return paginatedNodeSet, nil
 }
 
 func ListEntityEligibleAndApproverRolePaths(ctx context.Context, db graph.Database, objectID string) (graph.PathSet, error) {
-	if eligibleRolePaths, err := ListEntityEligibleRolePaths(ctx, db, objectID); err != nil {
-		return nil, err
-	} else if approverRolePaths, err := ListEntityApproverRolePaths(ctx, db, objectID); err != nil {
-		return nil, err
-	} else {
-		eligibleRolePaths.AddPathSet(approverRolePaths)
-		return eligibleRolePaths, nil
-	}
+	var combinedPaths graph.PathSet
+
+	return combinedPaths, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
+			return err
+		} else {
+			if eligibleRolePaths, err := FetchEntityEligibleRolePaths(tx, node); err != nil {
+				return err
+			} else if approverRolePaths, err := FetchEntityApproverRolePaths(tx, node); err != nil {
+				return err
+			} else {
+				combinedPaths.AddPathSet(eligibleRolePaths)
+				combinedPaths.AddPathSet(approverRolePaths)
+				return nil
+			}
+		}
+	})
 }
 
 func ListEntityExecutionPrivilegePaths(ctx context.Context, db graph.Database, objectID string, direction graph.Direction) (graph.PathSet, error) {
