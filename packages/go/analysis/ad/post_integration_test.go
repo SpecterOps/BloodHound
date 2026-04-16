@@ -138,6 +138,7 @@ func TestCrossProductSharedMemberNotDuplicated(t *testing.T) {
 		// Both sub-groups are valid cross-product results: each appears in both sets
 		require.True(t, results.Contains(harness.ShortcutHarnessSharedMember.SubGroup1.ID.Uint64()))
 		require.True(t, results.Contains(harness.ShortcutHarnessSharedMember.SubGroup2.ID.Uint64()))
+		require.Equal(t, 2, int(results.Cardinality()))
 
 		// SharedUser is already covered by SubGroup1 and SubGroup2 and must not appear individually
 		require.False(t, results.Contains(harness.ShortcutHarnessSharedMember.SharedUser.ID.Uint64()))
