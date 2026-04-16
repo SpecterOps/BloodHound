@@ -298,7 +298,7 @@ func paginateCombinedNodeSet(combinedNodeSet graph.NodeSet, skip int, limit int)
 }
 
 func ListEntityEligibleAndApproverRolePaths(ctx context.Context, db graph.Database, objectID string) (graph.PathSet, error) {
-	var combinedPaths graph.PathSet
+	combinedPaths := graph.NewPathSet()
 
 	return combinedPaths, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
