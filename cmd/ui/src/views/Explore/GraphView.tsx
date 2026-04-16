@@ -94,7 +94,7 @@ const GraphView: FC = () => {
     const { data: pzFeatureFlag } = useFeatureFlag('tier_management_engine');
     const tagGlyphs = useTagGlyphs(glyphUtils, darkMode);
 
-    const autoDisplayTableEnabled = !exploreLayout && !isExploreTableSelected;
+    const autoDisplayTableEnabled = !isExploreLayoutSelected && !isExploreTableSelected;
     const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay(autoDisplayTableEnabled);
     // TODO: incorporate into larger hook with auto display table logic
     const displayTable = searchType === 'cypher' && (isExploreTableSelected || autoDisplayTable);
@@ -251,6 +251,16 @@ const GraphView: FC = () => {
         }
     };
 
+    const handleCloseTableView = () => {
+        setAutoDisplayTable(false);
+        dispatch(setIsExploreTableSelected(false));
+        if (isExploreLayoutSelected && exploreLayout) {
+            dispatch(setExploreLayout(exploreLayout));
+        } else {
+            dispatch(setExploreLayout(defaultGraphLayout));
+        }
+    };
+
     return (
         <div
             className='relative h-full w-full overflow-hidden'
@@ -315,10 +325,7 @@ const GraphView: FC = () => {
                     onManageColumnsChange={handleManageColumnsChange}
                     onKebabMenuClick={handleKebabMenuClick}
                     onChangePinnedColumns={handleChangePinnedColumns}
-                    onClose={() => {
-                        setAutoDisplayTable(false);
-                        dispatch(setIsExploreTableSelected(false));
-                    }}
+                    onClose={handleCloseTableView}
                 />
             )}
         </div>
