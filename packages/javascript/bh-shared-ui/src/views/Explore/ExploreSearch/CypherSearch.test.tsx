@@ -94,27 +94,61 @@ describe('CypherSearch', () => {
                 })
             );
         }),
-        rest.get('/api/v2/features', (_req, res, ctx) =>
-            res(ctx.json({ data: [{ id: 1, key: 'tier_management_engine', enabled: true }] }))
-        ),
-        rest.get('/api/v2/config', (_req, res, ctx) =>
-            res(
+        rest.get('/api/v2/features', async (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: [{ id: 1, key: 'tier_management_engine', enabled: true }],
+                })
+            );
+        }),
+        rest.get('/api/v2/config', async (req, res, ctx) => {
+            return res(
                 ctx.json({
                     data: [
                         {
                             key: 'analysis.tiering',
                             name: 'Multi-Tier Analysis Configuration',
-                            value: { tier_limit: 3, label_limit: 10, multi_tier_analysis_enabled: true },
+                            value: {
+                                tier_limit: 3,
+                                label_limit: 10,
+                                multi_tier_analysis_enabled: true,
+                            },
                             id: 8,
                         },
                     ],
                 })
-            )
-        ),
-        rest.get('/api/v2/saved-queries', (_req, res, ctx) => res(ctx.json({ data: [] }))),
-        rest.get('/api/v2/self', (_req, res, ctx) => res(ctx.json({ data: {} }))),
-        rest.get('/api/v2/asset-group-tags', (_req, res, ctx) => res(ctx.json({ data: [] }))),
-        rest.get('/api/v2/bloodhound-users-minimal', (_req, res, ctx) => res(ctx.json({ data: { users: [] } })))
+            );
+        }),
+        rest.get('/api/v2/saved-queries', async (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: [],
+                })
+            );
+        }),
+        rest.get('/api/v2/self', async (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: {},
+                })
+            );
+        }),
+        rest.get('/api/v2/asset-group-tags', async (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: [],
+                })
+            );
+        }),
+        rest.get('/api/v2/bloodhound-users-minimal', (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: {
+                        users: [],
+                    },
+                })
+            );
+        })
     );
 
     beforeAll(() => {
