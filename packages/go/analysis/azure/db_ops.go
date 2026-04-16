@@ -17,10 +17,8 @@
 package azure
 
 import (
-	"cmp"
 	"context"
 	"fmt"
-	"slices"
 
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
@@ -249,7 +247,7 @@ func ListEntityRoles(ctx context.Context, db graph.Database, objectID string, sk
 	})
 }
 
-func ListEntityEligibleAndApproverRoles(ctx context.Context, db graph.Database, objectID string, skip, limit int) (graph.NodeSet, error) {
+func ListEntityEligibleAndApproverRoles(ctx context.Context, db graph.Database, objectID string) (graph.NodeSet, error) {
 	var combinedNodeSet graph.NodeSet
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -267,34 +265,8 @@ func ListEntityEligibleAndApproverRoles(ctx context.Context, db graph.Database, 
 	}); err != nil {
 		return nil, err
 	}
+	return combinedNodeSet, nil
 
-	return paginateCombinedNodeSet(combinedNodeSet, skip, limit)
-}
-
-func paginateCombinedNodeSet(combinedNodeSet graph.NodeSet, skip int, limit int) (graph.NodeSet, error) {
-	if skip == 0 && limit == 0 {
-		return combinedNodeSet, nil
-	}
-
-	sortedNodes := combinedNodeSet.Slice()
-	slices.SortFunc(sortedNodes, func(a, b *graph.Node) int {
-		return cmp.Compare(a.ID, b.ID)
-	})
-
-	if skip >= len(sortedNodes) {
-		return graph.NewNodeSet(), nil
-	}
-
-	sortedNodes = sortedNodes[skip:]
-
-	if limit > 0 && limit < len(sortedNodes) {
-		sortedNodes = sortedNodes[:limit]
-	}
-
-	paginatedNodeSet := graph.NewNodeSet()
-	paginatedNodeSet.Add(sortedNodes...)
-
-	return paginatedNodeSet, nil
 }
 
 func ListEntityEligibleAndApproverRolePaths(ctx context.Context, db graph.Database, objectID string) (graph.PathSet, error) {

@@ -275,7 +275,7 @@ func listRelatedEntityType(ctx context.Context, db graph.Database, primaryDispla
 		}
 
 	case azure.RelatedEntityTypeEligibleAndApproverRoles:
-		if nodeSet, err = azure.ListEntityEligibleAndApproverRoles(ctx, db, objectID, 0, 0); err != nil {
+		if nodeSet, err = azure.ListEntityEligibleAndApproverRoles(ctx, db, objectID); err != nil {
 			return nil, 0, err
 		}
 
