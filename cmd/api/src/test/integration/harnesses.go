@@ -10089,7 +10089,7 @@ func (s *ACLInheritanceHarness) Setup(graphTestContext *GraphTestContext) {
 	}))
 }
 
-type AZEligibleRoleHarness struct {
+type AZEligibleAndApproverRoleHarness struct {
 	UserDirectEligible *graph.Node
 	UserGroupEligible  *graph.Node
 	UserNoEligibility  *graph.Node
@@ -10103,7 +10103,7 @@ type AZEligibleRoleHarness struct {
 	RoleGroupApprover  *graph.Node
 }
 
-func (s *AZEligibleRoleHarness) Setup(graphTestContext *GraphTestContext) {
+func (s *AZEligibleAndApproverRoleHarness) Setup(graphTestContext *GraphTestContext) {
 	var (
 		tenantID = RandomDomainSID()
 	)
@@ -10262,6 +10262,8 @@ type HarnessDetails struct {
 	AZMGGroupMemberReadWriteAllHarness              AZMGGroupMemberReadWriteAllHarness
 	AZMGRoleManagementReadWriteDirectoryHarness     AZMGRoleManagementReadWriteDirectoryHarness
 	AZMGServicePrincipalEndpointReadWriteAllHarness AZMGServicePrincipalEndpointReadWriteAllHarness
+	AZPIMRolesHarness                               AZPIMRolesHarness
+	AZEligibleAndApproverRoleHarness                AZEligibleAndApproverRoleHarness
 	RootADHarness                                   RootADHarness
 	SearchHarness                                   SearchHarness
 	ShortcutHarness                                 ShortcutHarness
@@ -10349,8 +10351,6 @@ type HarnessDetails struct {
 	ResolveEndpointsByName                          ResolveEndpointsByName
 	IngestRelationships                             IngestRelationships
 	IngestRelationshipsUppercaseInvariant           IngestRelationshipsUppercaseInvariant
-	AZPIMRolesHarness                               AZPIMRolesHarness
-	AZEligibleRoleHarness                           AZEligibleRoleHarness
 	Version730_Migration                            Version730_Migration_Harness
 	Version900_Migration_Harness                    Version900_Migration_Harness
 	Version910_Migration_Harness                    Version910_Migration_Harness

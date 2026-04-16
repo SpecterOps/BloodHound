@@ -195,20 +195,20 @@ func TestEntityEligibleRoles(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
 	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.AZEligibleRoleHarness.Setup(testContext)
+		harness.AZEligibleAndApproverRoleHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		directRoles, err := azure.FetchEntityEligibleRoles(tx, harness.AZEligibleRoleHarness.UserDirectEligible, 0, 0)
+		directRoles, err := azure.FetchEntityEligibleRoles(tx, harness.AZEligibleAndApproverRoleHarness.UserDirectEligible, 0, 0)
 		require.NoError(t, err)
 		assert.Equal(t, 1, directRoles.Len())
-		assert.True(t, directRoles.Contains(harness.AZEligibleRoleHarness.RoleDirect))
+		assert.True(t, directRoles.Contains(harness.AZEligibleAndApproverRoleHarness.RoleDirect))
 
-		groupRoles, err := azure.FetchEntityEligibleRoles(tx, harness.AZEligibleRoleHarness.UserGroupEligible, 0, 0)
+		groupRoles, err := azure.FetchEntityEligibleRoles(tx, harness.AZEligibleAndApproverRoleHarness.UserGroupEligible, 0, 0)
 		require.NoError(t, err)
 		assert.Equal(t, 1, groupRoles.Len())
-		assert.True(t, groupRoles.Contains(harness.AZEligibleRoleHarness.RoleViaGroup))
+		assert.True(t, groupRoles.Contains(harness.AZEligibleAndApproverRoleHarness.RoleViaGroup))
 
-		emptyRoles, err := azure.FetchEntityEligibleRoles(tx, harness.AZEligibleRoleHarness.UserNoEligibility, 0, 0)
+		emptyRoles, err := azure.FetchEntityEligibleRoles(tx, harness.AZEligibleAndApproverRoleHarness.UserNoEligibility, 0, 0)
 		require.NoError(t, err)
 		assert.Equal(t, 0, emptyRoles.Len())
 	})
@@ -218,20 +218,20 @@ func TestEntityApproverRoles(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
 	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.AZEligibleRoleHarness.Setup(testContext)
+		harness.AZEligibleAndApproverRoleHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		directRoles, err := azure.FetchEntityApproverRoles(tx, harness.AZEligibleRoleHarness.UserDirectApprover, 0, 0)
+		directRoles, err := azure.FetchEntityApproverRoles(tx, harness.AZEligibleAndApproverRoleHarness.UserDirectApprover, 0, 0)
 		require.NoError(t, err)
 		assert.Equal(t, 1, directRoles.Len())
-		assert.True(t, directRoles.Contains(harness.AZEligibleRoleHarness.RoleDirectApprover))
+		assert.True(t, directRoles.Contains(harness.AZEligibleAndApproverRoleHarness.RoleDirectApprover))
 
-		groupRoles, err := azure.FetchEntityApproverRoles(tx, harness.AZEligibleRoleHarness.UserGroupApprover, 0, 0)
+		groupRoles, err := azure.FetchEntityApproverRoles(tx, harness.AZEligibleAndApproverRoleHarness.UserGroupApprover, 0, 0)
 		require.NoError(t, err)
 		assert.Equal(t, 1, groupRoles.Len())
-		assert.True(t, groupRoles.Contains(harness.AZEligibleRoleHarness.RoleGroupApprover))
+		assert.True(t, groupRoles.Contains(harness.AZEligibleAndApproverRoleHarness.RoleGroupApprover))
 
-		emptyRoles, err := azure.FetchEntityApproverRoles(tx, harness.AZEligibleRoleHarness.UserNoEligibility, 0, 0)
+		emptyRoles, err := azure.FetchEntityApproverRoles(tx, harness.AZEligibleAndApproverRoleHarness.UserNoEligibility, 0, 0)
 		require.NoError(t, err)
 		assert.Equal(t, 0, emptyRoles.Len())
 	})
