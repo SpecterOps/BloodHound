@@ -24,6 +24,7 @@ import { mockCodemirrorLayoutMethods } from '../../../utils';
 import CypherSearch from './CypherSearch';
 
 const mockClearSelectedItem = vi.fn();
+const mockSetSelectedItem = vi.fn();
 
 vi.mock('../../../hooks', async () => {
     const actual = await vi.importActual('../../../hooks');
@@ -32,6 +33,7 @@ vi.mock('../../../hooks', async () => {
         ...actual,
         useExploreSelectedItem: () => ({
             clearSelectedItem: mockClearSelectedItem,
+            setSelectedItem: mockSetSelectedItem,
             selectedItem: '123',
         }),
     };
@@ -67,7 +69,7 @@ describe('CypherSearch', () => {
         setCypherQuery: vi.fn(),
         performSearch: testPerformSearch,
     };
-    const setup = async (state = testState, route = '/', disableQueryLimit = false) => {
+    const setup = async (state = testState, route = '/', disableQueryLimit = true) => {
         const screen = render(
             <CypherSearch
                 cypherSearchState={state}
@@ -123,6 +125,7 @@ describe('CypherSearch', () => {
         vi.restoreAllMocks();
         server.resetHandlers();
         mockClearSelectedItem.mockClear();
+        mockSetSelectedItem.mockClear();
         mockOnExploreMenuCollapse.mockClear();
     });
     afterAll(() => {
@@ -183,41 +186,27 @@ describe('CypherSearch', () => {
             server.use(rest.post('/api/v2/graphs/cypher', (_req, res, ctx) => res(ctx.json(response))));
         };
 
-        it('closes saved queries panel and clears selected item when a cypher query returns multiple nodes', async () => {
-            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute, true);
-
-            const toggleButton = screen.getByTestId('common-queries-toggle');
-            await user.click(toggleButton);
+        it('closes explore search tab menu and clears selected item when a cypher query returns multiple nodes', async () => {
+            mockCypherEndpoint(singleNodeGraphResponse);
+            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute);
 
             await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
 
-            await waitFor(() =>
-                expect(screen.getByTestId('common-queries-toggle')).toHaveAttribute('aria-expanded', 'true')
-            );
             expect(mockClearSelectedItem).not.toHaveBeenCalled();
 
             mockCypherEndpoint(multiNodeGraphResponse);
             await user.click(screen.getByRole('button', { name: /run cypher query/i }));
 
-            expect(mockClearSelectedItem).toHaveBeenCalled();
-            await waitFor(() =>
-                expect(screen.getByTestId('common-queries-toggle')).toHaveAttribute('aria-expanded', 'false')
-            );
+            await waitFor(() => expect(mockClearSelectedItem).toHaveBeenCalled());
             expect(mockOnExploreMenuCollapse).toHaveBeenCalled();
         });
 
-        it('does not close saved queries panel or entity info panel when search returns zero nodes', async () => {
+        it('does not close explore search tab menu or entity info panel when search returns zero nodes', async () => {
             mockCypherEndpoint(singleNodeGraphResponse);
-            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute, true);
-
-            const toggleButton = screen.getByTestId('common-queries-toggle');
-            await user.click(toggleButton);
+            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute);
 
             await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
 
-            await waitFor(() =>
-                expect(screen.getByTestId('common-queries-toggle')).toHaveAttribute('aria-expanded', 'true')
-            );
             expect(mockClearSelectedItem).not.toHaveBeenCalled();
 
             mockCypherEndpoint(zeroNodeGraphResponse);
@@ -229,18 +218,12 @@ describe('CypherSearch', () => {
             expect(mockOnExploreMenuCollapse).not.toHaveBeenCalled();
         });
 
-        it('does not close saved queries panel or entity info panel when search returns one node', async () => {
+        it('does not close explore search tab menu or entity info panel when search returns one node', async () => {
             mockCypherEndpoint(singleNodeGraphResponse);
-            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute, true);
-
-            const toggleButton = screen.getByTestId('common-queries-toggle');
-            await user.click(toggleButton);
+            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute);
 
             await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
 
-            await waitFor(() =>
-                expect(screen.getByTestId('common-queries-toggle')).toHaveAttribute('aria-expanded', 'true')
-            );
             expect(mockClearSelectedItem).not.toHaveBeenCalled();
 
             mockCypherEndpoint(singleNodeGraphResponse);
@@ -248,14 +231,14 @@ describe('CypherSearch', () => {
 
             await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
 
-            expect(screen.getByTestId('common-queries-toggle')).toHaveAttribute('aria-expanded', 'true');
             expect(mockClearSelectedItem).not.toHaveBeenCalled();
             expect(mockOnExploreMenuCollapse).not.toHaveBeenCalled();
+            expect(mockSetSelectedItem).toHaveBeenCalledWith('108');
         });
 
         it('calls onExploreMenuCollapse again when user reopens widget and runs another multi-node query', async () => {
             mockCypherEndpoint(singleNodeGraphResponse);
-            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute, true);
+            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute);
 
             await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
 

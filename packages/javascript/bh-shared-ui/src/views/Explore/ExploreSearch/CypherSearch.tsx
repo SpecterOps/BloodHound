@@ -96,14 +96,18 @@ const CypherSearchInner = ({
     const { checkPermission } = usePermissions();
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
-    const { clearSelectedItem } = useExploreSelectedItem();
+    const { clearSelectedItem, setSelectedItem } = useExploreSelectedItem();
 
     const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph({
         onSuccess: (data) => {
-            if (isGraphResponse(data) && Object.keys(data.data.nodes || {}).length > 1) {
-                clearSelectedItem();
-                setShowCommonQueries(false); // collapse saved queries
-                onExploreMenuCollapse(); // collapse spc menu
+            if (isGraphResponse(data)) {
+                const returnedNodes = Object.keys(data.data.nodes || {});
+                if (returnedNodes.length > 1) {
+                    clearSelectedItem();
+                    onExploreMenuCollapse();
+                } else if (returnedNodes.length === 1) {
+                    setSelectedItem(returnedNodes[0]);
+                }
             }
         },
     });
