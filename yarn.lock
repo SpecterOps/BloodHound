@@ -3287,6 +3287,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@radix-ui/react-toggle@npm:^1.1.10":
+  version: 1.1.10
+  resolution: "@radix-ui/react-toggle@npm:1.1.10"
+  dependencies:
+    "@radix-ui/primitive": "npm:1.1.3"
+    "@radix-ui/react-primitive": "npm:2.1.3"
+    "@radix-ui/react-use-controllable-state": "npm:1.2.2"
+  peerDependencies:
+    "@types/react": "*"
+    "@types/react-dom": "*"
+    react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+    "@types/react-dom":
+      optional: true
+  checksum: 10/ece154bd7a0ca765040fafbe4131f753457a3d37f73dec3ae94f08f17f3889272d06f33f305ad34c986925ce8a40532ee43f6bdb7e8b99fd8bac299b01d69204
+  languageName: node
+  linkType: hard
+
 "@radix-ui/react-tooltip@npm:^1.1.3":
   version: 1.1.3
   resolution: "@radix-ui/react-tooltip@npm:1.1.3"
@@ -7786,6 +7807,7 @@ __metadata:
     "@radix-ui/react-slot": "npm:^1.2.3"
     "@radix-ui/react-switch": "npm:^1.0.2"
     "@radix-ui/react-tabs": "npm:^1.1.8"
+    "@radix-ui/react-toggle": "npm:^1.1.10"
     "@radix-ui/react-tooltip": "npm:^1.1.3"
     "@radix-ui/react-visually-hidden": "npm:^1.1.0"
     "@storybook/addon-a11y": "npm:^8.3.6"
