@@ -1,0 +1,205 @@
+# Copyright 2026 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+parameters:
+  - $ref: "./../parameters/header.prefer.yaml"
+  - $ref: "./../parameters/query.asset-group-tag-id.yaml"
+get:
+  operationId: ListAttackPathFindings
+  summary: List attack path findings
+  description: |
+    Returns a unified, paginated list of attack path findings. Both relationship and list findings are returned when no filters are applied.
+  tags:
+    - Attack Paths
+    - Enterprise
+  parameters:
+    - name: sort_by
+      description: |
+        Sortable columns are `severity`, `finding_type`, `finding`, `platform`, `environment`,
+        `zone`, `source_principal`, `target_principal`, `status`, `first_seen`, `last_seen`.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.query.sort-by.yaml"
+    - name: severity
+      description: Filter by severity level.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: finding_type
+      description: Filter by finding type. When not provided, both types are returned.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: finding
+      description: Filter by finding name.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: platform
+      description: Filter by platform.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: environment
+      description: Filter by environment identifier.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: zone
+      description: Filter by zone.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: source_principal
+      description: Filter by source principal.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: target_principal
+      description: Filter by target principal.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: status
+      description: Filter by finding status.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: first_seen
+      description: Filter by first seen timestamp.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: last_seen
+      description: Filter by last seen timestamp.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: Accept
+      in: header
+      description: Media type for response format. Use `text/csv` for CSV export.
+      required: false
+      schema:
+        type: string
+        enum:
+          - application/json
+          - text/csv
+    - $ref: "./../parameters/query.skip.yaml"
+    - $ref: "./../parameters/query.limit.yaml"
+  responses:
+    200:
+      description: OK
+      content:
+        text/csv:
+          schema:
+            type: string
+            format: binary
+          examples:
+            Unified CSV export:
+              value: |
+                severity,finding_type,finding,platform,environment,zone,source_principal,target_principal,status,first_seen,last_seen
+                critical,relationship,Tier Zero Generic Write,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,ADMIN@CORP1.LAB.HOME-LABS.LOL,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
+                high,list,Kerberoasting,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,Tier Zero,,PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
+        application/json:
+          schema:
+            allOf:
+              - $ref: "./../schemas/api.response.pagination.yaml"
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        severity:
+                          type: string
+                          description: Severity level.
+                          enum: [critical, high, moderate, low]
+                        finding_type:
+                          type: string
+                          description: The type of finding.
+                          enum: [relationship, list]
+                        finding:
+                          type: string
+                          description: Finding name.
+                        platform:
+                          type: string
+                          description: Platform the finding belongs to.
+                        environment:
+                          type: string
+                          description: Environment identifier.
+                        zone:
+                          type: string
+                          description: Zone name.
+                        source_principal:
+                          type: string
+                          description: Source principal name. Omitted for list findings.
+                        target_principal:
+                          type: string
+                          description: Target principal name.
+                        status:
+                          type: string
+                          description: Finding status.
+                          enum: [active, accepted, remediated, deprecated]
+                        first_seen:
+                          type: string
+                          format: date-time
+                          description: Timestamp of when the finding was first created.
+                        last_seen:
+                          type: string
+                          format: date-time
+                          description: Timestamp of last update.
+          examples:
+            Mixed findings (relationship and list):
+              summary: Unified response with both finding types
+              value:
+                count: 2
+                skip: 0
+                limit: 10
+                data:
+                  - severity: "critical"
+                    finding_type: "relationship"
+                    finding: "Tier Zero Generic Write"
+                    platform: "Active Directory"
+                    environment: "S-1-5-21-1974516972-3116780949-2584384717"
+                    zone: "Tier Zero"
+                    source_principal: "RPATTON@CORP1.LAB.HOME-LABS.LOL"
+                    target_principal: "ADMIN@CORP1.LAB.HOME-LABS.LOL"
+                    status: "active"
+                    first_seen: "2026-04-11T00:30:18.491666Z"
+                    last_seen: "2026-04-14T16:57:35.675609Z"
+                  - severity: "high"
+                    finding_type: "list"
+                    finding: "Kerberoasting"
+                    platform: "Active Directory"
+                    environment: "S-1-5-21-1974516972-3116780949-2584384717"
+                    zone: "Tier Zero"
+                    target_principal: "PSX_D_BA@CORP1.LAB.HOME-LABS.LOL"
+                    status: "accepted"
+                    first_seen: "2026-04-11T00:30:18.491666Z"
+                    last_seen: "2026-04-14T16:57:35.675609Z"
+    400:
+      $ref: "./../responses/bad-request.yaml"
+    401:
+      $ref: "./../responses/unauthorized.yaml"
+    403:
+      $ref: "./../responses/forbidden.yaml"
+    404:
+      $ref: "./../responses/not-found.yaml"
+    429:
+      $ref: "./../responses/too-many-requests.yaml"
+    500:
+      $ref: "./../responses/internal-server-error.yaml"
