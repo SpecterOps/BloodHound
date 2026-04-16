@@ -33,136 +33,136 @@ type nodeIcon struct {
 var nodeIcons = map[string]nodeIcon{
 	// Active Directory Node Types
 	"User": {
-		Icon:  "fa-user",
+		Icon:  "user",
 		Color: "#17E625",
 	},
 	"Group": {
-		Icon:  "fa-users",
+		Icon:  "users",
 		Color: "#DBE617",
 	},
 	"Computer": {
-		Icon:  "fa-desktop",
+		Icon:  "desktop",
 		Color: "#E67873",
 	},
 	"Domain": {
-		Icon:  "fa-globe",
+		Icon:  "globe",
 		Color: "#17E6B9",
 	},
 	"GPO": {
-		Icon:  "fa-list",
+		Icon:  "list",
 		Color: "#998EFD",
 	},
 	"AIACA": {
-		Icon:  "fa-arrows-left-right-to-line",
+		Icon:  "arrows-left-right-to-line",
 		Color: "#9769F0",
 	},
 	"RootCA": {
-		Icon:  "fa-landmark",
+		Icon:  "landmark",
 		Color: "#6968E8",
 	},
 	"EnterpriseCA": {
-		Icon:  "fa-building",
+		Icon:  "building",
 		Color: "#4696E9",
 	},
 	"NTAuthStore": {
-		Icon:  "fa-store",
+		Icon:  "store",
 		Color: "#D575F5",
 	},
 	"CertTemplate": {
-		Icon:  "fa-id-card",
+		Icon:  "id-card",
 		Color: "#B153F3",
 	},
 	"IssuancePolicy": {
-		Icon:  "fa-clipboard-check",
+		Icon:  "clipboard-check",
 		Color: "#99B2DD",
 	},
 	"OU": {
-		Icon:  "fa-sitemap",
+		Icon:  "sitemap",
 		Color: "#FFAA00",
 	},
 	"Container": {
-		Icon:  "fa-box",
+		Icon:  "box",
 		Color: "#F79A78",
 	},
 	// Azure Node Types
 	"AZUser": {
-		Icon:  "fa-user",
+		Icon:  "user",
 		Color: "#34D2EB",
 	},
 	"AZGroup": {
-		Icon:  "fa-users",
+		Icon:  "users",
 		Color: "#F57C9B",
 	},
 	"AZTenant": {
-		Icon:  "fa-cloud",
+		Icon:  "cloud",
 		Color: "#54F2F2",
 	},
 	"AZSubscription": {
-		Icon:  "fa-key",
+		Icon:  "key",
 		Color: "#D2CCA1",
 	},
 	"AZResourceGroup": {
-		Icon:  "fa-cube",
+		Icon:  "cube",
 		Color: "#89BD9E",
 	},
 	"AZVM": {
-		Icon:  "fa-desktop",
+		Icon:  "desktop",
 		Color: "#F9ADA0",
 	},
 	"AZWebApp": {
-		Icon:  "fa-object-group",
+		Icon:  "object-group",
 		Color: "#4696E9",
 	},
 	"AZLogicApp": {
-		Icon:  "fa-sitemap",
+		Icon:  "sitemap",
 		Color: "#9EE047",
 	},
 	"AZAutomationAccount": {
-		Icon:  "fa-cog",
+		Icon:  "cog",
 		Color: "#F4BA44",
 	},
 	"AZFunctionApp": {
-		Icon:  "fa-bolt",
+		Icon:  "bolt",
 		Color: "#F4BA44",
 	},
 	"AZContainerRegistry": {
-		Icon:  "fa-box-open",
+		Icon:  "box-open",
 		Color: "#0885D7",
 	},
 	"AZManagedCluster": {
-		Icon:  "fa-cubes",
+		Icon:  "cubes",
 		Color: "#326CE5",
 	},
 	"AZDevice": {
-		Icon:  "fa-desktop",
+		Icon:  "desktop",
 		Color: "#B18FCF",
 	},
 	"AZKeyVault": {
-		Icon:  "fa-lock",
+		Icon:  "lock",
 		Color: "#ED658C",
 	},
 	"AZApp": {
-		Icon:  "fa-window-restore",
+		Icon:  "window-restore",
 		Color: "#03FC84",
 	},
 	"AZVMScaleSet": {
-		Icon:  "fa-server",
+		Icon:  "server",
 		Color: "#007CD0",
 	},
 	"AZServicePrincipal": {
-		Icon:  "fa-robot",
+		Icon:  "robot",
 		Color: "#C1D6D6",
 	},
 	"AZRole": {
-		Icon:  "fa-clipboard-list",
+		Icon:  "clipboard-list",
 		Color: "#ED8537",
 	},
 	"AZManagementGroup": {
-		Icon:  "fa-sitemap",
+		Icon:  "sitemap",
 		Color: "#BD93D8",
 	},
 	"AZFederatedIdentityCredential": {
-		Icon:  "fa-key",
+		Icon:  "key",
 		Color: "#FFEE8C",
 	},
 }

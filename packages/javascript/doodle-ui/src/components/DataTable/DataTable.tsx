@@ -30,6 +30,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 
 import {
     DndContext,
+    DndContextProps,
     type DragEndEvent,
     KeyboardSensor,
     MouseSensor,
@@ -86,6 +87,12 @@ interface DataTableProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElem
     TableBodyRowProps?: React.ComponentPropsWithoutRef<typeof TableRow>;
     TableCellProps?: Omit<React.ComponentPropsWithoutRef<typeof TableCell>, 'cell' | 'enableDragging'>;
 }
+
+const DndWrapper = (props: DndContextProps & { disabled?: boolean }) => {
+    if (props.disabled) return <>{props.children}</>;
+
+    return <DndContext {...props} />;
+};
 
 const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
     const {
@@ -316,11 +323,12 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
     };
 
     return (
-        <DndContext
+        <DndWrapper
             collisionDetection={closestCenter}
             modifiers={[restrictToHorizontalAxis]}
             onDragEnd={handleDragEnd}
-            sensors={sensors}>
+            sensors={sensors}
+            disabled={!enableDragAndDrop}>
             <div
                 className={cn('w-full bg-neutral-light dark:bg-neutral-dark', className)}
                 {...wrapperRest}
@@ -504,6 +512,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                 //column level prop to enable drag and drop
                                                 //set in columnDef meta: {enableDragging: boolean}
                                                 const isColDraggingEnabled =
+                                                    enableDragAndDrop &&
                                                     cell.column.columnDef.meta?.enableDragging !== false;
 
                                                 const cellContent = (
@@ -560,7 +569,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                 onClose={() => setIsPinDialogOpen(false)}
                 pinDialogState={pinDialogState}
                 onConfirm={handlePinDialogConfirm}></PinDialog>
-        </DndContext>
+        </DndWrapper>
     );
 };
 
