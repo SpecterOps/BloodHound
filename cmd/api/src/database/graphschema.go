@@ -758,14 +758,29 @@ func (s *BloodhoundDB) DeleteGraphSchemaRelationshipKind(ctx context.Context, sc
 }
 
 // CreateEnvironment - creates a new schema_environment.
+// Uses a CTE to JOIN the kinds table against the RETURNING clause so that EnvironmentKindName
+// is populated in the returned struct without a separate re-fetch.
 func (s *BloodhoundDB) CreateEnvironment(ctx context.Context, extensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error) {
 	var schemaEnvironment model.SchemaEnvironment
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		INSERT INTO %s (schema_extension_id, environment_kind_id, source_kind_id, created_at, updated_at)
-		VALUES (?, ?, ?, NOW(), NOW())
-		RETURNING id, schema_extension_id, environment_kind_id, source_kind_id, created_at, updated_at, deleted_at`,
-		schemaEnvironment.TableName()),
+		WITH inserted AS (
+			INSERT INTO %s (schema_extension_id, environment_kind_id, source_kind_id, created_at, updated_at)
+			VALUES (?, ?, ?, NOW(), NOW())
+			RETURNING id, schema_extension_id, environment_kind_id, source_kind_id, created_at, updated_at, deleted_at
+		)
+		SELECT
+			i.id,
+			i.schema_extension_id,
+			i.environment_kind_id,
+			k.name AS environment_kind_name,
+			i.source_kind_id,
+			i.created_at,
+			i.updated_at,
+			i.deleted_at
+		FROM inserted i
+		INNER JOIN %s k ON i.environment_kind_id = k.id`,
+		schemaEnvironment.TableName(), model.Kind{}.TableName()),
 		extensionId, environmentKindId, sourceKindId).Scan(&schemaEnvironment); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return model.SchemaEnvironment{}, fmt.Errorf("%w", model.ErrDuplicateSchemaEnvironment)
@@ -890,19 +905,36 @@ func (s *BloodhoundDB) GetEnvironmentKindName(ctx context.Context, kindName stri
 }
 
 // UpdateEnvironment - updates the source_kind_id of an existing schema environment by id.
+// Uses a CTE to JOIN the kinds table against the RETURNING clause so that EnvironmentKindName
+// is populated in the returned struct without a separate re-fetch.
 func (s *BloodhoundDB) UpdateEnvironment(ctx context.Context, environment model.SchemaEnvironment) (model.SchemaEnvironment, error) {
+	var updated model.SchemaEnvironment
+
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		UPDATE %s SET source_kind_id = ?, updated_at = NOW()
-		WHERE id = ?
-		RETURNING id, schema_extension_id, environment_kind_id, source_kind_id, created_at, updated_at, deleted_at`,
-		environment.TableName()),
-		environment.SourceKindId, environment.ID).Scan(&environment); result.Error != nil {
+		WITH updated AS (
+			UPDATE %s SET source_kind_id = ?, updated_at = NOW()
+			WHERE id = ?
+			RETURNING id, schema_extension_id, environment_kind_id, source_kind_id, created_at, updated_at, deleted_at
+		)
+		SELECT
+			u.id,
+			u.schema_extension_id,
+			u.environment_kind_id,
+			k.name AS environment_kind_name,
+			u.source_kind_id,
+			u.created_at,
+			u.updated_at,
+			u.deleted_at
+		FROM updated u
+		INNER JOIN %s k ON u.environment_kind_id = k.id`,
+		environment.TableName(), model.Kind{}.TableName()),
+		environment.SourceKindId, environment.ID).Scan(&updated); result.Error != nil {
 		return model.SchemaEnvironment{}, CheckError(result)
 	} else if result.RowsAffected == 0 {
 		return model.SchemaEnvironment{}, ErrNotFound
+	} else {
+		return updated, nil
 	}
-
-	return environment, nil
 }
 
 // GetEnvironmentById - retrieves a schema environment by id.

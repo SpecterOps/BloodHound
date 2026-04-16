@@ -53,8 +53,6 @@ func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtens
 		return schemaExists, err
 	} else if extension, schemaExists, err = bloodhoundDBTransaction.findOrCreateExtension(ctx, graphExtensionInput.ExtensionInput); err != nil {
 		return schemaExists, err
-	} else if extension.IsBuiltin {
-		return schemaExists, model.ErrGraphExtensionBuiltIn
 	} else if existingNodeKinds, err := bloodhoundDBTransaction.GetGraphSchemaNodeKindsByExtensionId(ctx, extension.ID); err != nil {
 		return schemaExists, fmt.Errorf("failed to fetch existing node kinds: %w", err)
 	} else if reconciledNodeKinds, err := reconcile(ctx, graphExtensionInput.NodeKindsInput, existingNodeKinds, bloodhoundDBTransaction.nodeKindReconcileConfig(extension.ID)); err != nil {
@@ -91,6 +89,9 @@ func (s *BloodhoundDB) findOrCreateExtension(ctx context.Context, extensionInput
 		}}}, model.Sort{}, 0, 1); err != nil && !errors.Is(err, ErrNotFound) {
 		return model.GraphSchemaExtension{}, false, err
 	} else if len(existingExtensions) > 0 {
+		if existingExtensions[0].IsBuiltin {
+			return model.GraphSchemaExtension{}, true, model.ErrGraphExtensionBuiltIn
+		}
 		return s.updateExistingExtension(ctx, existingExtensions[0], extensionInput)
 	} else {
 		return s.createNewExtension(ctx, extensionInput)

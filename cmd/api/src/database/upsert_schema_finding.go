@@ -24,7 +24,7 @@ import (
 )
 
 // resolveFindingFKs translates the FK names in a RelationshipFindingInput to their corresponding IDs.
-func (s *BloodhoundDB) resolveFindingFKs(ctx context.Context, extensionId int32, input model.RelationshipFindingInput) (int32, int32, error) {
+func (s *BloodhoundDB) resolveFindingFKs(ctx context.Context, input model.RelationshipFindingInput) (int32, int32, error) {
 	if relKind, err := s.GetKindByName(ctx, input.RelationshipKindName); err != nil {
 		return 0, 0, fmt.Errorf("error retrieving relationship kind '%s': %w", input.RelationshipKindName, err)
 	} else if environment, err := s.GetEnvironmentKindName(ctx, input.EnvironmentKindName); err != nil {
@@ -46,7 +46,7 @@ func applyFindingInput(existing model.SchemaFinding, relKindId, environmentId in
 
 // CreateFindingWithRemediation translates FK names, creates the finding, and creates its 1:1 remediation.
 func (s *BloodhoundDB) CreateFindingWithRemediation(ctx context.Context, extensionId int32, input model.RelationshipFindingInput) (model.SchemaFinding, error) {
-	if relKindId, environmentId, err := s.resolveFindingFKs(ctx, extensionId, input); err != nil {
+	if relKindId, environmentId, err := s.resolveFindingFKs(ctx, input); err != nil {
 		return model.SchemaFinding{}, err
 	} else if finding, err := s.CreateSchemaFinding(ctx, model.SchemaFindingTypeRelationship,
 		extensionId, relKindId, environmentId, input.Name, input.DisplayName); err != nil {
@@ -62,7 +62,7 @@ func (s *BloodhoundDB) CreateFindingWithRemediation(ctx context.Context, extensi
 
 // UpdateFindingWithRemediation translates FK names, updates the finding, and updates its 1:1 remediation.
 func (s *BloodhoundDB) UpdateFindingWithRemediation(ctx context.Context, existing model.SchemaFinding, input model.RelationshipFindingInput) (model.SchemaFinding, error) {
-	if relKindId, environmentId, err := s.resolveFindingFKs(ctx, existing.SchemaExtensionId, input); err != nil {
+	if relKindId, environmentId, err := s.resolveFindingFKs(ctx, input); err != nil {
 		return model.SchemaFinding{}, err
 	} else if updated, err := s.UpdateSchemaFinding(ctx, applyFindingInput(existing, relKindId, environmentId, input)); err != nil {
 		return model.SchemaFinding{}, fmt.Errorf("error updating finding: %w", err)

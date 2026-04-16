@@ -30,10 +30,10 @@ func (s *BloodhoundDB) CreateEnvironmentWithPrincipalKinds(ctx context.Context, 
 		return model.SchemaEnvironment{}, fmt.Errorf("error retrieving environment kind '%s': %w", input.EnvironmentKindName, err)
 	} else if sourceKind, err := s.UpsertKind(ctx, input.SourceKindName); err != nil {
 		return model.SchemaEnvironment{}, fmt.Errorf("error registering source kind '%s': %w", input.SourceKindName, err)
-	} else if created, err := s.CreateEnvironment(ctx, extensionId, envKind.ID, sourceKind.ID); err != nil {
-		return model.SchemaEnvironment{}, fmt.Errorf("error creating environment: %w", err)
 	} else if principalKinds, err := s.buildPrincipalKindsFromNames(ctx, input.PrincipalKinds); err != nil {
 		return model.SchemaEnvironment{}, err
+	} else if created, err := s.CreateEnvironment(ctx, extensionId, envKind.ID, sourceKind.ID); err != nil {
+		return model.SchemaEnvironment{}, fmt.Errorf("error creating environment: %w", err)
 	} else if _, err := reconcile(ctx, principalKinds, nil, s.principalKindReconcileConfig(created.ID)); err != nil {
 		return model.SchemaEnvironment{}, fmt.Errorf("error reconciling principal kinds: %w", err)
 	} else {
@@ -44,6 +44,7 @@ func (s *BloodhoundDB) CreateEnvironmentWithPrincipalKinds(ctx context.Context, 
 // UpdateEnvironmentWithPrincipalKinds translates FK names, updates the environment row if
 // source kind changed, and reconciles its principal kinds.
 func (s *BloodhoundDB) UpdateEnvironmentWithPrincipalKinds(ctx context.Context, existing model.SchemaEnvironment, input model.EnvironmentInput) (model.SchemaEnvironment, error) {
+	// Update the source kind only when it has changed.
 	if sourceKind, err := s.UpsertKind(ctx, input.SourceKindName); err != nil {
 		return model.SchemaEnvironment{}, fmt.Errorf("error registering source kind '%s': %w", input.SourceKindName, err)
 	} else if existing.SourceKindId != sourceKind.ID {
@@ -53,11 +54,12 @@ func (s *BloodhoundDB) UpdateEnvironmentWithPrincipalKinds(ctx context.Context, 
 		}
 	}
 
+	// Always reconcile principal kinds against the (possibly updated) environment.
 	if principalKindsInput, err := s.buildPrincipalKindsFromNames(ctx, input.PrincipalKinds); err != nil {
 		return model.SchemaEnvironment{}, err
 	} else if existingPrincipalKinds, err := s.GetPrincipalKindsByEnvironmentId(ctx, existing.ID); err != nil {
 		return model.SchemaEnvironment{}, fmt.Errorf("error fetching existing principal kinds: %w", err)
-	} else if _, err := reconcile(ctx, principalKindsInput, existingPrincipalKinds, s.principalKindReconcileConfig(existing.ID)); err != nil {
+	} else if _, err = reconcile(ctx, principalKindsInput, existingPrincipalKinds, s.principalKindReconcileConfig(existing.ID)); err != nil {
 		return model.SchemaEnvironment{}, fmt.Errorf("error reconciling principal kinds: %w", err)
 	} else {
 		return existing, nil
