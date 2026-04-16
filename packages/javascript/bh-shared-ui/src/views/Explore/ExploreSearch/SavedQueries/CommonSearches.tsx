@@ -181,7 +181,6 @@ const CommonSearches = ({
                     onClick={onToggleCommonQueries}
                     className='flex justify-start items-center w-full pl-0'
                     data-testid='common-queries-toggle'
-                    aria-expanded={showCommonQueries}
                     variant={'text'}>
                     <FontAwesomeIcon className='px-2 mr-2' icon={showCommonQueries ? faChevronDown : faChevronUp} />
                     <span className='my-4 font-semibold text-lg'>Saved Queries</span>
