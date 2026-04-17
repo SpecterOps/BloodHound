@@ -90,7 +90,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                 const { subheader, queries } = queryItem;
                                 return (
                                     <ul key={i} className='list-none'>
-                                        {subheader && !!queryData[0].queries.length && (
+                                        {subheader && !!queries.length && (
                                             <div className={`${styles.subheader} sticky top-9 z-[1] py-2`}>
                                                 {subheader}
                                             </div>
