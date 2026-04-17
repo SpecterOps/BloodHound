@@ -71,5 +71,3 @@ allOf:
               value: {}
               enterprise:
                 type: boolean
-
-        readOnly: false
