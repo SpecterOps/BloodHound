@@ -84,10 +84,7 @@ const DownloadCollectors = () => {
                         <br />
                         BloodHound CE supports {DocumentationLinks.sharpHoundCELink},{' '}
                         {DocumentationLinks.azureHoundCELink}, and{' '}
-                        <Link
-                            target='_blank'
-                            data-testid='download-collectors-openhound-link'
-                            href={openHoundHref}>
+                        <Link target='_blank' data-testid='download-collectors-openhound-link' href={openHoundHref}>
                             OpenHound
                         </Link>
                         .
