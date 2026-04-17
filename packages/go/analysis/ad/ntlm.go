@@ -19,14 +19,10 @@ package ad
 import (
 	"context"
 	"errors"
-
 	"log/slog"
 	"slices"
 	"sync"
 
-	"github.com/specterops/dawgs/traversal"
-
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -37,6 +33,7 @@ import (
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
+	"github.com/specterops/dawgs/traversal"
 )
 
 type NTLMCache struct {
@@ -131,7 +128,7 @@ func NewNTLMCache(ctx context.Context, db graph.Database, localGroupData *LocalG
 }
 
 // PostNTLM is the initial function used to execute our NTLM analysis
-func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroupData, adcsCache ADCSCache, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*post.AtomicPostProcessingStats, error) {
+func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroupData, adcsCache ADCSCache, ntlmEnabled bool) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -142,8 +139,7 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 	)()
 
 	var (
-		operation = analysis.NewPostRelationshipOperation(ctx, db, "PostNTLM")
-		// compositionChannel      = make(chan analysis.CompositionInfo)
+		operation = post.NewPostRelationshipOperation(ctx, db, "PostNTLM")
 	)
 
 	// NTLM must be enabled through the feature flag
@@ -151,30 +147,6 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 		operation.Done()
 		return &operation.Stats, nil
 	}
-
-	// This is a POC on how to pipe composition info up through the operations
-	// go func() {
-	//	count := 0
-	//	edgeBuffer := make([]model.EdgeCompositionEdge, 0)
-	//	nodeBuffer := make([]model.EdgeCompositionNode, 0)
-	//
-	//	for {
-	//		if elem, hasNextElem := channels.Receive(ctx, compositionChannel); hasNextElem {
-	//			count++
-	//			edgeBuffer = append(edgeBuffer, elem.GetCompositionEdges()...)
-	//			nodeBuffer = append(nodeBuffer, elem.GetCompositionNodes()...)
-	//			if count == 100 {
-	//				count = 0
-	//
-	//				if _, _, err := pgDB.CreateCompositionInfo(ctx, nodeBuffer, edgeBuffer); err != nil {
-	//					slog.ErrorContext(ctx, fmt.Sprintf("error creating composition info: %v", err))
-	//				}
-	//			}
-	//		} else {
-	//			break
-	//		}
-	//	}
-	// }()
 
 	// TODO: after adding all of our new NTLM edges, benchmark performance between submitting multiple readers per computer or single reader per computer
 	// First fetch pre-reqs + find all vulnerable computers that are not protected
@@ -242,7 +214,7 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 		domainNode *graph.Node
 		startNodes = graph.NodeSet{}
 
-		traversalInst      = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst      = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		paths              = graph.PathSet{}
 		candidateSegments  = map[graph.ID][]*graph.PathSegment{}
 		path1EnterpriseCAs = cardinality.NewBitmap64()
@@ -273,7 +245,10 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 		)
 		return nil, err
 	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		domainNode, err = analysis.FetchNodeByObjectID(tx, domainsid)
+		domainNode, err = tx.Nodes().Filter(query.And(
+			query.Equals(query.NodeProperty(common.ObjectID.String()), domainsid),
+			query.Kind(query.Node(), ad.Entity),
+		)).First()
 		return err
 	}); err != nil {
 		return nil, err
@@ -397,7 +372,7 @@ func coerceAndRelayNTLMtoADCSPath2Pattern(domainID graph.ID, enterpriseCAs cardi
 		))
 }
 
-func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTrackedOperation[post.EnsureRelationshipJob], ntlmCache NTLMCache) error {
+func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob], ntlmCache NTLMCache) error {
 	for _, outerDomain := range adcsCache.GetDomains() {
 		for _, outerEnterpriseCA := range adcsCache.GetEnterpriseCertAuthorities() {
 			domain := outerDomain

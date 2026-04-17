@@ -18,7 +18,6 @@ import { IconDefinition, faCircleNodes, faCloud, faGlobe } from '@fortawesome/fr
 import { Environment, KnownEnvironmentType, knownEnvironmentTypes } from 'js-client-library';
 import omit from 'lodash/omit';
 import pick from 'lodash/pick';
-import { EnvironmentAggregation, environmentAggregationMap } from '../hooks/useEnvironmentParams/useEnvironmentParams';
 import { MappedStringLiteral } from '../types';
 import { inRange } from './number';
 
@@ -31,7 +30,7 @@ export interface EnvironmentFilterCheckboxState extends MappedStringLiteral<Envi
     no: boolean;
 }
 
-export type EnvironmentInfo = {
+export type AggregateEnvironmentInfo = {
     aggregationDisplayName: string;
     displayName: string;
     icon: IconDefinition;
@@ -56,8 +55,9 @@ export const HIGH_THRESHOLD = 80;
 export const MODERATE_THRESHOLD = 40;
 
 export const noEnvironmentSelectedFallback = 'No Environment Selected';
+export const allEnvironmentsSelected = 'All Environments';
 
-export const knownEnvironmentInfoMap: Record<KnownEnvironmentType, EnvironmentInfo> = {
+export const knownEnvironmentInfoMap: Record<KnownEnvironmentType, AggregateEnvironmentInfo> = {
     'active-directory': {
         aggregationDisplayName: 'All Active Directory Domains',
         displayName: 'Active Directory',
@@ -158,7 +158,7 @@ export function getCheckboxOptions(environmentMap: Record<Environment['type'], {
 }
 
 /** Return an object containing display name, aggregation name, member type, and icon for a given environment type */
-export function getOpenGraphEnvironmentInfo(type: Environment['type']): EnvironmentInfo {
+export function getOpenGraphEnvironmentInfo(type: Environment['type']): AggregateEnvironmentInfo {
     // Known types (AD and Azure) use the known info map
     // Defaults used for OpenGraph types
     const { aggregationDisplayName, displayName, icon, memberType } = knownEnvironmentInfoMap[
@@ -180,7 +180,9 @@ export function getOpenGraphEnvironmentInfo(type: Environment['type']): Environm
 
 /** Return a map of environment types to their display name, aggregation name, member type, and icon */
 export function getOpenGraphEnvironmentInfoMap(environments: Environment[] = []) {
-    const knownEnvironmentInfoCopy = { ...(knownEnvironmentInfoMap as Record<Environment['type'], EnvironmentInfo>) };
+    const knownEnvironmentInfoCopy = {
+        ...(knownEnvironmentInfoMap as Record<Environment['type'], AggregateEnvironmentInfo>),
+    };
     if (environments === null) return knownEnvironmentInfoCopy;
 
     return environments.reduce(
@@ -194,10 +196,6 @@ export function getOpenGraphEnvironmentInfoMap(environments: Environment[] = [])
         },
         { ...knownEnvironmentInfoCopy }
     );
-}
-
-export function isEnvironmentAggregation(id: string): id is EnvironmentAggregation {
-    return Object.prototype.hasOwnProperty.call(environmentAggregationMap, id);
 }
 
 export function isKnownEnvironmentType(type?: string): type is KnownEnvironmentType {

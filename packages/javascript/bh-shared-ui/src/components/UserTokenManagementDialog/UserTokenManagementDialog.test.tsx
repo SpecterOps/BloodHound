@@ -153,7 +153,11 @@ describe('UserTokenManagementDialog - API Expiration Date column', () => {
         server.use(
             rest.get('/api/v2/config', (_req, res, ctx) => res(ctx.json(createConfigResponse(true)))),
             rest.get('/api/v2/tokens', (_req, res, ctx) =>
-                res(ctx.json({ data: { tokens: [{ ...testTokens[0], expires_at: pastDate.toISO() }] } }))
+                res(
+                    ctx.json({
+                        data: { tokens: [{ ...testTokens[0], expires_at: { Time: pastDate.toISO(), Valid: true } }] },
+                    })
+                )
             )
         );
         await renderAndWait();
@@ -166,7 +170,11 @@ describe('UserTokenManagementDialog - API Expiration Date column', () => {
         server.use(
             rest.get('/api/v2/config', (_req, res, ctx) => res(ctx.json(createConfigResponse(true)))),
             rest.get('/api/v2/tokens', (_req, res, ctx) =>
-                res(ctx.json({ data: { tokens: [{ ...testTokens[0], expires_at: futureDate.toISO() }] } }))
+                res(
+                    ctx.json({
+                        data: { tokens: [{ ...testTokens[0], expires_at: { Time: futureDate.toISO(), Valid: true } }] },
+                    })
+                )
             )
         );
         await renderAndWait();
@@ -178,7 +186,11 @@ describe('UserTokenManagementDialog - API Expiration Date column', () => {
         server.use(
             rest.get('/api/v2/config', (_req, res, ctx) => res(ctx.json(createConfigResponse(true)))),
             rest.get('/api/v2/tokens', (_req, res, ctx) =>
-                res(ctx.json({ data: { tokens: [{ ...testTokens[0], expires_at: soonDate.toISO() }] } }))
+                res(
+                    ctx.json({
+                        data: { tokens: [{ ...testTokens[0], expires_at: { Time: soonDate.toISO(), Valid: true } }] },
+                    })
+                )
             )
         );
         await renderAndWait();
@@ -190,7 +202,11 @@ describe('UserTokenManagementDialog - API Expiration Date column', () => {
         server.use(
             rest.get('/api/v2/config', (_req, res, ctx) => res(ctx.json(createConfigResponse(true)))),
             rest.get('/api/v2/tokens', (_req, res, ctx) =>
-                res(ctx.json({ data: { tokens: [{ ...testTokens[0], expires_at: farDate.toISO() }] } }))
+                res(
+                    ctx.json({
+                        data: { tokens: [{ ...testTokens[0], expires_at: { Time: farDate.toISO(), Valid: true } }] },
+                    })
+                )
             )
         );
         await renderAndWait();

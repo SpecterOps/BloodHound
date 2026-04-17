@@ -57,10 +57,12 @@ export const useSelectedEnvironment = (
     });
 
     const environmentInfo = useMemo(() => {
-        if (!environmentQuery.data) return;
+        const type = environmentAggregation ?? environmentQuery.data?.type;
 
-        return getOpenGraphEnvironmentInfo(environmentQuery.data.type);
-    }, [environmentQuery.data]);
+        if (!type) return;
+
+        return getOpenGraphEnvironmentInfo(type);
+    }, [environmentAggregation, environmentQuery.data]);
 
     const setEnvironment = (environmentId: EnvironmentQueryParams['environmentId']) => {
         setEnvironmentParams({ environmentId, environmentAggregation: null });

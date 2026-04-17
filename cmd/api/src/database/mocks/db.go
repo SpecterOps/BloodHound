@@ -35,6 +35,7 @@ import (
 	null "github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	model "github.com/specterops/bloodhound/cmd/api/src/model"
 	appcfg "github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	graphschema "github.com/specterops/bloodhound/packages/go/graphschema"
 	graph "github.com/specterops/dawgs/graph"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -2692,10 +2693,10 @@ func (mr *MockDatabaseMockRecorder) GetUserToken(ctx, userId, tokenId any) *gomo
 }
 
 // GetValidDisplayKinds mocks base method.
-func (m *MockDatabase) GetValidDisplayKinds(ctx context.Context) (map[graph.Kind]bool, error) {
+func (m *MockDatabase) GetValidDisplayKinds(ctx context.Context) (graphschema.ValidPrimaryKinds, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetValidDisplayKinds", ctx)
-	ret0, _ := ret[0].(map[graph.Kind]bool)
+	ret0, _ := ret[0].(graphschema.ValidPrimaryKinds)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
