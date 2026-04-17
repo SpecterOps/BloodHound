@@ -187,6 +187,47 @@ const GraphView: FC = () => {
         },
     });
 
+    const resetLayoutToDefault = useCallback(() => {
+        dispatch(setExploreLayout(defaultGraphLayout));
+        dispatch(setIsExploreLayoutSelected(false));
+        dispatch(setIsExploreTableSelected(false));
+    }, [dispatch]);
+
+    const setLayout = useCallback(
+        (layout: BaseExploreLayoutOptions) => {
+            const isDeselectingTable = layout === 'table' && isExploreTableSelected;
+            const isDeselectingLayout = layout !== 'table' && exploreLayout === layout && isExploreLayoutSelected;
+
+            if (isDeselectingTable || isDeselectingLayout) {
+                resetLayoutToDefault();
+                return;
+            }
+
+            if (layout === 'table') {
+                dispatch(setIsExploreTableSelected(true));
+            } else {
+                dispatch(setExploreLayout(layout));
+                dispatch(setIsExploreLayoutSelected(true));
+                dispatch(setIsExploreTableSelected(false));
+
+                if (layout === 'standard') sigmaChartRef.current?.runStandardLayout();
+
+                if (layout === 'sequential') sigmaChartRef.current?.runSequentialLayout();
+            }
+        },
+        [exploreLayout, dispatch, isExploreTableSelected, isExploreLayoutSelected, resetLayoutToDefault]
+    );
+
+    const handleCloseTableView = () => {
+        setAutoDisplayTable(false);
+        dispatch(setIsExploreTableSelected(false));
+        if (isExploreLayoutSelected && exploreLayout) {
+            dispatch(setExploreLayout(exploreLayout));
+        } else {
+            dispatch(setExploreLayout(defaultGraphLayout));
+        }
+    };
+
     if (graphHasDataQuery.isLoading) {
         return (
             <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
@@ -217,50 +258,6 @@ const GraphView: FC = () => {
         dispatch(setPinnedExploreTableColumns(['action-menu', ...columns]));
     };
 
-    const handleLayoutChange = (layout: BaseExploreLayoutOptions) => {
-        if (!layout) return;
-
-        //if already selected, deselect
-        if (layout === 'table' && isExploreTableSelected) {
-            dispatch(setIsExploreTableSelected(false));
-            //deselect - set to default
-            dispatch(setExploreLayout(defaultGraphLayout));
-            //return to default, unselected state
-            dispatch(setIsExploreLayoutSelected(false));
-            return;
-        }
-
-        if (exploreLayout == layout && isExploreLayoutSelected) {
-            //deselect - set to default
-            dispatch(setExploreLayout(defaultGraphLayout));
-            //return to default, unselected state
-            dispatch(setIsExploreLayoutSelected(false));
-            return;
-        }
-
-        if (layout === 'table') {
-            dispatch(setIsExploreTableSelected(true));
-        } else {
-            dispatch(setExploreLayout(layout));
-            dispatch(setIsExploreLayoutSelected(true));
-            dispatch(setIsExploreTableSelected(false));
-
-            if (layout === 'standard') sigmaChartRef.current?.runStandardLayout();
-
-            if (layout === 'sequential') sigmaChartRef.current?.runSequentialLayout();
-        }
-    };
-
-    const handleCloseTableView = () => {
-        setAutoDisplayTable(false);
-        dispatch(setIsExploreTableSelected(false));
-        if (isExploreLayoutSelected && exploreLayout) {
-            dispatch(setExploreLayout(exploreLayout));
-        } else {
-            dispatch(setExploreLayout(defaultGraphLayout));
-        }
-    };
-
     return (
         <div
             className='relative h-full w-full overflow-hidden'
@@ -285,7 +282,7 @@ const GraphView: FC = () => {
                     isExploreLayoutSelected={isExploreLayoutSelected}
                     layoutOptions={baseGraphLayouts}
                     selectedLayout={exploreLayout ?? defaultGraphLayout}
-                    onLayoutChange={handleLayoutChange}
+                    onLayoutChange={setLayout}
                     showNodeLabels={showNodeLabels}
                     onToggleNodeLabels={toggleShowNodeLabels}
                     showEdgeLabels={showEdgeLabels}
