@@ -19221,8 +19221,7 @@
                       "type": "boolean"
                     }
                   }
-                },
-                "readOnly": false
+                }
               }
             }
           }
