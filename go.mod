@@ -36,7 +36,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/schema v1.4.1
 	github.com/hashicorp/golang-lru v1.0.2
-	github.com/jackc/pgx/v5 v5.8.0
+	github.com/jackc/pgx/v5 v5.9.0
 	github.com/jedib0t/go-pretty/v6 v6.6.7
 	github.com/lib/pq v1.10.9
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.4
@@ -46,7 +46,7 @@ require (
 	github.com/prometheus/client_golang v1.22.0
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
 	github.com/shirou/gopsutil/v3 v3.24.5
-	github.com/specterops/dawgs v0.4.15
+	github.com/specterops/dawgs v0.4.16
 	github.com/stretchr/testify v1.11.1
 	github.com/teambition/rrule-go v1.8.2
 	github.com/ulule/limiter/v3 v3.11.2
