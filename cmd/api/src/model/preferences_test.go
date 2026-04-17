@@ -26,21 +26,21 @@ import (
 
 func TestPreferences_Scan_InvalidInput(t *testing.T) {
 	preferences := model.Preferences{}
-	err := preferences.Scan("not bytes")
-	require.NotNil(t, err)
+	err := preferences.Scan(json.RawMessage(`{"random":"random"}`))
+	require.Error(t, err)
 	require.Contains(t, err.Error(), "expected []byte representation of JSONB")
 }
 
 func TestPreferences_Scan_InvalidJSON(t *testing.T) {
 	preferences := model.Preferences{}
-	err := preferences.Scan(json.RawMessage(`{"random":"random"}`))
-	require.NotNil(t, err)
+	err := preferences.Scan([]byte(`{not valid json}`))
+	require.Error(t, err)
 }
 
 func TestPreferences_Scan_EmptyObject(t *testing.T) {
 	preferences := model.Preferences{}
 	err := preferences.Scan([]byte(`{}`))
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Empty(t, preferences)
 }
 
@@ -58,7 +58,7 @@ func TestPreferences_Scan_Success(t *testing.T) {
 	}`)
 
 	err := preferences.Scan(jsonbInput)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Len(t, preferences, 2)
 
 	darkMode, exists := preferences["dark_mode"]
@@ -81,11 +81,11 @@ func TestPreferences_Value_Success(t *testing.T) {
 	}
 
 	value, err := preferences.Value()
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	var result model.Preferences
 	err = json.Unmarshal(value.([]byte), &result)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Len(t, result, 1)
 
 	darkMode, exists := result["dark_mode"]
@@ -98,8 +98,16 @@ func TestPreferences_Value_EmptyPreferences(t *testing.T) {
 	preferences := model.Preferences{}
 
 	value, err := preferences.Value()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, []byte(`{}`), value)
+}
+
+func TestPreferences_Value_NilPreferences(t *testing.T) {
+	var preferences model.Preferences
+
+	value, err := preferences.Value()
+	require.NoError(t, err)
+	require.Equal(t, []byte("{}"), value)
 }
 
 func TestPreferences_Scan_Value_RoundTrip(t *testing.T) {
@@ -117,16 +125,16 @@ func TestPreferences_Scan_Value_RoundTrip(t *testing.T) {
 
 	// unmarshal original jsonb into preferences
 	err := preferences.Scan(originalJSONB)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// marshal newly-created preferences map back to jsonb
 	value, err := preferences.Value()
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// final unmarshaling after roundtrip to verify success
 	var roundTrip model.Preferences
 	err = json.Unmarshal(value.([]byte), &roundTrip)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	require.Equal(t, preferences, roundTrip)
 }

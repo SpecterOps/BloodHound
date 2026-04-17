@@ -35,6 +35,7 @@ type PreferenceItem struct {
 type Preferences map[string]PreferenceItem
 
 // Scan verifies that the input value is []byte (the Go representation of JSONB) and unmarshals it into the receiver.
+// Uses a pointer receiver because it must modify the map. This matches the pattern in types.JSONUntypedObject.
 // sql.Scanner implementation
 func (s *Preferences) Scan(value any) error {
 	var (
@@ -50,13 +51,16 @@ func (s *Preferences) Scan(value any) error {
 
 // Value marshals the Preferences map into []byte for storage as JSONB.
 // driver.Valuer implementation
-func (s *Preferences) Value() (driver.Value, error) {
+func (s Preferences) Value() (driver.Value, error) {
+	if len(s) == 0 {
+		return []byte("{}"), nil
+	}
 	return json.Marshal(s)
 }
 
 // GormDBDataType returns JSONB if postgres, otherwise panics due to lack of DB type support.
 // GORM schema.DataTypeInterface implementation
-func (s *Preferences) GormDBDataType(db *gorm.DB, _ *schema.Field) string {
+func (s Preferences) GormDBDataType(db *gorm.DB, _ *schema.Field) string {
 	switch dbDialect := db.Name(); dbDialect {
 	case "postgres":
 		return "JSONB"
