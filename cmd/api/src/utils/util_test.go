@@ -65,7 +65,16 @@ func TestIsValidClientVersion(t *testing.T) {
 	_, err = utils.IsValidClientVersion("azurehound/0.0.0+notdocker")
 	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
-	_, err = utils.IsValidClientVersion("azurehound/0.0.0-rc1+docker")
+	azureHoundRCDockerVersion, err := utils.IsValidClientVersion("azurehound/0.0.0-rc1+docker")
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeAzureHound, azureHoundRCDockerVersion.ClientType)
+	require.Equal(t, 0, azureHoundRCDockerVersion.Major)
+	require.Equal(t, 0, azureHoundRCDockerVersion.Minor)
+	require.Equal(t, 0, azureHoundRCDockerVersion.Patch)
+	require.Equal(t, "rc1", azureHoundRCDockerVersion.Prerelease)
+	require.Equal(t, "docker", azureHoundRCDockerVersion.BuildMetadata)
+
+	_, err = utils.IsValidClientVersion("azurehound/0.0.0-rc1+notdocker")
 	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
 	_, err = utils.IsValidClientVersion("azurehound/0.0.0-rcfoo")
@@ -232,6 +241,16 @@ func TestParseClientVersion(t *testing.T) {
 	require.Equal(t, "docker", version.BuildMetadata)
 
 	version, err = utils.ParseClientVersion("azurehound/v1.0.1-rc1+docker")
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeAzureHound, version.ClientType)
+	require.Equal(t, 1, version.Major)
+	require.Equal(t, 0, version.Minor)
+	require.Equal(t, 1, version.Patch)
+	require.Equal(t, 0, version.Extra)
+	require.Equal(t, "rc1", version.Prerelease)
+	require.Equal(t, "docker", version.BuildMetadata)
+
+	version, err = utils.ParseClientVersion("azurehound/v1.0.1-rc1+notdocker")
 	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
 
 	version, err = utils.ParseClientVersion("azurehound/v1.0.1+notdocker")
