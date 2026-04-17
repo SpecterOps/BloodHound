@@ -1,4 +1,4 @@
-# Copyright 2025 Specter Ops, Inc.
+# Copyright 2026 Specter Ops, Inc.
 #
 # Licensed under the Apache License, Version 2.0
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-name: Static Code Analysis
+name: Code Generation Check
 
 on:
   pull_request:
@@ -26,7 +26,8 @@ on:
       - synchronize
 
 jobs:
-  run-analysis:
+  code-generation-check:
+    name: Code Generation Check
     runs-on: ubuntu-latest
 
     steps:
@@ -48,13 +49,44 @@ jobs:
       - name: Enable Corepack
         run: |
           corepack enable
-          corepack install
-          yarn --version
 
-      - name: Install Deps
+      - name: Run stbernard deps
         run: |
           go tool stbernard deps
 
-      - name: Run Analysis
+      - name: Run stbernard modsync
         run: |
-          go tool stbernard analysis
+          go tool stbernard modsync
+
+      - name: Run stbernard generate
+        run: |
+          go tool stbernard generate
+
+      - name: Run stbernard license
+        run: |
+          go tool stbernard license
+
+      - name: Check for uncommitted changes
+        id: show
+        run: |
+          go tool stbernard show -no-version
+
+      - name: Fail with helpful message
+        if: failure() && steps.show.outcome == 'failure'
+        run: |
+          echo "::error::Code generation check failed!"
+          echo ""
+          echo "=========================================="
+          echo "  CODE GENERATION CHECK FAILED"
+          echo "=========================================="
+          echo ""
+          echo "This PR has uncommitted generated code or dependency changes."
+          echo ""
+          echo "Please run the following command locally and commit the changes:"
+          echo ""
+          echo "    just prepare-for-codereview"
+          echo ""
+          echo "Then push the updated changes to this PR."
+          echo ""
+          echo "=========================================="
+          exit 1
