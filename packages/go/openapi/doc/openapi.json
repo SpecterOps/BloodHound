@@ -19209,6 +19209,20 @@
               "eula_accepted": {
                 "type": "boolean",
                 "readOnly": true
+              },
+              "preferences": {
+                "type": "object",
+                "description": "User preferences stored as a map of preference names to their values",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "value": {},
+                    "enterprise": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "readOnly": false
               }
             }
           }
