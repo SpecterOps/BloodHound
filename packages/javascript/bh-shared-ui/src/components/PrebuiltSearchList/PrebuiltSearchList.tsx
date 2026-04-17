@@ -119,14 +119,6 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                         ) : (
                                                             <p className='mb-0 leading-none'>{description}</p>
                                                         )}
-
-                                                        {category && <span className='text-xs italic'>{category}</span>}
-                                                        {category && subheader && (
-                                                            <span className='text-xs italic pr-1'>,</span>
-                                                        )}
-                                                        {subheader && (
-                                                            <span className='text-xs italic'>{subheader}</span>
-                                                        )}
                                                     </div>
                                                     {canEdit && typeof id === 'number' && (
                                                         <ListItemActionMenu
