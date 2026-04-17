@@ -16,7 +16,7 @@
 import { faCircleInfo, faStar } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Toggle } from './toggle';
+import { Toggle } from './Toggle';
 
 const meta = {
     title: 'Components/Toggle',
@@ -34,14 +34,6 @@ const meta = {
         disabled: {
             control: 'boolean',
             description: 'Disables interaction with the toggle.',
-        },
-        pressed: {
-            control: 'boolean',
-            description: 'Controlled pressed state.',
-        },
-        defaultPressed: {
-            control: 'boolean',
-            description: 'Initial pressed state (uncontrolled).',
         },
     },
     args: {
