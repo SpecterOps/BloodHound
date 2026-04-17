@@ -40,6 +40,18 @@ func NewDefaultAdminConfiguration() (DefaultAdminConfiguration, error) {
 	}
 }
 
+// NewDefaultConfigurationConnection takes a connection string and returns a new Configuration
+// struct containing all documented configuration defaults as well as the database connection string
+func NewDefaultConnectionConfiguration(connection string) (Configuration, error) {
+	cfg, err := NewDefaultConfiguration()
+	if err != nil {
+		return cfg, err
+	}
+
+	cfg.Database.Connection = connection
+	return cfg, nil
+}
+
 // NewDefaultConfiguration returns a new Configuration struct containing all documented
 // configuration defaults.
 func NewDefaultConfiguration() (Configuration, error) {
