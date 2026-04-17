@@ -31,7 +31,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/crypto"
-	Dawgs "github.com/specterops/dawgs/drivers"
+	dawgs "github.com/specterops/dawgs/drivers"
 )
 
 const (
@@ -123,8 +123,8 @@ type Configuration struct {
 	LogPath                         string                      `json:"log_path"`
 	TLS                             TLSConfiguration            `json:"tls"`
 	GraphDriver                     string                      `json:"graph_driver"`
-	Database                        Dawgs.DatabaseConfiguration `json:"database"`
-	Neo4J                           Dawgs.DatabaseConfiguration `json:"neo4j"`
+	Database                        dawgs.DatabaseConfiguration `json:"database"`
+	Neo4J                           dawgs.DatabaseConfiguration `json:"neo4j"`
 	Crypto                          CryptoConfiguration         `json:"crypto"`
 	SAML                            SAMLConfiguration           `json:"saml"`
 	DefaultAdmin                    DefaultAdminConfiguration   `json:"default_admin"`
