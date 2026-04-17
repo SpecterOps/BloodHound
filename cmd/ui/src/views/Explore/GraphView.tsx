@@ -218,15 +218,13 @@ const GraphView: FC = () => {
         [exploreLayout, dispatch, isExploreTableSelected, isExploreLayoutSelected, resetLayoutToDefault]
     );
 
-    const handleCloseTableView = () => {
+    const handleCloseTableView = useCallback(() => {
         setAutoDisplayTable(false);
         dispatch(setIsExploreTableSelected(false));
-        if (isExploreLayoutSelected && exploreLayout) {
-            dispatch(setExploreLayout(exploreLayout));
-        } else {
+        if (!isExploreLayoutSelected || !exploreLayout) {
             dispatch(setExploreLayout(defaultGraphLayout));
         }
-    };
+    }, [setAutoDisplayTable, dispatch, isExploreLayoutSelected, exploreLayout]);
 
     if (graphHasDataQuery.isLoading) {
         return (
