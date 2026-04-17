@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 //go:build integration
 
 package database_test
@@ -4674,4 +4675,114 @@ func TestDatabase_GetPrincipalKindsGraphKinds(t *testing.T) {
 		// Should NOT contain the non-builtin principal kind
 		assert.False(t, containsKindName(principalKinds, nonBuiltinKindName), "expected non-builtin principal kind %s to be excluded when flag is disabled", nonBuiltinKindName)
 	})
+}
+
+func TestUpdateEnvironment(t *testing.T) {
+	type args struct {
+		sourceKindName string
+	}
+	type want struct {
+		sourceKindName string
+	}
+	type testData struct {
+		name   string
+		args   args
+		setup  func() (IntegrationTestSuite, model.SchemaEnvironment)
+		want   want
+		assert func(t *testing.T, testSuite IntegrationTestSuite, existing model.SchemaEnvironment, updated model.SchemaEnvironment, err error, want want)
+	}
+
+	tt := []testData{
+		{
+			name: "Success: updates source kind and preserves all other fields",
+			args: args{sourceKindName: "UpdatedSource"},
+			setup: func() (IntegrationTestSuite, model.SchemaEnvironment) {
+				testSuite := setupIntegrationTestSuite(t)
+				ext := createTestExtension(t, testSuite, "update-env-ext", "Update Env Ext", "1.0", "test")
+				envKind := registerAndGetKind(t, testSuite, "UpdateEnvKind")
+				srcKind := registerAndGetKind(t, testSuite, "OldSource")
+				env := createTestEnvironment(t, testSuite, ext.ID, int32(envKind.ID), int32(srcKind.ID))
+				return testSuite, env
+			},
+			want: want{sourceKindName: "UpdatedSource"},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, existing model.SchemaEnvironment, updated model.SchemaEnvironment, err error, want want) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.Equal(t, existing.ID, updated.ID)
+				assert.Equal(t, existing.SchemaExtensionId, updated.SchemaExtensionId)
+				assert.Equal(t, existing.EnvironmentKindId, updated.EnvironmentKindId)
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite, env := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			newSrcKind := registerAndGetKind(t, testSuite, testCase.args.sourceKindName)
+			env.SourceKindId = int32(newSrcKind.ID)
+
+			updated, err := testSuite.BHDatabase.UpdateEnvironment(testSuite.Context, env)
+			testCase.assert(t, testSuite, env, updated, err, testCase.want)
+		})
+	}
+}
+
+func TestUpdateSchemaFinding(t *testing.T) {
+	type args struct {
+		displayName string
+		findingType model.SchemaFindingType
+	}
+	type testData struct {
+		name   string
+		args   args
+		setup  func() (IntegrationTestSuite, model.SchemaFinding)
+		assert func(t *testing.T, existing model.SchemaFinding, updated model.SchemaFinding, err error)
+	}
+
+	tt := []testData{
+		{
+			name: "Success: updates type, display_name, kind_id, environment_id and preserves id and name",
+			args: args{displayName: "Updated Display Name", findingType: model.SchemaFindingTypeRelationship},
+			setup: func() (IntegrationTestSuite, model.SchemaFinding) {
+				testSuite := setupIntegrationTestSuite(t)
+				ext := createTestExtension(t, testSuite, "update-finding-ext", "Update Finding Ext", "1.0", "test")
+				envKind := registerAndGetKind(t, testSuite, "UpdFindEnvKind")
+				srcKind := registerAndGetKind(t, testSuite, "UpdFindSrcKind")
+				relKind := registerAndGetKind(t, testSuite, "UpdFindRelKind")
+				env := createTestEnvironment(t, testSuite, ext.ID, int32(envKind.ID), int32(srcKind.ID))
+				finding := createTestFinding(t, testSuite, model.SchemaFinding{
+					Type:              model.SchemaFindingTypeRelationship,
+					SchemaExtensionId: ext.ID,
+					KindId:            int32(relKind.ID),
+					EnvironmentId:     env.ID,
+					Name:              "TestFinding",
+					DisplayName:       "Original Display Name",
+				})
+				return testSuite, finding
+			},
+			assert: func(t *testing.T, existing model.SchemaFinding, updated model.SchemaFinding, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.Equal(t, existing.ID, updated.ID)
+				assert.Equal(t, existing.Name, updated.Name)
+				assert.Equal(t, "Updated Display Name", updated.DisplayName)
+				assert.Equal(t, model.SchemaFindingTypeRelationship, updated.Type)
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite, finding := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			finding.DisplayName = testCase.args.displayName
+			finding.Type = testCase.args.findingType
+
+			updated, err := testSuite.BHDatabase.UpdateSchemaFinding(testSuite.Context, finding)
+			testCase.assert(t, finding, updated, err)
+		})
+	}
 }
