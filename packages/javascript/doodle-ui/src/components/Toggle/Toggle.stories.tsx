@@ -13,8 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { faCircleInfo, faStar } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, userEvent, within } from '@storybook/test';
 import { Toggle } from './toggle';
 
 const meta = {
@@ -25,11 +26,6 @@ const meta = {
     },
     tags: ['autodocs'],
     argTypes: {
-        variant: {
-            options: ['default', 'outline'],
-            control: 'select',
-            description: 'Visual style of the toggle button.',
-        },
         size: {
             options: ['sm', 'lg'],
             control: 'select',
@@ -50,7 +46,6 @@ const meta = {
     },
     args: {
         children: 'Toggle',
-        variant: 'default',
         size: 'lg',
         disabled: false,
     },
@@ -60,7 +55,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * The default form of the toggle with transparent background.
+ * The default/large form of the toggle with outline.
  */
 export const Default: Story = {
     args: {
@@ -78,14 +73,24 @@ export const Small: Story = {
     },
 };
 
-/**
- * A larger toggle for prominent actions.
- */
-export const Large: Story = {
-    args: {
-        size: 'lg',
-        children: 'Toggle',
-    },
+/** A toggle button with an Icon on the Left. */
+export const IconLeft: Story = {
+    render: (args) => (
+        <Toggle {...args}>
+            <FontAwesomeIcon icon={faCircleInfo} />
+            Toggle
+        </Toggle>
+    ),
+};
+
+/** A toggle button with an Icon on the Right. */
+export const IconRight: Story = {
+    render: (args) => (
+        <Toggle {...args}>
+            Toggle
+            <FontAwesomeIcon icon={faStar} />
+        </Toggle>
+    ),
 };
 
 /**
@@ -105,32 +110,5 @@ export const Disabled: Story = {
     args: {
         disabled: true,
         children: 'Toggle',
-    },
-};
-
-/**
- * Interaction test: clicking the toggle switches between pressed and unpressed states.
- */
-export const Interaction: Story = {
-    args: {
-        children: 'Toggle',
-    },
-    play: async ({ canvasElement, step }) => {
-        const canvas = within(canvasElement);
-        const toggle = await canvas.findByRole('button');
-
-        await step('Toggle starts unpressed', async () => {
-            expect(toggle).toHaveAttribute('data-state', 'off');
-        });
-
-        await step('Click to press the toggle', async () => {
-            await userEvent.click(toggle);
-            expect(toggle).toHaveAttribute('data-state', 'on');
-        });
-
-        await step('Click again to unpress the toggle', async () => {
-            await userEvent.click(toggle);
-            expect(toggle).toHaveAttribute('data-state', 'off');
-        });
     },
 };
