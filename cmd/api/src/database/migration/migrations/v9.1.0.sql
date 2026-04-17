@@ -83,4 +83,5 @@ VALUES (current_timestamp,
 ON CONFLICT DO NOTHING;
 
 -- Add preferences column to users table
-ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS preferences JSONB NOT NULL DEFAULT '{}'::jsonb;
