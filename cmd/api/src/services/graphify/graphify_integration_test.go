@@ -63,10 +63,9 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 		workDir  = t.TempDir()
 	)
 
-	cfg, err := config.NewDefaultConfiguration()
+	cfg, err := config.NewDefaultConnectionConfiguration(connConf.URL())
 	require.NoError(t, err)
 
-	cfg.Database.Connection = connConf.URL()
 	//#region Setup for dbs
 	pool, err := pg.NewPool(cfg.Database)
 	require.NoError(t, err)

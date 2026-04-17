@@ -61,10 +61,9 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
 	)
 
-	cfg, err := config.NewDefaultConfiguration()
+	cfg, err := config.NewDefaultConnectionConfiguration(connConf.URL())
 	require.NoError(t, err)
 
-	cfg.Database.Connection = connConf.URL()
 	// #region Setup for dbs
 
 	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)

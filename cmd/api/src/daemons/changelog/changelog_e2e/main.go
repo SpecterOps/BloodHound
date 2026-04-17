@@ -79,12 +79,11 @@ func newHarness() *Harness {
 		os.Exit(1)
 	}
 
-	cfg, err := config.NewDefaultConfiguration()
+	cfg, err := config.NewDefaultConnectionConfiguration(connStr)
 	if err != nil {
 		slog.Error("Error creating new default configuration: %w", attr.Error(err))
 		os.Exit(1)
 	}
-	cfg.Database.Connection = connStr
 
 	pool, err := pg.NewPool(cfg.Database)
 

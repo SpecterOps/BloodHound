@@ -55,10 +55,8 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 		err      error
 	)
 
-	cfg, err := config.NewDefaultConfiguration()
+	cfg, err := config.NewDefaultConnectionConfiguration(connConf.URL())
 	require.NoError(t, err)
-
-	cfg.Database.Connection = connConf.URL()
 
 	// #region Setup for dbs
 
