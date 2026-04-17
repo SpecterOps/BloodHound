@@ -210,7 +210,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			},
 		},
 		{
-			name: "error_-_second_environments_has unknown_latter_principal_kind",
+			name: "error_-_second_environments_has_unknown_latter_principal_kind",
 			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
 				t.Helper()
 				return testSetupData{
