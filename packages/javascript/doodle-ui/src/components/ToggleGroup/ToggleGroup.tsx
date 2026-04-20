@@ -13,6 +13,7 @@ const ToggleGroup = React.forwardRef<
     React.ElementRef<typeof ToggleGroupPrimitive.Root>,
     React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> & VariantProps<typeof ToggleVariants>
 >(({ className, size, children, ...props }, ref) => (
+    // TODO: Replace hardcoded hex colors with design token CSS variables once the token system is ready.
     <ToggleGroupPrimitive.Root
         ref={ref}
         className={cn(
