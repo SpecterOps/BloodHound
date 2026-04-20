@@ -35,6 +35,82 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestAZAddOwner(t *testing.T) {
+	t.Parallel()
+
+	//#region Setup for test
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		tenantID                = integration.RandomObjectID(t)
+		AZTenant                = NewAzureTenant(t, &suite, tenantID)
+		AZApp                   = NewAzureApplication(t, &suite, "AZApp", integration.RandomObjectID(t), tenantID)
+		AZServicePrincipal      = NewAzureServicePrincipal(t, &suite, "AZServicePrincipal", integration.RandomObjectID(t), tenantID)
+		HybridIdentityAdminRole = NewAzureRole(t, &suite, "HybridIdentityAdminRole", integration.RandomObjectID(t), graphAzure.HybridIdentityAdministratorRole, tenantID)
+		PartnerTier1SupportRole = NewAzureRole(t, &suite, "PartnerTier1SupportRole", integration.RandomObjectID(t), graphAzure.PartnerTier1SupportRole, tenantID)
+		PartnerTier2SupportRole = NewAzureRole(t, &suite, "PartnerTier2SupportRole", integration.RandomObjectID(t), graphAzure.PartnerTier2SupportRole, tenantID)
+		DirSyncAccountsRole     = NewAzureRole(t, &suite, "DirSyncAccountsRole", integration.RandomObjectID(t), graphAzure.DirectorySynchronizationAccountsRole, tenantID)
+		// Role that should not generate AZAddOwner Edge
+		ConditionalAccessAdministratorRole = NewAzureRole(t, &suite, "ConditionalAccessAdministratorRole", integration.RandomObjectID(t), graphAzure.ConditionalAccessAdministratorRole, tenantID)
+	)
+
+	NewRelationship(t, &suite, AZTenant, AZApp, graphAzure.Contains)
+	NewRelationship(t, &suite, AZTenant, AZServicePrincipal, graphAzure.Contains)
+	NewRelationship(t, &suite, AZTenant, HybridIdentityAdminRole, graphAzure.Contains)
+	NewRelationship(t, &suite, AZTenant, PartnerTier1SupportRole, graphAzure.Contains)
+	NewRelationship(t, &suite, AZTenant, PartnerTier2SupportRole, graphAzure.Contains)
+	NewRelationship(t, &suite, AZTenant, DirSyncAccountsRole, graphAzure.Contains)
+	NewRelationship(t, &suite, AZTenant, ConditionalAccessAdministratorRole, graphAzure.Contains)
+	//#endregion
+
+	//#region Running AZAddOwner edge post processing
+	postProcessingStats, err := azure.CreateAZAddOwnerEdge(context.Background(), suite.GraphDB)
+	//#endregion
+
+	//#region Verifying assertions
+	require.NoError(t, err)
+	require.NotNil(t, postProcessingStats.RelationshipsCreated[graphAzure.AddOwner])
+	assert.Equal(t, 8, int(*postProcessingStats.RelationshipsCreated[graphAzure.AddOwner]))
+
+	// Validate that the AZAddOwner edges were created
+	err = suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
+		addOwnerEdges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+			return query.Kind(query.Relationship(), graphAzure.AddOwner)
+		}))
+		require.NoError(t, err)
+		assert.Len(t, addOwnerEdges, 8)
+
+		type edgeKey struct {
+			start graph.ID
+			end   graph.ID
+		}
+		expected := make(map[edgeKey]struct{}, 8)
+		expected[edgeKey{start: HybridIdentityAdminRole.ID, end: AZApp.ID}] = struct{}{}
+		expected[edgeKey{start: HybridIdentityAdminRole.ID, end: AZServicePrincipal.ID}] = struct{}{}
+		expected[edgeKey{start: PartnerTier1SupportRole.ID, end: AZApp.ID}] = struct{}{}
+		expected[edgeKey{start: PartnerTier1SupportRole.ID, end: AZServicePrincipal.ID}] = struct{}{}
+		expected[edgeKey{start: PartnerTier2SupportRole.ID, end: AZApp.ID}] = struct{}{}
+		expected[edgeKey{start: PartnerTier2SupportRole.ID, end: AZServicePrincipal.ID}] = struct{}{}
+		expected[edgeKey{start: DirSyncAccountsRole.ID, end: AZApp.ID}] = struct{}{}
+		expected[edgeKey{start: DirSyncAccountsRole.ID, end: AZServicePrincipal.ID}] = struct{}{}
+
+		for _, edge := range addOwnerEdges {
+			key := edgeKey{start: edge.StartID, end: edge.EndID}
+			_, present := expected[key]
+			assert.True(t, present)
+			delete(expected, key)
+		}
+
+		assert.Empty(t, expected, "not all expected edges were found")
+
+		return nil
+	})
+
+	require.NoError(t, err)
+	//#endregion
+}
+
 func TestFetchEntityByObjectID(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
