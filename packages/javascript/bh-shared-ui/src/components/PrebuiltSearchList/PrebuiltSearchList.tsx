@@ -24,6 +24,7 @@ import { useSavedQueriesContext } from '../../views/Explore/providers/SavedQueri
 import ListItemActionMenu from './ListItemActionMenu';
 interface PrebuiltSearchListProps {
     listSections: QueryListSection[];
+    showCommonQueries: boolean;
     clickHandler: (query: string, id?: number) => void;
     deleteHandler?: (id: number) => void;
     clearFiltersHandler: () => void;
