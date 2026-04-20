@@ -1347,10 +1347,10 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 					SAMLProvider: &model.SAMLProvider{},
 				}, nil)
 			}, expected: expected{
-				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"request Content-Type isn't multipart/form-data"}]}`,
-			},
+			responseCode:   http.StatusBadRequest,
+			responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"request Content-Type isn't multipart/form-data"}]}`,
+		},
 		},
 		{
 			name: "Error: Empty multiform, ParseMultipartForm - Bad Request",
@@ -3059,7 +3059,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: session created - ETAC enabled",
+			name: "Success: admin session created - ETAC enabled with AllEnvironments true",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -3098,6 +3098,36 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					Serial: model.Serial{
 						ID: int32(1),
 					},
+					Config: model.SSOProviderConfig{
+						AutoProvision: model.SSOProviderAutoProvisionConfig{
+							Enabled:       true,
+							RoleProvision: false,
+							DefaultRoleId: int32(1),
+						},
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{}, database.ErrNotFound)
+				mock.mockDatabase.EXPECT().GetAllRoles(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.Roles{
+					{
+						Serial: model.Serial{
+							ID: int32(1),
+						},
+						Name:        auth.RoleAdministrator,
+						Permissions: model.Permissions{model.NewPermission("auth", "ManageUsers")},
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().CreateUser(gomock.Any(), gomock.Cond(func(user model.User) bool {
+					if user.PrincipalName != "username" {
+						return false
+					} else if user.AllEnvironments != true {
+						return false
+					} else {
+						return true
+					}
+				})).Return(model.User{}, nil)
+				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{
+					SSOProviderID: null.Int32From(1),
+					Roles:         model.Roles{model.Role{Name: auth.RoleAdministrator}},
 				}, nil)
 				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
 					AttributeStatements: []saml.AttributeStatement{{
@@ -3109,27 +3139,122 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 								Type:  model.XMLTypeString,
 								Value: "username",
 							}},
-						}},
+						},
+							{
+								FriendlyName: "role",
+								Name:         model.MicrosoftClaimsRole,
+								NameFormat:   model.ObjectIDAttributeNameFormat,
+								Values: []saml.AttributeValue{{
+									Type:  model.XMLTypeString,
+									Value: auth.RoleAdministrator,
+								}},
+							},
+						},
 					}},
 				}, nil)
 				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
-				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{
-					SSOProviderID: null.Int32{
-						NullInt32: sql.NullInt32{
-							Int32: int32(1),
-							Valid: true,
-						},
+				mock.mockDatabase.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(model.UserSession{}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui"}, "Set-Cookie": []string{"token=token; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
+			},
+		},
+		{
+			name: "Success: user session created - ETAC enabled with AllEnvironments false",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/slug/callback",
 					},
-					SSOProvider: &model.SSOProvider{
-						Name:   "name",
-						Slug:   "slug",
-						Serial: model.Serial{ID: int32(1)},
-						SAMLProvider: &model.SAMLProvider{
-							Serial:        model.Serial{ID: 1234},
-							SSOProviderID: null.Int32From(int32(1)),
+					Method: http.MethodGet,
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.SessionTTLHours).Return(appcfg.Parameter{}, nil).Times(2)
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
+					Name: "POST Provider",
+					Slug: "post-provider",
+					Type: model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{
+						Name:            "POST SAML Provider",
+						DisplayName:     "POST SAML SSO",
+						IssuerURI:       "https://post-provider.com/saml",
+						SingleSignOnURI: "https://post-provider.com/sso",
+						MetadataXML: []byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://post-provider.com/saml">
+						<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+							<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://post-provider.com/sso"/>
+						</IDPSSODescriptor>
+					</EntityDescriptor>`),
+					},
+					Serial: model.Serial{
+						ID: int32(1),
+					},
+					Config: model.SSOProviderConfig{
+						AutoProvision: model.SSOProviderAutoProvisionConfig{
+							Enabled:       true,
+							RoleProvision: false,
+							DefaultRoleId: int32(1),
 						},
 					},
 				}, nil)
+				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{}, database.ErrNotFound)
+				mock.mockDatabase.EXPECT().GetAllRoles(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.Roles{
+					{
+						Serial: model.Serial{
+							ID: int32(1),
+						},
+						Name:        auth.RoleUser,
+						Permissions: model.Permissions{model.NewPermission("auth", "ManageUsers")},
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().CreateUser(gomock.Any(), gomock.Cond(func(user model.User) bool {
+					if user.PrincipalName != "username" {
+						return false
+					} else if user.AllEnvironments != false {
+						return false
+					} else {
+						return true
+					}
+				})).Return(model.User{}, nil)
+				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{
+					SSOProviderID: null.Int32From(1),
+					Roles:         model.Roles{model.Role{Name: auth.RoleUser}},
+				}, nil)
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
+					AttributeStatements: []saml.AttributeStatement{{
+						Attributes: []saml.Attribute{{
+							FriendlyName: "uid",
+							Name:         model.XMLSOAPClaimsEmailAddress,
+							NameFormat:   model.ObjectIDAttributeNameFormat,
+							Values: []saml.AttributeValue{{
+								Type:  model.XMLTypeString,
+								Value: "username",
+							}},
+						},
+							{
+								FriendlyName: "role",
+								Name:         model.MicrosoftClaimsRole,
+								NameFormat:   model.ObjectIDAttributeNameFormat,
+								Values: []saml.AttributeValue{{
+									Type:  model.XMLTypeString,
+									Value: auth.RoleUser,
+								}},
+							},
+						},
+					}},
+				}, nil)
+				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
 				mock.mockDatabase.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(model.UserSession{}, nil)
 			},
 			expected: expected{
