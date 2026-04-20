@@ -26,7 +26,7 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
 
     return {
-        plugins: [react(), glsl(), excludeMockServiceWorker()],
+        plugins: [react(), glsl(), excludeMockServiceWorker(env)],
         resolve: {
             alias: {
                 src: path.resolve(__dirname, './src'),
@@ -107,7 +107,7 @@ export default defineConfig(({ mode }) => {
             ],
         },
         build: {
-            outDir: './dist',
+            outDir: env.BUILD_PATH || './dist',
         },
     };
 });
@@ -116,13 +116,15 @@ export default defineConfig(({ mode }) => {
  * Exclude mockServiceWorker.js from production builds
  * MSW service worker should only be available in development mode
  */
-function excludeMockServiceWorker(): Plugin {
+function excludeMockServiceWorker(env: ReturnType<typeof loadEnv>): Plugin {
     return {
         name: 'exclude-mock-service-worker',
         apply: 'build', // Only apply during build (production)
         closeBundle() {
             // Remove mockServiceWorker.js from the output directory after build
-            const mockServiceWorkerPath = path.resolve(__dirname, 'dist', 'mockServiceWorker.js');
+            const mockServiceWorkerPath = env.BUILD_PATH
+                ? path.resolve(env.BUILD_PATH, 'mockServiceWorker.js')
+                : path.resolve(__dirname, 'dist', 'mockServiceWorker.js');
 
             if (fs.existsSync(mockServiceWorkerPath)) {
                 fs.unlinkSync(mockServiceWorkerPath);
