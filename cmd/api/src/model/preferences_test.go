@@ -48,12 +48,10 @@ func TestPreferences_Scan_Success(t *testing.T) {
 	preferences := model.Preferences{}
 	jsonbInput := []byte(`{
 		"dark_mode": {
-			"value": true,
-			"community": true
+			"value": true
 		},
 		"preferred_domain": {
-			"value": "S-1-5-24-1234567890",
-			"community": false
+			"value": "S-1-5-24-1234567890"
 		}
 	}`)
 
@@ -64,19 +62,16 @@ func TestPreferences_Scan_Success(t *testing.T) {
 	darkMode, exists := preferences["dark_mode"]
 	require.True(t, exists)
 	require.Equal(t, true, darkMode.Value)
-	require.Equal(t, true, darkMode.Community)
 
 	preferredDomain, exists := preferences["preferred_domain"]
 	require.True(t, exists)
 	require.Equal(t, "S-1-5-24-1234567890", preferredDomain.Value)
-	require.Equal(t, false, preferredDomain.Community)
 }
 
 func TestPreferences_Value_Success(t *testing.T) {
 	preferences := model.Preferences{
 		"dark_mode": model.PreferenceItem{
-			Value:     true,
-			Community: true,
+			Value: true,
 		},
 	}
 
@@ -91,7 +86,6 @@ func TestPreferences_Value_Success(t *testing.T) {
 	darkMode, exists := result["dark_mode"]
 	require.True(t, exists)
 	require.Equal(t, true, darkMode.Value)
-	require.Equal(t, true, darkMode.Community)
 }
 
 func TestPreferences_Value_EmptyPreferences(t *testing.T) {
@@ -113,12 +107,10 @@ func TestPreferences_Value_NilPreferences(t *testing.T) {
 func TestPreferences_Scan_Value_RoundTrip(t *testing.T) {
 	originalJSONB := []byte(`{
 		"dark_mode": {
-			"value": true,
-			"community": true
+			"value": true
 		},
 		"preferred_domain": {
-			"value": "S-1-5-24-1234567890",
-			"community": false
+			"value": "S-1-5-24-1234567890"
 		}
 	}`)
 	preferences := model.Preferences{}

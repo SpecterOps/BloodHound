@@ -25,13 +25,12 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-// PreferenceItem represents a single user preference with its value and a community flag.
+// PreferenceItem represents a single user preference.
 type PreferenceItem struct {
-	Value     any  `json:"value"`
-	Community bool `json:"community"`
+	Value any `json:"value"`
 }
 
-// Preferences represents a map of preference names to their PreferenceItem values, stored as JSONB in the database.
+// Preferences represents a map of preference names to their PreferenceItem objects, stored as JSONB in the database.
 type Preferences map[string]PreferenceItem
 
 // Scan verifies that the input value is []byte (the Go representation of JSONB) and unmarshals it into the receiver.

@@ -19216,10 +19216,7 @@
                 "additionalProperties": {
                   "type": "object",
                   "properties": {
-                    "value": {},
-                    "enterprise": {
-                      "type": "boolean"
-                    }
+                    "value": {}
                   }
                 }
               }
