@@ -16,7 +16,6 @@
 import { faCircleInfo, faStar } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { Meta, StoryObj } from '@storybook/react';
-import { userEvent, within } from '@storybook/test';
 import { ToggleGroup, ToggleGroupItem } from './ToggleGroup';
 
 const meta = {
@@ -31,15 +30,17 @@ const meta = {
             options: ['sm', 'lg'],
             control: 'select',
             description: 'Size applied to all items in the group.',
+            table: { category: 'props' },
         },
         disabled: {
             control: 'boolean',
             description: 'Disables all items in the group.',
+            table: { category: 'props' },
         },
     },
     args: {
         type: 'single',
-        size: 'lg',
+        size: 'sm',
         disabled: false,
     },
 } satisfies Meta<typeof ToggleGroup>;
@@ -48,25 +49,25 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Small size toggle group.
+ * Default/Small toggle group, use the controls panel above to change size and disabled.
  */
-export const Small: Story = {
+export const Default: Story = {
     render: (args) => (
-        <ToggleGroup {...args} size='sm'>
-            <ToggleGroupItem value='a'>Graph</ToggleGroupItem>
-            <ToggleGroupItem value='b'>Table</ToggleGroupItem>
+        <ToggleGroup {...args}>
+            <ToggleGroupItem value='graph'>Graph</ToggleGroupItem>
+            <ToggleGroupItem value='table'>Table</ToggleGroupItem>
         </ToggleGroup>
     ),
 };
 
 /**
- * Small size toggle group.
+ * Large size toggle group.
  */
 export const Large: Story = {
     render: (args) => (
         <ToggleGroup {...args} size='lg'>
-            <ToggleGroupItem value='a'>Graph</ToggleGroupItem>
-            <ToggleGroupItem value='b'>Table</ToggleGroupItem>
+            <ToggleGroupItem value='a'>Toggle Button</ToggleGroupItem>
+            <ToggleGroupItem value='b'>Toggle Button</ToggleGroupItem>
         </ToggleGroup>
     ),
 };
@@ -113,32 +114,33 @@ export const WithIconsRight: Story = {
 export const Disabled: Story = {
     render: (args) => (
         <ToggleGroup {...args} disabled>
-            <ToggleGroupItem value='a'>Graph</ToggleGroupItem>
-            <ToggleGroupItem value='b'>Table</ToggleGroupItem>
+            <ToggleGroupItem value='graph'>Graph</ToggleGroupItem>
+            <ToggleGroupItem value='table'>Table</ToggleGroupItem>
         </ToggleGroup>
     ),
 };
 
 /**
- * Interaction test: clicking items in a single-select group selects one at a time.
+ * Multiple selection toggle group.
  */
-export const Interaction: Story = {
-    render: (args) => (
-        <ToggleGroup {...args}>
-            <ToggleGroupItem value='a'>Graph</ToggleGroupItem>
-            <ToggleGroupItem value='b'>Table</ToggleGroupItem>
+export const Multiple: Story = {
+    render: ({ size, disabled }) => (
+        <ToggleGroup type='multiple' size={size} disabled={disabled}>
+            <ToggleGroupItem value='a'>Toggle A</ToggleGroupItem>
+            <ToggleGroupItem value='b'>Toggle B</ToggleGroupItem>
         </ToggleGroup>
     ),
-    play: async ({ canvasElement, step }) => {
-        const canvas = within(canvasElement);
-        const [itemA, itemB] = await canvas.findAllByRole('radio');
+};
 
-        await step('Click Toggle Button A to select it', async () => {
-            await userEvent.click(itemA);
-        });
-
-        await step('Click Toggle Button B — Toggle Button A deselects', async () => {
-            await userEvent.click(itemB);
-        });
-    },
+/**
+ * Three toggle button group.
+ */
+export const Three: Story = {
+    render: (args) => (
+        <ToggleGroup {...args}>
+            <ToggleGroupItem value='a'>Toggle A</ToggleGroupItem>
+            <ToggleGroupItem value='b'>Toggle B</ToggleGroupItem>
+            <ToggleGroupItem value='c'>Toggle C</ToggleGroupItem>
+        </ToggleGroup>
+    ),
 };

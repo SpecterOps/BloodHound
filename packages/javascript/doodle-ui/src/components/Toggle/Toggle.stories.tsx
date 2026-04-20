@@ -37,8 +37,8 @@ const meta = {
         },
     },
     args: {
-        children: 'Toggle',
-        size: 'lg',
+        children: 'Toggle Button',
+        size: 'sm',
         disabled: false,
     },
 } satisfies Meta<typeof Toggle>;
@@ -47,60 +47,60 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * The default/large form of the toggle with outline.
+ * Default/Small size toggle button with outline.
  */
 export const Default: Story = {
     args: {
-        children: 'Toggle',
+        children: 'Toggle Button',
     },
 };
 
 /**
- * A smaller toggle suitable for compact layouts.
+ * Large size toggle button.
  */
 export const Small: Story = {
     args: {
-        size: 'sm',
-        children: 'Toggle',
+        size: 'lg',
+        children: 'Toggle Button',
     },
 };
 
-/** A toggle button with an Icon on the Left. */
+/** Toggle button with an Icon on the Left. */
 export const IconLeft: Story = {
     render: (args) => (
         <Toggle {...args}>
             <FontAwesomeIcon icon={faCircleInfo} />
-            Toggle
+            Toggle Button
         </Toggle>
     ),
 };
 
-/** A toggle button with an Icon on the Right. */
+/** Toggle button with an Icon on the Right. */
 export const IconRight: Story = {
     render: (args) => (
         <Toggle {...args}>
-            Toggle
+            Toggle Button
             <FontAwesomeIcon icon={faStar} />
         </Toggle>
     ),
 };
 
 /**
- * The toggle rendered in a pressed (active) state by default.
+ * The toggle button rendered in a pressed (active) state by default.
  */
 export const DefaultPressed: Story = {
     args: {
         defaultPressed: true,
-        children: 'Toggle',
+        children: 'Toggle Button',
     },
 };
 
 /**
- * A disabled toggle cannot be interacted with.
+ * Disabled toggle button cannot be interacted with.
  */
 export const Disabled: Story = {
     args: {
         disabled: true,
-        children: 'Toggle',
+        children: 'Toggle Button',
     },
 };

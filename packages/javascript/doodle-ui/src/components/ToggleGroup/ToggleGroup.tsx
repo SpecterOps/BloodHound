@@ -6,14 +6,20 @@ import { ToggleVariants } from '../Toggle';
 import { cn } from '../utils';
 
 const ToggleGroupContext = React.createContext<VariantProps<typeof ToggleVariants>>({
-    size: 'lg',
+    size: 'sm',
 });
 
 const ToggleGroup = React.forwardRef<
     React.ElementRef<typeof ToggleGroupPrimitive.Root>,
     React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> & VariantProps<typeof ToggleVariants>
 >(({ className, size, children, ...props }, ref) => (
-    <ToggleGroupPrimitive.Root ref={ref} className={cn('flex items-center justify-center gap-1', className)} {...props}>
+    <ToggleGroupPrimitive.Root
+        ref={ref}
+        className={cn(
+            'flex items-center justify-center gap-2 p-1 rounded-lg bg-[#F4F4F4] dark:bg-[#222222] shadow-[0_1px_2px_0_rgba(0,0,0,0.30)]',
+            className
+        )}
+        {...props}>
         <ToggleGroupContext.Provider value={{ size }}>{children}</ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
 ));
