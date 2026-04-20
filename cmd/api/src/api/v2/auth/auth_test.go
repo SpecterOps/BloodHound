@@ -4180,6 +4180,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					HmacMethod: "hmac-sha2-256",
 					LastAccess: time.Time{},
 					ExpiresAt:  sql.NullTime{},
+					CreatedBy:  uuid.NullUUID{},
 					Unique: model.Unique{
 						ID: uuid.FromStringOrNil("id"),
 						Basic: model.Basic{
@@ -4196,7 +4197,74 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"hmac_method":"hmac-sha2-256","id":"00000000-0000-0000-0000-000000000000","key":"key","last_access":"0001-01-01T00:00:00Z","name":"name","updated_at":"0001-01-01T00:00:00Z","user_id":null,"expires_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}}`,
+				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z","created_by":null,"deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"hmac_method":"hmac-sha2-256","id":"00000000-0000-0000-0000-000000000000","key":"key","last_access":"0001-01-01T00:00:00Z","name":"name","updated_at":"0001-01-01T00:00:00Z","user_id":null,"expires_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}}`,
+			},
+		},
+		{
+			name: "Success: created_by is set correctly in the response - OK",
+			buildRequest: func() *http.Request {
+				var (
+					header  = http.Header{}
+					request = &http.Request{
+						URL: &url.URL{
+							Path: "/api/v2/tokens",
+						},
+						Method: http.MethodPost,
+						Header: header,
+						Body:   io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"00000000-0000-0000-0000-000000000000"}`))),
+					}
+				)
+
+				header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+					AuthCtx: authz.Context{
+						Owner: model.User{
+							Roles: model.Roles{
+								{
+									Permissions: model.Permissions{model.NewPermission("auth", "ManageUsers")},
+								},
+							},
+						},
+						PermissionOverrides: authz.PermissionOverrides{
+							Enabled: true,
+							Permissions: model.Permissions{
+								model.NewPermission("auth", "ManageUsers"),
+							},
+						},
+					},
+				}))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				createdByID := uuid.FromStringOrNil("00000000-0000-0000-0000-000000000001")
+
+				mock.mockDatabase.EXPECT().GetUser(gomock.Any(), uuid.FromStringOrNil("00000000-0000-0000-0000-000000000000")).Return(model.User{}, nil)
+				mock.mockDatabase.EXPECT().CreateAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{
+					UserID:     uuid.NullUUID{UUID: uuid.FromStringOrNil("id")},
+					ClientID:   uuid.NullUUID{UUID: uuid.FromStringOrNil("id")},
+					Name:       null.StringFrom("name"),
+					Key:        "key",
+					HmacMethod: "hmac-sha2-256",
+					LastAccess: time.Time{},
+					ExpiresAt:  sql.NullTime{},
+					CreatedBy:  uuid.NullUUID{UUID: createdByID, Valid: true},
+					Unique: model.Unique{
+						ID: uuid.FromStringOrNil("id"),
+						Basic: model.Basic{
+							CreatedAt: time.Time{},
+							UpdatedAt: time.Time{},
+							DeletedAt: sql.NullTime{},
+						},
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: &appcfg.APITokensParameter{Enabled: true},
+				}}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z","created_by":"00000000-0000-0000-0000-000000000001","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"hmac_method":"hmac-sha2-256","id":"00000000-0000-0000-0000-000000000000","key":"key","last_access":"0001-01-01T00:00:00Z","name":"name","updated_at":"0001-01-01T00:00:00Z","user_id":null,"expires_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}}`,
 			},
 		},
 	}
