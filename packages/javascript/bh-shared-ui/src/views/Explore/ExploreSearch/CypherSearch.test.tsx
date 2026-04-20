@@ -15,42 +15,75 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { GraphData } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render } from '../../../test-utils';
+import { cypherTestResponse } from '../../../mocks/factories/explore';
+import { render, waitFor } from '../../../test-utils';
 import { mockCodemirrorLayoutMethods } from '../../../utils';
 import CypherSearch from './CypherSearch';
+
+const mockClearSelectedItem = vi.fn();
+const mockSetSelectedItem = vi.fn();
+
+vi.mock('../../../hooks', async () => {
+    const actual = await vi.importActual('../../../hooks');
+
+    return {
+        ...actual,
+        useExploreSelectedItem: () => ({
+            clearSelectedItem: mockClearSelectedItem,
+            setSelectedItem: mockSetSelectedItem,
+            selectedItem: '123',
+        }),
+    };
+});
+
+const CYPHER_SEARCH_ROUTE = '?searchType=cypher&cypherSearch=bWF0Y2ggKG4pIHJldHVybiBuIGxpbWl0IDEw';
+
+const multiNodeGraphResponse = cypherTestResponse;
+
+const singleNodeGraphResponse = {
+    data: {
+        nodes: { '108': cypherTestResponse.data.nodes['108'] },
+        edges: [],
+    },
+};
+
+const zeroNodeGraphResponse = {
+    data: {
+        nodes: {},
+        edges: [{ source: '1', target: '2', label: 'HasSession', kind: 'HasSession', lastSeen: '2023-01-01' }],
+    },
+};
 
 const CYPHER = 'match (n) return n limit 5';
 const INCOMPLETE_CYPHER = 'match (n:';
 
 describe('CypherSearch', () => {
     const testPerformSearch = vi.fn();
+    const mockOnExploreMenuCollapse = vi.fn();
 
     const testState = {
         cypherQuery: '',
         setCypherQuery: vi.fn(),
         performSearch: testPerformSearch,
     };
-    const setup = async (state = testState) => {
-        const autoRun = true;
-        const handleAutoRun = () => {};
-        const testOnRunSearchClick = vi.fn();
-        const handleDisableQueryLimit = () => {};
-        const disableQueryLimit = false;
-
+    const setup = async (state = testState, route = '/', disableQueryLimit = true) => {
         const screen = render(
             <CypherSearch
                 cypherSearchState={state}
-                autoRun={autoRun}
-                setAutoRun={handleAutoRun}
+                autoRun={true}
+                setAutoRun={() => {}}
                 disableQueryLimit={disableQueryLimit}
-                setDisableQueryLimit={handleDisableQueryLimit}
-            />
+                setDisableQueryLimit={() => {}}
+                onExploreMenuCollapse={mockOnExploreMenuCollapse}
+            />,
+            { route }
         );
         const user = userEvent.setup();
 
-        return { state, screen, user, testOnRunSearchClick };
+        return { state, screen, user };
     };
 
     const server = setupServer(
@@ -122,7 +155,13 @@ describe('CypherSearch', () => {
         server.listen();
     });
     beforeEach(mockCodemirrorLayoutMethods);
-    afterEach(vi.restoreAllMocks);
+    afterEach(() => {
+        vi.restoreAllMocks();
+        server.resetHandlers();
+        mockClearSelectedItem.mockClear();
+        mockSetSelectedItem.mockClear();
+        mockOnExploreMenuCollapse.mockClear();
+    });
     afterAll(() => {
         server.close();
     });
@@ -171,5 +210,82 @@ describe('CypherSearch', () => {
         await user.keyboard('{Alt>}s{/Alt}');
 
         expect(screen.queryByTestId('save-query-dialog')).toBeInTheDocument();
+    });
+
+    describe('Minimize explorer page elements when multiple nodes are returned', () => {
+        const cypherSearchState = { ...testState, cypherQuery: CYPHER };
+        const cypherSearchRoute = `${CYPHER_SEARCH_ROUTE}&selectedItem=108`;
+
+        const mockCypherEndpoint = (response: { data: GraphData }) => {
+            server.use(rest.post('/api/v2/graphs/cypher', (_req, res, ctx) => res(ctx.json(response))));
+        };
+
+        it('closes explore search tab menu and clears selected item when a cypher query returns multiple nodes', async () => {
+            mockCypherEndpoint(singleNodeGraphResponse);
+            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute);
+
+            await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
+
+            expect(mockClearSelectedItem).not.toHaveBeenCalled();
+
+            mockCypherEndpoint(multiNodeGraphResponse);
+            await user.click(screen.getByRole('button', { name: /run cypher query/i }));
+
+            await waitFor(() => expect(mockClearSelectedItem).toHaveBeenCalled());
+            expect(mockOnExploreMenuCollapse).toHaveBeenCalled();
+        });
+
+        it('does not close explore search tab menu or entity info panel when search returns zero nodes', async () => {
+            mockCypherEndpoint(singleNodeGraphResponse);
+            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute);
+
+            await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
+
+            expect(mockClearSelectedItem).not.toHaveBeenCalled();
+
+            mockCypherEndpoint(zeroNodeGraphResponse);
+            await user.click(screen.getByRole('button', { name: /run cypher query/i }));
+
+            await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
+
+            expect(mockClearSelectedItem).not.toHaveBeenCalled();
+            expect(mockOnExploreMenuCollapse).not.toHaveBeenCalled();
+        });
+
+        it('does not close explore search tab menu or entity info panel when search returns one node', async () => {
+            mockCypherEndpoint(singleNodeGraphResponse);
+            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute);
+
+            await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
+
+            mockClearSelectedItem.mockClear();
+            mockSetSelectedItem.mockClear();
+
+            mockCypherEndpoint(singleNodeGraphResponse);
+            await user.click(screen.getByRole('button', { name: /run cypher query/i }));
+
+            await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
+
+            expect(mockClearSelectedItem).not.toHaveBeenCalled();
+            expect(mockOnExploreMenuCollapse).not.toHaveBeenCalled();
+            expect(mockSetSelectedItem).toHaveBeenCalledWith('108');
+        });
+
+        it('calls onExploreMenuCollapse again when user reopens widget and runs another multi-node query', async () => {
+            mockCypherEndpoint(singleNodeGraphResponse);
+            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute);
+
+            await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
+
+            mockCypherEndpoint(multiNodeGraphResponse);
+            await user.click(screen.getByRole('button', { name: /run cypher query/i }));
+            await waitFor(() => expect(mockOnExploreMenuCollapse).toHaveBeenCalledTimes(1));
+
+            mockOnExploreMenuCollapse.mockClear();
+
+            mockCypherEndpoint(multiNodeGraphResponse);
+            await user.click(screen.getByRole('button', { name: /run cypher query/i }));
+            await waitFor(() => expect(mockOnExploreMenuCollapse).toHaveBeenCalledTimes(1));
+        });
     });
 });
