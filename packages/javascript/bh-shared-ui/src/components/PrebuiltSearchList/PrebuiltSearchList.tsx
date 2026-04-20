@@ -111,7 +111,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                             tabIndex={0}
                                                             className='w-full h-full'
                                                             key={`${id}-${idx}`}
-                                                            aria-label={`Run pre-built search query: ${name || description}`}
+                                                            aria-label={`Run pre-built search query: ${name || description || ''}`.trimEnd()}
                                                             onClick={() => clickHandler(query, id)}
                                                             onKeyDown={adaptClickHandlerToKeyDown(() =>
                                                                 clickHandler(query, id)
