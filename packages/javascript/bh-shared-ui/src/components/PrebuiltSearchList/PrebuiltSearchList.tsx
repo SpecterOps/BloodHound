@@ -67,7 +67,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
         return false;
     };
 
-    const selectedItem = (e: HTMLLIElement | null) => {
+    const scrollSelectedItemIntoView = (e: HTMLLIElement | null) => {
         if (e) e.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
@@ -105,7 +105,11 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                                 : undefined
                                                         }
                                                         key={`${id}-${idx}`}
-                                                        ref={isSelectedQuery(name, id) ? selectedItem : null}>
+                                                        ref={
+                                                            isSelectedQuery(name, id)
+                                                                ? scrollSelectedItemIntoView
+                                                                : null
+                                                        }>
                                                         <div
                                                             role='button'
                                                             tabIndex={0}
