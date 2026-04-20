@@ -76,7 +76,7 @@ func TestSetFontIcon(t *testing.T) {
 		nodeKindMap := graphschema.PrimaryDisplayKinds{
 			graph.StringKind("User"): graphschema.DisplayKind{
 				Name: "User",
-				Icon: graphschema.DisplayNodeIcon{
+				Icon: &graphschema.DisplayNodeIcon{
 					Name:  "user",
 					Color: "#17E625",
 					Type:  graphschema.DisplayNodeTypeFontAwesome,
@@ -117,7 +117,7 @@ func TestSetFontIcon(t *testing.T) {
 		nodeKindMap := graphschema.PrimaryDisplayKinds{
 			graph.StringKind("Meta"): graphschema.DisplayKind{
 				Name: "Meta",
-				Icon: graphschema.DisplayNodeIcon{
+				Icon: &graphschema.DisplayNodeIcon{
 					Name:  "star",
 					Color: "#FFF",
 				},
