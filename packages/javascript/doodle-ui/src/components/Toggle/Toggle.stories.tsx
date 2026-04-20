@@ -58,7 +58,7 @@ export const Default: Story = {
 /**
  * Large size toggle button.
  */
-export const Small: Story = {
+export const Large: Story = {
     args: {
         size: 'lg',
         children: 'Toggle Button',
