@@ -68,9 +68,10 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
         return false;
     };
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deps intentionally trigger ref re-execution on selection change
     const selectedItem = useCallback(
         (e: HTMLLIElement | null) => {
-            if (e) e.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            if (e) e.scrollIntoView({ behavior: 'smooth', block: 'start' });
         },
         [selectedQuery, showCommonQueries]
     );
@@ -81,7 +82,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                 <div data-testid='list-sections'>
                     {Object.entries(groupedQueries).map(([category, queryData]) => (
                         <div key={category} className='relative'>
-                            {category && !!queryData[0].queries.length && (
+                            {category && queryData.some((q) => q.queries.length) && (
                                 <div className={`${styles.subheader} font-bold sticky top-0 z-[2] py-2`}>
                                     {category}
                                 </div>
@@ -89,50 +90,57 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                             {queryData.map((queryItem, i) => {
                                 const { subheader, queries } = queryItem;
                                 return (
-                                    <ul key={i} className='list-none'>
+                                    <div key={i}>
                                         {subheader && !!queries.length && (
                                             <div className={`${styles.subheader} sticky top-9 z-[1] py-2`}>
                                                 {subheader}
                                             </div>
                                         )}
-                                        {queries?.map((lineItem, idx) => {
-                                            const { id, name, description, query, canEdit = false } = lineItem;
-                                            return (
-                                                <li
-                                                    className={`p-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-3 dark:hover:bg-neutral-dark-3 justify-between pl-4 list-none ${
-                                                        isSelectedQuery(name, id) ? styles.selected : ''
-                                                    }`}
-                                                    key={`${id}-${idx}`}
-                                                    ref={isSelectedQuery(name, id) ? selectedItem : null}>
-                                                    <div
-                                                        role='button'
-                                                        tabIndex={0}
-                                                        className='w-full h-full'
+                                        <ul className='list-none'>
+                                            {queries?.map((lineItem, idx) => {
+                                                const { id, name, description, query, canEdit = false } = lineItem;
+                                                return (
+                                                    <li
+                                                        className={`p-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-3 dark:hover:bg-neutral-dark-3 justify-between pl-4 list-none ${
+                                                            isSelectedQuery(name, id) ? styles.selected : ''
+                                                        }`}
+                                                        style={
+                                                            isSelectedQuery(name, id)
+                                                                ? { scrollMarginTop: '72px' }
+                                                                : undefined
+                                                        }
                                                         key={`${id}-${idx}`}
-                                                        aria-label='Run pre-built search query'
-                                                        onClick={() => clickHandler(query, id)}
-                                                        onKeyDown={adaptClickHandlerToKeyDown(() =>
-                                                            clickHandler(query, id)
-                                                        )}>
-                                                        {name ? (
-                                                            <p className='mb-0 leading-none'>{name}</p>
-                                                        ) : (
-                                                            <p className='mb-0 leading-none'>{description}</p>
+                                                        ref={isSelectedQuery(name, id) ? selectedItem : null}>
+                                                        <div
+                                                            role='button'
+                                                            tabIndex={0}
+                                                            className='w-full h-full'
+                                                            key={`${id}-${idx}`}
+                                                            aria-label='Run pre-built search query'
+                                                            onClick={() => clickHandler(query, id)}
+                                                            onKeyDown={adaptClickHandlerToKeyDown(() =>
+                                                                clickHandler(query, id)
+                                                            )}>
+                                                            {name ? (
+                                                                <p className='mb-0 leading-none'>{name}</p>
+                                                            ) : (
+                                                                <p className='mb-0 leading-none'>{description}</p>
+                                                            )}
+                                                        </div>
+                                                        {canEdit && typeof id === 'number' && (
+                                                            <ListItemActionMenu
+                                                                id={id}
+                                                                query={query}
+                                                                deleteQuery={() => {
+                                                                    if (deleteHandler) deleteHandler(id);
+                                                                }}
+                                                            />
                                                         )}
-                                                    </div>
-                                                    {canEdit && typeof id === 'number' && (
-                                                        <ListItemActionMenu
-                                                            id={id}
-                                                            query={query}
-                                                            deleteQuery={() => {
-                                                                if (deleteHandler) deleteHandler(id);
-                                                            }}
-                                                        />
-                                                    )}
-                                                </li>
-                                            );
-                                        })}
-                                    </ul>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    </div>
                                 );
                             })}
                         </div>
