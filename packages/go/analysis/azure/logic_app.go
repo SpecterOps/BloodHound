@@ -23,14 +23,14 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-func LogicAppEntityDetails(ctx context.Context, db graph.Database, validPrimaryKinds graphschema.ValidPrimaryKinds, objectID string, hydrateCounts bool) (LogicAppDetails, error) {
+func LogicAppEntityDetails(ctx context.Context, db graph.Database, primaryDisplayKinds graphschema.PrimaryDisplayKinds, objectID string, hydrateCounts bool) (LogicAppDetails, error) {
 	var details LogicAppDetails
 
 	return details, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
 			return err
 		} else {
-			details.Node = FromGraphNode(validPrimaryKinds, node)
+			details.Node = FromGraphNode(primaryDisplayKinds, node)
 			if hydrateCounts {
 				details, err = PopulateLogicAppEntityDetailsCounts(tx, node, details)
 			}

@@ -560,7 +560,7 @@ func TestEntityDetails(t *testing.T) {
 		testContext = integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 		dbInst      = integration.SetupDB(t)
 	)
-	validPrimaryKinds, err := dbInst.GetValidDisplayKinds(testContext.Context())
+	primaryDisplayKinds, err := dbInst.GetPrimaryDisplayKinds(testContext.Context())
 	require.NoError(t, err)
 
 	t.Run("ApplicationEntityDetails", func(t *testing.T) {
@@ -573,13 +573,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", appObjectID)
 
-			app, err := azure.ApplicationEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, appObjectID, false)
+			app, err := azure.ApplicationEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, appObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.Application.Properties.Get(common.ObjectID.String()).Any(), app.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, app.InboundObjectControl)
 
-			app, err = azure.ApplicationEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, appObjectID, true)
+			app, err = azure.ApplicationEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, appObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, app.InboundObjectControl)
@@ -596,13 +596,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", deviceObjectID)
 
-			device, err := azure.DeviceEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, deviceObjectID, false)
+			device, err := azure.DeviceEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, deviceObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.Device.Properties.Get(common.ObjectID.String()).Any(), device.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, device.InboundObjectControl)
 
-			device, err = azure.DeviceEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, deviceObjectID, true)
+			device, err = azure.DeviceEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, deviceObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, device.InboundObjectControl)
@@ -619,13 +619,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", groupObjectID)
 
-			group, err := azure.GroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, false)
+			group, err := azure.GroupEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, groupObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.Group.Properties.Get(common.ObjectID.String()).Any(), group.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, group.InboundObjectControl)
 
-			group, err = azure.GroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, true)
+			group, err = azure.GroupEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, groupObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, group.InboundObjectControl)
@@ -642,13 +642,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", groupObjectID)
 
-			group, err := azure.ManagementGroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, false)
+			group, err := azure.ManagementGroupEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, groupObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.ManagementGroup.Properties.Get(common.ObjectID.String()).Any(), group.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, group.InboundObjectControl)
 
-			group, err = azure.ManagementGroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, true)
+			group, err = azure.ManagementGroupEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, groupObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, group.InboundObjectControl)
@@ -665,13 +665,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", groupObjectID)
 
-			group, err := azure.ResourceGroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, false)
+			group, err := azure.ResourceGroupEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, groupObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.ResourceGroup.Properties.Get(common.ObjectID.String()).Any(), group.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, group.InboundObjectControl)
 
-			group, err = azure.ResourceGroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, true)
+			group, err = azure.ResourceGroupEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, groupObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, group.InboundObjectControl)
@@ -688,13 +688,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", keyVaultObjectID)
 
-			keyVault, err := azure.KeyVaultEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, keyVaultObjectID, false)
+			keyVault, err := azure.KeyVaultEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, keyVaultObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.KeyVault.Properties.Get(common.ObjectID.String()).Any(), keyVault.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, keyVault.InboundObjectControl)
 
-			keyVault, err = azure.KeyVaultEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, keyVaultObjectID, true)
+			keyVault, err = azure.KeyVaultEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, keyVaultObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, keyVault.InboundObjectControl)
@@ -711,13 +711,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", roleObjectID)
 
-			role, err := azure.RoleEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, roleObjectID, false)
+			role, err := azure.RoleEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, roleObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.Role.Properties.Get(common.ObjectID.String()).Any(), role.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, role.ActiveAssignments)
 
-			role, err = azure.RoleEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, roleObjectID, true)
+			role, err = azure.RoleEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, roleObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, role.ActiveAssignments)
@@ -758,14 +758,14 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", servicePrincipalObjectID)
 
-			servicePrincipal, err := azure.ServicePrincipalEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, servicePrincipalObjectID, false)
+			servicePrincipal, err := azure.ServicePrincipalEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, servicePrincipalObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.ServicePrincipal.Properties.Get(common.ObjectID.String()).Any(), servicePrincipal.Properties[common.ObjectID.String()])
 			assert.Equal(t, harness.AZEntityPanelHarness.Application.Properties.Get(common.ObjectID.String()).Any(), servicePrincipal.Properties[graphAzure.AppID.String()])
 			assert.Equal(t, 0, servicePrincipal.InboundObjectControl)
 
-			servicePrincipal, err = azure.ServicePrincipalEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, servicePrincipalObjectID, true)
+			servicePrincipal, err = azure.ServicePrincipalEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, servicePrincipalObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, servicePrincipal.InboundObjectControl)
@@ -781,13 +781,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", subscriptionObjectID)
 
-			subscription, err := azure.SubscriptionEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, subscriptionObjectID, false)
+			subscription, err := azure.SubscriptionEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, subscriptionObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.Subscription.Properties.Get(common.ObjectID.String()).Any(), subscription.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, subscription.InboundObjectControl)
 
-			subscription, err = azure.SubscriptionEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, subscriptionObjectID, true)
+			subscription, err = azure.SubscriptionEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, subscriptionObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, subscription.InboundObjectControl)
@@ -803,13 +803,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", tenantObjectID)
 
-			tenant, err := azure.TenantEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, tenantObjectID, false)
+			tenant, err := azure.TenantEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, tenantObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.Tenant.Properties.Get(common.ObjectID.String()).Any(), tenant.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, tenant.InboundObjectControl)
 
-			tenant, err = azure.TenantEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, tenantObjectID, true)
+			tenant, err = azure.TenantEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, tenantObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, tenant.InboundObjectControl)
@@ -825,13 +825,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", userObjectID)
 
-			user, err := azure.UserEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, userObjectID, false)
+			user, err := azure.UserEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, userObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.User.Properties.Get(common.ObjectID.String()).Any(), user.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, user.OutboundObjectControl)
 
-			user, err = azure.UserEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, userObjectID, true)
+			user, err = azure.UserEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, userObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, user.OutboundObjectControl)
@@ -847,13 +847,13 @@ func TestEntityDetails(t *testing.T) {
 			require.Nil(t, err)
 			assert.NotEqual(t, "", vmObjectID)
 
-			vm, err := azure.VMEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, vmObjectID, false)
+			vm, err := azure.VMEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, vmObjectID, false)
 
 			require.Nil(t, err)
 			assert.Equal(t, harness.AZEntityPanelHarness.VM.Properties.Get(common.ObjectID.String()).Any(), vm.Properties[common.ObjectID.String()])
 			assert.Equal(t, 0, vm.InboundObjectControl)
 
-			vm, err = azure.VMEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, vmObjectID, true)
+			vm, err = azure.VMEntityDetails(testContext.Context(), testContext.Graph.Database, primaryDisplayKinds, vmObjectID, true)
 
 			require.Nil(t, err)
 			assert.NotEqual(t, 0, vm.InboundObjectControl)

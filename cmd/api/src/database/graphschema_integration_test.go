@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -59,9 +60,9 @@ func registerAndGetKind(t *testing.T, testSuite IntegrationTestSuite, name strin
 func getKindByName(t *testing.T, testSuite IntegrationTestSuite, name string) model.Kind {
 	t.Helper()
 	// Create Kind by name from DAWGS Kind Table
-	kind, err := testSuite.BHDatabase.GetKindByName(testSuite.Context, name)
+	kind, err := testSuite.BHDatabase.GetKindsByNames(testSuite.Context, name)
 	require.NoError(t, err, "unexpected error occurred when getting kind by name")
-	return kind
+	return kind[0]
 }
 
 func createTestEnvironment(t *testing.T, testSuite IntegrationTestSuite, extensionID int32, envKindID int32, sourceKindID int32) model.SchemaEnvironment {
@@ -1320,7 +1321,7 @@ func TestDatabase_UpdateGraphSchemaNodeKindIconById(t *testing.T) {
 				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
 				createdNodeKind := createTestNodeKind(t, testSuite, "Test Kind 1", extension.ID, "Test_Kind_1", "Test Kind 1", true, "user", "#17E625")
 
-				updatedNodeKind, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKindIconById(testSuite.Context, createdNodeKind.ID, model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#3a0b138c"})
+				updatedNodeKind, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKindIconById(testSuite.Context, createdNodeKind.ID, graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "coffee", Color: "#3a0b138c"})
 				require.NoError(t, err, "unexpected error occurred when updating node kind icon")
 
 				// Retrieve Node Kind 1
@@ -1334,7 +1335,7 @@ func TestDatabase_UpdateGraphSchemaNodeKindIconById(t *testing.T) {
 		}, {
 			name: "Error: failed to update schema node kind icon that does not exist",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
-				_, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKindIconById(testSuite.Context, 12345, model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#3a0b138c"})
+				_, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKindIconById(testSuite.Context, 12345, graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "coffee", Color: "#3a0b138c"})
 				require.EqualError(t, err, database.ErrNotFound.Error())
 			},
 		},
@@ -4528,14 +4529,16 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 }
 
 func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
-	assertContainsDisplayKind := func(t *testing.T, got map[graph.Kind]bool, name string) {
+	assertContainsDisplayKind := func(t *testing.T, got graphschema.PrimaryDisplayKinds, name string) {
 		t.Helper()
-		assert.True(t, got[graph.StringKind(name)], "expected display kind %s to be present in result", name)
+		_, ok := got[graph.StringKind(name)]
+		assert.True(t, ok, "expected display kind %s to be present in result", name)
 	}
 
-	assertDoesNotContainDisplayKind := func(t *testing.T, got map[graph.Kind]bool, name string) {
+	assertDoesNotContainDisplayKind := func(t *testing.T, got graphschema.PrimaryDisplayKinds, name string) {
 		t.Helper()
-		assert.False(t, got[graph.StringKind(name)], "expected kind %s to not be present in result", name)
+		_, ok := got[graph.StringKind(name)]
+		assert.False(t, ok, "expected kind %s to not be present in result", name)
 	}
 
 	tests := []struct {
@@ -4545,7 +4548,7 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 		{
 			name: "Success: returns display kinds",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
-				baseline, err := testSuite.BHDatabase.GetValidDisplayKinds(testSuite.Context)
+				baseline, err := testSuite.BHDatabase.GetPrimaryDisplayKinds(testSuite.Context)
 				require.NoError(t, err, "unexpected error occurred when getting baseline display kinds")
 
 				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
@@ -4554,7 +4557,7 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 				createTestNodeKind(t, testSuite, "Display_Kind_1", extension.ID, "Display Kind 1", "a display kind", true, "icon", "blue")
 				createTestNodeKind(t, testSuite, "Display_Kind_2", extension.ID, "Display Kind 2", "a display kind", true, "icon", "red")
 
-				displayKinds, err := testSuite.BHDatabase.GetValidDisplayKinds(testSuite.Context)
+				displayKinds, err := testSuite.BHDatabase.GetPrimaryDisplayKinds(testSuite.Context)
 				assert.NoError(t, err, "unexpected error occurred when retrieving display kinds")
 
 				// Both new display kinds should appear in the result
@@ -4569,7 +4572,7 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 		{
 			name: "Success: does not include non-display kinds",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
-				baseline, err := testSuite.BHDatabase.GetValidDisplayKinds(testSuite.Context)
+				baseline, err := testSuite.BHDatabase.GetPrimaryDisplayKinds(testSuite.Context)
 				require.NoError(t, err, "unexpected error occurred when getting baseline display kinds")
 
 				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
@@ -4578,7 +4581,7 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 				createTestNodeKind(t, testSuite, "Display_Kind_1", extension.ID, "Display Kind 1", "a display kind", true, "icon", "blue")
 				createTestNodeKind(t, testSuite, "Non_Display_Kind_1", extension.ID, "Non Display Kind 1", "a non-display kind", false, "", "")
 
-				displayKinds, err := testSuite.BHDatabase.GetValidDisplayKinds(testSuite.Context)
+				displayKinds, err := testSuite.BHDatabase.GetPrimaryDisplayKinds(testSuite.Context)
 				assert.NoError(t, err, "unexpected error occurred when retrieving display kinds")
 
 				// Only the display kind should appear, not the non-display kind
