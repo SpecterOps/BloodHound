@@ -231,6 +231,7 @@ const ExploreSearch: React.FC = () => {
                             setAutoRun={handleAutoRunChange}
                             disableQueryLimit={disableTimeout}
                             setDisableQueryLimit={handleDisableTimeoutChange}
+                            onExploreMenuCollapse={() => setShowSearchWidget(false)}
                         />,
                         /* eslint-enable react/jsx-key */
                     ]}
