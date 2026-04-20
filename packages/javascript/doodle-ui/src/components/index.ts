@@ -40,6 +40,8 @@ export * from './Switch';
 export * from './Table';
 export * from './Tabs';
 export * from './Textarea';
+export * from './Toggle';
+export * from './ToggleGroup';
 export * from './Tooltip';
 export * from './Typography';
 export * from './VisuallyHidden';

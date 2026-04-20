@@ -13,4 +13,4 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-export { Toggle, ToggleVariants } from './Toggle';
+export { ToggleGroup, ToggleGroupItem } from './ToggleGroup';
