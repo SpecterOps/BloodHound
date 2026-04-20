@@ -17,7 +17,7 @@ import { Box, Typography } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { Button } from 'doodle-ui';
 import groupBy from 'lodash/groupBy';
-import { FC, useCallback } from 'react';
+import { FC } from 'react';
 import { QueryListSection } from '../../types';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { useSavedQueriesContext } from '../../views/Explore/providers/SavedQueriesProvider';
@@ -68,13 +68,9 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
         return false;
     };
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- deps intentionally trigger ref re-execution on selection change
-    const selectedItem = useCallback(
-        (e: HTMLLIElement | null) => {
-            if (e) e.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        },
-        [selectedQuery, showCommonQueries]
-    );
+    const selectedItem = (e: HTMLLIElement | null) => {
+        if (e) e.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
 
     return (
         <>
@@ -116,7 +112,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                             tabIndex={0}
                                                             className='w-full h-full'
                                                             key={`${id}-${idx}`}
-                                                            aria-label='Run pre-built search query'
+                                                            aria-label={`Run pre-built search query: ${name || description}`}
                                                             onClick={() => clickHandler(query, id)}
                                                             onKeyDown={adaptClickHandlerToKeyDown(() =>
                                                                 clickHandler(query, id)
