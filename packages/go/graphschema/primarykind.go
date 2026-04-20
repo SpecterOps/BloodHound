@@ -17,8 +17,6 @@
 package graphschema
 
 import (
-	"log/slog"
-
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -105,7 +103,6 @@ func PrimaryDisplayKind(primaryDisplayKinds PrimaryDisplayKinds, kinds graph.Kin
 	)
 
 	if primaryDisplayKinds == nil {
-		slog.Warn("PrimaryDisplayKind: primaryDisplayKinds is nil")
 		primaryDisplayKinds = ValidKinds
 	}
 
