@@ -1347,10 +1347,10 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 					SAMLProvider: &model.SAMLProvider{},
 				}, nil)
 			}, expected: expected{
-				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"request Content-Type isn't multipart/form-data"}]}`,
-			},
+			responseCode:   http.StatusBadRequest,
+			responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"request Content-Type isn't multipart/form-data"}]}`,
+		},
 		},
 		{
 			name: "Error: Empty multiform, ParseMultipartForm - Bad Request",
@@ -2496,10 +2496,11 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		expected         expected
+		dogTagsOverrides dogtags.TestOverrides
 	}
 
 	tt := []testData{
@@ -3057,6 +3058,85 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui"}, "Set-Cookie": []string{"token=token; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
 			},
 		},
+		{
+			name: "Success: session created - ETAC enabled",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/slug/callback",
+					},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.SessionTTLHours).Return(appcfg.Parameter{}, nil).Times(2)
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
+					Name: "POST Provider",
+					Slug: "post-provider",
+					Type: model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{
+						Name:            "POST SAML Provider",
+						DisplayName:     "POST SAML SSO",
+						IssuerURI:       "https://post-provider.com/saml",
+						SingleSignOnURI: "https://post-provider.com/sso",
+						MetadataXML: []byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://post-provider.com/saml">
+						<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+							<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://post-provider.com/sso"/>
+						</IDPSSODescriptor>
+					</EntityDescriptor>`),
+					},
+					Serial: model.Serial{
+						ID: int32(1),
+					},
+				}, nil)
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
+					AttributeStatements: []saml.AttributeStatement{{
+						Attributes: []saml.Attribute{{
+							FriendlyName: "uid",
+							Name:         model.XMLSOAPClaimsEmailAddress,
+							NameFormat:   model.ObjectIDAttributeNameFormat,
+							Values: []saml.AttributeValue{{
+								Type:  model.XMLTypeString,
+								Value: "username",
+							}},
+						}},
+					}},
+				}, nil)
+				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
+				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{
+					SSOProviderID: null.Int32{
+						NullInt32: sql.NullInt32{
+							Int32: int32(1),
+							Valid: true,
+						},
+					},
+					SSOProvider: &model.SSOProvider{
+						Name:   "name",
+						Slug:   "slug",
+						Serial: model.Serial{ID: int32(1)},
+						SAMLProvider: &model.SAMLProvider{
+							Serial:        model.Serial{ID: 1234},
+							SSOProviderID: null.Int32From(int32(1)),
+						},
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(model.UserSession{}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui"}, "Set-Cookie": []string{"token=token; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
+			},
+		},
 	}
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -3077,7 +3157,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					ServiceProviderKey:                ValidKey,
 					ServiceProviderCertificateCAChain: "",
 				},
-			}, mocks.mockDatabase, auth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, dogtags.NewDefaultService())
+			}, mocks.mockDatabase, auth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, dogtags.NewTestService(testCase.dogTagsOverrides))
 			resources.SAML = mocks.mockSAML
 			response := httptest.NewRecorder()
 
