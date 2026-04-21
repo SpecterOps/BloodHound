@@ -152,7 +152,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--platform-badge-bg': elevation.light[2],
 
             // Components / Graph / Edge
-            '--edge-color': '#55595C',
+            '--edge-color': light.edge.color,
             '--edge-label-bg': palette.neutral.light[200],
             '--edge-label-text': common.dark,
 
@@ -184,7 +184,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // TEXT
             '--text-main': common.white,
-            '--text-light': '#CDCDCD',
+            '--text-light': dark.text.light,
             '--text-contrast': common.dark,
             '--text-disabled': common.disabled,
             '--text-primary': dark.primary.main,
@@ -250,10 +250,10 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--input-label': common.white,
             '--input-fill': elevation.dark[1],
             '--input-fill-disabled': palette.neutral.dark[400],
-            '--input-border-default': '#515151',
+            '--input-border-default': dark.input.border,
             '--input-border-hover': dark.secondary.main,
             '--input-border-disabled': palette.neutral.dark[900],
-            '--input-placeholder-text': '#868686',
+            '--input-placeholder-text': dark.input.placeholder,
 
             // Components/Input/Selectors
             '--selector-disable-fill': common.white,
@@ -298,7 +298,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--platform-badge-bg': elevation.dark[2],
 
             // Components / Graph / Edge
-            '--edge-color': '#6C6C6C',
+            '--edge-color': dark.edge.color,
             '--edge-label-bg': palette.neutral.dark[500],
             '--edge-label-text': common.white,
 

@@ -295,6 +295,9 @@ export const light = {
         main: '#00AA66',
         variant: '#008751',
     },
+    edge: {
+        color: '#55595C',
+    },
     status: {
         error: {
             main: '#B44641',
@@ -363,6 +366,16 @@ export const dark = {
     tertiary: {
         main: '#57E7AD',
         variant: '#7BC9A2',
+    },
+    text: {
+        light: '#CDCDCD',
+    },
+    input: {
+        border: '#515151',
+        placeholder: '#868686',
+    },
+    edge: {
+        color: '#6C6C6C',
     },
     status: {
         error: {
