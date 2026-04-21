@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { PluginCreator } from 'tailwindcss/types/config';
-import { common, dark, elevation, light, palette } from './colors';
+import { common, dark, elevation, light, palette, text } from './colors';
 
 const plugin: PluginCreator = ({ addBase, addUtilities }) => {
     addBase({
@@ -47,8 +47,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // TEXT
             '--text-contrast': common.white,
             '--text-disabled': palette.grey[700],
-            // double check below
-            '--text-light': '#505050',
+            '--text-light': text.light,
             '--text-main': common.dark,
             '--text-primary': light.primary.main,
             '--text-secondary': light.secondary.main,
@@ -79,7 +78,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // BRAND COLORS
             '--bhe-main': light.primary.main,
             '--sp-main': light.primary.main,
-            // double check below
             '--bhce-main': light['bhce-main'],
             '--logo-neutral': common.black,
             '--brand-primary-dark-purple': light.primary.variant,
@@ -109,15 +107,14 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--input-border-default': palette.grey[700],
             '--input-border-hover': light.secondary.main,
             '--input-border-disabled': palette.neutral.light[900],
-            // double check below
-            '--input-placeholder-text': '#6D6D6D',
+            '--input-placeholder-text': text.placeholder,
 
             // Components/Input/Selectors
             '--selector-disable-fill': common.white,
             '--switch-fill': palette.neutral.dark[700],
             '--switch-disabled-fill': palette.neutral.light[300],
 
-            // Compoennts/Data Display/ Menu
+            // Components/Data Display/ Menu
             '--menu-bg': elevation.light[0],
 
             // Components/Data Display/ Badge & Chip
@@ -189,7 +186,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--text-main': common.white,
             '--text-light': '#CDCDCD',
             '--text-contrast': common.dark,
-            '--text-disabled': '#A6A6A6',
+            '--text-disabled': common.disabled,
             '--text-primary': dark.primary.main,
             '--text-secondary': dark.secondary.main,
 
@@ -235,9 +232,8 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // Brand
             '--bhe-main': dark.primary.main,
             '--sp-main': dark.primary.main,
-            // double check below
             '--bhce-main': dark['bhce-main'],
-            '--logo-neutral': common.black,
+            '--logo-neutral': common.white,
             '--brand-primary-dark-purple': dark.primary.variant,
             '--brand-primary-deep-purple': dark.primary.main,
             '--brand-primary-medium-blue': dark.secondary.main,
@@ -257,15 +253,14 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--input-border-default': '#515151',
             '--input-border-hover': dark.secondary.main,
             '--input-border-disabled': palette.neutral.dark[900],
-            // double check below
             '--input-placeholder-text': '#868686',
 
             // Components/Input/Selectors
             '--selector-disable-fill': common.white,
             '--switch-fill': common.white,
-            '--switch-disabled-fill': '#A6A6A6',
+            '--switch-disabled-fill': common.disabled,
 
-            // Compoennts/Data Display/ Menu
+            // Components/Data Display/ Menu
             '--menu-bg': elevation.dark[2],
 
             // Components/Data Display/ Badge & Chip
@@ -310,7 +305,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // Utilities
             '--icon': common.white,
             '--icon-contrast': common.dark,
-            '--icon-disabled': '#A6A6A6',
+            '--icon-disabled': common.disabled,
             '--divider': palette.neutral.dark[500],
         },
     }),

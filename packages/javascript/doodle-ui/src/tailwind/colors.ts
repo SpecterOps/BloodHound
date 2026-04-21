@@ -254,6 +254,7 @@ export const common = {
     white: '#FFFFFF',
     black: '#000000',
     dark: '#121212',
+    disabled: '#A6A6A6',
     'neon-blue': '#5465FF',
     orange: '#F46036',
     'medium-purple': '#8E92EB',
@@ -344,6 +345,7 @@ export const text = {
     light: '#505050',
     contrast: common.white,
     disabled: palette.grey[700],
+    placeholder: '#6D6D6D',
     primary: light.primary.main,
     secondary: light.secondary.main,
 };
