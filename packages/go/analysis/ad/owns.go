@@ -73,12 +73,12 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, localGroupDat
 
 		// Get all source nodes of Owns ACEs (i.e., owning principals) where the target node has no ACEs granting abusable explicit permissions to OWNER RIGHTS
 		if err := postOwnsEdges(ctx, db, sink, dsHeuristicsCache, anyEnforced, adminGroupIds); err != nil {
-			return &post.AtomicPostProcessingStats{}, err
+			slog.ErrorContext(ctx, "Failed to process Owns relationships for postownsandwriteowner", attr.Error(err))
 		}
 
 		// Get all source nodes of WriteOwner ACEs where the target node has no ACEs granting explicit abusable permissions to OWNER RIGHTS
 		if err := postWriteOwnerEdges(ctx, db, sink, dsHeuristicsCache, anyEnforced); err != nil {
-			return &post.AtomicPostProcessingStats{}, err
+			slog.ErrorContext(ctx, "Failed to process WriteOwner relationships for postownsandwriteowner", attr.Error(err))
 		}
 
 		return sink.Stats(), nil
@@ -93,7 +93,7 @@ func postOwnsEdges(ctx context.Context, db graph.Database, sink *post.FilteredRe
 				query.Kind(query.Start(), ad.Entity),
 			)
 		})); err != nil {
-			return err
+			slog.ErrorContext(ctx, "Failed to fetch OwnsRaw relationships for postownsandwriteowner", attr.Error(err))
 		} else {
 			for _, rel := range relationships {
 
@@ -154,7 +154,7 @@ func postWriteOwnerEdges(ctx context.Context, db graph.Database, sink *post.Filt
 				query.Kind(query.Start(), ad.Entity),
 			)
 		})); err != nil {
-			return err
+			slog.ErrorContext(ctx, "Failed to fetch WriteOwnerRaw relationships for postownsandwriteowner", attr.Error(err))
 		} else {
 			for _, rel := range relationships {
 
