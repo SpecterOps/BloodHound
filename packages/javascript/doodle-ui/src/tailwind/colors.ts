@@ -1,4 +1,4 @@
-export const colors = {
+export const palette = {
     amber: {
         50: '#FFF8E1',
         100: '#FFECB3',
@@ -6,6 +6,7 @@ export const colors = {
         300: '#FFD54F',
         400: '#FFCA28',
         500: '#FFC107',
+        // 600 and 700 have same value
         600: '#FFB300',
         700: '#FFB300',
         800: '#FF8F00',
@@ -126,6 +127,7 @@ export const colors = {
         100: '#DCEDC8',
         200: '#C5E1A5',
         300: '#AED581',
+        // 400 and 500 have same value
         400: '#8BC34A',
         500: '#8BC34A',
         600: '#7CB342',
@@ -220,9 +222,186 @@ export const colors = {
         900: '#F57F17',
         A300: '#FFD64C',
     },
-    common: {
-        White: '#FFFFFF',
-        Black: '#000000',
-        Dark: '#121212',
+    neutral: {
+        light: {
+            50: '#F2F2F2',
+            100: '#F4F4F4',
+            200: '#E3E7EA',
+            300: '#DADEE1',
+            400: '#CACFD3',
+            500: '#C0C6CB',
+            600: '#B2B8BD',
+            700: '#A6ADB2',
+            800: '#979FA4',
+            900: '#848C91',
+        },
+        dark: {
+            50: '#121212',
+            100: '#161616',
+            200: '#1A1A1A',
+            300: '#1F1F1F',
+            400: '#222222',
+            500: '#272727',
+            600: '#2C2C2C',
+            700: '#2E2E2E',
+            800: '#323232',
+            900: '#363636',
+        },
+    },
+};
+
+export const common = {
+    white: '#FFFFFF',
+    black: '#000000',
+    dark: '#121212',
+    'neon-blue': '#5465FF',
+    orange: '#F46036',
+    'medium-purple': '#8E92EB',
+    'light-purple': '#D7D6E6',
+    'light-blue-gray': '#E3EAF0',
+};
+
+export const elevation = {
+    light: {
+        0: common.white,
+        1: common.white,
+        2: palette.neutral.light[100],
+        3: palette.neutral.light[200],
+        4: palette.neutral.light[300],
+        5: palette.neutral.light[400],
+    },
+    dark: {
+        0: common.black,
+        1: palette.neutral.dark[50],
+        2: palette.neutral.dark[400],
+        3: palette.neutral.dark[500],
+        4: palette.neutral.dark[600],
+        5: palette.neutral.dark[700],
+    },
+};
+
+export const light = {
+    'bhce-main': '#E02F35',
+    primary: {
+        main: '#2C2677',
+        variant: '#0D0A30',
+    },
+    secondary: {
+        main: '#4A3BD7',
+        variant: '#3729BB',
+    },
+    tertiary: {
+        main: '#00AA66',
+        variant: '#008751',
+    },
+    status: {
+        error: {
+            main: '#B44641',
+            text: '#5F2120',
+            fill: palette.red[50],
+        },
+        indeterminate: {
+            fill: palette.neutral.dark[400],
+        },
+        info: {
+            main: palette['light-blue'][700],
+            text: '#004465',
+            fill: palette['light-blue'][50],
+        },
+        success: {
+            main: palette.green[600],
+            text: '#1E4620',
+            fill: palette.green[50],
+        },
+        warning: {
+            main: palette.orange[900],
+            text: '#6D3900',
+            fill: '#FFE1D1',
+        },
+    },
+    badge: {
+        error: {
+            hover: '#8A3531',
+        },
+        warning: {
+            main: '#BD5500',
+            hover: '#964300',
+        },
+        success: {
+            main: palette.green[800],
+            hover: palette.green[900],
+        },
+        info: {
+            main: palette['light-blue'][800],
+            hover: palette['light-blue'][900],
+        },
+        indeterminate: palette.neutral.dark[400],
+    },
+};
+
+export const text = {
+    main: common.dark,
+    light: '#505050',
+    contrast: common.white,
+    disabled: palette.grey[700],
+    primary: light.primary.main,
+    secondary: light.secondary.main,
+};
+
+export const dark = {
+    'bhce-main': '#F35857',
+    primary: {
+        main: '#A1A0FF',
+        variant: '#8D8BF8',
+    },
+    secondary: {
+        main: '#66A3FF',
+        variant: '#4E95FF',
+    },
+    tertiary: {
+        main: '#57E7AD',
+        variant: '#7BC9A2',
+    },
+    status: {
+        error: {
+            main: palette.red[200],
+            text: palette.red[100],
+            fill: '#5F2120',
+        },
+        indeterminate: {
+            fill: common.white,
+        },
+        info: {
+            main: palette['light-blue'][200],
+            text: palette['light-blue'][100],
+            fill: '#103440',
+        },
+        success: {
+            main: palette.green[200],
+            text: palette.green[100],
+            fill: '#1E4620',
+        },
+        warning: {
+            main: palette.orange[500],
+            text: palette.orange[100],
+            fill: '#452F16',
+        },
+    },
+    badge: {
+        error: {
+            hover: palette.red[300],
+        },
+        warning: {
+            main: palette.orange[200],
+            hover: palette.orange[300],
+        },
+        success: {
+            main: palette.green[200],
+            hover: palette.green[300],
+        },
+        info: {
+            main: palette['light-blue'][200],
+            hover: palette['light-blue'][300],
+        },
     },
 };
