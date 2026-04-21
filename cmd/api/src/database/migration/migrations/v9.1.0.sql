@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS events (
   id UUID PRIMARY KEY NOT NULL,
   type TEXT NOT NULL,
   message TEXT NOT NULL,
-  data JSONB,
+  data JSONB NOT NULL,
   created_at timestamp with time zone DEFAULT current_timestamp,
   processed_at timestamp with time zone DEFAULT NULL
 );
