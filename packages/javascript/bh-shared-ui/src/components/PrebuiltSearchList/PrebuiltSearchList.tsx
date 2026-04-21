@@ -17,7 +17,7 @@ import { Box, Typography } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { Button } from 'doodle-ui';
 import groupBy from 'lodash/groupBy';
-import { FC } from 'react';
+import { FC, useCallback } from 'react';
 import { QueryListSection } from '../../types';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { useSavedQueriesContext } from '../../views/Explore/providers/SavedQueriesProvider';
@@ -67,9 +67,9 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
         return false;
     };
 
-    const scrollSelectedItemIntoView = (e: HTMLLIElement | null) => {
+    const scrollSelectedItemIntoView = useCallback((e: HTMLLIElement | null) => {
         if (e) e.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
+    }, []);
 
     return (
         <>
