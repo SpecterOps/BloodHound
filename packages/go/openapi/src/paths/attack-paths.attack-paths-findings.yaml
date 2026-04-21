@@ -28,7 +28,7 @@ get:
     - name: sort_by
       description: |
         Sortable columns are `severity`, `finding_type`, `finding`, `platform`, `environment`,
-        `zone`, `source_principal`, `target_principal`, `status`, `first_seen`, `last_seen`.
+        `zone`, `source_principal`, `source_principal_kind`, `target_principal`, `target_principal_kind`, `status`, `first_seen`, `last_seen`.
       in: query
       schema:
         $ref: "./../schemas/api.params.query.sort-by.yaml"
@@ -67,8 +67,18 @@ get:
       in: query
       schema:
         $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: source_principal_kind
+      description: Filter by source principal kind.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
     - name: target_principal
       description: Filter by target principal.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: target_principal_kind
+      description: Filter by target principal kind.
       in: query
       schema:
         $ref: "./../schemas/api.params.predicate.filter.string.yaml"
@@ -100,9 +110,9 @@ get:
           examples:
             Unified CSV export:
               value: |
-                severity,finding_type,finding,platform,environment,zone,source_principal,target_principal,status,first_seen,last_seen
-                critical,relationship,Tier Zero Generic Write,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,ADMIN@CORP1.LAB.HOME-LABS.LOL,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
-                high,list,Kerberoasting,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,Tier Zero,,PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
+                severity,finding_type,finding,platform,environment,zone,source_principal,source_principal_kind,target_principal,target_principal_kind,status,first_seen,last_seen
+                critical,relationship,Tier Zero Generic Write,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
+                high,list,Kerberoasting,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,Tier Zero,,,,User,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
         application/json:
           schema:
             allOf:
@@ -137,9 +147,15 @@ get:
                         source_principal:
                           type: string
                           description: Source principal name. Omitted for list findings.
+                        source_principal_kind:
+                          type: string
+                          description: Source principal kind. Omitted for list findings.
                         target_principal:
                           type: string
                           description: Target principal name.
+                        target_principal_kind:
+                          type: string
+                          description: Target principal kind.
                         status:
                           type: string
                           description: Finding status.
@@ -167,7 +183,9 @@ get:
                     environment: "S-1-5-21-1974516972-3116780949-2584384717"
                     zone: "Tier Zero"
                     source_principal: "RPATTON@CORP1.LAB.HOME-LABS.LOL"
+                    source_principal_kind: "User"
                     target_principal: "ADMIN@CORP1.LAB.HOME-LABS.LOL"
+                    target_principal_kind: "User"
                     status: "active"
                     first_seen: "2026-04-11T00:30:18.491666Z"
                     last_seen: "2026-04-14T16:57:35.675609Z"
@@ -178,6 +196,7 @@ get:
                     environment: "S-1-5-21-1974516972-3116780949-2584384717"
                     zone: "Tier Zero"
                     target_principal: "PSX_D_BA@CORP1.LAB.HOME-LABS.LOL"
+                    target_principal_kind: "User"
                     status: "accepted"
                     first_seen: "2026-04-11T00:30:18.491666Z"
                     last_seen: "2026-04-14T16:57:35.675609Z"
