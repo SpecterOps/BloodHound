@@ -23,25 +23,115 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
 
+func isExtendedNodeKind(kind graph.Kind) bool {
+	return strings.HasPrefix(kind.String(), model.AssetGroupTagKindPrefix) || kind.Is(graph.StringKind("Meta"), graph.StringKind("MetaDetails"), common.MigrationData)
+}
+
 type ListKindsResponse struct {
-	Kinds graph.Kinds `json:"kinds"`
+	Kinds     graph.Kinds `json:"kinds"`
+	NodeKinds graph.Kinds `json:"node_kinds"`
+	EdgeKinds graph.Kinds `json:"edge_kinds"`
 }
 
 // ListKinds returns all node kinds, edge kinds, and tier tags present in the system.
 // It is a comprehensive view of the various kinds the graph currently recognizes.
 func (s Resources) ListKinds(response http.ResponseWriter, request *http.Request) {
+	var (
+		resp = ListKindsResponse{}
+		err  error
+	)
+
+	if resp.Kinds, err = s.Graph.FetchKinds(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		// Alpha sort kind list
+		slices.SortFunc(resp.Kinds, func(a, b graph.Kind) int {
+			return strings.Compare(a.String(), b.String())
+		})
+
+		// This gets both custom node kinds (schemaless) and schema based node kinds
+		// Note: currently this is not an exhaustive list until all the custom-node sync work is complete
+		if displayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			// Add nodes and edge kinds for UI
+			for _, kind := range resp.Kinds {
+				if _, ok := displayKinds[kind]; ok {
+					resp.NodeKinds = append(resp.NodeKinds, kind)
+					// Asset group tags are node kinds as well as meta kinds
+				} else if isExtendedNodeKind(kind) {
+					resp.NodeKinds = append(resp.NodeKinds, kind)
+				} else {
+					resp.EdgeKinds = append(resp.EdgeKinds, kind)
+				}
+			}
+		}
+
+		api.WriteBasicResponse(request.Context(), resp, http.StatusOK, response)
+	}
+}
+
+type ListDisplayKindsResponse struct {
+	NodeKinds map[string]graphschema.DisplayKind `json:"node_kinds"`
+	EdgeKinds map[string]graphschema.DisplayKind `json:"edge_kinds"`
+}
+
+// ListDisplayKinds returns kinds to be mapped to enriched data like display name, icon, etc
+func (s Resources) ListDisplayKinds(response http.ResponseWriter, request *http.Request) {
+	var resp = ListDisplayKindsResponse{NodeKinds: make(map[string]graphschema.DisplayKind), EdgeKinds: make(map[string]graphschema.DisplayKind)}
+
 	if kinds, err := s.Graph.FetchKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		// Alpha sort
+		// Alpha sort kind list
 		slices.SortFunc(kinds, func(a, b graph.Kind) int {
 			return strings.Compare(a.String(), b.String())
 		})
 
-		api.WriteBasicResponse(request.Context(), ListKindsResponse{Kinds: kinds}, http.StatusOK, response)
+		// This gets both custom node kinds (schemaless) and schema based node kinds
+		// Note: currently this is not an exhaustive list until all the custom-node sync work is complete
+		if displayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if extensions, _, err := s.DB.GetGraphSchemaExtensions(request.Context(), model.Filters{}, model.Sort{}, 0, 0); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			// Build map to link extension display name to id to enrich the display kind
+			extensionNameById := make(map[int]string)
+			for _, extension := range extensions {
+				extensionNameById[int(extension.ID)] = extension.DisplayName
+			}
+
+			// Sort nodes and edge kinds for UI
+			for _, kind := range kinds {
+				if nodeKind, ok := displayKinds[kind]; ok {
+					// Enrich display kind with extension display name so nodes can be labeled "ExtensionX | NodeKindY"
+					if extensionDisplayName, ok := extensionNameById[nodeKind.ExtensionId]; ok {
+						nodeKind.ExtensionDisplayName = extensionDisplayName
+					} else {
+						nodeKind.ExtensionDisplayName = "Open Graph" // Fallback to Open graph when schemaless
+					}
+					resp.NodeKinds[kind.String()] = nodeKind
+					// Asset group tags are node kinds as well as meta kinds, they do not have icons
+				} else if isExtendedNodeKind(kind) {
+					resp.NodeKinds[kind.String()] = graphschema.DisplayKind{
+						Name:        kind.String(),
+						DisplayName: kind.String(),
+					}
+				} else {
+					resp.EdgeKinds[kind.String()] = graphschema.DisplayKind{
+						Name:        kind.String(),
+						DisplayName: kind.String(),
+					}
+				}
+			}
+		}
+
+		api.WriteBasicResponse(request.Context(), resp, http.StatusOK, response)
 	}
 }
 

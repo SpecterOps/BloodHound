@@ -1361,18 +1361,22 @@ func (s *BloodhoundDB) GetPrimaryDisplayKinds(ctx context.Context) (graphschema.
 			for _, kind := range kinds {
 				customKind := customKindsByName[kind.Name]
 				primaryDisplayKinds[kind.ToKind()] = graphschema.DisplayKind{
-					Name: kind.Name,
-					Icon: graphschema.DisplayNodeIcon{
+					Name:        kind.Name,
+					DisplayName: kind.Name,
+					Icon: &graphschema.DisplayNodeIcon{
 						Name:  customKind.Config.Icon.Name,
 						Type:  customKind.Config.Icon.Type,
 						Color: customKind.Config.Icon.Color,
 					},
 				}
 			}
+			// Prioritize schema node kind definitions
 			for _, kind := range displaySchemaNodeKinds {
 				primaryDisplayKinds[kind.ToKind()] = graphschema.DisplayKind{
-					Name: kind.Name,
-					Icon: graphschema.DisplayNodeIcon{
+					Name:        kind.Name,
+					ExtensionId: int(kind.SchemaExtensionId),
+					DisplayName: kind.DisplayName,
+					Icon: &graphschema.DisplayNodeIcon{
 						Name:  kind.Icon,
 						Color: kind.IconColor,
 						Type:  graphschema.DisplayNodeTypeFontAwesome,

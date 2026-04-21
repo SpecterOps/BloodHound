@@ -71,8 +71,11 @@ type DisplayNodeIcon struct {
 }
 
 type DisplayKind struct {
-	Name string
-	Icon DisplayNodeIcon
+	Name                 string           `json:"name"`
+	DisplayName          string           `json:"display_name"`
+	Icon                 *DisplayNodeIcon `json:"icon,omitempty"`
+	ExtensionId          int              `json:"extension_id,omitempty"`
+	ExtensionDisplayName string           `json:"extension_display_name,omitempty"`
 }
 
 type PrimaryDisplayKinds map[graph.Kind]DisplayKind
@@ -80,7 +83,7 @@ type PrimaryDisplayKinds map[graph.Kind]DisplayKind
 func (s PrimaryDisplayKinds) Add(kindName, iconName, iconColor string, iconType DisplayNodeType) {
 	s[graph.StringKind(kindName)] = DisplayKind{
 		Name: kindName,
-		Icon: DisplayNodeIcon{
+		Icon: &DisplayNodeIcon{
 			Type:  iconType,
 			Name:  iconName,
 			Color: iconColor,
