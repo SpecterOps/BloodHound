@@ -93,7 +93,7 @@ describe('EdgeFilter', () => {
         const toggleDialogButton = screen.getByRole('button', { name: /filter/i });
         await user.click(toggleDialogButton);
 
-        const activeDirectoryCategoryCheckbox = screen.getByRole('checkbox', { name: /active directory/i });
+        const activeDirectoryCategoryCheckbox = screen.getByRole('checkbox', { name: 'Active Directory' });
         expect(activeDirectoryCategoryCheckbox).toBeChecked();
 
         // 2: click active directory category, deselecting those edges
@@ -116,7 +116,7 @@ describe('EdgeFilter', () => {
 
         // 7. open dialog a third time, active directory category should be unselected
         await user.click(toggleDialogButton);
-        expect(await screen.findByRole('checkbox', { name: /active directory/i })).not.toBeChecked();
+        expect(await screen.findByRole('checkbox', { name: 'Active Directory' })).not.toBeChecked();
     });
 
     // Skipping this since our url param state is not syncing correctly in tests
@@ -126,8 +126,8 @@ describe('EdgeFilter', () => {
         const pathfindingButton = screen.getByRole('button', { name: /filter/i });
         await user.click(pathfindingButton);
 
-        const categoryADCheckbox = screen.getByRole('checkbox', { name: /active directory/i });
-        const categoryAzureCheckbox = screen.getByRole('checkbox', { name: /azure/i });
+        const categoryADCheckbox = screen.getByRole('checkbox', { name: 'Active Directory' });
+        const categoryAzureCheckbox = screen.getByRole('checkbox', { name: 'Azure' });
         expect(categoryADCheckbox).toBeChecked();
         expect(categoryAzureCheckbox).toBeChecked();
 
