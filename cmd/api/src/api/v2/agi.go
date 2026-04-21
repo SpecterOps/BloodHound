@@ -443,10 +443,10 @@ func (s Resources) getAssetGroupMembers(response http.ResponseWriter, request *h
 		} else if assetGroupNodes, err := s.GraphQuery.GetAssetGroupNodes(request.Context(), assetGroup.Tag, assetGroup.SystemGroup); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error fetching nodes for asset group ID %v: %v", assetGroup.ID, err), request), response)
 			return agMembers, err
-		} else if validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
+		} else if primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return agMembers, err
-		} else if agMembers, err = parseAGMembersFromNodes(validPrimaryKinds, assetGroupNodes, assetGroup.Selectors, int(assetGroup.ID)).SortBy(sortByColumns); err != nil {
+		} else if agMembers, err = parseAGMembersFromNodes(primaryDisplayKinds, assetGroupNodes, assetGroup.Selectors, int(assetGroup.ID)).SortBy(sortByColumns); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 			return agMembers, err
 		} else if agMembers, err = agMembers.Filter(queryFilters); err != nil {
@@ -489,7 +489,7 @@ func (s Resources) ListAssetGroupMemberCountsByKind(response http.ResponseWriter
 	}
 }
 
-func parseAGMembersFromNodes(validPrimaryKinds graphschema.ValidPrimaryKinds, nodes graph.NodeSet, selectors model.AssetGroupSelectors, assetGroupID int) api.AssetGroupMembers {
+func parseAGMembersFromNodes(primaryDisplayKinds graphschema.PrimaryDisplayKinds, nodes graph.NodeSet, selectors model.AssetGroupSelectors, assetGroupID int) api.AssetGroupMembers {
 	agMembers := api.AssetGroupMembers{}
 	for _, node := range nodes {
 		isCustomMember := false
@@ -533,7 +533,7 @@ func parseAGMembersFromNodes(validPrimaryKinds graphschema.ValidPrimaryKinds, no
 		agMember := api.AssetGroupMember{
 			AssetGroupID: assetGroupID,
 			ObjectID:     memberObjectId,
-			PrimaryKind:  graphschema.GetNodeKindDisplayLabel(validPrimaryKinds, node),
+			PrimaryKind:  graphschema.GetNodeKindDisplayLabel(primaryDisplayKinds, node),
 			Kinds:        node.Kinds.Strings(),
 			Name:         memberName,
 			CustomMember: isCustomMember,

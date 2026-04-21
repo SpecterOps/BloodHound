@@ -16,8 +16,9 @@
 
 /// <reference types="vitest" />
 import react from '@vitejs/plugin-react';
+import fs from 'fs';
 import path from 'path';
-import { defineConfig, loadEnv, searchForWorkspaceRoot } from 'vite';
+import { defineConfig, loadEnv, Plugin, searchForWorkspaceRoot } from 'vite';
 import glsl from 'vite-plugin-glsl';
 
 // https://vitejs.dev/config/
@@ -25,7 +26,7 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
 
     return {
-        plugins: [react(), glsl()],
+        plugins: [react(), glsl(), excludeMockServiceWorker(env)],
         resolve: {
             alias: {
                 src: path.resolve(__dirname, './src'),
@@ -110,3 +111,24 @@ export default defineConfig(({ mode }) => {
         },
     };
 });
+
+/**
+ * Exclude mockServiceWorker.js from production builds
+ * MSW service worker should only be available in development mode
+ */
+function excludeMockServiceWorker(env: ReturnType<typeof loadEnv>): Plugin {
+    return {
+        name: 'exclude-mock-service-worker',
+        apply: 'build', // Only apply during build (production)
+        closeBundle() {
+            // Remove mockServiceWorker.js from the output directory after build
+            const mockServiceWorkerPath = env.BUILD_PATH
+                ? path.resolve(env.BUILD_PATH, 'mockServiceWorker.js')
+                : path.resolve(__dirname, 'dist', 'mockServiceWorker.js');
+
+            if (fs.existsSync(mockServiceWorkerPath)) {
+                fs.unlinkSync(mockServiceWorkerPath);
+            }
+        },
+    };
+}
