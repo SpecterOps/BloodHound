@@ -64,9 +64,9 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, localGroupDat
 		slog.ErrorContext(ctx, "Failed fetching dsheuristics values for postownsandwriteowner", attr.Error(err))
 		return &post.AtomicPostProcessingStats{}, err
 	} else if adminGroupIds, err := FetchAdminGroupIds(ctx, db, localGroupData.GroupMembershipCache); err != nil {
-		// Get the admin group IDs
-		slog.ErrorContext(ctx, "Failed fetching admin group ids values for postownsandwriteowner", attr.Error(err))
-		return &post.AtomicPostProcessingStats{}, err
+		// While it's ideal if this succeeds, the risk of this call failing will be a false negative case of missing an `Owns` edge sourced
+		// from an Enterprise or Domain Admin, who will already have control in another manner anyways.
+		slog.WarnContext(ctx, "Failed fetching admin group ids values for postownsandwriteowner", attr.Error(err))
 	} else {
 		sink := post.NewFilteredRelationshipSink(ctx, "PostOwnsAndWriteOwner", db, ownsWriteOwnerTracker)
 		defer sink.Done()
