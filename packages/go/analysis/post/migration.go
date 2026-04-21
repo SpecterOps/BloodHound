@@ -54,7 +54,7 @@ func MigrationForDCAPostProcessedEdges(ctx context.Context, db graph.Database, m
 				slog.LevelInfo,
 				fmt.Sprintf("Deleted %d %s relationships for DCA Post-Processing migration", len(relationshipIDs), kind.String()),
 				attr.Namespace("analysis"),
-				attr.Function("MigrationForDACPostProcessedEdges"),
+				attr.Function("MigrationForDCAPostProcessedEdges"),
 				attr.Scope("process"),
 			)
 
