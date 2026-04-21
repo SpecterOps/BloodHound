@@ -7039,6 +7039,114 @@
                           "items": {
                             "type": "string"
                           }
+                        },
+                        "node_kinds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "edge_kinds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/graphs/display-kinds": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetDisplayKinds",
+        "summary": "Get display kinds",
+        "description": "Gets display kinds",
+        "tags": [
+          "Graph",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "node_kinds": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "display_name": {
+                                "type": "string"
+                              },
+                              "extension_display_name": {
+                                "type": "string"
+                              },
+                              "extension_id": {
+                                "type": "number"
+                              },
+                              "icon": {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "type": {
+                                    "type": "string"
+                                  },
+                                  "color": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "edge_kinds": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "display_name": {
+                                "type": "string"
+                              }
+                            }
+                          }
                         }
                       }
                     }
