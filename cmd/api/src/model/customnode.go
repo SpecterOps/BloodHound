@@ -24,12 +24,9 @@ import (
 	"regexp"
 
 	"github.com/specterops/bloodhound/packages/go/graphschema"
-	"github.com/specterops/dawgs/graph"
 )
 
 var ValidColorStringRegex = regexp.MustCompile("^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$")
-
-const ValidIconType = "font-awesome"
 
 type CustomNodeKinds []CustomNodeKind
 
@@ -50,6 +47,10 @@ type CustomNodeKind struct {
 	Config           CustomNodeKindConfig `json:"config"`
 }
 
+func (s CustomNodeKind) TableName() string {
+	return "custom_node_kinds"
+}
+
 func (s CustomNodeKind) AuditData() AuditData {
 	return AuditData{
 		"id":     s.ID,
@@ -59,26 +60,12 @@ func (s CustomNodeKind) AuditData() AuditData {
 }
 
 type CustomNodeKindConfig struct {
-	Icon CustomNodeIcon `json:"icon"`
+	Icon graphschema.DisplayNodeIcon `json:"icon"`
 }
 
-type CustomNodeIcon struct {
-	Type  string `json:"type"`
-	Name  string `json:"name"`
-	Color string `json:"color"`
-}
+type CustomNodeKindType string
 
 type CustomNodeKindMap map[string]CustomNodeKindConfig
-
-func (s CustomNodeKindMap) ValidKinds() graphschema.ValidPrimaryKinds {
-	validKinds := make(graphschema.ValidPrimaryKinds, len(s))
-
-	for kind := range s {
-		validKinds[graph.StringKind(kind)] = true
-	}
-
-	return validKinds
-}
 
 func (s *CustomNodeKindConfig) Scan(value interface{}) error {
 	if value == nil {
@@ -98,7 +85,7 @@ func (s CustomNodeKindConfig) Value() (driver.Value, error) {
 }
 
 func (s CustomNodeKindConfig) Validate() error {
-	if s.Icon.Type != ValidIconType {
+	if s.Icon.Type != graphschema.DisplayNodeTypeFontAwesome {
 		return fmt.Errorf("invalid icon type. only Font Awesome icons are supported")
 	} else if s.Icon.Color != "" && !IsValidIconColor(s.Icon.Color) {
 		return fmt.Errorf("icon color must be a valid hexadecimal color string starting with '#' followed by 3 or 6 hex digits")

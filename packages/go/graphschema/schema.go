@@ -150,6 +150,28 @@ func ActiveDirectoryGraphSchema(name string) graph.Graph {
 	}
 }
 
+func MetaGraphDefinition() graph.Graph {
+	return graph.Graph{
+		Name:  "meta",
+		Nodes: []graph.Kind{meta, metaDetail},
+		Edges: []graph.Kind{metaIncludes},
+		NodeIndexes: []graph.Index{
+			{
+				Field: common.SystemTags.String(),
+				Type:  graph.TextSearchIndex,
+			},
+			{
+				Field: common.UserTags.String(),
+				Type:  graph.TextSearchIndex,
+			},
+			{
+				Field: common.OwnerObjectID.String(),
+				Type:  graph.TextSearchIndex,
+			},
+		},
+	}
+}
+
 func DefaultGraph() graph.Graph {
 	return CombinedGraphSchema("default")
 }
@@ -160,6 +182,7 @@ func DefaultGraphSchema() graph.Schema {
 	return graph.Schema{
 		Graphs: []graph.Graph{
 			defaultGraph,
+			MetaGraphDefinition(),
 		},
 
 		DefaultGraph: defaultGraph,

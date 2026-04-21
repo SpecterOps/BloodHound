@@ -82,6 +82,11 @@ func IsValidClientVersion(userAgent string) (ClientVersion, error) {
 	}
 }
 
+// ParseClientVersion extracts the client type from a user agent string and delegates to
+// the appropriate version parser. Supported formats:
+//   - azurehound/vX.Y.Z[-rcN][+docker]
+//   - openhound/vX.Y.Z[-rcN]
+//   - sharphound/X.Y.Z.W[-rcN]
 func ParseClientVersion(userAgent string) (ClientVersion, error) {
 	clientType, rawVersion, err := parseClientUserAgent(userAgent)
 	if err != nil {
@@ -98,6 +103,7 @@ func ParseClientVersion(userAgent string) (ClientVersion, error) {
 	}
 }
 
+// clientVersionFromSemver maps a parsed semver.Version into a ClientVersion struct.
 func clientVersionFromSemver(clientType ClientType, parsedVersion *semver.Version, extra int) ClientVersion {
 	return ClientVersion{
 		ClientType:    clientType,
@@ -110,6 +116,8 @@ func clientVersionFromSemver(clientType ClientType, parsedVersion *semver.Versio
 	}
 }
 
+// parseClientUserAgent splits a user agent string into its client type and raw version component.
+// Returns ErrInvalidClientType if the user agent does not match a known client prefix.
 func parseClientUserAgent(userAgent string) (ClientType, string, error) {
 	switch {
 	case strings.HasPrefix(userAgent, "azurehound/"):
@@ -126,6 +134,8 @@ func parseClientUserAgent(userAgent string) (ClientType, string, error) {
 	}
 }
 
+// parseCollectorVersion parses a raw version string for AzureHound or OpenHound collectors
+// using semver, then validates that the prerelease and build metadata conform to allowed values.
 func parseCollectorVersion(clientType ClientType, rawVersion string) (ClientVersion, error) {
 	version := ClientVersion{ClientType: clientType}
 
@@ -145,6 +155,8 @@ func parseCollectorVersion(clientType ClientType, rawVersion string) (ClientVers
 	return clientVersionFromSemver(clientType, parsedVersion, 0), nil
 }
 
+// parseSharpHoundVersion parses a raw version string in SharpHound's X.Y.Z.W[-rcN] format.
+// The fourth numeric component is stored as Extra, and the first three are parsed via semver.
 func parseSharpHoundVersion(rawVersion string) (ClientVersion, error) {
 	version := ClientVersion{ClientType: ClientTypeSharpHound}
 
@@ -169,6 +181,8 @@ func parseSharpHoundVersion(rawVersion string) (ClientVersion, error) {
 	return clientVersionFromSemver(ClientTypeSharpHound, parsedVersion, extra), nil
 }
 
+// splitSharpHoundVersion splits a SharpHound version string into a semver-compatible version
+// and the fourth numeric component (extra). For example, "2.1.0.3-rc1" returns ("2.1.0-rc1", 3, nil).
 func splitSharpHoundVersion(rawVersion string) (string, int, error) {
 	sharpHoundParts := strings.Split(rawVersion, ".")
 
@@ -185,6 +199,8 @@ func splitSharpHoundVersion(rawVersion string) (string, int, error) {
 	return strings.Join(sharpHoundParts[:3], ".") + buildPrereleaseSuffix(prereleasePart), extra, nil
 }
 
+// buildPrereleaseSuffix returns a prerelease suffix prefixed with "-" for use in semver strings,
+// or an empty string if no prerelease is present.
 func buildPrereleaseSuffix(prerelease string) string {
 	if prerelease == "" {
 		return ""
@@ -193,22 +209,24 @@ func buildPrereleaseSuffix(prerelease string) string {
 	return "-" + prerelease
 }
 
+// isValidCollectorSemver validates that a parsed semver version conforms to collector-specific rules:
+//   - Prerelease must be empty or match the format "rcN" where N >= 1.
+//   - AzureHound build metadata must be empty or "docker".
+//   - OpenHound build metadata must be empty.
 func isValidCollectorSemver(parsedVersion *semver.Version, clientType ClientType) bool {
 	if !isValidRCPrerelease(parsedVersion.Prerelease()) {
 		return false
 	}
 
 	if clientType == ClientTypeAzureHound {
-		if parsedVersion.Prerelease() != "" && parsedVersion.Metadata() != "" {
-			return false
-		}
-
 		return parsedVersion.Metadata() == "" || parsedVersion.Metadata() == "docker"
 	}
 
 	return parsedVersion.Metadata() == ""
 }
 
+// isValidRCPrerelease validates that a prerelease string is either empty or matches the
+// format "rcN" where N is an integer >= 1.
 func isValidRCPrerelease(prerelease string) bool {
 	if prerelease == "" {
 		return true
@@ -231,10 +249,13 @@ func isValidRCPrerelease(prerelease string) bool {
 	return true
 }
 
+// isValidSharpHoundSemver validates that a parsed semver version conforms to SharpHound rules:
+// prerelease must be empty or "rcN" where N >= 1, and build metadata must be empty.
 func isValidSharpHoundSemver(parsedVersion *semver.Version) bool {
 	return isValidRCPrerelease(parsedVersion.Prerelease()) && parsedVersion.Metadata() == ""
 }
 
+// parseSemverVersion strips an optional leading "v" and parses the version using semver.StrictNewVersion.
 func parseSemverVersion(rawVersion string) (*semver.Version, error) {
 	return semver.StrictNewVersion(strings.TrimPrefix(rawVersion, "v"))
 }
