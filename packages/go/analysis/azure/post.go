@@ -196,6 +196,15 @@ func aggregateSourceReadWriteServicePrincipals(tx graph.Transaction, tenantConta
 	return sourceNodes, nil
 }
 
+var appRoleAssignmentPostProcessedEdges = graph.Kinds{
+	azure.AZMGAddSecret,
+	azure.AZMGAddOwner,
+	azure.AZMGGrantAppRoles,
+	azure.AZMGAddMember,
+	azure.AZMGGrantRole,
+	azure.AddSecret,
+}
+
 func AppRoleAssignments(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
@@ -206,457 +215,338 @@ func AppRoleAssignments(ctx context.Context, db graph.Database) (*post.AtomicPos
 		attr.Scope("process"),
 	)()
 
-	if tenants, err := FetchTenants(ctx, db); err != nil {
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, appRoleAssignmentPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	if appRoleAssignmentTracker, err := post.FetchTracker(ctx, db, appRoleAssignmentPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	} else if tenants, err := FetchTenants(ctx, db); err != nil {
 		return &post.AtomicPostProcessingStats{}, err
 	} else {
-		operation := post.NewPostRelationshipOperation(ctx, db, "Azure App Role Assignments Post Processing")
+		sink := post.NewFilteredRelationshipSink(ctx, "Azure App Role Assignments Post Processing", db, appRoleAssignmentTracker)
+		defer sink.Done()
 
 		for _, tenant := range tenants {
-			if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-				if tenantContainsServicePrincipalRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.ServicePrincipal); err != nil {
-					return err
-				} else if err := createAZMGApplicationReadWriteAllEdges(ctx, db, operation, tenant, tenantContainsServicePrincipalRelationships); err != nil {
-					return err
-				} else if err := createAZMGAppRoleAssignmentReadWriteAllEdges(ctx, db, operation, tenantContainsServicePrincipalRelationships); err != nil {
-					return err
-				} else if err := createAZMGDirectoryReadWriteAllEdges(ctx, db, operation, tenant, tenantContainsServicePrincipalRelationships); err != nil {
-					return err
-				} else if err := createAZMGGroupReadWriteAllEdges(ctx, db, operation, tenant, tenantContainsServicePrincipalRelationships); err != nil {
-					return err
-				} else if err := createAZMGGroupMemberReadWriteAllEdges(ctx, db, operation, tenant, tenantContainsServicePrincipalRelationships); err != nil {
-					return err
-				} else if err := createAZMGRoleManagementReadWriteDirectoryEdgesPart1(ctx, db, operation, tenant, tenantContainsServicePrincipalRelationships); err != nil {
-					return err
-				} else if err := createAZMGRoleManagementReadWriteDirectoryEdgesPart2(ctx, db, operation, tenant, tenantContainsServicePrincipalRelationships); err != nil {
-					return err
-				} else if err := createAZMGRoleManagementReadWriteDirectoryEdgesPart3(ctx, db, operation, tenantContainsServicePrincipalRelationships); err != nil {
-					return err
-				} else if err := createAZMGRoleManagementReadWriteDirectoryEdgesPart4(ctx, db, operation, tenant, tenantContainsServicePrincipalRelationships); err != nil {
-					return err
-				} else if err := createAZMGRoleManagementReadWriteDirectoryEdgesPart5(ctx, db, operation, tenant, tenantContainsServicePrincipalRelationships); err != nil {
-					return err
-				} else if err := createAZMGServicePrincipalEndpointReadWriteAllEdges(ctx, db, operation, tenantContainsServicePrincipalRelationships); err != nil {
-					return err
-				} else if err := addSecret(operation, tenant); err != nil {
-					return err
-				}
-
-				return nil
-			}); err != nil {
-				if err := operation.Done(); err != nil {
-					slog.ErrorContext(ctx, "Error caught during azure AppRoleAssignments teardown", attr.Error(err))
-				}
-
-				return &operation.Stats, err
+			if err := postAppRoleAssignmentsForTenant(ctx, db, sink, tenant); err != nil {
+				return &post.AtomicPostProcessingStats{}, err
 			}
 		}
 
-		return &operation.Stats, operation.Done()
+		return sink.Stats(), nil
 	}
 }
 
-func createAZMGApplicationReadWriteAllEdges(ctx context.Context, db graph.Database, operation post.StatTrackedOperation[post.EnsureRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
-	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+func postAppRoleAssignmentsForTenant(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenant *graph.Node) error {
+	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if tenantContainsServicePrincipalRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.ServicePrincipal); err != nil {
+			return err
+		} else if err := postAZMGApplicationReadWriteAllEdges(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships); err != nil {
+			return err
+		} else if err := postAZMGAppRoleAssignmentReadWriteAllEdges(ctx, db, sink, tenantContainsServicePrincipalRelationships); err != nil {
+			return err
+		} else if err := postAZMGDirectoryReadWriteAllEdges(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships); err != nil {
+			return err
+		} else if err := postAZMGGroupReadWriteAllEdges(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships); err != nil {
+			return err
+		} else if err := postAZMGGroupMemberReadWriteAllEdges(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships); err != nil {
+			return err
+		} else if err := postAZMGRoleManagementReadWriteDirectoryEdgesPart1(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships); err != nil {
+			return err
+		} else if err := postAZMGRoleManagementReadWriteDirectoryEdgesPart2(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships); err != nil {
+			return err
+		} else if err := postAZMGRoleManagementReadWriteDirectoryEdgesPart3(ctx, db, sink, tenantContainsServicePrincipalRelationships); err != nil {
+			return err
+		} else if err := postAZMGRoleManagementReadWriteDirectoryEdgesPart4(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships); err != nil {
+			return err
+		} else if err := postAZMGRoleManagementReadWriteDirectoryEdgesPart5(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships); err != nil {
+			return err
+		} else if err := postAZMGServicePrincipalEndpointReadWriteAllEdges(ctx, db, sink, tenantContainsServicePrincipalRelationships); err != nil {
+			return err
+		} else if err := postAddSecret(ctx, db, sink, tenant); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func postAZMGApplicationReadWriteAllEdges(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if tenantContainsAppRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.App); err != nil {
 			return err
 		} else if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.ApplicationReadWriteAll); err != nil {
 			return err
 		} else {
-			return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				for _, targetRelationship := range append(tenantContainsServicePrincipalRelationships, tenantContainsAppRelationships...) {
-					for _, sourceNode := range sourceNodes {
-						AZMGAddSecretRelationship := post.EnsureRelationshipJob{
-							FromID: sourceNode.ID,
-							ToID:   targetRelationship.EndID,
-							Kind:   azure.AZMGAddSecret,
-						}
+			for _, targetRelationship := range append(tenantContainsServicePrincipalRelationships, tenantContainsAppRelationships...) {
+				for _, sourceNode := range sourceNodes {
+					sink.Submit(ctx, post.EnsureRelationshipJob{
+						FromID: sourceNode.ID,
+						ToID:   targetRelationship.EndID,
+						Kind:   azure.AZMGAddSecret,
+					})
 
-						if !channels.Submit(ctx, outC, AZMGAddSecretRelationship) {
-							return nil
-						}
-
-						AZMGAddOwnerRelationship := post.EnsureRelationshipJob{
-							FromID: sourceNode.ID,
-							ToID:   targetRelationship.EndID,
-							Kind:   azure.AZMGAddOwner,
-						}
-
-						if !channels.Submit(ctx, outC, AZMGAddOwnerRelationship) {
-							return nil
-						}
-					}
+					sink.Submit(ctx, post.EnsureRelationshipJob{
+						FromID: sourceNode.ID,
+						ToID:   targetRelationship.EndID,
+						Kind:   azure.AZMGAddOwner,
+					})
 				}
-
-				return nil
-			})
+			}
 		}
-	}); err != nil {
-		return err
-	} else {
+
 		return nil
-	}
+	})
 }
 
-func createAZMGAppRoleAssignmentReadWriteAllEdges(ctx context.Context, db graph.Database, operation post.StatTrackedOperation[post.EnsureRelationshipJob], tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
-	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+func postAZMGAppRoleAssignmentReadWriteAllEdges(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.AppRoleAssignmentReadWriteAll); err != nil {
 			return err
 		} else {
-			return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				for _, tenantContainsServicePrincipalRelationship := range tenantContainsServicePrincipalRelationships {
-					for _, sourceNode := range sourceNodes {
-						AZMGGrantAppRolesRelationship := post.EnsureRelationshipJob{
-							FromID: sourceNode.ID,
-							ToID:   tenantContainsServicePrincipalRelationship.StartID, // the tenant
-							Kind:   azure.AZMGGrantAppRoles,
-						}
-
-						if !channels.Submit(ctx, outC, AZMGGrantAppRolesRelationship) {
-							return nil
-						}
-					}
+			for _, tenantContainsServicePrincipalRelationship := range tenantContainsServicePrincipalRelationships {
+				for _, sourceNode := range sourceNodes {
+					sink.Submit(ctx, post.EnsureRelationshipJob{
+						FromID: sourceNode.ID,
+						ToID:   tenantContainsServicePrincipalRelationship.StartID, // the tenant
+						Kind:   azure.AZMGGrantAppRoles,
+					})
 				}
-
-				return nil
-			})
+			}
 		}
-	}); err != nil {
-		return err
-	} else {
+
 		return nil
-	}
+	})
 }
 
-func createAZMGDirectoryReadWriteAllEdges(ctx context.Context, db graph.Database, operation post.StatTrackedOperation[post.EnsureRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
-	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+func postAZMGDirectoryReadWriteAllEdges(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.DirectoryReadWriteAll); err != nil {
 			return err
 		} else if tenantContainsGroupRelationships, err := fetchTenantContainsReadWriteAllGroupRelationships(tx, tenant); err != nil {
 			return err
 		} else {
-			return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				for _, tenantContainsGroupRelationship := range tenantContainsGroupRelationships {
-					for _, sourceNode := range sourceNodes {
-						AZMGAddMemberRelationship := post.EnsureRelationshipJob{
-							FromID: sourceNode.ID,
-							ToID:   tenantContainsGroupRelationship.EndID,
-							Kind:   azure.AZMGAddMember,
-						}
+			for _, tenantContainsGroupRelationship := range tenantContainsGroupRelationships {
+				for _, sourceNode := range sourceNodes {
+					sink.Submit(ctx, post.EnsureRelationshipJob{
+						FromID: sourceNode.ID,
+						ToID:   tenantContainsGroupRelationship.EndID,
+						Kind:   azure.AZMGAddMember,
+					})
 
-						if !channels.Submit(ctx, outC, AZMGAddMemberRelationship) {
-							return nil
-						}
-
-						AZMGAddOwnerRelationship := post.EnsureRelationshipJob{
-							FromID: sourceNode.ID,
-							ToID:   tenantContainsGroupRelationship.EndID,
-							Kind:   azure.AZMGAddOwner,
-						}
-
-						if !channels.Submit(ctx, outC, AZMGAddOwnerRelationship) {
-							return nil
-						}
-					}
+					sink.Submit(ctx, post.EnsureRelationshipJob{
+						FromID: sourceNode.ID,
+						ToID:   tenantContainsGroupRelationship.EndID,
+						Kind:   azure.AZMGAddOwner,
+					})
 				}
-				return nil
-			})
+			}
 		}
-	}); err != nil {
-		return err
-	} else {
+
 		return nil
-	}
+	})
 }
 
-func createAZMGGroupReadWriteAllEdges(ctx context.Context, db graph.Database, operation post.StatTrackedOperation[post.EnsureRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
-	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+func postAZMGGroupReadWriteAllEdges(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.GroupReadWriteAll); err != nil {
 			return err
 		} else if tenantContainsGroupRelationships, err := fetchTenantContainsReadWriteAllGroupRelationships(tx, tenant); err != nil {
 			return err
 		} else {
-			return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				for _, tenantContainsGroupRelationship := range tenantContainsGroupRelationships {
-					for _, sourceNode := range sourceNodes {
-						AZMGAddMemberRelationship := post.EnsureRelationshipJob{
-							FromID: sourceNode.ID,
-							ToID:   tenantContainsGroupRelationship.EndID,
-							Kind:   azure.AZMGAddMember,
-						}
+			for _, tenantContainsGroupRelationship := range tenantContainsGroupRelationships {
+				for _, sourceNode := range sourceNodes {
+					sink.Submit(ctx, post.EnsureRelationshipJob{
+						FromID: sourceNode.ID,
+						ToID:   tenantContainsGroupRelationship.EndID,
+						Kind:   azure.AZMGAddMember,
+					})
 
-						if !channels.Submit(ctx, outC, AZMGAddMemberRelationship) {
-							return nil
-						}
-
-						AZMGAddOwnerRelationship := post.EnsureRelationshipJob{
-							FromID: sourceNode.ID,
-							ToID:   tenantContainsGroupRelationship.EndID,
-							Kind:   azure.AZMGAddOwner,
-						}
-
-						if !channels.Submit(ctx, outC, AZMGAddOwnerRelationship) {
-							return nil
-						}
-					}
+					sink.Submit(ctx, post.EnsureRelationshipJob{
+						FromID: sourceNode.ID,
+						ToID:   tenantContainsGroupRelationship.EndID,
+						Kind:   azure.AZMGAddOwner,
+					})
 				}
-				return nil
-			})
+			}
 		}
-	}); err != nil {
-		return err
-	} else {
+
 		return nil
-	}
+	})
 }
 
-func createAZMGGroupMemberReadWriteAllEdges(ctx context.Context, db graph.Database, operation post.StatTrackedOperation[post.EnsureRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
-	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+func postAZMGGroupMemberReadWriteAllEdges(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.GroupMemberReadWriteAll); err != nil {
 			return err
 		} else if tenantContainsGroupRelationships, err := fetchTenantContainsReadWriteAllGroupRelationships(tx, tenant); err != nil {
 			return err
 		} else {
-			return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				for _, tenantContainsGroupRelationship := range tenantContainsGroupRelationships {
-					for _, sourceNode := range sourceNodes {
-						AZMGAddMemberRelationship := post.EnsureRelationshipJob{
-							FromID: sourceNode.ID,
-							ToID:   tenantContainsGroupRelationship.EndID,
-							Kind:   azure.AZMGAddMember,
-						}
-
-						if !channels.Submit(ctx, outC, AZMGAddMemberRelationship) {
-							return nil
-						}
-					}
+			for _, tenantContainsGroupRelationship := range tenantContainsGroupRelationships {
+				for _, sourceNode := range sourceNodes {
+					sink.Submit(ctx, post.EnsureRelationshipJob{
+						FromID: sourceNode.ID,
+						ToID:   tenantContainsGroupRelationship.EndID,
+						Kind:   azure.AZMGAddMember,
+					})
 				}
-				return nil
-			})
+			}
 		}
-	}); err != nil {
-		return err
-	} else {
+
 		return nil
-	}
+	})
 }
 
-func createAZMGRoleManagementReadWriteDirectoryEdgesPart1(ctx context.Context, db graph.Database, operation post.StatTrackedOperation[post.EnsureRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
-	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+func postAZMGRoleManagementReadWriteDirectoryEdgesPart1(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
 			return err
 		} else if tenantContainsRoleRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.Role); err != nil {
 			return err
 		} else {
-			return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				for _, tenantContainsRoleRelationship := range tenantContainsRoleRelationships {
-					for _, sourceNode := range sourceNodes {
-						AZMGGrantAppRolesRelationship := post.EnsureRelationshipJob{
-							FromID: sourceNode.ID,
-							ToID:   tenantContainsRoleRelationship.StartID,
-							Kind:   azure.AZMGGrantAppRoles,
-						}
-
-						if !channels.Submit(ctx, outC, AZMGGrantAppRolesRelationship) {
-							return nil
-						}
-					}
+			for _, tenantContainsRoleRelationship := range tenantContainsRoleRelationships {
+				for _, sourceNode := range sourceNodes {
+					sink.Submit(ctx, post.EnsureRelationshipJob{
+						FromID: sourceNode.ID,
+						ToID:   tenantContainsRoleRelationship.StartID,
+						Kind:   azure.AZMGGrantAppRoles,
+					})
 				}
-				return nil
-			})
+			}
 		}
-	}); err != nil {
-		return err
-	} else {
+
 		return nil
-	}
+	})
 }
 
-func createAZMGRoleManagementReadWriteDirectoryEdgesPart2(ctx context.Context, db graph.Database, operation post.StatTrackedOperation[post.EnsureRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
-	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+func postAZMGRoleManagementReadWriteDirectoryEdgesPart2(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
 			return err
 		} else if tenantContainsRoleRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.Role); err != nil {
 			return err
 		} else {
-			return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				for _, tenantContainsRoleRelationship := range tenantContainsRoleRelationships {
-					for _, sourceNode := range sourceNodes {
-						AZMGGrantRoleRelationship := post.EnsureRelationshipJob{
-							FromID: sourceNode.ID,
-							ToID:   tenantContainsRoleRelationship.EndID,
-							Kind:   azure.AZMGGrantRole,
-						}
-
-						if !channels.Submit(ctx, outC, AZMGGrantRoleRelationship) {
-							return nil
-						}
-					}
+			for _, tenantContainsRoleRelationship := range tenantContainsRoleRelationships {
+				for _, sourceNode := range sourceNodes {
+					sink.Submit(ctx, post.EnsureRelationshipJob{
+						FromID: sourceNode.ID,
+						ToID:   tenantContainsRoleRelationship.EndID,
+						Kind:   azure.AZMGGrantRole,
+					})
 				}
-				return nil
-			})
+			}
 		}
-	}); err != nil {
-		return err
-	} else {
+
 		return nil
-	}
+	})
 }
 
-func createAZMGRoleManagementReadWriteDirectoryEdgesPart3(ctx context.Context, db graph.Database, operation post.StatTrackedOperation[post.EnsureRelationshipJob], tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
-	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+func postAZMGRoleManagementReadWriteDirectoryEdgesPart3(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
 			return err
 		} else {
-			return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				for _, tenantContainsServicePrincipalRelationship := range tenantContainsServicePrincipalRelationships {
-					for _, sourceNode := range sourceNodes {
-						AZMGAddSecretRelationship := post.EnsureRelationshipJob{
-							FromID: sourceNode.ID,
-							ToID:   tenantContainsServicePrincipalRelationship.EndID,
-							Kind:   azure.AZMGAddSecret,
-						}
+			for _, tenantContainsServicePrincipalRelationship := range tenantContainsServicePrincipalRelationships {
+				for _, sourceNode := range sourceNodes {
+					sink.Submit(ctx, post.EnsureRelationshipJob{
+						FromID: sourceNode.ID,
+						ToID:   tenantContainsServicePrincipalRelationship.EndID,
+						Kind:   azure.AZMGAddSecret,
+					})
 
-						if !channels.Submit(ctx, outC, AZMGAddSecretRelationship) {
-							return nil
-						}
-
-						AZMGAddOwnerRelationship := post.EnsureRelationshipJob{
-							FromID: sourceNode.ID,
-							ToID:   tenantContainsServicePrincipalRelationship.EndID,
-							Kind:   azure.AZMGAddOwner,
-						}
-
-						if !channels.Submit(ctx, outC, AZMGAddOwnerRelationship) {
-							return nil
-						}
-					}
+					sink.Submit(ctx, post.EnsureRelationshipJob{
+						FromID: sourceNode.ID,
+						ToID:   tenantContainsServicePrincipalRelationship.EndID,
+						Kind:   azure.AZMGAddOwner,
+					})
 				}
-
-				return nil
-			})
+			}
 		}
-	}); err != nil {
-		return err
-	} else {
+
 		return nil
-	}
+	})
 }
 
-func createAZMGRoleManagementReadWriteDirectoryEdgesPart4(ctx context.Context, db graph.Database, operation post.StatTrackedOperation[post.EnsureRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
-	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+func postAZMGRoleManagementReadWriteDirectoryEdgesPart4(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
 			return err
 		} else if tenantContainsAppRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.App); err != nil {
 			return err
 		} else {
-			return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				for _, tenantContainsAppRelationship := range tenantContainsAppRelationships {
-					for _, sourceNode := range sourceNodes {
-						AZMGAddSecretRelationship := post.EnsureRelationshipJob{
-							FromID: sourceNode.ID,
-							ToID:   tenantContainsAppRelationship.EndID,
-							Kind:   azure.AZMGAddSecret,
-						}
+			for _, tenantContainsAppRelationship := range tenantContainsAppRelationships {
+				for _, sourceNode := range sourceNodes {
+					sink.Submit(ctx, post.EnsureRelationshipJob{
+						FromID: sourceNode.ID,
+						ToID:   tenantContainsAppRelationship.EndID,
+						Kind:   azure.AZMGAddSecret,
+					})
 
-						if !channels.Submit(ctx, outC, AZMGAddSecretRelationship) {
-							return nil
-						}
-
-						AZMGAddOwnerRelationship := post.EnsureRelationshipJob{
-							FromID: sourceNode.ID,
-							ToID:   tenantContainsAppRelationship.EndID,
-							Kind:   azure.AZMGAddOwner,
-						}
-
-						if !channels.Submit(ctx, outC, AZMGAddOwnerRelationship) {
-							return nil
-						}
-					}
+					sink.Submit(ctx, post.EnsureRelationshipJob{
+						FromID: sourceNode.ID,
+						ToID:   tenantContainsAppRelationship.EndID,
+						Kind:   azure.AZMGAddOwner,
+					})
 				}
-
-				return nil
-			})
+			}
 		}
-	}); err != nil {
-		return err
-	} else {
+
 		return nil
-	}
+	})
 }
 
-func createAZMGRoleManagementReadWriteDirectoryEdgesPart5(ctx context.Context, db graph.Database, operation post.StatTrackedOperation[post.EnsureRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
-	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+func postAZMGRoleManagementReadWriteDirectoryEdgesPart5(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
 			return err
 		} else if tenantContainsGroupRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.Group); err != nil {
 			return err
 		} else {
-			return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				for _, tenantContainsGroupRelationship := range tenantContainsGroupRelationships {
-					for _, sourceNode := range sourceNodes {
-						AZMGAddMemberRelationship := post.EnsureRelationshipJob{
-							FromID: sourceNode.ID,
-							ToID:   tenantContainsGroupRelationship.EndID,
-							Kind:   azure.AZMGAddMember,
-						}
+			for _, tenantContainsGroupRelationship := range tenantContainsGroupRelationships {
+				for _, sourceNode := range sourceNodes {
+					sink.Submit(ctx, post.EnsureRelationshipJob{
+						FromID: sourceNode.ID,
+						ToID:   tenantContainsGroupRelationship.EndID,
+						Kind:   azure.AZMGAddMember,
+					})
 
-						if !channels.Submit(ctx, outC, AZMGAddMemberRelationship) {
-							return nil
-						}
-
-						AZMGAddOwnerRelationship := post.EnsureRelationshipJob{
-							FromID: sourceNode.ID,
-							ToID:   tenantContainsGroupRelationship.EndID,
-							Kind:   azure.AZMGAddOwner,
-						}
-
-						if !channels.Submit(ctx, outC, AZMGAddOwnerRelationship) {
-							return nil
-						}
-					}
+					sink.Submit(ctx, post.EnsureRelationshipJob{
+						FromID: sourceNode.ID,
+						ToID:   tenantContainsGroupRelationship.EndID,
+						Kind:   azure.AZMGAddOwner,
+					})
 				}
-				return nil
-			})
+			}
 		}
-	}); err != nil {
-		return err
-	} else {
+
 		return nil
-	}
+	})
 }
 
-func createAZMGServicePrincipalEndpointReadWriteAllEdges(ctx context.Context, db graph.Database, operation post.StatTrackedOperation[post.EnsureRelationshipJob], tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
-	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+func postAZMGServicePrincipalEndpointReadWriteAllEdges(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.ServicePrincipalEndpointReadWriteAll); err != nil {
 			return err
 		} else {
-			return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				for _, tenantContainsServicePrincipalRelationship := range tenantContainsServicePrincipalRelationships {
-					for _, sourceNode := range sourceNodes {
-						AZMGAddOwnerRelationship := post.EnsureRelationshipJob{
-							FromID: sourceNode.ID,
-							ToID:   tenantContainsServicePrincipalRelationship.EndID,
-							Kind:   azure.AZMGAddOwner,
-						}
-
-						if !channels.Submit(ctx, outC, AZMGAddOwnerRelationship) {
-							return nil
-						}
-					}
+			for _, tenantContainsServicePrincipalRelationship := range tenantContainsServicePrincipalRelationships {
+				for _, sourceNode := range sourceNodes {
+					sink.Submit(ctx, post.EnsureRelationshipJob{
+						FromID: sourceNode.ID,
+						ToID:   tenantContainsServicePrincipalRelationship.EndID,
+						Kind:   azure.AZMGAddOwner,
+					})
 				}
-
-				return nil
-			})
+			}
 		}
-	}); err != nil {
-		return err
-	} else {
+
 		return nil
-	}
+	})
 }
 
-func addSecret(operation post.StatTrackedOperation[post.EnsureRelationshipJob], tenant *graph.Node) error {
-	return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+func postAddSecret(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenant *graph.Node) error {
+	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if addSecretRoles, err := TenantRoles(tx, tenant, AddSecretRoleIDs()...); err != nil {
 			return err
 		} else if tenantAppsAndSPs, err := TenantApplicationsAndServicePrincipals(tx, tenant); err != nil {
@@ -671,15 +561,12 @@ func addSecret(operation post.StatTrackedOperation[post.EnsureRelationshipJob], 
 						slog.String("target_kinds", strings.Join(target.Kinds.Strings(), ",")),
 						slog.Uint64("target_id", target.ID.Uint64()),
 					)
-					nextJob := post.EnsureRelationshipJob{
+
+					sink.Submit(ctx, post.EnsureRelationshipJob{
 						FromID: role.ID,
 						ToID:   target.ID,
 						Kind:   azure.AddSecret,
-					}
-
-					if !channels.Submit(ctx, outC, nextJob) {
-						return nil
-					}
+					})
 				}
 			}
 		}
