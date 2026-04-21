@@ -1081,8 +1081,11 @@ func Post(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingSta
 
 	if userRoleStats, err := UserRoleAssignments(ctx, db); err != nil {
 		return &aggregateStats, err
+	} else if appRoleAssignmentStats, err := AppRoleAssignments(ctx, db); err != nil {
+		return &aggregateStats, err
 	} else {
 		aggregateStats.Merge(userRoleStats)
+		aggregateStats.Merge(appRoleAssignmentStats)
 	}
 
 	if stats, err := post.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, azure.PostProcessedRelationships()); err != nil {
@@ -1093,8 +1096,6 @@ func Post(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingSta
 
 	if executeCommandStats, err := ExecuteCommand(ctx, db); err != nil {
 		return &aggregateStats, err
-	} else if appRoleAssignmentStats, err := AppRoleAssignments(ctx, db); err != nil {
-		return &aggregateStats, err
 	} else if addOwnerStats, err := CreateAZAddOwnerEdge(ctx, db); err != nil {
 		return &aggregateStats, err
 	} else if hybridStats, err := hybrid.PostHybrid(ctx, db); err != nil {
@@ -1103,7 +1104,6 @@ func Post(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingSta
 		return &aggregateStats, err
 	} else {
 		aggregateStats.Merge(executeCommandStats)
-		aggregateStats.Merge(appRoleAssignmentStats)
 		aggregateStats.Merge(addOwnerStats)
 		aggregateStats.Merge(hybridStats)
 		aggregateStats.Merge(pimRolesStats)
