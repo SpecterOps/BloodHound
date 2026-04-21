@@ -96,7 +96,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                 const { id, name, description, query, canEdit = false } = lineItem;
                                                 return (
                                                     <li
-                                                        className={`p-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-3 dark:hover:bg-neutral-dark-3 justify-between pl-4 list-none ${
+                                                        className={`p-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-3 dark:hover:bg-neutral-dark-3 justify-between pl-8 list-none ${
                                                             isSelectedQuery(name, id) ? styles.selected : ''
                                                         }`}
                                                         style={
