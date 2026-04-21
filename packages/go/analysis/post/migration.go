@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/specterops/bloodhound-enterprise/lib/go/graphschema/meta"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -34,10 +35,11 @@ func MigrationForDCAPostProcessedEdges(ctx context.Context, db graph.Database, m
 
 		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			fetchedRelationshipIDs, err := ops.FetchRelationshipIDs(tx.Relationships().Filterf(func() graph.Criteria {
-				// Only remove existing post-processed edges if they contain a `lastseen` property
+				// Only remove existing post-processed edges if they contain a `lastseen` property and don't involve meta nodes
 				return query.And(
 					query.Kind(query.Relationship(), kind),
 					query.Exists(query.RelationshipProperty(common.LastSeen.String())),
+					query.Not(query.Kind(query.End(), meta.Meta)),
 				)
 			}))
 
