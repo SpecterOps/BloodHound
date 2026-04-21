@@ -281,6 +281,16 @@ func TestFetchTenants(t *testing.T) {
 	assert.Contains(t, tenants.Slice(), stubTenant)
 }
 
+func TestAddOwnerRoleIDs(t *testing.T) {
+	roleIDs := azure.AddOwnerRoleIDs()
+
+	assert.Len(t, roleIDs, 4)
+	assert.Contains(t, roleIDs, azschema.HybridIdentityAdministratorRole)
+	assert.Contains(t, roleIDs, azschema.PartnerTier1SupportRole)
+	assert.Contains(t, roleIDs, azschema.PartnerTier2SupportRole)
+	assert.Contains(t, roleIDs, azschema.DirectorySynchronizationAccountsRole)
+}
+
 func TestEndNodes(t *testing.T) {
 	var (
 		ctrl         = gomock.NewController(t)

@@ -120,10 +120,11 @@ func Test_filterAndFormatSearchResults(t *testing.T) {
 		input = []*graph.Node{
 			{Properties: inputNodeProps},
 		}
-		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
+		primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
 	)
+	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
 
-	actual := filterAndFormatSearchResults(input, nil, customNodeKindsMap.ValidKinds(), nil)
+	actual := filterAndFormatSearchResults(input, nil, primaryDisplayKinds)
 
 	expectedName, _ := inputNodeProps.Get("name").String()
 	expectedObjectId, _ := inputNodeProps.Get("objectid").String()
@@ -144,10 +145,11 @@ func Test_filterAndFormatSearchResults_default(t *testing.T) {
 		expectedObjectId          = graphschema.DefaultMissingObjectId
 		expectedDistinguishedName = ""
 
-		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
+		primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
 	)
+	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
 
-	actual := filterAndFormatSearchResults(input, nil, customNodeKindsMap.ValidKinds(), nil)
+	actual := filterAndFormatSearchResults(input, nil, primaryDisplayKinds)
 
 	require.Equal(t, 1, len(actual))
 	require.Equal(t, expectedName, actual[0].Name)
@@ -165,11 +167,11 @@ func Test_filterAndFormatSearchResults_includeOpenGraphNodes(t *testing.T) {
 			{Kinds: []graph.Kind{graph.StringKind("OtherKind"), graph.StringKind(customKind)},
 				Properties: inputNodeProps},
 		}
-
-		customNodeKindsMap = model.CustomNodeKindMap{customKind: model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
+		primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
 	)
+	primaryDisplayKinds.Add("CustomKind", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
 
-	actual := filterAndFormatSearchResults(input, nil, customNodeKindsMap.ValidKinds(), nil)
+	actual := filterAndFormatSearchResults(input, nil, primaryDisplayKinds)
 
 	require.Equal(t, 1, len(actual))
 	require.Equal(t, customKind, actual[0].Type)
@@ -201,10 +203,11 @@ func Test_filterAndFormatSearchResults_filterEnvironments(t *testing.T) {
 
 		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
 
-		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
+		primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
 	)
+	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
 
-	actual := filterAndFormatSearchResults(input, []string{"54321"}, customNodeKindsMap.ValidKinds(), nil)
+	actual := filterAndFormatSearchResults(input, []string{"54321"}, primaryDisplayKinds)
 
 	expectedName, _ := inputNodeProp2.Properties.Get(common.Name.String()).String()
 	expectedObjectId, _ := inputNodeProp2.Properties.Get(common.ObjectID.String()).String()
@@ -241,10 +244,11 @@ func Test_filterAndFormatSearchResults_filterEnvironmentsEmpty(t *testing.T) {
 
 		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
 
-		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
+		primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
 	)
+	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
 
-	actual := filterAndFormatSearchResults(input, []string{}, customNodeKindsMap.ValidKinds(), nil)
+	actual := filterAndFormatSearchResults(input, []string{}, primaryDisplayKinds)
 
 	require.Empty(t, actual)
 }
@@ -273,12 +277,12 @@ func Test_filterAndFormatSearchResults_filterEnvironments_domainSIDFail(t *testi
 			},
 		}
 
-		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
-
-		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
+		input               = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
+		primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
 	)
+	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
 
-	result := filterAndFormatSearchResults(input, []string{"54321"}, customNodeKindsMap.ValidKinds(), nil)
+	result := filterAndFormatSearchResults(input, []string{"54321"}, primaryDisplayKinds)
 	require.Len(t, result, 0)
 }
 
@@ -308,10 +312,11 @@ func Test_filterAndFormatSearchResults_filterEnvironments_tenantIDFail(t *testin
 
 		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
 
-		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
+		primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
 	)
+	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
 
-	result := filterAndFormatSearchResults(input, []string{"azure12345"}, customNodeKindsMap.ValidKinds(), nil)
+	result := filterAndFormatSearchResults(input, []string{"azure12345"}, primaryDisplayKinds)
 	require.Len(t, result, 0)
 }
 
@@ -341,10 +346,11 @@ func Test_filterAndFormatSearchResults_filterEnvironmentsOG(t *testing.T) {
 
 		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
 
-		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
+		primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
 	)
+	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
 
-	actual := filterAndFormatSearchResults(input, []string{"og-12345"}, customNodeKindsMap.ValidKinds(), nil)
+	actual := filterAndFormatSearchResults(input, []string{"og-12345"}, primaryDisplayKinds)
 
 	require.Len(t, actual, 1)
 	require.Equal(t, "objectid3", actual[0].ObjectID)
@@ -354,7 +360,7 @@ func Test_getSearchableNodeKinds(t *testing.T) {
 	tests := []struct {
 		name                   string
 		openGraphSearchEnabled bool
-		validPrimaryKinds      graphschema.ValidPrimaryKinds
+		primaryDisplayKinds    graphschema.PrimaryDisplayKinds
 		typeParams             graph.Kinds
 		expected               graph.Kinds
 		expectErr              bool
@@ -362,7 +368,7 @@ func Test_getSearchableNodeKinds(t *testing.T) {
 		{
 			name:                   "returns unconstrained kinds when open graph search is enabled and no types are provided",
 			openGraphSearchEnabled: true,
-			validPrimaryKinds:      graphschema.ValidPrimaryKinds{graph.StringKind("CustomKind"): true},
+			primaryDisplayKinds:    graphschema.PrimaryDisplayKinds{graph.StringKind("CustomKind"): graphschema.DisplayKind{}},
 			typeParams:             nil,
 			expected:               nil,
 		},
@@ -375,7 +381,7 @@ func Test_getSearchableNodeKinds(t *testing.T) {
 		{
 			name:                   "returns custom kinds when open graph search is enabled",
 			openGraphSearchEnabled: true,
-			validPrimaryKinds:      graphschema.ValidPrimaryKinds{graph.StringKind("CustomKind"): true},
+			primaryDisplayKinds:    graphschema.PrimaryDisplayKinds{graph.StringKind("CustomKind"): graphschema.DisplayKind{}},
 			typeParams:             graph.Kinds{graph.StringKind("CustomKind")},
 			expected:               graph.Kinds{graph.StringKind("CustomKind")},
 		},
@@ -389,7 +395,7 @@ func Test_getSearchableNodeKinds(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual, err := getSearchableNodeKinds(tt.openGraphSearchEnabled, tt.validPrimaryKinds, tt.typeParams)
+			actual, err := getSearchableNodeKinds(tt.openGraphSearchEnabled, tt.primaryDisplayKinds, tt.typeParams)
 
 			if tt.expectErr {
 				require.Error(t, err)

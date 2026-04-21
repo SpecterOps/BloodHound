@@ -25,12 +25,12 @@ import (
 
 // resolveFindingFKs translates the FK names in a RelationshipFindingInput to their corresponding IDs.
 func (s *BloodhoundDB) resolveFindingFKs(ctx context.Context, input model.RelationshipFindingInput) (int32, int32, error) {
-	if relKind, err := s.GetKindByName(ctx, input.RelationshipKindName); err != nil {
+	if relKind, err := s.GetKindsByNames(ctx, input.RelationshipKindName); err != nil {
 		return 0, 0, fmt.Errorf("error retrieving relationship kind '%s': %w", input.RelationshipKindName, err)
 	} else if environment, err := s.GetEnvironmentKindName(ctx, input.EnvironmentKindName); err != nil {
 		return 0, 0, fmt.Errorf("error retrieving environment kind '%s': %w", input.EnvironmentKindName, err)
 	} else {
-		return relKind.ID, environment.ID, nil
+		return relKind[0].ID, environment.ID, nil
 	}
 }
 

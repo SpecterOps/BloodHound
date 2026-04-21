@@ -168,7 +168,6 @@ func TestDatabaseWipe(t *testing.T) {
 
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), gomock.Any()).Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockGraph.EXPECT().FetchKinds(gomock.Any()).Return(graph.Kinds{graph.StringKind("HasSession"), graph.StringKind("User")}, nil)
 					mockDB.EXPECT().RequestCollectedGraphDataDeletion(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, request model.AnalysisRequest) error {
 						capturedDeleteRequest = request
 						return nil
@@ -206,23 +205,6 @@ func TestDatabaseWipe(t *testing.T) {
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "failure building delete request: requested source kind id 99 not found")
-				},
-			},
-			{
-				Name: "relationship deletion request returns 400 for invalid relationship kind",
-				Input: func(input *apitest.Input) {
-					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
-					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteRelationships: []string{"HasSession"}})
-				},
-				Setup: func() {
-					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), gomock.Any()).Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockGraph.EXPECT().FetchKinds(gomock.Any()).Return(graph.Kinds{graph.StringKind("MemberOf")}, nil)
-					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-				},
-				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusBadRequest)
-					apitest.BodyContains(output, "failure building delete request: requested relationship kind \\\"HasSession\\\" is not a valid kind")
 				},
 			},
 			{
@@ -409,7 +391,7 @@ func TestDatabaseWipe(t *testing.T) {
 }
 
 func TestResources_BuildDeleteRequest(t *testing.T) {
-	t.Run("maps valid relationship delete request", func(t *testing.T) {
+	t.Run("maps relationship delete request", func(t *testing.T) {
 		var (
 			testCtx   = context.Background()
 			mockCtrl  = gomock.NewController(t)
@@ -418,8 +400,6 @@ func TestResources_BuildDeleteRequest(t *testing.T) {
 			resources = v2.Resources{DB: mockDB, Graph: mockGraph}
 		)
 		defer mockCtrl.Finish()
-
-		mockGraph.EXPECT().FetchKinds(testCtx).Return(graph.Kinds{graph.StringKind("HasSession"), graph.StringKind("User")}, nil)
 
 		deleteRequest, err := resources.BuildDeleteRequest(testCtx, "test-user", v2.DatabaseWipe{
 			DeleteRelationships: []string{"HasSession"},
@@ -438,30 +418,6 @@ func TestResources_BuildDeleteRequest(t *testing.T) {
 
 		if !slices.Equal(deleteRequest.DeleteRelationships, []string{"HasSession"}) {
 			t.Fatalf("expected delete relationships to contain HasSession, got %v", deleteRequest.DeleteRelationships)
-		}
-	})
-
-	t.Run("rejects invalid relationship kind", func(t *testing.T) {
-		var (
-			testCtx   = context.Background()
-			mockCtrl  = gomock.NewController(t)
-			mockDB    = dbMocks.NewMockDatabase(mockCtrl)
-			mockGraph = graph_mocks.NewMockDatabase(mockCtrl)
-			resources = v2.Resources{DB: mockDB, Graph: mockGraph}
-		)
-		defer mockCtrl.Finish()
-
-		mockGraph.EXPECT().FetchKinds(testCtx).Return(graph.Kinds{graph.StringKind("MemberOf")}, nil)
-
-		_, err := resources.BuildDeleteRequest(testCtx, "test-user", v2.DatabaseWipe{
-			DeleteRelationships: []string{"HasSession"},
-		})
-		if err == nil {
-			t.Fatal("expected an error for an invalid relationship kind")
-		}
-
-		if !strings.Contains(err.Error(), `requested relationship kind "HasSession" is not a valid kind`) {
-			t.Fatalf("expected invalid relationship error, got %v", err)
 		}
 	})
 
