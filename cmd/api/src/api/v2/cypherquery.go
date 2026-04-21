@@ -104,7 +104,7 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	validPrimaryKinds, err := s.DB.GetDisplayNodeGraphKinds(request.Context())
+	primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context())
 	if err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return
@@ -112,10 +112,10 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 
 	if preparedQuery.HasMutation {
 		// defaulting include properties to true so ETAC filtering logic has access to node properties
-		graphResponse, err = s.cypherMutation(request, validPrimaryKinds, preparedQuery, true)
+		graphResponse, err = s.cypherMutation(request, primaryDisplayKinds, preparedQuery, true)
 	} else {
 		// defaulting include properties to true so ETAC filtering logic has access to node properties
-		graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), validPrimaryKinds, preparedQuery, true)
+		graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), primaryDisplayKinds, preparedQuery, true)
 	}
 
 	if err != nil {
@@ -157,7 +157,7 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	}
 }
 
-func (s Resources) cypherMutation(request *http.Request, validPrimaryKinds graphschema.ValidPrimaryKinds, preparedQuery queries.PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
+func (s Resources) cypherMutation(request *http.Request, primaryDisplayKinds graphschema.PrimaryDisplayKinds, preparedQuery queries.PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
 	var (
 		auditLogEntry model.AuditEntry
 		graphResponse model.UnifiedGraph
@@ -179,7 +179,7 @@ func (s Resources) cypherMutation(request *http.Request, validPrimaryKinds graph
 		return model.UnifiedGraph{}, err
 	}
 
-	if graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), validPrimaryKinds, preparedQuery, includeProperties); err != nil {
+	if graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), primaryDisplayKinds, preparedQuery, includeProperties); err != nil {
 		auditLogEntry.Status = model.AuditLogStatusFailure
 	} else {
 		auditLogEntry.Status = model.AuditLogStatusSuccess

@@ -67,6 +67,7 @@ func FetchWellKnownTierZeroEntities(ctx context.Context, db graph.Database, doma
 				return query.And(
 					// Make sure we have the Group or User label. This should cover the case for URA as well as filter out all the other localgroups
 					query.KindIn(query.Node(), ad.Group, ad.User),
+					query.KindIn(query.Node(), ad.Entity),
 					query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), wellKnownSIDSuffix),
 					query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSID),
 				)
@@ -129,6 +130,7 @@ func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
 				return query.And(
 					query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), suffix),
 					query.Not(query.KindIn(query.Node(), ad.Group, ad.LocalGroup)),
+					query.KindIn(query.Node(), ad.Entity),
 				)
 			})); err != nil && !graph.IsErrNotFound(err) {
 				return err
@@ -666,11 +668,19 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 		}
 
 		if checkSet.Contains(groupId) {
-			// If this entity is a cross product, add it to result entities, remove the group id from the second set and xor the group's membership with the result set
+			// If this entity is a cross product, add it to result entities, remove the group id from the second set and remove the group's membership from the result set
 			resultEntities.Add(groupId)
 
 			unrolledRefSet.Remove(groupId)
-			localGroupData.GroupMembershipCache.XorReach(groupId, graph.DirectionInbound, unrolledRefSet)
+			// Use ReachSliceOfComponentContainingMember with iterative AndNot instead of XorReach.
+			// XorReach toggles bits, which re-adds members that were previously removed when they
+			// belong to multiple matching groups, causing false-positive result entries.
+			// Iterative AndNot only removes: A & ~(B₁|B₂|…|Bₖ) = A&~B₁&~B₂&…&~Bₖ
+			// This also avoids the two bitmap allocations XorReach requires (merge + clone),
+			// since ReachSliceOfComponentContainingMember returns shared component bitmaps directly.
+			for _, componentBitmap := range localGroupData.GroupMembershipCache.ReachSliceOfComponentContainingMember(groupId, graph.DirectionInbound) {
+				unrolledRefSet.AndNot(componentBitmap)
+			}
 		} else {
 			// If this isn't a match, remove it from the second set to ensure we don't check it again, but leave its membership
 			unrolledRefSet.Remove(groupId)

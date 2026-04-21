@@ -258,7 +258,7 @@ func TestResources_GetEdgeComposition(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: GetDisplayNodeGraphKindsError",
+			name: "Error: GetPrimaryDisplayKindsError",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
@@ -272,7 +272,7 @@ func TestResources_GetEdgeComposition(t *testing.T) {
 				t.Helper()
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
-				mock.mockDb.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+				mock.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -295,7 +295,7 @@ func TestResources_GetEdgeComposition(t *testing.T) {
 				t.Helper()
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
-				mock.mockDb.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mock.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -531,7 +531,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 			},
 		},
 		{
-			name: "GetDisplayNodeGraphKindsError",
+			name: "GetPrimaryDisplayKindsError",
 			request: http.Request{
 				URL: &url.URL{
 					RawQuery: "edge_type=AZBase&source_node=1&target_node=2",
@@ -545,7 +545,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
 				t.Helper()
 				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(nil).Times(2)
-				mocks.mockDb.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+				mocks.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
 			},
 		},
 		{
@@ -563,7 +563,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
 				t.Helper()
 				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(nil).Times(2)
-				mocks.mockDb.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
 		},
 	}
@@ -823,7 +823,7 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: GetDisplayNodeGraphKindsError",
+			name: "Error: GetPrimaryDisplayKindsError",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
@@ -837,7 +837,7 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 				t.Helper()
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
-				mock.mockDb.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+				mock.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -860,7 +860,7 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 				t.Helper()
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
-				mock.mockDb.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mock.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,

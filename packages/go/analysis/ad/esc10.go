@@ -18,11 +18,9 @@ package ad
 
 import (
 	"context"
-
 	"log/slog"
 	"sync"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/ein"
@@ -326,7 +324,7 @@ func GetADCSESC10EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		startNode *graph.Node
 		endNode   *graph.Node
 
-		traversalInst          = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst          = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		paths                  = graph.PathSet{}
 		path1CandidateSegments = map[graph.ID][]*graph.PathSegment{}
 		victimCANodes          = map[graph.ID][]graph.ID{}

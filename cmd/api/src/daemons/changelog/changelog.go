@@ -38,6 +38,22 @@ type Options struct {
 	BatchSize     int
 	FlushInterval time.Duration // interval for force flush when ingest is quiet (clears out leftovers in buffer)
 	PollInterval  time.Duration // interval for Feature Flag check
+	RetryConfig   RetryConfig   // retry configuration for deadlock handling during flush
+}
+
+// RetryConfig controls retry behavior when the coordinator flush encounters a PostgreSQL deadlock.
+type RetryConfig struct {
+	MaxRetries int           // maximum number of retry attempts on deadlock
+	BaseDelay  time.Duration // initial delay before first retry (doubles each attempt)
+	MaxJitter  time.Duration // upper bound on random jitter added to each delay
+}
+
+func DefaultRetryConfig() RetryConfig {
+	return RetryConfig{
+		MaxRetries: defaultMaxDeadlockRetries,
+		BaseDelay:  defaultDeadlockBaseDelay,
+		MaxJitter:  defaultDeadlockMaxJitter,
+	}
 }
 
 func DefaultOptions() Options {
@@ -45,13 +61,14 @@ func DefaultOptions() Options {
 		BatchSize:     1_000,
 		FlushInterval: 5 * time.Second,
 		PollInterval:  10 * time.Second,
+		RetryConfig:   DefaultRetryConfig(),
 	}
 }
 
 func NewChangelog(dawgsDB graph.Database, flagProvider appcfg.GetFlagByKeyer, opts Options) *Changelog {
 	// Use dummy HA implementation for BHCE (always primary)
 	flagManager := newFeatureFlagManager(flagGetter(dawgsDB, flagProvider), opts.PollInterval, ha.NewDummyHA())
-	coordinator := newIngestionCoordinator(dawgsDB)
+	coordinator := newIngestionCoordinator(dawgsDB, opts.RetryConfig)
 
 	return &Changelog{
 		flagManager: flagManager,
@@ -63,7 +80,7 @@ func NewChangelog(dawgsDB graph.Database, flagProvider appcfg.GetFlagByKeyer, op
 // NewChangelogWithHA creates a changelog with a real HA implementation for high-availability deployments.
 func NewChangelogWithHA(dawgsDB graph.Database, flagProvider appcfg.GetFlagByKeyer, opts Options, haMutex ha.HAMutex) *Changelog {
 	flagManager := newFeatureFlagManager(flagGetter(dawgsDB, flagProvider), opts.PollInterval, haMutex)
-	coordinator := newIngestionCoordinator(dawgsDB)
+	coordinator := newIngestionCoordinator(dawgsDB, opts.RetryConfig)
 
 	return &Changelog{
 		flagManager: flagManager,
