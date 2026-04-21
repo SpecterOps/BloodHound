@@ -13,10 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import * as React from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
 import { cn } from '../utils';
 
 /**
@@ -76,7 +76,7 @@ const MenuItem = React.forwardRef<React.ElementRef<typeof DropdownMenuPrimitive.
         <DropdownMenuPrimitive.Item
             ref={ref}
             className={cn(
-                'relative flex cursor-pointer select-none items-center rounded-lg border border-transparent p-1 text-sm outline-none',
+                'relative flex cursor-pointer select-none items-center rounded-lg border-none p-2 text-sm outline-none',
                 'data-[highlighted]:border-[#4A3BD7] data-[highlighted]:bg-[#4A3BD7] data-[highlighted]:text-white',
                 'dark:data-[highlighted]:border-[#66a3ff] dark:data-[highlighted]:bg-[#66a3ff] dark:data-[highlighted]:text-black',
                 'data-[highlighted]:active:bg-[#2C2677] dark:data-[highlighted]:active:bg-[#a1a0ff] dark:data-[highlighted]:active:text-black',
@@ -86,7 +86,7 @@ const MenuItem = React.forwardRef<React.ElementRef<typeof DropdownMenuPrimitive.
             )}
             {...props}>
             {iconLeft && icon && <span className='mr-2 flex items-center'>{icon}</span>}
-            <span className='flex-1'>{children}</span>
+            <span className='flex-1 leading-4'>{children}</span>
             {secondaryMenu && <FontAwesomeIcon icon={faCaretRight} className='ml-2' />}
         </DropdownMenuPrimitive.Item>
     )
