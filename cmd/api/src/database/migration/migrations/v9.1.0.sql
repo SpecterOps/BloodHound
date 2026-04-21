@@ -13,8 +13,6 @@
 -- limitations under the License.
 --
 -- SPDX-License-Identifier: Apache-2.0
--- Add OpenGraph Phase 2 feature flag
-
 
 -- Add OpenGraph permissions to permissions table
 INSERT INTO permissions(created_at, updated_at, authority, name)
@@ -81,13 +79,3 @@ VALUES (current_timestamp,
         false,
         false)
 ON CONFLICT DO NOTHING;
-
--- Add Events Table 
-CREATE TABLE IF NOT EXISTS events (
-  id TEXT PRIMARY KEY NOT NULL,
-  type TEXT NOT NULL,
-  message TEXT NOT NULL,
-  data JSONB NOT NULL,
-  created_at timestamp with time zone DEFAULT current_timestamp,
-  processed_at timestamp with time zone DEFAULT NULL
-);
