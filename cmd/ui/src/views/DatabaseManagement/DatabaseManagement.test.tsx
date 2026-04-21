@@ -246,6 +246,8 @@ describe('DatabaseManagement', () => {
             deleteRelationships: ['HasSession'],
             deleteSourceKinds: [1],
         });
+        expect(screen.getByRole('checkbox', { name: /Active Directory data/i })).not.toBeChecked();
+        expect(screen.getByRole('checkbox', { name: /HasSession/i })).not.toBeChecked();
     });
 
     it('handles delete by nested graph data selection', async () => {

@@ -34,11 +34,6 @@ import { useMutation } from 'react-query';
 import { useSelector } from 'react-redux';
 import { selectAllAssetGroupIds, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 
-const getEmptyGraphDataSelections = (): GraphDataSelections => ({
-    sourceKinds: [],
-    relationships: [],
-});
-
 const initialState: State = {
     deleteAllAssetGroupSelectors: false,
     deleteCollectedGraphData: false,
@@ -110,7 +105,8 @@ const reducer = (state: State, action: Action): State => {
                 deleteCustomHighValueSelectors: false,
                 deleteDataQualityHistory: false,
                 deleteFileIngestHistory: false,
-                ...getEmptyGraphDataSelections(),
+                deleteSourceKinds: [],
+                deleteRelationships: [],
 
                 showSuccessMessage: true,
             };

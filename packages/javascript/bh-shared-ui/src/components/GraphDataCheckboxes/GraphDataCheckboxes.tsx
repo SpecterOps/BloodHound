@@ -387,7 +387,7 @@ export const GraphDataCheckboxes: FC<{
                                             )}
                                             onChange={toggleGraphDataOption(sourceKind.id, graphDataOption.key)}
                                             name={graphDataOption.key}
-                                            disabled={isDisabled}
+                                            disabled={isDisabled || isSourceKindChecked(checked, sourceKind.id)}
                                         />
                                     }
                                     label={graphDataOption.label}

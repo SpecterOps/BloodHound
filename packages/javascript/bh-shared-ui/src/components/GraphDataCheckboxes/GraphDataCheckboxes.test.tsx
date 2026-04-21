@@ -275,7 +275,7 @@ describe('GraphDataCheckboxes', () => {
         expect(onChange).toHaveBeenCalledWith({ sourceKinds: [], relationships: [] });
     });
 
-    it('does not change a nested graph data option while its source kind is selected', async () => {
+    it('disables a nested graph data option while its source kind is selected', async () => {
         const onChange = vi.fn();
 
         await act(async () =>
@@ -290,10 +290,9 @@ describe('GraphDataCheckboxes', () => {
             )
         );
 
-        const user = userEvent.setup();
         const child = screen.getByRole('checkbox', { name: /HasSession/i });
-        await user.click(child);
-
+        expect(child).toBeChecked();
+        expect(child).toBeDisabled();
         expect(onChange).not.toHaveBeenCalled();
     });
 });
