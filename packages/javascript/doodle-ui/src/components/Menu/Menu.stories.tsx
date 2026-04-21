@@ -100,14 +100,12 @@ export const WithIconLeft: Story = {
             <Trigger />
             <MenuContent>
                 <MenuLabel>My Account</MenuLabel>
-                <MenuSeparator />
                 <MenuItem icon={<User size={16} />} iconLeft onSelect={() => console.log('Profile')}>
                     Profile
                 </MenuItem>
                 <MenuItem icon={<UserCog size={16} />} iconLeft onSelect={() => console.log('Settings')}>
                     Settings
                 </MenuItem>
-                <MenuSeparator />
                 <MenuItem icon={<MagnifyingGlass size={16} />} iconLeft onSelect={() => console.log('Search')}>
                     Search
                 </MenuItem>
@@ -122,7 +120,6 @@ export const WithSecondaryMenu: Story = {
             <Trigger />
             <MenuContent>
                 <MenuLabel>Navigation</MenuLabel>
-                <MenuSeparator />
                 <MenuItem onSelect={() => console.log('Profile')}>Profile</MenuItem>
                 <MenuSub>
                     <MenuSubTrigger>Settings</MenuSubTrigger>
@@ -143,12 +140,10 @@ export const WithDisabledItem: Story = {
             <Trigger />
             <MenuContent>
                 <MenuLabel>My Account</MenuLabel>
-                <MenuSeparator />
                 <MenuItem onSelect={() => console.log('Profile')}>Profile</MenuItem>
                 <MenuItem disabled onSelect={() => console.log('Settings')}>
                     Settings (disabled)
                 </MenuItem>
-                <MenuSeparator />
                 <MenuItem onSelect={() => console.log('Logout')}>Logout</MenuItem>
             </MenuContent>
         </Menu>
@@ -161,7 +156,6 @@ export const AllFeatures: Story = {
             <Trigger />
             <MenuContent>
                 <MenuLabel>All Features</MenuLabel>
-                <MenuSeparator />
                 <MenuItem icon={<User size={16} />} iconLeft onSelect={() => console.log('Profile')}>
                     With Icon Left
                 </MenuItem>
@@ -175,7 +169,6 @@ export const AllFeatures: Story = {
                         <MenuItem onSelect={() => console.log('Privacy')}>Privacy</MenuItem>
                     </MenuSubContent>
                 </MenuSub>
-                <MenuSeparator />
                 <MenuItem icon={<MagnifyingGlass size={16} />} iconLeft disabled>
                     Disabled with Icon
                 </MenuItem>

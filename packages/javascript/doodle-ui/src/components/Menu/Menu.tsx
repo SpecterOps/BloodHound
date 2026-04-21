@@ -46,7 +46,7 @@ const MenuContent = React.forwardRef<
             ref={ref}
             sideOffset={sideOffset}
             className={cn(
-                'z-50 min-w-[8rem] overflow-hidden rounded-md border border-neutral-light-4 bg-neutral-light-2 p-1 shadow-md',
+                'z-50 min-w-[8rem] overflow-hidden rounded-md border-neutral-light-4 bg-neutral-1 p-1 shadow-md',
                 'dark:border-neutral-dark-4 dark:bg-neutral-dark-2',
                 'data-[state=open]:animate-in data-[state=closed]:animate-out',
                 'data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0',
@@ -76,10 +76,10 @@ const MenuItem = React.forwardRef<React.ElementRef<typeof DropdownMenuPrimitive.
         <DropdownMenuPrimitive.Item
             ref={ref}
             className={cn(
-                'relative flex cursor-pointer select-none items-center rounded-lg border border-transparent px-2 py-1.5 text-sm outline-none',
+                'relative flex cursor-pointer select-none items-center rounded-lg border border-transparent p-1 text-sm outline-none',
                 'data-[highlighted]:border-[#4A3BD7] data-[highlighted]:bg-[#4A3BD7] data-[highlighted]:text-white',
                 'dark:data-[highlighted]:border-[#66a3ff] dark:data-[highlighted]:bg-[#66a3ff] dark:data-[highlighted]:text-black',
-                'active:bg-[#2C2677] dark:active:bg-[#a1a0ff] dark:active:text-black',
+                'data-[highlighted]:active:bg-[#2C2677] dark:data-[highlighted]:active:bg-[#a1a0ff] dark:data-[highlighted]:active:text-black',
                 'data-[disabled]:pointer-events-none data-[disabled]:cursor-not-allowed data-[disabled]:bg-neutral-light-3 data-[disabled]:text-[#616161]',
                 'dark:data-[disabled]:bg-neutral-dark-5 dark:data-[disabled]:text-[#a6a6a6]',
                 className
@@ -144,7 +144,7 @@ const MenuSubContent = React.forwardRef<
         <DropdownMenuPrimitive.SubContent
             ref={ref}
             className={cn(
-                'z-50 min-w-[8rem] overflow-hidden rounded-md border border-neutral-light-4 bg-neutral-light-2 p-1 shadow-md',
+                'z-50 min-w-[8rem] overflow-hidden rounded-md bg-neutral-1 p-1 shadow-md',
                 'dark:border-neutral-dark-4 dark:bg-neutral-dark-2',
                 'data-[state=open]:animate-in data-[state=closed]:animate-out',
                 'data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0',
