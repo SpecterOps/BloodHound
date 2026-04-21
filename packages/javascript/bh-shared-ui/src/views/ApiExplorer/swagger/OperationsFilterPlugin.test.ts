@@ -14,14 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { compareTerm } from './OperationsFilterPlugin';
+import { fromJS } from 'immutable';
+import { compareTerm, opsFilter } from './OperationsFilterPlugin';
 
-describe('OperationsFilterPlugin', () => {
-    it('should return true when tag matches term', () => {
+const buildTaggedOps = (data: Record<string, { operations: { path: string }[] }>) => fromJS(data);
+
+describe('compareTerm', () => {
+    it('should return true when value matches term', () => {
         expect(compareTerm('auth', 'auth')).toEqual(true);
     });
 
-    it('should return true when tag partially matches term', () => {
+    it('should return true when value partially matches term', () => {
         expect(compareTerm('auth', 'au')).toEqual(true);
     });
 
@@ -32,5 +35,50 @@ describe('OperationsFilterPlugin', () => {
 
     it('should return false when there is no match', () => {
         expect(compareTerm('user', 'auth')).toEqual(false);
+    });
+});
+
+describe('opsFilter', () => {
+    const taggedOps = buildTaggedOps({
+        Auth: { operations: [{ path: '/api/v1/login' }, { path: '/api/v1/logout' }] },
+        Users: { operations: [{ path: '/api/v1/users' }, { path: '/api/v1/users/{id}' }] },
+        Graph: { operations: [{ path: '/api/v1/graph/nodes' }] },
+    });
+
+    it('should include all operations when the tag matches the term', () => {
+        const result = opsFilter(taggedOps, 'Auth');
+        expect(result.has('Auth')).toBe(true);
+        expect(result.getIn(['Auth', 'operations']).size).toBe(2);
+    });
+
+    it('should exclude tags and operations that do not match the term', () => {
+        const result = opsFilter(taggedOps, 'Auth');
+        expect(result.has('Users')).toBe(false);
+        expect(result.has('Graph')).toBe(false);
+    });
+
+    it('should include a tag with only the matching operations when the path matches', () => {
+        const result = opsFilter(taggedOps, '/api/v1/users/{id}');
+        expect(result.has('Users')).toBe(true);
+        expect(result.getIn(['Users', 'operations']).size).toBe(1);
+        expect(result.getIn(['Users', 'operations', 0, 'path'])).toBe('/api/v1/users/{id}');
+    });
+
+    it('should exclude operations within a tag when only the path matches but not all paths', () => {
+        const result = opsFilter(taggedOps, 'login');
+        expect(result.has('Auth')).toBe(true);
+        expect(result.getIn(['Auth', 'operations']).size).toBe(1);
+        expect(result.getIn(['Auth', 'operations', 0, 'path'])).toBe('/api/v1/login');
+    });
+
+    it('should be case-insensitive when matching by path', () => {
+        const result = opsFilter(taggedOps, 'GRAPH');
+        expect(result.has('Graph')).toBe(true);
+        expect(result.getIn(['Graph', 'operations']).size).toBe(1);
+    });
+
+    it('should return an empty map when no tags or paths match', () => {
+        const result = opsFilter(taggedOps, 'nonexistent');
+        expect(result.size).toBe(0);
     });
 });
