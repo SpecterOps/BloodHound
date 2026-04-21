@@ -29,7 +29,7 @@ varying vec4 v_color;
 
 const float minThickness = 1.7;
 const float bias = 255.0 / 254.0;
-const float arrowHeadWidthLengthRatio = 0.75;
+const float arrowHeadWidthLengthRatio = 0.9;
 const float arrowHeadLengthThicknessRatio = 3.0;
 
 void main() {

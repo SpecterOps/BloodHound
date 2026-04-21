@@ -38,6 +38,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/crypto"
 	"github.com/specterops/bloodhound/packages/go/headers"
@@ -519,7 +520,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 		api.RedirectToLoginURL(response, request, "Invalid assertion: no valid email address found")
 	} else {
 		if ssoProvider.Config.AutoProvision.Enabled {
-			if err := jitSAMLUserUpsert(request.Context(), ssoProvider, principalName, assertion, s.db); err != nil {
+			if err := jitSAMLUserUpsert(request.Context(), ssoProvider, principalName, assertion, s.db, s.DogTags); err != nil {
 				// It is safe to let this request drop into the CreateSSOSession function below to ensure proper audit logging
 				slog.WarnContext(
 					request.Context(),
@@ -533,14 +534,14 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 	}
 }
 
-func jitSAMLUserUpsert(ctx context.Context, ssoProvider model.SSOProvider, principalName string, assertion *saml.Assertion, u jitUserUpserter) error {
+func jitSAMLUserUpsert(ctx context.Context, ssoProvider model.SSOProvider, principalName string, assertion *saml.Assertion, u jitUserUpserter, dogTagsService dogtags.Service) error {
 	if roles, err := SanitizeAndGetRoles(ctx, ssoProvider.Config.AutoProvision, ssoProvider.SAMLProvider.GetSAMLUserRolesFromAssertion(assertion), u); err != nil {
 		return fmt.Errorf("sanitize roles: %v", err)
 	} else if len(roles) != 1 {
 		return fmt.Errorf("invalid roles detected")
 	} else if user, err := u.LookupUser(ctx, principalName); err != nil {
 		if errors.Is(err, database.ErrNotFound) {
-			return jitSAMLUserCreate(ctx, ssoProvider, principalName, assertion, u, roles)
+			return jitSAMLUserCreate(ctx, ssoProvider, principalName, assertion, u, roles, dogTagsService)
 		}
 		return fmt.Errorf("lookup user: %v", err)
 	} else if ssoProvider.Config.AutoProvision.RoleProvision && !user.Roles.Has(roles[0]) {
@@ -554,7 +555,7 @@ func jitSAMLUserUpsert(ctx context.Context, ssoProvider model.SSOProvider, princ
 	return nil
 }
 
-func jitSAMLUserCreate(ctx context.Context, ssoProvider model.SSOProvider, principalName string, assertion *saml.Assertion, u jitUserUpserter, roles model.Roles) error {
+func jitSAMLUserCreate(ctx context.Context, ssoProvider model.SSOProvider, principalName string, assertion *saml.Assertion, u jitUserUpserter, roles model.Roles, dogTagsService dogtags.Service) error {
 	user := model.User{
 		EmailAddress:  null.StringFrom(principalName),
 		PrincipalName: principalName,
@@ -571,6 +572,12 @@ func jitSAMLUserCreate(ctx context.Context, ssoProvider model.SSOProvider, princ
 
 	if surname, err := ssoProvider.SAMLProvider.GetSAMLUserSurnameFromAssertion(assertion); err == nil {
 		user.LastName = null.StringFrom(surname)
+	}
+
+	if dogTagsService.GetFlagAsBool(dogtags.ETAC_ENABLED) {
+		user.AllEnvironments = !hasValidRolesForETAC(roles)
+	} else {
+		user.AllEnvironments = true
 	}
 
 	if _, err := u.CreateUser(ctx, user); err != nil {

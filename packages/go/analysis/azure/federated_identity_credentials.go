@@ -28,14 +28,14 @@ import (
 	"github.com/specterops/dawgs/query"
 )
 
-func FederatedIdentityCredentialEntityDetails(ctx context.Context, db graph.Database, validPrimaryKinds graphschema.ValidPrimaryKinds, objectID string, hydrateCounts bool) (FederatedIdentityCredentialDetails, error) {
+func FederatedIdentityCredentialEntityDetails(ctx context.Context, db graph.Database, primaryDisplayKinds graphschema.PrimaryDisplayKinds, objectID string, hydrateCounts bool) (FederatedIdentityCredentialDetails, error) {
 	var details FederatedIdentityCredentialDetails
 
 	return details, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
 			return err
 		} else {
-			details.Node = FromGraphNode(validPrimaryKinds, node)
+			details.Node = FromGraphNode(primaryDisplayKinds, node)
 			if appID, err := getFICAppID(tx, node); err != nil {
 				return err
 			} else {
