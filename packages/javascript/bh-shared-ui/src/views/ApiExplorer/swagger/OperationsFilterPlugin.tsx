@@ -50,8 +50,9 @@ export const OperationsFilterPlugin = () => {
                 function FilterContainer(props: any) {
                     const containerRef = useRef<HTMLDivElement>(null);
 
-                    // Swagger doesn't give an option to change the placeholder text "Filter by tag"
-                    // so we'll do a little hack
+                    // Swagger hardcodes the filter input placeholder "Filter by tag"
+                    // but our implementation customizes results, included resource path
+                    // so this little hack updates the placeholder accordingly
                     useEffect(() => {
                         const input = containerRef.current?.querySelector<HTMLInputElement>('.operation-filter-input');
                         if (input) {
