@@ -20,6 +20,6 @@ CREATE TABLE IF NOT EXISTS events (
   type TEXT NOT NULL,
   message TEXT NOT NULL,
   data JSONB NOT NULL,
-  created_at timestamp with time zone DEFAULT current_timestamp,
+  created_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
   processed_at timestamp with time zone DEFAULT NULL
 );
