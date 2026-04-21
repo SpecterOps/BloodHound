@@ -66,21 +66,21 @@ func TestCreateEnvironmentWithPrincipalKinds(t *testing.T) {
 				require.NoError(t, err)
 				assert.NotZero(t, env.ID)
 
-				envKind, err := db.GetKindByName(context.Background(), args.environmentKindName)
+				envKind, err := db.GetKindsByNames(context.Background(), args.environmentKindName)
 				require.NoError(t, err)
-				assert.Equal(t, envKind.ID, env.EnvironmentKindId)
+				assert.Equal(t, envKind[0].ID, env.EnvironmentKindId)
 
-				sourceKind, err := db.GetKindByName(context.Background(), args.sourceKindName)
+				sourceKind, err := db.GetKindsByNames(context.Background(), args.sourceKindName)
 				require.NoError(t, err)
-				assert.Equal(t, sourceKind.ID, env.SourceKindId)
+				assert.Equal(t, sourceKind[0].ID, env.SourceKindId)
 
 				principalKinds, err := db.GetPrincipalKindsByEnvironmentId(context.Background(), env.ID)
 				require.NoError(t, err)
 				require.Len(t, principalKinds, len(args.principalKinds))
 				for i, pk := range principalKinds {
-					expectedKind, err := db.GetKindByName(context.Background(), args.principalKinds[i])
+					expectedKind, err := db.GetKindsByNames(context.Background(), args.principalKinds[i])
 					require.NoError(t, err)
-					assert.Equal(t, expectedKind.ID, pk.PrincipalKind)
+					assert.Equal(t, expectedKind[0].ID, pk.PrincipalKind)
 				}
 			},
 		},
@@ -244,17 +244,17 @@ func TestUpdateEnvironmentWithPrincipalKinds(t *testing.T) {
 				require.NoError(t, err)
 				assert.NotZero(t, updated.ID)
 
-				sourceKind, err := db.GetKindByName(context.Background(), args.newSourceKindName)
+				sourceKind, err := db.GetKindsByNames(context.Background(), args.newSourceKindName)
 				require.NoError(t, err)
-				assert.Equal(t, sourceKind.ID, updated.SourceKindId)
+				assert.Equal(t, sourceKind[0].ID, updated.SourceKindId)
 
 				principalKinds, err := db.GetPrincipalKindsByEnvironmentId(context.Background(), updated.ID)
 				require.NoError(t, err)
 				require.Len(t, principalKinds, len(args.newPrincipalKinds))
 				for i, pk := range principalKinds {
-					expectedKind, err := db.GetKindByName(context.Background(), args.newPrincipalKinds[i])
+					expectedKind, err := db.GetKindsByNames(context.Background(), args.newPrincipalKinds[i])
 					require.NoError(t, err)
-					assert.Equal(t, expectedKind.ID, pk.PrincipalKind)
+					assert.Equal(t, expectedKind[0].ID, pk.PrincipalKind)
 				}
 			},
 		},
@@ -283,9 +283,9 @@ func TestUpdateEnvironmentWithPrincipalKinds(t *testing.T) {
 				require.NoError(t, err)
 				assert.NotZero(t, updated.ID)
 
-				sourceKind, err := db.GetKindByName(context.Background(), args.newSourceKindName)
+				sourceKind, err := db.GetKindsByNames(context.Background(), args.newSourceKindName)
 				require.NoError(t, err)
-				assert.Equal(t, sourceKind.ID, updated.SourceKindId)
+				assert.Equal(t, sourceKind[0].ID, updated.SourceKindId)
 			},
 		},
 	}
