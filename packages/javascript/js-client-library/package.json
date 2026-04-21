@@ -10,7 +10,7 @@
     ],
     "scripts": {
         "audit": "yarn npm audit --recursive",
-        "build": "yarn check-types && rollup --config rollup.config.js",
+        "build": "tsc --noEmit --pretty && rollup --config rollup.config.js",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "test": "echo \"Warning: no test specified\"",
         "check-types": "tsc --noEmit --pretty",
