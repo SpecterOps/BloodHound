@@ -25,7 +25,7 @@ import {
     RadioItem,
     VisuallyHidden,
 } from 'doodle-ui';
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { ExportColumns } from './explore-table-utils';
 
 type ExportConfirmDialogProps = {
@@ -36,7 +36,11 @@ type ExportConfirmDialogProps = {
 
 const ExportConfirmDialog: FC<ExportConfirmDialogProps> = ({ open, onCancel, onConfirm }) => {
     const [exportColumns, setExportColumns] = useState<ExportColumns>('all');
-
+    useEffect(() => {
+        if (open) {
+            setExportColumns('all');
+        }
+    }, [open]);
     return (
         <Dialog open={open} onOpenChange={() => onCancel()}>
             <DialogPortal>
