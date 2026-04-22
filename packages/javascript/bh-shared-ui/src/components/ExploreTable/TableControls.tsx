@@ -77,7 +77,7 @@ const TableControls = <TData, TValue>({
         setIsExportConfirmOpen(false);
     };
     const handleConfirmExport = (columns: ExportColumns) => {
-        onDownloadClick && onDownloadClick(columns);
+        onDownloadClick?.(columns);
         setIsExportConfirmOpen(false);
     };
 
