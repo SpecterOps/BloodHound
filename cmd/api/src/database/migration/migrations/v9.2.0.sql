@@ -90,9 +90,9 @@ CREATE TABLE IF NOT EXISTS webhook_events
     webhook_id       text                     NOT NULL,
     event_id         text                     NOT NULL,
     created_at       timestamp with time zone NOT NULL DEFAULT current_timestamp,
-    last_status_code integer                  NOT NULL DEFAULT 0,
+    last_status_code integer,
     last_error       text,
-    attempts         integer                  NOT NULL DEFAULT 0,
+    attempts         integer                  NOT NULL DEFAULT 1,
     PRIMARY KEY (webhook_id, event_id),
     CONSTRAINT fk_webhook_events_webhooks
         FOREIGN KEY (webhook_id) REFERENCES webhooks (id) ON DELETE CASCADE,
