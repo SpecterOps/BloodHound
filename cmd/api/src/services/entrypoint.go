@@ -154,9 +154,9 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		connections.Graph.SetWriteFlushSize(neo4jParameters.WriteFlushSize)
 
 		// Register metrics then trigger analysis on first start
-		if _, err = metrics.NewRegistry(); err != nil {
+		if promRegistry, err := metrics.NewRegistry(); err != nil {
 			return nil, fmt.Errorf("failed to create prometheus registry: %w", err)
-		} else if err = metrics.InitializeBHCEMetrics(); err != nil {
+		} else if err = metrics.InitializeBHCEMetrics(promRegistry); err != nil {
 			return nil, fmt.Errorf("failed to register prometheus metrics: %w", err)
 		} else if err := connections.RDMS.RequestAnalysis(ctx, "init"); err != nil {
 			slog.WarnContext(ctx, "Failed to request init analysis", attr.Error(err))

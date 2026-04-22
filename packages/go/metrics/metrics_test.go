@@ -29,7 +29,8 @@ func TestNewRegistry(t *testing.T) {
 func TestInitializeBHCEMetrics(t *testing.T) {
 	t.Parallel()
 
-	err := metrics.InitializeBHCEMetrics()
+	registry := prometheus.NewRegistry()
+	err := metrics.InitializeBHCEMetrics(registry)
 
 	assert.NoError(t, err)
 }

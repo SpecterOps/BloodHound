@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 )
 
 // NewRegistry creates a custom Prometheus registry and registers it to the
@@ -21,9 +22,11 @@ func NewRegistry() (*prometheus.Registry, error) {
 	return promRegistry, nil
 }
 
-// InitializeBHCEMetrics - Placeholder til API middleware and DB metrics are implemented and added here
-func InitializeBHCEMetrics() error {
-	// register api metrics
-	// register db metrics
+// InitializeBHCEMetrics registers all BHCE Prometheus metrics to the provided registerer.
+func InitializeBHCEMetrics(registerer prometheus.Registerer) error {
+	if err := post.InitializePostProcessingMetrics(registerer); err != nil {
+		return fmt.Errorf("failed to register post-processing metrics: %w", err)
+	}
+
 	return nil
 }

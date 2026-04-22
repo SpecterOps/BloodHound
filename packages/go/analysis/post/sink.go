@@ -13,17 +13,18 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package post
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"runtime"
 	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -31,7 +32,7 @@ import (
 )
 
 var (
-	postOperationsVec = promauto.NewCounterVec(prometheus.CounterOpts{
+	postOperationsVec = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "analysis",
 		Name:      "post_processing_ops",
 		Help:      "Post-processing operation statistics.",
@@ -40,6 +41,15 @@ var (
 		"operation",
 	})
 )
+
+// InitializePostProcessingMetrics registers the analysis post-processing counter with the provided Prometheus registerer.
+func InitializePostProcessingMetrics(registerer prometheus.Registerer) error {
+	if err := registerer.Register(postOperationsVec); err != nil {
+		return fmt.Errorf("failed to register analysis post-processing metrics: %w", err)
+	}
+
+	return nil
+}
 
 func newPropertiesWithFirstSeen() *graph.Properties {
 	newProperties := graph.NewProperties()
