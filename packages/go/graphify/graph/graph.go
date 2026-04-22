@@ -154,6 +154,7 @@ func (s *CommunityGraphService) TeardownService(ctx context.Context) {
 		} else {
 			slog.InfoContext(ctx, "Successfully wiped database")
 		}
+		s.db.Close(ctx)
 	}
 }
 
