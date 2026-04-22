@@ -125,7 +125,7 @@ func (s *Command) Parse() error {
 
 type GraphService interface {
 	TeardownService(context.Context)
-	InitializeService(context.Context, string, graph.Database) error
+	InitializeService(context.Context, config.Configuration, graph.Database) error
 	Ingest(context.Context, *graphify.IngestContext, io.ReadSeeker) error
 	RunAnalysis(context.Context, graph.Database) error
 }
@@ -157,13 +157,13 @@ func (s *CommunityGraphService) TeardownService(ctx context.Context) {
 	}
 }
 
-func (s *CommunityGraphService) InitializeService(ctx context.Context, connection string, graphDB graph.Database) error {
-	gormDB, err := database.OpenDatabase(connection)
+func (s *CommunityGraphService) InitializeService(ctx context.Context, cfg config.Configuration, graphDB graph.Database) error {
+	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
 	if err != nil {
 		return fmt.Errorf("error opening database: %w", err)
 	}
 
-	s.db = database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), config.Configuration{})
+	s.db = database.NewBloodhoundDB(gormDB, dbPool, auth.NewIdentityResolver(), config.Configuration{})
 
 	if s.db != nil {
 		err := s.db.Wipe(ctx)
@@ -204,9 +204,14 @@ func (s *Command) Run() error {
 		cancel()
 	}()
 
-	if graphDB, err := initializeGraphDatabase(ctx, s.env[environment.PostgresConnectionVarName]); err != nil {
+	dbcfg, err := config.NewDefaultConnectionConfiguration(s.env[environment.PostgresConnectionVarName])
+	if err != nil {
+		return fmt.Errorf("failed to create default configuration: %w", err)
+	}
+
+	if graphDB, err := initializeGraphDatabase(ctx, dbcfg); err != nil {
 		return fmt.Errorf("error connecting to graphDB: %w", err)
-	} else if err := s.service.InitializeService(ctx, s.env[environment.PostgresConnectionVarName], graphDB); err != nil {
+	} else if err := s.service.InitializeService(ctx, dbcfg, graphDB); err != nil {
 		return fmt.Errorf("error connecting to database: %w", err)
 	} else if ingestFilePaths, err := s.getIngestFilePaths(); err != nil {
 		return fmt.Errorf("error getting ingest file paths from directory: %w", err)
@@ -404,12 +409,12 @@ func getNodesAndEdges(ctx context.Context, database graph.Database) ([]*graph.No
 	}
 }
 
-func initializeGraphDatabase(ctx context.Context, postgresConnection string) (graph.Database, error) {
-	if pool, err := pg.NewPool(postgresConnection); err != nil {
+func initializeGraphDatabase(ctx context.Context, cfg config.Configuration) (graph.Database, error) {
+	if pool, err := pg.NewPool(cfg.Database); err != nil {
 		return nil, fmt.Errorf("error creating postgres connection: %w", err)
 	} else if database, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
 		GraphQueryMemoryLimit: size.Gibibyte,
-		ConnectionString:      postgresConnection,
+		ConnectionString:      cfg.Database.PostgreSQLConnectionString(),
 		Pool:                  pool,
 	}); err != nil {
 		return nil, fmt.Errorf("error connecting to database: %w", err)

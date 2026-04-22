@@ -79,7 +79,14 @@ func newHarness() *Harness {
 		os.Exit(1)
 	}
 
-	pool, err := pg.NewPool(connStr)
+	cfg, err := config.NewDefaultConnectionConfiguration(connStr)
+	if err != nil {
+		slog.Error("Error creating new default configuration: %w", attr.Error(err))
+		os.Exit(1)
+	}
+
+	pool, err := pg.NewPool(cfg.Database)
+
 	if err != nil {
 		slog.Error("Failed to connect", attr.Error(err))
 		os.Exit(1)
@@ -91,13 +98,13 @@ func newHarness() *Harness {
 		os.Exit(1)
 	}
 
-	gormDB, err := database.OpenDatabase(connStr)
+	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
 	if err != nil {
 		slog.Error("Failed to open", attr.Error(err))
 		os.Exit(1)
 	}
 
-	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), cfg)
+	db := database.NewBloodhoundDB(gormDB, dbPool, auth.NewIdentityResolver(), cfg)
 
 	// Attempt to truncate but don't care about the error
 	dawgsDB.Run(
