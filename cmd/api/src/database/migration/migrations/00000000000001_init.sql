@@ -1,5 +1,3 @@
--- +goose Up
-
 -- Copyright 2023 Specter Ops, Inc.
 --
 -- Licensed under the Apache License, Version 2.0
@@ -15,6 +13,8 @@
 -- limitations under the License.
 --
 -- SPDX-License-Identifier: Apache-2.0
+
+-- +goose Up
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 CREATE TABLE IF NOT EXISTS ad_data_quality_aggregations (

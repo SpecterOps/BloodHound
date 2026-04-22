@@ -79,24 +79,36 @@ func (s *Migrator) ExecuteExtensionDataPopulation() error {
 	return nil
 }
 
-// ExecuteMigrations runs all necessary migrations for a deployment using goose.
-// It begins by checking if a legacy migrations table exists to determine the deployment type.
+// ExecuteGooseMigrations runs all necessary migrations for a deployment using goose.
+// It handles three scenarios:
 //
-// If the deployment is existing (has legacy migrations table), we bootstrap goose by
-// seeding the goose_db_version table with the baseline migration marked as applied,
-// then drop the legacy migrations table.
+//  1. New installation: No legacy migrations table exists, goose runs the baseline
+//     migration to create the schema.
 //
-// If the deployment is new, goose will run the baseline migration to create the schema.
+//  2. Existing installation (up to date): Legacy migrations table exists and is current.
+//     We bootstrap goose by marking baseline migrations as applied, then run goose
+//     for any new migrations.
 //
-// Once bootstrap is complete (if needed), we run goose to apply any pending migrations.
-func (s *Migrator) ExecuteMigrations() error {
+//  3. Existing installation (behind): Legacy migrations table exists but is behind.
+//     We first run v8 stepwise migrations to catch up, then bootstrap goose and
+//     run any new goose migrations.
+//
+// The legacy migrations table is only dropped after all migrations succeed.
+func (s *Migrator) ExecuteGooseMigrations(ctx context.Context) error {
 	// Check for legacy migrations table
 	hasLegacyTable, err := s.HasMigrationTable()
 	if err != nil {
 		return fmt.Errorf("failed to check if migration table exists: %w", err)
 	}
+
 	if hasLegacyTable {
-		// Seed goose_db_version so baseline is skipped
+		// Existing database - check if behind and run v8 stepwise migrations if needed
+		// This logic can be removed once v10 is released
+		if err := s.runLegacyMigrationsIfNeeded(); err != nil {
+			return fmt.Errorf("failed to run legacy migrations: %w", err)
+		}
+
+		// Bootstrap goose by marking baseline migrations as applied
 		if err := s.bootstrapGoose(); err != nil {
 			return err
 		}
@@ -112,7 +124,7 @@ func (s *Migrator) ExecuteMigrations() error {
 		return fmt.Errorf("failed to create goose provider: %w", err)
 	}
 
-	if _, err := provider.Up(context.Background()); err != nil {
+	if _, err := provider.Up(ctx); err != nil {
 		return fmt.Errorf("failed to execute up migrations: %w", err)
 	}
 
@@ -126,11 +138,37 @@ func (s *Migrator) ExecuteMigrations() error {
 			return err
 		}
 	}
-	slog.Info(
-		"Successfully ran goose migrations",
-		slog.String("fn", "ExecuteNewMigrations"),
-		slog.String("db version", string(goose.DialectPostgres)),
-	)
+
+	slog.Info("Successfully ran goose migrations")
+	return nil
+}
+
+// runLegacyMigrationsIfNeeded checks if the database is behind on v8 stepwise migrations
+// and runs them if needed. This can be removed once v10 is released.
+func (s *Migrator) runLegacyMigrationsIfNeeded() error {
+	lastMigration, err := s.LatestMigration()
+	if err != nil {
+		return fmt.Errorf("could not get latest migration: %w", err)
+	}
+
+	manifest, err := s.GenerateManifestAfterVersion(lastMigration.Version())
+	if err != nil {
+		return fmt.Errorf("failed to generate migration manifest: %w", err)
+	}
+
+	if len(manifest.VersionTable) == 0 {
+		slog.Info("Legacy migrations are up to date")
+		return nil
+	}
+
+	slog.Info("Running legacy v8 migrations to catch up",
+		slog.String("from_version", lastMigration.Version().String()),
+		slog.Int("pending_versions", len(manifest.VersionTable)))
+
+	if err := s.ExecuteMigrations(manifest); err != nil {
+		return fmt.Errorf("failed to execute legacy migrations: %w", err)
+	}
+
 	return nil
 }
 

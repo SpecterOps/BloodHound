@@ -275,7 +275,7 @@ func (s *BloodhoundDB) Migrate(ctx context.Context) error {
 		slog.ErrorContext(ctx, "Failed to create migrator: %v", attr.Error(err))
 		return err
 	}
-	if err := migrator.ExecuteMigrations(); err != nil {
+	if err := migrator.ExecuteGooseMigrations(ctx); err != nil {
 		slog.ErrorContext(ctx, "Failed to execute migrations: %v", attr.Error(err))
 		return err
 	}

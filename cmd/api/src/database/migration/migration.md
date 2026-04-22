@@ -13,40 +13,37 @@ table against any new available migration files and automatically applies pendin
 
 -   Files can be created via the command `just goose-create <name>`. This will create a new file for you in the `migrations` folder in
     the timestamp format: `YYYYMMDDHHMMSS_name.sql`
+-   Add the current major version at the beginning of the name chosen. e.g, `just goose-create v9_add_column_users`
 -   Choose a migration name that clearly describes the schema change being made
 -   Use underscores instead of hyphens when picking a description/name
 
 **Required Annotations**
 
--   All migration files must have an Up and Down command. It should look like:<br>
-    `sql
+-   All migration files must have an Up and Down command. It should look like:
+
+    ```sql
     -- +goose Up
     CREATE TABLE example (id INT);
     -- +goose Down
     DROP TABLE IF EXISTS example;
-    `
+    ```
 
 **Statement Delimiters**
 
 -   Statement delimiters are needed for functions, triggers and DO blocks
 
-        ```sql
+    ```sql
         -- +goose StatementBegin
         CREATE FUNCTION ...
         -- +goose StatementEnd
-        ```
-
-**Migration Location**
-
--   `cmd/api/src/database/migration/migrations/`
--   All new migrations should live in the `migrations` folder. Upon each major release, a new folder will need to be created for the previous version. For example, we are currently adding to `v9`. Once we bump to and release `v10`, a folder named `v9` will be created and all `v9` migration files will need to be moved.
+    ```
 
 ## Common Rules
 
 -   Never modify the baseline migration(`00000000000001_init.sql`). This is a migration file all of the previous schemas before switching to goose.
 -   Never modify migrations already merged into main. Create a new migration if a fix is needed
 -   Always include a `Down` migration
--   `Down` should safely reverse an `Up` ie., use `IF EXISTS`, `ON CONFLICT`, etc.
+-   `Down` should safely reverse an `Up`, e.g., use `IF EXISTS`, `ON CONFLICT`, etc.
 -   Migration files should be their own separate PR. Once merged, code implementation can begin. \* do we want this? this would potentially require two jira tickets?
 -   Always pull main before creating a new migration
 
