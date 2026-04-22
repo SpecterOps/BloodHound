@@ -23,14 +23,14 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-func DeviceEntityDetails(ctx context.Context, db graph.Database, validPrimaryKinds graphschema.ValidPrimaryKinds, objectID string, hydrateCounts bool) (DeviceDetails, error) {
+func DeviceEntityDetails(ctx context.Context, db graph.Database, primaryDisplayKinds graphschema.PrimaryDisplayKinds, objectID string, hydrateCounts bool) (DeviceDetails, error) {
 	var details DeviceDetails
 
 	return details, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
 			return err
 		} else {
-			details.Node = FromGraphNode(validPrimaryKinds, node)
+			details.Node = FromGraphNode(primaryDisplayKinds, node)
 			if hydrateCounts {
 				if details, err = populateDeviceEntityDetailsCounts(tx, node, details); err != nil {
 					return err

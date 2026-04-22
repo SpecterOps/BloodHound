@@ -26,13 +26,13 @@ import (
 // CreateEnvironmentWithPrincipalKinds translates FK names, creates the environment row,
 // and reconciles its principal kinds.
 func (s *BloodhoundDB) CreateEnvironmentWithPrincipalKinds(ctx context.Context, extensionId int32, input model.EnvironmentInput) (model.SchemaEnvironment, error) {
-	if envKind, err := s.GetKindByName(ctx, input.EnvironmentKindName); err != nil {
+	if envKind, err := s.GetKindsByNames(ctx, input.EnvironmentKindName); err != nil {
 		return model.SchemaEnvironment{}, fmt.Errorf("error retrieving environment kind '%s': %w", input.EnvironmentKindName, err)
 	} else if sourceKind, err := s.UpsertKind(ctx, input.SourceKindName); err != nil {
 		return model.SchemaEnvironment{}, fmt.Errorf("error registering source kind '%s': %w", input.SourceKindName, err)
 	} else if principalKinds, err := s.buildPrincipalKindsFromNames(ctx, input.PrincipalKinds); err != nil {
 		return model.SchemaEnvironment{}, err
-	} else if created, err := s.CreateEnvironment(ctx, extensionId, envKind.ID, sourceKind.ID); err != nil {
+	} else if created, err := s.CreateEnvironment(ctx, extensionId, envKind[0].ID, sourceKind.ID); err != nil {
 		return model.SchemaEnvironment{}, fmt.Errorf("error creating environment: %w", err)
 	} else if _, err := reconcile(ctx, principalKinds, nil, s.principalKindReconcileConfig(created.ID)); err != nil {
 		return model.SchemaEnvironment{}, fmt.Errorf("error reconciling principal kinds: %w", err)
@@ -72,10 +72,10 @@ func (s *BloodhoundDB) buildPrincipalKindsFromNames(ctx context.Context, names [
 	principalKinds := make([]model.SchemaEnvironmentPrincipalKind, len(names))
 
 	for i, name := range names {
-		if kind, err := s.GetKindByName(ctx, name); err != nil {
+		if kind, err := s.GetKindsByNames(ctx, name); err != nil {
 			return nil, fmt.Errorf("error retrieving principal kind '%s': %w", name, err)
 		} else {
-			principalKinds[i] = model.SchemaEnvironmentPrincipalKind{PrincipalKind: kind.ID}
+			principalKinds[i] = model.SchemaEnvironmentPrincipalKind{PrincipalKind: kind[0].ID}
 		}
 	}
 

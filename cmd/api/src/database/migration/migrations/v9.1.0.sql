@@ -70,3 +70,14 @@ DO $$
             REFERENCES users(id);
     END IF;
   END $$;
+
+-- Add Attack Paths Table feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'attack_paths_table',
+        'Attack Paths Table',
+        'Enables a new table view for attack paths.',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
