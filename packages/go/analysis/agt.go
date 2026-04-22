@@ -559,7 +559,7 @@ func fetchOldSelectedNodes(ctx context.Context, db database.Database, selectorId
 }
 
 // SelectNodes - selects all nodes for a given selector and diffs previous db state for minimal db updates
-func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Database, agtParameters appcfg.AGTParameters, validPrimaryKinds graphschema.ValidPrimaryKinds, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) []error {
+func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Database, agtParameters appcfg.AGTParameters, primaryDisplayKinds graphschema.PrimaryDisplayKinds, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) []error {
 	defer measure.ContextMeasure(ctx, slog.LevelDebug, "Selecting nodes", slog.String("selector", strconv.Itoa(selector.ID)))()
 
 	var (
@@ -582,7 +582,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 			var (
 				certified                                 = model.AssetGroupCertificationPending
 				certifiedBy                               null.String
-				primaryKind, displayName, objectId, envId = model.GetAssetGroupMemberProperties(validPrimaryKinds, node.Node)
+				primaryKind, displayName, objectId, envId = model.GetAssetGroupMemberProperties(primaryDisplayKinds, node.Node)
 			)
 
 			if (selector.AutoCertify == model.SelectorAutoCertifyMethodSeedsOnly && node.Source == model.AssetGroupSelectorNodeSourceSeed) || selector.AutoCertify == model.SelectorAutoCertifyMethodAllMembers {
@@ -634,7 +634,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 						slog.Uint64("node_id", oldSelectorNode.NodeId.Uint64()),
 					)
 				} else {
-					primaryKind, displayName, objectId, envId := model.GetAssetGroupMemberProperties(validPrimaryKinds, graphNode.Node)
+					primaryKind, displayName, objectId, envId := model.GetAssetGroupMemberProperties(primaryDisplayKinds, graphNode.Node)
 					if err = db.UpdateSelectorNodesByNodeId(ctx, selector.AssetGroupTagId, selector.ID, oldSelectorNode.NodeId, certified, certifiedBy, primaryKind, envId, objectId, displayName); err != nil {
 						errs = append(errs, err)
 					}
@@ -681,7 +681,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 
 	if tags, err := db.GetAssetGroupTagForSelection(ctx); err != nil {
 		errs.Append(err)
-	} else if validPrimaryKinds, err := db.GetValidDisplayKinds(ctx); err != nil {
+	} else if primaryDisplayKinds, err := db.GetPrimaryDisplayKinds(ctx); err != nil {
 		errs.Append(err)
 	} else {
 		agtParameters := appcfg.GetAGTParameters(ctx, db)
@@ -717,7 +717,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 					if selector, ok := channels.Receive(ctx, getCh); !ok {
 						return
 					} else {
-						if selectNodeErrors := SelectNodes(ctx, db, graphDb, agtParameters, validPrimaryKinds, selector, expansionByTagId[selector.AssetGroupTagId]); len(selectNodeErrors) > 0 {
+						if selectNodeErrors := SelectNodes(ctx, db, graphDb, agtParameters, primaryDisplayKinds, selector, expansionByTagId[selector.AssetGroupTagId]); len(selectNodeErrors) > 0 {
 							errs.Append(selectNodeErrors...)
 						}
 					}

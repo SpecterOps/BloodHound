@@ -27,34 +27,34 @@ import (
 func Test_PrimaryNodeKind(t *testing.T) {
 
 	t.Run("detects meta kinds", func(t *testing.T) {
-		primaryKind := PrimaryNodeKind(nil, graph.Kinds{meta})
+		primaryKind := PrimaryDisplayKind(nil, graph.Kinds{meta})
 		require.Equal(t, meta, primaryKind)
 	})
 
 	t.Run("ad local group overrides unknown", func(t *testing.T) {
-		primaryKind := PrimaryNodeKind(nil, graph.Kinds{ad.Entity, ad.LocalGroup})
+		primaryKind := PrimaryDisplayKind(nil, graph.Kinds{ad.Entity, ad.LocalGroup})
 		require.Equal(t, ad.LocalGroup, primaryKind)
 	})
 
 	t.Run("detects valid kind", func(t *testing.T) {
-		primaryKind := PrimaryNodeKind(nil, graph.Kinds{ad.Entity, ad.Computer})
+		primaryKind := PrimaryDisplayKind(nil, graph.Kinds{ad.Entity, ad.Computer})
 		require.Equal(t, ad.Computer, primaryKind)
 	})
 
 	t.Run("falls back to base kind if no valid kinds", func(t *testing.T) {
-		primaryKind := PrimaryNodeKind(nil, graph.Kinds{ad.Entity, graph.StringKind("Villain")})
+		primaryKind := PrimaryDisplayKind(nil, graph.Kinds{ad.Entity, graph.StringKind("Villain")})
 		require.Equal(t, ad.Entity, primaryKind)
 	})
 
 	t.Run("falls back to unknown if nothing detected", func(t *testing.T) {
-		primaryKind := PrimaryNodeKind(nil, graph.Kinds{graph.StringKind("Hero")})
+		primaryKind := PrimaryDisplayKind(nil, graph.Kinds{graph.StringKind("Hero")})
 		require.Equal(t, UnknownKind, primaryKind)
 	})
 
 	t.Run("returns the first valid kind in the kinds array", func(t *testing.T) {
-		primaryKind := PrimaryNodeKind(ValidPrimaryKinds{
-			graph.StringKind("Hero"):    true,
-			graph.StringKind("Villain"): true,
+		primaryKind := PrimaryDisplayKind(PrimaryDisplayKinds{
+			graph.StringKind("Hero"):    DisplayKind{},
+			graph.StringKind("Villain"): DisplayKind{},
 		}, graph.Kinds{graph.StringKind("Hero"), graph.StringKind("Villain")})
 		require.Equal(t, graph.StringKind("Hero"), primaryKind)
 	})

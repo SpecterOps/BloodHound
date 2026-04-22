@@ -23,299 +23,288 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
+func TestCreateEnvironmentWithPrincipalKinds(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
-		environmentKind string
-		sourceKind      string
-		principalKinds  []string
+		environmentKindName string
+		sourceKindName      string
+		principalKinds      []string
 	}
-	tests := []struct {
-		name          string
-		setupData     func(t *testing.T, db *database.BloodhoundDB) int32
-		args          args
-		assert        func(t *testing.T, db *database.BloodhoundDB, args args)
-		expectedError string
-	}{
-		{
-			name: "Success: Create new environment with principal kinds",
-			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
-				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0", "test_namespace_1")
-				require.NoError(t, err, "unexpected error occurred when creating extension")
+	type testData struct {
+		name   string
+		args   args
+		setup  func(t *testing.T, db *database.BloodhoundDB) int32
+		assert func(t *testing.T, db *database.BloodhoundDB, env model.SchemaEnvironment, err error, args args)
+	}
 
+	tt := []testData{
+		{
+			name: "success_-_create_environment_with_principal_kinds",
+			args: args{
+				environmentKindName: "TestEnvKind",
+				sourceKindName:      "TestSourceKind",
+				principalKinds:      []string{"TestOwnedKind"},
+			},
+			setup: func(t *testing.T, db *database.BloodhoundDB) int32 {
+				t.Helper()
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "CreateEnvWithPK", "Test", "v1.0.0", "test_ns")
+				require.NoError(t, err)
+				_, err = db.CreateGraphSchemaNodeKind(context.Background(), "TestEnvKind", ext.ID, "TestEnvKind", "test environment kind", false, "", "")
+				require.NoError(t, err)
+				_, err = db.CreateGraphSchemaNodeKind(context.Background(), "TestOwnedKind", ext.ID, "TestOwnedKind", "test owned kind", false, "", "")
+				require.NoError(t, err)
 				return ext.ID
 			},
-			args: args{
-				environmentKind: "Tag_Tier_Zero",
-				sourceKind:      "Base",
-				principalKinds:  []string{"Tag_Tier_Zero", "Tag_Owned"},
-			},
-			assert: func(t *testing.T, db *database.BloodhoundDB, args args) {
+			assert: func(t *testing.T, db *database.BloodhoundDB, env model.SchemaEnvironment, err error, args args) {
 				t.Helper()
+				require.NoError(t, err)
+				assert.NotZero(t, env.ID)
 
-				environmentKind, err := db.GetKindByName(context.Background(), args.environmentKind)
-				require.NoError(t, err, "unexpected error occurred when retrieving kind by name")
+				envKind, err := db.GetKindsByNames(context.Background(), args.environmentKindName)
+				require.NoError(t, err)
+				assert.Equal(t, envKind[0].ID, env.EnvironmentKindId)
 
-				environment, err := db.GetEnvironmentByEnvironmentKindId(context.Background(), environmentKind.ID)
-				require.NoError(t, err, "unexpected error occurred when getting environment by kinds")
+				sourceKind, err := db.GetKindsByNames(context.Background(), args.sourceKindName)
+				require.NoError(t, err)
+				assert.Equal(t, sourceKind[0].ID, env.SourceKindId)
 
-				principalKinds, err := db.GetPrincipalKindsByEnvironmentId(context.Background(), environment.ID)
-				require.NoError(t, err, "unexpected error occurred when retrieving principal kinds by env id")
+				principalKinds, err := db.GetPrincipalKindsByEnvironmentId(context.Background(), env.ID)
+				require.NoError(t, err)
 				require.Len(t, principalKinds, len(args.principalKinds))
-
-				expectedKindIDs := make([]int32, 0, len(args.principalKinds))
-				for _, name := range args.principalKinds {
-					kind, err := db.GetKindByName(context.Background(), name)
-					require.NoError(t, err, "unexpected error occurred when retrieving kind by name")
-
-					expectedKindIDs = append(expectedKindIDs, int32(kind.ID))
+				for i, pk := range principalKinds {
+					expectedKind, err := db.GetKindsByNames(context.Background(), args.principalKinds[i])
+					require.NoError(t, err)
+					assert.Equal(t, expectedKind[0].ID, pk.PrincipalKind)
 				}
-
-				actualKindIDs := make([]int32, 0, len(principalKinds))
-				for _, pk := range principalKinds {
-					assert.Equal(t, environment.ID, pk.EnvironmentId)
-					actualKindIDs = append(actualKindIDs, pk.PrincipalKind)
-				}
-
-				assert.ElementsMatch(t, expectedKindIDs, actualKindIDs)
 			},
 		},
 		{
-			name: "Success: Upsert replaces existing environment",
-			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
+			name: "success_-_create_environment_with_empty_principal_kinds",
+			args: args{
+				environmentKindName: "TestEnvKind",
+				sourceKindName:      "TestSourceKind",
+				principalKinds:      []string{},
+			},
+			setup: func(t *testing.T, db *database.BloodhoundDB) int32 {
 				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0", "test_namespace_2")
-				require.NoError(t, err, "unexpected error occurred when creating extension")
-
-				err = db.Transaction(context.Background(), func(tx *database.BloodhoundDB) error {
-					return tx.UpsertSchemaEnvironmentWithPrincipalKinds(
-						context.Background(),
-						ext.ID,
-						"Tag_Tier_Zero",
-						"Base",
-						[]string{"Tag_Owned"},
-					)
-				})
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "CreateEnvEmptyPK", "Test", "v1.0.0", "test_ns_empty_pk")
 				require.NoError(t, err)
-
-				return ext.ID
-			},
-			args: args{
-				environmentKind: "Tag_Tier_Zero",
-				sourceKind:      "Base",
-				principalKinds:  []string{"Tag_Tier_Zero"},
-			},
-			assert: func(t *testing.T, db *database.BloodhoundDB, args args) {
-				t.Helper()
-
-				environmentKind, err := db.GetKindByName(context.Background(), args.environmentKind)
-				require.NoError(t, err, "unexpected error occurred when retrieving kind by name")
-
-				environment, err := db.GetEnvironmentByEnvironmentKindId(context.Background(), environmentKind.ID)
-				require.NoError(t, err, "unexpected error occurred when getting environment by environment kind id")
-
-				principalKinds, err := db.GetPrincipalKindsByEnvironmentId(context.Background(), environment.ID)
-				require.NoError(t, err, "unexpected error occurred when retrieving principal kinds by env id")
-				require.Len(t, principalKinds, 1)
-
-				expectedKind, err := db.GetKindByName(context.Background(), args.principalKinds[0])
-				require.NoError(t, err, "unexpected error occurred when retrieving kind by name")
-
-				assert.Equal(t, int32(expectedKind.ID), principalKinds[0].PrincipalKind)
-				assert.Equal(t, environment.ID, principalKinds[0].EnvironmentId)
-			},
-		},
-		{
-			name: "Success: Source kind auto-registers",
-			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
-				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0", "test_namespace_3")
-				require.NoError(t, err, "unexpected error occurred when creating extension")
-				return ext.ID
-			},
-			args: args{
-				environmentKind: "Tag_Tier_Zero",
-				sourceKind:      "NewSource_" + t.Name(), // Make unique per test
-				principalKinds:  []string{"Tag_Tier_Zero"},
-			},
-			assert: func(t *testing.T, db *database.BloodhoundDB, args args) {
-				t.Helper()
-
-				sourceKind, err := db.GetKindByName(context.Background(), args.sourceKind)
-				require.NoError(t, err, "unexpected error occurred when retrieving source kind by name")
-
-				assert.Equal(t, args.sourceKind, sourceKind.Name)
-			},
-		},
-		{
-			name: "Error: Environment kind not found",
-			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
-				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0", "test_namespace_4")
-				require.NoError(t, err, "unexpected error occurred when creating extension")
-
-				return ext.ID
-			},
-			args: args{
-				environmentKind: "NonExistent",
-				sourceKind:      "Base",
-				principalKinds:  []string{},
-			},
-			expectedError: "environment kind 'NonExistent' not found",
-			assert: func(t *testing.T, db *database.BloodhoundDB, args args) {
-				t.Helper()
-
-				_, err := db.GetKindByName(context.Background(), args.environmentKind)
-				assert.ErrorIs(t, err, database.ErrNotFound)
-			},
-		},
-		{
-			name: "Error: Principal kind not found",
-			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
-				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0", "test_namespace_5")
-				require.NoError(t, err, "unexpected error occurred when creating extension")
-
-				return ext.ID
-			},
-			args: args{
-				environmentKind: "Tag_Tier_Zero",
-				sourceKind:      "Base",
-				principalKinds:  []string{"NonExistent"},
-			},
-			expectedError: "principal kind 'NonExistent' not found",
-			assert: func(t *testing.T, db *database.BloodhoundDB, args args) {
-				t.Helper()
-
-				// Verify no environment was created for this extension
-				_, err := db.GetKindByName(context.Background(), args.sourceKind)
-				require.NoError(t, err, "unexpected error occurred when retrieving source kind by name")
-
-				environmentKind, err := db.GetKindByName(context.Background(), args.environmentKind)
-				require.NoError(t, err, "unexpected error occurred when retrieving kind by name")
-
-				_, err = db.GetEnvironmentByEnvironmentKindId(context.Background(), environmentKind.ID)
-				assert.Error(t, err, "Environment should not exist after rollback")
-			},
-		},
-		{
-			name: "Rollback: Partial failure on second principal kind",
-			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
-				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0", "test_namespace_6")
-				require.NoError(t, err, "unexpected error occurred when creating extension")
-
-				return ext.ID
-			},
-			args: args{
-				environmentKind: "Tag_Tier_Zero",
-				sourceKind:      "Base",
-				principalKinds:  []string{"Tag_Owned", "NonExistent"},
-			},
-			expectedError: "principal kind 'NonExistent' not found",
-			assert: func(t *testing.T, db *database.BloodhoundDB, args args) {
-				t.Helper()
-
-				environmentKind, err := db.GetKindByName(context.Background(), args.environmentKind)
-				require.NoError(t, err, "unexpected error occurred when retrieving kind by name")
-
-				_, err = db.GetEnvironmentByEnvironmentKindId(context.Background(), environmentKind.ID)
-				assert.Error(t, err, "Environment should not exist after rollback")
-			},
-		},
-		{
-			name: "Success: Multiple environments with different combinations",
-			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
-				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0", "test_namespace_7")
-				require.NoError(t, err, "unexpected error occurred when creating extension")
-
-				err = db.Transaction(context.Background(), func(tx *database.BloodhoundDB) error {
-					return tx.UpsertSchemaEnvironmentWithPrincipalKinds(
-						context.Background(),
-						ext.ID,
-						"Tag_Tier_Zero",
-						"Base",
-						[]string{"Tag_Tier_Zero"},
-					)
-				})
+				_, err = db.CreateGraphSchemaNodeKind(context.Background(), "TestEnvKind", ext.ID, "TestEnvKind", "test environment kind", false, "", "")
 				require.NoError(t, err)
-
 				return ext.ID
 			},
-			args: args{
-				environmentKind: "Tag_Owned",
-				sourceKind:      "Base",
-				principalKinds:  []string{"Tag_Owned"},
-			},
-			assert: func(t *testing.T, db *database.BloodhoundDB, args args) {
+			assert: func(t *testing.T, db *database.BloodhoundDB, env model.SchemaEnvironment, err error, args args) {
 				t.Helper()
+				require.NoError(t, err)
+				assert.NotZero(t, env.ID)
 
-				// Count environments created in setup + this test
-				// We can't rely on total environment count due to existing data
-
-				// Verify the first environment exists
-				envKind1, err := db.GetKindByName(context.Background(), "Tag_Tier_Zero")
-				require.NoError(t, err, "unexpected error occurred when retrieving kind 1 by name")
-
-				env1, err := db.GetEnvironmentByEnvironmentKindId(context.Background(), envKind1.ID)
-				require.NoError(t, err, "unexpected error occurred when retrieving environment by kinds")
-
-				principalKinds1, err := db.GetPrincipalKindsByEnvironmentId(context.Background(), env1.ID)
-				require.NoError(t, err, "unexpected error occurred when retrieving principal kind 1 by env id")
-				require.Len(t, principalKinds1, 1)
-
-				// Verify the second environment exists
-				envKind2, err := db.GetKindByName(context.Background(), args.environmentKind)
-				require.NoError(t, err, "unexpected error occurred when retrieving kind 2 by name")
-
-				env2, err := db.GetEnvironmentByEnvironmentKindId(context.Background(), envKind2.ID)
-				require.NoError(t, err, "unexpected error occurred when getting environment by kinds")
-
-				principalKinds2, err := db.GetPrincipalKindsByEnvironmentId(context.Background(), env2.ID)
-				require.NoError(t, err, "unexpected error occurred when retrieving principal kind 2 by env id")
-				require.Len(t, principalKinds2, 1)
-
-				// Ensure they are different environments
-				assert.NotEqual(t, env1.ID, env2.ID)
+				principalKinds, err := db.GetPrincipalKindsByEnvironmentId(context.Background(), env.ID)
+				require.NoError(t, err)
+				assert.Empty(t, principalKinds)
+			},
+		},
+		{
+			name: "error_-_invalid_environment_kind",
+			args: args{
+				environmentKindName: "DoesNotExist",
+				sourceKindName:      "TestSourceKind",
+				principalKinds:      []string{},
+			},
+			setup: func(t *testing.T, db *database.BloodhoundDB) int32 {
+				t.Helper()
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "CreateEnvBadKind", "Test", "v1.0.0", "test_ns2")
+				require.NoError(t, err)
+				return ext.ID
+			},
+			assert: func(t *testing.T, db *database.BloodhoundDB, env model.SchemaEnvironment, err error, args args) {
+				t.Helper()
+				require.ErrorIs(t, err, database.ErrNotFound)
+				assert.Zero(t, env.ID)
 			},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			testSuite := setupIntegrationTestSuite(t)
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
-			extensionID := tt.setupData(t, testSuite.BHDatabase)
+			extensionId := testCase.setup(t, testSuite.BHDatabase)
+			input := model.EnvironmentInput{
+				EnvironmentKindName: testCase.args.environmentKindName,
+				SourceKindName:      testCase.args.sourceKindName,
+				PrincipalKinds:      testCase.args.principalKinds,
+			}
 
-			err := testSuite.BHDatabase.Transaction(context.Background(), func(tx *database.BloodhoundDB) error {
-				return tx.UpsertSchemaEnvironmentWithPrincipalKinds(
-					context.Background(),
-					extensionID,
-					tt.args.environmentKind,
-					tt.args.sourceKind,
-					tt.args.principalKinds,
-				)
-			})
+			env, err := testSuite.BHDatabase.CreateEnvironmentWithPrincipalKinds(testSuite.Context, extensionId, input)
+			testCase.assert(t, testSuite.BHDatabase, env, err, testCase.args)
+		})
+	}
+}
 
-			if tt.expectedError != "" {
+func TestUpdateEnvironmentWithPrincipalKinds(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		newSourceKindName string
+		newPrincipalKinds []string
+	}
+	type testData struct {
+		name   string
+		args   args
+		setup  func(t *testing.T, db *database.BloodhoundDB) (int32, model.SchemaEnvironment)
+		assert func(t *testing.T, db *database.BloodhoundDB, updated model.SchemaEnvironment, err error, args args)
+	}
+
+	tt := []testData{
+		{
+			name: "error_-_unknown_principal_kind",
+			args: args{
+				newSourceKindName: "TestSourceKind",
+				newPrincipalKinds: []string{"NonExistentKind"},
+			},
+			setup: func(t *testing.T, db *database.BloodhoundDB) (int32, model.SchemaEnvironment) {
+				t.Helper()
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "UpdateEnvBadPKExt", "Test", "v1.0.0", "test_ns4")
+				require.NoError(t, err)
+				_, err = db.CreateGraphSchemaNodeKind(context.Background(), "TestEnvKind", ext.ID, "TestEnvKind", "test environment kind", false, "", "")
+				require.NoError(t, err)
+				env, err := db.CreateEnvironmentWithPrincipalKinds(context.Background(), ext.ID, model.EnvironmentInput{
+					EnvironmentKindName: "TestEnvKind",
+					SourceKindName:      "TestSourceKind",
+					PrincipalKinds:      []string{"TestEnvKind"},
+				})
+				require.NoError(t, err)
+				return ext.ID, env
+			},
+			assert: func(t *testing.T, db *database.BloodhoundDB, updated model.SchemaEnvironment, err error, args args) {
+				t.Helper()
+				require.ErrorContains(t, err, "error retrieving principal kind 'NonExistentKind'")
+				assert.Zero(t, updated.ID)
+			},
+		},
+		{
+			name: "error_-_duplicate_principal_kinds",
+			args: args{
+				newSourceKindName: "TestSourceKind",
+				newPrincipalKinds: []string{"TestEnvKind", "TestEnvKind"},
+			},
+			setup: func(t *testing.T, db *database.BloodhoundDB) (int32, model.SchemaEnvironment) {
+				t.Helper()
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "UpdateEnvDupePKExt", "Test", "v1.0.0", "test_ns5")
+				require.NoError(t, err)
+				_, err = db.CreateGraphSchemaNodeKind(context.Background(), "TestEnvKind", ext.ID, "TestEnvKind", "test environment kind", false, "", "")
+				require.NoError(t, err)
+				env, err := db.CreateEnvironmentWithPrincipalKinds(context.Background(), ext.ID, model.EnvironmentInput{
+					EnvironmentKindName: "TestEnvKind",
+					SourceKindName:      "TestSourceKind",
+					PrincipalKinds:      []string{},
+				})
+				require.NoError(t, err)
+				return ext.ID, env
+			},
+			assert: func(t *testing.T, db *database.BloodhoundDB, updated model.SchemaEnvironment, err error, args args) {
+				t.Helper()
 				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.expectedError)
-				if tt.assert != nil {
-					tt.assert(t, testSuite.BHDatabase, tt.args)
+				assert.Zero(t, updated.ID)
+			},
+		},
+		{
+			name: "success_-_reconciles_principal_kinds",
+			args: args{
+				newSourceKindName: "TestSourceKind",
+				newPrincipalKinds: []string{"TestEnvKind"},
+			},
+			setup: func(t *testing.T, db *database.BloodhoundDB) (int32, model.SchemaEnvironment) {
+				t.Helper()
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "UpdateEnvPKExt", "Test", "v1.0.0", "test_ns3")
+				require.NoError(t, err)
+				_, err = db.CreateGraphSchemaNodeKind(context.Background(), "TestEnvKind", ext.ID, "TestEnvKind", "test environment kind", false, "", "")
+				require.NoError(t, err)
+				_, err = db.CreateGraphSchemaNodeKind(context.Background(), "TestOwnedKind", ext.ID, "TestOwnedKind", "test owned kind", false, "", "")
+				require.NoError(t, err)
+				input := model.EnvironmentInput{
+					EnvironmentKindName: "TestEnvKind",
+					SourceKindName:      "TestSourceKind",
+					PrincipalKinds:      []string{"TestEnvKind", "TestOwnedKind"},
 				}
-				return
+				env, err := db.CreateEnvironmentWithPrincipalKinds(context.Background(), ext.ID, input)
+				require.NoError(t, err)
+				return ext.ID, env
+			},
+			assert: func(t *testing.T, db *database.BloodhoundDB, updated model.SchemaEnvironment, err error, args args) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.NotZero(t, updated.ID)
+
+				sourceKind, err := db.GetKindsByNames(context.Background(), args.newSourceKindName)
+				require.NoError(t, err)
+				assert.Equal(t, sourceKind[0].ID, updated.SourceKindId)
+
+				principalKinds, err := db.GetPrincipalKindsByEnvironmentId(context.Background(), updated.ID)
+				require.NoError(t, err)
+				require.Len(t, principalKinds, len(args.newPrincipalKinds))
+				for i, pk := range principalKinds {
+					expectedKind, err := db.GetKindsByNames(context.Background(), args.newPrincipalKinds[i])
+					require.NoError(t, err)
+					assert.Equal(t, expectedKind[0].ID, pk.PrincipalKind)
+				}
+			},
+		},
+		{
+			name: "success_-_updates_source_kind",
+			args: args{
+				newSourceKindName: "UpdatedSourceKind",
+				newPrincipalKinds: []string{"TestEnvKind"},
+			},
+			setup: func(t *testing.T, db *database.BloodhoundDB) (int32, model.SchemaEnvironment) {
+				t.Helper()
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "UpdateEnvSrcKindExt", "Test", "v1.0.0", "test_ns6")
+				require.NoError(t, err)
+				_, err = db.CreateGraphSchemaNodeKind(context.Background(), "TestEnvKind", ext.ID, "TestEnvKind", "test environment kind", false, "", "")
+				require.NoError(t, err)
+				env, err := db.CreateEnvironmentWithPrincipalKinds(context.Background(), ext.ID, model.EnvironmentInput{
+					EnvironmentKindName: "TestEnvKind",
+					SourceKindName:      "OriginalSourceKind",
+					PrincipalKinds:      []string{},
+				})
+				require.NoError(t, err)
+				return ext.ID, env
+			},
+			assert: func(t *testing.T, db *database.BloodhoundDB, updated model.SchemaEnvironment, err error, args args) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.NotZero(t, updated.ID)
+
+				sourceKind, err := db.GetKindsByNames(context.Background(), args.newSourceKindName)
+				require.NoError(t, err)
+				assert.Equal(t, sourceKind[0].ID, updated.SourceKindId)
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			testSuite := setupIntegrationTestSuite(t)
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			_, env := testCase.setup(t, testSuite.BHDatabase)
+			input := model.EnvironmentInput{
+				EnvironmentKindName: "TestEnvKind",
+				SourceKindName:      testCase.args.newSourceKindName,
+				PrincipalKinds:      testCase.args.newPrincipalKinds,
 			}
 
-			require.NoError(t, err)
-			if tt.assert != nil {
-				tt.assert(t, testSuite.BHDatabase, tt.args)
-			}
+			updated, err := testSuite.BHDatabase.UpdateEnvironmentWithPrincipalKinds(testSuite.Context, env, input)
+			testCase.assert(t, testSuite.BHDatabase, updated, err, testCase.args)
 		})
 	}
 }

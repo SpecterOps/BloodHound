@@ -45,6 +45,7 @@ const (
 	DirectoryReadersRole                        = "88d8e3e3-8f55-4a1e-953a-9b9898b8876b"
 	DirectorySynchronizationAccountsRole        = "d29b2b05-8046-44ba-8758-1e26182fcf32"
 	DirectoryWritersRole                        = "9360feb5-f418-4baa-8175-e2a00bac4301"
+	HybridIdentityAdministratorRole             = "8ac3fc64-6eca-42ea-9e69-59f4c7b60eb2"
 	TeamsServiceAdministratorRole               = "69091246-20e8-4a56-aa4d-066075b2a7a8"
 	TeamsCommunicationsSupportSpecialistRole    = "fcf91098-03e3-41a9-b5ba-6f0ec8188a12"
 	TeamsCommunicationsSupportEngineerRole      = "f70938a0-fc10-4177-9e90-2178f8765737"

@@ -19,7 +19,8 @@ package bloodhoundgraph
 import (
 	"fmt"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/dawgs/graph"
 )
 
 //TODO: Move styling responsibilities to the UI or move shared styling definitions to a cue file to generate from one source of truth
@@ -144,30 +145,25 @@ type BloodHoundGraphLink struct {
 	Width     int                       `json:"width,omitempty"`
 }
 
-func (s *BloodHoundGraphNode) SetFontIcon(nodeKind string, schemaNodeKinds model.GraphSchemaNodeKindMap, schemalessNodeKinds model.CustomNodeKindMap) {
+func (s *BloodHoundGraphNode) SetFontIcon(nodeKind string, primaryDisplayKinds graphschema.PrimaryDisplayKinds) {
 	if nodeKind == metaNodeKindLabel {
 		s.Color = metaNodeColor
+		s.Image = metaImageDefault
 
-		if tier, ok := s.Data["admintier"]; ok {
-			if tier.(int64) == 0 {
-				s.Image = metaImageTierZero
-			} else {
-				s.Image = metaImageDefault
+		if tier, ok := s.Data["admintier"]; ok && tier.(int64) == 0 {
+			s.Image = metaImageTierZero
+		}
+	} else if primaryKind, ok := primaryDisplayKinds[graph.StringKind(nodeKind)]; ok {
+		switch primaryKind.Icon.Type {
+		case graphschema.DisplayNodeTypeFontAwesome:
+			s.FontIcon = &BloodHoundGraphFontIcon{
+				Text: fmt.Sprintf("%s%s", fontAwesomePrefix, primaryKind.Icon.Name),
 			}
-		} else {
-			s.Image = metaImageDefault
+		default:
+			s.FontIcon = &BloodHoundGraphFontIcon{Text: primaryKind.Icon.Name}
 		}
-	} else if nodeKindConfig, ok := schemaNodeKinds[nodeKind]; ok {
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: fmt.Sprintf("%s%s", fontAwesomePrefix, nodeKindConfig.Icon),
-		}
-		s.Color = nodeKindConfig.IconColor
-	} else if schemalessNodeKindConfig, ok := schemalessNodeKinds[nodeKind]; ok {
-		s.Data["nodetype"] = nodeKind
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: fmt.Sprintf("%s%s", fontAwesomePrefix, schemalessNodeKindConfig.Icon.Name),
-		}
-		s.Color = schemalessNodeKindConfig.Icon.Color
+
+		s.Color = primaryKind.Icon.Color
 	} else {
 		s.FontIcon = &BloodHoundGraphFontIcon{
 			Text: defaultUnknownIcon,

@@ -30,11 +30,11 @@ import { fragmentShaderSource } from 'src/rendering/shaders/edge.arrowHead.frag'
 import { vertexShaderSource } from 'src/rendering/shaders/edge.arrowHead.vert';
 import { bezier } from 'src/rendering/utils/bezier';
 import { getNodeRadius } from 'src/rendering/utils/utils';
-import { EdgeDirection } from 'src/utils';
 
 const POINTS = 3,
     ATTRIBUTES = 9,
-    STRIDE = POINTS * ATTRIBUTES;
+    STRIDE = POINTS * ATTRIBUTES,
+    EPSILON = 1e-10;
 
 export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
     // Locations
@@ -46,6 +46,8 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
     matrixLocation: WebGLUniformLocation;
     sqrtZoomRatioLocation: WebGLUniformLocation;
     correctionRatioLocation: WebGLUniformLocation;
+
+    correctionRatio: number = 1;
 
     constructor(gl: WebGLRenderingContext) {
         super(gl, vertexShaderSource, fragmentShaderSource, POINTS, ATTRIBUTES);
@@ -126,19 +128,6 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
         // nothing to do
     }
 
-    // If the arrow sits right along the line between the node and control point, it never quite lines up correctly.
-    // This allows us to add a standard adjustment value to the control point height that works for most curve lengths,
-    // then handle the special case of very short curve lengths.
-    calculateAdjustmentFactor(distanceBetweenNodes: number): number {
-        const startingValue = 0.007;
-
-        if (distanceBetweenNodes >= 0.1) {
-            return startingValue;
-        }
-
-        return startingValue + (0.1 - distanceBetweenNodes) * 0.15;
-    }
-
     process(
         sourceData: NodeDisplayData,
         targetData: NodeDisplayData,
@@ -151,36 +140,59 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
             return;
         }
 
-        let start, end: Coordinates;
-        if (data.direction === EdgeDirection.BACKWARDS) {
-            start = { x: targetData.x, y: targetData.y };
-            end = { x: sourceData.x, y: sourceData.y };
-        } else {
-            start = { x: sourceData.x, y: sourceData.y };
-            end = { x: targetData.x, y: targetData.y };
-        }
-
         const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
         const thickness = data.size || 1;
-        const radius = getNodeRadius(targetData.highlighted, inverseSqrtZoomRatio, targetData.size);
         const color = floatColor(data.color);
 
-        // We are going to try and approximate the intersection here
-        const height = bezier.calculateCurveHeight(data.groupSize, data.groupPosition);
-        let adjustedHeight = 0;
+        // The magic numbers are hardcoded constants from the existing GLSL shaders for the arrowhead, they are needed here
+        // to calculate the correct arrowhead length.
+        const sqrtZoomRatio = 1 / inverseSqrtZoomRatio;
+        const graphSpaceRadius = targetData.size * 2.0 * this.correctionRatio;
+        const pixelsThickness = Math.max(thickness, 1.7 * sqrtZoomRatio);
+        const graphSpaceArrowLength = pixelsThickness * 3.0 * this.correctionRatio;
 
+        const height = bezier.calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
+        const control = bezier.getControlAtMidpoint(height, sourceData, targetData);
+
+        // The following approximates two points along the curved edge via binary search -- first, the intersection between the
+        // curve and the node's edge, where the tip of the arrowhead should be placed. Then we use that point in our second
+        // search to find a point on the curve exactly one arrowhead length away, where the center of the arrowhead's base should
+        // be placed. We duplicate this behavior in our edge rendering program (to find a clamp value) rather than pass this
+        // calculation down from the reducer to prevent unneccessary curve evaluations when panning/zooming.
+        let tip: Coordinates, base: Coordinates, radius: number;
         if (height !== 0) {
-            const distanceBetweenNodes = bezier.getLineLength(start, end);
-            const adjustmentFactor = this.calculateAdjustmentFactor(distanceBetweenNodes);
-            adjustedHeight = Math.abs(height) - adjustmentFactor;
+            const evalCurve = (t: number) =>
+                bezier.getCoordinatesAlongQuadraticBezier(sourceData, targetData, control, t);
+
+            // The original straight line arrowhead shader, which we are using here, takes the target node's coordinates
+            // and a radius and projects the arrowhead out from the nodes center by distance === radius. Instead, we can
+            // pass in the tip's coordinates and set radius to 0 to bypass this projection.
+            const tipT = bezier.getTAtDistance(evalCurve, targetData, graphSpaceRadius, 0.5, 1);
+            tip = evalCurve(tipT);
+
+            const baseT = bezier.getTAtDistance(evalCurve, tip, graphSpaceArrowLength, 0.5, tipT);
+            base = evalCurve(baseT);
+            radius = 0;
+        } else {
+            // If height === 0, this is the straight line in the center of an odd-numbered edge group and we can project
+            // out from the node's center.
+            tip = targetData;
+            base = sourceData;
+            radius = getNodeRadius(targetData.highlighted, inverseSqrtZoomRatio, targetData.size);
         }
 
-        if (height < 0) {
-            adjustedHeight *= -1;
+        const dx = tip.x - base.x;
+        const dy = tip.y - base.y;
+        const distSquared = dx * dx + dy * dy;
+
+        // Don't try to render anything if the nodes are at the same point
+        if (distSquared < EPSILON) {
+            for (let i = offset * STRIDE, l = i + STRIDE; i < l; i++) this.array[i] = 0;
+            return;
         }
 
-        const control = bezier.getControlAtMidpoint(adjustedHeight, start, end);
-        const normal = bezier.getNormals(control, targetData);
+        const len = 1 / Math.sqrt(distSquared);
+        const normal = { x: dx * len, y: dy * len };
 
         const vOffset = {
             x: normal.x * thickness,
@@ -192,8 +204,8 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
         const array = this.array;
 
         // First point
-        array[i++] = targetData.x;
-        array[i++] = targetData.y;
+        array[i++] = tip.x;
+        array[i++] = tip.y;
         array[i++] = -vOffset.y;
         array[i++] = -vOffset.x;
         array[i++] = radius;
@@ -203,8 +215,8 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
         array[i++] = 0;
 
         // Second point
-        array[i++] = targetData.x;
-        array[i++] = targetData.y;
+        array[i++] = tip.x;
+        array[i++] = tip.y;
         array[i++] = -vOffset.y;
         array[i++] = -vOffset.x;
         array[i++] = radius;
@@ -214,8 +226,8 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
         array[i++] = 0;
 
         // Third point
-        array[i++] = targetData.x;
-        array[i++] = targetData.y;
+        array[i++] = tip.x;
+        array[i++] = tip.y;
         array[i++] = -vOffset.y;
         array[i++] = -vOffset.x;
         array[i++] = radius;
@@ -227,6 +239,8 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
 
     render(params: RenderParams): void {
         if (this.hasNothingToRender()) return;
+
+        this.correctionRatio = params.correctionRatio;
 
         const gl = this.gl;
 
