@@ -210,9 +210,14 @@ func (s *Command) Run() error {
 		return fmt.Errorf("failed to create default configuration: %w", err)
 	}
 
-	if graphDB, err := initializeGraphDatabase(ctx, dbcfg); err != nil {
+	graphDB, err := initializeGraphDatabase(ctx, dbcfg)
+	if err != nil {
 		return fmt.Errorf("error connecting to graphDB: %w", err)
-	} else if err := s.service.InitializeService(ctx, dbcfg, graphDB); err != nil {
+	}
+
+	defer graphDB.Close(ctx)
+
+	if err := s.service.InitializeService(ctx, dbcfg, graphDB); err != nil {
 		return fmt.Errorf("error connecting to database: %w", err)
 	} else if ingestFilePaths, err := s.getIngestFilePaths(); err != nil {
 		return fmt.Errorf("error getting ingest file paths from directory: %w", err)
