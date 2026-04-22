@@ -21,12 +21,12 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/algo"
 	"github.com/specterops/dawgs/cardinality"
@@ -50,7 +50,7 @@ func PostSyncLAPSPassword(ctx context.Context, db graph.Database, localGroupData
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &post.AtomicPostProcessingStats{}, err
 	} else {
-		operation := analysis.NewPostRelationshipOperation(ctx, db, "SyncLAPSPassword Post Processing")
+		operation := post.NewPostRelationshipOperation(ctx, db, "SyncLAPSPassword Post Processing")
 		for _, domain := range domainNodes {
 			innerDomain := domain
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
@@ -94,7 +94,7 @@ func PostDCSync(ctx context.Context, db graph.Database, localGroupData *LocalGro
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &post.AtomicPostProcessingStats{}, err
 	} else {
-		operation := analysis.NewPostRelationshipOperation(ctx, db, "DCSync Post Processing")
+		operation := post.NewPostRelationshipOperation(ctx, db, "DCSync Post Processing")
 
 		for _, domain := range domainNodes {
 			innerDomain := domain
@@ -137,7 +137,7 @@ func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*post.Atomi
 		return &post.AtomicPostProcessingStats{}, err
 	}
 
-	operation := analysis.NewPostRelationshipOperation(ctx, db, "ProtectAdminGroups Post Processing")
+	operation := post.NewPostRelationshipOperation(ctx, db, "ProtectAdminGroups Post Processing")
 
 	for _, domain := range domainNodes {
 
@@ -182,7 +182,7 @@ func PostHasTrustKeys(ctx context.Context, db graph.Database) (*post.AtomicPostP
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &post.AtomicPostProcessingStats{}, err
 	} else {
-		operation := analysis.NewPostRelationshipOperation(ctx, db, "HasTrustKeys Post Processing")
+		operation := post.NewPostRelationshipOperation(ctx, db, "HasTrustKeys Post Processing")
 		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 			for _, domain := range domainNodes {
 				if netbios, err := domain.Properties.Get(ad.NetBIOS.String()).String(); err != nil {
@@ -268,25 +268,6 @@ func FetchNodeIDsByKind(tx graph.Transaction, targetKind graph.Kind) (cardinalit
 	return nodes, nil
 }
 
-func FetchAdminGroups(ctx context.Context, db graph.Database) (cardinality.Duplex[uint64], error) {
-	computerNodeIds := cardinality.NewBitmap64()
-
-	return computerNodeIds, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		return tx.Nodes().Filter(query.And(
-			query.Or(
-				query.StringEndsWith(query.StartProperty(common.ObjectID.String()), wellknown.AdministratorsSIDSuffix.String()),
-				query.StringEndsWith(query.EndProperty(common.ObjectID.String()), wellknown.AdministratorsSIDSuffix.String()),
-			),
-		)).FetchIDs(func(cursor graph.Cursor[graph.ID]) error {
-			for id := range cursor.Chan() {
-				computerNodeIds.Add(id.Uint64())
-			}
-
-			return nil
-		})
-	})
-}
-
 func FetchNodesByKind(ctx context.Context, db graph.Database, kinds ...graph.Kind) ([]*graph.Node, error) {
 	var nodes []*graph.Node
 	return nodes, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -347,10 +328,22 @@ func getTrustAccount(tx graph.Transaction, domainSid, netbios string) (*graph.No
 	return nodes[0], err
 }
 
+func fromEntityToEntityWithRelationshipKind(tx graph.Transaction, target *graph.Node, relKind graph.Kind) graph.RelationshipQuery {
+	return tx.Relationships().Filterf(func() graph.Criteria {
+		filters := []graph.Criteria{
+			query.Kind(query.Start(), ad.Entity),
+			query.Kind(query.Relationship(), relKind),
+			query.Equals(query.EndID(), target.ID),
+		}
+
+		return query.And(filters...)
+	})
+}
+
 func getLAPSSyncers(tx graph.Transaction, domain *graph.Node, localGroupData *LocalGroupData) (cardinality.Duplex[uint64], error) {
 	var (
-		getChangesQuery         = analysis.FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges)
-		getChangesFilteredQuery = analysis.FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesInFilteredSet)
+		getChangesQuery         = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges)
+		getChangesFilteredQuery = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesInFilteredSet)
 	)
 
 	if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
@@ -366,8 +359,8 @@ func getLAPSSyncers(tx graph.Transaction, domain *graph.Node, localGroupData *Lo
 
 func getDCSyncers(tx graph.Transaction, domain *graph.Node, localGroupData *LocalGroupData) (cardinality.Duplex[uint64], error) {
 	var (
-		getChangesQuery    = analysis.FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges)
-		getChangesAllQuery = analysis.FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesAll)
+		getChangesQuery    = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges)
+		getChangesAllQuery = fromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesAll)
 	)
 
 	if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
@@ -844,4 +837,60 @@ func FetchRemoteDesktopUsersBitmapForComputerWithURA(canRDPData *CanRDPComputerD
 	}
 
 	return rdpEntities, nil
+}
+
+func Post(ctx context.Context, db graph.Database, citrixEnabled, ntlmEnabled bool) (*post.AtomicPostProcessingStats, error) {
+	defer measure.ContextLogAndMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Active Directory Post Processing",
+		attr.Namespace("analysis"),
+		attr.Function("Post"),
+		attr.Scope("step"),
+	)()
+
+	aggregateStats := post.NewAtomicPostProcessingStats()
+
+	if err := FixWellKnownNodeTypes(ctx, db); err != nil {
+		return &aggregateStats, err
+	} else if err := RunDomainAssociations(ctx, db); err != nil {
+		return &aggregateStats, err
+	} else if err := LinkWellKnownNodes(ctx, db); err != nil {
+		return &aggregateStats, err
+	} else if deleteTransitEdgesStats, err := post.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, ad.PostProcessedRelationships()); err != nil {
+		return &aggregateStats, err
+	} else if localGroupData, err := FetchLocalGroupData(ctx, db); err != nil {
+		return &aggregateStats, err
+	} else if dcSyncStats, err := PostDCSync(ctx, db, localGroupData); err != nil {
+		return &aggregateStats, err
+	} else if protectAdminGroupsStats, err := PostProtectAdminGroups(ctx, db); err != nil {
+		return &aggregateStats, err
+	} else if syncLAPSStats, err := PostSyncLAPSPassword(ctx, db, localGroupData); err != nil {
+		return &aggregateStats, err
+	} else if hasTrustKeyStats, err := PostHasTrustKeys(ctx, db); err != nil {
+		return &aggregateStats, err
+	} else if localGroupStats, err := PostLocalGroups(ctx, db, localGroupData); err != nil {
+		return &aggregateStats, err
+	} else if canRDPStats, err := PostCanRDP(ctx, db, localGroupData, true, citrixEnabled); err != nil {
+		return &aggregateStats, err
+	} else if adcsStats, adcsCache, err := PostADCS(ctx, db, localGroupData); err != nil {
+		return &aggregateStats, err
+	} else if ownsStats, err := PostOwnsAndWriteOwner(ctx, db, localGroupData); err != nil {
+		return &aggregateStats, err
+	} else if ntlmStats, err := PostNTLM(ctx, db, localGroupData, adcsCache, ntlmEnabled); err != nil {
+		return &aggregateStats, err
+	} else {
+		aggregateStats.Merge(deleteTransitEdgesStats)
+		aggregateStats.Merge(syncLAPSStats)
+		aggregateStats.Merge(hasTrustKeyStats)
+		aggregateStats.Merge(dcSyncStats)
+		aggregateStats.Merge(protectAdminGroupsStats)
+		aggregateStats.Merge(localGroupStats)
+		aggregateStats.Merge(canRDPStats)
+		aggregateStats.Merge(adcsStats)
+		aggregateStats.Merge(ownsStats)
+		aggregateStats.Merge(ntlmStats)
+
+		return &aggregateStats, nil
+	}
 }

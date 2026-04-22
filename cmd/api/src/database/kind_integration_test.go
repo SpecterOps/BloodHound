@@ -65,12 +65,12 @@ func TestGetKindByName(t *testing.T) {
 			testSuite := testCase.setup()
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
-			kind, err := testSuite.BHDatabase.GetKindByName(testSuite.Context, testCase.args.name)
+			kind, err := testSuite.BHDatabase.GetKindsByNames(testSuite.Context, testCase.args.name)
 			if testCase.want.err != nil {
 				assert.EqualError(t, err, testCase.want.err.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, testCase.want.kind, kind)
+				assert.Equal(t, testCase.want.kind, kind[0])
 			}
 		})
 	}

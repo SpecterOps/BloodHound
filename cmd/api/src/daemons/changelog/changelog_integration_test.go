@@ -55,7 +55,12 @@ type changelogHarness struct {
 func setupChangelogTest(t *testing.T, config testChangelogConfig) *changelogHarness {
 	suite := setupIntegrationTest(t)
 
-	changelog := NewChangelog(suite.GraphDB, suite.BloodhoundDB, Options(config))
+	changelog := NewChangelog(suite.GraphDB, suite.BloodhoundDB, Options{
+		BatchSize:     config.BatchSize,
+		FlushInterval: config.FlushInterval,
+		PollInterval:  config.PollInterval,
+		RetryConfig:   DefaultRetryConfig(),
+	})
 
 	return &changelogHarness{
 		suite:     &suite,
@@ -139,8 +144,6 @@ func (s *changelogHarness) assertNodesExistInDB(objectIDs []string, expectedCoun
 }
 
 func TestChangelogIntegration(t *testing.T) {
-	t.Parallel()
-
 	t.Run("coordinator and flag manager startup coordination", func(t *testing.T) {
 		harness := setupChangelogTest(t, defaultTestConfig())
 		defer harness.close()
@@ -228,8 +231,6 @@ func TestChangelogIntegration(t *testing.T) {
 }
 
 func TestCacheClearFunctionality(t *testing.T) {
-	t.Parallel()
-
 	t.Run("ClearCache clears active cache", func(t *testing.T) {
 		harness := setupChangelogTest(t, defaultTestConfig())
 		defer harness.close()

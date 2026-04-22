@@ -9,6 +9,7 @@
         "README.md"
     ],
     "scripts": {
+        "audit": "yarn npm audit --recursive",
         "build": "yarn check-types && rollup --config rollup.config.js",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "test": "echo \"Warning: no test specified\"",
@@ -17,7 +18,7 @@
         "check-format": "prettier  --list-different \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\""
     },
     "dependencies": {
-        "axios": "^1.12.0"
+        "axios": "1.15.0"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3.3.5",

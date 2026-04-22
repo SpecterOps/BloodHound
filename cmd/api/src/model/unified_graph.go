@@ -19,7 +19,6 @@ package model
 import (
 	"time"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/tiering"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -74,7 +73,7 @@ type UnifiedEdge struct {
 	Properties map[string]any `json:"properties,omitempty"`
 }
 
-func FromDAWGSNode(validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.Node, includeProperties bool) UnifiedNode {
+func FromDAWGSNode(primaryDisplayKinds graphschema.PrimaryDisplayKinds, node *graph.Node, includeProperties bool) UnifiedNode {
 	var (
 		props       = node.Properties
 		objectId    = getTypedPropertyOrDefault(props, common.ObjectID.String(), "")
@@ -86,7 +85,7 @@ func FromDAWGSNode(validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.
 	// only generic-ingested nodes have the PrimaryKind property set to control what icon the UI displays.
 	kind := primaryKind
 	if kind == "" {
-		kind = analysis.GetNodeKind(validPrimaryKinds, node).String()
+		kind = graphschema.GetNodeKind(primaryDisplayKinds, node).String()
 	}
 
 	var properties map[string]any
@@ -131,16 +130,16 @@ func (s *UnifiedGraph) AddRelationship(rel *graph.Relationship, includePropertie
 	s.Edges = append(s.Edges, formattedRelationship)
 }
 
-func (s *UnifiedGraph) AddNode(validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.Node, includeProperties bool) {
-	formattedNode := FromDAWGSNode(validPrimaryKinds, node, includeProperties)
+func (s *UnifiedGraph) AddNode(primaryDisplayKinds graphschema.PrimaryDisplayKinds, node *graph.Node, includeProperties bool) {
+	formattedNode := FromDAWGSNode(primaryDisplayKinds, node, includeProperties)
 	s.Nodes[node.ID.String()] = formattedNode
 }
 
-func (s *UnifiedGraph) AddPathSet(validPrimaryKinds graphschema.ValidPrimaryKinds, paths graph.PathSet, includeProperties bool) {
+func (s *UnifiedGraph) AddPathSet(primaryDisplayKinds graphschema.PrimaryDisplayKinds, paths graph.PathSet, includeProperties bool) {
 	nonDuplicateEdges := make(map[graph.ID]bool)
 	for _, path := range paths.Paths() {
 		for _, node := range path.Nodes {
-			s.AddNode(validPrimaryKinds, node, includeProperties)
+			s.AddNode(primaryDisplayKinds, node, includeProperties)
 		}
 
 		for _, edge := range path.Edges {

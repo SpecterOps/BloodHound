@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 //go:build integration
 
 package database_test
@@ -26,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -58,9 +60,9 @@ func registerAndGetKind(t *testing.T, testSuite IntegrationTestSuite, name strin
 func getKindByName(t *testing.T, testSuite IntegrationTestSuite, name string) model.Kind {
 	t.Helper()
 	// Create Kind by name from DAWGS Kind Table
-	kind, err := testSuite.BHDatabase.GetKindByName(testSuite.Context, name)
+	kind, err := testSuite.BHDatabase.GetKindsByNames(testSuite.Context, name)
 	require.NoError(t, err, "unexpected error occurred when getting kind by name")
-	return kind
+	return kind[0]
 }
 
 func createTestEnvironment(t *testing.T, testSuite IntegrationTestSuite, extensionID int32, envKindID int32, sourceKindID int32) model.SchemaEnvironment {
@@ -1319,7 +1321,7 @@ func TestDatabase_UpdateGraphSchemaNodeKindIconById(t *testing.T) {
 				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
 				createdNodeKind := createTestNodeKind(t, testSuite, "Test Kind 1", extension.ID, "Test_Kind_1", "Test Kind 1", true, "user", "#17E625")
 
-				updatedNodeKind, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKindIconById(testSuite.Context, createdNodeKind.ID, model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#3a0b138c"})
+				updatedNodeKind, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKindIconById(testSuite.Context, createdNodeKind.ID, graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "coffee", Color: "#3a0b138c"})
 				require.NoError(t, err, "unexpected error occurred when updating node kind icon")
 
 				// Retrieve Node Kind 1
@@ -1333,7 +1335,7 @@ func TestDatabase_UpdateGraphSchemaNodeKindIconById(t *testing.T) {
 		}, {
 			name: "Error: failed to update schema node kind icon that does not exist",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
-				_, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKindIconById(testSuite.Context, 12345, model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#3a0b138c"})
+				_, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKindIconById(testSuite.Context, 12345, graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "coffee", Color: "#3a0b138c"})
 				require.EqualError(t, err, database.ErrNotFound.Error())
 			},
 		},
@@ -4527,14 +4529,16 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 }
 
 func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
-	assertContainsDisplayKind := func(t *testing.T, got map[graph.Kind]bool, name string) {
+	assertContainsDisplayKind := func(t *testing.T, got graphschema.PrimaryDisplayKinds, name string) {
 		t.Helper()
-		assert.True(t, got[graph.StringKind(name)], "expected display kind %s to be present in result", name)
+		_, ok := got[graph.StringKind(name)]
+		assert.True(t, ok, "expected display kind %s to be present in result", name)
 	}
 
-	assertDoesNotContainDisplayKind := func(t *testing.T, got map[graph.Kind]bool, name string) {
+	assertDoesNotContainDisplayKind := func(t *testing.T, got graphschema.PrimaryDisplayKinds, name string) {
 		t.Helper()
-		assert.False(t, got[graph.StringKind(name)], "expected kind %s to not be present in result", name)
+		_, ok := got[graph.StringKind(name)]
+		assert.False(t, ok, "expected kind %s to not be present in result", name)
 	}
 
 	tests := []struct {
@@ -4544,7 +4548,7 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 		{
 			name: "Success: returns display kinds",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
-				baseline, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(testSuite.Context)
+				baseline, err := testSuite.BHDatabase.GetPrimaryDisplayKinds(testSuite.Context)
 				require.NoError(t, err, "unexpected error occurred when getting baseline display kinds")
 
 				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
@@ -4553,7 +4557,7 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 				createTestNodeKind(t, testSuite, "Display_Kind_1", extension.ID, "Display Kind 1", "a display kind", true, "icon", "blue")
 				createTestNodeKind(t, testSuite, "Display_Kind_2", extension.ID, "Display Kind 2", "a display kind", true, "icon", "red")
 
-				displayKinds, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(testSuite.Context)
+				displayKinds, err := testSuite.BHDatabase.GetPrimaryDisplayKinds(testSuite.Context)
 				assert.NoError(t, err, "unexpected error occurred when retrieving display kinds")
 
 				// Both new display kinds should appear in the result
@@ -4568,7 +4572,7 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 		{
 			name: "Success: does not include non-display kinds",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
-				baseline, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(testSuite.Context)
+				baseline, err := testSuite.BHDatabase.GetPrimaryDisplayKinds(testSuite.Context)
 				require.NoError(t, err, "unexpected error occurred when getting baseline display kinds")
 
 				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
@@ -4577,7 +4581,7 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 				createTestNodeKind(t, testSuite, "Display_Kind_1", extension.ID, "Display Kind 1", "a display kind", true, "icon", "blue")
 				createTestNodeKind(t, testSuite, "Non_Display_Kind_1", extension.ID, "Non Display Kind 1", "a non-display kind", false, "", "")
 
-				displayKinds, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(testSuite.Context)
+				displayKinds, err := testSuite.BHDatabase.GetPrimaryDisplayKinds(testSuite.Context)
 				assert.NoError(t, err, "unexpected error occurred when retrieving display kinds")
 
 				// Only the display kind should appear, not the non-display kind
@@ -4674,4 +4678,114 @@ func TestDatabase_GetPrincipalKindsGraphKinds(t *testing.T) {
 		// Should NOT contain the non-builtin principal kind
 		assert.False(t, containsKindName(principalKinds, nonBuiltinKindName), "expected non-builtin principal kind %s to be excluded when flag is disabled", nonBuiltinKindName)
 	})
+}
+
+func TestUpdateEnvironment(t *testing.T) {
+	type args struct {
+		sourceKindName string
+	}
+	type want struct {
+		sourceKindName string
+	}
+	type testData struct {
+		name   string
+		args   args
+		setup  func() (IntegrationTestSuite, model.SchemaEnvironment)
+		want   want
+		assert func(t *testing.T, testSuite IntegrationTestSuite, existing model.SchemaEnvironment, updated model.SchemaEnvironment, err error, want want)
+	}
+
+	tt := []testData{
+		{
+			name: "Success: updates source kind and preserves all other fields",
+			args: args{sourceKindName: "UpdatedSource"},
+			setup: func() (IntegrationTestSuite, model.SchemaEnvironment) {
+				testSuite := setupIntegrationTestSuite(t)
+				ext := createTestExtension(t, testSuite, "update-env-ext", "Update Env Ext", "1.0", "test")
+				envKind := registerAndGetKind(t, testSuite, "UpdateEnvKind")
+				srcKind := registerAndGetKind(t, testSuite, "OldSource")
+				env := createTestEnvironment(t, testSuite, ext.ID, int32(envKind.ID), int32(srcKind.ID))
+				return testSuite, env
+			},
+			want: want{sourceKindName: "UpdatedSource"},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, existing model.SchemaEnvironment, updated model.SchemaEnvironment, err error, want want) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.Equal(t, existing.ID, updated.ID)
+				assert.Equal(t, existing.SchemaExtensionId, updated.SchemaExtensionId)
+				assert.Equal(t, existing.EnvironmentKindId, updated.EnvironmentKindId)
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite, env := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			newSrcKind := registerAndGetKind(t, testSuite, testCase.args.sourceKindName)
+			env.SourceKindId = int32(newSrcKind.ID)
+
+			updated, err := testSuite.BHDatabase.UpdateEnvironment(testSuite.Context, env)
+			testCase.assert(t, testSuite, env, updated, err, testCase.want)
+		})
+	}
+}
+
+func TestUpdateSchemaFinding(t *testing.T) {
+	type args struct {
+		displayName string
+		findingType model.SchemaFindingType
+	}
+	type testData struct {
+		name   string
+		args   args
+		setup  func() (IntegrationTestSuite, model.SchemaFinding)
+		assert func(t *testing.T, existing model.SchemaFinding, updated model.SchemaFinding, err error)
+	}
+
+	tt := []testData{
+		{
+			name: "Success: updates type, display_name, kind_id, environment_id and preserves id and name",
+			args: args{displayName: "Updated Display Name", findingType: model.SchemaFindingTypeRelationship},
+			setup: func() (IntegrationTestSuite, model.SchemaFinding) {
+				testSuite := setupIntegrationTestSuite(t)
+				ext := createTestExtension(t, testSuite, "update-finding-ext", "Update Finding Ext", "1.0", "test")
+				envKind := registerAndGetKind(t, testSuite, "UpdFindEnvKind")
+				srcKind := registerAndGetKind(t, testSuite, "UpdFindSrcKind")
+				relKind := registerAndGetKind(t, testSuite, "UpdFindRelKind")
+				env := createTestEnvironment(t, testSuite, ext.ID, int32(envKind.ID), int32(srcKind.ID))
+				finding := createTestFinding(t, testSuite, model.SchemaFinding{
+					Type:              model.SchemaFindingTypeRelationship,
+					SchemaExtensionId: ext.ID,
+					KindId:            int32(relKind.ID),
+					EnvironmentId:     env.ID,
+					Name:              "TestFinding",
+					DisplayName:       "Original Display Name",
+				})
+				return testSuite, finding
+			},
+			assert: func(t *testing.T, existing model.SchemaFinding, updated model.SchemaFinding, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.Equal(t, existing.ID, updated.ID)
+				assert.Equal(t, existing.Name, updated.Name)
+				assert.Equal(t, "Updated Display Name", updated.DisplayName)
+				assert.Equal(t, model.SchemaFindingTypeRelationship, updated.Type)
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite, finding := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			finding.DisplayName = testCase.args.displayName
+			finding.Type = testCase.args.findingType
+
+			updated, err := testSuite.BHDatabase.UpdateSchemaFinding(testSuite.Context, finding)
+			testCase.assert(t, finding, updated, err)
+		})
+	}
 }

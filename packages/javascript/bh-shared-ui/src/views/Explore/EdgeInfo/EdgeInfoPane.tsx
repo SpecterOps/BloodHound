@@ -47,12 +47,16 @@ const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ className, selectedEdge }) 
                     label='Role-based access filtering applied'
                 />
             )}
-            <div className='bg-neutral-2 pointer-events-auto rounded-lg shadow-outer-1'>
-                <Header name={selectedEdge?.name || 'None'} />
-            </div>
-            <div className='bg-neutral-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded-lg shadow-outer-1'>
-                {selectedEdge === null ? 'No information to display.' : <EdgeInfoContent selectedEdge={selectedEdge} />}
-            </div>
+            {selectedEdge && (
+                <>
+                    <div className='bg-neutral-2 pointer-events-auto rounded-lg shadow-outer-1'>
+                        <Header name={selectedEdge?.name || 'None'} />
+                    </div>
+                    <div className='bg-neutral-2 mt-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded-lg shadow-outer-1'>
+                        <EdgeInfoContent selectedEdge={selectedEdge} />
+                    </div>
+                </>
+            )}
         </div>
     );
 };
