@@ -33,6 +33,12 @@ func TestNewRegistry(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, registry)
 
+	// Remove the registry from the global default registerer so this test does not
+	// leak state that interferes with other parallel tests.
+	t.Cleanup(func() {
+		prometheus.DefaultRegisterer.Unregister(registry)
+	})
+
 	// Verify the returned registry is functional and accepts metric registration
 	testCounter := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "test_new_registry_counter_total",
