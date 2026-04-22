@@ -21,7 +21,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"path"
 	"time"
@@ -81,7 +80,6 @@ type FileService interface {
 	ReadFile(ctx context.Context, name string) ([]byte, error)
 	WriteFile(ctx context.Context, name string, data []byte, opts WriteOptions) error
 	DeleteFile(ctx context.Context, name string) error
-	TempPath(prefix, pattern string) (string, error)
 	WriteTempFile(ctx context.Context, prefix string, reader io.Reader, opts WriteOptions) (string, error)
 }
 
@@ -117,20 +115,6 @@ func (s *LocalFileService) WriteFile(ctx context.Context, name string, data []by
 
 func (s *LocalFileService) DeleteFile(ctx context.Context, name string) error {
 	return s.Storage.Delete(ctx, name)
-}
-
-func (s *LocalFileService) TempPath(prefix, pattern string) (string, error) {
-	id, err := randomID()
-	if err != nil {
-		return "", err
-	}
-
-	name := pattern
-	if name == "" {
-		name = "tmp-*"
-	}
-
-	return path.Join(prefix, fmt.Sprintf("%s-%s", name, id)), nil
 }
 
 func (s *LocalFileService) WriteTempFile(ctx context.Context, prefix string, reader io.Reader, opts WriteOptions) (string, error) {
