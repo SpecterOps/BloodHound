@@ -150,7 +150,7 @@ type WebhookEvent struct {
 	WebhookId      uuid.UUID   `json:"webhook_id" gorm:"type:text;primaryKey"`
 	EventId        uuid.UUID   `json:"event_id" gorm:"type:text;primaryKey"`
 	CreatedAt      time.Time   `json:"created_at"`
-	LastStatusCode int         `json:"last_status_code"`
+	LastStatusCode null.Int32  `json:"last_status_code"`
 	LastError      null.String `json:"last_error"`
 	Attempts       int         `json:"attempts"`
 }
