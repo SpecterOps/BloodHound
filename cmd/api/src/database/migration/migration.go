@@ -71,7 +71,7 @@ func NewMigrator(db *gorm.DB) (*Migrator, error) {
 	return &Migrator{
 		// Deprecated: Sources supports legacy v8 stepwise migrations. Can be removed after v10 is released.
 		Sources: []Source{
-			{FileSystem: FossMigrations, Directory: "migrations/v8"},
+			{FileSystem: FossMigrations, Directory: "migrations/legacy"},
 		},
 		ExtensionsData: []Source{
 			{FileSystem: ExtensionMigrations, Directory: "extensions"},
