@@ -417,6 +417,7 @@ func initializeGraphDatabase(ctx context.Context, cfg config.Configuration) (gra
 		ConnectionString:      cfg.Database.PostgreSQLConnectionString(),
 		Pool:                  pool,
 	}); err != nil {
+		pool.Close()
 		return nil, fmt.Errorf("error connecting to database: %w", err)
 	} else {
 		return database, nil

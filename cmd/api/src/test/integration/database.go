@@ -152,14 +152,17 @@ func Prepare(ctx context.Context, db database.Database) error {
 // Integration tests should be updated to reflect the latest standards.
 // See commit https://github.com/SpecterOps/BloodHound/commit/a6cc43013fd769b97cc52cbc60b2314494054c9a#diff-e6bcb50873ade3cf33cef4e3e0ff566fb8ac1367b4ade36f4511bc2172a760e1
 // for implementation guidance. Additional detailed information can be found in Confluence.
-func SetupTestMigrator(t *testing.T, sources ...migration.Source) (*gorm.DB, *migration.Migrator, error) {
+func SetupTestMigrator(t *testing.T, sources ...migration.Source) (*gorm.DB, *pgxpool.Pool, *migration.Migrator, error) {
 	if cfg, err := utils.LoadIntegrationTestConfig(); err != nil {
-		return nil, nil, fmt.Errorf("failed to load integration test config: %w", err)
-	} else if db, _, err := setupPGTestDB(t, cfg); err != nil {
-		return nil, nil, fmt.Errorf("failed to setup pgtestdb: %v", err)
+		return nil, nil, nil, fmt.Errorf("failed to load integration test config: %w", err)
+	} else if db, pool, err := setupPGTestDB(t, cfg); err != nil {
+		if pool != nil {
+			pool.Close()
+		}
+		return nil, nil, nil, fmt.Errorf("failed to setup pgtestdb: %v", err)
 	} else {
 		OpenGraphDB(t, graphschema.DefaultGraphSchema()).Close(context.Background())
-		return db, &migration.Migrator{
+		return db, pool, &migration.Migrator{
 			Sources: sources,
 			DB:      db,
 		}, nil

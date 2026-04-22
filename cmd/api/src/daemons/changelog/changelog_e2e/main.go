@@ -68,7 +68,6 @@ func schema() graph.Schema {
 
 func newHarness() *Harness {
 	var (
-		cfg         = config.Configuration{}
 		ctx, cancel = context.WithCancel(context.Background())
 		connStr     = os.Getenv("PG_CONNECTION_STRING")
 	)
@@ -81,7 +80,7 @@ func newHarness() *Harness {
 
 	cfg, err := config.NewDefaultConnectionConfiguration(connStr)
 	if err != nil {
-		slog.Error("Error creating new default configuration: %w", attr.Error(err))
+		slog.Error("Error creating new default configuration", attr.Error(err))
 		os.Exit(1)
 	}
 
