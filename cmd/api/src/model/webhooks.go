@@ -136,14 +136,6 @@ func (s WebhookSubscription) AuditData() AuditData {
 	}
 }
 
-func (s WebhookSubscription) ValidFilters() map[string][]FilterOperator {
-	return map[string][]FilterOperator{
-		"webhook_id": {Equals, NotEquals},
-		"event_type": {Equals, NotEquals, ApproximatelyEquals},
-		"version":    {Equals, NotEquals},
-	}
-}
-
 type WebhookEvents []WebhookEvent
 
 type WebhookEvent struct {
