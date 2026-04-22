@@ -249,11 +249,14 @@ func OpenDatabase(cfg drivers.DatabaseConfiguration) (*gorm.DB, *pgxpool.Pool, e
 
 	dbPool := stdlib.OpenDBFromPool(pool)
 
-	if db, err := gorm.Open(postgres.New(postgres.Config{Conn: dbPool}), gormConfig); err != nil {
+	db, err := gorm.Open(postgres.New(postgres.Config{Conn: dbPool}), gormConfig)
+	if err != nil {
+		_ = dbPool.Close()
+		pool.Close()
 		return nil, nil, err
-	} else {
-		return db, pool, nil
 	}
+
+	return db, pool, nil
 }
 
 func (s *BloodhoundDB) RawDelete(value any) error {
