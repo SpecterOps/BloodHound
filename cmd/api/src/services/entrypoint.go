@@ -44,6 +44,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/metrics"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -152,8 +153,12 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		connections.Graph.SetBatchWriteSize(neo4jParameters.BatchWriteSize)
 		connections.Graph.SetWriteFlushSize(neo4jParameters.WriteFlushSize)
 
-		// Trigger analysis on first start
-		if err := connections.RDMS.RequestAnalysis(ctx, "init"); err != nil {
+		// Register metrics then trigger analysis on first start
+		if _, err = metrics.NewRegistry(); err != nil {
+			return nil, fmt.Errorf("failed to create prometheus registry: %w", err)
+		} else if err = metrics.InitializeBHCEMetrics(); err != nil {
+			return nil, fmt.Errorf("failed to register prometheus metrics: %w", err)
+		} else if err := connections.RDMS.RequestAnalysis(ctx, "init"); err != nil {
 			slog.WarnContext(ctx, "Failed to request init analysis", attr.Error(err))
 		}
 
