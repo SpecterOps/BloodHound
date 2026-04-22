@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ export * from './BHELogoFull';
 export * from './CalendarDay';
 export * from './CaretDown';
 export * from './CaretUp';
+export * from './CircleCheck';
 export * from './Compass';
 export * from './DataAlert';
 export * from './Diamond';
@@ -30,6 +31,7 @@ export * from './DownArrow';
 export * from './Download';
 export * from './EclipseCircle';
 export * from './Equals';
+export * from './Error';
 export * from './FileMagnifyingGlass';
 export * from './FilterOutline';
 export * from './Findings';
@@ -48,4 +50,5 @@ export * from './Upload';
 export * from './User';
 export * from './UserCog';
 export * from './VerticalEllipsis';
+export * from './Warning';
 export * from './Zones';

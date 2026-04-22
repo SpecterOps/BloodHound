@@ -13,7 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 export * from './Accordion';
+export * from './Alert';
 export * from './Badge';
 export * from './Breadcrumbs';
 export * from './Button';
