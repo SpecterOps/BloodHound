@@ -197,8 +197,10 @@ func (s *BloodhoundDB) Close(ctx context.Context) {
 		slog.ErrorContext(ctx, "Failed to fetch SQL DB reference from GORM", attr.Error(err))
 	} else if err := sqlDBRef.Close(); err != nil {
 		slog.ErrorContext(ctx, "Failed closing database", attr.Error(err))
-	} else if s.pool != nil {
-		s.pool.Close() // pgxpool must be closed seperately
+	}
+
+	if s.pool != nil {
+		s.pool.Close() // pgxpool must be closed separately
 	}
 }
 
