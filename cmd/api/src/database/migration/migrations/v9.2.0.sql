@@ -16,9 +16,7 @@
 
 -- Webhooks subsystem tables
 
--- events carries the domain events that may be delivered to subscribed webhooks.
--- id is stored as text holding the canonical string form of a UUIDv7 so events
--- remain naturally time-ordered. Event ingestion is owned by a separate changeset.
+-- events
 CREATE TABLE IF NOT EXISTS events
 (
     id           text                     NOT NULL,
@@ -30,8 +28,7 @@ CREATE TABLE IF NOT EXISTS events
     PRIMARY KEY (id)
 );
 
--- webhooks is the top-level registration of an outbound delivery target.
--- id is stored as text holding the canonical string form of a UUIDv4.
+-- webhooks
 CREATE TABLE IF NOT EXISTS webhooks
 (
     id          text                     NOT NULL,
@@ -50,9 +47,7 @@ CREATE TABLE IF NOT EXISTS webhooks
 
 CREATE UNIQUE INDEX IF NOT EXISTS webhooks_url_unique_index ON webhooks (url);
 
--- webhook_secrets stores the HMAC signing secret for a webhook (1:1 with webhooks).
--- Kept in a separate table so the secret can be protected independently of the
--- record that is regularly selected by the UI.
+-- webhook_secrets
 CREATE TABLE IF NOT EXISTS webhook_secrets
 (
     webhook_id  text                     NOT NULL,
@@ -63,7 +58,7 @@ CREATE TABLE IF NOT EXISTS webhook_secrets
         FOREIGN KEY (webhook_id) REFERENCES webhooks (id) ON DELETE CASCADE
 );
 
--- webhook_metadata tracks rolling delivery health per webhook (1:1 with webhooks).
+-- webhook_metadata
 CREATE TABLE IF NOT EXISTS webhook_metadata
 (
     webhook_id        text                     NOT NULL,
@@ -78,9 +73,7 @@ CREATE TABLE IF NOT EXISTS webhook_metadata
         FOREIGN KEY (webhook_id) REFERENCES webhooks (id) ON DELETE CASCADE
 );
 
--- webhook_subscriptions maps a webhook to the event types it consumes.
--- version is a payload attribute, not part of identity: a webhook can subscribe
--- to any given event_type exactly once.
+-- webhook_subscriptions
 CREATE TABLE IF NOT EXISTS webhook_subscriptions
 (
     webhook_id text NOT NULL,
@@ -91,7 +84,7 @@ CREATE TABLE IF NOT EXISTS webhook_subscriptions
         FOREIGN KEY (webhook_id) REFERENCES webhooks (id) ON DELETE CASCADE
 );
 
--- webhook_events records the delivery state of a single event to a single webhook.
+-- webhook_events
 CREATE TABLE IF NOT EXISTS webhook_events
 (
     webhook_id       text                     NOT NULL,
