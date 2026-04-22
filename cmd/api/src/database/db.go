@@ -179,6 +179,9 @@ type Database interface {
 
 	// Kind
 	Kind
+
+	// Events
+	EventData
 }
 
 type BloodhoundDB struct {
