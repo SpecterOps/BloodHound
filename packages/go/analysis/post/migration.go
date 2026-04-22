@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/specterops/bloodhound-enterprise/lib/go/graphschema/meta"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
@@ -39,7 +39,7 @@ func MigrationForDCAPostProcessedEdges(ctx context.Context, db graph.Database, m
 				return query.And(
 					query.Kind(query.Relationship(), kind),
 					query.Exists(query.RelationshipProperty(common.LastSeen.String())),
-					query.Not(query.Kind(query.End(), meta.Meta)),
+					query.Not(query.Kind(query.End(), graphschema.Meta)),
 				)
 			}))
 

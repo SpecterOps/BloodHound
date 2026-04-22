@@ -25,7 +25,8 @@ import (
 
 var (
 	// Originates from BHE but copied here
-	meta         = graph.StringKind("Meta")
+	Meta         = graph.StringKind("Meta")
+	meta         = Meta
 	metaDetail   = graph.StringKind("MetaDetail")
 	metaIncludes = graph.StringKind("MetaIncludes")
 	metaKinds    = []graph.Kind{meta, metaDetail, metaIncludes}
