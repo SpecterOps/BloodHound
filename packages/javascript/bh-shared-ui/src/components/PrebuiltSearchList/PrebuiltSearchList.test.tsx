@@ -22,37 +22,53 @@ import PrebuiltSearchList from './PrebuiltSearchList';
 describe('PrebuiltSearchList', () => {
     const testListSections = [
         {
-            category: 'category',
-            subheader: 'subheader text',
+            category: 'Active Directory',
+            subheader: 'Domain Information',
             queries: [
                 {
-                    name: 'query 1',
-                    description: 'query 1 description',
-                    query: 'match (n) return n limit 5',
+                    name: 'Find all Domain Admins',
+                    description: 'Returns all members of the Domain Admins group',
+                    query: 'MATCH (n:Group {name:"DOMAIN ADMINS@TESTLAB.LOCAL"})<-[r:MemberOf*1..]-(m) RETURN m',
                 },
                 {
-                    name: 'query 2',
-                    description: 'query 2 description',
-                    query: 'match (n) return n limit 5',
+                    name: 'Find Computers with Unconstrained Delegation',
+                    description: 'Returns all computers with unconstrained delegation enabled',
+                    query: 'MATCH (c:Computer {unconstraineddelegation:true}) RETURN c',
                 },
                 {
-                    name: 'query 3',
-                    description: 'query 3  description',
-                    query: 'match (n) return n limit 5',
+                    name: 'Find Kerberoastable Users',
+                    description: 'Returns all users with SPN set',
+                    query: 'MATCH (u:User {hasspn:true}) RETURN u',
                     canEdit: true,
                     id: 1,
                     user_id: '4e09c965-65bd-4f15-ae71-5075a6fed14b',
                 },
             ],
         },
+        {
+            category: 'Azure',
+            subheader: 'Tenant Information',
+            queries: [
+                {
+                    name: 'Find all Global Admins',
+                    description: 'Returns all members of the Global Administrator role',
+                    query: 'MATCH (n:AZRole {name:"Global Administrator"})<-[r:AZHasRole]-(m) RETURN m',
+                },
+                {
+                    name: 'Find Azure VMs',
+                    description: 'Returns all Azure virtual machines',
+                    query: 'MATCH (v:AZVM) RETURN v',
+                },
+            ],
+        },
     ];
 
-    it('renders a list of pre-built searches', async () => {
+    const setup = () => {
         const testClickHandler = vi.fn();
         const testDeleteHandler = vi.fn();
         const testClearFiltersHandler = vi.fn();
 
-        render(
+        const result = render(
             <PrebuiltSearchList
                 listSections={testListSections}
                 showCommonQueries={true}
@@ -61,32 +77,29 @@ describe('PrebuiltSearchList', () => {
                 clearFiltersHandler={testClearFiltersHandler}
             />
         );
-        expect(screen.getAllByText(/subheader/i)[0]).toBeInTheDocument();
-        expect(screen.getByText(/query 1/i)).toBeInTheDocument();
 
-        expect(screen.getByText(testListSections[0].queries[0].name)).toBeInTheDocument();
+        return {
+            ...result,
+            testClickHandler,
+            testDeleteHandler,
+            testClearFiltersHandler,
+        };
+    };
 
-        const listItems = screen.getAllByRole('button');
-        const lastListItem = screen.getAllByRole('button')[listItems.length - 1];
+    it('renders a list of pre-built searches', async () => {
+        setup();
 
-        expect(lastListItem).toHaveAttribute('aria-haspopup');
+        expect(screen.getByText('Domain Information')).toBeInTheDocument();
+        expect(screen.getByText('Find all Domain Admins')).toBeInTheDocument();
+
+        // Verifying that the one editable query has an action menu
+        const actionMenuTriggers = screen.getAllByTestId('saved-query-action-menu-trigger');
+        expect(actionMenuTriggers).toHaveLength(1);
     });
 
     it('calls clickHandler when a line item is clicked', async () => {
         const user = userEvent.setup();
-        const testClickHandler = vi.fn();
-        const testDeleteHandler = vi.fn();
-        const testClearFiltersHandler = vi.fn();
-
-        render(
-            <PrebuiltSearchList
-                listSections={testListSections}
-                showCommonQueries={true}
-                clickHandler={testClickHandler}
-                deleteHandler={testDeleteHandler}
-                clearFiltersHandler={testClearFiltersHandler}
-            />
-        );
+        const { testClickHandler } = setup();
 
         await user.click(screen.getByText(testListSections[0].queries[0].name));
 
@@ -99,24 +112,28 @@ describe('PrebuiltSearchList', () => {
 
     it('clicking a delete button calls deleteHandler', async () => {
         const user = userEvent.setup();
-        const testClickHandler = vi.fn();
-        const testDeleteHandler = vi.fn();
-        const testClearFiltersHandler = vi.fn();
+        setup();
 
-        render(
-            <PrebuiltSearchList
-                listSections={testListSections}
-                showCommonQueries={true}
-                clickHandler={testClickHandler}
-                deleteHandler={testDeleteHandler}
-                clearFiltersHandler={testClearFiltersHandler}
-            />
-        );
+        const actionMenuTrigger = screen.getByTestId('saved-query-action-menu-trigger');
+        await user.click(actionMenuTrigger);
 
-        const listItems = screen.getAllByRole('button');
-        const lastListItem = screen.getAllByRole('button')[listItems.length - 1];
+        const deleteOption = await screen.findByText(/delete/i);
+        expect(deleteOption).toBeInTheDocument();
+    });
 
-        await user.click(lastListItem);
-        expect(screen.getByText(/delete/i)).toBeInTheDocument();
+    it('renders a list of pre-built searches and displays categories and subcategories one time', async () => {
+        setup();
+
+        const adCategory = screen.getAllByText('Active Directory');
+        expect(adCategory).toHaveLength(1);
+
+        const domainInfoSubcategory = screen.getAllByText('Domain Information');
+        expect(domainInfoSubcategory).toHaveLength(1);
+
+        const azureCategory = screen.getAllByText('Azure');
+        expect(azureCategory).toHaveLength(1);
+
+        const tenantInfoSubcategory = screen.getAllByText('Tenant Information');
+        expect(tenantInfoSubcategory).toHaveLength(1);
     });
 });
