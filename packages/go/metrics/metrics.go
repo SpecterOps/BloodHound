@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package metrics
 
 import (
@@ -22,19 +23,15 @@ import (
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 )
 
-// NewRegistry creates a custom Prometheus registry and registers it to the
-// default registerer.
-//
-// Returns the custom registry for metric registration, or an error if registration fails.
-func NewRegistry() (*prometheus.Registry, error) {
-	promRegistry := prometheus.NewRegistry()
-
-	// Register custom registry to default registerer so promhttp.Handler() exposes it
-	if err := prometheus.DefaultRegisterer.Register(promRegistry); err != nil {
-		return nil, fmt.Errorf("failed to register default metrics collector: %w", err)
+// ExposeToDefaultRegisterer registers the provided registry as a collector on
+// prometheus.DefaultRegisterer, making all of its metrics visible via /metrics.
+// Call this only after all metrics have been initialized into the registry.
+func ExposeToDefaultRegisterer(registry *prometheus.Registry) error {
+	if err := prometheus.DefaultRegisterer.Register(registry); err != nil {
+		return fmt.Errorf("failed to register metrics registry with default registerer: %w", err)
 	}
 
-	return promRegistry, nil
+	return nil
 }
 
 // InitializeBHCEMetrics registers all BHCE Prometheus metrics to the provided registerer.

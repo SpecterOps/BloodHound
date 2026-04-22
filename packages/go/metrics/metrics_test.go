@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package metrics_test
 
 import (
@@ -20,31 +21,24 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/specterops/bloodhound/packages/go/metrics"
 )
 
-func TestNewRegistry(t *testing.T) {
+func TestExposeToDefaultRegisterer(t *testing.T) {
 	t.Parallel()
 
-	registry, err := metrics.NewRegistry()
+	registry := prometheus.NewRegistry()
 
-	require.NoError(t, err)
-	require.NotNil(t, registry)
-
-	// Remove the registry from the global default registerer so this test does not
-	// leak state that interferes with other parallel tests.
+	// Remove the registry from the global default registerer after the test to
+	// prevent leaking state that could interfere with other parallel tests.
 	t.Cleanup(func() {
 		prometheus.DefaultRegisterer.Unregister(registry)
 	})
 
-	// Verify the returned registry is functional and accepts metric registration
-	testCounter := prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "test_new_registry_counter_total",
-		Help: "A counter used to verify the registry accepts metric registration.",
-	})
-	assert.NoError(t, registry.Register(testCounter))
+	err := metrics.ExposeToDefaultRegisterer(registry)
+
+	assert.NoError(t, err)
 }
 
 func TestInitializeBHCEMetrics(t *testing.T) {

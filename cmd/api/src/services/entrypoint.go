@@ -22,6 +22,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/registration"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
@@ -153,11 +154,12 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		connections.Graph.SetBatchWriteSize(neo4jParameters.BatchWriteSize)
 		connections.Graph.SetWriteFlushSize(neo4jParameters.WriteFlushSize)
 
-		// Register metrics then trigger analysis on first start
-		if promRegistry, err := metrics.NewRegistry(); err != nil {
-			return nil, fmt.Errorf("failed to create prometheus registry: %w", err)
-		} else if err = metrics.InitializeBHCEMetrics(promRegistry); err != nil {
+		// Initialize and associate all metrics with the registry before exposing it
+		promRegistry := prometheus.NewRegistry()
+		if err := metrics.InitializeBHCEMetrics(promRegistry); err != nil {
 			return nil, fmt.Errorf("failed to register prometheus metrics: %w", err)
+		} else if err := metrics.ExposeToDefaultRegisterer(promRegistry); err != nil {
+			return nil, fmt.Errorf("failed to expose prometheus registry: %w", err)
 		} else if err := connections.RDMS.RequestAnalysis(ctx, "init"); err != nil {
 			slog.WarnContext(ctx, "Failed to request init analysis", attr.Error(err))
 		}
