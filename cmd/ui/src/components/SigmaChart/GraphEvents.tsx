@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
+import { useTheme } from 'bh-shared-ui';
 import type { Attributes } from 'graphology-types';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useState } from 'react';
 import type { SigmaNodeEventPayload } from 'sigma/sigma';
@@ -29,8 +30,9 @@ import {
     graphToFramedGraph,
     resetCamera,
 } from 'src/ducks/graph/utils';
+import { Glyph } from 'src/rendering/programs/node.glyphs';
 import { bezier } from 'src/rendering/utils/bezier';
-import { getNodeRadius } from 'src/rendering/utils/utils';
+import { blendHexColors, getNodeRadius } from 'src/rendering/utils/utils';
 import { useAppSelector } from 'src/store';
 import { preventAllDefaults } from 'src/utils';
 import { sequentialLayout, standardLayout } from 'src/views/Explore/utils';
@@ -91,6 +93,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
     ref
 ) {
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
+    const theme = useTheme();
 
     const sigma = useSigma();
     const graph = sigma.getGraph();
@@ -275,22 +278,61 @@ export const GraphEvents = forwardRef(function GraphEvents(
     ]);
 
     useEffect(() => {
+        // Compute which nodes and edges should remain fully visible when an item is selected.
+        // Nodes: the selected node itself + all its direct neighbors.
+        // Edges: all edges directly connected to the selected node/edge endpoints.
+        const highlightedNodeIds = new Set<string>();
+        const highlightedEdgeIds = new Set<string>();
+
+        if (highlightedItem) {
+            if (graph.hasNode(highlightedItem)) {
+                highlightedNodeIds.add(highlightedItem);
+                graph.neighbors(highlightedItem).forEach((n) => highlightedNodeIds.add(n));
+                graph.edges(highlightedItem).forEach((e) => highlightedEdgeIds.add(e));
+            } else if (graph.hasEdge(highlightedItem)) {
+                highlightedEdgeIds.add(highlightedItem);
+                graph.extremities(highlightedItem).forEach((n) => highlightedNodeIds.add(n));
+            }
+        }
+
+        const bgColor = theme.neutral.primary;
+
         setSettings({
             nodeReducer: (node, data) => {
                 const camera = sigma.getCamera();
+                const isDimmed = !!highlightedItem && !highlightedNodeIds.has(node);
+
                 return {
                     ...data,
                     highlighted: node === highlightedItem,
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
+                    isDimmed,
+                    ...(isDimmed && {
+                        color: blendHexColors(data.color, bgColor, 0.8),
+                        borderColor: blendHexColors(data.borderColor ?? data.color, bgColor, 0.8),
+                        backgroundColor: blendHexColors(data.backgroundColor ?? bgColor, bgColor, 0.8),
+                        glyphs: data.glyphs?.map((g: Glyph) => ({
+                            ...g,
+                            backgroundColor: blendHexColors(g.backgroundColor, bgColor, 0.8),
+                            color: blendHexColors(g.color, bgColor, 0.8),
+                        })),
+                    }),
                 };
             },
             edgeReducer: (edge, data) => {
                 const camera = sigma.getCamera();
+                const isDimmed = !!highlightedItem && !highlightedEdgeIds.has(edge);
+
                 const newData: Attributes = {
                     ...data,
                     hidden: false,
                     highlighted: edge === highlightedItem,
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
+                    isDimmed,
+                    backgroundColor: bgColor,
+                    ...(isDimmed && {
+                        color: blendHexColors(data.color, bgColor, 0.9),
+                    }),
                 };
 
                 if (data.type === 'curved') {
@@ -302,7 +344,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 return newData;
             },
         });
-    }, [curvedEdgeReducer, highlightedItem, selfEdgeReducer, setSettings, sigma]);
+    }, [curvedEdgeReducer, graph, highlightedItem, selfEdgeReducer, setSettings, sigma, theme.neutral.primary]);
 
     // Toggle off edge labels when dragging a node to avoid performance hit
     useLayoutEffect(() => {

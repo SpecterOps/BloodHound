@@ -46,7 +46,7 @@ const POINTS = 3,
       - angle (1xfloat)
       - borderColor (4xbyte = 1xfloat)
    */
-    ATTRIBUTES = 9,
+    ATTRIBUTES = 10,
     // maximum size of single texture in atlas
     MAX_TEXTURE_SIZE = 192,
     // maximum width of atlas texture (limited by browser)
@@ -256,6 +256,7 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
         correctionRatioLocation: WebGLUniformLocation;
         angleLocation: GLint;
         borderColorLocation: GLint;
+        dimLocation: GLint;
         latestRenderParams?: RenderParams;
 
         constructor(gl: WebGLRenderingContext, renderer: Sigma) {
@@ -272,6 +273,7 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
             this.textureLocation = gl.getAttribLocation(this.program, 'a_texture');
             this.angleLocation = gl.getAttribLocation(this.program, 'a_angle');
             this.borderColorLocation = gl.getAttribLocation(this.program, 'a_borderColor');
+            this.dimLocation = gl.getAttribLocation(this.program, 'a_dim');
 
             // Uniform Location
             const atlasLocation = gl.getUniformLocation(this.program, 'u_atlas');
@@ -308,6 +310,7 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
             gl.enableVertexAttribArray(this.textureLocation);
             gl.enableVertexAttribArray(this.angleLocation);
             gl.enableVertexAttribArray(this.borderColorLocation);
+            gl.enableVertexAttribArray(this.dimLocation);
 
             gl.vertexAttribPointer(
                 this.textureLocation,
@@ -332,6 +335,14 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
                 true,
                 this.attributes * Float32Array.BYTES_PER_ELEMENT,
                 32
+            );
+            gl.vertexAttribPointer(
+                this.dimLocation,
+                1,
+                gl.FLOAT,
+                false,
+                this.attributes * Float32Array.BYTES_PER_ELEMENT,
+                36
             );
         }
 
@@ -361,6 +372,8 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
                 array[i++] = 0;
                 // Border Color:
                 array[i++] = 0;
+                // Dim:
+                array[i++] = 0;
                 return;
             }
 
@@ -386,6 +399,7 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
             }
             array[i++] = ANGLE_1;
             array[i++] = borderColor;
+            array[i++] = data.isDimmed ? 0.1 : 1.0;
 
             array[i++] = data.x;
             array[i++] = data.y;
@@ -408,6 +422,7 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
             }
             array[i++] = ANGLE_2;
             array[i++] = borderColor;
+            array[i++] = data.isDimmed ? 0.1 : 1.0;
 
             array[i++] = data.x;
             array[i++] = data.y;
@@ -426,6 +441,7 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
             }
             array[i++] = ANGLE_3;
             array[i++] = borderColor;
+            array[i++] = data.isDimmed ? 0.1 : 1.0;
         }
 
         render(params: RenderParams): void {

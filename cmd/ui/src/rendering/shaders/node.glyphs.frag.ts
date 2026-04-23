@@ -26,6 +26,7 @@ varying vec2 v_diffVector;
 varying float v_radius;
 varying float v_angle;
 varying vec2 v_position;
+varying float v_dim;
 
 
 
@@ -67,4 +68,10 @@ void main(void) {
     gl_FragColor = mix(color, border_color, (dist - v_radius + v_border) / v_softborder);
   else
     gl_FragColor = color;
+
+  // Mix RGB toward the node color (already blended toward background in the reducer)
+  // while preserving the geometric alpha so the circle stays opaque.
+  // Multiply by sign(alpha) to zero out RGB for fully-transparent pixels, which
+  // prevents color leaking under premultiplied alpha blending (gl.ONE, gl.ONE_MINUS_SRC_ALPHA).
+  gl_FragColor.rgb = mix(v_color.rgb, gl_FragColor.rgb, v_dim) * sign(gl_FragColor.a);
 }`;
