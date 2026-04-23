@@ -35,16 +35,16 @@ var PostgresFixture = lab.NewFixture(func(harness *lab.Harness) (*database.Blood
 	testCtx := context.Background()
 	if labConfig, ok := lab.Unpack(harness, ConfigFixture); !ok {
 		return nil, fmt.Errorf("unable to unpack ConfigFixture")
-	} else if pgdb, err := database.OpenDatabase(labConfig.Database.PostgreSQLConnectionString()); err != nil {
+	} else if pgdb, dbPool, err := database.OpenDatabase(labConfig.Database); err != nil {
 		return nil, err
-	} else if err := integration.Prepare(testCtx, database.NewBloodhoundDB(pgdb, auth.NewIdentityResolver(), labConfig)); err != nil {
+	} else if err := integration.Prepare(testCtx, database.NewBloodhoundDB(pgdb, dbPool, auth.NewIdentityResolver(), labConfig)); err != nil {
 		return nil, fmt.Errorf("failed ensuring database: %v", err)
-	} else if err := bootstrap.MigrateDB(testCtx, labConfig, database.NewBloodhoundDB(pgdb, auth.NewIdentityResolver(), labConfig), config.NewDefaultAdminConfiguration); err != nil {
+	} else if err := bootstrap.MigrateDB(testCtx, labConfig, database.NewBloodhoundDB(pgdb, dbPool, auth.NewIdentityResolver(), labConfig), config.NewDefaultAdminConfiguration); err != nil {
 		return nil, fmt.Errorf("failed migrating database: %v", err)
-	} else if err := bootstrap.PopulateExtensionData(testCtx, database.NewBloodhoundDB(pgdb, auth.NewIdentityResolver(), labConfig)); err != nil {
+	} else if err := bootstrap.PopulateExtensionData(testCtx, database.NewBloodhoundDB(pgdb, dbPool, auth.NewIdentityResolver(), labConfig)); err != nil {
 		return nil, fmt.Errorf("failed populating extension data: %v", err)
 	} else {
-		return database.NewBloodhoundDB(pgdb, auth.NewIdentityResolver(), labConfig), nil
+		return database.NewBloodhoundDB(pgdb, dbPool, auth.NewIdentityResolver(), labConfig), nil
 	}
 }, nil)
 

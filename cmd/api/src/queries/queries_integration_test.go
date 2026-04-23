@@ -62,6 +62,9 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 		defaultGraph = schema.DefaultGraph()
 	)
 
+	cfg, err := config.NewDefaultConfiguration()
+	require.NoError(t, err)
+
 	defaultGraph.Nodes.Add(graph.StringKind("Person"))
 
 	openGraphSchema := graph.Schema{
@@ -71,14 +74,16 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 		DefaultGraph: defaultGraph,
 	}
 
+	cfg.Database.Connection = connConf.URL()
+
 	//#region Setup for dbs
-	pool, err := pg.NewPool(connConf.URL())
+	pool, err := pg.NewPool(cfg.Database)
 	require.NoError(t, err)
 
-	gormDB, err := database.OpenDatabase(connConf.URL())
+	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
 	require.NoError(t, err)
 
-	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), config.Configuration{})
+	db := database.NewBloodhoundDB(gormDB, dbPool, auth.NewIdentityResolver(), cfg)
 	require.NoError(t, db.Migrate(ctx))
 	require.NoError(t, db.PopulateExtensionData(ctx))
 
