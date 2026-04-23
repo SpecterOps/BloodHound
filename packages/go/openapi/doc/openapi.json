@@ -7027,7 +7027,7 @@
           {
             "name": "type",
             "in": "query",
-            "description": "Filter by type, valid types are \"node\" or \"edge\".",
+            "description": "Filter by type, valid types are node or edge, e.g. \"eq:node\"",
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string-strict"
