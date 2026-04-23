@@ -145,8 +145,7 @@ func main() {
 
 	cfg, err := config.NewDefaultConfiguration()
 	if err != nil {
-		fmt.Printf("Error creating new default configuration: %v", err)
-		os.Exit(1)
+		fatalf("Error creating new default configuration: %v", err)
 	}
 	cfg.Neo4J.Connection = neo4jConnectionStr
 	cfg.Database.Connection = pgConnectionStr
