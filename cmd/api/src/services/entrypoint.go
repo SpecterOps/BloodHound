@@ -51,10 +51,10 @@ import (
 
 // ConnectPostgres initializes a connection to PG, and returns errors if any
 func ConnectPostgres(cfg config.Configuration) (*database.BloodhoundDB, error) {
-	if db, err := database.OpenDatabase(cfg.Database.PostgreSQLConnectionString()); err != nil {
+	if db, dbPool, err := database.OpenDatabase(cfg.Database); err != nil {
 		return nil, fmt.Errorf("error while attempting to create database connection: %w", err)
 	} else {
-		return database.NewBloodhoundDB(db, auth.NewIdentityResolver(), cfg), nil
+		return database.NewBloodhoundDB(db, dbPool, auth.NewIdentityResolver(), cfg), nil
 	}
 }
 
