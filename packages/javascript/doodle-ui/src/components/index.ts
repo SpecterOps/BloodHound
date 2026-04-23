@@ -28,6 +28,7 @@ export * from './Dialog';
 export * from './Form';
 export * from './Input';
 export * from './Label';
+export * from './Link';
 export * from './Menu';
 export * from './Pagination';
 export * from './Popover';
