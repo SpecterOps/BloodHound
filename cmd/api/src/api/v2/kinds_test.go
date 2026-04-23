@@ -30,7 +30,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/analysis/tiering"
-	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -58,20 +57,21 @@ func TestResources_ListKinds(t *testing.T) {
 	}
 
 	var (
-		mockKindsResp = graph.Kinds{
+		customNodeKind = graph.StringKind("Villain")
+		mockKindsResp  = graph.Kinds{
 			ad.User,
 			ad.DCSync,
 			tiering.KindTagTierZero,
 			common.MigrationData,
 			azure.Entity,
 			azure.HasRole,
+			customNodeKind,
 		}
 
-		mockDispKindsResp = graphschema.PrimaryDisplayKinds{
-			ad.User: graphschema.DisplayKind{Name: ad.User.String()},
-		}
-
-		mockSrcKindsResp = []model.SourceKind{{ID: 1, Name: azure.Entity.String()}}
+		mockSchemaNodeKindsResp = model.GraphSchemaNodeKinds{{Name: ad.User.String()}}
+		mockCustomNodeKindsResp = []model.CustomNodeKind{{KindName: customNodeKind.String()}}
+		mockKindsByNamesResp    = []model.Kind{{Name: customNodeKind.String()}}
+		mockSrcKindsResp        = []model.SourceKind{{ID: 1, Name: azure.Entity.String()}}
 	)
 
 	tt := []testData{
@@ -153,7 +153,7 @@ func TestResources_ListKinds(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: GetPrimaryDisplayKinds database error - Internal Server Error",
+			name: "Error: GetGraphSchemaNodeKinds database error - Internal Server Error",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
@@ -165,7 +165,52 @@ func TestResources_ListKinds(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockGraph.EXPECT().FetchKinds(gomock.Any())
-				mock.mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(nil, errors.New("error"))
+				mock.mockDB.EXPECT().GetGraphSchemaNodeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(nil, 0, errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			name: "Error: GetCustomNodeKinds database error - Internal Server Error",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/kinds",
+						RawQuery: "type=eq:node",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockGraph.EXPECT().FetchKinds(gomock.Any())
+				mock.mockDB.EXPECT().GetGraphSchemaNodeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0)
+				mock.mockDB.EXPECT().GetCustomNodeKinds(gomock.Any(), nil).Return(nil, errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			name: "Error: GetKindsByNames database error - Internal Server Error",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/kinds",
+						RawQuery: "type=eq:node",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockGraph.EXPECT().FetchKinds(gomock.Any())
+				mock.mockDB.EXPECT().GetGraphSchemaNodeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0)
+				mock.mockDB.EXPECT().GetCustomNodeKinds(gomock.Any(), nil)
+				mock.mockDB.EXPECT().GetKindsByNames(gomock.Any()).Return(nil, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -186,7 +231,9 @@ func TestResources_ListKinds(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockGraph.EXPECT().FetchKinds(gomock.Any())
-				mock.mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+				mock.mockDB.EXPECT().GetGraphSchemaNodeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0)
+				mock.mockDB.EXPECT().GetCustomNodeKinds(gomock.Any(), nil)
+				mock.mockDB.EXPECT().GetKindsByNames(gomock.Any())
 				mock.mockDB.EXPECT().GetSourceKinds(gomock.Any()).Return(nil, errors.New("error"))
 			},
 			expected: expected{
@@ -209,7 +256,7 @@ func TestResources_ListKinds(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"kinds":["AZBase", "AZHasRole", "DCSync", "MigrationData", "Tag_Tier_Zero", "User"]}}`,
+				responseBody:   `{"data":{"kinds":["AZBase", "AZHasRole", "DCSync", "MigrationData", "Tag_Tier_Zero", "User", "Villain"]}}`,
 			},
 		},
 		{
@@ -225,13 +272,15 @@ func TestResources_ListKinds(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockGraph.EXPECT().FetchKinds(gomock.Any()).Return(mockKindsResp, nil)
-				mock.mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(mockDispKindsResp, nil)
+				mock.mockDB.EXPECT().GetGraphSchemaNodeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(mockSchemaNodeKindsResp, 0, nil)
+				mock.mockDB.EXPECT().GetCustomNodeKinds(gomock.Any(), nil).Return(mockCustomNodeKindsResp, nil)
+				mock.mockDB.EXPECT().GetKindsByNames(gomock.Any(), []string{customNodeKind.String()}).Return(mockKindsByNamesResp, nil)
 				mock.mockDB.EXPECT().GetSourceKinds(gomock.Any()).Return(mockSrcKindsResp, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"kinds":["AZBase","MigrationData","Tag_Tier_Zero","User"]}}`,
+				responseBody:   `{"data":{"kinds":["AZBase","MigrationData","Tag_Tier_Zero","User","Villain"]}}`,
 			},
 		},
 		{
@@ -247,7 +296,9 @@ func TestResources_ListKinds(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockGraph.EXPECT().FetchKinds(gomock.Any()).Return(mockKindsResp, nil)
-				mock.mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(mockDispKindsResp, nil)
+				mock.mockDB.EXPECT().GetGraphSchemaNodeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(mockSchemaNodeKindsResp, 0, nil)
+				mock.mockDB.EXPECT().GetCustomNodeKinds(gomock.Any(), nil).Return(mockCustomNodeKindsResp, nil)
+				mock.mockDB.EXPECT().GetKindsByNames(gomock.Any(), []string{customNodeKind.String()}).Return(mockKindsByNamesResp, nil)
 				mock.mockDB.EXPECT().GetSourceKinds(gomock.Any()).Return(mockSrcKindsResp, nil)
 			},
 			expected: expected{
@@ -269,7 +320,9 @@ func TestResources_ListKinds(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockGraph.EXPECT().FetchKinds(gomock.Any()).Return(mockKindsResp, nil)
-				mock.mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(mockDispKindsResp, nil)
+				mock.mockDB.EXPECT().GetGraphSchemaNodeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(mockSchemaNodeKindsResp, 0, nil)
+				mock.mockDB.EXPECT().GetCustomNodeKinds(gomock.Any(), nil).Return(mockCustomNodeKindsResp, nil)
+				mock.mockDB.EXPECT().GetKindsByNames(gomock.Any(), []string{customNodeKind.String()}).Return(mockKindsByNamesResp, nil)
 				mock.mockDB.EXPECT().GetSourceKinds(gomock.Any()).Return(mockSrcKindsResp, nil)
 			},
 			expected: expected{
@@ -291,7 +344,9 @@ func TestResources_ListKinds(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockGraph.EXPECT().FetchKinds(gomock.Any()).Return(mockKindsResp, nil)
-				mock.mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(mockDispKindsResp, nil)
+				mock.mockDB.EXPECT().GetGraphSchemaNodeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(mockSchemaNodeKindsResp, 0, nil)
+				mock.mockDB.EXPECT().GetCustomNodeKinds(gomock.Any(), nil).Return(mockCustomNodeKindsResp, nil)
+				mock.mockDB.EXPECT().GetKindsByNames(gomock.Any(), []string{customNodeKind.String()}).Return(mockKindsByNamesResp, nil)
 				mock.mockDB.EXPECT().GetSourceKinds(gomock.Any()).Return(mockSrcKindsResp, nil)
 			},
 			expected: expected{
