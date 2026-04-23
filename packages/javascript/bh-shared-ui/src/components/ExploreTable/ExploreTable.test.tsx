@@ -569,7 +569,7 @@ describe('ExploreTable', async () => {
         expect(container.className).toContain('h-[calc(100%');
     });
 
-    it('Download button opens a modal and confirming "All Columns" calls json2csv with all columns', async () => {
+    it('Download button opens a menu and selecting "All Columns" calls json2csv with all columns', async () => {
         const { user } = await setup();
 
         await screen.findByText('10 results');
@@ -579,29 +579,29 @@ describe('ExploreTable', async () => {
 
         await user.click(downloadButton);
 
-        expect(await screen.findByText('Download Table')).toBeInTheDocument();
-        expect(screen.getByRole('radio', { name: 'All Columns' })).toBeInTheDocument();
-        expect(screen.getByRole('radio', { name: 'Selected Columns' })).toBeInTheDocument();
+        const allButton = screen.getByRole('menuitem', { name: 'All Columns' });
+        const visibleButton = screen.getByRole('menuitem', { name: 'Visible Columns' });
 
-        await user.click(screen.getByRole('button', { name: 'Confirm' }));
+        expect(allButton).toBeInTheDocument();
+        expect(visibleButton).toBeInTheDocument();
+
+        await user.click(allButton);
 
         expect(json2csv).toBeCalledWith(...jsonToCsvArgs);
     });
 
-    it('Download button opens a modal and confirming "Selected Columns" calls json2csv with selected columns only', async () => {
+    it('Download button opens a menu and selecting "Visible Columns" calls json2csv with selected columns only', async () => {
         const { user } = await setup();
 
         await screen.findByText('10 results');
 
         expect(json2csv).not.toBeCalled();
-        const downloadButton = screen.getByTestId('download-button');
 
+        const downloadButton = screen.getByTestId('download-button');
         await user.click(downloadButton);
 
-        expect(await screen.findByText('Download Table')).toBeInTheDocument();
-
-        await user.click(screen.getByRole('radio', { name: 'Selected Columns' }));
-        await user.click(screen.getByRole('button', { name: 'Confirm' }));
+        const visibleButton = screen.getByRole('menuitem', { name: 'Visible Columns' });
+        await user.click(visibleButton);
 
         expect(json2csv).toBeCalledWith(...jsonToCsvSelectedColumnsArgs);
     });

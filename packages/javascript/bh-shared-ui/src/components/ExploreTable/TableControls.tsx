@@ -21,7 +21,6 @@ import { Button, Input, InputProps, Menu, MenuContent, MenuItem, MenuTrigger } f
 import { useMemo } from 'react';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
-// import ExportConfirmDialog from './ExportConfirmDialog';
 import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
 import { ExportColumns } from './explore-table-utils';
 
@@ -148,11 +147,6 @@ const TableControls = <TData, TValue>({
                     </Button>
                 )}
             </div>
-            {/* <ExportConfirmDialog
-                open={isExportConfirmOpen}
-                onCancel={handleCancelExport}
-                onConfirm={handleConfirmExport}
-            /> */}
         </div>
     );
 };
