@@ -153,7 +153,10 @@ const ExploreTable = ({
                         return flattenedNodeClone;
                     });
                     const csv = json2csv(nodeValues, {
-                        keys: columns === 'all' ? exploreTableData.node_keys : Object.keys(selectedColumns),
+                        keys:
+                            columns === 'all'
+                                ? exploreTableData.node_keys
+                                : exploreTableData.node_keys.filter((key) => selectedColumns[key]),
                         emptyFieldValue: '',
                         preventCsvInjection: true,
                     });
