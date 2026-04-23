@@ -404,6 +404,25 @@ func positiveGenericIngestCases() []genericIngestAssertion {
 				},
 			},
 		},
+		{
+			name: "kind merely starts with 'tag' substring is not reserved",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:         "1234",
+						Kinds:      []string{"TaggingService"},
+						Properties: map[string]any{},
+					},
+				},
+				Edges: []testEdge{
+					{
+						Start: &edgePiece{Value: "1234"},
+						End:   &edgePiece{Value: "5678"},
+						Kind:  "Tagged_By",
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -666,6 +685,66 @@ func nodeSchemaFailureCases() []genericIngestAssertion {
 				{"nodes[0]", "at '/kinds': maxItems: got 4, want 3"},
 			},
 		},
+		{
+			name: "node validation: kind uses reserved namespace 'tag' as prefix",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:         "1234",
+						Kinds:      []string{"Tag_Foo"},
+						Properties: map[string]any{},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"nodes[0] validation failed with 1 error(s)", "kind 'Tag_Foo' uses reserved namespace 'tag'"},
+			},
+		},
+		{
+			name: "node validation: kind is the reserved namespace 'tag' (lowercase)",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:         "1234",
+						Kinds:      []string{"tag"},
+						Properties: map[string]any{},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"nodes[0] validation failed with 1 error(s)", "kind 'tag' uses reserved namespace 'tag'"},
+			},
+		},
+		{
+			name: "node validation: kind uses reserved namespace 'TAG' (uppercase prefix)",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:         "1234",
+						Kinds:      []string{"TAG_Thing"},
+						Properties: map[string]any{},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"nodes[0] validation failed with 1 error(s)", "kind 'TAG_Thing' uses reserved namespace 'tag'"},
+			},
+		},
+		{
+			name: "node validation: multiple reserved kinds aggregate into one report line",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:         "1234",
+						Kinds:      []string{"Tag_Foo", "tag_bar"},
+						Properties: map[string]any{},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"nodes[0] validation failed with 2 error(s)", "kind 'Tag_Foo' uses reserved namespace 'tag'", "kind 'tag_bar' uses reserved namespace 'tag'"},
+			},
+		},
 	}
 }
 
@@ -861,6 +940,51 @@ func edgeSchemaFailureCases() []genericIngestAssertion {
 			},
 			validationErrContains: [][]string{
 				{"edges[0]", "at '/kind': 'invalid!!*name!!' does not match pattern '^[A-Za-z0-9_]+$']"},
+			},
+		},
+		{
+			name: "edge validation: kind uses reserved namespace 'tag' as prefix",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind:  "Tag_Related",
+						Start: &edgePiece{Value: "1234"},
+						End:   &edgePiece{Value: "5678"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0] validation failed with 1 error(s)", "kind 'Tag_Related' uses reserved namespace 'tag'"},
+			},
+		},
+		{
+			name: "edge validation: kind is the reserved namespace 'Tag' exactly (mixed case)",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind:  "Tag",
+						Start: &edgePiece{Value: "1234"},
+						End:   &edgePiece{Value: "5678"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0] validation failed with 1 error(s)", "kind 'Tag' uses reserved namespace 'tag'"},
+			},
+		},
+		{
+			name: "edge validation: kind uses reserved namespace 'tag' with lowercase prefix",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind:  "tag_has_relationship",
+						Start: &edgePiece{Value: "1234"},
+						End:   &edgePiece{Value: "5678"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0] validation failed with 1 error(s)", "kind 'tag_has_relationship' uses reserved namespace 'tag'"},
 			},
 		},
 		{

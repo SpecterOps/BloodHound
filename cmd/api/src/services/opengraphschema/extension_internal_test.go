@@ -102,6 +102,48 @@ func Test_validateGraphExtension(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema extension namespace cannot be Tag"),
 		},
 		{
+			name: "fail - extension namespace cannot be tag (lowercase)",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "tag",
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema extension namespace cannot be Tag"),
+		},
+		{
+			name: "fail - extension namespace cannot be TAG (uppercase)",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "TAG",
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema extension namespace cannot be Tag"),
+		},
+		{
+			name: "fail - extension namespace cannot be tAg (mixed case)",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "tAg",
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema extension namespace cannot be Tag"),
+		},
+		{
 			name: "fail - empty graph schema nodes",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
