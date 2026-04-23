@@ -17,14 +17,20 @@
 package v2
 
 import (
+	"fmt"
 	"net/http"
 	"slices"
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
+
+func isExtendedNodeKind(kind graph.Kind) bool {
+	return strings.HasPrefix(kind.String(), model.AssetGroupTagKindPrefix) || kind.Is(graph.StringKind("Meta"), graph.StringKind("MetaDetail"), common.MigrationData)
+}
 
 type ListKindsResponse struct {
 	Kinds graph.Kinds `json:"kinds"`
@@ -35,7 +41,70 @@ type ListKindsResponse struct {
 func (s Resources) ListKinds(response http.ResponseWriter, request *http.Request) {
 	if kinds, err := s.Graph.FetchKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
+	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 	} else {
+		for name, filters := range queryFilters {
+			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(model.Kind{}, name); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
+			} else {
+				for _, filter := range filters {
+					if !slices.Contains(validPredicates, string(filter.Operator)) {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+						return
+					}
+				}
+			}
+		}
+
+		if len(queryFilters) > 0 {
+			if filters, ok := queryFilters["type"]; ok {
+				// This gets both custom node kinds (schemaless) and schema based node kinds
+				// Only kinds that have been synced to the kinds table will be included in this.
+				displayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context())
+				if err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				}
+
+				// Source kinds are node kinds
+				sourceKindsByKind := make(map[graph.Kind]bool)
+				if sourceKinds, err := s.DB.GetSourceKinds(request.Context()); err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				} else {
+					for _, kind := range sourceKinds {
+						sourceKindsByKind[kind.ToKind()] = true
+					}
+				}
+
+				// Filter down kinds
+				var filteredKinds = graph.Kinds{}
+				for _, filter := range filters {
+					for _, kind := range kinds {
+						var isNodeKind bool
+						// Asset group tags are node kinds as well as meta / migrationData kinds
+						if _, ok := displayKinds[kind]; ok || sourceKindsByKind[kind] || isExtendedNodeKind(kind) {
+							isNodeKind = true
+						}
+
+						switch filter.Value {
+						case "node":
+							if (isNodeKind && filter.Operator == model.Equals) || (!isNodeKind && filter.Operator == model.NotEquals) {
+								filteredKinds = append(filteredKinds, kind)
+							}
+						case "edge":
+							if (!isNodeKind && filter.Operator == model.Equals) || (isNodeKind && filter.Operator == model.NotEquals) {
+								filteredKinds = append(filteredKinds, kind)
+							}
+						}
+					}
+				}
+				kinds = filteredKinds
+			}
+		}
+
 		// Alpha sort
 		slices.SortFunc(kinds, func(a, b graph.Kind) int {
 			return strings.Compare(a.String(), b.String())
