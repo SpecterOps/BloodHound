@@ -1870,6 +1870,22 @@ func (mr *MockDatabaseMockRecorder) GetEvent(ctx, eventId any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEvent", reflect.TypeOf((*MockDatabase)(nil).GetEvent), ctx, eventId)
 }
 
+// GetEvents mocks base method.
+func (m *MockDatabase) GetEvents(ctx context.Context, filter model.SQLFilter, sort model.Sort, skip, limit int) (model.Events, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEvents", ctx, filter, sort, skip, limit)
+	ret0, _ := ret[0].(model.Events)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetEvents indicates an expected call of GetEvents.
+func (mr *MockDatabaseMockRecorder) GetEvents(ctx, filter, sort, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEvents", reflect.TypeOf((*MockDatabase)(nil).GetEvents), ctx, filter, sort, skip, limit)
+}
+
 // GetFlag mocks base method.
 func (m *MockDatabase) GetFlag(ctx context.Context, id int32) (appcfg.FeatureFlag, error) {
 	m.ctrl.T.Helper()

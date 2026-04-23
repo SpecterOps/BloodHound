@@ -122,3 +122,124 @@ func TestDatabase_GetEvent(t *testing.T) {
 		})
 	}
 }
+
+func TestDatabase_GetEvents(t *testing.T) {
+	t.Run("success - returns empty list when none exist", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		events, count, err := testSuite.BHDatabase.GetEvents(testSuite.Context, model.SQLFilter{}, nil, 0, 0)
+		require.NoError(t, err)
+		assert.Equal(t, 0, count)
+		assert.Empty(t, events)
+	})
+
+	t.Run("success - returns all created events", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		for i := 0; i < 3; i++ {
+			_, err := testSuite.BHDatabase.CreateEvent(testSuite.Context, model.Event{
+				ID:      uuid.Must(uuid.NewV7()),
+				Type:    "test_event",
+				Message: "event message",
+			})
+			require.NoError(t, err)
+		}
+
+		events, count, err := testSuite.BHDatabase.GetEvents(testSuite.Context, model.SQLFilter{}, nil, 0, 0)
+		require.NoError(t, err)
+		assert.Equal(t, 3, count)
+		assert.Len(t, events, 3)
+	})
+
+	t.Run("success - default sort is created_at descending", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		for _, eventType := range []string{"first", "second", "third"} {
+			_, err := testSuite.BHDatabase.CreateEvent(testSuite.Context, model.Event{
+				ID:      uuid.Must(uuid.NewV7()),
+				Type:    eventType,
+				Message: eventType,
+			})
+			require.NoError(t, err)
+		}
+
+		events, _, err := testSuite.BHDatabase.GetEvents(testSuite.Context, model.SQLFilter{}, nil, 0, 0)
+		require.NoError(t, err)
+		require.Len(t, events, 3)
+		assert.Equal(t, "third", events[0].Type)
+		assert.Equal(t, "second", events[1].Type)
+		assert.Equal(t, "first", events[2].Type)
+	})
+
+	t.Run("success - pagination with skip and limit", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		for i := 0; i < 5; i++ {
+			_, err := testSuite.BHDatabase.CreateEvent(testSuite.Context, model.Event{
+				ID:      uuid.Must(uuid.NewV7()),
+				Type:    "paginated_event",
+				Message: "event message",
+			})
+			require.NoError(t, err)
+		}
+
+		events, count, err := testSuite.BHDatabase.GetEvents(testSuite.Context, model.SQLFilter{}, nil, 2, 2)
+		require.NoError(t, err)
+		assert.Equal(t, 5, count)
+		assert.Len(t, events, 2)
+	})
+
+	t.Run("success - filter by type", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		for _, eventType := range []string{"analysis_complete", "ingest_started", "analysis_complete"} {
+			_, err := testSuite.BHDatabase.CreateEvent(testSuite.Context, model.Event{
+				ID:   uuid.Must(uuid.NewV7()),
+				Type: eventType,
+			})
+			require.NoError(t, err)
+		}
+
+		filter := model.SQLFilter{
+			SQLString: "type = ?",
+			Params:    []any{"analysis_complete"},
+		}
+
+		events, count, err := testSuite.BHDatabase.GetEvents(testSuite.Context, filter, nil, 0, 0)
+		require.NoError(t, err)
+		assert.Equal(t, 2, count)
+		assert.Len(t, events, 2)
+		for _, event := range events {
+			assert.Equal(t, "analysis_complete", event.Type)
+		}
+	})
+
+	t.Run("success - custom sort ascending", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		for _, eventType := range []string{"charlie", "alpha", "bravo"} {
+			_, err := testSuite.BHDatabase.CreateEvent(testSuite.Context, model.Event{
+				ID:   uuid.Must(uuid.NewV4()),
+				Type: eventType,
+			})
+			require.NoError(t, err)
+		}
+
+		sortItems := model.Sort{
+			{Column: "type", Direction: model.AscendingSortDirection},
+		}
+
+		events, _, err := testSuite.BHDatabase.GetEvents(testSuite.Context, model.SQLFilter{}, sortItems, 0, 0)
+		require.NoError(t, err)
+		require.Len(t, events, 3)
+		assert.Equal(t, "alpha", events[0].Type)
+		assert.Equal(t, "bravo", events[1].Type)
+		assert.Equal(t, "charlie", events[2].Type)
+	})
+}
