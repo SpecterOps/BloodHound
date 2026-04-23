@@ -17,8 +17,8 @@
 import { NodeDisplayData, PartialButFor } from 'sigma/types';
 
 /** Threshold of graph zoom before labels fade out */
-export const STARTING_ZOOM_FADE_RATIO = 0.65;
-export const ENDING_ZOOM_FADE_RATIO = 0.5;
+export const STARTING_ZOOM_FADE_RATIO = 0.4;
+export const ENDING_ZOOM_FADE_RATIO = 0.3;
 
 /** Padding displayed around label for node or edge */
 export const LABEL_PADDING = 3;
@@ -96,19 +96,19 @@ const DEFAULT_PARAMS: LabelBoundsParams = {
  */
 export const getLabelBoundsFromContext = (
     context: CanvasRenderingContext2D,
-    params: LabelBoundsParams = DEFAULT_PARAMS
+    params: LabelBoundsParams = DEFAULT_PARAMS,
+    offsetY: number = 0
 ): [x: number, y: number, width: number, height: number] => {
     const labelBounds = context.measureText(params.label);
     const labelWidth = labelBounds.width;
     // Add the space above the text baseline plus the space below it
     const labelHeight = labelBounds.actualBoundingBoxAscent + labelBounds.actualBoundingBoxDescent;
-    const labelOffsetX = ((params.size ?? 0) + LABEL_PADDING / 2) * params.inverseSqrtZoomRatio;
-    const labelOffsetY = labelHeight / 2;
+    const nodeRadius = params.size * params.inverseSqrtZoomRatio;
 
     return [
         // Subtracting 1 pixel prevents a gap between node and label
-        params.position.x + labelOffsetX - 1,
-        params.position.y - labelOffsetY - LABEL_PADDING,
+        params.position.x - labelWidth / 2 - LABEL_PADDING,
+        params.position.y + nodeRadius + LABEL_NODE_MARGIN + offsetY,
         labelWidth + 2 * LABEL_PADDING,
         labelHeight + 2 * LABEL_PADDING,
     ];
@@ -134,10 +134,12 @@ export const getNodeLabelBoundsBelowFromContext = (
     // Add the space above the text baseline plus the space below it
     const labelHeight = labelBounds.actualBoundingBoxAscent + labelBounds.actualBoundingBoxDescent;
     const nodeRadius = params.size * params.inverseSqrtZoomRatio;
+    const scaledMargin = LABEL_NODE_MARGIN / params.inverseSqrtZoomRatio;
 
     return [
         params.position.x - labelWidth / 2 - LABEL_PADDING,
-        params.position.y + nodeRadius + LABEL_NODE_MARGIN + offsetY,
+        //params.position.y + nodeRadius + LABEL_NODE_MARGIN + offsetY,
+        params.position.y + nodeRadius + 2 + offsetY,
         labelWidth + 2 * LABEL_PADDING,
         labelHeight + 2 * LABEL_PADDING,
     ];

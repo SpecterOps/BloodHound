@@ -84,10 +84,14 @@ export const copySigmaNodesToGraphlibGraph = (
 ): void => {
     sigmaGraph.forEachNode((node: string) => {
         const { label, size } = sigmaGraph.getNodeAttributes(node);
+        const nodeSize = size || NODE_DEFAULT_SIZE;
+
         graphlibGraph.setNode(node, {
             label: label || '',
-            width: size || NODE_DEFAULT_SIZE,
-            height: size || NODE_DEFAULT_SIZE,
+            //width: size || NODE_DEFAULT_SIZE,
+            //height: size || NODE_DEFAULT_SIZE,
+            width: nodeSize * 2,
+            height: nodeSize * 2,
         });
     });
 };
@@ -146,6 +150,8 @@ export const setDagreLayout = (
         const graphlibGraphGraph = graphlibGraph.graph();
         graphlibGraphGraph.rankdir = attributes.graph.rankdir;
         graphlibGraphGraph.ranksep = attributes.graph.ranksep;
+        graphlibGraphGraph.nodesep = 120;
+        graphlibGraphGraph.edgesep = 20;
 
         dagre.layout(graphlibGraph);
 
