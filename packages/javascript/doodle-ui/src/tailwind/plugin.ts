@@ -14,21 +14,25 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { PluginCreator } from 'tailwindcss/types/config';
+import { dark, light } from './colors';
 
 const plugin: PluginCreator = ({ addBase, addUtilities }) => {
     addBase({
         ' :root': {
+            '--secondary-main': light.secondary.main,
+            '--secondary-variant': light.secondary.variant,
+
+            '--link-main': light.secondary.main,
+            '--link-hover': light.secondary.variant,
+
+            // Legacy below
             '--contrast': '#121212',
 
             '--primary': '#33318f',
             '--primary-variant': '#261f7a',
-            '--secondary': '#1a30ff',
-            '--secondary-variant': '#0524f0',
             '--secondary-variant-2': '#99a3ff',
             '--tertiary': '#02c577',
             '--tertiary-variant': '#5cc791',
-
-            '--link': '#1a30ff',
 
             '--neutral-1': '#ffffff',
             '--neutral-2': '#f4f4f4',
@@ -52,6 +56,10 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
         },
 
         '.dark': {
+            '--link-main': dark.secondary.main,
+            '--link-hover': dark.secondary.variant,
+
+            // Legacy below
             '--contrast': '#ffffff',
 
             '--neutral-1': '#121212',
@@ -63,21 +71,15 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--link': '#99a3ff',
 
             '--error': '#e9827c',
-
+            // //////////////////////
             // New color tokens
             //     '--primary': light.primary.main,
             //     '--primary-variant': light.primary.variant,
-            //     '--secondary': light.secondary.main,
-            //     '--secondary-variant': light.secondary.variant,
             //     '--tertiary': light.tertiary.main,
             //     '--tertiary-variant': light.tertiary.variant,
 
             //     '--common-dark': common.dark,
             //     '--common-white': common.white,
-
-            //     // LINKS
-            //     '--link-main': light.secondary.main,
-            //     '--link-hover': light.secondary.variant,
 
             //     '--neutral-50': palette.neutral.light[50],
             //     '--neutral-100': palette.neutral.light[100],
@@ -234,10 +236,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             //     '--text-disabled': common.disabled,
             //     '--text-primary': dark.primary.main,
             //     '--text-secondary': dark.secondary.main,
-
-            //     // LINKS
-            //     '--link-main': dark.secondary.main,
-            //     '--link-hover': dark.secondary.variant,
 
             //     // NEUTRALS
             //     '--neutral-50': palette.neutral.dark[50],

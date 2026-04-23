@@ -21,7 +21,7 @@ import * as React from 'react';
 import { cn } from '../utils';
 
 const styledLinkClasses =
-    'text-link underline underline-offset-1 decoration-secondary-variant-2 hover:text-link hover:decoration-link dark:no-underline dark:hover:underline';
+    'text-link underline underline-offset-1 decoration-secondary hover:text-link-hover hover:decoration-link dark:no-underline dark:hover:underline';
 
 const linkVariants = cva(
     'inline-flex items-center rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-ring',
