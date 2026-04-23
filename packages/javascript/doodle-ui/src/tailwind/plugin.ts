@@ -56,6 +56,9 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
         },
 
         '.dark': {
+            '--secondary': dark.secondary.main,
+            '--secondary-variant': dark.secondary.variant,
+
             '--link-main': dark.secondary.main,
             '--link-hover': dark.secondary.variant,
 
@@ -224,8 +227,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '.dark': {
             //     '--primary': dark.primary.main,
             //     '--primary-variant': dark.primary.variant,
-            //     '--secondary': dark.secondary.main,
-            //     '--secondary-variant': dark.secondary.variant,
             //     '--tertiary': dark.tertiary.main,
             //     '--tertiary-variant': dark.tertiary.variant,
 
