@@ -60,6 +60,138 @@ export default {
                 'neutral-dark-3': 'var(--neutral-dark-3)',
                 'neutral-dark-4': 'var(--neutral-dark-4)',
                 'neutral-dark-5': 'var(--neutral-dark-5)',
+
+                // New color tokens:
+                // primary: 'var(--primary)',
+                // 'primary-variant': 'var(--primary-variant)',
+
+                // secondary: 'var(--secondary)',
+                // 'secondary-variant': 'var(--secondary-variant)',
+
+                // tertiary: 'var(--tertiary)',
+                // 'tertiary-variant': 'var(--tertiary-variant)',
+
+                // 'common-dark': 'var(--common-dark)',
+                // 'common-white': 'var(--common-white)',
+
+                // contrast: 'var(--common-dark)',
+
+                // link: 'var(--link-main)',
+                // 'link-hover': 'var(--link-hover)',
+
+                // 'text-main': 'var(--text-main)',
+                // 'text-light': 'var(--text-light)',
+                // 'text-contrast': 'var(--text-contrast)',
+                // 'text-disabled': 'var(--text-disabled)',
+                // 'text-primary': 'var(--text-primary)',
+                // 'text-secondary': 'var(--text-secondary)',
+
+                // 'neutral-50': 'var(--neutral-50)',
+                // 'neutral-100': 'var(--neutral-100)',
+                // 'neutral-200': 'var(--neutral-200)',
+                // 'neutral-300': 'var(--neutral-300)',
+                // 'neutral-400': 'var(--neutral-400)',
+                // 'neutral-500': 'var(--neutral-500)',
+                // 'neutral-600': 'var(--neutral-600)',
+                // 'neutral-700': 'var(--neutral-700)',
+                // 'neutral-800': 'var(--neutral-800)',
+                // 'neutral-900': 'var(--neutral-900)',
+
+                // 'status-error': 'var(--status-error)',
+                // 'status-error-text': 'var(--status-error-text)',
+                // 'status-error-fill': 'var(--status-error-fill)',
+                // 'status-warning': 'var(--status-warning)',
+                // 'status-warning-text': 'var(--status-warning-text)',
+                // 'status-warning-fill': 'var(--status-warning-fill)',
+                // 'status-success': 'var(--status-success)',
+                // 'status-success-text': 'var(--status-success-text)',
+                // 'status-success-fill': 'var(--status-success-fill)',
+                // 'status-info': 'var(--status-info)',
+                // 'status-info-text': 'var(--status-info-text)',
+                // 'status-info-fill': 'var(--status-info-fill)',
+                // 'status-indeterminate': 'var(--status-indeterminate)',
+
+                // 'bhe-main': 'var(--bhe-main)',
+                // 'sp-main': 'var(--sp-main)',
+                // 'bhce-main': 'var(--bhce-main)',
+                // 'logo-neutral': 'var(--logo-neutral)',
+
+                // 'brand-primary-dark-purple': 'var(--brand-primary-dark-purple)',
+                // 'brand-primary-deep-purple': 'var(--brand-primary-deep-purple)',
+                // 'brand-primary-medium-blue': 'var(--brand-primary-medium-blue)',
+                // 'brand-primary-highlight-neon-blue': 'var(--brand-primary-highlight-neon-blue)',
+                // 'brand-primary-highlight-orange': 'var(--brand-primary-highlight-orange)',
+                // 'brand-secondary-medium-purple': 'var(--brand-secondary-medium-purple)',
+                // 'brand-secondary-light-purple': 'var(--brand-secondary-light-purple)',
+                // 'brand-secondary-light-blue-gray': 'var(--brand-secondary-light-blue-gray)',
+                // 'brand-secondary-highlight-light-blue': 'var(--brand-secondary-highlight-light-blue)',
+                // 'brand-secondary-highlight-green': 'var(--brand-secondary-highlight-green)',
+
+                // 'secondary-btn-fill': 'var(--secondary-btn-fill)',
+                // 'secondary-btn-active-fill': 'var(--secondary-btn-active-fill)',
+                // 'btn-disabled-fill': 'var(--btn-disabled-fill)',
+                // 'toggle-btn-fill': 'var(--toggle-btn-fill)',
+                // 'toggle-btn-border': 'var(--toggle-btn-border)',
+
+                // 'input-label': 'var(--input-label)',
+                // 'input-fill': 'var(--input-fill)',
+                // 'input-fill-disabled': 'var(--input-fill-disabled)',
+                // 'input-border-default': 'var(--input-border-default)',
+                // 'input-border-hover': 'var(--input-border-hover)',
+                // 'input-border-disabled': 'var(--input-border-disabled)',
+                // 'input-placeholder-text': 'var(--input-placeholder-text)',
+
+                // 'selector-disable-fill': 'var(--selector-disable-fill)',
+                // 'switch-fill': 'var(--switch-fill)',
+                // 'switch-disabled-fill': 'var(--switch-disabled-fill)',
+
+                // 'menu-bg': 'var(--menu-bg)',
+
+                // 'badge-error': 'var(--badge-error)',
+                // 'badge-error-hover': 'var(--badge-error-hover)',
+                // 'badge-warning': 'var(--badge-warning)',
+                // 'badge-warning-hover': 'var(--badge-warning-hover)',
+                // 'badge-success': 'var(--badge-success)',
+                // 'badge-success-hover': 'var(--badge-success-hover)',
+                // 'badge-info': 'var(--badge-info)',
+                // 'badge-info-hover': 'var(--badge-info-hover)',
+                // 'badge-indeterminate': 'var(--badge-indeterminate)',
+
+                // 'chip-indeterminate': 'var(--chip-indeterminate)',
+                // 'chip-indeterminate-hover': 'var(--chip-indeterminate-hover)',
+                // 'chip-outline-fill': 'var(--chip-outline-fill)',
+                // 'chip-outline-hover': 'var(--chip-outline-hover)',
+                // 'chip-outline-active': 'var(--chip-outline-active)',
+
+                // 'sidenav-bg': 'var(--sidenav-bg)',
+                // 'sidenav-bg-hover': 'var(--sidenav-bg-hover)',
+                // 'sidenav-bg-active': 'var(--sidenav-bg-active)',
+                // 'nav-control-btn': 'var(--nav-control-btn)',
+                // 'nav-control-btn-hover': 'var(--nav-control-btn-hover)',
+                // 'nav-control-btn-focus': 'var(--nav-control-btn-focus)',
+                // 'nav-item-default': 'var(--nav-item-default)',
+                // 'nav-item-hover': 'var(--nav-item-hover)',
+                // 'nav-item-active': 'var(--nav-item-active)',
+
+                // 'platform-badge-bg': 'var(--platform-badge-bg)',
+
+                // 'edge-color': 'var(--edge-color)',
+                // 'edge-label-bg': 'var(--edge-label-bg)',
+                // 'edge-label-text': 'var(--edge-label-text)',
+
+                // icon: 'var(--icon)',
+                // 'icon-contrast': 'var(--icon-contrast)',
+                // 'icon-disabled': 'var(--icon-disabled)',
+                // divider: 'var(--divider)',
+
+                // 'risk-critical': 'var(--risk-critical)',
+                // 'risk-high': 'var(--risk-high)',
+                // 'risk-moderate': 'var(--risk-moderate)',
+                // 'risk-low': 'var(--risk-low)',
+                // 'risk-mitigated': 'var(--risk-mitigated)',
+                // 'risk-resolved': 'var(--risk-resolved)',
+                // 'risk-accepted': 'var(--risk-accepted)',
+                // 'risk-text': 'var(--risk-text)',
             },
             keyframes: {
                 'accordion-down': {
@@ -116,7 +248,7 @@ export default {
     safelist: [
         {
             pattern:
-                /(bg|text|border|w)-(primary|secondary|accent|contrast|link|error|tertiary|neutral|base|headline|button|caption|eyeline|body|az|group|ou|computer|user|container|meta|domain|default|gpo|aiaca|root-ca|enterprise-ca|nt-auth-store|cert-template|issuance-policy|az-function-app)/,
+                /(bg|text|border|w|ring)-(primary|secondary|accent|contrast|link|error|tertiary|neutral|base|headline|button|caption|eyeline|body|az|group|ou|computer|user|container|meta|domain|default|gpo|aiaca|root-ca|enterprise-ca|nt-auth-store|cert-template|issuance-policy|az-function-app)/,
         },
         {
             pattern: /(w|top|left)-(0|px|[1-9][0-9]?|-[1-9][0-9]?)/, // Safelist padding values including 0, px, and positive/negative numbers

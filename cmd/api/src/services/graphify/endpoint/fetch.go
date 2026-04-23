@@ -24,7 +24,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/dawgs/cypher/models/cypher"
 	"github.com/specterops/dawgs/graph"
@@ -268,7 +268,7 @@ func resolveIngestibleEndpoint(tx graph.Transaction, ingestEntry ein.IngestibleE
 // during the worker execution. This function logs its duration and operation details to the context logger.
 func ResolveAll(ctx context.Context, endpointResolver *Resolver, ingestEntries []ein.IngestibleRelationship) ([]ein.IngestibleRelationship, error) {
 	// Start a new parallel resolution
-	endpointResolver.Start(ctx, analysis.MaximumDatabaseParallelWorkers)
+	endpointResolver.Start(ctx, post.MaximumDatabaseParallelWorkers)
 
 	// Update ingest entries in-place
 	for idx := range ingestEntries {

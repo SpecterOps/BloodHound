@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// import { Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, TextField } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';

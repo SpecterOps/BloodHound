@@ -47,35 +47,31 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
     const hiddenNode = nodeType === 'HIDDEN' && selectedItemType === 'node';
 
     return (
-        <div className='flex justify-between items-center text-sm font-bold pr-4'>
-            {selectedItem ? (
+        <div className='flex justify-between items-center text-sm font-bold'>
+            <Icon
+                tip='Collapse All'
+                onClick={handleCollapseAll}
+                className='box-border text-contrast px-4'
+                data-testid='explore_entity-information-panel_button-collapse-all'>
+                <FontAwesomeIcon icon={faAngleDoubleUp} />
+            </Icon>
+            {hiddenNode ? <HiddenEntityIcon /> : <NodeIcon nodeType={nodeType} />}
+            <Tooltip tooltip={name} contentProps={{ side: 'bottom' }}>
+                <h6
+                    data-testid='explore_entity-information-panel_header-text'
+                    className='truncate pl-2 pr-4 leading-10 grow'>
+                    {name}
+                </h6>
+            </Tooltip>
+            {/* selectedItem only gets set from param so we only offer the clear icon if its from param, hence nothing in PZ entity  panel */}
+            {selectedItem && (
                 <Icon
                     className='h-10 box-border p-4 text-contrast'
                     onClick={clearSelectedItem}
                     tip='Clear selected item'>
                     <FontAwesomeIcon icon={faRemove} />
                 </Icon>
-            ) : (
-                <div className='w-3' />
             )}
-
-            {hiddenNode ? <HiddenEntityIcon /> : <NodeIcon nodeType={nodeType} />}
-
-            <Tooltip tooltip={name} contentProps={{ side: 'bottom' }}>
-                <h6
-                    data-testid='explore_entity-information-panel_header-text'
-                    className='truncate pr-2 leading-10 grow ml-2'>
-                    {name}
-                </h6>
-            </Tooltip>
-
-            <Icon
-                tip='Collapse All'
-                onClick={handleCollapseAll}
-                className='box-border text-contrast'
-                data-testid='explore_entity-information-panel_button-collapse-all'>
-                <FontAwesomeIcon icon={faAngleDoubleUp} />
-            </Icon>
         </div>
     );
 };

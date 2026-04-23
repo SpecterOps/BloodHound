@@ -18,7 +18,6 @@ package agi
 
 import (
 	"context"
-
 	"log/slog"
 	"slices"
 	"strings"
@@ -68,16 +67,16 @@ func FetchAssetGroupNodes(tx graph.Transaction, assetGroupTag string, isSystemGr
 
 type agiGetter interface {
 	GetAllAssetGroups(ctx context.Context, order string, filter model.SQLFilter) (model.AssetGroups, error)
-	GetValidDisplayKinds(ctx context.Context) (map[graph.Kind]bool, error)
+	GetPrimaryDisplayKinds(ctx context.Context) (graphschema.PrimaryDisplayKinds, error)
 	CreateAssetGroupCollection(ctx context.Context, collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
 }
 
-func RunAssetGroupIsolationCollections(ctx context.Context, db agiGetter, graphDB graph.Database, nodeLabelFn func(graphschema.ValidPrimaryKinds, *graph.Node) string) error {
+func RunAssetGroupIsolationCollections(ctx context.Context, db agiGetter, graphDB graph.Database, nodeLabelFn func(graphschema.PrimaryDisplayKinds, *graph.Node) string) error {
 	defer measure.ContextMeasureWithThreshold(ctx, slog.LevelInfo, "Asset Group Isolation Collections")()
 
 	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
 		return err
-	} else if validPrimaryKinds, err := db.GetValidDisplayKinds(ctx); err != nil {
+	} else if primaryDisplayKinds, err := db.GetPrimaryDisplayKinds(ctx); err != nil {
 		return err
 	} else {
 		return graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
@@ -105,7 +104,7 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db agiGetter, graphD
 						} else {
 							entries[idx] = model.AssetGroupCollectionEntry{
 								ObjectID:   objectID,
-								NodeLabel:  nodeLabelFn(validPrimaryKinds, node),
+								NodeLabel:  nodeLabelFn(primaryDisplayKinds, node),
 								Properties: node.Properties.Map,
 							}
 						}
