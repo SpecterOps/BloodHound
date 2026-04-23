@@ -1,0 +1,58 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "preferences_schema",
+    "title": "Preferences",
+    "description": "Schema for validating the preferences JSONB column on the users table. Each key is a preference name mapping to a preference item containing a typed value.",
+    "type": "object",
+    "properties": {
+        "dark_mode": {
+            "description": "Enables or disables the dark mode theme",
+            "$ref": "#/$defs/dark_mode"
+        },
+        "preferred_domain": {
+            "description": "Sets the default domain context for the user",
+            "$ref": "#/$defs/preferred_domain"
+        }
+    },
+    "additionalProperties": false,
+    "$defs": {
+        "dark_mode": {
+            "type": "object",
+            "properties": {
+                "value": {
+                    "type": "boolean"
+                }
+            },
+            "required": ["value"],
+            "additionalProperties": false
+        },
+        "preferred_domain": {
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "Domain SID string, or empty string representing the preferred domain identifier",
+                    "type": "string"
+                }
+            },
+            "required": ["value"],
+            "additionalProperties": false
+        }
+    },
+    "examples": [
+        {
+            "dark_mode": {
+                "value": true
+            }
+        },
+        {
+            "preferred_domain": {
+                "value": "S-1-5-21-3662707843-2053279151-3839588741"
+            }
+        },
+        {
+            "preferred_domain": {
+                "value": ""
+            }
+        }
+    ]
+}

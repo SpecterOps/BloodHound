@@ -74,6 +74,7 @@ type UpdateUserRequest struct {
 
 	AllEnvironments                  null.Bool              `json:"all_environments"`
 	EnvironmentTargetedAccessControl *UpdateUserETACRequest `json:"environment_targeted_access_control,omitempty"`
+	Preferences                      model.Preferences      `json:"preferences"`
 }
 
 type CreateUserRequest struct {
