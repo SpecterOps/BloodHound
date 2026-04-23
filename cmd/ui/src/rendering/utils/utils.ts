@@ -134,7 +134,6 @@ export const getNodeLabelBoundsBelowFromContext = (
     // Add the space above the text baseline plus the space below it
     const labelHeight = labelBounds.actualBoundingBoxAscent + labelBounds.actualBoundingBoxDescent;
     const nodeRadius = params.size * params.inverseSqrtZoomRatio;
-    const scaledMargin = LABEL_NODE_MARGIN / params.inverseSqrtZoomRatio;
 
     return [
         params.position.x - labelWidth / 2 - LABEL_PADDING,
