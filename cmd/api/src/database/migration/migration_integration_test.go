@@ -56,8 +56,8 @@ func (BarTest) TableName() string {
 // the last migration entry in the `migration` table.
 func TestMigrator_LatestMigration(t *testing.T) {
 	_, pool, migrator, err := integration.SetupTestMigrator(t, migration.Source{FileSystem: testMigrationSystem1, Directory: "test_migrations/system1"})
-	defer pool.Close()
 	require.Nil(t, err)
+	defer pool.Close()
 
 	require.Nil(t, migrator.CreateMigrationSchema())
 
@@ -92,8 +92,8 @@ func TestMigrator_ExecuteMigrations(t *testing.T) {
 		migration.Source{FileSystem: testMigrationSystem1, Directory: "test_migrations/system1"},
 		migration.Source{FileSystem: testMigrationSystem2, Directory: "test_migrations/system2"},
 	)
-	defer pool.Close()
 	require.Nil(t, err)
+	defer pool.Close()
 
 	require.Nil(t, migrator.CreateMigrationSchema())
 
@@ -223,8 +223,8 @@ func TestMigrator_ExecuteMigrations(t *testing.T) {
 // detect the `migrations` table.
 func TestMigrator_HasMigrationTable(t *testing.T) {
 	_, pool, migrator, err := integration.SetupTestMigrator(t)
-	defer pool.Close()
 	require.Nil(t, err)
+	defer pool.Close()
 
 	require.Nil(t, migrator.CreateMigrationSchema())
 
@@ -256,8 +256,8 @@ func TestMigrator_CreateMigrationSchema(t *testing.T) {
 	)
 
 	db, pool, migrator, err := integration.SetupTestMigrator(t)
-	defer pool.Close()
 	require.Nil(t, err)
+	defer pool.Close()
 
 	assert.Nil(t, migrator.CreateMigrationSchema())
 
@@ -284,8 +284,8 @@ func TestMigrator_CreateMigrationSchema(t *testing.T) {
 // TestMigrator_Migrate tests the integrity of FossMigrations.
 func TestMigrator_Migrate(t *testing.T) {
 	_, pool, migrator, err := integration.SetupTestMigrator(t, migration.Source{FileSystem: migration.FossMigrations, Directory: "migrations"})
-	defer pool.Close()
 	require.Nil(t, err)
+	defer pool.Close()
 
 	manifest, err := migrator.GenerateManifest()
 	require.Nil(t, err)
