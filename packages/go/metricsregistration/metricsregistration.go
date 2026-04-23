@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//	http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package metrics
+// Package metricsregistration aggregates Prometheus metric registrations for
+// BHCE subsystems. Entrypoints call RegisterBHCEMetrics against the Prometheus
+// registry they own before exposing it to prometheus.DefaultRegisterer.
+package metricsregistration
 
 import (
 	"fmt"
@@ -23,22 +26,11 @@ import (
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 )
 
-// ExposeToDefaultRegisterer registers the provided registry as a collector on
-// prometheus.DefaultRegisterer, making all of its metrics visible via /metrics.
-// Call this only after all metrics have been initialized into the registry.
-func ExposeToDefaultRegisterer(registry *prometheus.Registry) error {
-	if err := prometheus.DefaultRegisterer.Register(registry); err != nil {
-		return fmt.Errorf("failed to register metrics registry with default registerer: %w", err)
-	}
-
-	return nil
-}
-
-// InitializeBHCEMetrics registers all BHCE Prometheus metrics to the provided registerer.
-func InitializeBHCEMetrics(registerer prometheus.Registerer) error {
-	if err := post.InitializePostProcessingMetrics(registerer); err != nil {
+// RegisterBHCEMetrics registers all BHCE subsystem Prometheus metrics with the
+// provided registerer.
+func RegisterBHCEMetrics(registerer prometheus.Registerer) error {
+	if err := post.RegisterPostProcessingMetrics(registerer); err != nil {
 		return fmt.Errorf("failed to register post-processing metrics: %w", err)
 	}
-
 	return nil
 }

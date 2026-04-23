@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//	http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package metrics_test
+package metricsregistration_test
 
 import (
 	"testing"
@@ -22,30 +22,14 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/specterops/bloodhound/packages/go/metrics"
+	"github.com/specterops/bloodhound/packages/go/metricsregistration"
 )
 
-func TestExposeToDefaultRegisterer(t *testing.T) {
+func TestRegisterBHCEMetrics(t *testing.T) {
 	t.Parallel()
 
 	registry := prometheus.NewRegistry()
-
-	// Remove the registry from the global default registerer after the test to
-	// prevent leaking state that could interfere with other parallel tests.
-	t.Cleanup(func() {
-		prometheus.DefaultRegisterer.Unregister(registry)
-	})
-
-	err := metrics.ExposeToDefaultRegisterer(registry)
-
-	assert.NoError(t, err)
-}
-
-func TestInitializeBHCEMetrics(t *testing.T) {
-	t.Parallel()
-
-	registry := prometheus.NewRegistry()
-	err := metrics.InitializeBHCEMetrics(registry)
+	err := metricsregistration.RegisterBHCEMetrics(registry)
 
 	assert.NoError(t, err)
 }
