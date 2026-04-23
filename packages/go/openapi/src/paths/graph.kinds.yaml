@@ -24,6 +24,13 @@ get:
     - Graph
     - Community
     - Enterprise
+  parameters:
+    - name: type
+      in: query
+      description: Filter by type, valid types are "node" or "edge".
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string-strict.yaml'
   responses:
     200:
       description: OK
@@ -39,6 +46,8 @@ get:
                     type: array
                     items:
                       type: string
+    400:
+      $ref: './../responses/bad-request.yaml'
     401:
       $ref: './../responses/unauthorized.yaml'
     403:
