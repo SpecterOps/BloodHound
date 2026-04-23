@@ -39,19 +39,20 @@ type ListKindsResponse struct {
 // ListKinds returns all node kinds, edge kinds, and tier tags present in the system.
 // It is a comprehensive view of the various kinds the graph currently recognizes.
 func (s Resources) ListKinds(response http.ResponseWriter, request *http.Request) {
-	if kinds, err := s.Graph.FetchKinds(request.Context()); err != nil {
+	ctx := request.Context()
+	if kinds, err := s.Graph.FetchKinds(ctx); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 	} else {
 		for name, filters := range queryFilters {
 			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(model.Kind{}, name); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 				return
 			} else {
 				for _, filter := range filters {
 					if !slices.Contains(validPredicates, string(filter.Operator)) {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+						api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
 						return
 					}
 				}
@@ -60,22 +61,46 @@ func (s Resources) ListKinds(response http.ResponseWriter, request *http.Request
 
 		if len(queryFilters) > 0 {
 			if filters, ok := queryFilters["type"]; ok {
-				// This gets both custom node kinds (schemaless) and schema based node kinds
+				validNodeKinds := make(map[graph.Kind]bool)
+
+				// Schema based node kinds
 				// Only kinds that have been synced to the kinds table will be included in this.
-				displayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context())
-				if err != nil {
+				if schemaNodeKinds, _, err := s.DB.GetGraphSchemaNodeKinds(ctx, model.Filters{}, model.Sort{}, 0, 0); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
+				} else {
+					for _, kind := range schemaNodeKinds {
+						validNodeKinds[kind.ToKind()] = true
+					}
 				}
 
-				// Source kinds are node kinds
-				sourceKindsByKind := make(map[graph.Kind]bool)
+				// Schemaless customnode kinds
+				if customNodeKinds, err := s.DB.GetCustomNodeKinds(ctx, nil); err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				} else {
+					var customNames []string
+					for _, kind := range customNodeKinds {
+						customNames = append(customNames, kind.KindName)
+					}
+					// Until work is complete to ensure custom_node_kinds are properly kind backed, this will filter out invalid kinds
+					if kinds, err := s.DB.GetKindsByNames(ctx, customNames...); err != nil {
+						api.HandleDatabaseError(request, response, err)
+						return
+					} else {
+						for _, kind := range kinds {
+							validNodeKinds[kind.ToKind()] = true
+						}
+					}
+				}
+
+				// Source kinds
 				if sourceKinds, err := s.DB.GetSourceKinds(request.Context()); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				} else {
 					for _, kind := range sourceKinds {
-						sourceKindsByKind[kind.ToKind()] = true
+						validNodeKinds[kind.ToKind()] = true
 					}
 				}
 
@@ -85,7 +110,7 @@ func (s Resources) ListKinds(response http.ResponseWriter, request *http.Request
 					for _, kind := range kinds {
 						var isNodeKind bool
 						// Asset group tags are node kinds as well as meta / migrationData kinds
-						if _, ok := displayKinds[kind]; ok || sourceKindsByKind[kind] || isExtendedNodeKind(kind) {
+						if validNodeKinds[kind] || isExtendedNodeKind(kind) {
 							isNodeKind = true
 						}
 
