@@ -19,414 +19,337 @@ package storage
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
+	"io/fs"
 	"mime"
 	"os"
-	"path/filepath"
-	"strings"
+	"path"
+	"sync"
 )
 
+var ErrIsDirectory = errors.New("is a directory")
+
+// ctxReader wraps an io.Reader so that context cancellation is observed between
+// reads. io.Copy calls Read in a loop and each call checks ctx.Err() before delegating.
+type ctxReader struct {
+	ctx context.Context
+	r   io.Reader
+}
+
+func (s *ctxReader) Read(p []byte) (int, error) {
+	if err := s.ctx.Err(); err != nil {
+		return 0, err
+	}
+	return s.r.Read(p)
+}
+
+// LocalStore is a Storage implementation backed by a sandboxed directory on the
+// local filesystem. All operations are confined to the root supplied to
+// NewLocalStore. Callers use forward-slash-separated logical paths (e.g.
+// "archives/clients/abc/file") and the kernel enforces that resolution stays
+// within the root, including through symlinks. Passing a path with a leading slash
+// will cause an error.
 type LocalStore struct {
-	root string
+	root      *os.Root
+	closeOnce sync.Once
+	closeErr  error
 }
 
-func NewLocalStore(root string) *LocalStore {
+func NewLocalStore(root string) (*LocalStore, error) {
+	r, err := os.OpenRoot(root)
+	if err != nil {
+		return nil, err
+	}
 	return &LocalStore{
-		root: root,
-	}
+		root: r,
+	}, nil
 }
 
-func (s *LocalStore) fullPath(path string) (string, error) {
-	path = filepath.ToSlash(strings.TrimSpace(path))
-	path = strings.TrimPrefix(path, "/")
-
-	cleaned := filepath.Clean(path)
-
-	if cleaned == "." {
-		return "", errors.New("invalid empty path")
-	}
-
-	if cleaned == ".." || strings.HasPrefix(cleaned, ".."+string(filepath.Separator)) {
-		return "", errors.New("path escapes storage root")
-	}
-
-	full := filepath.Join(s.root, cleaned)
-	return full, nil
+func (s *LocalStore) Close() error {
+	s.closeOnce.Do(func() { s.closeErr = s.root.Close() })
+	return s.closeErr
 }
 
-func normalizeLogicalPath(path string) string {
-	path = filepath.ToSlash(strings.TrimSpace(path))
-	path = strings.TrimPrefix(path, "/")
-	return filepath.Clean(path)
-}
-
-func detectContentType(path string) string {
-	ext := filepath.Ext(path)
-	if ext == "" {
-		return "application/octet-stream"
-	}
-
-	ct := mime.TypeByExtension(ext)
-	if ct == "" {
-		return "application/octet-stream"
-	}
-
-	return ct
-}
-
-func (s *LocalStore) Put(ctx context.Context, path string, reader io.Reader, options WriteOptions) error {
-	full, err := s.fullPath(path)
-	if err != nil {
-		return err
-	}
-
-	dir := filepath.Dir(full)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return err
-	}
-
-	tmp, err := os.CreateTemp(dir, ".tmp-*")
-	if err != nil {
-		return err
-	}
-	tmpName := tmp.Name()
-
-	cleanup := func() {
-		tmp.Close()
-		os.Remove(tmpName)
-	}
-
-	buf := make([]byte, 32*1024)
-	for {
-		select {
-		case <-ctx.Done():
-			cleanup()
-			return ctx.Err()
-		default:
+func detectContentType(name string) string {
+	if ext := path.Ext(name); ext != "" {
+		if ct := mime.TypeByExtension(ext); ct != "" {
+			return ct
 		}
+	}
+	return "application/octet-stream"
+}
 
-		n, readErr := reader.Read(buf)
-		if n > 0 {
-			if _, err := tmp.Write(buf[:n]); err != nil {
-				cleanup()
-				return err
+// writeAtomic streams src into a temp file under dir(name), then publishes it at name.
+// If failIfExists is true, publish uses link+unlink and returns an error satisfying
+// errors.Is(err, fs.ErrExist) on collision. Otherwise, publish uses rename and silently
+// replaces any existing file at name. The temp file is removed on every failure path.
+func (s *LocalStore) writeAtomic(ctx context.Context, name string, src io.Reader, failIfExists bool) error {
+	var (
+		dir     = path.Dir(name)
+		tmpName string
+		tmp     *os.File
+		id      string
+		closed  bool
+		err     error
+	)
+
+	if err = ctx.Err(); err != nil {
+		return err
+	}
+
+	if dir != "." {
+		if err = s.root.MkdirAll(dir, 0o750); err != nil {
+			return err
+		}
+	}
+
+	if id, err = randomID(); err != nil {
+		return err
+	}
+	tmpName = path.Join(dir, ".tmp-"+id)
+
+	if tmp, err = s.root.OpenFile(tmpName, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o640); err != nil {
+		return err
+	}
+
+	// Remove the temp file on any failure path. On the success path we rename it
+	// before this runs, so Remove returns ErrNotExist and we ignore it.
+	defer func() {
+		if err != nil {
+			if !closed {
+				_ = tmp.Close()
 			}
+			_ = s.root.Remove(tmpName)
 		}
+	}()
 
-		if readErr == io.EOF {
-			break
-		}
-		if readErr != nil {
-			cleanup()
-			return readErr
-		}
-	}
-
-	if err := tmp.Close(); err != nil {
-		_ = os.Remove(tmpName)
+	if _, err = io.Copy(tmp, &ctxReader{ctx: ctx, r: src}); err != nil {
 		return err
 	}
-
-	if err := os.Rename(tmpName, full); err != nil {
-		_ = os.Remove(tmpName)
+	if err = tmp.Sync(); err != nil { // flush data blocks
 		return err
 	}
+	if err = tmp.Close(); err != nil {
+		return err
+	}
+	closed = true
 
-	return nil
+	if failIfExists {
+		// Link fails with fs.ErrExist if name already exists. Atomic and race-free
+		// against concurrent writers on the same filesystem.
+		if err = s.root.Link(tmpName, name); err != nil {
+			return err
+		}
+		// Publish is durable, a failed Remove leaks a .tmp-... that a sweeper can reclaim
+		_ = s.root.Remove(tmpName)
+		return nil
+	}
+	err = s.root.Rename(tmpName, name)
+	return err
 }
 
-
-func (s *LocalStore) Get(ctx context.Context, path string) (io.ReadCloser, FileInfo, error) {
-	full, err := s.fullPath(path)
-	if err != nil {
-		return nil, FileInfo{}, err
-	}
-
-	file, err := os.Open(full)
-	if err != nil {
-		return nil, FileInfo{}, err
-	}
-
-	stat, err := file.Stat()
-	if err != nil {
-		_ = file.Close()
-		return nil, FileInfo{}, err
-	}
-
-	info := FileInfo{
-		Path:         normalizeLogicalPath(path),
-		Size:         stat.Size(),
-		LastModified: stat.ModTime(),
-		IsDir:        stat.IsDir(),
-		ContentType:  detectContentType(path),
-	}
-
-	select {
-	case <-ctx.Done():
-		_ = file.Close()
-		return nil, FileInfo{}, ctx.Err()
-	default:
-	}
-
-	return file, info, nil
+// Open returns an fs.File, which must be closed.
+func (s *LocalStore) Open(name string) (fs.File, error) {
+	return s.root.Open(name) // *os.File Satisfies fs.File
 }
 
-func (s *LocalStore) Stat(ctx context.Context, path string) (FileInfo, error) {
-	full, err := s.fullPath(path)
-	if err != nil {
+func (s *LocalStore) Stat(ctx context.Context, name string) (FileInfo, error) {
+	if err := ctx.Err(); err != nil {
 		return FileInfo{}, err
 	}
-
-	select {
-	case <-ctx.Done():
-		return FileInfo{}, ctx.Err()
-	default:
+	stat, err := s.root.Stat(name)
+	if stat.IsDir() {
+		return FileInfo{}, fmt.Errorf("stat %q: %w", name, ErrIsDirectory)
 	}
-
-	stat, err := os.Stat(full)
 	if err != nil {
 		return FileInfo{}, err
 	}
 
 	return FileInfo{
-		Path:         normalizeLogicalPath(path),
+		Path:         name,
 		Size:         stat.Size(),
 		LastModified: stat.ModTime(),
 		IsDir:        stat.IsDir(),
-		ContentType:  detectContentType(path),
+		ContentType:  detectContentType(name),
 	}, nil
 }
 
-func (s *LocalStore) Exists(ctx context.Context, path string) (bool, error) {
-	_, err := s.Stat(ctx, path)
-	if err == nil {
-		return true, nil
+func (s *LocalStore) Get(ctx context.Context, name string) (io.ReadCloser, FileInfo, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, FileInfo{}, err
 	}
+	file, err := s.root.Open(name)
+	if err != nil {
+		return nil, FileInfo{}, err
+	}
+	stat, err := file.Stat()
+	if err != nil {
+		_ = file.Close()
+		return nil, FileInfo{}, err
+	}
+	if stat.IsDir() {
+		return nil, FileInfo{}, fmt.Errorf("get: %q, %w", name, ErrIsDirectory)
+	}
+	if err := ctx.Err(); err != nil {
+		_ = file.Close()
+		return nil, FileInfo{}, err
+	}
+
+	return file, FileInfo{
+		Path:         name,
+		Size:         stat.Size(),
+		LastModified: stat.ModTime(),
+		IsDir:        stat.IsDir(),
+		ContentType:  detectContentType(name),
+	}, nil
+}
+
+func (s *LocalStore) Put(ctx context.Context, name string, reader io.Reader, options WriteOptions) error {
+	return s.writeAtomic(ctx, name, reader, options.FailIfExists)
+}
+
+func (s *LocalStore) Exists(ctx context.Context, name string) (bool, error) {
+	if err := ctx.Err(); err != nil {
+		return false, err
+	}
+	stat, err := s.root.Stat(name)
 	if errors.Is(err, os.ErrNotExist) {
 		return false, nil
 	}
-	return false, err
+	if err != nil {
+		return false, err
+	}
+	if stat.IsDir() {
+		return false, nil
+	}
+	return true, nil
 }
 
-func (s *LocalStore) Delete(ctx context.Context, path string) error {
-	full, err := s.fullPath(path)
-	if err != nil {
+func (s *LocalStore) Delete(ctx context.Context, name string) error {
+	if err := ctx.Err(); err != nil {
 		return err
 	}
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-	}
-
-	err = os.Remove(full)
+	err := s.root.Remove(name)
 	if errors.Is(err, os.ErrNotExist) {
 		return nil
 	}
 	return err
 }
 
-func (s *LocalStore) Move(ctx context.Context, srcPath, dstPath string) error {
-	srcFull, err := s.fullPath(srcPath)
-	if err != nil {
-		return err
+func (s *LocalStore) List(ctx context.Context, name string, options ListOptions) ([]FileInfo, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-
-	dstFull, err := s.fullPath(dstPath)
-	if err != nil {
-		return err
-	}
-
-	if err := os.MkdirAll(filepath.Dir(dstFull), 0o755); err != nil {
-		return err
-	}
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-	}
-
-	return os.Rename(srcFull, dstFull)
-}
-
-func (s *LocalStore) listRecursive(ctx context.Context, fullPrefix string) ([]FileInfo, error) {
-	var out []FileInfo
-
-	err := filepath.WalkDir(fullPrefix, func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-		}
-
-		if d.IsDir() {
+	fsys := s.root.FS()
+	if options.Recursive {
+		out := []FileInfo{}
+		err := fs.WalkDir(fsys, name, func(p string, d fs.DirEntry, err error) error {
+			if cerr := ctx.Err(); cerr != nil {
+				return cerr
+			}
+			if err != nil {
+				if errors.Is(err, fs.ErrNotExist) && p == name {
+					return fs.SkipAll
+				}
+				return err
+			}
+			if d.IsDir() {
+				return nil
+			}
+			info, err := d.Info()
+			if err != nil {
+				return err
+			}
+			out = append(out, FileInfo{
+				Path:         p,
+				Size:         info.Size(),
+				LastModified: info.ModTime(),
+				IsDir:        d.IsDir(),
+				ContentType:  detectContentType(p),
+			})
+			if options.Limit > 0 && len(out) >= options.Limit {
+				return fs.SkipAll
+			}
 			return nil
-		}
-
-		info, err := d.Info()
-		if err != nil {
-			return err
-		}
-
-		relPath, err := filepath.Rel(s.root, path)
-		if err != nil {
-			return err
-		}
-
-		out = append(out, FileInfo{
-			Path:         normalizeLogicalPath(relPath),
-			Size:         info.Size(),
-			ContentType:  detectContentType(path),
-			LastModified: info.ModTime(),
 		})
-
-		return nil
-	})
-
-	if errors.Is(err, os.ErrNotExist) {
-		return []FileInfo{}, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	return out, nil
-}
-
-func (s *LocalStore) listShallow(ctx context.Context, fullPrefix string) ([]FileInfo, error) {
-	entries, err := os.ReadDir(fullPrefix)
-	if errors.Is(err, os.ErrNotExist) {
-		return []FileInfo{}, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	out := make([]FileInfo, 0, len(entries))
-
-	for _, entry := range entries {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
+		if err != nil {
+			return nil, err
 		}
-
+		return out, nil
+	}
+	entries, err := fs.ReadDir(fsys, name)
+	if errors.Is(err, fs.ErrNotExist) {
+		return []FileInfo{}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	out := make([]FileInfo, 0, len(entries))
+	for _, entry := range entries {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		if entry.IsDir() {
 			continue
 		}
-
 		info, err := entry.Info()
 		if err != nil {
 			return nil, err
 		}
-
-		full := filepath.Join(fullPrefix, entry.Name())
-		rel, err := filepath.Rel(s.root, full)
-		if err != nil {
-			return nil, err
-		}
-
+		entryPath := path.Join(name, entry.Name())
 		out = append(out, FileInfo{
-			Path:         normalizeLogicalPath(rel),
+			Path:         entryPath,
 			Size:         info.Size(),
-			ContentType:  detectContentType(full),
 			LastModified: info.ModTime(),
+			IsDir:        entry.IsDir(),
+			ContentType:  detectContentType(entryPath),
 		})
+		if options.Limit > 0 && len(out) >= options.Limit {
+			break
+		}
 	}
-
 	return out, nil
 }
 
-func (s *LocalStore) List(ctx context.Context, path string, options ListOptions) ([]FileInfo, error) {
-	full, err := s.fullPath(path)
+// Copy duplicates srcName to destName atomically: on failure the destination is unchanged;
+// on success, callers observe either the old content or new, never a partial write.
+func (s *LocalStore) Copy(ctx context.Context, srcName, dstName string, options WriteOptions) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	src, err := s.root.Open(srcName)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	if options.Recursive {
-		return s.listRecursive(ctx, full)
+	defer src.Close()
+	info, err := src.Stat()
+	if err != nil {
+		return err
 	}
-
-	return s.listShallow(ctx, full)
+	if info.IsDir() {
+		return fmt.Errorf("copy %q: %w", srcName, ErrIsDirectory)
+	}
+	return s.writeAtomic(ctx, dstName, src, options.FailIfExists)
 }
 
-func (s *LocalStore) Copy(ctx context.Context, srcPath, dstPath string) error {
-	srcFull, err := s.fullPath(srcPath)
-	if err != nil {
+// Move is able to move a file from srcName to dstName using a two-step Link+Remove. A crash between link
+// and unlink leaves both names present.
+func (s *LocalStore) Move(ctx context.Context, srcName, dstName string, options WriteOptions) error {
+	if err := ctx.Err(); err != nil {
 		return err
 	}
-
-	dstFull, err := s.fullPath(dstPath)
-	if err != nil {
-		return err
-	}
-
-	srcFile, err := os.Open(srcFull)
-	if err != nil {
-		return err
-	}
-	defer srcFile.Close()
-
-	srcInfo, err := srcFile.Stat()
-	if err != nil {
-		return err
-	}
-	if srcInfo.IsDir() {
-		return errors.New("cannot copy a directory")
-	}
-
-	if err := os.MkdirAll(filepath.Dir(dstFull), 0o755); err != nil {
-		return err
-	}
-
-	tmp, err := os.CreateTemp(filepath.Dir(dstFull), ".tmp-*")
-	if err != nil {
-		return err
-	}
-	tmpName := tmp.Name()
-
-	cleanup := func() {
-		_ = tmp.Close()
-		_ = os.Remove(tmpName)
-	}
-
-	buf := make([]byte, 32*1024)
-	for {
-		select {
-		case <-ctx.Done():
-			cleanup()
-			return ctx.Err()
-		default:
-		}
-
-		n, readErr := srcFile.Read(buf)
-		if n > 0 {
-			if _, err := tmp.Write(buf[:n]); err != nil {
-				cleanup()
-				return err
-			}
-		}
-
-		if readErr == io.EOF {
-			break
-		}
-		if readErr != nil {
-			cleanup()
-			return readErr
+	dir := path.Dir(dstName)
+	if dir != "." {
+		if err := s.root.MkdirAll(dir, 0o750); err != nil {
+			return err
 		}
 	}
-
-	if err := tmp.Close(); err != nil {
-		_ = os.Remove(tmpName)
-		return err
+	if options.FailIfExists {
+		if err := s.root.Link(srcName, dstName); err != nil {
+			return err
+		}
+		return s.root.Remove(srcName)
 	}
-
-	return os.Rename(tmpName, dstFull)
+	return s.root.Rename(srcName, dstName)
 }
-
