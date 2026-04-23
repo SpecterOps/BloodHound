@@ -1259,22 +1259,6 @@ func (mr *MockDatabaseMockRecorder) GetAllConfigurationParameters(ctx any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllConfigurationParameters", reflect.TypeOf((*MockDatabase)(nil).GetAllConfigurationParameters), ctx)
 }
 
-// GetAllEvents mocks base method.
-func (m *MockDatabase) GetAllEvents(ctx context.Context, skip, limit int, order string, filter model.SQLFilter) (model.Events, int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllEvents", ctx, skip, limit, order, filter)
-	ret0, _ := ret[0].(model.Events)
-	ret1, _ := ret[1].(int)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// GetAllEvents indicates an expected call of GetAllEvents.
-func (mr *MockDatabaseMockRecorder) GetAllEvents(ctx, skip, limit, order, filter any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllEvents", reflect.TypeOf((*MockDatabase)(nil).GetAllEvents), ctx, skip, limit, order, filter)
-}
-
 // GetAllFlags mocks base method.
 func (m *MockDatabase) GetAllFlags(ctx context.Context) ([]appcfg.FeatureFlag, error) {
 	m.ctrl.T.Helper()
@@ -1872,18 +1856,18 @@ func (mr *MockDatabaseMockRecorder) GetEnvironmentsFiltered(ctx, filters any) *g
 }
 
 // GetEvent mocks base method.
-func (m *MockDatabase) GetEvent(ctx context.Context, id int) (model.Event, error) {
+func (m *MockDatabase) GetEvent(ctx context.Context, eventId uuid.UUID) (model.Event, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEvent", ctx, id)
+	ret := m.ctrl.Call(m, "GetEvent", ctx, eventId)
 	ret0, _ := ret[0].(model.Event)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetEvent indicates an expected call of GetEvent.
-func (mr *MockDatabaseMockRecorder) GetEvent(ctx, id any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetEvent(ctx, eventId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEvent", reflect.TypeOf((*MockDatabase)(nil).GetEvent), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEvent", reflect.TypeOf((*MockDatabase)(nil).GetEvent), ctx, eventId)
 }
 
 // GetFlag mocks base method.

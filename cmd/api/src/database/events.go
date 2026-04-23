@@ -19,14 +19,13 @@ package database
 import (
 	"context"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"gorm.io/gorm"
 )
 
 type EventData interface {
 	CreateEvent(ctx context.Context, event model.Event) (model.Event, error)
-	GetAllEvents(ctx context.Context, skip, limit int, order string, filter model.SQLFilter) (model.Events, int, error)
-	GetEvent(ctx context.Context, id int) (model.Event, error)
+	GetEvent(ctx context.Context, eventId uuid.UUID) (model.Event, error)
 }
 
 func (s *BloodhoundDB) CreateEvent(ctx context.Context, event model.Event) (model.Event, error) {
@@ -34,40 +33,8 @@ func (s *BloodhoundDB) CreateEvent(ctx context.Context, event model.Event) (mode
 	return event, CheckError(result)
 }
 
-func (s *BloodhoundDB) GetAllEvents(ctx context.Context, skip, limit int, order string, filter model.SQLFilter) (model.Events, int, error) {
-	var (
-		events model.Events
-		result *gorm.DB
-		count  int64
-	)
-
-	if filter.SQLString != "" {
-		result = s.db.Model(&events).WithContext(ctx).Where(filter.SQLString, filter.Params...).Count(&count)
-	} else {
-		result = s.db.Model(&events).WithContext(ctx).Count(&count)
-	}
-
-	if result.Error != nil {
-		return nil, 0, CheckError(result)
-	}
-
-	if order == "" {
-		order = "created_at desc"
-	}
-
-	cursor := s.Scope(Paginate(skip, limit)).WithContext(ctx)
-
-	if filter.SQLString != "" {
-		result = cursor.Where(filter.SQLString, filter.Params...).Order(order).Find(&events)
-	} else {
-		result = cursor.Order(order).Find(&events)
-	}
-
-	return events, int(count), CheckError(result)
-}
-
-func (s *BloodhoundDB) GetEvent(ctx context.Context, id int) (model.Event, error) {
+func (s *BloodhoundDB) GetEvent(ctx context.Context, eventId uuid.UUID) (model.Event, error) {
 	var event model.Event
-	result := s.db.WithContext(ctx).First(&event, id)
+	result := s.db.WithContext(ctx).First(&event, eventId)
 	return event, CheckError(result)
 }

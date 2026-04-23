@@ -19,13 +19,14 @@ package model
 import (
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 )
 
 type Event struct {
-	ID          int                     `json:"id"`
-	Type        string                  `json:"type"`
+	ID          uuid.UUID               `json:"id" gorm:"type:text;primaryKey"`
+	Type        string                  `json:"type" validate:"required"`
 	Message     string                  `json:"message"`
 	Data        types.JSONUntypedObject `json:"data"`
 	CreatedAt   time.Time               `json:"created_at"`
@@ -34,6 +35,33 @@ type Event struct {
 
 type Events []Event
 
-func (Event) TableName() string {
+func (s Event) TableName() string {
 	return "events"
+}
+
+func (s Event) IsStringColumn(filter string) bool {
+	switch filter {
+	case "type", "message":
+		return true
+	default:
+		return false
+	}
+}
+
+func (s Event) ValidFilters() map[string][]FilterOperator {
+	return map[string][]FilterOperator{
+		"type":         {Equals, NotEquals, ApproximatelyEquals},
+		"message":      {Equals, NotEquals, ApproximatelyEquals},
+		"created_at":   {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"processed_at": {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+	}
+}
+
+func (s Event) IsSortable(column string) bool {
+	switch column {
+	case "id", "type", "created_at", "processed_at":
+		return true
+	default:
+		return false
+	}
 }
