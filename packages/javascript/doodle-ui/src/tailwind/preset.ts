@@ -32,7 +32,7 @@ export default {
                 primary: 'var(--primary)',
                 'primary-variant': 'var(--primary-variant)',
 
-                secondary: 'var(--secondary)',
+                secondary: 'var(--secondary-main)',
                 'secondary-variant': 'var(--secondary-variant)',
                 'secondary-variant-2': 'var(--secondary-variant-2)',
 
@@ -40,7 +40,8 @@ export default {
                 'tertiary-variant': 'var(--tertiary-variant)',
 
                 contrast: 'var(--contrast)',
-                link: 'var(--link)',
+                link: 'var(--link-main)',
+                'link-hover': '(--link-hover)',
                 error: 'var(--error)',
 
                 'neutral-1': 'var(--neutral-1)',
@@ -65,9 +66,6 @@ export default {
                 // primary: 'var(--primary)',
                 // 'primary-variant': 'var(--primary-variant)',
 
-                // secondary: 'var(--secondary)',
-                // 'secondary-variant': 'var(--secondary-variant)',
-
                 // tertiary: 'var(--tertiary)',
                 // 'tertiary-variant': 'var(--tertiary-variant)',
 
@@ -75,9 +73,6 @@ export default {
                 // 'common-white': 'var(--common-white)',
 
                 // contrast: 'var(--common-dark)',
-
-                // link: 'var(--link-main)',
-                // 'link-hover': 'var(--link-hover)',
 
                 // 'text-main': 'var(--text-main)',
                 // 'text-light': 'var(--text-light)',
