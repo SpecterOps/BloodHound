@@ -336,22 +336,6 @@ func (s Resources) BuildDeleteRequest(ctx context.Context, userID string, payloa
 	}
 
 	if len(payload.DeleteRelationships) > 0 {
-		validKinds, err := s.Graph.FetchKinds(ctx)
-		if err != nil {
-			return deleteRequest, fmt.Errorf("failed to fetch valid kinds: %w", err)
-		}
-
-		validSet := make(map[string]struct{}, len(validKinds))
-		for _, k := range validKinds {
-			validSet[k.String()] = struct{}{}
-		}
-
-		for _, relKind := range payload.DeleteRelationships {
-			if _, ok := validSet[relKind]; !ok {
-				return deleteRequest, fmt.Errorf("requested relationship kind %q is not a valid kind", relKind)
-			}
-		}
-
 		deleteRequest.DeleteRelationships = payload.DeleteRelationships
 	}
 

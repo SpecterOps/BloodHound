@@ -92,13 +92,15 @@ func setupIntegrationTest(t *testing.T) IntegrationTestSuite {
 	t.Helper()
 
 	var (
-		cfg      = config.Configuration{}
 		ctx      = context.Background()
 		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
 	)
 
+	cfg, err := config.NewDefaultConnectionConfiguration(connConf.URL())
+	require.NoError(t, err)
+
 	// Create connection pool
-	pool, err := pg.NewPool(connConf.URL())
+	pool, err := pg.NewPool(cfg.Database)
 	require.NoError(t, err)
 
 	// Open graph database
@@ -113,10 +115,10 @@ func setupIntegrationTest(t *testing.T) IntegrationTestSuite {
 	err = graphDB.AssertSchema(ctx, schema())
 	require.NoError(t, err)
 
-	gormDB, err := database.OpenDatabase(connConf.URL())
+	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
 	require.NoError(t, err)
 
-	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), cfg)
+	db := database.NewBloodhoundDB(gormDB, dbPool, auth.NewIdentityResolver(), cfg)
 	require.NoError(t, db.Migrate(ctx))
 	require.NoError(t, db.PopulateExtensionData(ctx))
 
@@ -181,224 +183,150 @@ func teardownIntegrationTest(t *testing.T, suite *IntegrationTestSuite) {
 func TestIngestionCoordinator(t *testing.T) {
 	t.Parallel()
 
-	t.Run("real NodeChange operations work end-to-end", func(t *testing.T) {
-		suite := setupIntegrationTest(t)
-		defer teardownIntegrationTest(t, &suite)
+	type args struct {
+		batchSize     int
+		flushInterval time.Duration
+		objectIDs     []string
+	}
 
-		var (
-			coordinator   = newIngestionCoordinator(suite.GraphDB)
-			ctx           = suite.Context
-			batchSize     = 3
-			flushInterval = 100 * time.Millisecond
-			lastseen      = time.Now().UTC()
-		)
+	tests := []struct {
+		name   string
+		args   args
+		setup  func(t *testing.T, coordinator *ingestionCoordinator, ctx context.Context, objectIDs []string)
+		assert func(t *testing.T, suite IntegrationTestSuite, objectIDs []string)
+	}{
+		{
+			name: "submits changes and flushes nodes to database",
+			args: args{
+				batchSize:     3,
+				flushInterval: 100 * time.Millisecond,
+				objectIDs:     []string{"node1", "node2", "node3"},
+			},
+			setup: func(t *testing.T, coordinator *ingestionCoordinator, ctx context.Context, objectIDs []string) {
+				t.Helper()
+				for _, objectID := range objectIDs {
+					change := NewNodeChange(objectID, graph.Kinds{graph.StringKind("NK1")},
+						graph.NewProperties().SetAll(map[string]any{
+							"objectid": objectID,
+							"lastseen": time.Now().UTC(),
+						}))
+					require.True(t, coordinator.submit(ctx, change))
+				}
+				time.Sleep(200 * time.Millisecond)
+			},
+			assert: func(t *testing.T, suite IntegrationTestSuite, objectIDs []string) {
+				t.Helper()
+				assertNodesExist(t, suite, objectIDs)
+			},
+		},
+		{
+			name: "flushes when buffer reaches batch size",
+			args: args{
+				batchSize:     2,
+				flushInterval: 1 * time.Second,
+				objectIDs:     []string{"batch1", "batch2"},
+			},
+			setup: func(t *testing.T, coordinator *ingestionCoordinator, ctx context.Context, objectIDs []string) {
+				t.Helper()
+				for _, objectID := range objectIDs {
+					change := NewNodeChange(objectID, graph.Kinds{graph.StringKind("NK1")},
+						graph.NewProperties().SetAll(map[string]any{
+							"objectid": objectID,
+							"lastseen": time.Now().UTC(),
+						}))
+					require.True(t, coordinator.submit(ctx, change))
+				}
+				time.Sleep(200 * time.Millisecond)
+			},
+			assert: func(t *testing.T, suite IntegrationTestSuite, objectIDs []string) {
+				t.Helper()
+				assertNodesExist(t, suite, objectIDs)
+			},
+		},
+		{
+			name: "periodic timer flushes buffer below batch size",
+			args: args{
+				batchSize:     10,
+				flushInterval: 50 * time.Millisecond,
+				objectIDs:     []string{"idle1"},
+			},
+			setup: func(t *testing.T, coordinator *ingestionCoordinator, ctx context.Context, objectIDs []string) {
+				t.Helper()
+				change := NewNodeChange(objectIDs[0], graph.Kinds{graph.StringKind("NK1")},
+					graph.NewProperties().SetAll(map[string]any{
+						"objectid": objectIDs[0],
+						"lastseen": time.Now().UTC(),
+					}))
+				require.True(t, coordinator.submit(ctx, change))
+				time.Sleep(150 * time.Millisecond)
+			},
+			assert: func(t *testing.T, suite IntegrationTestSuite, objectIDs []string) {
+				t.Helper()
+				assertNodesExist(t, suite, objectIDs)
+			},
+		},
+		{
+			name: "shutdown drains remaining buffer before exiting",
+			args: args{
+				batchSize:     10,
+				flushInterval: 1 * time.Second,
+				objectIDs:     []string{"final1", "final2"},
+			},
+			setup: func(t *testing.T, coordinator *ingestionCoordinator, ctx context.Context, objectIDs []string) {
+				t.Helper()
+				for _, objectID := range objectIDs {
+					change := NewNodeChange(objectID, graph.Kinds{graph.StringKind("NK1")},
+						graph.NewProperties().SetAll(map[string]any{
+							"objectid": objectID,
+							"lastseen": time.Now().UTC(),
+						}))
+					require.True(t, coordinator.submit(ctx, change))
+				}
+				time.Sleep(10 * time.Millisecond)
+				require.NoError(t, coordinator.stop(context.Background()))
+			},
+			assert: func(t *testing.T, suite IntegrationTestSuite, objectIDs []string) {
+				t.Helper()
+				assertNodesExist(t, suite, objectIDs)
+			},
+		},
+	}
 
-		// Start the coordinator
-		coordinator.start(ctx, batchSize, flushInterval)
-		defer coordinator.stop(context.Background())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			suite := setupIntegrationTest(t)
+			defer teardownIntegrationTest(t, &suite)
 
-		// Create real NodeChange instances with required properties
-		changes := []*NodeChange{
-			NewNodeChange("node1", graph.Kinds{graph.StringKind("NK1")},
-				graph.NewProperties().SetAll(map[string]any{
-					"objectid": "node1",
-					"lastseen": lastseen,
-				})),
-			NewNodeChange("node2", graph.Kinds{graph.StringKind("NK2")},
-				graph.NewProperties().SetAll(map[string]any{
-					"objectid": "node2",
-					"lastseen": lastseen,
-				})),
-			NewNodeChange("node3", graph.Kinds{graph.StringKind("NK3")},
-				graph.NewProperties().SetAll(map[string]any{
-					"objectid": "node3",
-					"lastseen": lastseen,
-				})),
-		}
+			coordinator := newIngestionCoordinator(suite.GraphDB, DefaultRetryConfig())
+			coordinator.start(suite.Context, tt.args.batchSize, tt.args.flushInterval)
+			defer coordinator.stop(context.Background())
 
-		// Submit changes
-		for _, change := range changes {
-			require.True(t, coordinator.submit(ctx, change))
-		}
-
-		// Wait for processing
-		time.Sleep(200 * time.Millisecond)
-
-		// Verify nodes were created in the database by querying for them
-		var nodeCount int
-
-		err := suite.GraphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
-
-			return tx.Nodes().
-				Filter(
-					query.Or(
-						query.Equals(query.Property(query.Node(), "objectid"), "node1"),
-						query.Equals(query.Property(query.Node(), "objectid"), "node2"),
-						query.Equals(query.Property(query.Node(), "objectid"), "node3"),
-					),
-				).
-				Fetch(func(cursor graph.Cursor[*graph.Node]) error {
-					for range cursor.Chan() {
-						nodeCount++
-					}
-
-					return cursor.Error()
-				})
+			tt.setup(t, coordinator, suite.Context, tt.args.objectIDs)
+			tt.assert(t, suite, tt.args.objectIDs)
 		})
-		require.NoError(t, err)
-		require.Equal(t, len(changes), nodeCount)
-	})
+	}
+}
 
-	t.Run("size-based batching creates nodes in database", func(t *testing.T) {
-		suite := setupIntegrationTest(t)
-		defer teardownIntegrationTest(t, &suite)
-		var (
-			coordinator   = newIngestionCoordinator(suite.GraphDB)
-			ctx           = suite.Context
-			batchSize     = 2
-			flushInterval = 1 * time.Second // Long interval to test size-based flushing
-		)
+// assertNodesExist verifies that nodes with the given objectIDs exist in the graph database.
+func assertNodesExist(t *testing.T, suite IntegrationTestSuite, objectIDs []string) {
+	t.Helper()
 
-		coordinator.start(ctx, batchSize, flushInterval)
-		defer coordinator.stop(context.Background())
+	var nodeCount int
+	filters := make([]graph.Criteria, 0, len(objectIDs))
+	for _, objectID := range objectIDs {
+		filters = append(filters, query.Equals(query.NodeProperty("objectid"), objectID))
+	}
 
-		// Submit exactly batchSize changes
-		changes := []*NodeChange{
-			NewNodeChange("batch1", graph.Kinds{graph.StringKind("NK1")},
-				graph.NewProperties().SetAll(map[string]any{
-					"objectid": "batch1",
-					"lastseen": time.Now(),
-					"batch":    "size-test",
-				})),
-			NewNodeChange("batch2", graph.Kinds{graph.StringKind("NK1")},
-				graph.NewProperties().SetAll(map[string]any{
-					"objectid": "batch2",
-					"lastseen": time.Now(),
-					"batch":    "size-test",
-				})),
-		}
-
-		for _, change := range changes {
-			require.True(t, coordinator.submit(ctx, change))
-		}
-
-		// Wait for size-based flush
-		time.Sleep(200 * time.Millisecond)
-
-		// Verify nodes were created
-		var nodeCount int
-		err := suite.GraphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
-			return tx.Nodes().
-				Filter(
-					query.Or(query.Equals(query.NodeProperty("objectid"), "batch1"),
-						query.Equals(query.NodeProperty("objectid"), "batch2"))).
-				Fetch(func(cursor graph.Cursor[*graph.Node]) error {
-					for node := range cursor.Chan() {
-						fmt.Println(node)
-						nodeCount++
-					}
-					return cursor.Error()
-				})
-		})
-		require.NoError(t, err)
-		require.Equal(t, 2, nodeCount)
-	})
-
-	t.Run("idle flush creates nodes in database", func(t *testing.T) {
-		suite := setupIntegrationTest(t)
-		defer teardownIntegrationTest(t, &suite)
-
-		var (
-			coordinator   = newIngestionCoordinator(suite.GraphDB)
-			ctx           = suite.Context
-			batchSize     = 10 // Large batch size
-			flushInterval = 50 * time.Millisecond
-		)
-
-		coordinator.start(ctx, batchSize, flushInterval)
-		defer coordinator.stop(context.Background())
-
-		// Submit single change (less than batch size)
-		change := NewNodeChange("idle1", graph.Kinds{graph.StringKind("NK1")},
-			graph.NewProperties().SetAll(map[string]any{
-				"objectid": "idle1",
-				"lastseen": time.Now(),
-				"batch":    "idle-test",
-			}))
-
-		require.True(t, coordinator.submit(ctx, change))
-
-		// Wait for idle flush
-		time.Sleep(150 * time.Millisecond)
-
-		// Verify node was created
-		var nodeCount int
-		err := suite.GraphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
-			return tx.Nodes().Filter(query.Equals(query.NodeProperty("objectid"), "idle1")).
-				Fetch(func(cursor graph.Cursor[*graph.Node]) error {
-					for range cursor.Chan() {
-						nodeCount++
-					}
-					return cursor.Error()
-				})
-		})
-		require.NoError(t, err)
-		require.Equal(t, 1, nodeCount)
-	})
-
-	t.Run("final flush on shutdown creates remaining nodes", func(t *testing.T) {
-		suite := setupIntegrationTest(t)
-		defer teardownIntegrationTest(t, &suite)
-
-		var (
-			coordinator   = newIngestionCoordinator(suite.GraphDB)
-			ctx           = suite.Context
-			batchSize     = 10              // Large batch size
-			flushInterval = 1 * time.Second // Long interval
-		)
-
-		coordinator.start(ctx, batchSize, flushInterval)
-
-		// Submit changes that won't trigger size-based flush
-		changes := []*NodeChange{
-			NewNodeChange("final1", graph.Kinds{graph.StringKind("NK1")},
-				graph.NewProperties().SetAll(map[string]any{
-					"objectid": "final1",
-					"lastseen": time.Now(),
-					"batch":    "final-test",
-				})),
-			NewNodeChange("final2", graph.Kinds{graph.StringKind("NK1")},
-				graph.NewProperties().SetAll(map[string]any{
-					"objectid": "final2",
-					"lastseen": time.Now(),
-					"batch":    "final-test",
-				})),
-		}
-
-		for _, change := range changes {
-			require.True(t, coordinator.submit(ctx, change))
-		}
-
-		// Give changes time to be received
-		time.Sleep(10 * time.Millisecond)
-
-		// Stop should trigger final flush
-		require.NoError(t, coordinator.stop(context.Background()))
-
-		// Verify nodes were created by final flush
-		var nodeCount int
-		err := suite.GraphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
-			return tx.Nodes().Filter(query.Or(
-				query.Equals(query.NodeProperty("objectid"), "final1"),
-				query.Equals(query.NodeProperty("objectid"), "final2"),
-			)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+	err := suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
+		return tx.Nodes().
+			Filter(query.Or(filters...)).
+			Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 				for range cursor.Chan() {
 					nodeCount++
 				}
 				return cursor.Error()
 			})
-		})
-		require.NoError(t, err)
-		require.Equal(t, 2, nodeCount)
 	})
+	require.NoError(t, err)
+	require.Equal(t, len(objectIDs), nodeCount)
 }

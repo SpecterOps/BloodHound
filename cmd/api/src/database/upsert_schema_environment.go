@@ -13,142 +13,90 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package database
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
-// UpsertSchemaEnvironmentWithPrincipalKinds creates or updates an environment with its principal kinds.
-// If an environment with the same environment kind exists, it will be replaced.
-func (s *BloodhoundDB) UpsertSchemaEnvironmentWithPrincipalKinds(ctx context.Context, schemaExtensionId int32, environmentKind string, sourceKind string, principalKinds []string) error {
-	environment := model.SchemaEnvironment{
-		SchemaExtensionId: schemaExtensionId,
-	}
-
-	envKindID, err := s.validateAndTranslateEnvironmentKind(ctx, environmentKind)
-	if err != nil {
-		return err
-	}
-
-	sourceKindID, err := s.validateAndTranslateSourceKind(ctx, sourceKind)
-	if err != nil {
-		return err
-	}
-
-	translatedPrincipalKinds, err := s.validateAndTranslatePrincipalKinds(ctx, principalKinds)
-	if err != nil {
-		return err
-	}
-
-	environment.EnvironmentKindId = envKindID
-	environment.SourceKindId = sourceKindID
-
-	envID, err := s.replaceSchemaEnvironment(ctx, environment)
-	if err != nil {
-		return fmt.Errorf("error replacing or creating schema environment: %w", err)
-	}
-
-	if err := s.replacePrincipalKinds(ctx, envID, translatedPrincipalKinds); err != nil {
-		return fmt.Errorf("error replacing principal kinds: %w", err)
-	}
-
-	return nil
-}
-
-// validateAndTranslateEnvironmentKind validates that the environment kind exists in the kinds table.
-func (s *BloodhoundDB) validateAndTranslateEnvironmentKind(ctx context.Context, environmentKindName string) (int32, error) {
-	if envKind, err := s.GetKindByName(ctx, environmentKindName); err != nil && !errors.Is(err, ErrNotFound) {
-		return 0, fmt.Errorf("error retrieving environment kind '%s': %w", environmentKindName, err)
-	} else if errors.Is(err, ErrNotFound) {
-		return 0, fmt.Errorf("environment kind '%s' not found", environmentKindName)
+// CreateEnvironmentWithPrincipalKinds translates FK names, creates the environment row,
+// and reconciles its principal kinds.
+func (s *BloodhoundDB) CreateEnvironmentWithPrincipalKinds(ctx context.Context, extensionId int32, input model.EnvironmentInput) (model.SchemaEnvironment, error) {
+	if envKind, err := s.GetKindsByNames(ctx, input.EnvironmentKindName); err != nil {
+		return model.SchemaEnvironment{}, fmt.Errorf("error retrieving environment kind '%s': %w", input.EnvironmentKindName, err)
+	} else if sourceKind, err := s.UpsertKind(ctx, input.SourceKindName); err != nil {
+		return model.SchemaEnvironment{}, fmt.Errorf("error registering source kind '%s': %w", input.SourceKindName, err)
+	} else if principalKinds, err := s.buildPrincipalKindsFromNames(ctx, input.PrincipalKinds); err != nil {
+		return model.SchemaEnvironment{}, err
+	} else if created, err := s.CreateEnvironment(ctx, extensionId, envKind[0].ID, sourceKind.ID); err != nil {
+		return model.SchemaEnvironment{}, fmt.Errorf("error creating environment: %w", err)
+	} else if _, err := reconcile(ctx, principalKinds, nil, s.principalKindReconcileConfig(created.ID)); err != nil {
+		return model.SchemaEnvironment{}, fmt.Errorf("error reconciling principal kinds: %w", err)
 	} else {
-		return envKind.ID, nil
+		return created, nil
 	}
 }
 
-// validateAndTranslateSourceKind validates that the source kind exists in the kinds table.
-// If not found, it registers the kind and returns its ID so it can be added to the Environment object.
-func (s *BloodhoundDB) validateAndTranslateSourceKind(ctx context.Context, sourceKindName string) (int32, error) {
-	if sourceKind, err := s.GetKindByName(ctx, sourceKindName); err != nil && !errors.Is(err, ErrNotFound) {
-		return 0, fmt.Errorf("error retrieving source kind '%s': %w", sourceKindName, err)
-	} else if err == nil {
-		return sourceKind.ID, nil
+// UpdateEnvironmentWithPrincipalKinds translates FK names, updates the environment row if
+// source kind changed, and reconciles its principal kinds.
+func (s *BloodhoundDB) UpdateEnvironmentWithPrincipalKinds(ctx context.Context, existing model.SchemaEnvironment, input model.EnvironmentInput) (model.SchemaEnvironment, error) {
+	// Update the source kind only when it has changed.
+	if sourceKind, err := s.UpsertKind(ctx, input.SourceKindName); err != nil {
+		return model.SchemaEnvironment{}, fmt.Errorf("error registering source kind '%s': %w", input.SourceKindName, err)
+	} else if existing.SourceKindId != sourceKind.ID {
+		existing.SourceKindId = sourceKind.ID
+		if existing, err = s.UpdateEnvironment(ctx, existing); err != nil {
+			return model.SchemaEnvironment{}, fmt.Errorf("error updating environment: %w", err)
+		}
 	}
 
-	// If source kind is not found it will be inserted.
-	if sourceKind, err := s.UpsertKind(ctx, sourceKindName); err != nil {
-		return 0, fmt.Errorf("error registering source kind '%s': %w", sourceKindName, err)
+	// Always reconcile principal kinds against the (possibly updated) environment.
+	if principalKindsInput, err := s.buildPrincipalKindsFromNames(ctx, input.PrincipalKinds); err != nil {
+		return model.SchemaEnvironment{}, err
+	} else if existingPrincipalKinds, err := s.GetPrincipalKindsByEnvironmentId(ctx, existing.ID); err != nil {
+		return model.SchemaEnvironment{}, fmt.Errorf("error fetching existing principal kinds: %w", err)
+	} else if _, err = reconcile(ctx, principalKindsInput, existingPrincipalKinds, s.principalKindReconcileConfig(existing.ID)); err != nil {
+		return model.SchemaEnvironment{}, fmt.Errorf("error reconciling principal kinds: %w", err)
 	} else {
-		return sourceKind.ID, nil
+		return existing, nil
 	}
 }
 
-// validateAndTranslatePrincipalKinds ensures all principalKinds exist in the kinds table.
-// It also translates them to IDs so they can be upserted into the database.
-func (s *BloodhoundDB) validateAndTranslatePrincipalKinds(ctx context.Context, principalKindNames []string) ([]model.SchemaEnvironmentPrincipalKind, error) {
-	principalKinds := make([]model.SchemaEnvironmentPrincipalKind, len(principalKindNames))
+// buildPrincipalKindsFromNames looks up each kind by name and returns the corresponding
+// principal kind structs. Returns an error if any kind does not exist.
+func (s *BloodhoundDB) buildPrincipalKindsFromNames(ctx context.Context, names []string) ([]model.SchemaEnvironmentPrincipalKind, error) {
+	principalKinds := make([]model.SchemaEnvironmentPrincipalKind, len(names))
 
-	for i, kindName := range principalKindNames {
-		if kind, err := s.GetKindByName(ctx, kindName); err != nil && !errors.Is(err, ErrNotFound) {
-			return nil, fmt.Errorf("error retrieving principal kind by name '%s': %w", kindName, err)
-		} else if errors.Is(err, ErrNotFound) {
-			return nil, fmt.Errorf("principal kind '%s' not found", kindName)
+	for i, name := range names {
+		if kind, err := s.GetKindsByNames(ctx, name); err != nil {
+			return nil, fmt.Errorf("error retrieving principal kind '%s': %w", name, err)
 		} else {
-			principalKinds[i] = model.SchemaEnvironmentPrincipalKind{
-				PrincipalKind: int32(kind.ID),
-			}
+			principalKinds[i] = model.SchemaEnvironmentPrincipalKind{PrincipalKind: kind[0].ID}
 		}
 	}
 
 	return principalKinds, nil
 }
 
-// replaceSchemaEnvironment creates or updates a schema environment.
-// If an environment with the given environment_kind_id exists, it deletes it first before creating the new one.
-// The unique constraint on environment_kind_id of the Schema Environment table ensures no
-// duplicates exist, enabling this upsert logic.
-func (s *BloodhoundDB) replaceSchemaEnvironment(ctx context.Context, graphSchema model.SchemaEnvironment) (int32, error) {
-	if existing, err := s.GetEnvironmentByEnvironmentKindId(ctx, graphSchema.EnvironmentKindId); err != nil && !errors.Is(err, ErrNotFound) {
-		return 0, fmt.Errorf("error retrieving schema environment: %w", err)
-	} else if !errors.Is(err, ErrNotFound) {
-		// Environment exists - delete it first
-		if err := s.DeleteEnvironment(ctx, existing.ID); err != nil {
-			return 0, fmt.Errorf("error deleting schema environment %d: %w", existing.ID, err)
-		}
+// principalKindReconcileConfig returns the reconcileConfig for principal kinds.
+// Inputs are pre-resolved SchemaEnvironmentPrincipalKind structs, environmentId is closed over by create.
+func (s *BloodhoundDB) principalKindReconcileConfig(environmentId int32) reconcileConfig[model.SchemaEnvironmentPrincipalKind, model.SchemaEnvironmentPrincipalKind, int32] {
+	return reconcileConfig[model.SchemaEnvironmentPrincipalKind, model.SchemaEnvironmentPrincipalKind, int32]{
+		getInputKey:    func(input model.SchemaEnvironmentPrincipalKind) int32 { return input.PrincipalKind },
+		getExistingKey: func(existing model.SchemaEnvironmentPrincipalKind) int32 { return existing.PrincipalKind },
+		create: func(ctx context.Context, input model.SchemaEnvironmentPrincipalKind) (model.SchemaEnvironmentPrincipalKind, error) {
+			return s.CreatePrincipalKind(ctx, environmentId, input.PrincipalKind)
+		},
+		// no-op
+		update: func(_ context.Context, existing model.SchemaEnvironmentPrincipalKind, _ model.SchemaEnvironmentPrincipalKind) (model.SchemaEnvironmentPrincipalKind, error) {
+			return existing, nil
+		},
+		delete: func(ctx context.Context, existing model.SchemaEnvironmentPrincipalKind) error {
+			return s.DeletePrincipalKind(ctx, existing.EnvironmentId, existing.PrincipalKind)
+		},
 	}
-
-	// Create Environment
-	if created, err := s.CreateEnvironment(ctx, graphSchema.SchemaExtensionId, graphSchema.EnvironmentKindId, graphSchema.SourceKindId); err != nil {
-		return 0, fmt.Errorf("error creating schema environment: %w", err)
-	} else {
-		return created.ID, nil
-	}
-}
-
-// replacePrincipalKinds deletes all existing principal kinds for an environment and creates new ones.
-func (s *BloodhoundDB) replacePrincipalKinds(ctx context.Context, environmentID int32, principalKinds []model.SchemaEnvironmentPrincipalKind) error {
-	if existingKinds, err := s.GetPrincipalKindsByEnvironmentId(ctx, environmentID); err != nil && !errors.Is(err, ErrNotFound) {
-		return fmt.Errorf("error retrieving existing principal kinds for environment %d: %w", environmentID, err)
-	} else if !errors.Is(err, ErrNotFound) {
-		// Delete all existing principal kinds
-		for _, kind := range existingKinds {
-			if err := s.DeletePrincipalKind(ctx, kind.EnvironmentId, kind.PrincipalKind); err != nil {
-				return fmt.Errorf("error deleting principal kind %d for environment %d: %w", kind.PrincipalKind, kind.EnvironmentId, err)
-			}
-		}
-	}
-
-	// Create the new principal kinds
-	for _, kind := range principalKinds {
-		if _, err := s.CreatePrincipalKind(ctx, environmentID, kind.PrincipalKind); err != nil {
-			return fmt.Errorf("error creating principal kind %d for environment %d: %w", kind.PrincipalKind, environmentID, err)
-		}
-	}
-
-	return nil
 }

@@ -27,6 +27,8 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database/migration"
@@ -34,6 +36,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/dawgs/drivers"
+	"github.com/specterops/dawgs/drivers/pg"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -185,6 +189,7 @@ type BloodhoundDB struct {
 	db         *gorm.DB
 	idResolver auth.IdentityResolver // TODO: this really needs to be elsewhere. something something separation of concerns
 	config     config.Configuration
+	pool       *pgxpool.Pool
 }
 
 func (s *BloodhoundDB) Close(ctx context.Context) {
@@ -192,6 +197,10 @@ func (s *BloodhoundDB) Close(ctx context.Context) {
 		slog.ErrorContext(ctx, "Failed to fetch SQL DB reference from GORM", attr.Error(err))
 	} else if err := sqlDBRef.Close(); err != nil {
 		slog.ErrorContext(ctx, "Failed closing database", attr.Error(err))
+	}
+
+	if s.pool != nil {
+		s.pool.Close() // pgxpool must be closed separately
 	}
 }
 
@@ -213,8 +222,8 @@ func (s *BloodhoundDB) Scope(scopeFuncs ...ScopeFunc) *gorm.DB {
 	return s.db.Scopes(scopes...)
 }
 
-func NewBloodhoundDB(db *gorm.DB, idResolver auth.IdentityResolver, cfg config.Configuration) *BloodhoundDB {
-	return &BloodhoundDB{db: db, idResolver: idResolver, config: cfg}
+func NewBloodhoundDB(db *gorm.DB, pool *pgxpool.Pool, idResolver auth.IdentityResolver, cfg config.Configuration) *BloodhoundDB {
+	return &BloodhoundDB{db: db, pool: pool, idResolver: idResolver, config: cfg}
 }
 
 // Transaction executes the given function within a database transaction.
@@ -225,23 +234,32 @@ func NewBloodhoundDB(db *gorm.DB, idResolver auth.IdentityResolver, cfg config.C
 // Optional sql.TxOptions can be provided to configure isolation level and read-only mode.
 func (s *BloodhoundDB) Transaction(ctx context.Context, fn func(tx *BloodhoundDB) error, opts ...*sql.TxOptions) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		return fn(NewBloodhoundDB(tx, s.idResolver, s.config))
+		return fn(NewBloodhoundDB(tx, s.pool, s.idResolver, s.config))
 	}, opts...)
 }
 
-func OpenDatabase(connection string) (*gorm.DB, error) {
+func OpenDatabase(cfg drivers.DatabaseConfiguration) (*gorm.DB, *pgxpool.Pool, error) {
 	gormConfig := &gorm.Config{
 		Logger: &GormLogAdapter{
 			SlowQueryErrorThreshold: time.Second * 30,
 			SlowQueryWarnThreshold:  time.Second * 10,
 		},
 	}
-
-	if db, err := gorm.Open(postgres.Open(connection), gormConfig); err != nil {
-		return nil, err
-	} else {
-		return db, nil
+	pool, err := pg.NewPool(cfg)
+	if err != nil {
+		return nil, nil, err
 	}
+
+	dbPool := stdlib.OpenDBFromPool(pool)
+
+	db, err := gorm.Open(postgres.New(postgres.Config{Conn: dbPool}), gormConfig)
+	if err != nil {
+		_ = dbPool.Close()
+		pool.Close()
+		return nil, nil, err
+	}
+
+	return db, pool, nil
 }
 
 func (s *BloodhoundDB) RawDelete(value any) error {

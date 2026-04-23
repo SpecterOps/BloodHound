@@ -23,7 +23,7 @@ VALUES (
         current_timestamp,
         'opengraph',
         'Read'
-       ), 
+       ),
        (
         current_timestamp,
         current_timestamp,
@@ -32,7 +32,7 @@ VALUES (
        )
 ON CONFLICT DO NOTHING;
 
--- Add OpenGraph Read permissions to specific roles 
+-- Add OpenGraph Read permissions to specific roles
 
 INSERT INTO roles_permissions (role_id, permission_id)
 SELECT r.id, p.id
@@ -49,4 +49,35 @@ FROM roles r
 JOIN permissions p
 ON (p.authority, p.name) = ('opengraph', 'Write')
 WHERE r.name IN ('Administrator')
+ON CONFLICT DO NOTHING;
+
+-- Update the 'auth_tokens' table adding created_by column
+-- As of current, we don't have a way to backfill the data, so we are leaving this field optional for now
+ALTER TABLE auth_tokens
+  ADD COLUMN IF NOT EXISTS created_by text;
+
+-- Create fk_auth_tokens_created_by to auth_tokens referencing users.id if it doesn't exist
+DO $$
+  BEGIN
+    IF NOT EXISTS (
+      SELECT 1
+      FROM pg_constraint
+      WHERE conname = 'fk_auth_tokens_created_by'
+    ) THEN
+      ALTER TABLE auth_tokens
+        ADD CONSTRAINT fk_auth_tokens_created_by
+          FOREIGN KEY (created_by)
+            REFERENCES users(id);
+    END IF;
+  END $$;
+
+-- Add Findings Table feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'findings_table',
+        'Findings Table',
+        'Enables a new table view for findings.',
+        false,
+        false)
 ON CONFLICT DO NOTHING;

@@ -16,6 +16,7 @@
 
 import userEvent from '@testing-library/user-event';
 import { Permission, createAuthStateWithPermissions } from 'bh-shared-ui';
+import { ClearDatabaseRequest } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen, waitFor } from 'src/test-utils';
@@ -45,23 +46,25 @@ const SOURCE_KINDS_RESPONSE = {
 };
 
 let permissionResponse = createAuthStateWithPermissions([Permission.WIPE_DB]).user;
+let clearDatabaseRequestBody: ClearDatabaseRequest | undefined;
 
 describe('DatabaseManagement', () => {
     const server = setupServer(
-        rest.get('/api/v2/graphs/source-kinds', (req, res, ctx) => {
+        rest.get('/api/v2/graphs/source-kinds', (_req, res, ctx) => {
             return res(ctx.json(SOURCE_KINDS_RESPONSE));
         }),
-        rest.get('/api/v2/self', (req, res, ctx) => {
+        rest.get('/api/v2/self', (_req, res, ctx) => {
             return res(
                 ctx.json({
                     data: permissionResponse,
                 })
             );
         }),
-        rest.post('/api/v2/clear-database', (req, res, ctx) => {
+        rest.post('/api/v2/clear-database', async (req, res, ctx) => {
+            clearDatabaseRequestBody = await req.json();
             return res(ctx.status(204));
         }),
-        rest.get('/api/v2/features', async (req, res, ctx) => {
+        rest.get('/api/v2/features', async (_req, res, ctx) => {
             return res(
                 ctx.json({
                     data: [
@@ -80,7 +83,10 @@ describe('DatabaseManagement', () => {
     );
 
     beforeAll(() => server.listen());
-    afterEach(() => server.resetHandlers());
+    afterEach(() => {
+        clearDatabaseRequestBody = undefined;
+        server.resetHandlers();
+    });
     afterAll(() => server.close());
 
     it('renders', async () => {
@@ -95,6 +101,7 @@ describe('DatabaseManagement', () => {
 
         // [ ] All graph data
         //    [ ] Active Directory data
+        //       [ ] HasSession
         //    [ ] Azure data
         //    [ ] ACustomBase data
         //    [ ] Sourceless data
@@ -102,7 +109,6 @@ describe('DatabaseManagement', () => {
         // [ ] All asset group selectors
         // [ ] File ingest log history
         // [ ] Data quality
-        // [ ] HasSession edges
         const checkboxes = screen.getAllByRole('checkbox');
         expect(checkboxes.length).toEqual(10);
         expect(deleteButton).toBeInTheDocument();
@@ -200,6 +206,14 @@ describe('DatabaseManagement', () => {
             /Deletion of the data is under way. Depending on data volume, this may take some time to complete./i
         );
         expect(successMessage).toBeInTheDocument();
+        expect(clearDatabaseRequestBody).toEqual({
+            deleteAssetGroupSelectors: [],
+            deleteCollectedGraphData: false,
+            deleteDataQualityHistory: false,
+            deleteFileIngestHistory: false,
+            deleteRelationships: [],
+            deleteSourceKinds: [],
+        });
     });
 
     it('handles delete by source kind', async () => {
@@ -224,5 +238,43 @@ describe('DatabaseManagement', () => {
             /Deletion of the data is under way. Depending on data volume, this may take some time to complete./i
         );
         expect(successMessage).toBeInTheDocument();
+        expect(clearDatabaseRequestBody).toEqual({
+            deleteAssetGroupSelectors: [],
+            deleteCollectedGraphData: false,
+            deleteDataQualityHistory: false,
+            deleteFileIngestHistory: false,
+            deleteRelationships: ['HasSession'],
+            deleteSourceKinds: [1],
+        });
+        expect(screen.getByRole('checkbox', { name: /Active Directory data/i })).not.toBeChecked();
+        expect(screen.getByRole('checkbox', { name: /HasSession/i })).not.toBeChecked();
+    });
+
+    it('handles delete by nested graph data selection', async () => {
+        await act(async () => render(<DatabaseManagement />));
+
+        const user = userEvent.setup();
+
+        const checkbox = screen.getByRole('checkbox', { name: /HasSession/i });
+        await waitFor(() => expect(checkbox).not.toBeDisabled());
+        await user.click(checkbox);
+
+        const deleteButton = screen.getByRole('button', { name: /delete/i });
+        await user.click(deleteButton);
+
+        const textField = screen.getByRole('textbox');
+        await user.type(textField, 'Delete this environment data');
+
+        const confirmButton = screen.getByRole('button', { name: /confirm/i });
+        await user.click(confirmButton);
+
+        expect(clearDatabaseRequestBody).toEqual({
+            deleteAssetGroupSelectors: [],
+            deleteCollectedGraphData: false,
+            deleteDataQualityHistory: false,
+            deleteFileIngestHistory: false,
+            deleteRelationships: ['HasSession'],
+            deleteSourceKinds: [],
+        });
     });
 });

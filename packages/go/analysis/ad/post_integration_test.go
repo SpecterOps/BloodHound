@@ -102,6 +102,49 @@ func TestCrossProductEveryone2(t *testing.T) {
 	})
 }
 
+// TestCrossProductSharedMemberNotDuplicated ensures that a user who is a member of two sub-groups that
+// both qualify as cross-product results does not appear as an individual result entry. Prior to the fix,
+// the XorReach shortcutting toggled the shared member back into the candidate set when the second
+// matching sub-group was processed, causing a false-positive individual result edge.
+//
+// Graph shape:
+//
+//	firstSet  = [ParentGroup]
+//	secondSet = [SubGroup1, SubGroup2]
+//
+//	SharedUser  -[MemberOf]-> SubGroup1 -[MemberOf]-> ParentGroup
+//	SharedUser  -[MemberOf]-> SubGroup2 -[MemberOf]-> ParentGroup
+//	UniqueUser1 -[MemberOf]-> SubGroup1
+//	UniqueUser2 -[MemberOf]-> SubGroup2
+//
+// Expected results: SubGroup1 and SubGroup2 only. SharedUser is covered by both groups and must not
+// appear individually.
+func TestCrossProductSharedMemberNotDuplicated(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.DatabaseTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.ShortcutHarnessSharedMember.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, graphDB graph.Database, tx graph.Transaction) {
+		var (
+			firstSet  = []*graph.Node{testContext.Harness.ShortcutHarnessSharedMember.ParentGroup}
+			secondSet = []*graph.Node{testContext.Harness.ShortcutHarnessSharedMember.SubGroup1, testContext.Harness.ShortcutHarnessSharedMember.SubGroup2}
+		)
+
+		localGroupData, err := ad.FetchLocalGroupData(context.Background(), graphDB)
+		require.NoError(t, err)
+
+		results := ad.CalculateCrossProductNodeSets(localGroupData, firstSet, secondSet)
+
+		// Both sub-groups are valid cross-product results: each appears in both sets
+		require.True(t, results.Contains(harness.ShortcutHarnessSharedMember.SubGroup1.ID.Uint64()))
+		require.True(t, results.Contains(harness.ShortcutHarnessSharedMember.SubGroup2.ID.Uint64()))
+		require.Equal(t, 2, int(results.Cardinality()))
+
+		// SharedUser is already covered by SubGroup1 and SubGroup2 and must not appear individually
+		require.False(t, results.Contains(harness.ShortcutHarnessSharedMember.SharedUser.ID.Uint64()))
+	})
+}
+
 func FetchCanRDPData(ctx context.Context, graphDB graph.Database) (*ad.CanRDPData, error) {
 	if localGroupData, err := ad.FetchLocalGroupData(ctx, graphDB); err != nil {
 		return nil, err

@@ -119,9 +119,9 @@ describe('Formatting strings via formatPrimive', () => {
         expect(formatPrimitive('2016', null, 'any_other_field')).toEqual('2016');
         expect(formatPrimitive('2016', null, 'any_other_field')).not.toEqual('2016-01-01 00:00 PST (GMT-0800)');
 
-        // With no field supplied, parse as a date
-        expect(formatPrimitive('2016')).toEqual('2016-01-01 00:00 PST (GMT-0800)');
-        expect(formatPrimitive('2016')).not.toEqual('2016');
+        // With no field supplied, do not parse as a date
+        expect(formatPrimitive('2016')).toEqual('2016');
+        expect(formatPrimitive('2016')).not.toEqual('2016-01-01 00:00 PST (GMT-0800)');
     });
 });
 

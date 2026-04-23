@@ -23,7 +23,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -45,11 +45,11 @@ func TestCreateCustomNodeKinds(t *testing.T) {
 				{
 					KindName: "TestKind",
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#FFFFFF"},
+						Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "coffee", Color: "#FFFFFF"},
 					},
 				},
 			},
-			wantMap: model.CustomNodeKindMap{"TestKind": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#FFFFFF"}}},
+			wantMap: model.CustomNodeKindMap{"TestKind": model.CustomNodeKindConfig{Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "coffee", Color: "#FFFFFF"}}},
 			wantErr: nil,
 		},
 		{
@@ -61,17 +61,17 @@ func TestCreateCustomNodeKinds(t *testing.T) {
 				{
 					KindName: "TestKindA",
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "house", Color: "#000000"},
+						Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "house", Color: "#000000"},
 					},
 				},
 				{
 					KindName: "TestKindB",
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star", Color: "#FF0000"},
+						Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "star", Color: "#FF0000"},
 					},
 				},
 			},
-			wantMap: model.CustomNodeKindMap{"TestKindA": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "house", Color: "#000000"}}, "TestKindB": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star", Color: "#FF0000"}}},
+			wantMap: model.CustomNodeKindMap{"TestKindA": model.CustomNodeKindConfig{Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "house", Color: "#000000"}}, "TestKindB": model.CustomNodeKindConfig{Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "star", Color: "#FF0000"}}},
 			wantErr: nil,
 		},
 
@@ -84,17 +84,17 @@ func TestCreateCustomNodeKinds(t *testing.T) {
 				{
 					KindName: "TestKindA",
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{Type: "font-awesome", Color: "#000000"},
+						Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Color: "#000000"},
 					},
 				},
 				{
 					KindName: "TestKindB",
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star"},
+						Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "star"},
 					},
 				},
 			},
-			wantMap: model.CustomNodeKindMap{"TestKindA": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Color: "#000000"}}, "TestKindB": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star"}}},
+			wantMap: model.CustomNodeKindMap{"TestKindA": model.CustomNodeKindConfig{Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Color: "#000000"}}, "TestKindB": model.CustomNodeKindConfig{Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "star"}}},
 			wantErr: nil,
 		},
 		{
@@ -105,7 +105,7 @@ func TestCreateCustomNodeKinds(t *testing.T) {
 					{
 						KindName: "DuplicateKind",
 						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#FFFFFF"},
+							Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "coffee", Color: "#FFFFFF"},
 						},
 					},
 				})
@@ -116,7 +116,7 @@ func TestCreateCustomNodeKinds(t *testing.T) {
 				{
 					KindName: "DuplicateKind",
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#FFFFFF"},
+						Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "coffee", Color: "#FFFFFF"},
 					},
 				},
 			},
@@ -166,13 +166,13 @@ func TestGetCustomNodeKinds(t *testing.T) {
 					{
 						KindName: "KindOne",
 						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "fire", Color: "#FF5733"},
+							Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "fire", Color: "#FF5733"},
 						},
 					},
 					{
 						KindName: "KindTwo",
 						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star", Color: "#FFFF00"},
+							Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "star", Color: "#FFFF00"},
 						},
 					},
 				})
@@ -200,70 +200,6 @@ func TestGetCustomNodeKinds(t *testing.T) {
 	}
 }
 
-func TestGetCustomNodeKindsMap(t *testing.T) {
-	tests := []struct {
-		name    string
-		setup   func() IntegrationTestSuite
-		wantLen int
-	}{
-		{
-			name: "success - retrieves nil when OG disabled",
-			setup: func() IntegrationTestSuite {
-				testSuite := setupIntegrationTestSuite(t)
-				flag, err := testSuite.BHDatabase.GetFlagByKey(testSuite.Context, appcfg.FeatureOpenGraphSearch)
-				require.NoError(t, err)
-				flag.Enabled = false
-				require.NoError(t, testSuite.BHDatabase.SetFlag(testSuite.Context, flag))
-
-				_, err = testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{
-					{
-						KindName: "RetrievableKind",
-						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "bell", Color: "#123456"},
-						},
-					},
-				})
-				require.NoError(t, err)
-				return testSuite
-			},
-			wantLen: 0,
-		},
-		{
-			name: "success - retrieves kind map when OG enabled",
-			setup: func() IntegrationTestSuite {
-				testSuite := setupIntegrationTestSuite(t)
-				flag, err := testSuite.BHDatabase.GetFlagByKey(testSuite.Context, appcfg.FeatureOpenGraphSearch)
-				require.NoError(t, err)
-				flag.Enabled = true
-				require.NoError(t, testSuite.BHDatabase.SetFlag(testSuite.Context, flag))
-
-				_, err = testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{
-					{
-						KindName: "RetrievableKind",
-						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "bell", Color: "#123456"},
-						},
-					},
-				})
-				require.NoError(t, err)
-				return testSuite
-			},
-			wantLen: 1,
-		},
-	}
-
-	for _, testCase := range tests {
-		t.Run(testCase.name, func(t *testing.T) {
-			testSuite := testCase.setup()
-			defer teardownIntegrationTestSuite(t, &testSuite)
-
-			customNodeKindMap, err := testSuite.BHDatabase.GetCustomNodeKindsMap(testSuite.Context)
-			require.NoError(t, err)
-			assert.Len(t, customNodeKindMap, testCase.wantLen)
-		})
-	}
-}
-
 func TestGetCustomNodeKind(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -287,7 +223,7 @@ func TestGetCustomNodeKind(t *testing.T) {
 					{
 						KindName: "RetrievableKind",
 						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "bell", Color: "#123456"},
+							Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "bell", Color: "#123456"},
 						},
 					},
 				})
@@ -335,7 +271,7 @@ func TestUpdateCustomNodeKind(t *testing.T) {
 			input: model.CustomNodeKind{
 				KindName: "NonExistentKind",
 				Config: model.CustomNodeKindConfig{
-					Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "bell", Color: "#FFFFFF"},
+					Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "bell", Color: "#FFFFFF"},
 				},
 			},
 			wantErr: database.ErrNotFound,
@@ -348,7 +284,7 @@ func TestUpdateCustomNodeKind(t *testing.T) {
 					{
 						KindName: "UpdatableKind",
 						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#FFFFFF"},
+							Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "coffee", Color: "#FFFFFF"},
 						},
 					},
 				})
@@ -358,7 +294,7 @@ func TestUpdateCustomNodeKind(t *testing.T) {
 			input: model.CustomNodeKind{
 				KindName: "UpdatableKind",
 				Config: model.CustomNodeKindConfig{
-					Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star", Color: "#000000"},
+					Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "star", Color: "#000000"},
 				},
 			},
 			want: struct {
@@ -368,7 +304,7 @@ func TestUpdateCustomNodeKind(t *testing.T) {
 				CustomNodeKind: model.CustomNodeKind{
 					KindName: "UpdatableKind",
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star", Color: "#000000"},
+						Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "star", Color: "#000000"},
 					},
 				},
 			},
@@ -389,7 +325,7 @@ func TestUpdateCustomNodeKind(t *testing.T) {
 						KindName:         "UpdatableKind",
 						SchemaNodeKindId: &schemaNodeKindID,
 						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#FFFFFF"},
+							Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "coffee", Color: "#FFFFFF"},
 						},
 					},
 				})
@@ -401,7 +337,7 @@ func TestUpdateCustomNodeKind(t *testing.T) {
 				KindName:         "UpdatableKind",
 				SchemaNodeKindId: &schemaNodeKindID,
 				Config: model.CustomNodeKindConfig{
-					Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star", Color: "#000000"},
+					Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "star", Color: "#000000"},
 				},
 			},
 			want: struct {
@@ -411,7 +347,7 @@ func TestUpdateCustomNodeKind(t *testing.T) {
 				CustomNodeKind: model.CustomNodeKind{
 					KindName: "UpdatableKind",
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star", Color: "#000000"},
+						Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "star", Color: "#000000"},
 					},
 				},
 				SchemaNodeKind: model.GraphSchemaNodeKind{
@@ -469,7 +405,7 @@ func TestDeleteCustomNodeKind(t *testing.T) {
 					{
 						KindName: "DeletableKind",
 						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "trash", Color: "#FF0000"},
+							Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "trash", Color: "#FF0000"},
 						},
 					},
 				})
