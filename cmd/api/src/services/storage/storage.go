@@ -40,6 +40,9 @@ type FileInfo struct {
 type WriteOptions struct {
 	ContentType string
 	Metadata    map[string]string
+	// FailIfExists causes write to return an error wrapping fs.ErrExist when the
+	// destination already exists, instead of silently replacing it.
+	FailIfExists bool
 }
 
 type ListOptions struct {

@@ -145,7 +145,7 @@ func NewResources(
 		Authorizer:                 authorizer,
 		Authenticator:              authenticator,
 		IngestSchema:               ingestSchema,
-		FileService:                storage.NewLocalFileService(storage.NewOsStore()),
+		FileService:                storage.NewLocalFileService(storage.NewLocalStore()),
 		DogTags:                    dogtagsService,
 		OpenGraphSchemaService:     openGraphSchemaService,
 	}
