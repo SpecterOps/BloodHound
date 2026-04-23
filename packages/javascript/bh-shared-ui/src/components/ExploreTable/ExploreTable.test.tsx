@@ -442,7 +442,7 @@ const jsonToCsvSelectedColumnsArgs = [
     {
         emptyFieldValue: '',
         preventCsvInjection: true,
-        keys: ['kind', 'isTierZero', 'label', 'objectId'],
+        keys: ['kind', 'label', 'objectId', 'isTierZero'],
     },
 ];
 
