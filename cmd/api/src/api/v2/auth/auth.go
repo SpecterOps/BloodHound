@@ -39,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/model/preferences"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
@@ -379,6 +380,14 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 			} else {
 				userTemplate.SSOProviderID = createUserRequest.SSOProviderID
 			}
+		}
+
+		if len(createUserRequest.Preferences) > 0 {
+			if err := preferences.ValidatePreferences(createUserRequest.Preferences); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+				return
+			}
+			userTemplate.Preferences = createUserRequest.Preferences
 		}
 
 		// ETAC DogTags
