@@ -294,6 +294,7 @@ require (
 
 tool (
 	github.com/golangci/golangci-lint/v2/cmd/golangci-lint
+	github.com/pressly/goose/v3/cmd/goose
 	github.com/specterops/bloodhound/packages/go/stbernard
 	golang.org/x/tools/cmd/goimports
 )
