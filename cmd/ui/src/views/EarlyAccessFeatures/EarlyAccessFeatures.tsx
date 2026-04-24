@@ -25,13 +25,11 @@ import {
     DialogContentText,
     DialogTitle,
     Skeleton,
-    Typography,
 } from '@mui/material';
 import {
     Flag,
     PageWithTitle,
     Permission,
-    cn,
     useAppNavigate,
     useFeatureFlags,
     useMountEffect,
@@ -39,7 +37,7 @@ import {
     usePermissions,
     useToggleFeatureFlag,
 } from 'bh-shared-ui';
-import { Button } from 'doodle-ui';
+import { Button, Typography } from 'doodle-ui';
 import { FC, useState } from 'react';
 import { setDarkMode } from 'src/ducks/global/actions';
 import { useAppDispatch } from 'src/store';
@@ -148,7 +146,7 @@ const EarlyAccessFeatures: FC = () => {
                 title='Early Access Features'
                 data-testid='early-access-features'
                 pageDescription={
-                    <Typography variant='body2' paragraph>
+                    <Typography variant='body2'>
                         Enable or disable features available under early access. These features may be unstable, broken,
                         or incomplete, but are available for testing.
                     </Typography>
@@ -185,7 +183,7 @@ const EarlyAccessFeatures: FC = () => {
                             .sort((a, b) => a.id - b.id)
                             .map((flag, index) => (
                                 <div
-                                    className={cn({ 'mt-4': index !== 0 })}
+                                    className='mt-4'
                                     key={flag.id}
                                     data-testid={`early-access-features_toggle-${index}`}>
                                     <EarlyAccessFeatureToggle

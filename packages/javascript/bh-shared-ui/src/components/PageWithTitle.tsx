@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Container, ContainerProps, Typography } from '@mui/material';
+import { Box, Container, ContainerProps } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import React from 'react';
 
 type PageWithTitleProps = ContainerProps<
@@ -29,7 +30,7 @@ type PageWithTitleProps = ContainerProps<
 const PageWithTitle: React.FC<PageWithTitleProps> = ({ title, pageDescription, children, ...rest }) => {
     return (
         <Container maxWidth='xl' {...rest}>
-            <Box component={'header'}>
+            <Box component={'header'} className='py-2'>
                 {title && <Typography variant='h1'>{title}</Typography>}
                 {pageDescription}
             </Box>
