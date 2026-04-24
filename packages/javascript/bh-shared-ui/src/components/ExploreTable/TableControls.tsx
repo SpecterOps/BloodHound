@@ -105,7 +105,8 @@ const TableControls = <TData, TValue>({
                                 aria-disabled={noResults}
                                 data-testid='download-button'
                                 aria-label='Download CSV'
-                                className={cn({ [DISABLED_CLASSNAME]: noResults })}>
+                                className={cn({ [DISABLED_CLASSNAME]: noResults })}
+                                disabled={noResults}>
                                 <FontAwesomeIcon className={ICON_CLASSES} icon={faDownload} />
                             </button>
                         </MenuTrigger>
