@@ -79,6 +79,7 @@ export { default as GenericErrorBoundaryFallback } from './GenericErrorBoundaryF
 export * from './GraphButton';
 export { default as GraphButton } from './GraphButton';
 export * from './GraphControls';
+export * from './GraphDataCheckboxes';
 export * from './GraphMenu';
 export { default as GraphMenu } from './GraphMenu';
 export * from './GraphProgress';
@@ -128,7 +129,6 @@ export * from './SelectMenus';
 export * from './SetupKeyDialog';
 export { default as SetupKeyDialog } from './SetupKeyDialog';
 export * from './SimpleEnvironmentSelector';
-export * from './SourceKindsCheckboxes';
 export * from './SSOProviderInfoPanel';
 export { default as SSOProviderInfoPanel } from './SSOProviderInfoPanel';
 export * from './SSOProviderTable';

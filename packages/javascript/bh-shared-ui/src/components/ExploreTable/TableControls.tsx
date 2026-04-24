@@ -17,11 +17,12 @@
 import { faClose, faDownload, faExpand, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ColumnDef } from '@tanstack/react-table';
-import { Button, Input, InputProps } from 'doodle-ui';
+import { Button, Input, InputProps, Menu, MenuContent, MenuItem, MenuTrigger } from 'doodle-ui';
 import { useMemo } from 'react';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
+import { ExportColumns } from './explore-table-utils';
 
 const ICON_CLASSES = 'cursor-pointer bg-slate-200 p-2 h-4 w-4 rounded-full dark:text-black';
 
@@ -33,7 +34,7 @@ type TableControlsProps<TData, TValue> = {
     resultsCount?: number;
     tableName?: string;
     className?: string;
-    onDownloadClick?: () => void;
+    onDownloadClick?: (columns: ExportColumns) => void;
     onExpandClick?: () => void;
     onCloseClick?: () => void;
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
@@ -68,6 +69,11 @@ const TableControls = <TData, TValue>({
 
     const DISABLED_CLASSNAME = 'pointer-events-none *:dark:text-neutral-500 *:text-neutral-400';
     const noResults = !resultsCount;
+
+    const handleConfirmExport = (columns: ExportColumns) => {
+        onDownloadClick?.(columns);
+    };
+
     return (
         <div className={cn('flex p-3 justify-between relative', className)}>
             <div>
@@ -93,14 +99,22 @@ const TableControls = <TData, TValue>({
                     </div>
                 )}
                 {onDownloadClick && (
-                    <button
-                        aria-disabled={noResults}
-                        onClick={onDownloadClick}
-                        data-testid='download-button'
-                        aria-label='Download CSV'
-                        className={cn({ [DISABLED_CLASSNAME]: noResults })}>
-                        <FontAwesomeIcon className={ICON_CLASSES} icon={faDownload} />
-                    </button>
+                    <Menu>
+                        <MenuTrigger asChild>
+                            <button
+                                aria-disabled={noResults}
+                                data-testid='download-button'
+                                aria-label='Download CSV'
+                                className={cn({ [DISABLED_CLASSNAME]: noResults })}
+                                disabled={noResults}>
+                                <FontAwesomeIcon className={ICON_CLASSES} icon={faDownload} />
+                            </button>
+                        </MenuTrigger>
+                        <MenuContent align='start'>
+                            <MenuItem onSelect={() => handleConfirmExport('all')}>All Columns</MenuItem>
+                            <MenuItem onSelect={() => handleConfirmExport('selected')}>Visible Columns</MenuItem>
+                        </MenuContent>
+                    </Menu>
                 )}
                 {onExpandClick && (
                     <div
