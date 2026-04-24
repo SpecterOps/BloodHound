@@ -69,24 +69,22 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, localGroupDat
 		return &post.AtomicPostProcessingStats{}, err
 	}
 
-	// While it's ideal if this succeeds, the risk of this call failing will be a false negative case of missing an `Owns` edge sourced
-	// from an Enterprise or Domain Admin, who will already have control in another manner anyways.
 	adminGroupIds, err := FetchAdminGroupIds(ctx, db, localGroupData.GroupMembershipCache)
 	if err != nil {
+		// While it's ideal if this succeeds, the risk of this call failing will be a false negative case of missing an `Owns` edge sourced
+		// from an Enterprise or Domain Admin, who will already have control in another manner anyways.
 		slog.WarnContext(ctx, "Failed fetching admin group ids values for postownsandwriteowner", attr.Error(err))
 	}
 
 	sink := post.NewFilteredRelationshipSink(ctx, "PostOwnsAndWriteOwner", db, ownsWriteOwnerTracker)
 	defer sink.Done()
 
-	// Get all source nodes of Owns ACEs (i.e., owning principals) where the target node has no ACEs granting abusable explicit permissions to OWNER RIGHTS
 	if err := postOwnsEdges(ctx, db, sink, dsHeuristicsCache, anyEnforced, adminGroupIds); err != nil {
-		slog.ErrorContext(ctx, "Failed to process Owns relationships for postownsandwriteowner", attr.Error(err))
+		return sink.Stats(), err
 	}
 
-	// Get all source nodes of WriteOwner ACEs where the target node has no ACEs granting explicit abusable permissions to OWNER RIGHTS
 	if err := postWriteOwnerEdges(ctx, db, sink, dsHeuristicsCache, anyEnforced); err != nil {
-		slog.ErrorContext(ctx, "Failed to process WriteOwner relationships for postownsandwriteowner", attr.Error(err))
+		return sink.Stats(), err
 	}
 
 	return sink.Stats(), nil
@@ -101,6 +99,7 @@ func postOwnsEdges(ctx context.Context, db graph.Database, sink *post.FilteredRe
 			)
 		})); err != nil {
 			slog.ErrorContext(ctx, "Failed to fetch OwnsRaw relationships for postownsandwriteowner", attr.Error(err))
+			return err
 		} else {
 			for _, rel := range relationships {
 
@@ -162,6 +161,7 @@ func postWriteOwnerEdges(ctx context.Context, db graph.Database, sink *post.Filt
 			)
 		})); err != nil {
 			slog.ErrorContext(ctx, "Failed to fetch WriteOwnerRaw relationships for postownsandwriteowner", attr.Error(err))
+			return err
 		} else {
 			for _, rel := range relationships {
 
