@@ -63,12 +63,12 @@ RUN 7z x '*.zip' -oartifacts/*
 RUN ls
 
 WORKDIR /tmp/azurehound/artifacts
+RUN mkdir -p ../dist
+
 RUN set -eux; \
   . /versions.env; \
-  7z a -tzip -mx9 azurehound-${AZUREHOUND_VERSION}.zip *
-RUN set -eux; \
-  . /versions.env; \
-  sha256sum azurehound-${AZUREHOUND_VERSION}.zip > azurehound-${AZUREHOUND_VERSION}.zip.sha256
+  7z a -tzip -mx9 "../dist/azurehound-${AZUREHOUND_VERSION}.zip" *; \
+  sha256sum "../dist/azurehound-${AZUREHOUND_VERSION}.zip" > "../dist/${AZUREHOUND_VERSION}.zip.sha256"
 
 FROM docker.io/library/golang:1.26.2-alpine3.22
 ENV GOFLAGS="-buildvcs=false"
@@ -82,6 +82,6 @@ RUN go install github.com/air-verse/air@v1.52.3
 # api/v2/collectors/[collector-type]/[version] for collector download specifically expects
 # '[collector-type]-[version].zip(.sha256)' - all lowercase for embedded files
 COPY --from=hound-builder /tmp/sharphound/ /bhapi/collectors/sharphound/
-COPY --from=hound-builder /tmp/azurehound/ /bhapi/collectors/azurehound/
+COPY --from=hound-builder /tmp/azurehound/dist/ /etc/bloodhound/collectors/azurehound/
 
 ENTRYPOINT ["air"]

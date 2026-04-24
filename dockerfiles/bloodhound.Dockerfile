@@ -61,8 +61,12 @@ RUN sha256sum -cw *.sha256
 RUN 7z x '*.zip' -oartifacts/*
 
 WORKDIR /tmp/azurehound/artifacts
-RUN 7z a -tzip -mx9 azurehound-${AZUREHOUND_VERSION}.zip *
-RUN sha256sum azurehound-${AZUREHOUND_VERSION}.zip > azurehound-${AZUREHOUND_VERSION}.zip.sha256
+RUN mkdir -p ../dist
+
+RUN set -eux; \
+  . /versions.env; \
+  7z a -tzip -mx9 "../dist/azurehound-${AZUREHOUND_VERSION}.zip" *; \
+  sha256sum "../dist/azurehound-${AZUREHOUND_VERSION}.zip" > "../dist/${AZUREHOUND_VERSION}.zip.sha256"
 
 ########
 # UI Build
@@ -129,6 +133,6 @@ COPY dockerfiles/configs/bloodhound.config.json /bloodhound.config.json
 # api/v2/collectors/[collector-type]/[version] for collector download specifically expects
 # '[collector-type]-[version].zip(.sha256)' - all lowercase for embedded files
 COPY --from=hound-builder /tmp/sharphound/ /etc/bloodhound/collectors/sharphound/
-COPY --from=hound-builder /tmp/azurehound/artifacts/ /etc/bloodhound/collectors/azurehound/
+COPY --from=hound-builder /tmp/azurehound/dist/ /etc/bloodhound/collectors/azurehound/
 
 ENTRYPOINT ["/bloodhound", "-configfile", "/bloodhound.config.json"]
