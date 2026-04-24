@@ -41,4 +41,3 @@
 -   Never modify migrations that have already been merged to main. The user should create a new migration instead
 -   Migration locations:
     -   BHCE migrations: `cmd/api/src/database/migration/migrations/`
-    -   BHE migrations: `lib/go/database/migration/migrations/`
