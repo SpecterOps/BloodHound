@@ -13,7 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 export * from './Accordion';
+export * from './Alert';
 export * from './Badge';
 export * from './Breadcrumbs';
 export * from './Button';
@@ -28,6 +30,7 @@ export * from './Dialog';
 export * from './Form';
 export * from './Input';
 export * from './Label';
+export * from './Link';
 export * from './Menu';
 export * from './Pagination';
 export * from './Popover';
@@ -41,6 +44,8 @@ export * from './Switch';
 export * from './Table';
 export * from './Tabs';
 export * from './Textarea';
+export * from './Toggle';
+export * from './ToggleGroup';
 export * from './Tooltip';
 export * from './Typography';
 export * from './VisuallyHidden';
