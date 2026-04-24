@@ -17,6 +17,8 @@
 package v2
 
 import (
+	"net/http"
+
 	"github.com/gorilla/schema"
 	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -118,6 +120,7 @@ type Resources struct {
 	FileService                fs.Service
 	OpenGraphSchemaService     OpenGraphSchemaService
 	OpenFeatureClient          *openfeature.Client
+	APIKeyExpirationChecker    func(request *http.Request) bool
 }
 
 func NewResources(

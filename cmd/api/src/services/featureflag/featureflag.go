@@ -33,11 +33,10 @@ import (
 //
 //	export FEATURE_ETAC_ENABLED='{"defaultVariant":"disabled","variants":[{"name":"enabled","criteria":[],"value":true},{"name":"disabled","criteria":[],"value":false}]}'
 const (
-	ETACEnabled             = "FEATURE_ETAC_ENABLED"
-	APIKeyExpirationEnabled = "FEATURE_API_KEY_EXPIRATION_ENABLED"
-	PZMultiTierAnalysis     = "FEATURE_PZ_MULTI_TIER_ANALYSIS"
-	PZTierLimit             = "FEATURE_PZ_TIER_LIMIT"
-	PZLabelLimit            = "FEATURE_PZ_LABEL_LIMIT"
+	ETACEnabled         = "FEATURE_ETAC_ENABLED"
+	PZMultiTierAnalysis = "FEATURE_PZ_MULTI_TIER_ANALYSIS"
+	PZTierLimit         = "FEATURE_PZ_TIER_LIMIT"
+	PZLabelLimit        = "FEATURE_PZ_LABEL_LIMIT"
 )
 
 // SetupProvider initializes the OpenFeature SDK with the from-env provider.
@@ -56,11 +55,10 @@ func NewClient() *openfeature.Client {
 
 // TestFlags holds feature flag overrides for test providers.
 type TestFlags struct {
-	ETACEnabled             bool
-	APIKeyExpirationEnabled bool
-	PZMultiTierAnalysis     bool
-	PZTierLimit             int64
-	PZLabelLimit            int64
+	ETACEnabled         bool
+	PZMultiTierAnalysis bool
+	PZTierLimit         int64
+	PZLabelLimit        int64
 }
 
 func boolVariant(enabled bool) string {
@@ -95,11 +93,10 @@ func intFlag(value int64) memprovider.InMemoryFlag {
 // It registers a uniquely named provider to avoid conflicts between parallel tests.
 func NewTestClient(flags TestFlags) *openfeature.Client {
 	provider := memprovider.NewInMemoryProvider(map[string]memprovider.InMemoryFlag{
-		ETACEnabled:             boolFlag(flags.ETACEnabled),
-		APIKeyExpirationEnabled: boolFlag(flags.APIKeyExpirationEnabled),
-		PZMultiTierAnalysis:     boolFlag(flags.PZMultiTierAnalysis),
-		PZTierLimit:             intFlag(flags.PZTierLimit),
-		PZLabelLimit:            intFlag(flags.PZLabelLimit),
+		ETACEnabled:         boolFlag(flags.ETACEnabled),
+		PZMultiTierAnalysis: boolFlag(flags.PZMultiTierAnalysis),
+		PZTierLimit:         intFlag(flags.PZTierLimit),
+		PZLabelLimit:        intFlag(flags.PZLabelLimit),
 	})
 
 	name := fmt.Sprintf("test-%p", &provider)

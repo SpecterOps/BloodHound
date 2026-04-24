@@ -20,11 +20,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	"github.com/specterops/bloodhound/cmd/api/src/services/featureflag"
 )
 
 type ListAppConfigParametersResponse struct {
@@ -69,7 +67,7 @@ func (s Resources) SetApplicationConfiguration(response http.ResponseWriter, req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Configuration parameter %s is not valid.", parameter.Key), request), response)
 	} else if errs := parameter.Validate(); errs != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
-	} else if !checkApiKeyExpirationParamAvailable(request, parameter, s.OpenFeatureClient) {
+	} else if !checkApiKeyExpirationParamAvailable(request, parameter, s.APIKeyExpirationChecker) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, fmt.Sprintf("Configuration parameter %s is not available.", parameter.Key), request), response)
 	} else if err := s.DB.SetConfigurationParameter(request.Context(), parameter); err != nil {
 		api.HandleDatabaseError(request, response, err)
@@ -78,10 +76,12 @@ func (s Resources) SetApplicationConfiguration(response http.ResponseWriter, req
 	}
 }
 
-func checkApiKeyExpirationParamAvailable(request *http.Request, param appcfg.Parameter, openFeatureClient *openfeature.Client) bool {
+func checkApiKeyExpirationParamAvailable(request *http.Request, param appcfg.Parameter, checker func(*http.Request) bool) bool {
 	if param.Key == appcfg.APITokenExpiration {
-		enabled, _ := openFeatureClient.BooleanValue(request.Context(), featureflag.APIKeyExpirationEnabled, false, openfeature.EvaluationContext{})
-		return enabled
+		if checker == nil {
+			return false
+		}
+		return checker(request)
 	}
 
 	return true
