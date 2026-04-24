@@ -281,21 +281,21 @@ export const GraphEvents = forwardRef(function GraphEvents(
     // Nodes: the selected node itself + all its direct neighbors.
     // Edges: all edges directly connected to the selected node/edge endpoints.
     const { highlightedNodeIds, highlightedEdgeIds } = useMemo(() => {
-        const nodeIds: string[] = [];
-        const edgeIds: string[] = [];
+        const highlightedNodeIds = new Set<string>();
+        const highlightedEdgeIds = new Set<string>();
 
         if (highlightedItem) {
             if (graph.hasNode(highlightedItem)) {
-                nodeIds.push(highlightedItem);
-                graph.neighbors(highlightedItem).forEach((directNodes) => nodeIds.push(directNodes));
-                graph.edges(highlightedItem).forEach((directEdges) => edgeIds.push(directEdges));
+                highlightedNodeIds.add(highlightedItem);
+                graph.neighbors(highlightedItem).forEach((directNodes) => highlightedNodeIds.add(directNodes));
+                graph.edges(highlightedItem).forEach((directEdges) => highlightedEdgeIds.add(directEdges));
             } else if (graph.hasEdge(highlightedItem)) {
-                edgeIds.push(highlightedItem);
-                graph.extremities(highlightedItem).forEach((directNodes) => nodeIds.push(directNodes));
+                highlightedEdgeIds.add(highlightedItem);
+                graph.extremities(highlightedItem).forEach((directNodes) => highlightedNodeIds.add(directNodes));
             }
         }
 
-        return { highlightedNodeIds: nodeIds, highlightedEdgeIds: edgeIds };
+        return { highlightedNodeIds, highlightedEdgeIds };
     }, [graph, highlightedItem]);
 
     useEffect(() => {
@@ -304,7 +304,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
         setSettings({
             nodeReducer: (node, data) => {
                 const camera = sigma.getCamera();
-                const isDimmed = !!highlightedItem && !highlightedNodeIds.includes(node);
+                const isDimmed = !!highlightedItem && !highlightedNodeIds.has(node);
 
                 return {
                     ...data,
@@ -325,7 +325,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
             },
             edgeReducer: (edge, data) => {
                 const camera = sigma.getCamera();
-                const isDimmed = !!highlightedItem && !highlightedEdgeIds.includes(edge);
+                const isDimmed = !!highlightedItem && !highlightedEdgeIds.has(edge);
 
                 const newData: Attributes = {
                     ...data,
