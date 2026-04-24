@@ -42,9 +42,8 @@ table against any new available migration files and automatically applies pendin
 
 -   Never modify the baseline migration(`00000000000001_init.sql`). This is a migration file all of the previous schemas before switching to goose.
 -   Never modify migrations already merged into main. Create a new migration if a fix is needed
--   Always include a `Down` migration
+-   Always include a `Down` migration when possible
 -   `Down` should safely reverse an `Up`, e.g., use `IF EXISTS`, `ON CONFLICT`, etc.
--   Migration files should be their own separate PR. Once merged, code implementation can begin. \* do we want this? this would potentially require two jira tickets?
 -   Always pull main before creating a new migration
 
 ## How to use in the codebase
