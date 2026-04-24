@@ -79,8 +79,17 @@ func (s *KeyEncoder) EdgeKey(start, end uint64, kind graph.Kind) uint64 {
 	return s.digester.Sum64()
 }
 
+// ignoredFingerprintKeys contains property keys that should be excluded from fingerprint
+// comparisons as they would result in unnecessary edge churn. While `lastseen` should never be
+// present on these edges, `firstseen` won't be known by the calling function.
+var ignoredFingerprintKeys = map[string]struct{}{
+	"firstseen": {},
+	"lastseen":  {},
+}
+
 // PropertiesFingerprint computes a deterministic hash of a property map. Keys are sorted
 // lexicographically before hashing so that insertion order does not affect the result.
+// Properties listed in ignoredFingerprintKeys are excluded from the hash.
 func (s *KeyEncoder) PropertiesFingerprint(properties map[string]any) uint64 {
 	if len(properties) == 0 {
 		return 0
@@ -90,7 +99,13 @@ func (s *KeyEncoder) PropertiesFingerprint(properties map[string]any) uint64 {
 
 	sortedKeys := make([]string, 0, len(properties))
 	for key := range properties {
-		sortedKeys = append(sortedKeys, key)
+		if _, ignored := ignoredFingerprintKeys[key]; !ignored {
+			sortedKeys = append(sortedKeys, key)
+		}
+	}
+
+	if len(sortedKeys) == 0 {
+		return 0
 	}
 
 	sort.Strings(sortedKeys)
