@@ -17,7 +17,7 @@
 import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
 import { useTheme } from 'bh-shared-ui';
 import type { Attributes } from 'graphology-types';
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useState } from 'react';
 import type { SigmaNodeEventPayload } from 'sigma/sigma';
 import type { Coordinates } from 'sigma/types';
 import {
@@ -277,30 +277,34 @@ export const GraphEvents = forwardRef(function GraphEvents(
         sigmaContainer,
     ]);
 
-    useEffect(() => {
-        // Compute which nodes and edges should remain fully visible when an item is selected.
-        // Nodes: the selected node itself + all its direct neighbors.
-        // Edges: all edges directly connected to the selected node/edge endpoints.
-        const highlightedNodeIds = new Set<string>();
-        const highlightedEdgeIds = new Set<string>();
+    // Compute which nodes and edges should remain fully visible when an item is selected.
+    // Nodes: the selected node itself + all its direct neighbors.
+    // Edges: all edges directly connected to the selected node/edge endpoints.
+    const { highlightedNodeIds, highlightedEdgeIds } = useMemo(() => {
+        const nodeIds: string[] = [];
+        const edgeIds: string[] = [];
 
         if (highlightedItem) {
             if (graph.hasNode(highlightedItem)) {
-                highlightedNodeIds.add(highlightedItem);
-                graph.neighbors(highlightedItem).forEach((n) => highlightedNodeIds.add(n));
-                graph.edges(highlightedItem).forEach((e) => highlightedEdgeIds.add(e));
+                nodeIds.push(highlightedItem);
+                graph.neighbors(highlightedItem).forEach((directNodes) => nodeIds.push(directNodes));
+                graph.edges(highlightedItem).forEach((directEdges) => edgeIds.push(directEdges));
             } else if (graph.hasEdge(highlightedItem)) {
-                highlightedEdgeIds.add(highlightedItem);
-                graph.extremities(highlightedItem).forEach((n) => highlightedNodeIds.add(n));
+                edgeIds.push(highlightedItem);
+                graph.extremities(highlightedItem).forEach((directNodes) => nodeIds.push(directNodes));
             }
         }
 
+        return { highlightedNodeIds: nodeIds, highlightedEdgeIds: edgeIds };
+    }, [graph, highlightedItem]);
+
+    useEffect(() => {
         const bgColor = theme.neutral.primary;
 
         setSettings({
             nodeReducer: (node, data) => {
                 const camera = sigma.getCamera();
-                const isDimmed = !!highlightedItem && !highlightedNodeIds.has(node);
+                const isDimmed = !!highlightedItem && !highlightedNodeIds.includes(node);
 
                 return {
                     ...data,
@@ -321,7 +325,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
             },
             edgeReducer: (edge, data) => {
                 const camera = sigma.getCamera();
-                const isDimmed = !!highlightedItem && !highlightedEdgeIds.has(edge);
+                const isDimmed = !!highlightedItem && !highlightedEdgeIds.includes(edge);
 
                 const newData: Attributes = {
                     ...data,
@@ -344,7 +348,16 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 return newData;
             },
         });
-    }, [curvedEdgeReducer, graph, highlightedItem, selfEdgeReducer, setSettings, sigma, theme.neutral.primary]);
+    }, [
+        curvedEdgeReducer,
+        highlightedEdgeIds,
+        highlightedItem,
+        highlightedNodeIds,
+        selfEdgeReducer,
+        setSettings,
+        sigma,
+        theme.neutral.primary,
+    ]);
 
     // Toggle off edge labels when dragging a node to avoid performance hit
     useLayoutEffect(() => {
