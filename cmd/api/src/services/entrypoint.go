@@ -106,6 +106,10 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		slog.InfoContext(ctx, "Database migrations are disabled per configuration")
 	}
 
+	if cfg.DisableRateLimiting {
+		slog.WarnContext(ctx, "HTTP rate limiting is disabled per configuration - login endpoint brute-force protection is OFF")
+	}
+
 	// Allow recreating the default admin account to help with lockouts/loading database dumps
 	if cfg.RecreateDefaultAdmin {
 		slog.InfoContext(ctx, "Recreating default admin user")

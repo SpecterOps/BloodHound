@@ -138,6 +138,7 @@ type Configuration struct {
 	DisableCypherComplexityLimit    bool                        `json:"disable_cypher_complexity_limit"`
 	DisableIngest                   bool                        `json:"disable_ingest"`
 	DisableMigrations               bool                        `json:"disable_migrations"`
+	DisableRateLimiting             bool                        `json:"disable_rate_limiting"`
 	GraphQueryMemoryLimit           uint16                      `json:"graph_query_memory_limit"`
 	EnableTextLogger                bool                        `json:"enable_text_logger"`
 	RecreateDefaultAdmin            bool                        `json:"recreate_default_admin"`

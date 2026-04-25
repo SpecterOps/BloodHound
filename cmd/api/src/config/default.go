@@ -78,6 +78,7 @@ func NewDefaultConfiguration() (Configuration, error) {
 			DisableCypherComplexityLimit:    false,
 			DisableIngest:                   false,
 			DisableMigrations:               false,
+			DisableRateLimiting:             false,
 			EnableCypherMutations:           false,
 			RecreateDefaultAdmin:            false,
 			ForceDownloadEmbeddedCollectors: false,

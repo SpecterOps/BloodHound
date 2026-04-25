@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -115,9 +116,9 @@ func removeRateLimitHeadersMiddleware(next http.Handler) http.Handler {
 //
 // Usage:
 //
-//	router.Use(DefaultRateLimitMiddleware(db))
-func DefaultRateLimitMiddleware(db database.Database) mux.MiddlewareFunc {
-	return RateLimitMiddleware(db, DefaultRateLimit)
+//	router.Use(DefaultRateLimitMiddleware(cfg, db))
+func DefaultRateLimitMiddleware(cfg config.Configuration, db database.Database) mux.MiddlewareFunc {
+	return RateLimitMiddleware(cfg, db, DefaultRateLimit)
 }
 
 // RateLimitMiddleware is a function for creating rate limiting middleware
@@ -125,8 +126,14 @@ func DefaultRateLimitMiddleware(db database.Database) mux.MiddlewareFunc {
 //
 // Usage:
 //
-//	router.Use(RateLimitMiddleware(db, 1))
-func RateLimitMiddleware(db database.Database, limit int64) mux.MiddlewareFunc {
+//	router.Use(RateLimitMiddleware(cfg, db, 1))
+func RateLimitMiddleware(cfg config.Configuration, db database.Database, limit int64) mux.MiddlewareFunc {
+	if cfg.DisableRateLimiting {
+		return func(next http.Handler) http.Handler {
+			return next
+		}
+	}
+
 	rate := limiter.Rate{
 		Period: 1 * time.Second,
 		Limit:  limit,
