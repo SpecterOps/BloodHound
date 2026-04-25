@@ -113,6 +113,8 @@ func TestDefaultRateLimitMiddleware(t *testing.T) {
 }
 
 func newRateLimitedRouter(t *testing.T, cfg config.Configuration, useDefaultRateLimit bool, limit int64) (*mux.Router, *CountingHandler) {
+	t.Helper()
+
 	mockCtl := gomock.NewController(t)
 	mockDatabase := mocks.NewMockDatabase(mockCtl)
 
@@ -135,6 +137,8 @@ func newRateLimitedRouter(t *testing.T, cfg config.Configuration, useDefaultRate
 }
 
 func newTestRequest(t *testing.T) *http.Request {
+	t.Helper()
+
 	req, err := http.NewRequest("GET", "/teapot", nil)
 	if err != nil {
 		t.Fatal(err)
