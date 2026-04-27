@@ -28,6 +28,7 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/santhosh-tekuri/jsonschema/v6/kind"
 
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
@@ -472,44 +473,12 @@ func (v *validator) report() error {
 	return nil
 }
 
-// reservedKindNamespaces enumerates kind namespaces that may not appear in an
-// opengraph ingest payload. These must stay in sync with the reserved
-// namespaces rejected by the opengraphschema extension registration path.
-var reservedKindNamespaces = []string{"tag"}
-
-// matchReservedKindNamespace reports whether kindName is either exactly a
-// reserved namespace or uses one as its "namespace_" prefix (case-insensitive).
-// The matched namespace is returned for use in the error message.
-func matchReservedKindNamespace(kindName string) (string, bool) {
-	for _, reserved := range reservedKindNamespaces {
-		if strings.EqualFold(kindName, reserved) {
-			return reserved, true
-		}
-		if len(kindName) > len(reserved) && kindName[len(reserved)] == '_' && strings.EqualFold(kindName[:len(reserved)], reserved) {
-			return reserved, true
-		}
-	}
-	return "", false
-}
-
-// ReservedKindError indicates that a node or edge kind uses a namespace that
-// is reserved for internal use (for example, the "tag" namespace used by the
-// asset tagging subsystem). It is returned by validateKinds so callers can
-// either render it as a string or type-assert to inspect the offending kind.
-type ReservedKindError struct {
-	KindName  string
-	Namespace string
-}
-
-func (s *ReservedKindError) Error() string {
-	return fmt.Sprintf("kind '%s' uses reserved namespace '%s'", s.KindName, s.Namespace)
-}
-
 // validateKinds enforces the reserved-kind-namespace policy on a single
 // decoded node or edge item and returns one error per offending kind. Nodes
 // are checked via the "kinds" array, edges via the "kind" field. Callers must
 // invoke this only after JSON Schema validation has passed, which guarantees
-// that "kinds" is an array of strings.
+// that "kinds" is an array of strings and "kind" is a string. The reserved
+// namespaces and the ReservedKindError type are defined in the model package.
 func validateKinds(arrayName string, item map[string]any) []error {
 	var (
 		kindsToCheck []string
@@ -530,8 +499,8 @@ func validateKinds(arrayName string, item map[string]any) []error {
 		}
 	}
 	for _, kindName := range kindsToCheck {
-		if namespace, reserved := matchReservedKindNamespace(kindName); reserved {
-			kindErrors = append(kindErrors, &ReservedKindError{KindName: kindName, Namespace: namespace})
+		if namespace, reserved := model.MatchReservedGraphKindNamespace(kindName); reserved {
+			kindErrors = append(kindErrors, &model.ReservedKindError{KindName: kindName, Namespace: namespace})
 		}
 	}
 	return kindErrors
