@@ -23,7 +23,7 @@ export const ENDING_ZOOM_FADE_RATIO = 0.3;
 /** Padding displayed around label for node or edge */
 export const LABEL_PADDING = 3;
 
-/** Padding displayed around a node  */
+/** Padding displayed around a node */
 export const NODE_PADDING = 2;
 
 /** Gap between the bottom of a node and the top of its label */
