@@ -437,6 +437,15 @@ const jsonToCsvArgs = [
     },
 ];
 
+const jsonToCsvSelectedColumnsArgs = [
+    jsonToCsvArgs[0],
+    {
+        emptyFieldValue: '',
+        preventCsvInjection: true,
+        keys: ['kind', 'label', 'objectId', 'isTierZero'],
+    },
+];
+
 const WrappedExploreTable = () => {
     const [selectedColumns, setSelectedColumns] = useState<Record<string, boolean>>({
         kind: true,
@@ -560,15 +569,41 @@ describe('ExploreTable', async () => {
         expect(container.className).toContain('h-[calc(100%');
     });
 
-    it('Download button causes the json2csv function to be called', async () => {
+    it('Download button opens a menu and selecting "All Columns" calls json2csv with all columns', async () => {
         const { user } = await setup();
+
+        await screen.findByText('10 results');
 
         expect(json2csv).not.toBeCalled();
         const downloadButton = screen.getByTestId('download-button');
 
         await user.click(downloadButton);
 
+        const allButton = screen.getByRole('menuitem', { name: 'All Columns' });
+        const visibleButton = screen.getByRole('menuitem', { name: 'Visible Columns' });
+
+        expect(allButton).toBeInTheDocument();
+        expect(visibleButton).toBeInTheDocument();
+
+        await user.click(allButton);
+
         expect(json2csv).toBeCalledWith(...jsonToCsvArgs);
+    });
+
+    it('Download button opens a menu and selecting "Visible Columns" calls json2csv with selected columns only', async () => {
+        const { user } = await setup();
+
+        await screen.findByText('10 results');
+
+        expect(json2csv).not.toBeCalled();
+
+        const downloadButton = screen.getByTestId('download-button');
+        await user.click(downloadButton);
+
+        const visibleButton = screen.getByRole('menuitem', { name: 'Visible Columns' });
+        await user.click(visibleButton);
+
+        expect(json2csv).toBeCalledWith(...jsonToCsvSelectedColumnsArgs);
     });
 
     it('Close button click causes the callback function to be called', async () => {
