@@ -23,11 +23,11 @@ export const ENDING_ZOOM_FADE_RATIO = 0.3;
 /** Padding displayed around label for node or edge */
 export const LABEL_PADDING = 3;
 
-/** Padding displayed around a node */
+/** Padding displayed around a node  */
 export const NODE_PADDING = 2;
 
 /** Gap between the bottom of a node and the top of its label */
-export const LABEL_NODE_MARGIN = 15;
+export const LABEL_NODE_MARGIN = 4;
 
 /**
  * While edge labels are drawn with a custom renderer, the mouse target for capturing clicks is
@@ -96,19 +96,19 @@ const DEFAULT_PARAMS: LabelBoundsParams = {
  */
 export const getLabelBoundsFromContext = (
     context: CanvasRenderingContext2D,
-    params: LabelBoundsParams = DEFAULT_PARAMS,
-    offsetY: number = 0
+    params: LabelBoundsParams = DEFAULT_PARAMS
 ): [x: number, y: number, width: number, height: number] => {
     const labelBounds = context.measureText(params.label);
     const labelWidth = labelBounds.width;
     // Add the space above the text baseline plus the space below it
     const labelHeight = labelBounds.actualBoundingBoxAscent + labelBounds.actualBoundingBoxDescent;
-    const nodeRadius = params.size * params.inverseSqrtZoomRatio;
+    const labelOffsetX = ((params.size ?? 0) + LABEL_PADDING / 2) * params.inverseSqrtZoomRatio;
+    const labelOffsetY = labelHeight / 2;
 
     return [
         // Subtracting 1 pixel prevents a gap between node and label
-        params.position.x - labelWidth / 2 - LABEL_PADDING,
-        params.position.y + nodeRadius + LABEL_NODE_MARGIN + offsetY,
+        params.position.x + labelOffsetX - 1,
+        params.position.y - labelOffsetY - LABEL_PADDING,
         labelWidth + 2 * LABEL_PADDING,
         labelHeight + 2 * LABEL_PADDING,
     ];
@@ -137,8 +137,7 @@ export const getNodeLabelBoundsBelowFromContext = (
 
     return [
         params.position.x - labelWidth / 2 - LABEL_PADDING,
-        //params.position.y + nodeRadius + LABEL_NODE_MARGIN + offsetY,
-        params.position.y + nodeRadius + 2 + offsetY,
+        params.position.y + nodeRadius + LABEL_NODE_MARGIN + offsetY,
         labelWidth + 2 * LABEL_PADDING,
         labelHeight + 2 * LABEL_PADDING,
     ];
