@@ -71,13 +71,13 @@ DO $$
     END IF;
   END $$;
 
--- Add Attack Paths Table feature flag
+-- Add Findings Table feature flag
 INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
 VALUES (current_timestamp,
         current_timestamp,
-        'attack_paths_table',
-        'Attack Paths Table',
-        'Enables a new table view for attack paths.',
+        'findings_table',
+        'Findings Table',
+        'Enables a new table view for findings.',
         false,
         false)
 ON CONFLICT DO NOTHING;
