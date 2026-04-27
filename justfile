@@ -280,8 +280,16 @@ init wipe="":
 
 # create new migration file
 goose-create name:
-  @goose -dir {{goose_migrations_dir}} create {{name}} sql
+  @go tool goose -dir {{goose_migrations_dir}} create {{name}} sql
 
 # rollback to last migration
 goose-down:
-  @goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" down
+  @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" down
+
+# run pending migrations
+goose-up:
+  @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" up -allow-missing
+
+# show migration status
+goose-status:
+  @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" status -allow-missing

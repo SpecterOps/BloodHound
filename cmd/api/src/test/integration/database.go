@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"net/url"
 	"strings"
 	"testing"
@@ -34,6 +35,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/migration"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"gorm.io/gorm"
@@ -156,8 +158,17 @@ func SetupTestMigrator(t *testing.T, sources ...migration.Source) (*gorm.DB, *mi
 	} else if db, err := setupPGTestDB(t, cfg); err != nil {
 		return nil, nil, fmt.Errorf("failed to setup pgtestdb: %v", err)
 	} else {
-		sqlDB, _ := db.DB()
-		fossMigrationsSubFS, _ := fs.Sub(migration.FossMigrations, "migrations")
+		sqlDB, err := db.DB()
+		if err != nil {
+			slog.Error("Failed to connect to database: %v", attr.Error(err))
+			return nil, nil, fmt.Errorf("failed to connect to database: %v", err)
+		}
+		// Create two fs, one for foss and bhe which we will then merge to run migrations from
+		fossMigrationsSubFS, err := fs.Sub(migration.FossMigrations, "migrations")
+		if err != nil {
+			slog.Error("Failed to open foss migrations directory: %v", attr.Error(err))
+			return nil, nil, fmt.Errorf("failed to open foss migrations directory: %v", err)
+		}
 		OpenGraphDB(t, graphschema.DefaultGraphSchema()).Close(context.Background())
 		return db, &migration.Migrator{
 			ExtensionsData: sources,
