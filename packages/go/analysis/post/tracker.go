@@ -240,6 +240,7 @@ func FetchTracker(ctx context.Context, db graph.Database, edgeKinds graph.Kinds)
 			query.Not(query.KindIn(query.End(), graphschema.Meta, graphschema.MetaDetail)),
 		)).Query(
 			func(results graph.Result) error {
+				defer results.Close()
 				var (
 					edgeID   graph.ID
 					startID  graph.ID
@@ -256,7 +257,6 @@ func FetchTracker(ctx context.Context, db graph.Database, edgeKinds graph.Kinds)
 					numResults += 1
 				}
 
-				results.Close()
 				return results.Error()
 			},
 			query.Returning(
