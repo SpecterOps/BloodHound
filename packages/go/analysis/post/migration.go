@@ -37,9 +37,10 @@ func MigrationForDCAPostProcessedEdges(ctx context.Context, db graph.Database, m
 			fetchedRelationshipIDs, err := ops.FetchRelationshipIDs(tx.Relationships().Filterf(func() graph.Criteria {
 				// Only remove existing post-processed edges if they contain a `lastseen` property and don't involve meta nodes
 				return query.And(
+					query.Not(query.Kind(query.Start(), graphschema.Meta, graphschema.MetaDetail)),
 					query.Kind(query.Relationship(), kind),
 					query.Exists(query.RelationshipProperty(common.LastSeen.String())),
-					query.Not(query.Kind(query.End(), graphschema.Meta)),
+					query.Not(query.Kind(query.End(), graphschema.Meta, graphschema.MetaDetail)),
 				)
 			}))
 
