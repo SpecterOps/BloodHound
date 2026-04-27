@@ -170,16 +170,19 @@ func NewAuthenticator(cfg config.Configuration, db database.Database, authExtens
 	}
 }
 
-func (s AuthenticatorBase) auditLogin(requestContext context.Context, commitID uuid.UUID, status model.AuditLogEntryStatus, user model.User, fields types.JSONUntypedObject) {
-	bhCtx := ctx.Get(requestContext)
-	auditLog := model.AuditLog{
-		Action:          model.AuditLogActionLoginAttempt,
-		Fields:          fields,
-		RequestID:       bhCtx.RequestID,
-		SourceIpAddress: bhCtx.RequestIP,
-		Status:          status,
-		CommitID:        commitID,
-	}
+// AuditLogin creates an audit log entry for login attempts
+func AuditLogin(requestContext context.Context, db database.Database, commitID uuid.UUID, status model.AuditLogEntryStatus, user model.User, fields types.JSONUntypedObject) {
+	var (
+		bhCtx    = ctx.Get(requestContext)
+		auditLog = model.AuditLog{
+			Action:          model.AuditLogActionLoginAttempt,
+			Fields:          fields,
+			RequestID:       bhCtx.RequestID,
+			SourceIpAddress: bhCtx.RequestIP,
+			Status:          status,
+			CommitID:        commitID,
+		}
+	)
 
 	if user.PrincipalName != "" {
 		auditLog.ActorID = user.ID.String()
@@ -187,10 +190,13 @@ func (s AuthenticatorBase) auditLogin(requestContext context.Context, commitID u
 		auditLog.ActorEmail = user.EmailAddress.ValueOrZero()
 	}
 
-	err := s.db.CreateAuditLog(requestContext, auditLog)
-	if err != nil {
+	if err := db.CreateAuditLog(requestContext, auditLog); err != nil {
 		slog.WarnContext(requestContext, "Failed to write login audit log", attr.Error(err))
 	}
+}
+
+func (s AuthenticatorBase) auditLogin(requestContext context.Context, commitID uuid.UUID, status model.AuditLogEntryStatus, user model.User, fields types.JSONUntypedObject) {
+	AuditLogin(requestContext, s.db, commitID, status, user, fields)
 }
 
 func (s AuthenticatorBase) validateSecretLogin(ctx context.Context, loginRequest LoginRequest) (model.User, string, error) {

@@ -192,6 +192,8 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--neutral-4': '#dadee1',
             '--neutral-5': '#cacfd3',
 
+            '--link': '#1a30ff',
+
             '--error': '#b44641',
 
             '--neutral-light-1': '#ffffff',
