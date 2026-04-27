@@ -19,8 +19,8 @@
 ################
 FROM docker.io/library/alpine:3.21 AS version-getter
 RUN set -eux; \
-  sharphound_version="${SHARPHOUND_VERSION:-$(wget -qO- https://api.github.com/repos/SpecterOps/SharpHound/releases/latest | sed -n 's/.*"tag_name": "\([^"]*\)".*/\1/p')}"; \
-  azurehound_version="${AZUREHOUND_VERSION:-$(wget -qO- https://api.github.com/repos/SpecterOps/AzureHound/releases/latest | sed -n 's/.*"tag_name": "\([^"]*\)".*/\1/p')}"; \
+  sharphound_version="${SHARPHOUND_VERSION:-$(wget -qO- https://api.github.com/repos/SpecterOps/SharpHound/releases?per_page=1 | sed -n 's/.*"tag_name": "\([^"]*\)".*/\1/p')}"; \
+  azurehound_version="${AZUREHOUND_VERSION:-$(wget -qO- https://api.github.com/repos/SpecterOps/AzureHound/releases?per_page=1 | sed -n 's/.*"tag_name": "\([^"]*\)".*/\1/p')}"; \
   printf 'SHARPHOUND_VERSION=%s\nAZUREHOUND_VERSION=%s\n' "$sharphound_version" "$azurehound_version" > /versions.env
 
 ########
