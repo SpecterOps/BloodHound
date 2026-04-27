@@ -27,8 +27,8 @@ import (
 func Test_PrimaryNodeKind(t *testing.T) {
 
 	t.Run("detects meta kinds", func(t *testing.T) {
-		primaryKind := PrimaryDisplayKind(nil, graph.Kinds{meta})
-		require.Equal(t, meta, primaryKind)
+		primaryKind := PrimaryDisplayKind(nil, graph.Kinds{Meta})
+		require.Equal(t, Meta, primaryKind)
 	})
 
 	t.Run("ad local group overrides unknown", func(t *testing.T) {

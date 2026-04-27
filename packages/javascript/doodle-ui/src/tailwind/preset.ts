@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import animate from 'tailwindcss-animate';
 
 export default {
@@ -32,7 +33,7 @@ export default {
                 primary: 'var(--primary)',
                 'primary-variant': 'var(--primary-variant)',
 
-                secondary: 'var(--secondary)',
+                secondary: 'var(--secondary-main)',
                 'secondary-variant': 'var(--secondary-variant)',
                 'secondary-variant-2': 'var(--secondary-variant-2)',
 
@@ -40,7 +41,8 @@ export default {
                 'tertiary-variant': 'var(--tertiary-variant)',
 
                 contrast: 'var(--contrast)',
-                link: 'var(--link)',
+                link: 'var(--link-main)',
+                'link-hover': '(--link-hover)',
                 error: 'var(--error)',
 
                 'neutral-1': 'var(--neutral-1)',
@@ -65,9 +67,6 @@ export default {
                 // primary: 'var(--primary)',
                 // 'primary-variant': 'var(--primary-variant)',
 
-                // secondary: 'var(--secondary)',
-                // 'secondary-variant': 'var(--secondary-variant)',
-
                 // tertiary: 'var(--tertiary)',
                 // 'tertiary-variant': 'var(--tertiary-variant)',
 
@@ -75,9 +74,6 @@ export default {
                 // 'common-white': 'var(--common-white)',
 
                 // contrast: 'var(--common-dark)',
-
-                // link: 'var(--link-main)',
-                // 'link-hover': 'var(--link-hover)',
 
                 // 'text-main': 'var(--text-main)',
                 // 'text-light': 'var(--text-light)',
@@ -97,19 +93,19 @@ export default {
                 // 'neutral-800': 'var(--neutral-800)',
                 // 'neutral-900': 'var(--neutral-900)',
 
-                // 'status-error': 'var(--status-error)',
-                // 'status-error-text': 'var(--status-error-text)',
-                // 'status-error-fill': 'var(--status-error-fill)',
-                // 'status-warning': 'var(--status-warning)',
-                // 'status-warning-text': 'var(--status-warning-text)',
-                // 'status-warning-fill': 'var(--status-warning-fill)',
-                // 'status-success': 'var(--status-success)',
-                // 'status-success-text': 'var(--status-success-text)',
-                // 'status-success-fill': 'var(--status-success-fill)',
-                // 'status-info': 'var(--status-info)',
-                // 'status-info-text': 'var(--status-info-text)',
-                // 'status-info-fill': 'var(--status-info-fill)',
-                // 'status-indeterminate': 'var(--status-indeterminate)',
+                'status-error-main': 'var(--status-error-main)',
+                'status-error-text': 'var(--status-error-text)',
+                'status-error-fill': 'var(--status-error-fill)',
+                'status-warning-main': 'var(--status-warning-main)',
+                'status-warning-text': 'var(--status-warning-text)',
+                'status-warning-fill': 'var(--status-warning-fill)',
+                'status-success-main': 'var(--status-success-main)',
+                'status-success-text': 'var(--status-success-text)',
+                'status-success-fill': 'var(--status-success-fill)',
+                'status-info-main': 'var(--status-info-main)',
+                'status-info-text': 'var(--status-info-text)',
+                'status-info-fill': 'var(--status-info-fill)',
+                'status-indeterminate-fill': 'var(--status-indeterminate-fill)',
 
                 // 'bhe-main': 'var(--bhe-main)',
                 // 'sp-main': 'var(--sp-main)',
@@ -248,7 +244,7 @@ export default {
     safelist: [
         {
             pattern:
-                /(bg|text|border|w|ring)-(primary|secondary|accent|contrast|link|error|tertiary|neutral|base|headline|button|caption|eyeline|body|az|group|ou|computer|user|container|meta|domain|default|gpo|aiaca|root-ca|enterprise-ca|nt-auth-store|cert-template|issuance-policy|az-function-app)/,
+                /(bg|text|border|w|ring|ring-offset)-(primary|secondary|accent|contrast|link|error|tertiary|neutral|base|headline|button|caption|eyeline|body|az|group|ou|computer|user|container|meta|domain|default|gpo|aiaca|root-ca|enterprise-ca|nt-auth-store|cert-template|issuance-policy|az-function-app)/,
         },
         {
             pattern: /(w|top|left)-(0|px|[1-9][0-9]?|-[1-9][0-9]?)/, // Safelist padding values including 0, px, and positive/negative numbers

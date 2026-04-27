@@ -22,6 +22,7 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
@@ -34,10 +35,12 @@ func MigrationForDCAPostProcessedEdges(ctx context.Context, db graph.Database, m
 
 		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			fetchedRelationshipIDs, err := ops.FetchRelationshipIDs(tx.Relationships().Filterf(func() graph.Criteria {
-				// Only remove existing post-processed edges if they contain a `lastseen` property
+				// Only remove existing post-processed edges if they contain a `lastseen` property and don't involve meta nodes
 				return query.And(
+					query.Not(query.Kind(query.Start(), graphschema.Meta, graphschema.MetaDetail)),
 					query.Kind(query.Relationship(), kind),
 					query.Exists(query.RelationshipProperty(common.LastSeen.String())),
+					query.Not(query.Kind(query.End(), graphschema.Meta, graphschema.MetaDetail)),
 				)
 			}))
 
@@ -54,7 +57,7 @@ func MigrationForDCAPostProcessedEdges(ctx context.Context, db graph.Database, m
 				slog.LevelInfo,
 				fmt.Sprintf("Deleted %d %s relationships for DCA Post-Processing migration", len(relationshipIDs), kind.String()),
 				attr.Namespace("analysis"),
-				attr.Function("MigrationForDACPostProcessedEdges"),
+				attr.Function("MigrationForDCAPostProcessedEdges"),
 				attr.Scope("process"),
 			)
 

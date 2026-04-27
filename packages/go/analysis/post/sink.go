@@ -122,7 +122,7 @@ func (s *FilteredRelationshipSink) deltaFilterWorker(ctx context.Context, filter
 			break
 		}
 
-		if !s.edgeTracker.HasEdge(nextJob.FromID.Uint64(), nextJob.ToID.Uint64(), nextJob.Kind) {
+		if !s.edgeTracker.HasEdge(nextJob.FromID.Uint64(), nextJob.ToID.Uint64(), nextJob.Kind, nextJob.RelProperties) {
 			if !channels.Submit(ctx, insertC, nextJob) {
 				break
 			}
