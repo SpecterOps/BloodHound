@@ -115,7 +115,7 @@ func TestSetFontIcon(t *testing.T) {
 
 	t.Run("Meta takes priority over schema map entry", func(t *testing.T) {
 		nodeKindMap := graphschema.PrimaryDisplayKinds{
-			graph.StringKind("Meta"): graphschema.DisplayKind{
+			graphschema.Meta: graphschema.DisplayKind{
 				Name: "Meta",
 				Icon: graphschema.DisplayNodeIcon{
 					Name:  "star",
