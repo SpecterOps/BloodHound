@@ -18,7 +18,9 @@ package post
 import (
 	"context"
 	"encoding/binary"
+	"fmt"
 	"slices"
+	"sort"
 	"sync"
 
 	"github.com/cespare/xxhash/v2"
@@ -78,6 +80,45 @@ func (s *KeyEncoder) EdgeKey(start, end uint64, kind graph.Kind) uint64 {
 	return s.digester.Sum64()
 }
 
+// ignoredFingerprintKeys contains property keys that should be excluded from fingerprint
+// comparisons as they would result in unnecessary edge churn. While `lastseen` should never be
+// present on these edges, `firstseen` won't be known by the calling function.
+var ignoredFingerprintKeys = map[string]struct{}{
+	"firstseen": {},
+	"lastseen":  {},
+}
+
+// PropertiesFingerprint computes a deterministic hash of a property map. Keys are sorted
+// lexicographically before hashing so that insertion order does not affect the result.
+// Properties listed in ignoredFingerprintKeys are excluded from the hash.
+func (s *KeyEncoder) PropertiesFingerprint(properties map[string]any) uint64 {
+	if len(properties) == 0 {
+		return 0
+	}
+
+	s.digester.Reset()
+
+	sortedKeys := make([]string, 0, len(properties))
+	for key := range properties {
+		if _, ignored := ignoredFingerprintKeys[key]; !ignored {
+			sortedKeys = append(sortedKeys, key)
+		}
+	}
+
+	if len(sortedKeys) == 0 {
+		return 0
+	}
+
+	sort.Strings(sortedKeys)
+
+	for _, key := range sortedKeys {
+		s.digester.WriteString(key)
+		fmt.Fprint(s.digester, properties[key])
+	}
+
+	return s.digester.Sum64()
+}
+
 // KeyEncoderPool manages a pool of KeyEncoder instances for efficient reuse.
 type KeyEncoderPool struct {
 	encoders *sync.Pool
@@ -94,8 +135,9 @@ func NewEdgeEncoderPool() *KeyEncoderPool {
 	}
 }
 
-// EdgeKey retrieves or allocates an encoder from the pool and computes the edge key.
-func (s *KeyEncoderPool) EdgeKey(start, end uint64, kind graph.Kind) uint64 {
+// getEncoder retrieves a KeyEncoder from the pool, allocating a new one if the pool returns
+// an unexpected type.
+func (s *KeyEncoderPool) getEncoder() (*KeyEncoder, bool) {
 	var (
 		raw             = s.encoders.Get()
 		encoder, typeOK = raw.(*KeyEncoder)
@@ -105,19 +147,38 @@ func (s *KeyEncoderPool) EdgeKey(start, end uint64, kind graph.Kind) uint64 {
 		encoder = NewKeyEncoder()
 	}
 
-	key := encoder.EdgeKey(start, end, kind)
+	return encoder, typeOK
+}
 
-	if typeOK {
-		s.encoders.Put(raw)
+// putEncoder returns a KeyEncoder to the pool if it was successfully retrieved from the pool.
+func (s *KeyEncoderPool) putEncoder(encoder *KeyEncoder, fromPool bool) {
+	if fromPool {
+		s.encoders.Put(encoder)
 	}
+}
 
-	return key
+// EdgeKey retrieves or allocates an encoder from the pool and computes the edge key.
+func (s *KeyEncoderPool) EdgeKey(start, end uint64, kind graph.Kind) uint64 {
+	encoder, fromPool := s.getEncoder()
+	defer s.putEncoder(encoder, fromPool)
+
+	return encoder.EdgeKey(start, end, kind)
+}
+
+// PropertiesFingerprint retrieves or allocates an encoder from the pool and computes the
+// deterministic hash of the given property map.
+func (s *KeyEncoderPool) PropertiesFingerprint(properties map[string]any) uint64 {
+	encoder, fromPool := s.getEncoder()
+	defer s.putEncoder(encoder, fromPool)
+
+	return encoder.PropertiesFingerprint(properties)
 }
 
 // trackedEntity represents a single entity being tracked within a Tracker.
 type trackedEntity struct {
-	ID  uint64
-	Key uint64
+	ID        uint64
+	Key       uint64
+	PropsHash uint64
 }
 
 // Tracker tracks edges and nodes as hashed keys that can be looked and checked. The Tracker also
@@ -153,11 +214,14 @@ func (s *Tracker) Deleted() []uint64 {
 	return deletedEdges
 }
 
-// HasEdge checks whether a specific edge exists in the tracker. If found, it marks the key as seen.
-func (s *Tracker) HasEdge(start, end uint64, edgeKind graph.Kind) bool {
+// HasEdge checks whether a specific edge with matching properties exists in the tracker. An edge
+// is considered a match only if the structural key (start, end, kind) matches and the property
+// fingerprint is identical. If found, it marks the key as seen.
+func (s *Tracker) HasEdge(start, end uint64, edgeKind graph.Kind, properties map[string]any) bool {
 	var (
-		edgeKey  = s.encoderPool.EdgeKey(start, end, edgeKind)
-		_, found = slices.BinarySearchFunc(s.entities, edgeKey, func(e trackedEntity, t uint64) int {
+		edgeKey       = s.encoderPool.EdgeKey(start, end, edgeKind)
+		propsHash     = s.encoderPool.PropertiesFingerprint(properties)
+		idx, keyFound = slices.BinarySearchFunc(s.entities, edgeKey, func(e trackedEntity, t uint64) int {
 			if e.Key < t {
 				return -1
 			}
@@ -170,13 +234,15 @@ func (s *Tracker) HasEdge(start, end uint64, edgeKind graph.Kind) bool {
 		})
 	)
 
-	if found {
+	if keyFound && s.entities[idx].PropsHash == propsHash {
 		s.seenKeysLock.Lock()
 		s.seenKeys[edgeKey] = struct{}{}
 		s.seenKeysLock.Unlock()
+
+		return true
 	}
 
-	return found
+	return false
 }
 
 // EdgeTrackerBuilder builds a Tracker from a sequence of tracked edges.
@@ -192,11 +258,12 @@ func NewTrackerBuilder() *EdgeTrackerBuilder {
 	}
 }
 
-// TrackEdge adds an edge to the builder for later tracking.
-func (s *EdgeTrackerBuilder) TrackEdge(edge, start, end uint64, kind graph.Kind) {
+// TrackEdge adds an edge with its properties to the builder for later tracking.
+func (s *EdgeTrackerBuilder) TrackEdge(edge, start, end uint64, kind graph.Kind, properties map[string]any) {
 	s.edges = append(s.edges, trackedEntity{
-		ID:  edge,
-		Key: s.encoderPool.EdgeKey(start, end, kind),
+		ID:        edge,
+		Key:       s.encoderPool.EdgeKey(start, end, kind),
+		PropsHash: s.encoderPool.PropertiesFingerprint(properties),
 	})
 }
 
@@ -226,46 +293,23 @@ func (s *EdgeTrackerBuilder) Build() *Tracker {
 }
 
 // FetchTracker retrieves all relevant edges that match one of the edge kinds given from the database. It uses
-// this data to then build a Tracker.
+// this data to then build a Tracker. Edge properties are included in the tracker so that property changes
+// are detected during delta filtering.
 func FetchTracker(ctx context.Context, db graph.Database, edgeKinds graph.Kinds) (*Tracker, error) {
-	var (
-		builder    = NewTrackerBuilder()
-		numResults = uint64(0)
-	)
+	builder := NewTrackerBuilder()
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Relationships().Filter(query.And(
 			query.Not(query.KindIn(query.Start(), graphschema.Meta, graphschema.MetaDetail)),
 			query.KindIn(query.Relationship(), edgeKinds...),
 			query.Not(query.KindIn(query.End(), graphschema.Meta, graphschema.MetaDetail)),
-		)).Query(
-			func(results graph.Result) error {
-				defer results.Close()
-				var (
-					edgeID   graph.ID
-					startID  graph.ID
-					edgeKind graph.Kind
-					endID    graph.ID
-				)
+		)).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
+			for relationship := range cursor.Chan() {
+				builder.TrackEdge(relationship.ID.Uint64(), relationship.StartID.Uint64(), relationship.EndID.Uint64(), relationship.Kind, relationship.Properties.Map)
+			}
 
-				for results.Next() {
-					if err := results.Scan(&edgeID, &startID, &edgeKind, &endID); err != nil {
-						return err
-					}
-
-					builder.TrackEdge(edgeID.Uint64(), startID.Uint64(), endID.Uint64(), edgeKind)
-					numResults += 1
-				}
-
-				return results.Error()
-			},
-			query.Returning(
-				query.RelationshipID(),
-				query.StartID(),
-				query.KindsOf(query.Relationship()),
-				query.EndID(),
-			),
-		)
+			return cursor.Error()
+		})
 	}); err != nil {
 		return nil, err
 	}
