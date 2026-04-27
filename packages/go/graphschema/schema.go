@@ -153,8 +153,8 @@ func ActiveDirectoryGraphSchema(name string) graph.Graph {
 func MetaGraphDefinition() graph.Graph {
 	return graph.Graph{
 		Name:  "meta",
-		Nodes: []graph.Kind{meta, metaDetail},
-		Edges: []graph.Kind{metaIncludes},
+		Nodes: []graph.Kind{Meta, MetaDetail},
+		Edges: []graph.Kind{MetaIncludes},
 		NodeIndexes: []graph.Index{
 			{
 				Field: common.SystemTags.String(),

@@ -102,6 +102,7 @@ const (
 	AuditLogActionToggleEarlyAccessFeatureFlag AuditLogAction = "ToggleEarlyAccessFeatureFlag"
 
 	AuditLogActionCreateClient       AuditLogAction = "CreateClient"
+	AuditLogActionDeleteClient       AuditLogAction = "DeleteClient"
 	AuditLogActionReplaceClientToken AuditLogAction = "ReplaceClientToken"
 
 	AuditLogActionImportSavedQuery   AuditLogAction = "ImportSavedQueries"

@@ -24,6 +24,7 @@ import (
 	"sync"
 
 	"github.com/cespare/xxhash/v2"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 )
@@ -299,9 +300,9 @@ func FetchTracker(ctx context.Context, db graph.Database, edgeKinds graph.Kinds)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Relationships().Filter(query.And(
-			query.Not(query.KindIn(query.Start(), graph.StringKind("Meta"), graph.StringKind("MetaDetail"))),
+			query.Not(query.KindIn(query.Start(), graphschema.Meta, graphschema.MetaDetail)),
 			query.KindIn(query.Relationship(), edgeKinds...),
-			query.Not(query.KindIn(query.End(), graph.StringKind("Meta"), graph.StringKind("MetaDetail"))),
+			query.Not(query.KindIn(query.End(), graphschema.Meta, graphschema.MetaDetail)),
 		)).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
 			for relationship := range cursor.Chan() {
 				builder.TrackEdge(relationship.ID.Uint64(), relationship.StartID.Uint64(), relationship.EndID.Uint64(), relationship.Kind, relationship.Properties.Map)
