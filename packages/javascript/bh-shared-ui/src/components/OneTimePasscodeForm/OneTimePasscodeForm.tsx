@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Grid, TextField, Typography } from '@mui/material';
-import { Button } from 'doodle-ui';
+import { Box, Grid, TextField } from '@mui/material';
+import { Button, Typography } from 'doodle-ui';
 import React, { useState } from 'react';
 
 interface OneTimePasscodeFormProps {
