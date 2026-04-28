@@ -130,7 +130,9 @@ func discoverGooseVersions(t *testing.T) []int64 {
 		require.NoErrorf(t, err, "migration file %s must start with a numeric version prefix", filename)
 		versions = append(versions, parsed)
 	}
-	sort.Slice(versions, func(a, b int) bool { return versions[a] < versions[b] })
+	sort.Slice(versions, func(a, b int) bool {
+		return versions[a] < versions[b]
+	})
 	return versions
 }
 
@@ -303,7 +305,7 @@ func assertLegacyStepwiseEffects(t *testing.T, db *gorm.DB) {
 
 	// v8.9.0 creates schema_findings and drops schema_relationship_findings
 	assertTableState(t, db, "schema_findings", true)
-	assertTableState(t, db, "schema_relationship_findings", true) // false -> true for testing
+	assertTableState(t, db, "schema_relationship_findings", false)
 	// v8.9.0 adds auth_tokens.expires_at
 	assertColumnExists(t, db, "auth_tokens", "expires_at")
 	// v9.0.0 adds users.support_account
