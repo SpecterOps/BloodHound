@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package post
 
 import (
@@ -22,23 +23,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/util/channels"
-)
-
-var (
-	postOperationsVec = promauto.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "analysis",
-		Name:      "post_processing_ops",
-		Help:      "Post-processing operation statistics.",
-	}, []string{
-		"kind",
-		"operation",
-	})
 )
 
 func newPropertiesWithFirstSeen() *graph.Properties {
