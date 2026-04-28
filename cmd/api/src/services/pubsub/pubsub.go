@@ -67,3 +67,9 @@ func (s *PubSubService) Publish(ctx context.Context, eventInput model.EventInput
 		}
 	}
 }
+
+// Subscribe registers an EventHandler for the given EventType. Multiple handlers
+// can be registered for the same EventType.
+func (s *PubSubService) Subscribe(eventType model.EventType, handler EventHandler) {
+	s.handlers[eventType] = append(s.handlers[eventType], handler)
+}

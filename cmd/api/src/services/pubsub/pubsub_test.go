@@ -30,7 +30,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestService_Publish(t *testing.T) {
+func TestPubSubService_Publish(t *testing.T) {
 
 	t.Run("error - empty message", func(t *testing.T) {
 		var (
@@ -95,7 +95,7 @@ func TestService_Publish(t *testing.T) {
 		assert.NotEmpty(t, createdEvent.ID)
 	})
 
-	t.Run("success - publishes event with minimal fields", func(t *testing.T) {
+	t.Run("success - publishes event with minimal fields (no data)", func(t *testing.T) {
 		var (
 			mockCtrl     = gomock.NewController(t)
 			mockDatabase = mocks.NewMockPubSubRepository(mockCtrl)
@@ -119,5 +119,59 @@ func TestService_Publish(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, string(eventInput.Type), createdEvent.Type)
 		assert.Equal(t, eventInput.Message, createdEvent.Message)
+	})
+}
+
+type testHandler struct {
+	called bool
+}
+
+func (s *testHandler) HandleEvent(_ context.Context, _ model.Event) error {
+	s.called = true
+	return nil
+}
+
+func TestPubSubService_Subscribe(t *testing.T) {
+	t.Run("success - subscribes a single handler", func(t *testing.T) {
+		var (
+			mockCtrl     = gomock.NewController(t)
+			mockDatabase = mocks.NewMockPubSubRepository(mockCtrl)
+			service      = pubsub.NewPubSubService(mockDatabase)
+		)
+
+		defer mockCtrl.Finish()
+
+		handler := &testHandler{}
+		service.Subscribe("ingest.started", handler)
+	})
+
+	t.Run("success - subscribes multiple handlers for the same event type", func(t *testing.T) {
+		var (
+			mockCtrl     = gomock.NewController(t)
+			mockDatabase = mocks.NewMockPubSubRepository(mockCtrl)
+			service      = pubsub.NewPubSubService(mockDatabase)
+		)
+
+		defer mockCtrl.Finish()
+
+		handlerOne := &testHandler{}
+		handlerTwo := &testHandler{}
+		service.Subscribe("ingest.started", handlerOne)
+		service.Subscribe("ingest.started", handlerTwo)
+	})
+
+	t.Run("success - subscribes handlers for different event types", func(t *testing.T) {
+		var (
+			mockCtrl     = gomock.NewController(t)
+			mockDatabase = mocks.NewMockPubSubRepository(mockCtrl)
+			service      = pubsub.NewPubSubService(mockDatabase)
+		)
+
+		defer mockCtrl.Finish()
+
+		handlerOne := &testHandler{}
+		handlerTwo := &testHandler{}
+		service.Subscribe("ingest.started", handlerOne)
+		service.Subscribe("analysis.completed", handlerTwo)
 	})
 }
