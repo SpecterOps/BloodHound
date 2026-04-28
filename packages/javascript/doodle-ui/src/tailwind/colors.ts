@@ -356,13 +356,17 @@ export const light = {
         },
         indeterminate: palette.neutral.dark[400],
     },
+    disabled: palette.grey[700],
+    text: {
+        disabled: palette.grey[700],
+    },
 };
 
 export const text = {
     main: common.dark,
     light: '#505050',
+    dark: '#CDCDCD',
     contrast: common.white,
-    disabled: palette.grey[700],
     placeholder: '#6D6D6D',
     primary: light.primary.main,
     secondary: light.secondary.main,
@@ -382,8 +386,9 @@ export const dark = {
         main: '#57E7AD',
         variant: '#7BC9A2',
     },
+    disabled: '#A6A6A6',
     text: {
-        light: '#CDCDCD',
+        disabled: '#A6A6A6',
     },
     input: {
         border: '#515151',
