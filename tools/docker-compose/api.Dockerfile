@@ -31,21 +31,24 @@ RUN set -eux; \
 FROM docker.io/library/alpine:3.21 AS hound-builder
 COPY --from=version-getter /versions.env /versions.env
 
-WORKDIR /tmp/sharphound
-
 # Make some additional directories for minimal container to copy
 RUN mkdir -p /opt/bloodhound /etc/bloodhound /var/log
 RUN apk --no-cache add p7zip
 
-# Package Sharphound
+# Package SharpHound in /tmp/sharphound/dist
+WORKDIR /tmp/sharphound
 RUN set -eux; \
     . /versions.env; \
-    wget "https://github.com/SpecterOps/SharpHound/releases/download/${SHARPHOUND_VERSION}/SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip" -O sharphound-${SHARPHOUND_VERSION}.zip; \
-    wget "https://github.com/SpecterOps/SharpHound/releases/download/${SHARPHOUND_VERSION}/SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip.sha256" -O sharphound-${SHARPHOUND_VERSION}.zip.sha256
+    mkdir -p dist; \
+    wget "https://github.com/SpecterOps/SharpHound/releases/download/${SHARPHOUND_VERSION}/SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip"; \
+    wget "https://github.com/SpecterOps/SharpHound/releases/download/${SHARPHOUND_VERSION}/SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip.sha256"; \
+    sha256sum -c "SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip.sha256"; \
+    mv "SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip" "dist/sharphound-${SHARPHOUND_VERSION}.zip"; \
+    cd dist; \
+    sha256sum "sharphound-${SHARPHOUND_VERSION}.zip" > "sharphound-${SHARPHOUND_VERSION}.zip.sha256"
 
+# Download AzureHound release artifacts
 WORKDIR /tmp/azurehound
-
-# Package Azurehound
 RUN set -eux; \
     . /versions.env; \
     wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_amd64.zip"; \
@@ -62,15 +65,15 @@ RUN set -eux; \
     wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_arm64.zip.sha256"
 RUN sha256sum -cw *.sha256
 RUN 7z x '*.zip' -oartifacts/*
-RUN ls
 
+# Package AzureHound in /tmp/azurehound/dist
 WORKDIR /tmp/azurehound/artifacts
-RUN mkdir -p ../dist
-
 RUN set -eux; \
     . /versions.env; \
+    mkdir -p ../dist; \
     7z a -tzip -mx9 "../dist/azurehound-${AZUREHOUND_VERSION}.zip" *; \
-    sha256sum "../dist/azurehound-${AZUREHOUND_VERSION}.zip" > "../dist/${AZUREHOUND_VERSION}.zip.sha256"
+    cd ../dist; \
+    sha256sum "azurehound-${AZUREHOUND_VERSION}.zip" > "azurehound-${AZUREHOUND_VERSION}.zip.sha256"
 
 FROM docker.io/library/golang:1.26.2-alpine3.22
 ENV GOFLAGS="-buildvcs=false"
@@ -83,7 +86,7 @@ RUN go install github.com/air-verse/air@v1.52.3
 
 # api/v2/collectors/[collector-type]/[version] for collector download specifically expects
 # '[collector-type]-[version].zip(.sha256)' - all lowercase for embedded files
-COPY --from=hound-builder /tmp/sharphound/ /bhapi/collectors/sharphound/
+COPY --from=hound-builder /tmp/sharphound/dist/ /bhapi/collectors/sharphound/
 COPY --from=hound-builder /tmp/azurehound/dist/ /etc/bloodhound/collectors/azurehound/
 
 ENTRYPOINT ["air"]
