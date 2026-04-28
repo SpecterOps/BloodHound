@@ -157,7 +157,7 @@ func Test_IngestRelationships(t *testing.T) {
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
 
-					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
+					err := IngestRelationships(ingestContext, graph.StringKind("SomeBase"), rels)
 					require.Nil(t, err)
 					return nil
 				})
@@ -281,7 +281,7 @@ func Test_IngestRelationships(t *testing.T) {
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
 
-					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
+					err := IngestRelationships(ingestContext, graph.StringKind("SomeBase"), rels)
 					require.Nil(t, err)
 					return nil
 				})
