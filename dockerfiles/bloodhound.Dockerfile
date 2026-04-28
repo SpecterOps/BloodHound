@@ -21,9 +21,11 @@
 ################
 FROM docker.io/library/alpine:3.21 AS version-getter
 RUN set -eux; \
-  sharphound_version="${SHARPHOUND_VERSION:-$(wget -qO- https://api.github.com/repos/SpecterOps/SharpHound/releases?per_page=1 | sed -n 's/.*"tag_name": "\([^"]*\)".*/\1/p')}"; \
-  azurehound_version="${AZUREHOUND_VERSION:-$(wget -qO- https://api.github.com/repos/SpecterOps/AzureHound/releases?per_page=1 | sed -n 's/.*"tag_name": "\([^"]*\)".*/\1/p')}"; \
-  printf 'SHARPHOUND_VERSION=%s\nAZUREHOUND_VERSION=%s\n' "$sharphound_version" "$azurehound_version" > /versions.env
+    sharphound_version="${SHARPHOUND_VERSION:-$(wget -qO- https://api.github.com/repos/SpecterOps/SharpHound/releases?per_page=1 | sed -n 's/.*"tag_name": "\([^"]*\)".*/\1/p')}"; \
+    azurehound_version="${AZUREHOUND_VERSION:-$(wget -qO- https://api.github.com/repos/SpecterOps/AzureHound/releases?per_page=1 | sed -n 's/.*"tag_name": "\([^"]*\)".*/\1/p')}"; \
+    echo "$sharphound_version" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$'; \
+    echo "$azurehound_version" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$'; \
+    printf 'SHARPHOUND_VERSION=%s\nAZUREHOUND_VERSION=%s\n' "$sharphound_version" "$azurehound_version" > /versions.env
 
 ########
 # Package remote assets
@@ -44,19 +46,19 @@ RUN set -eux; \
 WORKDIR /tmp/azurehound
 
 RUN set -eux; \
-  . /versions.env; \
-  wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_amd64.zip"; \
-  wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_amd64.zip.sha256"; \
-  wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_arm64.zip"; \
-  wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_arm64.zip.sha256"; \
-  wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_amd64.zip"; \
-  wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_amd64.zip.sha256"; \
-  wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_arm64.zip"; \
-  wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_arm64.zip.sha256"; \
-  wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_amd64.zip"; \
-  wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_amd64.zip.sha256"; \
-  wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_arm64.zip"; \
-  wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_arm64.zip.sha256"
+    . /versions.env; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_amd64.zip"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_amd64.zip.sha256"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_arm64.zip"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_arm64.zip.sha256"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_amd64.zip"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_amd64.zip.sha256"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_arm64.zip"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_arm64.zip.sha256"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_amd64.zip"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_amd64.zip.sha256"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_arm64.zip"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_arm64.zip.sha256"
 RUN sha256sum -cw *.sha256
 RUN 7z x '*.zip' -oartifacts/*
 
@@ -64,9 +66,9 @@ WORKDIR /tmp/azurehound/artifacts
 RUN mkdir -p ../dist
 
 RUN set -eux; \
-  . /versions.env; \
-  7z a -tzip -mx9 "../dist/azurehound-${AZUREHOUND_VERSION}.zip" *; \
-  sha256sum "../dist/azurehound-${AZUREHOUND_VERSION}.zip" > "../dist/${AZUREHOUND_VERSION}.zip.sha256"
+    . /versions.env; \
+    7z a -tzip -mx9 "../dist/azurehound-${AZUREHOUND_VERSION}.zip" *; \
+    sha256sum "../dist/azurehound-${AZUREHOUND_VERSION}.zip" > "../dist/${AZUREHOUND_VERSION}.zip.sha256"
 
 ########
 # UI Build
@@ -92,15 +94,15 @@ COPY .git ./.git
 # sort by semver version to grab latest and convert to required ldflags
 # (see https://git-scm.com/docs/git-config#Documentation/git-config.txt-versionsortsuffix)
 RUN git --no-pager -c 'versionsort.suffix=-rc' tag --list v*.*.* --sort=-v:refname | head -n 1 | sed 's/^v//' | awk \
-  -F'[.+-]' \
-  -v pkg="$VERSION_PKG" \
-  '{ major = $1; minor = $2; patch = $3; pre = ""; if ($4) pre = $4; \
-  printf("-X '\''%s.majorVersion=%s'\'' ", pkg, major); \
-  printf("-X '\''%s.minorVersion=%s'\'' ", pkg, minor); \
-  printf("-X '\''%s.patchVersion=%s'\''", pkg, patch); \
-  if (pre != "") \
-  printf(" -X '\''%s.prereleaseVersion=%s'\''", pkg, pre); \
-  }' > LDFLAGS
+    -F'[.+-]' \
+    -v pkg="$VERSION_PKG" \
+    '{ major = $1; minor = $2; patch = $3; pre = ""; if ($4) pre = $4; \
+    printf("-X '\''%s.majorVersion=%s'\'' ", pkg, major); \
+    printf("-X '\''%s.minorVersion=%s'\'' ", pkg, minor); \
+    printf("-X '\''%s.patchVersion=%s'\''", pkg, patch); \
+    if (pre != "") \
+    printf(" -X '\''%s.prereleaseVersion=%s'\''", pkg, pre); \
+    }' > LDFLAGS
 
 ########
 # API Build
