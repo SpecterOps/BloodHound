@@ -39,11 +39,22 @@ export default {
                 tertiary: 'var(--tertiary)',
                 'tertiary-variant': 'var(--tertiary-variant)',
 
+                'text-main': 'var(--text-main)',
+                'text-disabled': 'var(--text-disabled)',
+
+                disabled: 'var(--disabled)',
                 contrast: 'var(--contrast)',
                 link: 'var(--link-main)',
                 'link-hover': '(--link-hover)',
                 error: 'var(--error)',
 
+                'switch-fill': 'var(--switch-fill)',
+                'switch-disabled-fill': 'var(--switch-disabled-fill)',
+
+                'neutral-50': 'var(--neutral-50)',
+                'neutral-400': 'var(--neutral-400)',
+
+                // Legacy
                 'neutral-1': 'var(--neutral-1)',
                 'neutral-2': 'var(--neutral-2)',
                 'neutral-3': 'var(--neutral-3)',
@@ -63,8 +74,6 @@ export default {
                 'neutral-dark-5': 'var(--neutral-dark-5)',
 
                 // New color tokens:
-                // primary: 'var(--primary)',
-                // 'primary-variant': 'var(--primary-variant)',
 
                 // tertiary: 'var(--tertiary)',
                 // 'tertiary-variant': 'var(--tertiary-variant)',
@@ -74,14 +83,11 @@ export default {
 
                 // contrast: 'var(--common-dark)',
 
-                // 'text-main': 'var(--text-main)',
                 // 'text-light': 'var(--text-light)',
                 // 'text-contrast': 'var(--text-contrast)',
-                // 'text-disabled': 'var(--text-disabled)',
                 // 'text-primary': 'var(--text-primary)',
                 // 'text-secondary': 'var(--text-secondary)',
 
-                // 'neutral-50': 'var(--neutral-50)',
                 // 'neutral-100': 'var(--neutral-100)',
                 // 'neutral-200': 'var(--neutral-200)',
                 // 'neutral-300': 'var(--neutral-300)',
@@ -137,8 +143,6 @@ export default {
                 // 'input-placeholder-text': 'var(--input-placeholder-text)',
 
                 // 'selector-disable-fill': 'var(--selector-disable-fill)',
-                // 'switch-fill': 'var(--switch-fill)',
-                // 'switch-disabled-fill': 'var(--switch-disabled-fill)',
 
                 // 'menu-bg': 'var(--menu-bg)',
 
