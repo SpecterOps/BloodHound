@@ -25,9 +25,13 @@ import { usePZPathParams } from '../../../hooks/usePZParams';
 import { cn } from '../../../utils';
 import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
 import RuleFormContext from '../Save/RuleForm/RuleFormContext';
-5;
 
 const emptyFunction = () => {};
+
+const hasTagLabel = (value: string) => {
+    const tagLabel = `:${TagLabelPrefix}`;
+    return value.includes(tagLabel);
+};
 
 export const PrivilegeZonesCypherEditor: FC<{
     preview?: boolean;
@@ -37,7 +41,7 @@ export const PrivilegeZonesCypherEditor: FC<{
     setStalePreview?: Dispatch<SetStateAction<boolean>>;
 }> = ({ preview = true, initialInput = '', onChange, stalePreview = false, setStalePreview = () => {} }) => {
     const [cypherQuery, setCypherQuery] = useState(initialInput);
-    const [showLabelWarning, setShowLabelWarning] = useState(initialInput?.includes(`:${TagLabelPrefix}`));
+    const [showLabelWarning, setShowLabelWarning] = useState(hasTagLabel(initialInput));
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
@@ -70,7 +74,7 @@ export const PrivilegeZonesCypherEditor: FC<{
             setCypherQuery(value);
             setStalePreview(true);
 
-            if (hasZoneId && value.includes(':Tag_')) setShowLabelWarning(true);
+            if (hasZoneId && hasTagLabel(value)) setShowLabelWarning(true);
             else setShowLabelWarning(false);
         },
         [preview, setCypherQuery, hasZoneId, setStalePreview]

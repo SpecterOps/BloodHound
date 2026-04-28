@@ -17,11 +17,17 @@
 import { rest } from 'msw';
 import { createGraphKinds } from '../factories/graphKinds';
 
-export const mockKindsHandler = () =>
-    rest.get('/api/v2/graphs/kinds', async (_req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: createGraphKinds(),
-            })
-        );
+export const mockKindsHandler = (nodeKinds?: string[], edgeKinds?: string[]) =>
+    rest.get('/api/v2/graphs/kinds', async (req, res, ctx) => {
+        const filter = req.url.searchParams.get('type')?.split(':')[1];
+
+        if (filter === 'node') {
+            return res(ctx.json({ data: createGraphKinds(nodeKinds, []) }));
+        }
+
+        if (filter === 'edge' || filter === 'relationship') {
+            return res(ctx.json({ data: createGraphKinds([], edgeKinds) }));
+        }
+
+        return res(ctx.json({ data: createGraphKinds(nodeKinds, edgeKinds) }));
     });
