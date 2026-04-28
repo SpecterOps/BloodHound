@@ -69,9 +69,9 @@ void main(void) {
   else
     gl_FragColor = color;
 
-  // Mix RGB toward the node color (already blended toward background in the reducer)
-  // while preserving the geometric alpha so the circle stays opaque.
-  // Multiply by sign(alpha) to zero out RGB for fully-transparent pixels, which
-  // prevents color leaking under premultiplied alpha blending (gl.ONE, gl.ONE_MINUS_SRC_ALPHA).
-  gl_FragColor.rgb = mix(v_color.rgb, gl_FragColor.rgb, v_dim) * sign(gl_FragColor.a);
+  // Premultiplied alpha output required by Sigma's blend func (gl.ONE, gl.ONE_MINUS_SRC_ALPHA).
+  // Multiplying by alpha scales antialiasing pixels correctly so they don't contribute
+  // excess brightness at node edges. For fully opaque interior pixels (alpha=1) this is
+  // a no-op; for transparent pixels (alpha=0) it zeroes out RGB, preventing colour leaking.
+  gl_FragColor.rgb = mix(v_color.rgb, gl_FragColor.rgb, v_dim) * gl_FragColor.a;
 }`;
