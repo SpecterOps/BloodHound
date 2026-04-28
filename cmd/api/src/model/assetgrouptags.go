@@ -85,8 +85,9 @@ const (
 )
 
 const (
-	TierZeroGlyph = "gem"
-	OwnedGlyph    = "skull"
+	TierZeroGlyph           = "gem"
+	OwnedGlyph              = "skull"
+	AssetGroupTagKindPrefix = "Tag_"
 )
 
 type AssetGroupTagCounts struct {
@@ -142,7 +143,7 @@ func (s AssetGroupTag) ToKind() graph.Kind {
 }
 
 func (s AssetGroupTag) KindName() string {
-	return fmt.Sprintf("Tag_%s", strings.ReplaceAll(s.Name, " ", "_"))
+	return fmt.Sprintf("%s%s", AssetGroupTagKindPrefix, strings.ReplaceAll(s.Name, " ", "_"))
 }
 
 func (s AssetGroupTag) IsStringColumn(filter string) bool {
