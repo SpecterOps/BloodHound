@@ -64,7 +64,6 @@ func (s Resources) ListKinds(response http.ResponseWriter, request *http.Request
 				validNodeKinds := make(map[graph.Kind]bool)
 
 				// Schema based node kinds
-				// Only kinds that have been synced to the kinds table will be included in this.
 				if schemaNodeKinds, _, err := s.DB.GetGraphSchemaNodeKinds(ctx, model.Filters{}, model.Sort{}, 0, 0); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
@@ -95,7 +94,7 @@ func (s Resources) ListKinds(response http.ResponseWriter, request *http.Request
 				}
 
 				// Source kinds
-				if sourceKinds, err := s.DB.GetSourceKinds(request.Context()); err != nil {
+				if sourceKinds, err := s.DB.GetSourceKinds(ctx); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				} else {
@@ -106,6 +105,7 @@ func (s Resources) ListKinds(response http.ResponseWriter, request *http.Request
 
 				// Filter down kinds
 				var filteredKinds = graph.Kinds{}
+				var kindsSeen = make(map[graph.Kind]bool)
 				for _, filter := range filters {
 					for _, kind := range kinds {
 						var isNodeKind bool
@@ -117,11 +117,17 @@ func (s Resources) ListKinds(response http.ResponseWriter, request *http.Request
 						switch filter.Value {
 						case "node":
 							if (isNodeKind && filter.Operator == model.Equals) || (!isNodeKind && filter.Operator == model.NotEquals) {
-								filteredKinds = append(filteredKinds, kind)
+								if !kindsSeen[kind] {
+									filteredKinds = append(filteredKinds, kind)
+									kindsSeen[kind] = true
+								}
 							}
 						case "edge":
 							if (!isNodeKind && filter.Operator == model.Equals) || (isNodeKind && filter.Operator == model.NotEquals) {
-								filteredKinds = append(filteredKinds, kind)
+								if !kindsSeen[kind] {
+									filteredKinds = append(filteredKinds, kind)
+									kindsSeen[kind] = true
+								}
 							}
 						}
 					}
