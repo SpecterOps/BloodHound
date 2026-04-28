@@ -38,7 +38,7 @@ import (
 //
 // Each resolved relationship update is applied to the graph via batch.UpdateRelationshipBy.
 // Errors encountered during resolution or update are collected and returned as a single combined error.
-func IngestRelationships(ingestCtx *IngestContext, relationships []ein.IngestibleRelationship) error {
+func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relationships []ein.IngestibleRelationship) error {
 	var (
 		errs                                 = errorlist.NewBuilder()
 		resolvedRelationships, resolveErrors = endpoint.ResolveAll(ingestCtx.Ctx, ingestCtx.EndpointResolver, relationships)
@@ -48,7 +48,7 @@ func IngestRelationships(ingestCtx *IngestContext, relationships []ein.Ingestibl
 		errs.Add(resolveErrors)
 	}
 
-	for update := range ingestibleRelationshipsToUpdates(ingestCtx, resolvedRelationships) {
+	for update := range ingestibleRelationshipsToUpdates(ingestCtx, resolvedRelationships, sourceKind) {
 		if err := maybeSubmitRelationshipUpdate(ingestCtx, update); err != nil {
 			errs.Add(err)
 		}
@@ -196,7 +196,9 @@ func IngestSessions(batch *IngestContext, sessions []ein.IngestibleSession) erro
 // ingestibleRelationshipsToUpdates transforms a list of ingestible relationships into
 // graph.RelationshipUpdate objects as an iterator. Endpoint nodes are written without
 // any kind information; node kinds are managed exclusively by the node ingest path.
-func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.IngestibleRelationship) iter.Seq[graph.RelationshipUpdate] {
+// The sourceKind is propagated only to Start/EndIdentityKind so that Neo4j's label-scoped
+// MERGE can continue to use existing label-scoped indexes during endpoint resolution.
+func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.IngestibleRelationship, sourceKind graph.Kind) iter.Seq[graph.RelationshipUpdate] {
 	return func(yield func(graph.RelationshipUpdate) bool) {
 		for _, rel := range rels {
 			rel.RelProps[common.LastSeen.String()] = batch.IngestTime
@@ -211,12 +213,12 @@ func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.Ingestibl
 						common.LastSeen: batch.IngestTime,
 					})),
 					StartIdentityProperties: []string{common.ObjectID.String()},
-					StartIdentityKind:       graph.EmptyKind,
+					StartIdentityKind:       sourceKind,
 					End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 						common.ObjectID: endObjID,
 						common.LastSeen: batch.IngestTime,
 					})),
-					EndIdentityKind:       graph.EmptyKind,
+					EndIdentityKind:       sourceKind,
 					EndIdentityProperties: []string{common.ObjectID.String()},
 					Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
 				}

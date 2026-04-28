@@ -53,7 +53,7 @@ func Test_IngestRelationships(t *testing.T) {
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
 
-					err := IngestRelationships(ingestContext, rels)
+					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
 				})
@@ -100,7 +100,7 @@ func Test_IngestRelationships(t *testing.T) {
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
 
-					err := IngestRelationships(ingestContext, rels)
+					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
 				})
@@ -157,7 +157,7 @@ func Test_IngestRelationships(t *testing.T) {
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
 
-					err := IngestRelationships(ingestContext, rels)
+					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
 				})
@@ -224,7 +224,7 @@ func Test_IngestRelationships(t *testing.T) {
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
 
-					err := IngestRelationships(ingestContext, rels)
+					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
 				})
@@ -281,7 +281,7 @@ func Test_IngestRelationships(t *testing.T) {
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
 
-					err := IngestRelationships(ingestContext, rels)
+					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
 				})
@@ -355,7 +355,7 @@ func Test_IngestRelationships(t *testing.T) {
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
 
-					err := IngestRelationships(ingestContext, rels)
+					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.ErrorContains(t, err, "unable to resolve")
 					return nil
 				})
@@ -400,7 +400,7 @@ func Test_IngestRelationships(t *testing.T) {
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
 
-					err := IngestRelationships(ingestContext, rels)
+					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
 				})
@@ -455,7 +455,7 @@ func Test_ResolveRelationships(t *testing.T) {
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
 					)
 
 					require.Len(t, updates, 1)
@@ -642,7 +642,7 @@ func Test_ResolveRelationships(t *testing.T) {
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
 					)
 
 					require.Nil(t, err)
@@ -685,7 +685,7 @@ func Test_ResolveRelationships(t *testing.T) {
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
 					)
 
 					require.Nil(t, err)
@@ -728,7 +728,7 @@ func Test_ResolveRelationships(t *testing.T) {
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
 					)
 
 					require.Nil(t, err)
@@ -771,7 +771,7 @@ func Test_ResolveRelationships(t *testing.T) {
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
 					)
 
 					require.Len(t, updates, 1)
@@ -871,7 +871,7 @@ func Test_ResolveRelationships(t *testing.T) {
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
 					)
 
 					require.Nil(t, err)
@@ -943,7 +943,7 @@ func Test_ResolveRelationships(t *testing.T) {
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
 					)
 
 					require.Nil(t, err)

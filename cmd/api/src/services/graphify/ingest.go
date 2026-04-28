@@ -231,7 +231,7 @@ func IngestBasicData(batch *IngestContext, converted ConvertedData) error {
 		errs.Add(err)
 	}
 
-	if err := IngestRelationships(batch, converted.RelProps); err != nil {
+	if err := IngestRelationships(batch, ad.Entity, converted.RelProps); err != nil {
 		errs.Add(err)
 	}
 
@@ -247,7 +247,7 @@ func IngestGenericData(batch *IngestContext, sourceKind graph.Kind, converted Co
 		errs.Add(err)
 	}
 
-	if err := IngestRelationships(batch, converted.RelProps); err != nil {
+	if err := IngestRelationships(batch, sourceKind, converted.RelProps); err != nil {
 		errs.Add(err)
 	}
 
@@ -261,7 +261,7 @@ func IngestGroupData(batch *IngestContext, converted ConvertedGroupData) error {
 		errs.Add(err)
 	}
 
-	if err := IngestRelationships(batch, converted.RelProps); err != nil {
+	if err := IngestRelationships(batch, ad.Entity, converted.RelProps); err != nil {
 		errs.Add(err)
 	}
 
@@ -280,7 +280,7 @@ func IngestAzureData(batch *IngestContext, converted ConvertedAzureData) error {
 		errs.Add(err)
 	}
 
-	if err := IngestRelationships(batch, converted.RelProps); err != nil {
+	if err := IngestRelationships(batch, azure.Entity, converted.RelProps); err != nil {
 		errs.Add(err)
 	}
 
