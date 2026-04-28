@@ -347,7 +347,7 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
         }
 
         process(
-            data: NodeDisplayData & { image?: string; borderColor?: string },
+            data: NodeDisplayData & { image?: string; isDimmed: boolean; borderColor?: string },
             hidden: boolean,
             offset: number
         ): void {
