@@ -33,6 +33,7 @@ InboundRelationshipKinds: [...types.#Kind]
 OutboundRelationshipKinds: [...types.#Kind]
 EdgeCompositionRelationships: [...types.#Kind]
 PostProcessedRelationships: [...types.#Kind]
+DCAPostProcessedRelationships: [...types.#Kind]
 
 // Property name enumerations
 
@@ -1841,7 +1842,7 @@ ACLRelationships: [
 	OwnsLimitedRights,
 ]
 
-IngestACLRelationships: [for r in ACLRelationships if !list.Contains(PostProcessedRelationships, r) {r}],
+IngestACLRelationships: [for r in ACLRelationships if !list.Contains(AllPostProcessedRelationships, r) {r}],
 
 // these edges are common to inbound/outbound/pathfinding
 SharedRelationshipKinds: [
@@ -1961,8 +1962,6 @@ PostProcessedRelationships: [
 	ADCSESC13,
 	EnrollOnBehalfOf,
 	SyncedToADUser,
-	Owns,
-	WriteOwner,
 	ExtendedByPolicy,
 	CoerceAndRelayNTLMToADCS,
 	CoerceAndRelayNTLMToSMB,
@@ -1972,3 +1971,11 @@ PostProcessedRelationships: [
 	CanApplyGPO,
 	HasTrustKeys,
 ]
+
+DCAPostProcessedRelationships: [
+	Owns,
+	WriteOwner
+]
+
+// All post-processed edges
+AllPostProcessedRelationships: list.Concat([PostProcessedRelationships,DCAPostProcessedRelationships])

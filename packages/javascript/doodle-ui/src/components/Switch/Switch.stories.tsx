@@ -21,27 +21,59 @@ import { Switch } from './Switch';
 const meta = {
     title: 'Components/Switch',
     component: Switch,
-    parameters: {
-        layout: 'centered',
-    },
     // This component will have an automatically generated Autodocs entry: https://storybook.js.org/docs/writing-docs/autodocs
     tags: ['autodocs'],
     // More on argTypes: https://storybook.js.org/docs/api/argtypes
     argTypes: {
-        size: { options: ['small', 'medium', 'large'], control: 'select' },
+        checked: {
+            control: 'boolean',
+            description: 'The controlled checked state of the switch.',
+            table: {
+                type: { summary: 'boolean' },
+                required: true,
+            },
+        },
+        onCheckedChange: {
+            action: 'checked changed',
+            description: 'Called when the checked state changes.',
+            table: {
+                type: { summary: '(checked: boolean) => void' },
+                required: true,
+            },
+        },
         label: { control: 'text' },
         labelPosition: { options: ['left', 'right'], control: 'select' },
     },
     args: {
-        size: 'medium',
+        checked: false,
+        label: 'Label',
         labelPosition: 'right',
+    },
+    parameters: {
+        layout: 'centered',
+        docs: {
+            description: {
+                component: `
+The Switch component represents a binary on/off control.
+
+By default, the switch is rendered in an unchecked (off) state and can be toggled by user interaction (click or keyboard). When a label is provided, it is associated to the control for improved accessibility and can be positioned to the left or right.
+
+When disabled, the switch is non-interactive and cannot be toggled. Visual styles indicate the disabled state for both the switch and its label.
+
+Use this component for immediate state changes, such as enabling features or toggling settings.
+        `,
+            },
+        },
     },
 } satisfies Meta<typeof Switch>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Base: Story = {
+export const Default: Story = {
+    args: {
+        checked: false,
+    },
     play: async ({ canvasElement, step }) => {
         const canvas = within(canvasElement);
         const switchButton = await canvas.findByRole('switch');
@@ -77,39 +109,37 @@ export const Base: Story = {
     },
 };
 
-export const Disabled: Story = {
+export const Checked: Story = {
     args: {
-        disabled: true,
-    },
-};
-
-export const DefaultChecked: Story = {
-    args: {
-        defaultChecked: true,
-    },
-};
-
-export const Small: Story = {
-    args: {
-        size: 'small',
-    },
-};
-
-export const Large: Story = {
-    args: {
-        size: 'large',
+        checked: true,
     },
 };
 
 export const Labeled: Story = {
     args: {
-        label: 'Muted',
+        label: 'Label',
     },
 };
 
 export const LeftLabeled: Story = {
     args: {
-        label: 'Muted',
+        label: 'Label',
         labelPosition: 'left',
+    },
+};
+
+export const DisabledChecked: Story = {
+    args: {
+        disabled: true,
+        checked: true,
+        label: 'Label',
+    },
+};
+
+export const DisabledUnchecked: Story = {
+    args: {
+        disabled: true,
+        checked: false,
+        label: 'Label',
     },
 };

@@ -71,8 +71,8 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 		return fmt.Errorf("graph schema extension version is not valid semver: %w", err)
 	} else if strings.TrimSpace(graphExtension.ExtensionInput.Namespace) == "" {
 		return errors.New("graph schema extension namespace is required")
-	} else if graphExtension.ExtensionInput.Namespace == "Tag" {
-		return errors.New("graph schema extension namespace cannot be Tag")
+	} else if reservedNamespace, isReserved := model.MatchReservedGraphKindNamespace(graphExtension.ExtensionInput.Namespace); isReserved {
+		return fmt.Errorf("graph schema extension namespace '%s' uses reserved namespace '%s'", graphExtension.ExtensionInput.Namespace, reservedNamespace)
 	} else if len(graphExtension.NodeKindsInput) == 0 {
 		return errors.New("graph schema node kinds are required")
 	}

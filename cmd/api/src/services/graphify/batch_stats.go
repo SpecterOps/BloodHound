@@ -20,31 +20,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/specterops/dawgs/graph"
 )
 
-var (
-	// ingestThroughputGauge is registered withthe metrics daemon's Prometheus registry at startup
-	ingestThroughputGauge *prometheus.GaugeVec
-)
-
-// InitializeIngestMetrics registers the ingestion throughput gauge with the Prometheus registry
-func InitializeIngestMetrics(registerer prometheus.Registerer) error {
-	ingestThroughputGauge = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "bhe_ingest_throughput",
-			Help: "Ingestion throughput in entities per second",
-		},
-		[]string{"entity_type", "stage"}, // "nodes" or "relationships", "processed" or "written"
-	)
-
-	return registerer.Register(ingestThroughputGauge)
-}
-
 // PublishIngestThroughput publishes ingestion throughput metrics to Prometheus
 func PublishIngestThroughput(nodesProcessed, relsProcessed, nodesWritten, relsWritten int64, duration time.Duration) {
-	if ingestThroughputGauge == nil || duration.Seconds() <= 0 {
+	if duration.Seconds() <= 0 {
 		return
 	}
 
