@@ -24,6 +24,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/registration"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -94,6 +95,13 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		slog.String("namespace", "dogtags"),
 		slog.Any("flags", flags))
 
+	// Initialize a separate Prometheus registry for API middleware metrics 
+	// to avoid conflicts with any global metrics registered by other components.
+	promRegistry := prometheus.NewRegistry()
+	if err := prometheus.DefaultRegisterer.Register(promRegistry); err != nil {
+		return nil, fmt.Errorf("failed to init register metrics collector: %w", err)
+	}
+
 	if !cfg.DisableMigrations {
 		if err := bootstrap.MigrateDB(ctx, cfg, connections.RDMS, config.NewDefaultAdminConfiguration); err != nil {
 			return nil, fmt.Errorf("rdms migration error: %w", err)
@@ -132,6 +140,8 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		return nil, fmt.Errorf("failed to save collector manifests: %w", err)
 	} else if ingestSchema, err := upload.LoadIngestSchema(); err != nil {
 		return nil, fmt.Errorf("failed to load OpenGraph schema: %w", err)
+	} else if err = RegisterBHCEMetrics(promRegistry); err != nil {
+		return nil, err
 	} else {
 		startDelay := 0 * time.Second
 
@@ -172,4 +182,13 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 			datapipeDaemon,
 		}, nil
 	}
+}
+
+// RegisterBHCEMetrics registers BloodHoundCE-specific metrics,
+// as well as any shared API middleware metrics, with the provided Prometheus registry.
+func RegisterBHCEMetrics(prometheusRegistry *prometheus.Registry) error {
+	if err := middleware.RegisterApiMiddlewareMetrics(prometheusRegistry); err != nil {
+		return fmt.Errorf("failed to register API middleware metrics: %w", err)
+	}
+	return nil
 }
