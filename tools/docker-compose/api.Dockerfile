@@ -15,7 +15,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ########
-# Fetch latest versions from github
+# Fetch latest collector versions from github
 ################
 FROM docker.io/library/alpine:3.21 AS version-getter
 RUN set -eux; \
@@ -26,28 +26,32 @@ RUN set -eux; \
     printf 'SHARPHOUND_VERSION=%s\nAZUREHOUND_VERSION=%s\n' "$sharphound_version" "$azurehound_version" > /versions.env
 
 ########
-# Package other assets
+# Package remote assets
 ################
 FROM docker.io/library/alpine:3.21 AS hound-builder
 COPY --from=version-getter /versions.env /versions.env
+RUN apk --no-cache add p7zip
 
 # Make some additional directories for minimal container to copy
 RUN mkdir -p /opt/bloodhound /etc/bloodhound /var/log
-RUN apk --no-cache add p7zip
+
+# Download SharpHound artifacts
+WORKDIR /tmp/sharphound
+RUN set -eux; \
+    . /versions.env; \
+    wget "https://github.com/SpecterOps/SharpHound/releases/download/${SHARPHOUND_VERSION}/SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip"; \
+    wget "https://github.com/SpecterOps/SharpHound/releases/download/${SHARPHOUND_VERSION}/SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip.sha256"; \
+    sha256sum -cw "SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip.sha256"
 
 # Package SharpHound in /tmp/sharphound/dist
 WORKDIR /tmp/sharphound
 RUN set -eux; \
     . /versions.env; \
     mkdir -p dist; \
-    wget "https://github.com/SpecterOps/SharpHound/releases/download/${SHARPHOUND_VERSION}/SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip"; \
-    wget "https://github.com/SpecterOps/SharpHound/releases/download/${SHARPHOUND_VERSION}/SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip.sha256"; \
-    sha256sum -c "SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip.sha256"; \
     mv "SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip" "dist/sharphound-${SHARPHOUND_VERSION}.zip"; \
-    cd dist; \
-    sha256sum "sharphound-${SHARPHOUND_VERSION}.zip" > "sharphound-${SHARPHOUND_VERSION}.zip.sha256"
+    (cd dist && sha256sum "sharphound-${SHARPHOUND_VERSION}.zip" > "sharphound-${SHARPHOUND_VERSION}.zip.sha256")
 
-# Download AzureHound release artifacts
+# Download AzureHound artifacts
 WORKDIR /tmp/azurehound
 RUN set -eux; \
     . /versions.env; \
@@ -62,18 +66,16 @@ RUN set -eux; \
     wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_amd64.zip"; \
     wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_amd64.zip.sha256"; \
     wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_arm64.zip"; \
-    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_arm64.zip.sha256"
-RUN sha256sum -cw *.sha256
-RUN 7z x '*.zip' -oartifacts/*
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_arm64.zip.sha256"; \
+    sha256sum -cw *.sha256
 
 # Package AzureHound in /tmp/azurehound/dist
-WORKDIR /tmp/azurehound/artifacts
 RUN set -eux; \
     . /versions.env; \
-    mkdir -p ../dist; \
-    7z a -tzip -mx9 "../dist/azurehound-${AZUREHOUND_VERSION}.zip" *; \
-    cd ../dist; \
-    sha256sum "azurehound-${AZUREHOUND_VERSION}.zip" > "azurehound-${AZUREHOUND_VERSION}.zip.sha256"
+    mkdir -p artifacts dist; \
+    7z x '*.zip' -oartifacts/*; \
+    (cd artifacts && 7z a -tzip -mx9 "../dist/azurehound-${AZUREHOUND_VERSION}.zip" *); \
+    (cd dist && sha256sum "azurehound-${AZUREHOUND_VERSION}.zip" > "azurehound-${AZUREHOUND_VERSION}.zip.sha256")
 
 FROM docker.io/library/golang:1.26.2-alpine3.22
 ENV GOFLAGS="-buildvcs=false"
@@ -86,7 +88,7 @@ RUN go install github.com/air-verse/air@v1.52.3
 
 # api/v2/collectors/[collector-type]/[version] for collector download specifically expects
 # '[collector-type]-[version].zip(.sha256)' - all lowercase for embedded files
-COPY --from=hound-builder /tmp/sharphound/dist/ /bhapi/collectors/sharphound/
-COPY --from=hound-builder /tmp/azurehound/dist/ /bhapi/collectors/azurehound/
+COPY --from=hound-builder /tmp/sharphound/dist/sharphound-*.zip* /bhapi/collectors/sharphound/
+COPY --from=hound-builder /tmp/azurehound/dist/azurehound-*.zip* /bhapi/collectors/azurehound/
 
 ENTRYPOINT ["air"]
