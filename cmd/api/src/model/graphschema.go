@@ -67,11 +67,9 @@ func ErrIsGraphSchemaDuplicateError(err error) bool {
 	}
 }
 
-// reservedGraphKindNamespaces enumerates graph kind namespaces that may not be
-// registered as an opengraph schema extension namespace or appear as the
-// namespace of any node/edge kind in an ingest payload. These namespaces are
-// owned by internal subsystems (ex: "tag" is reserved for the asset
-// tagging subsystem). Comparisons against this list are case-insensitive.
+// reservedGraphKindNamespaces lists namespaces that cannot be used in custom
+// graph extensions or ingest payloads. These are owned by internal subsystems
+// (e.g., "tag" is reserved for asset tagging). Comparisons are case-insensitive.
 var reservedGraphKindNamespaces = []string{"tag"}
 
 // MatchReservedGraphKindNamespace reports whether a kind either exactly
