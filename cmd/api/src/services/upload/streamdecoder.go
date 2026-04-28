@@ -28,6 +28,7 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/santhosh-tekuri/jsonschema/v6/kind"
 
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
@@ -441,8 +442,17 @@ func (v *validator) validateArray(arrayName string, schema *jsonschema.Schema) {
 			default:
 				v.reportCritical(index, fmt.Sprintf("%s[%d] syntax error: %s", arrayName, index, err))
 			}
-		} else if err := schema.Validate(item); err != nil {
-			v.reportValidation(index, formatSchemaValidationError(arrayName, index, err))
+		} else {
+			if err := schema.Validate(item); err != nil {
+				v.reportValidation(index, formatSchemaValidationError(arrayName, index, err))
+			}
+			if kindErrors := validateKinds(arrayName, item); len(kindErrors) > 0 {
+				causes := make([]string, len(kindErrors))
+				for i, kindError := range kindErrors {
+					causes[i] = kindError.Error()
+				}
+				v.reportValidation(index, fmt.Sprintf("%s[%d] validation failed with %d error(s): [%s]", arrayName, index, len(causes), strings.Join(causes, ", ")))
+			}
 		}
 
 		if len(v.validationErrors) >= v.maxErrors || len(v.criticalErrors) > 0 {
@@ -464,4 +474,38 @@ func (v *validator) report() error {
 		}
 	}
 	return nil
+}
+
+// validateKinds enforces the reserved-kind-namespace policy on a single
+// decoded node or edge item and returns one error per offending kind. Nodes
+// are checked via the "kinds" array, edges via the "kind" field. This function
+// performs defensive type checking with type assertions to safely handle items
+// that may not conform to the schema, ensuring reserved-kind violations are
+// always reported regardless of other validation failures. The reserved
+// namespaces and the ReservedKindError type are defined in the model package.
+func validateKinds(arrayName string, item map[string]any) []error {
+	var (
+		kindsToCheck []string
+		kindErrors   []error
+	)
+	switch arrayName {
+	case "nodes":
+		if rawKinds, ok := item["kinds"].([]any); ok {
+			for _, rawKind := range rawKinds {
+				if kindName, ok := rawKind.(string); ok {
+					kindsToCheck = append(kindsToCheck, kindName)
+				}
+			}
+		}
+	case "edges":
+		if kindName, ok := item["kind"].(string); ok {
+			kindsToCheck = append(kindsToCheck, kindName)
+		}
+	}
+	for _, kindName := range kindsToCheck {
+		if namespace, reserved := model.MatchReservedGraphKindNamespace(kindName); reserved {
+			kindErrors = append(kindErrors, &model.ReservedKindError{KindName: kindName, Namespace: namespace})
+		}
+	}
+	return kindErrors
 }
