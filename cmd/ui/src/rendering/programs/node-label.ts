@@ -41,7 +41,7 @@ export default function drawLabel(context: CanvasRenderingContext2D, data: Graph
     const fillBackground = data.highlighted ? data.highlightedBackground : data.backgroundColor;
     const fillText = data.highlighted ? data.highlightedText : settings.labelColor.color;
 
-    const dimFactor = data.isDimmed ? 0.1 : 1;
+    const dimFactor = data.isDimmed ? data.labelDimFactor ?? 0.1 : 1;
     context.globalAlpha = calculateLabelOpacity(inverseSqrtZoomRatio) * dimFactor;
 
     // Edge labels: use original right-of-node positioning with center-alignment offset

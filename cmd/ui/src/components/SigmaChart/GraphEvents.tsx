@@ -93,6 +93,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
     ref
 ) {
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const theme = useTheme();
 
     const sigma = useSigma();
@@ -300,6 +301,9 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
     useEffect(() => {
         const bgColor = theme.neutral.primary;
+        const nodeBlend = darkMode ? 0.5 : 0.8;
+        const edgeBlend = darkMode ? 0.6 : 0.9;
+        const labelDimFactor = darkMode ? 0.3 : 0.1;
 
         setSettings({
             nodeReducer: (node, data) => {
@@ -312,13 +316,14 @@ export const GraphEvents = forwardRef(function GraphEvents(
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
                     isDimmed,
                     ...(isDimmed && {
-                        color: blendHexColors(data.color, bgColor, 0.8),
-                        borderColor: blendHexColors(data.borderColor ?? data.color, bgColor, 0.8),
-                        backgroundColor: blendHexColors(data.backgroundColor ?? bgColor, bgColor, 0.8),
+                        labelDimFactor,
+                        color: blendHexColors(data.color, bgColor, nodeBlend),
+                        borderColor: blendHexColors(data.borderColor ?? data.color, bgColor, nodeBlend),
+                        backgroundColor: blendHexColors(data.backgroundColor ?? bgColor, bgColor, nodeBlend),
                         glyphs: data.glyphs?.map((g: Glyph) => ({
                             ...g,
-                            backgroundColor: blendHexColors(g.backgroundColor, bgColor, 0.8),
-                            color: blendHexColors(g.color, bgColor, 0.8),
+                            backgroundColor: blendHexColors(g.backgroundColor, bgColor, nodeBlend),
+                            color: blendHexColors(g.color, bgColor, nodeBlend),
                         })),
                     }),
                 };
@@ -335,7 +340,8 @@ export const GraphEvents = forwardRef(function GraphEvents(
                     isDimmed,
                     backgroundColor: bgColor,
                     ...(isDimmed && {
-                        color: blendHexColors(data.color, bgColor, 0.9),
+                        labelDimFactor,
+                        color: blendHexColors(data.color, bgColor, edgeBlend),
                     }),
                 };
 
@@ -350,6 +356,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
         });
     }, [
         curvedEdgeReducer,
+        darkMode,
         highlightedEdgeIds,
         highlightedItem,
         highlightedNodeIds,
