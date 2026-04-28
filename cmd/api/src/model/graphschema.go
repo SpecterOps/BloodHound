@@ -67,12 +67,12 @@ func ErrIsGraphSchemaDuplicateError(err error) bool {
 	}
 }
 
-// ReservedGraphKindNamespaces enumerates graph kind namespaces that may not be
+// reservedGraphKindNamespaces enumerates graph kind namespaces that may not be
 // registered as an opengraph schema extension namespace or appear as the
 // namespace of any node/edge kind in an ingest payload. These namespaces are
 // owned by internal subsystems (ex: "tag" is reserved for the asset
 // tagging subsystem). Comparisons against this list are case-insensitive.
-var ReservedGraphKindNamespaces = []string{"tag"}
+var reservedGraphKindNamespaces = []string{"tag"}
 
 // MatchReservedGraphKindNamespace reports whether a kind either exactly
 // matches a reserved namespace or uses one as its "namespace_" prefix. The
@@ -82,7 +82,7 @@ var ReservedGraphKindNamespaces = []string{"tag"}
 // This function is used to validate kind names at ingest time and at
 // extension upload time.
 func MatchReservedGraphKindNamespace(candidate string) (string, bool) {
-	for _, reserved := range ReservedGraphKindNamespaces {
+	for _, reserved := range reservedGraphKindNamespaces {
 		if strings.EqualFold(candidate, reserved) {
 			return reserved, true
 		}
