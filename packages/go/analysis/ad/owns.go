@@ -19,10 +19,10 @@ package ad
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 
 	"github.com/specterops/dawgs/algo"
-	"github.com/specterops/dawgs/util/channels"
 
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
@@ -36,6 +36,11 @@ import (
 	"github.com/specterops/dawgs/query"
 )
 
+var ownsWriteOwnerPostProcessedEdges = graph.Kinds{
+	ad.Owns,
+	ad.WriteOwner,
+}
+
 func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
@@ -46,131 +51,167 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, localGroupDat
 		attr.Scope("process"),
 	)()
 
-	operation := post.NewPostRelationshipOperation(ctx, db, "PostOwnsAndWriteOwner")
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, ownsWriteOwnerPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	ownsWriteOwnerTracker, err := post.FetchTracker(ctx, db, ownsWriteOwnerPostProcessedEdges)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
 
 	// Get the dSHeuristics values for all domains
-	if dsHeuristicsCache, anyEnforced, err := GetDsHeuristicsCache(ctx, db); err != nil {
+	dsHeuristicsCache, anyEnforced, err := GetDsHeuristicsCache(ctx, db)
+	if err != nil {
 		slog.ErrorContext(ctx, "Failed fetching dsheuristics values for postownsandwriteowner", attr.Error(err))
-		return nil, err
-	} else if adminGroupIds, err := FetchAdminGroupIds(ctx, db, localGroupData.GroupMembershipCache); err != nil {
-		// Get the admin group IDs
-		slog.ErrorContext(ctx, "Failed fetching admin group ids values for postownsandwriteowner", attr.Error(err))
-	} else {
+		return &post.AtomicPostProcessingStats{}, err
+	}
 
-		// Get all source nodes of Owns ACEs (i.e., owning principals) where the target node has no ACEs granting abusable explicit permissions to OWNER RIGHTS
-		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-			if relationships, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-				return query.And(
-					query.Kind(query.Relationship(), ad.OwnsRaw),
-					query.Kind(query.Start(), ad.Entity),
-				)
-			})); err != nil {
-				slog.ErrorContext(ctx, "Failed to fetch OwnsRaw relationships for postownsandwriteowner", attr.Error(err))
-			} else {
-				for _, rel := range relationships {
+	adminGroupIds, err := FetchAdminGroupIds(ctx, db, localGroupData.GroupMembershipCache)
+	if err != nil {
+		// While it's ideal if this succeeds, the risk of this call failing will be a false negative case of missing an `Owns` edge sourced
+		// from an Enterprise or Domain Admin, who will already have control in another manner anyways.
+		slog.WarnContext(ctx, "Failed fetching admin group ids values for postownsandwriteowner", attr.Error(err))
+	}
 
-					// Check if ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1)
-					if anyEnforced {
+	sink := post.NewFilteredRelationshipSink(ctx, "PostOwnsAndWriteOwner", db, ownsWriteOwnerTracker)
+	defer sink.Done()
 
-						// Get the target node of the OwnsRaw relationship
-						if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
-							slog.ErrorContext(ctx, "Failed fetching OwnsRaw target node for postownsandwriteowner", attr.Error(err))
-							continue
+	if err := postOwnsEdges(ctx, db, sink, dsHeuristicsCache, anyEnforced, adminGroupIds); err != nil {
+		return sink.Stats(), err
+	}
 
-						} else if domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String(); err != nil {
-							// Get the domain SID of the target node
-							slog.ErrorContext(ctx, "Failed fetching domain SID for postownsandwriteowner", attr.Error(err))
-							continue
+	if err := postWriteOwnerEdges(ctx, db, sink, dsHeuristicsCache, anyEnforced); err != nil {
+		return sink.Stats(), err
+	}
 
-						} else {
-							enforced, ok := dsHeuristicsCache[domainSid]
-							if !ok {
-								enforced = false
+	return sink.Stats(), nil
+}
+
+func postOwnsEdges(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, dsHeuristicsCache map[string]bool, anyEnforced bool, adminGroupIds cardinality.Duplex[uint64]) error {
+	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if relationships, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+			return query.And(
+				query.Kind(query.Relationship(), ad.OwnsRaw),
+				query.Kind(query.Start(), ad.Entity),
+			)
+		})); err != nil {
+			slog.ErrorContext(ctx, "Failed to fetch OwnsRaw relationships for postownsandwriteowner", attr.Error(err))
+			return err
+		} else {
+			for _, rel := range relationships {
+
+				// Check if ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1)
+				if anyEnforced {
+
+					// Get the target node of the OwnsRaw relationship
+					if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
+						slog.ErrorContext(ctx, "Failed fetching OwnsRaw target node for postownsandwriteowner", attr.Error(err))
+						continue
+
+					} else if domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String(); err != nil {
+						// Get the domain SID of the target node
+						slog.ErrorContext(ctx, "Failed fetching domain SID for postownsandwriteowner", attr.Error(err))
+						continue
+
+					} else {
+						enforced, ok := dsHeuristicsCache[domainSid]
+						if !ok {
+							enforced = false
+						}
+						// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the Owns edge
+						if !enforced {
+							result := createPostRelFromRaw(rel, ad.Owns)
+							if !sink.Submit(ctx, result) {
+								return fmt.Errorf("unable to submit to channel in postOwnsEdges")
 							}
-							// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the Owns edge
-							if !enforced {
-								result := createPostRelFromRaw(rel, ad.Owns)
-								channels.Submit(ctx, outC, result)
-							} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err != nil {
-								// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
-								continue
-							} else if (isComputerDerived && adminGroupIds != nil && adminGroupIds.Contains(rel.StartID.Uint64())) || !isComputerDerived {
-								// If the target node is a computer or derived object, add the Owns edge if the owning principal is a member of DA/EA (or is either group's SID)
-								// If the target node is NOT a computer or derived object, add the Owns edge
-								result := createPostRelFromRaw(rel, ad.Owns)
-								channels.Submit(ctx, outC, result)
+						} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err != nil {
+							// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
+							continue
+						} else if (isComputerDerived && adminGroupIds != nil && adminGroupIds.Contains(rel.StartID.Uint64())) || !isComputerDerived {
+							// If the target node is a computer or derived object, add the Owns edge if the owning principal is a member of DA/EA (or is either group's SID)
+							// If the target node is NOT a computer or derived object, add the Owns edge
+							result := createPostRelFromRaw(rel, ad.Owns)
+							if !sink.Submit(ctx, result) {
+								return fmt.Errorf("unable to submit to channel in postOwnsEdges")
 							}
 						}
-					} else {
-						// If no domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1) or we can't fetch the attribute, we can skip this analysis and just add the Owns relationship
-						result := createPostRelFromRaw(rel, ad.Owns)
-						channels.Submit(ctx, outC, result)
+					}
+				} else {
+					// If no domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1) or we can't fetch the attribute, we can skip this analysis and just add the Owns relationship
+					result := createPostRelFromRaw(rel, ad.Owns)
+					if !sink.Submit(ctx, result) {
+						return fmt.Errorf("unable to submit to channel in postOwnsEdges")
 					}
 				}
 			}
-			return nil
-		}); err != nil {
-			slog.ErrorContext(ctx, "Failed to process Owns relationships for postownsandwriteowner", attr.Error(err))
 		}
+		return nil
+	})
+}
 
-		// Get all source nodes of WriteOwner ACEs where the target node has no ACEs granting explicit abusable permissions to OWNER RIGHTS
-		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+func postWriteOwnerEdges(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, dsHeuristicsCache map[string]bool, anyEnforced bool) error {
+	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if relationships, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+			return query.And(
+				query.Kind(query.Relationship(), ad.WriteOwnerRaw),
+				query.Kind(query.Start(), ad.Entity),
+			)
+		})); err != nil {
+			slog.ErrorContext(ctx, "Failed to fetch WriteOwnerRaw relationships for postownsandwriteowner", attr.Error(err))
+			return err
+		} else {
+			for _, rel := range relationships {
 
-			if relationships, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-				return query.And(
-					query.Kind(query.Relationship(), ad.WriteOwnerRaw),
-					query.Kind(query.Start(), ad.Entity),
-				)
-			})); err != nil {
-				slog.ErrorContext(ctx, "Failed to fetch WriteOwnerRaw relationships for postownsandwriteowner", attr.Error(err))
-			} else {
-				for _, rel := range relationships {
+				// Check if ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1)
+				if anyEnforced {
 
-					// Check if ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1)
-					if anyEnforced {
+					// Get the target node of the WriteOwnerRaw relationship
+					if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
+						slog.ErrorContext(ctx, "Failed fetching WriteOwnerRaw target node for postownsandwriteowner", attr.Error(err))
+						continue
 
-						// Get the target node of the WriteOwnerRaw relationship
-						if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
-							slog.ErrorContext(ctx, "Failed fetching WriteOwnerRaw target node for postownsandwriteowner", attr.Error(err))
-							continue
+					} else if domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String(); err != nil {
+						// Get the domain SID of the target node
+						slog.ErrorContext(ctx, "Failed fetching domain SID for postownsandwriteowner", attr.Error(err))
+						continue
 
-						} else if domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String(); err != nil {
-							// Get the domain SID of the target node
-							slog.ErrorContext(ctx, "Failed fetching domain SID for postownsandwriteowner", attr.Error(err))
-							continue
+					} else {
+						enforced, ok := dsHeuristicsCache[domainSid]
+						if !ok {
+							enforced = false
+						}
 
-						} else {
-							enforced, ok := dsHeuristicsCache[domainSid]
-							if !ok {
-								enforced = false
+						// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the WriteOwner edge
+						if !enforced {
+							result := createPostRelFromRaw(rel, ad.WriteOwner)
+							if !sink.Submit(ctx, result) {
+								return fmt.Errorf("unable to submit to channel in postWriteOwnerEdges")
 							}
-
-							// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the WriteOwner edge
-							if !enforced {
+						} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err == nil {
+							// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
+							if !isComputerDerived {
+								// If the target node is NOT a computer or derived object, add the WriteOwner edge
 								result := createPostRelFromRaw(rel, ad.WriteOwner)
-								channels.Submit(ctx, outC, result)
-							} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err == nil {
-								// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
-								if !isComputerDerived {
-									// If the target node is NOT a computer or derived object, add the WriteOwner edge
-									result := createPostRelFromRaw(rel, ad.WriteOwner)
-									channels.Submit(ctx, outC, result)
+								if !sink.Submit(ctx, result) {
+									return fmt.Errorf("unable to submit to channel in postWriteOwnerEdges")
 								}
 							}
 						}
-					} else {
-						// If no domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1) or we can't fetch the attribute, we can skip this analysis and just add the WriteOwner relationship
-						result := createPostRelFromRaw(rel, ad.WriteOwner)
-						channels.Submit(ctx, outC, result)
+					}
+				} else {
+					// If no domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1) or we can't fetch the attribute, we can skip this analysis and just add the WriteOwner relationship
+					result := createPostRelFromRaw(rel, ad.WriteOwner)
+					if !sink.Submit(ctx, result) {
+						return fmt.Errorf("unable to submit to channel in postWriteOwnerEdges")
 					}
 				}
 			}
-			return nil
-		}); err != nil {
-			slog.ErrorContext(ctx, "Failed to process WriteOwner relationships for postownsandwriteowner", attr.Error(err))
 		}
-	}
-	return &operation.Stats, operation.Done()
+		return nil
+	})
 }
 
 func createPostRelFromRaw(rel *graph.Relationship, kind graph.Kind) post.EnsureRelationshipJob {
