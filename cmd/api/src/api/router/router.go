@@ -129,6 +129,12 @@ func (s *Router) UsePrerouting(middleware ...mux.MiddlewareFunc) {
 	s.globalMiddleware = append(s.globalMiddleware, middleware...)
 }
 
+// MuxRouter returns the underlying *mux.Router. It is intended for pre-route middleware that needs to resolve the
+// matched route template without dispatching the request, e.g. the Prometheus metrics middleware.
+func (s Router) MuxRouter() *mux.Router {
+	return s.mux
+}
+
 func (s Router) Handler() http.Handler {
 	var handlerCursor http.Handler = s.mux
 

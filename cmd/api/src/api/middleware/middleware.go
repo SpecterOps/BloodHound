@@ -32,6 +32,8 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/unrolled/secure"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -328,6 +330,45 @@ func EnsureRequestBodyClosed() mux.MiddlewareFunc {
 					b.Close()
 				}
 			}
+		})
+	}
+}
+
+// unmatchedRouteLabel is the bounded "handler" label value used when an incoming request does not match any registered
+// route (e.g. 404 responses). Keeping the fallback as a single constant preserves the cardinality guarantees described
+// in metrics.go.
+const unmatchedRouteLabel = "unmatched"
+
+// routeTemplateFor returns the gorilla/mux path template that would match r, or unmatchedRouteLabel when no route
+// matches or the matched route has no retrievable template. The match is performed without dispatching the request so
+// it is safe to call from pre-route middleware.
+func routeTemplateFor(muxRouter *mux.Router, r *http.Request) string {
+	var routeMatch mux.RouteMatch
+	if !muxRouter.Match(r, &routeMatch) || routeMatch.Route == nil {
+		return unmatchedRouteLabel
+	}
+	template, err := routeMatch.Route.GetPathTemplate()
+	if err != nil {
+		return unmatchedRouteLabel
+	}
+	return template
+}
+
+// MetricsMiddleware wires the API request pipeline to the Prometheus metrics declared in metrics.go. It must be
+// registered as pre-route middleware so that unmatched requests are still counted; the muxRouter argument is used to
+// resolve the matched route template for the "handler" label without dispatching the request twice.
+func MetricsMiddleware(muxRouter *mux.Router) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handlerLabel := routeTemplateFor(muxRouter, r)
+			instrumented := promhttp.InstrumentHandlerInFlight(ApiInFlightGauge,
+				promhttp.InstrumentHandlerDuration(ApiRequestDuration.MustCurryWith(prometheus.Labels{"handler": handlerLabel}),
+					promhttp.InstrumentHandlerCounter(ApiTotalRequests,
+						promhttp.InstrumentHandlerResponseSize(ApiResponseSize, next),
+					),
+				),
+			)
+			instrumented.ServeHTTP(w, r)
 		})
 	}
 }

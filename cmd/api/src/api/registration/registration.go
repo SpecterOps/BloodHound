@@ -43,6 +43,7 @@ func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configur
 	bypassLimitsParam := appcfg.GetTimeoutLimitParameter(context.Background(), db)
 	routerInst.UsePrerouting(middleware.ContextMiddleware(bypassLimitsParam))
 	routerInst.UsePrerouting(middleware.CORSMiddleware())
+	routerInst.UsePrerouting(middleware.MetricsMiddleware(routerInst.MuxRouter()))
 
 	// Set up logging. This must be done after ContextMiddleware is initialized so the context can be accessed in the log logic
 	if cfg.EnableAPILogging {
