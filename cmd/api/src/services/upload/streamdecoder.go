@@ -442,14 +442,17 @@ func (v *validator) validateArray(arrayName string, schema *jsonschema.Schema) {
 			default:
 				v.reportCritical(index, fmt.Sprintf("%s[%d] syntax error: %s", arrayName, index, err))
 			}
-		} else if err := schema.Validate(item); err != nil {
-			v.reportValidation(index, formatSchemaValidationError(arrayName, index, err))
-		} else if kindErrors := validateKinds(arrayName, item); len(kindErrors) > 0 {
-			causes := make([]string, len(kindErrors))
-			for i, kindError := range kindErrors {
-				causes[i] = kindError.Error()
+		} else {
+			if err := schema.Validate(item); err != nil {
+				v.reportValidation(index, formatSchemaValidationError(arrayName, index, err))
 			}
-			v.reportValidation(index, fmt.Sprintf("%s[%d] validation failed with %d error(s): [%s]", arrayName, index, len(causes), strings.Join(causes, ", ")))
+			if kindErrors := validateKinds(arrayName, item); len(kindErrors) > 0 {
+				causes := make([]string, len(kindErrors))
+				for i, kindError := range kindErrors {
+					causes[i] = kindError.Error()
+				}
+				v.reportValidation(index, fmt.Sprintf("%s[%d] validation failed with %d error(s): [%s]", arrayName, index, len(causes), strings.Join(causes, ", ")))
+			}
 		}
 
 		if len(v.validationErrors) >= v.maxErrors || len(v.criticalErrors) > 0 {
@@ -475,9 +478,10 @@ func (v *validator) report() error {
 
 // validateKinds enforces the reserved-kind-namespace policy on a single
 // decoded node or edge item and returns one error per offending kind. Nodes
-// are checked via the "kinds" array, edges via the "kind" field. Callers must
-// invoke this only after JSON Schema validation has passed, which guarantees
-// that "kinds" is an array of strings and "kind" is a string. The reserved
+// are checked via the "kinds" array, edges via the "kind" field. This function
+// performs defensive type checking with type assertions to safely handle items
+// that may not conform to the schema, ensuring reserved-kind violations are
+// always reported regardless of other validation failures. The reserved
 // namespaces and the ReservedKindError type are defined in the model package.
 func validateKinds(arrayName string, item map[string]any) []error {
 	var (

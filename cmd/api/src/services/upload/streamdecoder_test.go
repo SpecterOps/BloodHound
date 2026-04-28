@@ -745,6 +745,35 @@ func nodeSchemaFailureCases() []genericIngestAssertion {
 				{"nodes[0] validation failed with 2 error(s)", "kind 'Tag_Foo' uses reserved namespace 'tag'", "kind 'tag_bar' uses reserved namespace 'tag'"},
 			},
 		},
+		{
+			name: "node validation: reserved kind error reported alongside schema error",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:    "",
+						Kinds: []string{"Tag_Foo"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"nodes[0] schema validation", "at '': missing property 'id'"},
+				{"nodes[0] validation failed with 1 error(s)", "kind 'Tag_Foo' uses reserved namespace 'tag'"},
+			},
+		},
+		{
+			name: "node validation: reserved kind error reported alongside multiple schema errors",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						Kinds: []string{"tag", "a", "b", "c"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"nodes[0] schema validation", "at '': missing property 'id'", "at '/kinds': maxItems: got 4, want 3"},
+				{"nodes[0] validation failed with 1 error(s)", "kind 'tag' uses reserved namespace 'tag'"},
+			},
+		},
 	}
 }
 
@@ -985,6 +1014,35 @@ func edgeSchemaFailureCases() []genericIngestAssertion {
 			},
 			validationErrContains: [][]string{
 				{"edges[0] validation failed with 1 error(s)", "kind 'tag_has_relationship' uses reserved namespace 'tag'"},
+			},
+		},
+		{
+			name: "edge validation: reserved kind error reported alongside schema error",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind: "Tag_Related",
+						End:  &edgePiece{Value: "5678"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0] schema validation", "at '/start': got null, want object"},
+				{"edges[0] validation failed with 1 error(s)", "kind 'Tag_Related' uses reserved namespace 'tag'"},
+			},
+		},
+		{
+			name: "edge validation: reserved kind error reported alongside multiple schema errors",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind: "tag",
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0] schema validation", "at '/start': got null, want object", "at '/end': got null, want object"},
+				{"edges[0] validation failed with 1 error(s)", "kind 'tag' uses reserved namespace 'tag'"},
 			},
 		},
 		{
