@@ -130,7 +130,6 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 	var (
 		requestId   = ctx.FromRequest(request).RequestID
 		jobIdString = mux.Vars(request)[FileUploadJobIdPathParameterName]
-		validator   = upload.NewIngestValidator(s.IngestSchema)
 		fileName    = request.Header.Get(FileUploadFileNameHeader)
 	)
 
@@ -146,16 +145,15 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 		api.HandleDatabaseError(request, response, err)
 	} else if ingestJob.Status != model.JobStatusRunning {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "job must be in running status to attach files", request), response)
-	} else if ingestTaskParams, err := upload.SaveIngestFile(s.Config.TempDirectory(), request, validator, ingestJob.ID); errors.Is(err, upload.ErrInvalidJSON) {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
-	} else if report, ok := err.(upload.ValidationReport); ok {
-		var (
-			msgs       = report.BuildAPIError()
-			errDetails = []api.ErrorDetails{}
-		)
+	} else if ingestTaskParams, report, err := upload.SaveIngestFile(s.Config.TempDirectory(), request, s.IngestSchema, ingestJob.ID); err != nil && (len(report.CriticalErrors) > 0 || len(report.ValidationErrors) > 0) {
+		var errDetails = []api.ErrorDetails{{Message: "Error saving ingest file. File failed schema validation."}}
 
-		for _, msg := range msgs {
-			errDetails = append(errDetails, api.ErrorDetails{Message: msg})
+		for _, criticalErr := range report.CriticalErrors {
+			errDetails = append(errDetails, api.ErrorDetails{Message: criticalErr.Message})
+		}
+
+		for _, valErr := range report.ValidationErrors {
+			errDetails = append(errDetails, api.ErrorDetails{Message: fmt.Sprintf("validation error at %s", valErr.Location)})
 		}
 
 		e := &api.ErrorWrapper{
@@ -166,6 +164,8 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 		}
 
 		api.WriteErrorResponse(request.Context(), e, response)
+	} else if errors.Is(err, upload.ErrInvalidJSON) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 	} else if _, err = upload.CreateIngestTask(request.Context(), s.DB, upload.IngestTaskParams{Filename: ingestTaskParams.Filename, ProvidedFileName: checkFileName(fileName, ingestTaskParams.FileType), FileType: ingestTaskParams.FileType, RequestID: requestId, JobID: int64(jobID)}); err != nil {

@@ -557,7 +557,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: error saving ingest file fileupload.ErrInvalidJSON - Internal Server Error",
+			name: "Error: error saving ingest file invalid JSON - Bad Request",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
@@ -576,14 +576,14 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   `{"errors":[{"context":"","message":"Error saving ingest file: file is not valid json"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"Error saving ingest file. File failed schema validation."},{"context":"","message":"failed to enter json object"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
-			name: "Error: error saving ingest file - Internal Server Error",
+			name: "Error: error saving ingest file unrecognized top level tag - Bad Request",
 			buildRequest: func() *http.Request {
-				data := map[string]interface{}{"name": "example", "value": 123}
+				data := map[string]any{"name": "example", "value": 123}
 				jsonBytes, err := json.Marshal(data)
 				if err != nil {
 					t.Fatalf("error marshalling json necessary for test %v", err)
@@ -604,8 +604,8 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
 			},
 			expected: expected{
-				responseCode:   http.StatusInternalServerError,
-				responseBody:   `{"errors":[{"context":"","message":"Error saving ingest file: no valid meta tag or data tag found"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"Error saving ingest file. File failed schema validation."},{"context":"","message":"unrecognized top level tag: name"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},

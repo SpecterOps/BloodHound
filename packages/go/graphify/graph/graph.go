@@ -35,7 +35,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
-	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -44,6 +43,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/specterops/chow/pkg/validator"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"
@@ -136,7 +136,7 @@ type CommunityGraphService struct {
 }
 
 func NewCommunityGraphService() (*CommunityGraphService, error) {
-	schema, err := upload.LoadIngestSchema()
+	schema, err := validator.LoadIngestSchema()
 	if err != nil {
 		return nil, fmt.Errorf("error loading ingest schema: %w", err)
 	}

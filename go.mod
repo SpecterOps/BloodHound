@@ -31,7 +31,6 @@ require (
 	github.com/gobeam/stringy v0.0.7
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt/v4 v4.5.2
-	github.com/google/go-cmp v0.7.0
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/schema v1.4.1
@@ -44,8 +43,8 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.5.0
 	github.com/prometheus/client_golang v1.22.0
-	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
 	github.com/shirou/gopsutil/v3 v3.24.5
+	github.com/specterops/chow v0.1.1
 	github.com/specterops/dawgs v0.4.16
 	github.com/stretchr/testify v1.11.1
 	github.com/teambition/rrule-go v1.8.2
@@ -147,6 +146,7 @@ require (
 	github.com/golangci/plugin-module-register v0.1.1 // indirect
 	github.com/golangci/revgrep v0.8.0 // indirect
 	github.com/golangci/unconvert v0.0.0-20250410112200-a129a6e6413e // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gordonklaus/ineffassign v0.1.0 // indirect
 	github.com/gostaticanalysis/analysisutil v0.7.1 // indirect
@@ -229,6 +229,7 @@ require (
 	github.com/ryanrolds/sqlclosecheck v0.5.1 // indirect
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
 	github.com/sanposhiho/wastedassign/v2 v2.1.0 // indirect
+	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2 // indirect
 	github.com/sashamelentyev/interfacebloat v1.1.0 // indirect
 	github.com/sashamelentyev/usestdlibvars v1.28.0 // indirect
 	github.com/securego/gosec/v2 v2.22.3 // indirect
