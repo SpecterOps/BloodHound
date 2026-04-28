@@ -215,7 +215,8 @@ func IngestSessions(batch *IngestContext, sessions []ein.IngestibleSession) erro
 // graph.RelationshipUpdate objects as an iterator. sourceKind is always propagated to
 // Start/EndIdentityKind so that Neo4j's label-scoped MERGE can use existing label-scoped
 // indexes during endpoint resolution. When applyKindToEndpoints is true, sourceKind is
-// also applied to the endpoint nodes themselves (legacy AD/Azure behavior); when false,
+// merged with each endpoint's per-relationship Kind (rel.Source.Kind / rel.Target.Kind)
+// and applied to the endpoint nodes themselves (legacy AD/Azure behavior); when false,
 // endpoint nodes are written without any kind information (OpenGraph behavior).
 func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.IngestibleRelationship, sourceKind graph.Kind, applyKindToEndpoints bool) iter.Seq[graph.RelationshipUpdate] {
 	return func(yield func(graph.RelationshipUpdate) bool) {
@@ -233,18 +234,20 @@ func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.Ingestibl
 					common.ObjectID: endObjID,
 					common.LastSeen: batch.IngestTime,
 				})
-				endpointKinds []graph.Kind
+				startEndpointKinds []graph.Kind
+				endEndpointKinds   []graph.Kind
 			)
 
-			if applyKindToEndpoints && sourceKind != graph.EmptyKind {
-				endpointKinds = []graph.Kind{sourceKind}
+			if applyKindToEndpoints {
+				startEndpointKinds = MergeNodeKinds(sourceKind, rel.Source.Kind)
+				endEndpointKinds = MergeNodeKinds(sourceKind, rel.Target.Kind)
 			}
 
 			update := graph.RelationshipUpdate{
-				Start:                   graph.PrepareNode(startProps, endpointKinds...),
+				Start:                   graph.PrepareNode(startProps, startEndpointKinds...),
 				StartIdentityProperties: []string{common.ObjectID.String()},
 				StartIdentityKind:       sourceKind,
-				End:                     graph.PrepareNode(endProps, endpointKinds...),
+				End:                     graph.PrepareNode(endProps, endEndpointKinds...),
 				EndIdentityKind:         sourceKind,
 				EndIdentityProperties:   []string{common.ObjectID.String()},
 				Relationship:            graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
