@@ -135,3 +135,11 @@ export const DisabledChecked: Story = {
         label: 'Label',
     },
 };
+
+export const DisabledUnchecked: Story = {
+    args: {
+        disabled: true,
+        checked: false,
+        label: 'Label',
+    },
+};

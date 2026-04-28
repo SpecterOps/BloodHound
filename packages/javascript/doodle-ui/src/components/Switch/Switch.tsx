@@ -24,21 +24,21 @@ const switchWrapperStyles = cva(
 );
 
 const switchRootStyles = cva(
-    'group flex h-3 w-6 items-center rounded-3xl transition-all ease-in-out bg-neutral-dark-5 dark:bg-[#fff] data-[state=checked]:bg-primary dark:data-[state=checked]:bg-[#A1A0FF] dark:disabled:data-[state=checked]:bg-[#A6A6A6] disabled:cursor-not-allowed disabled:bg-[#616161] disabled:data-[state=checked]:bg-[#616161] outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0'
+    'group flex h-3 w-6 items-center rounded-3xl transition-all ease-in-out bg-switch-fill data-[state=checked]:bg-primary disabled:data-[state=checked]:bg-disabled disabled:cursor-not-allowed disabled:bg-disabled outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0'
 );
 
 const switchThumbStyles = cva(
-    'h-2.5 w-2.5 translate-x-px rounded-full shadow-outer-1 transition-all ease-in-out bg-neutral-light-2 dark:bg-black data-[state=checked]:translate-x-[13px] disabled:bg-neutral-5 group-data-[disabled]:bg-neutral-5 group-data-[disabled]:data-[state=checked]:bg-neutral-5 focus-visible:outline-none focus-visible:ring-0'
+    'h-2.5 w-2.5 translate-x-px rounded-full shadow-outer-1 transition-all ease-in-out bg-neutral-50 data-[state=checked]:translate-x-[13px] disabled:bg-neutral-400 group-data-[disabled]:bg-neutral-400 group-data-[disabled]:data-[state=checked]:bg-neutral-400 focus-visible:outline-none focus-visible:ring-0'
 );
 
-const LabelVariants = cva('text-base text-neutral-dark-5 transition-all ease-in-out px-0.5 dark:text-white', {
+const LabelVariants = cva('text-base text-main transition-all ease-in-out px-0.5', {
     variants: {
         position: {
             left: 'mr-2',
             right: 'ml-2',
         },
         disabled: {
-            true: 'cursor-not-allowed text-neutral-5 dark:text-neutral-5',
+            true: 'cursor-not-allowed',
             false: 'hover:cursor-pointer',
         },
     },
