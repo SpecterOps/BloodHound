@@ -171,10 +171,10 @@ func SetupTestMigrator(t *testing.T, sources ...migration.Source) (*gorm.DB, *mi
 		}
 		OpenGraphDB(t, graphschema.DefaultGraphSchema()).Close(context.Background())
 		return db, &migration.Migrator{
-			ExtensionsData: sources,
-			DB:             db,
-			SqlDB:          sqlDB,
-			GooseFS:        migration.MergedFS(fossMigrationsSubFS),
+			Sources: sources,
+			DB:      db,
+			SqlDB:   sqlDB,
+			GooseFS: migration.MergedFS(fossMigrationsSubFS),
 		}, nil
 	}
 }
