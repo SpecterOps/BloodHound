@@ -292,7 +292,7 @@ const DatabaseManagement: FC = () => {
                 </Typography>
             }>
             <Box>
-                <Alert severity='warning' className='mt-4'>
+                <Alert severity='warning'>
                     <strong>Caution: </strong> This change is irreversible and will delete data from your environment.
                 </Alert>
 
