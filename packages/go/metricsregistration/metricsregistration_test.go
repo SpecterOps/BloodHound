@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//	http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,25 +14,22 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package model
+package metricsregistration_test
 
-import "github.com/specterops/dawgs/graph"
+import (
+	"testing"
 
-type Kind struct {
-	ID   int32  `json:"id"`
-	Name string `json:"name"`
-}
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/stretchr/testify/assert"
 
-func (k Kind) TableName() string {
-	return "kind"
-}
+	"github.com/specterops/bloodhound/packages/go/metricsregistration"
+)
 
-func (k Kind) ToKind() graph.Kind {
-	return graph.StringKind(k.Name)
-}
+func TestRegisterBHCEMetrics(t *testing.T) {
+	t.Parallel()
 
-func (k Kind) ValidFilters() map[string][]FilterOperator {
-	return map[string][]FilterOperator{
-		"type": {Equals, NotEquals},
-	}
+	registry := prometheus.NewRegistry()
+	err := metricsregistration.RegisterBHCEMetrics(registry)
+
+	assert.NoError(t, err)
 }

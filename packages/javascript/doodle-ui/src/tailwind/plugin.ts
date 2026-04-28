@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { PluginCreator } from 'tailwindcss/types/config';
-import { dark, light } from './colors';
+import { common, dark, light, palette } from './colors';
 
 const plugin: PluginCreator = ({ addBase, addUtilities }) => {
     addBase({
@@ -44,19 +44,20 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // END OF SHARED
 
             // MAIN
-            // '--primary': light.primary.main,
-            // '--primary-variant': light.primary.variant,
+            '--primary': light.primary.main,
+            '--primary-variant': light.primary.variant,
             '--secondary-main': light.secondary.main,
             '--secondary-variant': light.secondary.variant,
             // '--tertiary': light.tertiary.main,
             // '--tertiary-variant': light.tertiary.variant,
+            '--disabled': light.disabled,
 
             // // NEUTRALS
-            // '--neutral-50': palette.neutral.light[50],
+            '--neutral-50': palette.neutral.light[50],
             // '--neutral-100': palette.neutral.light[100],
             // '--neutral-200': palette.neutral.light[200],
             // '--neutral-300': palette.neutral.light[300],
-            // '--neutral-400': palette.neutral.light[400],
+            '--neutral-400': palette.neutral.light[400],
             // '--neutral-500': palette.neutral.light[500],
             // '--neutral-600': palette.neutral.light[600],
             // '--neutral-700': palette.neutral.light[700],
@@ -64,10 +65,10 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--neutral-900': palette.neutral.light[900],
 
             // // TEXT
-            // '--text-main': common.dark,
+            '--text-main': common.dark,
             // '--text-light': text.light,
             // '--text-contrast': common.white,
-            // '--text-disabled': palette.grey[700],
+            '--text-disabled': light.text.disabled,
             // '--text-primary': light.primary.main,
             // '--text-secondary': light.secondary.main,
 
@@ -126,8 +127,8 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
-            // '--switch-fill': palette.neutral.dark[700],
-            // '--switch-disabled-fill': palette.neutral.light[300],
+            '--switch-fill': palette.neutral.dark[700],
+            '--switch-disabled-fill': palette.neutral.light[300],
 
             // // Components/Data Display/ Menu
             // '--menu-bg': elevation.light[0],
@@ -178,15 +179,16 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--divider': palette.neutral.light[500],
 
             // Legacy below
+            // same as palette.neutral.dark[50]
             '--contrast': '#121212',
 
-            '--primary': '#33318f',
-            '--primary-variant': '#261f7a',
             '--secondary-variant-2': '#99a3ff',
             '--tertiary': '#02c577',
             '--tertiary-variant': '#5cc791',
 
+            // same as common.white
             '--neutral-1': '#ffffff',
+            // same as neutral-100
             '--neutral-2': '#f4f4f4',
             '--neutral-3': '#e3e7ea',
             '--neutral-4': '#dadee1',
@@ -196,34 +198,39 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             '--error': '#b44641',
 
+            // same as common.white
             '--neutral-light-1': '#ffffff',
+            // same as neutral-100
             '--neutral-light-2': '#f4f4f4',
             '--neutral-light-3': '#e3e7ea',
             '--neutral-light-4': '#dadee1',
             '--neutral-light-5': '#cacfd3',
 
+            // same palette.neutral.dark[50]
             '--neutral-dark-1': '#121212',
             '--neutral-dark-2': '#222222',
             '--neutral-dark-3': '#272727',
             '--neutral-dark-4': '#2c2c2c',
-            '--neutral-dark-5': '#2e2e2e',
+            // same as dark neutral-5
+            '--neutral-dark-5': palette.neutral.dark[700],
         },
 
         '.dark': {
             // MAIN
-            // '--primary': dark.primary.main,
-            // '--primary-variant': dark.primary.variant,
+            '--primary': dark.primary.main,
+            '--primary-variant': dark.primary.variant,
             '--secondary': dark.secondary.main,
             '--secondary-variant': dark.secondary.variant,
             // '--tertiary': dark.tertiary.main,
             // '--tertiary-variant': dark.tertiary.variant,
+            '--disabled': dark.disabled,
 
             // // NEUTRALS
-            // '--neutral-50': palette.neutral.dark[50],
+            '--neutral-50': palette.neutral.dark[50],
             // '--neutral-100': palette.neutral.dark[100],
             // '--neutral-200': palette.neutral.dark[200],
             // '--neutral-300': palette.neutral.dark[300],
-            // '--neutral-400': palette.neutral.dark[400],
+            '--neutral-400': palette.neutral.dark[400],
             // '--neutral-500': palette.neutral.dark[500],
             // '--neutral-600': palette.neutral.dark[600],
             // '--neutral-700': palette.neutral.dark[700],
@@ -231,10 +238,10 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--neutral-900': palette.neutral.dark[900],
 
             // // TEXT
-            // '--text-main': common.white,
+            '--text-main': common.white,
             // '--text-light': dark.text.light,
             // '--text-contrast': common.dark,
-            // '--text-disabled': common.disabled,
+            '--text-disabled': common.disabled,
             // '--text-primary': dark.primary.main,
             // '--text-secondary': dark.secondary.main,
 
@@ -293,8 +300,8 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
-            // '--switch-fill': common.white,
-            // '--switch-disabled-fill': common.disabled,
+            '--switch-fill': common.white,
+            '--switch-disabled-fill': common.disabled,
 
             // // Components/Data Display/ Menu
             // '--menu-bg': elevation.dark[2],
@@ -344,9 +351,10 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--icon-disabled': common.disabled,
             // '--divider': palette.neutral.dark[500],
 
-            // Legacy below
+            ///////////// Legacy below //////////
+            // same as common.white
             '--contrast': '#ffffff',
-
+            // same palette.neutral.dark[50]
             '--neutral-1': '#121212',
             '--neutral-2': '#222222',
             '--neutral-3': '#272727',
