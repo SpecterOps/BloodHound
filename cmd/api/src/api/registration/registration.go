@@ -20,8 +20,11 @@ import (
 	"context"
 	"net/http"
 
+	"strings"
+
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api/mcp"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/api/static"
@@ -89,4 +92,18 @@ func RegisterFossRoutes(
 
 	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator, ingestSchema, dogtagsService, openGraphSchemaService)
 	NewV2API(resources, routerInst)
+
+	// MCP Server (Model Context Protocol for Claude Code integration)
+	mcpHandler := mcp.NewHandler(mcpLoopbackURL(cfg.BindAddress), rdms)
+	routerInst.PathPrefix("/api/v2/mcp/", mcpHandler)
+}
+
+// mcpLoopbackURL derives a loopback URL from the server's bind address.
+// BindAddress can be "0.0.0.0:8080", "127.0.0.1:8080", or just "127.0.0.1".
+func mcpLoopbackURL(bindAddr string) string {
+	if strings.Contains(bindAddr, ":") {
+		_, port, _ := strings.Cut(bindAddr, ":")
+		return "http://127.0.0.1:" + port
+	}
+	return "http://127.0.0.1:8080"
 }

@@ -96,6 +96,13 @@ func (s *responseRecorder) WriteHeader(statusCode int) {
 	s.delegate.WriteHeader(statusCode)
 }
 
+// Flush implements http.Flusher, required for SSE (Server-Sent Events) support.
+func (s *responseRecorder) Flush() {
+	if f, ok := s.delegate.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+
 func getSignedRequestDate(request *http.Request) (string, bool) {
 	requestDateHeader := request.Header.Get(headers.RequestDate.String())
 	return requestDateHeader, requestDateHeader != ""
