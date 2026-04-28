@@ -24,11 +24,7 @@ import (
 )
 
 var (
-	// Originates from BHE but copied here
-	meta         = graph.StringKind("Meta")
-	metaDetail   = graph.StringKind("MetaDetail")
-	metaIncludes = graph.StringKind("MetaIncludes")
-	metaKinds    = []graph.Kind{meta, metaDetail, metaIncludes}
+	metaKinds = []graph.Kind{Meta, MetaDetail, MetaIncludes}
 
 	UnknownKind = graph.StringKind("Unknown")
 
@@ -109,7 +105,7 @@ func PrimaryDisplayKind(primaryDisplayKinds PrimaryDisplayKinds, kinds graph.Kin
 	for _, kind := range kinds {
 		// If this is a BHE meta kind, return early
 		if kind.Is(metaKinds...) {
-			return meta
+			return Meta
 		} else if kind.Is(ad.Entity, azure.Entity) {
 			baseKind = kind
 		} else if kind.Is(ad.LocalGroup) {

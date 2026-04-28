@@ -997,13 +997,7 @@ InboundOutboundRelationshipKinds: [
 PathfindingRelationships: list.Concat([InboundOutboundRelationshipKinds])
 
 PostProcessedRelationships: [
-	AddSecret,
 	ExecuteCommand,
-	AZMGAddMember,
-	AZMGAddOwner,
-	AZMGAddSecret,
-	AZMGGrantAppRoles,
-	AZMGGrantRole,
 	SyncedToEntraUser,
 	AZRoleApprover,
 ]

@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,21 +13,4 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-package headers
-
-//go:generate go run cmd/generate.go
-
-type Header string
-
-func (s Header) String() string {
-	return string(s)
-}
-
-// Non-standard headers
-const (
-	RequestDate Header = "RequestDate"
-	RequestID   Header = "RequestID"
-	Signature   Header = "Signature" // https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-04.html#name-the-signature-http-header
-	XCodename   Header = "X-Codename"
-)
+export * from './Link';
