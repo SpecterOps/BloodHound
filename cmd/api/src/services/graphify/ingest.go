@@ -247,7 +247,7 @@ func IngestGenericData(batch *IngestContext, sourceKind graph.Kind, converted Co
 		errs.Add(err)
 	}
 
-	if err := IngestRelationships(batch, sourceKind, converted.RelProps); err != nil {
+	if err := IngestRelationshipsKindless(batch, sourceKind, converted.RelProps); err != nil {
 		errs.Add(err)
 	}
 

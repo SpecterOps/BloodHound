@@ -32,13 +32,31 @@ import (
 	"github.com/specterops/dawgs/util"
 )
 
-// IngestRelationships resolves and writes a batch of ingestible relationships to the graph.
+// IngestRelationships resolves and writes a batch of ingestible relationships to the graph,
+// applying sourceKind to both endpoint nodes and to the dawgs RelationshipUpdate identity kind.
 //
-// This function first calls resolveRelationships to resolve node identifiers based on name and kind.
+// This is the legacy ingest path used by AD and Azure pipelines, where some endpoint nodes
+// are referenced only via relationship data (e.g. well-known SIDs, foreign principals, ACE
+// principals) and never appear in node payloads. Applying sourceKind here ensures those orphan
+// endpoint nodes receive a base kind.
 //
-// Each resolved relationship update is applied to the graph via batch.UpdateRelationshipBy.
-// Errors encountered during resolution or update are collected and returned as a single combined error.
+// For the kindless variant used by OpenGraph, see IngestRelationshipsKindless.
 func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relationships []ein.IngestibleRelationship) error {
+	return ingestRelationships(ingestCtx, sourceKind, relationships, true)
+}
+
+// IngestRelationshipsKindless resolves and writes a batch of ingestible relationships to the
+// graph WITHOUT applying sourceKind to endpoint nodes. sourceKind is propagated only to
+// Start/EndIdentityKind so that Neo4j's label-scoped MERGE can continue to use existing
+// label-scoped indexes during endpoint resolution.
+//
+// This is the OpenGraph (Generic) ingest path: endpoint kinds are managed exclusively by the
+// node ingest path; relationship ingest is forbidden from mutating endpoint node kinds.
+func IngestRelationshipsKindless(ingestCtx *IngestContext, sourceKind graph.Kind, relationships []ein.IngestibleRelationship) error {
+	return ingestRelationships(ingestCtx, sourceKind, relationships, false)
+}
+
+func ingestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relationships []ein.IngestibleRelationship, applyKindToEndpoints bool) error {
 	var (
 		errs                                 = errorlist.NewBuilder()
 		resolvedRelationships, resolveErrors = endpoint.ResolveAll(ingestCtx.Ctx, ingestCtx.EndpointResolver, relationships)
@@ -48,7 +66,7 @@ func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relati
 		errs.Add(resolveErrors)
 	}
 
-	for update := range ingestibleRelationshipsToUpdates(ingestCtx, resolvedRelationships, sourceKind) {
+	for update := range ingestibleRelationshipsToUpdates(ingestCtx, resolvedRelationships, sourceKind, applyKindToEndpoints) {
 		if err := maybeSubmitRelationshipUpdate(ingestCtx, update); err != nil {
 			errs.Add(err)
 		}
@@ -194,11 +212,12 @@ func IngestSessions(batch *IngestContext, sessions []ein.IngestibleSession) erro
 }
 
 // ingestibleRelationshipsToUpdates transforms a list of ingestible relationships into
-// graph.RelationshipUpdate objects as an iterator. Endpoint nodes are written without
-// any kind information; node kinds are managed exclusively by the node ingest path.
-// The sourceKind is propagated only to Start/EndIdentityKind so that Neo4j's label-scoped
-// MERGE can continue to use existing label-scoped indexes during endpoint resolution.
-func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.IngestibleRelationship, sourceKind graph.Kind) iter.Seq[graph.RelationshipUpdate] {
+// graph.RelationshipUpdate objects as an iterator. sourceKind is always propagated to
+// Start/EndIdentityKind so that Neo4j's label-scoped MERGE can use existing label-scoped
+// indexes during endpoint resolution. When applyKindToEndpoints is true, sourceKind is
+// also applied to the endpoint nodes themselves (legacy AD/Azure behavior); when false,
+// endpoint nodes are written without any kind information (OpenGraph behavior).
+func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.IngestibleRelationship, sourceKind graph.Kind, applyKindToEndpoints bool) iter.Seq[graph.RelationshipUpdate] {
 	return func(yield func(graph.RelationshipUpdate) bool) {
 		for _, rel := range rels {
 			rel.RelProps[common.LastSeen.String()] = batch.IngestTime
@@ -206,23 +225,30 @@ func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.Ingestibl
 			var (
 				startObjID = strings.ToUpper(rel.Source.Value)
 				endObjID   = strings.ToUpper(rel.Target.Value)
-
-				update = graph.RelationshipUpdate{
-					Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-						common.ObjectID: startObjID,
-						common.LastSeen: batch.IngestTime,
-					})),
-					StartIdentityProperties: []string{common.ObjectID.String()},
-					StartIdentityKind:       sourceKind,
-					End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-						common.ObjectID: endObjID,
-						common.LastSeen: batch.IngestTime,
-					})),
-					EndIdentityKind:       sourceKind,
-					EndIdentityProperties: []string{common.ObjectID.String()},
-					Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
-				}
+				startProps = graph.AsProperties(graph.PropertyMap{
+					common.ObjectID: startObjID,
+					common.LastSeen: batch.IngestTime,
+				})
+				endProps = graph.AsProperties(graph.PropertyMap{
+					common.ObjectID: endObjID,
+					common.LastSeen: batch.IngestTime,
+				})
+				endpointKinds []graph.Kind
 			)
+
+			if applyKindToEndpoints && sourceKind != graph.EmptyKind {
+				endpointKinds = []graph.Kind{sourceKind}
+			}
+
+			update := graph.RelationshipUpdate{
+				Start:                   graph.PrepareNode(startProps, endpointKinds...),
+				StartIdentityProperties: []string{common.ObjectID.String()},
+				StartIdentityKind:       sourceKind,
+				End:                     graph.PrepareNode(endProps, endpointKinds...),
+				EndIdentityKind:         sourceKind,
+				EndIdentityProperties:   []string{common.ObjectID.String()},
+				Relationship:            graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
+			}
 
 			if !yield(update) {
 				break
