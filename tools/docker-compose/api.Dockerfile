@@ -87,6 +87,6 @@ RUN go install github.com/air-verse/air@v1.52.3
 # api/v2/collectors/[collector-type]/[version] for collector download specifically expects
 # '[collector-type]-[version].zip(.sha256)' - all lowercase for embedded files
 COPY --from=hound-builder /tmp/sharphound/dist/ /bhapi/collectors/sharphound/
-COPY --from=hound-builder /tmp/azurehound/dist/ /etc/bloodhound/collectors/azurehound/
+COPY --from=hound-builder /tmp/azurehound/dist/ /bhapi/collectors/azurehound/
 
 ENTRYPOINT ["air"]
