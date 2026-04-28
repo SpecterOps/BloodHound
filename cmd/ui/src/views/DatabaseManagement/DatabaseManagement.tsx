@@ -18,13 +18,14 @@ import { Alert, Box, Checkbox, FormControl, FormControlLabel, FormGroup, Typogra
 import {
     DeleteConfirmationDialog,
     FeatureFlag,
+    GraphDataCheckboxes,
     PageWithTitle,
     Permission,
-    SourceKindsCheckboxes,
     apiClient,
     useMountEffect,
     useNotifications,
     usePermissions,
+    type GraphDataSelections,
 } from 'bh-shared-ui';
 import { Button } from 'doodle-ui';
 import { ClearDatabaseRequest } from 'js-client-library';
@@ -39,8 +40,8 @@ const initialState: State = {
     deleteCustomHighValueSelectors: false,
     deleteDataQualityHistory: false,
     deleteFileIngestHistory: false,
-    deleteHasSessionEdges: false,
     deleteSourceKinds: [],
+    deleteRelationships: [],
 
     noSelectionError: false,
     mutationError: false,
@@ -56,8 +57,8 @@ type State = {
     deleteCustomHighValueSelectors: boolean;
     deleteDataQualityHistory: boolean;
     deleteFileIngestHistory: boolean;
-    deleteHasSessionEdges: boolean;
     deleteSourceKinds: number[];
+    deleteRelationships: string[];
 
     // error state
     noSelectionError: boolean;
@@ -74,7 +75,7 @@ type Action =
     | { type: 'mutation_error'; message?: string }
     | { type: 'mutation_success' }
     | { type: 'selection'; targetName: string; checked: boolean }
-    | { type: 'source_kinds'; checked: number[] }
+    | { type: 'graph_data'; checked: GraphDataSelections }
     | { type: 'open_dialog' }
     | { type: 'close_dialog' };
 
@@ -104,8 +105,8 @@ const reducer = (state: State, action: Action): State => {
                 deleteCustomHighValueSelectors: false,
                 deleteDataQualityHistory: false,
                 deleteFileIngestHistory: false,
-                deleteHasSessionEdges: false,
                 deleteSourceKinds: [],
+                deleteRelationships: [],
 
                 showSuccessMessage: true,
             };
@@ -118,11 +119,12 @@ const reducer = (state: State, action: Action): State => {
                 noSelectionError: false,
             };
         }
-        case 'source_kinds': {
+        case 'graph_data': {
             const { checked } = action;
             return {
                 ...state,
-                deleteSourceKinds: checked,
+                deleteSourceKinds: checked.sourceKinds,
+                deleteRelationships: checked.relationships,
                 noSelectionError: false,
             };
         }
@@ -134,8 +136,9 @@ const reducer = (state: State, action: Action): State => {
                     state.deleteCustomHighValueSelectors,
                     state.deleteDataQualityHistory,
                     state.deleteFileIngestHistory,
-                    state.deleteHasSessionEdges,
-                ].filter(Boolean).length === 0 && state.deleteSourceKinds.length === 0;
+                ].filter(Boolean).length === 0 &&
+                state.deleteSourceKinds.length === 0 &&
+                state.deleteRelationships.length === 0;
 
             if (noSelection) {
                 return {
@@ -174,8 +177,8 @@ const useDatabaseManagement = () => {
         deleteCustomHighValueSelectors,
         deleteDataQualityHistory,
         deleteFileIngestHistory,
-        deleteHasSessionEdges,
         deleteSourceKinds,
+        deleteRelationships,
     } = state;
 
     const mutation = useMutation({
@@ -214,7 +217,6 @@ const useDatabaseManagement = () => {
         };
 
         const deleteAssetGroupSelectors = dedupe(assetGroupIds);
-        const deleteRelationships = deleteHasSessionEdges ? ['HasSession'] : [];
 
         mutation.mutate({
             deleteThisData: {
@@ -261,8 +263,8 @@ const DatabaseManagement: FC = () => {
         deleteCustomHighValueSelectors,
         deleteDataQualityHistory,
         deleteFileIngestHistory,
-        deleteHasSessionEdges,
         deleteSourceKinds,
+        deleteRelationships,
     } = state;
 
     const handleCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -273,9 +275,9 @@ const DatabaseManagement: FC = () => {
         });
     };
 
-    const setSourceKinds = (checked: number[]) => {
+    const setGraphData = (checked: GraphDataSelections) => {
         dispatch({
-            type: 'source_kinds',
+            type: 'graph_data',
             checked,
         });
     };
@@ -318,10 +320,11 @@ const DatabaseManagement: FC = () => {
                             <FeatureFlag
                                 flagKey='clear_graph_data'
                                 enabled={
-                                    <SourceKindsCheckboxes
-                                        checked={deleteSourceKinds}
+                                    <GraphDataCheckboxes
+                                        checkedSourceKinds={deleteSourceKinds}
+                                        checkedRelationships={deleteRelationships}
                                         disabled={!hasPermission}
-                                        onChange={setSourceKinds}
+                                        onChange={setGraphData}
                                     />
                                 }
                             />
@@ -365,17 +368,6 @@ const DatabaseManagement: FC = () => {
                                         checked={deleteDataQualityHistory}
                                         onChange={handleCheckbox}
                                         name='deleteDataQualityHistory'
-                                        disabled={!hasPermission}
-                                    />
-                                }
-                            />
-                            <FormControlLabel
-                                label='HasSession edges'
-                                control={
-                                    <Checkbox
-                                        checked={deleteHasSessionEdges}
-                                        onChange={handleCheckbox}
-                                        name='deleteHasSessionEdges'
                                         disabled={!hasPermission}
                                     />
                                 }

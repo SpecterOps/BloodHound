@@ -1,6 +1,8 @@
 ################
 # Project Level Git Ignore
 ################################
+# Codex
+.codex
 
 # Temporary backup files
 *.bak

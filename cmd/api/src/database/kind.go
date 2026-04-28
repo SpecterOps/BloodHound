@@ -25,30 +25,25 @@ import (
 )
 
 type Kind interface {
-	GetKindByName(ctx context.Context, name string) (model.Kind, error)
+	GetKindsByNames(ctx context.Context, names ...string) ([]model.Kind, error)
 	GetKindsByIDs(ctx context.Context, ids ...int32) ([]model.Kind, error)
 	UpsertKind(ctx context.Context, name string) (model.Kind, error)
 }
 
-func (s *BloodhoundDB) GetKindByName(ctx context.Context, name string) (model.Kind, error) {
-	const query = `
-		SELECT id, name
-		FROM kind
-		WHERE name = $1;
-	`
+func (s *BloodhoundDB) GetKindsByNames(ctx context.Context, names ...string) ([]model.Kind, error) {
+	var (
+		uniqueNames = utils.Dedupe(names)
+		query       = `SELECT id, name FROM kind WHERE name in (?);`
+	)
 
-	var kind model.Kind
-	result := s.db.WithContext(ctx).Raw(query, name).Scan(&kind)
-
-	if result.Error != nil {
-		return model.Kind{}, result.Error
+	var kinds []model.Kind
+	if result := s.db.WithContext(ctx).Raw(query, uniqueNames).Scan(&kinds); result.Error != nil {
+		return nil, result.Error
+	} else if len(kinds) != len(uniqueNames) {
+		return nil, ErrNotFound
 	}
 
-	if result.RowsAffected == 0 || kind.ID == 0 {
-		return model.Kind{}, ErrNotFound
-	}
-
-	return kind, nil
+	return kinds, nil
 }
 
 func (s *BloodhoundDB) GetKindsByIDs(ctx context.Context, ids ...int32) ([]model.Kind, error) {

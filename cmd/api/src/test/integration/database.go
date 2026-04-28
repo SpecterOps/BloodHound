@@ -29,6 +29,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
@@ -50,23 +51,25 @@ import (
 func OpenDatabase(t *testing.T) database.Database {
 	if cfg, err := utils.LoadIntegrationTestConfig(); err != nil {
 		t.Fatalf("Failed loading integration test config: %v", err)
-	} else if db, err := setupPGTestDB(t, cfg); err != nil {
+	} else if db, dbPool, err := setupPGTestDB(t, cfg); err != nil {
 		t.Fatalf("Failed to setup pgtestdb: %v", err)
 	} else {
-		return database.NewBloodhoundDB(db, auth.NewIdentityResolver(), cfg)
+		return database.NewBloodhoundDB(db, dbPool, auth.NewIdentityResolver(), cfg)
 	}
 
 	return nil
 }
 
-func setupPGTestDB(t *testing.T, cfg config.Configuration) (*gorm.DB, error) {
+func setupPGTestDB(t *testing.T, cfg config.Configuration) (*gorm.DB, *pgxpool.Pool, error) {
 	t.Helper()
 
 	var (
 		connConf = pgtestdb.Custom(t, GetPostgresConfig(cfg), pgtestdb.NoopMigrator{})
 	)
 
-	return database.OpenDatabase(connConf.URL())
+	cfg.Database.Connection = connConf.URL()
+
+	return database.OpenDatabase(cfg.Database)
 }
 
 // GetPostgresConfig reads key/value pairs from the default integration
@@ -152,11 +155,14 @@ func Prepare(ctx context.Context, db database.Database) error {
 // Integration tests should be updated to reflect the latest standards.
 // See commit https://github.com/SpecterOps/BloodHound/commit/a6cc43013fd769b97cc52cbc60b2314494054c9a#diff-e6bcb50873ade3cf33cef4e3e0ff566fb8ac1367b4ade36f4511bc2172a760e1
 // for implementation guidance. Additional detailed information can be found in Confluence.
-func SetupTestMigrator(t *testing.T, sources ...migration.Source) (*gorm.DB, *migration.Migrator, error) {
+func SetupTestMigrator(t *testing.T, sources ...migration.Source) (*gorm.DB, *pgxpool.Pool, *migration.Migrator, error) {
 	if cfg, err := utils.LoadIntegrationTestConfig(); err != nil {
-		return nil, nil, fmt.Errorf("failed to load integration test config: %w", err)
-	} else if db, err := setupPGTestDB(t, cfg); err != nil {
-		return nil, nil, fmt.Errorf("failed to setup pgtestdb: %v", err)
+		return nil, nil, nil, fmt.Errorf("failed to load integration test config: %w", err)
+	} else if db, pool, err := setupPGTestDB(t, cfg); err != nil {
+		if pool != nil {
+			pool.Close()
+		}
+		return nil, nil, nil, fmt.Errorf("failed to setup pgtestdb: %v", err)
 	} else {
 		sqlDB, err := db.DB()
 		if err != nil {
@@ -170,7 +176,7 @@ func SetupTestMigrator(t *testing.T, sources ...migration.Source) (*gorm.DB, *mi
 			return nil, nil, fmt.Errorf("failed to open foss migrations directory: %v", err)
 		}
 		OpenGraphDB(t, graphschema.DefaultGraphSchema()).Close(context.Background())
-		return db, &migration.Migrator{
+		return db, pool, &migration.Migrator{
 			Sources: sources,
 			DB:      db,
 			SqlDB:   sqlDB,

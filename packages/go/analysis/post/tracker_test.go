@@ -27,6 +27,10 @@ var (
 	kindA = graph.StringKind("A")
 	kindB = graph.StringKind("B")
 	kindC = graph.StringKind("C")
+
+	propsEmpty = map[string]any(nil)
+	propsA     = map[string]any{"isacl": true, "lastseen": "2026-01-01"}
+	propsB     = map[string]any{"isacl": false, "lastseen": "2026-01-01"}
 )
 
 func TestKeyEncoder_Key_Deterministic(t *testing.T) {
@@ -79,9 +83,9 @@ func TestTrackerBuilder_Build_SortsKeysAndIDs(t *testing.T) {
 	builder := NewTrackerBuilder()
 
 	// Insert edges in unsorted order.
-	builder.TrackEdge(100, 5, 10, kindA) // edgeID 100
-	builder.TrackEdge(101, 2, 8, kindB)  // edgeID 101
-	builder.TrackEdge(102, 7, 3, kindC)  // edgeID 102
+	builder.TrackEdge(100, 5, 10, kindA, propsEmpty) // edgeID 100
+	builder.TrackEdge(101, 2, 8, kindB, propsEmpty)  // edgeID 101
+	builder.TrackEdge(102, 7, 3, kindC, propsEmpty)  // edgeID 102
 
 	sub := builder.Build()
 
@@ -135,20 +139,20 @@ func TestTracker_HasEdge_And_DeletedEdges(t *testing.T) {
 	builder := NewTrackerBuilder()
 
 	// Edge set we will actually add to the subgraph.
-	builder.TrackEdge(10, 1, 2, kindA) // edgeID 10
-	builder.TrackEdge(20, 3, 4, kindB) // edgeID 20
-	builder.TrackEdge(30, 5, 6, kindC) // edgeID 30
+	builder.TrackEdge(10, 1, 2, kindA, propsEmpty) // edgeID 10
+	builder.TrackEdge(20, 3, 4, kindB, propsEmpty) // edgeID 20
+	builder.TrackEdge(30, 5, 6, kindC, propsEmpty) // edgeID 30
 
 	sub := builder.Build()
 
 	// Query a subset of edges – deliberately omit the second one.
-	if !sub.HasEdge(1, 2, kindA) {
+	if !sub.HasEdge(1, 2, kindA, propsEmpty) {
 		t.Fatalf("expected edge (1,2,kindA) to be present")
 	}
-	if sub.HasEdge(3, 5, kindB) {
+	if sub.HasEdge(3, 5, kindB, propsEmpty) {
 		t.Fatalf("expected edge (3,5,kindB) to be *absent* from HasEdge calls")
 	}
-	if !sub.HasEdge(5, 6, kindC) {
+	if !sub.HasEdge(5, 6, kindC, propsEmpty) {
 		t.Fatalf("expected edge (5,6,kindC) to be present")
 	}
 
@@ -164,12 +168,12 @@ func TestTracker_HasEdge_And_DeletedEdges(t *testing.T) {
 
 func TestTracker_HasEdge_DuplicateCalls(t *testing.T) {
 	builder := NewTrackerBuilder()
-	builder.TrackEdge(55, 11, 22, kindA)
+	builder.TrackEdge(55, 11, 22, kindA, propsEmpty)
 	sub := builder.Build()
 
 	// Call HasEdge many times – it should stay true and not affect DeletedEdges.
 	for i := range 5 {
-		if !sub.HasEdge(11, 22, kindA) {
+		if !sub.HasEdge(11, 22, kindA, propsEmpty) {
 			t.Fatalf("edge should be found on iteration %d", i)
 		}
 	}
@@ -183,26 +187,88 @@ func TestTracker_ConcurrentHasEdge(t *testing.T) {
 	builder := NewTrackerBuilder()
 	// Build a larger set of edges (10 edges)
 	for i := range 10 {
-		builder.TrackEdge(uint64(100+i), uint64(i), uint64(i+100), kindA)
+		builder.TrackEdge(uint64(100+i), uint64(i), uint64(i+100), kindA, propsEmpty)
 	}
 	sub := builder.Build()
 
 	var wg sync.WaitGroup
-	query := func(startIdx, endIdx int) {
+	queryEdges := func(startIdx, endIdx int) {
 		defer wg.Done()
 		for i := startIdx; i < endIdx; i++ {
-			if ok := sub.HasEdge(uint64(i), uint64(i+100), kindA); !ok {
+			if ok := sub.HasEdge(uint64(i), uint64(i+100), kindA, propsEmpty); !ok {
 				t.Errorf("expected edge %d to exist", i)
 			}
 		}
 	}
 
 	wg.Add(2)
-	go query(0, 5)  // first half
-	go query(5, 10) // second half
+	go queryEdges(0, 5)  // first half
+	go queryEdges(5, 10) // second half
 	wg.Wait()
 
 	if del := sub.Deleted(); len(del) != 0 {
 		t.Fatalf("expected no deleted edges after concurrent queries, got %v", del)
+	}
+}
+
+func TestTracker_HasEdge_PropertyMismatchTriggersInsert(t *testing.T) {
+	builder := NewTrackerBuilder()
+
+	// Track an edge with properties A
+	builder.TrackEdge(10, 1, 2, kindA, propsA)
+	sub := builder.Build()
+
+	// Same structural key but different properties should NOT match
+	if sub.HasEdge(1, 2, kindA, propsB) {
+		t.Fatalf("expected edge (1,2,kindA) with different properties to NOT match")
+	}
+
+	// Same structural key with matching properties SHOULD match
+	if !sub.HasEdge(1, 2, kindA, propsA) {
+		t.Fatalf("expected edge (1,2,kindA) with same properties to match")
+	}
+
+	// The edge was not marked as seen with propsB, so Deleted should return nothing
+	// (it was marked as seen with propsA above)
+	deleted := sub.Deleted()
+	if len(deleted) != 0 {
+		t.Fatalf("expected no deleted edges, got %v", deleted)
+	}
+}
+
+func TestTracker_HasEdge_PropertyChangeDetectedAsDeletion(t *testing.T) {
+	builder := NewTrackerBuilder()
+
+	// Track an edge with properties A
+	builder.TrackEdge(10, 1, 2, kindA, propsA)
+	sub := builder.Build()
+
+	// Query with different properties — should not match
+	if sub.HasEdge(1, 2, kindA, propsB) {
+		t.Fatalf("expected property mismatch to return false")
+	}
+
+	// Since the edge was never seen, Deleted should include it
+	deleted := sub.Deleted()
+	if len(deleted) != 1 || deleted[0] != 10 {
+		t.Fatalf("expected edge 10 to be deleted, got %v", deleted)
+	}
+}
+
+func TestTracker_HasEdge_NilVsEmptyProperties(t *testing.T) {
+	builder := NewTrackerBuilder()
+
+	// Track with nil properties
+	builder.TrackEdge(10, 1, 2, kindA, nil)
+	sub := builder.Build()
+
+	// Query with empty map should also match (both fingerprint to 0)
+	if !sub.HasEdge(1, 2, kindA, map[string]any{}) {
+		t.Fatalf("expected nil and empty properties to be equivalent")
+	}
+
+	// Query with nil should match
+	if !sub.HasEdge(1, 2, kindA, nil) {
+		t.Fatalf("expected nil properties to match nil-tracked edge")
 	}
 }

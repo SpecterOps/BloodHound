@@ -27,6 +27,7 @@ import { graphSchema } from '../../../constants';
 import {
     useCreateSavedQuery,
     useExploreGraph,
+    useExploreSelectedItem,
     useFeatureFlag,
     useKeybindings,
     usePermissions,
@@ -35,6 +36,7 @@ import {
     useUpdateQueryPermissions,
     useUpdateSavedQuery,
 } from '../../../hooks';
+import { isGraphResponse } from '../../../hooks/useExploreGraph/queries/utils';
 import { useGraphKinds } from '../../../hooks/useGraphKinds';
 import { useNotifications } from '../../../providers';
 import { Permission, cn } from '../../../utils';
@@ -53,12 +55,14 @@ const CypherSearchInner = ({
     setAutoRun,
     disableQueryLimit,
     setDisableQueryLimit,
+    onExploreMenuCollapse,
 }: {
     cypherSearchState: CypherSearchState;
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
     disableQueryLimit: boolean;
     setDisableQueryLimit: (timeoutSetting: boolean) => void;
+    onExploreMenuCollapse: () => void;
 }) => {
     const { selectedQuery, saveAction, showSaveQueryDialog, setSelected, setSaveAction, setShowSaveQueryDialog } =
         useSavedQueriesContext();
@@ -92,7 +96,21 @@ const CypherSearchInner = ({
     const { checkPermission } = usePermissions();
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
-    const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph();
+    const { clearSelectedItem, setSelectedItem } = useExploreSelectedItem();
+
+    const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph({
+        onSuccess: (data) => {
+            if (isGraphResponse(data)) {
+                const returnedNodes = Object.keys(data.data.nodes || {});
+                if (returnedNodes.length > 1) {
+                    clearSelectedItem();
+                    onExploreMenuCollapse();
+                } else if (returnedNodes.length === 1) {
+                    setSelectedItem(returnedNodes[0]);
+                }
+            }
+        },
+    });
 
     const timeoutLimitEnabled = useTimeoutLimitConfiguration();
 
@@ -157,6 +175,7 @@ const CypherSearchInner = ({
     const handleToggleCommonQueries = () => {
         setShowCommonQueries((v) => !v);
     };
+
     const updateQueryPermissions = (id: number) => {
         if (permissions?.public && !isPublic && sharedIds.length) {
             const localSharedIds = [...sharedIds];
@@ -442,12 +461,14 @@ const CypherSearch = ({
     setAutoRun,
     disableQueryLimit,
     setDisableQueryLimit,
+    onExploreMenuCollapse = () => {},
 }: {
     cypherSearchState: CypherSearchState;
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
     disableQueryLimit: boolean;
     setDisableQueryLimit: (timeoutSetting: boolean) => void;
+    onExploreMenuCollapse?: () => void;
 }) => {
     return (
         <SavedQueriesProvider>
@@ -457,6 +478,7 @@ const CypherSearch = ({
                 setAutoRun={setAutoRun}
                 disableQueryLimit={disableQueryLimit}
                 setDisableQueryLimit={setDisableQueryLimit}
+                onExploreMenuCollapse={onExploreMenuCollapse}
             />
         </SavedQueriesProvider>
     );
