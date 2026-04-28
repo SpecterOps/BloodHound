@@ -146,7 +146,6 @@ export const setDagreLayout = (
         const graphlibGraphGraph = graphlibGraph.graph();
         graphlibGraphGraph.rankdir = attributes.graph.rankdir;
         graphlibGraphGraph.ranksep = attributes.graph.ranksep;
-        graphlibGraphGraph.nodesep = 140;
 
         dagre.layout(graphlibGraph);
 
