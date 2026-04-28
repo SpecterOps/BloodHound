@@ -24,6 +24,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 )
 
+type EventType string
+
 type Event struct {
 	ID          uuid.UUID               `json:"id" gorm:"type:text;primaryKey"`
 	Type        string                  `json:"type" validate:"required"`
@@ -64,4 +66,10 @@ func (s Event) IsSortable(column string) bool {
 	default:
 		return false
 	}
+}
+
+type EventInput struct {
+	Type    EventType
+	Message string
+	Data    types.JSONUntypedObject
 }
