@@ -18,6 +18,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -1355,7 +1356,7 @@ func (s *BloodhoundDB) GetPrimaryDisplayKinds(ctx context.Context) (graphschema.
 			customKindsByName[kind.KindName] = kind
 		}
 		// Until work is complete to ensure custom_node_kinds are properly kind backed, this will filter out invalid kinds
-		if kinds, err := s.GetKindsByNames(ctx, customNames...); err != nil {
+		if kinds, err := s.GetKindsByNames(ctx, customNames...); err != nil && !errors.Is(err, ErrNotFound) {
 			return nil, err
 		} else {
 			var primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
