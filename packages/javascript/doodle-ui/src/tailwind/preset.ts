@@ -147,6 +147,8 @@ export default {
 
                 // 'menu-bg': 'var(--menu-bg)',
 
+                'badge-border-neutral': 'var(--badge-border-neutral)',
+                'badge-role-based-filtering': 'var(--badge-role-based-filtering)',
                 // 'badge-error': 'var(--badge-error)',
                 // 'badge-error-hover': 'var(--badge-error-hover)',
                 // 'badge-warning': 'var(--badge-warning)',

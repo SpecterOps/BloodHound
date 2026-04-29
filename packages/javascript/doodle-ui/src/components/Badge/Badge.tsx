@@ -18,7 +18,7 @@ import * as React from 'react';
 import { cn } from '../utils';
 
 const BadgeVariants = cva(
-    'inline-flex items-center justify-center rounded border bg-neutral-light-3 dark:bg-neutral-dark-3 text-neutral-dark-1 dark:text-white border-neutral-light-5 dark:border-neutral-dark-5',
+    'inline-flex items-center justify-center rounded border bg-interdeterminate text-main border-neutral-400 dark:border-neutral-700',
     {
         variants: {
             size: {
@@ -35,7 +35,7 @@ const BadgeVariants = cva(
     }
 );
 
-interface BadgeProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof BadgeVariants> {
+interface BadgeProps extends React.HTMLAttributes<HTMLDivElement>, Omit<VariantProps<typeof BadgeVariants>, 'hasIcon'> {
     label: string;
     labelClassName?: string;
     icon?: React.ReactNode;
@@ -57,7 +57,7 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
                 }}>
                 {icon && (
                     //badge-icon does not have actual properties, if you want to leverage it, you would have to target the className and define the properties via the Badge component instance in the parent
-                    <span className='badge-icon' style={{ color }}>
+                    <span className={iconClassName} style={{ color }}>
                         {icon}
                     </span>
                 )}

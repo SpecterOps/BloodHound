@@ -134,6 +134,8 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--menu-bg': elevation.light[0],
 
             // // Components/Data Display/ Badge & Chip
+            '--badge-border-neutral': palette.neutral.light[400],
+            '--badge-role-based-filtering': light.badge['role-based-filtering'],
             // '--badge-error': light.status.error.main,
             // '--badge-error-hover': light.badge.error.hover,
             // '--badge-warning': light.badge.warning.main,
@@ -204,6 +206,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--neutral-light-2': '#f4f4f4',
             '--neutral-light-3': '#e3e7ea',
             '--neutral-light-4': '#dadee1',
+            // same as neutral-light-400
             '--neutral-light-5': '#cacfd3',
 
             // same palette.neutral.dark[50]
@@ -211,8 +214,8 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--neutral-dark-2': '#222222',
             '--neutral-dark-3': '#272727',
             '--neutral-dark-4': '#2c2c2c',
-            // same as dark neutral-5
-            '--neutral-dark-5': palette.neutral.dark[700],
+            // same as palette.neutral.dark[700]
+            '--neutral-dark-5': '#2e2e2e',
         },
 
         '.dark': {
@@ -230,7 +233,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--neutral-100': palette.neutral.dark[100],
             // '--neutral-200': palette.neutral.dark[200],
             // '--neutral-300': palette.neutral.dark[300],
-            '--neutral-400': palette.neutral.dark[400],
+            // '--neutral-400': palette.neutral.dark[400],
             // '--neutral-500': palette.neutral.dark[500],
             // '--neutral-600': palette.neutral.dark[600],
             // '--neutral-700': palette.neutral.dark[700],
@@ -307,6 +310,8 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--menu-bg': elevation.dark[2],
 
             // // Components/Data Display/ Badge & Chip
+            '--badge-border-neutral': palette.neutral.dark[700],
+            '--badge-role-based-filtering': dark.badge['role-based-filtering'],
             // '--badge-error': dark.status.error.main,
             // '--badge-error-hover': dark.badge.error.hover,
             // '--badge-warning': dark.badge.warning.main,

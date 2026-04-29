@@ -339,6 +339,8 @@ export const light = {
         },
     },
     badge: {
+        'border-neutral': palette.neutral.light[400],
+        'role-based-filtering': palette['deep-purple'][50],
         error: {
             hover: '#8A3531',
         },
@@ -423,6 +425,8 @@ export const dark = {
         },
     },
     badge: {
+        'border-neutral': palette.neutral.dark[700],
+        'role-based-filtering': palette.purple[900],
         error: {
             hover: palette.red[300],
         },
