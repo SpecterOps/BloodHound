@@ -21,9 +21,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 type PubSubRepository interface {
@@ -46,7 +48,7 @@ func NewPubSubService(database PubSubRepository) *PubSubService {
 	}
 }
 
-// Publish validates the event properties, and then creates a new event in the events table.
+// Publish validates the event properties, creates a new event in the events table, and then fires an event to each registered handler for that EventType.
 func (s *PubSubService) Publish(ctx context.Context, eventInput model.EventInput) (model.Event, error) {
 	if eventID, err := uuid.NewV7(); err != nil {
 		return model.Event{}, fmt.Errorf("error generating event ID: %w", err)
@@ -63,6 +65,13 @@ func (s *PubSubService) Publish(ctx context.Context, eventInput model.EventInput
 		if createdEvent, err := s.database.CreateEvent(ctx, event); err != nil {
 			return model.Event{}, fmt.Errorf("error creating event: %w", err)
 		} else {
+			if handlers, ok := s.handlers[eventInput.Type]; ok {
+				for _, eventHandler := range handlers {
+					if err := eventHandler.HandleEvent(ctx, createdEvent); err != nil {
+						slog.Error("Error handling event", slog.String("event_type", createdEvent.Type), attr.Error(err))
+					}
+				}
+			}
 			return createdEvent, nil
 		}
 	}
