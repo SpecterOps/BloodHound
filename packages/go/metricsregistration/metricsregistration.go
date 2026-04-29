@@ -35,7 +35,7 @@ func RegisterBHCEMetrics(cfg config.Configuration, registerer prometheus.Registe
 		return fmt.Errorf("failed to register post-processing metrics: %w", err)
 	}
 
-	if err := middleware.RegisterApiMiddlewareMetrics(cfg, registerer); err != nil {
+	if err := middleware.RegisterApiMiddlewareMetrics(cfg.MetricsNamespace, registerer); err != nil {
 		return fmt.Errorf("failed to register API middleware metrics: %w", err)
 	}
 
