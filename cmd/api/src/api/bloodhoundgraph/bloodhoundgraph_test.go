@@ -19,7 +19,8 @@ package bloodhoundgraph
 import (
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -32,7 +33,7 @@ func TestSetFontIcon(t *testing.T) {
 			},
 		}
 
-		node.SetFontIcon("Meta", model.GraphSchemaNodeKindMap{}, nil)
+		node.SetFontIcon("Meta", nil)
 
 		assert.Equal(t, "#000", node.Color)
 		assert.Equal(t, "/ui/meta.png", node.Image)
@@ -48,7 +49,7 @@ func TestSetFontIcon(t *testing.T) {
 			},
 		}
 
-		node.SetFontIcon("Meta", model.GraphSchemaNodeKindMap{}, nil)
+		node.SetFontIcon("Meta", nil)
 
 		assert.Equal(t, "#000", node.Color)
 		assert.Equal(t, "/ui/metat0.png", node.Image)
@@ -64,7 +65,7 @@ func TestSetFontIcon(t *testing.T) {
 			},
 		}
 
-		node.SetFontIcon("Meta", model.GraphSchemaNodeKindMap{}, nil)
+		node.SetFontIcon("Meta", nil)
 
 		assert.Equal(t, "#000", node.Color)
 		assert.Equal(t, "/ui/meta.png", node.Image)
@@ -72,11 +73,14 @@ func TestSetFontIcon(t *testing.T) {
 	})
 
 	t.Run("sets font icon and color for known schema node kind", func(t *testing.T) {
-		nodeKindMap := model.GraphSchemaNodeKindMap{
-			"User": model.GraphSchemaNodeKind{
-				Name:      "User",
-				Icon:      "user",
-				IconColor: "#17E625",
+		nodeKindMap := graphschema.PrimaryDisplayKinds{
+			graph.StringKind("User"): graphschema.DisplayKind{
+				Name: "User",
+				Icon: graphschema.DisplayNodeIcon{
+					Name:  "user",
+					Color: "#17E625",
+					Type:  graphschema.DisplayNodeTypeFontAwesome,
+				},
 			},
 		}
 
@@ -86,7 +90,7 @@ func TestSetFontIcon(t *testing.T) {
 			},
 		}
 
-		node.SetFontIcon("User", nodeKindMap, nil)
+		node.SetFontIcon("User", nodeKindMap)
 
 		require.NotNil(t, node.FontIcon)
 		assert.Equal(t, "fas fa-user", node.FontIcon.Text)
@@ -101,7 +105,7 @@ func TestSetFontIcon(t *testing.T) {
 			},
 		}
 
-		node.SetFontIcon("SomeUnknownKind", model.GraphSchemaNodeKindMap{}, nil)
+		node.SetFontIcon("SomeUnknownKind", nil)
 
 		require.NotNil(t, node.FontIcon)
 		assert.Equal(t, "fas fa-question", node.FontIcon.Text)
@@ -110,50 +114,25 @@ func TestSetFontIcon(t *testing.T) {
 	})
 
 	t.Run("Meta takes priority over schema map entry", func(t *testing.T) {
-		nodeKindMap := model.GraphSchemaNodeKindMap{
-			"Meta": model.GraphSchemaNodeKind{
-				Name:      "Meta",
-				Icon:      "star",
-				IconColor: "#FFF",
+		nodeKindMap := graphschema.PrimaryDisplayKinds{
+			graphschema.Meta: graphschema.DisplayKind{
+				Name: "Meta",
+				Icon: graphschema.DisplayNodeIcon{
+					Name:  "star",
+					Color: "#FFF",
+				},
 			},
 		}
-
 		node := &BloodHoundGraphNode{
 			BloodHoundGraphItem: &BloodHoundGraphItem{
 				Data: map[string]any{},
 			},
 		}
 
-		node.SetFontIcon("Meta", nodeKindMap, nil)
+		node.SetFontIcon("Meta", nodeKindMap)
 
 		assert.Equal(t, "#000", node.Color)
 		assert.Equal(t, "/ui/meta.png", node.Image)
 		assert.Nil(t, node.FontIcon)
-	})
-
-	t.Run("sets font icon, color, and node type for custom node kind", func(t *testing.T) {
-		customNodeKindsMap := model.CustomNodeKindMap{
-			"CustomWidget": model.CustomNodeKindConfig{
-				Icon: model.CustomNodeIcon{
-					Type:  "font-awesome",
-					Name:  "cogs",
-					Color: "#FF5733",
-				},
-			},
-		}
-
-		node := &BloodHoundGraphNode{
-			BloodHoundGraphItem: &BloodHoundGraphItem{
-				Data: map[string]any{},
-			},
-		}
-
-		node.SetFontIcon("CustomWidget", model.GraphSchemaNodeKindMap{}, customNodeKindsMap)
-
-		require.NotNil(t, node.FontIcon)
-		assert.Equal(t, "fas fa-cogs", node.FontIcon.Text)
-		assert.Equal(t, "#FF5733", node.Color)
-		assert.Empty(t, node.Image)
-		assert.Equal(t, "CustomWidget", node.Data["nodetype"])
 	})
 }

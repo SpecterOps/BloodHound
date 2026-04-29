@@ -70,3 +70,14 @@ DO $$
             REFERENCES users(id);
     END IF;
   END $$;
+
+-- Add Findings Table feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'findings_table',
+        'Findings Table',
+        'Enables a new table view for findings.',
+        false,
+        false)
+ON CONFLICT DO NOTHING;

@@ -59,15 +59,17 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 	var (
 		ctx      = context.Background()
 		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
-		cfg      = config.Configuration{}
 	)
+
+	cfg, err := config.NewDefaultConnectionConfiguration(connConf.URL())
+	require.NoError(t, err)
 
 	// #region Setup for dbs
 
-	gormDB, err := database.OpenDatabase(connConf.URL())
+	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
 	require.NoError(t, err)
 
-	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), cfg)
+	db := database.NewBloodhoundDB(gormDB, dbPool, auth.NewIdentityResolver(), cfg)
 
 	err = db.Migrate(ctx)
 	require.NoError(t, err)
@@ -266,7 +268,7 @@ func TestGetNodeKindDisplayLabel(t *testing.T) {
 	nodeKindNoDis, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, "TestKindNoDis", extension.ID, "", "", false, "", "")
 	require.NoError(t, err)
 
-	primaryNodeKinds, err := testSuite.BHDatabase.GetValidDisplayKinds(testSuite.Context)
+	primaryNodeKinds, err := testSuite.BHDatabase.GetPrimaryDisplayKinds(testSuite.Context)
 	require.NoError(t, err)
 
 	assert.Equal(t, ad.Entity.String(), graphschema.GetNodeKindDisplayLabel(primaryNodeKinds, graph.PrepareNode(graph.NewProperties(), ad.Entity)), "should return base kind if no other valid kinds are present")

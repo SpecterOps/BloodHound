@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,4 +13,23 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-export * from './SourceKindsCheckboxes';
+
+package metricsregistration_test
+
+import (
+	"testing"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/specterops/bloodhound/packages/go/metricsregistration"
+)
+
+func TestRegisterBHCEMetrics(t *testing.T) {
+	t.Parallel()
+
+	registry := prometheus.NewRegistry()
+	err := metricsregistration.RegisterBHCEMetrics(registry)
+
+	assert.NoError(t, err)
+}

@@ -85,8 +85,9 @@ const (
 )
 
 const (
-	TierZeroGlyph = "gem"
-	OwnedGlyph    = "skull"
+	TierZeroGlyph           = "gem"
+	OwnedGlyph              = "skull"
+	AssetGroupTagKindPrefix = "Tag_"
 )
 
 type AssetGroupTagCounts struct {
@@ -142,7 +143,7 @@ func (s AssetGroupTag) ToKind() graph.Kind {
 }
 
 func (s AssetGroupTag) KindName() string {
-	return fmt.Sprintf("Tag_%s", strings.ReplaceAll(s.Name, " ", "_"))
+	return fmt.Sprintf("%s%s", AssetGroupTagKindPrefix, strings.ReplaceAll(s.Name, " ", "_"))
 }
 
 func (s AssetGroupTag) IsStringColumn(filter string) bool {
@@ -324,8 +325,8 @@ func (s AssetGroupSelectorNode) ValidFilters() map[string][]FilterOperator {
 /*
 These are the relevant properties for asset group tags. This method serves to keep consistency across the feature
 */
-func GetAssetGroupMemberProperties(validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.Node) (primaryKind, displayName, objectId, envId string) {
-	primaryKind = graphschema.GetNodeKindDisplayLabel(validPrimaryKinds, node)
+func GetAssetGroupMemberProperties(primaryDisplayKinds graphschema.PrimaryDisplayKinds, node *graph.Node) (primaryKind, displayName, objectId, envId string) {
+	primaryKind = graphschema.GetNodeKindDisplayLabel(primaryDisplayKinds, node)
 	displayName, _ = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
 	objectId, _ = node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 	envId, _ = node.Properties.GetWithFallback(ad.DomainSID.String(), "", azure.TenantID.String(), graphschema.EnvironmentIDKey).String()
