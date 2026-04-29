@@ -10089,6 +10089,50 @@ func (s *ACLInheritanceHarness) Setup(graphTestContext *GraphTestContext) {
 	}))
 }
 
+type AZEligibleAndApproverRoleHarness struct {
+	UserDirectEligible *graph.Node
+	UserGroupEligible  *graph.Node
+	UserNoEligibility  *graph.Node
+	UserDirectApprover *graph.Node
+	UserGroupApprover  *graph.Node
+	Group              *graph.Node
+	ApproverGroup      *graph.Node
+	RoleDirect         *graph.Node
+	RoleViaGroup       *graph.Node
+	RoleDirectApprover *graph.Node
+	RoleGroupApprover  *graph.Node
+}
+
+func (s *AZEligibleAndApproverRoleHarness) Setup(graphTestContext *GraphTestContext) {
+	var (
+		tenantID = RandomDomainSID()
+	)
+
+	s.RoleDirect = graphTestContext.NewAzureRole("DirectRole", RandomObjectID(graphTestContext.testCtx), azure.ContributorRole, tenantID)
+	s.RoleViaGroup = graphTestContext.NewAzureRole("GroupRole", RandomObjectID(graphTestContext.testCtx), azure.ContributorRole, tenantID)
+	s.RoleDirectApprover = graphTestContext.NewAzureRole("DirectApproverRole", RandomObjectID(graphTestContext.testCtx), azure.ContributorRole, tenantID)
+	s.RoleGroupApprover = graphTestContext.NewAzureRole("GroupApproverRole", RandomObjectID(graphTestContext.testCtx), azure.ContributorRole, tenantID)
+	s.UserDirectEligible = graphTestContext.NewAzureUser("UserDirect", "UserDirect", "", RandomObjectID(graphTestContext.testCtx), "", tenantID, false)
+	s.UserGroupEligible = graphTestContext.NewAzureUser("UserGroup", "UserGroup", "", RandomObjectID(graphTestContext.testCtx), "", tenantID, false)
+	s.UserNoEligibility = graphTestContext.NewAzureUser("UserNone", "UserNone", "", RandomObjectID(graphTestContext.testCtx), "", tenantID, false)
+	s.UserDirectApprover = graphTestContext.NewAzureUser("UserDirectApprover", "UserDirectApprover", "", RandomObjectID(graphTestContext.testCtx), "", tenantID, false)
+	s.UserGroupApprover = graphTestContext.NewAzureUser("UserGroupApprover", "UserGroupApprover", "", RandomObjectID(graphTestContext.testCtx), "", tenantID, false)
+	s.Group = graphTestContext.NewAzureGroup("EligibleGroup", RandomObjectID(graphTestContext.testCtx), tenantID)
+	s.ApproverGroup = graphTestContext.NewAzureGroup("ApproverGroup", RandomObjectID(graphTestContext.testCtx), tenantID)
+
+	// Eligible role edges
+	graphTestContext.NewRelationship(s.UserDirectEligible, s.RoleDirect, azure.AZRoleEligible)
+
+	graphTestContext.NewRelationship(s.UserGroupEligible, s.Group, azure.MemberOf)
+	graphTestContext.NewRelationship(s.Group, s.RoleViaGroup, azure.AZRoleEligible)
+
+	// Approver role edges
+	graphTestContext.NewRelationship(s.UserDirectApprover, s.RoleDirectApprover, azure.AZRoleApprover)
+
+	graphTestContext.NewRelationship(s.UserGroupApprover, s.ApproverGroup, azure.MemberOf)
+	graphTestContext.NewRelationship(s.ApproverGroup, s.RoleGroupApprover, azure.AZRoleApprover)
+}
+
 type AZPIMRolesHarness struct {
 	TenantNode *graph.Node
 
@@ -10218,6 +10262,8 @@ type HarnessDetails struct {
 	AZMGGroupMemberReadWriteAllHarness              AZMGGroupMemberReadWriteAllHarness
 	AZMGRoleManagementReadWriteDirectoryHarness     AZMGRoleManagementReadWriteDirectoryHarness
 	AZMGServicePrincipalEndpointReadWriteAllHarness AZMGServicePrincipalEndpointReadWriteAllHarness
+	AZPIMRolesHarness                               AZPIMRolesHarness
+	AZEligibleAndApproverRoleHarness                AZEligibleAndApproverRoleHarness
 	RootADHarness                                   RootADHarness
 	SearchHarness                                   SearchHarness
 	ShortcutHarness                                 ShortcutHarness
@@ -10305,7 +10351,6 @@ type HarnessDetails struct {
 	ResolveEndpointsByName                          ResolveEndpointsByName
 	IngestRelationships                             IngestRelationships
 	IngestRelationshipsUppercaseInvariant           IngestRelationshipsUppercaseInvariant
-	AZPIMRolesHarness                               AZPIMRolesHarness
 	Version730_Migration                            Version730_Migration_Harness
 	Version900_Migration_Harness                    Version900_Migration_Harness
 	Version910_Migration_Harness                    Version910_Migration_Harness
