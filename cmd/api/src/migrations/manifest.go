@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
@@ -48,6 +49,65 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 		}
 	} else {
 		return version.GetVersion().GreaterThan(currentMigration), nil
+	}
+}
+
+// Version_920_Migration returns a migration that removes any registered source kinds
+// (other than ad.Entity) from Active Directory nodes. It addresses cross-platform kind
+// pollution where AD nodes acquired foreign source kinds (e.g. azure.Entity, OpenGraph
+// custom kinds) via relationship ingest before BED-8158. The list of source kinds is
+// fetched from the relational database via sourceKinds; ad.Entity is excluded so AD
+// nodes retain their platform base kind alongside their type kinds (ad.User, ad.Group,
+// etc., which are not stored in the source_kinds table).
+func Version_920_Migration(sourceKindsData database.SourceKindsData) func(ctx context.Context, db graph.Database) error {
+	return func(ctx context.Context, db graph.Database) error {
+		defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove non-ad.Entity source kinds from Active Directory nodes")()
+
+		if sourceKindsData == nil {
+			slog.InfoContext(ctx, "Skipping Version_920_Migration: no SourceKindsData provider configured")
+			return nil
+		}
+
+		registeredSourceKinds, err := sourceKindsData.GetSourceKinds(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to fetch source kinds: %w", err)
+		}
+
+		removableSourceKinds := graph.Kinds{}
+		for _, sourceKind := range registeredSourceKinds {
+			kind := sourceKind.ToKind()
+			if kind == ad.Entity {
+				continue
+			}
+			removableSourceKinds = append(removableSourceKinds, kind)
+		}
+
+		if len(removableSourceKinds) == 0 {
+			return nil
+		}
+
+		return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+			if nodes, err := ops.FetchNodes(tx.Nodes().Filter(query.KindIn(query.Node(), ad.Nodes()...))); err != nil {
+				return err
+			} else {
+				for _, node := range nodes {
+					kindsToRemove := graph.Kinds{}
+					for _, kind := range removableSourceKinds {
+						if node.Kinds.ContainsOneOf(kind) {
+							kindsToRemove = append(kindsToRemove, kind)
+						}
+					}
+					if len(kindsToRemove) == 0 {
+						continue
+					}
+					node.DeleteKinds(kindsToRemove...)
+					if err := tx.UpdateNode(node); err != nil {
+						return err
+					}
+				}
+			}
+			return nil
+		})
 	}
 }
 
@@ -528,118 +588,127 @@ func Version_277_Migration(ctx context.Context, db graph.Database) error {
 	})
 }
 
-var Manifest = []Migration{
-	{
-		Version: version.Version{Major: 2, Minor: 3, Patch: 0},
-		Execute: func(ctx context.Context, db graph.Database) error {
-			defer measure.MeasureWithThreshold(slog.LevelInfo, "Deleting all existing role nodes")()
+// GetManifest returns the ordered list of graph migrations. Migrations that need
+// dependencies beyond the graph database (e.g. relational source kinds) capture
+// them via the provided arguments.
+func GetManifest(sourceKindsData database.SourceKindsData) []Migration {
+	return []Migration{
+		{
+			Version: version.Version{Major: 2, Minor: 3, Patch: 0},
+			Execute: func(ctx context.Context, db graph.Database) error {
+				defer measure.MeasureWithThreshold(slog.LevelInfo, "Deleting all existing role nodes")()
 
-			return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
-				return tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Kind(query.Node(), azure.Role)
-				}).Delete()
-			})
+				return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+					return tx.Nodes().Filterf(func() graph.Criteria {
+						return query.Kind(query.Node(), azure.Role)
+					}).Delete()
+				})
+			},
 		},
-	},
-	{
-		Version: version.Version{Major: 2, Minor: 6, Patch: 3},
-		Execute: func(ctx context.Context, db graph.Database) error {
-			defer measure.MeasureWithThreshold(slog.LevelInfo, "Deleting all LocalToComputer/RemoteInteractiveLogin edges and ADLocalGroup labels")()
+		{
+			Version: version.Version{Major: 2, Minor: 6, Patch: 3},
+			Execute: func(ctx context.Context, db graph.Database) error {
+				defer measure.MeasureWithThreshold(slog.LevelInfo, "Deleting all LocalToComputer/RemoteInteractiveLogin edges and ADLocalGroup labels")()
 
-			// This kind has long since gone missing from our schemas but the assert below reintroduces it for the
-			// purposes of running this migration
-			rilpKind := graph.StringKind("RemoteInteractiveLogonPrivilege")
+				// This kind has long since gone missing from our schemas but the assert below reintroduces it for the
+				// purposes of running this migration
+				rilpKind := graph.StringKind("RemoteInteractiveLogonPrivilege")
 
-			if err := db.AssertSchema(ctx, graph.Schema{
-				Graphs: []graph.Graph{{
-					Edges: graph.Kinds{rilpKind},
-				}},
-			}); err != nil {
-				return err
-			}
-
-			return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
-				// Remove ADLocalGroup label from all nodes that also have the group label
-				if nodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.And(
-						query.Kind(query.Node(), ad.LocalGroup),
-						query.Kind(query.Node(), ad.Group),
-					)
-				})); err != nil {
+				if err := db.AssertSchema(ctx, graph.Schema{
+					Graphs: []graph.Graph{{
+						Edges: graph.Kinds{rilpKind},
+					}},
+				}); err != nil {
 					return err
-				} else {
-					for _, node := range nodes {
-						node.DeleteKinds(ad.LocalGroup)
-						if err := tx.UpdateNode(node); err != nil {
-							return err
+				}
+
+				return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+					// Remove ADLocalGroup label from all nodes that also have the group label
+					if nodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
+						return query.And(
+							query.Kind(query.Node(), ad.LocalGroup),
+							query.Kind(query.Node(), ad.Group),
+						)
+					})); err != nil {
+						return err
+					} else {
+						for _, node := range nodes {
+							node.DeleteKinds(ad.LocalGroup)
+							if err := tx.UpdateNode(node); err != nil {
+								return err
+							}
 						}
 					}
-				}
 
-				// Delete all local group edges
-				if err := tx.Relationships().Filterf(func() graph.Criteria {
-					return query.And(
-						query.Or(
-							query.Kind(query.Relationship(), rilpKind),
-							query.Kind(query.Relationship(), ad.LocalToComputer),
-							query.Kind(query.Relationship(), ad.MemberOfLocalGroup),
-						),
-						query.Kind(query.Start(), ad.Entity),
-					)
-				}).Delete(); err != nil {
-					return err
-				}
+					// Delete all local group edges
+					if err := tx.Relationships().Filterf(func() graph.Criteria {
+						return query.And(
+							query.Or(
+								query.Kind(query.Relationship(), rilpKind),
+								query.Kind(query.Relationship(), ad.LocalToComputer),
+								query.Kind(query.Relationship(), ad.MemberOfLocalGroup),
+							),
+							query.Kind(query.Start(), ad.Entity),
+						)
+					}).Delete(); err != nil {
+						return err
+					}
 
-				return nil
-			})
+					return nil
+				})
+			},
 		},
-	},
-	{
-		Version: version.Version{Major: 2, Minor: 7, Patch: 7},
-		Execute: Version_277_Migration,
-	},
-	{
-		Version: version.Version{Major: 5, Minor: 0, Patch: 8},
-		Execute: Version_508_Migration,
-	},
-	{
-		Version: version.Version{Major: 5, Minor: 13, Patch: 0},
-		Execute: Version_513_Migration,
-	},
-	{
-		Version: version.Version{Major: 6, Minor: 2, Patch: 0},
-		Execute: Version_620_Migration,
-	},
-	{
-		Version: version.Version{Major: 7, Minor: 3, Patch: 0},
-		Execute: Version_730_Migration,
-	},
-	{
-		Version: version.Version{Major: 7, Minor: 4, Patch: 0},
-		Execute: Version_740_Migration,
-	},
-	{
-		Version: version.Version{Major: 8, Minor: 1, Patch: 3},
-		Execute: Version_813_Migration,
-	},
-	{
-		Version: version.Version{Major: 8, Minor: 3, Patch: 0},
-		Execute: Version_830_Migration,
-	},
-	{
-		Version: version.Version{Major: 8, Minor: 5, Patch: 2},
-		Execute: Version_852_Migration,
-	},
-	{
-		Version: version.Version{Major: 8, Minor: 6, Patch: 0},
-		Execute: Version_860_Migration,
-	},
-	{
-		Version: version.Version{Major: 9, Minor: 0, Patch: 0},
-		Execute: Version_900_Migration,
-	},
-	{
-		Version: version.Version{Major: 9, Minor: 1, Patch: 0},
-		Execute: Version_910_Migration,
-	},
+		{
+			Version: version.Version{Major: 2, Minor: 7, Patch: 7},
+			Execute: Version_277_Migration,
+		},
+		{
+			Version: version.Version{Major: 5, Minor: 0, Patch: 8},
+			Execute: Version_508_Migration,
+		},
+		{
+			Version: version.Version{Major: 5, Minor: 13, Patch: 0},
+			Execute: Version_513_Migration,
+		},
+		{
+			Version: version.Version{Major: 6, Minor: 2, Patch: 0},
+			Execute: Version_620_Migration,
+		},
+		{
+			Version: version.Version{Major: 7, Minor: 3, Patch: 0},
+			Execute: Version_730_Migration,
+		},
+		{
+			Version: version.Version{Major: 7, Minor: 4, Patch: 0},
+			Execute: Version_740_Migration,
+		},
+		{
+			Version: version.Version{Major: 8, Minor: 1, Patch: 3},
+			Execute: Version_813_Migration,
+		},
+		{
+			Version: version.Version{Major: 8, Minor: 3, Patch: 0},
+			Execute: Version_830_Migration,
+		},
+		{
+			Version: version.Version{Major: 8, Minor: 5, Patch: 2},
+			Execute: Version_852_Migration,
+		},
+		{
+			Version: version.Version{Major: 8, Minor: 6, Patch: 0},
+			Execute: Version_860_Migration,
+		},
+		{
+			Version: version.Version{Major: 9, Minor: 0, Patch: 0},
+			Execute: Version_900_Migration,
+		},
+		{
+			Version: version.Version{Major: 9, Minor: 1, Patch: 0},
+			Execute: Version_910_Migration,
+		},
+		{
+			Version: version.Version{Major: 9, Minor: 2, Patch: 0},
+			Execute: Version_920_Migration(sourceKindsData),
+		},
+	}
 }
