@@ -189,7 +189,7 @@ func (s *Migrator) bootstrapGoose() error {
         ALTER TABLE goose_db_version ADD COLUMN IF NOT EXISTS description TEXT;
 
         INSERT INTO goose_db_version (version_id, is_applied)
-        VALUES (1, true), (2, true)
+        VALUES (0, true), (1, true), (2, true)
         ON CONFLICT (version_id) DO NOTHING;
     `)
 	return result.Error
