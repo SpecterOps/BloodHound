@@ -155,7 +155,7 @@ func graphRelatedEntityType(request *http.Request, db database.Database, graphDb
 		if eligibleAndApproverRoles, err := azure.ListEntityEligibleAndApproverRolePaths(ctx, graphDb, objectID); err != nil {
 			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
 		} else {
-			return bloodhoundgraph.PathSetToBloodHoundGraph(validPrimaryKinds, customNodeKinds, eligibleAndApproverRoles), eligibleAndApproverRoles.Len(), nil
+			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, eligibleAndApproverRoles), eligibleAndApproverRoles.Len(), nil
 		}
 
 	case azure.RelatedEntityTypeOutboundExecutionPrivileges:
