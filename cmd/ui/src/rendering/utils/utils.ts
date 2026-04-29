@@ -17,8 +17,8 @@
 import { NodeDisplayData, PartialButFor } from 'sigma/types';
 
 /** Threshold of graph zoom before labels fade out */
-export const STARTING_ZOOM_FADE_RATIO = 0.65;
-export const ENDING_ZOOM_FADE_RATIO = 0.5;
+export const STARTING_ZOOM_FADE_RATIO = 0.4;
+export const ENDING_ZOOM_FADE_RATIO = 0.3;
 
 /** Padding displayed around label for node or edge */
 export const LABEL_PADDING = 3;
@@ -27,7 +27,7 @@ export const LABEL_PADDING = 3;
 export const NODE_PADDING = 2;
 
 /** Gap between the bottom of a node and the top of its label */
-export const LABEL_NODE_MARGIN = 15;
+export const LABEL_NODE_MARGIN = 4;
 
 /**
  * While edge labels are drawn with a custom renderer, the mouse target for capturing clicks is
