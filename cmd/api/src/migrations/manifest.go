@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
@@ -52,16 +53,19 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 	}
 }
 
-// Version_920_Migration returns a migration that removes any registered source kinds
-// (other than ad.Entity) from Active Directory nodes. It addresses cross-platform kind
-// pollution where AD nodes acquired foreign source kinds (e.g. azure.Entity, OpenGraph
-// custom kinds) via relationship ingest before BED-8158. The list of source kinds is
-// fetched from the relational database via sourceKinds; ad.Entity is excluded so AD
-// nodes retain their platform base kind alongside their type kinds (ad.User, ad.Group,
-// etc., which are not stored in the source_kinds table).
+// Version_920_Migration returns a migration that removes cross-platform kind
+// pollution from Active Directory and Azure nodes. Before BED-8158, AD and
+// Azure nodes could acquire foreign source kinds (e.g. azure.Entity on AD
+// nodes, OpenGraph custom kinds) via relationship ingest. For each platform
+// the migration strips every registered source kind from in-scope nodes
+// except the platform's own base kind (ad.Entity for AD, azure.Entity for
+// Azure), so nodes retain their platform base kind alongside their type
+// kinds (ad.User, azure.User, etc., which are not stored in the
+// source_kinds table). The list of source kinds is fetched from the
+// relational database via sourceKindsData.
 func Version_920_Migration(sourceKindsData database.SourceKindsData) func(ctx context.Context, db graph.Database) error {
 	return func(ctx context.Context, db graph.Database) error {
-		defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove non-ad.Entity source kinds from Active Directory nodes")()
+		defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove cross-platform source kinds from AD and Azure nodes")()
 
 		if sourceKindsData == nil {
 			slog.InfoContext(ctx, "Skipping Version_920_Migration: no SourceKindsData provider configured")
@@ -73,42 +77,65 @@ func Version_920_Migration(sourceKindsData database.SourceKindsData) func(ctx co
 			return fmt.Errorf("failed to fetch source kinds: %w", err)
 		}
 
-		removableSourceKinds := graph.Kinds{}
-		for _, sourceKind := range registeredSourceKinds {
-			kind := sourceKind.ToKind()
-			if kind == ad.Entity {
-				continue
-			}
-			removableSourceKinds = append(removableSourceKinds, kind)
-		}
-
-		if len(removableSourceKinds) == 0 {
-			return nil
-		}
-
 		return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
-			if nodes, err := ops.FetchNodes(tx.Nodes().Filter(query.KindIn(query.Node(), ad.Nodes()...))); err != nil {
+			var (
+				adKinds    graph.Kinds
+				azureKinds graph.Kinds
+			)
+			// Type kinds only — the base Entity kinds are exactly what may be polluted across platforms,
+			// so they can't be used to classify a node.
+			adKinds = ad.NodeKinds()
+			adKinds = adKinds.Remove(ad.Entity)
+			azureKinds = azure.NodeKinds()
+			azureKinds = azureKinds.Remove(azure.Entity)
+
+			if err := stripForeignSourceKinds(tx, ad.Entity, adKinds, registeredSourceKinds); err != nil {
 				return err
-			} else {
-				for _, node := range nodes {
-					kindsToRemove := graph.Kinds{}
-					for _, kind := range removableSourceKinds {
-						if node.Kinds.ContainsOneOf(kind) {
-							kindsToRemove = append(kindsToRemove, kind)
-						}
-					}
-					if len(kindsToRemove) == 0 {
-						continue
-					}
-					node.DeleteKinds(kindsToRemove...)
-					if err := tx.UpdateNode(node); err != nil {
-						return err
-					}
-				}
 			}
-			return nil
+			return stripForeignSourceKinds(tx, azure.Entity, azureKinds, registeredSourceKinds)
 		})
 	}
+}
+
+// stripForeignSourceKinds removes every registered source kind other than
+// preservedKind from each node whose kind is in platformNodeKinds. Type
+// kinds (e.g. ad.User, azure.User) are not stored in source_kinds and
+// therefore remain on the node.
+func stripForeignSourceKinds(tx graph.Transaction, preservedKind graph.Kind, platformNodeKinds []graph.Kind, registeredSourceKinds []model.SourceKind) error {
+	var removableSourceKinds graph.Kinds
+	for _, sourceKind := range registeredSourceKinds {
+		kind := sourceKind.ToKind()
+		if kind == preservedKind {
+			continue
+		}
+		removableSourceKinds = append(removableSourceKinds, kind)
+	}
+
+	if len(removableSourceKinds) == 0 {
+		return nil
+	}
+
+	nodes, err := ops.FetchNodes(tx.Nodes().Filter(query.KindIn(query.Node(), platformNodeKinds...)))
+	if err != nil {
+		return err
+	}
+
+	for _, node := range nodes {
+		var kindsToRemove graph.Kinds
+		for _, kind := range removableSourceKinds {
+			if node.Kinds.ContainsOneOf(kind) {
+				kindsToRemove = append(kindsToRemove, kind)
+			}
+		}
+		if len(kindsToRemove) == 0 {
+			continue
+		}
+		node.DeleteKinds(kindsToRemove...)
+		if err := tx.UpdateNode(node); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func Version_910_Migration(ctx context.Context, db graph.Database) error {

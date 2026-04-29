@@ -21,6 +21,7 @@ package migrations_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
@@ -133,7 +134,17 @@ func TestVersion_910_Migration(t *testing.T) {
 // newADNode returns an unsaved AD-kinded node with the given name and type kind,
 // optionally polluted with extra kinds that the migration is expected to strip.
 func newADNode(name string, typeKind graph.Kind, extraKinds ...graph.Kind) *graph.Node {
-	kinds := graph.Kinds{ad.Entity, typeKind}
+	return newPlatformNode(name, ad.Entity, typeKind, extraKinds...)
+}
+
+// newAzureNode returns an unsaved Azure-kinded node with the given name and type kind,
+// optionally polluted with extra kinds that the migration is expected to strip.
+func newAzureNode(name string, typeKind graph.Kind, extraKinds ...graph.Kind) *graph.Node {
+	return newPlatformNode(name, azure.Entity, typeKind, extraKinds...)
+}
+
+func newPlatformNode(name string, baseKind, typeKind graph.Kind, extraKinds ...graph.Kind) *graph.Node {
+	kinds := graph.Kinds{baseKind, typeKind}
 	kinds = append(kinds, extraKinds...)
 	return &graph.Node{
 		Kinds: kinds,
@@ -199,11 +210,77 @@ func TestVersion_920_Migration(t *testing.T) {
 
 			azNode, err := ops.FetchNode(tx, azNodeUntouched.ID)
 			require.NoError(t, err)
-			require.True(t, azNode.Kinds.ContainsOneOf(azure.Entity), "non-AD nodes must not be touched")
+			require.True(t, azNode.Kinds.ContainsOneOf(azure.Entity), "azure.Entity must be preserved on clean azure nodes")
+			require.True(t, azNode.Kinds.ContainsOneOf(azure.User), "azure type kinds must be preserved")
 
 			ogNode, err := ops.FetchNode(tx, ogNodeUntouched.ID)
 			require.NoError(t, err)
-			require.True(t, ogNode.Kinds.ContainsOneOf(graph.StringKind("CustomKind")), "non-AD nodes must not be touched")
+			require.True(t, ogNode.Kinds.ContainsOneOf(graph.StringKind("CustomKind")), "OpenGraph nodes must not be touched")
+
+			return nil
+		})
+		require.NoError(t, err)
+	})
+
+	t.Run("strips non-azure.Entity source kinds from Azure nodes", func(t *testing.T) {
+		suite := setupIntegrationTestSuite(t)
+		t.Cleanup(func() { suite.teardownIntegrationTestSuite(t) })
+
+		var (
+			azUserPolluted  = newAzureNode("PollutedAZUser", azure.User, ad.Entity, graph.StringKind("CustomKind"))
+			azGroupPolluted = newAzureNode("PollutedAZGroup", azure.Group, graph.StringKind("CustomKind"))
+			azTenantClean   = newAzureNode("CleanTenant", azure.Tenant)
+			adNodeUntouched = newADNode("ADUser", ad.User)
+			ogNodeUntouched = &graph.Node{
+				Kinds: graph.Kinds{graph.StringKind("CustomKind")},
+				Properties: graph.AsProperties(graph.PropertyMap{
+					common.Name:     "OGNode",
+					common.ObjectID: "OGNode",
+				}),
+			}
+		)
+
+		suite.createNodes(t, azUserPolluted, azGroupPolluted, azTenantClean, adNodeUntouched, ogNodeUntouched)
+
+		require.NoError(t, suite.bhDatabase.RegisterSourceKind(suite.context)(graph.StringKind("CustomKind")))
+
+		suite.graphDB.ReadTransaction(suite.context, func(tx graph.Transaction) error {
+			azUser, err := ops.FetchNode(tx, azUserPolluted.ID)
+			require.NoError(t, err)
+			fmt.Println(azUser)
+			return nil
+		})
+
+		err := migrations.Version_920_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
+		require.NoError(t, err)
+
+		err = suite.graphDB.ReadTransaction(suite.context, func(tx graph.Transaction) error {
+			azUser, err := ops.FetchNode(tx, azUserPolluted.ID)
+			require.NoError(t, err)
+			require.True(t, azUser.Kinds.ContainsOneOf(azure.Entity), "azure.Entity must be preserved")
+			require.True(t, azUser.Kinds.ContainsOneOf(azure.User), "azure.User type kind must be preserved")
+			require.False(t, azUser.Kinds.ContainsOneOf(ad.Entity), "ad.Entity must be stripped")
+			require.False(t, azUser.Kinds.ContainsOneOf(graph.StringKind("CustomKind")), "CustomKind must be stripped")
+
+			azGroup, err := ops.FetchNode(tx, azGroupPolluted.ID)
+			require.NoError(t, err)
+			require.True(t, azGroup.Kinds.ContainsOneOf(azure.Entity))
+			require.True(t, azGroup.Kinds.ContainsOneOf(azure.Group))
+			require.False(t, azGroup.Kinds.ContainsOneOf(graph.StringKind("CustomKind")))
+
+			azTenant, err := ops.FetchNode(tx, azTenantClean.ID)
+			require.NoError(t, err)
+			require.True(t, azTenant.Kinds.ContainsOneOf(azure.Entity))
+			require.True(t, azTenant.Kinds.ContainsOneOf(azure.Tenant))
+
+			adNode, err := ops.FetchNode(tx, adNodeUntouched.ID)
+			require.NoError(t, err)
+			require.True(t, adNode.Kinds.ContainsOneOf(ad.Entity), "ad.Entity must be preserved on clean AD nodes")
+			require.True(t, adNode.Kinds.ContainsOneOf(ad.User), "AD type kinds must be preserved")
+
+			ogNode, err := ops.FetchNode(tx, ogNodeUntouched.ID)
+			require.NoError(t, err)
+			require.True(t, ogNode.Kinds.ContainsOneOf(graph.StringKind("CustomKind")), "OpenGraph nodes must not be touched")
 
 			return nil
 		})
