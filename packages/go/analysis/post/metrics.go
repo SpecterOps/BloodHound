@@ -23,7 +23,7 @@ import (
 
 var (
 	postOperationsVec = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "analysis",
+		Subsystem: "analysis",
 		Name:      "post_processing_ops",
 		Help:      "Post-processing operation statistics.",
 	}, []string{
@@ -33,7 +33,16 @@ var (
 )
 
 // RegisterPostProcessingMetrics registers the analysis post-processing metrics.
-func RegisterPostProcessingMetrics(registerer prometheus.Registerer) error {
+func RegisterPostProcessingMetrics(namespace string, registerer prometheus.Registerer) error {
+	postOperationsVec = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: namespace,
+		Name:      "post_processing_ops",
+		Help:      "Post-processing operation statistics.",
+	}, []string{
+		"kind",
+		"operation",
+	})
+
 	if err := registerer.Register(postOperationsVec); err != nil {
 		return fmt.Errorf("failed to register analysis post-processing metrics: %w", err)
 	}
