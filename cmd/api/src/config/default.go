@@ -104,6 +104,7 @@ func NewDefaultConfiguration() (Configuration, error) {
 			},
 			EnableUserAnalytics:  false,
 			EnableAuditLogStdout: false,
+			MetricsNamespace:     "bhce",
 		}, nil
 	}
 }

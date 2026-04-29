@@ -24,17 +24,18 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 )
 
 // RegisterBHCEMetrics registers all BHCE subsystem Prometheus metrics with the
 // provided registerer.
-func RegisterBHCEMetrics(registerer prometheus.Registerer) error {
+func RegisterBHCEMetrics(cfg config.Configuration, registerer prometheus.Registerer) error {
 	if err := post.RegisterPostProcessingMetrics(registerer); err != nil {
 		return fmt.Errorf("failed to register post-processing metrics: %w", err)
 	}
 
-	if err := middleware.RegisterApiMiddlewareMetrics(registerer); err != nil {
+	if err := middleware.RegisterApiMiddlewareMetrics(cfg, registerer); err != nil {
 		return fmt.Errorf("failed to register API middleware metrics: %w", err)
 	}
 

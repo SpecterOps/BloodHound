@@ -157,7 +157,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		// Register all metrics into a single registry before exposing it via the
 		// default registerer so /metrics never observes a partially-initialized state.
 		promRegistry := prometheus.NewRegistry()
-		if err := metricsregistration.RegisterBHCEMetrics(promRegistry); err != nil {
+		if err := metricsregistration.RegisterBHCEMetrics(cfg, promRegistry); err != nil {
 			return nil, fmt.Errorf("failed to register prometheus metrics: %w", err)
 		} else if err := prometheus.DefaultRegisterer.Register(promRegistry); err != nil {
 			return nil, fmt.Errorf("failed to expose prometheus registry: %w", err)

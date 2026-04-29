@@ -22,6 +22,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/packages/go/metricsregistration"
 )
 
@@ -29,7 +30,8 @@ func TestRegisterBHCEMetrics(t *testing.T) {
 	t.Parallel()
 
 	registry := prometheus.NewRegistry()
-	err := metricsregistration.RegisterBHCEMetrics(registry)
+	cfg := config.Configuration{}
+	err := metricsregistration.RegisterBHCEMetrics(cfg, registry)
 
 	assert.NoError(t, err)
 }
