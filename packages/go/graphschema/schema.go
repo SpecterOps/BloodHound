@@ -22,6 +22,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 )
 
 const (
@@ -30,6 +31,13 @@ const (
 	DefaultMissingName         = "NO NAME"
 	DefaultMissingObjectId     = "NO OBJECT ID"
 	EnvironmentIDKey           = "environmentid"
+)
+
+var (
+	Meta             = graph.StringKind("Meta")
+	MetaDetail       = graph.StringKind("MetaDetail")
+	MetaIncludes     = graph.StringKind("MetaIncludes")
+	IgnoreMetaFilter = query.Not(query.KindIn(query.Node(), Meta, MetaDetail))
 )
 
 func ActiveDirectoryGraphName(suffix string) string {
