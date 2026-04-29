@@ -31,7 +31,11 @@ const PageWithTitle: React.FC<PageWithTitleProps> = ({ title, pageDescription, c
     return (
         <Container maxWidth='xl' {...rest}>
             <Box component={'header'} className='py-2 mb-2'>
-                {title && <Typography variant='h1'>{title}</Typography>}
+                {title && (
+                    <Typography variant='h1' className='mb-4'>
+                        {title}
+                    </Typography>
+                )}
                 {pageDescription}
             </Box>
             {children}
