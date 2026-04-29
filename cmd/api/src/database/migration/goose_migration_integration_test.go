@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/peterldowns/pgtestdb"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/migration"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
@@ -31,10 +32,11 @@ type gooseTestContext struct {
 
 func setupGooseTestContext(t *testing.T) gooseTestContext {
 	t.Helper()
-
 	connConf := pgtestdb.Custom(t, gooseGetPostgresConfig(t), pgtestdb.NoopMigrator{})
+	cfg, err := config.NewDefaultConnectionConfiguration(connConf.URL())
+	require.NoError(t, err)
 
-	gormDB, err := database.OpenDatabase(connConf.URL())
+	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
 	require.NoError(t, err)
 
 	migrator, err := migration.NewMigrator(gormDB)
@@ -44,6 +46,7 @@ func setupGooseTestContext(t *testing.T) gooseTestContext {
 		sqlDatabase, closeErr := gormDB.DB()
 		require.NoError(t, closeErr)
 		require.NoError(t, sqlDatabase.Close())
+		dbPool.Close()
 	})
 
 	return gooseTestContext{
@@ -339,7 +342,7 @@ type gooseTestCase struct {
 
 func TestMigrator_RunMigrations(t *testing.T) {
 	expectedVersions := discoverGooseVersions(t)
-	db, migrator, err := integration.SetupTestMigrator(t)
+	db, _, migrator, err := integration.SetupTestMigrator(t)
 	require.Nil(t, err)
 
 	assert.Nil(t, migrator.ExecuteGooseMigrations(context.Background()))

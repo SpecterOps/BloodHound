@@ -3052,6 +3052,7 @@ ALTER TABLE auth_tokens
   ADD COLUMN IF NOT EXISTS created_by text;
 
 -- Create fk_auth_tokens_created_by to auth_tokens referencing users.id if it doesn't exist
+-- +goose StatementBegin
 DO $$
   BEGIN
     IF NOT EXISTS (
@@ -3065,7 +3066,7 @@ DO $$
             REFERENCES users(id);
     END IF;
   END $$;
-
+-- +goose StatementEnd
 -- Add Findings Table feature flag
 INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
 VALUES (current_timestamp,

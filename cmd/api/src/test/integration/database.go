@@ -167,13 +167,13 @@ func SetupTestMigrator(t *testing.T, sources ...migration.Source) (*gorm.DB, *pg
 		sqlDB, err := db.DB()
 		if err != nil {
 			slog.Error("Failed to connect to database: %v", attr.Error(err))
-			return nil, nil, fmt.Errorf("failed to connect to database: %v", err)
+			return nil, nil, nil, fmt.Errorf("failed to connect to database: %v", err)
 		}
 		// Create two fs, one for foss and bhe which we will then merge to run migrations from
 		fossMigrationsSubFS, err := fs.Sub(migration.FossMigrations, "migrations")
 		if err != nil {
 			slog.Error("Failed to open foss migrations directory: %v", attr.Error(err))
-			return nil, nil, fmt.Errorf("failed to open foss migrations directory: %v", err)
+			return nil, nil, nil, fmt.Errorf("failed to open foss migrations directory: %v", err)
 		}
 		OpenGraphDB(t, graphschema.DefaultGraphSchema()).Close(context.Background())
 		return db, pool, &migration.Migrator{
