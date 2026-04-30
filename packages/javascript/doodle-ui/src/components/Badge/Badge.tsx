@@ -17,53 +17,58 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { cn } from '../utils';
 
-const BadgeVariants = cva(
-    'inline-flex items-center justify-center rounded border bg-interdeterminate text-main border-neutral-400 dark:border-neutral-700',
-    {
-        variants: {
-            size: {
-                small: 'h-6 px-1 font-medium min-w-14 w-14',
-                medium: 'h-8 px-2 text-base min-w-16',
-            },
-            hasIcon: {
-                true: 'pr-3',
-            },
-        },
-        defaultVariants: {
-            size: 'medium',
-        },
-    }
-);
+type BadgeColor = NonNullable<VariantProps<typeof BadgeVariants>['color']>;
 
-interface BadgeProps extends React.HTMLAttributes<HTMLDivElement>, Omit<VariantProps<typeof BadgeVariants>, 'hasIcon'> {
-    label: string;
-    labelClassName?: string;
-    icon?: React.ReactNode;
-    iconClassName?: string;
-    color?: string;
-    backgroundColor?: string;
-}
+const BadgeVariants = cva('inline-flex items-center justify-center rounded text-main text-sm p-2', {
+    variants: {
+        color: {
+            indeterminate: 'border-badge-indeterminate-border bg-badge-indeterminate-fill border',
+            primary: 'bg-badge-primary',
+            secondary: 'bg-badge-secondary',
+            grey: 'bg-badge-grey',
+            red: 'bg-badge-red',
+            orange: 'bg-badge-orange',
+            green: 'bg-badge-green',
+            blue: 'bg-badge-blue',
+            purple: 'bg-badge-purple',
+        },
+        iconPosition: {
+            left: 'flex-row',
+            right: 'flex-row-reverse',
+        },
+        hasIcon: {
+            true: 'gap-1',
+            false: null,
+        },
+    },
+    defaultVariants: {
+        color: 'indeterminate',
+    },
+});
+
+type BadgeProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'color'> &
+    Omit<VariantProps<typeof BadgeVariants>, 'hasIcon' | 'color'> & {
+        color?: BadgeColor;
+        label: string;
+        labelClassName?: string;
+        icon?: React.ReactNode;
+        iconClassName?: string;
+    };
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
-    ({ label, labelClassName, icon, iconClassName, color, backgroundColor, size, className, ...rest }, ref) => {
+    ({ label, labelClassName, icon, iconClassName, iconPosition, color, className, ...rest }, ref) => {
         return (
             <div
                 ref={ref}
                 {...rest}
-                className={cn(BadgeVariants({ size, hasIcon: !!icon }), className)}
-                style={{
-                    borderColor: color,
-                    backgroundColor: backgroundColor,
-                }}>
+                className={cn(
+                    BadgeVariants({ color, iconPosition: icon ? iconPosition ?? 'left' : undefined, hasIcon: !!icon }),
+                    className
+                )}>
                 {icon && (
-                    //badge-icon does not have actual properties, if you want to leverage it, you would have to target the className and define the properties via the Badge component instance in the parent
-                    <span className={iconClassName} style={{ color }}>
-                        {icon}
-                    </span>
+                    <span className={cn('shrink-0 [&>svg]:block [&>svg]:h-4 [&>svg]:w-4', iconClassName)}>{icon}</span>
                 )}
-                {/* badge-label does not have actual properties, if you want to leverage it, you would have to target the
-                className and define the properties via the Badge component instance in the parent */}
-                <span className='badge-label'>{label}</span>
+                <span className={cn('translate-y-[0.5px]', labelClassName)}>{label}</span>
             </div>
         );
     }
