@@ -339,24 +339,19 @@ export const light = {
         },
     },
     badge: {
-        'border-neutral': palette.neutral.light[400],
-        'role-based-filtering': palette['deep-purple'][50],
-        error: {
-            hover: '#8A3531',
+        'role-based-filtering': palette.purple[900],
+        indeterminate: {
+            fill: elevation.light[1],
+            border: palette.neutral.light[500],
         },
-        warning: {
-            main: '#BD5500',
-            hover: '#964300',
-        },
-        success: {
-            main: palette.green[800],
-            hover: palette.green[900],
-        },
-        info: {
-            main: palette['light-blue'][800],
-            hover: palette['light-blue'][900],
-        },
-        indeterminate: palette.neutral.dark[400],
+        primary: '#A1A0FF',
+        secondary: '#66A3FF',
+        grey: palette.neutral.light[500],
+        red: palette.red[200],
+        orange: palette.orange[200],
+        green: palette.green[200],
+        blue: palette['light-blue'][200],
+        purple: palette['deep-purple'][100],
     },
     disabled: palette.grey[700],
     text: {
@@ -425,22 +420,18 @@ export const dark = {
         },
     },
     badge: {
-        'border-neutral': palette.neutral.dark[700],
         'role-based-filtering': palette.purple[900],
-        error: {
-            hover: palette.red[300],
+        indeterminate: {
+            fill: elevation.dark[1],
+            border: palette.neutral.dark[500],
         },
-        warning: {
-            main: palette.orange[200],
-            hover: palette.orange[300],
-        },
-        success: {
-            main: palette.green[200],
-            hover: palette.green[300],
-        },
-        info: {
-            main: palette['light-blue'][200],
-            hover: palette['light-blue'][300],
-        },
+        primary: '#605DF7',
+        secondary: '#1569E7',
+        grey: palette.neutral.dark[500],
+        red: palette.red[700],
+        orange: '#C15012',
+        green: palette.green[800],
+        blue: palette['light-blue'][800],
+        purple: palette['deep-purple'][500],
     },
 };

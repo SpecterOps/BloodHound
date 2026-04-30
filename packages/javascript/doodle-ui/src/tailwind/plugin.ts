@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { PluginCreator } from 'tailwindcss/types/config';
-import { common, dark, light, palette } from './colors';
+import { common, dark, elevation, light, palette } from './colors';
 
 const plugin: PluginCreator = ({ addBase, addUtilities }) => {
     addBase({
@@ -134,17 +134,17 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--menu-bg': elevation.light[0],
 
             // // Components/Data Display/ Badge & Chip
-            '--badge-border-neutral': palette.neutral.light[400],
-            '--badge-role-based-filtering': light.badge['role-based-filtering'],
-            // '--badge-error': light.status.error.main,
-            // '--badge-error-hover': light.badge.error.hover,
-            // '--badge-warning': light.badge.warning.main,
-            // '--badge-warning-hover': light.badge.warning.hover,
-            // '--badge-success': light.badge.success.main,
-            // '--badge-success-hover': light.badge.success.hover,
-            // '--badge-info': light.badge.info.main,
-            // '--badge-info-hover': light.badge.info.hover,
-            // '--badge-indeterminate': light.status.indeterminate.fill,
+            '--badge-indeterminate-fill': light.badge.indeterminate.fill,
+            '--badge-indeterminate-border': light.badge.indeterminate.border,
+
+            '--badge-primary': light.badge.primary,
+            '--badge-secondary': light.badge.secondary,
+            '--badge-grey': light.badge.grey,
+            '--badge-red': light.badge.red,
+            '--badge-orange': light.badge.orange,
+            '--badge-green': light.badge.green,
+            '--badge-blue': light.badge.blue,
+            '--badge-purple': light.badge.purple,
 
             // // Components/Data Display/Badge & Chip / Chip
             // '--chip-indeterminate': palette.neutral.light[300],
@@ -254,7 +254,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // ELEVATION
             // '--elevation-0': elevation.dark[0],
-            // '--elevation-1': elevation.dark[1],
+            '--elevation-1': elevation.dark[1],
             // '--elevation-2': elevation.dark[2],
             // '--elevation-3': elevation.dark[3],
             // '--elevation-4': elevation.dark[4],
@@ -310,17 +310,17 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--menu-bg': elevation.dark[2],
 
             // // Components/Data Display/ Badge & Chip
-            '--badge-border-neutral': palette.neutral.dark[700],
-            '--badge-role-based-filtering': dark.badge['role-based-filtering'],
-            // '--badge-error': dark.status.error.main,
-            // '--badge-error-hover': dark.badge.error.hover,
-            // '--badge-warning': dark.badge.warning.main,
-            // '--badge-warning-hover': dark.badge.warning.hover,
-            // '--badge-success': dark.badge.success.main,
-            // '--badge-success-hover': dark.badge.success.hover,
-            // '--badge-info': dark.badge.info.main,
-            // '--badge-info-hover': dark.badge.info.hover,
-            // '--badge-indeterminate': dark.status.indeterminate.fill,
+            '--badge-indeterminate-fill': dark.badge.indeterminate.fill,
+            '--badge-indeterminate-border': dark.badge.indeterminate.border,
+
+            '--badge-primary': dark.badge.primary,
+            '--badge-secondary': dark.badge.secondary,
+            '--badge-grey': dark.badge.grey,
+            '--badge-red': dark.badge.red,
+            '--badge-orange': dark.badge.orange,
+            '--badge-green': dark.badge.green,
+            '--badge-blue': dark.badge.blue,
+            '--badge-purple': dark.badge.purple,
 
             // // Components/Data Display/Badge & Chip / Chip
             // '--chip-indeterminate': palette.neutral.dark[500],

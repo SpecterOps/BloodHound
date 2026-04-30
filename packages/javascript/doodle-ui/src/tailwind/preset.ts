@@ -147,17 +147,17 @@ export default {
 
                 // 'menu-bg': 'var(--menu-bg)',
 
-                'badge-border-neutral': 'var(--badge-border-neutral)',
-                'badge-role-based-filtering': 'var(--badge-role-based-filtering)',
-                // 'badge-error': 'var(--badge-error)',
-                // 'badge-error-hover': 'var(--badge-error-hover)',
-                // 'badge-warning': 'var(--badge-warning)',
-                // 'badge-warning-hover': 'var(--badge-warning-hover)',
-                // 'badge-success': 'var(--badge-success)',
-                // 'badge-success-hover': 'var(--badge-success-hover)',
-                // 'badge-info': 'var(--badge-info)',
-                // 'badge-info-hover': 'var(--badge-info-hover)',
-                // 'badge-indeterminate': 'var(--badge-indeterminate)',
+                'badge-indeterminate-fill': 'var(--badge-indeterminate-fill)',
+                'badge-indeterminate-border': 'var(--badge-indeterminate-border)',
+
+                'badge-primary': 'var(--badge-primary)',
+                'badge-secondary': 'var(--badge-secondary)',
+                'badge-grey': 'var(--badge-grey)',
+                'badge-red': 'var(--badge-red)',
+                'badge-orange': 'var(--badge-orange)',
+                'badge-green': 'var(--badge-green)',
+                'badge-blue': 'var(--badge-blue)',
+                'badge-purple': 'var(--badge-purple)',
 
                 // 'chip-indeterminate': 'var(--chip-indeterminate)',
                 // 'chip-indeterminate-hover': 'var(--chip-indeterminate-hover)',
