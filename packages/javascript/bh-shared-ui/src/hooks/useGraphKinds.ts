@@ -14,10 +14,36 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { useQuery } from 'react-query';
+import { graphSchema } from '../constants';
 import { apiClient } from '../utils/api';
 
-export const useGraphKinds = () =>
-    useQuery({
-        queryKey: ['graph-kinds'],
-        queryFn: ({ signal }) => apiClient.getKinds({ signal }).then((res) => res.data.data.kinds),
+export const graphKindsKeys = {
+    all: ['graph-kinds'] as const,
+    nodes: () => [...graphKindsKeys.all, 'nodes'] as const,
+    edges: () => [...graphKindsKeys.all, 'edges'] as const,
+};
+
+export const useGraphNodeKinds = () => {
+    const params = new URLSearchParams({ type: 'eq:node' });
+    return useQuery({
+        queryKey: graphKindsKeys.nodes(),
+        queryFn: ({ signal }) => apiClient.getKinds({ signal, params }).then((res) => res.data.data),
     });
+};
+
+const useGraphEdgeKinds = () => {
+    const params = new URLSearchParams({ type: 'eq:edge' });
+    return useQuery({
+        queryKey: graphKindsKeys.edges(),
+        queryFn: ({ signal }) => apiClient.getKinds({ signal, params }).then((res) => res.data.data),
+    });
+};
+
+export const useCypherSchema = () => {
+    const { data: nodeKinds } = useGraphNodeKinds();
+    const { data: edgeKinds } = useGraphEdgeKinds();
+
+    const schema = graphSchema({ nodes: nodeKinds?.kinds, edges: edgeKinds?.kinds });
+
+    return schema;
+};
