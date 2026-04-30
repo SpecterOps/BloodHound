@@ -292,7 +292,6 @@ func TestVersion_920_Migration(t *testing.T) {
 		t.Cleanup(func() { suite.teardownIntegrationTestSuite(t) })
 
 		require.NoError(t, suite.bhDatabase.RegisterSourceKind(suite.context)(graph.StringKind("CustomKind")))
-		require.NoError(t, suite.graphDB.RefreshKinds(suite.context))
 
 		adUserPolluted := newADNode("PollutedUser", ad.User, azure.Entity, graph.StringKind("CustomKind"))
 		suite.createNodes(t, adUserPolluted)
