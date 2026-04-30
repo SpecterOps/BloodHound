@@ -19,6 +19,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import ExploreSearchCombobox from '.';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
+import { mockKindsHandler } from '../../mocks';
 import { act, render, screen, within } from '../../test-utils';
 
 const testSearchResults = {
@@ -52,13 +53,7 @@ const server = setupServer(
             })
         );
     }),
-    rest.get('/api/v2/graphs/kinds', (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: [],
-            })
-        );
-    })
+    mockKindsHandler()
 );
 
 beforeAll(() => server.listen());

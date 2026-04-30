@@ -23,7 +23,6 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { UncommonSearches } from '../../../commonSearchesAGT';
 import { AppIcon } from '../../../components';
 import ProcessingIndicator from '../../../components/Animations';
-import { graphSchema } from '../../../constants';
 import {
     useCreateSavedQuery,
     useExploreGraph,
@@ -37,7 +36,7 @@ import {
     useUpdateSavedQuery,
 } from '../../../hooks';
 import { isGraphResponse } from '../../../hooks/useExploreGraph/queries/utils';
-import { useGraphKinds } from '../../../hooks/useGraphKinds';
+import { useCypherSchema } from '../../../hooks/useGraphKinds';
 import { useNotifications } from '../../../providers';
 import { Permission, cn } from '../../../utils';
 import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
@@ -90,7 +89,7 @@ const CypherSearchInner = ({
     const updateSavedQueryMutation = useUpdateSavedQuery();
     const updateQueryPermissionsMutation = useUpdateQueryPermissions();
 
-    const kindsQuery = useGraphKinds();
+    const cypherSchema = useCypherSchema();
 
     const { addNotification } = useNotifications();
     const { checkPermission } = usePermissions();
@@ -354,7 +353,7 @@ const CypherSearchInner = ({
                                     }
                                 }}
                                 aria-label='Cypher editor'
-                                schema={graphSchema(kindsQuery.data)}
+                                schema={cypherSchema}
                                 lineWrapping
                                 lint
                                 placeholder='Cypher Query'

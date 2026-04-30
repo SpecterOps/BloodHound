@@ -44,6 +44,14 @@ func (s *BloodhoundDB) CreateCustomNodeKinds(ctx context.Context, customNodeKind
 	)
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
+
+		for _, kind := range customNodeKinds {
+			if _, err := bhdb.UpsertKind(ctx, kind.KindName); err != nil {
+				return fmt.Errorf("failed to upsert kind %q: %w", kind.KindName, err)
+			}
+		}
+
 		err := tx.Create(&customNodeKinds).Error
 
 		if err != nil {
