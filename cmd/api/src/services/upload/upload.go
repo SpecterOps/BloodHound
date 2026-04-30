@@ -31,17 +31,17 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bomenc"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
-	"github.com/specterops/chow/pkg/validator"
+	"github.com/specterops/chow/pkg/payload"
 )
 
 var ErrInvalidJSON = errors.New("file is not valid json")
 
-func SaveIngestFile(location string, request *http.Request, ingestSchema validator.IngestSchema, jobID int64) (IngestTaskParams, validator.ValidationReport, error) {
+func SaveIngestFile(location string, request *http.Request, ingestSchema payload.Schema, jobID int64) (IngestTaskParams, payload.ValidationReport, error) {
 	var (
 		fileData     = request.Body
 		fileType     model.FileType
 		tempFileName string
-		report       validator.ValidationReport
+		report       payload.ValidationReport
 		err          error
 	)
 
@@ -100,15 +100,15 @@ func WriteAndValidateZip(fileData io.Reader, location string, jobID int64) (stri
 	return tempFileName, nil
 }
 
-func WriteAndValidateJSON(fileData io.Reader, location string, jobID int64, ingestSchema validator.IngestSchema) (string, validator.ValidationReport, error) {
+func WriteAndValidateJSON(fileData io.Reader, location string, jobID int64, ingestSchema payload.Schema) (string, payload.ValidationReport, error) {
 	tempFile, err := os.CreateTemp(location, fmt.Sprintf("file_upload_job%d_", jobID))
 	if err != nil {
-		return "", validator.ValidationReport{}, fmt.Errorf("error creating ingest file: %w", err)
+		return "", payload.ValidationReport{}, fmt.Errorf("error creating ingest file: %w", err)
 	}
 
 	var (
 		tempFileName     = tempFile.Name()
-		report           validator.ValidationReport
+		report           payload.ValidationReport
 		validationErr    error
 		normalizedReader io.Reader
 	)
@@ -119,7 +119,7 @@ func WriteAndValidateJSON(fileData io.Reader, location string, jobID int64, inge
 	} else {
 		var (
 			teeReader       = io.TeeReader(normalizedReader, tempFile)
-			ingestValidator = validator.NewValidator(teeReader, ingestSchema)
+			ingestValidator = payload.NewValidator(teeReader, ingestSchema)
 		)
 		if _, report, validationErr = ingestValidator.ParseAndValidate(); validationErr != nil {
 			validationErr = fmt.Errorf("%w: %w", ErrInvalidJSON, validationErr)

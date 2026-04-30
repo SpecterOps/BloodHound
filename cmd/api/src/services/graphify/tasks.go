@@ -20,6 +20,7 @@ import (
 	"archive/zip"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"log/slog"
@@ -33,6 +34,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/bomenc"
 	"github.com/specterops/bloodhound/packages/go/errorlist"
+	"github.com/specterops/chow/pkg/payload"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -179,13 +181,22 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.Ingest
 					RegisterSourceKind: s.RegisterSourceKind(s.ctx),
 				}
 
-				if err := processSingleFile(ic.Ctx, data, ic, readOpts); err != nil {
+				if report, err := processSingleFile(ic.Ctx, data, ic, readOpts); err != nil {
 					var (
 						graphifyError errorlist.Error
 						resolutionErr endpoint.ResolutionError
 					)
 
-					if errors.As(err, &graphifyError) {
+					switch {
+					case len(report.CriticalErrors) > 0 || len(report.ValidationErrors) > 0:
+						for _, criticalErr := range report.CriticalErrors {
+							fileData[i].Errors = append(fileData[i].Errors, criticalErr.Message)
+						}
+						for _, valErr := range report.ValidationErrors {
+							fileData[i].Errors = append(fileData[i].Errors, fmt.Sprintf("validation error at %s", valErr.Location))
+						}
+						errs.Add(err)
+					case errors.As(err, &graphifyError):
 						for _, graphifyErr := range graphifyError.Errors {
 							if ok := errors.As(graphifyErr, &resolutionErr); ok {
 								// Resolution errors are data quality issues. They are surfaced to the user via
@@ -196,7 +207,7 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.Ingest
 								errs.Add(graphifyErr)
 							}
 						}
-					} else {
+					default:
 						fileData[i].Errors = append(fileData[i].Errors, err.Error())
 						errs.Add(err)
 					}
@@ -224,7 +235,7 @@ func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.
 	return NewIngestContext(ctx, opts...)
 }
 
-func processSingleFile(ctx context.Context, fileData IngestFileData, ingestContext *IngestContext, readOpts ReadOptions) error {
+func processSingleFile(ctx context.Context, fileData IngestFileData, ingestContext *IngestContext, readOpts ReadOptions) (payload.ValidationReport, error) {
 	defer measure.ContextLogAndMeasureWithThreshold(ctx, slog.LevelDebug, "processing single file for ingest", slog.String("filepath", fileData.Path))()
 
 	file, err := os.Open(fileData.Path)
@@ -235,7 +246,7 @@ func processSingleFile(ctx context.Context, fileData IngestFileData, ingestConte
 			slog.String("filepath", fileData.Path),
 			attr.Error(err),
 		)
-		return err
+		return payload.ValidationReport{}, err
 	}
 
 	defer func() {
@@ -252,17 +263,18 @@ func processSingleFile(ctx context.Context, fileData IngestFileData, ingestConte
 		}
 	}()
 
-	if err := ReadFileForIngest(ingestContext, file, readOpts); err != nil {
+	report, err := ReadFileForIngest(ingestContext, file, readOpts)
+	if err != nil {
 		slog.ErrorContext(
 			ctx,
 			"Error reading ingest file",
 			slog.String("filepath", fileData.Path),
 			attr.Error(err),
 		)
-		return err
+		return report, err
 	}
 
-	return nil
+	return report, nil
 }
 
 func (s *GraphifyService) getAllTasks() model.IngestTasks {

@@ -25,7 +25,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
-	"github.com/specterops/chow/pkg/validator"
+	"github.com/specterops/chow/pkg/payload"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -78,17 +78,17 @@ func TestWriteAndValidateJSON(t *testing.T) {
 			name:          "Missing meta tag",
 			input:         []byte(`{"data": [{"domain": "example.com"}]}`),
 			expectError:   true,
-			expectedError: validator.ErrInvalidFileConfiguration,
+			expectedError: payload.ErrInvalidFileConfiguration,
 		},
 		{
 			name:          "Missing data tag",
 			input:         []byte(`{"meta": {"type": "domains", "version": 4, "count": 1}}`),
 			expectError:   true,
-			expectedError: validator.ErrInvalidFileConfiguration,
+			expectedError: payload.ErrInvalidFileConfiguration,
 		},
 	}
 
-	schema, err := validator.LoadIngestSchema()
+	schema, err := payload.LoadSchema()
 	require.NoError(t, err)
 
 	for _, tt := range tests {
@@ -115,7 +115,7 @@ func TestWriteAndValidateJSON(t *testing.T) {
 func TestWriteAndValidateJSON_NormalizationError(t *testing.T) {
 	src := &ErrorReader{err: errors.New("read error")}
 
-	schema, err := validator.LoadIngestSchema()
+	schema, err := payload.LoadSchema()
 	require.NoError(t, err)
 
 	_, _, err = WriteAndValidateJSON(src, t.TempDir(), 1, schema)

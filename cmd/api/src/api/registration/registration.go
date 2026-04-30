@@ -33,7 +33,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/packages/go/cache"
-	"github.com/specterops/chow/pkg/validator"
+	"github.com/specterops/chow/pkg/payload"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -66,7 +66,7 @@ func RegisterFossRoutes(
 	collectorManifests config.CollectorManifests,
 	authenticator api.Authenticator,
 	authorizer auth.Authorizer,
-	ingestSchema validator.IngestSchema,
+	ingestSchema payload.Schema,
 	dogtagsService dogtags.Service,
 	openGraphSchemaService v2.OpenGraphSchemaService,
 ) {

@@ -35,7 +35,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
-	"github.com/specterops/chow/pkg/validator"
+	"github.com/specterops/chow/pkg/payload"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -47,13 +47,13 @@ type BHCEPipeline struct {
 	cache               cache.Cache
 	cfg                 config.Configuration
 	orphanedFileSweeper *OrphanFileSweeper
-	ingestSchema        validator.IngestSchema
+	ingestSchema        payload.Schema
 	jobService          job.JobService
 	graphifyService     graphify.GraphifyService
 	changelog           *changelog.Changelog
 }
 
-func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Database, graphDB graph.Database, cache cache.Cache, ingestSchema validator.IngestSchema, cl *changelog.Changelog) *BHCEPipeline {
+func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Database, graphDB graph.Database, cache cache.Cache, ingestSchema payload.Schema, cl *changelog.Changelog) *BHCEPipeline {
 	return &BHCEPipeline{
 		db:                  db,
 		graphdb:             graphDB,

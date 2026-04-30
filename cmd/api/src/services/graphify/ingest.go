@@ -36,7 +36,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/chow/pkg/ingest"
-	"github.com/specterops/chow/pkg/validator"
+	"github.com/specterops/chow/pkg/payload"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -52,7 +52,7 @@ type registrationFn func(kind graph.Kind) error
 type ReadOptions struct {
 	FileType           model.FileType // JSON or ZIP
 	RegisterSourceKind registrationFn
-	IngestSchema       validator.IngestSchema
+	IngestSchema       payload.Schema
 }
 
 // IngestContext is a container for dependencies needed by ingest
@@ -180,40 +180,34 @@ type BatchUpdater interface {
 // Files that fail this validation step will not be processed further.
 //
 // Returns an error if metadata validation or ingestion fails.
-func ReadFileForIngest(batch *IngestContext, reader io.ReadSeeker, options ReadOptions) error {
+func ReadFileForIngest(batch *IngestContext, reader io.ReadSeeker, options ReadOptions) (payload.ValidationReport, error) {
 	var (
 		shouldValidateGraph = options.FileType == model.FileTypeZip
-		ingestValidator     = validator.NewValidator(reader, options.IngestSchema)
-		parsedData          validator.ParsedData
+		ingestValidator     = payload.NewValidator(reader, options.IngestSchema)
+		parsedData          payload.ParsedData
+		report              payload.ValidationReport
 		err                 error
 	)
 
 	if shouldValidateGraph {
-		parsedData, _, err = ingestValidator.ParseAndValidate()
+		parsedData, report, err = ingestValidator.ParseAndValidate()
 	} else {
 		parsedData, err = ingestValidator.ParseMetadata()
 	}
 
 	if err != nil {
-		return err
-	}
-
-	// ParseMetadata returns an empty PayloadType for opengraph payloads that contain no
-	// top-level "metadata" tag (e.g. graph-only files). Default to opengraph in that case so
-	// IngestWrapper can dispatch to the opengraph handler.
-	if parsedData.PayloadType == "" {
-		parsedData.PayloadType = ingest.DataTypeOpenGraph
+		return report, fmt.Errorf("error validating meta tag: %w", err)
 	}
 
 	if _, err := reader.Seek(0, io.SeekStart); err != nil {
-		return fmt.Errorf("rewind failed: %w", err)
+		return report, fmt.Errorf("rewind failed: %w", err)
 	}
 
-	return IngestWrapper(batch, reader, parsedData, options)
+	return report, IngestWrapper(batch, reader, parsedData, options)
 }
 
 // IngestWrapper dispatches the ingest process based on the parsed payload type.
-func IngestWrapper(batch *IngestContext, reader io.ReadSeeker, parsedData validator.ParsedData, readOpts ReadOptions) error {
+func IngestWrapper(batch *IngestContext, reader io.ReadSeeker, parsedData payload.ParsedData, readOpts ReadOptions) error {
 	// Source-kind-aware handler
 	if handler, ok := sourceKindHandlers[parsedData.PayloadType]; ok {
 		if readOpts.RegisterSourceKind == nil {
@@ -299,15 +293,15 @@ func IngestAzureData(batch *IngestContext, converted ConvertedAzureData) error {
 }
 
 // basicIngestHandler defines the function signature for all ingest paths except for the OpenGraph
-type basicIngestHandler func(batch *IngestContext, reader io.ReadSeeker, parsedData validator.ParsedData) error
+type basicIngestHandler func(batch *IngestContext, reader io.ReadSeeker, parsedData payload.ParsedData) error
 
 // sourceKindIngestHandler defines the function signature for ingest handlers that require
 // additional logic — specifically, registration of a sourceKind before decoding data.
 // This is only used for ingest payloads within OpenGraph, which may specify new source kinds that we want to track (e.g. Base, AZBase, GithubBase).
-type sourceKindIngestHandler func(batch *IngestContext, reader io.ReadSeeker, parsedData validator.ParsedData, register registrationFn) error
+type sourceKindIngestHandler func(batch *IngestContext, reader io.ReadSeeker, parsedData payload.ParsedData, register registrationFn) error
 
 func defaultBasicHandler[T any](conversionFunc ConversionFuncWithTime[T]) basicIngestHandler {
-	return func(batch *IngestContext, reader io.ReadSeeker, parsedData validator.ParsedData) error {
+	return func(batch *IngestContext, reader io.ReadSeeker, parsedData payload.ParsedData) error {
 		decoder, err := getDefaultDecoder(reader)
 		if err != nil {
 			return err
@@ -317,7 +311,7 @@ func defaultBasicHandler[T any](conversionFunc ConversionFuncWithTime[T]) basicI
 }
 
 var basicHandlers = map[ingest.DataType]basicIngestHandler{
-	ingest.DataTypeComputer: func(batch *IngestContext, reader io.ReadSeeker, parsedData validator.ParsedData) error {
+	ingest.DataTypeComputer: func(batch *IngestContext, reader io.ReadSeeker, parsedData payload.ParsedData) error {
 		if decoder, err := getDefaultDecoder(reader); err != nil {
 			return err
 		} else if parsedData.LegacyMetadata.Version >= 5 {
@@ -326,21 +320,21 @@ var basicHandlers = map[ingest.DataType]basicIngestHandler{
 			return nil
 		}
 	},
-	ingest.DataTypeGroup: func(batch *IngestContext, reader io.ReadSeeker, parsedData validator.ParsedData) error {
+	ingest.DataTypeGroup: func(batch *IngestContext, reader io.ReadSeeker, parsedData payload.ParsedData) error {
 		if decoder, err := getDefaultDecoder(reader); err != nil {
 			return err
 		} else {
 			return decodeGroupData(batch, decoder)
 		}
 	},
-	ingest.DataTypeSession: func(batch *IngestContext, reader io.ReadSeeker, parsedData validator.ParsedData) error {
+	ingest.DataTypeSession: func(batch *IngestContext, reader io.ReadSeeker, parsedData payload.ParsedData) error {
 		if decoder, err := getDefaultDecoder(reader); err != nil {
 			return err
 		} else {
 			return decodeSessionData(batch, decoder)
 		}
 	},
-	ingest.DataTypeAzure: func(batch *IngestContext, reader io.ReadSeeker, parsedData validator.ParsedData) error {
+	ingest.DataTypeAzure: func(batch *IngestContext, reader io.ReadSeeker, parsedData payload.ParsedData) error {
 		if decoder, err := getDefaultDecoder(reader); err != nil {
 			return err
 		} else {
@@ -361,7 +355,7 @@ var basicHandlers = map[ingest.DataType]basicIngestHandler{
 }
 
 var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
-	ingest.DataTypeOpenGraph: func(batch *IngestContext, reader io.ReadSeeker, parsedData validator.ParsedData, registerSourceKind registrationFn) error {
+	ingest.DataTypeOpenGraph: func(batch *IngestContext, reader io.ReadSeeker, parsedData payload.ParsedData, registerSourceKind registrationFn) error {
 		sourceKind := graph.EmptyKind
 
 		// decode metadata, if present
