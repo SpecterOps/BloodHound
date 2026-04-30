@@ -81,6 +81,8 @@ func (s *Resources) CreateCustomNodeKind(response http.ResponseWriter, request *
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, fmt.Sprintf("%s: duplicate kind name", api.ErrorResponseConflict), request), response)
 	} else if err != nil {
 		api.HandleDatabaseError(request, response, err)
+	} else if err := s.Graph.RefreshKinds(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), kinds, http.StatusCreated, response)
 	}

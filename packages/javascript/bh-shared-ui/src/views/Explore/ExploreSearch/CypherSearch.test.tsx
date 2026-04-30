@@ -19,6 +19,7 @@ import { GraphData } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { cypherTestResponse } from '../../../mocks/factories/explore';
+import { createGraphKinds } from '../../../mocks/factories/graphKinds';
 import { render, waitFor } from '../../../test-utils';
 import { mockCodemirrorLayoutMethods } from '../../../utils';
 import CypherSearch from './CypherSearch';
@@ -90,7 +91,7 @@ describe('CypherSearch', () => {
         rest.get('/api/v2/graphs/kinds', async (_req, res, ctx) => {
             return res(
                 ctx.json({
-                    data: { kinds: ['Tier Zero', 'Tier One', 'Tier Two'] },
+                    data: createGraphKinds(['Tier Zero', 'Tier One', 'Tier Two'], []),
                 })
             );
         }),

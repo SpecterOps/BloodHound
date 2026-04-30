@@ -18,6 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { usePathfindingFilters, usePathfindingSearch } from '../../../hooks';
+import { mockKindsHandler } from '../../../mocks/handlers/graphKinds';
 import { act, render } from '../../../test-utils';
 import PathfindingSearch from './PathfindingSearch';
 
@@ -60,13 +61,7 @@ describe('Pathfinding: interaction', () => {
                 })
             );
         }),
-        rest.get('/api/v2/graphs/kinds', (req, res, ctx) => {
-            return res(
-                ctx.json({
-                    data: [],
-                })
-            );
-        })
+        mockKindsHandler()
     );
 
     const WrappedPathfindingSearch = () => {

@@ -382,6 +382,96 @@ func TestUpdateCustomNodeKind(t *testing.T) {
 	}
 }
 
+func TestCreateCustomNodeKinds_UpsertsToKindTable(t *testing.T) {
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	_, err := testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{
+		{
+			KindName: "TestUpsertKindA",
+			Config: model.CustomNodeKindConfig{
+				Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "coffee", Color: "#FFFFFF"},
+			},
+		},
+		{
+			KindName: "TestUpsertKindB",
+			Config: model.CustomNodeKindConfig{
+				Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "house", Color: "#000000"},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	kinds, err := testSuite.BHDatabase.GetKindsByNames(testSuite.Context, "TestUpsertKindA", "TestUpsertKindB")
+	require.NoError(t, err)
+	assert.Len(t, kinds, 2)
+}
+
+func TestCreateCustomNodeKinds_ReusesExistingKindRow(t *testing.T) {
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	// Simulate a kind that already exists in the registry (e.g. from prior ingest
+	// or the BED-7926 backfill) but has no custom_node_kinds row yet.
+	existing, err := testSuite.BHDatabase.UpsertKind(testSuite.Context, "PreExistingKind")
+	require.NoError(t, err)
+
+	_, err = testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{
+		{
+			KindName: "PreExistingKind",
+			Config: model.CustomNodeKindConfig{
+				Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "star", Color: "#FF0000"},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	kinds, err := testSuite.BHDatabase.GetKindsByNames(testSuite.Context, "PreExistingKind")
+	require.NoError(t, err)
+	require.Len(t, kinds, 1)
+	assert.Equal(t, existing.ID, kinds[0].ID, "expected the pre-existing kind row to be reused, not duplicated")
+}
+
+func TestCreateCustomNodeKinds_TxAtomicity(t *testing.T) {
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	// Pre-create a custom_node_kinds row so the second item in the batch below
+	// will conflict on the unique constraint.
+	_, err := testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{
+		{
+			KindName: "AlreadyRegistered",
+			Config: model.CustomNodeKindConfig{
+				Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "coffee", Color: "#FFFFFF"},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	// Submit a batch where one kind is brand new and the other will conflict.
+	_, err = testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{
+		{
+			KindName: "NewKindShouldRollBack",
+			Config: model.CustomNodeKindConfig{
+				Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "fire", Color: "#FF5733"},
+			},
+		},
+		{
+			KindName: "AlreadyRegistered",
+			Config: model.CustomNodeKindConfig{
+				Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "coffee", Color: "#FFFFFF"},
+			},
+		},
+	})
+	require.ErrorIs(t, err, database.ErrDuplicateCustomNodeKindName)
+
+	// The new kind upsert into `kind` must have been rolled back along with the
+	// failed custom_node_kinds insert. If `kind` is written outside the tx, the
+	// row will still exist and this assertion will fail.
+	_, err = testSuite.BHDatabase.GetKindsByNames(testSuite.Context, "NewKindShouldRollBack")
+	require.ErrorIs(t, err, database.ErrNotFound, "kind row should have been rolled back when custom_node_kinds insert failed")
+}
+
 func TestDeleteCustomNodeKind(t *testing.T) {
 	tests := []struct {
 		name     string
