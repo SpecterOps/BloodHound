@@ -21,7 +21,6 @@ package migrations_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
@@ -243,13 +242,6 @@ func TestVersion_920_Migration(t *testing.T) {
 		suite.createNodes(t, azUserPolluted, azGroupPolluted, azTenantClean, adNodeUntouched, ogNodeUntouched)
 
 		require.NoError(t, suite.bhDatabase.RegisterSourceKind(suite.context)(graph.StringKind("CustomKind")))
-
-		suite.graphDB.ReadTransaction(suite.context, func(tx graph.Transaction) error {
-			azUser, err := ops.FetchNode(tx, azUserPolluted.ID)
-			require.NoError(t, err)
-			fmt.Println(azUser)
-			return nil
-		})
 
 		err := migrations.Version_920_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
 		require.NoError(t, err)
