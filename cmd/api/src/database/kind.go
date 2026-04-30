@@ -38,9 +38,9 @@ func (s *BloodhoundDB) GetKindsByNames(ctx context.Context, names ...string) ([]
 
 	var kinds []model.Kind
 	if result := s.db.WithContext(ctx).Raw(query, uniqueNames).Scan(&kinds); result.Error != nil {
-		return nil, result.Error
+		return kinds, result.Error
 	} else if len(kinds) != len(uniqueNames) {
-		return nil, ErrNotFound
+		return kinds, ErrNotFound
 	}
 
 	return kinds, nil
@@ -66,11 +66,11 @@ func (s *BloodhoundDB) GetKindsByIDs(ctx context.Context, ids ...int32) ([]model
 	result := s.db.WithContext(ctx).Raw(query, uniqueIDs).Scan(&kinds)
 
 	if err := result.Error; err != nil {
-		return nil, fmt.Errorf("failed to fetch kinds by IDs: %w", err)
+		return kinds, fmt.Errorf("failed to fetch kinds by IDs: %w", err)
 	}
 
 	if len(kinds) != len(uniqueIDs) {
-		return nil, ErrNotFound
+		return kinds, ErrNotFound
 	}
 
 	return kinds, nil

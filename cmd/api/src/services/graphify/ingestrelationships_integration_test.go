@@ -157,7 +157,7 @@ func Test_IngestRelationships(t *testing.T) {
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
 
-					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
+					err := IngestRelationships(ingestContext, graph.StringKind("SomeBase"), rels)
 					require.Nil(t, err)
 					return nil
 				})
@@ -176,6 +176,26 @@ func Test_IngestRelationships(t *testing.T) {
 
 					require.Equal(t, int64(1), count)
 					require.Nil(t, err)
+
+					// existing endpoint nodes must retain only the kinds they were created with
+					refetchedEndpoints := []*graph.Node{}
+					err = tx.Nodes().Filter(
+						query.Or(
+							query.Equals(query.NodeID(), harness.IngestRelationships.Node1.ID),
+							query.Equals(query.NodeID(), harness.IngestRelationships.Node2.ID),
+						),
+					).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+						for node := range cursor.Chan() {
+							refetchedEndpoints = append(refetchedEndpoints, node)
+						}
+						return nil
+					})
+					require.Nil(t, err)
+					require.Len(t, refetchedEndpoints, 2)
+					for _, node := range refetchedEndpoints {
+						objectid, _ := node.Properties.Get("objectid").String()
+						require.ElementsMatch(t, graph.Kinds{graph.StringKind("Computer"), graph.StringKind("SomeBase")}, node.Kinds, "endpoint node %s should retain its existing kind and gain the sourceKind", objectid)
+					}
 
 					return nil
 				})
@@ -261,7 +281,7 @@ func Test_IngestRelationships(t *testing.T) {
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
 
-					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
+					err := IngestRelationships(ingestContext, graph.StringKind("SomeBase"), rels)
 					require.Nil(t, err)
 					return nil
 				})
@@ -270,6 +290,7 @@ func Test_IngestRelationships(t *testing.T) {
 
 				err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
 					nodeIDs := map[string]graph.ID{}
+					createdNodes := []*graph.Node{}
 					// verify start and end nodes were created
 					_ = tx.Nodes().Filter(
 						query.Or(
@@ -281,12 +302,19 @@ func Test_IngestRelationships(t *testing.T) {
 							for node := range cursor.Chan() {
 								objectid, _ := node.Properties.Get("objectid").String()
 								nodeIDs[objectid] = node.ID
+								createdNodes = append(createdNodes, node)
 							}
 							return nil
 						},
 					)
 
 					require.Len(t, nodeIDs, 2)
+
+					// endpoint nodes implicitly created by IngestRelationships (legacy path) receive the sourceKind
+					for _, node := range createdNodes {
+						objectid, _ := node.Properties.Get("objectid").String()
+						require.ElementsMatch(t, graph.Kinds{graph.StringKind("SomeBase")}, node.Kinds, "endpoint node %s should be created with the sourceKind", objectid)
+					}
 
 					// verify rel created
 					count, err := tx.Relationships().Filter(
@@ -305,6 +333,145 @@ func Test_IngestRelationships(t *testing.T) {
 
 				require.Nil(t, err)
 
+			})
+	})
+
+	t.Run("IngestRelationshipsKindless. Existing endpoint nodes are NOT mutated by the relationship ingest.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.IngestRelationships.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				// Endpoints reference the harness nodes by objectid (Node1=1234, Node2=5678, both kind Computer).
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "1234"},
+					ein.IngestibleEndpoint{Value: "5678"},
+					ein.IngestibleRel{RelType: graph.StringKind("related_to")},
+				)
+				rels := []ein.IngestibleRelationship{ingestibleRel}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
+
+					err := IngestRelationshipsKindless(ingestContext, graph.StringKind("SomeBase"), rels)
+					require.Nil(t, err)
+					return nil
+				})
+
+				require.Nil(t, err)
+
+				err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+					// Verify the relationship was created.
+					count, err := tx.Relationships().Filter(
+						query.And(
+							query.Equals(query.StartID(), harness.IngestRelationships.Node1.ID),
+							query.Equals(query.EndID(), harness.IngestRelationships.Node2.ID),
+							query.Kind(query.Relationship(), graph.StringKind("related_to")),
+						),
+					).Count()
+					require.Nil(t, err)
+					require.Equal(t, int64(1), count)
+
+					// Existing endpoint nodes must retain ONLY their original kinds; the kindless
+					// path must not append sourceKind to endpoint nodes.
+					refetchedEndpoints := []*graph.Node{}
+					err = tx.Nodes().Filter(
+						query.Or(
+							query.Equals(query.NodeID(), harness.IngestRelationships.Node1.ID),
+							query.Equals(query.NodeID(), harness.IngestRelationships.Node2.ID),
+						),
+					).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+						for node := range cursor.Chan() {
+							refetchedEndpoints = append(refetchedEndpoints, node)
+						}
+						return nil
+					})
+					require.Nil(t, err)
+					require.Len(t, refetchedEndpoints, 2)
+					for _, node := range refetchedEndpoints {
+						objectid, _ := node.Properties.Get("objectid").String()
+						require.ElementsMatch(t, graph.Kinds{graph.StringKind("Computer")}, node.Kinds, "endpoint node %s kinds should be unchanged by kindless relationship ingest", objectid)
+					}
+
+					return nil
+				})
+
+				require.Nil(t, err)
+			})
+	})
+
+	t.Run("IngestRelationshipsKindless. New endpoint nodes are created without any kinds.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.IngestRelationships.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				// Brand-new objectids that don't exist in the harness; nodes will be created by the ingest.
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "0001"},
+					ein.IngestibleEndpoint{Value: "0002"},
+					ein.IngestibleRel{RelType: graph.StringKind("related_to")},
+				)
+				rels := []ein.IngestibleRelationship{ingestibleRel}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
+
+					err := IngestRelationshipsKindless(ingestContext, graph.StringKind("SomeBase"), rels)
+					require.Nil(t, err)
+					return nil
+				})
+
+				require.Nil(t, err)
+
+				err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+					nodeIDs := map[string]graph.ID{}
+					createdNodes := []*graph.Node{}
+					_ = tx.Nodes().Filter(
+						query.Or(
+							query.Equals(query.Property(query.Node(), "objectid"), "0001"),
+							query.Equals(query.Property(query.Node(), "objectid"), "0002"),
+						)).
+						OrderBy(query.Order(query.Property(query.Node(), "objectid"), query.Ascending())).Fetch(
+						func(cursor graph.Cursor[*graph.Node]) error {
+							for node := range cursor.Chan() {
+								objectid, _ := node.Properties.Get("objectid").String()
+								nodeIDs[objectid] = node.ID
+								createdNodes = append(createdNodes, node)
+							}
+							return nil
+						},
+					)
+					require.Len(t, nodeIDs, 2)
+
+					// Endpoint nodes implicitly created by the kindless path must have NO kinds:
+					// node kinding for OpenGraph is the exclusive responsibility of the node ingest path.
+					for _, node := range createdNodes {
+						objectid, _ := node.Properties.Get("objectid").String()
+						require.Empty(t, node.Kinds, "endpoint node %s should have no kinds when created via kindless relationship ingest", objectid)
+					}
+
+					// Verify the relationship was created.
+					count, err := tx.Relationships().Filter(
+						query.And(
+							query.Equals(query.StartID(), nodeIDs["0001"]),
+							query.Equals(query.EndID(), nodeIDs["0002"]),
+							query.Kind(query.Relationship(), graph.StringKind("related_to")),
+						),
+					).Count()
+					require.Nil(t, err)
+					require.Equal(t, int64(1), count)
+
+					return nil
+				})
+
+				require.Nil(t, err)
 			})
 	})
 
@@ -427,7 +594,7 @@ func Test_ResolveRelationships(t *testing.T) {
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind, true),
 					)
 
 					require.Len(t, updates, 1)
@@ -436,11 +603,9 @@ func Test_ResolveRelationships(t *testing.T) {
 
 					startObjectID, _ := startNode.Properties.Get(string(common.ObjectID)).String()
 					require.NotNil(t, startObjectID)
-					require.True(t, startNode.Kinds.ContainsOneOf(ad.Computer))
 
 					endObjectID, _ := endNode.Properties.Get(string(common.ObjectID)).String()
 					require.NotNil(t, endObjectID)
-					require.True(t, endNode.Kinds.ContainsOneOf(ad.Computer))
 
 					return nil
 				})
@@ -616,7 +781,7 @@ func Test_ResolveRelationships(t *testing.T) {
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind, true),
 					)
 
 					require.Nil(t, err)
@@ -626,11 +791,9 @@ func Test_ResolveRelationships(t *testing.T) {
 
 					startObjectID, _ := startNode.Properties.Get(string(common.ObjectID)).String()
 					require.NotNil(t, startObjectID)
-					require.True(t, startNode.Kinds.ContainsOneOf(graph.StringKind("KindA")))
 
 					endObjectID, _ := endNode.Properties.Get(string(common.ObjectID)).String()
 					require.NotNil(t, endObjectID)
-					require.True(t, endNode.Kinds.ContainsOneOf(graph.StringKind("KindB")))
 
 					return nil
 				})
@@ -661,7 +824,7 @@ func Test_ResolveRelationships(t *testing.T) {
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind, true),
 					)
 
 					require.Nil(t, err)
@@ -671,7 +834,6 @@ func Test_ResolveRelationships(t *testing.T) {
 
 					startObjectID, _ := startNode.Properties.Get(string(common.ObjectID)).String()
 					require.NotNil(t, startObjectID)
-					require.True(t, startNode.Kinds.ContainsOneOf(graph.StringKind("KindA")))
 
 					endObjectID, _ := endNode.Properties.Get(string(common.ObjectID)).String()
 					require.NotNil(t, endObjectID)
@@ -705,7 +867,7 @@ func Test_ResolveRelationships(t *testing.T) {
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind, true),
 					)
 
 					require.Nil(t, err)
@@ -748,7 +910,7 @@ func Test_ResolveRelationships(t *testing.T) {
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind, true),
 					)
 
 					require.Len(t, updates, 1)
@@ -848,7 +1010,7 @@ func Test_ResolveRelationships(t *testing.T) {
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind, true),
 					)
 
 					require.Nil(t, err)
@@ -920,7 +1082,7 @@ func Test_ResolveRelationships(t *testing.T) {
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind, true),
 					)
 
 					require.Nil(t, err)
