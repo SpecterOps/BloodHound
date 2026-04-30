@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-
 // Deprecated: The code in this file supports legacy v8 stepwise migrations for existing customers
 // who may be upgrading from older versions. Once v10 is released and all customers have
 // migrated through v9 (which transitions to goose), this code can be removed.
