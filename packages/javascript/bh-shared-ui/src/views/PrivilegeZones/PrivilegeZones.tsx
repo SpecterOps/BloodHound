@@ -120,8 +120,8 @@ const PrivilegeZones: FC = () => {
                     {isRoleBasedFiltering && (
                         <Badge
                             data-testid='privilege-zones_etac-filtering-badge'
-                            className='justify-start text-sm text-main bg-badge-role-based-filtering border-0'
-                            icon={<FontAwesomeIcon icon={faEyeSlash} className='mr-2' />}
+                            color='primary'
+                            icon={<FontAwesomeIcon icon={faEyeSlash} />}
                             label='Role-based access filtering applied'
                         />
                     )}

@@ -60,7 +60,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
             {showFilteringBanner && isRoleBasedFiltering && (
                 <Badge
                     data-testid='explore_entity-information-panel-role-based-filtering-badge'
-                    className='justify-start text-sm bg-badge-role-based-filtering border-0 rounded-lg'
+                    color='primary'
                     icon={<FontAwesomeIcon icon={faEyeSlash} className='ml-1 mr-3' />}
                     label='Role-based access filtering applied'
                 />

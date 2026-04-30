@@ -339,7 +339,6 @@ export const light = {
         },
     },
     badge: {
-        'role-based-filtering': palette.purple[900],
         indeterminate: {
             fill: elevation.light[1],
             border: palette.neutral.light[500],
@@ -420,7 +419,6 @@ export const dark = {
         },
     },
     badge: {
-        'role-based-filtering': palette.purple[900],
         indeterminate: {
             fill: elevation.dark[1],
             border: palette.neutral.dark[500],
