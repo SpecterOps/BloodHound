@@ -19,7 +19,6 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Badge } from './Badge';
 
 const iconMap = {
-    // noIcon: undefined,
     chevronUp: <FontAwesomeIcon icon={faChevronUp} />,
     chevronDown: <FontAwesomeIcon icon={faChevronDown} />,
     plus: <FontAwesomeIcon icon={faPlus} />,
@@ -34,7 +33,6 @@ type StoryArgs = React.ComponentProps<typeof Badge> & {
 };
 
 const iconSourceMap: Record<IconName, string | undefined> = {
-    // noIcon: undefined,
     chevronUp: '<FontAwesomeIcon icon={faChevronUp} />',
     chevronDown: '<FontAwesomeIcon icon={faChevronDown} />',
     plus: '<FontAwesomeIcon icon={faPlus} />',
@@ -102,7 +100,6 @@ Badges are best used sparingly and should remain **short, scannable, and non-int
             control: 'select',
             options: ['chevronUp', 'chevronDown', 'plus', 'minus', 'eyeSlash'],
             labels: {
-                // noIcon: 'None',
                 chevronUp: 'Chevron Up',
                 chevronDown: 'Chevron Down',
                 plus: 'Plus',
@@ -192,8 +189,12 @@ export const WithoutIcon: Story = {
             control: false,
             table: { disable: true },
         },
+        iconClassName: {
+            control: false,
+            table: { disable: true },
+        },
     },
-    render: ({ iconName, iconPosition, ...args }) => <Badge {...args} />,
+    render: (args) => <Badge {...args} />,
 };
 
 export const WithIcon: Story = {
