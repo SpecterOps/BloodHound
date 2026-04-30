@@ -18,7 +18,7 @@ import { isAxiosError } from 'js-client-library';
 import { useQuery } from 'react-query';
 import { apiClient } from '../../utils';
 import { useTimeoutLimitConfiguration } from '../useConfiguration';
-import { useGraphKinds } from '../useGraphKinds';
+import { useGraphNodeKinds } from '../useGraphKinds';
 
 export type SearchResult = {
     distinguishedname?: string;
@@ -39,11 +39,12 @@ export const useSearch = (keyword: string, type: string | undefined) => {
     const timeoutLimitEnabled = useTimeoutLimitConfiguration();
     const timeout = timeoutLimitEnabled ? 60000 : 0;
 
-    const kindsQuery = useGraphKinds();
+    const kindsQuery = useGraphNodeKinds();
+    const kinds = kindsQuery.data?.kinds ?? [];
 
     // the current behavior is to case insensitive match the kind name from the input
     // find and use the case sensitive kind name because the API requires the correct case
-    const kind = kindsQuery.data?.find((kind) => kind.toLocaleLowerCase() === type?.toLocaleLowerCase()) ?? type;
+    const kind = kinds.find((kind) => kind.toLocaleLowerCase() === type?.toLocaleLowerCase()) ?? type;
 
     return useQuery<SearchResults, any>({
         queryKey: searchKeys.detail(keyword, type),

@@ -85,6 +85,7 @@ import {
     GetExtensionsResponse,
     GetScheduledJobDisplayResponse,
     GetSelfResponse,
+    GraphKindsResponse,
     GraphResponse,
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
@@ -241,8 +242,7 @@ class BHEAPIClient {
             )
         );
 
-    getKinds = (options?: RequestOptions) =>
-        this.baseClient.get<BasicResponse<{ kinds: string[] }>>('/api/v2/graphs/kinds', options);
+    getKinds = (options?: RequestOptions) => this.baseClient.get<GraphKindsResponse>('/api/v2/graphs/kinds', options);
 
     getSourceKinds = (options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<{ kinds: { id: number; name: string }[] }>>(
