@@ -191,6 +191,52 @@ func TestAzureEntityRoles(t *testing.T) {
 	})
 }
 
+func TestEntityEligibleRoles(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.AZEligibleAndApproverRoleHarness.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+		directRoles, err := azure.FetchEntityEligibleRoles(tx, harness.AZEligibleAndApproverRoleHarness.UserDirectEligible, 0, 0)
+		require.NoError(t, err)
+		assert.Equal(t, 1, directRoles.Len())
+		assert.True(t, directRoles.Contains(harness.AZEligibleAndApproverRoleHarness.RoleDirect))
+
+		groupRoles, err := azure.FetchEntityEligibleRoles(tx, harness.AZEligibleAndApproverRoleHarness.UserGroupEligible, 0, 0)
+		require.NoError(t, err)
+		assert.Equal(t, 1, groupRoles.Len())
+		assert.True(t, groupRoles.Contains(harness.AZEligibleAndApproverRoleHarness.RoleViaGroup))
+
+		emptyRoles, err := azure.FetchEntityEligibleRoles(tx, harness.AZEligibleAndApproverRoleHarness.UserNoEligibility, 0, 0)
+		require.NoError(t, err)
+		assert.Equal(t, 0, emptyRoles.Len())
+	})
+}
+
+func TestEntityApproverRoles(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.AZEligibleAndApproverRoleHarness.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+		directRoles, err := azure.FetchEntityApproverRoles(tx, harness.AZEligibleAndApproverRoleHarness.UserDirectApprover, 0, 0)
+		require.NoError(t, err)
+		assert.Equal(t, 1, directRoles.Len())
+		assert.True(t, directRoles.Contains(harness.AZEligibleAndApproverRoleHarness.RoleDirectApprover))
+
+		groupRoles, err := azure.FetchEntityApproverRoles(tx, harness.AZEligibleAndApproverRoleHarness.UserGroupApprover, 0, 0)
+		require.NoError(t, err)
+		assert.Equal(t, 1, groupRoles.Len())
+		assert.True(t, groupRoles.Contains(harness.AZEligibleAndApproverRoleHarness.RoleGroupApprover))
+
+		emptyRoles, err := azure.FetchEntityApproverRoles(tx, harness.AZEligibleAndApproverRoleHarness.UserNoEligibility, 0, 0)
+		require.NoError(t, err)
+		assert.Equal(t, 0, emptyRoles.Len())
+	})
+}
+
 func TestAzureEntityGroupMembership(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
