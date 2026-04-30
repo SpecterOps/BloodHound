@@ -545,7 +545,7 @@ class BHEAPIClient {
 
     changeFindingAcceptance = (
         attackPathId: string,
-        findingType: string,
+        findingName: string,
         accepted: boolean,
         acceptUntil?: Date,
         options?: RequestOptions
@@ -553,7 +553,7 @@ class BHEAPIClient {
         this.baseClient.put(
             `/api/v2/attack-paths/${attackPathId}/acceptance`,
             {
-                risk_type: findingType,
+                risk_type: findingName,
                 accepted: accepted,
                 accept_until: acceptUntil && acceptUntil.toISOString(),
             },
@@ -576,13 +576,13 @@ class BHEAPIClient {
             Object.assign({ params: { skip } }, options)
         );
 
-    exportRiskFindings = (environmentId: string, findingType: string, accepted?: boolean, options?: RequestOptions) =>
+    exportRiskFindings = (environmentId: string, findingName: string, accepted?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/domains/${environmentId}/attack-path-findings`,
             Object.assign(
                 {
                     params: {
-                        finding: findingType,
+                        finding: findingName,
                         accepted: accepted,
                     },
                     responseType: 'blob',
