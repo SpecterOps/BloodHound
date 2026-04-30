@@ -29,8 +29,8 @@ type PageWithTitleProps = ContainerProps<
 
 const PageWithTitle: React.FC<PageWithTitleProps> = ({ title, pageDescription, children, ...rest }) => {
     return (
-        <Container maxWidth='xl' {...rest}>
-            <Box component={'header'} className='py-2 mb-2'>
+        <Container maxWidth='xl' {...rest} className='pt-4'>
+            <Box component={'header'} className='pb-4'>
                 {title && (
                     <Typography variant='h1' className='mb-4'>
                         {title}
