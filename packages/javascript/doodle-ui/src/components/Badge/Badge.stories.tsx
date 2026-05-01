@@ -32,13 +32,35 @@ type StoryArgs = React.ComponentProps<typeof Badge> & {
     iconName?: IconName;
 };
 
-const iconSourceMap: Record<IconName, string | undefined> = {
+const iconSourceMap: Record<IconName, string> = {
     chevronUp: '<FontAwesomeIcon icon={faChevronUp} />',
     chevronDown: '<FontAwesomeIcon icon={faChevronDown} />',
     plus: '<FontAwesomeIcon icon={faPlus} />',
     minus: '<FontAwesomeIcon icon={faMinus} />',
     eyeSlash: '<FontAwesomeIcon icon={faEyeSlash} />',
 };
+
+const buildBadgeSource = (_src: string, context: { args: StoryArgs }): string => {
+    const { iconName, ...args } = context.args;
+    const iconCode = iconName ? iconSourceMap[iconName] : undefined;
+
+    const props = [
+        `label="${args.label}"`,
+        args.color && `color="${args.color}"`,
+        iconCode && args.iconPosition && `iconPosition="${args.iconPosition}"`,
+        iconCode && `icon={${iconCode}}`,
+    ]
+        .filter(Boolean)
+        .join(' ');
+
+    return `<Badge ${props} />`;
+};
+
+const disabledIconArgTypes = {
+    iconName: { control: false, table: { disable: true } },
+    iconPosition: { control: false, table: { disable: true } },
+    iconClassName: { control: false, table: { disable: true } },
+} satisfies Meta<StoryArgs>['argTypes'];
 
 const meta = {
     title: 'Components/Badge',
@@ -59,18 +81,14 @@ Badges are used to communicate **status, counts, or small pieces of metadata** i
 Badges are best used sparingly and should remain **short, scannable, and non-interactive**.
                 `,
             },
-            canvas: {
-                sourceState: 'shown',
-            },
+            canvas: { sourceState: 'shown' },
         },
     },
     argTypes: {
         label: {
             control: 'text',
             description: 'Text displayed inside the badge.',
-            table: {
-                type: { summary: 'string' },
-            },
+            table: { type: { summary: 'string' } },
         },
         color: {
             control: 'select',
@@ -93,8 +111,6 @@ Badges are best used sparingly and should remain **short, scannable, and non-int
                 defaultValue: { summary: 'left' },
             },
         },
-
-        // Storybook-only control
         iconName: {
             name: 'icon',
             control: 'select',
@@ -112,15 +128,10 @@ Badges are best used sparingly and should remain **short, scannable, and non-int
                 defaultValue: { summary: 'undefined' },
             },
         },
-
-        // hide real prop from controls table
         icon: {
             control: false,
-            table: {
-                disable: true,
-            },
+            table: { disable: true },
         },
-
         labelClassName: {
             control: 'text',
             description: 'Additional class names applied to the label.',
@@ -149,29 +160,15 @@ export default meta;
 
 type Story = StoryObj<StoryArgs>;
 
+const renderWithIcon = ({ iconName, ...args }: StoryArgs) => (
+    <Badge {...args} icon={iconName ? iconMap[iconName] : undefined} />
+);
+
 export const Default: Story = {
     tags: ['!dev'],
-    render: ({ iconName, ...args }) => <Badge {...args} icon={iconName ? iconMap[iconName] : undefined} />,
+    render: renderWithIcon,
     parameters: {
-        docs: {
-            source: {
-                transform: (_src: string, context: { args: StoryArgs }) => {
-                    const { iconName, ...args } = context.args;
-                    const iconCode = iconName ? iconSourceMap[iconName] : undefined;
-
-                    const props = [
-                        `label="${args.label}"`,
-                        args.color && `color="${args.color}"`,
-                        iconCode && args.iconPosition && `iconPosition="${args.iconPosition}"`,
-                        iconCode && `icon={${iconCode}}`,
-                    ]
-                        .filter(Boolean)
-                        .join(' ');
-
-                    return `<Badge ${props} />`;
-                },
-            },
-        },
+        docs: { source: { transform: buildBadgeSource } },
     },
 };
 
@@ -180,20 +177,7 @@ export const WithoutIcon: Story = {
         label: 'No Icon',
         iconName: undefined,
     },
-    argTypes: {
-        iconName: {
-            control: false,
-            table: { disable: true },
-        },
-        iconPosition: {
-            control: false,
-            table: { disable: true },
-        },
-        iconClassName: {
-            control: false,
-            table: { disable: true },
-        },
-    },
+    argTypes: disabledIconArgTypes,
     render: (args) => <Badge {...args} />,
 };
 
@@ -203,26 +187,8 @@ export const WithIcon: Story = {
         iconName: 'chevronUp',
         iconPosition: 'left',
     },
-    render: ({ iconName, ...args }) => <Badge {...args} icon={iconName ? iconMap[iconName] : undefined} />,
+    render: renderWithIcon,
     parameters: {
-        docs: {
-            source: {
-                transform: (_src: string, context: { args: StoryArgs }) => {
-                    const { iconName, ...args } = context.args;
-                    const iconCode = iconName ? iconSourceMap[iconName] : undefined;
-
-                    const props = [
-                        `label="${args.label}"`,
-                        args.color && `color="${args.color}"`,
-                        iconCode && args.iconPosition && `iconPosition="${args.iconPosition}"`,
-                        iconCode && `icon={${iconCode}}`,
-                    ]
-                        .filter(Boolean)
-                        .join(' ');
-
-                    return `<Badge ${props} />`;
-                },
-            },
-        },
+        docs: { source: { transform: buildBadgeSource } },
     },
 };

@@ -17,9 +17,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { cn } from '../utils';
 
-type BadgeColor = NonNullable<VariantProps<typeof BadgeVariants>['color']>;
-
-const BadgeVariants = cva('inline-flex items-center justify-center rounded text-main text-sm p-2', {
+const BadgeVariants = cva('inline-flex items-center justify-center rounded text-main text-sm p-2 min-w-16', {
     variants: {
         color: {
             indeterminate: 'border-badge-indeterminate-border bg-badge-indeterminate-fill border',
@@ -37,8 +35,8 @@ const BadgeVariants = cva('inline-flex items-center justify-center rounded text-
             right: 'flex-row-reverse',
         },
         hasIcon: {
-            true: 'gap-1',
-            false: null,
+            true: 'gap-2',
+            false: '',
         },
     },
     defaultVariants: {
@@ -46,32 +44,50 @@ const BadgeVariants = cva('inline-flex items-center justify-center rounded text-
     },
 });
 
+type NamedColor = NonNullable<VariantProps<typeof BadgeVariants>['color']>;
+
+/** @deprecated Use a named color instead. Hex support is transitional and will be removed in a future release. */
+type HexColor = `#${string}`;
+
 type BadgeProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'color'> &
     Omit<VariantProps<typeof BadgeVariants>, 'hasIcon' | 'color'> & {
-        color?: BadgeColor;
+        /** @deprecated Passing a hex color is transitional and will be removed in a future release. Use a named color instead. */
+        color?: NamedColor | HexColor;
         label: string;
-        labelClassName?: string;
         icon?: React.ReactNode;
         iconClassName?: string;
+        labelClassName?: string;
     };
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
-    ({ label, labelClassName, icon, iconClassName, iconPosition, color, className, ...rest }, ref) => {
+    ({ className, color, icon, iconClassName, iconPosition, label, labelClassName, style, ...rest }, ref) => {
+        const isHex = typeof color === 'string' && color.startsWith('#');
+
         return (
             <div
                 ref={ref}
                 {...rest}
+                style={isHex ? { backgroundColor: color, ...style } : style}
                 className={cn(
-                    BadgeVariants({ color, iconPosition: icon ? iconPosition ?? 'left' : undefined, hasIcon: !!icon }),
+                    BadgeVariants({
+                        color: isHex ? undefined : (color as NamedColor | undefined),
+                        hasIcon: !!icon,
+                        iconPosition: icon ? iconPosition ?? 'left' : undefined,
+                    }),
                     className
                 )}>
                 {icon && (
-                    <span className={cn('shrink-0 [&>svg]:block [&>svg]:h-4 [&>svg]:w-4', iconClassName)}>{icon}</span>
+                    <span className={cn('flex shrink-0 items-center [&>svg]:h-4 [&>svg]:w-4', iconClassName)}>
+                        {icon}
+                    </span>
                 )}
-                <span className={cn('translate-y-[0.5px]', labelClassName)}>{label}</span>
+                <span className={cn('translate-y-[1px]', labelClassName)}>{label}</span>
             </div>
         );
     }
 );
 
+Badge.displayName = 'Badge';
+
 export { Badge };
+export type { HexColor, NamedColor };
