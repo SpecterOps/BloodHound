@@ -54,29 +54,28 @@ type ListOptions struct {
 // in a variety of storage backends.
 type Storage interface {
 	// Put writes a file at the given path.
-	Put(ctx context.Context, path string, reader io.Reader, options WriteOptions) error
+	Put(ctx context.Context, name string, reader io.Reader, options WriteOptions) error
 
 	// Get opens a file for reading.
-	Get(ctx context.Context, path string) (io.ReadCloser, FileInfo, error)
+	Get(ctx context.Context, name string) (io.ReadCloser, FileInfo, error)
 
 	// Stat returns metadata for a given path.
-	Stat(ctx context.Context, path string) (FileInfo, error)
+	Stat(ctx context.Context, name string) (FileInfo, error)
 
 	// Delete removes a file.
-	Delete(ctx context.Context, path string) error
+	Delete(ctx context.Context, name string) error
 
 	// Exists checks whether a file exists.
-	Exists(ctx context.Context, path string) (bool, error)
+	Exists(ctx context.Context, name string) (bool, error)
 
 	// List returns a list of files in a given path.
-	List(ctx context.Context, path string, options ListOptions) ([]FileInfo, error)
+	List(ctx context.Context, name string, options ListOptions) ([]FileInfo, error)
 
 	// Copy duplicates an object.
-	Copy(ctx context.Context, srcPath, dstPath string) error
+	Copy(ctx context.Context, srcName, dstName string, options WriteOptions) error
 
-	// Move moves an object.
-	// Is done by a copy and a delete.
-	Move(ctx context.Context, srcPath, dstPath string) error
+	// Move moves an object. Is done by a copy and a delete.
+	Move(ctx context.Context, srcName, dstName string, options WriteOptions) error
 }
 
 type FileService interface {
