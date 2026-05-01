@@ -189,6 +189,7 @@ func (s *LocalStore) Get(ctx context.Context, name string) (io.ReadCloser, FileI
 		return nil, FileInfo{}, err
 	}
 	if stat.IsDir() {
+		_ = file.Close()
 		return nil, FileInfo{}, fmt.Errorf("get: %q, %w", name, ErrIsDirectory)
 	}
 	if err := ctx.Err(); err != nil {
