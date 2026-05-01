@@ -1867,6 +1867,101 @@ func TestCreateUser_ResetPassword(t *testing.T) {
 	require.Equal(t, time.Time{}.Format(time.RFC3339), expiresAt)
 }
 
+func TestCreateUser_Preferences(t *testing.T) {
+	var (
+		endpoint         = "/api/v2/auth/users"
+		validPreferences = model.Preferences{
+			"dark_mode": model.PreferenceItem{
+				Value: true,
+			},
+			"preferred_domain": model.PreferenceItem{
+				Value: "abcd",
+			},
+		}
+		testUser1 = model.User{
+			PrincipalName: "User1",
+			Unique:        model.Unique{ID: must.NewUUIDv4()},
+			Preferences:   validPreferences,
+		}
+		//	testUser2 = model.User{
+		//		PrincipalName: "User2",
+		//		Unique:        model.Unique{ID: must.NewUUIDv4()},
+		//	}
+		//	emptyPreferences = model.Preferences{}
+	)
+
+	testCases := []struct {
+		name           string
+		testUser       model.User
+		createReq      v2.CreateUserRequest
+		mockSetup      func(testUser model.User, mockDB *mocks.MockDatabase)
+		assertBody     func(t *testing.T, body string)
+		expectedStatus int
+	}{
+		{
+			name:     "Valid test",
+			testUser: testUser1,
+			createReq: v2.CreateUserRequest{
+				UpdateUserRequest: v2.UpdateUserRequest{
+					Principal:   testUser1.PrincipalName,
+					Preferences: testUser1.Preferences,
+				},
+				SetUserSecretRequest: v2.SetUserSecretRequest{
+					Secret:             "029358239853251Wq36!",
+					NeedsPasswordReset: true,
+				},
+			},
+			mockSetup: func(testUser model.User, mockDB *mocks.MockDatabase) {
+				mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(testUser, nil)
+			},
+			assertBody: func(t *testing.T, body string) {
+				assert.Contains(t, body, `"dark_mode`)
+				assert.Contains(t, body, `"preferred_domain"`)
+			},
+			expectedStatus: http.StatusOK,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
+
+			// shared mock setup
+			mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
+				Key: appcfg.PasswordExpirationWindow,
+				Value: must.NewJSONBObject(appcfg.PasswordExpiration{
+					Duration: appcfg.DefaultPasswordExpirationWindow,
+				}),
+			}, nil)
+			mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
+
+			// specific mock setup
+			tc.mockSetup(tc.testUser, mockDB)
+
+			ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+			payload, err := json.Marshal(tc.createReq)
+			require.NoError(t, err)
+
+			req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(payload))
+			require.NoError(t, err)
+			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+			router := mux.NewRouter()
+			router.HandleFunc(endpoint, resources.CreateUser).Methods(http.MethodPost)
+
+			rr := httptest.NewRecorder()
+			router.ServeHTTP(rr, req)
+
+			require.Equal(t, tc.expectedStatus, rr.Code)
+			tc.assertBody(t, rr.Body.String())
+		})
+	}
+}
+
 func TestManagementResource_UpdateUser_IDMalformed(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
