@@ -83,13 +83,33 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
         };
         const maxWidthClass = maxWidth ? maxWidthMap[maxWidth] : '';
 
+        const titleChildren: React.ReactNode[] = [];
+        const actionsChildren: React.ReactNode[] = [];
+        const middleChildren: React.ReactNode[] = [];
+
+        // Title and Actions are separated from other content so that they may be "stickied" to top/bottom.
+        // All other content is added to its own container so that if it causes overflow, the content is
+        // scrollable, but Title and Actions are always visible.
+        React.Children.toArray(children).forEach((child) => {
+            if (React.isValidElement(child) && child.type === DialogTitle) {
+                titleChildren.push(child);
+            } else if (React.isValidElement(child) && child.type === DialogActions) {
+                actionsChildren.push(child);
+            } else {
+                middleChildren.push(child);
+            }
+        });
+
         return (
             <>
                 <DialogOverlay {...DialogOverlayProps} allowNav={allowNav} />
                 <DialogPrimitive.Content
                     ref={ref}
                     className={cn(
-                        'fixed left-[50%] top-[50%] grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-md bg-neutral-light-2 dark:bg-neutral-dark-2 dark:text-neutral-light-1 z-[1500]',
+                        'flex flex-col overflow-hidden fixed gap-4 p-6 w-full shadow-lg max-w-lg max-h-[calc(100vh-32px)]',
+                        'left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]',
+                        'duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]',
+                        'rounded-md bg-neutral-light-2 dark:bg-neutral-dark-2 dark:text-neutral-light-1 z-[1500]',
                         maxWidthClass,
                         className
                     )}
@@ -100,7 +120,11 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
                         }
                     }}
                     {...props}>
-                    {children}
+                    {titleChildren}
+                    {middleChildren.length > 0 && (
+                        <div className='flex flex-col gap-4 flex-auto min-h-0 overflow-y-auto'>{middleChildren}</div>
+                    )}
+                    {actionsChildren}
                 </DialogPrimitive.Content>
             </>
         );

@@ -62,7 +62,7 @@ const FileDrop: React.FC<{
     return (
         <div
             className={cn(
-                'cursor-pointer h-80 rounded font-bold text-center border-2 border-contrast px-32 relative flex flex-col items-center justify-center bg-neutral-2',
+                'cursor-pointer h-80 rounded font-bold text-center border-2 border-contrast px-32 py-4 relative flex flex-col items-center justify-center bg-neutral-2',
                 {
                     'cursor-default opacity-50': disabled,
                     'bg-neutral-3': isHoverActive || isDragActive || disabled,
