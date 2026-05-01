@@ -32,7 +32,7 @@ const Administration: React.FC = () => {
             <Box flexGrow={1} position='relative' minWidth={0}>
                 <main>
                     <Container maxWidth='xl'>
-                        <Box>
+                        <Box py={2}>
                             <Suspense
                                 fallback={
                                     <Box
