@@ -159,11 +159,11 @@ func (s *LocalStore) Stat(ctx context.Context, name string) (FileInfo, error) {
 		return FileInfo{}, err
 	}
 	stat, err := s.root.Stat(name)
-	if stat.IsDir() {
-		return FileInfo{}, fmt.Errorf("stat %q: %w", name, ErrIsDirectory)
-	}
 	if err != nil {
 		return FileInfo{}, err
+	}
+	if stat.IsDir() {
+		return FileInfo{}, fmt.Errorf("stat %q: %w", name, ErrIsDirectory)
 	}
 
 	return FileInfo{
