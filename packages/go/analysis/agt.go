@@ -849,7 +849,7 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 
 					node.DeleteKinds(tagKind)
 					nodesToUpdate[nodeId] = node
-					return false
+					return true
 				})
 
 			}
