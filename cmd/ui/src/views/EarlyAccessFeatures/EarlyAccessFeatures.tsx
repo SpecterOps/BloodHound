@@ -27,6 +27,7 @@ import {
     Skeleton,
 } from '@mui/material';
 import {
+    cn,
     Flag,
     PageWithTitle,
     Permission,
@@ -183,7 +184,7 @@ const EarlyAccessFeatures: FC = () => {
                             .sort((a, b) => a.id - b.id)
                             .map((flag, index) => (
                                 <div
-                                    className='mt-4'
+                                    className={cn({ 'mt-4': index !== 0 })}
                                     key={flag.id}
                                     data-testid={`early-access-features_toggle-${index}`}>
                                     <EarlyAccessFeatureToggle
