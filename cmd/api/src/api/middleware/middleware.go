@@ -354,6 +354,52 @@ func routeTemplateFor(muxRouter *mux.Router, r *http.Request) string {
 	return template
 }
 
+// highValueHandlers defines the set of API endpoints that should receive detailed
+// per-handler metrics. These are Tier 1 endpoints representing critical business
+// logic, performance-sensitive operations, and frequently-used functionality.
+//
+// All other endpoints will be grouped under the "other" handler label to limit
+// cardinality in the ApiRequestDuration metric while maintaining visibility into
+// the most important endpoints.
+var highValueHandlers = map[string]bool{
+	// Graph Query & Search - Core functionality
+	"/api/v2/graphs/cypher":        true, // Primary graph query endpoint
+	"/api/v2/graphs/shortest-path": true, // Pathfinding queries
+	"/api/v2/pathfinding":          true, // Alternative pathfinding
+	"/api/v2/search":               true, // Global search
+	"/api/v2/graph-search":         true, // Graph-specific search
+
+	// Attack Paths & Findings - Core business logic
+	"/api/v2/attack-paths":                             true, // Request analysis
+	"/api/v2/attack-paths/details":                     true, // Stream AP details
+	"/api/v2/attack-paths/finding-trends":              true, // Historical trends
+	"/api/v2/domains/{domain_id}/attack-path-findings": true, // Export findings
+	"/api/v2/domains/{domain_id}/details":              true, // AP details by domain
+	"/api/v2/domains/{domain_id}/sparkline":            true, // Sparkline data
+	"/api/v2/domains/{domain_id}/available-types":      true, // Available AP types
+
+	// Risk Posture - Customer-facing metrics
+	"/api/v2/posture-stats":               true, // Current risk posture
+	"/api/v2/posture-history/{data_type}": true, // Historical posture
+
+	// Data Ingestion - Performance critical
+	"/api/v2/ingest":                           true, // Primary collector ingestion
+	"/api/v2/file-upload/start":                true, // Generic file upload
+	"/api/v2/file-upload/{file_upload_job_id}": true, // File processing
+}
+
+// normalizeHandlerLabel takes a route template and returns either the template
+// itself (if it's a high-value endpoint) or "other" (to limit cardinality).
+//
+// This prevents cardinality explosion in ApiRequestDuration by only tracking
+// detailed metrics for Tier 1 endpoints while still counting all requests.
+func normalizeHandlerLabel(template string) string {
+	if highValueHandlers[template] {
+		return template
+	}
+	return "other"
+}
+
 // MetricsMiddleware wires the API request pipeline to the Prometheus metrics declared in metrics.go. It must be
 // registered as pre-route middleware so that unmatched requests are still counted; the muxRouter argument is used to
 // resolve the matched route template for the "handler" label without dispatching the request twice.
@@ -362,7 +408,7 @@ func MetricsMiddleware(muxRouter *mux.Router) mux.MiddlewareFunc {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			handlerLabel := routeTemplateFor(muxRouter, r)
 			instrumented := promhttp.InstrumentHandlerInFlight(ApiInFlightGauge,
-				promhttp.InstrumentHandlerDuration(ApiRequestDuration.MustCurryWith(prometheus.Labels{"handler": handlerLabel}),
+				promhttp.InstrumentHandlerDuration(ApiRequestDuration.MustCurryWith(prometheus.Labels{"handler": normalizeHandlerLabel(handlerLabel)}),
 					promhttp.InstrumentHandlerCounter(ApiTotalRequests,
 						promhttp.InstrumentHandlerResponseSize(ApiResponseSize, next),
 					),
