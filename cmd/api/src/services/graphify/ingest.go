@@ -196,7 +196,7 @@ func ReadFileForIngest(batch *IngestContext, reader io.ReadSeeker, options ReadO
 	}
 
 	if err != nil {
-		return report, fmt.Errorf("error validating meta tag: %w", err)
+		return report, err
 	}
 
 	if _, err := reader.Seek(0, io.SeekStart); err != nil {

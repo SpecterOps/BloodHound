@@ -20,7 +20,6 @@ import (
 	"archive/zip"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"io/fs"
 	"log/slog"
@@ -193,7 +192,7 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.Ingest
 							fileData[i].Errors = append(fileData[i].Errors, criticalErr.Message)
 						}
 						for _, valErr := range report.ValidationErrors {
-							fileData[i].Errors = append(fileData[i].Errors, fmt.Sprintf("validation error at %s", valErr.Location))
+							fileData[i].Errors = append(fileData[i].Errors, valErr.Error())
 						}
 						errs.Add(err)
 					case errors.As(err, &graphifyError):

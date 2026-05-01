@@ -153,7 +153,7 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 		}
 
 		for _, valErr := range report.ValidationErrors {
-			errDetails = append(errDetails, api.ErrorDetails{Message: fmt.Sprintf("validation error at %s", valErr.Location)})
+			errDetails = append(errDetails, api.ErrorDetails{Message: valErr.Error()})
 		}
 
 		e := &api.ErrorWrapper{
