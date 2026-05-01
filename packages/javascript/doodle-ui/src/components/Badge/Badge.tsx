@@ -19,16 +19,18 @@ import { cn } from '../utils';
 
 const BadgeVariants = cva('inline-flex items-center justify-center rounded text-main text-sm p-2 min-w-16', {
     variants: {
+        variant: {
+            fill: '',
+            outline: 'border bg-badge-outline-bg',
+        },
         color: {
-            indeterminate: 'border-badge-indeterminate-border bg-badge-indeterminate-fill border',
-            primary: 'bg-badge-primary',
-            secondary: 'bg-badge-secondary',
-            grey: 'bg-badge-grey',
-            red: 'bg-badge-red',
-            orange: 'bg-badge-orange',
-            green: 'bg-badge-green',
-            blue: 'bg-badge-blue',
-            purple: 'bg-badge-purple',
+            primary: '',
+            secondary: '',
+            grey: '',
+            red: '',
+            orange: '',
+            green: '',
+            blue: '',
         },
         iconPosition: {
             left: 'flex-row',
@@ -39,8 +41,56 @@ const BadgeVariants = cva('inline-flex items-center justify-center rounded text-
             false: '',
         },
     },
+    compoundVariants: [
+        // Fill variants
+        { variant: 'fill', color: 'primary', className: 'bg-badge-primary-fill' },
+        { variant: 'fill', color: 'secondary', className: 'bg-badge-secondary-fill' },
+        { variant: 'fill', color: 'grey', className: 'bg-badge-grey-fill' },
+        { variant: 'fill', color: 'red', className: 'bg-badge-red-fill' },
+        { variant: 'fill', color: 'orange', className: 'bg-badge-orange-fill' },
+        { variant: 'fill', color: 'green', className: 'bg-badge-green-fill' },
+        { variant: 'fill', color: 'blue', className: 'bg-badge-blue-fill' },
+
+        // Outline variants
+        {
+            variant: 'outline',
+            color: 'primary',
+            className: 'border-badge-primary-outline [&>span>svg]:text-badge-primary-outline',
+        },
+        {
+            variant: 'outline',
+            color: 'secondary',
+            className: 'border-badge-secondary-outline [&>span>svg]:text-badge-secondary-outline',
+        },
+        {
+            variant: 'outline',
+            color: 'grey',
+            className: 'border-badge-grey-outline [&>span>svg]:text-badge-grey-outline',
+        },
+        {
+            variant: 'outline',
+            color: 'red',
+            className: 'border-badge-red-outline [&>span>svg]:text-badge-red-outline',
+        },
+        {
+            variant: 'outline',
+            color: 'orange',
+            className: 'border-badge-orange-outline [&>span>svg]:text-badge-orange-outline',
+        },
+        {
+            variant: 'outline',
+            color: 'green',
+            className: 'border-badge-green-outline [&>span>svg]:text-badge-green-outline',
+        },
+        {
+            variant: 'outline',
+            color: 'blue',
+            className: 'border-badge-blue-outline [&>span>svg]:text-badge-blue-outline',
+        },
+    ],
     defaultVariants: {
-        color: 'indeterminate',
+        variant: 'outline',
+        color: 'grey',
     },
 });
 
@@ -60,16 +110,23 @@ type BadgeProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'color'> &
     };
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
-    ({ className, color, icon, iconClassName, iconPosition, label, labelClassName, style, ...rest }, ref) => {
+    ({ className, color, icon, iconClassName, iconPosition, label, labelClassName, style, variant, ...rest }, ref) => {
         const isHex = typeof color === 'string' && color.startsWith('#');
+
+        const hexStyle = isHex
+            ? variant === 'outline'
+                ? { borderColor: color, ...style }
+                : { backgroundColor: color, ...style }
+            : style;
 
         return (
             <div
                 ref={ref}
                 {...rest}
-                style={isHex ? { backgroundColor: color, ...style } : style}
+                style={hexStyle}
                 className={cn(
                     BadgeVariants({
+                        variant,
                         color: isHex ? undefined : (color as NamedColor | undefined),
                         hasIcon: !!icon,
                         iconPosition: icon ? iconPosition ?? 'left' : undefined,

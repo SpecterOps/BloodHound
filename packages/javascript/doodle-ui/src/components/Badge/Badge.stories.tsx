@@ -46,6 +46,7 @@ const buildBadgeSource = (_src: string, context: { args: StoryArgs }): string =>
 
     const props = [
         `label="${args.label}"`,
+        args.variant && args.variant !== 'fill' && `variant="${args.variant}"`,
         args.color && `color="${args.color}"`,
         iconCode && args.iconPosition && `iconPosition="${args.iconPosition}"`,
         iconCode && `icon={${iconCode}}`,
@@ -85,6 +86,15 @@ Badges are best used sparingly and should remain **short, scannable, and non-int
         },
     },
     argTypes: {
+        variant: {
+            control: 'select',
+            options: ['fill', 'outline'],
+            description: 'Visual style of the badge.',
+            table: {
+                type: { summary: "'fill' | 'outline'" },
+                defaultValue: { summary: 'outline' },
+            },
+        },
         label: {
             control: 'text',
             description: 'Text displayed inside the badge.',
@@ -92,14 +102,13 @@ Badges are best used sparingly and should remain **short, scannable, and non-int
         },
         color: {
             control: 'select',
-            options: ['indeterminate', 'primary', 'secondary', 'grey', 'red', 'orange', 'green', 'blue', 'purple'],
-            description: 'Color of the badge.',
+            options: ['primary', 'secondary', 'grey', 'red', 'orange', 'green', 'blue'],
+            description: 'Color of the badge. Hex colors are deprecated — use a named color instead.',
             table: {
                 type: {
-                    summary:
-                        "'indeterminate' | 'primary' | 'secondary' | 'grey' | 'red' | 'orange' | 'green' | 'blue' | 'purple'",
+                    summary: "'primary' | 'secondary' | 'grey' | 'red' | 'orange' | 'green' | 'blue'",
                 },
-                defaultValue: { summary: 'indeterminate' },
+                defaultValue: { summary: 'grey' },
             },
         },
         iconPosition: {
@@ -151,7 +160,8 @@ Badges are best used sparingly and should remain **short, scannable, and non-int
     },
     args: {
         label: 'Badge',
-        color: 'indeterminate',
+        variant: 'outline',
+        color: 'grey',
         iconPosition: 'left',
     },
 } satisfies Meta<StoryArgs>;
@@ -191,4 +201,24 @@ export const WithIcon: Story = {
     parameters: {
         docs: { source: { transform: buildBadgeSource } },
     },
+};
+
+export const Fill: Story = {
+    args: {
+        label: 'Fill',
+        variant: 'fill',
+        color: 'primary',
+    },
+    argTypes: disabledIconArgTypes,
+    render: (args) => <Badge {...args} />,
+};
+
+export const Outline: Story = {
+    args: {
+        label: 'Outline',
+        variant: 'outline',
+        color: 'primary',
+    },
+    argTypes: disabledIconArgTypes,
+    render: (args) => <Badge {...args} />,
 };

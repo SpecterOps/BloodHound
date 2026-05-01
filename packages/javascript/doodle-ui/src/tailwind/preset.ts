@@ -146,18 +146,28 @@ export default {
                 // 'selector-disable-fill': 'var(--selector-disable-fill)',
 
                 // 'menu-bg': 'var(--menu-bg)',
+                'badge-outline-bg': 'var(--badge-outline-bg)',
 
-                'badge-indeterminate-fill': 'var(--badge-indeterminate-fill)',
-                'badge-indeterminate-border': 'var(--badge-indeterminate-border)',
+                'badge-primary-fill': 'var(--badge-primary-fill)',
+                'badge-primary-outline': 'var(--badge-primary-outline)',
 
-                'badge-primary': 'var(--badge-primary)',
-                'badge-secondary': 'var(--badge-secondary)',
-                'badge-grey': 'var(--badge-grey)',
-                'badge-red': 'var(--badge-red)',
-                'badge-orange': 'var(--badge-orange)',
-                'badge-green': 'var(--badge-green)',
-                'badge-blue': 'var(--badge-blue)',
-                'badge-purple': 'var(--badge-purple)',
+                'badge-secondary-fill': 'var(--badge-secondary-fill)',
+                'badge-secondary-outline': 'var(--badge-secondary-outline)',
+
+                'badge-grey-fill': 'var(--badge-grey-fill)',
+                'badge-grey-outline': 'var(--badge-grey-outline)',
+
+                'badge-red-fill': 'var(--badge-red-fill)',
+                'badge-red-outline': 'var(--badge-red-outline)',
+
+                'badge-orange-fill': 'var(--badge-orange-fill)',
+                'badge-orange-outline': 'var(--badge-orange-outline)',
+
+                'badge-green-fill': 'var(--badge-green-fill)',
+                'badge-green-outline': 'var(--badge-green-outline)',
+
+                'badge-blue-fill': 'var(--badge-blue-fill)',
+                'badge-blue-outline': 'var(--badge-blue-outline)',
 
                 // 'chip-indeterminate': 'var(--chip-indeterminate)',
                 // 'chip-indeterminate-hover': 'var(--chip-indeterminate-hover)',

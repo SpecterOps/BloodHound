@@ -339,18 +339,34 @@ export const light = {
         },
     },
     badge: {
-        indeterminate: {
-            fill: elevation.light[1],
-            border: palette.neutral.light[500],
+        primary: {
+            fill: '#A1A0FF',
+            outline: '#2C2677',
         },
-        primary: '#A1A0FF',
-        secondary: '#66A3FF',
-        grey: palette.neutral.light[500],
-        red: palette.red[200],
-        orange: palette.orange[200],
-        green: palette.green[200],
-        blue: palette['light-blue'][200],
-        purple: palette['deep-purple'][100],
+        secondary: {
+            fill: '#66A3FF',
+            outline: '#4A3BD7',
+        },
+        grey: {
+            fill: palette.neutral.light[500],
+            outline: palette.neutral.light[500],
+        },
+        red: {
+            fill: palette.red[200],
+            outline: '#B44641',
+        },
+        orange: {
+            fill: palette.orange[200],
+            outline: '#E65100',
+        },
+        green: {
+            fill: palette.green[200],
+            outline: '#43A047',
+        },
+        blue: {
+            fill: palette['light-blue'][200],
+            outline: '#0288D1',
+        },
     },
     disabled: palette.grey[700],
     text: {
@@ -419,17 +435,33 @@ export const dark = {
         },
     },
     badge: {
-        indeterminate: {
-            fill: elevation.dark[1],
-            border: palette.neutral.dark[500],
+        primary: {
+            fill: '#605DF7',
+            outline: '#A1A0FF',
         },
-        primary: '#605DF7',
-        secondary: '#1569E7',
-        grey: palette.neutral.dark[500],
-        red: palette.red[700],
-        orange: '#C15012',
-        green: palette.green[800],
-        blue: palette['light-blue'][800],
-        purple: palette['deep-purple'][500],
+        secondary: {
+            fill: '#1569E7',
+            outline: '#66A3FF',
+        },
+        grey: {
+            fill: palette.neutral.dark[500],
+            outline: palette.neutral.dark[500],
+        },
+        red: {
+            fill: palette.red[700],
+            outline: palette.red[200],
+        },
+        orange: {
+            fill: '#C15012',
+            outline: palette.orange[200],
+        },
+        green: {
+            fill: palette.green[800],
+            outline: palette.green[200],
+        },
+        blue: {
+            fill: palette['light-blue'][800],
+            outline: palette['light-blue'][200],
+        },
     },
 };
