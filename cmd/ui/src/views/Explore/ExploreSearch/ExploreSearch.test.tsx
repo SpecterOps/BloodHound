@@ -20,7 +20,7 @@ import { act, render, screen } from 'src/test-utils';
 import ExploreSearch from './ExploreSearch';
 
 import userEvent from '@testing-library/user-event';
-import { mockCodemirrorLayoutMethods } from 'bh-shared-ui';
+import { createGraphKinds, mockCodemirrorLayoutMethods } from 'bh-shared-ui';
 import { ConfigurationKey } from 'js-client-library';
 
 const comboboxLookaheadOptions = {
@@ -60,7 +60,7 @@ const server = setupServer(
     rest.get('/api/v2/graphs/kinds', async (_req, res, ctx) => {
         return res(
             ctx.json({
-                data: { kinds: ['Tier Zero', 'Tier One', 'Tier Two'] },
+                data: createGraphKinds(['Tier Zero', 'Tier One', 'Tier Two'], []),
             })
         );
     }),

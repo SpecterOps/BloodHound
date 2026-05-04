@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package model
 
 import "github.com/specterops/dawgs/graph"
@@ -28,4 +29,10 @@ func (k Kind) TableName() string {
 
 func (k Kind) ToKind() graph.Kind {
 	return graph.StringKind(k.Name)
+}
+
+func (k Kind) ValidFilters() map[string][]FilterOperator {
+	return map[string][]FilterOperator{
+		"type": {Equals, NotEquals},
+	}
 }

@@ -26,6 +26,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/peterldowns/pgtestdb"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs"
@@ -102,8 +103,11 @@ func SetupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
 	)
 
+	cfg, err := config.NewDefaultConnectionConfiguration(connConf.URL())
+	require.NoError(t, err)
+
 	//#region Setup for dbs
-	pool, err := pg.NewPool(connConf.URL())
+	pool, err := pg.NewPool(cfg.Database)
 	require.NoError(t, err)
 
 	graphDB, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
