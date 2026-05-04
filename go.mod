@@ -44,7 +44,7 @@ require (
 	github.com/pquerna/otp v1.5.0
 	github.com/prometheus/client_golang v1.22.0
 	github.com/shirou/gopsutil/v3 v3.24.5
-	github.com/specterops/chow v0.1.1
+	github.com/specterops/chow v0.1.2-0.20260501161234-9ffc316fa3ec
 	github.com/specterops/dawgs v0.4.18
 	github.com/stretchr/testify v1.11.1
 	github.com/teambition/rrule-go v1.8.2
