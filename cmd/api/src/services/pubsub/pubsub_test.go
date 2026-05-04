@@ -34,7 +34,7 @@ type testHandler struct {
 	called bool
 }
 
-func (s *testHandler) HandleEvent(_ context.Context, _ model.Event) error {
+func (s *testHandler) HandleEvent(_ context.Context) error {
 	s.called = true
 	return nil
 }
@@ -44,7 +44,7 @@ type errorHandler struct {
 	err    error
 }
 
-func (s *errorHandler) HandleEvent(_ context.Context, _ model.Event) error {
+func (s *errorHandler) HandleEvent(_ context.Context) error {
 	s.called = true
 	return s.err
 }
@@ -96,7 +96,7 @@ func TestPubSubService_Publish(t *testing.T) {
 
 		defer mockCtrl.Finish()
 
-		pubSubService.Subscribe("analysis.completed", handler)
+		pubSubService.Subscribe(handler)
 
 		mockDatabase.EXPECT().CreateEvent(ctx, gomock.Any()).DoAndReturn(
 			func(_ context.Context, event model.Event) (model.Event, error) {
@@ -130,7 +130,7 @@ func TestPubSubService_Publish(t *testing.T) {
 
 		defer mockCtrl.Finish()
 
-		pubSubService.Subscribe("ingest.started", handler)
+		pubSubService.Subscribe(handler)
 
 		mockDatabase.EXPECT().CreateEvent(ctx, gomock.Any()).DoAndReturn(
 			func(_ context.Context, event model.Event) (model.Event, error) {
@@ -148,7 +148,7 @@ func TestPubSubService_Publish(t *testing.T) {
 		assert.True(t, handler.called, "handler should have been called")
 	})
 
-	t.Run("success - fires multiple handlers for the same event type", func(t *testing.T) {
+	t.Run("success - fires all handlers when an event is published", func(t *testing.T) {
 		var (
 			mockCtrl      = gomock.NewController(t)
 			mockDatabase  = mocks.NewMockPubSubRepository(mockCtrl)
@@ -161,8 +161,8 @@ func TestPubSubService_Publish(t *testing.T) {
 
 		defer mockCtrl.Finish()
 
-		pubSubService.Subscribe("ingest.started", handlerOne)
-		pubSubService.Subscribe("ingest.started", handlerTwo)
+		pubSubService.Subscribe(handlerOne)
+		pubSubService.Subscribe(handlerTwo)
 
 		mockDatabase.EXPECT().CreateEvent(ctx, gomock.Any()).DoAndReturn(
 			func(_ context.Context, event model.Event) (model.Event, error) {
@@ -174,31 +174,6 @@ func TestPubSubService_Publish(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, handlerOne.called, "the first handler should have been called")
 		assert.True(t, handlerTwo.called, "the second handler should have been called")
-	})
-
-	t.Run("success - does not fire handler for a different event type", func(t *testing.T) {
-		var (
-			mockCtrl      = gomock.NewController(t)
-			mockDatabase  = mocks.NewMockPubSubRepository(mockCtrl)
-			pubSubService = pubsub.NewPubSubService(mockDatabase)
-			ctx           = context.Background()
-			handler       = &testHandler{}
-			eventInput    = model.EventInput{Type: "ingest.started", Message: "Ingest started"}
-		)
-
-		defer mockCtrl.Finish()
-
-		pubSubService.Subscribe("analysis.completed", handler)
-
-		mockDatabase.EXPECT().CreateEvent(ctx, gomock.Any()).DoAndReturn(
-			func(_ context.Context, event model.Event) (model.Event, error) {
-				return event, nil
-			},
-		)
-
-		_, err := pubSubService.Publish(ctx, eventInput)
-		require.NoError(t, err)
-		assert.False(t, handler.called, "the handler should not have been called for a different event type")
 	})
 
 	t.Run("success - handler error does not prevent publish from succeeding", func(t *testing.T) {
@@ -214,8 +189,8 @@ func TestPubSubService_Publish(t *testing.T) {
 
 		defer mockCtrl.Finish()
 
-		pubSubService.Subscribe("ingest.started", failingHandler)
-		pubSubService.Subscribe("ingest.started", passingHandler)
+		pubSubService.Subscribe(failingHandler)
+		pubSubService.Subscribe(passingHandler)
 
 		mockDatabase.EXPECT().CreateEvent(ctx, gomock.Any()).DoAndReturn(
 			func(_ context.Context, event model.Event) (model.Event, error) {
@@ -237,41 +212,23 @@ func TestPubSubService_Subscribe(t *testing.T) {
 			mockCtrl      = gomock.NewController(t)
 			mockDatabase  = mocks.NewMockPubSubRepository(mockCtrl)
 			pubSubService = pubsub.NewPubSubService(mockDatabase)
+			ctx           = context.Background()
+			handler       = &testHandler{}
+			eventInput    = model.EventInput{Type: "ingest.started", Message: "Ingest started"}
 		)
 
 		defer mockCtrl.Finish()
 
-		handler := &testHandler{}
-		pubSubService.Subscribe("ingest.started", handler)
-	})
+		pubSubService.Subscribe(handler)
 
-	t.Run("success - subscribes multiple handlers for the same event type", func(t *testing.T) {
-		var (
-			mockCtrl      = gomock.NewController(t)
-			mockDatabase  = mocks.NewMockPubSubRepository(mockCtrl)
-			pubSubService = pubsub.NewPubSubService(mockDatabase)
+		mockDatabase.EXPECT().CreateEvent(ctx, gomock.Any()).DoAndReturn(
+			func(_ context.Context, event model.Event) (model.Event, error) {
+				return event, nil
+			},
 		)
 
-		defer mockCtrl.Finish()
-
-		handlerOne := &testHandler{}
-		handlerTwo := &testHandler{}
-		pubSubService.Subscribe("ingest.started", handlerOne)
-		pubSubService.Subscribe("ingest.started", handlerTwo)
-	})
-
-	t.Run("success - subscribes handlers for different event types", func(t *testing.T) {
-		var (
-			mockCtrl      = gomock.NewController(t)
-			mockDatabase  = mocks.NewMockPubSubRepository(mockCtrl)
-			pubSubService = pubsub.NewPubSubService(mockDatabase)
-		)
-
-		defer mockCtrl.Finish()
-
-		handlerOne := &testHandler{}
-		handlerTwo := &testHandler{}
-		pubSubService.Subscribe("ingest.started", handlerOne)
-		pubSubService.Subscribe("analysis.completed", handlerTwo)
+		_, err := pubSubService.Publish(ctx, eventInput)
+		require.NoError(t, err)
+		assert.True(t, handler.called, "handler should have been called after subscribing")
 	})
 }

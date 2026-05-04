@@ -33,22 +33,22 @@ type PubSubRepository interface {
 }
 
 type EventHandler interface {
-	HandleEvent(ctx context.Context, event model.Event) error
+	HandleEvent(ctx context.Context) error
 }
 
 type PubSubService struct {
 	database PubSubRepository
-	handlers map[model.EventType][]EventHandler
+	handlers []EventHandler
 }
 
 func NewPubSubService(database PubSubRepository) *PubSubService {
 	return &PubSubService{
 		database: database,
-		handlers: make(map[model.EventType][]EventHandler),
+		handlers: make([]EventHandler, 0),
 	}
 }
 
-// Publish validates the event properties, creates a new event in the events table, and then fires an event to each registered handler for that EventType.
+// Publish validates the event properties, creates a new event in the events table, and then fires an event to all handlers.
 func (s *PubSubService) Publish(ctx context.Context, eventInput model.EventInput) (model.Event, error) {
 	if eventID, err := uuid.NewV7(); err != nil {
 		return model.Event{}, fmt.Errorf("error generating event ID: %w", err)
@@ -65,11 +65,9 @@ func (s *PubSubService) Publish(ctx context.Context, eventInput model.EventInput
 		if createdEvent, err := s.database.CreateEvent(ctx, event); err != nil {
 			return model.Event{}, fmt.Errorf("error creating event: %w", err)
 		} else {
-			if handlers, ok := s.handlers[eventInput.Type]; ok {
-				for _, eventHandler := range handlers {
-					if err := eventHandler.HandleEvent(ctx, createdEvent); err != nil {
-						slog.Error("Error handling event", slog.String("event_type", createdEvent.Type), attr.Error(err))
-					}
+			for _, eventHandler := range s.handlers {
+				if err := eventHandler.HandleEvent(ctx); err != nil {
+					slog.Error("Error handling event", attr.Error(err))
 				}
 			}
 			return createdEvent, nil
@@ -77,8 +75,7 @@ func (s *PubSubService) Publish(ctx context.Context, eventInput model.EventInput
 	}
 }
 
-// Subscribe registers an EventHandler for the given EventType. Multiple handlers
-// can be registered for the same EventType.
-func (s *PubSubService) Subscribe(eventType model.EventType, handler EventHandler) {
-	s.handlers[eventType] = append(s.handlers[eventType], handler)
+// Subscribe registers an EventHandler.
+func (s *PubSubService) Subscribe(handler EventHandler) {
+	s.handlers = append(s.handlers, handler)
 }
