@@ -27,10 +27,10 @@ const Abuse: FC = () => {
                 (grant yourself access to read secrets)
             </Typography>
             <Typography variant='body2'>
-                <Typography className='font-bold'>Automation Account</Typography>: You can create a new runbook that
-                runs as the Automation Account, and edit existing runbooks. Runbooks can be used to authenticate as the
-                Automation Account and abuse privileges held by the Automation Account. If the Automation Account is
-                using a 'RunAs' account, you can gather the certificate used to login and impersonate that account.
+                <strong>Automation Account</strong>: You can create a new runbook that runs as the Automation Account,
+                and edit existing runbooks. Runbooks can be used to authenticate as the Automation Account and abuse
+                privileges held by the Automation Account. If the Automation Account is using a 'RunAs' account, you can
+                gather the certificate used to login and impersonate that account.
             </Typography>
             <Typography variant='body2'>
                 <Typography className='font-bold'>Virtual Machine</Typography>: Run SYSTEM commands on the VM
