@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Skeleton, Typography } from '@mui/material';
+import { Box, Skeleton } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { PageWithTitle } from '../../../components';
 import DocumentationLinks from '../../../components/DocumentationLinks';
 
@@ -51,7 +52,7 @@ function CustomLayout(props: Props) {
             data-testid='api-explorer'
             className='api-explorer'
             pageDescription={
-                <Typography variant='body2' paragraph>
+                <Typography variant='body2'>
                     Review and understand the API endpoints available that power BloodHound. To learn how to use the
                     API, see {DocumentationLinks.apiUsageLink}. <br /> <br /> <b>*[EXPERIMENTAL]</b> – Endpoints labeled
                     as "Experimental" are under active development, such as for Early Access functionality. Breaking

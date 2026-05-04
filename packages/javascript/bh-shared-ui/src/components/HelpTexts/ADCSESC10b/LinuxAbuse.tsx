@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Link, Typography } from '@mui/material';
+import { Box, Link } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 import { hasChildCodeElementsClasses } from '../utils';
 
