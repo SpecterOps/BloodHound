@@ -32,10 +32,11 @@ import (
 // curry it via MustCurryWith(prometheus.Labels{"handler": template}) before
 // calling the promhttp.InstrumentHandler* helpers.
 var (
+	namespace = "bh"
 	// ApiInFlightGauge is label-free: in-flight counts are only meaningful
 	// globally, and labels would inflate cardinality.
 	ApiInFlightGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: "bh",
+		Namespace: namespace,
 		Subsystem: "api",
 		Name:      "in_flight_requests",
 		Help:      "A gauge of requests currently being served by the wrapped handler.",
@@ -46,7 +47,7 @@ var (
 	// as described above if a per-endpoint breakdown is required.
 	ApiTotalRequests = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: "bh",
+			Namespace: namespace,
 			Subsystem: "api",
 			Name:      "requests_total",
 			Help:      "A counter for requests to the wrapped handler.",
@@ -60,7 +61,7 @@ var (
 	// before observation so concrete request paths never reach Prometheus.
 	ApiRequestDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Namespace: "bh",
+			Namespace: namespace,
 			Subsystem: "api",
 			Name:      "request_duration_seconds",
 			Help:      "A histogram of latencies for requests.",
@@ -73,7 +74,7 @@ var (
 	// follow the same "handler"-label rules rather than adding a path label.
 	ApiResponseSize = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Namespace: "bh",
+			Namespace: namespace,
 			Subsystem: "api",
 			Name:      "response_size_bytes",
 			Help:      "A histogram of response sizes for requests.",

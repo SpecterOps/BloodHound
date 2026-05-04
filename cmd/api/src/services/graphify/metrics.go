@@ -22,9 +22,10 @@ import (
 )
 
 var (
+	namespace             = "bh"
 	ingestThroughputGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Namespace: "bh",
+			Namespace: namespace,
 			Name:      "ingest_throughput",
 			Help:      "Ingestion throughput in entities per second",
 		},
