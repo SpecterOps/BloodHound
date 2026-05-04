@@ -412,7 +412,7 @@ func MetricsMiddleware(muxRouter *mux.Router) mux.MiddlewareFunc {
 			handlerLabel := routeTemplateFor(muxRouter, r)
 			curriedDuration, err := ApiRequestDuration.CurryWith(prometheus.Labels{"handler": normalizeHandlerLabel(handlerLabel)})
 			if err != nil {
-				slog.ErrorContext(r.Context(), "failed to curry request duration metric", attr.Error(err))
+				slog.ErrorContext(r.Context(), "Failed to curry request duration metric", attr.Error(err))
 				next.ServeHTTP(w, r)
 				return
 			}
