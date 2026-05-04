@@ -42,8 +42,8 @@ func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configur
 	// Initialize bypassLimits here so we only run the DB query once and not per request
 	bypassLimitsParam := appcfg.GetTimeoutLimitParameter(context.Background(), db)
 	routerInst.UsePrerouting(middleware.ContextMiddleware(bypassLimitsParam))
-	routerInst.UsePrerouting(middleware.CORSMiddleware())
 	routerInst.UsePrerouting(middleware.MetricsMiddleware(routerInst.MuxRouter()))
+	routerInst.UsePrerouting(middleware.CORSMiddleware())
 
 	// Set up logging. This must be done after ContextMiddleware is initialized so the context can be accessed in the log logic
 	if cfg.EnableAPILogging {
