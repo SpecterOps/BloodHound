@@ -25,7 +25,8 @@ const FileDrop: React.FC<{
     accept?: string[];
     multiple?: boolean;
     icon?: IconDefinition;
-}> = ({ onDrop, disabled, accept, multiple = true, icon = faInbox }) => {
+    className?: string;
+}> = ({ onDrop, disabled, accept, multiple = true, icon = faInbox, className }) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const [isDragActive, setDragActive] = useState(false);
     const [isHoverActive, setHoverActive] = useState(false);
@@ -66,7 +67,8 @@ const FileDrop: React.FC<{
                 {
                     'cursor-default opacity-50': disabled,
                     'bg-neutral-3': isHoverActive || isDragActive || disabled,
-                }
+                },
+                className
             )}>
             <input
                 data-testid='ingest-file-upload'
