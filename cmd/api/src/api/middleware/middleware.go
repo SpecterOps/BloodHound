@@ -394,6 +394,9 @@ var highValueHandlers = map[string]bool{
 // This prevents cardinality explosion in ApiRequestDuration by only tracking
 // detailed metrics for Tier 1 endpoints while still counting all requests.
 func normalizeHandlerLabel(template string) string {
+	if template == unmatchedRouteLabel {
+		return unmatchedRouteLabel
+	}
 	if highValueHandlers[template] {
 		return template
 	}
