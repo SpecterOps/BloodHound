@@ -19,12 +19,12 @@ import (
 	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 var (
-	namespace         = "bh"
 	postOperationsVec = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: namespace,
+		Namespace: model.Namespace,
 		Subsystem: "analysis",
 		Name:      "post_processing_ops",
 		Help:      "Post-processing operation statistics.",

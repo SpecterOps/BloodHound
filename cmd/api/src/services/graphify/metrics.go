@@ -19,13 +19,13 @@ import (
 	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 var (
-	namespace             = "bh"
 	ingestThroughputGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Namespace: namespace,
+			Namespace: model.Namespace,
 			Name:      "ingest_throughput",
 			Help:      "Ingestion throughput in entities per second",
 		},
