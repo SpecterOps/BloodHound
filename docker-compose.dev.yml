@@ -123,6 +123,9 @@ services:
       - dev
       - api-only
     build:
+      args:
+        SHARPHOUND_VERSION: ${SHARPHOUND_VERSION:-}
+        AZUREHOUND_VERSION: ${AZUREHOUND_VERSION:-}
       context: tools/docker-compose
       dockerfile: api.Dockerfile
     command: "-c .air.toml ${AIR_FLAGS:-''}"
@@ -179,6 +182,9 @@ services:
     profiles:
       - debug-api
     build:
+      args:
+        SHARPHOUND_VERSION: ${SHARPHOUND_VERSION:-}
+        AZUREHOUND_VERSION: ${AZUREHOUND_VERSION:-}
       context: tools/docker-compose
       dockerfile: api.Dockerfile
     command: "-c .air.debug.toml ${AIR_FLAGS:-''}"
