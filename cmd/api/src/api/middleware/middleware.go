@@ -369,19 +369,6 @@ var highValueHandlers = map[string]bool{
 	"/api/v2/search":               true, // Global search
 	"/api/v2/graph-search":         true, // Graph-specific search
 
-	// Attack Paths & Findings - Core business logic
-	"/api/v2/attack-paths":                             true, // Request analysis
-	"/api/v2/attack-paths/details":                     true, // Stream AP details
-	"/api/v2/attack-paths/finding-trends":              true, // Historical trends
-	"/api/v2/domains/{domain_id}/attack-path-findings": true, // Export findings
-	"/api/v2/domains/{domain_id}/details":              true, // AP details by domain
-	"/api/v2/domains/{domain_id}/sparkline":            true, // Sparkline data
-	"/api/v2/domains/{domain_id}/available-types":      true, // Available AP types
-
-	// Risk Posture - Customer-facing metrics
-	"/api/v2/posture-stats":               true, // Current risk posture
-	"/api/v2/posture-history/{data_type}": true, // Historical posture
-
 	// Data Ingestion - Performance critical
 	"/api/v2/ingest":                           true, // Primary collector ingestion
 	"/api/v2/file-upload/start":                true, // Generic file upload
