@@ -22,6 +22,7 @@ import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
 import { useRef, useState } from 'react';
 import { useExploreParams, useKeybindings } from '../../hooks';
+import { cn } from '../../utils';
 import { exportToJson } from '../../utils/exportGraphData';
 import GraphButton from '../GraphButton';
 import GraphMenu from '../GraphMenu';
@@ -144,7 +145,8 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                                 data-testid={`explore_graph-controls_${buttonLabel}-buttonLabel`}
                                 key={buttonLabel}
                                 selected={isSelected}
-                                onClick={() => onLayoutChange(buttonLabel)}>
+                                onClick={() => onLayoutChange(buttonLabel)}
+                                className={cn(isSelected ? '!bg-primary text-white' : '')}>
                                 {capitalize(buttonLabel)}
                             </MenuItem>
                         );
