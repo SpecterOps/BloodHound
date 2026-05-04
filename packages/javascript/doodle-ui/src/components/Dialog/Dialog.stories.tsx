@@ -49,6 +49,15 @@ const meta = {
                 defaultValue: { summary: '{ blurBackground: false }' },
             },
         },
+        disableStickyLayout: {
+            control: 'boolean',
+            description:
+                'When `true`, opts out of the default sticky layout. By default, `DialogTitle` and `DialogActions` are pinned to the top and bottom of `DialogContent` and any other children are placed inside an internal scrollable container, so the title and actions remain in view while the middle content scrolls. With this prop enabled, all children render in source order and the entire dialog scrolls as a single block — a difference that only becomes visible when the content overflows.',
+            table: {
+                type: { summary: 'boolean' },
+                defaultValue: { summary: 'false' },
+            },
+        },
         maxWidth: {
             control: 'select',
             options: ['xl', 'lg', 'md', 'sm', 'xs'],
@@ -187,6 +196,70 @@ export const OverflowingContent: Story = {
             <Dialog>
                 <DialogTrigger asChild>
                     <Button variant='primary'>Overflowing Dialog</Button>
+                </DialogTrigger>
+                <DialogPortal>
+                    <DialogContent {...args}>
+                        <DialogTitle>Terms and Conditions</DialogTitle>
+                        <DialogDescription>A bunch of repeating text</DialogDescription>
+                        {Array.from({ length: 25 }, (_, index) => (
+                            <p key={index} className='mb-4'>
+                                {loremParagraph}
+                            </p>
+                        ))}
+                        <DialogActions className='flex justify-end gap-4'>
+                            <DialogClose asChild>
+                                <Button variant='secondary'>Cancel</Button>
+                            </DialogClose>
+                            <Button>Accept</Button>
+                        </DialogActions>
+                    </DialogContent>
+                </DialogPortal>
+            </Dialog>
+        );
+    },
+};
+
+export const OverflowingContentWithDisabledStickyLayout: Story = {
+    parameters: {
+        docs: {
+            description: {
+                story: 'Setting `disableStickyLayout` to `true` opts out of the default sticky layout behavior. The `DialogTitle` and `DialogActions` are no longer pinned to the top and bottom of the dialog, and children are rendered in source order without an internal scrollable container. When the body content exceeds the available height the entire `DialogContent` scrolls as a single block, so the title and actions scroll out of view along with the rest of the content. Use this when you need full control over the dialog layout.',
+            },
+            source: {
+                code: `
+<Dialog>
+    <DialogTrigger asChild>
+        <Button variant='primary'>Overflowing Dialog</Button>
+    </DialogTrigger>
+    <DialogPortal>
+        <DialogContent disableStickyLayout>
+            <DialogTitle>Terms and Conditions</DialogTitle>
+            <DialogDescription>A bunch of repeating text</DialogDescription>
+            {Array.from({ length: 25 }, (_, index) => (
+                <p key={index} className='mb-4'>
+                    {loremParagraph}
+                </p>
+            ))}
+            <DialogActions className='flex justify-end gap-4'>
+                <DialogClose asChild>
+                    <Button variant='secondary'>Cancel</Button>
+                </DialogClose>
+                <Button>Accept</Button>
+            </DialogActions>
+        </DialogContent>
+    </DialogPortal>
+</Dialog>`,
+                language: 'tsx',
+                type: 'code',
+            },
+        },
+    },
+    args: { disableStickyLayout: true },
+    render: (args) => {
+        return (
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button variant='primary'>Overflowing Dialog without auto </Button>
                 </DialogTrigger>
                 <DialogPortal>
                     <DialogContent {...args}>

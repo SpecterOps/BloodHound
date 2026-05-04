@@ -63,16 +63,28 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
 export const DialogMaxWidth = ['xl', 'lg', 'md', 'sm', 'xs'] as const;
 interface DialogContentProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
-    maxWidth?: (typeof DialogMaxWidth)[number];
     allowNav?: boolean;
     DialogOverlayProps?: DialogOverlayProps;
+    maxWidth?: (typeof DialogMaxWidth)[number];
+    disableStickyLayout?: boolean;
 }
 
 /**
  * See documentation: [DialogContent](https://www.radix-ui.com/primitives/docs/components/dialog#content)
  */
 const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Content>, DialogContentProps>(
-    ({ DialogOverlayProps, allowNav = false, maxWidth = 'sm', className, children, ...props }, ref) => {
+    (
+        {
+            allowNav = false,
+            children,
+            className,
+            DialogOverlayProps,
+            disableStickyLayout = false,
+            maxWidth = 'sm',
+            ...props
+        },
+        ref
+    ) => {
         // Where do these magic values come from? They match MUIs maxWidth values
         const maxWidthMap: Record<(typeof DialogMaxWidth)[number], string> = {
             xl: 'max-w-[1536px]',
@@ -90,15 +102,16 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
         // Title and Actions are separated from other content so that they may be "stickied" to top/bottom.
         // All other content is added to its own container so that if it causes overflow, the content is
         // scrollable, but Title and Actions are always visible.
-        React.Children.toArray(children).forEach((child) => {
-            if (React.isValidElement(child) && child.type === DialogTitle) {
-                titleChildren.push(child);
-            } else if (React.isValidElement(child) && child.type === DialogActions) {
-                actionsChildren.push(child);
-            } else {
-                middleChildren.push(child);
-            }
-        });
+        !disableStickyLayout &&
+            React.Children.toArray(children).forEach((child) => {
+                if (React.isValidElement(child) && child.type === DialogTitle) {
+                    titleChildren.push(child);
+                } else if (React.isValidElement(child) && child.type === DialogActions) {
+                    actionsChildren.push(child);
+                } else {
+                    middleChildren.push(child);
+                }
+            });
 
         return (
             <>
@@ -111,6 +124,7 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
                         'duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]',
                         'rounded-md bg-neutral-light-2 dark:bg-neutral-dark-2 dark:text-neutral-light-1 z-[1500]',
                         maxWidthClass,
+                        { 'overflow-y-auto': disableStickyLayout },
                         className
                     )}
                     onOpenAutoFocus={() => {
@@ -120,11 +134,19 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
                         }
                     }}
                     {...props}>
-                    {titleChildren}
-                    {middleChildren.length > 0 && (
-                        <div className='flex flex-col gap-4 flex-auto min-h-0 overflow-y-auto'>{middleChildren}</div>
+                    {disableStickyLayout ? (
+                        children
+                    ) : (
+                        <>
+                            {titleChildren}
+                            {middleChildren.length > 0 && (
+                                <div className='flex flex-col gap-4 flex-auto min-h-0 overflow-y-auto'>
+                                    {middleChildren}
+                                </div>
+                            )}
+                            {actionsChildren}
+                        </>
                     )}
-                    {actionsChildren}
                 </DialogPrimitive.Content>
             </>
         );
