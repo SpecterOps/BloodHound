@@ -328,12 +328,12 @@ _collector-version-env:
   sharphound_version="${SHARPHOUND_VERSION:-$(wget -qO- https://api.github.com/repos/SpecterOps/SharpHound/releases/latest | sed -n 's/.*"tag_name": "\([^"]*\)".*/\1/p')}"
   azurehound_version="${AZUREHOUND_VERSION:-$(wget -qO- https://api.github.com/repos/SpecterOps/AzureHound/releases/latest | sed -n 's/.*"tag_name": "\([^"]*\)".*/\1/p')}"
   # Validate version strings
-  version_regex='^v[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$'
+  version_regex='^v[0-9]+\.[0-9]+\.[0-9]+$'
   if [[ ! "$sharphound_version" =~ $version_regex ]]; then
-    echo "SHARPHOUND_VERSION must match vX.Y.Z[-rcN], got '${sharphound_version:-<empty>}'" >&2
+    echo "SHARPHOUND_VERSION must match vX.Y.Z, got '${sharphound_version:-<empty>}'" >&2
     exit 1
   elif [[ ! "$azurehound_version" =~ $version_regex ]]; then
-    echo "AZUREHOUND_VERSION must match vX.Y.Z[-rcN], got '${azurehound_version:-<empty>}'" >&2
+    echo "AZUREHOUND_VERSION must match vX.Y.Z, got '${azurehound_version:-<empty>}'" >&2
     exit 1
   fi
   # Export versions as shell variables

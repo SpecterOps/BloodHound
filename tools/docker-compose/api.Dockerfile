@@ -27,8 +27,8 @@ FROM docker.io/library/alpine:3.21 AS version-validator
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 RUN set -eux; \
-    echo "${SHARPHOUND_VERSION:-}" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$' || { echo "SHARPHOUND_VERSION must match vX.Y.Z[-rcN]" >&2; exit 1; }; \
-    echo "${AZUREHOUND_VERSION:-}" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$' || { echo "AZUREHOUND_VERSION must match vX.Y.Z[-rcN]" >&2; exit 1; }
+    echo "${SHARPHOUND_VERSION:-}" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$' || { echo "SHARPHOUND_VERSION must match vX.Y.Z" >&2; exit 1; }; \
+    echo "${AZUREHOUND_VERSION:-}" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$' || { echo "AZUREHOUND_VERSION must match vX.Y.Z" >&2; exit 1; }
 
 ########
 # Package remote assets

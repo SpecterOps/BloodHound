@@ -15,25 +15,19 @@
 # SPDX-License-Identifier: Apache-2.0
 name: Resolve Latest Collector Versions
 description: |-
-
   Fetches the latest release versions for SharpHound and AzureHound collectors using the GH /releases/latest endpoint.
 inputs:
-
   gh_token:
     description: GitHub token for API access (increases rate limits)
-    required: true
+    required: false
 outputs:
-
   sharphound_version:
-
     value: ${{ steps.fetch-collector-versions.outputs.sharphound_version }}
     description: The latest stable release version of SharpHound.
   azurehound_version:
-
     value: ${{ steps.fetch-collector-versions.outputs.azurehound_version }}
     description: The latest stable release version of AzureHound.
 runs:
-
   using: composite
   steps:
     - id: fetch-collector-versions
