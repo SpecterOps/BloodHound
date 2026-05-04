@@ -17,11 +17,11 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { cn } from '../utils';
 
-const BadgeVariants = cva('inline-flex items-center justify-center rounded text-main text-sm p-2 min-w-16', {
+const BadgeVariants = cva('inline-flex items-center justify-center rounded text-main text-sm px-2 py-1 min-w-16', {
     variants: {
         variant: {
             fill: '',
-            outline: 'border bg-badge-outline-bg',
+            outline: 'border bg-badge-grey-fill',
         },
         color: {
             primary: '',
@@ -45,7 +45,6 @@ const BadgeVariants = cva('inline-flex items-center justify-center rounded text-
         // Fill variants
         { variant: 'fill', color: 'primary', className: 'bg-badge-primary-fill' },
         { variant: 'fill', color: 'secondary', className: 'bg-badge-secondary-fill' },
-        { variant: 'fill', color: 'grey', className: 'bg-badge-grey-fill' },
         { variant: 'fill', color: 'red', className: 'bg-badge-red-fill' },
         { variant: 'fill', color: 'orange', className: 'bg-badge-orange-fill' },
         { variant: 'fill', color: 'green', className: 'bg-badge-green-fill' },
@@ -65,7 +64,7 @@ const BadgeVariants = cva('inline-flex items-center justify-center rounded text-
         {
             variant: 'outline',
             color: 'grey',
-            className: 'border-badge-grey-outline [&>span>svg]:text-badge-grey-outline',
+            className: 'border-badge-grey-outline [&>span>svg]:text-badge-main',
         },
         {
             variant: 'outline',
@@ -96,13 +95,8 @@ const BadgeVariants = cva('inline-flex items-center justify-center rounded text-
 
 type NamedColor = NonNullable<VariantProps<typeof BadgeVariants>['color']>;
 
-/** @deprecated Use a named color instead. Hex support is transitional and will be removed in a future release. */
-type HexColor = `#${string}`;
-
 type BadgeProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'color'> &
-    Omit<VariantProps<typeof BadgeVariants>, 'hasIcon' | 'color'> & {
-        /** @deprecated Passing a hex color is transitional and will be removed in a future release. Use a named color instead. */
-        color?: NamedColor | HexColor;
+    Omit<VariantProps<typeof BadgeVariants>, 'hasIcon'> & {
         label: string;
         icon?: React.ReactNode;
         iconClassName?: string;
@@ -110,31 +104,22 @@ type BadgeProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'color'> &
     };
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
-    ({ className, color, icon, iconClassName, iconPosition, label, labelClassName, style, variant, ...rest }, ref) => {
-        const isHex = typeof color === 'string' && color.startsWith('#');
-
-        const hexStyle = isHex
-            ? variant === 'outline'
-                ? { borderColor: color, ...style }
-                : { backgroundColor: color, ...style }
-            : style;
-
+    ({ className, color, icon, iconClassName, iconPosition, label, labelClassName, variant, ...rest }, ref) => {
         return (
             <div
                 ref={ref}
                 {...rest}
-                style={hexStyle}
                 className={cn(
                     BadgeVariants({
                         variant,
-                        color: isHex ? undefined : (color as NamedColor | undefined),
+                        color,
                         hasIcon: !!icon,
                         iconPosition: icon ? iconPosition ?? 'left' : undefined,
                     }),
                     className
                 )}>
                 {icon && (
-                    <span className={cn('flex shrink-0 items-center [&>svg]:h-4 [&>svg]:w-4', iconClassName)}>
+                    <span className={cn('flex shrink-0 items-center [&>svg]:h-3 [&>svg]:w-3', iconClassName)}>
                         {icon}
                     </span>
                 )}
@@ -147,4 +132,4 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
 Badge.displayName = 'Badge';
 
 export { Badge };
-export type { HexColor, NamedColor };
+export type { NamedColor };

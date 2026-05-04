@@ -146,7 +146,6 @@ export default {
                 // 'selector-disable-fill': 'var(--selector-disable-fill)',
 
                 // 'menu-bg': 'var(--menu-bg)',
-                'badge-outline-bg': 'var(--badge-outline-bg)',
 
                 'badge-primary-fill': 'var(--badge-primary-fill)',
                 'badge-primary-outline': 'var(--badge-primary-outline)',

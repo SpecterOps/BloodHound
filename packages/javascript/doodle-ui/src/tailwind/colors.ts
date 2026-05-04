@@ -348,8 +348,8 @@ export const light = {
             outline: '#4A3BD7',
         },
         grey: {
-            fill: palette.neutral.light[500],
-            outline: palette.neutral.light[500],
+            fill: palette.neutral.light[200],
+            outline: palette.neutral.light[400],
         },
         red: {
             fill: palette.red[200],
@@ -445,7 +445,7 @@ export const dark = {
         },
         grey: {
             fill: palette.neutral.dark[500],
-            outline: palette.neutral.dark[500],
+            outline: palette.neutral.dark[700],
         },
         red: {
             fill: palette.red[700],

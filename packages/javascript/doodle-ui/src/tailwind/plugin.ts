@@ -134,8 +134,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--menu-bg': elevation.light[0],
 
             // // Components/Data Display/ Badge & Chip
-            '--badge-outline-bg': elevation.light[2],
-
             '--badge-primary-fill': light.badge.primary.fill,
             '--badge-primary-outline': light.badge.primary.outline,
 
@@ -321,8 +319,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--menu-bg': elevation.dark[2],
 
             // // Components/Data Display/ Badge & Chip
-            '--badge-outline-bg': elevation.dark[2],
-
             '--badge-primary-fill': dark.badge.primary.fill,
             '--badge-primary-outline': dark.badge.primary.outline,
 

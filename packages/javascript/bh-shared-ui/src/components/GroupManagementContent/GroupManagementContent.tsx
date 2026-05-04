@@ -142,7 +142,9 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
             {isRoleBasedFiltering && (
                 <Badge
                     data-testid='explore_entity-information-panel-badge-etac-filtering'
+                    variant={'fill'}
                     color='primary'
+                    className='px-2 py-1'
                     icon={<FontAwesomeIcon icon={faEyeSlash} className='mr-2' />}
                     label='This account does not have access to this page. Please contact an administrator if this message is in error.'
                 />
