@@ -24,8 +24,9 @@ import (
 var (
 	ingestThroughputGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "bhe_ingest_throughput",
-			Help: "Ingestion throughput in entities per second",
+			Namespace: "bh",
+			Name:      "ingest_throughput",
+			Help:      "Ingestion throughput in entities per second",
 		},
 		[]string{"entity_type", "stage"}, // "nodes" or "relationships", "processed" or "written"
 	)

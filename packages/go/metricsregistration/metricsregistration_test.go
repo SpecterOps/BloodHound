@@ -29,7 +29,7 @@ func TestRegisterBHCEMetrics(t *testing.T) {
 	t.Parallel()
 
 	registry := prometheus.NewRegistry()
-	err := metricsregistration.RegisterBHCEMetrics("bhce", registry)
+	err := metricsregistration.RegisterBHCEMetrics(registry)
 
 	assert.NoError(t, err)
 }

@@ -29,12 +29,12 @@ import (
 
 // RegisterBHCEMetrics registers all BHCE subsystem Prometheus metrics with the
 // provided registerer.
-func RegisterBHCEMetrics(namespace string, registerer prometheus.Registerer) error {
-	if err := post.RegisterPostProcessingMetrics(namespace, registerer); err != nil {
+func RegisterBHCEMetrics(registerer prometheus.Registerer) error {
+	if err := post.RegisterPostProcessingMetrics(registerer); err != nil {
 		return fmt.Errorf("failed to register post-processing metrics: %w", err)
 	}
 
-	if err := middleware.RegisterApiMiddlewareMetrics(namespace, registerer); err != nil {
+	if err := middleware.RegisterApiMiddlewareMetrics(registerer); err != nil {
 		return fmt.Errorf("failed to register API middleware metrics: %w", err)
 	}
 

@@ -33,9 +33,9 @@ var (
 )
 
 // RegisterPostProcessingMetrics registers the analysis post-processing metrics.
-func RegisterPostProcessingMetrics(namespace string, registerer prometheus.Registerer) error {
+func RegisterPostProcessingMetrics(registerer prometheus.Registerer) error {
 	postOperationsVec = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: namespace,
+		Namespace: "bh",
 		Name:      "post_processing_ops",
 		Help:      "Post-processing operation statistics.",
 	}, []string{

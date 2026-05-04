@@ -35,8 +35,10 @@ var (
 	// ApiInFlightGauge is label-free: in-flight counts are only meaningful
 	// globally, and labels would inflate cardinality.
 	ApiInFlightGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "in_flight_requests",
-		Help: "A gauge of requests currently being served by the wrapped handler.",
+		Namespace: "bh",
+		Subsystem: "api",
+		Name:      "in_flight_requests",
+		Help:      "A gauge of requests currently being served by the wrapped handler.",
 	})
 
 	// ApiTotalRequests is partitioned by response code and HTTP method (both
@@ -44,8 +46,10 @@ var (
 	// as described above if a per-endpoint breakdown is required.
 	ApiTotalRequests = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "requests_total",
-			Help: "A counter for requests to the wrapped handler.",
+			Namespace: "bh",
+			Subsystem: "api",
+			Name:      "requests_total",
+			Help:      "A counter for requests to the wrapped handler.",
 		},
 		[]string{"code", "method"},
 	)
@@ -56,48 +60,7 @@ var (
 	// before observation so concrete request paths never reach Prometheus.
 	ApiRequestDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "request_duration_seconds",
-			Help:    "A histogram of latencies for requests.",
-			Buckets: []float64{.25, .5, 1, 2.5, 5, 10},
-		},
-		[]string{"code", "method", "handler"},
-	)
-
-	// ApiResponseSize is a zero-dimensional ObserverVec. If ever extended,
-	// follow the same "handler"-label rules rather than adding a path label.
-	ApiResponseSize = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:    "response_size_bytes",
-			Help:    "A histogram of response sizes for requests.",
-			Buckets: []float64{200, 500, 900, 1500},
-		},
-		[]string{},
-	)
-)
-
-// RegisterApiMiddlewareMetrics registers Prometheus metrics used by API middleware
-// with the provided registry and returns an error if any registration fails.
-func RegisterApiMiddlewareMetrics(namespace string, registry prometheus.Registerer) error {
-	ApiInFlightGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: "api",
-		Name:      "in_flight_requests",
-		Help:      "A gauge of requests currently being served by the wrapped handler.",
-	})
-
-	ApiTotalRequests = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: namespace,
-			Subsystem: "api",
-			Name:      "requests_total",
-			Help:      "A counter for requests to the wrapped handler.",
-		},
-		[]string{"code", "method"},
-	)
-
-	ApiRequestDuration = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: namespace,
+			Namespace: "bh",
 			Subsystem: "api",
 			Name:      "request_duration_seconds",
 			Help:      "A histogram of latencies for requests.",
@@ -106,9 +69,11 @@ func RegisterApiMiddlewareMetrics(namespace string, registry prometheus.Register
 		[]string{"code", "method", "handler"},
 	)
 
+	// ApiResponseSize is a zero-dimensional ObserverVec. If ever extended,
+	// follow the same "handler"-label rules rather than adding a path label.
 	ApiResponseSize = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Namespace: namespace,
+			Namespace: "bh",
 			Subsystem: "api",
 			Name:      "response_size_bytes",
 			Help:      "A histogram of response sizes for requests.",
@@ -116,7 +81,11 @@ func RegisterApiMiddlewareMetrics(namespace string, registry prometheus.Register
 		},
 		[]string{},
 	)
+)
 
+// RegisterApiMiddlewareMetrics registers Prometheus metrics used by API middleware
+// with the provided registry and returns an error if any registration fails.
+func RegisterApiMiddlewareMetrics(registry prometheus.Registerer) error {
 	if err := registry.Register(ApiInFlightGauge); err != nil {
 		return err
 	} else if err = registry.Register(ApiTotalRequests); err != nil {
