@@ -410,14 +410,19 @@ func MetricsMiddleware(muxRouter *mux.Router) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			handlerLabel := routeTemplateFor(muxRouter, r)
-			instrumented := promhttp.InstrumentHandlerInFlight(ApiInFlightGauge,
-				promhttp.InstrumentHandlerDuration(ApiRequestDuration.MustCurryWith(prometheus.Labels{"handler": normalizeHandlerLabel(handlerLabel)}),
+			curriedDuration, err := ApiRequestDuration.CurryWith(prometheus.Labels{"handler": normalizeHandlerLabel(handlerLabel)})
+			if err != nil {
+				slog.ErrorContext(r.Context(), "failed to curry request duration metric", attr.Error(err))
+				next.ServeHTTP(w, r)
+				return
+			}
+			promhttp.InstrumentHandlerInFlight(ApiInFlightGauge,
+				promhttp.InstrumentHandlerDuration(curriedDuration,
 					promhttp.InstrumentHandlerCounter(ApiTotalRequests,
 						promhttp.InstrumentHandlerResponseSize(ApiResponseSize, next),
 					),
 				),
-			)
-			instrumented.ServeHTTP(w, r)
+			).ServeHTTP(w, r)
 		})
 	}
 }
