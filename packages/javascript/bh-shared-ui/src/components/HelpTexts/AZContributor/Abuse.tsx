@@ -23,8 +23,8 @@ const Abuse: FC = () => {
         <>
             <Typography variant='body2'>This depends on what the target object is:</Typography>
             <Typography variant='body2'>
-                <Typography className='font-bold'>Key Vault</Typography>: You can read secrets and alter access policies
-                (grant yourself access to read secrets)
+                <strong>Key Vault</strong>: You can read secrets and alter access policies (grant yourself access to
+                read secrets)
             </Typography>
             <Typography variant='body2'>
                 <strong>Automation Account</strong>: You can create a new runbook that runs as the Automation Account,
@@ -33,11 +33,10 @@ const Abuse: FC = () => {
                 gather the certificate used to login and impersonate that account.
             </Typography>
             <Typography variant='body2'>
-                <Typography className='font-bold'>Virtual Machine</Typography>: Run SYSTEM commands on the VM
+                <strong>Virtual Machine</strong>: Run SYSTEM commands on the VM
             </Typography>
             <Typography variant='body2'>
-                <Typography className='font-bold'>Resource Group</Typography>: NOT abusable, and not collected by
-                AzureHound
+                <strong>Resource Group</strong>: NOT abusable, and not collected by AzureHound
             </Typography>
 
             <Typography variant='body2'>Via PowerZure:</Typography>
