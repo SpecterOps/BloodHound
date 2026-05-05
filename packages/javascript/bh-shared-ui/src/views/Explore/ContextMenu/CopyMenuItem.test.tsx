@@ -14,12 +14,25 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Menu, MenuContent } from 'doodle-ui';
 import * as hooks from '../../../hooks';
 import { render } from '../../../test-utils';
 import CopyMenuItem from './CopyMenuItem';
 
 const useExploreSelectedItemSpy = vi.spyOn(hooks, 'useExploreSelectedItem');
+
+// CopyMenuItem renders a MenuSub which requires a Radix Menu context.
+// MenuContent forceMount ensures content is visible immediately in JSDOM
+// (where CSS transitions never fire and Presence would otherwise block mount).
+// modal={false} prevents the DismissableLayer from installing pointer capture on body,
+// which would intercept clicks on the portal-rendered SubContent before onSelect fires.
+const MenuWrapper = ({ children }: { children: React.ReactNode }) => (
+    <Menu open modal={false}>
+        <MenuContent forceMount>{children}</MenuContent>
+    </Menu>
+);
 
 describe('CopyMenuItem', () => {
     const selectedNode = {
@@ -28,7 +41,11 @@ describe('CopyMenuItem', () => {
 
     const setup = () => {
         useExploreSelectedItemSpy.mockReturnValue({ selectedItemQuery: { data: selectedNode } } as any);
-        const screen = render(<CopyMenuItem />);
+        const screen = render(
+            <MenuWrapper>
+                <CopyMenuItem />
+            </MenuWrapper>
+        );
         return screen;
     };
 
@@ -37,17 +54,22 @@ describe('CopyMenuItem', () => {
 
         const user = userEvent.setup();
 
+        // Spy on clipboard.writeText rather than reading back from clipboard storage.
+        // jsdom returns zero bounding rects for all elements, which breaks Radix's
+        // "safe polygon" that keeps a submenu open while the pointer travels from the
+        // SubTrigger into the SubContent. The submenu closes before a userEvent.click
+        // can land on the item, so onSelect never fires. Using fireEvent.click instead
+        // dispatches the click event directly — no pointer-travel required — so Radix
+        // processes it and calls onSelect correctly.
+        const clipboardSpy = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
+
         const copyOption = screen.getByRole('menuitem', { name: /copy/i });
         await user.hover(copyOption);
 
-        const tooltip = await screen.findByRole('tooltip');
-        expect(tooltip).toBeInTheDocument();
+        // Radix renders the submenu as role="menuitem" entries — no tooltip involved
+        const nameOption = await screen.findByRole('menuitem', { name: /^name$/i });
+        fireEvent.click(nameOption);
 
-        // the tooltip container and the menu item for `name` have the same accessible name, so return the second element here (which is the menu item)
-        const nameOption = screen.getAllByRole('menuitem', { name: /name/i })[1];
-        await user.click(nameOption);
-
-        const clipboardText = await navigator.clipboard.readText();
-        expect(clipboardText).toBe(selectedNode.label);
+        expect(clipboardSpy).toHaveBeenCalledWith(selectedNode.label);
     });
 });

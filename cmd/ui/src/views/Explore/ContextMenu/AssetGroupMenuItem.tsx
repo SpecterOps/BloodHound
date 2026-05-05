@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { NodeResponse, apiClient, useExploreGraph, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
-import { Button } from 'doodle-ui';
+import { Button, MenuItem } from 'doodle-ui';
 import { FC, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import { selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
@@ -75,7 +75,7 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
         }
     };
 
-    const handleOpenConfirmation = (e: React.MouseEvent<HTMLLIElement>) => {
+    const handleOpenConfirmation = (e: Event) => {
         e.stopPropagation();
         setOpen(true);
     };
@@ -93,7 +93,7 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
     if (assetGroupMembers.length === 0) {
         return (
             <>
-                <MenuItem onClick={isMenuItemForTierZero ? handleOpenConfirmation : handleAddToAssetGroup}>
+                <MenuItem onSelect={isMenuItemForTierZero ? handleOpenConfirmation : handleAddToAssetGroup}>
                     Add to {assetGroupName}
                 </MenuItem>
                 {isMenuItemForTierZero ? (
@@ -112,7 +112,7 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
     if (assetGroupMembers.length === 1 && assetGroupMembers[0].custom_member) {
         return (
             <>
-                <MenuItem onClick={isMenuItemForTierZero ? handleOpenConfirmation : handleRemoveFromAssetGroup}>
+                <MenuItem onSelect={isMenuItemForTierZero ? handleOpenConfirmation : handleRemoveFromAssetGroup}>
                     Remove from {assetGroupName}
                 </MenuItem>
                 {isMenuItemForTierZero ? (

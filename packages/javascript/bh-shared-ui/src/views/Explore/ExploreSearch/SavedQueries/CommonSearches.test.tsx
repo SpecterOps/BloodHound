@@ -128,14 +128,15 @@ describe('CommonSearches', () => {
         const testPlatforms = await screen.findByLabelText(/platform/i);
         expect(testPlatforms).toBeInTheDocument();
         await user.click(testPlatforms);
-        const testListBox = await screen.findByRole('listbox');
-        expect(testListBox).toBeInTheDocument();
-        expect(testListBox).toBeVisible();
+        await screen.findByRole('listbox');
 
-        const ulElement = testListBox;
-        expect(ulElement.children).toHaveLength(4);
+        // Radix Select wraps items in a Viewport + scroll buttons inside the listbox —
+        // use getAllByRole('option') to query the actual option elements directly.
+        // Hidden native <option>s inside <select aria-hidden> are excluded automatically.
+        const options = screen.getAllByRole('option');
+        expect(options).toHaveLength(4);
 
-        await user.click(ulElement.children[0]);
+        await user.click(options[0]);
 
         expect(screen.getByText(/all domain admins/i)).toBeInTheDocument();
     });
@@ -157,15 +158,13 @@ describe('CommonSearches', () => {
         const testPlatforms = await screen.findByLabelText(/platform/i);
         expect(testPlatforms).toBeInTheDocument();
         await user.click(testPlatforms);
-        const testListBox = await screen.findByRole('listbox');
-        expect(testListBox).toBeInTheDocument();
-        expect(testListBox).toBeVisible();
+        await screen.findByRole('listbox');
 
-        const ulElement = testListBox;
-        expect(ulElement.children).toHaveLength(4);
+        const options = screen.getAllByRole('option');
+        expect(options).toHaveLength(4);
 
         //select Azure
-        await user.click(ulElement.children[2]);
+        await user.click(options[2]);
 
         //Azure query present
         expect(screen.getByText(/All members of high privileged roles/i)).toBeInTheDocument();
@@ -192,12 +191,13 @@ describe('CommonSearches', () => {
         const testPlatforms = await screen.findByLabelText(/platform/i);
         expect(testPlatforms).toBeInTheDocument();
         await user.click(testPlatforms);
-        const testListBox = await screen.findByRole('listbox');
-        const ulElement = testListBox;
-        expect(ulElement.children).toHaveLength(4);
+        await screen.findByRole('listbox');
+
+        const options = screen.getAllByRole('option');
+        expect(options).toHaveLength(4);
 
         //select AD
-        await user.click(ulElement.children[1]);
+        await user.click(options[1]);
 
         //AD query present
         expect(screen.getByText(/all domain admins/i)).toBeInTheDocument();

@@ -16,23 +16,9 @@
 
 import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { MenuItem, Tooltip, TooltipProps, styled, tooltipClasses } from '@mui/material';
+import { MenuItem, MenuSub, MenuSubContent, MenuSubTrigger } from 'doodle-ui';
 import { NodeResponse, useExploreSelectedItem } from '../../../hooks';
 import { useNotifications } from '../../../providers';
-
-const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
-    <Tooltip {...props} classes={{ popper: className }} />
-))(({ theme }) => ({
-    [`& .${tooltipClasses.tooltip}`]: {
-        color: theme.palette.text.primary,
-        backgroundColor: theme.palette.background.paper,
-        padding: 0,
-        paddingTop: '0.5rem',
-        paddingBottom: '0.5rem',
-        boxShadow: theme.shadows[8],
-        marginLeft: '2px !important',
-    },
-}));
 
 const CopyMenuItem = () => {
     const { addNotification } = useNotifications();
@@ -62,21 +48,16 @@ const CopyMenuItem = () => {
     };
 
     return (
-        <div>
-            <StyledTooltip
-                placement='right'
-                title={
-                    <>
-                        <MenuItem onClick={handleCopyName}>Name</MenuItem>
-                        <MenuItem onClick={handleCopyObjectId}>Object ID</MenuItem>
-                        <MenuItem onClick={handleCopyCypher}>Cypher</MenuItem>
-                    </>
-                }>
-                <MenuItem className='justify-between' onClick={(e) => e.stopPropagation()}>
-                    Copy <FontAwesomeIcon icon={faCaretRight} />
-                </MenuItem>
-            </StyledTooltip>
-        </div>
+        <MenuSub>
+            <MenuSubTrigger>
+                Copy <FontAwesomeIcon icon={faCaretRight} />
+            </MenuSubTrigger>
+            <MenuSubContent>
+                <MenuItem onSelect={handleCopyName}>Name</MenuItem>
+                <MenuItem onSelect={handleCopyObjectId}>Object ID</MenuItem>
+                <MenuItem onSelect={handleCopyCypher}>Cypher</MenuItem>
+            </MenuSubContent>
+        </MenuSub>
     );
 };
 

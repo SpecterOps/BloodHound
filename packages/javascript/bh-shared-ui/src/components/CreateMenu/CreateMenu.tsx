@@ -16,8 +16,8 @@
 
 import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Menu, MenuItem, Typography } from '@mui/material';
-import { Button } from 'doodle-ui';
+import { Box, Typography } from '@mui/material';
+import { Button, Menu, MenuContent, MenuItem, MenuTrigger } from 'doodle-ui';
 import React, { ComponentPropsWithoutRef, FC } from 'react';
 import FeatureFlag from '../FeatureFlag';
 
@@ -28,43 +28,24 @@ const MenuWithDropdown: React.FC<{
     menuItems: MenuItems;
     disabled: boolean;
 }> = ({ menuTitle, menuItems, disabled }) => {
-    const buttonRef = React.useRef(null);
-    const [isOpen, setIsOpen] = React.useState(false);
-
-    const openMenu = () => {
-        setIsOpen(true);
-    };
-
-    const closeMenu = () => {
-        setIsOpen(false);
-    };
-
     return (
-        <>
-            <Button
-                aria-controls='create-menu'
-                aria-haspopup='true'
-                ref={buttonRef}
-                onClick={openMenu}
-                disabled={disabled}>
-                <Box display='flex' alignItems={'center'}>
-                    <Typography mr='8px'>{menuTitle}</Typography>
-                    <FontAwesomeIcon icon={faCaretDown} />
-                </Box>
-            </Button>
-            <Menu id='create-menu' anchorEl={buttonRef.current} keepMounted open={isOpen} onClose={closeMenu}>
+        <Menu>
+            <MenuTrigger asChild>
+                <Button disabled={disabled}>
+                    <Box display='flex' alignItems='center'>
+                        <Typography mr='8px'>{menuTitle}</Typography>
+                        <FontAwesomeIcon icon={faCaretDown} />
+                    </Box>
+                </Button>
+            </MenuTrigger>
+            <MenuContent>
                 {menuItems.map((menuItem) => (
-                    <MenuItem
-                        key={menuItem.title}
-                        onClick={() => {
-                            menuItem.onClick();
-                            closeMenu();
-                        }}>
+                    <MenuItem key={menuItem.title} onSelect={menuItem.onClick}>
                         {menuItem.title}
                     </MenuItem>
                 ))}
-            </Menu>
-        </>
+            </MenuContent>
+        </Menu>
     );
 };
 

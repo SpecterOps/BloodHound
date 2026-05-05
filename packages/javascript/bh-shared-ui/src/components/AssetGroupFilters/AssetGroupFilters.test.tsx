@@ -94,10 +94,9 @@ describe('AssetGroupEdit', () => {
         it('displays the value from filterParams.node_type', async () => {
             await setup({ filterParams, memberCounts });
             const nodeTypeFilter = screen.getByTestId('asset-groups-node-type-filter');
-            const nodeTypeFilterValue = nodeTypeFilter.firstChild?.nextSibling;
 
+            // Radix SelectTrigger is a <button> — check the visible display text rather than a hidden input
             expect(nodeTypeFilter.textContent).toContain('Domain');
-            expect((nodeTypeFilterValue as HTMLInputElement)?.value).toBe('eq:Domain');
         });
 
         it('lists all available node kinds as options to filter by', async () => {

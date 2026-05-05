@@ -16,8 +16,8 @@
 
 import { faCropAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { MenuItem, Popper } from '@mui/material';
-import { TooltipContent, TooltipPortal, TooltipProvider, TooltipRoot, TooltipTrigger } from 'doodle-ui';
+import { Popper } from '@mui/material';
+import { MenuItem, TooltipContent, TooltipPortal, TooltipProvider, TooltipRoot, TooltipTrigger } from 'doodle-ui';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
 import { useRef, useState } from 'react';
@@ -114,19 +114,19 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                     <MenuItem
                         aria-label='All Labels Toggle'
                         data-testid='explore_graph-controls_all-labels-toggle'
-                        onClick={handleToggleAllLabels}>
+                        onSelect={handleToggleAllLabels}>
                         {!showNodeLabels || !showEdgeLabels ? 'Show' : 'Hide'} All Labels
                     </MenuItem>
                     <MenuItem
                         aria-label='Node Labels Toggle'
                         data-testid='explore_graph-controls_node-labels-toggle'
-                        onClick={onToggleNodeLabels}>
+                        onSelect={onToggleNodeLabels}>
                         {showNodeLabels ? 'Hide' : 'Show'} Node Labels
                     </MenuItem>
                     <MenuItem
                         aria-label='Edge Labels Toggle'
                         data-testid='explore_graph-controls_edge-labels-toggle'
-                        onClick={onToggleEdgeLabels}>
+                        onSelect={onToggleEdgeLabels}>
                         {showEdgeLabels ? 'Hide' : 'Show'} Edge Labels
                     </MenuItem>
                 </GraphMenu>
@@ -142,8 +142,8 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                             <MenuItem
                                 data-testid={`explore_graph-controls_${buttonLabel}-buttonLabel`}
                                 key={buttonLabel}
-                                selected={isSelected}
-                                onClick={() => onLayoutChange(buttonLabel)}>
+                                className={isSelected ? 'font-bold text-secondary' : ''}
+                                onSelect={() => onLayoutChange(buttonLabel)}>
                                 {capitalize(buttonLabel)}
                             </MenuItem>
                         );
@@ -151,7 +151,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 </GraphMenu>
 
                 <GraphMenu label='Export'>
-                    <MenuItem onClick={() => exportToJson(jsonData)} disabled={isEmpty(jsonData)}>
+                    <MenuItem disabled={isEmpty(jsonData)} onSelect={() => exportToJson(jsonData)}>
                         JSON
                     </MenuItem>
                 </GraphMenu>

@@ -14,21 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Box,
-    Checkbox,
-    Collapse,
-    FormControl,
-    FormControlLabel,
-    Grid,
-    InputLabel,
-    MenuItem,
-    Paper,
-    Select,
-    Typography,
-} from '@mui/material';
+import { Box, Checkbox, Collapse, FormControlLabel, Grid, Paper, Typography } from '@mui/material';
 import clsx from 'clsx';
-import { Button } from 'doodle-ui';
+import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from 'doodle-ui';
 import { AssetGroupMemberCounts } from 'js-client-library';
 import { AssetGroupMemberParams } from 'js-client-library/dist/types';
 import { FC, useState } from 'react';
@@ -81,29 +69,33 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, member
             <Collapse in={displayFilters} data-testid='asset-group-filter-collapsible-section' className='mt-3'>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
-                        <FormControl className='block'>
-                            <InputLabel id='nodeTypeFilter-label'>Node Type</InputLabel>
-                            <Select
+                        <label htmlFor='nodeType' className='text-sm'>
+                            Node Type
+                        </label>
+                        <Select
+                            value={filterParams.primary_kind || '__none__'}
+                            onValueChange={(value) =>
+                                handleFilterChange('primary_kind', value === '__none__' ? '' : value)
+                            }>
+                            <SelectTrigger
                                 id='nodeType'
-                                labelId='nodeTypeFilter-label'
-                                value={filterParams.primary_kind ?? ''}
-                                onChange={(e) => handleFilterChange('primary_kind', e.target.value)}
-                                variant='standard'
-                                fullWidth
+                                variant='underlined'
+                                className='w-full'
                                 data-testid='asset-groups-node-type-filter'>
-                                <MenuItem value=''>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value='__none__'>
                                     <em>None</em>
-                                </MenuItem>
-                                {Object.keys(memberCounts.counts).map((value) => {
-                                    return (
-                                        <MenuItem value={`eq:${value}`} key={value}>
-                                            <NodeIcon nodeType={value} />
-                                            {value}
-                                        </MenuItem>
-                                    );
-                                })}
-                            </Select>
-                        </FormControl>
+                                </SelectItem>
+                                {Object.keys(memberCounts.counts).map((value) => (
+                                    <SelectItem value={`eq:${value}`} key={value}>
+                                        <NodeIcon nodeType={value} />
+                                        {value}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </Grid>
                     <Grid item xs={12}>
                         <FormControlLabel

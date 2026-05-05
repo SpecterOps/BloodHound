@@ -168,8 +168,10 @@ describe('GraphControls', () => {
             const layoutMenu = screen.getByText('Layout');
             await user.click(layoutMenu);
 
-            const selectedLayout = await screen.findByText(preselectedLayout);
-            expect(selectedLayout).toHaveClass('Mui-selected');
+            // Query by role to get the menuitem element itself (not the inner text span)
+            // and check the Tailwind class the component applies to the selected item
+            const selectedLayout = await screen.findByRole('menuitem', { name: preselectedLayout });
+            expect(selectedLayout).toHaveClass('font-bold');
         });
     });
     describe('Exporting json', () => {
@@ -179,9 +181,11 @@ describe('GraphControls', () => {
             const exportMenu = screen.getByText('Export');
             await user.click(exportMenu);
 
-            const jsonButton = await screen.findByText('JSON');
+            // Query by role to get the menuitem div (not the inner text span)
+            // Radix sets aria-disabled on disabled items rather than a Mui-disabled class
+            const jsonButton = await screen.findByRole('menuitem', { name: 'JSON' });
 
-            expect(jsonButton).toHaveClass('Mui-disabled');
+            expect(jsonButton).toHaveAttribute('aria-disabled', 'true');
         });
 
         it('calls exportToJson util when valid non a empty object is passed as the jsonData prop', async () => {

@@ -14,11 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { MenuItem } from '@mui/material';
-import { Button, Dialog, DialogActions, DialogContent, DialogDescription, DialogPortal, DialogTitle } from 'doodle-ui';
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogDescription,
+    DialogPortal,
+    DialogTitle,
+    MenuItem,
+} from 'doodle-ui';
 import { FC, useState } from 'react';
 import { useMutation } from 'react-query';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import type { AssetGroupTag, CreateSelectorRequest } from 'js-client-library';
 import { useExploreSelectedItem, usePermissions, useTagsQuery, type ItemResponse } from '../../../hooks';
@@ -60,6 +68,7 @@ export const AssetGroupMenuItem: FC<{
     tagIdentifierFn: (tags: AssetGroupTag[]) => AssetGroupTag | undefined;
 }> = ({ addNodePayload, isCurrentMemberFn, removeNodePathFn, showConfirmationOnAdd = false, tagIdentifierFn }) => {
     const [dialogOpen, setDialogOpen] = useState(false);
+    const navigate = useNavigate();
     const { addNotification } = useNotifications();
     const { selectedItemQuery } = useExploreSelectedItem();
     const { checkPermission } = usePermissions();
@@ -98,12 +107,12 @@ export const AssetGroupMenuItem: FC<{
 
     // Show a loading state until the query is resolved
     if (isLoading) {
-        return <MenuItem disabled>Loading</MenuItem>;
+        return <MenuItem disabled={true}>Loading</MenuItem>;
     }
 
     // Show an error state if the query failed
     if (isError) {
-        return <MenuItem disabled>Unavailable</MenuItem>;
+        return <MenuItem disabled={true}>Unavailable</MenuItem>;
     }
 
     // If everything is loaded but there are no tags, there is nothing to render
@@ -114,7 +123,7 @@ export const AssetGroupMenuItem: FC<{
     // If selected node is already a member, navigate to the asset group details page for removal
     if (isCurrentMember) {
         return (
-            <MenuItem component={Link} to={removeNodePathFn(assetGroupTag)}>
+            <MenuItem onSelect={() => navigate(removeNodePathFn(assetGroupTag))}>
                 Remove from {assetGroupTag.name}
             </MenuItem>
         );
@@ -122,7 +131,7 @@ export const AssetGroupMenuItem: FC<{
 
     return (
         <>
-            <MenuItem onClick={createRuleAction}>Add to {assetGroupTag.name}</MenuItem>
+            <MenuItem onSelect={createRuleAction}>Add to {assetGroupTag.name}</MenuItem>
 
             {showConfirmationOnAdd && (
                 <ConfirmNodeChangesDialog

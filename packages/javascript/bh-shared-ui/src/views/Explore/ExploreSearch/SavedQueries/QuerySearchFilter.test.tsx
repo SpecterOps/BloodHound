@@ -90,14 +90,19 @@ describe('QuerySearchFilter', () => {
 
         expect(testPlatforms).toBeInTheDocument();
 
-        expect(screen.queryByText('All')).not.toBeInTheDocument();
+        // Radix SelectValue renders the placeholder ("All") inside the trigger immediately,
+        // so we cannot assert it's absent before opening. Instead, verify the listbox (dropdown
+        // content) is not yet present.
+        expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
 
         await user.click(testPlatforms);
 
-        const testPlatformAll = screen.getByText('All');
-        const testPlatformAD = screen.getByText('Active Directory');
-        const testPlatformAzure = screen.getByText('Azure');
-        const testPlatformSavedQueries = screen.getByText('Saved Queries');
+        // After opening, use role="option" to target SelectItem elements specifically,
+        // avoiding false matches against the SelectValue placeholder in the trigger.
+        const testPlatformAll = screen.getByRole('option', { name: 'All' });
+        const testPlatformAD = screen.getByRole('option', { name: 'Active Directory' });
+        const testPlatformAzure = screen.getByRole('option', { name: 'Azure' });
+        const testPlatformSavedQueries = screen.getByRole('option', { name: 'Saved Queries' });
 
         expect(testPlatformAll).toBeInTheDocument();
         expect(testPlatformAD).toBeInTheDocument();

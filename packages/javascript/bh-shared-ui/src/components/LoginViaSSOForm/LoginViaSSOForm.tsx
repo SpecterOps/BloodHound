@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material';
-import { Button } from 'doodle-ui';
+import { Box, Grid } from '@mui/material';
+import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from 'doodle-ui';
 import { SSOProvider } from 'js-client-library';
 import React from 'react';
 
@@ -45,22 +45,21 @@ const LoginViaSSOForm: React.FC<LoginViaSSOFormProps> = ({ providers, onSubmit, 
         <form onSubmit={handleSubmit}>
             <Grid container spacing={4} justifyContent='center'>
                 <Grid item xs={12}>
-                    <FormControl variant='outlined'>
-                        <InputLabel id='selected-saml-provider-label'>Choose your SSO Provider</InputLabel>
-                        <Select
-                            labelId='selected-saml-provider-label'
-                            id='selected-saml-provider'
-                            value={selectedProviderSlug}
-                            label='Choose your SSO Provider'
-                            onChange={(e) => setSelectedProviderSlug(e.target.value as string)}
-                            fullWidth>
+                    <label htmlFor='selected-saml-provider' className='text-sm'>
+                        Choose your SSO Provider
+                    </label>
+                    <Select value={selectedProviderSlug || undefined} onValueChange={setSelectedProviderSlug}>
+                        <SelectTrigger id='selected-saml-provider' className='w-full mt-1'>
+                            <SelectValue placeholder='Choose your SSO Provider' />
+                        </SelectTrigger>
+                        <SelectContent>
                             {providers?.map((provider) => (
-                                <MenuItem key={provider.id} value={provider.slug}>
+                                <SelectItem key={provider.id} value={provider.slug}>
                                     {provider.name}
-                                </MenuItem>
+                                </SelectItem>
                             ))}
-                        </Select>
-                    </FormControl>
+                        </SelectContent>
+                    </Select>
                 </Grid>
                 <Grid item xs={8}>
                     <Button size='large' type='submit' className='w-full' disabled={selectedProviderSlug === ''}>

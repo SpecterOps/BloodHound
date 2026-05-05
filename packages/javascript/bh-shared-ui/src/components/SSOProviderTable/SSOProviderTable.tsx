@@ -17,8 +17,6 @@
 import { faEdit, faEllipsisVertical, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    Menu,
-    MenuItem,
     Skeleton,
     Table,
     TableBody,
@@ -28,9 +26,9 @@ import {
     TableRow,
     TableSortLabel,
 } from '@mui/material';
-import { Button } from 'doodle-ui';
+import { Button, Menu, MenuContent, MenuItem, MenuTrigger } from 'doodle-ui';
 import { SSOProvider } from 'js-client-library';
-import { FC, MouseEventHandler, useState } from 'react';
+import { FC } from 'react';
 import { usePermissions } from '../../hooks';
 import { SortOrder } from '../../types';
 import { Permission } from '../../utils';
@@ -39,60 +37,24 @@ const SSOProviderTableActionsMenu: FC<{
     onDeleteSSOProvider: () => void;
     onUpdateSSOProvider: () => void;
 }> = ({ onDeleteSSOProvider, onUpdateSSOProvider }) => {
-    /* Hooks */
-
-    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-
-    /* Event Handlers */
-
-    const handleOnOpen: MouseEventHandler<HTMLButtonElement> = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    /* Implementation */
-
-    const onClickDeleteSSOProvider = () => {
-        onDeleteSSOProvider();
-        setAnchorEl(null);
-    };
-
-    const onClickUpdateSSOProvider = () => {
-        onUpdateSSOProvider();
-        setAnchorEl(null);
-    };
-
     return (
-        <>
-            <Button variant={'text'} onClick={handleOnOpen} size='small' aria-label='Open provider actions menu'>
-                <FontAwesomeIcon icon={faEllipsisVertical} />
-            </Button>
-            <Menu
-                anchorEl={anchorEl}
-                elevation={0}
-                anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'right',
-                }}
-                transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                }}
-                classes={{ paper: 'border border-gray-300' }}
-                keepMounted
-                open={Boolean(anchorEl)}
-                onClose={() => {
-                    setAnchorEl(null);
-                }}>
-                <MenuItem onClick={onClickDeleteSSOProvider} className='flex gap-2'>
+        <Menu>
+            <MenuTrigger asChild>
+                <Button variant={'text'} size='small' aria-label='Open provider actions menu'>
+                    <FontAwesomeIcon icon={faEllipsisVertical} />
+                </Button>
+            </MenuTrigger>
+            <MenuContent align='end'>
+                <MenuItem onSelect={onDeleteSSOProvider} className='flex gap-2'>
                     <FontAwesomeIcon icon={faTrash} className='text-gray-500' />
                     <span>Delete SSO Provider</span>
                 </MenuItem>
-                <MenuItem onClick={onClickUpdateSSOProvider} className='flex gap-2'>
+                <MenuItem onSelect={onUpdateSSOProvider} className='flex gap-2'>
                     <FontAwesomeIcon icon={faEdit} className='text-gray-500' />
                     <span>Edit SSO Provider</span>
                 </MenuItem>
-            </Menu>
-        </>
+            </MenuContent>
+        </Menu>
     );
 };
 

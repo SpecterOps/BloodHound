@@ -15,8 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
-import { Button, Input } from 'doodle-ui';
+import {
+    FormControl,
+    InputLabel,
+    MenuItem as MuiMenuItem,
+    Select as MuiSelect,
+    SelectChangeEvent,
+} from '@mui/material';
+import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from 'doodle-ui';
 import { useState } from 'react';
 import { AppIcon } from '../../../../components';
 import { useSavedQueriesContext } from '../../providers';
@@ -46,7 +52,6 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
     const { selectedQuery } = useSavedQueriesContext();
 
     const [categoriesOpen, setCategoriesOpen] = useState<boolean>(false);
-    const [sourcesOpen, setSourcesOpen] = useState<boolean>(false);
 
     const [showImportDialog, setShowImportDialog] = useState<boolean>(false);
 
@@ -118,24 +123,27 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                     </div>
                 </div>
                 <div className='flex w-full items-center justify-between flex-row'>
-                    <FormControl size='small' className='w-full z-10'>
-                        <InputLabel id='platforms-label'>Platforms</InputLabel>
+                    <div className='w-full z-10'>
+                        <label htmlFor='platforms' className='text-sm'>
+                            Platforms
+                        </label>
                         <Select
-                            labelId='platforms-label'
-                            id='demo-simple-select-helper'
-                            className='z-10'
-                            value={platform}
-                            label='Platforms'
-                            onChange={(e) => handlePlatformFilter(e.target.value)}>
-                            <MenuItem value=''>All</MenuItem>
-                            <MenuItem value='Active Directory'>Active Directory</MenuItem>
-                            <MenuItem value='Azure'>Azure</MenuItem>
-                            <MenuItem value='Saved Queries'>Saved Queries</MenuItem>
+                            value={platform || undefined}
+                            onValueChange={(val) => handlePlatformFilter(val === '__all__' ? '' : val)}>
+                            <SelectTrigger id='platforms' className='w-full mt-1'>
+                                <SelectValue placeholder='All' />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value='__all__'>All</SelectItem>
+                                <SelectItem value='Active Directory'>Active Directory</SelectItem>
+                                <SelectItem value='Azure'>Azure</SelectItem>
+                                <SelectItem value='Saved Queries'>Saved Queries</SelectItem>
+                            </SelectContent>
                         </Select>
-                    </FormControl>
+                    </div>
                     <FormControl size='small' className='w-full ml-2 z-10'>
                         <InputLabel id='category-filter-label'>Categories</InputLabel>
-                        <Select
+                        <MuiSelect
                             labelId='category-filter-label'
                             id='category-filter'
                             className='z-10'
@@ -146,32 +154,32 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                             onClose={() => setCategoriesOpen(false)}
                             multiple
                             onChange={handleCategoryChange}>
-                            <MenuItem value=''>All Categories</MenuItem>
+                            <MuiMenuItem value=''>All Categories</MuiMenuItem>
                             {categories.map((category) => (
-                                <MenuItem key={category} value={category}>
+                                <MuiMenuItem key={category} value={category}>
                                     {category}
-                                </MenuItem>
+                                </MuiMenuItem>
                             ))}
-                        </Select>
+                        </MuiSelect>
                     </FormControl>
-                    <FormControl size='small' className='w-full ml-2 z-10'>
-                        <InputLabel id='source-filter-label'>Source</InputLabel>
+                    <div className='w-full ml-2 z-10'>
+                        <label htmlFor='source-filter' className='text-sm'>
+                            Source
+                        </label>
                         <Select
-                            labelId='source-filter-label'
-                            id='source-filter'
-                            className='z-10'
-                            value={source || ''}
-                            label='source'
-                            open={sourcesOpen}
-                            onOpen={() => setSourcesOpen(true)}
-                            onClose={() => setSourcesOpen(false)}
-                            onChange={(e) => handleSourceFilter(e.target.value)}>
-                            <MenuItem value=''>All Sources</MenuItem>
-                            <MenuItem value='prebuilt'>Prebuilt</MenuItem>
-                            <MenuItem value='personal'>Personal</MenuItem>
-                            <MenuItem value='shared'>Shared</MenuItem>
+                            value={source || undefined}
+                            onValueChange={(val) => handleSourceFilter(val === '__all__' ? '' : val)}>
+                            <SelectTrigger id='source-filter' className='w-full mt-1'>
+                                <SelectValue placeholder='All Sources' />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value='__all__'>All Sources</SelectItem>
+                                <SelectItem value='prebuilt'>Prebuilt</SelectItem>
+                                <SelectItem value='personal'>Personal</SelectItem>
+                                <SelectItem value='shared'>Shared</SelectItem>
+                            </SelectContent>
                         </Select>
-                    </FormControl>
+                    </div>
                 </div>
             </div>
             <ImportQueryDialog open={showImportDialog} onClose={() => setShowImportDialog(false)} />

@@ -14,69 +14,25 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Menu } from '@mui/material';
-import React, { Children, FC, JSXElementConstructor, ReactElement, useState } from 'react';
+import { Menu, MenuContent, MenuTrigger } from 'doodle-ui';
+import { FC, ReactNode } from 'react';
 import GraphButton from '../GraphButton';
-
-type RenderableChild = ReactElement<any, string | JSXElementConstructor<any>>;
-type Attributes = Partial<React.HTMLAttributes<Element>>;
 
 const GraphMenu: FC<{
     label: string;
-    children: RenderableChild | RenderableChild[];
+    children: ReactNode;
 }> = ({ children, label }) => {
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-    const open = Boolean(anchorEl);
-
-    const handleClose = () => setAnchorEl(null);
-
     return (
-        <>
-            <GraphButton
-                aria-label={label}
-                data-testid={`explore_graph-controls_${label.toLowerCase().split(' ').join('-')}-menu`}
-                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-                    setAnchorEl(event.currentTarget);
-                }}
-                aria-controls={open ? `${label}-menu` : undefined}
-                aria-haspopup='true'
-                aria-expanded={open ? 'true' : undefined}
-                displayText={label}></GraphButton>
-            <Menu
-                id={`${label}-menu`}
-                open={open}
-                anchorEl={anchorEl}
-                onClose={handleClose}
-                MenuListProps={{
-                    'aria-labelledby': `${label}-button`,
-                }}
-                anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'left',
-                }}
-                transformOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'left',
-                }}>
-                {Children.map(children, (child) => {
-                    if (React.isValidElement(child) && child.props && (child.props as Attributes)?.onClick) {
-                        try {
-                            return React.cloneElement(child, {
-                                onClick: (e: React.MouseEvent) => {
-                                    (child?.props as Attributes).onClick?.(e);
-                                    handleClose();
-                                },
-                            } as Attributes);
-                        } catch (e) {
-                            return child;
-                        }
-                    }
-
-                    return child;
-                })}
-            </Menu>
-        </>
+        <Menu>
+            <MenuTrigger asChild>
+                <GraphButton
+                    aria-label={label}
+                    data-testid={`explore_graph-controls_${label.toLowerCase().split(' ').join('-')}-menu`}
+                    displayText={label}
+                />
+            </MenuTrigger>
+            <MenuContent side='top'>{children}</MenuContent>
+        </Menu>
     );
 };
 

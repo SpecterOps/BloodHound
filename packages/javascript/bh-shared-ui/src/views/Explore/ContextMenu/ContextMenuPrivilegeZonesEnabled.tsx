@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Menu, MenuItem } from '@mui/material';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from 'doodle-ui';
 import {
     AssetGroupTag,
     AssetGroupTagSelectorAutoCertifySeedsOnly,
@@ -86,31 +86,37 @@ const ContextMenu: FC<{
     };
 
     return (
-        <Menu
-            open={contextMenu !== null}
-            anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
-            anchorReference='anchorPosition'
-            onClick={onClose}
-            keepMounted>
-            <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
-            <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
+        <Menu open={contextMenu !== null} onOpenChange={(open) => !open && onClose()}>
+            <MenuTrigger asChild>
+                <span
+                    style={{
+                        position: 'fixed',
+                        left: contextMenu?.mouseX ?? 0,
+                        top: contextMenu?.mouseY ?? 0,
+                    }}
+                />
+            </MenuTrigger>
+            <MenuContent>
+                <MenuItem onSelect={handleSetStartingNode}>Set as starting node</MenuItem>
+                <MenuItem onSelect={handleSetEndingNode}>Set as ending node</MenuItem>
 
-            <AssetGroupMenuItem
-                addNodePayload={tierZeroPayload}
-                isCurrentMemberFn={isTierZero}
-                removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'zones')}
-                showConfirmationOnAdd
-                tagIdentifierFn={getIsTierZeroTag}
-            />
+                <AssetGroupMenuItem
+                    addNodePayload={tierZeroPayload}
+                    isCurrentMemberFn={isTierZero}
+                    removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'zones')}
+                    showConfirmationOnAdd
+                    tagIdentifierFn={getIsTierZeroTag}
+                />
 
-            <AssetGroupMenuItem
-                addNodePayload={ownedPayload}
-                isCurrentMemberFn={isOwnedObject}
-                removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
-                tagIdentifierFn={getIsOwnedTag}
-            />
+                <AssetGroupMenuItem
+                    addNodePayload={ownedPayload}
+                    isCurrentMemberFn={isOwnedObject}
+                    removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
+                    tagIdentifierFn={getIsOwnedTag}
+                />
 
-            <CopyMenuItem />
+                <CopyMenuItem />
+            </MenuContent>
         </Menu>
     );
 };

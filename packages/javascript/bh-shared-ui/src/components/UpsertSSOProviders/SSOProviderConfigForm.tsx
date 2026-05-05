@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, FormControl, FormControlLabel, Grid, InputLabel, MenuItem, Select, Typography } from '@mui/material';
+import { Alert, FormControlLabel, Grid, Typography } from '@mui/material';
 import clsx from 'clsx';
-import { Switch } from 'doodle-ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch } from 'doodle-ui';
 import {
     Role,
     SSOProviderConfiguration,
@@ -113,33 +113,35 @@ const SSOProviderConfigForm: FC<{
                     validate: (value) => value != 0 || 'Default role is required',
                 }}
                 render={({ field }) => (
-                    <FormControl>
-                        <InputLabel
-                            id='role-label'
-                            className='-ml-3.5 mt-2'
-                            disabled={!watch('config.auto_provision.enabled')}>
+                    <>
+                        <label
+                            htmlFor='role'
+                            className={clsx('text-sm', !watch('config.auto_provision.enabled') && 'opacity-50')}>
                             Default User Role
-                        </InputLabel>
+                        </label>
                         <Select
-                            disabled={!watch('config.auto_provision.enabled')}
-                            labelId='role-label'
-                            id='role'
-                            name='role'
-                            onChange={(e) => {
-                                const output = parseInt(e.target.value as string, 10);
+                            value={isNaN(field.value) ? undefined : field.value.toString()}
+                            onValueChange={(value) => {
+                                const output = parseInt(value, 10);
                                 field.onChange(isNaN(output) ? 1 : output);
                             }}
-                            value={isNaN(field.value) ? '' : field.value.toString()}
-                            variant='standard'
-                            fullWidth
-                            data-testid='sso-provider-config-form_select-default-role'>
-                            {roles?.map((role: Role) => (
-                                <MenuItem key={role.id} value={role.id.toString()}>
-                                    {role.name}
-                                </MenuItem>
-                            ))}
+                            disabled={!watch('config.auto_provision.enabled')}>
+                            <SelectTrigger
+                                id='role'
+                                variant='underlined'
+                                className='w-full mt-1'
+                                data-testid='sso-provider-config-form_select-default-role'>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {roles?.map((role: Role) => (
+                                    <SelectItem key={role.id} value={role.id.toString()}>
+                                        {role.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
                         </Select>
-                    </FormControl>
+                    </>
                 )}
             />
         </Grid>

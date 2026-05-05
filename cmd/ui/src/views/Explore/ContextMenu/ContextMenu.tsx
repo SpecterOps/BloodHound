@@ -14,8 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Menu, MenuItem } from '@mui/material';
-
 import {
     CopyMenuItem,
     Permission,
@@ -25,6 +23,7 @@ import {
     useFeatureFlag,
     usePermissions,
 } from 'bh-shared-ui';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from 'doodle-ui';
 import { FC } from 'react';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { useAppSelector } from 'src/store';
@@ -68,28 +67,34 @@ const ContextMenu: FC<{
     };
 
     return (
-        <Menu
-            open={contextMenu !== null}
-            anchorPosition={{ left: contextMenu?.mouseX || 0 + 10, top: contextMenu?.mouseY || 0 }}
-            anchorReference='anchorPosition'
-            onClick={handleClose}>
-            <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
-            <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
-
-            {!tierFlag?.enabled &&
-                checkPermission(Permission.GRAPH_DB_WRITE) && [
-                    <AssetGroupMenuItem
-                        key={tierZeroAssetGroupId}
-                        assetGroupId={tierZeroAssetGroupId}
-                        assetGroupName='High Value'
-                    />,
-                    <AssetGroupMenuItem
-                        key={ownedAssetGroupId}
-                        assetGroupId={ownedAssetGroupId}
-                        assetGroupName='Owned'
-                    />,
-                ]}
-            <CopyMenuItem />
+        <Menu open={contextMenu !== null} onOpenChange={(open) => !open && handleClose()}>
+            <MenuTrigger asChild>
+                <span
+                    style={{
+                        position: 'fixed',
+                        left: contextMenu?.mouseX ?? 0,
+                        top: contextMenu?.mouseY ?? 0,
+                    }}
+                />
+            </MenuTrigger>
+            <MenuContent>
+                <MenuItem onSelect={handleSetStartingNode}>Set as starting node</MenuItem>
+                <MenuItem onSelect={handleSetEndingNode}>Set as ending node</MenuItem>
+                {!tierFlag?.enabled &&
+                    checkPermission(Permission.GRAPH_DB_WRITE) && [
+                        <AssetGroupMenuItem
+                            key={tierZeroAssetGroupId}
+                            assetGroupId={tierZeroAssetGroupId}
+                            assetGroupName='High Value'
+                        />,
+                        <AssetGroupMenuItem
+                            key={ownedAssetGroupId}
+                            assetGroupId={ownedAssetGroupId}
+                            assetGroupName='Owned'
+                        />,
+                    ]}
+                <CopyMenuItem />
+            </MenuContent>
         </Menu>
     );
 };

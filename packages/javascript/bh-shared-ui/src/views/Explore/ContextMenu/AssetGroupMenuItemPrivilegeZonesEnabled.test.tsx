@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { Menu, MenuContent } from 'doodle-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { getIsOwnedTag, getIsTierZeroTag, isOwnedObject, isTierZero } from '../../../hooks';
@@ -23,6 +24,20 @@ import { withoutErrorLogging } from '../../../mocks/stderr';
 import { render, screen } from '../../../test-utils';
 import { Permission, apiClient } from '../../../utils';
 import { AssetGroupMenuItem } from './AssetGroupMenuItemPrivilegeZonesEnabled';
+
+// doodle-ui MenuItem is backed by DropdownMenuPrimitive.Item which requires a Radix
+// DropdownMenu context (MenuContext + MenuContentContext) to render correctly.
+// Without context it throws and the component renders nothing.
+// forceMount bypasses Radix's Presence/animation system so content renders immediately
+// in JSDOM (where CSS transitions never fire and the content would otherwise stay hidden).
+// modal={false} disables the DropdownMenu's focus trap so that a Radix Dialog opened
+// from inside an onSelect handler can manage focus without deadlocking against the
+// DropdownMenu's own close-and-return-focus lifecycle in JSDOM.
+const MenuWrapper = ({ children }: { children: React.ReactNode }) => (
+    <Menu open modal={false}>
+        <MenuContent forceMount>{children}</MenuContent>
+    </Menu>
+);
 
 const assetGroupTags = {
     data: {
@@ -125,12 +140,14 @@ describe('AssetGroupMenuItem', () => {
 
     it('shows a loading state', async () => {
         render(
-            <AssetGroupMenuItem
-                addNodePayload={{} as any}
-                isCurrentMemberFn={isOwnedObject}
-                removeNodePathFn={() => '/privilege-zones/labels/1/details'}
-                tagIdentifierFn={getIsOwnedTag}
-            />,
+            <MenuWrapper>
+                <AssetGroupMenuItem
+                    addNodePayload={{} as any}
+                    isCurrentMemberFn={isOwnedObject}
+                    removeNodePathFn={() => '/privilege-zones/labels/1/details'}
+                    tagIdentifierFn={getIsOwnedTag}
+                />
+            </MenuWrapper>,
             {
                 route: ROUTE_WITH_SELECTED_ITEM_PARAM,
             }
@@ -149,12 +166,14 @@ describe('AssetGroupMenuItem', () => {
 
         await withoutErrorLogging(async () => {
             render(
-                <AssetGroupMenuItem
-                    addNodePayload={{} as any}
-                    isCurrentMemberFn={isOwnedObject}
-                    removeNodePathFn={() => '/privilege-zones/labels/1/details'}
-                    tagIdentifierFn={getIsOwnedTag}
-                />,
+                <MenuWrapper>
+                    <AssetGroupMenuItem
+                        addNodePayload={{} as any}
+                        isCurrentMemberFn={isOwnedObject}
+                        removeNodePathFn={() => '/privilege-zones/labels/1/details'}
+                        tagIdentifierFn={getIsOwnedTag}
+                    />
+                </MenuWrapper>,
                 {
                     route: ROUTE_WITH_SELECTED_ITEM_PARAM,
                 }
@@ -169,13 +188,15 @@ describe('AssetGroupMenuItem', () => {
         const mutateSpy = vi.spyOn(apiClient, 'createAssetGroupTagSelector');
 
         render(
-            <AssetGroupMenuItem
-                addNodePayload={{} as any}
-                isCurrentMemberFn={isTierZero}
-                removeNodePathFn={() => '/privilege-zones/zones/1/details'}
-                tagIdentifierFn={getIsTierZeroTag}
-                showConfirmationOnAdd={true}
-            />,
+            <MenuWrapper>
+                <AssetGroupMenuItem
+                    addNodePayload={{} as any}
+                    isCurrentMemberFn={isTierZero}
+                    removeNodePathFn={() => '/privilege-zones/zones/1/details'}
+                    tagIdentifierFn={getIsTierZeroTag}
+                    showConfirmationOnAdd={true}
+                />
+            </MenuWrapper>,
             {
                 route: ROUTE_WITH_SELECTED_ITEM_PARAM,
             }
@@ -202,12 +223,14 @@ describe('AssetGroupMenuItem', () => {
         const mutateSpy = vi.spyOn(apiClient, 'createAssetGroupTagSelector');
 
         render(
-            <AssetGroupMenuItem
-                addNodePayload={{} as any}
-                isCurrentMemberFn={isOwnedObject}
-                removeNodePathFn={() => '/privilege-zones/labels/1/details'}
-                tagIdentifierFn={getIsOwnedTag}
-            />,
+            <MenuWrapper>
+                <AssetGroupMenuItem
+                    addNodePayload={{} as any}
+                    isCurrentMemberFn={isOwnedObject}
+                    removeNodePathFn={() => '/privilege-zones/labels/1/details'}
+                    tagIdentifierFn={getIsOwnedTag}
+                />
+            </MenuWrapper>,
             {
                 route: ROUTE_WITH_SELECTED_ITEM_PARAM,
             }
@@ -231,12 +254,14 @@ describe('AssetGroupMenuItem', () => {
         );
 
         render(
-            <AssetGroupMenuItem
-                addNodePayload={{} as any}
-                isCurrentMemberFn={isOwnedObject}
-                removeNodePathFn={() => '/privilege-zones/labels/1/details'}
-                tagIdentifierFn={getIsOwnedTag}
-            />,
+            <MenuWrapper>
+                <AssetGroupMenuItem
+                    addNodePayload={{} as any}
+                    isCurrentMemberFn={isOwnedObject}
+                    removeNodePathFn={() => '/privilege-zones/labels/1/details'}
+                    tagIdentifierFn={getIsOwnedTag}
+                />
+            </MenuWrapper>,
             { route: ROUTE_WITH_SELECTED_ITEM_PARAM }
         );
 

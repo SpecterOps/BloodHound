@@ -16,11 +16,24 @@
 
 import userEvent from '@testing-library/user-event';
 import { apiClient } from 'bh-shared-ui';
+import { Menu, MenuContent } from 'doodle-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
 import { render, screen } from 'src/test-utils';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
+
+// doodle-ui MenuItem is backed by DropdownMenuPrimitive.Item which requires a Radix
+// DropdownMenu context (MenuContext + MenuContentContext) to render correctly.
+// forceMount bypasses Radix's Presence/animation system so content renders immediately
+// in JSDOM (where CSS transitions never fire and the content would otherwise stay hidden).
+// modal={false} prevents the DropdownMenu's focus trap from stalling Radix's close
+// lifecycle in JSDOM (where CSS transition events that signal close completion never fire).
+const MenuWrapper = ({ children }: { children: React.ReactNode }) => (
+    <Menu open modal={false}>
+        <MenuContent forceMount>{children}</MenuContent>
+    </Menu>
+);
 
 const tierZeroAssetGroup = { id: 1, name: 'high value' };
 const ownedAssetGroup = { id: 2, name: 'owned' };
@@ -98,10 +111,12 @@ describe('AssetGroupMenuItem', async () => {
         it('handles adding to tier zero asset group', async () => {
             await act(async () => {
                 render(
-                    <AssetGroupMenuItem
-                        assetGroupId={tierZeroAssetGroup.id}
-                        assetGroupName={tierZeroAssetGroup.name}
-                    />,
+                    <MenuWrapper>
+                        <AssetGroupMenuItem
+                            assetGroupId={tierZeroAssetGroup.id}
+                            assetGroupName={tierZeroAssetGroup.name}
+                        />
+                    </MenuWrapper>,
                     {
                         initialState: {
                             ...getAssetGroupTestProps({ isTierZero: true }),
@@ -137,12 +152,17 @@ describe('AssetGroupMenuItem', async () => {
 
         it('handles adding to non-tier-zero asset group', async () => {
             await act(async () => {
-                render(<AssetGroupMenuItem assetGroupId={ownedAssetGroup.id} assetGroupName={ownedAssetGroup.name} />, {
-                    initialState: {
-                        ...getAssetGroupTestProps({ isTierZero: false }),
-                    },
-                    route: ROUTE_WITH_SELECTED_ITEM_PARAM,
-                });
+                render(
+                    <MenuWrapper>
+                        <AssetGroupMenuItem assetGroupId={ownedAssetGroup.id} assetGroupName={ownedAssetGroup.name} />
+                    </MenuWrapper>,
+                    {
+                        initialState: {
+                            ...getAssetGroupTestProps({ isTierZero: false }),
+                        },
+                        route: ROUTE_WITH_SELECTED_ITEM_PARAM,
+                    }
+                );
             });
 
             const user = userEvent.setup();
@@ -164,9 +184,16 @@ describe('AssetGroupMenuItem', async () => {
         });
 
         it('renders null if network fails to return valid asset group membership list', async () => {
-            render(<AssetGroupMenuItem assetGroupId={3} assetGroupName={'blah'} />, {});
+            render(
+                <MenuWrapper>
+                    <AssetGroupMenuItem assetGroupId={3} assetGroupName={'blah'} />
+                </MenuWrapper>,
+                {}
+            );
 
-            expect(document.body.firstChild).toBeEmptyDOMElement();
+            // Component returns null when membership data hasn't loaded.
+            // With MenuWrapper present, body is not empty — assert at the semantic level instead.
+            expect(screen.queryByRole('menuitem')).not.toBeInTheDocument();
         });
     });
 
@@ -221,10 +248,12 @@ describe('AssetGroupMenuItem', async () => {
         it('handles removing from a tier zero asset group', async () => {
             await act(async () => {
                 await render(
-                    <AssetGroupMenuItem
-                        assetGroupId={tierZeroAssetGroup.id}
-                        assetGroupName={tierZeroAssetGroup.name}
-                    />,
+                    <MenuWrapper>
+                        <AssetGroupMenuItem
+                            assetGroupId={tierZeroAssetGroup.id}
+                            assetGroupName={tierZeroAssetGroup.name}
+                        />
+                    </MenuWrapper>,
                     {
                         initialState: {
                             ...getAssetGroupTestProps({ isTierZero: true }),
@@ -261,7 +290,9 @@ describe('AssetGroupMenuItem', async () => {
         it('handles removing from a non-tier-zero asset group', async () => {
             await act(async () => {
                 await render(
-                    <AssetGroupMenuItem assetGroupId={ownedAssetGroup.id} assetGroupName={ownedAssetGroup.name} />,
+                    <MenuWrapper>
+                        <AssetGroupMenuItem assetGroupId={ownedAssetGroup.id} assetGroupName={ownedAssetGroup.name} />
+                    </MenuWrapper>,
                     {
                         initialState: {
                             ...getAssetGroupTestProps({ isTierZero: false }),
