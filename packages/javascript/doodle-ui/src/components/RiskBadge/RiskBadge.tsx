@@ -18,7 +18,7 @@ import { ColorOptions } from '../../types';
 import { cn, getConditionalStyles, getCssColor } from '../utils';
 
 // These variants are used to determine the component props and wrapper element
-const RiskBadgePropVariants = cva('flex justify-center items-center rounded-full', {
+const RiskBadgePropVariants = cva('flex justify-center items-center rounded-full text-black', {
     variants: {
         type: {
             labeled: 'size-[32px] p-2 shadow-none w-auto p-0 leading-[1]',

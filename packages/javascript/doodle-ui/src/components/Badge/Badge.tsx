@@ -122,7 +122,7 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
                         {icon}
                     </span>
                 )}
-                <span className='translate-y-[1px] badge-label'>{label}</span>
+                <span className='translate-y-[1px]'>{label}</span>
             </div>
         );
     }
