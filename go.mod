@@ -21,7 +21,7 @@ require (
 	cuelang.org/go v0.16.0
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/RoaringBitmap/roaring/v2 v2.16.0
-	github.com/bloodhoundad/azurehound/v2 v2.12.0
+	github.com/bloodhoundad/azurehound/v2 v2.12.1
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/channelmeter/iso8601duration v0.0.0-20150204201828-8da3af7a2a61
 	github.com/coreos/go-oidc/v3 v3.14.1
@@ -55,7 +55,7 @@ require (
 	golang.org/x/crypto v0.49.0
 	golang.org/x/mod v0.34.0
 	golang.org/x/oauth2 v0.35.0
-	golang.org/x/text v0.35.0
+	golang.org/x/text v0.36.0
 	golang.org/x/tools v0.43.0
 	gorm.io/driver/postgres v1.5.10
 	gorm.io/gorm v1.25.12
