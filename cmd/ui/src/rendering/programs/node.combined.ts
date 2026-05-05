@@ -46,7 +46,7 @@ const POINTS = 3,
       - angle (1xfloat)
       - borderColor (4xbyte = 1xfloat)
    */
-    ATTRIBUTES = 10,
+    ATTRIBUTES = 11,
     // maximum size of single texture in atlas
     MAX_TEXTURE_SIZE = 192,
     // maximum width of atlas texture (limited by browser)
@@ -257,6 +257,7 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
         angleLocation: GLint;
         borderColorLocation: GLint;
         dimLocation: GLint;
+        bgColorLocation: GLint;
         latestRenderParams?: RenderParams;
 
         constructor(gl: WebGLRenderingContext, renderer: Sigma) {
@@ -274,6 +275,7 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
             this.angleLocation = gl.getAttribLocation(this.program, 'a_angle');
             this.borderColorLocation = gl.getAttribLocation(this.program, 'a_borderColor');
             this.dimLocation = gl.getAttribLocation(this.program, 'a_dim');
+            this.bgColorLocation = gl.getAttribLocation(this.program, 'a_bgColor');
 
             // Uniform Location
             const atlasLocation = gl.getUniformLocation(this.program, 'u_atlas');
@@ -311,6 +313,7 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
             gl.enableVertexAttribArray(this.angleLocation);
             gl.enableVertexAttribArray(this.borderColorLocation);
             gl.enableVertexAttribArray(this.dimLocation);
+            gl.enableVertexAttribArray(this.bgColorLocation);
 
             gl.vertexAttribPointer(
                 this.textureLocation,
@@ -344,10 +347,24 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
                 this.attributes * Float32Array.BYTES_PER_ELEMENT,
                 36
             );
+            gl.vertexAttribPointer(
+                this.bgColorLocation,
+                4,
+                gl.UNSIGNED_BYTE,
+                true,
+                this.attributes * Float32Array.BYTES_PER_ELEMENT,
+                40
+            );
         }
 
         process(
-            data: NodeDisplayData & { image?: string; isDimmed: boolean; borderColor?: string },
+            data: NodeDisplayData & {
+                image?: string;
+                isDimmed: boolean;
+                borderColor?: string;
+                dimFactor?: number;
+                graphBgColor?: string;
+            },
             hidden: boolean,
             offset: number
         ): void {
@@ -374,11 +391,15 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
                 array[i++] = 0;
                 // Dim:
                 array[i++] = 0;
+                // BgColor:
+                array[i++] = 0;
                 return;
             }
 
             const color = floatColor(data.color);
             const borderColor = floatColor(data.borderColor ?? data.color);
+            const bgColor = floatColor(data.graphBgColor ?? '#ffffff');
+            const dim = data.dimFactor ?? (data.isDimmed ? 0.1 : 1.0);
             array[i++] = data.x;
             array[i++] = data.y;
             array[i++] = data.size;
@@ -399,7 +420,8 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
             }
             array[i++] = ANGLE_1;
             array[i++] = borderColor;
-            array[i++] = data.isDimmed ? 0.1 : 1.0;
+            array[i++] = dim;
+            array[i++] = bgColor;
 
             array[i++] = data.x;
             array[i++] = data.y;
@@ -422,7 +444,8 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
             }
             array[i++] = ANGLE_2;
             array[i++] = borderColor;
-            array[i++] = data.isDimmed ? 0.1 : 1.0;
+            array[i++] = dim;
+            array[i++] = bgColor;
 
             array[i++] = data.x;
             array[i++] = data.y;
@@ -441,7 +464,8 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
             }
             array[i++] = ANGLE_3;
             array[i++] = borderColor;
-            array[i++] = data.isDimmed ? 0.1 : 1.0;
+            array[i++] = dim;
+            array[i++] = bgColor;
         }
 
         render(params: RenderParams): void {

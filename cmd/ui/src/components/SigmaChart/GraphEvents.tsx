@@ -30,7 +30,6 @@ import {
     graphToFramedGraph,
     resetCamera,
 } from 'src/ducks/graph/utils';
-import { Glyph } from 'src/rendering/programs/node.glyphs';
 import { bezier } from 'src/rendering/utils/bezier';
 import { blendHexColors, getNodeRadius } from 'src/rendering/utils/utils';
 import { useAppSelector } from 'src/store';
@@ -301,7 +300,9 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
     useEffect(() => {
         const bgColor = theme.neutral.primary;
-        const nodeBlend = darkMode ? 0.5 : 0.8;
+        // dimFactor is how much of the original color shows through (1 = full, 0 = fully hidden).
+        // Equivalent to 1 - nodeBlend from the old CPU-blend approach: dark 1-0.5=0.5, light 1-0.8=0.2.
+        const nodeDimFactor = darkMode ? 0.5 : 0.2;
         const edgeBlend = darkMode ? 0.6 : 0.9;
         const labelDimFactor = darkMode ? 0.3 : 0.1;
 
@@ -315,16 +316,13 @@ export const GraphEvents = forwardRef(function GraphEvents(
                     highlighted: node === highlightedItem,
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
                     isDimmed,
+                    // Always pass the canvas background color so the shader can dim toward it.
+                    graphBgColor: bgColor,
                     ...(isDimmed && {
                         labelDimFactor,
-                        color: blendHexColors(data.color, bgColor, nodeBlend),
-                        borderColor: blendHexColors(data.borderColor ?? data.color, bgColor, nodeBlend),
-                        backgroundColor: blendHexColors(data.backgroundColor ?? bgColor, bgColor, nodeBlend),
-                        glyphs: data.glyphs?.map((g: Glyph) => ({
-                            ...g,
-                            backgroundColor: blendHexColors(g.backgroundColor, bgColor, nodeBlend),
-                            color: blendHexColors(g.color, bgColor, nodeBlend),
-                        })),
+                        dimFactor: nodeDimFactor,
+                        // Keep label background dimmed — labels are rendered on canvas 2D, not by the shader.
+                        backgroundColor: blendHexColors(data.backgroundColor ?? bgColor, bgColor, 1 - nodeDimFactor),
                     }),
                 };
             },

@@ -27,6 +27,7 @@ varying float v_radius;
 varying float v_angle;
 varying vec2 v_position;
 varying float v_dim;
+varying vec4 v_bgColor;
 
 
 
@@ -73,5 +74,7 @@ void main(void) {
   // Multiplying by alpha scales antialiasing pixels correctly so they don't contribute
   // excess brightness at node edges. For fully opaque interior pixels (alpha=1) this is
   // a no-op; for transparent pixels (alpha=0) it zeroes out RGB, preventing colour leaking.
-  gl_FragColor.rgb = mix(v_color.rgb, gl_FragColor.rgb, v_dim) * gl_FragColor.a;
+  // Dim toward the canvas background color so nodes appear semi-transparent rather than
+  // washing out into their own fill color.
+  gl_FragColor.rgb = mix(v_bgColor.rgb, gl_FragColor.rgb, v_dim) * gl_FragColor.a;
 }`;
