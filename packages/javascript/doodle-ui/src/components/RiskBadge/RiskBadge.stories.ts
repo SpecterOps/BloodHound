@@ -22,9 +22,23 @@ const meta = {
     component: RiskBadge,
     parameters: {
         layout: 'centered',
+        docs: {
+            description: {
+                component: `
+RiskBadges are used to communicate **severity of risk** using color to indicate such risk.
+
+### When to use
+- To display **risk severity** (e.g., critical, high, moderate, low)
+- To show **exposure** (e.g., percentage of a certain asset that is exposed)
+
+RiskBadges are best used within charts, graphs and paired with severity legend.
+                `,
+            },
+            canvas: { sourceState: 'shown' },
+        },
     },
     argTypes: {
-        type: { type: 'string', control: 'select', options: ['labeled', 'sm-circle', 'md-circle'] },
+        type: { type: 'string', control: 'select', options: ['labeled', 'sm-labeled', 'sm-circle', 'md-circle'] },
         color: {
             type: 'string',
             control: 'color',
@@ -52,6 +66,15 @@ export const Labeled: Story = {
         type: 'labeled',
         color: 'secondary',
         label: 'Critical',
+        outlined: false,
+    },
+};
+
+export const SmallLabeled: Story = {
+    args: {
+        type: 'sm-labeled',
+        color: '#B553EC',
+        label: '100%',
         outlined: false,
     },
 };

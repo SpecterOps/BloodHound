@@ -168,12 +168,6 @@ export default {
                 'badge-blue-fill': 'var(--badge-blue-fill)',
                 'badge-blue-outline': 'var(--badge-blue-outline)',
 
-                // 'chip-indeterminate': 'var(--chip-indeterminate)',
-                // 'chip-indeterminate-hover': 'var(--chip-indeterminate-hover)',
-                // 'chip-outline-fill': 'var(--chip-outline-fill)',
-                // 'chip-outline-hover': 'var(--chip-outline-hover)',
-                // 'chip-outline-active': 'var(--chip-outline-active)',
-
                 // 'sidenav-bg': 'var(--sidenav-bg)',
                 // 'sidenav-bg-hover': 'var(--sidenav-bg-hover)',
                 // 'sidenav-bg-active': 'var(--sidenav-bg-active)',
