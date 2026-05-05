@@ -100,11 +100,10 @@ type BadgeProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'color'> &
         label: string;
         icon?: React.ReactNode;
         iconClassName?: string;
-        labelClassName?: string;
     };
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
-    ({ className, color, icon, iconClassName, iconPosition, label, labelClassName, variant, ...rest }, ref) => {
+    ({ className, color, icon, iconClassName, iconPosition, label, variant, ...rest }, ref) => {
         return (
             <div
                 ref={ref}
@@ -123,7 +122,7 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
                         {icon}
                     </span>
                 )}
-                <span className={cn('translate-y-[1px]', labelClassName)}>{label}</span>
+                <span className='translate-y-[1px] badge-label'>{label}</span>
             </div>
         );
     }

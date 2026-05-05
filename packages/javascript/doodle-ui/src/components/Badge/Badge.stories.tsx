@@ -141,14 +141,6 @@ Badges are best used sparingly and should remain **short, scannable, and non-int
             control: false,
             table: { disable: true },
         },
-        labelClassName: {
-            control: 'text',
-            description: 'Additional class names applied to the label.',
-            table: {
-                type: { summary: 'string' },
-                defaultValue: { summary: 'undefined' },
-            },
-        },
         iconClassName: {
             control: 'text',
             description: 'Additional class names applied to the icon wrapper.',
