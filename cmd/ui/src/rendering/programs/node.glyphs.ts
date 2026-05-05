@@ -38,6 +38,7 @@ import { Coordinates, Dimensions, NodeDisplayData } from 'sigma/types';
 import { floatColor } from 'sigma/utils';
 import { fragmentShaderSource } from 'src/rendering/shaders/node.glyphs.frag';
 import { vertexShaderSource } from 'src/rendering/shaders/node.glyphs.vert';
+import { DEFAULT_BG_COLOR, DIM_FACTOR, NO_DIM_FACTOR } from '../utils/utils';
 
 const POINTS = 3,
     /*
@@ -400,8 +401,8 @@ export default function getNodeGlyphsProgram(): typeof AbstractNodeGlyphsProgram
             offset: number
         ): void {
             let i = offset * POINTS * ATTRIBUTES * CIRCLES;
-            const dim = data.dimFactor ?? (data.isDimmed ? 0.1 : 1.0);
-            const bgColor = data.graphBgColor ?? '#ffffff';
+            const dim = data.dimFactor ?? (data.isDimmed ? DIM_FACTOR : NO_DIM_FACTOR);
+            const bgColor = data.graphBgColor ?? DEFAULT_BG_COLOR;
 
             this.fillCircleAttributeBuffer(
                 this.array,
@@ -463,7 +464,7 @@ export default function getNodeGlyphsProgram(): typeof AbstractNodeGlyphsProgram
             image?: string,
             translation?: Coordinates,
             dim: number = 1.0,
-            bgColor: string = '#ffffff'
+            bgColor: string = DEFAULT_BG_COLOR
         ): void {
             let i = currentIndex;
             const imageSource = image;

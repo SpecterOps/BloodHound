@@ -35,6 +35,7 @@ import { Coordinates, Dimensions, NodeDisplayData } from 'sigma/types';
 import { floatColor } from 'sigma/utils';
 import { fragmentShaderSource } from '../shaders/node.combined.frag';
 import { vertexShaderSource } from '../shaders/node.combined.vert';
+import { DEFAULT_BG_COLOR, DIM_FACTOR, NO_DIM_FACTOR } from '../utils/utils';
 
 const POINTS = 3,
     /*
@@ -398,8 +399,8 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
 
             const color = floatColor(data.color);
             const borderColor = floatColor(data.borderColor ?? data.color);
-            const bgColor = floatColor(data.graphBgColor ?? '#ffffff');
-            const dim = data.dimFactor ?? (data.isDimmed ? 0.1 : 1.0);
+            const bgColor = floatColor(data.graphBgColor ?? DEFAULT_BG_COLOR);
+            const dim = data.dimFactor ?? (data.isDimmed ? DIM_FACTOR : NO_DIM_FACTOR);
             array[i++] = data.x;
             array[i++] = data.y;
             array[i++] = data.size;

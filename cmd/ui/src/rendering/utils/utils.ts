@@ -29,6 +29,11 @@ export const NODE_PADDING = 2;
 /** Gap between the bottom of a node and the top of its label */
 export const LABEL_NODE_MARGIN = 4;
 
+/** Dimming values for fading the non highlighted nodes */
+export const DIM_FACTOR = 0.1;
+export const NO_DIM_FACTOR = 1.0;
+export const DEFAULT_BG_COLOR = '#ffffff';
+
 /**
  * While edge labels are drawn with a custom renderer, the mouse target for capturing clicks is
  * handled by a separate process, making its position slightly differ. This offset is applied
