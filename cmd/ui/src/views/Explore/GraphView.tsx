@@ -45,6 +45,7 @@ import {
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
+import { FlatGraphResponse, GraphResponse } from 'js-client-library';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataFileUploadDialogWithLinks } from 'src/components/NoDataFileUploadDialogWithLinks';
@@ -55,7 +56,7 @@ import {
     setPinnedExploreTableColumns,
     setSelectedExploreTableColumns,
 } from 'src/ducks/global/actions';
-import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
+import { normalizeGraphDataForSigma, useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
@@ -70,11 +71,28 @@ const GraphView: FC = () => {
     const theme = useTheme();
 
     const graphHasDataQuery = useGraphHasData();
-    const graphQuery = useSigmaExploreGraph();
 
-    const { searchType } = useExploreParams();
+    const { searchType, primarySearch } = useExploreParams();
     const { selectedItem, setSelectedItem, selectedItemQuery, clearSelectedItem, previousSelectedItem } =
         useExploreSelectedItem();
+
+    // Auto-select the searched node so it is highlighted and its information panel is displayed
+    const handleNodeAutoSelect = useCallback(
+        (data: GraphResponse | FlatGraphResponse) => {
+            if (searchType !== 'node' || !primarySearch) return;
+
+            const nodes = normalizeGraphDataForSigma(data)?.nodes;
+            if (!nodes) return;
+
+            if (selectedItem && nodes[selectedItem]) return;
+
+            const matchedEntry = Object.entries(nodes).find(([, node]) => node.objectId === primarySearch);
+            if (matchedEntry) setSelectedItem(matchedEntry[0]);
+        },
+        [searchType, primarySearch, selectedItem, setSelectedItem]
+    );
+
+    const graphQuery = useSigmaExploreGraph({ onSuccess: handleNodeAutoSelect });
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
