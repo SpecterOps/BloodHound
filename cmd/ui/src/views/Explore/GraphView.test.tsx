@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { cypherTestResponse } from 'bh-shared-ui';
+import { cypherTestResponse, singleNodeResponse } from 'bh-shared-ui';
 import { GraphEdge } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
@@ -229,6 +229,27 @@ describe('GraphView', () => {
             expect(screen.queryByRole('table')).not.toBeInTheDocument();
         });
 
+        it('does not auto display the table for single node responses with no edges', async () => {
+            server.use(
+                rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
+                    return res(ctx.json(singleNodeResponse));
+                })
+            );
+            render(<GraphView />, {
+                initialState: {
+                    global: {
+                        view: {
+                            ...baseGlobalView,
+                            exploreLayout: 'table',
+                            isExploreLayoutSelected: true,
+                        },
+                    },
+                },
+            });
+
+            expect(screen.queryByRole('table')).not.toBeInTheDocument();
+        });
+
         it('reflects the persisted selected layout in the controls menu', async () => {
             render(<GraphView />, {
                 route: cypherRoute,
@@ -310,8 +331,8 @@ describe('GraphView', () => {
             const layoutMenu = screen.getByText('Layout');
             await user.click(layoutMenu);
 
-            const tableOption = await screen.findByTestId('explore_graph-controls_table-buttonLabel');
-            await user.click(tableOption);
+            const closeTableBtn = await screen.findByTestId('close-button');
+            await user.click(closeTableBtn);
 
             await waitFor(() => {
                 expect(screen.queryByRole('table')).not.toBeInTheDocument();
