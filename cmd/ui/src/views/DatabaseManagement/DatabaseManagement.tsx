@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Checkbox, FormControl, FormControlLabel, FormGroup, Typography } from '@mui/material';
+import { Alert, Box, Checkbox, FormControl, FormControlLabel, FormGroup } from '@mui/material';
 import {
     DeleteConfirmationDialog,
     FeatureFlag,
@@ -27,7 +27,7 @@ import {
     usePermissions,
     type GraphDataSelections,
 } from 'bh-shared-ui';
-import { Button } from 'doodle-ui';
+import { Button, Typography } from 'doodle-ui';
 import { ClearDatabaseRequest } from 'js-client-library';
 import { FC, useReducer } from 'react';
 import { useMutation } from 'react-query';
@@ -287,20 +287,17 @@ const DatabaseManagement: FC = () => {
             title='Database Management'
             data-testid='database-management'
             pageDescription={
-                <Typography variant='body2' paragraph>
+                <Typography variant='body2'>
                     Manage your BloodHound data. Select from the options below which data should be deleted.
                 </Typography>
             }>
             <Box>
-                <Alert severity='warning' className='mt-4'>
+                <Alert severity='warning'>
                     <strong>Caution: </strong> This change is irreversible and will delete data from your environment.
                 </Alert>
 
                 <Box display='flex' flexDirection='column' alignItems='start'>
-                    <FormControl
-                        variant='standard'
-                        className='py-4'
-                        error={state.noSelectionError || state.mutationError}>
+                    <FormControl variant='standard' error={state.noSelectionError || state.mutationError}>
                         {state.noSelectionError ? <Alert severity='error'>Please make a selection.</Alert> : null}
                         {state.mutationError ? (
                             <Alert severity='error'>

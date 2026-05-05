@@ -26,9 +26,8 @@ import {
     TableCell,
     TableHead,
     TableRow,
-    Typography,
 } from '@mui/material';
-import { Button } from 'doodle-ui';
+import { Button, Typography } from 'doodle-ui';
 import { AuthToken, NewAuthToken } from 'js-client-library';
 import { DateTime } from 'luxon';
 import React, { useState } from 'react';

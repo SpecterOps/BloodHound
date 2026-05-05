@@ -160,13 +160,9 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                             </Box>
 
                             <Box paddingLeft={'0.5rem'}>
-                                <Typography variant='body1' fontSize={'0.75rem'}>
+                                <Typography variant='body1' className='text-xs'>
                                     The edge{' '}
-                                    <Typography
-                                        component={'span'}
-                                        variant='body1'
-                                        fontWeight={'bold'}
-                                        fontSize={'0.75rem'}>
+                                    <Typography variant='body1' component={'span'} className='font-bold text-xs'>
                                         {selectedEdge.name}
                                     </Typography>{' '}
                                     does not have any additional contextual information at this time.

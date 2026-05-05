@@ -16,4 +16,5 @@
 
 export * from './bloodHoundUsers';
 export * from './environments';
+export * from './graphKinds';
 export { default as zoneHandlers } from './zoneHandlers';

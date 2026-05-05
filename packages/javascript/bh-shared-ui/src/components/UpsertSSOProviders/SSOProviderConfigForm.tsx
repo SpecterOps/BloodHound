@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, FormControl, FormControlLabel, Grid, InputLabel, MenuItem, Select, Typography } from '@mui/material';
+import { Alert, FormControl, FormControlLabel, Grid, InputLabel, MenuItem, Select } from '@mui/material';
 import clsx from 'clsx';
-import { Switch } from 'doodle-ui';
+import { Switch, Typography } from 'doodle-ui';
 import {
     Role,
     SSOProviderConfiguration,

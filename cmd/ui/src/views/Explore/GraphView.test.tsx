@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { cypherTestResponse, singleNodeResponse } from 'bh-shared-ui';
+import { cypherTestResponse, mockKindsHandler, singleNodeResponse } from 'bh-shared-ui';
 import { GraphEdge } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
@@ -56,9 +56,7 @@ const server = setupServer(
     rest.get('/api/v2/saved-queries', async (_, res, ctx) => {
         return res(ctx.status(200));
     }),
-    rest.get('/api/v2/graphs/kinds', (req, res, ctx) => {
-        return res(ctx.status(200));
-    }),
+    mockKindsHandler(),
     rest.get(`/api/v2/roles`, (req, res, ctx) => {
         return res(
             ctx.json({

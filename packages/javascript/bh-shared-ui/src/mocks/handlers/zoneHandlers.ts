@@ -17,6 +17,7 @@
 import { ConfigurationKey } from 'js-client-library';
 import { rest } from 'msw';
 import * as tierMocks from '../factories/privilegeZones';
+import { mockKindsHandler } from './graphKinds';
 
 const zoneHandlers = [
     rest.get('/api/v2/features', async (_req, res, ctx) => {
@@ -44,13 +45,7 @@ const zoneHandlers = [
         );
     }),
     // GET Kinds
-    rest.get('/api/v2/graphs/kinds', async (_req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {},
-            })
-        );
-    }),
+    mockKindsHandler(),
 
     rest.get('/api/v2/available-domains', async (_req, res, ctx) => {
         return res(
