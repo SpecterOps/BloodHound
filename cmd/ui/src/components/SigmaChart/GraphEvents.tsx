@@ -277,6 +277,11 @@ export const GraphEvents = forwardRef(function GraphEvents(
         sigmaContainer,
     ]);
 
+    const isHighlightedItemInGraph = useMemo(() => {
+        if (!highlightedItem) return;
+        return graph.hasNode(highlightedItem) || graph.hasEdge(highlightedItem);
+    }, [graph, highlightedItem]);
+
     // Compute which nodes and edges should remain fully visible when an item is selected.
     // Nodes: the selected node itself + all its direct neighbors.
     // Edges: all edges directly connected to the selected node/edge endpoints.
@@ -309,7 +314,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
         setSettings({
             nodeReducer: (node, data) => {
                 const camera = sigma.getCamera();
-                const isDimmed = !!highlightedItem && !highlightedNodeIds.has(node);
+                const isDimmed = !!highlightedItem && !highlightedNodeIds.has(node) && isHighlightedItemInGraph;
 
                 return {
                     ...data,
