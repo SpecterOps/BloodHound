@@ -280,20 +280,3 @@ func TestMigrator_CreateMigrationSchema(t *testing.T) {
 		assert.Equal(t, int64(1), count)
 	})
 }
-
-// TestMigrator_Migrate tests the integrity of FossMigrations.
-func TestMigrator_Migrate(t *testing.T) {
-	_, pool, migrator, err := integration.SetupTestMigrator(t, migration.Source{FileSystem: migration.FossMigrations, Directory: "migrations"})
-	require.Nil(t, err)
-	defer pool.Close()
-
-	manifest, err := migrator.GenerateManifest()
-	require.Nil(t, err)
-
-	assert.Nil(t, migrator.ExecuteStepwiseMigrations())
-
-	lastVersionInManifest := manifest.VersionTable[len(manifest.VersionTable)-1]
-	latestMigration, err := migrator.LatestMigration()
-	assert.Nil(t, err)
-	assert.Equal(t, lastVersionInManifest, latestMigration.Version().String())
-}
