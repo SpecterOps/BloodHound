@@ -84,7 +84,7 @@ const GraphView: FC = () => {
             const nodes = normalizeGraphDataForSigma(data)?.nodes;
             if (!nodes) return;
 
-            if (selectedItem && nodes[selectedItem]) return;
+            if (selectedItem && nodes[selectedItem]?.objectId === primarySearch) return;
 
             const matchedEntry = Object.entries(nodes).find(([, node]) => node.objectId === primarySearch);
             if (matchedEntry) setSelectedItem(matchedEntry[0]);
