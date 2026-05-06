@@ -65,6 +65,9 @@ FROM docker.io/library/golang:1.26.2-alpine3.22
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 ENV GOFLAGS="-buildvcs=false"
+# Use the local toolchain instead of downloading/caching one in /go/pkg/mod
+# This ensures Go version upgrades take effect without clearing volumes
+ENV GOTOOLCHAIN=local
 WORKDIR /bloodhound
 VOLUME [ "/go/pkg/mod" ]
 
