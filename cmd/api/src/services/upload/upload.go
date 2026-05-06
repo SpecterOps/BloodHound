@@ -54,7 +54,7 @@ func SaveIngestFile(ctx context.Context, fileService storage.FileService, reques
 		return IngestTaskParams{}, fmt.Errorf("invalid content type for ingest file")
 	}
 
-	if tempFileName, err := WriteAndValidateFile(ctx, fileService, fileData, fmt.Sprintf("file_upload_job%d_", jobID), validationFn); err != nil {
+	if tempFileName, err := WriteAndValidateFile(ctx, fileService, fileData, fmt.Sprintf("tmp/file_upload_job%d_", jobID), validationFn); err != nil {
 		return IngestTaskParams{}, err
 	} else {
 		return IngestTaskParams{

@@ -17,8 +17,6 @@
 package v2
 
 import (
-	"log/slog"
-
 	"github.com/gorilla/schema"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -117,7 +115,7 @@ type Resources struct {
 	Authorizer                 auth.Authorizer
 	Authenticator              api.Authenticator
 	IngestSchema               upload.IngestSchema
-	FileService                storage.FileService
+	FileServiceResolver        storage.FileServiceResolver
 	OpenGraphSchemaService     OpenGraphSchemaService
 	DogTags                    dogtags.Service
 }
@@ -132,13 +130,14 @@ func NewResources(
 	authorizer auth.Authorizer,
 	authenticator api.Authenticator,
 	ingestSchema upload.IngestSchema,
+	fileServiceResolver storage.FileServiceResolver,
 	dogtagsService dogtags.Service,
 	openGraphSchemaService OpenGraphSchemaService,
 ) Resources {
-	localStore, err := storage.NewLocalStore("/")
-	if err != nil {
-		slog.Error("Error creating local store")
-	}
+	// localStore, err := storage.NewLocalStore("/tmp/")
+	// if err != nil {
+	// 	slog.Error("Error creating local store")
+	// }
 	return Resources{
 		Decoder:                    schema.NewDecoder(),
 		DB:                         rdms,
@@ -151,7 +150,7 @@ func NewResources(
 		Authorizer:                 authorizer,
 		Authenticator:              authenticator,
 		IngestSchema:               ingestSchema,
-		FileService:                storage.NewLocalFileService(localStore),
+		FileServiceResolver:        fileServiceResolver,
 		DogTags:                    dogtagsService,
 		OpenGraphSchemaService:     openGraphSchemaService,
 	}
