@@ -40,6 +40,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/cache"
@@ -130,6 +131,10 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		return nil, fmt.Errorf("failed to save collector manifests: %w", err)
 	} else if ingestSchema, err := upload.LoadIngestSchema(); err != nil {
 		return nil, fmt.Errorf("failed to load OpenGraph schema: %w", err)
+	} else if fileServices, err := storage.NewDefaultFileServices(cfg); err != nil {
+		return nil, fmt.Errorf("failed to intialize file services: %w", err)
+	} else if fileServiceResolver, err := storage.NewFileServiceResolver(fileServices); err != nil {
+		return nil, fmt.Errorf("failed to initialize file service resolver: %w", err)
 	} else {
 		startDelay := 0 * time.Second
 
@@ -145,7 +150,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		)
 
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator, connections.RDMS)
-		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dogtagsService, openGraphSchemaService)
+		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, fileServiceResolver, dogtagsService, openGraphSchemaService)
 
 		// Set neo4j batch and flush sizes
 		neo4jParameters := appcfg.GetNeo4jParameters(ctx, connections.RDMS)

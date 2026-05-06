@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/dawgs/graph"
@@ -67,6 +68,7 @@ func RegisterFossRoutes(
 	authenticator api.Authenticator,
 	authorizer auth.Authorizer,
 	ingestSchema upload.IngestSchema,
+	fileServiceResolver storage.FileServiceResolver,
 	dogtagsService dogtags.Service,
 	openGraphSchemaService v2.OpenGraphSchemaService,
 ) {
@@ -87,6 +89,6 @@ func RegisterFossRoutes(
 		routerInst.PathPrefix("/ui", static.AssetHandler),
 	)
 
-	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator, ingestSchema, dogtagsService, openGraphSchemaService)
+	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator, ingestSchema, fileServiceResolver, dogtagsService, openGraphSchemaService)
 	NewV2API(resources, routerInst)
 }
