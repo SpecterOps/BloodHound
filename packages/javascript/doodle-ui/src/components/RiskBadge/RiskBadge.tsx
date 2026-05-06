@@ -21,8 +21,8 @@ import { cn, getConditionalStyles, getCssColor } from '../utils';
 const RiskBadgePropVariants = cva('flex justify-center items-center rounded-full text-black', {
     variants: {
         type: {
-            labeled: 'size-[32px] p-2 shadow-none w-auto p-0 leading-[1]',
-            'sm-labeled': 'size-[24px] p-1 shadow-none w-auto p-0 leading-[1]',
+            labeled: 'size-[32px] p-2 shadow-none w-auto leading-[1]',
+            'sm-labeled': 'size-[24px] p-1 shadow-none w-auto leading-[1]',
             'sm-circle': 'size-4 p-1 drop-shadow bg-neutral-300',
             'md-circle': 'size-8 p-2 drop-shadow bg-neutral-300',
         },
@@ -80,7 +80,9 @@ function RiskBadge(props: RiskBadgeProps) {
 
     return (
         <div role='status' className={cn(RiskBadgePropVariants({ type }), className)} {...rest}>
-            <div style={riskBadgeStyle} className={cn(RiskBadgeContentVariants({ outlined, type }))}>
+            <div
+                style={riskBadgeStyle}
+                className={cn(RiskBadgeContentVariants({ outlined, type }), 'risk-badge-label')}>
                 {labeled ? label : null}
             </div>
         </div>
