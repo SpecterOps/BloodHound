@@ -36,9 +36,8 @@ import {
     VisuallyHidden,
 } from 'doodle-ui';
 import { UpdateUserQueryRequest } from 'js-client-library';
-import { useQuery } from 'react-query';
-import { graphSchema } from '../../../../constants';
-import { apiClient, cn } from '../../../../utils';
+import { useCypherSchema } from '../../../../hooks/useGraphKinds';
+import { cn } from '../../../../utils';
 import { useSavedQueriesContext } from '../../providers';
 import { CypherSearchState } from '../types';
 import ConfirmUpdateQueryDialog from './ConfirmUpdateQueryDialog';
@@ -108,10 +107,7 @@ const SaveQueryDialog: React.FC<{
         }
     };
     const cypherEditorRef = useRef<CypherEditor | null>(null);
-    const kindsQuery = useQuery({
-        queryKey: ['graph-kinds'],
-        queryFn: ({ signal }) => apiClient.getKinds({ signal }).then((res) => res.data.data.kinds),
-    });
+    const cypherSchema = useCypherSchema();
 
     const handleConfirmUpdate = () => {
         if (id) {
@@ -183,7 +179,7 @@ const SaveQueryDialog: React.FC<{
                                             theme={
                                                 document.documentElement.classList.contains('dark') ? 'dark' : 'light'
                                             }
-                                            schema={graphSchema(kindsQuery.data)}
+                                            schema={cypherSchema}
                                             lineWrapping
                                             lint
                                             placeholder='Cypher Query'

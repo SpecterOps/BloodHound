@@ -99,7 +99,105 @@ func Test_validateGraphExtension(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("graph schema extension namespace cannot be Tag"),
+			wantErr: fmt.Errorf("graph schema extension namespace 'Tag' uses reserved namespace 'tag'"),
+		},
+		{
+			name: "fail - extension namespace cannot be tag (lowercase)",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "tag",
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema extension namespace 'tag' uses reserved namespace 'tag'"),
+		},
+		{
+			name: "fail - extension namespace cannot be TAG (uppercase)",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "TAG",
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema extension namespace 'TAG' uses reserved namespace 'tag'"),
+		},
+		{
+			name: "fail - extension namespace cannot be tAg (mixed case)",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "tAg",
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema extension namespace 'tAg' uses reserved namespace 'tag'"),
+		},
+		{
+			name: "fail - extension namespace cannot be prefixed by reserved namespace (tag_sub)",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "tag_sub",
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema extension namespace 'tag_sub' uses reserved namespace 'tag'"),
+		},
+		{
+			name: "fail - extension namespace cannot be prefixed by reserved namespace mixed-case (Tag_audit)",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "Tag_audit",
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema extension namespace 'Tag_audit' uses reserved namespace 'tag'"),
+		},
+		{
+			name: "fail - extension namespace cannot be prefixed by reserved namespace uppercase (TAG_x)",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "TAG_x",
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema extension namespace 'TAG_x' uses reserved namespace 'tag'"),
+		},
+		{
+			name: "pass reserved-namespace check - similar-looking namespace 'tagged' is not reserved (fails at later check)",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "tagged",
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema node kinds are required"),
 		},
 		{
 			name: "fail - empty graph schema nodes",

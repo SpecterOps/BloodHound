@@ -22,6 +22,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/registration"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
@@ -44,6 +45,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/metricsregistration"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -95,7 +97,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 	if !cfg.DisableMigrations {
 		if err := bootstrap.MigrateDB(ctx, cfg, connections.RDMS, config.NewDefaultAdminConfiguration); err != nil {
 			return nil, fmt.Errorf("rdms migration error: %w", err)
-		} else if err := migrations.NewGraphMigrator(connections.Graph).Migrate(ctx); err != nil {
+		} else if err := migrations.NewGraphMigrator(connections.Graph, migrations.WithSourceKinds(connections.RDMS)).Migrate(ctx); err != nil {
 			return nil, fmt.Errorf("graph migration error: %w", err)
 		} else if err := bootstrap.PopulateExtensionData(ctx, connections.RDMS); err != nil {
 			return nil, fmt.Errorf("extensions data population error: %w", err)
@@ -152,8 +154,14 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		connections.Graph.SetBatchWriteSize(neo4jParameters.BatchWriteSize)
 		connections.Graph.SetWriteFlushSize(neo4jParameters.WriteFlushSize)
 
-		// Trigger analysis on first start
-		if err := connections.RDMS.RequestAnalysis(ctx, "init"); err != nil {
+		// Register all metrics into a single registry before exposing it via the
+		// default registerer so /metrics never observes a partially-initialized state.
+		promRegistry := prometheus.NewRegistry()
+		if err := metricsregistration.RegisterBHCEMetrics(promRegistry); err != nil {
+			return nil, fmt.Errorf("failed to register prometheus metrics: %w", err)
+		} else if err := prometheus.DefaultRegisterer.Register(promRegistry); err != nil {
+			return nil, fmt.Errorf("failed to expose prometheus registry: %w", err)
+		} else if err := connections.RDMS.RequestAnalysis(ctx, "init"); err != nil {
 			slog.WarnContext(ctx, "Failed to request init analysis", attr.Error(err))
 		}
 

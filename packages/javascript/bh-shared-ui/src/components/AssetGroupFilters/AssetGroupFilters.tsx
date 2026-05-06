@@ -25,10 +25,9 @@ import {
     MenuItem,
     Paper,
     Select,
-    Typography,
 } from '@mui/material';
 import clsx from 'clsx';
-import { Button } from 'doodle-ui';
+import { Button, Typography } from 'doodle-ui';
 import { AssetGroupMemberCounts } from 'js-client-library';
 import { AssetGroupMemberParams } from 'js-client-library/dist/types';
 import { FC, useState } from 'react';
@@ -75,7 +74,7 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, member
                 <Typography
                     component={'span'}
                     data-testid={'active-filters-dot'}
-                    className={cn('size-1 rounded-full bg-white align-baseline invisible', { visible: active })}
+                    className={cn('size-1 rounded-full bg-white align-baseline invisible ml-2', { visible: active })}
                 />
             </Button>
             <Collapse in={displayFilters} data-testid='asset-group-filter-collapsible-section' className='mt-3'>

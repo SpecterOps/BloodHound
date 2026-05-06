@@ -16,7 +16,8 @@
 
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Grid, TextField, Typography } from '@mui/material';
+import { Box, Grid, TextField } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { SSOProvider, UpsertOIDCProviderRequest, UpsertSAMLProviderFormInputs } from 'js-client-library';
 import { ChangeEvent, FC, useMemo, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
@@ -260,7 +261,7 @@ const SSOConfiguration: FC = () => {
                 title='SSO Configuration'
                 data-testid='sso-configuration'
                 pageDescription={
-                    <Typography variant='body2' paragraph>
+                    <Typography variant='body2'>
                         BloodHound supports SAML {flag?.enabled ? 'and OIDC ' : ''}for single sign-on (SSO). Learn how
                         to deploy {flag?.enabled ? 'SSO' : 'SAML'} with BloodHound{' '}
                         {DocumentationLinks.samlConfigDocLink}.
@@ -283,9 +284,7 @@ const SSOConfiguration: FC = () => {
                         <div className='bg-neutral-2 rounded-lg shadow-outer-1 pt-2'>
                             <Box display='flex' justifyContent='space-between'>
                                 <Box className='flex items-center ml-6'>
-                                    <Typography fontWeight='bold' variant='h5'>
-                                        Providers
-                                    </Typography>
+                                    <Typography variant='h5'>Providers</Typography>
                                 </Box>
                                 <div className='flex mr-6 items-center'>
                                     <TextField

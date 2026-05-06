@@ -17,15 +17,7 @@
 import { Theme, ThemeOptions } from '@mui/material/styles';
 import createPalette, { Palette } from '@mui/material/styles/createPalette';
 import { makeStyles } from '@mui/styles';
-import {
-    ActiveDirectoryKindProperties,
-    ActiveDirectoryNodeKind,
-    ActiveDirectoryRelationshipKind,
-    AzureKindProperties,
-    AzureNodeKind,
-    AzureRelationshipKind,
-    CommonKindProperties,
-} from './graphSchema';
+import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from './graphSchema';
 import { BaseExploreLayoutOptions, MappedStringLiteral } from './types';
 import { addOpacityToHex } from './utils/colors';
 
@@ -418,42 +410,23 @@ export const defaultPortalContainer = {
  * Returns a schema object describing node kinds (`labels`), relationship kinds (`relationshipTypes`),
  * and known property keys. This is primarily used for type completion in the cypher editor.
  *
- * @param extraKinds - A list of all known kinds in the graph, including:
+ * @param kinds - A list of all known kinds in the graph, including:
  *   - Static kinds from Active Directory and Azure
  *   - Dynamically added kinds (e.g., custom types, tier tags, etc.)
- *
- * Since custom kinds may refer to either nodes or relationships (and that information is not available),
- * this function does a best-effort split:
- *   - `labels` excludes known relationships
- *   - `relationshipTypes` excludes known node kinds
  */
-export const graphSchema = (extraKinds?: string[]) => {
-    const adNodeKinds = Object.values(ActiveDirectoryNodeKind).map((l) => `:${l}`);
-    const azureNodeKinds = Object.values(AzureNodeKind).map((l) => `:${l}`);
-    const adEdges = Object.values(ActiveDirectoryRelationshipKind).map((r) => `:${r}`);
-    const azureEdges = Object.values(AzureRelationshipKind).map((r) => `:${r}`);
-
-    const knownNodeKinds = new Set([...adNodeKinds, ...azureNodeKinds]);
-    const knownEdgeKinds = new Set([...adEdges, ...azureEdges]);
-
-    // Best effort attempt to remove known nodes from the edges list and vice versa.
-    const dynamicNodeKinds = (extraKinds ?? []).map((l) => `:${l}`).filter((label) => !knownEdgeKinds.has(label));
-    const dynamicEdgeKinds = (extraKinds ?? []).map((l) => `:${l}`).filter((label) => !knownNodeKinds.has(label));
-
-    const nodeKinds = [...knownNodeKinds, ...dynamicNodeKinds];
-    const edgeKinds = [...knownEdgeKinds, ...dynamicEdgeKinds];
-
+export const graphSchema = (kinds: { nodes: string[] | undefined; edges: string[] | undefined }) => {
+    // these property keys are not exhaustive as they do not capture potentially generic properties
     const propertyKeys = [
         ...Object.values(CommonKindProperties),
         ...Object.values(ActiveDirectoryKindProperties),
         ...Object.values(AzureKindProperties),
     ];
+    const nodeKinds = kinds.nodes ?? [];
+    const edgeKinds = kinds.edges ?? [];
 
     return {
-        // `labels`: dynamic + static node kinds, excluding known relationship types
-        labels: nodeKinds,
-        // `relationshipTypes`: dynamic + static relationship types, excluding known node kinds
-        relationshipTypes: edgeKinds,
+        labels: nodeKinds.map((l) => `:${l}`),
+        relationshipTypes: edgeKinds.map((r) => `:${r}`),
         propertyKeys,
     };
 };

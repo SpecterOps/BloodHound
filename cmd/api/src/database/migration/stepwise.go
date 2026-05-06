@@ -14,14 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+// Deprecated: The code in this file supports legacy v8 stepwise migrations for existing customers
+// who may be upgrading from older versions. Once v10 is released and all customers have
+// migrated through v9 (which transitions to goose), this code can be removed.
+// The goose migration system in goose.go will handle all migrations going forward.
 package migration
 
 import (
 	"fmt"
 	"io/fs"
 	"log/slog"
-	"path/filepath"
-	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
@@ -82,15 +84,6 @@ func (s *Migrator) ExecuteMigrations(manifest Manifest) error {
 	}
 
 	return nil
-}
-
-// HasMigrationTable is a utility for checking if migration schema is initialized. We assume that
-// if the `migrations` table exists, the schema must be initialized, and vice versa.
-func (s *Migrator) HasMigrationTable() (bool, error) {
-	const tableCheckSQL = `select exists(select * from information_schema.tables where table_schema = current_schema() and table_name = 'migrations');`
-
-	var hasTable bool
-	return hasTable, s.DB.Raw(tableCheckSQL).Scan(&hasTable).Error
 }
 
 // CreateMigrationSchema creates all the necessary SQL schema for tracking migration status.
@@ -194,46 +187,4 @@ func (s *Migrator) ExecuteStepwiseMigrations() error {
 	} else {
 		return nil
 	}
-}
-
-func (s *Migrator) ExecuteExtensionDataPopulation() error {
-	const migrationSQLFilenameSuffix = ".sql"
-
-	// loop through extensions data
-	for _, source := range s.ExtensionsData {
-		dirEntries, err := fs.ReadDir(source.FileSystem, source.Directory)
-		if err != nil {
-			return err
-		}
-
-		// loop through file system entries
-		for _, entry := range dirEntries {
-			if entry.IsDir() {
-				continue
-			}
-
-			filename := filepath.Join(source.Directory, entry.Name())
-			basename := filepath.Base(filename)
-
-			if !strings.HasSuffix(basename, migrationSQLFilenameSuffix) {
-				continue
-			}
-
-			slog.Info("Executing extension data population", slog.String("file", basename))
-			if err := s.DB.Transaction(func(tx *gorm.DB) error {
-				// read migration file content and execute
-				if migrationContent, err := fs.ReadFile(source.FileSystem, filename); err != nil {
-					return err
-				} else if result := tx.Exec(string(migrationContent)); result.Error != nil {
-					return result.Error
-				}
-
-				return nil
-			}); err != nil {
-				return fmt.Errorf("failed to execute extension data population for %s: %w", basename, err)
-			}
-		}
-	}
-
-	return nil
 }

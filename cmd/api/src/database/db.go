@@ -288,8 +288,13 @@ func (s *BloodhoundDB) Wipe(ctx context.Context) error {
 
 func (s *BloodhoundDB) Migrate(ctx context.Context) error {
 	// Run the migrator
-	if err := migration.NewMigrator(s.db.WithContext(ctx)).ExecuteStepwiseMigrations(); err != nil {
-		slog.ErrorContext(ctx, "Error during SQL database migration phase", attr.Error(err))
+	migrator, err := migration.NewMigrator(s.db.WithContext(ctx))
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to create migrator: %v", attr.Error(err))
+		return err
+	}
+	if err := migrator.ExecuteGooseMigrations(ctx); err != nil {
+		slog.ErrorContext(ctx, "Failed to execute migrations: %v", attr.Error(err))
 		return err
 	}
 
@@ -297,8 +302,13 @@ func (s *BloodhoundDB) Migrate(ctx context.Context) error {
 }
 
 func (s *BloodhoundDB) PopulateExtensionData(ctx context.Context) error {
-	if err := migration.NewMigrator(s.db.WithContext(ctx)).ExecuteExtensionDataPopulation(); err != nil {
-		slog.ErrorContext(ctx, "Error during extensions data population phase", attr.Error(err))
+	migrator, err := migration.NewMigrator(s.db.WithContext(ctx))
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to create migrator: %v", attr.Error(err))
+		return err
+	}
+	if err := migrator.ExecuteExtensionDataPopulation(); err != nil {
+		slog.ErrorContext(ctx, "Failed to execute extension data population", attr.Error(err))
 		return err
 	}
 

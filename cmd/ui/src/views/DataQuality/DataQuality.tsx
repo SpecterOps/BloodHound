@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, AlertTitle, Box, Grid, Link, Typography } from '@mui/material';
+import { Alert, AlertTitle, Box, Grid, Link } from '@mui/material';
 import {
     ActiveDirectoryPlatformInfo,
     AzurePlatformInfo,
@@ -26,6 +26,7 @@ import {
     TenantInfo,
     useInitialEnvironment,
 } from 'bh-shared-ui';
+import { Typography } from 'doodle-ui';
 import { useEffect, useState } from 'react';
 import { dataCollectionMessage } from './utils';
 
@@ -160,7 +161,7 @@ const DataQuality: React.FC = () => {
 export default DataQuality;
 
 const QualityAssuranceDescription = () => (
-    <Typography variant='body2' paragraph>
+    <Typography variant='body2'>
         Understand the data collected within BloodHound broken down by environment and principal type.
     </Typography>
 );
