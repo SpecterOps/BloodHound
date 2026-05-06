@@ -31,7 +31,7 @@ import FileStatusListItem from '../../../../components/FileStatusListItem';
 import { FileForIngest, FileStatus, FileUploadStep } from '../../../../components/FileUploadDialog/types';
 import { useImportSavedQuery } from '../../../../hooks';
 import { useNotifications } from '../../../../providers';
-import { QuickUploadExclusionIds } from '../../../../utils';
+import { cn, QuickUploadExclusionIds } from '../../../../utils';
 
 const allowedFileTypes = ['application/json', 'application/zip', 'application/x-zip-compressed'];
 
@@ -200,14 +200,20 @@ const ImportQueryDialog: React.FC<{
                     }}
                     maxWidth='sm'
                     id={QuickUploadExclusionIds.ImportQueryDialog}>
-                    <DialogTitle>Upload Files</DialogTitle>
-
-                    {fileUploadStep === FileUploadStep.ADD_FILES && (
-                        <FileDrop onDrop={handleFileDrop} disabled={false} accept={allowedFileTypes} />
-                    )}
-                    {fileUploadStep === FileUploadStep.UPLOAD && uploadMessage && (
-                        <div className='text-lg mb-4'>{uploadMessage}</div>
-                    )}
+                    <DialogTitle className='flex flex-col gap-2'>
+                        <div>Upload Files</div>
+                        {fileUploadStep === FileUploadStep.ADD_FILES && (
+                            <FileDrop
+                                onDrop={handleFileDrop}
+                                disabled={false}
+                                accept={allowedFileTypes}
+                                className={cn({ 'h-40': filesForIngest.length > 0 })}
+                            />
+                        )}
+                        {fileUploadStep === FileUploadStep.UPLOAD && uploadMessage && (
+                            <div className='text-lg mb-4'>{uploadMessage}</div>
+                        )}
+                    </DialogTitle>
 
                     {filesForIngest.length > 0 && (
                         <>

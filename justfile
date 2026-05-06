@@ -3,6 +3,9 @@ _default:
 
 host_os := if os() == "macos" { "darwin" } else { os() }
 host_arch := if arch() == "x86" { "386" } else { if arch() == "x86_64" { "amd64" } else { if arch() == "aarch64" { "arm64" } else { arch() } } }
+# database connections for goose commands 
+goose_db := env_var_or_default("GOOSE_DB", "postgres://bloodhound:bloodhoundcommunityedition@localhost:65432/bloodhound?sslmode=disable")
+goose_migrations_dir := "cmd/api/src/database/migration/migrations"
 
 export CGO_ENABLED := "0"
 export GOOS := env_var_or_default("GOOS", host_os)
@@ -274,3 +277,19 @@ init wipe="":
   fi
 
   echo "BloodHound CE Init Complete"
+
+# create new migration file
+goose-create name:
+  @go tool goose -dir {{goose_migrations_dir}} create {{name}} sql
+
+# rollback to last migration
+goose-down:
+  @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" down
+
+# run pending migrations
+goose-up:
+  @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" up -allow-missing
+
+# show migration status
+goose-status:
+  @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" status -allow-missing
