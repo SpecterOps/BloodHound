@@ -823,21 +823,7 @@ SELECT pg_catalog.setval('feature_flags_id_seq', MAX(id), true) FROM feature_fla
 SELECT pg_catalog.setval('parameters_id_seq', MAX(id), true) FROM parameters;
 SELECT pg_catalog.setval('permissions_id_seq', MAX(id), true) FROM permissions;
 SELECT pg_catalog.setval('roles_id_seq', MAX(id), true) FROM roles;
--- Copyright 2024 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+
 
 -- Add Scheduled Analysis Configs
 INSERT INTO parameters (key, name, description, value, created_at, updated_at)
@@ -920,21 +906,7 @@ SET sso_provider_id = (SELECT sso.id
                        WHERE u.saml_provider_id = saml.id)
 WHERE sso_provider_id IS NULL
   AND saml_provider_id IS NOT NULL;
--- Copyright 2024 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+
 
 -- Add updated posture page feature flag
 INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
@@ -986,21 +958,7 @@ SET sso_provider_id = (SELECT sso.id
                        WHERE u.saml_provider_id = saml.id)
 WHERE sso_provider_id IS NULL
   AND saml_provider_id IS NOT NULL;
--- Copyright 2024 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+
 
 -- Drop column saml_provider_id from users table
 ALTER TABLE ONLY users
@@ -1024,21 +982,7 @@ DELETE FROM auth_secrets WHERE id IN (SELECT auth_secrets.id FROM auth_secrets J
 
 -- Set the `oidc_support` feature flag to true
 UPDATE feature_flags SET enabled = true WHERE key = 'oidc_support';
--- Copyright 2025 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+
 
 -- Delete the `updated_posture_page` feature flag
 DELETE FROM feature_flags WHERE key = 'updated_posture_page';
@@ -1048,21 +992,7 @@ ALTER TABLE IF EXISTS sso_providers ADD COLUMN IF NOT EXISTS config jsonb;
 
 -- Update sso_providers table by backfilling existing sso providers' new config column with default values
 UPDATE sso_providers set config = '{"auto_provision": {"enabled": false, "default_role_id": 0, "role_provision": false}}';
--- Copyright 2025 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+
 
 -- Prepend all found duplicate emails on user table with user id in preparation for unique constraint
 UPDATE users SET email_address = id || '-' || lower(email_address) where lower(email_address) in (SELECT distinct(lower(email_address)) FROM users GROUP BY lower(email_address) HAVING count(lower(email_address)) > 1);
@@ -1105,21 +1035,7 @@ VALUES (current_timestamp,
         false,
         true)
 ON CONFLICT DO NOTHING;
--- Copyright 2025 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+
 
 -- Set `back_button_support` feature flag as user updatable
 UPDATE feature_flags SET user_updatable = true WHERE key = 'back_button_support';
@@ -1134,21 +1050,7 @@ VALUES ('http.trusted_proxies', 'Trusted Proxies',
         '{"trusted_proxies": 0}',
         current_timestamp, current_timestamp)
 ON CONFLICT DO NOTHING;
--- Copyright 2025 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+
 
 -- This table is normally created by dawgs, as defined in schema_up.sql
 -- We add it here to maintain a new FK to asset_group_tags below regardless
@@ -1246,21 +1148,7 @@ ALTER TABLE ingest_tasks ADD COLUMN IF NOT EXISTS is_generic BOOLEAN NOT NULL DE
 -- GA for ntlm post processing
 UPDATE feature_flags SET user_updatable = false WHERE key = 'ntlm_post_processing';
 UPDATE feature_flags SET enabled = true WHERE key = 'ntlm_post_processing';
--- Copyright 2025 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+
 
 ALTER TABLE asset_group_history
 	ADD COLUMN IF NOT EXISTS email VARCHAR(330) DEFAULT NULL;
@@ -1421,21 +1309,7 @@ FROM inserted_selectors s JOIN src_data d ON d.name = s.name;
 UPDATE feature_flags SET user_updatable = false, enabled = true WHERE key = 'back_button_support';
 
 UPDATE feature_flags SET "user_updatable" = true WHERE "key" = 'tier_management_engine';
--- Copyright 2025 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+
 
 -- is_generic column not actually needed.
 ALTER TABLE ingest_tasks
@@ -1454,21 +1328,7 @@ ON CONFLICT DO NOTHING;
 
  -- Add Tier Management Parameter
 INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES ('analysis.tiering', 'Multi-Tier Analysis Configuration', 'This configuration parameter determines the limits of tiering with respect to analysis', '{"tier_limit": 1, "label_limit": 0, "multi_tier_analysis_enabled": false}', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
--- Copyright 2025 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+
 
 -- Add analysis_enabled flag to asset_group_tags
 ALTER TABLE asset_group_tags ADD COLUMN IF NOT EXISTS analysis_enabled BOOL;
@@ -1529,21 +1389,7 @@ SELECT
   2,
   d.cypher
 FROM inserted_selectors s JOIN src_data d ON d.name = s.name;
--- Copyright 2025 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+
 create table if not exists source_kinds (
   id smallserial,
   name varchar(256) not null,
@@ -1631,21 +1477,7 @@ SELECT
 	s.id,
 	2,
 	E'MATCH (n:Group) \nWHERE n.objectid ENDS WITH ''-557''\nRETURN n;'
-FROM s;-- Copyright 2025 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+FROM s;
 
 -- Environment Targeted Access Control Feature Flag
 INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
@@ -1713,21 +1545,7 @@ VALUES (
   false
 )
 ON CONFLICT DO NOTHING;
--- Copyright 2025 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+
 -- Add OpenGraph Phase 2 feature flag
 INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
 VALUES (
@@ -1781,21 +1599,7 @@ VALUES (
            current_timestamp
        )
   ON CONFLICT DO NOTHING;
--- Copyright 2025 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+
 
 
 -- Set all_environments to true for existing users
@@ -1949,21 +1753,7 @@ UPDATE feature_flags SET enabled = true WHERE key = 'open_graph_phase_2';
 
 -- Add Analysis file retention defaults
 INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES ('analysis.retain_ingest_files', 'Analysis Retain Ingest Files', 'This config param sets the default beehavior of ingest file retention', '{"enabled": false}', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
--- Copyright 2025 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+
 
 -- Add Audit Log permission and Auditor role
 INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('audit_log', 'Read', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
@@ -2021,21 +1811,7 @@ WHERE actor = 'SYSTEM';
 UPDATE asset_group_tags SET glyph = 'gem' WHERE position = 1;
 -- Find Owned by type
 UPDATE asset_group_tags SET glyph = 'skull' WHERE type = 3;
--- Copyright 2026 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+
 
 -- OpenGraph Search feature flag
 INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
@@ -2248,21 +2024,7 @@ BEGIN
     RETURN kind_row;
 END $$ LANGUAGE plpgsql;
 -- +goose StatementEnd
--- Copyright 2026 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+
 -- OpenGraph Pathfinding feature flag
 INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
 VALUES (current_timestamp,
@@ -2276,21 +2038,7 @@ ON CONFLICT DO NOTHING;
 
 -- Set `opengraph_search` feature flag to enabled by default
 UPDATE feature_flags SET enabled = true WHERE key = 'opengraph_search';
--- Copyright 2026 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+
 
 ALTER TABLE IF EXISTS schema_environments
     DROP CONSTRAINT IF EXISTS schema_environments_source_kind_id_fkey;
@@ -2410,21 +2158,7 @@ SET name = agts.name || '_' || rowNumber FROM duplicate_selectors
 WHERE agts.id = duplicate_selectors.id AND duplicate_selectors.rowNumber > 1;
 
 -- Reinstate unique constraint for asset group tag selectors name per asset group tag
-ALTER TABLE IF EXISTS asset_group_tag_selectors ADD CONSTRAINT asset_group_tag_selectors_unique_name_asset_group_tag UNIQUE ("name",asset_group_tag_id,is_default);-- Copyright 2026 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+ALTER TABLE IF EXISTS asset_group_tag_selectors ADD CONSTRAINT asset_group_tag_selectors_unique_name_asset_group_tag UNIQUE ("name",asset_group_tag_id,is_default);
 
 -- OpenGraph Extension Management feature flag
 INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
@@ -2611,21 +2345,7 @@ WHERE agts.id = duplicate_selectors.id AND duplicate_selectors.rowNumber > 1;
 
 -- Reinstate unique constraint for asset group tag selectors name per asset group tag
 ALTER TABLE IF EXISTS asset_group_tag_selectors ADD CONSTRAINT asset_group_tag_selectors_unique_name_asset_group_tag UNIQUE ("name",asset_group_tag_id,is_default);
--- Copyright 2026 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+
 -- Drop the compound unique constraint on schema_environments (environment_kind_id, source_kind_id)
 -- and add a unique constraint on just environment_kind_id
 ALTER TABLE IF EXISTS schema_environments
@@ -2851,38 +2571,10 @@ RETURN source_kind_row;
 END $$
 LANGUAGE plpgsql;
 -- +goose StatementEnd
--- Copyright 2026 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+
 
 -- Fix schema_findings_pkey duplicate key value violation
-SELECT setval('schema_findings_id_seq', COALESCE(MAX(id), 1), true) FROM schema_findings;-- Copyright 2026 Specter Ops, Inc.
---
--- Licensed under the Apache License, Version 2.0
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- SPDX-License-Identifier: Apache-2.0
+SELECT setval('schema_findings_id_seq', COALESCE(MAX(id), 1), true) FROM schema_findings;
 
 
 -- Add support_account flag to users
