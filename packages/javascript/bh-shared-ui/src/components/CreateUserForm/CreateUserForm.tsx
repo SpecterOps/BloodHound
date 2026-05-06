@@ -412,9 +412,9 @@ const CreateUserFormInner: React.FC<{
                                                         message: 'Password must be at least 12 characters long',
                                                     },
                                                     pattern: {
-                                                        value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])/,
+                                                        value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[\p{P}\p{S}])/u,
                                                         message:
-                                                            'Password must contain at least 1 lowercase character, 1 uppercase character, 1 number and 1 special character (!@#$%^&*)',
+                                                            'Password must contain at least 1 lowercase character, 1 uppercase character, 1 number and 1 special character (any unicode character)',
                                                     },
                                                     maxLength: {
                                                         value: 1000,

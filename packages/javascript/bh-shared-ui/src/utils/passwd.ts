@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export const passwordRegex = new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^\\w\\s])(?=.{12,})', 'u');
+export const passwordRegex = new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[\\p{P}\\p{S}])(?=.{12,})', 'u');
 
 export const testPassword = (s: string): boolean => {
     return passwordRegex.test(s);
@@ -25,5 +25,5 @@ export const PASSWD_REQS = [
     'must have at least one lowercase',
     'must have at least one uppercase',
     'must have at least one number',
-    'must have at least one of (!@#$%^&*)',
+    'must have at least one special character (any unicode punctuation or symbol)',
 ];
