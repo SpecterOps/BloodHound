@@ -19,13 +19,15 @@ import (
 	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 var (
 	ingestThroughputGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "bhe_ingest_throughput",
-			Help: "Ingestion throughput in entities per second",
+			Namespace: model.Namespace,
+			Name:      "ingest_throughput",
+			Help:      "Ingestion throughput in entities per second",
 		},
 		[]string{"entity_type", "stage"}, // "nodes" or "relationships", "processed" or "written"
 	)
