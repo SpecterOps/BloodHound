@@ -18,6 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { SeedTypeCypher } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { createGraphKinds } from '../../../mocks/factories/graphKinds';
 import { act, render, screen, waitFor } from '../../../test-utils';
 import { mockCodemirrorLayoutMethods } from '../../../utils';
 import RuleFormContext, { initialValue } from '../Save/RuleForm/RuleFormContext';
@@ -37,7 +38,7 @@ const server = setupServer(
     rest.get('/api/v2/graphs/kinds', async (_req, res, ctx) => {
         return res(
             ctx.json({
-                data: ['Tier Zero', 'Tier One', 'Tier Two'],
+                data: createGraphKinds(['Tier Zero', 'Tier One', 'Tier Two'], []),
             })
         );
     }),

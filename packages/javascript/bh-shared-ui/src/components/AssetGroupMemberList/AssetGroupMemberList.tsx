@@ -28,8 +28,8 @@ import {
     TableHead,
     TablePagination,
     TableRow,
-    Typography,
 } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
 import { FC, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
@@ -163,9 +163,7 @@ const AssetGroupMemberRow: FC<{
             <TableCell>
                 <Box className='flex items-center w-full'>
                     <NodeIcon nodeType={member.primary_kind} />
-                    <Typography noWrap marginLeft={1} display={'inline-block'}>
-                        {member.name}
-                    </Typography>
+                    <Typography className='ml-2 text-nowrap inline-block'>{member.name}</Typography>
                 </Box>
             </TableCell>
             <TableCell align='right' className='p-0 flex justify-center items-center h-full'>
