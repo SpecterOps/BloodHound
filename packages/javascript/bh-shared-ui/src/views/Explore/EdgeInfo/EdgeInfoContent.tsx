@@ -13,7 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Box, Divider, Typography } from '@mui/material';
+import { Box, Divider } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { ElementType, FC, Fragment } from 'react';
 import EdgeInfoComponents from '../../../components/HelpTexts';
 import ACLInheritance from '../../../components/HelpTexts/shared/ACLInheritance';
@@ -141,7 +142,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                 <FieldsContainer>
                     <div>
                         <p className='text-sm'>
-                            This edge’s information is not disclosed. Please contact your admin in order to get access.
+                            This edge's information is not disclosed. Please contact your admin in order to get access.
                         </p>
                     </div>
                 </FieldsContainer>
@@ -160,15 +161,8 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                             </Box>
 
                             <Box paddingLeft={'0.5rem'}>
-                                <Typography variant='body1' fontSize={'0.75rem'}>
-                                    The edge{' '}
-                                    <Typography
-                                        component={'span'}
-                                        variant='body1'
-                                        fontWeight={'bold'}
-                                        fontSize={'0.75rem'}>
-                                        {selectedEdge.name}
-                                    </Typography>{' '}
+                                <Typography variant='body1' className='text-xs'>
+                                    The edge <strong className='text-xs'>{selectedEdge.name}</strong>
                                     does not have any additional contextual information at this time.
                                 </Typography>
                             </Box>

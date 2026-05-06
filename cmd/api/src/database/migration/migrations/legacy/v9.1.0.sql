@@ -19,16 +19,16 @@
 -- Add OpenGraph permissions to permissions table
 INSERT INTO permissions(created_at, updated_at, authority, name)
 VALUES (
-        current_timestamp,
-        current_timestamp,
-        'opengraph',
-        'Read'
+           current_timestamp,
+           current_timestamp,
+           'opengraph',
+           'Read'
        ),
        (
-        current_timestamp,
-        current_timestamp,
-        'opengraph',
-        'Write'
+           current_timestamp,
+           current_timestamp,
+           'opengraph',
+           'Write'
        )
 ON CONFLICT DO NOTHING;
 
@@ -37,8 +37,8 @@ ON CONFLICT DO NOTHING;
 INSERT INTO roles_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
-JOIN permissions p
-ON (p.authority, p.name) = ('opengraph', 'Read')
+       JOIN permissions p
+            ON (p.authority, p.name) = ('opengraph', 'Read')
 WHERE r.name IN ('Administrator', 'User', 'Read-Only', 'Power User', 'Auditor')
 ON CONFLICT DO NOTHING;
 
@@ -46,8 +46,8 @@ ON CONFLICT DO NOTHING;
 INSERT INTO roles_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
-JOIN permissions p
-ON (p.authority, p.name) = ('opengraph', 'Write')
+       JOIN permissions p
+            ON (p.authority, p.name) = ('opengraph', 'Write')
 WHERE r.name IN ('Administrator')
 ON CONFLICT DO NOTHING;
 

@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { useEffect } from 'react';
+import { isQuickUploadExcludedById } from '../utils/quickUpload';
 import type { AcceptedIngestType } from './useFileIngest';
 
 type ExecuteOnFileDragOptions = {
@@ -32,6 +33,13 @@ export const useExecuteOnFileDrag = (
         const onDragEnter = (e: DragEvent) => {
             // Hook only executes when provided condition returns true
             if (!condition()) {
+                return;
+            }
+
+            // Re-check exclusion ids against the live DOM at drag time. The condition closure
+            // above can hold a stale value when an excluded element (e.g. ImportQueryDialog)
+            // mounts without triggering a re-render of the consumer.
+            if (isQuickUploadExcludedById()) {
                 return;
             }
 

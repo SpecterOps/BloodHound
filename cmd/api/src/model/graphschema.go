@@ -18,8 +18,10 @@ package model
 
 import (
 	"errors"
+	"fmt"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/specterops/dawgs/graph"
@@ -63,6 +65,42 @@ func ErrIsGraphSchemaDuplicateError(err error) bool {
 	default:
 		return false
 	}
+}
+
+// reservedGraphKindNamespaces lists namespaces that cannot be used in custom
+// graph extensions or ingest payloads. These are owned by internal subsystems
+// (e.g., "tag" is reserved for asset tagging). Comparisons are case-insensitive.
+var reservedGraphKindNamespaces = []string{"tag"}
+
+// MatchReservedGraphKindNamespace reports whether a kind either exactly
+// matches a reserved namespace or uses one as its "namespace_" prefix. The
+// matched namespace is returned (in its canonical lowercase form) for use in
+// error messages. Comparisons are case-insensitive.
+//
+// This function is used to validate kind names at ingest time and at
+// extension upload time.
+func MatchReservedGraphKindNamespace(candidate string) (string, bool) {
+	for _, reserved := range reservedGraphKindNamespaces {
+		if strings.EqualFold(candidate, reserved) {
+			return reserved, true
+		}
+		if len(candidate) > len(reserved) && candidate[len(reserved)] == '_' && strings.EqualFold(candidate[:len(reserved)], reserved) {
+			return reserved, true
+		}
+	}
+	return "", false
+}
+
+// ReservedKindError indicates that a node or edge kind uses a namespace that
+// is reserved for internal use. Callers can render it as a string via Error()
+// or type-assert to inspect the offending kind and namespace.
+type ReservedKindError struct {
+	KindName  string
+	Namespace string
+}
+
+func (s *ReservedKindError) Error() string {
+	return fmt.Sprintf("kind '%s' uses reserved namespace '%s'", s.KindName, s.Namespace)
 }
 
 type GraphSchemaExtensions []GraphSchemaExtension

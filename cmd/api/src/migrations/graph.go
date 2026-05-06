@@ -23,6 +23,7 @@ import (
 	"log/slog"
 	"sort"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -134,11 +135,29 @@ type GraphMigration interface {
 }
 
 type GraphMigrator struct {
-	db graph.Database
+	db              graph.Database
+	sourceKindsData database.SourceKindsData
 }
 
-func NewGraphMigrator(db graph.Database) *GraphMigrator {
-	return &GraphMigrator{db: db}
+// Option configures optional dependencies on a GraphMigrator. Most migrations
+// only need a graph.Database; a small number need access to the relational
+// database (e.g. to read source_kinds). Use functional options to inject those
+// dependencies without forcing every caller to acknowledge them.
+type Option func(*GraphMigrator)
+
+// WithSourceKinds wires a SourceKindsData provider into the migrator. Migrations
+// that depend on the source_kinds table will short-circuit when this option is
+// not supplied.
+func WithSourceKinds(sourceKindsData database.SourceKindsData) Option {
+	return func(m *GraphMigrator) { m.sourceKindsData = sourceKindsData }
+}
+
+func NewGraphMigrator(db graph.Database, opts ...Option) *GraphMigrator {
+	migrator := &GraphMigrator{db: db}
+	for _, opt := range opts {
+		opt(migrator)
+	}
+	return migrator
 }
 
 func (s *GraphMigrator) Migrate(ctx context.Context) error {
@@ -220,7 +239,7 @@ func (s *GraphMigrator) executeMigrations(ctx context.Context, originalVersion v
 
 func (s *GraphMigrator) GetMigrationsByVersion() MigrationsByVersion {
 	migrationsByVersion := make(MigrationsByVersion)
-	for _, migration := range Manifest {
+	for _, migration := range GetManifest(s.sourceKindsData) {
 		migrationsByVersion[migration.Version] = append(migrationsByVersion[migration.Version], migration)
 	}
 	return migrationsByVersion

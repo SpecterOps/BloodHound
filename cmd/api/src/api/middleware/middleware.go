@@ -32,6 +32,8 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/unrolled/secure"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -328,6 +330,86 @@ func EnsureRequestBodyClosed() mux.MiddlewareFunc {
 					b.Close()
 				}
 			}
+		})
+	}
+}
+
+// unmatchedRouteLabel is the bounded "handler" label value used when an incoming request does not match any registered
+// route (e.g. 404 responses). Keeping the fallback as a single constant preserves the cardinality guarantees described
+// in metrics.go.
+const unmatchedRouteLabel = "unmatched"
+
+// routeTemplateFor returns the gorilla/mux path template that would match r, or unmatchedRouteLabel when no route
+// matches or the matched route has no retrievable template. The match is performed without dispatching the request so
+// it is safe to call from pre-route middleware.
+func routeTemplateFor(muxRouter *mux.Router, r *http.Request) string {
+	var routeMatch mux.RouteMatch
+	if !muxRouter.Match(r, &routeMatch) || routeMatch.Route == nil {
+		return unmatchedRouteLabel
+	}
+	template, err := routeMatch.Route.GetPathTemplate()
+	if err != nil {
+		return unmatchedRouteLabel
+	}
+	return template
+}
+
+// highValueHandlers defines the set of API endpoints that should receive detailed
+// per-handler metrics. These are Tier 1 endpoints representing critical business
+// logic, performance-sensitive operations, and frequently-used functionality.
+//
+// All other endpoints will be grouped under the "other" handler label to limit
+// cardinality in the ApiRequestDuration metric while maintaining visibility into
+// the most important endpoints.
+var highValueHandlers = map[string]bool{
+	// Graph Query & Search - Core functionality
+	"/api/v2/graphs/cypher":        true, // Primary graph query endpoint
+	"/api/v2/graphs/shortest-path": true, // Pathfinding queries
+	"/api/v2/pathfinding":          true, // Alternative pathfinding
+	"/api/v2/search":               true, // Global search
+	"/api/v2/graph-search":         true, // Graph-specific search
+
+	// Data Ingestion - Performance critical
+	"/api/v2/ingest":                           true, // Primary collector ingestion
+	"/api/v2/file-upload/start":                true, // Generic file upload
+	"/api/v2/file-upload/{file_upload_job_id}": true, // File processing
+}
+
+// normalizeHandlerLabel takes a route template and returns either the template
+// itself (if it's a high-value endpoint) or "other" (to limit cardinality).
+//
+// This prevents cardinality explosion in ApiRequestDuration by only tracking
+// detailed metrics for Tier 1 endpoints while still counting all requests.
+func normalizeHandlerLabel(template string) string {
+	if template == unmatchedRouteLabel {
+		return unmatchedRouteLabel
+	}
+	if highValueHandlers[template] {
+		return template
+	}
+	return "other"
+}
+
+// MetricsMiddleware wires the API request pipeline to the Prometheus metrics declared in metrics.go. It must be
+// registered as pre-route middleware so that unmatched requests are still counted; the muxRouter argument is used to
+// resolve the matched route template for the "handler" label without dispatching the request twice.
+func MetricsMiddleware(muxRouter *mux.Router) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handlerLabel := routeTemplateFor(muxRouter, r)
+			curriedDuration, err := ApiRequestDuration.CurryWith(prometheus.Labels{"handler": normalizeHandlerLabel(handlerLabel)})
+			if err != nil {
+				slog.ErrorContext(r.Context(), "Failed to curry request duration metric", attr.Error(err))
+				next.ServeHTTP(w, r)
+				return
+			}
+			promhttp.InstrumentHandlerInFlight(ApiInFlightGauge,
+				promhttp.InstrumentHandlerDuration(curriedDuration,
+					promhttp.InstrumentHandlerCounter(ApiTotalRequests,
+						promhttp.InstrumentHandlerResponseSize(ApiResponseSize, next),
+					),
+				),
+			).ServeHTTP(w, r)
 		})
 	}
 }
