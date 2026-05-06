@@ -21,12 +21,27 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
+	"fmt"
 	"io"
 	"path"
 	"time"
+
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 )
 
 //go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/fs.go -package=mocks . FileService
+
+type FileServiceName string
+
+const (
+	FileServiceIngest     FileServiceName = "ingest"
+	FileServiceCollectors FileServiceName = "collectors"
+	FileServiceJobLogs    FileServiceName = "job_logs"
+	FileServiceWork       FileServiceName = "work"
+)
+
+var ErrFileServiceNotFound = errors.New("file service not found")
 
 type FileInfo struct {
 	Path         string
@@ -89,7 +104,7 @@ type LocalFileService struct {
 	Storage Storage
 }
 
-func NewLocalFileService(storage Storage) *LocalFileService {
+func NewFileService(storage Storage) *LocalFileService {
 	return &LocalFileService{Storage: storage}
 }
 
@@ -131,4 +146,86 @@ func (s *LocalFileService) WriteTempFile(ctx context.Context, prefix string, rea
 	}
 
 	return tempPath, nil
+}
+
+// FileServiceResolver is an interface that is used to resolve the actual FileService needed for
+// a specific use case. This is ultimately map backed.
+type FileServiceResolver interface {
+	Resolve(name FileServiceName) (FileService, error)
+}
+
+type fileServiceResolver struct {
+	services map[FileServiceName]FileService
+}
+
+func NewFileServiceResolver(services map[FileServiceName]FileService) (FileServiceResolver, error) {
+	var (
+		serviceName    FileServiceName
+		fileService    FileService
+		copiedServices = make(map[FileServiceName]FileService, len(services))
+	)
+
+	for serviceName, fileService = range services {
+		if serviceName == "" {
+			return nil, errors.New("file service name is required")
+		}
+		if fileService == nil {
+			return nil, fmt.Errorf("file service %q is nil", serviceName)
+		}
+
+		copiedServices[serviceName] = fileService
+	}
+
+	return &fileServiceResolver{
+		services: copiedServices,
+	}, nil
+}
+
+func (s *fileServiceResolver) Resolve(name FileServiceName) (FileService, error) {
+	var (
+		fileService FileService
+		found       bool
+	)
+
+	if name == "" {
+		return nil, fmt.Errorf("%w: empty name", ErrFileServiceNotFound)
+	}
+
+	fileService, found = s.services[name]
+	if !found {
+		return nil, fmt.Errorf("%w: %s", ErrFileServiceNotFound, name)
+	}
+
+	return fileService, nil
+}
+
+func NewDefaultFileServices(cfg config.Configuration) (map[FileServiceName]FileService, error) {
+	var (
+		fileServices = make(map[FileServiceName]FileService)
+	)
+	workStore, err := NewLocalStore(cfg.WorkDir)
+	if err != nil {
+		return nil, err
+	}
+
+	ingestStore, err := NewLocalStore(cfg.TempDirectory())
+	if err != nil {
+		return nil, err
+	}
+
+	collectorsStore, err := NewLocalStore(cfg.CollectorsBasePath)
+	if err != nil {
+		return nil, err
+	}
+
+	workService := NewFileService(workStore)
+	fileServices[FileServiceWork] = workService
+
+	ingestService := NewFileService(ingestStore)
+	fileServices[FileServiceIngest] = ingestService
+
+	collectersService := NewFileService(collectorsStore)
+	fileServices[FileServiceCollectors] = collectersService
+
+	return fileServices, nil
 }

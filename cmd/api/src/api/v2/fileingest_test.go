@@ -580,7 +580,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			// Use a real OsStore so that actual file I/O gives the concurrent validation
 			// goroutine time to set validationErr before the main goroutine reads it.
-			fileServiceOvrd: storage.NewLocalFileService(storage.NewLocalStore()),
+			fileServiceOvrd: storage.NewFileService(storage.NewLocalStore()),
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"Error saving ingest file: file is not valid json"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
@@ -611,7 +611,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
 			},
 			// Use a real OsStore for the same reason as the ErrInvalidJSON case above.
-			fileServiceOvrd: storage.NewLocalFileService(storage.NewLocalStore()),
+			fileServiceOvrd: storage.NewFileService(storage.NewLocalStore()),
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseBody:   `{"errors":[{"context":"","message":"Error saving ingest file: no valid meta tag or data tag found"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
@@ -809,9 +809,9 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			}
 
 			resources := v2.Resources{
-				DB:          mocks.mockDatabase,
-				Config:      config.Configuration{},
-				FileService: fileService,
+				DB:                  mocks.mockDatabase,
+				Config:              config.Configuration{},
+				FileServiceResolver: fileService,
 			}
 
 			err := os.Mkdir(resources.Config.TempDirectory(), 0755)

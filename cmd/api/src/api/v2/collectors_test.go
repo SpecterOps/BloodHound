@@ -162,8 +162,8 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 			}
 
 			resources := v2.Resources{
-				CollectorManifests: collectorManifests,
-				FileService:        mock.mockFS,
+				CollectorManifests:  collectorManifests,
+				FileServiceResolver: mock.mockFS,
 			}
 
 			response := httptest.NewRecorder()
@@ -309,8 +309,8 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 			testCase.setupMocks(t, mock)
 
 			resources := v2.Resources{
-				CollectorManifests: collectorManifests,
-				FileService:        mock.mockFS,
+				CollectorManifests:  collectorManifests,
+				FileServiceResolver: mock.mockFS,
 			}
 
 			response := httptest.NewRecorder()
