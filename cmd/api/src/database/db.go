@@ -204,6 +204,11 @@ func (s *BloodhoundDB) Close(ctx context.Context) {
 	}
 }
 
+// SQLDB returns the underlying *sql.DB handle managed by GORM.
+func (s *BloodhoundDB) SQLDB() (*sql.DB, error) {
+	return s.db.DB()
+}
+
 func (s *BloodhoundDB) preload(associations []string) *gorm.DB {
 	cursor := s.db
 	for _, association := range associations {
