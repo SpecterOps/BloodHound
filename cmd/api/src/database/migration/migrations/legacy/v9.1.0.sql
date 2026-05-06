@@ -13,7 +13,6 @@
 -- limitations under the License.
 --
 -- SPDX-License-Identifier: Apache-2.0
--- Add OpenGraph Phase 2 feature flag
 
 
 -- Add OpenGraph permissions to permissions table
