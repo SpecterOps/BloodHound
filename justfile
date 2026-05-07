@@ -284,15 +284,15 @@ goose-create name:
 
 # run pending migrations
 goose-up:
-  @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" up -allow-missing
+  @go tool goose postgres "{{goose_db}}" -dir {{goose_migrations_dir}} -allow-missing up
 
 # run migration up by 1 migration
 goose-up-by-one:
-  @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" up-by-one -allow-missing
+  @go tool goose postgres "{{goose_db}}" -dir {{goose_migrations_dir}} -allow-missing up-by-one
 
 # run migration up to specific version
 goose-up-to version:
-  @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" up-to {{version}} -allow-missing
+  @go tool goose postgres "{{goose_db}}" -dir {{goose_migrations_dir}} -allow-missing up-to {{version}}
 
 # rollback to last migration
 goose-down:
@@ -308,4 +308,4 @@ goose-down-all:
 
 # show migration status
 goose-status:
-  @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" status -allow-missing
+  @go tool goose postgres "{{goose_db}}" -dir {{goose_migrations_dir}} -allow-missing status
