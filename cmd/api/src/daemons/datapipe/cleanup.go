@@ -20,6 +20,8 @@ package datapipe
 
 import (
 	"context"
+	"path"
+	"time"
 
 	"log/slog"
 	"os"
@@ -27,10 +29,16 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 // TODO MC: update cleanup to take into account the new file service
+
+const (
+	orphanMinimumAge  = 24 * time.Hour
+	scratchMinimumAge = 24 * time.Hour
+)
 
 // FileOperations is an interface for describing filesystem actions. This implementation exists due to deficiencies in
 // the fs package where the fs.FS interface does not support destructive operations like RemoveAll.
@@ -57,112 +65,161 @@ func (s osFileOperations) RemoveAll(path string) error {
 
 // OrphanFileSweeper is a file cleanup utility that allows only one goroutine to attempt file cleanup at a time.
 type OrphanFileSweeper struct {
-	lock                  *sync.Mutex
-	fileOps               FileOperations
-	tempDirectoryRootPath string
+	lock                     *sync.Mutex
+	fileOps                  FileOperations
+	tempDirectoryRootPath    string
+	scratchDirectoryRootPath string
 }
 
-func NewOrphanFileSweeper(fileOps FileOperations, tempDirectoryRootPath string) *OrphanFileSweeper {
+func NewOrphanFileSweeper(fileOps FileOperations, tempDirectoryRootPath string, scratchDirectoryRootPath string) *OrphanFileSweeper {
 	return &OrphanFileSweeper{
-		lock:                  &sync.Mutex{},
-		fileOps:               fileOps,
-		tempDirectoryRootPath: strings.TrimSuffix(tempDirectoryRootPath, string(filepath.Separator)),
+		lock:                     &sync.Mutex{},
+		fileOps:                  fileOps,
+		tempDirectoryRootPath:    strings.TrimSuffix(tempDirectoryRootPath, string(filepath.Separator)),
+		scratchDirectoryRootPath: strings.TrimSuffix(scratchDirectoryRootPath, string(filepath.Separator)),
+	}
+}
+
+func ClearLocalIngestScratch(ctx context.Context, scratchDirectory string, minimumAge time.Duration) {
+	entries, err := os.ReadDir(scratchDirectory)
+	if err != nil {
+		slog.ErrorContext(ctx, "Error reading scratch directory", slog.String("scratch_directory", scratchDirectory), attr.Error(err))
+		return
+	}
+
+	cutoff := time.Now().Add(-minimumAge)
+
+	for _, entry := range entries {
+		if ctx.Err() != nil {
+			return
+		}
+
+		if entry.IsDir() {
+			continue
+		}
+
+		info, err := entry.Info()
+		if err != nil {
+			continue
+		}
+
+		if info.ModTime().After(cutoff) {
+			continue
+		}
+
+		_ = os.Remove(filepath.Join(scratchDirectory, entry.Name()))
+	}
+}
+
+// addExpectedStoragePath handles saved file paths that were saved in absolute prior to this release
+func (s *OrphanFileSweeper) addExpectedStoragePath(expectedFiles map[string]struct{}, expectedFileName string) {
+	if expectedFileName == "" {
+		return
+	}
+
+	if filepath.IsAbs(expectedFileName) {
+		relativePath, err := filepath.Rel(s.tempDirectoryRootPath, filepath.Clean(expectedFileName))
+		if err != nil {
+			return
+		}
+
+		if relativePath == "." || relativePath == ".." || strings.HasPrefix(relativePath, ".."+string(filepath.Separator)) || filepath.IsAbs(relativePath) {
+			return
+		}
+
+		expectedFiles[path.Clean(filepath.ToSlash(relativePath))] = struct{}{}
+		return
+	}
+
+	expectedFiles[path.Clean(filepath.ToSlash(expectedFileName))] = struct{}{}
+}
+
+func (s *OrphanFileSweeper) clearStoredIngestFiles(ctx context.Context, ingestFileService storage.FileService, expectedFileNames []string) {
+	expectedFiles := map[string]struct{}{}
+
+	for _, expectedFileName := range expectedFileNames {
+		s.addExpectedStoragePath(expectedFiles, expectedFileName)
+	}
+
+	files, err := ingestFileService.ListFiles(ctx, "", storage.ListOptions{Recursive: true})
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed listing ingest files", attr.Error(err))
+		return
+	}
+
+	for _, file := range files {
+		if ctx.Err() != nil {
+			return
+		}
+		if file.IsDir {
+			continue
+		}
+
+		logicalPath := path.Clean(file.Path)
+		if _, ok := expectedFiles[logicalPath]; ok {
+			continue
+		}
+
+		if !file.LastModified.IsZero() && time.Since(file.LastModified) < orphanMinimumAge {
+			continue
+		}
+
+		if err := ingestFileService.DeleteFile(ctx, logicalPath); err != nil {
+			slog.WarnContext(ctx, "Failed deleting orphaned ingest file", slog.String("path", logicalPath), attr.Error(err))
+		}
+	}
+}
+
+func (s *OrphanFileSweeper) clearLegacyLocalIngestFiles(ctx context.Context, expectedFileNames []string) {
+	expectedLocalFiles := map[string]struct{}{}
+
+	for _, expectedFileName := range expectedFileNames {
+		if filepath.IsAbs(expectedFileName) {
+			expectedLocalFiles[filepath.Clean(expectedFileName)] = struct{}{}
+		}
+	}
+
+	entries, err := s.fileOps.ReadDir(s.tempDirectoryRootPath)
+	if err != nil {
+		slog.WarnContext(ctx, "Failed reading legacy ingest temp directory", attr.Error(err))
+		return
+	}
+
+	cutoff := time.Now().Add(-orphanMinimumAge)
+
+	for _, entry := range entries {
+		if ctx.Err() != nil {
+			return
+		}
+		if entry.IsDir() {
+			continue
+		}
+
+		fullPath := filepath.Join(s.tempDirectoryRootPath, entry.Name())
+		if _, ok := expectedLocalFiles[filepath.Clean(fullPath)]; ok {
+			continue
+		}
+
+		info, err := entry.Info()
+		if err != nil || info.ModTime().After(cutoff) {
+			continue
+		}
+
+		_ = s.fileOps.RemoveAll(fullPath)
 	}
 }
 
 // Clear takes a context and a list of expected file names. The function will list all directory entries within the
-// configured tempDirectoryRootPath that the sweeper was instantiated with and compare the resulting list against the
-// passed expected file names. The function will then call RemoveAll on each directory entry not found in the expected
-// file name slice.
-func (s *OrphanFileSweeper) Clear(ctx context.Context, expectedFileNames []string) {
-	// Only allow one background thread to run for clearing orphaned data/
+// configured tempDirectoryRootPath and scratchDirectoryRootPath that the sweeper was instantiated with and compare the
+// resulting list against the passed expected file names. The function will then call RemoveAll on each directory entry not
+// found in the expected file name slice. In addition, ingested files are also deleted using the supplied file service.
+func (s *OrphanFileSweeper) Clear(ctx context.Context, ingestFileService storage.FileService, expectedFileNames []string) {
 	if !s.lock.TryLock() {
 		return
 	}
-
-	// Release the lock once finished
 	defer s.lock.Unlock()
 
-	slog.InfoContext(
-		ctx,
-		"Running OrphanFileSweeper",
-		slog.String("path", s.tempDirectoryRootPath),
-	)
-	slog.DebugContext(
-		ctx,
-		"OrphanFileSweeper expected names",
-		slog.String("expected_file_names", strings.Join(expectedFileNames, ",")),
-	)
-
-	if dirEntries, err := s.fileOps.ReadDir(s.tempDirectoryRootPath); err != nil {
-		slog.ErrorContext(
-			ctx,
-			"Failed reading work directory",
-			slog.String("path", s.tempDirectoryRootPath),
-			attr.Error(err),
-		)
-	} else {
-		numDeleted := 0
-
-		// Remove expected files from the deletion list
-		for _, expectedFileName := range expectedFileNames {
-			expectedDir, expectedFile := filepath.Split(expectedFileName)
-			if expectedDir != "" {
-				expectedDir = strings.TrimSuffix(expectedDir, string(filepath.Separator))
-				if expectedDir != s.tempDirectoryRootPath {
-					slog.WarnContext(
-						ctx,
-						"Directory does not match temp directory root path for expected file, skipping",
-						slog.String("expected_dir", expectedDir),
-						slog.String("expected_file_name", expectedFileName),
-						slog.String("path", s.tempDirectoryRootPath),
-					)
-					continue
-				}
-			}
-			for idx, dirEntry := range dirEntries {
-				if expectedFile == dirEntry.Name() {
-					slog.DebugContext(
-						ctx,
-						"Skipping expected file",
-						slog.String("expected_file", expectedFile),
-					)
-					dirEntries = append(dirEntries[:idx], dirEntries[idx+1:]...)
-				}
-			}
-		}
-
-		for _, orphanedDirEntry := range dirEntries {
-			// Check for context cancellation before each file deletion
-			if ctx.Err() != nil {
-				break
-			}
-
-			slog.InfoContext(
-				ctx,
-				"Removing orphaned file",
-				slog.String("name", orphanedDirEntry.Name()),
-			)
-			fullPath := filepath.Join(s.tempDirectoryRootPath, orphanedDirEntry.Name())
-
-			if err := s.fileOps.RemoveAll(fullPath); err != nil {
-				slog.ErrorContext(
-					ctx,
-					"Failed removing orphaned file",
-					slog.String("full_path", fullPath),
-					attr.Error(err),
-				)
-			}
-
-			numDeleted += 1
-		}
-
-		if numDeleted > 0 {
-			slog.InfoContext(
-				ctx,
-				"Finished removing orphaned ingest files",
-				slog.Int("num_deleted", numDeleted),
-			)
-		}
-	}
+	s.clearStoredIngestFiles(ctx, ingestFileService, expectedFileNames)
+	s.clearLegacyLocalIngestFiles(ctx, expectedFileNames)
+	ClearLocalIngestScratch(ctx, s.scratchDirectoryRootPath, scratchMinimumAge)
 }

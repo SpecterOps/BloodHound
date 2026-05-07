@@ -15,7 +15,7 @@ import (
 	"github.com/specterops/dawgs/util"
 )
 
-func SpoolToScratch(ctx context.Context, tempDirectory string, fileService storage.FileService, storedFileName string) (string, error) {
+func SpoolToScratch(ctx context.Context, scratchDirectory string, fileService storage.FileService, storedFileName string) (string, error) {
 	var (
 		sourceFile  io.ReadCloser
 		scratchFile *os.File
@@ -30,7 +30,7 @@ func SpoolToScratch(ctx context.Context, tempDirectory string, fileService stora
 	}
 	defer sourceFile.Close()
 
-	scratchFile, err = os.CreateTemp(tempDirectory, "ingest-archive-*")
+	scratchFile, err = os.CreateTemp(scratchDirectory, "archive-*")
 	if err != nil {
 		return "", fmt.Errorf("create ingest scratch file: %w", err)
 	}
@@ -60,14 +60,14 @@ func SpoolToScratch(ctx context.Context, tempDirectory string, fileService stora
 	return scratchPath, nil
 }
 
-func OpenScratchReadSeeker(ctx context.Context, tempDirectory string, fileService storage.FileService, storedFileName string) (*os.File, string, error) {
+func OpenScratchReadSeeker(ctx context.Context, scratchDirectory string, fileService storage.FileService, storedFileName string) (*os.File, string, error) {
 	var (
 		scratchPath string
 		scratchFile *os.File
 		err         error
 	)
 
-	if scratchPath, err = SpoolToScratch(ctx, tempDirectory, fileService, storedFileName); err != nil {
+	if scratchPath, err = SpoolToScratch(ctx, scratchDirectory, fileService, storedFileName); err != nil {
 		return nil, "", err
 	}
 
@@ -108,7 +108,7 @@ func WriteArchiveFileToStorage(ctx context.Context, fileService storage.FileServ
 	return extractedPath, nil
 }
 
-func ExtractIngestFiles(ctx context.Context, tempDirectory string, fileService storage.FileService, storedFileName, providedFileName string, fileType model.FileType, prefix string) ([]IngestFileData, error) {
+func ExtractIngestFiles(ctx context.Context, scratchDirectory string, fileService storage.FileService, storedFileName, providedFileName string, fileType model.FileType, prefix string) ([]IngestFileData, error) {
 	if fileType == model.FileTypeJson {
 		// If this isn't a zip file, just return a slice with the path in it and let stuff process as normal
 		return []IngestFileData{
@@ -120,7 +120,7 @@ func ExtractIngestFiles(ctx context.Context, tempDirectory string, fileService s
 	}
 
 	// Zip Path:
-	scratchPath, err := SpoolToScratch(ctx, tempDirectory, fileService, storedFileName)
+	scratchPath, err := SpoolToScratch(ctx, scratchDirectory, fileService, storedFileName)
 	if err != nil {
 		return []IngestFileData{
 			{
@@ -158,16 +158,16 @@ func ExtractIngestFiles(ctx context.Context, tempDirectory string, fileService s
 			ParentFile: providedFileName,
 		}
 
-		//if extractedPath, err := WriteArchiveFileToStorage(ctx, fileService, archiveFile, fmt.Sprintf("tmp/file_upload_job%d_", jobID)); err != nil {
 		if extractedPath, err := WriteArchiveFileToStorage(ctx, fileService, archiveFile, prefix); err != nil {
 			processedFileData.Errors = []string{err.Error()}
 
-			errs.Add(fmt.Errorf(
-				"error extracting file %s in archive %s: %w",
-				archiveFile.Name,
-				storedFileName,
-				err,
-			))
+			// TODO MC: should a single extract break the full process? Any file data with error can be skipped directly
+			// errs.Add(fmt.Errorf(
+			// 	"error extracting file %s in archive %s: %w",
+			// 	archiveFile.Name,
+			// 	storedFileName,
+			// 	err,
+			// ))
 		} else {
 			processedFileData.Path = extractedPath
 		}
