@@ -200,11 +200,10 @@ describe('FileIngestTable', () => {
             fileUploadRequests.length = 0;
             server.use(
                 rest.get('/api/v2/file-upload', (req, res, ctx) => {
-                    const url = new URL(req.url.toString());
-                    fileUploadRequests.push(url);
-                    const skip = parseInt(url.searchParams.get('skip') ?? '0', 10);
-                    const limit = parseInt(url.searchParams.get('limit') ?? '10', 10);
-                    const statusParam = url.searchParams.get('status');
+                    fileUploadRequests.push(req.url);
+                    const skip = parseInt(req.url.searchParams.get('skip') ?? '0', 10);
+                    const limit = parseInt(req.url.searchParams.get('limit') ?? '10', 10);
+                    const statusParam = req.url.searchParams.get('status');
                     let pool = ALL_JOBS;
                     const statusEq = statusParam?.match(/^eq:(\d+)$/);
                     if (statusEq) {
