@@ -99,7 +99,7 @@ func (s *GraphifyService) extractToTempFile(f *zip.File) (string, error) {
 // archive, the number of files that failed to ingest as JSON, and an error
 func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, fileService storage.FileService, task model.IngestTask) ([]IngestFileData, error) {
 	// Try to pre-process the file. If any of them fail, stop processing and return the error
-	if fileData, err := ExtractIngestFiles(ic.Ctx, s.cfg.TempDirectory(), fileService, task.StoredFileName, task.OriginalFileName, task.FileType, fmt.Sprintf("tmp/file_upload_job%d_", ic.JobId)); err != nil {
+	if fileData, err := ExtractIngestFiles(ic.Ctx, s.cfg.ScratchDirectory(), fileService, task.StoredFileName, task.OriginalFileName, task.FileType, fmt.Sprintf("tmp/file_upload_job%d_", ic.JobId)); err != nil {
 		return fileData, err
 	} else {
 		errs := errorlist.NewBuilder()
@@ -118,7 +118,7 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, fileService stora
 					continue
 				}
 
-				if err := processSingleFile(ic.Ctx, fileService, s.cfg.TempDirectory(), data, ic, readOpts); err != nil {
+				if err := processSingleFile(ic.Ctx, fileService, s.cfg.ScratchDirectory(), data, ic, readOpts); err != nil {
 					var (
 						graphifyError errorlist.Error
 						resolutionErr endpoint.ResolutionError

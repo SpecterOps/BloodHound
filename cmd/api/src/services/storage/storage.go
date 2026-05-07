@@ -100,6 +100,7 @@ type FileService interface {
 	DeleteFile(ctx context.Context, name string) error
 	WriteTempFile(ctx context.Context, prefix string, reader io.Reader, opts WriteOptions) (string, error)
 	MoveFile(ctx context.Context, srcName, dstName string, opts WriteOptions) error
+	ListFiles(ctx context.Context, name string, opts ListOptions) ([]FileInfo, error)
 }
 
 type LocalFileService struct {
@@ -156,6 +157,10 @@ func (s *LocalFileService) WriteTempFile(ctx context.Context, prefix string, rea
 
 func (s *LocalFileService) MoveFile(ctx context.Context, srcName, dstName string, options WriteOptions) error {
 	return s.Storage.Move(ctx, srcName, dstName, options)
+}
+
+func (s *LocalFileService) ListFiles(ctx context.Context, name string, options ListOptions) ([]FileInfo, error) {
+	return s.Storage.List(ctx, name, options)
 }
 
 // FileServiceResolver is an interface that is used to resolve the actual FileService needed for
