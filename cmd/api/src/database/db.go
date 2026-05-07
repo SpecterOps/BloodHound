@@ -204,6 +204,11 @@ func (s *BloodhoundDB) Close(ctx context.Context) {
 	}
 }
 
+// SQLDB returns the underlying *sql.DB handle managed by GORM.
+func (s *BloodhoundDB) SQLDB() (*sql.DB, error) {
+	return s.db.DB()
+}
+
 func (s *BloodhoundDB) preload(associations []string) *gorm.DB {
 	cursor := s.db
 	for _, association := range associations {
@@ -288,8 +293,13 @@ func (s *BloodhoundDB) Wipe(ctx context.Context) error {
 
 func (s *BloodhoundDB) Migrate(ctx context.Context) error {
 	// Run the migrator
-	if err := migration.NewMigrator(s.db.WithContext(ctx)).ExecuteStepwiseMigrations(); err != nil {
-		slog.ErrorContext(ctx, "Error during SQL database migration phase", attr.Error(err))
+	migrator, err := migration.NewMigrator(s.db.WithContext(ctx))
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to create migrator: %v", attr.Error(err))
+		return err
+	}
+	if err := migrator.ExecuteGooseMigrations(ctx); err != nil {
+		slog.ErrorContext(ctx, "Failed to execute migrations: %v", attr.Error(err))
 		return err
 	}
 
@@ -297,8 +307,13 @@ func (s *BloodhoundDB) Migrate(ctx context.Context) error {
 }
 
 func (s *BloodhoundDB) PopulateExtensionData(ctx context.Context) error {
-	if err := migration.NewMigrator(s.db.WithContext(ctx)).ExecuteExtensionDataPopulation(); err != nil {
-		slog.ErrorContext(ctx, "Error during extensions data population phase", attr.Error(err))
+	migrator, err := migration.NewMigrator(s.db.WithContext(ctx))
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to create migrator: %v", attr.Error(err))
+		return err
+	}
+	if err := migrator.ExecuteExtensionDataPopulation(); err != nil {
+		slog.ErrorContext(ctx, "Failed to execute extension data population", attr.Error(err))
 		return err
 	}
 
