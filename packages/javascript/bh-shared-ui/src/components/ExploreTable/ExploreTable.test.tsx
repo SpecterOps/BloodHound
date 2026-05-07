@@ -580,7 +580,7 @@ describe('ExploreTable', async () => {
         await user.click(downloadButton);
 
         const allButton = screen.getByRole('menuitem', { name: 'All Columns' });
-        const selectedButton = screen.getByRole('menuitem', { name: 'selected Columns' });
+        const selectedButton = screen.getByRole('menuitem', { name: 'Selected Columns' });
 
         expect(allButton).toBeInTheDocument();
         expect(selectedButton).toBeInTheDocument();
@@ -590,7 +590,7 @@ describe('ExploreTable', async () => {
         expect(json2csv).toBeCalledWith(...jsonToCsvArgs);
     });
 
-    it('Download button opens a menu and selecting "selected Columns" calls json2csv with selected columns only', async () => {
+    it('Download button opens a menu and selecting "Selected Columns" calls json2csv with selected columns only', async () => {
         const { user } = await setup();
 
         await screen.findByText('10 results');
@@ -600,7 +600,7 @@ describe('ExploreTable', async () => {
         const downloadButton = screen.getByTestId('download-button');
         await user.click(downloadButton);
 
-        const selectedButton = screen.getByRole('menuitem', { name: 'selected Columns' });
+        const selectedButton = screen.getByRole('menuitem', { name: 'Selected Columns' });
         await user.click(selectedButton);
 
         expect(json2csv).toBeCalledWith(...jsonToCsvSelectedColumnsArgs);
