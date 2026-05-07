@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
@@ -305,4 +306,26 @@ func Test_AuthMiddleware(t *testing.T) {
 			require.Equal(t, http.StatusOK, response.Code)
 		}
 	})
+}
+
+func TestLoginTimer_DisabledWhenLoginProtectionsOff(t *testing.T) {
+	// LoginTimer normally adds 1.5-2s of latency to /api/v2/login. When
+	// DisableLoginProtections is true the middleware must short-circuit so
+	// dev/load-test flows aren't paced by the timer.
+	handler := LoginTimer(config.Configuration{DisableLoginProtections: true})(
+		http.HandlerFunc(func(rw http.ResponseWriter, _ *http.Request) {
+			rw.WriteHeader(http.StatusOK)
+		}),
+	)
+
+	request, err := http.NewRequest(http.MethodPost, "/login", nil)
+	require.NoError(t, err)
+	response := httptest.NewRecorder()
+
+	start := time.Now()
+	handler.ServeHTTP(response, request)
+	elapsed := time.Since(start)
+
+	require.Equal(t, http.StatusOK, response.Code)
+	require.Less(t, elapsed, 500*time.Millisecond, "LoginTimer should be a no-op when login protections are disabled")
 }

@@ -40,11 +40,11 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 	)
 
 	router.With(func() mux.MiddlewareFunc {
-		return middleware.RateLimitMiddleware(resources.Config, resources.DB, 1)
+		return middleware.LoginRateLimitMiddleware(resources.Config, resources.DB)
 	},
 		// Login resource
 		routerInst.POST("/api/v2/login", func(response http.ResponseWriter, request *http.Request) {
-			middleware.LoginTimer()(http.HandlerFunc(loginResource.Login)).ServeHTTP(response, request)
+			middleware.LoginTimer(resources.Config)(http.HandlerFunc(loginResource.Login)).ServeHTTP(response, request)
 		}),
 	)
 

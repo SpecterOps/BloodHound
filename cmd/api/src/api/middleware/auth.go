@@ -31,6 +31,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -214,8 +215,12 @@ const (
 
 // LoginTimer is a middleware to protect against time-based user enumeration on the Login route. It does this by
 // starting a timer before the actual login procedure to normalize the duration of this procedure to be within 1.5s and
-// 2s.
-func LoginTimer() mux.MiddlewareFunc {
+// 2s. When cfg.DisableLoginProtections is true the middleware is a no-op.
+func LoginTimer(cfg config.Configuration) mux.MiddlewareFunc {
+	if cfg.DisableLoginProtections {
+		return noOpMiddleware()
+	}
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			timer := time.NewTimer(loginMinimum + time.Duration(rand.Int64N(loginVariation.Nanoseconds())))

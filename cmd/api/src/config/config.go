@@ -40,6 +40,11 @@ const (
 	BHAPIEnvironmentVariablePrefix       = "bhe"
 	environmentVariablePathSeparator     = "_"
 	environmentVariableKeyValueSeparator = "="
+
+	// DefaultAPIRateLimit is the default per-IP request-per-second cap for the
+	// HTTP API, applied via the rate-limiting middleware when no override is
+	// configured. Sourced here so middleware and config defaults agree.
+	DefaultAPIRateLimit = 55
 )
 
 type TLSConfiguration struct {
@@ -138,7 +143,8 @@ type Configuration struct {
 	DisableCypherComplexityLimit    bool                        `json:"disable_cypher_complexity_limit"`
 	DisableIngest                   bool                        `json:"disable_ingest"`
 	DisableMigrations               bool                        `json:"disable_migrations"`
-	DisableRateLimiting             bool                        `json:"disable_rate_limiting"`
+	DisableLoginProtections         bool                        `json:"disable_login_protections"`
+	APIRateLimitRequestsPerSecond   int64                       `json:"api_rate_limit_requests_per_second"`
 	GraphQueryMemoryLimit           uint16                      `json:"graph_query_memory_limit"`
 	EnableTextLogger                bool                        `json:"enable_text_logger"`
 	RecreateDefaultAdmin            bool                        `json:"recreate_default_admin"`

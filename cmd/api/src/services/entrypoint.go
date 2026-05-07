@@ -106,8 +106,16 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		slog.InfoContext(ctx, "Database migrations are disabled per configuration")
 	}
 
-	if cfg.DisableRateLimiting {
-		slog.WarnContext(ctx, "HTTP rate limiting is disabled per configuration - login endpoint brute-force protection is OFF")
+	if cfg.APIRateLimitRequestsPerSecond < 0 {
+		return nil, fmt.Errorf("api_rate_limit_requests_per_second must be >= 0 (got %d); use 0 to disable rate limiting", cfg.APIRateLimitRequestsPerSecond)
+	}
+
+	if cfg.DisableLoginProtections {
+		slog.WarnContext(ctx, "Login protections are disabled per configuration - login rate limiting and timing protection are OFF (brute-force and user-enumeration mitigations disabled)")
+	}
+
+	if cfg.APIRateLimitRequestsPerSecond == 0 {
+		slog.WarnContext(ctx, "API rate limiting is disabled per configuration")
 	}
 
 	// Allow recreating the default admin account to help with lockouts/loading database dumps

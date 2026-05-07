@@ -74,14 +74,16 @@ func TestSetValuesFromEnv(t *testing.T) {
 		assert.Equal(t, "postgresql://bhe:supersecretpassword@localhost:5432/bhe", cfg.Database.PostgreSQLConnectionString())
 	})
 
-	t.Run("disable rate limiting configuration", func(t *testing.T) {
+	t.Run("rate limiting configuration", func(t *testing.T) {
 		const envPrefix = "bhe"
 		var cfg config.Configuration
 
 		assert.Nil(t, config.SetValuesFromEnv(envPrefix, &cfg, []string{
-			"bhe_disable_rate_limiting=true",
+			"bhe_disable_login_protections=true",
+			"bhe_api_rate_limit_requests_per_second=10",
 		}))
-		assert.True(t, cfg.DisableRateLimiting)
+		assert.True(t, cfg.DisableLoginProtections)
+		assert.Equal(t, int64(10), cfg.APIRateLimitRequestsPerSecond)
 	})
 
 	// This test ensures that fields that could be considered sensitive are configurable through expected environment

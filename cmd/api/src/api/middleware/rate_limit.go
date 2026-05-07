@@ -33,8 +33,14 @@ import (
 	"github.com/ulule/limiter/v3/drivers/store/memory"
 )
 
-// DefaultRateLimit is the default number of allowed requests per second
-const DefaultRateLimit = 55
+// LoginRateLimit is the number of allowed login requests per second
+const LoginRateLimit = 1
+
+func noOpMiddleware() mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return next
+	}
+}
 
 func rateLimitMiddleware(db database.Database, limiter *limiter.Limiter) mux.MiddlewareFunc {
 	ipGetter := stdlib.WithKeyGetter(
@@ -112,26 +118,36 @@ func removeRateLimitHeadersMiddleware(next http.Handler) http.Handler {
 }
 
 // DefaultRateLimitMiddleware is a convenience function for creating the default rate limiting middleware
-// for a router/route
+// for a router/route. The applied limit is read from cfg.APIRateLimitRequestsPerSecond; a value of 0
+// disables rate limiting.
 //
 // Usage:
 //
 //	router.Use(DefaultRateLimitMiddleware(cfg, db))
 func DefaultRateLimitMiddleware(cfg config.Configuration, db database.Database) mux.MiddlewareFunc {
-	return RateLimitMiddleware(cfg, db, DefaultRateLimit)
+	return RateLimitMiddleware(db, cfg.APIRateLimitRequestsPerSecond)
+}
+
+// LoginRateLimitMiddleware creates the login rate limiting middleware. When
+// cfg.DisableLoginProtections is true the middleware is a no-op.
+func LoginRateLimitMiddleware(cfg config.Configuration, db database.Database) mux.MiddlewareFunc {
+	if cfg.DisableLoginProtections {
+		return noOpMiddleware()
+	}
+
+	return RateLimitMiddleware(db, LoginRateLimit)
 }
 
 // RateLimitMiddleware is a function for creating rate limiting middleware
-// with a particular limit for a router/route
+// with a particular limit for a router/route. A non-positive limit returns a
+// no-op middleware (rate limiting disabled).
 //
 // Usage:
 //
-//	router.Use(RateLimitMiddleware(cfg, db, 1))
-func RateLimitMiddleware(cfg config.Configuration, db database.Database, limit int64) mux.MiddlewareFunc {
-	if cfg.DisableRateLimiting {
-		return func(next http.Handler) http.Handler {
-			return next
-		}
+//	router.Use(RateLimitMiddleware(db, 1))
+func RateLimitMiddleware(db database.Database, limit int64) mux.MiddlewareFunc {
+	if limit <= 0 {
+		return noOpMiddleware()
 	}
 
 	rate := limiter.Rate{
