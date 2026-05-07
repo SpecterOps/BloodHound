@@ -22,7 +22,6 @@ import (
 	"log/slog"
 	"mime"
 	"net/http"
-	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -172,7 +171,7 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 	} else if _, err = upload.CreateIngestTask(request.Context(), s.DB, upload.IngestTaskParams{Filename: ingestTaskParams.Filename, ProvidedFileName: checkFileName(fileName, ingestTaskParams.FileType), FileType: ingestTaskParams.FileType, RequestID: requestId, JobID: int64(jobID)}); err != nil {
-		if removeErr := os.Remove(ingestTaskParams.Filename); removeErr != nil {
+		if removeErr := ingestFileService.DeleteFile(request.Context(), ingestTaskParams.Filename); removeErr != nil {
 			slog.WarnContext(request.Context(), "Failed to clean up file after task creation error", attr.Error(removeErr))
 		}
 		api.HandleDatabaseError(request, response, err)

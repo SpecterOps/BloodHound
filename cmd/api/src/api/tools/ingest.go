@@ -87,6 +87,7 @@ func (s *IngestControl) FetchRetainedIngestFiles(response http.ResponseWriter, r
 
 	retainedFilesDirectory := s.cfg.RetainedFilesDirectory()
 
+	// TODO MC: should there be a retained fileService?
 	if retainedFilesDirEntries, err := os.ReadDir(retainedFilesDirectory); err != nil {
 		// Unable to stat the retained files directory. Log a warning and inform the user that the
 		// operation failed.
@@ -228,6 +229,7 @@ func (s *IngestControl) DisableIngestFileRetention(response http.ResponseWriter,
 
 		retainedFilesDirectory := s.cfg.RetainedFilesDirectory()
 
+		// TODO MC: should there be a retained fileService
 		if retainedFilesDirEntries, err := os.ReadDir(retainedFilesDirectory); err != nil {
 			slog.WarnContext(
 				request.Context(),

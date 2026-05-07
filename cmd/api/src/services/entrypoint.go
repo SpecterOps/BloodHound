@@ -142,7 +142,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 
 		var (
 			cl                     = changelog.NewChangelog(connections.Graph, connections.RDMS, changelog.DefaultOptions())
-			pipeline               = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema, cl)
+			pipeline               = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema, fileServiceResolver, cl)
 			graphQuery             = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)
 			authorizer             = auth.NewAuthorizer(connections.RDMS)
 			datapipeDaemon         = datapipe.NewDaemon(pipeline, startDelay, time.Duration(cfg.DatapipeInterval)*time.Second, connections.RDMS)
