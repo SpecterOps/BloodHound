@@ -3,8 +3,8 @@ _default:
 
 host_os := if os() == "macos" { "darwin" } else { os() }
 host_arch := if arch() == "x86" { "386" } else { if arch() == "x86_64" { "amd64" } else { if arch() == "aarch64" { "arm64" } else { arch() } } }
-# database connections for goose commands 
-goose_db := env_var_or_default("GOOSE_DB", "postgres://bloodhound:bloodhoundcommunityedition@localhost:65432/bloodhound?sslmode=disable")
+# database connections for goose commands
+goose_db := env_var_or_default("GOOSE_DB", "postgres://bloodhound:bloodhoundcommunityedition@localhost:5432/bloodhound?sslmode=disable")
 goose_migrations_dir := "cmd/api/src/database/migration/migrations"
 
 export CGO_ENABLED := "0"
@@ -282,13 +282,29 @@ init wipe="":
 goose-create name:
   @go tool goose -dir {{goose_migrations_dir}} create {{name}} sql
 
+# run pending migrations
+goose-up:
+  @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" up -allow-missing
+
+# run migration up by 1 migration
+goose-up-by-one:
+  @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" up-by-one -allow-missing
+
+# run migration up to specific version
+goose-up-to version:
+  @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" up-to {{version}} -allow-missing
+
 # rollback to last migration
 goose-down:
   @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" down
 
-# run pending migrations
-goose-up:
-  @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" up -allow-missing
+# rollback to a specific version
+goose-down-to version:
+  @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" down-to {{version}}
+
+# rollback all migrations
+goose-down-all:
+  @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" down-to 0
 
 # show migration status
 goose-status:
