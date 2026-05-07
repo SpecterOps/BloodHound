@@ -239,7 +239,7 @@ func TestResources_RequestAnalysis(t *testing.T) {
 						Path: "/api/v2/analysis",
 					},
 					Method: http.MethodPut,
-					Body:   io.NopCloser(bytes.NewBufferString(`{"analysis_step":2}`)),
+					Body:   io.NopCloser(bytes.NewBufferString(`{"analysis_step":4}`)),
 				}
 
 				param := map[string]string{
