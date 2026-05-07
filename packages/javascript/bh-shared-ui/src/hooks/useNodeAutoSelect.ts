@@ -21,17 +21,6 @@ import { useExploreSelectedItem } from './useExploreSelectedItem';
 
 type NodeRecord = Record<string, { objectId: string }>;
 
-/**
- * Returns an `onSuccess` callback that auto-selects the node matching the
- * current node search when graph data loads. It is intended to be passed as
- * the `onSuccess` option to the graph query hook (e.g. `useSigmaExploreGraph`
- * or `useRegraphExploreGraph`).
- *
- * @param extractNodes - A graph-library-specific function that converts the raw
- *   `GraphResponse | FlatGraphResponse` into a flat record mapping each graph
- *   key to an object containing the node's `objectId`. Pass a stable reference
- *   (module-level constant or `useCallback`) to avoid unnecessary re-renders.
- */
 export const useNodeAutoSelect = (
     extractNodes: (data: GraphResponse | FlatGraphResponse) => NodeRecord | undefined
 ) => {

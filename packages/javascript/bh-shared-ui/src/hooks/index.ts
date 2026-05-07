@@ -47,6 +47,7 @@ export * from './useLocalStorage';
 export * from './useMatchingPaths';
 export * from './useMeasure';
 export * from './useMountEffect';
+export * from './useNodeAutoSelect';
 export * from './useObjectState';
 export { default as useOnClickOutside } from './useOnClickOutside';
 export * from './usePermissions';

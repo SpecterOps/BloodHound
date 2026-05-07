@@ -37,6 +37,7 @@ import {
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
     useFeatureFlag,
+    useGraphHasData,
     useKeybindings,
     useNodeAutoSelect,
     useTagGlyphs,
@@ -77,11 +78,14 @@ const GraphView: FC = () => {
 
     const { selectedItem, setSelectedItem, selectedItemQuery, previousSelectedItem, clearSelectedItem } =
         useExploreSelectedItem();
+    const { searchType, setExploreParams, exploreSearchTab } = useExploreParams();
 
     // Auto-select the searched node so it is highlighted and its information panel is displayed
     const handleNodeAutoSelect = useNodeAutoSelect(extractSigmaNodes);
 
     const graphQuery = useSigmaExploreGraph({ onSuccess: handleNodeAutoSelect });
+
+    const graphHasDataQuery = useGraphHasData();
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
@@ -151,8 +155,6 @@ const GraphView: FC = () => {
         },
         [handleContextMenu]
     );
-
-    const { setExploreParams, exploreSearchTab } = useExploreParams();
 
     useKeybindings({
         KeyC: () => {
