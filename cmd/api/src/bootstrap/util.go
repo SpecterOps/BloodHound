@@ -57,6 +57,10 @@ func EnsureServerDirectories(cfg config.Configuration) error {
 		return err
 	}
 
+	if err := ensureDirectory(cfg.ScratchDirectory()); err != nil {
+		return err
+	}
+
 	if err := ensureDirectory(cfg.RetainedFilesDirectory()); err != nil {
 		return err
 	}

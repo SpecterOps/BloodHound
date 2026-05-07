@@ -61,7 +61,7 @@ func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Data
 		graphdb:             graphDB,
 		cache:               cache,
 		cfg:                 cfg,
-		orphanedFileSweeper: NewOrphanFileSweeper(NewOSFileOperations(), cfg.TempDirectory()),
+		orphanedFileSweeper: NewOrphanFileSweeper(NewOSFileOperations(), cfg.TempDirectory(), cfg.ScratchDirectory()),
 		ingestSchema:        ingestSchema,
 		fileServiceResolver: fileServiceResolver,
 		jobService:          job.NewJobService(ctx, db),
@@ -158,6 +158,8 @@ func filterDeletableKinds(kindsToDelete []string) []string {
 func (s *BHCEPipeline) PruneData(ctx context.Context) error {
 	if ingestTasks, err := s.db.GetAllIngestTasks(ctx); err != nil {
 		return fmt.Errorf("fetching available ingest tasks: %v", err)
+	} else if ingestFileService, err := s.fileServiceResolver.Resolve(storage.FileServiceIngest); err != nil {
+		return fmt.Errorf("error resolving ingest file service: %v", err)
 	} else {
 		expectedFiles := make([]string, len(ingestTasks))
 
@@ -165,7 +167,7 @@ func (s *BHCEPipeline) PruneData(ctx context.Context) error {
 			expectedFiles[idx] = ingestTask.StoredFileName
 		}
 
-		go s.orphanedFileSweeper.Clear(ctx, expectedFiles)
+		go s.orphanedFileSweeper.Clear(ctx, ingestFileService, expectedFiles)
 	}
 	return nil
 }

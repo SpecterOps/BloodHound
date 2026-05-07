@@ -170,6 +170,10 @@ type Configuration struct {
 	EnableAuditLogStdout            bool                      `json:"enable_audit_log_stdout"`
 }
 
+func (s Configuration) ScratchDirectory() string {
+	return filepath.Join(s.WorkDir, "ingest_scratch")
+}
+
 func (s Configuration) TempDirectory() string {
 	return filepath.Join(s.WorkDir, "tmp")
 }
