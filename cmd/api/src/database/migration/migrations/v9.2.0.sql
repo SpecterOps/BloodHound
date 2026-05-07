@@ -15,7 +15,8 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 -- Add analysis_step column to analysis_request_switch to allow callers to specify
--- where in the analysis pipeline to begin. The default value of 1 corresponds to
--- AnalysisStepPostProcessing (== AnalysisStepAll), which starts from the beginning.
+-- which steps of the analysis pipeline should run. The column stores an AnalysisStep
+-- bitmask (PostProcessing=1, Tagging=2, Analysis=4). The default value of 7
+-- corresponds to AnalysisStepAll, which selects every step.
 ALTER TABLE analysis_request_switch
-  ADD COLUMN IF NOT EXISTS analysis_step integer NOT NULL DEFAULT 1;
+  ADD COLUMN IF NOT EXISTS analysis_step integer NOT NULL DEFAULT 7;

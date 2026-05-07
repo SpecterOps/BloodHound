@@ -267,6 +267,41 @@ func TestResources_RequestAnalysis(t *testing.T) {
 			},
 		},
 		{
+			name: "Success: explicit zero analysis step honored - OK",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/analysis",
+					},
+					Method: http.MethodPut,
+					Body:   io.NopCloser(bytes.NewBufferString(`{"analysis_step":0}`)),
+				}
+
+				param := map[string]string{
+					"object_id": "id",
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner:   model.User{},
+						Session: model.UserSession{},
+					},
+				}
+
+				request = mux.SetURLVars(request, param)
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000", 0).Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusAccepted,
+				responseHeader: http.Header{},
+			},
+		},
+		{
 			name: "Error: malformed JSON body - Bad Request",
 			buildRequest: func() *http.Request {
 				request := &http.Request{

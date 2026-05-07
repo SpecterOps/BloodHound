@@ -33,7 +33,7 @@ import (
 )
 
 type AnalysisRequestPayload struct {
-	AnalysisStep int `json:"analysis_step"`
+	AnalysisStep *int `json:"analysis_step"`
 }
 
 func (s Resources) GetAnalysisRequest(response http.ResponseWriter, request *http.Request) {
@@ -63,8 +63,8 @@ func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.R
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "JSON malformed", request), response)
 				return
 			}
-			if payload.AnalysisStep != 0 {
-				step = payload.AnalysisStep
+			if payload.AnalysisStep != nil {
+				step = *payload.AnalysisStep
 			}
 		}
 	}

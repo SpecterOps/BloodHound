@@ -126,27 +126,27 @@ var (
 	ErrAnalysisPartiallyCompleted = errors.New("analysis partially completed")
 )
 
-// AnalysisStep represents a starting point in the analysis pipeline. When provided
-// as a bitmask, the selected step and all subsequent steps in the pipeline will run.
-// The order of operations is: PostProcessing -> Tagging -> Analysis.
+// AnalysisStep is a bitmask that selects which steps of the analysis pipeline
+// should run. Each flag is independent, so callers may request any combination
+// of steps. When steps are combined, they always execute in pipeline order:
+// PostProcessing -> Tagging -> Analysis.
 type AnalysisStep int
 
 const (
-	// AnalysisStepPostProcessing starts from AD and Azure post-processing.
+	// AnalysisStepPostProcessing runs AD and Azure post-processing.
 	AnalysisStepPostProcessing AnalysisStep = 1 << iota
-	// AnalysisStepTagging starts from tagging asset groups and tiers.
+	// AnalysisStepTagging runs tagging of asset groups and tiers.
 	AnalysisStepTagging
-	// AnalysisStepAnalysis starts from the analysis pipeline (BHE only).
+	// AnalysisStepAnalysis runs the analysis pipeline (BHE only).
 	AnalysisStepAnalysis
 
-	// AnalysisStepAll starts from the beginning, running all analysis steps.
-	AnalysisStepAll = AnalysisStepPostProcessing
+	// AnalysisStepAll selects every step in the pipeline.
+	AnalysisStepAll = AnalysisStepPostProcessing | AnalysisStepTagging | AnalysisStepAnalysis
 )
 
-// Has returns true if the given step should run based on the selected starting point.
-// A step runs if it is at or after the starting point in the pipeline order.
+// Has reports whether all of the bits in step are set in s.
 func (s AnalysisStep) Has(step AnalysisStep) bool {
-	return step >= s
+	return s&step == step
 }
 
 // TODO Cleanup tieringEnabled after Tiering GA
