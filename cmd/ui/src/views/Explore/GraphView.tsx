@@ -73,6 +73,7 @@ const extractSigmaNodes = (
 };
 
 const GraphView: FC = () => {
+    /* Hooks */
     const theme = useTheme();
     const dispatch = useAppDispatch();
 
