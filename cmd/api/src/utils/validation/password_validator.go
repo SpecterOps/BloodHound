@@ -25,12 +25,13 @@ import (
 )
 
 const (
-	ErrorPassword        = "failed to meet password requirements:\n%v"
-	ErrorPasswordLength  = "must have at least %d characters"
-	ErrorPasswordLower   = "must have at least %d lowercase characters"
-	ErrorPasswordUpper   = "must have at least %d uppercase characters"
-	ErrorPasswordSpecial = "must have at least %d special characters"
-	ErrorPasswordNumeric = "must have at least %d numeric characters"
+	ErrorPassword            = "failed to meet password requirements:\n%v"
+	ErrorPasswordLength      = "must have at least %d characters"
+	ErrorPasswordLower       = "must have at least %d lowercase characters"
+	ErrorPasswordUpper       = "must have at least %d uppercase characters"
+	ErrorPasswordSpecial     = "must have at least %d special characters"
+	ErrorPasswordNumeric     = "must have at least %d numeric characters"
+	ErrorPasswordControlChar = "cannot contain control characters (tabs, newline, etc.)"
 )
 
 type PasswordValidator struct {
@@ -110,6 +111,8 @@ func (s PasswordValidator) Validate(value any) utils.Errors {
 				countSpecial++
 			case unicode.IsNumber(char):
 				countNumeric++
+			case unicode.IsControl(char):
+				return append(errs, fmt.Errorf(ErrorPasswordControlChar))
 			}
 		}
 	}

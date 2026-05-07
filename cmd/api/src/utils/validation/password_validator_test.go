@@ -35,6 +35,7 @@ func TestPasswordValidator(t *testing.T) {
 	upperErr := fmt.Errorf("Password: "+validation.ErrorPasswordUpper, 2)
 	specialErr := fmt.Errorf("Password: "+validation.ErrorPasswordSpecial, 2)
 	numericErr := fmt.Errorf("Password: "+validation.ErrorPasswordNumeric, 2)
+	controlErr := fmt.Errorf("Password: " + validation.ErrorPasswordControlChar)
 
 	var cases = []struct {
 		Input  Foo
@@ -46,6 +47,8 @@ func TestPasswordValidator(t *testing.T) {
 		{Foo{"abcDEF***aaa"}, utils.Errors{numericErr}},
 		{Foo{"abcDEF_123!45"}, nil},
 		{Foo{"abcDEF !123 !45"}, nil},
+		{Foo{"abcDEF	**123"}, utils.Errors{controlErr}},
+		{Foo{"abcDEF\n**123"}, utils.Errors{controlErr}},
 	}
 
 	for _, tc := range cases {
