@@ -45,6 +45,7 @@ const BadgeVariants = cva('inline-flex items-center justify-center rounded text-
         // Fill variants
         { variant: 'fill', color: 'primary', className: 'bg-badge-primary-fill' },
         { variant: 'fill', color: 'secondary', className: 'bg-badge-secondary-fill' },
+        { variant: 'fill', color: 'grey', className: 'bg-badge-grey-fill' },
         { variant: 'fill', color: 'red', className: 'bg-badge-red-fill' },
         { variant: 'fill', color: 'orange', className: 'bg-badge-orange-fill' },
         { variant: 'fill', color: 'green', className: 'bg-badge-green-fill' },
