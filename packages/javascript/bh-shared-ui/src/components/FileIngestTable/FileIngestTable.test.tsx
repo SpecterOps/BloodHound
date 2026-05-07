@@ -19,7 +19,7 @@ import type { FileIngestCompletedTasksResponse, FileIngestJob } from 'js-client-
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import * as useFileUpload from '../../hooks/useFileUploadQuery/useFileUploadQuery';
-import { act, render, screen } from '../../test-utils';
+import { act, render, screen, waitFor } from '../../test-utils';
 import { FileIngestTable } from './FileIngestTable';
 
 const checkPermissionMock = vi.fn();
@@ -177,5 +177,100 @@ describe('FileIngestTable', () => {
             'skipping invalid relationship. unable to resolve endpoints. source: NON2@EXISTING.NODE, target: NON1@EXISTING.NODE'
         );
         expect(warningText).toBeInTheDocument();
+    });
+
+    describe('pagination reset', () => {
+        // 5 jobs match the Complete (status=2) filter; 10 do not. Total 15 — chosen so that:
+        //   - On rowsPerPage=10, skip=10 has data (5 rows), but skip=10 on the filtered pool of 5 would be empty.
+        //   - On rowsPerPage=25, skip=25 on the unfiltered pool of 15 would be empty.
+        const COMPLETE_STATUS = 2;
+        const OTHER_STATUS = 3;
+        const ALL_JOBS: FileIngestJob[] = new Array(15).fill(null).map((_, index) => ({
+            ...MOCK_INGEST_JOB,
+            id: index,
+            status: index < 5 ? COMPLETE_STATUS : OTHER_STATUS,
+        }));
+
+        const fileUploadRequests: URL[] = [];
+        const lastFileUploadRequest = () => fileUploadRequests[fileUploadRequests.length - 1];
+        const visibleIngestRows = () => screen.queryAllByRole('button', { name: /view ingest .* details/i });
+
+        beforeEach(() => {
+            checkPermissionMock.mockImplementation(() => true);
+            fileUploadRequests.length = 0;
+            server.use(
+                rest.get('/api/v2/file-upload', (req, res, ctx) => {
+                    const url = new URL(req.url.toString());
+                    fileUploadRequests.push(url);
+                    const skip = parseInt(url.searchParams.get('skip') ?? '0', 10);
+                    const limit = parseInt(url.searchParams.get('limit') ?? '10', 10);
+                    const statusParam = url.searchParams.get('status');
+                    let pool = ALL_JOBS;
+                    const statusEq = statusParam?.match(/^eq:(\d+)$/);
+                    if (statusEq) {
+                        const wanted = parseInt(statusEq[1], 10);
+                        pool = pool.filter((job) => job.status === wanted);
+                    }
+                    return res(
+                        ctx.json({
+                            count: pool.length,
+                            data: pool.slice(skip, skip + limit),
+                            limit,
+                            skip,
+                        })
+                    );
+                })
+            );
+        });
+
+        it('resets skip to 0 when filters change so rows are visible on the new result set', async () => {
+            const user = userEvent.setup();
+            render(<FileIngestTable />);
+
+            // Initial unfiltered load: 15 jobs total, page 0 shows 10.
+            await waitFor(() => expect(visibleIngestRows()).toHaveLength(10));
+            expect(lastFileUploadRequest().searchParams.get('skip')).toBe('0');
+
+            // Page 1 of the unfiltered set shows the remaining 5 rows.
+            await user.click(screen.getByRole('button', { name: /go to next page/i }));
+            await waitFor(() => expect(lastFileUploadRequest().searchParams.get('skip')).toBe('10'));
+            await waitFor(() => expect(visibleIngestRows()).toHaveLength(5));
+
+            // Apply Complete filter. The filtered pool only has 5 jobs, so without resetting page
+            // the request would be skip=10 against a 5-row pool and the table would render empty.
+            await user.click(screen.getByTestId('file_ingest_log-open_filter_dialog'));
+            await user.click(await screen.findByRole('combobox', { name: 'Status Select' }));
+            await user.click(await screen.findByRole('option', { name: 'Complete' }));
+            await user.click(screen.getByTestId('file_ingest_log-filter_dialog_confirm'));
+
+            await waitFor(() => {
+                const last = lastFileUploadRequest();
+                expect(last.searchParams.get('skip')).toBe('0');
+                expect(last.searchParams.get('status')).toBe('eq:2');
+            });
+            await waitFor(() => expect(visibleIngestRows()).toHaveLength(5));
+        });
+
+        it('resets skip to 0 when rows per page changes so rows are visible on the new page size', async () => {
+            const user = userEvent.setup();
+            render(<FileIngestTable />);
+
+            await waitFor(() => expect(visibleIngestRows()).toHaveLength(10));
+            await user.click(screen.getByRole('button', { name: /go to next page/i }));
+            await waitFor(() => expect(lastFileUploadRequest().searchParams.get('skip')).toBe('10'));
+            await waitFor(() => expect(visibleIngestRows()).toHaveLength(5));
+
+            // Change rows per page to 25. The full pool is 15 jobs, so without resetting page
+            // the request would be skip=25 (page 1 * 25) and the table would render empty.
+            await user.click(screen.getByRole('combobox', { name: /rows per page/i }));
+            await user.click(await screen.findByRole('option', { name: '25' }));
+
+            await waitFor(() => {
+                const last = lastFileUploadRequest();
+                expect(last.searchParams.get('skip')).toBe('0');
+                expect(last.searchParams.get('limit')).toBe('25');
+            });
+            await waitFor(() => expect(visibleIngestRows()).toHaveLength(15));
+        });
     });
 });
