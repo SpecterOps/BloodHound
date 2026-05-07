@@ -38,10 +38,9 @@ import {
 import { AssetGroupTagSelectorAutoCertifyMap, SeedTypeCypher } from 'js-client-library';
 import { FC, useContext, useEffect } from 'react';
 import { Control } from 'react-hook-form';
-import { useQuery } from 'react-query';
 import { useLocation } from 'react-router-dom';
-import { usePZPathParams } from '../../../../hooks';
-import { apiClient, queriesAreLoadingOrErrored } from '../../../../utils';
+import { useAssetGroupTagInfo, usePZPathParams } from '../../../../hooks';
+import { queriesAreLoadingOrErrored } from '../../../../utils';
 import { PrivilegeZonesContext } from '../../PrivilegeZonesContext';
 import RuleFormContext from './RuleFormContext';
 import { RuleFormInputs } from './types';
@@ -59,14 +58,9 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
         }
     }, [dispatch, receivedData]);
 
-    const tagQuery = useQuery({
-        queryKey: ['privilege-zones', 'tags', tagId],
-        queryFn: async () => {
-            const response = await apiClient.getAssetGroupTag(tagId);
-            return response.data.data['tag'];
-        },
-        enabled: tagId !== '',
-    });
+    const tagQuery = useAssetGroupTagInfo(tagId);
+    const isCertificationDisabledOnZoneLevel = tagQuery.data?.require_certify;
+    const zoneName = tagQuery.data?.name;
 
     const { isLoading, isError } = queriesAreLoadingOrErrored(tagQuery, ruleQuery);
 
@@ -156,7 +150,7 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                                     </FormItem>
                                 )}
                             />
-                            {tagType === 'zones' && Certification && (
+                            {tagType === 'zones' && Certification && isCertificationDisabledOnZoneLevel ? (
                                 <FormField
                                     control={control}
                                     name='auto_certify'
@@ -210,6 +204,16 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                                         </FormItem>
                                     )}
                                 />
+                            ) : (
+                                <FormItem>
+                                    <FormLabel>Automatic Certification</FormLabel>
+                                    <div>
+                                        <p>
+                                            Certification disabled by the Zone's settings. Please edit {zoneName}{' '}
+                                            settings to manage rule-specific certification settings.
+                                        </p>
+                                    </div>
+                                </FormItem>
                             )}
                         </div>
                     </div>
