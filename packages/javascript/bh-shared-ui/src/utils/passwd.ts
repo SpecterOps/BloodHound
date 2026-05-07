@@ -20,6 +20,9 @@ export const testPassword = (s: string): boolean => {
     return passwordRegex.test(s);
 };
 
+export const PASSWORD_REQUIREMENTS_MESSAGE =
+    'Password must contain at least 1 lowercase character, 1 uppercase character, 1 number and 1 special character (any unicode punctuation or symbol)';
+
 export const PASSWD_REQS = [
     'must have at least 12 characters',
     'must have at least one lowercase',
