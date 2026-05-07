@@ -37,15 +37,14 @@ import {
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
     useFeatureFlag,
-    useGraphHasData,
     useKeybindings,
+    useNodeAutoSelect,
     useTagGlyphs,
     useTheme,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
-import { FlatGraphResponse, GraphResponse } from 'js-client-library';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataFileUploadDialogWithLinks } from 'src/components/NoDataFileUploadDialogWithLinks';
@@ -64,33 +63,23 @@ import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
 
+const extractSigmaNodes = (
+    data: Parameters<typeof normalizeGraphDataForSigma>[0]
+): Record<string, { objectId: string }> | undefined => {
+    const nodes = normalizeGraphDataForSigma(data)?.nodes;
+    if (!nodes) return undefined;
+    return Object.fromEntries(Object.entries(nodes).map(([key, node]) => [key, { objectId: node.objectId }]));
+};
+
 const GraphView: FC = () => {
-    /* Hooks */
+    const theme = useTheme();
     const dispatch = useAppDispatch();
 
-    const theme = useTheme();
-
-    const graphHasDataQuery = useGraphHasData();
-
-    const { searchType, primarySearch } = useExploreParams();
-    const { selectedItem, setSelectedItem, selectedItemQuery, clearSelectedItem, previousSelectedItem } =
+    const { selectedItem, setSelectedItem, selectedItemQuery, previousSelectedItem, clearSelectedItem } =
         useExploreSelectedItem();
 
     // Auto-select the searched node so it is highlighted and its information panel is displayed
-    const handleNodeAutoSelect = useCallback(
-        (data: GraphResponse | FlatGraphResponse) => {
-            if (searchType !== 'node' || !primarySearch) return;
-
-            const nodes = normalizeGraphDataForSigma(data)?.nodes;
-            if (!nodes) return;
-
-            if (selectedItem && nodes[selectedItem]?.objectId === primarySearch) return;
-
-            const matchedEntry = Object.entries(nodes).find(([, node]) => node.objectId === primarySearch);
-            if (matchedEntry) setSelectedItem(matchedEntry[0]);
-        },
-        [searchType, primarySearch, selectedItem, setSelectedItem]
-    );
+    const handleNodeAutoSelect = useNodeAutoSelect(extractSigmaNodes);
 
     const graphQuery = useSigmaExploreGraph({ onSuccess: handleNodeAutoSelect });
 
