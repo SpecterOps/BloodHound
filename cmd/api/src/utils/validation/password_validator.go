@@ -85,10 +85,6 @@ func (s PasswordValidator) okNumeric(count int) bool {
 	return count >= s.Numeric
 }
 
-func (s PasswordValidator) ok(lower, upper, special, numeric int) bool {
-	return s.okLower(lower) && s.okUpper(upper) && s.okSpecial(special) && s.okNumeric(numeric)
-}
-
 func (s PasswordValidator) Validate(value any) utils.Errors {
 	var countLower, countUpper, countSpecial, countNumeric int
 	var passwd string
@@ -100,21 +96,17 @@ func (s PasswordValidator) Validate(value any) utils.Errors {
 	}
 
 	for _, char := range passwd {
-		if s.ok(countLower, countUpper, countSpecial, countNumeric) {
-			break
-		} else {
-			switch {
-			case unicode.IsLower(char):
-				countLower++
-			case unicode.IsUpper(char):
-				countUpper++
-			case unicode.IsPunct(char) || unicode.IsSymbol(char):
-				countSpecial++
-			case unicode.IsNumber(char):
-				countNumeric++
-			case unicode.IsControl(char):
-				return append(errs, errors.New(ErrorPasswordControlChar))
-			}
+		switch {
+		case unicode.IsLower(char):
+			countLower++
+		case unicode.IsUpper(char):
+			countUpper++
+		case unicode.IsPunct(char) || unicode.IsSymbol(char):
+			countSpecial++
+		case unicode.IsNumber(char):
+			countNumeric++
+		case unicode.IsControl(char):
+			return append(errs, errors.New(ErrorPasswordControlChar))
 		}
 	}
 

@@ -49,6 +49,7 @@ func TestPasswordValidator(t *testing.T) {
 		{Foo{"abcDEF !123 !45"}, nil},
 		{Foo{"abcDEF	**123"}, utils.Errors{controlErr}},
 		{Foo{"abcDEF\n**123"}, utils.Errors{controlErr}},
+		{Foo{"abcDEF**1234\t"}, utils.Errors{controlErr}},
 	}
 
 	for _, tc := range cases {
