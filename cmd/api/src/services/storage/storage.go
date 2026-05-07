@@ -36,6 +36,7 @@ type FileServiceName string
 
 const (
 	FileServiceIngest     FileServiceName = "ingest"
+	FileServiceRetained   FileServiceName = "retained"
 	FileServiceCollectors FileServiceName = "collectors"
 	FileServiceJobLogs    FileServiceName = "job_logs"
 	FileServiceWork       FileServiceName = "work"
@@ -228,6 +229,11 @@ func NewDefaultFileServices(cfg config.Configuration) (map[FileServiceName]FileS
 		return nil, err
 	}
 
+	retainStore, err := NewLocalStore(cfg.RetainedFilesDirectory())
+	if err != nil {
+		return nil, err
+	}
+
 	collectorsStore, err := NewLocalStore(cfg.CollectorsBasePath)
 	if err != nil {
 		return nil, err
@@ -238,6 +244,9 @@ func NewDefaultFileServices(cfg config.Configuration) (map[FileServiceName]FileS
 
 	ingestService := NewFileService(ingestStore)
 	fileServices[FileServiceIngest] = ingestService
+
+	retainService := NewFileService(retainStore)
+	fileServices[FileServiceRetained] = retainService
 
 	collectersService := NewFileService(collectorsStore)
 	fileServices[FileServiceCollectors] = collectersService
