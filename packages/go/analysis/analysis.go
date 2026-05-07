@@ -129,19 +129,25 @@ var (
 // AnalysisStep is a bitmask that selects which steps of the analysis pipeline
 // should run. Each flag is independent, so callers may request any combination
 // of steps. When steps are combined, they always execute in pipeline order:
-// PostProcessing -> Tagging -> Analysis.
+// AD post-processing -> Azure post-processing -> Tagging -> Analysis.
 type AnalysisStep int
 
 const (
-	// AnalysisStepPostProcessing runs AD and Azure post-processing.
-	AnalysisStepPostProcessing AnalysisStep = 1 << iota
+	// AnalysisStepADPostProcessing runs AD post-processing.
+	AnalysisStepADPostProcessing AnalysisStep = 1 << iota
+	// AnalysisStepAzurePostProcessing runs Azure post-processing.
+	AnalysisStepAzurePostProcessing
 	// AnalysisStepTagging runs tagging of asset groups and tiers.
 	AnalysisStepTagging
 	// AnalysisStepAnalysis runs the analysis pipeline (BHE only).
 	AnalysisStepAnalysis
 
+	// AnalysisStepPostProcessing runs both AD and Azure post-processing.
+	AnalysisStepPostProcessing = AnalysisStepADPostProcessing | AnalysisStepAzurePostProcessing
+	// AnalysisStepTaggingToCompletion runs the tagging step and every step that follows it.
+	AnalysisStepTaggingToCompletion = AnalysisStepTagging | AnalysisStepAnalysis
 	// AnalysisStepAll selects every step in the pipeline.
-	AnalysisStepAll = AnalysisStepPostProcessing | AnalysisStepTagging | AnalysisStepAnalysis
+	AnalysisStepAll = AnalysisStepPostProcessing | AnalysisStepTaggingToCompletion
 )
 
 // Has reports whether all of the bits in step are set in s.
@@ -164,7 +170,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		dataQualityFailed  = false
 	)
 
-	if steps.Has(AnalysisStepPostProcessing) {
+	if steps.Has(AnalysisStepADPostProcessing) {
 		if ntlmFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureNTLMPostProcessing); err != nil {
 			collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving NTLM Post Processing feature flag: %w", err))
 		} else if stats, err := adAnalysis.Post(ctx, graphDB, appcfg.GetCitrixRDPSupport(ctx, db), ntlmFlag.Enabled); err != nil {
@@ -173,7 +179,9 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		} else {
 			stats.LogStats()
 		}
+	}
 
+	if steps.Has(AnalysisStepAzurePostProcessing) {
 		if stats, err := azureAnalysis.Post(ctx, graphDB); err != nil {
 			collectedErrors = append(collectedErrors, fmt.Errorf("error during azure post: %w", err))
 			azureFailed = true
