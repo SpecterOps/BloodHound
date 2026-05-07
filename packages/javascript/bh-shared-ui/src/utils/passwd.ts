@@ -24,12 +24,12 @@ export const testPassword = (s: string): boolean => {
 };
 
 export const PASSWORD_REQUIREMENTS_MESSAGE =
-    'Password must contain at least 1 lowercase character, 1 uppercase character, 1 number and 1 special character (any unicode punctuation or symbol, excluding control characters like tabs or newlines)';
+    'Password must contain at least 1 lowercase character, 1 uppercase character, 1 number and 1 special character (any punctuation or symbol)';
 
 export const PASSWD_REQS = [
     'must have at least 12 characters',
     'must have at least one lowercase',
     'must have at least one uppercase',
     'must have at least one number',
-    'must have at least one special character (any unicode punctuation or symbol, excluding control characters like tabs or newlines)',
+    'must have at least one special character (any punctuation or symbol)',
 ];
