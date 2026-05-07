@@ -30,6 +30,8 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
+// TODO MC: update cleanup to take into account the new file service
+
 // FileOperations is an interface for describing filesystem actions. This implementation exists due to deficiencies in
 // the fs package where the fs.FS interface does not support destructive operations like RemoveAll.
 type FileOperations interface {
