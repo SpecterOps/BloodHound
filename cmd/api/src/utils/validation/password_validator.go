@@ -17,6 +17,7 @@
 package validation
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"unicode"
@@ -112,7 +113,7 @@ func (s PasswordValidator) Validate(value any) utils.Errors {
 			case unicode.IsNumber(char):
 				countNumeric++
 			case unicode.IsControl(char):
-				return append(errs, fmt.Errorf(ErrorPasswordControlChar))
+				return append(errs, errors.New(ErrorPasswordControlChar))
 			}
 		}
 	}
