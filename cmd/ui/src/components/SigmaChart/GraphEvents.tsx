@@ -367,6 +367,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
         setSettings,
         sigma,
         theme.neutral.primary,
+        isHighlightedItemInGraph,
     ]);
 
     // Toggle off edge labels when dragging a node to avoid performance hit
