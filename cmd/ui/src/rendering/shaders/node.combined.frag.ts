@@ -71,10 +71,8 @@ void main(void) {
     gl_FragColor = color;
 
   // Premultiplied alpha output required by Sigma's blend func (gl.ONE, gl.ONE_MINUS_SRC_ALPHA).
-  // Multiplying by alpha scales antialiasing pixels correctly so they don't contribute
-  // excess brightness at node edges. For fully opaque interior pixels (alpha=1) this is
-  // a no-op; for transparent pixels (alpha=0) it zeroes out RGB, preventing colour leaking.
-  // Dim toward the canvas background color so nodes appear semi-transparent rather than
-  // washing out into their own fill color.
-  gl_FragColor.rgb = mix(v_bgColor.rgb, gl_FragColor.rgb, v_dim) * gl_FragColor.a;
+  // Pre-multiplying v_bgColor.rgb by gl_FragColor.a before the mix avoids the double-alpha
+  // artifact that produces a grey ring at antialiased edges: without it the background colour
+  // leaks through at (1-t)^2 weight instead of (1-t), making the ring visibly too dark.
+  gl_FragColor.rgb = mix(v_bgColor.rgb * gl_FragColor.a, gl_FragColor.rgb, v_dim);
 }`;
