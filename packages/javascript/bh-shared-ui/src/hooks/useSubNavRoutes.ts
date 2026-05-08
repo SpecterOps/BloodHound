@@ -42,6 +42,7 @@ export function useSubNavRoutes(sections: SubNavSection[], isAuthenticated: bool
     const hasAdminPermissions = checkAllPermissions([
         Permission.APP_READ_APPLICATION_CONFIGURATION,
         Permission.APP_WRITE_APPLICATION_CONFIGURATION,
+        Permission.CAN_REQUEST_ANALYSIS,
     ]);
 
     const routes = useMemo(

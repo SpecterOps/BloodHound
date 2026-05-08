@@ -36,6 +36,8 @@ type PermissionSet struct {
 	AuthManageUsers     model.Permission
 	AuthReadUsers       model.Permission
 
+	CanRequestAnalysis model.Permission
+
 	ClientsManage  model.Permission
 	ClientsRead    model.Permission
 	ClientsTasking model.Permission

@@ -356,7 +356,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET("/api/v2/datapipe/status", resources.GetDatapipeStatus).RequireAuth(),
 		// TODO: Update the permission on this once we get something more concrete
 		routerInst.GET("/api/v2/analysis/status", resources.GetAnalysisRequest).RequirePermissions(permissions.GraphDBRead),
-		routerInst.PUT("/api/v2/analysis", resources.RequestAnalysis).RequirePermissions(permissions.GraphDBWrite),
+		routerInst.PUT("/api/v2/analysis", resources.RequestAnalysis).RequirePermissions(permissions.CanRequestAnalysis),
 		routerInst.DELETE("/api/v2/analysis", resources.CancelAnalysisRequest).RequirePermissions(permissions.GraphDBWrite),
 
 		// Custom Node Management
