@@ -160,9 +160,10 @@ func (s QueryParameterFilterMap) ToFiltersModel() Filters {
 		newModelFilters := make([]Filter, len(oldModelFilters))
 		for idx, oldModelFilter := range oldModelFilters {
 			newModelFilters[idx] = Filter{
-				Operator:    oldModelFilter.Operator,
-				Value:       oldModelFilter.Value,
-				SetOperator: oldModelFilter.SetOperator,
+				Operator:     oldModelFilter.Operator,
+				Value:        oldModelFilter.Value,
+				SetOperator:  oldModelFilter.SetOperator,
+				IsStringData: oldModelFilter.IsStringData,
 			}
 		}
 
@@ -175,9 +176,13 @@ func (s QueryParameterFilterMap) ToFiltersModel() Filters {
 // filterValueAsPGLiteral takes a string value and returns a PG SQL literal that represents the value in the form of a
 // Go struct. This function will attempt to parse the string value into different types but otherwise defaults to the
 // given string value as a wrapped literal.
-func filterValueAsPGLiteral(valueStr string, isNullValue bool) (pgsql.Literal, error) {
+func filterValueAsPGLiteral(valueStr string, isNullValue bool, isColumnString bool) (pgsql.Literal, error) {
 	if isNullValue {
 		return pgsql.NullLiteral(), nil
+	}
+
+	if isColumnString {
+		return pgsql.AsLiteral(valueStr)
 	}
 
 	if valueInt64, err := strconv.ParseInt(valueStr, 10, 64); err == nil {
@@ -215,9 +220,10 @@ func BuildSQLFilter(filters Filters, tableAlias models.Optional[string]) (SQLFil
 
 		for _, filter := range filterOperations {
 			var (
-				operator    pgsql.Operator
-				filterValue = filter.Value
-				isNullValue = filterValue == NullString
+				operator             pgsql.Operator
+				filterValue          = filter.Value
+				isNullValue          = filterValue == NullString
+				isFilterColumnString = filter.IsStringData
 			)
 
 			switch filter.Operator {
@@ -255,7 +261,7 @@ func BuildSQLFilter(filters Filters, tableAlias models.Optional[string]) (SQLFil
 				return SQLFilter{}, fmt.Errorf("invalid operator specified")
 			}
 
-			if literalValue, err := filterValueAsPGLiteral(filterValue, isNullValue); err != nil {
+			if literalValue, err := filterValueAsPGLiteral(filterValue, isNullValue, isFilterColumnString); err != nil {
 				return SQLFilter{}, fmt.Errorf("invalid filter value specified for %s: %w", name, err)
 			} else {
 				setOperator := pgsql.OperatorAnd
@@ -477,9 +483,10 @@ func NewQueryParameterFilterParser() QueryParameterFilterParser {
 }
 
 type Filter struct {
-	Operator    FilterOperator
-	Value       string
-	SetOperator FilterSetOperator
+	Operator     FilterOperator
+	Value        string
+	SetOperator  FilterSetOperator
+	IsStringData bool
 }
 
 type Filters map[string][]Filter

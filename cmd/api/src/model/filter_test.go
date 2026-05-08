@@ -35,8 +35,9 @@ func TestBuildSQLFilter(t *testing.T) {
 			name: "greater than",
 			input: model.Filters{
 				"foo": []model.Filter{{
-					Operator: "gt",
-					Value:    "12",
+					Operator:     "gt",
+					Value:        "12",
+					IsStringData: false,
 				}},
 			},
 			alias: models.OptionalValue("f"),
@@ -49,8 +50,9 @@ func TestBuildSQLFilter(t *testing.T) {
 			name: "greater than or equals",
 			input: model.Filters{
 				"foo": []model.Filter{{
-					Operator: "gte",
-					Value:    "12",
+					Operator:     "gte",
+					Value:        "12",
+					IsStringData: false,
 				}},
 			},
 			alias: models.OptionalValue("f"),
@@ -62,8 +64,9 @@ func TestBuildSQLFilter(t *testing.T) {
 			name: "greater than",
 			input: model.Filters{
 				"foo": []model.Filter{{
-					Operator: "gt",
-					Value:    "12",
+					Operator:     "gt",
+					Value:        "12",
+					IsStringData: false,
 				}},
 			},
 			output: model.SQLFilter{
@@ -74,8 +77,9 @@ func TestBuildSQLFilter(t *testing.T) {
 			name: "greater than or equals",
 			input: model.Filters{
 				"foo": []model.Filter{{
-					Operator: "gte",
-					Value:    "12",
+					Operator:     "gte",
+					Value:        "12",
+					IsStringData: false,
 				}},
 			},
 			output: model.SQLFilter{
@@ -86,8 +90,9 @@ func TestBuildSQLFilter(t *testing.T) {
 			name: "less than",
 			input: model.Filters{
 				"foo": []model.Filter{{
-					Operator: "lt",
-					Value:    "12",
+					Operator:     "lt",
+					Value:        "12",
+					IsStringData: false,
 				}},
 			},
 			output: model.SQLFilter{
@@ -98,8 +103,9 @@ func TestBuildSQLFilter(t *testing.T) {
 			name: "less than or equals",
 			input: model.Filters{
 				"foo": []model.Filter{{
-					Operator: "lte",
-					Value:    "12",
+					Operator:     "lte",
+					Value:        "12",
+					IsStringData: false,
 				}},
 			},
 			output: model.SQLFilter{
@@ -110,8 +116,9 @@ func TestBuildSQLFilter(t *testing.T) {
 			name: "equals int",
 			input: model.Filters{
 				"foo": []model.Filter{{
-					Operator: "eq",
-					Value:    "12",
+					Operator:     "eq",
+					Value:        "12",
+					IsStringData: false,
 				}},
 			},
 			output: model.SQLFilter{
@@ -122,8 +129,9 @@ func TestBuildSQLFilter(t *testing.T) {
 			name: "equals float",
 			input: model.Filters{
 				"foo": []model.Filter{{
-					Operator: "eq",
-					Value:    "12.215",
+					Operator:     "eq",
+					Value:        "12.215",
+					IsStringData: false,
 				}},
 			},
 			output: model.SQLFilter{
@@ -134,8 +142,9 @@ func TestBuildSQLFilter(t *testing.T) {
 			name: "equals string",
 			input: model.Filters{
 				"foo": []model.Filter{{
-					Operator: "eq",
-					Value:    "1notanumber2",
+					Operator:     "eq",
+					Value:        "1notanumber2",
+					IsStringData: true,
 				}},
 			},
 			output: model.SQLFilter{
@@ -143,11 +152,51 @@ func TestBuildSQLFilter(t *testing.T) {
 			},
 		},
 		{
+			name: "equals numeric string",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator:     "eq",
+					Value:        "1",
+					IsStringData: true,
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "foo = '1'",
+			},
+		},
+		{
+			name: "equals float-like string",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator:     "eq",
+					Value:        "1.1",
+					IsStringData: true,
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "foo = '1.1'",
+			},
+		},
+		{
+			name: "equals boolean-like string",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator:     "eq",
+					Value:        "t",
+					IsStringData: true,
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "foo = 't'",
+			},
+		},
+		{
 			name: "equals boolean",
 			input: model.Filters{
 				"foo": []model.Filter{{
-					Operator: "eq",
-					Value:    "false",
+					Operator:     "eq",
+					Value:        "false",
+					IsStringData: false,
 				}},
 			},
 			output: model.SQLFilter{
@@ -155,11 +204,25 @@ func TestBuildSQLFilter(t *testing.T) {
 			},
 		},
 		{
+			name: "equals 1-letter boolean",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator:     "eq",
+					Value:        "t",
+					IsStringData: false,
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "foo = true",
+			},
+		},
+		{
 			name: "equals null",
 			input: model.Filters{
 				"foo": []model.Filter{{
-					Operator: "eq",
-					Value:    "null",
+					Operator:     "eq",
+					Value:        "null",
+					IsStringData: false,
 				}},
 			},
 			output: model.SQLFilter{
@@ -170,8 +233,9 @@ func TestBuildSQLFilter(t *testing.T) {
 			name: "not equals int",
 			input: model.Filters{
 				"foo": []model.Filter{{
-					Operator: "neq",
-					Value:    "12",
+					Operator:     "neq",
+					Value:        "12",
+					IsStringData: false,
 				}},
 			},
 			output: model.SQLFilter{
@@ -179,11 +243,25 @@ func TestBuildSQLFilter(t *testing.T) {
 			},
 		},
 		{
+			name: "not equals boolean-like string",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator:     "neq",
+					Value:        "f",
+					IsStringData: false,
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "foo != false",
+			},
+		},
+		{
 			name: "not equals null",
 			input: model.Filters{
 				"foo": []model.Filter{{
-					Operator: "neq",
-					Value:    "null",
+					Operator:     "neq",
+					Value:        "null",
+					IsStringData: false,
 				}},
 			},
 			output: model.SQLFilter{
@@ -191,11 +269,12 @@ func TestBuildSQLFilter(t *testing.T) {
 			},
 		},
 		{
-			name: "aprox equals",
+			name: "approx equals",
 			input: model.Filters{
 				"foo": []model.Filter{{
-					Operator: "~eq",
-					Value:    "12",
+					Operator:     "~eq",
+					Value:        "12",
+					IsStringData: false,
 				}},
 			},
 			output: model.SQLFilter{
@@ -206,13 +285,15 @@ func TestBuildSQLFilter(t *testing.T) {
 			name: "or equals",
 			input: model.Filters{
 				"z": []model.Filter{{
-					SetOperator: model.FilterOr,
-					Operator:    "eq",
-					Value:       "6",
+					Operator:     "eq",
+					Value:        "6",
+					SetOperator:  model.FilterOr,
+					IsStringData: false,
 				}, {
-					SetOperator: model.FilterOr,
-					Operator:    "eq",
-					Value:       "7",
+					Operator:     "eq",
+					Value:        "7",
+					SetOperator:  model.FilterOr,
+					IsStringData: false,
 				}},
 			},
 			output: model.SQLFilter{
@@ -220,11 +301,50 @@ func TestBuildSQLFilter(t *testing.T) {
 			},
 		},
 		{
+			name: "combined and equals numeric strings",
+			input: model.Filters{
+				"some_column": []model.Filter{{
+					Operator:     "eq",
+					Value:        "6",
+					SetOperator:  model.FilterAnd,
+					IsStringData: true,
+				}, {
+					Operator:     "eq",
+					Value:        "7",
+					SetOperator:  model.FilterAnd,
+					IsStringData: true,
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "some_column = '6' and some_column = '7'",
+			},
+		},
+		{
+			name: "combined or equals boolean-like strings",
+			input: model.Filters{
+				"some_column": []model.Filter{{
+					Operator:     "eq",
+					Value:        "t",
+					SetOperator:  model.FilterOr,
+					IsStringData: true,
+				}, {
+					Operator:     "eq",
+					Value:        "false",
+					SetOperator:  model.FilterOr,
+					IsStringData: true,
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "(some_column = 't' or some_column = 'false')",
+			},
+		},
+		{
 			name: "broken operator",
 			input: model.Filters{
 				"foo": []model.Filter{{
-					Operator: "NOT OPERATOR",
-					Value:    "12",
+					Operator:     "NOT OPERATOR",
+					Value:        "12",
+					IsStringData: false,
 				}},
 			},
 			wantErr: true,
