@@ -53,7 +53,11 @@ table against any new available migration files and automatically applies pendin
 -   `just goose-create <name>` - create a new migration file
 -   `just goose-status` - see applied migrations
 -   `just goose-up` - apply pending migrations
+-   `just goose-up-by-one` - apply next pending migration
+-   `just goose-up-to version` - apply up to a specific version
 -   `just goose-down` - rollback last migration
+-   `just goose-down-to version` - rollback to specified version (non-inclusive)
+-   `just goose-down-all` - rollback all versions
 
 ## Troubleshooting
 
