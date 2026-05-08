@@ -376,7 +376,11 @@ func certTemplateValidForUserVictim(certTemplate *graph.Node) bool {
 func filterUserDNSResults(tx graph.Transaction, bitmap cardinality.Duplex[uint64], certTemplate *graph.Node) (cardinality.Duplex[uint64], error) {
 	if userNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
-			query.KindIn(query.Node(), ad.User),
+			query.Or(
+				query.KindIn(query.Node(), ad.User),
+				query.Equals(query.NodeProperty(ad.GMSA.String()), true),
+				query.Equals(query.NodeProperty(ad.MSA.String()), true),
+			),
 			query.InIDs(query.NodeID(), graph.DuplexToGraphIDs(bitmap)...),
 		)
 	})); err != nil {
