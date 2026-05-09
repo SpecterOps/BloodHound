@@ -301,7 +301,7 @@ func TestBuildSQLFilter(t *testing.T) {
 			},
 		},
 		{
-			name: "combined and equals numeric strings",
+			name: "combined AND equals numeric strings",
 			input: model.Filters{
 				"some_column": []model.Filter{{
 					Operator:     "eq",
@@ -320,7 +320,7 @@ func TestBuildSQLFilter(t *testing.T) {
 			},
 		},
 		{
-			name: "combined or equals boolean-like strings",
+			name: "combined OR equals boolean-like strings",
 			input: model.Filters{
 				"some_column": []model.Filter{{
 					Operator:     "eq",
