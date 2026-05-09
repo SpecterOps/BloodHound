@@ -61,7 +61,10 @@ const (
 	ObjectIdString = "objectid"
 )
 
-var ErrNotFiltered = errors.New("parameter value is not filtered")
+var (
+	ErrNotFiltered              = errors.New("parameter value is not filtered")
+	FmtErrFilterValueConversion = "unable to convert filter value to SQL literal for %s: %w"
+)
 
 type Filtered interface {
 	ValidFilters() map[string][]FilterOperator
@@ -174,7 +177,8 @@ func (s QueryParameterFilterMap) ToFiltersModel() Filters {
 }
 
 // filterValueAsPGLiteral takes a string value and returns a PG SQL literal that represents the value in the form of a
-// Go struct. This function will attempt to parse the string value into different types but otherwise defaults to the
+// Go struct. If the filter column is a string type, the value is returned directly as a string literal.
+// Otherwise, this function will attempt to parse the string value into different types but defaults to the
 // given string value as a wrapped literal.
 func filterValueAsPGLiteral(valueStr string, isNullValue bool, isColumnString bool) (pgsql.Literal, error) {
 	if isNullValue {
@@ -262,7 +266,7 @@ func BuildSQLFilter(filters Filters, tableAlias models.Optional[string]) (SQLFil
 			}
 
 			if literalValue, err := filterValueAsPGLiteral(filterValue, isNullValue, isFilterColumnString); err != nil {
-				return SQLFilter{}, fmt.Errorf("invalid filter value specified for %s: %w", name, err)
+				return SQLFilter{}, fmt.Errorf(FmtErrFilterValueConversion, name, err)
 			} else {
 				setOperator := pgsql.OperatorAnd
 				if filter.SetOperator == FilterOr {

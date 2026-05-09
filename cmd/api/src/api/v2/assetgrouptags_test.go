@@ -61,7 +61,10 @@ import (
 )
 
 func TestResources_GetAssetGroupTags(t *testing.T) {
-	const queryParamTagType = "type"
+	const (
+		queryParamTagType = "type"
+		queryParamName    = "name"
+	)
 	var (
 		mockCtrl      = gomock.NewController(t)
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
@@ -207,6 +210,50 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 						}
 					}
 					apitest.Equal(output, 2, tierCount)
+				},
+			},
+			{
+				Name: "NumericStringName",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, queryParamName, "eq:123")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTags(gomock.Any(), model.SQLFilter{
+							SQLString: queryParamName + " = '123'",
+						}).
+						Return(model.AssetGroupTags{
+							model.AssetGroupTag{ID: 1, Name: "123"},
+						}, nil)
+				},
+				Test: func(output apitest.Output) {
+					resp := v2.GetAssetGroupTagsResponse{}
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.UnmarshalData(output, &resp)
+					apitest.Equal(output, "123", resp.Tags[0].Name)
+
+				},
+			},
+			{
+				Name: "Bool-likeName",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, queryParamName, "eq:t")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTags(gomock.Any(), model.SQLFilter{
+							SQLString: queryParamName + " = 't'",
+						}).
+						Return(model.AssetGroupTags{
+							model.AssetGroupTag{ID: 1, Name: "t"},
+						}, nil)
+				},
+				Test: func(output apitest.Output) {
+					resp := v2.GetAssetGroupTagsResponse{}
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.UnmarshalData(output, &resp)
+					apitest.Equal(output, "t", resp.Tags[0].Name)
+
 				},
 			},
 			{
