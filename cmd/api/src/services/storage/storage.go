@@ -98,6 +98,7 @@ type FileService interface {
 	GetFile(ctx context.Context, name string) (io.ReadCloser, FileInfo, error)
 	ReadFile(ctx context.Context, name string) ([]byte, error)
 	WriteFile(ctx context.Context, name string, data []byte, opts WriteOptions) error
+	WriteFileFromReader(ctx context.Context, name string, reader io.Reader, opts WriteOptions) error
 	DeleteFile(ctx context.Context, name string) error
 	WriteTempFile(ctx context.Context, prefix string, reader io.Reader, opts WriteOptions) (string, error)
 	MoveFile(ctx context.Context, srcName, dstName string, opts WriteOptions) error
@@ -138,6 +139,10 @@ func (s *LocalFileService) WriteFile(ctx context.Context, name string, data []by
 	return s.Storage.Put(ctx, name, bytes.NewReader(data), opts)
 }
 
+func (s *LocalFileService) WriteFileFromReader(ctx context.Context, name string, reader io.Reader, opts WriteOptions) error {
+	return s.Storage.Put(ctx, name, reader, opts)
+}
+
 func (s *LocalFileService) DeleteFile(ctx context.Context, name string) error {
 	return s.Storage.Delete(ctx, name)
 }
@@ -162,6 +167,28 @@ func (s *LocalFileService) MoveFile(ctx context.Context, srcName, dstName string
 
 func (s *LocalFileService) ListFiles(ctx context.Context, name string, options ListOptions) ([]FileInfo, error) {
 	return s.Storage.List(ctx, name, options)
+}
+
+// TODO MC: is this functinality necessary?
+func MoveFileBetweenServices(
+	ctx context.Context,
+	sourceService FileService,
+	destinationService FileService,
+	sourceName string,
+	destinationName string,
+	opts WriteOptions,
+) error {
+	sourceFile, _, err := sourceService.GetFile(ctx, sourceName)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
+
+	if err := destinationService.WriteFileFromReader(ctx, destinationName, sourceFile, opts); err != nil {
+		return err
+	}
+
+	return sourceService.DeleteFile(ctx, sourceName)
 }
 
 // FileServiceResolver is an interface that is used to resolve the actual FileService needed for
