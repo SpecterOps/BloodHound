@@ -24,6 +24,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
@@ -49,6 +51,112 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 	} else {
 		return version.GetVersion().GreaterThan(currentMigration), nil
 	}
+}
+
+// Version_930_Migration returns a migration that backfills custom_node_kinds rows for any node kind
+// that exists in the graph but has no corresponding entry in either custom_node_kinds or schema_node_kinds.
+// This covers node kinds that entered the graph through schemaless Open Graph ingest, which were never written
+// to custom_node_kinds.
+func Version_930_Migration(backfillData database.SchemalessNodeKindBackfillData) func(ctx context.Context, db graph.Database) error {
+	return func(ctx context.Context, db graph.Database) error {
+		defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to backfill custom_node_kinds for schemaless ingest kinds")()
+
+		if backfillData == nil {
+			slog.InfoContext(ctx, "Skipping Version_930_Migration: no SchemalessNodeKindBackfillData provider configured")
+			return nil
+		}
+
+		// Fetch all kinds registered in the graph / kind table.
+		allKinds, err := db.FetchKinds(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to fetch kinds from graph: %w", err)
+		}
+
+		// Build a set of kind names already covered by custom_node_kinds.
+		existingCustomNodeKinds, err := backfillData.GetCustomNodeKinds(ctx, nil)
+		if err != nil {
+			return fmt.Errorf("failed to fetch custom node kinds: %w", err)
+		}
+
+		coveredKindNames := make(map[string]struct{}, len(existingCustomNodeKinds))
+		for _, customNodeKind := range existingCustomNodeKinds {
+			coveredKindNames[customNodeKind.KindName] = struct{}{}
+		}
+
+		// Extend the covered set with kind names present in schema_node_kinds.
+		schemaNodeKinds, _, err := backfillData.GetGraphSchemaNodeKinds(ctx, nil, model.Sort{}, 0, 0)
+		if err != nil {
+			return fmt.Errorf("failed to fetch schema node kinds: %w", err)
+		}
+		for _, schemaNodeKind := range schemaNodeKinds {
+			coveredKindNames[schemaNodeKind.Name] = struct{}{}
+		}
+
+		var kindsToCreate model.CustomNodeKinds
+		for _, kind := range allKinds {
+			// skip meta kinds, tier tags, etc.
+			if isInternalGraphKind(kind) {
+				continue
+			}
+			// skip kinds that are already covered by custom_node_kinds or schema_node_kinds
+			if _, alreadyCovered := coveredKindNames[kind.String()]; alreadyCovered {
+				continue
+			}
+
+			nodeFound, err := graphKindHasNodes(ctx, db, kind)
+			if err != nil {
+				return fmt.Errorf("failed to check graph for nodes of kind %q: %w", kind.String(), err)
+			}
+			if nodeFound {
+				kindsToCreate = append(kindsToCreate, model.CustomNodeKind{
+					KindName: kind.String(),
+					Config: model.CustomNodeKindConfig{
+						Icon: graphschema.DisplayNodeIcon{
+							Type:  graphschema.DisplayNodeTypeFontAwesome,
+							Color: "#FFFFFF",
+						},
+					},
+				})
+			}
+		}
+
+		if len(kindsToCreate) == 0 {
+			slog.InfoContext(ctx, "No schemaless node kinds require backfilling into custom_node_kinds")
+			return nil
+		}
+
+		if _, err := backfillData.CreateCustomNodeKinds(ctx, kindsToCreate); err != nil {
+			return fmt.Errorf("failed to create custom node kinds during backfill: %w", err)
+		}
+
+		slog.InfoContext(ctx, "Backfilled custom_node_kinds for schemaless ingest kinds",
+			slog.Int("count", len(kindsToCreate)),
+		)
+		return nil
+	}
+}
+
+// isInternalGraphKind reports whether a kind is an internal implementation detail that would
+// never have been ingested as user data (e.g. migration tracking nodes, meta nodes, tier tags).
+func isInternalGraphKind(kind graph.Kind) bool {
+	return strings.HasPrefix(kind.String(), model.AssetGroupTagKindPrefix) ||
+		kind.Is(common.MigrationData, graph.StringKind("Meta"), graph.StringKind("MetaDetail"))
+}
+
+// graphKindHasNodes returns true if at least one node with the kind exists in the graph.
+func graphKindHasNodes(ctx context.Context, db graph.Database, kind graph.Kind) (bool, error) {
+	var nodeFound bool
+	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if _, err := tx.Nodes().Filter(query.Kind(query.Node(), kind)).First(); err != nil {
+			if errors.Is(err, graph.ErrNoResultsFound) {
+				return nil
+			}
+			return err
+		}
+		nodeFound = true
+		return nil
+	})
+	return nodeFound, err
 }
 
 func Version_910_Migration(ctx context.Context, db graph.Database) error {
@@ -528,118 +636,127 @@ func Version_277_Migration(ctx context.Context, db graph.Database) error {
 	})
 }
 
-var Manifest = []Migration{
-	{
-		Version: version.Version{Major: 2, Minor: 3, Patch: 0},
-		Execute: func(ctx context.Context, db graph.Database) error {
-			defer measure.MeasureWithThreshold(slog.LevelInfo, "Deleting all existing role nodes")()
+// GetManifest returns the ordered list of graph migrations. Migrations that need
+// dependencies beyond the graph database (e.g. relational source kinds) capture
+// them via the provided arguments.
+func GetManifest(backfillData database.SchemalessNodeKindBackfillData) []Migration {
+	return []Migration{
+		{
+			Version: version.Version{Major: 2, Minor: 3, Patch: 0},
+			Execute: func(ctx context.Context, db graph.Database) error {
+				defer measure.MeasureWithThreshold(slog.LevelInfo, "Deleting all existing role nodes")()
 
-			return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
-				return tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Kind(query.Node(), azure.Role)
-				}).Delete()
-			})
+				return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+					return tx.Nodes().Filterf(func() graph.Criteria {
+						return query.Kind(query.Node(), azure.Role)
+					}).Delete()
+				})
+			},
 		},
-	},
-	{
-		Version: version.Version{Major: 2, Minor: 6, Patch: 3},
-		Execute: func(ctx context.Context, db graph.Database) error {
-			defer measure.MeasureWithThreshold(slog.LevelInfo, "Deleting all LocalToComputer/RemoteInteractiveLogin edges and ADLocalGroup labels")()
+		{
+			Version: version.Version{Major: 2, Minor: 6, Patch: 3},
+			Execute: func(ctx context.Context, db graph.Database) error {
+				defer measure.MeasureWithThreshold(slog.LevelInfo, "Deleting all LocalToComputer/RemoteInteractiveLogin edges and ADLocalGroup labels")()
 
-			// This kind has long since gone missing from our schemas but the assert below reintroduces it for the
-			// purposes of running this migration
-			rilpKind := graph.StringKind("RemoteInteractiveLogonPrivilege")
+				// This kind has long since gone missing from our schemas but the assert below reintroduces it for the
+				// purposes of running this migration
+				rilpKind := graph.StringKind("RemoteInteractiveLogonPrivilege")
 
-			if err := db.AssertSchema(ctx, graph.Schema{
-				Graphs: []graph.Graph{{
-					Edges: graph.Kinds{rilpKind},
-				}},
-			}); err != nil {
-				return err
-			}
-
-			return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
-				// Remove ADLocalGroup label from all nodes that also have the group label
-				if nodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.And(
-						query.Kind(query.Node(), ad.LocalGroup),
-						query.Kind(query.Node(), ad.Group),
-					)
-				})); err != nil {
+				if err := db.AssertSchema(ctx, graph.Schema{
+					Graphs: []graph.Graph{{
+						Edges: graph.Kinds{rilpKind},
+					}},
+				}); err != nil {
 					return err
-				} else {
-					for _, node := range nodes {
-						node.DeleteKinds(ad.LocalGroup)
-						if err := tx.UpdateNode(node); err != nil {
-							return err
+				}
+
+				return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+					// Remove ADLocalGroup label from all nodes that also have the group label
+					if nodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
+						return query.And(
+							query.Kind(query.Node(), ad.LocalGroup),
+							query.Kind(query.Node(), ad.Group),
+						)
+					})); err != nil {
+						return err
+					} else {
+						for _, node := range nodes {
+							node.DeleteKinds(ad.LocalGroup)
+							if err := tx.UpdateNode(node); err != nil {
+								return err
+							}
 						}
 					}
-				}
 
-				// Delete all local group edges
-				if err := tx.Relationships().Filterf(func() graph.Criteria {
-					return query.And(
-						query.Or(
-							query.Kind(query.Relationship(), rilpKind),
-							query.Kind(query.Relationship(), ad.LocalToComputer),
-							query.Kind(query.Relationship(), ad.MemberOfLocalGroup),
-						),
-						query.Kind(query.Start(), ad.Entity),
-					)
-				}).Delete(); err != nil {
-					return err
-				}
+					// Delete all local group edges
+					if err := tx.Relationships().Filterf(func() graph.Criteria {
+						return query.And(
+							query.Or(
+								query.Kind(query.Relationship(), rilpKind),
+								query.Kind(query.Relationship(), ad.LocalToComputer),
+								query.Kind(query.Relationship(), ad.MemberOfLocalGroup),
+							),
+							query.Kind(query.Start(), ad.Entity),
+						)
+					}).Delete(); err != nil {
+						return err
+					}
 
-				return nil
-			})
+					return nil
+				})
+			},
 		},
-	},
-	{
-		Version: version.Version{Major: 2, Minor: 7, Patch: 7},
-		Execute: Version_277_Migration,
-	},
-	{
-		Version: version.Version{Major: 5, Minor: 0, Patch: 8},
-		Execute: Version_508_Migration,
-	},
-	{
-		Version: version.Version{Major: 5, Minor: 13, Patch: 0},
-		Execute: Version_513_Migration,
-	},
-	{
-		Version: version.Version{Major: 6, Minor: 2, Patch: 0},
-		Execute: Version_620_Migration,
-	},
-	{
-		Version: version.Version{Major: 7, Minor: 3, Patch: 0},
-		Execute: Version_730_Migration,
-	},
-	{
-		Version: version.Version{Major: 7, Minor: 4, Patch: 0},
-		Execute: Version_740_Migration,
-	},
-	{
-		Version: version.Version{Major: 8, Minor: 1, Patch: 3},
-		Execute: Version_813_Migration,
-	},
-	{
-		Version: version.Version{Major: 8, Minor: 3, Patch: 0},
-		Execute: Version_830_Migration,
-	},
-	{
-		Version: version.Version{Major: 8, Minor: 5, Patch: 2},
-		Execute: Version_852_Migration,
-	},
-	{
-		Version: version.Version{Major: 8, Minor: 6, Patch: 0},
-		Execute: Version_860_Migration,
-	},
-	{
-		Version: version.Version{Major: 9, Minor: 0, Patch: 0},
-		Execute: Version_900_Migration,
-	},
-	{
-		Version: version.Version{Major: 9, Minor: 1, Patch: 0},
-		Execute: Version_910_Migration,
-	},
+		{
+			Version: version.Version{Major: 2, Minor: 7, Patch: 7},
+			Execute: Version_277_Migration,
+		},
+		{
+			Version: version.Version{Major: 5, Minor: 0, Patch: 8},
+			Execute: Version_508_Migration,
+		},
+		{
+			Version: version.Version{Major: 5, Minor: 13, Patch: 0},
+			Execute: Version_513_Migration,
+		},
+		{
+			Version: version.Version{Major: 6, Minor: 2, Patch: 0},
+			Execute: Version_620_Migration,
+		},
+		{
+			Version: version.Version{Major: 7, Minor: 3, Patch: 0},
+			Execute: Version_730_Migration,
+		},
+		{
+			Version: version.Version{Major: 7, Minor: 4, Patch: 0},
+			Execute: Version_740_Migration,
+		},
+		{
+			Version: version.Version{Major: 8, Minor: 1, Patch: 3},
+			Execute: Version_813_Migration,
+		},
+		{
+			Version: version.Version{Major: 8, Minor: 3, Patch: 0},
+			Execute: Version_830_Migration,
+		},
+		{
+			Version: version.Version{Major: 8, Minor: 5, Patch: 2},
+			Execute: Version_852_Migration,
+		},
+		{
+			Version: version.Version{Major: 8, Minor: 6, Patch: 0},
+			Execute: Version_860_Migration,
+		},
+		{
+			Version: version.Version{Major: 9, Minor: 0, Patch: 0},
+			Execute: Version_900_Migration,
+		},
+		{
+			Version: version.Version{Major: 9, Minor: 1, Patch: 0},
+			Execute: Version_910_Migration,
+		},
+		{
+			Version: version.Version{Major: 9, Minor: 3, Patch: 0},
+			Execute: Version_930_Migration(backfillData),
+		},
+	}
 }
