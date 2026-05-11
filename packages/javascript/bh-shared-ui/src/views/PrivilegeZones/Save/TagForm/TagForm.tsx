@@ -465,6 +465,7 @@ export const TagForm: FC = () => {
                                                         <Switch
                                                             {...field}
                                                             value={''}
+                                                            aria-label='Enable Analysis'
                                                             data-testid='privilege-zones_save_tag-form_enable-analysis-toggle'
                                                             checked={field.value || false}
                                                             onCheckedChange={field.onChange}
@@ -552,6 +553,7 @@ export const TagForm: FC = () => {
                                                         <FormControl>
                                                             <Switch
                                                                 {...field}
+                                                                aria-label='Enable Certification'
                                                                 value={field.value?.toString()}
                                                                 data-testid='privilege-zones_save_tag-form_require-certify-toggle'
                                                                 checked={field.value || false}
