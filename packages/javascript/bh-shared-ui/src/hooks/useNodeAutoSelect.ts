@@ -25,10 +25,15 @@ export const useNodeAutoSelect = (
     extractNodes: (data: GraphResponse | FlatGraphResponse) => NodeRecord | undefined
 ) => {
     const { searchType, primarySearch } = useExploreParams();
-    const { selectedItem, setSelectedItem } = useExploreSelectedItem();
+    const { selectedItem, setSelectedItem, clearSelectedItem } = useExploreSelectedItem();
 
     return useCallback(
         (data: GraphResponse | FlatGraphResponse) => {
+            if (searchType === 'pathfinding') {
+                clearSelectedItem();
+                return;
+            }
+
             if (searchType !== 'node' || !primarySearch) return;
 
             const nodes = extractNodes(data);
@@ -39,6 +44,6 @@ export const useNodeAutoSelect = (
             const matchedEntry = Object.entries(nodes).find(([, node]) => node.objectId === primarySearch);
             if (matchedEntry) setSelectedItem(matchedEntry[0]);
         },
-        [searchType, primarySearch, selectedItem, setSelectedItem, extractNodes]
+        [searchType, primarySearch, selectedItem, setSelectedItem, clearSelectedItem, extractNodes]
     );
 };

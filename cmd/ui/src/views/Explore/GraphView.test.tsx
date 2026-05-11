@@ -264,4 +264,25 @@ describe('GraphView', () => {
 
         expect(searchNodesElAfter).toBeInTheDocument();
     });
+
+    it('clears selected item when pathfinding search returns results', async () => {
+        server.use(
+            rest.post('/api/v2/graphs/cypher', (_req, res, ctx) =>
+                res(
+                    ctx.json({
+                        data: {
+                            nodes: { '42': searchedNode },
+                            edges: [],
+                        },
+                    })
+                )
+            )
+        );
+
+        const pathfindingRoute = `/explore?searchType=pathfinding&primarySearch=${searchedNode.objectId}&secondarySearch=some-destination`;
+
+        render(<GraphView />, { route: pathfindingRoute });
+
+        await waitFor(() => expect(window.location.search).not.toContain('selectedItem='));
+    });
 });
