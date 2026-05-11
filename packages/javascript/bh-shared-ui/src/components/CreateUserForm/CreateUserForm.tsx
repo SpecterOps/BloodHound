@@ -44,6 +44,7 @@ import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../consta
 import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments';
 import { useListDisplayRoles } from '../../hooks/useListDisplayRoles/useListDisplayRoles';
 import { useSSOProviders } from '../../hooks/useSSOProviders';
+import { PASSWORD_REQUIREMENTS_MESSAGE, passwordRegex } from '../../utils/passwd';
 import { getDefaultUserRoleId, isAdminRole, isETACRole } from '../../utils/roles';
 import { mapFormFieldsToUserRequest } from '../../views/Users/utils';
 import EnvironmentSelectPanel from '../EnvironmentSelectPanel/EnvironmentSelectPanel';
@@ -412,9 +413,8 @@ const CreateUserFormInner: React.FC<{
                                                         message: 'Password must be at least 12 characters long',
                                                     },
                                                     pattern: {
-                                                        value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])/,
-                                                        message:
-                                                            'Password must contain at least 1 lowercase character, 1 uppercase character, 1 number and 1 special character (!@#$%^&*)',
+                                                        value: passwordRegex,
+                                                        message: PASSWORD_REQUIREMENTS_MESSAGE,
                                                     },
                                                     maxLength: {
                                                         value: 1000,

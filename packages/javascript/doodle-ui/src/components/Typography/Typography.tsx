@@ -51,7 +51,7 @@ const Typography = ({ variant, component, children, className, ...rest }: Typogr
     const Tag = (component || variantMapping[variant ?? DEFAULT_VARIANT]) as ElementType;
 
     return (
-        <Tag className={cn(TypographyVariants({ variant }), className)} {...rest}>
+        <Tag className={cn(TypographyVariants({ variant }), `typography-${variant}`, className)} {...rest}>
             {children}
         </Tag>
     );

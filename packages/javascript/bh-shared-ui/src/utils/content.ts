@@ -244,6 +244,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
         },
         {
             id,
+            label: 'Eligible Roles',
+            queryType: 'azgroup-eligible-approver-roles',
+        },
+        {
+            id,
             label: 'Inbound Object Control',
             queryType: 'azgroup-inbound_object_control',
         },
@@ -636,6 +641,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             id,
             label: 'Roles',
             queryType: 'azuser-roles',
+        },
+        {
+            id,
+            label: 'Eligible Roles',
+            queryType: 'azuser-eligible-approver-roles',
         },
         {
             id,
@@ -1161,6 +1171,12 @@ export const entityRelationshipEndpoints = {
         apiClient
             .getAZEntityInfoV2('groups', id, 'roles', counts, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
+    'azgroup-eligible-approver-roles': ({ id, counts, skip, limit, type }) =>
+        apiClient
+            .getAZEntityInfoV2('groups', id, 'eligible-approver-roles', counts, skip, limit, type, {
+                signal: controller.signal,
+            })
+            .then((res) => res.data),
     'azgroup-inbound_object_control': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('groups', id, 'inbound-control', counts, skip, limit, type, {
@@ -1596,6 +1612,12 @@ export const entityRelationshipEndpoints = {
     'azuser-roles': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('users', id, 'roles', counts, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
+    'azuser-eligible-approver-roles': ({ id, counts, skip, limit, type }) =>
+        apiClient
+            .getAZEntityInfoV2('users', id, 'eligible-approver-roles', counts, skip, limit, type, {
+                signal: controller.signal,
+            })
             .then((res) => res.data),
     'azuser-execution_privileges': ({ id, counts, skip, limit, type }) =>
         apiClient

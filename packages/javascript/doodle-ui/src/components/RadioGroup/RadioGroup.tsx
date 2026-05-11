@@ -48,7 +48,7 @@ interface RadioGroupItemProps extends React.ComponentPropsWithoutRef<typeof Radi
 
 const RadioItem = React.forwardRef<React.ElementRef<typeof RadioGroupPrimitive.Item>, RadioGroupItemProps>(
     ({ className, label, value, ...props }, ref) => (
-        <Label className='flex items-center font-normal cursor-pointer px-1 mb-1 mr-4 rounded-md [&:has(:focus-visible)]:ring-2 [&:has(:focus-visible)]:ring-secondary'>
+        <Label className='flex items-center font-normal cursor-pointer mb-1 mr-4 rounded-md [&:has(:focus-visible)]:ring-2 [&:has(:focus-visible)]:ring-secondary ring-offset-1 ring-offset-transparent px-1'>
             <RadioGroupPrimitive.Item
                 value={value}
                 ref={ref}

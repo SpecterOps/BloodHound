@@ -31,6 +31,7 @@ export const makeStoreMapFromColumnOptions = (columnOptions: ManageColumnsComboB
 
 export type NodeClickInfo = { id: string; x: number; y: number };
 export type MungedTableRowWithId = GraphNodeSpreadWithProperties & { id: string };
+export type ExportColumns = 'all' | 'selected';
 
 export const DEFAULT_EXPLORE_TABLE_COLUMN_KEYS = [
     'kind',
@@ -70,37 +71,6 @@ export const getExploreTableData = (graphData: GraphResponse | FlatGraphResponse
         nodes,
         node_keys: completeNodeKeys,
     };
-};
-
-/**
- * Handles keys that were originally available in v8.0.1 when ExploreTable used the same data transformed for the graph.
- * But because we skip the graph specific transformations now, those keys should match the GraphNode type.
- * Users will have the new keys after resetting columns, so after enough time, this function will be useless.
- * Future 2026 DEV should remove this function entirely.
- */
-export const shimGraphSpecificKeys = (selectedColumns: NonNullable<ExploreTableProps['selectedColumns']>) => {
-    const graphSpecificKeysMap = {
-        nodetype: 'kind',
-        objectid: 'objectId',
-        name: 'label',
-    };
-
-    // check if any columns in the migration exist in selected columns
-    const keysToShim = Object.keys(graphSpecificKeysMap).filter((key) => selectedColumns[key]);
-    // if no migrations needed, then return early with selectedColumns as-is. This will be most cases.
-    if (keysToShim.length === 0) return selectedColumns;
-
-    // otherwise clone selectedColumns and shim old column keys
-    const shimmedColumns = { ...selectedColumns };
-
-    keysToShim.forEach((key) => {
-        const newKey = graphSpecificKeysMap[key as keyof typeof graphSpecificKeysMap];
-
-        shimmedColumns[newKey] = selectedColumns[key];
-        delete shimmedColumns[key];
-    });
-
-    return shimmedColumns;
 };
 
 export const createColumnStateFromKeys = (keys: string[]): Record<string, boolean> => {

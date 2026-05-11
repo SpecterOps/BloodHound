@@ -44,6 +44,14 @@ func (s *BloodhoundDB) CreateCustomNodeKinds(ctx context.Context, customNodeKind
 	)
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
+
+		for _, kind := range customNodeKinds {
+			if _, err := bhdb.UpsertKind(ctx, kind.KindName); err != nil {
+				return fmt.Errorf("failed to upsert kind %q: %w", kind.KindName, err)
+			}
+		}
+
 		err := tx.Create(&customNodeKinds).Error
 
 		if err != nil {
@@ -95,7 +103,7 @@ func (s *BloodhoundDB) UpdateCustomNodeKind(ctx context.Context, customNodeKind 
 	)
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
+		bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
 		if result := tx.Raw(fmt.Sprintf("UPDATE %s SET schema_node_kind_id = COALESCE(?, schema_node_kind_id), config = ?, updated_at = NOW() WHERE kind_name = ? RETURNING id, kind_name, schema_node_kind_id, config", model.CustomNodeKind{}.TableName()), customNodeKind.SchemaNodeKindId, customNodeKind.Config, customNodeKind.KindName).
 			Scan(&customNodeKind); result.RowsAffected == 0 {
 			return ErrNotFound

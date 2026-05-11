@@ -17,7 +17,7 @@ import userEvent from '@testing-library/user-event';
 import { Dialog } from 'doodle-ui';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { render, screen, waitFor } from '../../test-utils';
-import { setUpQueryClient } from '../../utils';
+import { PASSWORD_REQUIREMENTS_MESSAGE, setUpQueryClient } from '../../utils';
 import { Roles } from '../../utils/roles';
 import CreateUserForm from './CreateUserForm';
 
@@ -90,6 +90,17 @@ const MOCK_ROLES = [
         },
     },
 ];
+
+const fillRequiredFieldsAndSubmit = async (user: ReturnType<typeof userEvent.setup>, password: string) => {
+    const button = await waitFor(() => screen.getByRole('button', { name: 'Save' }));
+
+    await user.type(screen.getByLabelText(/principal/i), 'testuser');
+    await user.type(screen.getByLabelText(/first/i), 'Test');
+    await user.type(screen.getByLabelText(/last/i), 'User');
+    await user.click(screen.getByLabelText(/Initial password/i));
+    await user.paste(password);
+    await user.click(button);
+};
 
 describe('CreateUserForm', () => {
     type SetupOptions = {
@@ -255,5 +266,67 @@ describe('CreateUserForm', () => {
 
         expect(screen.queryByText('Environmental Targeted Access Control')).not.toBeInTheDocument();
         expect(await screen.findByText('Create User')).toBeInTheDocument();
+    });
+
+    it('should accept passwords with standard special characters', async () => {
+        createFormInitSetup();
+        const user = userEvent.setup();
+
+        await fillRequiredFieldsAndSubmit(user, 'Password!123');
+
+        await waitFor(() => {
+            expect(screen.queryByText(PASSWORD_REQUIREMENTS_MESSAGE)).not.toBeInTheDocument();
+        });
+    });
+
+    it('should accept passwords with unicode punctuation characters', async () => {
+        createFormInitSetup();
+        const user = userEvent.setup();
+
+        await fillRequiredFieldsAndSubmit(user, 'Password«123');
+
+        await waitFor(() => {
+            expect(screen.queryByText(PASSWORD_REQUIREMENTS_MESSAGE)).not.toBeInTheDocument();
+        });
+    });
+
+    it('should accept passwords with unicode symbol characters', async () => {
+        createFormInitSetup();
+        const user = userEvent.setup();
+
+        await fillRequiredFieldsAndSubmit(user, 'Password⏥123');
+
+        await waitFor(() => {
+            expect(screen.queryByText(PASSWORD_REQUIREMENTS_MESSAGE)).not.toBeInTheDocument();
+        });
+    });
+
+    it('should accept passwords with emojis', async () => {
+        createFormInitSetup();
+        const user = userEvent.setup();
+
+        await fillRequiredFieldsAndSubmit(user, 'Password💃123');
+
+        await waitFor(() => {
+            expect(screen.queryByText(PASSWORD_REQUIREMENTS_MESSAGE)).not.toBeInTheDocument();
+        });
+    });
+
+    it('should reject passwords with no special characters', async () => {
+        createFormInitSetup();
+        const user = userEvent.setup();
+
+        await fillRequiredFieldsAndSubmit(user, 'Password1234');
+
+        expect(await screen.findByText(PASSWORD_REQUIREMENTS_MESSAGE)).toBeInTheDocument();
+    });
+
+    it('should reject passwords where only a space is used as the special character', async () => {
+        createFormInitSetup();
+        const user = userEvent.setup();
+
+        await fillRequiredFieldsAndSubmit(user, 'Password 123');
+
+        expect(await screen.findByText(PASSWORD_REQUIREMENTS_MESSAGE)).toBeInTheDocument();
     });
 });

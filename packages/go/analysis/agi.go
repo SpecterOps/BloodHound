@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -87,7 +88,7 @@ func updateAssetGroupIsolationTags(ctx context.Context, db database.AgiData, gra
 	}
 }
 
-func clearSystemTags(ctx context.Context, db graph.Database, additionalFilter ...graph.Criteria) error {
+func clearSystemTags(ctx context.Context, db graph.Database) error {
 	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -99,12 +100,8 @@ func clearSystemTags(ctx context.Context, db graph.Database, additionalFilter ..
 
 	var (
 		props   = graph.NewProperties()
-		filters = []graph.Criteria{query.IsNotNull(query.NodeProperty(common.SystemTags.String()))}
+		filters = []graph.Criteria{graphschema.IgnoreMetaFilter, query.IsNotNull(query.NodeProperty(common.SystemTags.String()))}
 	)
-
-	if additionalFilter != nil {
-		filters = append(filters, additionalFilter...)
-	}
 
 	props.Delete(common.SystemTags.String())
 

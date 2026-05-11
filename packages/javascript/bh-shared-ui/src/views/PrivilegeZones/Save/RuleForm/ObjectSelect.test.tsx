@@ -17,6 +17,7 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { mockKindsHandler } from '../../../../mocks/handlers/graphKinds';
 import { act, render, screen, waitFor } from '../../../../test-utils';
 import ObjectSelect from './ObjectSelect';
 import RuleFormContext, { initialValue } from './RuleFormContext';
@@ -45,13 +46,7 @@ const server = setupServer(
     rest.get(`/api/v2/custom-nodes`, async (_req, res, ctx) => {
         return res(ctx.json({ data: [] }));
     }),
-    rest.get('/api/v2/graphs/kinds', (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: [],
-            })
-        );
-    })
+    mockKindsHandler()
 );
 
 beforeAll(() => server.listen());

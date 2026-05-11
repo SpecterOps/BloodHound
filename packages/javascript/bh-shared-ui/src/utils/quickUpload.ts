@@ -28,7 +28,7 @@ export enum QuickUploadExclusionPaths {
     OpenGraphManagementPath = '/administration/opengraph-management',
 }
 
-const getExcludedIds = () => {
+export const isQuickUploadExcludedById = () => {
     const ids = Object.values(QuickUploadExclusionIds);
 
     for (const id of ids) {
@@ -44,7 +44,7 @@ export const useQuickUploadEnabled = () => {
     const { pathname } = useLocation();
     const { checkPermission } = usePermissions();
 
-    const isExcludedById = getExcludedIds();
+    const isExcludedById = isQuickUploadExcludedById();
     const isExcludedByPath = Object.values(QuickUploadExclusionPaths).includes(pathname as QuickUploadExclusionPaths);
     const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST);
 

@@ -16,11 +16,11 @@
 
 import { faAlignJustify, faCopy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Theme, Typography } from '@mui/material';
+import { Theme } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import clsx from 'clsx';
-import { Button } from 'doodle-ui';
-import { PropsWithChildren, useMemo, useRef, useState } from 'react';
+import { Button, Typography } from 'doodle-ui';
+import { PropsWithChildren, useMemo, useState } from 'react';
 import { copyToClipboard } from '../../../utils/copyToClipboard';
 
 export const useStyles = makeStyles((theme: Theme) => ({
@@ -77,8 +77,6 @@ function CodeController(props: PropsWithChildren<Props>) {
     const [scrollLeft, setScrollLeft] = useState(false);
     const [scrollRight, setScrollRight] = useState(false);
 
-    const codeRef = useRef<HTMLPreElement>(null);
-
     const classes = useStyles();
 
     const handleScroll = (e: React.UIEvent<HTMLPreElement>) => {
@@ -128,7 +126,6 @@ function CodeController(props: PropsWithChildren<Props>) {
                     scrollLeft: !wrapped && scrollLeft,
                     scrollRight: !wrapped && scrollRight,
                 })}
-                ref={codeRef}
                 onScroll={handleScroll}>
                 {(!hideCopy || !hideWrap) && (
                     <>

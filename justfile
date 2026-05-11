@@ -3,6 +3,9 @@ _default:
 
 host_os := if os() == "macos" { "darwin" } else { os() }
 host_arch := if arch() == "x86" { "386" } else { if arch() == "x86_64" { "amd64" } else { if arch() == "aarch64" { "arm64" } else { arch() } } }
+# database connections for goose commands
+goose_db := env_var_or_default("GOOSE_DB", "postgres://bloodhound:bloodhoundcommunityedition@localhost:5432/bloodhound?sslmode=disable")
+goose_migrations_dir := "cmd/api/src/database/migration/migrations"
 
 export CGO_ENABLED := "0"
 export GOOS := env_var_or_default("GOOS", host_os)
@@ -339,3 +342,35 @@ _collector-version-env:
   # Export versions as shell variables
   printf 'export SHARPHOUND_VERSION=%q\n' "$sharphound_version"
   printf 'export AZUREHOUND_VERSION=%q\n' "$azurehound_version"
+
+# create new migration file
+goose-create name:
+  @go tool goose -dir {{goose_migrations_dir}} create {{name}} sql
+
+# run pending migrations
+goose-up:
+  @go tool goose postgres "{{goose_db}}" -dir {{goose_migrations_dir}} -allow-missing up
+
+# run migration up by 1 migration
+goose-up-by-one:
+  @go tool goose postgres "{{goose_db}}" -dir {{goose_migrations_dir}} -allow-missing up-by-one
+
+# run migration up to specific version
+goose-up-to version:
+  @go tool goose postgres "{{goose_db}}" -dir {{goose_migrations_dir}} -allow-missing up-to {{version}}
+
+# rollback to last migration
+goose-down:
+  @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" down
+
+# rollback to a specific version
+goose-down-to version:
+  @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" down-to {{version}}
+
+# rollback all migrations
+goose-down-all:
+  @go tool goose -dir {{goose_migrations_dir}} postgres "{{goose_db}}" down-to 0
+
+# show migration status
+goose-status:
+  @go tool goose postgres "{{goose_db}}" -dir {{goose_migrations_dir}} -allow-missing status
