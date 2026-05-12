@@ -123,6 +123,8 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
                         {icon}
                     </span>
                 )}
+                {/* badge-label does not have actual properties, if you want to leverage it, you would have to target the
+                className and define the properties via the Badge component instance in the parent */}
                 <span className='translate-y-[1px] badge-label'>{label}</span>
             </div>
         );

@@ -60,7 +60,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
             {showFilteringBanner && isRoleBasedFiltering && (
                 <Badge
                     data-testid='explore_entity-information-panel-role-based-filtering-badge'
-                    variant={'fill'}
+                    variant='fill'
                     className='px-2 py-1'
                     color='primary'
                     icon={<FontAwesomeIcon icon={faEyeSlash} className='ml-1 mr-3' />}
