@@ -21,12 +21,13 @@ import "time"
 type DatapipeStatus string
 
 const (
-	DatapipeStatusIdle      DatapipeStatus = "idle"
-	DatapipeStatusIngesting DatapipeStatus = "ingesting"
-	DatapipeStatusAnalyzing DatapipeStatus = "analyzing"
-	DatapipeStatusPurging   DatapipeStatus = "purging"
-	DatapipeStatusPruning   DatapipeStatus = "pruning"
-	DatapipeStatusStarting  DatapipeStatus = "starting"
+	DatapipeStatusIdle       DatapipeStatus = "idle"
+	DatapipeStatusIngesting  DatapipeStatus = "ingesting"
+	DatapipeStatusAnalyzing  DatapipeStatus = "analyzing"
+	DatapipeStatusOptimizing DatapipeStatus = "optimizing"
+	DatapipeStatusPurging    DatapipeStatus = "purging"
+	DatapipeStatusPruning    DatapipeStatus = "pruning"
+	DatapipeStatusStarting   DatapipeStatus = "starting"
 )
 
 type DatapipeStatusWrapper struct {
