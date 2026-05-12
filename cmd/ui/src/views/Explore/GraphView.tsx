@@ -73,10 +73,10 @@ const GraphView: FC = () => {
         useExploreSelectedItem();
     const { searchType, setExploreParams, exploreSearchTab } = useExploreParams();
 
-    // Automatically select the first node when performing a node search, or clear selection for pathfinding searches
-    useAutomaticGraphActions();
-
     const graphQuery = useSigmaExploreGraph();
+
+    // Automatically select the first node when performing a node search, or clear selection for pathfinding searches
+    useAutomaticGraphActions(graphQuery.data);
 
     const graphHasDataQuery = useGraphHasData();
 

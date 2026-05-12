@@ -17,20 +17,22 @@
 import { useExploreParams } from './useExploreParams';
 import { useExploreSelectedItem } from './useExploreSelectedItem';
 
-export const useAutomaticGraphActions = () => {
+export const useAutomaticGraphActions = (graphData: Record<string, any> | undefined) => {
     const { searchType, primarySearch } = useExploreParams();
     const { setSelectedItem, clearSelectedItem } = useExploreSelectedItem();
 
-    return (nodeId: string | undefined) => {
-        if (searchType === 'pathfinding') {
-            clearSelectedItem();
-            return;
-        }
+    if (searchType === 'pathfinding') {
+        clearSelectedItem();
+        return;
+    }
 
-        if (searchType !== 'node' || !primarySearch) return;
+    if (searchType !== 'node' || !primarySearch || !graphData) return;
 
-        if (nodeId) {
-            setSelectedItem(nodeId);
-        }
-    };
+    // Handle both data structures: BHCE uses { nodes: {...}, edges: [...] }, BE uses flat object
+    const nodeData = graphData.nodes || graphData;
+    const nodeId = Object.keys(nodeData).length === 1 ? Object.keys(nodeData)[0] : undefined;
+
+    if (nodeId) {
+        setSelectedItem(nodeId);
+    }
 };
