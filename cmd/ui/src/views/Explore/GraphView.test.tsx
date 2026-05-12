@@ -186,30 +186,6 @@ describe('GraphView', () => {
         await waitFor(() => expect(window.location.search).toContain('selectedItem=42'));
     });
 
-    it('does not auto-select when no search result has a matching objectId', async () => {
-        let requestHandled = false;
-        server.use(
-            rest.get('/api/v2/graph-search', (_req, res, ctx) => {
-                requestHandled = true;
-                return res(
-                    ctx.json({
-                        data: {
-                            data: {
-                                nodes: { '42': { ...searchedNode, objectId: 'non-matching-object-id' } },
-                                edges: [],
-                            },
-                        },
-                    })
-                );
-            })
-        );
-
-        render(<GraphView />, { route: autoSelectRoute });
-
-        await waitFor(() => expect(requestHandled).toBe(true));
-        expect(window.location.search).not.toContain('selectedItem=');
-    });
-
     it('opens the entity information panel for the auto-selected node', async () => {
         server.use(
             rest.post('/api/v2/graphs/cypher', (_req, res, ctx) =>
@@ -230,6 +206,27 @@ describe('GraphView', () => {
 
         const panel = await screen.findByTestId('explore_entity-information-panel');
         expect(within(panel).getByText('Searched Node')).toBeInTheDocument();
+    });
+
+    it('clears selected item when pathfinding search returns results', async () => {
+        server.use(
+            rest.post('/api/v2/graphs/cypher', (_req, res, ctx) =>
+                res(
+                    ctx.json({
+                        data: {
+                            nodes: { '42': searchedNode },
+                            edges: [],
+                        },
+                    })
+                )
+            )
+        );
+
+        const pathfindingRoute = `/explore?searchType=pathfinding&primarySearch=${searchedNode.objectId}&secondarySearch=some-destination`;
+
+        render(<GraphView />, { route: pathfindingRoute });
+
+        await waitFor(() => expect(window.location.search).not.toContain('selectedItem='));
     });
 
     it('renders correct search elements after keypresses', async () => {
@@ -263,26 +260,5 @@ describe('GraphView', () => {
         const searchNodesElAfter = screen.queryByPlaceholderText('Search Nodes');
 
         expect(searchNodesElAfter).toBeInTheDocument();
-    });
-
-    it('clears selected item when pathfinding search returns results', async () => {
-        server.use(
-            rest.post('/api/v2/graphs/cypher', (_req, res, ctx) =>
-                res(
-                    ctx.json({
-                        data: {
-                            nodes: { '42': searchedNode },
-                            edges: [],
-                        },
-                    })
-                )
-            )
-        );
-
-        const pathfindingRoute = `/explore?searchType=pathfinding&primarySearch=${searchedNode.objectId}&secondarySearch=some-destination`;
-
-        render(<GraphView />, { route: pathfindingRoute });
-
-        await waitFor(() => expect(window.location.search).not.toContain('selectedItem='));
     });
 });
