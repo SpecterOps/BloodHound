@@ -94,18 +94,21 @@ export const CertificationPending = 0 as const;
 export const CertificationRevoked = 1 as const;
 export const CertificationManual = 2 as const;
 export const CertificationAuto = 3 as const;
+export const AllStatuses = 4 as const;
 
 export type CertificationType =
     | typeof CertificationPending
     | typeof CertificationRevoked
     | typeof CertificationManual
-    | typeof CertificationAuto;
+    | typeof CertificationAuto
+    | typeof AllStatuses;
 
 export const CertificationTypeMap: Record<CertificationType, string> = {
     [CertificationPending]: 'Pending',
     [CertificationRevoked]: 'Rejected',
     [CertificationManual]: 'User Certified',
     [CertificationAuto]: 'Automatic',
+    [AllStatuses]: 'All Statuses',
 };
 
 export type AssetGroupTagCertificationParams = {
