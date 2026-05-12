@@ -24,7 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
@@ -57,7 +56,7 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 // that exists in the graph but has no corresponding entry in either custom_node_kinds or schema_node_kinds.
 // This covers node kinds that entered the graph through schemaless Open Graph ingest, which were never written
 // to custom_node_kinds.
-func Version_930_Migration(backfillData database.SchemalessNodeKindBackfillData) func(ctx context.Context, db graph.Database) error {
+func Version_930_Migration(backfillData SchemalessNodeKindBackfillData) func(ctx context.Context, db graph.Database) error {
 	return func(ctx context.Context, db graph.Database) error {
 		defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to backfill custom_node_kinds for schemaless ingest kinds")()
 
@@ -633,7 +632,7 @@ func Version_277_Migration(ctx context.Context, db graph.Database) error {
 // GetManifest returns the ordered list of graph migrations. Migrations that need
 // dependencies beyond the graph database (e.g. relational source kinds) capture
 // them via the provided arguments.
-func GetManifest(backfillData database.SchemalessNodeKindBackfillData) []Migration {
+func GetManifest(backfillData SchemalessNodeKindBackfillData) []Migration {
 	return []Migration{
 		{
 			Version: version.Version{Major: 2, Minor: 3, Patch: 0},

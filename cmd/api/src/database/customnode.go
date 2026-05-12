@@ -58,14 +58,6 @@ func (s *BloodhoundDB) EnsureStubbedCustomNodeKindForIngest(ctx context.Context,
 	return nil
 }
 
-// SchemalessNodeKindBackfillData is a narrow interface used by the graph migration Version_930_Migration()
-// to read display metadata from Postgres and write backfilled custom_node_kinds entries.
-type SchemalessNodeKindBackfillData interface {
-	GetCustomNodeKinds(ctx context.Context, filters model.Filters) ([]model.CustomNodeKind, error)
-	GetGraphSchemaNodeKinds(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error)
-	CreateCustomNodeKinds(ctx context.Context, customNodeKinds model.CustomNodeKinds) (model.CustomNodeKinds, error)
-}
-
 func (s *BloodhoundDB) CreateCustomNodeKinds(ctx context.Context, customNodeKinds model.CustomNodeKinds) (model.CustomNodeKinds, error) {
 	var (
 		auditEntry = model.AuditEntry{
