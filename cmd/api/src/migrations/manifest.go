@@ -95,7 +95,7 @@ func Version_930_Migration(backfillData database.SchemalessNodeKindBackfillData)
 		var kindsToCreate model.CustomNodeKinds
 		for _, kind := range allKinds {
 			// skip meta kinds, tier tags, etc.
-			if isInternalGraphKind(kind) {
+			if model.IsExtendedNodeKind(kind) {
 				continue
 			}
 			// skip kinds that are already covered by custom_node_kinds or schema_node_kinds
@@ -114,6 +114,7 @@ func Version_930_Migration(backfillData database.SchemalessNodeKindBackfillData)
 						Icon: graphschema.DisplayNodeIcon{
 							Type:  graphschema.DisplayNodeTypeFontAwesome,
 							Color: "#FFFFFF",
+							Name:  "question",
 						},
 					},
 				})
@@ -134,13 +135,6 @@ func Version_930_Migration(backfillData database.SchemalessNodeKindBackfillData)
 		)
 		return nil
 	}
-}
-
-// isInternalGraphKind reports whether a kind is an internal implementation detail that would
-// never have been ingested as user data (e.g. migration tracking nodes, meta nodes, tier tags).
-func isInternalGraphKind(kind graph.Kind) bool {
-	return strings.HasPrefix(kind.String(), model.AssetGroupTagKindPrefix) ||
-		kind.Is(common.MigrationData, graph.StringKind("Meta"), graph.StringKind("MetaDetail"))
 }
 
 // graphKindHasNodes returns true if at least one node with the kind exists in the graph.
