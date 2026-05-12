@@ -32,6 +32,7 @@ import {
     isNode,
     isWebGLEnabled,
     makeStoreMapFromColumnOptions,
+    useAutomaticGraphActions,
     useCustomNodeKinds,
     useExploreParams,
     useExploreSelectedItem,
@@ -39,7 +40,6 @@ import {
     useFeatureFlag,
     useGraphHasData,
     useKeybindings,
-    useNodeAutoSelect,
     useTagGlyphs,
     useTheme,
     useToggle,
@@ -56,21 +56,13 @@ import {
     setPinnedExploreTableColumns,
     setSelectedExploreTableColumns,
 } from 'src/ducks/global/actions';
-import { normalizeGraphDataForSigma, useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
+import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
-
-const extractSigmaNodes = (
-    data: Parameters<typeof normalizeGraphDataForSigma>[0]
-): Record<string, { objectId: string }> | undefined => {
-    const nodes = normalizeGraphDataForSigma(data)?.nodes;
-    if (!nodes) return undefined;
-    return Object.fromEntries(Object.entries(nodes).map(([key, node]) => [key, { objectId: node.objectId }]));
-};
 
 const GraphView: FC = () => {
     /* Hooks */
@@ -81,10 +73,10 @@ const GraphView: FC = () => {
         useExploreSelectedItem();
     const { searchType, setExploreParams, exploreSearchTab } = useExploreParams();
 
-    // Auto-select the searched node so it is highlighted and its information panel is displayed
-    const handleNodeAutoSelect = useNodeAutoSelect(extractSigmaNodes);
+    // Automatically select the first node when performing a node search, or clear selection for pathfinding searches
+    useAutomaticGraphActions();
 
-    const graphQuery = useSigmaExploreGraph({ onSuccess: handleNodeAutoSelect });
+    const graphQuery = useSigmaExploreGraph();
 
     const graphHasDataQuery = useGraphHasData();
 

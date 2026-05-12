@@ -16,6 +16,7 @@
 
 export { default as useApiVersion } from './useApiVersion';
 export * from './useAssetGroupTags';
+export * from './useAutomaticGraphActions';
 export * from './useAvailableEnvironments';
 export * from './useConfiguration';
 export { default as useCreateDisableZoomRef } from './useCreateDisableZoomRef';
@@ -47,7 +48,6 @@ export * from './useLocalStorage';
 export * from './useMatchingPaths';
 export * from './useMeasure';
 export * from './useMountEffect';
-export * from './useNodeAutoSelect';
 export * from './useObjectState';
 export { default as useOnClickOutside } from './useOnClickOutside';
 export * from './usePermissions';
