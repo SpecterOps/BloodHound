@@ -261,26 +261,11 @@ func TestVersion_930_Migration(t *testing.T) {
 		}
 	})
 
-	t.Run("is a no-op when backfillData is nil", func(t *testing.T) {
+	t.Run("returns an error when backfillData is nil", func(t *testing.T) {
 		suite := setupIntegrationTestSuite(t)
 		t.Cleanup(func() { suite.teardownIntegrationTestSuite(t) })
 
-		nilTestNode := &graph.Node{
-			Kinds: graph.Kinds{graph.StringKind("NilTestKind")},
-			Properties: graph.AsProperties(graph.PropertyMap{
-				common.Name:     "NilTestNode",
-				common.ObjectID: "NilTestNode",
-			}),
-		}
-		suite.createNodes(t, nilTestNode)
-
 		err := migrations.Version_930_Migration(nil)(suite.context, suite.graphDB)
-		require.NoError(t, err)
-
-		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context, nil)
-		require.NoError(t, err)
-		for _, customNodeKind := range customNodeKinds {
-			require.NotEqual(t, "NilTestKind", customNodeKind.KindName, "NilTestKind must not be backfilled when backfillData is nil")
-		}
+		require.Error(t, err)
 	})
 }

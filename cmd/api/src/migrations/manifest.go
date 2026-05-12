@@ -61,8 +61,7 @@ func Version_930_Migration(backfillData SchemalessNodeKindBackfillData) func(ctx
 		defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to backfill custom_node_kinds for schemaless ingest kinds")()
 
 		if backfillData == nil {
-			slog.InfoContext(ctx, "Skipping Version_930_Migration: no SchemalessNodeKindBackfillData provider configured")
-			return nil
+			return fmt.Errorf("Version_930_Migration requires a SchemalessNodeKindBackfillData provider but none was configured")
 		}
 
 		// Fetch all kinds registered in the graph / kind table.
