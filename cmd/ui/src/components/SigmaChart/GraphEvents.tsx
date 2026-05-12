@@ -15,8 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
+import { useTheme } from 'bh-shared-ui';
 import type { Attributes } from 'graphology-types';
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useState } from 'react';
 import type { SigmaNodeEventPayload } from 'sigma/sigma';
 import type { Coordinates } from 'sigma/types';
 import {
@@ -30,7 +31,7 @@ import {
     resetCamera,
 } from 'src/ducks/graph/utils';
 import { bezier } from 'src/rendering/utils/bezier';
-import { getNodeRadius } from 'src/rendering/utils/utils';
+import { blendHexColors, getNodeRadius } from 'src/rendering/utils/utils';
 import { useAppSelector } from 'src/store';
 import { preventAllDefaults } from 'src/utils';
 import { sequentialLayout, standardLayout } from 'src/views/Explore/utils';
@@ -91,6 +92,8 @@ export const GraphEvents = forwardRef(function GraphEvents(
     ref
 ) {
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
+    const theme = useTheme();
 
     const sigma = useSigma();
     const graph = sigma.getGraph();
@@ -274,23 +277,75 @@ export const GraphEvents = forwardRef(function GraphEvents(
         sigmaContainer,
     ]);
 
+    const isHighlightedItemInGraph = useMemo(() => {
+        if (!highlightedItem) return;
+        return graph.hasNode(highlightedItem) || graph.hasEdge(highlightedItem);
+    }, [graph, highlightedItem]);
+
+    // Compute which nodes and edges should remain fully visible when an item is selected.
+    // Nodes: the selected node itself + all its direct neighbors.
+    // Edges: all edges directly connected to the selected node/edge endpoints.
+    const { highlightedNodeIds, highlightedEdgeIds } = useMemo(() => {
+        const highlightedNodeIds = new Set<string>();
+        const highlightedEdgeIds = new Set<string>();
+
+        if (highlightedItem) {
+            if (graph.hasNode(highlightedItem)) {
+                highlightedNodeIds.add(highlightedItem);
+                graph.neighbors(highlightedItem).forEach((directNodes) => highlightedNodeIds.add(directNodes));
+                graph.edges(highlightedItem).forEach((directEdges) => highlightedEdgeIds.add(directEdges));
+            } else if (graph.hasEdge(highlightedItem)) {
+                highlightedEdgeIds.add(highlightedItem);
+                graph.extremities(highlightedItem).forEach((directNodes) => highlightedNodeIds.add(directNodes));
+            }
+        }
+
+        return { highlightedNodeIds, highlightedEdgeIds };
+    }, [graph, highlightedItem]);
+
     useEffect(() => {
+        const bgColor = theme.neutral.primary;
+        // dimFactor is how much of the original color shows through (1 = full, 0 = fully hidden).
+        // Equivalent to 1 - nodeBlend from the old CPU-blend approach: dark 1-0.5=0.5, light 1-0.8=0.2.
+        const nodeDimFactor = darkMode ? 0.5 : 0.2;
+        const edgeBlend = darkMode ? 0.6 : 0.9;
+        const labelDimFactor = darkMode ? 0.3 : 0.1;
+
         setSettings({
             nodeReducer: (node, data) => {
                 const camera = sigma.getCamera();
+                const isDimmed = !!highlightedItem && !highlightedNodeIds.has(node) && isHighlightedItemInGraph;
+
                 return {
                     ...data,
                     highlighted: node === highlightedItem,
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
+                    isDimmed,
+                    // Always pass the canvas background color so the shader can dim toward it.
+                    graphBgColor: bgColor,
+                    ...(isDimmed && {
+                        labelDimFactor,
+                        dimFactor: nodeDimFactor,
+                        // Keep label background dimmed — labels are rendered on canvas 2D, not by the shader.
+                        backgroundColor: blendHexColors(data.backgroundColor ?? bgColor, bgColor, 1 - nodeDimFactor),
+                    }),
                 };
             },
             edgeReducer: (edge, data) => {
                 const camera = sigma.getCamera();
+                const isDimmed = !!highlightedItem && !highlightedEdgeIds.has(edge);
+
                 const newData: Attributes = {
                     ...data,
                     hidden: false,
                     highlighted: edge === highlightedItem,
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
+                    isDimmed,
+                    backgroundColor: bgColor,
+                    ...(isDimmed && {
+                        labelDimFactor,
+                        color: blendHexColors(data.color, bgColor, edgeBlend),
+                    }),
                 };
 
                 if (data.type === 'curved') {
@@ -302,7 +357,18 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 return newData;
             },
         });
-    }, [curvedEdgeReducer, highlightedItem, selfEdgeReducer, setSettings, sigma]);
+    }, [
+        curvedEdgeReducer,
+        darkMode,
+        highlightedEdgeIds,
+        highlightedItem,
+        highlightedNodeIds,
+        selfEdgeReducer,
+        setSettings,
+        sigma,
+        theme.neutral.primary,
+        isHighlightedItemInGraph,
+    ]);
 
     // Toggle off edge labels when dragging a node to avoid performance hit
     useLayoutEffect(() => {
