@@ -303,8 +303,12 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 	}
 }
 
-// Optimize is a stub for post-analysis database optimization. The concrete
-// implementation will be delegated to the underlying graph driver (DAWGS).
+// Optimize delegates post-analysis database optimization to the underlying
+// graph driver if it implements the optional graph.Optimizer interface.
+// Drivers without a meaningful optimization step are a silent no-op.
 func (s *BHCEPipeline) Optimize(ctx context.Context) error {
+	if optimizer, ok := s.graphdb.(graph.Optimizer); ok {
+		return optimizer.Optimize(ctx)
+	}
 	return nil
 }
