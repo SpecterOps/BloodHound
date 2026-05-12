@@ -202,9 +202,19 @@ func (s *Migrator) dropLegacyMigrationTable() error {
 }
 
 func (s *Migrator) populateMigrationDescription(provider *goose.Provider) error {
+	// use a transaction so failures don't congest the connection pool
+	tx, err := s.SqlDB.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
 
-	if _, err := s.SqlDB.Exec(`
-        ALTER TABLE goose_db_version 
+	if _, err = tx.Exec(`
+        ALTER TABLE goose_db_version
         ADD COLUMN IF NOT EXISTS description TEXT
     `); err != nil {
 		return err
@@ -219,14 +229,14 @@ func (s *Migrator) populateMigrationDescription(provider *goose.Provider) error 
 		if len(parts) > 1 {
 			description = strings.ReplaceAll(parts[1], "_", " ")
 		}
-		if _, err := s.SqlDB.Exec(`
-            UPDATE goose_db_version 
-            SET description = $1 
+		if _, err = tx.Exec(`
+            UPDATE goose_db_version
+            SET description = $1
             WHERE version_id = $2 AND (description IS NULL OR description = '')
         `, description, source.Version); err != nil {
 			return err
 		}
 	}
 
-	return nil
+	return tx.Commit()
 }
