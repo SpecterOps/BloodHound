@@ -99,6 +99,7 @@ func TestPostADCSESC6a_ManagedServiceAccounts(t *testing.T) {
 		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 			if err := adAnalysis.PostADCSESC6a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
 				t.Logf("failed post processing for %s: %v", ad.ADCSESC6a.String(), err)
+				return err
 			}
 			return nil
 		})
