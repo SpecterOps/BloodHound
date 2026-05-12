@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
@@ -40,6 +41,11 @@ import (
 )
 
 var ErrAnalysisDisabled = errors.New("analysis is disabled by configuration")
+
+// optimizationCooldown is the minimum interval between successful optimization
+// runs. Optimization is resource intensive and gains little from being run more
+// than once per day, so callers within the cooldown window are skipped.
+const optimizationCooldown = 24 * time.Hour
 
 type BHCEPipeline struct {
 	db                  database.Database
@@ -306,9 +312,33 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 // Optimize delegates post-analysis database optimization to the underlying
 // graph driver if it implements the optional graph.Optimizer interface.
 // Drivers without a meaningful optimization step are a silent no-op.
+//
+// A 24-hour cooldown is enforced based on the most recent successful run
+// recorded in datapipe_status.last_complete_optimization_at. If the status
+// row cannot be read the cooldown is treated as fail-open and optimization
+// proceeds, since the alternative would silently mask configuration drift.
 func (s *BHCEPipeline) Optimize(ctx context.Context) error {
-	if optimizer, ok := s.graphdb.(graph.Optimizer); ok {
-		return optimizer.Optimize(ctx)
+	optimizer, ok := s.graphdb.(graph.Optimizer)
+	if !ok {
+		return nil
+	}
+
+	if status, err := s.db.GetDatapipeStatus(ctx); err != nil {
+		slog.WarnContext(ctx, "Failed to read datapipe status while evaluating optimization cooldown; proceeding with optimization", attr.Error(err))
+	} else if !status.LastCompleteOptimizationAt.IsZero() && time.Since(status.LastCompleteOptimizationAt) < optimizationCooldown {
+		slog.DebugContext(ctx, "Skipping graph optimization within cooldown window",
+			slog.Time("last_complete_optimization_at", status.LastCompleteOptimizationAt),
+			slog.Duration("cooldown", optimizationCooldown),
+		)
+		return nil
+	}
+
+	if err := optimizer.Optimize(ctx); err != nil {
+		return err
+	}
+
+	if err := s.db.UpdateLastOptimizationCompleteTime(ctx); err != nil {
+		return fmt.Errorf("update last optimization completion time: %v", err)
 	}
 	return nil
 }

@@ -25,6 +25,7 @@ import (
 
 type DatapipeStatusData interface {
 	UpdateLastAnalysisCompleteTime(ctx context.Context) error
+	UpdateLastOptimizationCompleteTime(ctx context.Context) error
 	SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus) error
 	GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error)
 }
@@ -35,6 +36,12 @@ func (s *BloodhoundDB) UpdateLastAnalysisCompleteTime(ctx context.Context) error
 	return s.db.WithContext(ctx).Exec("UPDATE datapipe_status SET updated_at = ?, last_complete_analysis_at = ?", now, now).Error
 }
 
+// This should be called at the end of a successful optimization run (not always every optimization)
+func (s *BloodhoundDB) UpdateLastOptimizationCompleteTime(ctx context.Context) error {
+	now := time.Now().UTC()
+	return s.db.WithContext(ctx).Exec("UPDATE datapipe_status SET updated_at = ?, last_complete_optimization_at = ?", now, now).Error
+}
+
 func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus) error {
 	now := time.Now().UTC()
 	return s.db.WithContext(ctx).Exec("UPDATE datapipe_status SET status = ?, updated_at = ?;", status, now).Error
@@ -43,7 +50,7 @@ func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.Datap
 func (s *BloodhoundDB) GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error) {
 	var datapipeStatus model.DatapipeStatusWrapper
 
-	tx := s.db.WithContext(ctx).Select("status, updated_at, last_complete_analysis_at, last_analysis_run_at").Table("datapipe_status").First(&datapipeStatus)
+	tx := s.db.WithContext(ctx).Select("status, updated_at, last_complete_analysis_at, last_complete_optimization_at, last_analysis_run_at").Table("datapipe_status").First(&datapipeStatus)
 
 	return datapipeStatus, CheckError(tx)
 }

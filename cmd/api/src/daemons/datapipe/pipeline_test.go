@@ -20,10 +20,14 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
+	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 // stubGraphDB is a no-op graph.Database used purely to satisfy the field type
@@ -63,25 +67,82 @@ func (o *optimizingGraphDB) Optimize(_ context.Context) error {
 }
 
 func TestBHCEPipeline_Optimize_DriverImplementsOptimizer(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockDB := dbmocks.NewMockDatabase(ctrl)
+	mockDB.EXPECT().GetDatapipeStatus(gomock.Any()).Return(model.DatapipeStatusWrapper{}, nil)
+	mockDB.EXPECT().UpdateLastOptimizationCompleteTime(gomock.Any()).Return(nil)
+
 	driver := &optimizingGraphDB{}
-	p := &BHCEPipeline{graphdb: driver}
+	p := &BHCEPipeline{db: mockDB, graphdb: driver}
 
 	require.NoError(t, p.Optimize(context.Background()))
 	assert.Equal(t, 1, driver.calls, "driver.Optimize should be invoked exactly once")
 }
 
 func TestBHCEPipeline_Optimize_DriverImplementsOptimizer_PropagatesError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockDB := dbmocks.NewMockDatabase(ctrl)
+	mockDB.EXPECT().GetDatapipeStatus(gomock.Any()).Return(model.DatapipeStatusWrapper{}, nil)
+
 	wantErr := errors.New("boom")
 	driver := &optimizingGraphDB{returns: wantErr}
-	p := &BHCEPipeline{graphdb: driver}
+	p := &BHCEPipeline{db: mockDB, graphdb: driver}
 
 	err := p.Optimize(context.Background())
 	assert.ErrorIs(t, err, wantErr)
 }
 
 func TestBHCEPipeline_Optimize_DriverDoesNotImplementOptimizer(t *testing.T) {
-	p := &BHCEPipeline{graphdb: stubGraphDB{}}
+	// The type-assertion miss path must be silent and successful, and must
+	// not even read datapipe status (no mock expectations registered).
+	ctrl := gomock.NewController(t)
+	mockDB := dbmocks.NewMockDatabase(ctrl)
 
-	// The type-assertion miss path must be silent and successful.
+	p := &BHCEPipeline{db: mockDB, graphdb: stubGraphDB{}}
+
 	require.NoError(t, p.Optimize(context.Background()))
+}
+
+func TestBHCEPipeline_Optimize_SkipsWithinCooldown(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockDB := dbmocks.NewMockDatabase(ctrl)
+	mockDB.EXPECT().GetDatapipeStatus(gomock.Any()).Return(model.DatapipeStatusWrapper{
+		LastCompleteOptimizationAt: time.Now().Add(-time.Hour),
+	}, nil)
+
+	driver := &optimizingGraphDB{}
+	p := &BHCEPipeline{db: mockDB, graphdb: driver}
+
+	require.NoError(t, p.Optimize(context.Background()))
+	assert.Equal(t, 0, driver.calls, "Optimize must not run while inside the cooldown window")
+}
+
+func TestBHCEPipeline_Optimize_RunsAfterCooldown(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockDB := dbmocks.NewMockDatabase(ctrl)
+	mockDB.EXPECT().GetDatapipeStatus(gomock.Any()).Return(model.DatapipeStatusWrapper{
+		LastCompleteOptimizationAt: time.Now().Add(-25 * time.Hour),
+	}, nil)
+	mockDB.EXPECT().UpdateLastOptimizationCompleteTime(gomock.Any()).Return(nil)
+
+	driver := &optimizingGraphDB{}
+	p := &BHCEPipeline{db: mockDB, graphdb: driver}
+
+	require.NoError(t, p.Optimize(context.Background()))
+	assert.Equal(t, 1, driver.calls)
+}
+
+func TestBHCEPipeline_Optimize_StatusReadFailureProceeds(t *testing.T) {
+	// Fail-open: a status read failure must not block optimization, since the
+	// alternative would silently mask configuration drift.
+	ctrl := gomock.NewController(t)
+	mockDB := dbmocks.NewMockDatabase(ctrl)
+	mockDB.EXPECT().GetDatapipeStatus(gomock.Any()).Return(model.DatapipeStatusWrapper{}, errors.New("transient db error"))
+	mockDB.EXPECT().UpdateLastOptimizationCompleteTime(gomock.Any()).Return(nil)
+
+	driver := &optimizingGraphDB{}
+	p := &BHCEPipeline{db: mockDB, graphdb: driver}
+
+	require.NoError(t, p.Optimize(context.Background()))
+	assert.Equal(t, 1, driver.calls)
 }
