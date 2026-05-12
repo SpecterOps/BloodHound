@@ -21983,7 +21983,8 @@
         "enum": [
           "idle",
           "ingesting",
-          "analyzing"
+          "analyzing",
+          "optimizing"
         ]
       },
       "model.components.base-ad-entity": {

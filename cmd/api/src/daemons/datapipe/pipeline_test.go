@@ -35,8 +35,8 @@ import (
 // in this file; if a future test reaches one, the panic surfaces the bug.
 type stubGraphDB struct{}
 
-func (stubGraphDB) SetWriteFlushSize(int)                                       {}
-func (stubGraphDB) SetBatchWriteSize(int)                                       {}
+func (stubGraphDB) SetWriteFlushSize(int) {}
+func (stubGraphDB) SetBatchWriteSize(int) {}
 func (stubGraphDB) ReadTransaction(context.Context, graph.TransactionDelegate, ...graph.TransactionOption) error {
 	panic("not implemented")
 }
@@ -46,12 +46,12 @@ func (stubGraphDB) WriteTransaction(context.Context, graph.TransactionDelegate, 
 func (stubGraphDB) BatchOperation(context.Context, graph.BatchDelegate, ...graph.BatchOption) error {
 	panic("not implemented")
 }
-func (stubGraphDB) AssertSchema(context.Context, graph.Schema) error  { panic("not implemented") }
+func (stubGraphDB) AssertSchema(context.Context, graph.Schema) error   { panic("not implemented") }
 func (stubGraphDB) SetDefaultGraph(context.Context, graph.Graph) error { panic("not implemented") }
-func (stubGraphDB) Run(context.Context, string, map[string]any) error { panic("not implemented") }
-func (stubGraphDB) Close(context.Context) error                       { return nil }
-func (stubGraphDB) FetchKinds(context.Context) (graph.Kinds, error)   { return nil, nil }
-func (stubGraphDB) RefreshKinds(context.Context) error                { return nil }
+func (stubGraphDB) Run(context.Context, string, map[string]any) error  { panic("not implemented") }
+func (stubGraphDB) Close(context.Context) error                        { return nil }
+func (stubGraphDB) FetchKinds(context.Context) (graph.Kinds, error)    { return nil, nil }
+func (stubGraphDB) RefreshKinds(context.Context) error                 { return nil }
 
 // optimizingGraphDB embeds the no-op stub and additionally implements
 // graph.Optimizer, recording invocations and returning a configurable error.

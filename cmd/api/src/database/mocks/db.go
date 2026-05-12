@@ -3301,6 +3301,20 @@ func (mr *MockDatabaseMockRecorder) UpdateLastAnalysisCompleteTime(ctx any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateLastAnalysisCompleteTime", reflect.TypeOf((*MockDatabase)(nil).UpdateLastAnalysisCompleteTime), ctx)
 }
 
+// UpdateLastOptimizationCompleteTime mocks base method.
+func (m *MockDatabase) UpdateLastOptimizationCompleteTime(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateLastOptimizationCompleteTime", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateLastOptimizationCompleteTime indicates an expected call of UpdateLastOptimizationCompleteTime.
+func (mr *MockDatabaseMockRecorder) UpdateLastOptimizationCompleteTime(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateLastOptimizationCompleteTime", reflect.TypeOf((*MockDatabase)(nil).UpdateLastOptimizationCompleteTime), ctx)
+}
+
 // UpdateOIDCProvider mocks base method.
 func (m *MockDatabase) UpdateOIDCProvider(ctx context.Context, ssoProvider model.SSOProvider) (model.OIDCProvider, error) {
 	m.ctrl.T.Helper()
