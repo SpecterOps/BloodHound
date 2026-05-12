@@ -207,11 +207,8 @@ func (s *Migrator) populateMigrationDescription(provider *goose.Provider) error 
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		}
-	}()
+
+	defer tx.Rollback()
 
 	if _, err = tx.Exec(`
         ALTER TABLE goose_db_version
