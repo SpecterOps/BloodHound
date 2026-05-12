@@ -20,3 +20,6 @@ enum:
   - ingesting
   - analyzing
   - optimizing
+  - purging
+  - pruning
+  - starting
