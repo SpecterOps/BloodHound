@@ -42,7 +42,7 @@ const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ className, selectedEdge }) 
             {isRoleBasedFiltering && (
                 <Badge
                     data-testid='explore_entity-information-panel-badge-etac-filtering'
-                    variant={'fill'}
+                    variant='fill'
                     color='primary'
                     className='px-2 py-1'
                     icon={<FontAwesomeIcon icon={faEyeSlash} />}
