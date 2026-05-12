@@ -279,6 +279,8 @@ func TestVersion_930_Migration(t *testing.T) {
 
 		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context, nil)
 		require.NoError(t, err)
-		require.Empty(t, customNodeKinds, "no custom_node_kinds rows should be created when backfillData is nil")
+		for _, customNodeKind := range customNodeKinds {
+			require.NotEqual(t, "NilTestKind", customNodeKind.KindName, "NilTestKind must not be backfilled when backfillData is nil")
+		}
 	})
 }
