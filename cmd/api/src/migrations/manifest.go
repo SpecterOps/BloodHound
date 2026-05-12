@@ -56,11 +56,11 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 // that exists in the graph but has no corresponding entry in either custom_node_kinds or schema_node_kinds.
 // This covers node kinds that entered the graph through schemaless Open Graph ingest, which were never written
 // to custom_node_kinds.
-func Version_930_Migration(backfillData SchemalessNodeKindBackfillData) func(ctx context.Context, db graph.Database) error {
+func Version_930_Migration(nodeKindData SchemalessNodeKindBackfillData) func(ctx context.Context, db graph.Database) error {
 	return func(ctx context.Context, db graph.Database) error {
 		defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to backfill custom_node_kinds for schemaless ingest kinds")()
 
-		if backfillData == nil {
+		if nodeKindData == nil {
 			return fmt.Errorf("Version_930_Migration requires a SchemalessNodeKindBackfillData provider but none was configured")
 		}
 
@@ -71,7 +71,7 @@ func Version_930_Migration(backfillData SchemalessNodeKindBackfillData) func(ctx
 		}
 
 		// Build a set of kind names already covered by custom_node_kinds.
-		existingCustomNodeKinds, err := backfillData.GetCustomNodeKinds(ctx, nil)
+		existingCustomNodeKinds, err := nodeKindData.GetCustomNodeKinds(ctx, nil)
 		if err != nil {
 			return fmt.Errorf("failed to fetch custom node kinds: %w", err)
 		}
@@ -82,7 +82,7 @@ func Version_930_Migration(backfillData SchemalessNodeKindBackfillData) func(ctx
 		}
 
 		// Extend the covered set with kind names present in schema_node_kinds.
-		schemaNodeKinds, _, err := backfillData.GetGraphSchemaNodeKinds(ctx, nil, model.Sort{}, 0, 0)
+		schemaNodeKinds, _, err := nodeKindData.GetGraphSchemaNodeKinds(ctx, nil, model.Sort{}, 0, 0)
 		if err != nil {
 			return fmt.Errorf("failed to fetch schema node kinds: %w", err)
 		}
@@ -124,7 +124,7 @@ func Version_930_Migration(backfillData SchemalessNodeKindBackfillData) func(ctx
 			return nil
 		}
 
-		if _, err := backfillData.CreateCustomNodeKinds(ctx, kindsToCreate); err != nil {
+		if _, err := nodeKindData.CreateCustomNodeKinds(ctx, kindsToCreate); err != nil {
 			return fmt.Errorf("failed to create custom node kinds during backfill: %w", err)
 		}
 
@@ -631,7 +631,7 @@ func Version_277_Migration(ctx context.Context, db graph.Database) error {
 // GetManifest returns the ordered list of graph migrations. Migrations that need
 // dependencies beyond the graph database (e.g. relational source kinds) capture
 // them via the provided arguments.
-func GetManifest(backfillData SchemalessNodeKindBackfillData) []Migration {
+func GetManifest(nodeKindData SchemalessNodeKindBackfillData) []Migration {
 	return []Migration{
 		{
 			Version: version.Version{Major: 2, Minor: 3, Patch: 0},
@@ -748,7 +748,7 @@ func GetManifest(backfillData SchemalessNodeKindBackfillData) []Migration {
 		},
 		{
 			Version: version.Version{Major: 9, Minor: 3, Patch: 0},
-			Execute: Version_930_Migration(backfillData),
+			Execute: Version_930_Migration(nodeKindData),
 		},
 	}
 }

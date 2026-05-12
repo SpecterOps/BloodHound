@@ -150,11 +150,17 @@ func TestVersion_930_Migration(t *testing.T) {
 		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context, nil)
 		require.NoError(t, err)
 
-		var kindNames []string
-		for _, customNodeKind := range customNodeKinds {
-			kindNames = append(kindNames, customNodeKind.KindName)
+		var backfilledKind *model.CustomNodeKind
+		for i, customNodeKind := range customNodeKinds {
+			if customNodeKind.KindName == "SchemalessKind" {
+				backfilledKind = &customNodeKinds[i]
+				break
+			}
 		}
-		require.Contains(t, kindNames, "SchemalessKind")
+		require.NotNil(t, backfilledKind, "SchemalessKind must be present in custom_node_kinds after backfill")
+		require.Equal(t, graphschema.DisplayNodeTypeFontAwesome, backfilledKind.Config.Icon.Type)
+		require.Equal(t, "question", backfilledKind.Config.Icon.Name)
+		require.Equal(t, "#FFFFFF", backfilledKind.Config.Icon.Color)
 	})
 
 	t.Run("does not backfill a kind already present in custom_node_kinds", func(t *testing.T) {
@@ -261,7 +267,7 @@ func TestVersion_930_Migration(t *testing.T) {
 		}
 	})
 
-	t.Run("returns an error when backfillData is nil", func(t *testing.T) {
+	t.Run("returns an error when nodeKindData is nil", func(t *testing.T) {
 		suite := setupIntegrationTestSuite(t)
 		t.Cleanup(func() { suite.teardownIntegrationTestSuite(t) })
 
