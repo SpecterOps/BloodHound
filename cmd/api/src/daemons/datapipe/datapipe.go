@@ -83,6 +83,10 @@ func (s *Daemon) Start(ctx context.Context) {
 
 	s.WithDatapipeStatus(ctx, model.DatapipeStatusStarting, s.pipeline.Start)
 
+	// Run optimization once at boot so the database is in a clean state before
+	// the operational loop begins ingesting and analyzing.
+	s.WithDatapipeStatus(ctx, model.DatapipeStatusOptimizing, s.pipeline.Optimize)
+
 	for {
 		select {
 		case <-pruningTicker.C:
