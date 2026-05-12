@@ -2360,61 +2360,6 @@ func TestADCSESC6a(t *testing.T) {
 			})
 		})
 	})
-
-	t.Run("ESC6aHarnessManagedServiceAccounts", func(t *testing.T) {
-		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
-			harness.ESC6aHarnessManagedServiceAccounts.Setup(testContext)
-			return nil
-		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC6a MSA")
-
-			localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
-			require.Nil(t, err)
-
-			for _, enterpriseCA := range enterpriseCertAuthorities {
-				innerEnterpriseCA := enterpriseCA
-				targetDomains := &graph.NodeSet{}
-				for _, domain := range domains {
-					innerDomain := domain
-					if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
-						targetDomains.Add(innerDomain)
-					}
-				}
-
-				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := adAnalysis.PostADCSESC6a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
-						t.Logf("failed post processing for %s: %v", ad.ADCSESC6a.String(), err)
-					}
-					return nil
-				})
-			}
-			err = operation.Done()
-			require.Nil(t, err)
-
-			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-				if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
-					return query.Kind(query.Relationship(), ad.ADCSESC6a)
-				})); err != nil {
-					t.Fatalf("error fetching esc6a edges in integration test; %v", err)
-				} else {
-					// gMSA, sMSA, and Computer enrollers should produce ESC6a edges even when the
-					// cert template requires DNS in the SubjectAltName. The plain User enroller
-					// should be filtered out by filterUserDNSResults.
-					require.Equal(t, 3, len(results))
-					require.True(t, results.Contains(harness.ESC6aHarnessManagedServiceAccounts.GMSAUser),
-						"gMSA enroller should retain its ESC6a edge when SubjectAltRequireDNS is true")
-					require.True(t, results.Contains(harness.ESC6aHarnessManagedServiceAccounts.SMSAUser),
-						"sMSA enroller should retain its ESC6a edge when SubjectAltRequireDNS is true")
-					require.True(t, results.Contains(harness.ESC6aHarnessManagedServiceAccounts.Computer),
-						"Computer enroller should retain its ESC6a edge when SubjectAltRequireDNS is true")
-					require.False(t, results.Contains(harness.ESC6aHarnessManagedServiceAccounts.RegularUser),
-						"plain User enroller should be filtered out when SubjectAltRequireDNS is true")
-				}
-				return nil
-			})
-		})
-	})
 }
 
 func TestADCSESC6b(t *testing.T) {

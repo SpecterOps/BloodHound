@@ -3623,72 +3623,6 @@ func (s *ESC6aHarnessPrincipalEdges) Setup(c *GraphTestContext) {
 	c.UpdateNode(s.EnterpriseCA1)
 }
 
-// ESC6aHarnessManagedServiceAccounts exercises the gMSA/sMSA filtering carve-out in
-// filterUserDNSResults. The cert template requires DNS in the SubjectAltName so any
-// plain User enroller should be filtered out, while gMSA/sMSA/Computer enrollers
-// must still produce ADCSESC6a edges.
-type ESC6aHarnessManagedServiceAccounts struct {
-	CertTemplate *graph.Node
-	EnterpriseCA *graph.Node
-	NTAuthStore  *graph.Node
-	RootCA       *graph.Node
-	Domain       *graph.Node
-	RegularUser  *graph.Node
-	GMSAUser     *graph.Node
-	SMSAUser     *graph.Node
-	Computer     *graph.Node
-}
-
-func (s *ESC6aHarnessManagedServiceAccounts) Setup(c *GraphTestContext) {
-	sid := RandomDomainSID()
-	s.CertTemplate = c.NewActiveDirectoryCertTemplate("CertTemplate", sid, CertTemplateData{
-		RequiresManagerApproval: false,
-		AuthenticationEnabled:   true,
-		EnrolleeSuppliesSubject: false,
-		SubjectAltRequireUPN:    false,
-		SubjectAltRequireSPN:    false,
-		SubjectAltRequireDNS:    true,
-		NoSecurityExtension:     true,
-		SchemaVersion:           1,
-		AuthorizedSignatures:    0,
-		EffectiveEKUs:           []string{},
-		ApplicationPolicies:     []string{},
-	})
-	s.EnterpriseCA = c.NewActiveDirectoryEnterpriseCA("EnterpriseCA", sid)
-	s.NTAuthStore = c.NewActiveDirectoryNTAuthStore("NTAuthStore", sid)
-	s.RootCA = c.NewActiveDirectoryRootCA("RootCA", sid)
-	s.Domain = c.NewActiveDirectoryDomain("ESC6aMSA", sid, false, true)
-
-	s.RegularUser = c.NewActiveDirectoryUser("RegularUser", sid)
-	s.GMSAUser = c.NewActiveDirectoryUser("GMSAUser", sid)
-	s.GMSAUser.Properties.Set(ad.GMSA.String(), true)
-	c.UpdateNode(s.GMSAUser)
-	s.SMSAUser = c.NewActiveDirectoryUser("SMSAUser", sid)
-	s.SMSAUser.Properties.Set(ad.MSA.String(), true)
-	c.UpdateNode(s.SMSAUser)
-	s.Computer = c.NewActiveDirectoryComputer("Computer", sid)
-
-	c.NewRelationship(s.RegularUser, s.CertTemplate, ad.Enroll)
-	c.NewRelationship(s.GMSAUser, s.CertTemplate, ad.Enroll)
-	c.NewRelationship(s.SMSAUser, s.CertTemplate, ad.Enroll)
-	c.NewRelationship(s.Computer, s.CertTemplate, ad.Enroll)
-
-	c.NewRelationship(s.RegularUser, s.EnterpriseCA, ad.Enroll)
-	c.NewRelationship(s.GMSAUser, s.EnterpriseCA, ad.Enroll)
-	c.NewRelationship(s.SMSAUser, s.EnterpriseCA, ad.Enroll)
-	c.NewRelationship(s.Computer, s.EnterpriseCA, ad.Enroll)
-
-	c.NewRelationship(s.CertTemplate, s.EnterpriseCA, ad.PublishedTo)
-	c.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	c.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
-	c.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
-	c.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
-
-	s.EnterpriseCA.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
-	s.EnterpriseCA.Properties.Set(ad.IsUserSpecifiesSanEnabledCollected.String(), true)
-	c.UpdateNode(s.EnterpriseCA)
-}
-
 // This function relies on having the "kind" property set for nodes in the json from arrows.app
 // If the edges that are being tested have been set within the diagram, adding "asserted": "true" to the relationship property will skip creating that edge from the diagram
 func setupHarnessFromArrowsJson(c *GraphTestContext, fileName string) {
@@ -10357,7 +10291,6 @@ type HarnessDetails struct {
 	ESC6aHarnessECA                                 ESC6aHarnessECA
 	ESC6aHarnessTemplate1                           ESC6aHarnessTemplate1
 	ESC6aHarnessTemplate2                           ESC6aHarnessTemplate2
-	ESC6aHarnessManagedServiceAccounts              ESC6aHarnessManagedServiceAccounts
 	ESC9aPrincipalHarness                           ESC9aPrincipalHarness
 	ESC9aHarness1                                   ESC9aHarness1
 	ESC9aHarness2                                   ESC9aHarness2

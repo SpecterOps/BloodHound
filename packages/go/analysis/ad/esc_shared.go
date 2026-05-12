@@ -374,11 +374,20 @@ func certTemplateValidForUserVictim(certTemplate *graph.Node) bool {
 }
 
 func filterUserDNSResults(tx graph.Transaction, bitmap cardinality.Duplex[uint64], certTemplate *graph.Node) (cardinality.Duplex[uint64], error) {
+	// gMSAs and sMSAs are ingested as User nodes but behave like Computer objects in AD
+	// and possess DNS names, so they should not be filtered out of attack paths that
+	// require DNS in the SubjectAltName
 	if userNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
 			query.KindIn(query.Node(), ad.User),
-			query.Not(query.Equals(query.NodeProperty(ad.GMSA.String()), true)),
-			query.Not(query.Equals(query.NodeProperty(ad.MSA.String()), true)),
+			query.Not(query.And(
+				query.Exists(query.NodeProperty(ad.GMSA.String())),
+				query.Equals(query.NodeProperty(ad.GMSA.String()), true),
+			)),
+			query.Not(query.And(
+				query.Exists(query.NodeProperty(ad.MSA.String())),
+				query.Equals(query.NodeProperty(ad.MSA.String()), true),
+			)),
 			query.InIDs(query.NodeID(), graph.DuplexToGraphIDs(bitmap)...),
 		)
 	})); err != nil {
