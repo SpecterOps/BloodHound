@@ -1530,21 +1530,6 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 		propMap[ad.CertificateMappingMethods.String()] = prettyMappings
 	}
 
-	if computer.DCRegistryData.StrongCertificateBindingEnforcement.Collected {
-		propMap[ad.StrongCertificateBindingEnforcementRaw.String()] = computer.DCRegistryData.StrongCertificateBindingEnforcement.Value
-
-		switch computer.DCRegistryData.StrongCertificateBindingEnforcement.Value {
-		case -1:
-			propMap[ad.StrongCertificateBindingEnforcement.String()] = RegValNotExisting
-		case 0:
-			propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementDisabled
-		case 1:
-			propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementCompatibility
-		case 2:
-			propMap[ad.StrongCertificateBindingEnforcement.String()] = PrettyStrongCertBindingEnforcementFull
-		}
-	}
-
 	propMap[ad.VulnerableNetlogonSecurityDescriptorCollected.String()] = computer.DCRegistryData.VulnerableNetlogonSecurityDescriptor.Collected
 	if computer.DCRegistryData.VulnerableNetlogonSecurityDescriptor.Collected {
 		propMap[ad.VulnerableNetlogonSecurityDescriptor.String()] = computer.DCRegistryData.VulnerableNetlogonSecurityDescriptor.Value

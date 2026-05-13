@@ -135,8 +135,6 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC4 = 'ADCSESC4',
     ADCSESC6a = 'ADCSESC6a',
     ADCSESC6b = 'ADCSESC6b',
-    ADCSESC9a = 'ADCSESC9a',
-    ADCSESC9b = 'ADCSESC9b',
     ADCSESC10a = 'ADCSESC10a',
     ADCSESC10b = 'ADCSESC10b',
     ADCSESC13 = 'ADCSESC13',
@@ -289,10 +287,6 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ADCSESC6a';
         case ActiveDirectoryRelationshipKind.ADCSESC6b:
             return 'ADCSESC6b';
-        case ActiveDirectoryRelationshipKind.ADCSESC9a:
-            return 'ADCSESC9a';
-        case ActiveDirectoryRelationshipKind.ADCSESC9b:
-            return 'ADCSESC9b';
         case ActiveDirectoryRelationshipKind.ADCSESC10a:
             return 'ADCSESC10a';
         case ActiveDirectoryRelationshipKind.ADCSESC10b:
@@ -343,8 +337,6 @@ export const EdgeCompositionRelationships = [
     'ADCSESC4',
     'ADCSESC6a',
     'ADCSESC6b',
-    'ADCSESC9a',
-    'ADCSESC9b',
     'ADCSESC10a',
     'ADCSESC10b',
     'ADCSESC13',
@@ -405,8 +397,6 @@ export enum ActiveDirectoryKindProperties {
     SamAccountName = 'samaccountname',
     CertificateMappingMethodsRaw = 'certificatemappingmethodsraw',
     CertificateMappingMethods = 'certificatemappingmethods',
-    StrongCertificateBindingEnforcementRaw = 'strongcertificatebindingenforcementraw',
-    StrongCertificateBindingEnforcement = 'strongcertificatebindingenforcement',
     VulnerableNetlogonSecurityDescriptor = 'vulnerablenetlogonsecuritydescriptor',
     VulnerableNetlogonSecurityDescriptorCollected = 'vulnerablenetlogonsecuritydescriptorcollected',
     EKUs = 'ekus',
@@ -597,10 +587,6 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Certificate Mapping Methods (Raw)';
         case ActiveDirectoryKindProperties.CertificateMappingMethods:
             return 'Certificate Mapping Methods';
-        case ActiveDirectoryKindProperties.StrongCertificateBindingEnforcementRaw:
-            return 'Strong Certificate Binding Enforcement (Raw)';
-        case ActiveDirectoryKindProperties.StrongCertificateBindingEnforcement:
-            return 'Strong Certificate Binding Enforcement';
         case ActiveDirectoryKindProperties.VulnerableNetlogonSecurityDescriptor:
             return 'Vulnerable Netlogon Security Descriptor';
         case ActiveDirectoryKindProperties.VulnerableNetlogonSecurityDescriptorCollected:
@@ -822,8 +808,6 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC4,
         ActiveDirectoryRelationshipKind.ADCSESC6a,
         ActiveDirectoryRelationshipKind.ADCSESC6b,
-        ActiveDirectoryRelationshipKind.ADCSESC9a,
-        ActiveDirectoryRelationshipKind.ADCSESC9b,
         ActiveDirectoryRelationshipKind.ADCSESC10a,
         ActiveDirectoryRelationshipKind.ADCSESC10b,
         ActiveDirectoryRelationshipKind.ADCSESC13,
@@ -888,8 +872,6 @@ export function ActiveDirectoryPathfindingEdgesMatchFrontend(): ActiveDirectoryR
         ActiveDirectoryRelationshipKind.ADCSESC4,
         ActiveDirectoryRelationshipKind.ADCSESC6a,
         ActiveDirectoryRelationshipKind.ADCSESC6b,
-        ActiveDirectoryRelationshipKind.ADCSESC9a,
-        ActiveDirectoryRelationshipKind.ADCSESC9b,
         ActiveDirectoryRelationshipKind.ADCSESC10a,
         ActiveDirectoryRelationshipKind.ADCSESC10b,
         ActiveDirectoryRelationshipKind.ADCSESC13,

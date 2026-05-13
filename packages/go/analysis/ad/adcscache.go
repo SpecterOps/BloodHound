@@ -52,7 +52,6 @@ type ADCSCache struct {
 	enterpriseCAEnrollers           map[graph.ID][]*graph.Node // principals that have enrollment rights on an enterprise ca via `enroll` edge
 	publishedTemplateCache          map[graph.ID][]*graph.Node // cert templates that are published to an enterprise ca
 	hasUPNCertMappingInForest       cardinality.Duplex[uint64] // domains where at least one DC in the forest has Schannel UPN cert mapping enabled
-	hasWeakCertBindingInForest      cardinality.Duplex[uint64] // domains where at least one DC in the forest has Kerberos weak cert binding enabled
 }
 
 func NewADCSCache() ADCSCache {
@@ -69,7 +68,6 @@ func NewADCSCache() ADCSCache {
 		enterpriseCAEnrollers:           make(map[graph.ID][]*graph.Node),
 		publishedTemplateCache:          make(map[graph.ID][]*graph.Node),
 		hasUPNCertMappingInForest:       cardinality.NewBitmap64(),
-		hasWeakCertBindingInForest:      cardinality.NewBitmap64(),
 	}
 }
 
@@ -237,16 +235,6 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 			} else if upnMapping {
 				s.hasUPNCertMappingInForest.Add(domain.ID.Uint64())
 			}
-			if weakCertBinding, err := hasWeakCertBindingInForest(tx, domain); err != nil {
-				slog.WarnContext(
-					ctx,
-					"Error checking hasWeakCertBindingInForest for domain",
-					slog.Uint64("domain_id", uint64(domain.ID)),
-					attr.Error(err),
-				)
-			} else if weakCertBinding {
-				s.hasWeakCertBindingInForest.Add(domain.ID.Uint64())
-			}
 		}
 
 		return nil
@@ -358,13 +346,6 @@ func (s *ADCSCache) HasUPNCertMappingInForest(id uint64) bool {
 	return s.hasUPNCertMappingInForest.Contains(id)
 }
 
-func (s *ADCSCache) HasWeakCertBindingInForest(id uint64) bool {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	return s.hasWeakCertBindingInForest.Contains(id)
-}
-
 func (s *ADCSCache) GetEnterpriseCertAuthorities() []*graph.Node {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -405,34 +386,6 @@ func hasUPNCertMappingInForest(tx graph.Transaction, domain *graph.Node) (bool, 
 					} else if cmmrProperty == ein.RegistryValueDoesNotExist {
 						continue
 					} else if cmmrProperty&int(ein.CertificateMappingUserPrincipalName) == int(ein.CertificateMappingUserPrincipalName) {
-						return true, nil
-					}
-				}
-			}
-		}
-	}
-	return false, nil
-}
-
-func hasWeakCertBindingInForest(tx graph.Transaction, domain *graph.Node) (bool, error) {
-	if sameForestTrustNodes, err := FetchNodesWithSameForestTrustRelationship(tx, domain); err != nil {
-		return false, err
-	} else {
-		for _, sameForestTrustDomain := range sameForestTrustNodes {
-			if dcForNodes, err := FetchNodesWithDCForEdge(tx, sameForestTrustDomain); err != nil {
-				slog.Warn(
-					"Unable to fetch DCFor nodes in hasWeakCertBindingInForest",
-					attr.Error(err),
-				)
-				continue
-			} else {
-				for _, dcForNode := range dcForNodes {
-					if strongCertBindingEnforcement, err := dcForNode.Properties.Get(ad.StrongCertificateBindingEnforcementRaw.String()).Int(); err != nil {
-						// We do not want to throw an error here as this property only exists if privileged collection has been performed
-						continue
-					} else if strongCertBindingEnforcement == 0 || strongCertBindingEnforcement == 1 {
-						return true, nil
-					} else if strongCertBindingEnforcement == -1 { // We have confirmed the registry value does not exist. Compatibility mode is default.
 						return true, nil
 					}
 				}

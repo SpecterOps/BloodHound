@@ -145,16 +145,10 @@ type CARegistryData struct {
 
 type DCRegistryData struct {
 	CertificateMappingMethods            CertificateMappingMethods
-	StrongCertificateBindingEnforcement  StrongCertificateBindingEnforcement
 	VulnerableNetlogonSecurityDescriptor VulnerableNetlogonSecurityDescriptor
 }
 
 type CertificateMappingMethods struct {
-	APIResult
-	Value int
-}
-
-type StrongCertificateBindingEnforcement struct {
 	APIResult
 	Value int
 }

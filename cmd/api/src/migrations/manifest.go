@@ -97,6 +97,33 @@ func Version_920_Migration(sourceKindsData database.SourceKindsData) func(ctx co
 	}
 }
 
+func Version_930_Migration(ctx context.Context, db graph.Database) error {
+	var (
+		esc9RelationshipKinds = graph.Kinds{
+			graph.StringKind("ADCSESC9a"),
+			graph.StringKind("ADCSESC9b"),
+		}
+	)
+
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove ADCS ESC9 relationships")()
+
+	return db.BatchOperation(ctx, func(batch graph.Batch) error {
+		if relationships, err := ops.FetchRelationships(batch.Relationships().Filter(
+			query.KindIn(query.Relationship(), esc9RelationshipKinds...),
+		)); err != nil {
+			return err
+		} else {
+			for _, relationship := range relationships {
+				if err := batch.DeleteRelationship(relationship.ID); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	})
+}
+
 // stripForeignSourceKinds removes every registered source kind other than
 // preservedKind from each node whose kind is in platformNodeKinds. Type
 // kinds (e.g. ad.User, azure.User) are not stored in source_kinds and
@@ -736,6 +763,10 @@ func GetManifest(sourceKindsData database.SourceKindsData) []Migration {
 		{
 			Version: version.Version{Major: 9, Minor: 2, Patch: 0},
 			Execute: Version_920_Migration(sourceKindsData),
+		},
+		{
+			Version: version.Version{Major: 9, Minor: 3, Patch: 0},
+			Execute: Version_930_Migration,
 		},
 	}
 }
