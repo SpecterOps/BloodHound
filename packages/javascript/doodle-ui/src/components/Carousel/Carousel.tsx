@@ -232,7 +232,7 @@ const CarouselDots = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
                 <button
                     name={`dot-${index}`}
                     key={index}
-                    aria-label='Select item in carousel'
+                    aria-label={`Select item ${index + 1} of ${scrollSnaps.length} in carousel`}
                     className={'h-2.5 w-2.5 mx-1.5 border-x border-y rounded-3xl border-black dark:border-white '.concat(
                         index === selectedIndex ? 'active bg-black dark:bg-white rounded-3xl' : ''
                     )}
