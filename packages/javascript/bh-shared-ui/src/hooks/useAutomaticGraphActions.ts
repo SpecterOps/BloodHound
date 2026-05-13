@@ -21,11 +21,13 @@ export const useAutomaticGraphActions = (graphData: Record<string, any> | undefi
     const { searchType, primarySearch } = useExploreParams();
     const { setSelectedItem, clearSelectedItem } = useExploreSelectedItem();
 
+    // Clear selection for pathfinding to avoid highlighting individual nodes/edges
     if (searchType === 'pathfinding') {
         clearSelectedItem();
         return;
     }
 
+    // Only auto-select for node searches with valid data
     if (searchType !== 'node' || !primarySearch || !graphData) return;
 
     // Handle both data structures: BHCE uses { nodes: {...}, edges: [...] }, BE uses flat object
