@@ -35,6 +35,7 @@ import { blendHexColors, getNodeRadius } from 'src/rendering/utils/utils';
 import { useAppSelector } from 'src/store';
 import { preventAllDefaults } from 'src/utils';
 import { sequentialLayout, standardLayout } from 'src/views/Explore/utils';
+import { getHighlightedEntities } from './utils';
 
 interface SigmaChartRef {
     resetCamera: () => void;
@@ -282,26 +283,10 @@ export const GraphEvents = forwardRef(function GraphEvents(
         return graph.hasNode(highlightedItem) || graph.hasEdge(highlightedItem);
     }, [graph, highlightedItem]);
 
-    // Compute which nodes and edges should remain fully visible when an item is selected.
-    // Nodes: the selected node itself + all its direct neighbors.
-    // Edges: all edges directly connected to the selected node/edge endpoints.
-    const { highlightedNodeIds, highlightedEdgeIds } = useMemo(() => {
-        const highlightedNodeIds = new Set<string>();
-        const highlightedEdgeIds = new Set<string>();
-
-        if (highlightedItem) {
-            if (graph.hasNode(highlightedItem)) {
-                highlightedNodeIds.add(highlightedItem);
-                graph.neighbors(highlightedItem).forEach((directNodes) => highlightedNodeIds.add(directNodes));
-                graph.edges(highlightedItem).forEach((directEdges) => highlightedEdgeIds.add(directEdges));
-            } else if (graph.hasEdge(highlightedItem)) {
-                highlightedEdgeIds.add(highlightedItem);
-                graph.extremities(highlightedItem).forEach((directNodes) => highlightedNodeIds.add(directNodes));
-            }
-        }
-
-        return { highlightedNodeIds, highlightedEdgeIds };
-    }, [graph, highlightedItem]);
+    const { highlightedNodeIds, highlightedEdgeIds } = useMemo(
+        () => getHighlightedEntities(graph, highlightedItem),
+        [graph, highlightedItem]
+    );
 
     useEffect(() => {
         const bgColor = theme.neutral.primary;
