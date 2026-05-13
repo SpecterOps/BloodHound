@@ -18,9 +18,7 @@ package v2
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
-	"io"
 	"log/slog"
 	"net/http"
 
@@ -31,10 +29,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 )
-
-type AnalysisRequestPayload struct {
-	AnalysisStep *int `json:"analysis_step"`
-}
 
 func (s Resources) GetAnalysisRequest(response http.ResponseWriter, request *http.Request) {
 	if analysisRequest, err := s.DB.GetAnalysisRequest(request.Context()); err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -55,21 +49,7 @@ func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.R
 		userId = user.ID.String()
 	}
 
-	step := int(analysis.AnalysisStepAll)
-	if request.Body != nil {
-		if body, err := io.ReadAll(request.Body); err == nil && len(body) > 0 {
-			var payload AnalysisRequestPayload
-			if err := json.Unmarshal(body, &payload); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "JSON malformed", request), response)
-				return
-			}
-			if payload.AnalysisStep != nil {
-				step = *payload.AnalysisStep
-			}
-		}
-	}
-
-	if err := s.DB.RequestAnalysis(request.Context(), userId, step); err != nil {
+	if err := s.DB.RequestAnalysis(request.Context(), userId, int(analysis.AnalysisStepAll)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return
 	}
