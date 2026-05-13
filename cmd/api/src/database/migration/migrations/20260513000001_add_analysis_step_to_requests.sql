@@ -14,9 +14,16 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
+-- +goose Up
+
 -- Add analysis_step column to analysis_request_switch to allow callers to specify
 -- which steps of the analysis pipeline should run. The column stores an AnalysisStep
 -- bitmask (ADPostProcessing=1, AzurePostProcessing=2, Tagging=4, Analysis=8). The
 -- default value of 15 corresponds to AnalysisStepAll, which selects every step.
 ALTER TABLE analysis_request_switch
   ADD COLUMN IF NOT EXISTS analysis_step integer NOT NULL DEFAULT 15;
+
+-- +goose Down
+
+ALTER TABLE analysis_request_switch
+  DROP COLUMN IF EXISTS analysis_step;
