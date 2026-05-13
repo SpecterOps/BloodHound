@@ -116,7 +116,7 @@ type QueryParameterFilters []QueryParameterFilter
 func (s QueryParameterFilter) BuildGDBNodeFilter() graph.Criteria {
 	var (
 		propertyRef = query.NodeProperty(s.Name)
-		value       = guessFilterValueType(s.Value)
+		value       = guessFilterValueType(s.Value, s.IsStringData)
 	)
 
 	// TODO: Investigate whether we can set the collected property for domains that originate from trusts in ParseDomainTrusts
@@ -320,7 +320,12 @@ func (s QueryParameterFilterMap) BuildSQLFilter() (SQLFilter, error) {
 	return s.BuildAliasedSQLFilter(models.EmptyOptional[string]())
 }
 
-func guessFilterValueType(raw string) any {
+func guessFilterValueType(raw string, isPropertyString bool) any {
+	// GDB node property corresponds to a string value
+	if isPropertyString {
+		return raw
+	}
+
 	if strings.ToLower(raw) == TrueString {
 		return true
 	}
