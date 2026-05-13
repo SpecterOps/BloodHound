@@ -134,10 +134,10 @@ type GraphMigration interface {
 	executeMigrations(ctx context.Context, originalVersion version.Version, migrationsByVersion MigrationsByVersion) error
 }
 
-// SchemalessNodeKindBackfillData is the narrow interface consumed by Version_930_Migration to read
+// schemalessNodeKindBackfillData is the narrow interface consumed by Version_930_Migration to read
 // display metadata from Postgres and write backfilled custom_node_kinds entries. It is intended to
 // be satisfied by database.Database
-type SchemalessNodeKindBackfillData interface {
+type schemalessNodeKindBackfillData interface {
 	GetCustomNodeKinds(ctx context.Context, filters model.Filters) ([]model.CustomNodeKind, error)
 	GetGraphSchemaNodeKinds(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error)
 	CreateCustomNodeKinds(ctx context.Context, customNodeKinds model.CustomNodeKinds) (model.CustomNodeKinds, error)
@@ -145,7 +145,7 @@ type SchemalessNodeKindBackfillData interface {
 
 type GraphMigrator struct {
 	db                             graph.Database
-	schemalessNodeKindBackfillData SchemalessNodeKindBackfillData
+	schemalessNodeKindBackfillData schemalessNodeKindBackfillData
 }
 
 // Option configures optional dependencies on a GraphMigrator. Most migrations
@@ -157,7 +157,7 @@ type Option func(*GraphMigrator)
 // WithSchemalessKindBackfill wires a SchemalessNodeKindBackfillData provider into the migrator.
 // Migrations that backfill custom_node_kinds for orphaned schemaless ingest kinds will
 // short-circuit when this option is not supplied.
-func WithSchemalessKindBackfill(nodeKindData SchemalessNodeKindBackfillData) Option {
+func WithSchemalessKindBackfill(nodeKindData schemalessNodeKindBackfillData) Option {
 	return func(m *GraphMigrator) { m.schemalessNodeKindBackfillData = nodeKindData }
 }
 
