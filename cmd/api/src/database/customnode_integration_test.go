@@ -472,6 +472,74 @@ func TestCreateCustomNodeKinds_TxAtomicity(t *testing.T) {
 	require.ErrorIs(t, err, database.ErrNotFound, "kind row should have been rolled back when custom_node_kinds insert failed")
 }
 
+func TestEnsureStubbedCustomNodeKindForIngest(t *testing.T) {
+	t.Run("brand-new kind creates one kind row and one custom node kind stub", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		err := testSuite.BHDatabase.EnsureStubbedCustomNodeKindForIngest(testSuite.Context, "IngestedUnknownKind")
+		require.NoError(t, err)
+
+		kinds, err := testSuite.BHDatabase.GetKindsByNames(testSuite.Context, "IngestedUnknownKind")
+		require.NoError(t, err)
+		require.Len(t, kinds, 1)
+
+		customNodeKind, err := testSuite.BHDatabase.GetCustomNodeKind(testSuite.Context, "IngestedUnknownKind")
+		require.NoError(t, err)
+		assert.Nil(t, customNodeKind.SchemaNodeKindId)
+		assert.Equal(t, model.CustomNodeKindConfig{
+			Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "question", Color: "#FFFFFF"},
+		}, customNodeKind.Config)
+
+		err = testSuite.BHDatabase.EnsureStubbedCustomNodeKindForIngest(testSuite.Context, "IngestedUnknownKind")
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), countKindRows(t, testSuite, "IngestedUnknownKind"))
+		assert.Equal(t, int64(1), countCustomNodeKindRows(t, testSuite, "IngestedUnknownKind"))
+	})
+
+	t.Run("pre-existing kind without custom node kind is not stubbed", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		_, err := testSuite.BHDatabase.UpsertKind(testSuite.Context, "PreExistingSchemaKind")
+		require.NoError(t, err)
+
+		err = testSuite.BHDatabase.EnsureStubbedCustomNodeKindForIngest(testSuite.Context, "PreExistingSchemaKind")
+		require.NoError(t, err)
+
+		_, err = testSuite.BHDatabase.GetCustomNodeKind(testSuite.Context, "PreExistingSchemaKind")
+		require.ErrorIs(t, err, database.ErrNotFound)
+		assert.Equal(t, int64(1), countKindRows(t, testSuite, "PreExistingSchemaKind"))
+		assert.Equal(t, int64(0), countCustomNodeKindRows(t, testSuite, "PreExistingSchemaKind"))
+	})
+
+	t.Run("existing custom node kind is not duplicated or overwritten", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		_, err := testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{
+			{
+				KindName: "RegisteredCustomKind",
+				Config: model.CustomNodeKindConfig{
+					Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "star", Color: "#000000"},
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		err = testSuite.BHDatabase.EnsureStubbedCustomNodeKindForIngest(testSuite.Context, "RegisteredCustomKind")
+		require.NoError(t, err)
+
+		customNodeKind, err := testSuite.BHDatabase.GetCustomNodeKind(testSuite.Context, "RegisteredCustomKind")
+		require.NoError(t, err)
+		assert.Equal(t, model.CustomNodeKindConfig{
+			Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "star", Color: "#000000"},
+		}, customNodeKind.Config)
+		assert.Equal(t, int64(1), countKindRows(t, testSuite, "RegisteredCustomKind"))
+		assert.Equal(t, int64(1), countCustomNodeKindRows(t, testSuite, "RegisteredCustomKind"))
+	})
+}
+
 func TestDeleteCustomNodeKind(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -522,4 +590,22 @@ func TestDeleteCustomNodeKind(t *testing.T) {
 			}
 		})
 	}
+}
+
+func countKindRows(t *testing.T, testSuite IntegrationTestSuite, kindName string) int64 {
+	t.Helper()
+
+	var count int64
+	result := testSuite.DB.WithContext(testSuite.Context).Raw("SELECT COUNT(*) FROM kind WHERE name = ?", kindName).Scan(&count)
+	require.NoError(t, result.Error)
+	return count
+}
+
+func countCustomNodeKindRows(t *testing.T, testSuite IntegrationTestSuite, kindName string) int64 {
+	t.Helper()
+
+	var count int64
+	result := testSuite.DB.WithContext(testSuite.Context).Raw("SELECT COUNT(*) FROM custom_node_kinds WHERE kind_name = ?", kindName).Scan(&count)
+	require.NoError(t, result.Error)
+	return count
 }

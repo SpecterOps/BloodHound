@@ -18,11 +18,13 @@ package graphify
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/mocks"
+	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -153,5 +155,145 @@ func TestMaybeSubmitNodeUpdate(t *testing.T) {
 		nodesProcessed, _, nodesWritten, _ = ingestCtx.Stats.GetCounts()
 		require.Equal(t, int64(1), nodesProcessed, "NodesProcessed should be incremented even when deduplicated")
 		require.Equal(t, int64(0), nodesWritten, "NodesWritten should NOT be incremented when deduplicated")
+	})
+}
+
+func TestIngestGenericData_RegisterNodeKind(t *testing.T) {
+	t.Run("new unknown kind calls registrar once", func(t *testing.T) {
+		var (
+			ctrl             = gomock.NewController(t)
+			mockBatchUpdater = mocks.NewMockBatchUpdater(ctrl)
+			called           []string
+			ingestCtx        = NewIngestContext(context.Background(), WithNodeKindRegistrar(func(kind graph.Kind) error {
+				called = append(called, kind.String())
+				return nil
+			}))
+		)
+
+		ingestCtx.BindBatchUpdater(mockBatchUpdater)
+		mockBatchUpdater.EXPECT().UpdateNodeBy(gomock.Any()).Return(nil).Times(1)
+
+		err := IngestGenericData(ingestCtx, graph.StringKind("UnknownKind"), ConvertedData{NodeProps: []ein.IngestibleNode{{ObjectID: "node-1"}}})
+		require.NoError(t, err)
+		assert.Equal(t, []string{"UnknownKind"}, called)
+	})
+
+	t.Run("same kind across multiple nodes in one context calls registrar once", func(t *testing.T) {
+		var (
+			ctrl             = gomock.NewController(t)
+			mockBatchUpdater = mocks.NewMockBatchUpdater(ctrl)
+			called           []string
+			ingestCtx        = NewIngestContext(context.Background(), WithNodeKindRegistrar(func(kind graph.Kind) error {
+				called = append(called, kind.String())
+				return nil
+			}))
+		)
+
+		ingestCtx.BindBatchUpdater(mockBatchUpdater)
+		mockBatchUpdater.EXPECT().UpdateNodeBy(gomock.Any()).Return(nil).Times(2)
+
+		require.NoError(t, IngestGenericData(ingestCtx, graph.StringKind("UnknownKind"), ConvertedData{NodeProps: []ein.IngestibleNode{{ObjectID: "node-1"}}}))
+		require.NoError(t, IngestGenericData(ingestCtx, graph.StringKind("UnknownKind"), ConvertedData{NodeProps: []ein.IngestibleNode{{ObjectID: "node-2"}}}))
+		assert.Equal(t, []string{"UnknownKind"}, called)
+	})
+
+	t.Run("two distinct kinds call registrar once each", func(t *testing.T) {
+		var (
+			ctrl             = gomock.NewController(t)
+			mockBatchUpdater = mocks.NewMockBatchUpdater(ctrl)
+			called           []string
+			ingestCtx        = NewIngestContext(context.Background(), WithNodeKindRegistrar(func(kind graph.Kind) error {
+				called = append(called, kind.String())
+				return nil
+			}))
+		)
+
+		ingestCtx.BindBatchUpdater(mockBatchUpdater)
+		mockBatchUpdater.EXPECT().UpdateNodeBy(gomock.Any()).Return(nil).Times(1)
+
+		err := IngestGenericData(ingestCtx, graph.StringKind("UnknownKindA"), ConvertedData{NodeProps: []ein.IngestibleNode{{
+			ObjectID: "node-1",
+			Labels:   []graph.Kind{graph.StringKind("UnknownKindB")},
+		}}})
+		require.NoError(t, err)
+		assert.ElementsMatch(t, []string{"UnknownKindA", "UnknownKindB"}, called)
+	})
+
+	t.Run("tag kind does not call registrar", func(t *testing.T) {
+		var (
+			ctrl             = gomock.NewController(t)
+			mockBatchUpdater = mocks.NewMockBatchUpdater(ctrl)
+			called           []string
+			ingestCtx        = NewIngestContext(context.Background(), WithNodeKindRegistrar(func(kind graph.Kind) error {
+				called = append(called, kind.String())
+				return nil
+			}))
+		)
+
+		ingestCtx.BindBatchUpdater(mockBatchUpdater)
+		mockBatchUpdater.EXPECT().UpdateNodeBy(gomock.Any()).Return(nil).Times(1)
+
+		err := IngestGenericData(ingestCtx, graph.StringKind("Tag_Custom"), ConvertedData{NodeProps: []ein.IngestibleNode{{ObjectID: "node-1"}}})
+		require.NoError(t, err)
+		assert.Empty(t, called)
+	})
+
+	t.Run("registrar error propagates and prevents node update", func(t *testing.T) {
+		var (
+			ctrl             = gomock.NewController(t)
+			mockBatchUpdater = mocks.NewMockBatchUpdater(ctrl)
+			wantErr          = errors.New("register failed")
+			ingestCtx        = NewIngestContext(context.Background(), WithNodeKindRegistrar(func(kind graph.Kind) error {
+				return wantErr
+			}))
+		)
+
+		ingestCtx.BindBatchUpdater(mockBatchUpdater)
+		mockBatchUpdater.EXPECT().UpdateNodeBy(gomock.Any()).Times(0)
+
+		err := IngestGenericData(ingestCtx, graph.StringKind("UnknownKind"), ConvertedData{NodeProps: []ein.IngestibleNode{{ObjectID: "node-1"}}})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), wantErr.Error())
+	})
+
+	t.Run("registrar error does not mark kind seen", func(t *testing.T) {
+		var (
+			ctrl             = gomock.NewController(t)
+			mockBatchUpdater = mocks.NewMockBatchUpdater(ctrl)
+			wantErr          = errors.New("register failed")
+			called           []string
+			ingestCtx        = NewIngestContext(context.Background(), WithNodeKindRegistrar(func(kind graph.Kind) error {
+				called = append(called, kind.String())
+				if len(called) == 1 {
+					return wantErr
+				}
+				return nil
+			}))
+		)
+
+		ingestCtx.BindBatchUpdater(mockBatchUpdater)
+		mockBatchUpdater.EXPECT().UpdateNodeBy(gomock.Any()).Return(nil).Times(1)
+
+		err := IngestGenericData(ingestCtx, graph.StringKind("UnknownKind"), ConvertedData{NodeProps: []ein.IngestibleNode{{ObjectID: "node-1"}}})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), wantErr.Error())
+
+		err = IngestGenericData(ingestCtx, graph.StringKind("UnknownKind"), ConvertedData{NodeProps: []ein.IngestibleNode{{ObjectID: "node-2"}}})
+		require.NoError(t, err)
+		assert.Equal(t, []string{"UnknownKind", "UnknownKind"}, called)
+	})
+
+	t.Run("missing registrar remains safe", func(t *testing.T) {
+		var (
+			ctrl             = gomock.NewController(t)
+			mockBatchUpdater = mocks.NewMockBatchUpdater(ctrl)
+			ingestCtx        = NewIngestContext(context.Background())
+		)
+
+		ingestCtx.BindBatchUpdater(mockBatchUpdater)
+		mockBatchUpdater.EXPECT().UpdateNodeBy(gomock.Any()).Return(nil).Times(1)
+
+		err := IngestGenericData(ingestCtx, graph.StringKind("UnknownKind"), ConvertedData{NodeProps: []ein.IngestibleNode{{ObjectID: "node-1"}}})
+		require.NoError(t, err)
 	})
 }
