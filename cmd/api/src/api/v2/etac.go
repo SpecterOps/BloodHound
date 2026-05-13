@@ -143,7 +143,7 @@ func filterETACGraph(graphResponse model.UnifiedGraph, user model.User) (model.U
 	filteredResponse := model.UnifiedGraph{}
 	filteredNodes := make(map[string]model.UnifiedNode)
 
-	environmentKeys := []string{ad.DomainSID.String(), azure.TenantID.String()}
+	environmentKeys := []string{ad.DomainSID.String(), azure.TenantID.String(), graphschema.EnvironmentIDKey}
 
 	// filter nodes based on environment access
 	for id, node := range graphResponse.Nodes {
