@@ -387,20 +387,6 @@ CertificateMappingMethods: types.#StringEnum & {
 	representation: "certificatemappingmethods"
 }
 
-StrongCertificateBindingEnforcementRaw: types.#StringEnum & {
-	symbol:         "StrongCertificateBindingEnforcementRaw"
-	schema:         "ad"
-	name:           "Strong Certificate Binding Enforcement (Raw)"
-	representation: "strongcertificatebindingenforcementraw"
-}
-
-StrongCertificateBindingEnforcement: types.#StringEnum & {
-	symbol:         "StrongCertificateBindingEnforcement"
-	schema:         "ad"
-	name:           "Strong Certificate Binding Enforcement"
-	representation: "strongcertificatebindingenforcement"
-}
-
 VulnerableNetlogonSecurityDescriptor: types.#StringEnum & {
 	symbol:         "VulnerableNetlogonSecurityDescriptor"
 	schema:         "ad"
@@ -1087,8 +1073,6 @@ Properties: [
 	SamAccountName,
 	CertificateMappingMethodsRaw,
 	CertificateMappingMethods,
-	StrongCertificateBindingEnforcementRaw,
-	StrongCertificateBindingEnforcement,
 	VulnerableNetlogonSecurityDescriptor,
 	VulnerableNetlogonSecurityDescriptorCollected,
 	EKUs,
@@ -1614,16 +1598,6 @@ ADCSESC6b: types.#Kind & {
 	schema: "active_directory"
 }
 
-ADCSESC9a: types.#Kind & {
-	symbol: "ADCSESC9a"
-	schema: "active_directory"
-}
-
-ADCSESC9b: types.#Kind & {
-	symbol: "ADCSESC9b"
-	schema: "active_directory"
-}
-
 ADCSESC10a: types.#Kind & {
 	symbol: "ADCSESC10a"
 	schema: "active_directory"
@@ -1787,8 +1761,6 @@ RelationshipKinds: [
 	ADCSESC4,
 	ADCSESC6a,
 	ADCSESC6b,
-	ADCSESC9a,
-	ADCSESC9b,
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
@@ -1883,8 +1855,6 @@ SharedRelationshipKinds: [
 	ADCSESC4,
 	ADCSESC6a,
 	ADCSESC6b,
-	ADCSESC9a,
-	ADCSESC9b,
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
@@ -1925,8 +1895,6 @@ EdgeCompositionRelationships: [
 	ADCSESC4,
 	ADCSESC6a,
 	ADCSESC6b,
-	ADCSESC9a,
-	ADCSESC9b,
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
@@ -1957,8 +1925,6 @@ PostProcessedRelationships: [
 	ADCSESC6b,
 	ADCSESC10a,
 	ADCSESC10b,
-	ADCSESC9a,
-	ADCSESC9b,
 	ADCSESC13,
 	EnrollOnBehalfOf,
 	SyncedToADUser,

@@ -716,10 +716,6 @@ func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.
 			pathSet, err = GetADCSESC4EdgeComposition(ctx, db, edge)
 		case ad.ADCSESC6a, ad.ADCSESC6b:
 			pathSet, err = GetADCSESC6EdgeComposition(ctx, db, edge)
-		case ad.ADCSESC9a:
-			pathSet, err = GetADCSESC9aEdgeComposition(ctx, db, edge)
-		case ad.ADCSESC9b:
-			pathSet, err = GetADCSESC9bEdgeComposition(ctx, db, edge)
 		case ad.ADCSESC10a, ad.ADCSESC10b:
 			pathSet, err = GetADCSESC10EdgeComposition(ctx, db, edge)
 		case ad.ADCSESC13:

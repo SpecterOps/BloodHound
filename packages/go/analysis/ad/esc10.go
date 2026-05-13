@@ -269,6 +269,26 @@ func adcsESC10Path1Pattern(domainID graph.ID, edgeKind graph.Kind) traversal.Pat
 		))
 }
 
+func adcsESC10APath2Pattern(caNodes []graph.ID, domainId graph.ID) traversal.PatternContinuation {
+	return traversal.NewPattern().
+		OutboundWithDepth(0, 0, query.And(
+			query.Kind(query.Relationship(), ad.MemberOf),
+			query.Kind(query.End(), ad.Group),
+		)).
+		Outbound(query.And(
+			query.Kind(query.Relationship(), ad.Enroll),
+			query.InIDs(query.End(), caNodes...),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
+			query.Kind(query.End(), ad.NTAuthStore),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.NTAuthStoreFor),
+			query.Equals(query.EndID(), domainId),
+		))
+}
+
 func adcsESC10APath3Pattern() traversal.PatternContinuation {
 	return traversal.NewPattern().
 		InboundWithDepth(0, 0,
@@ -388,11 +408,10 @@ func GetADCSESC10EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		return nil, err
 	}
 
-	//We can re-use p2 from ESC9a, since they're the same
 	for victim, p1CANodes := range victimCANodes {
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 			Root: nodeMap[victim],
-			Driver: adcsESC9APath2Pattern(p1CANodes, edge.EndID).Do(func(terminal *graph.PathSegment) error {
+			Driver: adcsESC10APath2Pattern(p1CANodes, edge.EndID).Do(func(terminal *graph.PathSegment) error {
 				caNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
 					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 				})

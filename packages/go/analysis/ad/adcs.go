@@ -221,40 +221,6 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		if err := PostADCSESC9a(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(
-				ctx,
-				"Post processing for ADCSESC9a missing property",
-				attr.Error(err),
-			)
-		} else if err != nil {
-			slog.ErrorContext(
-				ctx,
-				"Failed post processing for ADCSESC9a",
-				attr.Error(err),
-			)
-		}
-		return nil
-	})
-
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		if err := PostADCSESC9b(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(
-				ctx,
-				"Post processing for ADCSESC9b missing property",
-				attr.Error(err),
-			)
-		} else if err != nil {
-			slog.ErrorContext(
-				ctx,
-				"Failed post processing for ADCSESC9b",
-				attr.Error(err),
-			)
-		}
-		return nil
-	})
-
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		if err := PostADCSESC10a(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,

@@ -246,11 +246,6 @@ RETURN p\nLIMIT 1000`,
                 query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.hasvulnerableendpoint = True\nRETURN p\nLIMIT 1000`,
             },
             {
-                name: 'Domain controllers with weak certificate binding enabled',
-                description: '',
-                query: `MATCH p = (s:Computer)-[:DCFor]->(:Domain)\nWHERE s.strongcertificatebindingenforcementraw = 0 OR s.strongcertificatebindingenforcementraw = 1\nRETURN p\nLIMIT 1000`,
-            },
-            {
                 name: 'Domain controllers with UPN certificate mapping enabled',
                 description: '',
                 query: `MATCH p = (s:Computer)-[:DCFor]->(:Domain)\nWHERE s.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]\nRETURN p\nLIMIT 1000`,

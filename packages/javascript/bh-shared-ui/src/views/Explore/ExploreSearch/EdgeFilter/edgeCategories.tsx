@@ -116,8 +116,6 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
                     ActiveDirectoryRelationshipKind.ADCSESC4,
                     ActiveDirectoryRelationshipKind.ADCSESC6a,
                     ActiveDirectoryRelationshipKind.ADCSESC6b,
-                    ActiveDirectoryRelationshipKind.ADCSESC9a,
-                    ActiveDirectoryRelationshipKind.ADCSESC9b,
                     ActiveDirectoryRelationshipKind.ADCSESC10a,
                     ActiveDirectoryRelationshipKind.ADCSESC10b,
                     ActiveDirectoryRelationshipKind.ADCSESC13,

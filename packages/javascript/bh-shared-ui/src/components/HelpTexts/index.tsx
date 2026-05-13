@@ -23,8 +23,6 @@ import ADCSESC3 from './ADCSESC3/ADCSESC3';
 import ADCSESC4 from './ADCSESC4/ADCSESC4';
 import ADCSESC6a from './ADCSESC6a/ADCSESC6a';
 import ADCSESC6b from './ADCSESC6b/ADCSESC6b';
-import ADCSESC9a from './ADCSESC9a/ADCSESC9a';
-import ADCSESC9b from './ADCSESC9b/ADCSESC9b';
 import AZAKSContributor from './AZAKSContributor/AZAKSContributor';
 import AZAddMembers from './AZAddMembers/AZAddMembers';
 import AZAddOwner from './AZAddOwner/AZAddOwner';
@@ -256,8 +254,6 @@ const EdgeInfoComponents = {
     ADCSESC3: ADCSESC3,
     ADCSESC6a: ADCSESC6a,
     ADCSESC6b: ADCSESC6b,
-    ADCSESC9a: ADCSESC9a,
-    ADCSESC9b: ADCSESC9b,
     ADCSESC10a: ADCSESC10a,
     ADCSESC10b: ADCSESC10b,
     ADCSESC13: ADCSESC13,

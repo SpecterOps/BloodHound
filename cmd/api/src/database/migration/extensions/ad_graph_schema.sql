@@ -218,8 +218,6 @@ BEGIN
 	PERFORM genscript_upsert_kind('ADCSESC4');
 	PERFORM genscript_upsert_kind('ADCSESC6a');
 	PERFORM genscript_upsert_kind('ADCSESC6b');
-	PERFORM genscript_upsert_kind('ADCSESC9a');
-	PERFORM genscript_upsert_kind('ADCSESC9b');
 	PERFORM genscript_upsert_kind('ADCSESC10a');
 	PERFORM genscript_upsert_kind('ADCSESC10b');
 	PERFORM genscript_upsert_kind('ADCSESC13');
@@ -322,8 +320,6 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ADCSESC4', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ADCSESC6a', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ADCSESC6b', '', true);
-	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ADCSESC9a', '', true);
-	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ADCSESC9b', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ADCSESC10a', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ADCSESC10b', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ADCSESC13', '', true);
