@@ -3,7 +3,7 @@ bh-rfc: 6
 title: Dogtags - SKU-Based Feature Entitlements
 authors: |
     [Pomeroy, Kaleb](kpomeroy@specterops.io)
-status: DRAFT
+status: SUPERSEDED BY BHADR-2
 created: 2025-01-07
 ---
 

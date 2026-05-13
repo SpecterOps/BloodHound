@@ -109,5 +109,9 @@ model {
   bloodhound.apiServer.databaseClient -[sync]-> bloodhound.postgresql 'SQL queries'
   bloodhound.apiServer.graphClient -[sync]-> bloodhound.postgresqlGraph 'Graph operations (DAWGS)'
   bloodhound.apiServer.graphClient -[sync]-> bloodhound.neo4j 'Cypher queries'
+
+  // Feature flag evaluation
+  bloodhound.apiServer.restApi -[uses]-> bloodhound.apiServer.featureFlagClient 'Evaluates feature flags'
+  bloodhound.apiServer.analysisService -[uses]-> bloodhound.apiServer.featureFlagClient 'Evaluates feature flags'
 }
 
