@@ -111,6 +111,14 @@ model {
       technology 'Go'
     }
 
+    // ─── Feature Flags ─────────────────────────────────────────
+
+    featureFlagClient = component 'Feature Flag Client' {
+      #go #featureFlags
+      description 'OpenFeature SDK client used by application code to evaluate feature flags. The active provider is selected at build time, decoupling flag evaluation call sites from the backend. In BHCE the from-env provider reads flag defaults from environment variables; BHE swaps in LaunchDarkly (Fleet) or a Replicated-license-backed InMemoryProvider (On-Prem).'
+      technology 'Go / OpenFeature SDK'
+    }
+
     // ─── Data Access ───────────────────────────────────────────
 
     databaseClient = library 'Database Client' {
