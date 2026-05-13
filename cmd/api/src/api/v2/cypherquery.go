@@ -104,6 +104,31 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		return
 	}
 
+	auditLogData := model.AuditData{
+		"query":              preparedQuery.StrippedQuery,
+		"include_properties": payload.IncludeProperties,
+	}
+
+	auditLogEntry, err := model.NewAuditEntry(model.AuditLogActionRunCypherQuery, model.AuditLogStatusIntent, auditLogData)
+	if err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	}
+
+	err = s.DB.AppendAuditLog(request.Context(), auditLogEntry)
+	if err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		return
+	}
+
+	auditLogEntry.Status = model.AuditLogStatusFailure
+
+	defer func() {
+		err = s.DB.AppendAuditLog(request.Context(), auditLogEntry)
+		if err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		}
+	}()
+
 	primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context())
 	if err != nil {
 		api.HandleDatabaseError(request, response, err)
@@ -137,6 +162,8 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "resource not found", request), response)
 		return
 	}
+
+	auditLogEntry.Status = model.AuditLogStatusSuccess
 
 	if !payload.IncludeProperties {
 		// removing node properties from the response
