@@ -14,27 +14,35 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { useEffect, useRef } from 'react';
 import { useExploreParams } from './useExploreParams';
 import { useExploreSelectedItem } from './useExploreSelectedItem';
 
 export const useAutomaticGraphActions = (graphData: Record<string, any> | undefined) => {
     const { searchType, primarySearch } = useExploreParams();
     const { setSelectedItem, clearSelectedItem } = useExploreSelectedItem();
+    const previousGraphDataRef = useRef(graphData);
 
-    // Clear selection for pathfinding to avoid highlighting individual nodes/edges
-    if (searchType === 'pathfinding') {
-        clearSelectedItem();
-        return;
-    }
+    useEffect(() => {
+        // Only run automatic actions when graph data actually changes
+        if (previousGraphDataRef.current === graphData) return;
+        previousGraphDataRef.current = graphData;
 
-    // Only auto-select for node searches with valid data
-    if (searchType !== 'node' || !primarySearch || !graphData) return;
+        // Clear selection for pathfinding to avoid highlighting individual nodes/edges
+        if (searchType === 'pathfinding') {
+            clearSelectedItem();
+            return;
+        }
 
-    // Handle both data structures: BHCE uses { nodes: {...}, edges: [...] }, BE uses flat object
-    const nodeData = graphData.nodes || graphData;
-    const nodeId = Object.keys(nodeData).length === 1 ? Object.keys(nodeData)[0] : undefined;
+        // Only auto-select for node searches with valid data
+        if (searchType !== 'node' || !primarySearch || !graphData) return;
 
-    if (nodeId) {
-        setSelectedItem(nodeId);
-    }
+        // Handle both data structures: BHCE uses { nodes: {...}, edges: [...] }, BE uses flat object
+        const nodeData = graphData.nodes || graphData;
+        const nodeId = Object.keys(nodeData).length === 1 ? Object.keys(nodeData)[0] : undefined;
+
+        if (nodeId) {
+            setSelectedItem(nodeId);
+        }
+    }, [graphData, searchType, primarySearch, setSelectedItem, clearSelectedItem]);
 };
