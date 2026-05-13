@@ -191,6 +191,19 @@ func TestBuildSQLFilter(t *testing.T) {
 			},
 		},
 		{
+			name: "not equals boolean-like string",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator:     "neq",
+					Value:        "f",
+					IsStringData: true,
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "foo != 'f'",
+			},
+		},
+		{
 			name: "equals boolean",
 			input: model.Filters{
 				"foo": []model.Filter{{
@@ -204,7 +217,7 @@ func TestBuildSQLFilter(t *testing.T) {
 			},
 		},
 		{
-			name: "equals 1-letter boolean",
+			name: "equals one-letter boolean",
 			input: model.Filters{
 				"foo": []model.Filter{{
 					Operator:     "eq",
@@ -243,7 +256,7 @@ func TestBuildSQLFilter(t *testing.T) {
 			},
 		},
 		{
-			name: "not equals boolean-like string",
+			name: "not equals one-letter boolean",
 			input: model.Filters{
 				"foo": []model.Filter{{
 					Operator:     "neq",

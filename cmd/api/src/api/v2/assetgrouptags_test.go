@@ -230,8 +230,8 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 					resp := v2.GetAssetGroupTagsResponse{}
 					apitest.StatusCode(output, http.StatusOK)
 					apitest.UnmarshalData(output, &resp)
+					require.Len(t, resp.Tags, 1)
 					apitest.Equal(output, "123", resp.Tags[0].Name)
-
 				},
 			},
 			{
@@ -252,8 +252,8 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 					resp := v2.GetAssetGroupTagsResponse{}
 					apitest.StatusCode(output, http.StatusOK)
 					apitest.UnmarshalData(output, &resp)
+					require.Len(t, resp.Tags, 1)
 					apitest.Equal(output, "t", resp.Tags[0].Name)
-
 				},
 			},
 			{
