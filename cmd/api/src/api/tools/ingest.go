@@ -23,30 +23,30 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"os"
-	"path/filepath"
+	"path"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/headers"
 )
 
 type IngestControl struct {
-	cfg              config.Configuration
-	retainedFileLock *sync.RWMutex
-	parameterService appcfg.ParameterService
+	retainedFileLock    *sync.RWMutex
+	parameterService    appcfg.ParameterService
+	retainedFileService storage.FileService
 }
 
-func NewIngestControlTool(cfg config.Configuration, parameterService appcfg.ParameterService) IngestControl {
+func NewIngestControlTool(parameterService appcfg.ParameterService, retainedFileService storage.FileService) IngestControl {
 	return IngestControl{
-		cfg:              cfg,
-		retainedFileLock: &sync.RWMutex{},
-		parameterService: parameterService,
+		retainedFileLock:    &sync.RWMutex{},
+		parameterService:    parameterService,
+		retainedFileService: retainedFileService,
 	}
 }
 
@@ -69,6 +69,39 @@ func (s *IngestControl) setIngestFileRetention(ctx context.Context, parameter ap
 	return nil
 }
 
+func retainedArchiveName(filePath string) string {
+	filePath = path.Clean(strings.TrimPrefix(filePath, "/"))
+	if filePath == "." || filePath == ".." || strings.HasPrefix(filePath, "../") {
+		return path.Base(filePath)
+	}
+	return filePath
+}
+
+func (s *IngestControl) writeRetainedFileToTar(ctx context.Context, tarWriter *tar.Writer, filePath string) error {
+	reader, fileInfo, err := s.retainedFileService.GetFile(ctx, filePath)
+	if err != nil {
+		return fmt.Errorf("opening retained file: %w", err)
+	}
+	defer reader.Close()
+
+	tarHeader := &tar.Header{
+		Name:    retainedArchiveName(fileInfo.Path),
+		Size:    fileInfo.Size,
+		Mode:    0o600,
+		ModTime: fileInfo.LastModified,
+	}
+
+	if err := tarWriter.WriteHeader(tarHeader); err != nil {
+		return fmt.Errorf("writing tar header: %w", err)
+	}
+
+	if _, err := io.Copy(tarWriter, reader); err != nil {
+		return fmt.Errorf("copying retained file: %w", err)
+	}
+
+	return nil
+}
+
 func (s *IngestControl) FetchRetainedIngestFiles(response http.ResponseWriter, request *http.Request) {
 	if !s.retainedFileLock.TryRLock() {
 		// Unable to acquire a write lock at this time - notify of a conflict. User is expected to retry
@@ -85,102 +118,33 @@ func (s *IngestControl) FetchRetainedIngestFiles(response http.ResponseWriter, r
 		return
 	}
 
-	retainedFilesDirectory := s.cfg.RetainedFilesDirectory()
-
-	// TODO MC: should there be a retained fileService?
-	if retainedFilesDirEntries, err := os.ReadDir(retainedFilesDirectory); err != nil {
-		// Unable to stat the retained files directory. Log a warning and inform the user that the
-		// operation failed.
-		slog.WarnContext(
-			request.Context(),
-			"Failed reading retained files directory",
-			slog.String("directory", retainedFilesDirectory),
-			attr.Error(err),
-		)
+	files, err := s.retainedFileService.ListFiles(request.Context(), "", storage.ListOptions{Recursive: true})
+	if err != nil {
+		slog.WarnContext(request.Context(), "Failed listing retained files", attr.Error(err))
 		response.WriteHeader(http.StatusInternalServerError)
-	} else {
-		// Author the response
-		response.Header().Set(headers.ContentType.String(), "application/gzip")
-		response.Header().Set(headers.ContentEncoding.String(), "gzip")
-		response.Header().Set(headers.ContentDisposition.String(), fmt.Sprintf(`attachment; filename="retained-ingest-%s.tar.gz"`, time.Now().UTC().Format("20060102T150405Z")))
-		response.WriteHeader(http.StatusOK)
+		return
+	}
 
-		var (
-			gzipWriter = gzip.NewWriter(response)
-			tarWriter  = tar.NewWriter(gzipWriter)
-		)
+	response.Header().Set(headers.ContentType.String(), "application/gzip")
+	response.Header().Set(headers.ContentEncoding.String(), "gzip")
+	response.Header().Set(headers.ContentDisposition.String(), fmt.Sprintf(`attachment; filename="retained-ingest-%s.tar.gz"`, time.Now().UTC().Format("20060102T150405Z")))
+	response.WriteHeader(http.StatusOK)
 
-		for _, retainedFilesDirEntry := range retainedFilesDirEntries {
-			retainedFilePath := filepath.Join(retainedFilesDirectory, retainedFilesDirEntry.Name())
+	gzipWriter := gzip.NewWriter(response)
+	defer gzipWriter.Close()
 
-			if retainedFilesDirEntry.IsDir() {
-				// Log a warning for directory entries and skip reading it.
-				slog.WarnContext(
-					request.Context(),
-					"Unexpected directory in retained files directory",
-					slog.String("path", retainedFilePath),
-					slog.String("directory", retainedFilesDirectory),
-				)
-				continue
-			}
+	tarWriter := tar.NewWriter(gzipWriter)
+	defer tarWriter.Close()
 
-			if fileInfo, err := retainedFilesDirEntry.Info(); err != nil {
-				slog.WarnContext(
-					request.Context(),
-					"Unable to stat file",
-					slog.String("path", retainedFilePath),
-					attr.Error(err),
-				)
-				break
-			} else {
-				if tarHeader, err := tar.FileInfoHeader(fileInfo, ""); err != nil {
-					slog.WarnContext(
-						request.Context(),
-						"Unable to convert file info for file",
-						slog.String("path", retainedFilePath),
-						attr.Error(err),
-					)
-					break
-				} else if err := tarWriter.WriteHeader(tarHeader); err != nil {
-					slog.WarnContext(
-						request.Context(),
-						"Failed writing tar file header to response",
-						slog.String("path", retainedFilePath),
-						attr.Error(err),
-					)
-					break
-				}
-
-				if fin, err := os.Open(retainedFilePath); err != nil {
-					slog.WarnContext(
-						request.Context(),
-						"Failed to open retained file",
-						slog.String("path", retainedFilePath),
-						slog.String("directory", retainedFilesDirectory),
-						attr.Error(err),
-					)
-					break
-				} else {
-					// Copy and inspect the error only after closing the file.
-					_, copyErr := io.Copy(tarWriter, fin)
-					fin.Close()
-
-					if copyErr != nil {
-						slog.WarnContext(
-							request.Context(),
-							"Failed writing file content from to response",
-							slog.String("path", retainedFilePath),
-							attr.Error(copyErr),
-						)
-						break
-					}
-				}
-			}
+	for _, file := range files {
+		if file.IsDir {
+			continue
 		}
 
-		// Attempt to flush and close the tar.gz writers - best effort
-		tarWriter.Close()
-		gzipWriter.Close()
+		if err := s.writeRetainedFileToTar(request.Context(), tarWriter, file.Path); err != nil {
+			slog.WarnContext(request.Context(), "Failed writing retained file to response", slog.String("path", file.Path), attr.Error(err))
+			break
+		}
 	}
 }
 
@@ -216,6 +180,7 @@ func (s *IngestControl) DisableIngestFileRetention(response http.ResponseWriter,
 	if err := s.setIngestFileRetention(request.Context(), appcfg.RetainIngestedFilesParameter{
 		Enabled: false,
 	}); err != nil {
+		s.retainedFileLock.Unlock()
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 		return
 	}
@@ -224,32 +189,24 @@ func (s *IngestControl) DisableIngestFileRetention(response http.ResponseWriter,
 
 	// Clear all retained files in a goroutine that releases the lock once finished. This is best effort as
 	// it is still possible for a file to make it into the retained directory even after the parameter is set.
-	go func() {
+	cleanupCtx := context.WithoutCancel(request.Context())
+
+	go func(ctx context.Context) {
 		defer s.retainedFileLock.Unlock()
 
-		retainedFilesDirectory := s.cfg.RetainedFilesDirectory()
+		files, err := s.retainedFileService.ListFiles(ctx, "", storage.ListOptions{Recursive: true})
+		if err != nil {
+			slog.WarnContext(ctx, "Failed listing retained files", attr.Error(err))
+		}
 
-		// TODO MC: should there be a retained fileService
-		if retainedFilesDirEntries, err := os.ReadDir(retainedFilesDirectory); err != nil {
-			slog.WarnContext(
-				request.Context(),
-				"Failed reading retained files directory",
-				slog.String("directory", retainedFilesDirectory),
-				attr.Error(err),
-			)
-		} else {
-			for _, retainedFilesDirEntry := range retainedFilesDirEntries {
-				retainedFilePath := filepath.Join(retainedFilesDirectory, retainedFilesDirEntry.Name())
+		for _, file := range files {
+			if file.IsDir {
+				continue
+			}
 
-				if err := os.RemoveAll(retainedFilePath); err != nil {
-					slog.WarnContext(
-						request.Context(),
-						"Failed removing retained file",
-						slog.String("path", retainedFilePath),
-						attr.Error(err),
-					)
-				}
+			if err := s.retainedFileService.DeleteFile(ctx, file.Path); err != nil {
+				slog.WarnContext(ctx, "Failed removing retained file", slog.String("path", file.Path), attr.Error(err))
 			}
 		}
-	}()
+	}(cleanupCtx)
 }

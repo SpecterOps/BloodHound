@@ -33,13 +33,15 @@ type DatabaseConnections[DBType database.Database, GraphType graph.Database] str
 }
 
 type DatabaseConstructor[DBType database.Database, GraphType graph.Database] func(ctx context.Context, cfg config.Configuration) (DatabaseConnections[DBType, GraphType], error)
-type InitializerLogic[DBType database.Database, GraphType graph.Database] func(ctx context.Context, cfg config.Configuration, databaseConnections DatabaseConnections[DBType, GraphType]) ([]daemons.Daemon, error)
+type RuntimeDependenciesConstructor[DBType database.Database, GraphType graph.Database] func(ctx context.Context, cfg config.Configuration, conections DatabaseConnections[DBType, GraphType]) (RuntimeDependencies, error)
+type InitializerLogic[DBType database.Database, GraphType graph.Database] func(ctx context.Context, cfg config.Configuration, databaseConnections DatabaseConnections[DBType, GraphType], deps RuntimeDependencies) ([]daemons.Daemon, error)
 
 type Initializer[DBType database.Database, GraphType graph.Database] struct {
 	Configuration       config.Configuration
+	DBConnector         DatabaseConstructor[DBType, GraphType]
+	RuntimeDependencies RuntimeDependenciesConstructor[DBType, GraphType]
 	PreMigrationDaemons InitializerLogic[DBType, GraphType]
 	Entrypoint          InitializerLogic[DBType, GraphType]
-	DBConnector         DatabaseConstructor[DBType, GraphType]
 }
 
 func (s Initializer[DBType, GraphType]) Launch(parentCtx context.Context, handleSignals bool) error {
@@ -65,29 +67,34 @@ func (s Initializer[DBType, GraphType]) Launch(parentCtx context.Context, handle
 	defer databaseConnections.RDMS.Close(ctx)
 	defer databaseConnections.Graph.Close(ctx)
 
-	// Daemons that start prior to blocking db migration
-	if s.PreMigrationDaemons != nil {
-		if daemonInstances, err := s.PreMigrationDaemons(ctx, s.Configuration, databaseConnections); err != nil {
+	if dependencies, err := s.RuntimeDependencies(ctx, s.Configuration, databaseConnections); err != nil {
+		return fmt.Errorf("failed to initialize runtime dependencies: %w", err)
+	} else {
+		// Daemons that start prior to blocking db migration
+		if s.PreMigrationDaemons != nil {
+			if daemonInstances, err := s.PreMigrationDaemons(ctx, s.Configuration, databaseConnections, dependencies); err != nil {
+				return fmt.Errorf("failed to start services: %w", err)
+			} else {
+				daemonManager.Start(ctx, daemonInstances...)
+			}
+		}
+
+		// Daemons that start after blocking db migration
+		if daemonInstances, err := s.Entrypoint(ctx, s.Configuration, databaseConnections, dependencies); err != nil {
 			return fmt.Errorf("failed to start services: %w", err)
 		} else {
 			daemonManager.Start(ctx, daemonInstances...)
 		}
+
+		// Log successful start and wait for a signal to exit
+		slog.InfoContext(ctx, "Server started successfully")
+		<-ctx.Done()
+
+		slog.InfoContext(ctx, "Shutting down")
+		// TODO: Refactor this pattern in favor of context handling
+		daemonManager.Stop()
+
 	}
-
-	// Daemons that start after blocking db migration
-	if daemonInstances, err := s.Entrypoint(ctx, s.Configuration, databaseConnections); err != nil {
-		return fmt.Errorf("failed to start services: %w", err)
-	} else {
-		daemonManager.Start(ctx, daemonInstances...)
-	}
-
-	// Log successful start and wait for a signal to exit
-	slog.InfoContext(ctx, "Server started successfully")
-	<-ctx.Done()
-
-	slog.InfoContext(ctx, "Shutting down")
-	// TODO: Refactor this pattern in favor of context handling
-	daemonManager.Stop()
 
 	return nil
 }

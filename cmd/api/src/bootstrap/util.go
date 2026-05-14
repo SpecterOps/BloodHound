@@ -25,12 +25,22 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/tools"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/neo4j"
 	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/util/size"
 )
+
+// RuntimeDependencies holds values that must be created prior to the entrypoint. For instance
+// IngestControl is reliant on the FileService. In order for the
+// pre-migration toolapi to hve access to the FileServiceRetained, the
+// FileServiceResolver is created prior ot the PreMigrationDaemons and the Entrypoint. This could
+// then be passed in.
+type RuntimeDependencies struct {
+	FileServiceResolver storage.FileServiceResolver
+}
 
 func ensureDirectory(path string) error {
 	if _, err := os.Stat(path); err != nil {
