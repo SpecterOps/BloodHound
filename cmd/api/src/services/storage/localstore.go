@@ -25,6 +25,7 @@ import (
 	"mime"
 	"os"
 	"path"
+	"strings"
 	"sync"
 )
 
@@ -242,15 +243,19 @@ func (s *LocalStore) List(ctx context.Context, name string, options ListOptions)
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
+	listName := name
+	if strings.TrimSpace(listName) == "" || listName == "/" {
+		listName = "."
+	}
 	fsys := s.root.FS()
 	if options.Recursive {
 		out := []FileInfo{}
-		err := fs.WalkDir(fsys, name, func(p string, d fs.DirEntry, err error) error {
+		err := fs.WalkDir(fsys, listName, func(p string, d fs.DirEntry, err error) error {
 			if cerr := ctx.Err(); cerr != nil {
 				return cerr
 			}
 			if err != nil {
-				if errors.Is(err, fs.ErrNotExist) && p == name {
+				if errors.Is(err, fs.ErrNotExist) && p == listName {
 					return fs.SkipAll
 				}
 				return err
@@ -279,7 +284,7 @@ func (s *LocalStore) List(ctx context.Context, name string, options ListOptions)
 		}
 		return out, nil
 	}
-	entries, err := fs.ReadDir(fsys, name)
+	entries, err := fs.ReadDir(fsys, listName)
 	if errors.Is(err, fs.ErrNotExist) {
 		return []FileInfo{}, nil
 	}
@@ -298,7 +303,10 @@ func (s *LocalStore) List(ctx context.Context, name string, options ListOptions)
 		if err != nil {
 			return nil, err
 		}
-		entryPath := path.Join(name, entry.Name())
+		entryPath := path.Join(listName, entry.Name())
+		if listName == "." {
+			entryPath = entry.Name()
+		}
 		out = append(out, FileInfo{
 			Path:         entryPath,
 			Size:         info.Size(),
