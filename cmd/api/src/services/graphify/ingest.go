@@ -240,6 +240,11 @@ func IngestBasicData(batch *IngestContext, converted ConvertedData) error {
 
 // IngestGenericData writes generic graph data into the database using the provided batch.
 // It attempts to ingest all nodes and relationships from the ConvertedData object.
+//
+// Because generic entities do not have a predefined base kind (unlike AZ or AD), this function passes
+// graph.EmptyKind to the node and relationship ingestion functions. This indicates that no
+// base kind should be applied uniformly to all ingested entities, and instead the kind(s)
+// defined directly on each node or edge (if any) are used as-is.
 func IngestGenericData(batch *IngestContext, sourceKind graph.Kind, converted ConvertedData) error {
 	errs := errorlist.NewBuilder()
 
@@ -247,7 +252,7 @@ func IngestGenericData(batch *IngestContext, sourceKind graph.Kind, converted Co
 		errs.Add(err)
 	}
 
-	if err := IngestRelationshipsKindless(batch, sourceKind, converted.RelProps); err != nil {
+	if err := IngestRelationships(batch, sourceKind, converted.RelProps); err != nil {
 		errs.Add(err)
 	}
 
