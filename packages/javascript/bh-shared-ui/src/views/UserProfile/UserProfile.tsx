@@ -136,7 +136,8 @@ const UserProfile = () => {
                                     <Button
                                         style={{ width: '100%' }}
                                         onClick={() => setUserTokenManagementDialogOpen(true)}
-                                        data-testid='my-profile_button-api-key-management'>
+                                        data-testid='my-profile_button-api-key-management'
+                                        variant='primary'>
                                         API Key Management
                                     </Button>
                                 </Grid>
@@ -152,7 +153,8 @@ const UserProfile = () => {
                                         <Button
                                             style={{ width: '100%' }}
                                             onClick={() => setChangePasswordDialogOpen(true)}
-                                            data-testid='my-profile_button-reset-password'>
+                                            data-testid='my-profile_button-reset-password'
+                                            variant='primary'>
                                             Reset Password
                                         </Button>
                                     </Grid>
