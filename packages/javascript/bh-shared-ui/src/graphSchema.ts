@@ -469,6 +469,8 @@ export enum ActiveDirectoryKindProperties {
     MSA = 'msa',
     DoesAnyAceGrantOwnerRights = 'doesanyacegrantownerrights',
     DoesAnyInheritedAceGrantOwnerRights = 'doesanyinheritedacegrantownerrights',
+    CustomExplicitDenyAcesCount = 'customexplicitdenyacescount',
+    CustomInheritedDenyAcesCount = 'custominheriteddenyacescount',
     ADCSWebEnrollmentHTTP = 'adcswebenrollmenthttp',
     ADCSWebEnrollmentHTTPS = 'adcswebenrollmenthttps',
     ADCSWebEnrollmentHTTPSEPA = 'adcswebenrollmenthttpsepa',
@@ -725,6 +727,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Does Any ACE Grant Owner Rights';
         case ActiveDirectoryKindProperties.DoesAnyInheritedAceGrantOwnerRights:
             return 'Does Any Inherited ACE Grant Owner Rights';
+        case ActiveDirectoryKindProperties.CustomExplicitDenyAcesCount:
+            return 'Custom Explicit Deny ACEs Count';
+        case ActiveDirectoryKindProperties.CustomInheritedDenyAcesCount:
+            return 'Custom Inherited Deny ACEs Count';
         case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTP:
             return 'ADCS Web Enrollment HTTP';
         case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPS:
