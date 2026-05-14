@@ -33,8 +33,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
-// TODO MC: update cleanup to take into account the new file service
-
 const (
 	orphanMinimumAge  = 24 * time.Hour
 	scratchMinimumAge = 24 * time.Hour
@@ -69,14 +67,37 @@ type OrphanFileSweeper struct {
 	fileOps                  FileOperations
 	tempDirectoryRootPath    string
 	scratchDirectoryRootPath string
+	excludedStoragePrefixes  []string
 }
 
-func NewOrphanFileSweeper(fileOps FileOperations, tempDirectoryRootPath string, scratchDirectoryRootPath string) *OrphanFileSweeper {
+func normalizeStoragePrefixes(prefixes []string) []string {
+	var normalizedPrefixes []string
+
+	for _, prefix := range prefixes {
+		prefix = strings.TrimSpace(filepath.ToSlash(prefix))
+		prefix = strings.Trim(prefix, "/")
+		if prefix == "" {
+			continue
+		}
+
+		prefix = path.Clean(prefix)
+		if prefix == "." || prefix == ".." || strings.HasPrefix(prefix, "../") {
+			continue
+		}
+
+		normalizedPrefixes = append(normalizedPrefixes, prefix)
+	}
+
+	return normalizedPrefixes
+}
+
+func NewOrphanFileSweeper(fileOps FileOperations, tempDirectoryRootPath string, scratchDirectoryRootPath string, excludedStoragePrefixes ...string) *OrphanFileSweeper {
 	return &OrphanFileSweeper{
 		lock:                     &sync.Mutex{},
 		fileOps:                  fileOps,
 		tempDirectoryRootPath:    strings.TrimSuffix(tempDirectoryRootPath, string(filepath.Separator)),
 		scratchDirectoryRootPath: strings.TrimSuffix(scratchDirectoryRootPath, string(filepath.Separator)),
+		excludedStoragePrefixes:  normalizeStoragePrefixes(excludedStoragePrefixes),
 	}
 }
 
@@ -109,6 +130,48 @@ func ClearLocalIngestScratch(ctx context.Context, scratchDirectory string, minim
 
 		_ = os.Remove(filepath.Join(scratchDirectory, entry.Name()))
 	}
+}
+
+func (s *OrphanFileSweeper) isExcludedStoragePath(logicalPath string) bool {
+	logicalPath = path.Clean(strings.TrimPrefix(filepath.ToSlash(logicalPath), "/"))
+
+	for _, excludedPrefix := range s.excludedStoragePrefixes {
+		if logicalPath == excludedPrefix || strings.HasPrefix(logicalPath, excludedPrefix+"/") {
+			return true
+		}
+	}
+
+	return false
+}
+
+// addExpectedLocalPath records an expected file path for the legacy local temp-directory cleanup pass.
+// Expected names may bn legacy absolute filesystem paths or file-service logical paths. Logical paths are
+// normalized, resolved under tempDirectoryRootPath, and ignored if they are empty or would excape the temp root.
+func (s *OrphanFileSweeper) addExpectedLocalPath(expectedLocalFiles map[string]struct{}, expectedFileName string) {
+	expectedFileName = strings.TrimSpace(expectedFileName)
+	if expectedFileName == "" {
+		return
+	}
+
+	if filepath.IsAbs(expectedFileName) {
+		expectedLocalFiles[filepath.Clean(expectedFileName)] = struct{}{}
+		return
+	}
+
+	logicalPath := path.Clean(filepath.ToSlash(expectedFileName))
+	if logicalPath == "." || logicalPath == ".." || strings.HasPrefix(logicalPath, "../") {
+		return
+	}
+
+	tempDirectoryRootPath := filepath.Clean(s.tempDirectoryRootPath)
+	localPath := filepath.Clean(filepath.Join(tempDirectoryRootPath, filepath.FromSlash(logicalPath)))
+
+	relativePath, err := filepath.Rel(tempDirectoryRootPath, localPath)
+	if err != nil || relativePath == "." || relativePath == ".." || strings.HasPrefix(relativePath, ".."+string(filepath.Separator)) || filepath.IsAbs(relativePath) {
+		return
+	}
+
+	expectedLocalFiles[localPath] = struct{}{}
 }
 
 // addExpectedStoragePath handles saved file paths that were saved in absolute prior to this release
@@ -156,6 +219,10 @@ func (s *OrphanFileSweeper) clearStoredIngestFiles(ctx context.Context, ingestFi
 		}
 
 		logicalPath := path.Clean(file.Path)
+		if s.isExcludedStoragePath(logicalPath) {
+			continue
+		}
+
 		if _, ok := expectedFiles[logicalPath]; ok {
 			continue
 		}
@@ -174,9 +241,7 @@ func (s *OrphanFileSweeper) clearLegacyLocalIngestFiles(ctx context.Context, exp
 	expectedLocalFiles := map[string]struct{}{}
 
 	for _, expectedFileName := range expectedFileNames {
-		if filepath.IsAbs(expectedFileName) {
-			expectedLocalFiles[filepath.Clean(expectedFileName)] = struct{}{}
-		}
+		s.addExpectedLocalPath(expectedLocalFiles, expectedFileName)
 	}
 
 	entries, err := s.fileOps.ReadDir(s.tempDirectoryRootPath)
