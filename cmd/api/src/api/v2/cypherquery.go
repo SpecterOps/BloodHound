@@ -85,6 +85,11 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		preparedQuery queries.PreparedQuery
 		graphResponse model.UnifiedGraph
 		err           error
+
+		auditLogData = model.AuditData{
+			"query":              preparedQuery.StrippedQuery,
+			"include_properties": payload.IncludeProperties,
+		}
 	)
 
 	user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx)
@@ -104,19 +109,13 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	auditLogData := model.AuditData{
-		"query":              preparedQuery.StrippedQuery,
-		"include_properties": payload.IncludeProperties,
-	}
-
 	auditLogEntry, err := model.NewAuditEntry(model.AuditLogActionRunCypherQuery, model.AuditLogStatusIntent, auditLogData)
 	if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
 	}
 
-	err = s.DB.AppendAuditLog(request.Context(), auditLogEntry)
-	if err != nil {
+	if err = s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 		return
 	}
@@ -124,8 +123,7 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	auditLogEntry.Status = model.AuditLogStatusFailure
 
 	defer func() {
-		err = s.DB.AppendAuditLog(request.Context(), auditLogEntry)
-		if err != nil {
+		if err = s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 			slog.ErrorContext(request.Context(), "Failure to create run cypher query audit log", attr.Error(err))
 		}
 	}()
