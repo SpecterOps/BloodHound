@@ -30,9 +30,10 @@ const (
 )
 
 type AnalysisRequest struct {
-	RequestedBy string              `json:"requested_by"`
-	RequestType AnalysisRequestType `json:"request_type"`
-	RequestedAt time.Time           `json:"requested_at"`
+	RequestedBy  string              `json:"requested_by"`
+	RequestType  AnalysisRequestType `json:"request_type"`
+	RequestedAt  time.Time           `json:"requested_at"`
+	AnalysisStep int                 `json:"analysis_step"` // Bitmask indicating where in the analysis pipeline to begin (see analysis.AnalysisStep)
 
 	DeleteAllGraph        bool           `json:"delete_all_graph"`                        // Deletes all nodes and edges in the graph
 	DeleteSourcelessGraph bool           `json:"delete_sourceless_graph"`                 // Deletes all nodes and edges in the graph that have a type not registered in the source_kinds table

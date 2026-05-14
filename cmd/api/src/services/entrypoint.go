@@ -42,6 +42,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
@@ -161,7 +162,8 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 			return nil, fmt.Errorf("failed to register prometheus metrics: %w", err)
 		} else if err := prometheus.DefaultRegisterer.Register(promRegistry); err != nil {
 			return nil, fmt.Errorf("failed to expose prometheus registry: %w", err)
-		} else if err := connections.RDMS.RequestAnalysis(ctx, "init"); err != nil {
+			// Trigger analysis on first start
+		} else if err := connections.RDMS.RequestAnalysis(ctx, "init", int(analysis.AnalysisStepAll)); err != nil {
 			slog.WarnContext(ctx, "Failed to request init analysis", attr.Error(err))
 		}
 

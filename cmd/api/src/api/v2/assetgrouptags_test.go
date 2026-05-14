@@ -1602,7 +1602,7 @@ func TestResources_UpdateAssetGroupTag(t *testing.T) {
 						Return(updatedTag, nil)
 					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).
 						Return(paramDisabled, nil)
-					mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String())
+					mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String(), gomock.Any())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -1635,7 +1635,7 @@ func TestResources_UpdateAssetGroupTag(t *testing.T) {
 						Return(updatedTag, nil)
 					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).
 						Return(paramDisabled, nil)
-					mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.Nil.String())
+					mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.Nil.String(), gomock.Any())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -1666,7 +1666,7 @@ func TestResources_UpdateAssetGroupTag(t *testing.T) {
 						Return(model.AssetGroupTag{}, nil)
 					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).
 						Return(paramDisabled, nil)
-					mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.Nil.String())
+					mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.Nil.String(), gomock.Any())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)

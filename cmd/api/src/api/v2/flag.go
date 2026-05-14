@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/analysis"
 )
 
 type ListFlagsResponse struct {
@@ -70,7 +71,7 @@ func (s Resources) ToggleFlag(response http.ResponseWriter, request *http.Reques
 					userId = user.ID.String()
 				}
 
-				if err := s.DB.RequestAnalysis(request.Context(), userId); err != nil {
+				if err := s.DB.RequestAnalysis(request.Context(), userId, int(analysis.AnalysisStepAll)); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				}

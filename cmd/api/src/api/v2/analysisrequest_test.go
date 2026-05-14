@@ -126,7 +126,7 @@ func TestResources_RequestAnalysis(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000").Return(errors.New("error"))
+				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000", gomock.Any()).Return(errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -161,7 +161,7 @@ func TestResources_RequestAnalysis(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000").Return(nil)
+				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000", gomock.Any()).Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusAccepted,
@@ -195,7 +195,7 @@ func TestResources_RequestAnalysis(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000").Return(nil)
+				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000", gomock.Any()).Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusAccepted,
@@ -220,7 +220,7 @@ func TestResources_RequestAnalysis(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "unknown-user").Return(nil)
+				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "unknown-user", gomock.Any()).Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusAccepted,

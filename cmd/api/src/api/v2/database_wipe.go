@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/dawgs/graph"
 )
@@ -176,7 +177,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 			userId = user.ID.String()
 		}
 
-		if err := s.DB.RequestAnalysis(request.Context(), userId); err != nil {
+		if err := s.DB.RequestAnalysis(request.Context(), userId, int(analysis.AnalysisStepAll)); err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return
 		}
