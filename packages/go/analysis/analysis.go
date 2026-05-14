@@ -24,6 +24,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dataquality"
@@ -126,37 +127,8 @@ var (
 	ErrAnalysisPartiallyCompleted = errors.New("analysis partially completed")
 )
 
-// AnalysisStep is a bitmask that selects which steps of the analysis pipeline
-// should run. Each flag is independent, so callers may request any combination
-// of steps. When steps are combined, they always execute in pipeline order:
-// AD post-processing -> Azure post-processing -> Tagging -> Analysis.
-type AnalysisStep int
-
-const (
-	// AnalysisStepADPostProcessing runs AD post-processing.
-	AnalysisStepADPostProcessing AnalysisStep = 1 << iota
-	// AnalysisStepAzurePostProcessing runs Azure post-processing.
-	AnalysisStepAzurePostProcessing
-	// AnalysisStepTagging runs tagging of asset groups and tiers.
-	AnalysisStepTagging
-	// AnalysisStepAnalysis runs the analysis pipeline (BHE only).
-	AnalysisStepAnalysis
-
-	// AnalysisStepPostProcessing runs both AD and Azure post-processing.
-	AnalysisStepPostProcessing = AnalysisStepADPostProcessing | AnalysisStepAzurePostProcessing
-	// AnalysisStepTaggingToCompletion runs the tagging step and every step that follows it.
-	AnalysisStepTaggingToCompletion = AnalysisStepTagging | AnalysisStepAnalysis
-	// AnalysisStepAll selects every step in the pipeline.
-	AnalysisStepAll = AnalysisStepPostProcessing | AnalysisStepTaggingToCompletion
-)
-
-// Has reports whether all of the bits in step are set in s.
-func (s AnalysisStep) Has(step AnalysisStep) bool {
-	return s&step == step
-}
-
 // TODO Cleanup tieringEnabled after Tiering GA
-func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration, steps AnalysisStep) error {
+func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration, steps model.AnalysisStep) error {
 	var (
 		collectedErrors []error
 		tieringEnabled  = appcfg.GetTieringEnabled(ctx, db)
@@ -170,7 +142,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		dataQualityFailed  = false
 	)
 
-	if steps.Has(AnalysisStepADPostProcessing) {
+	if steps.Has(model.AnalysisStepADPostProcessing) {
 		if ntlmFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureNTLMPostProcessing); err != nil {
 			collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving NTLM Post Processing feature flag: %w", err))
 		} else if stats, err := adAnalysis.Post(ctx, graphDB, appcfg.GetCitrixRDPSupport(ctx, db), ntlmFlag.Enabled); err != nil {
@@ -181,7 +153,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		}
 	}
 
-	if steps.Has(AnalysisStepAzurePostProcessing) {
+	if steps.Has(model.AnalysisStepAzurePostProcessing) {
 		if stats, err := azureAnalysis.Post(ctx, graphDB); err != nil {
 			collectedErrors = append(collectedErrors, fmt.Errorf("error during azure post: %w", err))
 			azureFailed = true
@@ -190,7 +162,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		}
 	}
 
-	if steps.Has(AnalysisStepTagging) {
+	if steps.Has(model.AnalysisStepTagging) {
 		if errs := TagAssetGroupsAndTierZero(ctx, db, graphDB); len(errs) > 0 {
 			for _, err := range errs {
 				collectedErrors = append(collectedErrors, fmt.Errorf("tagging asset groups and tier zero failed: %w", err))

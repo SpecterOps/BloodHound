@@ -26,7 +26,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 )
 
@@ -49,7 +48,7 @@ func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.R
 		userId = user.ID.String()
 	}
 
-	if err := s.DB.RequestAnalysis(request.Context(), userId, int(analysis.AnalysisStepAll)); err != nil {
+	if err := s.DB.RequestAnalysis(request.Context(), userId, model.AnalysisStepAll); err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return
 	}

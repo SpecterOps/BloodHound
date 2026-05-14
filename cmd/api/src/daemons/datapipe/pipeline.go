@@ -79,7 +79,7 @@ func (s *BHCEPipeline) DeleteData(ctx context.Context) error {
 	}
 	defer func() {
 		_ = s.db.DeleteAnalysisRequest(ctx)
-		_ = s.db.RequestAnalysis(ctx, "datapipe", int(analysis.AnalysisStepAll))
+		_ = s.db.RequestAnalysis(ctx, "datapipe", model.AnalysisStepAll)
 	}()
 	defer measure.LogAndMeasure(slog.LevelInfo, "Purge Graph Data")()
 
@@ -240,15 +240,15 @@ func (s *BHCEPipeline) IsPrimary(ctx context.Context, status model.DatapipeStatu
 }
 
 func (s *BHCEPipeline) Analyze(ctx context.Context) error {
-	return s.analyze(ctx, analysis.AnalysisStepAll)
+	return s.analyze(ctx, model.AnalysisStepAll)
 }
 
-func (s *BHCEPipeline) analyze(ctx context.Context, steps analysis.AnalysisStep) error {
+func (s *BHCEPipeline) analyze(ctx context.Context, steps model.AnalysisStep) error {
 	// If there are completed ingest jobs or if analysis was user-requested, perform analysis.
 	if hasJobsWaitingForAnalysis, err := s.jobService.HasIngestJobsWaitingForAnalysis(); err != nil {
 		return fmt.Errorf("looking up jobs for analysis: %v", err)
 	} else if analysisRequest, err := s.db.GetAnalysisRequest(ctx); err == nil {
-		steps = analysis.AnalysisStep(analysisRequest.AnalysisStep)
+		steps = analysisRequest.AnalysisStep
 		hasJobsWaitingForAnalysis = true
 		_ = hasJobsWaitingForAnalysis
 	} else if !hasJobsWaitingForAnalysis {
