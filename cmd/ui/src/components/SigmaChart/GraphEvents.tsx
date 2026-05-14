@@ -35,7 +35,7 @@ import { blendHexColors, getNodeRadius } from 'src/rendering/utils/utils';
 import { useAppSelector } from 'src/store';
 import { preventAllDefaults } from 'src/utils';
 import { sequentialLayout, standardLayout } from 'src/views/Explore/utils';
-import { getHighlightedEntities } from './utils';
+import { getHighlightedEntities, getIsHighlightedItemInGraph } from './utils';
 
 interface SigmaChartRef {
     resetCamera: () => void;
@@ -278,10 +278,10 @@ export const GraphEvents = forwardRef(function GraphEvents(
         sigmaContainer,
     ]);
 
-    const isHighlightedItemInGraph = useMemo(() => {
-        if (!highlightedItem) return;
-        return graph.hasNode(highlightedItem) || graph.hasEdge(highlightedItem);
-    }, [graph, highlightedItem]);
+    const isHighlightedItemInGraph = useMemo(
+        () => getIsHighlightedItemInGraph(graph, highlightedItem),
+        [graph, highlightedItem]
+    );
 
     const { highlightedNodeIds, highlightedEdgeIds } = useMemo(
         () => getHighlightedEntities(graph, highlightedItem),
