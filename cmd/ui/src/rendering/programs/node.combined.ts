@@ -35,7 +35,6 @@ import { Coordinates, Dimensions, NodeDisplayData } from 'sigma/types';
 import { floatColor } from 'sigma/utils';
 import { fragmentShaderSource } from '../shaders/node.combined.frag';
 import { vertexShaderSource } from '../shaders/node.combined.vert';
-import { DEFAULT_BG_COLOR, DIM_FACTOR, NO_DIM_FACTOR } from '../utils/utils';
 
 const POINTS = 3,
     /*
@@ -47,7 +46,7 @@ const POINTS = 3,
       - angle (1xfloat)
       - borderColor (4xbyte = 1xfloat)
    */
-    ATTRIBUTES = 11,
+    ATTRIBUTES = 9,
     // maximum size of single texture in atlas
     MAX_TEXTURE_SIZE = 192,
     // maximum width of atlas texture (limited by browser)
@@ -257,8 +256,6 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
         correctionRatioLocation: WebGLUniformLocation;
         angleLocation: GLint;
         borderColorLocation: GLint;
-        dimLocation: GLint;
-        bgColorLocation: GLint;
         latestRenderParams?: RenderParams;
 
         constructor(gl: WebGLRenderingContext, renderer: Sigma) {
@@ -275,8 +272,6 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
             this.textureLocation = gl.getAttribLocation(this.program, 'a_texture');
             this.angleLocation = gl.getAttribLocation(this.program, 'a_angle');
             this.borderColorLocation = gl.getAttribLocation(this.program, 'a_borderColor');
-            this.dimLocation = gl.getAttribLocation(this.program, 'a_dim');
-            this.bgColorLocation = gl.getAttribLocation(this.program, 'a_bgColor');
 
             // Uniform Location
             const atlasLocation = gl.getUniformLocation(this.program, 'u_atlas');
@@ -313,8 +308,6 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
             gl.enableVertexAttribArray(this.textureLocation);
             gl.enableVertexAttribArray(this.angleLocation);
             gl.enableVertexAttribArray(this.borderColorLocation);
-            gl.enableVertexAttribArray(this.dimLocation);
-            gl.enableVertexAttribArray(this.bgColorLocation);
 
             gl.vertexAttribPointer(
                 this.textureLocation,
@@ -340,32 +333,10 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
                 this.attributes * Float32Array.BYTES_PER_ELEMENT,
                 32
             );
-            gl.vertexAttribPointer(
-                this.dimLocation,
-                1,
-                gl.FLOAT,
-                false,
-                this.attributes * Float32Array.BYTES_PER_ELEMENT,
-                36
-            );
-            gl.vertexAttribPointer(
-                this.bgColorLocation,
-                4,
-                gl.UNSIGNED_BYTE,
-                true,
-                this.attributes * Float32Array.BYTES_PER_ELEMENT,
-                40
-            );
         }
 
         process(
-            data: NodeDisplayData & {
-                image?: string;
-                isDimmed: boolean;
-                borderColor?: string;
-                dimFactor?: number;
-                graphBgColor?: string;
-            },
+            data: NodeDisplayData & { image?: string; borderColor?: string },
             hidden: boolean,
             offset: number
         ): void {
@@ -390,17 +361,11 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
                 array[i++] = 0;
                 // Border Color:
                 array[i++] = 0;
-                // Dim:
-                array[i++] = 0;
-                // BgColor:
-                array[i++] = 0;
                 return;
             }
 
             const color = floatColor(data.color);
             const borderColor = floatColor(data.borderColor ?? data.color);
-            const bgColor = floatColor(data.graphBgColor ?? DEFAULT_BG_COLOR);
-            const dim = data.dimFactor ?? (data.isDimmed ? DIM_FACTOR : NO_DIM_FACTOR);
             array[i++] = data.x;
             array[i++] = data.y;
             array[i++] = data.size;
@@ -421,8 +386,6 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
             }
             array[i++] = ANGLE_1;
             array[i++] = borderColor;
-            array[i++] = dim;
-            array[i++] = bgColor;
 
             array[i++] = data.x;
             array[i++] = data.y;
@@ -445,8 +408,6 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
             }
             array[i++] = ANGLE_2;
             array[i++] = borderColor;
-            array[i++] = dim;
-            array[i++] = bgColor;
 
             array[i++] = data.x;
             array[i++] = data.y;
@@ -465,8 +426,6 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
             }
             array[i++] = ANGLE_3;
             array[i++] = borderColor;
-            array[i++] = dim;
-            array[i++] = bgColor;
         }
 
         render(params: RenderParams): void {
