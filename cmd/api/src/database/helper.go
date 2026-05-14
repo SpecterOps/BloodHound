@@ -72,11 +72,13 @@ func buildSQLFilter(filters model.Filters) (sqlFilter, error) {
 
 		for _, filter := range filterOperations {
 			var (
-				operator     pgsql.Operator
-				filterValue  = filter.Value
-				isNullValue  = filterValue == model.NullString
-				literalValue pgsql.Literal
-				setOperator  = pgsql.OperatorAnd
+				operator             pgsql.Operator
+				filterValue          = filter.Value
+				isNullValue          = filterValue == model.NullString
+				isFilterColumnString = filter.IsStringData
+				literalValue         pgsql.Literal
+				setOperator          = pgsql.OperatorAnd
+				err                  error
 			)
 
 			switch filter.Operator {
@@ -116,6 +118,11 @@ func buildSQLFilter(filters model.Filters) (sqlFilter, error) {
 
 			if isNullValue {
 				literalValue = pgsql.NullLiteral()
+			} else if isFilterColumnString {
+				literalValue, err = pgsql.AsLiteral(filterValue)
+				if err != nil {
+					return sqlFilter{}, fmt.Errorf(model.FmtErrFilterValueConversion, name, err)
+				}
 			} else if valueInt64, err := strconv.ParseInt(filterValue, 10, 64); err == nil {
 				literalValue = pgsql.NewLiteral(valueInt64, pgsql.Int8)
 			} else if valueFloat64, err := strconv.ParseFloat(filterValue, 64); err == nil {
@@ -123,7 +130,7 @@ func buildSQLFilter(filters model.Filters) (sqlFilter, error) {
 			} else if valueBool, err := strconv.ParseBool(filterValue); err == nil {
 				literalValue = pgsql.NewLiteral(valueBool, pgsql.Boolean)
 			} else if val, err := pgsql.AsLiteral(filterValue); err != nil {
-				return sqlFilter{}, fmt.Errorf("invalid filter value specified for %s: %w", name, err)
+				return sqlFilter{}, fmt.Errorf(model.FmtErrFilterValueConversion, name, err)
 			} else {
 				literalValue = val
 			}

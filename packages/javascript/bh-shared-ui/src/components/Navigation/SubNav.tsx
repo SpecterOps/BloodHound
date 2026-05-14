@@ -80,6 +80,7 @@ const SubNav: React.FC<{
                 'bottom-2 py-2 rounded-lg cursor-default z-subNav',
                 'flex flex-col gap-8 absolute shadow-md',
                 'bg-[#F2F2F2] dark:bg-[#1F1F1F]',
+                'transform-gpu translate-z-[0px]', // This line addresses a Safari hardware rendering bug
                 'transition-all duration-300 ease-out',
                 {
                     'opacity-100': visible,
