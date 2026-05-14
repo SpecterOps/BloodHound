@@ -61,7 +61,7 @@ func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Data
 		graphdb:             graphDB,
 		cache:               cache,
 		cfg:                 cfg,
-		orphanedFileSweeper: NewOrphanFileSweeper(NewOSFileOperations(), cfg.TempDirectory(), cfg.ScratchDirectory()),
+		orphanedFileSweeper: NewOrphanFileSweeper(NewOSFileOperations(), cfg.TempDirectory(), cfg.ScratchDirectory(), "retained"),
 		ingestSchema:        ingestSchema,
 		fileServiceResolver: fileServiceResolver,
 		jobService:          job.NewJobService(ctx, db),
