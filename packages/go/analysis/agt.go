@@ -28,6 +28,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -855,6 +856,9 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 		}); err != nil {
 			return err
 		}
+
+		pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_added"}).Add(float64(countNewTagged))
+		pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_removed"}).Add(float64(oldTaggedNodes.Cardinality()))
 
 		slog.InfoContext(
 			ctx,
