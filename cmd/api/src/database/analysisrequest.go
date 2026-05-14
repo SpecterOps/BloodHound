@@ -76,8 +76,10 @@ func (s *BloodhoundDB) HasCollectedGraphDataDeletionRequest(ctx context.Context)
 }
 
 // setAnalysisRequest inserts a row into analysis_request_switch for both a collected graph data deletion request or an analysis request.
-// There should only ever be 1 row, if a request is present, subsequent requests no-op
-// If an analysis request is present when a deletion request comes in, that overwrites the analysis to deletion but not vice-versa
+// There should only ever be 1 row.
+// If an analysis request is already queued and another analysis request comes in, the requested analysis steps are merged
+// (bitwise OR) so subsequent requests can only widen the work, never narrow it.
+// If an analysis request is present when a deletion request comes in, that overwrites the analysis to deletion but not vice-versa.
 // To request: Use the helper methods `RequestAnalysis` and `RequestCollectedGraphDataDeletion`
 func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.AnalysisRequest) error {
 	var (
@@ -121,13 +123,19 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 	} else if errors.Is(err, ErrNotFound) {
 		// No request exists — insert a new one with all relevant columns
 		return s.db.Exec(insertSQL, args...).Error
-	} else {
-		// Analysis request existed, we only want to overwrite if request is for a deletion request, otherwise ignore additional requests
-		if analysisRequest.RequestType == model.AnalysisRequestAnalysis && request.RequestType == model.AnalysisRequestDeletion {
-			return s.db.Exec(updateSQL, args...).Error
+	} else if analysisRequest.RequestType == model.AnalysisRequestAnalysis && request.RequestType == model.AnalysisRequestDeletion {
+		// A queued analysis request is overwritten by an incoming deletion request.
+		return s.db.Exec(updateSQL, args...).Error
+	} else if analysisRequest.RequestType == model.AnalysisRequestAnalysis && request.RequestType == model.AnalysisRequestAnalysis {
+		// Merge the requested analysis steps so a subsequent request can only widen the work, never narrow it.
+		// requested_by/requested_at are preserved from the original request.
+		merged := analysisRequest.AnalysisStep | request.AnalysisStep
+		if merged == analysisRequest.AnalysisStep {
+			return nil
 		}
-		return nil
+		return s.db.Exec(`UPDATE analysis_request_switch SET analysis_step = ? WHERE request_type = ?;`, merged, model.AnalysisRequestAnalysis).Error
 	}
+	return nil
 }
 
 // RequestAnalysis will request an analysis be executed, as long as there isn't an existing analysis request or collected graph data deletion request, then it no-ops

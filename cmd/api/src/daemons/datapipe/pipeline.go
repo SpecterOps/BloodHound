@@ -239,31 +239,36 @@ func (s *BHCEPipeline) IsPrimary(ctx context.Context, status model.DatapipeStatu
 	return true, ctx
 }
 
+// Analyze decides whether analysis should run and which steps to execute. Analysis runs when either
+// ingest jobs are waiting (full analysis) or an analysis request is queued (the request's merged
+// step bits). When both triggers are present the step sets are unioned.
 func (s *BHCEPipeline) Analyze(ctx context.Context) error {
-	return s.analyze(ctx, model.AnalysisStepAll)
-}
+	var steps model.AnalysisStep
 
-func (s *BHCEPipeline) analyze(ctx context.Context, steps model.AnalysisStep) error {
-	// If there are completed ingest jobs or if analysis was user-requested, perform analysis.
 	hasJobsWaitingForAnalysis, err := s.jobService.HasIngestJobsWaitingForAnalysis()
 	if err != nil {
 		return fmt.Errorf("looking up jobs for analysis: %v", err)
+	}
+	if hasJobsWaitingForAnalysis {
+		steps |= model.AnalysisStepAll
 	}
 
 	analysisRequest, err := s.db.GetAnalysisRequest(ctx)
 	if err != nil && !errors.Is(err, database.ErrNotFound) {
 		return fmt.Errorf("looking up analysis request: %v", err)
 	}
-	hasAnalysisRequest := err == nil
-
-	if !hasJobsWaitingForAnalysis && !hasAnalysisRequest {
-		return nil
-	}
-
-	if hasAnalysisRequest {
+	if err == nil {
 		steps |= analysisRequest.AnalysisStep
 	}
 
+	if steps == 0 {
+		return nil
+	}
+
+	return s.analyze(ctx, steps)
+}
+
+func (s *BHCEPipeline) analyze(ctx context.Context, steps model.AnalysisStep) error {
 	// Ensure that the user-requested analysis switch is deleted. This is done at the beginning of the
 	// function so that any re-analysis requests are caught while analysis is in-progress.
 	if err := s.db.DeleteAnalysisRequest(ctx); err != nil {
