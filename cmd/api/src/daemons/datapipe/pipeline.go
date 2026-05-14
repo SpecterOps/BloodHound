@@ -262,7 +262,7 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 			attr.Scope("summary"),
 		)()
 
-		if err := analysis.RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg); err != nil {
+		if err := analysis.RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg, analysis.AnalysisStepAll); err != nil {
 			if errors.Is(err, analysis.ErrAnalysisFailed) {
 				s.jobService.FailAnalyzedIngestJobs()
 			} else if errors.Is(err, analysis.ErrAnalysisPartiallyCompleted) {
