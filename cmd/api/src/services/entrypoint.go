@@ -80,7 +80,7 @@ func ConnectDatabases(ctx context.Context, cfg config.Configuration) (bootstrap.
 func CreateRuntimeDependencies(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) (bootstrap.RuntimeDependencies, error) {
 	var deps = bootstrap.RuntimeDependencies{}
 	if fileServices, err := storage.NewDefaultFileServices(cfg); err != nil {
-		return deps, fmt.Errorf("failed to intialize file services: %w", err)
+		return deps, fmt.Errorf("failed to initialize file services: %w", err)
 	} else if fileServiceResolver, err := storage.NewFileServiceResolver(fileServices); err != nil {
 		return deps, fmt.Errorf("failed to initialize file service resolver: %w", err)
 		// The FileServiceRetained is necessary for the PreMigrationDaemons where it is used in IngestControl for Cleanup. Checking it here ensures
@@ -96,7 +96,7 @@ func CreateRuntimeDependencies(ctx context.Context, cfg config.Configuration, co
 // PreMigrationDaemons Word of caution: These daemons will be launched prior to any migration starting
 func PreMigrationDaemons(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], deps bootstrap.RuntimeDependencies) ([]daemons.Daemon, error) {
 	if retainedFileService, err := deps.FileServiceResolver.Resolve(storage.FileServiceRetained); err != nil {
-		return nil, fmt.Errorf("Error resolving FileServiceRetained: %w", err)
+		return nil, fmt.Errorf("error resolving FileServiceRetained: %w", err)
 	} else {
 		return []daemons.Daemon{
 			toolapi.NewDaemon(ctx, connections, cfg, schema.DefaultGraphSchema(), retainedFileService),

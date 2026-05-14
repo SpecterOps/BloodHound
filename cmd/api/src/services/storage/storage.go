@@ -169,7 +169,7 @@ func (s *LocalFileService) ListFiles(ctx context.Context, name string, options L
 	return s.Storage.List(ctx, name, options)
 }
 
-// TODO MC: is this functinality necessary?
+// TODO MC: is this functionality necessary?
 func MoveFileBetweenServices(
 	ctx context.Context,
 	sourceService FileService,
@@ -275,8 +275,8 @@ func NewDefaultFileServices(cfg config.Configuration) (map[FileServiceName]FileS
 	retainService := NewFileService(retainStore)
 	fileServices[FileServiceRetained] = retainService
 
-	collectersService := NewFileService(collectorsStore)
-	fileServices[FileServiceCollectors] = collectersService
+	collectorsService := NewFileService(collectorsStore)
+	fileServices[FileServiceCollectors] = collectorsService
 
 	return fileServices, nil
 }

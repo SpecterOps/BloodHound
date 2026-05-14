@@ -35,8 +35,8 @@ import (
 
 // RuntimeDependencies holds values that must be created prior to the entrypoint. For instance
 // IngestControl is reliant on the FileService. In order for the
-// pre-migration toolapi to hve access to the FileServiceRetained, the
-// FileServiceResolver is created prior ot the PreMigrationDaemons and the Entrypoint. This could
+// pre-migration toolapi to have access to the FileServiceRetained, the
+// FileServiceResolver is created prior to the PreMigrationDaemons and the Entrypoint. This could
 // then be passed in.
 type RuntimeDependencies struct {
 	FileServiceResolver storage.FileServiceResolver
