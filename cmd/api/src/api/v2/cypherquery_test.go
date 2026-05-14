@@ -66,6 +66,25 @@ func TestResources_CypherQuery(t *testing.T) {
 
 	primaryDisplayKinds := graphschema.PrimaryDisplayKinds{graph.StringKind("KindA"): graphschema.DisplayKind{}}
 
+	intentAuditEntry := model.AuditEntry{
+		Action: model.AuditLogActionRunCypherQuery,
+		Status: model.AuditLogStatusIntent,
+		Model: model.AuditData{
+			"query":              "query",
+			"include_properties": true,
+		},
+	}
+	successAuditEntry := intentAuditEntry
+	successAuditEntry.Status = model.AuditLogStatusSuccess
+	failureAuditEntry := intentAuditEntry
+	failureAuditEntry.Status = model.AuditLogStatusFailure
+
+	unauthorizedAccessEntry := model.AuditEntry{
+		Action: model.AuditLogActionUnauthorizedAccessAttempt,
+		Status: model.AuditLogStatusFailure,
+		Model:  model.AuditData{"endpoint": "POST /api/v2/graphs/cypher"},
+	}
+
 	tt := []testData{
 		{
 			name: "Test Ordered node keys",
@@ -101,7 +120,8 @@ func TestResources_CypherQuery(t *testing.T) {
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
-					HasMutation: false,
+					StrippedQuery: "query",
+					HasMutation:   false,
 				}, nil)
 				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
 				mocks.mockGraphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Eq(primaryDisplayKinds), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{
@@ -119,6 +139,8 @@ func TestResources_CypherQuery(t *testing.T) {
 					},
 					Literals: graph.Literals{},
 				}, nil)
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), intentAuditEntry).Times(1)
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), successAuditEntry).Times(1)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -234,9 +256,12 @@ func TestResources_CypherQuery(t *testing.T) {
 				t.Helper()
 				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
-					HasMutation: true,
+					StrippedQuery: "query",
+					HasMutation:   true,
 				}, nil)
-				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), intentAuditEntry).Times(1)
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), unauthorizedAccessEntry).Times(1)
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), failureAuditEntry).Times(1)
 			},
 			expected: expected{
 				responseCode:   http.StatusForbidden,
@@ -279,9 +304,12 @@ func TestResources_CypherQuery(t *testing.T) {
 				t.Helper()
 				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
-					HasMutation: false,
+					StrippedQuery: "query",
+					HasMutation:   false,
 				}, nil)
 				mocks.mockGraphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Eq(primaryDisplayKinds), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{}, &neo4j.Neo4jError{})
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), intentAuditEntry).Times(1)
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), failureAuditEntry).Times(1)
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -324,9 +352,12 @@ func TestResources_CypherQuery(t *testing.T) {
 				t.Helper()
 				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
-					HasMutation: false,
+					StrippedQuery: "query",
+					HasMutation:   false,
 				}, nil)
 				mocks.mockGraphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Eq(primaryDisplayKinds), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{}, nil)
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), intentAuditEntry).Times(1)
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), failureAuditEntry).Times(1)
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
@@ -369,8 +400,11 @@ func TestResources_CypherQuery(t *testing.T) {
 				t.Helper()
 				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
-					HasMutation: false,
+					StrippedQuery: "query",
+					HasMutation:   false,
 				}, nil)
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), intentAuditEntry).Times(1)
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), failureAuditEntry).Times(1)
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -413,7 +447,8 @@ func TestResources_CypherQuery(t *testing.T) {
 				t.Helper()
 				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
-					HasMutation: false,
+					StrippedQuery: "query",
+					HasMutation:   false,
 				}, nil)
 				mocks.mockGraphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Eq(primaryDisplayKinds), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{
 					Nodes: map[string]model.UnifiedNode{
@@ -430,6 +465,8 @@ func TestResources_CypherQuery(t *testing.T) {
 					},
 					Literals: graph.Literals{},
 				}, nil)
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), intentAuditEntry).Times(1)
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), successAuditEntry).Times(1)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -472,7 +509,8 @@ func TestResources_CypherQuery(t *testing.T) {
 				t.Helper()
 				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
-					HasMutation: false,
+					StrippedQuery: "query",
+					HasMutation:   false,
 				}, nil)
 				mocks.mockGraphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Eq(primaryDisplayKinds), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{
 					Nodes: map[string]model.UnifiedNode{
@@ -489,6 +527,8 @@ func TestResources_CypherQuery(t *testing.T) {
 					},
 					Literals: graph.Literals{},
 				}, nil)
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), intentAuditEntry).Times(1)
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), successAuditEntry).Times(1)
 			},
 			dogTagsOverrides: dogtags.TestOverrides{
 				Bools: map[dogtags.BoolDogTag]bool{
@@ -539,7 +579,8 @@ func TestResources_CypherQuery(t *testing.T) {
 				t.Helper()
 				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
-					HasMutation: false,
+					StrippedQuery: "query",
+					HasMutation:   false,
 				}, nil)
 				mocks.mockGraphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Eq(primaryDisplayKinds), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{
 					Nodes: map[string]model.UnifiedNode{
@@ -569,6 +610,8 @@ func TestResources_CypherQuery(t *testing.T) {
 					},
 					Literals: graph.Literals{},
 				}, nil)
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), intentAuditEntry).Times(1)
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), successAuditEntry).Times(1)
 			},
 			dogTagsOverrides: dogtags.TestOverrides{
 				Bools: map[dogtags.BoolDogTag]bool{
@@ -616,7 +659,8 @@ func TestResources_CypherQuery(t *testing.T) {
 				t.Helper()
 				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(primaryDisplayKinds, nil)
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
-					HasMutation: false,
+					StrippedQuery: "query",
+					HasMutation:   false,
 				}, nil)
 				mocks.mockGraphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Eq(primaryDisplayKinds), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{
 					Nodes: map[string]model.UnifiedNode{
@@ -639,6 +683,8 @@ func TestResources_CypherQuery(t *testing.T) {
 					},
 					Literals: graph.Literals{},
 				}, nil)
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), intentAuditEntry).Times(1)
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), successAuditEntry).Times(1)
 			},
 			dogTagsOverrides: dogtags.TestOverrides{
 				Bools: map[dogtags.BoolDogTag]bool{
