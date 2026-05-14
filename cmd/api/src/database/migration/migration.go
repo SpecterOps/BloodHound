@@ -42,14 +42,14 @@ type Source struct {
 
 // Migrator is the main SQL migration tool for BloodHound.
 type Migrator struct {
-	Sources        []Source // Deprecated: Sources supports legacy v8 stepwise migrations.  Can be removed after v10 is released
+	Sources        []Source // Deprecated: Sources supports legacy v8 stepwise migrations.  Can be removed after v11 is released
 	ExtensionsData []Source
 	DB             *gorm.DB
 	SqlDB          *sql.DB
 	GooseFS        fs.FS
 }
 
-// Migration contains information about a specific migration such as the file location, it's Source, and Version. Can be removed after v10 release
+// Migration contains information about a specific migration such as the file location, it's Source, and Version. Can be removed after v11 release
 type Migration struct {
 	Filename string
 	Source   fs.FS
@@ -69,7 +69,7 @@ func NewMigrator(db *gorm.DB) (*Migrator, error) {
 		return nil, fmt.Errorf("failed to open foss migrations directory: %v", err)
 	}
 	return &Migrator{
-		// Deprecated: Sources supports legacy v8 stepwise migrations. Can be removed after v10 is released.
+		// Deprecated: Sources supports legacy v8 stepwise migrations. Can be removed after v11 is released.
 		Sources: []Source{
 			{FileSystem: FossMigrations, Directory: "migrations/legacy"},
 		},

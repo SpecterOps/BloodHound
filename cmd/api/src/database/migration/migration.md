@@ -45,6 +45,7 @@ table against any new available migration files and automatically applies pendin
 -   Always include a `Down` migration when possible
 -   `Down` should safely reverse an `Up`, e.g., use `IF EXISTS`, `ON CONFLICT`, etc.
 -   Always pull main before creating a new migration
+-   If you're editing an existing migration file that has already been applied, you must run `just goose-down` followed by `just goose-up` to roll back and re-apply the migration with your changes, since goose only tracks version numbers and won't detect file content changes.
 
 ## How to use in the codebase
 
