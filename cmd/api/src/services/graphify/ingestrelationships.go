@@ -32,31 +32,13 @@ import (
 	"github.com/specterops/dawgs/util"
 )
 
-// IngestRelationships resolves and writes a batch of ingestible relationships to the graph,
-// applying sourceKind to both endpoint nodes and to the dawgs RelationshipUpdate identity kind.
+// IngestRelationships resolves and writes a batch of ingestible relationships to the graph.
 //
-// This is the legacy ingest path used by AD and Azure pipelines, where some endpoint nodes
-// are referenced only via relationship data (e.g. well-known SIDs, foreign principals, ACE
-// principals) and never appear in node payloads. Applying sourceKind here ensures those orphan
-// endpoint nodes receive a base kind.
+// This function first calls resolveRelationships to resolve node identifiers based on name and kind.
 //
-// For the kindless variant used by OpenGraph, see IngestRelationshipsKindless.
+// Each resolved relationship update is applied to the graph via batch.UpdateRelationshipBy.
+// Errors encountered during resolution or update are collected and returned as a single combined error.
 func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relationships []ein.IngestibleRelationship) error {
-	return ingestRelationships(ingestCtx, sourceKind, relationships, true)
-}
-
-// IngestRelationshipsKindless resolves and writes a batch of ingestible relationships to the
-// graph WITHOUT applying sourceKind to endpoint nodes. sourceKind is propagated only to
-// Start/EndIdentityKind so that Neo4j's label-scoped MERGE can continue to use existing
-// label-scoped indexes during endpoint resolution.
-//
-// This is the OpenGraph (Generic) ingest path: endpoint kinds are managed exclusively by the
-// node ingest path; relationship ingest is forbidden from mutating endpoint node kinds.
-func IngestRelationshipsKindless(ingestCtx *IngestContext, sourceKind graph.Kind, relationships []ein.IngestibleRelationship) error {
-	return ingestRelationships(ingestCtx, sourceKind, relationships, false)
-}
-
-func ingestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relationships []ein.IngestibleRelationship, applyKindToEndpoints bool) error {
 	var (
 		errs                                 = errorlist.NewBuilder()
 		resolvedRelationships, resolveErrors = endpoint.ResolveAll(ingestCtx.Ctx, ingestCtx.EndpointResolver, relationships)
@@ -66,7 +48,7 @@ func ingestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relati
 		errs.Add(resolveErrors)
 	}
 
-	for update := range ingestibleRelationshipsToUpdates(ingestCtx, resolvedRelationships, sourceKind, applyKindToEndpoints) {
+	for update := range ingestibleRelationshipsToUpdates(ingestCtx, resolvedRelationships, sourceKind) {
 		if err := maybeSubmitRelationshipUpdate(ingestCtx, update); err != nil {
 			errs.Add(err)
 		}
@@ -212,46 +194,35 @@ func IngestSessions(batch *IngestContext, sessions []ein.IngestibleSession) erro
 }
 
 // ingestibleRelationshipsToUpdates transforms a list of ingestible relationships into
-// graph.RelationshipUpdate objects as an iterator. sourceKind is always propagated to
-// Start/EndIdentityKind so that Neo4j's label-scoped MERGE can use existing label-scoped
-// indexes during endpoint resolution. When applyKindToEndpoints is true, sourceKind is
-// merged with each endpoint's per-relationship Kind (rel.Source.Kind / rel.Target.Kind)
-// and applied to the endpoint nodes themselves (legacy AD/Azure behavior); when false,
-// endpoint nodes are written without any kind information (OpenGraph behavior).
-func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.IngestibleRelationship, sourceKind graph.Kind, applyKindToEndpoints bool) iter.Seq[graph.RelationshipUpdate] {
+// graph.RelationshipUpdate objects as an iterator.
+func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.IngestibleRelationship, sourceKind graph.Kind) iter.Seq[graph.RelationshipUpdate] {
 	return func(yield func(graph.RelationshipUpdate) bool) {
 		for _, rel := range rels {
 			rel.RelProps[common.LastSeen.String()] = batch.IngestTime
 
 			var (
+				startKinds = MergeNodeKinds(sourceKind, rel.Source.Kind)
+				endKinds   = MergeNodeKinds(sourceKind, rel.Target.Kind)
+
 				startObjID = strings.ToUpper(rel.Source.Value)
 				endObjID   = strings.ToUpper(rel.Target.Value)
-				startProps = graph.AsProperties(graph.PropertyMap{
-					common.ObjectID: startObjID,
-					common.LastSeen: batch.IngestTime,
-				})
-				endProps = graph.AsProperties(graph.PropertyMap{
-					common.ObjectID: endObjID,
-					common.LastSeen: batch.IngestTime,
-				})
-				startEndpointKinds []graph.Kind
-				endEndpointKinds   []graph.Kind
+
+				update = graph.RelationshipUpdate{
+					Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+						common.ObjectID: startObjID,
+						common.LastSeen: batch.IngestTime,
+					}), startKinds...),
+					StartIdentityProperties: []string{common.ObjectID.String()},
+					StartIdentityKind:       sourceKind,
+					End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+						common.ObjectID: endObjID,
+						common.LastSeen: batch.IngestTime,
+					}), endKinds...),
+					EndIdentityKind:       sourceKind,
+					EndIdentityProperties: []string{common.ObjectID.String()},
+					Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
+				}
 			)
-
-			if applyKindToEndpoints {
-				startEndpointKinds = MergeNodeKinds(sourceKind, rel.Source.Kind)
-				endEndpointKinds = MergeNodeKinds(sourceKind, rel.Target.Kind)
-			}
-
-			update := graph.RelationshipUpdate{
-				Start:                   graph.PrepareNode(startProps, startEndpointKinds...),
-				StartIdentityProperties: []string{common.ObjectID.String()},
-				StartIdentityKind:       sourceKind,
-				End:                     graph.PrepareNode(endProps, endEndpointKinds...),
-				EndIdentityKind:         sourceKind,
-				EndIdentityProperties:   []string{common.ObjectID.String()},
-				Relationship:            graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
-			}
 
 			if !yield(update) {
 				break
