@@ -36,6 +36,9 @@ const (
 type AnalysisStep int
 
 const (
+	////////
+	// Individual steps available to the bitmask
+	////////
 	// AnalysisStepADPostProcessing runs AD post-processing.
 	AnalysisStepADPostProcessing AnalysisStep = 1 << iota
 	// AnalysisStepAzurePostProcessing runs Azure post-processing.
@@ -45,12 +48,19 @@ const (
 	// AnalysisStepGenerateFindings runs the analysis pipeline (BHE only).
 	AnalysisStepGenerateFindings
 
-	// AnalysisStepPostProcessing runs both AD and Azure post-processing.
-	AnalysisStepPostProcessing = AnalysisStepADPostProcessing | AnalysisStepAzurePostProcessing
+	/////////
+	// analysisStepSentinel MUST remain the last entry in this iota block;
+	// AnalysisStepAll is derived from it. Add new steps above this line.
+	////////
+	analysisStepSentinel
+
+	////////
+	// Helpers available for ease of use throughout the codebase. If adding indvidual steps above, validate whether these need updating based on expected behavior.
+	////////
 	// AnalysisStepTaggingToCompletion runs the tagging step and every step that follows it.
 	AnalysisStepTaggingToCompletion = AnalysisStepTagging | AnalysisStepGenerateFindings
 	// AnalysisStepAll selects every step in the pipeline.
-	AnalysisStepAll = AnalysisStepPostProcessing | AnalysisStepTaggingToCompletion
+	AnalysisStepAll = analysisStepSentinel - 1
 )
 
 // Has reports whether all of the bits in step are set in s.
