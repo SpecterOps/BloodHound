@@ -209,12 +209,10 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                                 ) : (
                                     <FormItem>
                                         <FormLabel>Automatic Certification</FormLabel>
-                                        <div>
-                                            <p>
-                                                Certification disabled by the Zone's settings. Please edit {zoneName}{' '}
-                                                settings to manage rule-specific certification settings.
-                                            </p>
-                                        </div>
+                                        <p>
+                                            Certification disabled by the Zone's settings. Please edit {zoneName}{' '}
+                                            settings to manage rule-specific certification settings.
+                                        </p>
                                     </FormItem>
                                 ))}
                         </div>
