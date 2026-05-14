@@ -60,6 +60,17 @@ table against any new available migration files and automatically applies pendin
 -   `just goose-down-to version` - rollback to specified version (non-inclusive)
 -   `just goose-down-all` - rollback all versions
 
+**Common Workflow:**
+
+-   `just goose-create <name>` - This creates a file with boilerplate SQL
+-   Make edits to the desired migration file
+-   `just goose-up` - Applies migrations
+-   If modifications are needed to an already-applied local migration:
+    -   Make edits
+    -   `just goose-down` - Rolls back the most recent migration (goose tracks versions, not file contents)
+        -   `just goose-down-to <timestamp>` - Use this if you need to roll back multiple local migrations
+    -   `just goose-up` - Re-applies the modified migration/s
+
 ## Troubleshooting
 
 ### Migration Fails Mid Run
