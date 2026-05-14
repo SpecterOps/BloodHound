@@ -145,8 +145,8 @@ func (s *OrphanFileSweeper) isExcludedStoragePath(logicalPath string) bool {
 }
 
 // addExpectedLocalPath records an expected file path for the legacy local temp-directory cleanup pass.
-// Expected names may bn legacy absolute filesystem paths or file-service logical paths. Logical paths are
-// normalized, resolved under tempDirectoryRootPath, and ignored if they are empty or would excape the temp root.
+// Expected names may be legacy absolute filesystem paths or file-service logical paths. Logical paths are
+// normalized, resolved under tempDirectoryRootPath, and ignored if they are empty or would escape the temp root.
 func (s *OrphanFileSweeper) addExpectedLocalPath(expectedLocalFiles map[string]struct{}, expectedFileName string) {
 	expectedFileName = strings.TrimSpace(expectedFileName)
 	if expectedFileName == "" {
