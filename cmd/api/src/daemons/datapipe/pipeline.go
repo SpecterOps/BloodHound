@@ -245,14 +245,23 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 
 func (s *BHCEPipeline) analyze(ctx context.Context, steps model.AnalysisStep) error {
 	// If there are completed ingest jobs or if analysis was user-requested, perform analysis.
-	if hasJobsWaitingForAnalysis, err := s.jobService.HasIngestJobsWaitingForAnalysis(); err != nil {
+	hasJobsWaitingForAnalysis, err := s.jobService.HasIngestJobsWaitingForAnalysis()
+	if err != nil {
 		return fmt.Errorf("looking up jobs for analysis: %v", err)
-	} else if analysisRequest, err := s.db.GetAnalysisRequest(ctx); err == nil {
-		steps = analysisRequest.AnalysisStep
-		hasJobsWaitingForAnalysis = true
-		_ = hasJobsWaitingForAnalysis
-	} else if !hasJobsWaitingForAnalysis {
+	}
+
+	analysisRequest, err := s.db.GetAnalysisRequest(ctx)
+	if err != nil && !errors.Is(err, database.ErrNotFound) {
+		return fmt.Errorf("looking up analysis request: %v", err)
+	}
+	hasAnalysisRequest := err == nil
+
+	if !hasJobsWaitingForAnalysis && !hasAnalysisRequest {
 		return nil
+	}
+
+	if hasAnalysisRequest {
+		steps |= analysisRequest.AnalysisStep
 	}
 
 	// Ensure that the user-requested analysis switch is deleted. This is done at the beginning of the
