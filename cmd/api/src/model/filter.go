@@ -320,8 +320,11 @@ func (s QueryParameterFilterMap) BuildSQLFilter() (SQLFilter, error) {
 	return s.BuildAliasedSQLFilter(models.EmptyOptional[string]())
 }
 
+// guessFilterValueType takes a raw string filter value and attempts to guess its Go type.
+// If isPropertyString is true, the raw value is returned as is. Otherwise, it
+// attempts boolean, integer, or float parsing before defaulting to string.
 func guessFilterValueType(raw string, isPropertyString bool) any {
-	// GDB node property corresponds to a string value
+	// skip type guessing when the node property is a string type
 	if isPropertyString {
 		return raw
 	}

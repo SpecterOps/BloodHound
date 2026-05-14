@@ -399,47 +399,72 @@ func TestBuildGDBNodeFilter(t *testing.T) {
 		output graph.Criteria
 	}{
 		{
-			name: "equals string", //TODO
+			name: "equals string",
 			input: model.QueryParameterFilter{
-				Name:     "name",
-				Operator: model.Equals,
-				Value:    "abc",
+				Name:         "name",
+				Operator:     model.Equals,
+				Value:        "abc",
+				IsStringData: true,
 			},
 			output: query.Equals(query.NodeProperty("name"), "abc"),
 		},
 		{
-			name: "not equals string", //TODO
+			name: "not equals string",
 			input: model.QueryParameterFilter{
-				Name:     "name",
-				Operator: model.NotEquals,
-				Value:    "xyz",
+				Name:         "name",
+				Operator:     model.NotEquals,
+				Value:        "xyz",
+				IsStringData: true,
 			},
 			output: query.Not(query.Equals(query.NodeProperty("name"), "xyz")),
 		},
 		{
-			name: "equals integer",
+			name: "greater than integer",
 			input: model.QueryParameterFilter{
-				Name:     "name",
-				Operator: model.Equals,
-				Value:    "007",
+				Name:         "integer_property",
+				Operator:     model.GreaterThan,
+				Value:        "550",
+				IsStringData: false,
 			},
-			output: query.Equals(query.NodeProperty("name"), int64(007)),
+			output: query.GreaterThan(query.NodeProperty("integer_property"), int64(550)),
+		},
+		{
+			name: "less than integer",
+			input: model.QueryParameterFilter{
+				Name:         "integer_property",
+				Operator:     model.LessThan,
+				Value:        "5",
+				IsStringData: false,
+			},
+			output: query.LessThan(query.NodeProperty("integer_property"), int64(5)),
+		},
+		{
+			name: "less than float",
+			input: model.QueryParameterFilter{
+				Name:         "float_property",
+				Operator:     model.LessThan,
+				Value:        "9.99999",
+				IsStringData: false,
+			},
+			output: query.LessThan(query.NodeProperty("float_property"), float64(9.99999)),
 		},
 		{
 			name: "equals boolean true",
 			input: model.QueryParameterFilter{
-				Name:     "collected",
-				Operator: model.Equals,
-				Value:    "true",
+				Name:         "collected",
+				Operator:     model.Equals,
+				Value:        "true",
+				IsStringData: false,
 			},
 			output: query.Equals(query.NodeProperty("collected"), true),
 		},
 		{
 			name: "equals boolean false",
 			input: model.QueryParameterFilter{
-				Name:     "collected",
-				Operator: model.Equals,
-				Value:    "false",
+				Name:         "collected",
+				Operator:     model.Equals,
+				Value:        "false",
+				IsStringData: false,
 			},
 			output: query.Or(
 				query.Equals(query.NodeProperty("collected"), false),
@@ -447,31 +472,14 @@ func TestBuildGDBNodeFilter(t *testing.T) {
 			),
 		},
 		{
-			name: "not equals",
+			name: "not equals boolean false",
 			input: model.QueryParameterFilter{
-				Name:     "some_property",
-				Operator: model.NotEquals,
-				Value:    "42",
+				Name:         "collected",
+				Operator:     model.NotEquals,
+				Value:        "false",
+				IsStringData: false,
 			},
-			output: query.Not(query.Equals(query.NodeProperty("some_property"), int64(42))),
-		},
-		{
-			name: "greater than",
-			input: model.QueryParameterFilter{
-				Name:     "some_property",
-				Operator: model.GreaterThan,
-				Value:    "7",
-			},
-			output: query.GreaterThan(query.NodeProperty("some_property"), int64(7)),
-		},
-		{
-			name: "less than",
-			input: model.QueryParameterFilter{
-				Name:     "abcd",
-				Operator: model.LessThan,
-				Value:    "5",
-			},
-			output: query.LessThan(query.NodeProperty("abcd"), int64(5)),
+			output: query.Not(query.Equals(query.NodeProperty("collected"), false)),
 		},
 		{
 			name: "equals boolean-like string",
@@ -514,11 +522,32 @@ func TestBuildGDBNodeFilter(t *testing.T) {
 			output: query.Not(query.Equals(query.NodeProperty("name"), "5.6")),
 		},
 		{
+			name: "empty value defaults to raw string",
+			input: model.QueryParameterFilter{
+				Name:         "abc",
+				Operator:     model.Equals,
+				Value:        "",
+				IsStringData: true,
+			},
+			output: query.Equals(query.NodeProperty("abc"), ""),
+		},
+		{
+			name: "empty value on bool defaults to raw string - edge case",
+			input: model.QueryParameterFilter{
+				Name:         "collected",
+				Operator:     model.Equals,
+				Value:        "",
+				IsStringData: false,
+			},
+			output: query.Equals(query.NodeProperty("collected"), ""),
+		},
+		{
 			name: "unsupported operator returns nil",
 			input: model.QueryParameterFilter{
-				Name:     "some_property",
-				Operator: model.ApproximatelyEquals,
-				Value:    "test",
+				Name:         "some_property",
+				Operator:     model.ApproximatelyEquals,
+				Value:        "test",
+				IsStringData: true,
 			},
 			output: nil,
 		},
