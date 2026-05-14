@@ -85,11 +85,6 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		preparedQuery queries.PreparedQuery
 		graphResponse model.UnifiedGraph
 		err           error
-
-		auditLogData = model.AuditData{
-			"query":              preparedQuery.StrippedQuery,
-			"include_properties": payload.IncludeProperties,
-		}
 	)
 
 	user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx)
@@ -109,7 +104,14 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	auditLogEntry, err := model.NewAuditEntry(model.AuditLogActionRunCypherQuery, model.AuditLogStatusIntent, auditLogData)
+	auditLogEntry, err := model.NewAuditEntry(
+		model.AuditLogActionRunCypherQuery,
+		model.AuditLogStatusIntent,
+		model.AuditData{
+			"query":              preparedQuery.StrippedQuery,
+			"include_properties": payload.IncludeProperties,
+		},
+	)
 	if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
