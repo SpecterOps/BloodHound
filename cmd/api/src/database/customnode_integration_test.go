@@ -19,6 +19,7 @@
 package database_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -596,7 +597,7 @@ func countKindRows(t *testing.T, testSuite IntegrationTestSuite, kindName string
 	t.Helper()
 
 	var count int64
-	result := testSuite.DB.WithContext(testSuite.Context).Raw("SELECT COUNT(*) FROM kind WHERE name = ?", kindName).Scan(&count)
+	result := testSuite.DB.WithContext(testSuite.Context).Raw(fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE name = ?", model.Kind{}.TableName()), kindName).Scan(&count)
 	require.NoError(t, result.Error)
 	return count
 }
@@ -605,7 +606,7 @@ func countCustomNodeKindRows(t *testing.T, testSuite IntegrationTestSuite, kindN
 	t.Helper()
 
 	var count int64
-	result := testSuite.DB.WithContext(testSuite.Context).Raw("SELECT COUNT(*) FROM custom_node_kinds WHERE kind_name = ?", kindName).Scan(&count)
+	result := testSuite.DB.WithContext(testSuite.Context).Raw(fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE kind_name = ?", model.CustomNodeKind{}.TableName()), kindName).Scan(&count)
 	require.NoError(t, result.Error)
 	return count
 }

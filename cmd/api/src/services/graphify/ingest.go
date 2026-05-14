@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
@@ -268,7 +267,7 @@ func IngestGenericData(batch *IngestContext, sourceKind graph.Kind, converted Co
 	}
 
 	if len(converted.RelProps) > 0 {
-		if err := IngestRelationshipsKindless(batch, sourceKind, converted.RelProps); err != nil {
+		if err := IngestRelationships(batch, sourceKind, converted.RelProps); err != nil {
 			errs.Add(err)
 		}
 	}
@@ -287,11 +286,11 @@ func registerGenericNodeKinds(batch *IngestContext, sourceKind graph.Kind, nodes
 
 	for _, node := range nodes {
 		for _, kind := range MergeNodeKinds(sourceKind, node.Labels...) {
-			kindName := kind.String()
-			if strings.HasPrefix(kindName, "Tag_") {
+			if model.IsExtendedNodeKind(kind) {
 				continue
 			}
 
+			kindName := kind.String()
 			if _, seen := batch.seenKinds[kindName]; seen {
 				continue
 			}
