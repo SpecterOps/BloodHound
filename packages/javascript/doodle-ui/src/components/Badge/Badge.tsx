@@ -119,7 +119,9 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
                     className
                 )}>
                 {icon && (
-                    <span className={cn('flex shrink-0 items-center [&>svg]:h-3 [&>svg]:w-3', iconClassName)}>
+                    // badge-icon does not have actual properties, if you want to leverage it, you would have to target the className and define the properties via the Badge component instance in the parent
+                    <span
+                        className={cn('flex shrink-0 items-center [&>svg]:h-3 [&>svg]:w-3 badge-icon', iconClassName)}>
                         {icon}
                     </span>
                 )}
