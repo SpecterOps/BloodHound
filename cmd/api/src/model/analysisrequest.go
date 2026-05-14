@@ -29,11 +29,40 @@ const (
 	AnalysisRequestDeletion AnalysisRequestType = "deletion"
 )
 
+// AnalysisStep is a bitmask that selects which steps of the analysis pipeline
+// should run. Each flag is independent, so callers may request any combination
+// of steps. When steps are combined, they always execute in pipeline order:
+// AD post-processing -> Azure post-processing -> Tagging -> Analysis.
+type AnalysisStep int
+
+const (
+	// AnalysisStepADPostProcessing runs AD post-processing.
+	AnalysisStepADPostProcessing AnalysisStep = 1 << iota
+	// AnalysisStepAzurePostProcessing runs Azure post-processing.
+	AnalysisStepAzurePostProcessing
+	// AnalysisStepTagging runs tagging of asset groups and tiers.
+	AnalysisStepTagging
+	// AnalysisStepGenerateFindings runs the analysis pipeline (BHE only).
+	AnalysisStepGenerateFindings
+
+	// AnalysisStepPostProcessing runs both AD and Azure post-processing.
+	AnalysisStepPostProcessing = AnalysisStepADPostProcessing | AnalysisStepAzurePostProcessing
+	// AnalysisStepTaggingToCompletion runs the tagging step and every step that follows it.
+	AnalysisStepTaggingToCompletion = AnalysisStepTagging | AnalysisStepGenerateFindings
+	// AnalysisStepAll selects every step in the pipeline.
+	AnalysisStepAll = AnalysisStepPostProcessing | AnalysisStepTaggingToCompletion
+)
+
+// Has reports whether all of the bits in step are set in s.
+func (s AnalysisStep) Has(step AnalysisStep) bool {
+	return s&step == step
+}
+
 type AnalysisRequest struct {
 	RequestedBy  string              `json:"requested_by"`
 	RequestType  AnalysisRequestType `json:"request_type"`
 	RequestedAt  time.Time           `json:"requested_at"`
-	AnalysisStep int                 `json:"analysis_step"` // Bitmask indicating where in the analysis pipeline to begin (see analysis.AnalysisStep)
+	AnalysisStep AnalysisStep        `json:"analysis_step"` // Bitmask indicating which analysis pipeline steps to run.
 
 	DeleteAllGraph        bool           `json:"delete_all_graph"`                        // Deletes all nodes and edges in the graph
 	DeleteSourcelessGraph bool           `json:"delete_sourceless_graph"`                 // Deletes all nodes and edges in the graph that have a type not registered in the source_kinds table
