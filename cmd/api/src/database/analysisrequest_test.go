@@ -49,3 +49,67 @@ func TestAnalysisRequest(t *testing.T) {
 	_, err = dbInst.GetAnalysisRequest(testCtx)
 	require.ErrorIs(t, err, database.ErrNotFound)
 }
+
+func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+	)
+
+	resetState := func(t *testing.T) {
+		t.Helper()
+		require.NoError(t, dbInst.DeleteAnalysisRequest(testCtx))
+	}
+
+	t.Run("subsequent request widens queued analysis_step bits", func(t *testing.T) {
+		resetState(t)
+
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor", model.AnalysisStepTaggingToCompletion))
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "admin", model.AnalysisStepAll))
+
+		queued, err := dbInst.GetAnalysisRequest(testCtx)
+		require.NoError(t, err)
+		require.Equal(t, model.AnalysisStepAll, queued.AnalysisStep)
+		require.Equal(t, "tag-editor", queued.RequestedBy, "audit fields preserve the original requester")
+	})
+
+	t.Run("subsequent narrower request does not downgrade queued bits", func(t *testing.T) {
+		resetState(t)
+
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "admin", model.AnalysisStepAll))
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor", model.AnalysisStepTaggingToCompletion))
+
+		queued, err := dbInst.GetAnalysisRequest(testCtx)
+		require.NoError(t, err)
+		require.Equal(t, model.AnalysisStepAll, queued.AnalysisStep, "narrower follow-up request must not downgrade queued steps")
+		require.Equal(t, "admin", queued.RequestedBy)
+	})
+
+	t.Run("identical bits are a no-op and leave the row untouched", func(t *testing.T) {
+		resetState(t)
+
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor-1", model.AnalysisStepTaggingToCompletion))
+		original, err := dbInst.GetAnalysisRequest(testCtx)
+		require.NoError(t, err)
+
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor-2", model.AnalysisStepTaggingToCompletion))
+		queued, err := dbInst.GetAnalysisRequest(testCtx)
+		require.NoError(t, err)
+
+		require.Equal(t, model.AnalysisStepTaggingToCompletion, queued.AnalysisStep)
+		require.Equal(t, "tag-editor-1", queued.RequestedBy)
+		require.Equal(t, original.RequestedAt, queued.RequestedAt, "row must not be updated when bits don't change")
+	})
+
+	t.Run("disjoint bits union into the queued row", func(t *testing.T) {
+		resetState(t)
+
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "post-proc", model.AnalysisStepADPostProcessing))
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor", model.AnalysisStepTaggingToCompletion))
+
+		queued, err := dbInst.GetAnalysisRequest(testCtx)
+		require.NoError(t, err)
+		require.Equal(t, model.AnalysisStepADPostProcessing|model.AnalysisStepTaggingToCompletion, queued.AnalysisStep)
+		require.Equal(t, "post-proc", queued.RequestedBy)
+	})
+}
