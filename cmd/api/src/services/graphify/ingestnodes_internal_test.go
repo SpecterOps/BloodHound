@@ -19,6 +19,7 @@ package graphify
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -219,24 +220,26 @@ func TestIngestGenericData_RegisterNodeKind(t *testing.T) {
 		assert.ElementsMatch(t, []string{"UnknownKindA", "UnknownKindB"}, called)
 	})
 
-	t.Run("tag kind does not call registrar", func(t *testing.T) {
-		var (
-			ctrl             = gomock.NewController(t)
-			mockBatchUpdater = mocks.NewMockBatchUpdater(ctrl)
-			called           []string
-			ingestCtx        = NewIngestContext(context.Background(), WithNodeKindRegistrar(func(kind graph.Kind) error {
-				called = append(called, kind.String())
-				return nil
-			}))
-		)
+	for _, kind := range []graph.Kind{graph.StringKind("Tag_Custom"), graph.StringKind("Meta"), graph.StringKind("MetaDetail"), common.MigrationData} {
+		t.Run(fmt.Sprintf("extended kind %s does not call registrar", kind), func(t *testing.T) {
+			var (
+				ctrl             = gomock.NewController(t)
+				mockBatchUpdater = mocks.NewMockBatchUpdater(ctrl)
+				called           []string
+				ingestCtx        = NewIngestContext(context.Background(), WithNodeKindRegistrar(func(kind graph.Kind) error {
+					called = append(called, kind.String())
+					return nil
+				}))
+			)
 
-		ingestCtx.BindBatchUpdater(mockBatchUpdater)
-		mockBatchUpdater.EXPECT().UpdateNodeBy(gomock.Any()).Return(nil).Times(1)
+			ingestCtx.BindBatchUpdater(mockBatchUpdater)
+			mockBatchUpdater.EXPECT().UpdateNodeBy(gomock.Any()).Return(nil).Times(1)
 
-		err := IngestGenericData(ingestCtx, graph.StringKind("Tag_Custom"), ConvertedData{NodeProps: []ein.IngestibleNode{{ObjectID: "node-1"}}})
-		require.NoError(t, err)
-		assert.Empty(t, called)
-	})
+			err := IngestGenericData(ingestCtx, kind, ConvertedData{NodeProps: []ein.IngestibleNode{{ObjectID: "node-1"}}})
+			require.NoError(t, err)
+			assert.Empty(t, called)
+		})
+	}
 
 	t.Run("registrar error propagates and prevents node update", func(t *testing.T) {
 		var (

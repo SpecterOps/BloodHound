@@ -21,7 +21,8 @@ DECLARE
   kind_row kind%rowtype;
   custom_node_kind_id INTEGER;
 BEGIN
-  -- Mirrors upsert_kind's locking behavior without burning sequence values on conflicts.
+  -- Lock before checking existence so only the caller that first observes a new
+  -- kind creates its custom_node_kinds stub.
   PERFORM pg_advisory_xact_lock(hashtext(node_kind_name));
 
   SELECT * INTO kind_row FROM kind WHERE name = node_kind_name;
@@ -29,7 +30,7 @@ BEGIN
     RETURN;
   END IF;
 
-  INSERT INTO kind (name) VALUES (node_kind_name) RETURNING * INTO kind_row;
+  SELECT * INTO kind_row FROM upsert_kind(node_kind_name);
 
   SELECT id INTO custom_node_kind_id FROM custom_node_kinds WHERE kind_name = node_kind_name;
   IF custom_node_kind_id IS NULL THEN
