@@ -21,18 +21,20 @@ import "time"
 type DatapipeStatus string
 
 const (
-	DatapipeStatusIdle      DatapipeStatus = "idle"
-	DatapipeStatusIngesting DatapipeStatus = "ingesting"
-	DatapipeStatusAnalyzing DatapipeStatus = "analyzing"
-	DatapipeStatusPurging   DatapipeStatus = "purging"
-	DatapipeStatusPruning   DatapipeStatus = "pruning"
-	DatapipeStatusStarting  DatapipeStatus = "starting"
+	DatapipeStatusIdle       DatapipeStatus = "idle"
+	DatapipeStatusIngesting  DatapipeStatus = "ingesting"
+	DatapipeStatusAnalyzing  DatapipeStatus = "analyzing"
+	DatapipeStatusOptimizing DatapipeStatus = "optimizing"
+	DatapipeStatusPurging    DatapipeStatus = "purging"
+	DatapipeStatusPruning    DatapipeStatus = "pruning"
+	DatapipeStatusStarting   DatapipeStatus = "starting"
 )
 
 type DatapipeStatusWrapper struct {
 	Status                     DatapipeStatus `json:"status"`
 	UpdatedAt                  time.Time      `json:"updated_at"`
 	LastCompleteAnalysisAt     time.Time      `json:"last_complete_analysis_at"`
+	LastCompleteOptimizationAt time.Time      `json:"last_complete_optimization_at"`
 	LastScheduledAnalysisRunAt time.Time      `json:"last_analysis_run_at" gorm:"column:last_analysis_run_at"`
 }
 

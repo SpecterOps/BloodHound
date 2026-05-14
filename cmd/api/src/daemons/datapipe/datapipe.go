@@ -47,6 +47,9 @@ type Pipeline interface {
 	IngestTasks(context.Context) error
 	// Analyze provides a way to analyze and enhance graph data, including post processing
 	Analyze(context.Context) error
+	// Optimize provides a way to perform database optimization (e.g. index upkeep) after analysis.
+	// The concrete work is database-specific and lives in the underlying driver.
+	Optimize(context.Context) error
 }
 
 type Daemon struct {
@@ -80,6 +83,10 @@ func (s *Daemon) Start(ctx context.Context) {
 
 	s.WithDatapipeStatus(ctx, model.DatapipeStatusStarting, s.pipeline.Start)
 
+	// Run optimization once at boot so the database is in a clean state before
+	// the operational loop begins ingesting and analyzing.
+	s.WithDatapipeStatus(ctx, model.DatapipeStatusOptimizing, s.pipeline.Optimize)
+
 	for {
 		select {
 		case <-pruningTicker.C:
@@ -91,6 +98,8 @@ func (s *Daemon) Start(ctx context.Context) {
 			s.WithDatapipeStatus(ctx, model.DatapipeStatusIngesting, s.pipeline.IngestTasks)
 
 			s.WithDatapipeStatus(ctx, model.DatapipeStatusAnalyzing, s.pipeline.Analyze)
+
+			s.WithDatapipeStatus(ctx, model.DatapipeStatusOptimizing, s.pipeline.Optimize)
 
 			datapipeLoopTimer.Reset(s.tickInterval)
 

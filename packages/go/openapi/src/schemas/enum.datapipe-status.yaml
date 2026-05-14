@@ -19,3 +19,7 @@ enum:
   - idle
   - ingesting
   - analyzing
+  - optimizing
+  - purging
+  - pruning
+  - starting

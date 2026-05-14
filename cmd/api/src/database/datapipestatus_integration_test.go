@@ -45,4 +45,10 @@ func TestDatapipeStatus(t *testing.T) {
 	status, err = db.GetDatapipeStatus(testCtx)
 	require.Nil(t, err)
 	assert.True(t, !status.LastCompleteAnalysisAt.IsZero())
+
+	err = db.UpdateLastOptimizationCompleteTime(testCtx)
+	require.Nil(t, err)
+	status, err = db.GetDatapipeStatus(testCtx)
+	require.Nil(t, err)
+	assert.True(t, !status.LastCompleteOptimizationAt.IsZero())
 }

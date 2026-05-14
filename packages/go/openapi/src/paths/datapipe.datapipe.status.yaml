@@ -43,6 +43,9 @@ get:
                   last_complete_analysis_at:
                     type: string
                     format: date-time
+                  last_complete_optimization_at:
+                    type: string
+                    format: date-time
     401:
       $ref: './../responses/unauthorized.yaml'
     429:

@@ -13976,6 +13976,10 @@
                         "last_complete_analysis_at": {
                           "type": "string",
                           "format": "date-time"
+                        },
+                        "last_complete_optimization_at": {
+                          "type": "string",
+                          "format": "date-time"
                         }
                       }
                     }
@@ -21979,7 +21983,8 @@
         "enum": [
           "idle",
           "ingesting",
-          "analyzing"
+          "analyzing",
+          "optimizing"
         ]
       },
       "model.components.base-ad-entity": {
