@@ -19,6 +19,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { MenuItem, Tooltip, TooltipProps, styled, tooltipClasses } from '@mui/material';
 import { NodeResponse, useExploreSelectedItem } from '../../../hooks';
 import { useNotifications } from '../../../providers';
+import { escapeCypherString } from '../../../utils/cypher';
 
 const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
     <Tooltip {...props} classes={{ popper: className }} />
@@ -55,7 +56,7 @@ const CopyMenuItem = () => {
 
     const handleCopyCypher = () => {
         if (selectedItemQuery.data) {
-            const cypher = `MATCH (n:${selectedItemQuery.data.kind}) WHERE n.objectid = '${(selectedItemQuery.data as NodeResponse).objectId}' RETURN n`;
+            const cypher = `MATCH (n:${selectedItemQuery.data.kind}) WHERE n.objectid = ${escapeCypherString((selectedItemQuery.data as NodeResponse).objectId)} RETURN n`;
             navigator.clipboard.writeText(cypher);
             addNotification(`Cypher copied to clipboard`, 'copyToClipboard');
         }
