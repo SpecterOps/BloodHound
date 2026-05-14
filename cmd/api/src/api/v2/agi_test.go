@@ -662,7 +662,7 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 
 	// Should receive a call to RequestAnalysis() since this is a Tier Zero Asset group.
 	// Analysis must be run upon updating a T0 AG
-	mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String())
+	mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String(), gomock.Any())
 
 	handlers := v2.Resources{DB: mockDB, GraphQuery: mockGraph}
 
@@ -752,7 +752,7 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 
 	// NOTE should NOT receive a call to RequestAnalysis() since this is not a Tier Zero Asset group.
 	// Analysis should not be re-run when a non T0 AG is updated
-	mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String()).Times(0)
+	mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String(), gomock.Any()).Times(0)
 
 	handlers := v2.Resources{DB: mockDB, GraphQuery: mockGraph}
 

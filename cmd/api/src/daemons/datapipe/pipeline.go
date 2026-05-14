@@ -79,7 +79,7 @@ func (s *BHCEPipeline) DeleteData(ctx context.Context) error {
 	}
 	defer func() {
 		_ = s.db.DeleteAnalysisRequest(ctx)
-		_ = s.db.RequestAnalysis(ctx, "datapipe")
+		_ = s.db.RequestAnalysis(ctx, "datapipe", int(analysis.AnalysisStepAll))
 	}()
 	defer measure.LogAndMeasure(slog.LevelInfo, "Purge Graph Data")()
 
@@ -240,65 +240,73 @@ func (s *BHCEPipeline) IsPrimary(ctx context.Context, status model.DatapipeStatu
 }
 
 func (s *BHCEPipeline) Analyze(ctx context.Context) error {
+	return s.analyze(ctx, analysis.AnalysisStepAll)
+}
+
+func (s *BHCEPipeline) analyze(ctx context.Context, steps analysis.AnalysisStep) error {
 	// If there are completed ingest jobs or if analysis was user-requested, perform analysis.
 	if hasJobsWaitingForAnalysis, err := s.jobService.HasIngestJobsWaitingForAnalysis(); err != nil {
 		return fmt.Errorf("looking up jobs for analysis: %v", err)
-	} else if hasJobsWaitingForAnalysis || s.db.HasAnalysisRequest(ctx) {
-		// Ensure that the user-requested analysis switch is deleted. This is done at the beginning of the
-		// function so that any re-analysis requests are caught while analysis is in-progress.
-		if err := s.db.DeleteAnalysisRequest(ctx); err != nil {
-			return fmt.Errorf("clearing analysis request: %v", err)
+	} else if analysisRequest, err := s.db.GetAnalysisRequest(ctx); err == nil {
+		steps = analysis.AnalysisStep(analysisRequest.AnalysisStep)
+		hasJobsWaitingForAnalysis = true
+		_ = hasJobsWaitingForAnalysis
+	} else if !hasJobsWaitingForAnalysis {
+		return nil
+	}
+
+	// Ensure that the user-requested analysis switch is deleted. This is done at the beginning of the
+	// function so that any re-analysis requests are caught while analysis is in-progress.
+	if err := s.db.DeleteAnalysisRequest(ctx); err != nil {
+		return fmt.Errorf("clearing analysis request: %v", err)
+	}
+
+	if s.cfg.DisableAnalysis {
+		return ErrAnalysisDisabled
+	}
+
+	defer measure.LogAndMeasure(
+		slog.LevelInfo,
+		"Graph Analysis",
+		attr.Namespace("analysis"),
+		attr.Function("Analyze"),
+		attr.Scope("summary"),
+	)()
+
+	if err := analysis.RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg, steps); err != nil {
+		if errors.Is(err, analysis.ErrAnalysisFailed) {
+			s.jobService.FailAnalyzedIngestJobs()
+		} else if errors.Is(err, analysis.ErrAnalysisPartiallyCompleted) {
+			s.jobService.PartialCompleteIngestJobs()
 		}
-
-		if s.cfg.DisableAnalysis {
-			return ErrAnalysisDisabled
-		}
-
-		defer measure.LogAndMeasure(
-			slog.LevelInfo,
-			"Graph Analysis",
-			attr.Namespace("analysis"),
-			attr.Function("Analyze"),
-			attr.Scope("summary"),
-		)()
-
-		if err := analysis.RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg, analysis.AnalysisStepAll); err != nil {
-			if errors.Is(err, analysis.ErrAnalysisFailed) {
-				s.jobService.FailAnalyzedIngestJobs()
-			} else if errors.Is(err, analysis.ErrAnalysisPartiallyCompleted) {
-				s.jobService.PartialCompleteIngestJobs()
-			}
-			return fmt.Errorf("analysis failure: %v", err)
-		} else if err := s.db.UpdateLastAnalysisCompleteTime(ctx); err != nil {
-			return fmt.Errorf("update last analysis completion time: %v", err)
-		} else {
-			s.jobService.CompleteAnalyzedIngestJobs()
-
-			// This is cacheclearing. The analysis is still successful here
-			if _, err := s.db.GetFlagByKey(ctx, appcfg.FeatureEntityPanelCaching); err != nil {
-				slog.ErrorContext(
-					ctx,
-					"Error retrieving entity panel caching flag",
-					attr.Error(err),
-				)
-			} else if err := s.cache.Reset(); err != nil {
-				slog.ErrorContext(
-					ctx,
-					"Error while resetting the cache",
-					attr.Error(err),
-				)
-			} else {
-				slog.InfoContext(
-					ctx,
-					"Cache successfully reset by datapipe daemon",
-					attr.Namespace("analysis"),
-					attr.Function("Analyze"),
-				)
-			}
-
-			return nil
-		}
+		return fmt.Errorf("analysis failure: %v", err)
+	} else if err := s.db.UpdateLastAnalysisCompleteTime(ctx); err != nil {
+		return fmt.Errorf("update last analysis completion time: %v", err)
 	} else {
+		s.jobService.CompleteAnalyzedIngestJobs()
+
+		// This is cacheclearing. The analysis is still successful here
+		if _, err := s.db.GetFlagByKey(ctx, appcfg.FeatureEntityPanelCaching); err != nil {
+			slog.ErrorContext(
+				ctx,
+				"Error retrieving entity panel caching flag",
+				attr.Error(err),
+			)
+		} else if err := s.cache.Reset(); err != nil {
+			slog.ErrorContext(
+				ctx,
+				"Error while resetting the cache",
+				attr.Error(err),
+			)
+		} else {
+			slog.InfoContext(
+				ctx,
+				"Cache successfully reset by datapipe daemon",
+				attr.Namespace("analysis"),
+				attr.Function("Analyze"),
+			)
+		}
+
 		return nil
 	}
 }

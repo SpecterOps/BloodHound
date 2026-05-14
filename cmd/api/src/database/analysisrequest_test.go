@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
+	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/stretchr/testify/require"
 )
 
@@ -34,7 +35,7 @@ func TestAnalysisRequest(t *testing.T) {
 		dbInst  = integration.SetupDB(t)
 	)
 
-	err := dbInst.RequestAnalysis(testCtx, "test")
+	err := dbInst.RequestAnalysis(testCtx, "test", int(analysis.AnalysisStepAll))
 	require.Nil(t, err)
 
 	analysisRequest, err := dbInst.GetAnalysisRequest(testCtx)
