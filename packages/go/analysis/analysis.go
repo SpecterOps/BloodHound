@@ -126,8 +126,31 @@ var (
 	ErrAnalysisPartiallyCompleted = errors.New("analysis partially completed")
 )
 
+// AnalysisStep represents a starting point in the analysis pipeline. When provided
+// as a bitmask, the selected step and all subsequent steps in the pipeline will run.
+// The order of operations is: PostProcessing -> Tagging -> Analysis.
+type AnalysisStep int
+
+const (
+	// AnalysisStepPostProcessing starts from AD and Azure post-processing.
+	AnalysisStepPostProcessing AnalysisStep = 1 << iota
+	// AnalysisStepTagging starts from tagging asset groups and tiers.
+	AnalysisStepTagging
+	// AnalysisStepAnalysis starts from the analysis pipeline (BHE only).
+	AnalysisStepAnalysis
+
+	// AnalysisStepAll starts from the beginning, running all analysis steps.
+	AnalysisStepAll = AnalysisStepPostProcessing
+)
+
+// Has returns true if the given step should run based on the selected starting point.
+// A step runs if it is at or after the starting point in the pipeline order.
+func (s AnalysisStep) Has(step AnalysisStep) bool {
+	return step >= s
+}
+
 // TODO Cleanup tieringEnabled after Tiering GA
-func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration) error {
+func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration, steps AnalysisStep) error {
 	var (
 		collectedErrors []error
 		tieringEnabled  = appcfg.GetTieringEnabled(ctx, db)
@@ -141,36 +164,40 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		dataQualityFailed  = false
 	)
 
-	if ntlmFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureNTLMPostProcessing); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving NTLM Post Processing feature flag: %w", err))
-	} else if stats, err := adAnalysis.Post(ctx, graphDB, appcfg.GetCitrixRDPSupport(ctx, db), ntlmFlag.Enabled); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("error during ad post: %w", err))
-		adFailed = true
-	} else {
-		stats.LogStats()
-	}
-
-	if stats, err := azureAnalysis.Post(ctx, graphDB); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("error during azure post: %w", err))
-		azureFailed = true
-	} else {
-		stats.LogStats()
-	}
-
-	if errs := TagAssetGroupsAndTierZero(ctx, db, graphDB); len(errs) > 0 {
-		for _, err := range errs {
-			collectedErrors = append(collectedErrors, fmt.Errorf("tagging asset groups and tier zero failed: %w", err))
+	if steps.Has(AnalysisStepPostProcessing) {
+		if ntlmFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureNTLMPostProcessing); err != nil {
+			collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving NTLM Post Processing feature flag: %w", err))
+		} else if stats, err := adAnalysis.Post(ctx, graphDB, appcfg.GetCitrixRDPSupport(ctx, db), ntlmFlag.Enabled); err != nil {
+			collectedErrors = append(collectedErrors, fmt.Errorf("error during ad post: %w", err))
+			adFailed = true
+		} else {
+			stats.LogStats()
 		}
 
-		if ContainsOnlyCypherSelectorErrors(errs) {
-			agtPartiallyFailed = true
+		if stats, err := azureAnalysis.Post(ctx, graphDB); err != nil {
+			collectedErrors = append(collectedErrors, fmt.Errorf("error during azure post: %w", err))
+			azureFailed = true
+		} else {
+			stats.LogStats()
 		}
 	}
 
-	if !tieringEnabled {
-		if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB, graphschema.GetNodeKindDisplayLabel); err != nil {
-			collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
-			agiFailed = true
+	if steps.Has(AnalysisStepTagging) {
+		if errs := TagAssetGroupsAndTierZero(ctx, db, graphDB); len(errs) > 0 {
+			for _, err := range errs {
+				collectedErrors = append(collectedErrors, fmt.Errorf("tagging asset groups and tier zero failed: %w", err))
+			}
+
+			if ContainsOnlyCypherSelectorErrors(errs) {
+				agtPartiallyFailed = true
+			}
+		}
+
+		if !tieringEnabled {
+			if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB, graphschema.GetNodeKindDisplayLabel); err != nil {
+				collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
+				agiFailed = true
+			}
 		}
 	}
 
