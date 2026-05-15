@@ -498,20 +498,21 @@ func TestEnsureStubbedCustomNodeKindForIngest(t *testing.T) {
 		assert.Equal(t, int64(1), countCustomNodeKindRows(t, testSuite, "IngestedUnknownKind"))
 	})
 
-	t.Run("pre-existing kind without custom node kind is not stubbed", func(t *testing.T) {
+	t.Run("pre-existing bare kind without custom node kind is stubbed", func(t *testing.T) {
 		testSuite := setupIntegrationTestSuite(t)
 		defer teardownIntegrationTestSuite(t, &testSuite)
 
-		_, err := testSuite.BHDatabase.UpsertKind(testSuite.Context, "PreExistingSchemaKind")
+		_, err := testSuite.BHDatabase.UpsertKind(testSuite.Context, "PreExistingBareKind")
 		require.NoError(t, err)
 
-		err = testSuite.BHDatabase.EnsureStubbedCustomNodeKindForIngest(testSuite.Context, "PreExistingSchemaKind")
+		err = testSuite.BHDatabase.EnsureStubbedCustomNodeKindForIngest(testSuite.Context, "PreExistingBareKind")
 		require.NoError(t, err)
 
-		_, err = testSuite.BHDatabase.GetCustomNodeKind(testSuite.Context, "PreExistingSchemaKind")
-		require.ErrorIs(t, err, database.ErrNotFound)
-		assert.Equal(t, int64(1), countKindRows(t, testSuite, "PreExistingSchemaKind"))
-		assert.Equal(t, int64(0), countCustomNodeKindRows(t, testSuite, "PreExistingSchemaKind"))
+		customNodeKind, err := testSuite.BHDatabase.GetCustomNodeKind(testSuite.Context, "PreExistingBareKind")
+		require.NoError(t, err)
+		assert.Nil(t, customNodeKind.SchemaNodeKindId)
+		assert.Equal(t, int64(1), countKindRows(t, testSuite, "PreExistingBareKind"))
+		assert.Equal(t, int64(1), countCustomNodeKindRows(t, testSuite, "PreExistingBareKind"))
 	})
 
 	t.Run("existing custom node kind is not duplicated or overwritten", func(t *testing.T) {
