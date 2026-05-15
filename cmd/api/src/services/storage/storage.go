@@ -30,7 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 )
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/fs.go -package=mocks . FileService
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/fs.go -package=mocks . Storage,FileService,FileServiceResolver
 
 type FileServiceName string
 
@@ -169,7 +169,6 @@ func (s *LocalFileService) ListFiles(ctx context.Context, name string, options L
 	return s.Storage.List(ctx, name, options)
 }
 
-// TODO MC: is this functionality necessary?
 func MoveFileBetweenServices(
 	ctx context.Context,
 	sourceService FileService,

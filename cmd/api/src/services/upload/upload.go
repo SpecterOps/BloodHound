@@ -97,18 +97,18 @@ func WriteAndValidateFile(ctx context.Context, fileService storage.FileService, 
 
 	// Check if validation failed first — the temp file should be cleaned up.
 	if validationErr != nil {
-		slog.ErrorContext(ctx, "Validation failed", slog.String("tempFileName", tempFileName), attr.Error(validationErr))
+		slog.ErrorContext(ctx, "Validation failed", slog.String("temp_file_name", tempFileName), attr.Error(validationErr))
 		fileService.DeleteFile(ctx, tempFileName)
 		return "", validationErr
 	}
 
 	// Check if writing failed — the temp file should be cleaned up.
 	if writeErr != nil {
-		slog.ErrorContext(ctx, "Write failed", slog.String("tempFileName", tempFileName), attr.Error(writeErr))
+		slog.ErrorContext(ctx, "Write failed", slog.String("temp_file_name", tempFileName), attr.Error(writeErr))
 		fileService.DeleteFile(ctx, tempFileName)
 		return "", writeErr
 	}
 
-	slog.InfoContext(ctx, "File written and validated", slog.String("tempFileName", tempFileName))
+	slog.InfoContext(ctx, "File written and validated", slog.String("temp_file_name", tempFileName))
 	return tempFileName, nil
 }
