@@ -34,13 +34,6 @@ BEGIN
     SELECT * INTO kind_row FROM upsert_kind(node_kind_name);
   END IF;
 
-  -- We know we have a kind, but do we have a schema kind
-  IF EXISTS (SELECT 1 FROM schema_node_kinds WHERE kind_id = kind_row.id) THEN
-
-    -- If so, we don't need a custom node kind created, so simply return
-    RETURN;
-  END IF;
-
   -- See if we have an existing custom node kind (note, we skip, do not update)
   SELECT id INTO custom_node_kind_id FROM custom_node_kinds WHERE kind_name = node_kind_name;
   IF custom_node_kind_id IS NULL THEN
