@@ -31,7 +31,7 @@ import (
 )
 
 func (s Resources) GetAnalysisRequest(response http.ResponseWriter, request *http.Request) {
-	if analysisRequest, err := s.Analysis.GetAnalysisRequest(request.Context()); err != nil && !errors.Is(err, sql.ErrNoRows) && !errors.Is(err, database.ErrNotFound) {
+	if analysisRequest, err := s.AnalysisService.GetAnalysisRequest(request.Context()); err != nil && !errors.Is(err, sql.ErrNoRows) && !errors.Is(err, database.ErrNotFound) {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), analysisRequest, http.StatusOK, response)
@@ -49,7 +49,7 @@ func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.R
 		userId = user.ID.String()
 	}
 
-	if err := s.Analysis.RequestFullAnalysis(request.Context(), userId); err != nil {
+	if err := s.AnalysisService.RequestFullAnalysis(request.Context(), userId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return
 	}
@@ -63,13 +63,13 @@ func (s Resources) CancelAnalysisRequest(response http.ResponseWriter, request *
 	if _, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.ErrorContext(request.Context(), "Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseUnknownUser.Error(), request), response)
-	} else if analysisRequest, err := s.Analysis.GetAnalysisRequest(request.Context()); errors.Is(err, sql.ErrNoRows) || errors.Is(err, database.ErrNotFound) {
+	} else if analysisRequest, err := s.AnalysisService.GetAnalysisRequest(request.Context()); errors.Is(err, sql.ErrNoRows) || errors.Is(err, database.ErrNotFound) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else if err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if analysisRequest.RequestType == model.AnalysisRequestDeletion {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseAnalysisRequestTypeDeletionPending, request), response)
-	} else if err := s.Analysis.DeleteAnalysisRequest(request.Context()); err != nil {
+	} else if err := s.AnalysisService.DeleteAnalysisRequest(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		response.WriteHeader(http.StatusAccepted)

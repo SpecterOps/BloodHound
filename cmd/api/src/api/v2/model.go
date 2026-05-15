@@ -119,7 +119,7 @@ type Resources struct {
 	FileService                fs.Service
 	OpenGraphSchemaService     OpenGraphSchemaService
 	DogTags                    dogtags.Service
-	Analysis                   analysis.Service
+	AnalysisService            analysis.Service
 }
 
 func NewResources(
@@ -151,6 +151,6 @@ func NewResources(
 		FileService:                &fs.Client{},
 		DogTags:                    dogtagsService,
 		OpenGraphSchemaService:     openGraphSchemaService,
-		Analysis:                   analysisService,
+		AnalysisService:            analysisService,
 	}
 }

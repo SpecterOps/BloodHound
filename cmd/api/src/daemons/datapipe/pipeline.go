@@ -241,7 +241,8 @@ func (s *BHCEPipeline) IsPrimary(ctx context.Context, status model.DatapipeStatu
 
 // Analyze decides whether analysis should run and which steps to execute. Analysis runs when either
 // ingest jobs are waiting (full analysis) or an analysis request is queued (the request's merged
-// step bits). When both triggers are present the step sets are unioned.
+// step bits). When both triggers are present the step sets are unioned. Deletion requests are
+// ignored here; they are handled by DeleteData on a separate path.
 func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 	var steps model.AnalysisStep
 
@@ -257,7 +258,7 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 	if err != nil && !errors.Is(err, database.ErrNotFound) {
 		return fmt.Errorf("looking up analysis request: %v", err)
 	}
-	if err == nil {
+	if err == nil && analysisRequest.RequestType == model.AnalysisRequestAnalysis {
 		steps |= analysisRequest.AnalysisStep
 	}
 

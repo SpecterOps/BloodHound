@@ -76,15 +76,15 @@ func (s *service) RequestFullAnalysis(ctx context.Context, requestedBy string) e
 	return s.applyRequest(ctx, buildAnalysisRequest(requestedBy, model.AnalysisStepAll))
 }
 
-// RequestGraphDataDeletion queues a collected graph data deletion. Deletion is
-// sticky and overrides any pending analysis request.
+// RequestGraphDataDeletion queues a collected graph data deletion. A deletion
+// replaces any queued analysis request and once queued, must run before any
+// new request can be queued.
 func (s *service) RequestGraphDataDeletion(ctx context.Context, request model.AnalysisRequest) error {
 	request.RequestType = model.AnalysisRequestDeletion
 	return s.applyRequest(ctx, request)
 }
 
-// buildAnalysisRequest constructs an AnalysisRequest struct for the analysis
-// pipeline. It does not touch the database; applyRequest is what persists it.
+// buildAnalysisRequest constructs an AnalysisRequest for the analysis pipeline.
 func buildAnalysisRequest(requestedBy string, step model.AnalysisStep) model.AnalysisRequest {
 	return model.AnalysisRequest{
 		RequestType:  model.AnalysisRequestAnalysis,
@@ -94,37 +94,39 @@ func buildAnalysisRequest(requestedBy string, step model.AnalysisStep) model.Ana
 }
 
 // applyRequest reads any existing request, reconciles it with the incoming one
-// via the pure merge helper, and writes the resulting decision. To keep the
-// merge rules in exactly one place this bypasses the database layer's
-// precedence branch by deleting the existing row before writing the merged
-// request.
+// via the reconcile helper, and writes the resulting decision.
 func (s *service) applyRequest(ctx context.Context, incoming model.AnalysisRequest) error {
-	var (
-		existing    model.AnalysisRequest
-		hasExisting = true
-	)
-	if got, err := s.db.GetAnalysisRequest(ctx); err != nil {
-		if !errors.Is(err, sql.ErrNoRows) && !errors.Is(err, database.ErrNotFound) {
-			return err
-		}
-		hasExisting = false
-	} else {
-		existing = got
+	existing, err := s.lookupExistingRequest(ctx)
+	if err != nil {
+		return err
 	}
 
-	decision := merge(existing, hasExisting, incoming)
+	decision := reconcile(existing, incoming)
 	if !decision.write {
 		return nil
 	}
 
-	if hasExisting {
+	if existing != nil {
 		if err := s.db.DeleteAnalysisRequest(ctx); err != nil {
 			return err
 		}
 	}
 
-	if decision.merged.RequestType == model.AnalysisRequestDeletion {
-		return s.db.RequestCollectedGraphDataDeletion(ctx, decision.merged)
+	if decision.request.RequestType == model.AnalysisRequestDeletion {
+		return s.db.RequestCollectedGraphDataDeletion(ctx, decision.request)
 	}
-	return s.db.RequestAnalysis(ctx, decision.merged.RequestedBy, decision.merged.AnalysisStep)
+	return s.db.RequestAnalysis(ctx, decision.request.RequestedBy, decision.request.AnalysisStep)
+}
+
+// lookupExistingRequest returns the currently queued analysis request, or nil when
+// nothing is queued.
+func (s *service) lookupExistingRequest(ctx context.Context) (*model.AnalysisRequest, error) {
+	request, err := s.db.GetAnalysisRequest(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, database.ErrNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &request, nil
 }
