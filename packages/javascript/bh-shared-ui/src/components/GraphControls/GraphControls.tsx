@@ -146,7 +146,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                                 key={buttonLabel}
                                 selected={isSelected}
                                 onClick={() => onLayoutChange(buttonLabel)}
-                                className={cn(isSelected ? '!bg-primary text-white dark:text-[#121212]' : '')}>
+                                className={cn({ '!bg-primary text-white dark:text-[#121212]': isSelected })}>
                                 {capitalize(buttonLabel)}
                             </MenuItem>
                         );
