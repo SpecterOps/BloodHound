@@ -135,8 +135,6 @@ const UserActionsMenu: React.FC<UserActionsMenuProps> = ({
 
     const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS);
 
-    console.log(checkPermission(Permission.AUTH_MANAGE_USERS));
-
     /* Implementation */
 
     return (

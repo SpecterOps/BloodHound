@@ -48,9 +48,6 @@ const CreateUserDialog: React.FC<{
 
     const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS);
 
-    console.log(checkPermission(Permission.AUTH_MANAGE_USERS));
-    console.log(checkPermission(Permission.AUTH_READ_USERS));
-
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen} data-testid='manage-users_create-user-dialog'>
             <DialogTrigger asChild>
