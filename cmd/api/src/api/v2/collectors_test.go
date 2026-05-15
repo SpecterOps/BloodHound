@@ -28,6 +28,7 @@ import (
 	"github.com/gorilla/mux"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	storagemocks "github.com/specterops/bloodhound/cmd/api/src/services/storage/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/specterops/bloodhound/packages/go/headers"
@@ -40,7 +41,8 @@ import (
 
 func TestResources_DownloadCollectorByVersion(t *testing.T) {
 	type mock struct {
-		mockFS *storagemocks.MockFileService
+		mockFS                  *storagemocks.MockFileService
+		mockFileServiceResolver *storagemocks.MockFileServiceResolver
 	}
 	type expected struct {
 		responseBody   string
@@ -99,6 +101,7 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceCollectors).Return(mock.mockFS, nil)
 				mock.mockFS.EXPECT().ReadFile(gomock.Any(), "azurehound/azurehound-latest.zip").Return([]byte{}, errors.New("error"))
 			},
 			expected: expected{
@@ -118,6 +121,7 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceCollectors).Return(mock.mockFS, nil)
 				mock.mockFS.EXPECT().ReadFile(gomock.Any(), "azurehound/azurehound-v1.0.0.zip").Return([]byte{}, nil)
 			},
 			expected: expected{
@@ -136,6 +140,7 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceCollectors).Return(mock.mockFS, nil)
 				mock.mockFS.EXPECT().ReadFile(gomock.Any(), "azurehound/azurehound-latest.zip").Return([]byte{}, nil)
 			},
 			expected: expected{
@@ -150,7 +155,8 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 
 			ctrl := gomock.NewController(t)
 			mock := &mock{
-				mockFS: storagemocks.NewMockFileService(ctrl),
+				mockFS:                  storagemocks.NewMockFileService(ctrl),
+				mockFileServiceResolver: storagemocks.NewMockFileServiceResolver(ctrl),
 			}
 			testCase.setupMocks(t, mock)
 
@@ -163,7 +169,7 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 
 			resources := v2.Resources{
 				CollectorManifests:  collectorManifests,
-				FileServiceResolver: mock.mockFS,
+				FileServiceResolver: mock.mockFileServiceResolver,
 			}
 
 			response := httptest.NewRecorder()
@@ -187,7 +193,8 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 
 func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 	type mock struct {
-		mockFS *storagemocks.MockFileService
+		mockFS                  *storagemocks.MockFileService
+		mockFileServiceResolver *storagemocks.MockFileServiceResolver
 	}
 	type expected struct {
 		responseBody   string
@@ -246,6 +253,7 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceCollectors).Return(mock.mockFS, nil)
 				mock.mockFS.EXPECT().ReadFile(gomock.Any(), "azurehound/azurehound-latest.zip.sha256").Return([]byte{}, errors.New("error"))
 			},
 			expected: expected{
@@ -265,6 +273,7 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceCollectors).Return(mock.mockFS, nil)
 				mock.mockFS.EXPECT().ReadFile(gomock.Any(), "azurehound/azurehound-v1.0.0.zip.sha256").Return([]byte{}, nil)
 			},
 			expected: expected{
@@ -283,6 +292,7 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceCollectors).Return(mock.mockFS, nil)
 				mock.mockFS.EXPECT().ReadFile(gomock.Any(), "azurehound/azurehound-latest.zip.sha256").Return([]byte{}, nil)
 			},
 			expected: expected{
@@ -304,13 +314,14 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 
 			ctrl := gomock.NewController(t)
 			mock := &mock{
-				mockFS: storagemocks.NewMockFileService(ctrl),
+				mockFS:                  storagemocks.NewMockFileService(ctrl),
+				mockFileServiceResolver: storagemocks.NewMockFileServiceResolver(ctrl),
 			}
 			testCase.setupMocks(t, mock)
 
 			resources := v2.Resources{
 				CollectorManifests:  collectorManifests,
-				FileServiceResolver: mock.mockFS,
+				FileServiceResolver: mock.mockFileServiceResolver,
 			}
 
 			response := httptest.NewRecorder()

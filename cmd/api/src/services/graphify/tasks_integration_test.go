@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
 	"github.com/stretchr/testify/require"
 )
@@ -49,12 +50,15 @@ func TestVersion5IngestJSON(t *testing.T) {
 			path.Join(testSuite.WorkDir, "users.json"),
 		}
 	)
+	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
+	require.NoError(t, err, "error creating ingest local store")
+	ingestFileService := storage.NewFileService(ingestLocalStore)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
 		ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, ingestFileService, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
 		failed := 0
@@ -85,12 +89,15 @@ func TestVersion5IngestZIP(t *testing.T) {
 			path.Join(testSuite.WorkDir, "archive.zip"),
 		}
 	)
+	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
+	require.NoError(t, err, "error creating ingest local store")
+	ingestFileService := storage.NewFileService(ingestLocalStore)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
 		ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip})
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, ingestFileService, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip})
 		require.NoError(t, err)
 
 		failed := 0
@@ -133,12 +140,15 @@ func TestVersion6ADCSJSON(t *testing.T) {
 			path.Join(testSuite.WorkDir, "users.json"),
 		}
 	)
+	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
+	require.NoError(t, err, "error creating ingest local store")
+	ingestFileService := storage.NewFileService(ingestLocalStore)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
 		ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, ingestFileService, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
 		failed := 0
@@ -169,12 +179,15 @@ func TestVersion6ADCSZIP(t *testing.T) {
 			path.Join(testSuite.WorkDir, "archive.zip"),
 		}
 	)
+	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
+	require.NoError(t, err, "error creating ingest local store")
+	ingestFileService := storage.NewFileService(ingestLocalStore)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
 		ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip})
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, ingestFileService, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip})
 		require.NoError(t, err)
 
 		failed := 0
@@ -217,12 +230,15 @@ func TestVersion6AllJSON(t *testing.T) {
 			path.Join(testSuite.WorkDir, "users.json"),
 		}
 	)
+	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
+	require.NoError(t, err, "error creating ingest local store")
+	ingestFileService := storage.NewFileService(ingestLocalStore)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
 		ingestContext := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, ingestFileService, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
 		failed := 0
@@ -253,12 +269,15 @@ func TestVersion6AllZIP(t *testing.T) {
 			path.Join(testSuite.WorkDir, "archive.zip"),
 		}
 	)
+	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
+	require.NoError(t, err, "error creating ingest local store")
+	ingestFileService := storage.NewFileService(ingestLocalStore)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
 		ingestContext := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip})
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, ingestFileService, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip})
 		require.NoError(t, err)
 
 		failed := 0
@@ -296,12 +315,15 @@ func TestVersion6IngestJSON(t *testing.T) {
 			path.Join(testSuite.WorkDir, "users.json"),
 		}
 	)
+	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
+	require.NoError(t, err, "error creating ingest local store")
+	ingestFileService := storage.NewFileService(ingestLocalStore)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
 		ingestContext := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, ingestFileService, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
 		failed := 0
@@ -332,12 +354,15 @@ func TestVersion6IngestZIP(t *testing.T) {
 			path.Join(testSuite.WorkDir, "archive.zip"),
 		}
 	)
+	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
+	require.NoError(t, err, "error creating ingest local store")
+	ingestFileService := storage.NewFileService(ingestLocalStore)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
 		ingestContext := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip})
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, ingestFileService, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip})
 		require.NoError(t, err)
 
 		failed := 0
