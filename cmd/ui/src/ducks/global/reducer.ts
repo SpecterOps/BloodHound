@@ -25,6 +25,7 @@ const initialGlobalState: types.GlobalViewState = {
     autoRunQueries: true,
     exploreLayout: undefined,
     isExploreTableSelected: false,
+    isExploreLayoutSelected: false,
     selectedExploreTableColumns: undefined,
     pinnedExploreTableColumns: undefined,
     timeoutSetting: false,
