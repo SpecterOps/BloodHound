@@ -17,6 +17,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { renderHook, waitFor } from '../../test-utils';
 import { useExploreTableAutoDisplay } from './useExploreTableAutoDisplay';
+const emptyResponse = { edges: [], nodes: {} };
 
 const graphShapedResponse = {
     edges: [{ testEdge: {} }],
@@ -60,6 +61,8 @@ describe('useExploreTableAutoDisplay', () => {
     });
 
     it('sets autoDisplayTable to false if query returns no results', async () => {
+        server.use(getCypherAPIMock(emptyResponse));
+
         const initialRoute = '?searchType=cypher&cypherSearch=YQ%3D%3D';
         const { result } = setup({ initialRoute });
 
