@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { PluginCreator } from 'tailwindcss/types/config';
-import { common, dark, light, palette } from './colors';
+import { common, dark, elevation, light, palette } from './colors';
 
 const plugin: PluginCreator = ({ addBase, addUtilities }) => {
     addBase({
@@ -55,8 +55,8 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // NEUTRALS
             '--neutral-50': palette.neutral.light[50],
             // '--neutral-100': palette.neutral.light[100],
-            // '--neutral-200': palette.neutral.light[200],
-            // '--neutral-300': palette.neutral.light[300],
+            '--neutral-200': palette.neutral.light[200],
+            '--neutral-300': palette.neutral.light[300],
             '--neutral-400': palette.neutral.light[400],
             // '--neutral-500': palette.neutral.light[500],
             // '--neutral-600': palette.neutral.light[600],
@@ -134,15 +134,26 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--menu-bg': elevation.light[0],
 
             // // Components/Data Display/ Badge & Chip
-            // '--badge-error': light.status.error.main,
-            // '--badge-error-hover': light.badge.error.hover,
-            // '--badge-warning': light.badge.warning.main,
-            // '--badge-warning-hover': light.badge.warning.hover,
-            // '--badge-success': light.badge.success.main,
-            // '--badge-success-hover': light.badge.success.hover,
-            // '--badge-info': light.badge.info.main,
-            // '--badge-info-hover': light.badge.info.hover,
-            // '--badge-indeterminate': light.status.indeterminate.fill,
+            '--badge-primary-fill': light.badge.primary.fill,
+            '--badge-primary-outline': light.badge.primary.outline,
+
+            '--badge-secondary-fill': light.badge.secondary.fill,
+            '--badge-secondary-outline': light.badge.secondary.outline,
+
+            '--badge-grey-fill': light.badge.grey.fill,
+            '--badge-grey-outline': light.badge.grey.outline,
+
+            '--badge-red-fill': light.badge.red.fill,
+            '--badge-red-outline': light.badge.red.outline,
+
+            '--badge-orange-fill': light.badge.orange.fill,
+            '--badge-orange-outline': light.badge.orange.outline,
+
+            '--badge-green-fill': light.badge.green.fill,
+            '--badge-green-outline': light.badge.green.outline,
+
+            '--badge-blue-fill': light.badge.blue.fill,
+            '--badge-blue-outline': light.badge.blue.outline,
 
             // // Components/Data Display/Badge & Chip / Chip
             // '--chip-indeterminate': palette.neutral.light[300],
@@ -204,6 +215,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--neutral-light-2': '#f4f4f4',
             '--neutral-light-3': '#e3e7ea',
             '--neutral-light-4': '#dadee1',
+            // same as neutral-light-400
             '--neutral-light-5': '#cacfd3',
 
             // same palette.neutral.dark[50]
@@ -211,8 +223,8 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--neutral-dark-2': '#222222',
             '--neutral-dark-3': '#272727',
             '--neutral-dark-4': '#2c2c2c',
-            // same as dark neutral-5
-            '--neutral-dark-5': palette.neutral.dark[700],
+            // same as palette.neutral.dark[700]
+            '--neutral-dark-5': '#2e2e2e',
         },
 
         '.dark': {
@@ -230,7 +242,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--neutral-100': palette.neutral.dark[100],
             // '--neutral-200': palette.neutral.dark[200],
             // '--neutral-300': palette.neutral.dark[300],
-            '--neutral-400': palette.neutral.dark[400],
+            // '--neutral-400': palette.neutral.dark[400],
             // '--neutral-500': palette.neutral.dark[500],
             // '--neutral-600': palette.neutral.dark[600],
             // '--neutral-700': palette.neutral.dark[700],
@@ -251,7 +263,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // ELEVATION
             // '--elevation-0': elevation.dark[0],
-            // '--elevation-1': elevation.dark[1],
+            '--elevation-1': elevation.dark[1],
             // '--elevation-2': elevation.dark[2],
             // '--elevation-3': elevation.dark[3],
             // '--elevation-4': elevation.dark[4],
@@ -307,15 +319,26 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--menu-bg': elevation.dark[2],
 
             // // Components/Data Display/ Badge & Chip
-            // '--badge-error': dark.status.error.main,
-            // '--badge-error-hover': dark.badge.error.hover,
-            // '--badge-warning': dark.badge.warning.main,
-            // '--badge-warning-hover': dark.badge.warning.hover,
-            // '--badge-success': dark.badge.success.main,
-            // '--badge-success-hover': dark.badge.success.hover,
-            // '--badge-info': dark.badge.info.main,
-            // '--badge-info-hover': dark.badge.info.hover,
-            // '--badge-indeterminate': dark.status.indeterminate.fill,
+            '--badge-primary-fill': dark.badge.primary.fill,
+            '--badge-primary-outline': dark.badge.primary.outline,
+
+            '--badge-secondary-fill': dark.badge.secondary.fill,
+            '--badge-secondary-outline': dark.badge.secondary.outline,
+
+            '--badge-grey-fill': dark.badge.grey.fill,
+            '--badge-grey-outline': dark.badge.grey.outline,
+
+            '--badge-red-fill': dark.badge.red.fill,
+            '--badge-red-outline': dark.badge.red.outline,
+
+            '--badge-orange-fill': dark.badge.orange.fill,
+            '--badge-orange-outline': dark.badge.orange.outline,
+
+            '--badge-green-fill': dark.badge.green.fill,
+            '--badge-green-outline': dark.badge.green.outline,
+
+            '--badge-blue-fill': dark.badge.blue.fill,
+            '--badge-blue-outline': dark.badge.blue.outline,
 
             // // Components/Data Display/Badge & Chip / Chip
             // '--chip-indeterminate': palette.neutral.dark[500],

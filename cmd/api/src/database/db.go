@@ -209,6 +209,11 @@ func (s *BloodhoundDB) SQLDB() (*sql.DB, error) {
 	return s.db.DB()
 }
 
+// Pool returns the underlying pgx connection pool.
+func (s *BloodhoundDB) Pool() *pgxpool.Pool {
+	return s.pool
+}
+
 func (s *BloodhoundDB) preload(associations []string) *gorm.DB {
 	cursor := s.db
 	for _, association := range associations {
