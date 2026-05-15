@@ -331,11 +331,15 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                     nextCol = Math.min(totalCols - 1, colIndex + 1);
                     break;
                 case 'Tab':
-                    e.preventDefault();
                     if (e.shiftKey) {
+                        if (rowIndex === 0 && colIndex == 0) {
+                            return;
+                        }
+                        e.preventDefault();
                         nextRow = Math.min(totalRows - 1, rowIndex - 1);
                         nextCol = 0;
                     } else {
+                        e.preventDefault();
                         nextRow = Math.min(totalRows - 1, rowIndex + 1);
                         nextCol = 0;
                     }
