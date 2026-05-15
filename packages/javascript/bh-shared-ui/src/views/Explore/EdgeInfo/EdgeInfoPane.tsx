@@ -35,15 +35,17 @@ const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ className, selectedEdge }) 
     return (
         <div
             className={cn(
-                'flex flex-col pointer-events-none overflow-y-hidden h-full w-[400px] max-w-[400px]',
+                'flex flex-col pointer-events-none overflow-y-hidden h-full w-[400px] max-w-[400px] gap-2',
                 className
             )}
             data-testid='explore_edge-information-pane'>
             {isRoleBasedFiltering && (
                 <Badge
                     data-testid='explore_entity-information-panel-badge-etac-filtering'
-                    className='justify-start text-sm text-neutral-dark-1 bg-[#F8EEFD] dark:bg-[#472E54] dark:text-neutral-light-1 border-0 mb-2'
-                    icon={<FontAwesomeIcon icon={faEyeSlash} className='mr-2' />}
+                    variant='fill'
+                    color='primary'
+                    className='px-2 py-1'
+                    icon={<FontAwesomeIcon icon={faEyeSlash} />}
                     label='Role-based access filtering applied'
                 />
             )}
