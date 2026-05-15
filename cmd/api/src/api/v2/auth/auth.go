@@ -390,7 +390,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 			// The migration sets the default for all_environments to true, which will enable all users to have access to all environments until ETAC is explicitly enabled
 			userTemplate.AllEnvironments = false
 
-			if err := handleETACRequest(request.Context(), createUserRequest.UpdateUserRequest, roles, &userTemplate, s.GraphQuery); err != nil {
+			if err := handleETACRequest(createUserRequest.UpdateUserRequest, roles, &userTemplate, s.GraphQuery); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 				return
 			}
@@ -526,7 +526,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 				effectiveRoles = roles
 			}
 
-			if err := handleETACRequest(request.Context(), updateUserRequest, effectiveRoles, &user, s.GraphQuery); err != nil {
+			if err := handleETACRequest(updateUserRequest, effectiveRoles, &user, s.GraphQuery); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 				return
 			}
