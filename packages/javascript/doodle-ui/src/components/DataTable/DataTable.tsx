@@ -126,6 +126,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
 
     const [isOverflowing, setIsOverflowing] = useState(false);
     const [isPinDialogOpen, setIsPinDialogOpen] = useState(false);
+    const [focusedCell, setFocusedCell] = useState<{ rowIndex: number; colIndex: number } | null>(null);
 
     interface PinDialogState {
         action: 'pin' | 'unpin' | null;
@@ -161,7 +162,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         }
     }, [columns, growLastColumn]);
 
-    const parentRef = useRef(null);
+    const parentRef = useRef<HTMLDivElement>(null);
     const tableHeaderRef = useRef<HTMLTableSectionElement>(null);
     const tableHeadRef = useRef<HTMLTableCellElement>(null);
     const tableCellRef = useRef<HTMLTableCellElement>(null);
@@ -303,6 +304,55 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
     const tableRows = table.getRowModel().rows;
     const haveLeftPinnedColumns = (columnPinning?.left?.length || 0) > 0;
     const tableWidth = enableResizing && !growLastColumn ? table.getCenterTotalSize() : '100%';
+
+    const handleCellKeyDown = useCallback(
+        (e: React.KeyboardEvent<HTMLTableCellElement>, rowIndex: number, colIndex: number) => {
+            const totalRows = tableRows.length;
+            const totalCols = tableRows[rowIndex]?.getVisibleCells().length ?? 0;
+
+            let nextRow = rowIndex;
+            let nextCol = colIndex;
+
+            switch (e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    nextRow = Math.max(0, rowIndex - 1);
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    nextRow = Math.min(totalRows - 1, rowIndex + 1);
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    nextCol = Math.max(0, colIndex - 1);
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    nextCol = Math.min(totalCols - 1, colIndex + 1);
+                    break;
+                default:
+                    return;
+            }
+
+            setFocusedCell({ rowIndex: nextRow, colIndex: nextCol });
+        },
+        [tableRows]
+    );
+
+    // When focusedCell changes, scroll the virtualizer to bring the target row into view,
+    // then focus the corresponding <td> element via its data attributes.
+    useEffect(() => {
+        if (!focusedCell) return;
+
+        virtualizer.scrollToIndex(focusedCell.rowIndex, { align: 'auto' });
+
+        requestAnimationFrame(() => {
+            const cell = parentRef.current?.querySelector(
+                `td[data-row-index="${focusedCell.rowIndex}"][data-col-index="${focusedCell.colIndex}"]`
+            ) as HTMLElement | null;
+            cell?.focus();
+        });
+    }, [focusedCell, virtualizer]);
 
     //Expand column to accommodate full width of content
     const setExpanded = (header: Header<TData, TValue>) => {
@@ -515,6 +565,11 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                     enableDragAndDrop &&
                                                     cell.column.columnDef.meta?.enableDragging !== false;
 
+                                                const isCellFocused = focusedCell
+                                                    ? focusedCell.rowIndex === row.index &&
+                                                      focusedCell.colIndex === index
+                                                    : row.index === 0 && index === 0;
+
                                                 const cellContent = (
                                                     <TableCell
                                                         ref={tableCellRef}
@@ -523,6 +578,15 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                         enableDragging={enableDragAndDrop && isColDraggingEnabled}
                                                         className={cn('text-left overflow-x-clip', propsClassName)}
                                                         {...tableCellRest}
+                                                        tabIndex={isCellFocused ? 0 : -1}
+                                                        data-row-index={row.index}
+                                                        data-col-index={index}
+                                                        onKeyDown={(e: React.KeyboardEvent<HTMLTableCellElement>) =>
+                                                            handleCellKeyDown(e, row.index, index)
+                                                        }
+                                                        onFocus={() =>
+                                                            setFocusedCell({ rowIndex: row.index, colIndex: index })
+                                                        }
                                                         style={{
                                                             width,
                                                             ...(cell.column.getIsPinned() === 'left' && {
