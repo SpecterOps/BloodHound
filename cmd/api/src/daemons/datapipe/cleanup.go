@@ -104,7 +104,12 @@ func NewOrphanFileSweeper(fileOps FileOperations, tempDirectoryRootPath string, 
 func ClearLocalIngestScratch(ctx context.Context, scratchDirectory string, minimumAge time.Duration) {
 	entries, err := os.ReadDir(scratchDirectory)
 	if err != nil {
-		slog.ErrorContext(ctx, "Error reading scratch directory", slog.String("scratch_directory", scratchDirectory), attr.Error(err))
+		slog.ErrorContext(
+			ctx,
+			"Error reading scratch directory",
+			slog.String("scratch_directory", scratchDirectory),
+			attr.Error(err),
+		)
 		return
 	}
 
@@ -232,7 +237,12 @@ func (s *OrphanFileSweeper) clearStoredIngestFiles(ctx context.Context, ingestFi
 		}
 
 		if err := ingestFileService.DeleteFile(ctx, logicalPath); err != nil {
-			slog.WarnContext(ctx, "Failed deleting orphaned ingest file", slog.String("path", logicalPath), attr.Error(err))
+			slog.WarnContext(
+				ctx,
+				"Failed deleting orphaned ingest file",
+				slog.String("path", logicalPath),
+				attr.Error(err),
+			)
 		}
 	}
 }

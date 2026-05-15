@@ -142,7 +142,12 @@ func (s *IngestControl) FetchRetainedIngestFiles(response http.ResponseWriter, r
 		}
 
 		if err := s.writeRetainedFileToTar(request.Context(), tarWriter, file.Path); err != nil {
-			slog.WarnContext(request.Context(), "Failed writing retained file to response", slog.String("path", file.Path), attr.Error(err))
+			slog.WarnContext(
+				request.Context(),
+				"Failed writing retained file to response",
+				slog.String("path", file.Path),
+				attr.Error(err),
+			)
 			break
 		}
 	}
@@ -205,7 +210,12 @@ func (s *IngestControl) DisableIngestFileRetention(response http.ResponseWriter,
 			}
 
 			if err := s.retainedFileService.DeleteFile(ctx, file.Path); err != nil {
-				slog.WarnContext(ctx, "Failed removing retained file", slog.String("path", file.Path), attr.Error(err))
+				slog.WarnContext(
+					ctx,
+					"Failed removing retained file",
+					slog.String("path", file.Path),
+					attr.Error(err),
+				)
 			}
 		}
 	}(cleanupCtx)

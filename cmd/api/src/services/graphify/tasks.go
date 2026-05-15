@@ -59,42 +59,6 @@ type IngestFileData struct {
 	UserDataErrs []string
 }
 
-func (s *GraphifyService) extractToTempFile(f *zip.File) (string, error) {
-	// Given a single artifact in an archive, extract it out to a temporary file
-	tempFile, err := os.CreateTemp(s.cfg.TempDirectory(), "bh")
-	if err != nil {
-		return "", err
-	}
-
-	success := false
-	defer func() {
-		// Always close the tempFile, but...
-		tempFile.Close()
-		if !success {
-			// ... only delete if it wasn't successful. Otherwise we leave it around to be processed
-			os.Remove(tempFile.Name())
-		}
-	}()
-
-	srcFile, err := f.Open()
-	if err != nil {
-		return "", err
-	}
-	defer srcFile.Close()
-
-	// this creates a normalized file to feed to the copy
-	if normFile, err := bomenc.NormalizeToUTF8(srcFile); err != nil {
-		return "", err
-		// and this is what actually copies it to disk
-	} else if _, err := io.Copy(tempFile, normFile); err != nil {
-		return "", err
-	} else {
-		// let the deferred method above know we shouldn't delete it and return the filename
-		success = true
-		return tempFile.Name(), nil
-	}
-}
-
 // ProcessIngestFile reads the files at the path supplied, and returns the total number of files in the
 // archive, the number of files that failed to ingest as JSON, and an error
 func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, fileService storage.FileService, task model.IngestTask) ([]IngestFileData, error) {
