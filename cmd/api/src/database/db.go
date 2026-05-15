@@ -209,8 +209,7 @@ func (s *BloodhoundDB) SQLDB() (*sql.DB, error) {
 	return s.db.DB()
 }
 
-// Pool returns the underlying pgxpool.Pool. Callers wiring pgx-backed stores
-// outside of GORM use this to share the same connection pool.
+// Pool returns the underlying pgx connection pool.
 func (s *BloodhoundDB) Pool() *pgxpool.Pool {
 	return s.pool
 }
