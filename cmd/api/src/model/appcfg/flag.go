@@ -48,6 +48,7 @@ const (
 	FeatureOpenHoundSupport             = "openhound_support"
 	FeatureAPIKeyExpirationSupport      = "api_key_expiration_support"
 	FeatureFindingsTable                = "findings_table"
+	FeatureAGTPartialAnalysis           = "agt_partial_analysis"
 )
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be
@@ -122,5 +123,15 @@ func GetOpenHoundEnabled(ctx context.Context, service GetFlagByKeyer) bool {
 		return false
 	} else {
 		return openHoundFlag.Enabled
+	}
+}
+
+// GetAGTPartialAnalysisEnabled returns true if the AGT Partial Analysis feature flag is enabled.
+func GetAGTPartialAnalysisEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+	if flag, err := service.GetFlagByKey(ctx, FeatureAGTPartialAnalysis); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch AGT partial analysis flag; returning false")
+		return false
+	} else {
+		return flag.Enabled
 	}
 }

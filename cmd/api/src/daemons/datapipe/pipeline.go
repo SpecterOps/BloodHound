@@ -287,6 +287,17 @@ func (s *BHCEPipeline) analyze(ctx context.Context, steps model.AnalysisStep) er
 		attr.Scope("summary"),
 	)()
 
+	analysisKind := "partial"
+	if steps == model.AnalysisStepAll {
+		analysisKind = "full"
+	}
+	slog.InfoContext(
+		ctx,
+		"Starting graph analysis",
+		slog.String("kind", analysisKind),
+		slog.Int("steps", int(steps)),
+	)
+
 	if err := analysis.RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg, steps); err != nil {
 		if errors.Is(err, analysis.ErrAnalysisFailed) {
 			s.jobService.FailAnalyzedIngestJobs()

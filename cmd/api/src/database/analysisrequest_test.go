@@ -113,3 +113,110 @@ func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
 		require.Equal(t, "post-proc", queued.RequestedBy)
 	})
 }
+
+// TestAnalysisRequestPrecedence exercises the precedence rules that govern
+// what happens when a request lands on analysis_request_switch while another
+// request is already pending.
+func TestAnalysisRequestPrecedence(t *testing.T) {
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+
+		partialStep     = model.AnalysisStepTaggingToCompletion
+		fullStep        = model.AnalysisStepAll
+		deletionRequest = model.AnalysisRequest{
+			RequestType:    model.AnalysisRequestDeletion,
+			RequestedBy:    "deleter",
+			DeleteAllGraph: true,
+		}
+	)
+
+	type op struct {
+		isDeletion bool
+		step       model.AnalysisStep
+	}
+
+	testCases := []struct {
+		name     string
+		seed     *op // nil means start with an empty table
+		incoming op
+		wantType model.AnalysisRequestType
+		wantStep model.AnalysisStep // only checked when wantType == AnalysisRequestAnalysis
+	}{
+		{
+			name:     "empty table, incoming partial inserts partial",
+			seed:     nil,
+			incoming: op{step: partialStep},
+			wantType: model.AnalysisRequestAnalysis,
+			wantStep: partialStep,
+		},
+		{
+			name:     "empty table, incoming full inserts full",
+			seed:     nil,
+			incoming: op{step: fullStep},
+			wantType: model.AnalysisRequestAnalysis,
+			wantStep: fullStep,
+		},
+		{
+			name:     "existing partial, incoming full upgrades to full",
+			seed:     &op{step: partialStep},
+			incoming: op{step: fullStep},
+			wantType: model.AnalysisRequestAnalysis,
+			wantStep: fullStep,
+		},
+		{
+			name:     "existing full, incoming partial stays full",
+			seed:     &op{step: fullStep},
+			incoming: op{step: partialStep},
+			wantType: model.AnalysisRequestAnalysis,
+			wantStep: fullStep,
+		},
+		{
+			name:     "existing partial, incoming partial stays partial",
+			seed:     &op{step: partialStep},
+			incoming: op{step: partialStep},
+			wantType: model.AnalysisRequestAnalysis,
+			wantStep: partialStep,
+		},
+		{
+			name:     "existing analysis, incoming deletion overwrites to deletion",
+			seed:     &op{step: fullStep},
+			incoming: op{isDeletion: true},
+			wantType: model.AnalysisRequestDeletion,
+		},
+		{
+			name:     "existing deletion, incoming analysis stays deletion",
+			seed:     &op{isDeletion: true},
+			incoming: op{step: fullStep},
+			wantType: model.AnalysisRequestDeletion,
+		},
+	}
+
+	apply := func(t *testing.T, action op) {
+		t.Helper()
+		if action.isDeletion {
+			require.Nil(t, dbInst.RequestCollectedGraphDataDeletion(testCtx, deletionRequest))
+		} else {
+			require.Nil(t, dbInst.RequestAnalysis(testCtx, "requester", action.step))
+		}
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			require.Nil(t, dbInst.DeleteAnalysisRequest(testCtx))
+
+			if testCase.seed != nil {
+				apply(t, *testCase.seed)
+			}
+			apply(t, testCase.incoming)
+
+			got, err := dbInst.GetAnalysisRequest(testCtx)
+			require.Nil(t, err)
+			require.Equal(t, testCase.wantType, got.RequestType)
+			if testCase.wantType == model.AnalysisRequestAnalysis {
+				require.Equal(t, testCase.wantStep, got.AnalysisStep,
+					"expected analysis_step=%d, got %d", testCase.wantStep, got.AnalysisStep)
+			}
+		})
+	}
+}

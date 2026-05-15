@@ -25,12 +25,13 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 )
 
 func (s Resources) GetAnalysisRequest(response http.ResponseWriter, request *http.Request) {
-	if analysisRequest, err := s.DB.GetAnalysisRequest(request.Context()); err != nil && !errors.Is(err, sql.ErrNoRows) {
+	if analysisRequest, err := s.Analysis.GetAnalysisRequest(request.Context()); err != nil && !errors.Is(err, sql.ErrNoRows) && !errors.Is(err, database.ErrNotFound) {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), analysisRequest, http.StatusOK, response)
@@ -48,7 +49,7 @@ func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.R
 		userId = user.ID.String()
 	}
 
-	if err := s.DB.RequestAnalysis(request.Context(), userId, model.AnalysisStepAll); err != nil {
+	if err := s.Analysis.RequestFullAnalysis(request.Context(), userId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return
 	}
@@ -62,13 +63,13 @@ func (s Resources) CancelAnalysisRequest(response http.ResponseWriter, request *
 	if _, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.ErrorContext(request.Context(), "Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseUnknownUser.Error(), request), response)
-	} else if analysisRequest, err := s.DB.GetAnalysisRequest(request.Context()); errors.Is(err, sql.ErrNoRows) {
+	} else if analysisRequest, err := s.Analysis.GetAnalysisRequest(request.Context()); errors.Is(err, sql.ErrNoRows) || errors.Is(err, database.ErrNotFound) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else if err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if analysisRequest.RequestType == model.AnalysisRequestDeletion {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseAnalysisRequestTypeDeletionPending, request), response)
-	} else if err := s.DB.DeleteAnalysisRequest(request.Context()); err != nil {
+	} else if err := s.Analysis.DeleteAnalysisRequest(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		response.WriteHeader(http.StatusAccepted)
