@@ -112,7 +112,7 @@ const TableControls = <TData, TValue>({
                         </MenuTrigger>
                         <MenuContent align='start'>
                             <MenuItem onSelect={() => handleConfirmExport('all')}>All Columns</MenuItem>
-                            <MenuItem onSelect={() => handleConfirmExport('selected')}>Visible Columns</MenuItem>
+                            <MenuItem onSelect={() => handleConfirmExport('selected')}>Selected Columns</MenuItem>
                         </MenuContent>
                     </Menu>
                 )}
