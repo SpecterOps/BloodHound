@@ -330,6 +330,18 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                     e.preventDefault();
                     nextCol = Math.min(totalCols - 1, colIndex + 1);
                     break;
+                case 'Tab':
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                        nextRow = Math.min(totalRows - 1, rowIndex - 1);
+                        nextCol = 0;
+                    } else {
+                        nextRow = Math.min(totalRows - 1, rowIndex + 1);
+                        nextCol = 0;
+                    }
+
+                    break;
+
                 default:
                     return;
             }

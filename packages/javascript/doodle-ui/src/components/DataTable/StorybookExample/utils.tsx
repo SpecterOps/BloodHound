@@ -44,7 +44,7 @@ interface Finding {
 export const getColumns = (sortOrder?: string | null, handleSort?: (sortBy: string) => void) => {
     const columns: ColumnDef<Finding>[] = [
         {
-            accessorKey: '',
+            accessorKey: 'test',
             id: 'action-menu',
             size: 50,
             minSize: 50,
