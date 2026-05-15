@@ -43,7 +43,7 @@ table against any new available migration files and automatically applies pendin
 
 -   Never modify the baseline migration(`00000000000001_init.sql`). This is a migration file all of the previous schemas before switching to goose.
 -   Never modify migrations already merged into main or staging branches. Create a new migration if a fix is needed
--   Never modify the `goose_db_version` table
+-   Never manually modify the `goose_db_version` table
 -   Always include a `Down` migration when possible
 -   `Down` should safely reverse an `Up`, e.g., use `IF EXISTS`, `ON CONFLICT`, etc.
 -   Always pull main before creating a new migration
