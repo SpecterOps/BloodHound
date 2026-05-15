@@ -21,19 +21,30 @@ DECLARE
   kind_row kind%rowtype;
   custom_node_kind_id INTEGER;
 BEGIN
-  -- Lock before checking existence so only the caller that first observes a new
-  -- kind creates its custom_node_kinds stub.
+  -- Lock before checking existence so concurrent callers do not duplicate stubs.
   PERFORM pg_advisory_xact_lock(hashtext(node_kind_name));
 
+  -- Try to find the existing kind
   SELECT * INTO kind_row FROM kind WHERE name = node_kind_name;
-  IF kind_row.id IS NOT NULL THEN
+
+  -- If there is no kind, we should add it
+  IF kind_row.id IS NULL THEN
+
+    -- Yes, this is a select, but upsert_kind is a function that adds a kind
+    SELECT * INTO kind_row FROM upsert_kind(node_kind_name);
+  END IF;
+
+  -- We know we have a kind, but do we have a schema kind
+  IF EXISTS (SELECT 1 FROM schema_node_kinds WHERE kind_id = kind_row.id) THEN
+
+    -- If so, we don't need a custom node kind created, so simply return
     RETURN;
   END IF;
 
-  SELECT * INTO kind_row FROM upsert_kind(node_kind_name);
-
+  -- See if we have an existing custom node kind (note, we skip, do not update)
   SELECT id INTO custom_node_kind_id FROM custom_node_kinds WHERE kind_name = node_kind_name;
   IF custom_node_kind_id IS NULL THEN
+    -- Insert based on the config 
     INSERT INTO custom_node_kinds (kind_name, schema_node_kind_id, config)
     VALUES (node_kind_name, NULL, custom_node_kind_config);
   END IF;
