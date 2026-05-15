@@ -26,8 +26,6 @@ varying vec2 v_diffVector;
 varying float v_radius;
 varying float v_angle;
 varying vec2 v_position;
-varying float v_dim;
-varying vec4 v_bgColor;
 
 
 
@@ -69,10 +67,4 @@ void main(void) {
     gl_FragColor = mix(color, border_color, (dist - v_radius + v_border) / v_softborder);
   else
     gl_FragColor = color;
-
-  // Premultiplied alpha output required by Sigma's blend func (gl.ONE, gl.ONE_MINUS_SRC_ALPHA).
-  // Pre-multiplying v_bgColor.rgb by gl_FragColor.a before the mix avoids the double-alpha
-  // artifact that produces a grey ring at antialiased edges: without it the background colour
-  // leaks through at (1-t)^2 weight instead of (1-t), making the ring visibly too dark.
-  gl_FragColor.rgb = mix(v_bgColor.rgb * gl_FragColor.a, gl_FragColor.rgb, v_dim);
 }`;
