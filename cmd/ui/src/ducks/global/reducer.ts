@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { combineReducers } from '@reduxjs/toolkit';
+import { DEFAULT_PINNED_COLUMN_KEYS, defaultColumns, defaultGraphLayout } from 'bh-shared-ui';
 import { castDraft, produce } from 'immer';
 import assign from 'lodash/assign';
 import * as types from './types';
@@ -23,11 +24,11 @@ const initialGlobalState: types.GlobalViewState = {
     notifications: [],
     darkMode: false,
     autoRunQueries: true,
-    exploreLayout: undefined,
+    exploreLayout: defaultGraphLayout,
     isExploreTableSelected: false,
     isExploreLayoutSelected: false,
-    selectedExploreTableColumns: undefined,
-    pinnedExploreTableColumns: undefined,
+    selectedExploreTableColumns: defaultColumns,
+    pinnedExploreTableColumns: DEFAULT_PINNED_COLUMN_KEYS,
     timeoutSetting: false,
 };
 
