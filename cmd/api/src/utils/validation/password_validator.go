@@ -17,6 +17,7 @@
 package validation
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"unicode"
@@ -25,12 +26,13 @@ import (
 )
 
 const (
-	ErrorPassword        = "failed to meet password requirements:\n%v"
-	ErrorPasswordLength  = "must have at least %d characters"
-	ErrorPasswordLower   = "must have at least %d lowercase characters"
-	ErrorPasswordUpper   = "must have at least %d uppercase characters"
-	ErrorPasswordSpecial = "must have at least %d special characters"
-	ErrorPasswordNumeric = "must have at least %d numeric characters"
+	ErrorPassword            = "failed to meet password requirements:\n%v"
+	ErrorPasswordLength      = "must have at least %d characters"
+	ErrorPasswordLower       = "must have at least %d lowercase characters"
+	ErrorPasswordUpper       = "must have at least %d uppercase characters"
+	ErrorPasswordSpecial     = "must have at least %d special characters"
+	ErrorPasswordNumeric     = "must have at least %d numeric characters"
+	ErrorPasswordControlChar = "cannot contain control characters (tabs, newline, etc.)"
 )
 
 type PasswordValidator struct {
@@ -83,10 +85,6 @@ func (s PasswordValidator) okNumeric(count int) bool {
 	return count >= s.Numeric
 }
 
-func (s PasswordValidator) ok(lower, upper, special, numeric int) bool {
-	return s.okLower(lower) && s.okUpper(upper) && s.okSpecial(special) && s.okNumeric(numeric)
-}
-
 func (s PasswordValidator) Validate(value any) utils.Errors {
 	var countLower, countUpper, countSpecial, countNumeric int
 	var passwd string
@@ -98,19 +96,17 @@ func (s PasswordValidator) Validate(value any) utils.Errors {
 	}
 
 	for _, char := range passwd {
-		if s.ok(countLower, countUpper, countSpecial, countNumeric) {
-			break
-		} else {
-			switch {
-			case unicode.IsLower(char):
-				countLower++
-			case unicode.IsUpper(char):
-				countUpper++
-			case unicode.IsPunct(char) || unicode.IsSymbol(char):
-				countSpecial++
-			case unicode.IsNumber(char):
-				countNumeric++
-			}
+		switch {
+		case unicode.IsLower(char):
+			countLower++
+		case unicode.IsUpper(char):
+			countUpper++
+		case unicode.IsPunct(char) || unicode.IsSymbol(char):
+			countSpecial++
+		case unicode.IsNumber(char):
+			countNumeric++
+		case unicode.IsControl(char):
+			return append(errs, errors.New(ErrorPasswordControlChar))
 		}
 	}
 

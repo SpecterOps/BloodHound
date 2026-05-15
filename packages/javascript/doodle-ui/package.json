@@ -25,7 +25,7 @@
         "prepack": "pinst --disable",
         "postpack": "pinst --enable",
         "preview": "vite preview",
-        "storybook": "storybook dev -p 6006",
+        "storybook": "STORYBOOK_DISABLE_TELEMETRY=true storybook dev -p 6006",
         "build:storybook": "storybook build",
         "build:styles": "npx tailwindcss -i ./src/input.css -o ./dist/styles.css --minify",
         "create-component": "tsx ./scripts/createComponent.ts",

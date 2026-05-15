@@ -19,7 +19,7 @@ import { cypherTestResponse, mockKindsHandler, singleNodeResponse } from 'bh-sha
 import { GraphEdge } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, waitFor } from 'src/test-utils';
+import { render, screen, waitFor, within } from 'src/test-utils';
 import GraphView from './GraphView';
 
 const baseGlobalView = {
@@ -32,6 +32,19 @@ const baseGlobalView = {
     selectedExploreTableColumns: undefined,
     pinnedExploreTableColumns: undefined,
     timeoutSetting: false,
+};
+
+const searchedNode = {
+    label: 'Searched Node',
+    kind: 'User',
+    kinds: ['User'],
+    objectId: 'testing-node-123',
+    isTierZero: false,
+    isOwnedObject: false,
+    lastSeen: '',
+};
+const graphSearchResponse = {
+    data: { data: { nodes: { '42': searchedNode }, edges: [] } },
 };
 
 const server = setupServer(
@@ -55,6 +68,9 @@ const server = setupServer(
     }),
     rest.get('/api/v2/saved-queries', async (_, res, ctx) => {
         return res(ctx.status(200));
+    }),
+    rest.get('/api/v2/graph-search', (_req, res, ctx) => {
+        return res(ctx.json(graphSearchResponse));
     }),
     mockKindsHandler(),
     rest.get(`/api/v2/roles`, (req, res, ctx) => {
@@ -173,6 +189,58 @@ describe('GraphView', () => {
         expect(sigma).toBeInTheDocument();
         expect(table).not.toBeInTheDocument();
     });
+
+    const autoSelectRoute = `/explore?searchType=node&primarySearch=${searchedNode.objectId}`;
+
+    it('auto-selects when a search result has a matching objectId', async () => {
+        render(<GraphView />, { route: autoSelectRoute });
+
+        await waitFor(() => expect(window.location.search).toContain('selectedItem=42'));
+    });
+
+    it('opens the entity information panel for the auto-selected node', async () => {
+        server.use(
+            rest.post('/api/v2/graphs/cypher', (_req, res, ctx) =>
+                res(
+                    ctx.json({
+                        data: {
+                            nodes: { '42': searchedNode },
+                            edges: [],
+                        },
+                    })
+                )
+            )
+        );
+
+        render(<GraphView />, { route: autoSelectRoute });
+
+        await waitFor(() => expect(window.location.search).toContain('selectedItem=42'));
+
+        const panel = await screen.findByTestId('explore_entity-information-panel');
+        expect(within(panel).getByText('Searched Node')).toBeInTheDocument();
+    });
+
+    it('clears selected item when pathfinding search returns results', async () => {
+        server.use(
+            rest.post('/api/v2/graphs/cypher', (_req, res, ctx) =>
+                res(
+                    ctx.json({
+                        data: {
+                            nodes: { '42': searchedNode },
+                            edges: [],
+                        },
+                    })
+                )
+            )
+        );
+
+        const pathfindingRoute = `/explore?searchType=pathfinding&primarySearch=${searchedNode.objectId}&secondarySearch=some-destination`;
+
+        render(<GraphView />, { route: pathfindingRoute });
+
+        await waitFor(() => expect(window.location.search).not.toContain('selectedItem='));
+    });
+
     it('renders correct search elements after keypresses', async () => {
         render(<GraphView />, { route: `/explore` });
         const user = userEvent.setup();

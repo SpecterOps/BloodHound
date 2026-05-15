@@ -45,6 +45,7 @@ table against any new available migration files and automatically applies pendin
 -   Always include a `Down` migration when possible
 -   `Down` should safely reverse an `Up`, e.g., use `IF EXISTS`, `ON CONFLICT`, etc.
 -   Always pull main before creating a new migration
+-   If you are editing an existing migration file that has already been applied locally (but not yet merged to main), you must run `just goose-down` followed by `just goose-up` to roll back and re-apply the migration with your changes, since goose only tracks version numbers and will not detect file content changes.
 
 ## How to use in the codebase
 
@@ -53,7 +54,22 @@ table against any new available migration files and automatically applies pendin
 -   `just goose-create <name>` - create a new migration file
 -   `just goose-status` - see applied migrations
 -   `just goose-up` - apply pending migrations
+-   `just goose-up-by-one` - apply next pending migration
+-   `just goose-up-to version` - apply up to a specific version
 -   `just goose-down` - rollback last migration
+-   `just goose-down-to version` - rollback to specified version (non-inclusive)
+-   `just goose-down-all` - rollback all versions
+
+**Common Workflow:**
+
+-   `just goose-create <name>` - This creates a file with boilerplate SQL
+-   Make edits to the desired migration file
+-   `just goose-up` - Applies migrations
+-   If modifications are needed to an already-applied local migration:
+    -   Make edits
+    -   `just goose-down` - Rolls back the most recent migration (goose tracks versions, not file contents)
+        -   `just goose-down-to <timestamp>` - Use this if you need to roll back multiple local migrations
+    -   `just goose-up` - Re-applies the modified migration/s
 
 ## Troubleshooting
 

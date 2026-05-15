@@ -32,6 +32,7 @@ import {
     isNode,
     isWebGLEnabled,
     makeStoreMapFromColumnOptions,
+    useAutomaticGraphActions,
     useCustomNodeKinds,
     useExploreParams,
     useExploreSelectedItem,
@@ -66,16 +67,19 @@ import { transformIconDictionary } from './svgIcons';
 
 const GraphView: FC = () => {
     /* Hooks */
+    const theme = useTheme();
     const dispatch = useAppDispatch();
 
-    const theme = useTheme();
+    const { selectedItem, setSelectedItem, selectedItemQuery, previousSelectedItem, clearSelectedItem } =
+        useExploreSelectedItem();
+    const { searchType, setExploreParams, exploreSearchTab } = useExploreParams();
 
-    const graphHasDataQuery = useGraphHasData();
     const graphQuery = useSigmaExploreGraph();
 
-    const { searchType } = useExploreParams();
-    const { selectedItem, setSelectedItem, selectedItemQuery, clearSelectedItem, previousSelectedItem } =
-        useExploreSelectedItem();
+    // Automatically select the first node when performing a node search, or clear selection for pathfinding searches
+    useAutomaticGraphActions(graphQuery.data);
+
+    const graphHasDataQuery = useGraphHasData();
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
@@ -146,8 +150,6 @@ const GraphView: FC = () => {
         },
         [handleContextMenu]
     );
-
-    const { setExploreParams, exploreSearchTab } = useExploreParams();
 
     useKeybindings({
         KeyC: () => {
