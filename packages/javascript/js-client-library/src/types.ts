@@ -87,7 +87,7 @@ export interface AssetGroupTagCertificationRecord {
     created_at: string;
     asset_group_tag_id: number;
     certified_by: string;
-    certified: number;
+    certified: CertificationType;
 }
 
 export const CertificationPending = 0 as const;
