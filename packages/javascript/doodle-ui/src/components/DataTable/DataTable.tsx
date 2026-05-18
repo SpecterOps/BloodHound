@@ -29,9 +29,13 @@ import {
 import { useVirtualizer } from '@tanstack/react-virtual';
 
 import {
+    Announcements,
     DndContext,
     DndContextProps,
+    DragCancelEvent,
     type DragEndEvent,
+    DragOverEvent,
+    DragStartEvent,
     KeyboardSensor,
     MouseSensor,
     TouchSensor,
@@ -401,13 +405,38 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         }));
     };
 
+    const announcements: Announcements = {
+        onDragStart({ active }: DragStartEvent) {
+            const item = active.id;
+            console.log(table.getAllColumns());
+            return `Picked up sortable item ${item}.`;
+        },
+        onDragOver({ active, over }: DragOverEvent) {
+            if (over) {
+                const item = active.id;
+                return `Sortable item ${item} was moved over over.id`;
+            }
+        },
+        onDragEnd({ active, over }: DragEndEvent) {
+            if (over) {
+                const item = active.id;
+                return `Sortable item ${item} was dropped.`;
+            }
+        },
+        onDragCancel({ active }: DragCancelEvent) {
+            const item = active.id;
+            return `Dragging was cancelled. Sortable item ${item} was dropped.`;
+        },
+    };
+
     return (
         <DndWrapper
             collisionDetection={closestCenter}
             modifiers={[restrictToHorizontalAxis]}
             onDragEnd={handleDragEnd}
             sensors={sensors}
-            disabled={!enableDragAndDrop}>
+            disabled={!enableDragAndDrop}
+            accessibility={{ announcements, screenReaderInstructions: { draggable: 'draggable column header' } }}>
             <div
                 className={cn('w-full bg-neutral-light dark:bg-neutral-dark', className)}
                 {...wrapperRest}
