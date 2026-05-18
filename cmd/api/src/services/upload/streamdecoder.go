@@ -376,13 +376,16 @@ func formatAggregateErrors(errs []validationError) string {
 
 // ReadZippedFile - Util Function to help read zipped files
 func ReadZippedFile(zf *zip.File) ([]byte, error) {
-	if f, err := zf.Open(); err != nil {
+	f, err := zf.Open()
+	if err != nil {
 		return nil, err
-	} else if normFile, err := bomenc.NormalizeToUTF8(f); err != nil {
+	}
+
+	defer f.Close()
+
+	if normFile, err := bomenc.NormalizeToUTF8(f); err != nil {
 		return nil, fmt.Errorf("failed to normalize json file: %w", err)
 	} else {
-		defer f.Close()
-
 		return io.ReadAll(normFile)
 	}
 }

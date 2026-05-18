@@ -382,6 +382,8 @@ func (s Resources) ImportSavedQueries(response http.ResponseWriter, request *htt
 		if savedQueries, err = extractQueriesFromFileFunc(user.ID, request.Body); err != nil {
 			auditLogEntry.Status = model.AuditLogStatusFailure
 			switch {
+			case strings.Contains(err.Error(), "failed to normalize json file"):
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 			case strings.Contains(err.Error(), "failed to unmarshal json file"):
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 			case strings.Contains(err.Error(), "error during zip validation") || strings.Contains(err.Error(), "not a valid zip file"):
