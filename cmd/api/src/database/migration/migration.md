@@ -43,7 +43,7 @@ table against any new available migration files and automatically applies pendin
 
 -   Never modify the baseline migration(`00000000000001_init.sql`). This is a migration file all of the previous schemas before switching to goose.
 -   Never modify migrations already merged into main or staging branches. Create a new migration if a fix is needed
--   Never manually modify the `goose_db_version` table
+-   The `is_applied` field in the `goose_db_version` table is managed internally by goose. Do not modify this field manually. It will not re-apply or skip migrations. Use `just goose-up` and `just goose-down` commands instead.
 -   Always include a `Down` migration when possible
 -   `Down` should safely reverse an `Up`, e.g., use `IF EXISTS`, `ON CONFLICT`, etc.
 -   Always pull main before creating a new migration
@@ -72,6 +72,10 @@ table against any new available migration files and automatically applies pendin
     -   `just goose-down` - Rolls back the most recent migration (goose tracks versions, not file contents)
         -   `just goose-down-to <timestamp>` - Use this if you need to roll back multiple local migrations
     -   `just goose-up` - Re-applies the modified migration/s
+
+**Handling Migrations From Other Branches**
+
+-   If you are testing someone else's branch locally that has a migration, that migration will be applied to your local database. Once you switch back to your branch or main, goose will fail since there will be a version in the `goose_db_version` table but there is no corresponding file. To fix this, delete the row from your database and run a `just goose-status` to verify the state is clean.
 
 ## Troubleshooting
 
