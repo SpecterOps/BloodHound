@@ -295,13 +295,13 @@ func (s ValidationReport) BuildAPIError() []string {
 func (s ValidationReport) Error() string {
 	var sb strings.Builder
 	if len(s.CriticalErrors) > 0 {
-		sb.WriteString(fmt.Sprintf("(%d) critical error(s): [%s]", len(s.CriticalErrors), formatAggregateErrors(s.CriticalErrors)))
+		fmt.Fprintf(&sb, "(%d) critical error(s): [%s]", len(s.CriticalErrors), formatAggregateErrors(s.CriticalErrors))
 		if len(s.ValidationErrors) > 0 {
 			sb.WriteString(", ")
 		}
 	}
 	if len(s.ValidationErrors) > 0 {
-		sb.WriteString(fmt.Sprintf("(%d) validation error(s): [%s]", len(s.ValidationErrors), formatAggregateErrors(s.ValidationErrors)))
+		fmt.Fprintf(&sb, "(%d) validation error(s): [%s]", len(s.ValidationErrors), formatAggregateErrors(s.ValidationErrors))
 	}
 	return sb.String()
 }
@@ -310,7 +310,7 @@ func formatSchemaValidationError(arrayName string, index int, err error) string 
 	var sb strings.Builder
 	if ve, ok := err.(*jsonschema.ValidationError); ok {
 		numberOfViolations := len(ve.Causes)
-		sb.WriteString(fmt.Sprintf("%s[%d] schema validation failed with %d error(s): ", arrayName, index, numberOfViolations))
+		fmt.Fprintf(&sb, "%s[%d] schema validation failed with %d error(s): ", arrayName, index, numberOfViolations)
 
 		sb.WriteString("[")
 
@@ -328,17 +328,13 @@ func formatSchemaValidationError(arrayName string, index int, err error) string 
 			switch {
 			// Case: property value is an object (not allowed)
 			case isPropertyError && isTypeError(cause, "object"):
-				sb.WriteString(fmt.Sprintf(
-					"Invalid property '%s': objects are not allowed in the property bag. Use only strings, numbers, booleans, nulls, or arrays of these types.",
-					propertyName,
-				))
+				fmt.Fprintf(&sb, "Invalid property '%s': objects are not allowed in the property bag. Use only strings, numbers, booleans, nulls, or arrays of these types.",
+					propertyName)
 
 			// Case: array contains a nested object (also not allowed)
 			case isPropertyError && isNotError(cause):
-				sb.WriteString(fmt.Sprintf(
-					"Invalid property '%s': array contains an object. Arrays must contain only primitive values (string, number, boolean, or null).",
-					propertyName,
-				))
+				fmt.Fprintf(&sb, "Invalid property '%s': array contains an object. Arrays must contain only primitive values (string, number, boolean, or null).",
+					propertyName)
 
 			default:
 				sb.WriteString(cause.Error())
