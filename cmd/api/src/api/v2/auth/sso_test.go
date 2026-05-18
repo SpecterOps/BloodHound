@@ -38,7 +38,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	samlmocks "github.com/specterops/bloodhound/cmd/api/src/services/saml/mocks"
 
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -108,7 +108,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 	var (
 		mockCtrl             = gomock.NewController(t)
 		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
-		reqCtx               = &ctx.Context{Host: &url.URL{}}
+		reqCtx               = &bhctx.Context{Host: &url.URL{}}
 
 		oidcProvider = model.OIDCProvider{
 			SSOProviderID: 1,
@@ -266,7 +266,7 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 	t.Run("error user cannot delete their own SSO provider", func(t *testing.T) {
 		test.Request(t).
 			WithMethod(http.MethodDelete).
-			WithContext(&ctx.Context{AuthCtx: bhceauth.Context{
+			WithContext(&bhctx.Context{AuthCtx: bhceauth.Context{
 				Owner: model.User{SSOProviderID: null.Int32From(1)},
 			}}).
 			WithURL(ssoDeleteURL, api.URIPathVariableSSOProviderID).
@@ -459,7 +459,7 @@ func TestManagementResource_SSOLoginHandler(t *testing.T) {
 				}
 				req = mux.SetURLVars(req, vars)
 
-				req = req.WithContext(ctx.Set(req.Context(), &ctx.Context{Host: &url.URL{Host: "loremipsum"}}))
+				req = req.WithContext(bhctx.Set(req.Context(), &bhctx.Context{Host: &url.URL{Host: "loremipsum"}}))
 
 				return req
 			},
@@ -559,10 +559,10 @@ func TestManagementResource_SSOCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
@@ -583,10 +583,10 @@ func TestManagementResource_SSOCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
@@ -608,10 +608,10 @@ func TestManagementResource_SSOCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()

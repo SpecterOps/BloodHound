@@ -31,7 +31,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
@@ -433,7 +433,7 @@ func TestResources_ListExtensions(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner: model.User{
@@ -450,7 +450,7 @@ func TestResources_ListExtensions(t *testing.T) {
 					},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -472,7 +472,7 @@ func TestResources_ListExtensions(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner: model.User{
@@ -489,7 +489,7 @@ func TestResources_ListExtensions(t *testing.T) {
 					},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -586,7 +586,7 @@ func TestResources_DeleteExtension(t *testing.T) {
 					Method: http.MethodDelete,
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner: model.User{
@@ -603,7 +603,7 @@ func TestResources_DeleteExtension(t *testing.T) {
 					},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
@@ -622,7 +622,7 @@ func TestResources_DeleteExtension(t *testing.T) {
 					Method: http.MethodDelete,
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner: model.User{
@@ -639,7 +639,7 @@ func TestResources_DeleteExtension(t *testing.T) {
 					},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -662,7 +662,7 @@ func TestResources_DeleteExtension(t *testing.T) {
 					Method: http.MethodDelete,
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner: model.User{
@@ -679,7 +679,7 @@ func TestResources_DeleteExtension(t *testing.T) {
 					},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -701,7 +701,7 @@ func TestResources_DeleteExtension(t *testing.T) {
 					Method: http.MethodDelete,
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner: model.User{
@@ -718,7 +718,7 @@ func TestResources_DeleteExtension(t *testing.T) {
 					},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -741,7 +741,7 @@ func TestResources_DeleteExtension(t *testing.T) {
 					Method: http.MethodDelete,
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner: model.User{
@@ -758,7 +758,7 @@ func TestResources_DeleteExtension(t *testing.T) {
 					},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
