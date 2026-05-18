@@ -126,7 +126,11 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
 
     const [isOverflowing, setIsOverflowing] = useState(false);
     const [isPinDialogOpen, setIsPinDialogOpen] = useState(false);
-    const [focusedCell, setFocusedCell] = useState<{ rowIndex: number; colIndex: number } | null>(null);
+    const [focusedCell, setFocusedCell] = useState<{
+        rowIndex: number;
+        colIndex: number;
+        childFocused?: boolean;
+    } | null>(null);
 
     interface PinDialogState {
         action: 'pin' | 'unpin' | null;
@@ -307,10 +311,6 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
 
     const handleCellKeyDown = useCallback(
         (e: React.KeyboardEvent<HTMLTableCellElement>, rowIndex: number, colIndex: number) => {
-            // If the event originated from an interactive child element (e.g. button or input),
-            // don't intercept keyboard navigation so those elements can function normally.
-            // if (e.target !== e.currentTarget) return;
-
             const totalRows = tableRows.length;
             const totalCols = tableRows[rowIndex]?.getVisibleCells().length ?? 0;
 
@@ -336,8 +336,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                     break;
                 case 'Tab':
                     if (e.shiftKey) {
-                        if (rowIndex === 0 && colIndex == 0) {
-                            console.log('here');
+                        if (rowIndex === 0) {
                             return;
                         }
                         e.preventDefault();
@@ -608,14 +607,18 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                         enableDragging={enableDragAndDrop && isColDraggingEnabled}
                                                         className={cn('text-left overflow-x-clip', propsClassName)}
                                                         {...tableCellRest}
-                                                        tabIndex={isCellFocused ? 0 : -1}
+                                                        tabIndex={isCellFocused && !focusedCell?.childFocused ? 0 : -1}
                                                         data-row-index={row.index}
                                                         data-col-index={index}
                                                         onKeyDown={(e: React.KeyboardEvent<HTMLTableCellElement>) =>
                                                             handleCellKeyDown(e, row.index, index)
                                                         }
-                                                        onFocus={() =>
-                                                            setFocusedCell({ rowIndex: row.index, colIndex: index })
+                                                        onFocus={(e) =>
+                                                            setFocusedCell({
+                                                                rowIndex: row.index,
+                                                                colIndex: index,
+                                                                childFocused: e.target !== e.currentTarget,
+                                                            })
                                                         }
                                                         style={{
                                                             width,
