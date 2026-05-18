@@ -37,7 +37,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -173,7 +173,7 @@ func NewAuthenticator(cfg config.Configuration, db database.Database, authExtens
 // AuditLogin creates an audit log entry for login attempts
 func AuditLogin(requestContext context.Context, db database.Database, commitID uuid.UUID, status model.AuditLogEntryStatus, user model.User, fields types.JSONUntypedObject) {
 	var (
-		bhCtx    = ctx.Get(requestContext)
+		bhCtx    = bhctx.Get(requestContext)
 		auditLog = model.AuditLog{
 			Action:          model.AuditLogActionLoginAttempt,
 			Fields:          fields,
@@ -388,7 +388,7 @@ func DeleteBrowserCookie(request *http.Request, response http.ResponseWriter, na
 
 func SetSecureBrowserCookie(request *http.Request, response http.ResponseWriter, name, value string, expires time.Time, httpOnly bool, sameSite http.SameSite) {
 	var (
-		hostURL = *ctx.FromRequest(request).Host
+		hostURL = *bhctx.FromRequest(request).Host
 		isHttps = hostURL.Scheme == "https"
 	)
 
@@ -416,7 +416,7 @@ func SetSecureBrowserCookie(request *http.Request, response http.ResponseWriter,
 
 func (s AuthenticatorBase) CreateSSOSession(request *http.Request, response http.ResponseWriter, principalNameOrEmail string, ssoProvider model.SSOProvider) {
 	var (
-		hostURL    = *ctx.FromRequest(request).Host
+		hostURL    = *bhctx.FromRequest(request).Host
 		requestCtx = request.Context()
 		err        error
 

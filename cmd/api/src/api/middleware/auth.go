@@ -27,10 +27,10 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -75,7 +75,7 @@ func AuthMiddleware(authenticator api.Authenticator) mux.MiddlewareFunc {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "Token Authorization failed.", request), response)
 						return
 					} else {
-						bhCtx := ctx.Get(request.Context())
+						bhCtx := bhctx.Get(request.Context())
 						bhCtx.AuthCtx = authContext
 					}
 
@@ -91,7 +91,7 @@ func AuthMiddleware(authenticator api.Authenticator) mux.MiddlewareFunc {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(responseCode, msg, request), response)
 						return
 					} else {
-						bhCtx := ctx.Get(request.Context())
+						bhCtx := bhctx.Get(request.Context())
 						bhCtx.AuthCtx = userAuth
 					}
 
@@ -111,7 +111,7 @@ func AuthMiddleware(authenticator api.Authenticator) mux.MiddlewareFunc {
 func PermissionsCheckAll(authorizer auth.Authorizer, permissions ...model.Permission) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			if bhCtx := ctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
+			if bhCtx := bhctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "not authenticated", request), response)
 			} else if !authorizer.AllowsAllPermissions(bhCtx.AuthCtx, permissions) {
 				authorizer.AuditLogUnauthorizedAccess(request)
@@ -128,7 +128,7 @@ func PermissionsCheckAll(authorizer auth.Authorizer, permissions ...model.Permis
 func PermissionsCheckAtLeastOne(authorizer auth.Authorizer, permissions ...model.Permission) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			if bhCtx := ctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
+			if bhCtx := bhctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "not authenticated", request), response)
 			} else if !authorizer.AllowsAtLeastOnePermission(bhCtx.AuthCtx, permissions) {
 				authorizer.AuditLogUnauthorizedAccess(request)
@@ -172,7 +172,7 @@ func RequireUserId() mux.MiddlewareFunc {
 func AuthorizeAuthManagementAccess(permissions auth.PermissionSet, authorizer auth.Authorizer) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			bhCtx := ctx.FromRequest(request)
+			bhCtx := bhctx.FromRequest(request)
 
 			if !bhCtx.AuthCtx.Authenticated() {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "not authorized", request), response)
