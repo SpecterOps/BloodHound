@@ -17,9 +17,13 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { renderHook, waitFor } from '../../test-utils';
 import { useExploreTableAutoDisplay } from './useExploreTableAutoDisplay';
+const emptyResponse = { edges: [], nodes: {} };
 
-const graphShapedResponse = { edges: [{ testEdge: {} }], nodes: { testNode: { objectId: '' } } };
-const tableShapedResponse = { edges: [], nodes: { testNode: { objectId: '' } } };
+const graphShapedResponse = {
+    edges: [{ testEdge: {} }],
+    nodes: { testNode: { objectId: '' } },
+};
+const tableShapedResponse = { edges: [], nodes: { testNode: { objectId: '' }, testNode2: { objectId: '' } } };
 const getCypherAPIMock = (results: Record<string, any>) => {
     return rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
         return res(
@@ -57,6 +61,8 @@ describe('useExploreTableAutoDisplay', () => {
     });
 
     it('sets autoDisplayTable to false if query returns no results', async () => {
+        server.use(getCypherAPIMock(emptyResponse));
+
         const initialRoute = '?searchType=cypher&cypherSearch=YQ%3D%3D';
         const { result } = setup({ initialRoute });
 
@@ -83,7 +89,6 @@ describe('useExploreTableAutoDisplay', () => {
     it('sets autoDisplayTable to true if query returns nodes only, searchType = cypher, and and enabled is true', async () => {
         const initialRoute = '?searchType=cypher&cypherSearch=YQ%3D%3D';
         const { result } = setup({ enabled: true, initialRoute });
-
         await waitFor(() => expect(result.current[0]).toBe(true));
     });
 });

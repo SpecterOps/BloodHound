@@ -7,6 +7,29 @@ host_arch := if arch() == "x86" { "386" } else { if arch() == "x86_64" { "amd64"
 goose_db := env_var_or_default("GOOSE_DB", "postgres://bloodhound:bloodhoundcommunityedition@localhost:5432/bloodhound?sslmode=disable")
 goose_migrations_dir := "cmd/api/src/database/migration/migrations"
 
+# populate migration descriptions from filenames
+_goose-populate-descriptions:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  
+  # Ensure description column exists
+  psql -q "{{goose_db}}" -c "SET client_min_messages TO WARNING; ALTER TABLE goose_db_version ADD COLUMN IF NOT EXISTS description TEXT;"
+  
+  # Loop through migration files and update descriptions
+  for f in {{goose_migrations_dir}}/*.sql; do
+    [[ -f "$f" ]] || continue
+    filename="$(basename "$f" .sql)"
+    # Extract version (timestamp) - first 14 digits
+    version="${filename%%_*}"
+    # Extract description - everything after first underscore, replace _ with space
+    desc="${filename#*_}"
+    desc="${desc//_/ }"
+    # Escape single quotes to prevent SQL injection
+    desc="${desc//\'/\'\'}"
+    
+    psql -q "{{goose_db}}" -c "UPDATE goose_db_version SET description = '$desc' WHERE version_id = $version AND (description IS NULL OR description = '');"
+  done
+
 export CGO_ENABLED := "0"
 export GOOS := env_var_or_default("GOOS", host_os)
 export GOARCH := env_var_or_default("GOARCH", host_arch)
@@ -285,14 +308,17 @@ goose-create name:
 # run pending migrations
 goose-up:
   @go tool goose postgres "{{goose_db}}" -dir {{goose_migrations_dir}} -allow-missing up
+  @just _goose-populate-descriptions
 
 # run migration up by 1 migration
 goose-up-by-one:
   @go tool goose postgres "{{goose_db}}" -dir {{goose_migrations_dir}} -allow-missing up-by-one
+  @just _goose-populate-descriptions
 
 # run migration up to specific version
 goose-up-to version:
   @go tool goose postgres "{{goose_db}}" -dir {{goose_migrations_dir}} -allow-missing up-to {{version}}
+  @just _goose-populate-descriptions
 
 # rollback to last migration
 goose-down:
