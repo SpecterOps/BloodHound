@@ -1943,6 +1943,68 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 				responseBody: "imported 3 queries",
 			},
 		},
+		{
+			name: "success - json with UTF-8 BOM",
+			fields: fields{
+				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
+					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
+					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(nil)
+					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
+				},
+			},
+			args: args{
+				buildRequest: func() (*http.Request, error) {
+					body, err := json.Marshal(testQuery)
+					require.NoError(t, err)
+					// Prepend UTF-8 BOM
+					bodyWithBOM := append([]byte{0xEF, 0xBB, 0xBF}, body...)
+					req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPost, "/api/v2/saved-queries/import", bytes.NewReader(bodyWithBOM))
+					req.Header.Set("Content-Type", mediatypes.ApplicationJson.String())
+					require.NoError(t, err)
+					return req, err
+				},
+			},
+			expect: expected{
+				responseCode: http.StatusCreated,
+				responseBody: "imported 1 queries",
+			},
+		},
+		{
+			name: "success - zip with UTF-8 BOM in JSON files",
+			fields: fields{
+				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
+					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
+					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(nil)
+					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
+				},
+			},
+			args: args{
+				buildRequest: func() (*http.Request, error) {
+					zipBuffer := new(bytes.Buffer)
+					zipWriter := zip.NewWriter(zipBuffer)
+					for _, query := range testQueries {
+						file, err := zipWriter.Create(query.Name)
+						require.NoError(t, err)
+						jsonFile, err := json.Marshal(query)
+						require.NoError(t, err)
+						// Prepend UTF-8 BOM to JSON content
+						jsonFileWithBOM := append([]byte{0xEF, 0xBB, 0xBF}, jsonFile...)
+						_, err = io.Copy(file, bytes.NewReader(jsonFileWithBOM))
+						require.NoError(t, err)
+					}
+					err = zipWriter.Close()
+					require.NoError(t, err)
+					req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPost, "/api/v2/saved-queries/import", bytes.NewReader(zipBuffer.Bytes()))
+					req.Header.Set("Content-Type", mediatypes.ApplicationZip.String())
+					require.NoError(t, err)
+					return req, err
+				},
+			},
+			expect: expected{
+				responseCode: http.StatusCreated,
+				responseBody: "imported 3 queries",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
