@@ -232,11 +232,18 @@ func (s *LocalStore) Delete(ctx context.Context, name string) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	err := s.root.Remove(name)
+
+	stat, err := s.root.Stat(name)
 	if errors.Is(err, os.ErrNotExist) {
 		return nil
 	}
-	return err
+	if err != nil {
+		return err
+	}
+	if stat.IsDir() {
+		return fmt.Errorf("delete %q: %w", name, ErrIsDirectory)
+	}
+	return s.root.Remove(name)
 }
 
 func (s *LocalStore) List(ctx context.Context, name string, options ListOptions) ([]FileInfo, error) {
@@ -348,6 +355,14 @@ func (s *LocalStore) Move(ctx context.Context, srcName, dstName string, options 
 	if err := ctx.Err(); err != nil {
 		return err
 	}
+	info, err := s.root.Stat(srcName)
+	if err != nil {
+		return err
+	}
+	if info.IsDir() {
+		return fmt.Errorf("move %q: %w", srcName, ErrIsDirectory)
+	}
+
 	dir := path.Dir(dstName)
 	if dir != "." {
 		if err := s.root.MkdirAll(dir, 0o750); err != nil {
