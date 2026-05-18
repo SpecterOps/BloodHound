@@ -44,12 +44,15 @@ interface Finding {
 export const getColumns = (sortOrder?: string | null, handleSort?: (sortBy: string) => void) => {
     const columns: ColumnDef<Finding>[] = [
         {
-            accessorKey: 'test',
+            accessorKey: '',
             id: 'action-menu',
             size: 50,
             minSize: 50,
+            header: () => {
+                return <span className='sr-only'>Action Menu</span>;
+            },
             cell: () => (
-                <button className='pl-4'>
+                <button className='pl-4' tabIndex={0}>
                     <FontAwesomeIcon icon={faEllipsis} className='rotate-90 dark:text-neutral-light-1' />
                 </button>
             ),
