@@ -53,7 +53,7 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
     const [manageUserTokensDialogOpen, toggleManageUserTokensDialog] = useToggle(false);
 
     const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS) || checkPermission(Permission.AUTH_READ_USERS);
+    const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS);
 
     const { addNotification, dismissNotification } = useNotifications();
     const notificationKey = 'manage-users-permission';
