@@ -106,6 +106,7 @@ const CypherSearchInner = ({
                     onExploreMenuCollapse();
                 } else if (returnedNodes.length === 1) {
                     setSelectedItem(returnedNodes[0]);
+                    onExploreMenuCollapse();
                 }
             }
         },
