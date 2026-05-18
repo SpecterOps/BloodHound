@@ -163,7 +163,7 @@ get:
                         zone_name:
                           type: string
                           description: Human-readable zone name. Empty when the finding is not tied to a named zone.
-                        source_principal:
+                        source_principal_id:
                           type: string
                           description: Source principal identifier. Omitted for list findings.
                         source_principal_kind:
