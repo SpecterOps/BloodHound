@@ -75,16 +75,17 @@ func ConnectDatabases(ctx context.Context, cfg config.Configuration) (bootstrap.
 	}
 }
 
-// CreateRuntimeDependencies creates the needed dependencies prior to migration. For instance, the FileService is needed for IngestControl which
-// occurs prior to migration. This function can be used to make the struct to contain the services that are necessary for the application.
+// CreateRuntimeDependencies creates the needed dependencies prior to migration. For instance, the FileService is needed for
+// IngestControl which occurs prior to migration. This function can be used to make the struct to contain the services that
+// are necessary for the application.
 func CreateRuntimeDependencies(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) (bootstrap.RuntimeDependencies, error) {
 	var deps = bootstrap.RuntimeDependencies{}
 	if fileServices, err := storage.NewDefaultFileServices(cfg); err != nil {
 		return deps, fmt.Errorf("failed to initialize file services: %w", err)
 	} else if fileServiceResolver, err := storage.NewFileServiceResolver(fileServices); err != nil {
 		return deps, fmt.Errorf("failed to initialize file service resolver: %w", err)
-		// The FileServiceRetained is necessary for the PreMigrationDaemons where it is used in IngestControl for Cleanup. Checking it here ensures
-		// we have the service prior to running the application.
+		// The FileServiceRetained is necessary for the PreMigrationDaemons where it is used in IngestControl for Cleanup.
+		// Checking it here ensures we have the service prior to running the application.
 	} else if _, err := fileServiceResolver.Resolve(storage.FileServiceRetained); err != nil {
 		return deps, fmt.Errorf("failed to resolve FileServiceRetained which is needed for the PreMigrationDaemons: %w", err)
 	} else {

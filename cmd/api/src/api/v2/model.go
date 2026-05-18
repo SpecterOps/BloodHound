@@ -134,10 +134,6 @@ func NewResources(
 	dogtagsService dogtags.Service,
 	openGraphSchemaService OpenGraphSchemaService,
 ) Resources {
-	// localStore, err := storage.NewLocalStore("/tmp/")
-	// if err != nil {
-	// 	slog.Error("Error creating local store")
-	// }
 	return Resources{
 		Decoder:                    schema.NewDecoder(),
 		DB:                         rdms,

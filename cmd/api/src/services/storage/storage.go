@@ -94,14 +94,38 @@ type Storage interface {
 	Move(ctx context.Context, srcName, dstName string, options WriteOptions) error
 }
 
+// Serves as an abstraction to hanlde files with different storage backends. This functions
+// are general functions that each file service must implement.
 type FileService interface {
+	// GetFile returns a io.ReadCloser and FileInfo for the named filed that is requested.
 	GetFile(ctx context.Context, name string) (io.ReadCloser, FileInfo, error)
+
+	// ReadFile returns the byte information of the file that is requested.
 	ReadFile(ctx context.Context, name string) ([]byte, error)
+
+	// WriteFile takes the name and byte information as well as WriteOptions to write to the
+	// storage backend.
 	WriteFile(ctx context.Context, name string, data []byte, opts WriteOptions) error
+
+	// WriteFileFromReader takes the name, io.Reader, and WriteOptions to write to the
+	// storage backend.
 	WriteFileFromReader(ctx context.Context, name string, reader io.Reader, opts WriteOptions) error
+
+	// DeleteFile deletes a file at a specific name from the storage backend. If the file
+	// is not found, no error is returned.
 	DeleteFile(ctx context.Context, name string) error
+
+	// WriteTempFile handles the creation of a temp file when given an io.Reader. A prefix
+	// can also be used to define how the temp file is created. WriteOptions can also be
+	// specified.
 	WriteTempFile(ctx context.Context, prefix string, reader io.Reader, opts WriteOptions) (string, error)
+
+	// MoveFile takes a srcName and dstName to move a file from one location to another on
+	// the storage backend. WriteOptions can also be specified in the case of collisions.
 	MoveFile(ctx context.Context, srcName, dstName string, opts WriteOptions) error
+
+	// ListFiles lists the files at a given location in the storage backend. This can be done
+	// recursively, or with a limit on the specified directory.
 	ListFiles(ctx context.Context, name string, opts ListOptions) ([]FileInfo, error)
 }
 
@@ -193,6 +217,8 @@ func MoveFileBetweenServices(
 // FileServiceResolver is an interface that is used to resolve the actual FileService needed for
 // a specific use case. This is ultimately map backed.
 type FileServiceResolver interface {
+	// Resolve returns a FileService interface if a FileService is found with the given name.
+	// Otherwise, an error is returned.
 	Resolve(name FileServiceName) (FileService, error)
 }
 
@@ -241,6 +267,8 @@ func (s *fileServiceResolver) Resolve(name FileServiceName) (FileService, error)
 	return fileService, nil
 }
 
+// NewDefaultFileServices creates the file services that should be considered default with
+// BloodHound. Additional FileServices can still be created prior to creating a Resolver.
 func NewDefaultFileServices(cfg config.Configuration) (map[FileServiceName]FileService, error) {
 	var (
 		fileServices = make(map[FileServiceName]FileService)
