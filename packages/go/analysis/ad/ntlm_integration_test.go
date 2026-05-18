@@ -22,12 +22,19 @@ import (
 	"context"
 	"testing"
 
+	"github.com/peterldowns/pgtestdb"
+	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/specterops/bloodhound/packages/go/analysis"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/bloodhound/packages/go/lab/arrows"
+	"github.com/specterops/dawgs"
+	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -126,6 +133,136 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 		})
 	})
 
+}
+
+func TestCoerceAndRelayNTLMToADCSTrust(t *testing.T) {
+	var (
+		ctx        = context.Background()
+		graphDB    = newNTLMIntegrationGraph(t, ctx)
+		testEdges  []arrows.Edge
+		otherEdges []arrows.Edge
+	)
+
+	fixture, err := arrows.LoadGraphFromFile(integration.Harnesses, "harnesses/CoerceAndRelayNTLMToADCSTrust.json")
+	require.NoError(t, err)
+
+	// Split edges into test edges and the other edges
+	for _, edge := range fixture.Relationships {
+		if edge.Type == ad.CoerceAndRelayNTLMToADCS.String() {
+			testEdges = append(testEdges, edge)
+		} else {
+			otherEdges = append(otherEdges, edge)
+		}
+	}
+	require.NotEmpty(t, testEdges)
+	fixture.Relationships = otherEdges
+
+	err = arrows.WriteGraphToDatabase(graphDB, &fixture)
+	require.NoError(t, err)
+
+	localGroupData, err := adAnalysis.FetchLocalGroupData(ctx, graphDB)
+	require.NoError(t, err)
+
+	ntlmCache, err := adAnalysis.NewNTLMCache(ctx, graphDB, localGroupData)
+	require.NoError(t, err)
+
+	enterpriseCertAuthorities, err := adAnalysis.FetchNodesByKind(ctx, graphDB, ad.EnterpriseCA)
+	require.NoError(t, err)
+
+	certTemplates, err := adAnalysis.FetchNodesByKind(ctx, graphDB, ad.CertTemplate)
+	require.NoError(t, err)
+
+	adcsCache := adAnalysis.NewADCSCache()
+	err = adcsCache.BuildCache(ctx, graphDB, enterpriseCertAuthorities, certTemplates)
+	require.NoError(t, err)
+
+	operation := post.NewPostRelationshipOperation(ctx, graphDB, "CoerceAndRelayNTLMToADCS Trust Post Processing")
+	err = adAnalysis.PostCoerceAndRelayNTLMToADCS(adcsCache, operation, ntlmCache)
+	require.NoError(t, err)
+	require.NoError(t, operation.Done())
+
+	err = graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if results, err := ops.FetchRelationshipIDs(tx.Relationships().Filterf(func() graph.Criteria {
+			return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToADCS)
+		})); err != nil {
+			t.Fatalf("error fetching CoerceAndRelayNTLMToADCS edges in integration test; %v", err)
+		} else {
+			require.Equal(t, len(testEdges), len(results))
+		}
+
+		for _, testEdge := range testEdges {
+			if fromNode, found := findNTLMFixtureNodeByID(fixture.Nodes, testEdge.FromID); !found {
+				t.Fatalf("error finding source node with ID %s; %v", testEdge.FromID, err)
+			} else if toNode, found := findNTLMFixtureNodeByID(fixture.Nodes, testEdge.ToID); !found {
+				t.Fatalf("error finding destination node with ID %s; %v", testEdge.ToID, err)
+			} else if fromGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+				return query.Equals(query.NodeProperty(common.Name.String()), fromNode.Caption)
+			})); err != nil || len(fromGraphNodeId) != 1 {
+				t.Fatalf("error fetching node with name %s in integration test; %v", fromNode.Caption, err)
+			} else if toGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+				return query.Equals(query.NodeProperty(common.Name.String()), toNode.Caption)
+			})); err != nil || len(toGraphNodeId) != 1 {
+				t.Fatalf("error fetching node with name %s in integration test; %v", toNode.Caption, err)
+			} else if edge, err := analysis.FetchEdgeByStartAndEnd(ctx, graphDB, fromGraphNodeId[0], toGraphNodeId[0], ad.CoerceAndRelayNTLMToADCS); err != nil {
+				t.Fatalf("error fetching CoerceAndRelayNTLMToADCS edge from node %s (ID: %d) to node %s (ID: %d) in integration test; %v", fromNode.Caption, fromGraphNodeId[0], toNode.Caption, toGraphNodeId[0], err)
+			} else {
+				require.NotNil(t, edge)
+
+				composition, err := adAnalysis.GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx, graphDB, edge)
+				require.NoError(t, err)
+				require.Greater(t, composition.AllNodes().Len(), 0)
+
+				compositionEdgeCount := 0
+				for _, path := range composition.Paths() {
+					compositionEdgeCount += len(path.Edges)
+				}
+				require.Greater(t, compositionEdgeCount, 0)
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("error in CoerceAndRelayNTLMToADCS integration test; %v", err)
+	}
+}
+
+func newNTLMIntegrationGraph(t *testing.T, ctx context.Context) graph.Database {
+	t.Helper()
+
+	cfg, err := utils.LoadIntegrationTestConfig()
+	require.NoError(t, err)
+
+	connConf := pgtestdb.Custom(t, integration.GetPostgresConfig(cfg), pgtestdb.NoopMigrator{})
+	cfg.Database.Connection = connConf.URL()
+
+	pool, err := pg.NewPool(cfg.Database)
+	require.NoError(t, err)
+
+	graphDB, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
+		ConnectionString: cfg.Database.PostgreSQLConnectionString(),
+		Pool:             pool,
+	})
+	require.NoError(t, err)
+	require.NoError(t, migrations.NewGraphMigrator(graphDB).Migrate(ctx))
+	require.NoError(t, graphDB.AssertSchema(ctx, graphschema.DefaultGraphSchema()))
+
+	t.Cleanup(func() {
+		if err := graphDB.Close(ctx); err != nil {
+			t.Logf("failed to close graph database: %v", err)
+		}
+	})
+
+	return graphDB
+}
+
+func findNTLMFixtureNodeByID(nodes []arrows.Node, id string) (*arrows.Node, bool) {
+	for i := range nodes {
+		if nodes[i].ID == id {
+			return &nodes[i], true
+		}
+	}
+	return nil, false
 }
 
 func TestPostNTLMRelaySMB(t *testing.T) {
