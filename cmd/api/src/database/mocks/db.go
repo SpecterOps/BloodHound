@@ -2934,7 +2934,7 @@ func (mr *MockDatabaseMockRecorder) RegisterSourceKind(ctx any) *gomock.Call {
 }
 
 // RequestAnalysis mocks base method.
-func (m *MockDatabase) RequestAnalysis(ctx context.Context, requester string, analysisStep model.AnalysisStep) error {
+func (m *MockDatabase) RequestAnalysis(ctx context.Context, requester string, analysisStep model.AnalysisSteps) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RequestAnalysis", ctx, requester, analysisStep)
 	ret0, _ := ret[0].(error)

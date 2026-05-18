@@ -243,7 +243,7 @@ func (s *BHCEPipeline) IsPrimary(ctx context.Context, status model.DatapipeStatu
 // ingest jobs are waiting (full analysis) or an analysis request is queued (the request's merged
 // step bits). When both triggers are present the step sets are unioned.
 func (s *BHCEPipeline) Analyze(ctx context.Context) error {
-	var steps model.AnalysisStep
+	var steps model.AnalysisSteps
 
 	hasJobsWaitingForAnalysis, err := s.jobService.HasIngestJobsWaitingForAnalysis()
 	if err != nil {
@@ -258,7 +258,7 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 		return fmt.Errorf("looking up analysis request: %v", err)
 	}
 	if err == nil {
-		steps |= analysisRequest.AnalysisStep
+		steps |= analysisRequest.AnalysisSteps
 	}
 
 	if steps == 0 {
@@ -268,7 +268,7 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 	return s.analyze(ctx, steps)
 }
 
-func (s *BHCEPipeline) analyze(ctx context.Context, steps model.AnalysisStep) error {
+func (s *BHCEPipeline) analyze(ctx context.Context, steps model.AnalysisSteps) error {
 	// Ensure that the user-requested analysis switch is deleted. This is done at the beginning of the
 	// function so that any re-analysis requests are caught while analysis is in-progress.
 	if err := s.db.DeleteAnalysisRequest(ctx); err != nil {

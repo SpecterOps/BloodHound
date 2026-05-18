@@ -34,7 +34,7 @@ type AnalysisRequestData interface {
 	GetAnalysisRequest(ctx context.Context) (model.AnalysisRequest, error)
 	HasAnalysisRequest(ctx context.Context) bool
 	HasCollectedGraphDataDeletionRequest(ctx context.Context) (model.AnalysisRequest, bool)
-	RequestAnalysis(ctx context.Context, requester string, analysisStep model.AnalysisStep) error
+	RequestAnalysis(ctx context.Context, requester string, analysisStep model.AnalysisSteps) error
 	RequestCollectedGraphDataDeletion(ctx context.Context, request model.AnalysisRequest) error
 }
 
@@ -88,7 +88,7 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 			request.RequestedBy,
 			request.RequestType,
 			now,
-			request.AnalysisStep,
+			request.AnalysisSteps,
 			request.DeleteAllGraph,
 			request.DeleteSourcelessGraph,
 			pq.StringArray(request.DeleteSourceKinds),
@@ -129,8 +129,8 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 	} else if analysisRequest.RequestType == model.AnalysisRequestAnalysis && request.RequestType == model.AnalysisRequestAnalysis {
 		// Merge the requested analysis steps so a subsequent request can only widen the work, never narrow it.
 		// requested_by/requested_at are preserved from the original request.
-		merged := analysisRequest.AnalysisStep | request.AnalysisStep
-		if merged == analysisRequest.AnalysisStep {
+		merged := analysisRequest.AnalysisSteps.Merge(request.AnalysisSteps)
+		if merged == analysisRequest.AnalysisSteps {
 			return nil
 		}
 		return s.db.Exec(`UPDATE analysis_request_switch SET analysis_step = ? WHERE request_type = ?;`, merged, model.AnalysisRequestAnalysis).Error
@@ -139,9 +139,9 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 }
 
 // RequestAnalysis will request an analysis be executed, as long as there isn't an existing analysis request or collected graph data deletion request, then it no-ops
-func (s *BloodhoundDB) RequestAnalysis(ctx context.Context, requestedBy string, analysisStep model.AnalysisStep) error {
+func (s *BloodhoundDB) RequestAnalysis(ctx context.Context, requestedBy string, analysisStep model.AnalysisSteps) error {
 	slog.InfoContext(ctx, "Request analysis", slog.String("requested_by", requestedBy))
-	return s.setAnalysisRequest(ctx, model.AnalysisRequest{RequestType: model.AnalysisRequestAnalysis, RequestedBy: requestedBy, AnalysisStep: analysisStep})
+	return s.setAnalysisRequest(ctx, model.AnalysisRequest{RequestType: model.AnalysisRequestAnalysis, RequestedBy: requestedBy, AnalysisSteps: analysisStep})
 }
 
 // RequestCollectedGraphDataDeletion will request collected graph data be deleted, if an analysis request is present, it will overwrite that.

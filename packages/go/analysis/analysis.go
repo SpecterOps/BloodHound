@@ -128,7 +128,7 @@ var (
 )
 
 // TODO Cleanup tieringEnabled after Tiering GA
-func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration, steps model.AnalysisStep) error {
+func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration, steps model.AnalysisSteps) error {
 	var (
 		collectedErrors []error
 		tieringEnabled  = appcfg.GetTieringEnabled(ctx, db)
