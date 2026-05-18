@@ -84,20 +84,12 @@ func TestPostADCSESC6a_ManagedServiceAccounts(t *testing.T) {
 
 	operation := post.NewPostRelationshipOperation(suite.Context, suite.GraphDB, "ADCS Post Process Test - ESC6a MSA")
 
-	localGroupData, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(suite.GraphDB)
+	localGroupData, cache, err := FetchADCSPrereqs(suite.GraphDB)
 	require.NoError(t, err)
 
-	for _, ca := range enterpriseCertAuthorities {
-		innerEnterpriseCA := ca
-		targetDomains := &graph.NodeSet{}
-		for _, candidateDomain := range domains {
-			if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, candidateDomain) {
-				targetDomains.Add(candidateDomain)
-			}
-		}
-
+	for _, certChains := range cache.GetChainedDomains() {
 		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-			if err := adAnalysis.PostADCSESC6a(ctx, tx, outC, localGroupData, innerEnterpriseCA, targetDomains, cache); err != nil {
+			if err := adAnalysis.PostADCSESC6a(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 				t.Logf("failed post processing for %s: %v", ad.ADCSESC6a.String(), err)
 				return err
 			}

@@ -44,20 +44,14 @@ func TestPostNTLMRelayADCS(t *testing.T) {
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToADCS")
-		localGroupData, _, _, _, err := fetchNTLMPrereqs(db)
+
+		localGroupData, cache, err := FetchADCSPrereqs(db)
 		require.NoError(t, err)
+
 		ntlmCache, err := adAnalysis.NewNTLMCache(context.Background(), db, localGroupData)
 		require.NoError(t, err)
 
-		cache := adAnalysis.NewADCSCache()
-		enterpriseCertAuthorities, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA)
-		require.NoError(t, err)
-		certTemplates, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
-		require.NoError(t, err)
-		err = cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
-		require.NoError(t, err)
-
-		err = adAnalysis.PostCoerceAndRelayNTLMToADCS(cache, operation, ntlmCache)
+		err = adAnalysis.PostCoerceAndRelayNTLMToADCS(context.Background(), operation, cache, ntlmCache)
 		require.NoError(t, err)
 
 		operation.Done()
@@ -91,20 +85,14 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM Composition Test - CoerceAndRelayNTLMToADCS")
-		localGroupData, _, _, _, err := fetchNTLMPrereqs(db)
+
+		localGroupData, cache, err := FetchADCSPrereqs(db)
 		require.NoError(t, err)
+
 		ntlmCache, err := adAnalysis.NewNTLMCache(context.Background(), db, localGroupData)
 		require.NoError(t, err)
 
-		cache := adAnalysis.NewADCSCache()
-		enterpriseCertAuthorities, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA)
-		require.NoError(t, err)
-		certTemplates, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
-		require.NoError(t, err)
-		err = cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
-		require.NoError(t, err)
-
-		err = adAnalysis.PostCoerceAndRelayNTLMToADCS(cache, operation, ntlmCache)
+		err = adAnalysis.PostCoerceAndRelayNTLMToADCS(context.Background(), operation, cache, ntlmCache)
 		require.NoError(t, err)
 
 		operation.Done()
