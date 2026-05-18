@@ -26,7 +26,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api/tools"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/stretchr/testify/require"
@@ -43,7 +43,7 @@ func TestToolContainer_GetScheduledAnalysisConfiguration_Errors(t *testing.T) {
 		defer ctrl.Finish()
 
 		endpoint := "/analysis/schedule"
-		requestCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		requestCtx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		scheduledAnalysisRequest := tools.ScheduledAnalysisConfiguration{
 			Enabled: true,
 			RRule:   "abc123",
@@ -76,7 +76,7 @@ func TestToolContainer_GetScheduledAnalysisConfiguration_Errors(t *testing.T) {
 		defer ctrl.Finish()
 
 		endpoint := "/analysis/schedule"
-		requestCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		requestCtx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		scheduledAnalysisRequest := tools.ScheduledAnalysisConfiguration{
 			Enabled: true,
 			RRule:   "FREQ=DAILY;INTERVAL=1;COUNT=3",
@@ -109,7 +109,7 @@ func TestToolContainer_GetScheduledAnalysisConfiguration_Errors(t *testing.T) {
 		defer ctrl.Finish()
 
 		endpoint := "/analysis/schedule"
-		requestCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		requestCtx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		scheduledAnalysisRequest := tools.ScheduledAnalysisConfiguration{
 			Enabled: true,
 			RRule:   "FREQ=DAILY;INTERVAL=1;UNTIL=20240930T000000Z",
@@ -142,7 +142,7 @@ func TestToolContainer_GetScheduledAnalysisConfiguration_Errors(t *testing.T) {
 		defer ctrl.Finish()
 
 		endpoint := "/analysis/schedule"
-		requestCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		requestCtx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		scheduledAnalysisRequest := tools.ScheduledAnalysisConfiguration{
 			Enabled: true,
 			RRule:   "RRULE:FREQ=DAILY;INTERVAL=1",

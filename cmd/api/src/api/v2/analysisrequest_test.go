@@ -30,7 +30,7 @@ import (
 	"github.com/gorilla/mux"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	dbMocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
@@ -113,7 +113,7 @@ func TestResources_RequestAnalysis(t *testing.T) {
 					"object_id": "id",
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner:   model.User{},
@@ -122,7 +122,7 @@ func TestResources_RequestAnalysis(t *testing.T) {
 				}
 
 				request = mux.SetURLVars(request, param)
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -148,7 +148,7 @@ func TestResources_RequestAnalysis(t *testing.T) {
 					"object_id": "id",
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner:   model.User{},
@@ -157,7 +157,7 @@ func TestResources_RequestAnalysis(t *testing.T) {
 				}
 
 				request = mux.SetURLVars(request, param)
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -182,7 +182,7 @@ func TestResources_RequestAnalysis(t *testing.T) {
 					"object_id": "id",
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner:   model.User{},
@@ -191,7 +191,7 @@ func TestResources_RequestAnalysis(t *testing.T) {
 				}
 
 				request = mux.SetURLVars(request, param)
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -322,7 +322,7 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 					"object_id": "id",
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner:   model.User{},
@@ -331,7 +331,7 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 				}
 
 				request = mux.SetURLVars(request, param)
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -359,7 +359,7 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 					"object_id": "id",
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner:   model.User{},
@@ -368,7 +368,7 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 				}
 
 				request = mux.SetURLVars(request, param)
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -397,7 +397,7 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 					"object_id": "id",
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner:   model.User{},
@@ -406,7 +406,7 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 				}
 
 				request = mux.SetURLVars(request, param)
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -439,7 +439,7 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 					"object_id": "id",
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner:   model.User{},
@@ -448,7 +448,7 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 				}
 
 				request = mux.SetURLVars(request, param)
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -482,7 +482,7 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 					"object_id": "id",
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner:   model.User{},
@@ -491,7 +491,7 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 				}
 
 				request = mux.SetURLVars(request, param)
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()

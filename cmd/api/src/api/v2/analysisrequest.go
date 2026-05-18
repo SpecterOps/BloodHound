@@ -24,7 +24,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 )
@@ -41,7 +41,7 @@ func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.R
 	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Requesting analysis")()
 
 	var userId string
-	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+	if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 		slog.WarnContext(request.Context(), "Encountered request analysis for unknown user, this shouldn't happen")
 		userId = "unknown-user"
 	} else {
@@ -59,7 +59,7 @@ func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.R
 func (s Resources) CancelAnalysisRequest(response http.ResponseWriter, request *http.Request) {
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Cancelling analysis request")()
 
-	if _, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+	if _, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 		slog.ErrorContext(request.Context(), "Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseUnknownUser.Error(), request), response)
 	} else if analysisRequest, err := s.DB.GetAnalysisRequest(request.Context()); errors.Is(err, sql.ErrNoRows) {

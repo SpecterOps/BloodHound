@@ -32,7 +32,7 @@ import (
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -411,7 +411,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 	require.Nil(t, err)
 
 	requestTemplate.
-		WithContext(&ctx.Context{
+		WithContext(&bhctx.Context{
 			Host: &url.URL{},
 		}).
 		WithBody(jsonBody).
@@ -430,7 +430,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 	require.Nil(t, err)
 
 	requestTemplate.
-		WithContext(&ctx.Context{
+		WithContext(&bhctx.Context{
 			Host: &url.URL{},
 		}).
 		WithBody(jsonBody).
@@ -449,7 +449,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 	require.Nil(t, err)
 
 	requestTemplate.
-		WithContext(&ctx.Context{
+		WithContext(&bhctx.Context{
 			Host: &url.URL{},
 		}).
 		WithBody(jsonBody).
@@ -461,7 +461,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 	require.Nil(t, err)
 
 	requestTemplate.
-		WithContext(&ctx.Context{
+		WithContext(&bhctx.Context{
 			Host: &url.URL{},
 		}).
 		WithBody(jsonBody).
@@ -473,7 +473,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 	require.Nil(t, err)
 
 	requestTemplate.
-		WithContext(&ctx.Context{
+		WithContext(&bhctx.Context{
 			Host: &url.URL{},
 		}).
 		WithBody(jsonBody).
@@ -524,7 +524,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroup{}, nil)
 
 	requestTemplate.
-		WithContext(&ctx.Context{
+		WithContext(&bhctx.Context{
 			Host: &url.URL{},
 		}).
 		WithBody(v2.CreateAssetGroupRequest{Name: "valid_name", Tag: "valid_tag"}).
@@ -619,14 +619,14 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
-	bheCtx := ctx.Context{
+	bheCtx := bhctx.Context{
 		RequestID: "requestID",
 		AuthCtx: auth.Context{
 			Owner:   model.User{},
 			Session: model.UserSession{},
 		},
 	}
-	req = req.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bheCtx.WithRequestID("requestID")))
+	req = req.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bheCtx.WithRequestID("requestID")))
 	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupID: "1"})
 
 	assetGroup := model.AssetGroup{
@@ -709,14 +709,14 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
-	bheCtx := ctx.Context{
+	bheCtx := bhctx.Context{
 		RequestID: "requestID",
 		AuthCtx: auth.Context{
 			Owner:   model.User{},
 			Session: model.UserSession{},
 		},
 	}
-	req = req.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bheCtx.WithRequestID("requestID")))
+	req = req.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bheCtx.WithRequestID("requestID")))
 	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupID: "1"})
 
 	assetGroup := model.AssetGroup{
