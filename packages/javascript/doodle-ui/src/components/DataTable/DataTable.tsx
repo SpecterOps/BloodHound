@@ -307,6 +307,10 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
 
     const handleCellKeyDown = useCallback(
         (e: React.KeyboardEvent<HTMLTableCellElement>, rowIndex: number, colIndex: number) => {
+            // If the event originated from an interactive child element (e.g. button or input),
+            // don't intercept keyboard navigation so those elements can function normally.
+            // if (e.target !== e.currentTarget) return;
+
             const totalRows = tableRows.length;
             const totalCols = tableRows[rowIndex]?.getVisibleCells().length ?? 0;
 
@@ -333,17 +337,20 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                 case 'Tab':
                     if (e.shiftKey) {
                         if (rowIndex === 0 && colIndex == 0) {
+                            console.log('here');
                             return;
                         }
                         e.preventDefault();
                         nextRow = Math.min(totalRows - 1, rowIndex - 1);
                         nextCol = 0;
                     } else {
+                        if (rowIndex === totalRows - 1) {
+                            return;
+                        }
                         e.preventDefault();
                         nextRow = Math.min(totalRows - 1, rowIndex + 1);
                         nextCol = 0;
                     }
-
                     break;
 
                 default:
@@ -357,6 +364,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
 
     // When focusedCell changes, scroll the virtualizer to bring the target row into view,
     // then focus the corresponding <td> element via its data attributes.
+    // If the cell contains a focusable interactive element (button, input, etc.), focus that instead.
     useEffect(() => {
         if (!focusedCell) return;
 
@@ -366,7 +374,13 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
             const cell = parentRef.current?.querySelector(
                 `td[data-row-index="${focusedCell.rowIndex}"][data-col-index="${focusedCell.colIndex}"]`
             ) as HTMLElement | null;
-            cell?.focus();
+
+            if (!cell) return;
+
+            const focusableChild = cell.querySelector<HTMLElement>(
+                'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            );
+            (focusableChild ?? cell).focus();
         });
     }, [focusedCell, virtualizer]);
 
