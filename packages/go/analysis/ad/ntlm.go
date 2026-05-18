@@ -210,6 +210,7 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 
 func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	var (
+		startNode  *graph.Node
 		endNode    *graph.Node
 		domainNode *graph.Node
 		startNodes = graph.NodeSet{}
@@ -225,6 +226,8 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx); err != nil {
 			return err
+		} else if startNode, err = ops.FetchNode(tx, edge.StartID); err != nil {
+			return err
 		} else if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
 			return err
 		} else {
@@ -236,14 +239,14 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 		return nil, err
 	}
 
-	if domainsid, err := endNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		slog.WarnContext(
-			ctx,
-			"Error getting domain SID for domain",
-			slog.Uint64("node_id", uint64(endNode.ID)),
-			attr.Error(err),
-		)
-		return nil, err
+	if domainsid, err := startNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+			slog.WarnContext(
+				ctx,
+				"Error getting domain SID for start node",
+				slog.Uint64("node_id", uint64(startNode.ID)),
+				attr.Error(err),
+			)
+			return nil, err
 	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		domainNode, err = tx.Nodes().Filter(query.And(
 			query.Equals(query.NodeProperty(common.ObjectID.String()), domainsid),
@@ -258,13 +261,25 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 			Root: n,
 			Driver: coerceAndRelayNTLMtoADCSPath1Pattern(domainNode.ID).Do(func(terminal *graph.PathSegment) error {
-				var enterpriseCANode *graph.Node
+				var (
+					certTemplateNode *graph.Node
+					enterpriseCANode *graph.Node
+				)
+
 				terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
 					if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
 						enterpriseCANode = nextSegment.Node
+					} else if nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate) {
+						certTemplateNode = nextSegment.Node
 					}
 					return true
 				})
+
+				if certTemplateNode == nil || enterpriseCANode == nil {
+					return nil
+				} else if valid, err := isCertTemplateValidForADCSRelay(certTemplateNode); err != nil || !valid {
+					return nil
+				}
 
 				lock.Lock()
 				candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
@@ -320,19 +335,6 @@ func coerceAndRelayNTLMtoADCSPath1Pattern(domainID graph.ID) traversal.PatternCo
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.GenericAll, ad.Enroll, ad.AllExtendedRights),
 			query.Kind(query.End(), ad.CertTemplate),
-			query.Or(
-				query.And(
-					query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
-					query.GreaterThan(query.EndProperty(ad.SchemaVersion.String()), 1),
-					query.Equals(query.EndProperty(ad.AuthorizedSignatures.String()), 0),
-					query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
-				),
-				query.And(
-					query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
-					query.Equals(query.EndProperty(ad.SchemaVersion.String()), 1),
-					query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
-				),
-			),
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.PublishedTo),
