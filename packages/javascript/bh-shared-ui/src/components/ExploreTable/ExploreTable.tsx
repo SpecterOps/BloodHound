@@ -89,15 +89,23 @@ const ExploreTable = ({
 
     const exploreTableData = useMemo(() => getExploreTableData(graphData), [graphData]);
 
-    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount, columnOrder, setColumnOrder } =
-        useExploreTableRowsAndColumns({
-            onKebabMenuClick,
-            searchInput,
-            selectedColumns,
-            exploreTableData,
-        });
+    const {
+        columnOptionsForDropdown,
+        sortedFilteredRows,
+        tableColumns,
+        resultsCount,
+        columnOrder,
+        setColumnOrder,
+        announcement,
+    } = useExploreTableRowsAndColumns({
+        onKebabMenuClick,
+        searchInput,
+        selectedColumns,
+        exploreTableData,
+    });
 
     const effectivePinnedColumns = pinnedColumns ?? DEFAULT_EXPLORE_TABLE_COLUMN_KEYS;
+    console.log(announcement);
 
     const columnPinning = useMemo(() => {
         return {
@@ -188,6 +196,9 @@ const ExploreTable = ({
                     'w-[calc(100%-450px)]': selectedItem,
                 }
             )}>
+            <div role='status' aria-live='polite' className='visually-hidden'>
+                {announcement}
+            </div>
             <div className='explore-table-container w-full h-full overflow-hidden grid grid-rows-[72px,1fr]'>
                 <TableControls
                     columns={columnOptionsForDropdown}
