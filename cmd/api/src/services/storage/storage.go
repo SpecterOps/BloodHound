@@ -205,9 +205,15 @@ func MoveFileBetweenServices(
 	if err != nil {
 		return err
 	}
-	defer sourceFile.Close()
 
 	if err := destinationService.WriteFileFromReader(ctx, destinationName, sourceFile, opts); err != nil {
+		if closeErr := sourceFile.Close(); closeErr != nil {
+			return errors.Join(err, closeErr)
+		}
+		return err
+	}
+
+	if err := sourceFile.Close(); err != nil {
 		return err
 	}
 
