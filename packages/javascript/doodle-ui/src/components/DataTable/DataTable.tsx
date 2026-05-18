@@ -605,7 +605,10 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                         key={cell.id}
                                                         cell={cell}
                                                         enableDragging={enableDragAndDrop && isColDraggingEnabled}
-                                                        className={cn('text-left overflow-x-clip', propsClassName)}
+                                                        className={cn(
+                                                            'text-left overflow-x-clip -outline-offset-2',
+                                                            propsClassName
+                                                        )}
                                                         {...tableCellRest}
                                                         tabIndex={isCellFocused && !focusedCell?.childFocused ? 0 : -1}
                                                         data-row-index={row.index}
