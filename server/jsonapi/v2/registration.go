@@ -28,6 +28,6 @@ func RegisterAnalysisRoutes(routerInst *router.Router, handlers *analysis.Handle
 
 	// Analysis request APIs
 	routerInst.GET("/api/v2/analysis", handlers.GetRequest).RequirePermissions(permissions.AppReadApplicationConfiguration)
-	// routerInst.POST("/api/v2/analysis", handlers.CreateRequest).RequirePermissions(permissions.AppWriteApplicationConfiguration)
+	routerInst.PUT("/api/v2/analysis", handlers.CreateRequest).RequirePermissions(permissions.AppWriteApplicationConfiguration)
 	// routerInst.DELETE("/api/v2/analysis", handlers.CancelRequest).RequirePermissions(permissions.AppWriteApplicationConfiguration)
 }
