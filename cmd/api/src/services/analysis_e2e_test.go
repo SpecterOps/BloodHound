@@ -72,12 +72,16 @@ func runGetAnalysisStatusSuite(t *testing.T, db *database.BloodhoundDB, handler 
 		return req
 	}
 
-	t.Run("returns 404 when no request is pending", func(t *testing.T) {
+	t.Run("returns 200 with empty data when no request is pending", func(t *testing.T) {
 		resp, err := http.DefaultClient.Do(newGetRequest(t))
 		require.NoError(t, err)
 		defer resp.Body.Close()
 
-		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		var envelope analysisStatusEnvelope
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+		assert.Empty(t, envelope.Data.RequestedBy)
 	})
 
 	t.Run("returns 200 with requester details when a request is pending", func(t *testing.T) {

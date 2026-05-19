@@ -73,7 +73,7 @@ func TestHandlers_GetRequest(t *testing.T) {
 		assert.Equal(t, expected.DeleteRelationships, envelope.Data.DeleteRelationships)
 	})
 
-	t.Run("returns 404 when no request is pending", func(t *testing.T) {
+	t.Run("returns 200 with a zero-value view when no request is pending", func(t *testing.T) {
 		var (
 			analysisMock = analysisMocks.NewMockAnalysis(t)
 			handlers     = analysishandlers.NewHandlersContainer(analysisMock)
@@ -85,7 +85,13 @@ func TestHandlers_GetRequest(t *testing.T) {
 
 		handlers.GetRequest(recorder, request)
 
-		assert.Equal(t, http.StatusNotFound, recorder.Code)
+		assert.Equal(t, http.StatusOK, recorder.Code)
+
+		var envelope struct {
+			Data analysishandlers.RequestedAnalysisView `json:"data"`
+		}
+		require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &envelope))
+		assert.Empty(t, envelope.Data.RequestedBy)
 	})
 
 	t.Run("returns 500 on unexpected service errors", func(t *testing.T) {

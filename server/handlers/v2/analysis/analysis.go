@@ -48,18 +48,14 @@ func NewHandlersContainer(analysis Analysis) *Handlers {
 }
 
 // GetRequest returns the currently pending analysis request.
-// A 404 is returned when no request is pending; 200 with the request details otherwise.
+// A 200 with a zero-value body is returned when no request is pending; 200
+// with the request details otherwise.
 func (h Handlers) GetRequest(response http.ResponseWriter, request *http.Request) {
 	var ctx = request.Context()
 
 	ra, err := h.analysis.GetRequest(ctx)
 
-	if errors.Is(err, analysis.ErrNoPendingRequest) {
-		responses.WriteError(ctx, http.StatusNotFound, "no analysis request pending", response)
-		return
-	}
-
-	if err != nil {
+	if err != nil && !errors.Is(err, analysis.ErrNoPendingRequest) {
 		responses.WriteInternalServerError(request, err, response)
 		return
 	}
