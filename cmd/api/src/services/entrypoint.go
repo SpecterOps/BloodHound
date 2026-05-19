@@ -46,6 +46,10 @@ import (
 	"github.com/specterops/bloodhound/packages/go/cache"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/metricsregistration"
+	appdbAnalysis "github.com/specterops/bloodhound/server/appdb/analysis"
+	analysisHandlers "github.com/specterops/bloodhound/server/handlers/v2/analysis"
+	jsonapiV2 "github.com/specterops/bloodhound/server/jsonapi/v2"
+	analysisService "github.com/specterops/bloodhound/server/services/analysis"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -148,6 +152,11 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator, connections.RDMS)
 		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dogtagsService, openGraphSchemaService)
+
+		// pgx-backed analysis stack: Store -> Service -> Handlers -> routes.
+		analysisStore := appdbAnalysis.NewStore(connections.RDMS.Pool())
+		analysisSvc := analysisService.NewService(analysisStore)
+		jsonapiV2.RegisterAnalysisRoutes(&routerInst, analysisHandlers.NewHandlersContainer(analysisSvc))
 
 		// Set neo4j batch and flush sizes
 		neo4jParameters := appcfg.GetNeo4jParameters(ctx, connections.RDMS)
