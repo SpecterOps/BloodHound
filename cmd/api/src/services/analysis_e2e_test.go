@@ -181,17 +181,12 @@ func TestGetAnalysisStatus(t *testing.T) {
 	})
 }
 
-// newLegacyCreateAnalysisHandler wraps db.RequestAnalysis so the suite can
-// exercise the PUT behaviour without depending on the full HTTP handler stack.
-// It is replaced by the pgx-backed handler once that is implemented.
-func newLegacyCreateAnalysisHandler(db *database.BloodhoundDB) http.HandlerFunc {
-	return func(response http.ResponseWriter, request *http.Request) {
-		if err := db.RequestAnalysis(request.Context(), "unknown-user"); err != nil {
-			http.Error(response, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		response.WriteHeader(http.StatusAccepted)
-	}
+// newCreateAnalysisHandler wires the pgx-backed analysis stack from a BloodhoundDB
+// and returns its PUT handler ready to pass to runCreateAnalysisRequestSuite.
+func newCreateAnalysisHandler(db *database.BloodhoundDB) http.HandlerFunc {
+	store := appdbAnalysis.NewStore(db.Pool())
+	svc := analysisService.NewService(store)
+	return analysisHandlers.NewHandlersContainer(svc).CreateRequest
 }
 
 // runCreateAnalysisRequestSuite exercises PUT /api/v2/analysis.
@@ -252,8 +247,8 @@ func runCreateAnalysisRequestSuite(t *testing.T, db *database.BloodhoundDB, putH
 }
 
 func TestCreateAnalysisRequest(t *testing.T) {
-	t.Run("legacy DB adapter", func(t *testing.T) {
+	t.Run("new handler", func(t *testing.T) {
 		db := setupAnalysisDB(t)
-		runCreateAnalysisRequestSuite(t, db, newLegacyCreateAnalysisHandler(db))
+		runCreateAnalysisRequestSuite(t, db, newCreateAnalysisHandler(db))
 	})
 }

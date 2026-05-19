@@ -29,25 +29,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 )
 
-func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.Request) {
-	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Requesting analysis")()
-
-	var userId string
-	if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
-		slog.WarnContext(request.Context(), "Encountered request analysis for unknown user, this shouldn't happen")
-		userId = "unknown-user"
-	} else {
-		userId = user.ID.String()
-	}
-
-	if err := s.DB.RequestAnalysis(request.Context(), userId); err != nil {
-		api.HandleDatabaseError(request, response, err)
-		return
-	}
-
-	response.WriteHeader(http.StatusAccepted)
-}
-
 func (s Resources) CancelAnalysisRequest(response http.ResponseWriter, request *http.Request) {
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Cancelling analysis request")()
 
