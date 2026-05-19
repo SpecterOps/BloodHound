@@ -110,3 +110,44 @@ func TestHandlers_GetRequest(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, recorder.Code)
 	})
 }
+
+func TestHandlers_CreateRequest(t *testing.T) {
+	newRequest := func(t *testing.T) *http.Request {
+		t.Helper()
+		req, err := http.NewRequest(http.MethodPut, "/api/v2/analysis", nil)
+		require.NoError(t, err)
+		return req
+	}
+
+	t.Run("returns 202 Accepted on success", func(t *testing.T) {
+		var (
+			analysisMock = analysisMocks.NewMockAnalysis(t)
+			handlers     = analysishandlers.NewHandlersContainer(analysisMock)
+			recorder     = httptest.NewRecorder()
+			request      = newRequest(t)
+		)
+
+		// No auth context present — handler falls back to "unknown-user".
+		analysisMock.EXPECT().CreateRequest(mock.Anything, "unknown-user").Return(nil)
+
+		handlers.CreateRequest(recorder, request)
+
+		assert.Equal(t, http.StatusAccepted, recorder.Code)
+	})
+
+	t.Run("returns 500 on service error", func(t *testing.T) {
+		var (
+			expectedErr  = errors.New("db unavailable")
+			analysisMock = analysisMocks.NewMockAnalysis(t)
+			handlers     = analysishandlers.NewHandlersContainer(analysisMock)
+			recorder     = httptest.NewRecorder()
+			request      = newRequest(t)
+		)
+
+		analysisMock.EXPECT().CreateRequest(mock.Anything, "unknown-user").Return(expectedErr)
+
+		handlers.CreateRequest(recorder, request)
+
+		assert.Equal(t, http.StatusInternalServerError, recorder.Code)
+	})
+}

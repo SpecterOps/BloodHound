@@ -21,18 +21,20 @@ package analysis
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/server/jsonapi/v2/responses"
 	"github.com/specterops/bloodhound/server/models"
 	"github.com/specterops/bloodhound/server/services/analysis"
 )
 
 // Analysis defines the analysis service boundary for the analysis handlers package.
-// CreateRequest and CancelRequest are intentionally omitted while their handlers
-// remain commented out below; re-add them here when those handlers are restored.
 type Analysis interface {
 	GetRequest(context.Context) (models.RequestedAnalysis, error)
+	CreateRequest(ctx context.Context, requestedBy string) error
 }
 
 // Handlers is a dependency injection container for analysis handlers
@@ -63,42 +65,26 @@ func (h Handlers) GetRequest(response http.ResponseWriter, request *http.Request
 	responses.WriteBasic(ctx, BuildRequestedAnalysisView(ra), http.StatusOK, response)
 }
 
-// // CreateRequest creates a new requested analysis run for the current user
-// func (s Handlers) CreateRequest(response http.ResponseWriter, request *http.Request) {
-// 	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Requesting analysis")()
+// CreateRequest submits a new analysis request attributed to the authenticated user.
+// Returns 202 Accepted on success. If no auth context is present, the request is
+// attributed to "unknown-user" (matching legacy behaviour).
+func (h Handlers) CreateRequest(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx    = request.Context()
+		userID string
+	)
 
-// 	var userId string
-// 	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-// 		slog.WarnContext(request.Context(), "Encountered request analysis for unknown user, this shouldn't happen")
-// 		userId = "unknown-user"
-// 	} else {
-// 		userId = user.ID.String()
-// 	}
+	if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
+		slog.WarnContext(ctx, "Encountered request analysis for unknown user, this shouldn't happen")
+		userID = "unknown-user"
+	} else {
+		userID = user.ID.String()
+	}
 
-// 	if err := s.analysis.CreateRequest(request.Context(), userId); err != nil {
-// 		api.HandleDatabaseError(request, response, err)
-// 		return
-// 	}
+	if err := h.analysis.CreateRequest(ctx, userID); err != nil {
+		responses.WriteInternalServerError(request, err, response)
+		return
+	}
 
-// 	response.WriteHeader(http.StatusAccepted)
-// }
-
-// // CancelRequest removes any pending requested analysis
-// func (s Handlers) CancelRequest(response http.ResponseWriter, request *http.Request) {
-// 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Cancelling analysis request")()
-
-// 	if _, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-// 		slog.ErrorContext(request.Context(), "Unable to get user from auth context")
-// 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseUnknownUser.Error(), request), response)
-// 	} else if analysisRequest, err := s.analysis.GetRequest(request.Context()); errors.Is(err, sql.ErrNoRows) {
-// 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
-// 	} else if err != nil {
-// 		api.HandleDatabaseError(request, response, err)
-// 	} else if analysisRequest.RequestType == model.AnalysisRequestDeletion {
-// 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseAnalysisRequestTypeDeletionPending, request), response)
-// 	} else if err := s.analysis.CancelRequest(request.Context()); err != nil {
-// 		api.HandleDatabaseError(request, response, err)
-// 	} else {
-// 		response.WriteHeader(http.StatusAccepted)
-// 	}
-// }
+	response.WriteHeader(http.StatusAccepted)
+}
