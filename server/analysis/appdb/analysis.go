@@ -25,7 +25,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/server/analysis/service"
-	"github.com/specterops/bloodhound/server/appdb/pgxutils"
+	"github.com/specterops/bloodhound/server/pgxutils"
 	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/im"
 	"github.com/stephenafamo/bob/dialect/psql/sm"

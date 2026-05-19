@@ -26,7 +26,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/server/analysis/service"
-	"github.com/specterops/bloodhound/server/jsonapi/v2/responses"
+	"github.com/specterops/bloodhound/server/jsonapiv2/responses"
 )
 
 const (
