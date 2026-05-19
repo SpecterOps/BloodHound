@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,5 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './AnnouncementProvider';
-export * from './NotificationProvider';
+import { useContext } from 'react';
+import { AnnouncementContext } from './AnnouncementProvider';
+
+export const useAnnounce = () => {
+    const announce = useContext(AnnouncementContext);
+    if (!announce) {
+        throw new Error('useAnnounce must be used within an AnnouncementProvider');
+    }
+    return announce;
+};
