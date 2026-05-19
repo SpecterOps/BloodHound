@@ -180,3 +180,80 @@ func TestGetAnalysisStatus(t *testing.T) {
 		runGetAnalysisStatusSuite(t, db, newAnalysisHandler(db))
 	})
 }
+
+// newLegacyCreateAnalysisHandler wraps db.RequestAnalysis so the suite can
+// exercise the PUT behaviour without depending on the full HTTP handler stack.
+// It is replaced by the pgx-backed handler once that is implemented.
+func newLegacyCreateAnalysisHandler(db *database.BloodhoundDB) http.HandlerFunc {
+	return func(response http.ResponseWriter, request *http.Request) {
+		if err := db.RequestAnalysis(request.Context(), "unknown-user"); err != nil {
+			http.Error(response, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		response.WriteHeader(http.StatusAccepted)
+	}
+}
+
+// runCreateAnalysisRequestSuite exercises PUT /api/v2/analysis.
+// It shares the same GET handler infrastructure to verify end-to-end state.
+func runCreateAnalysisRequestSuite(t *testing.T, db *database.BloodhoundDB, putHandler http.HandlerFunc) {
+	t.Helper()
+
+	var (
+		ctx       = context.Background()
+		muxRouter = mux.NewRouter()
+		server    = httptest.NewServer(muxRouter)
+	)
+
+	muxRouter.HandleFunc("/api/v2/analysis", putHandler).Methods(http.MethodPut)
+	muxRouter.HandleFunc("/api/v2/analysis", newAnalysisHandler(db)).Methods(http.MethodGet)
+	t.Cleanup(server.Close)
+
+	newPutRequest := func(t *testing.T) *http.Request {
+		t.Helper()
+		req, err := http.NewRequestWithContext(ctx, http.MethodPut, server.URL+"/api/v2/analysis", nil)
+		require.NoError(t, err)
+		return req
+	}
+
+	newGetRequest := func(t *testing.T) *http.Request {
+		t.Helper()
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/analysis", nil)
+		require.NoError(t, err)
+		return req
+	}
+
+	t.Run("returns 202 Accepted when analysis request is submitted", func(t *testing.T) {
+		resp, err := http.DefaultClient.Do(newPutRequest(t))
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusAccepted, resp.StatusCode)
+	})
+
+	t.Run("GET reflects pending request after PUT", func(t *testing.T) {
+		require.NoError(t, db.DeleteAnalysisRequest(ctx))
+
+		resp, err := http.DefaultClient.Do(newPutRequest(t))
+		require.NoError(t, err)
+		defer resp.Body.Close()
+		require.Equal(t, http.StatusAccepted, resp.StatusCode)
+
+		resp, err = http.DefaultClient.Do(newGetRequest(t))
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		var envelope analysisStatusEnvelope
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+		assert.Equal(t, "analysis", envelope.Data.RequestType)
+	})
+}
+
+func TestCreateAnalysisRequest(t *testing.T) {
+	t.Run("legacy DB adapter", func(t *testing.T) {
+		db := setupAnalysisDB(t)
+		runCreateAnalysisRequestSuite(t, db, newLegacyCreateAnalysisHandler(db))
+	})
+}
