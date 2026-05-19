@@ -32,6 +32,7 @@ var (
 		Help:      "Total number of privilege zone tag additions and removals applied to graph nodes during analysis.",
 	}, []string{
 		"action",
+		"tag",
 	})
 )
 
