@@ -89,6 +89,13 @@ func WriteError(ctx context.Context, statusCode int, message string, response ht
 	writeJSON(ctx, errorWrapper, statusCode, response)
 }
 
+// WriteNoContent writes a 204 No Content response with no body. Use this to signal a
+// successful request where there is nothing to return (e.g. a resource exists but has
+// no current value).
+func WriteNoContent(response http.ResponseWriter) {
+	response.WriteHeader(http.StatusNoContent)
+}
+
 // WriteInternalServerError writes a generic 500 error response and logs the underlying cause.
 // Use this when a service returns an error that the handler cannot map to a more specific
 // failure mode.

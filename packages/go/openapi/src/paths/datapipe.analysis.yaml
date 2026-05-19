@@ -55,12 +55,12 @@ get:
                     type: array
                     items:
                       type: string
+    204:
+      description: No Content. The request was successful but no analysis is currently pending.
     401:
       $ref: './../responses/unauthorized.yaml'
     403:
       $ref: './../responses/forbidden.yaml'
-    404:
-      $ref: './../responses/not-found.yaml'
     429:
       $ref: './../responses/too-many-requests.yaml'
     500:
@@ -72,7 +72,7 @@ put:
   description: |
     Submits an analysis request attributed to the authenticated user. The
     endpoint is idempotent — at most one analysis request can be pending at a
-    time. Returns 201 Created when this call accepted the new request, or 200
+    time. Returns 202 Accepted when this call accepted the new request, or 200
     OK when a request was already pending. The currently pending request is
     returned in the response body in both cases.
   tags:
@@ -109,8 +109,8 @@ put:
                     type: array
                     items:
                       type: string
-    201:
-      description: Created. The request was accepted by this call; its details are returned in the response body.
+    202:
+      description: Accepted. The request was accepted by this call; its details are returned in the response body.
       content:
         application/json:
           schema:

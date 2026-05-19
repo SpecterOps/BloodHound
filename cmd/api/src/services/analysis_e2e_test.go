@@ -88,12 +88,12 @@ func runGetAnalysisStatusSuite(t *testing.T, db *database.BloodhoundDB, handler 
 		return req
 	}
 
-	t.Run("returns 404 when no request is pending", func(t *testing.T) {
+	t.Run("returns 204 when no request is pending", func(t *testing.T) {
 		resp, err := http.DefaultClient.Do(newGetRequest(t))
 		require.NoError(t, err)
 		defer resp.Body.Close()
 
-		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 	})
 
 	t.Run("returns 200 with requester details when a request is pending", func(t *testing.T) {
@@ -231,14 +231,14 @@ func runCreateAnalysisRequestSuite(t *testing.T, db *database.BloodhoundDB, user
 		return req
 	}
 
-	t.Run("returns 201 Created and persists the new request on first PUT", func(t *testing.T) {
+	t.Run("returns 202 Accepted and persists the new request on first PUT", func(t *testing.T) {
 		require.NoError(t, db.DeleteAnalysisRequest(ctx))
 
 		resp, err := http.DefaultClient.Do(newPutRequest(t))
 		require.NoError(t, err)
 		defer resp.Body.Close()
 
-		assert.Equal(t, http.StatusCreated, resp.StatusCode)
+		assert.Equal(t, http.StatusAccepted, resp.StatusCode)
 
 		var envelope analysisStatusEnvelope
 		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
@@ -262,7 +262,7 @@ func runCreateAnalysisRequestSuite(t *testing.T, db *database.BloodhoundDB, user
 		resp, err := http.DefaultClient.Do(newPutRequest(t))
 		require.NoError(t, err)
 		defer resp.Body.Close()
-		require.Equal(t, http.StatusCreated, resp.StatusCode)
+		require.Equal(t, http.StatusAccepted, resp.StatusCode)
 
 		resp, err = http.DefaultClient.Do(newGetRequest(t))
 		require.NoError(t, err)

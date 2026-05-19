@@ -31,8 +31,7 @@ import (
 )
 
 const (
-	errMessageNoPendingRequest = "no analysis request is currently pending"
-	errMessageUnauthenticated  = "authentication is required to submit an analysis request"
+	errMessageUnauthenticated = "authentication is required to submit an analysis request"
 )
 
 // Analysis defines the analysis service boundary for the analysis handlers package.
@@ -61,7 +60,7 @@ func (s Handlers) GetRequest(response http.ResponseWriter, request *http.Request
 
 	ra, err := s.analysis.GetRequest(ctx)
 	if errors.Is(err, analysis.ErrNoPendingRequest) {
-		responses.WriteError(ctx, http.StatusNotFound, errMessageNoPendingRequest, response)
+		responses.WriteNoContent(response)
 		return
 	}
 	if err != nil {
@@ -93,7 +92,7 @@ func (s Handlers) CreateRequest(response http.ResponseWriter, request *http.Requ
 
 	statusCode := http.StatusOK
 	if created {
-		statusCode = http.StatusCreated
+		statusCode = http.StatusAccepted
 	}
 	responses.WriteBasic(ctx, BuildRequestedAnalysisView(current), statusCode, response)
 }

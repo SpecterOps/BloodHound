@@ -90,7 +90,7 @@ func TestHandlers_GetRequest(t *testing.T) {
 		assert.Equal(t, expected.DeleteRelationships, envelope.Data.DeleteRelationships)
 	})
 
-	t.Run("returns 404 with an error envelope when no request is pending", func(t *testing.T) {
+	t.Run("returns 204 No Content when no request is pending", func(t *testing.T) {
 		var (
 			analysisMock = analysisMocks.NewMockAnalysis(t)
 			handlers     = analysishandlers.NewHandlersContainer(analysisMock)
@@ -102,9 +102,8 @@ func TestHandlers_GetRequest(t *testing.T) {
 
 		handlers.GetRequest(recorder, request)
 
-		assert.Equal(t, http.StatusNotFound, recorder.Code)
-		assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
-		assert.Contains(t, recorder.Body.String(), "no analysis request is currently pending")
+		assert.Equal(t, http.StatusNoContent, recorder.Code)
+		assert.Empty(t, recorder.Body.Bytes())
 	})
 
 	t.Run("returns 500 on unexpected service errors", func(t *testing.T) {
@@ -150,7 +149,7 @@ func TestHandlers_CreateRequest(t *testing.T) {
 		return envelope.Data
 	}
 
-	t.Run("returns 201 Created with the new request body when this call accepted it", func(t *testing.T) {
+	t.Run("returns 202 Accepted with the new request body when this call accepted it", func(t *testing.T) {
 		var (
 			analysisMock = analysisMocks.NewMockAnalysis(t)
 			handlers     = analysishandlers.NewHandlersContainer(analysisMock)
@@ -162,7 +161,7 @@ func TestHandlers_CreateRequest(t *testing.T) {
 
 		handlers.CreateRequest(recorder, request)
 
-		assert.Equal(t, http.StatusCreated, recorder.Code)
+		assert.Equal(t, http.StatusAccepted, recorder.Code)
 		assert.Equal(t, userIDString, decodeBody(t, recorder.Body.Bytes()).RequestedBy)
 	})
 
