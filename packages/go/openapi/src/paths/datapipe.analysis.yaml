@@ -34,7 +34,7 @@ get:
             type: object
             properties:
               requested_by:
-                type: string 
+                type: string
               request_type:
                 type: string
               requested_at:

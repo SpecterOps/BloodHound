@@ -48,9 +48,10 @@ type analysisStatusEnvelope struct {
 	} `json:"data"`
 }
 
-// runGetAnalysisStatusSuite exercises GET /api/v2/analysis/status against a
+// runGetAnalysisStatusSuite exercises GET /api/v2/analysis against any
 // handler. A fresh httptest.Server is started without auth middleware so the
-// test focuses on handler behaviour.
+// test focuses on handler behaviour. Run the same suite against the legacy and
+// new handlers to assert behavioural compatibility.
 func runGetAnalysisStatusSuite(t *testing.T, db *database.BloodhoundDB, handler http.HandlerFunc) {
 	t.Helper()
 
@@ -60,12 +61,12 @@ func runGetAnalysisStatusSuite(t *testing.T, db *database.BloodhoundDB, handler 
 		server    = httptest.NewServer(muxRouter)
 	)
 
-	muxRouter.HandleFunc("/api/v2/analysis/status", handler).Methods(http.MethodGet)
+	muxRouter.HandleFunc("/api/v2/analysis", handler).Methods(http.MethodGet)
 	t.Cleanup(server.Close)
 
 	newGetRequest := func(t *testing.T) *http.Request {
 		t.Helper()
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/analysis/status", nil)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/analysis", nil)
 		require.NoError(t, err)
 		return req
 	}
