@@ -30,7 +30,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/peterldowns/pgtestdb"
-	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -43,7 +42,7 @@ import (
 )
 
 // analysisStatusEnvelope is a minimal JSON envelope covering the fields
-// returned by the legacy analysis status handler.
+// returned by the GET /api/v2/analysis handler.
 type analysisStatusEnvelope struct {
 	Data struct {
 		RequestedBy string `json:"requested_by"`
@@ -51,10 +50,9 @@ type analysisStatusEnvelope struct {
 	} `json:"data"`
 }
 
-// runGetAnalysisStatusSuite exercises GET /api/v2/analysis against any
-// handler. A fresh httptest.Server is started without auth middleware so the
-// test focuses on handler behaviour. Run the same suite against the legacy and
-// new handlers to assert behavioural compatibility.
+// runGetAnalysisStatusSuite exercises GET /api/v2/analysis against a handler.
+// A fresh httptest.Server is started without auth middleware so the test
+// focuses on handler behaviour.
 func runGetAnalysisStatusSuite(t *testing.T, db *database.BloodhoundDB, handler http.HandlerFunc) {
 	t.Helper()
 
@@ -173,15 +171,8 @@ func newAnalysisHandler(db *database.BloodhoundDB) http.HandlerFunc {
 }
 
 func TestGetAnalysisStatus(t *testing.T) {
-	t.Run("legacy handler", func(t *testing.T) {
+	t.Run("new handler", func(t *testing.T) {
 		db := setupAnalysisDB(t)
-		resources := v2.Resources{DB: db}
-		runGetAnalysisStatusSuite(t, db, resources.GetAnalysisRequest)
+		runGetAnalysisStatusSuite(t, db, newAnalysisHandler(db))
 	})
-
-	// Uncomment once the new handler is ready to be validated for compatibility:
-	// t.Run("new handler", func(t *testing.T) {
-	// 	db := setupAnalysisDB(t)
-	// 	runGetAnalysisStatusSuite(t, db, newAnalysisHandler(db))
-	// })
 }

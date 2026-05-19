@@ -29,14 +29,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 )
 
-func (s Resources) GetAnalysisRequest(response http.ResponseWriter, request *http.Request) {
-	if analysisRequest, err := s.DB.GetAnalysisRequest(request.Context()); err != nil && !errors.Is(err, sql.ErrNoRows) {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		api.WriteBasicResponse(request.Context(), analysisRequest, http.StatusOK, response)
-	}
-}
-
 func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.Request) {
 	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Requesting analysis")()
 
