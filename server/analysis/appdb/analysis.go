@@ -21,12 +21,10 @@ import (
 	"errors"
 	"time"
 
+	"github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/specterops/bloodhound/server/analysis/service"
-	"github.com/stephenafamo/bob/dialect/psql"
-	"github.com/stephenafamo/bob/dialect/psql/im"
-	"github.com/stephenafamo/bob/dialect/psql/sm"
 )
 
 // pgxQuerier is the minimal pgx surface the analysis Store relies on. Each
@@ -52,28 +50,24 @@ func NewStore(db pgxQuerier) *Store {
 // no request is present.
 func (s *Store) GetAnalysisRequest(ctx context.Context) (service.RequestedAnalysis, error) {
 	var (
-		row      analysisRequest
-		sqlQuery string
-		args     []any
-		err      error
+		row analysisRequest
+		err error
 	)
 
-	sqlQuery, args, err = psql.Select(
-		sm.Columns(
-			"requested_by",
-			"request_type",
-			"requested_at",
-			"delete_all_graph",
-			"delete_sourceless_graph",
-			"delete_source_kinds",
-			"delete_relationships",
-		),
-		sm.From("analysis_request_switch"),
-		sm.Limit(1),
-	).Build(ctx)
-	if err != nil {
-		return service.RequestedAnalysis{}, err
-	}
+	selectBuilder := sqlbuilder.PostgreSQL.NewSelectBuilder()
+	selectBuilder.Select(
+		"requested_by",
+		"request_type",
+		"requested_at",
+		"delete_all_graph",
+		"delete_sourceless_graph",
+		"delete_source_kinds",
+		"delete_relationships",
+	)
+	selectBuilder.From("analysis_request_switch")
+	selectBuilder.Limit(1)
+
+	sqlQuery, args := selectBuilder.Build()
 
 	err = s.db.QueryRow(ctx, sqlQuery, args...).Scan(
 		&row.RequestedBy,
@@ -101,37 +95,34 @@ func (s *Store) GetAnalysisRequest(ctx context.Context) (service.RequestedAnalys
 func (s *Store) CreateAnalysisRequest(ctx context.Context, requestedBy string) (service.RequestedAnalysis, bool, error) {
 	var (
 		now            = time.Now().UTC()
-		sqlQuery       string
-		args           []any
 		err            error
 		commandTag     pgconn.CommandTag
 		currentRequest service.RequestedAnalysis
 	)
 
-	sqlQuery, args, err = psql.Insert(
-		im.Into("analysis_request_switch",
-			"requested_by",
-			"request_type",
-			"requested_at",
-			"delete_all_graph",
-			"delete_sourceless_graph",
-			"delete_source_kinds",
-			"delete_relationships",
-		),
-		im.Values(psql.Arg(
-			requestedBy,
-			string(service.RequestedAnalysisTypeAnalysis),
-			now,
-			false,
-			false,
-			[]string{},
-			[]string{},
-		)),
-		im.OnConflict("singleton").DoNothing(),
-	).Build(ctx)
-	if err != nil {
-		return service.RequestedAnalysis{}, false, err
-	}
+	insertBuilder := sqlbuilder.PostgreSQL.NewInsertBuilder()
+	insertBuilder.InsertInto("analysis_request_switch")
+	insertBuilder.Cols(
+		"requested_by",
+		"request_type",
+		"requested_at",
+		"delete_all_graph",
+		"delete_sourceless_graph",
+		"delete_source_kinds",
+		"delete_relationships",
+	)
+	insertBuilder.Values(
+		requestedBy,
+		string(service.RequestedAnalysisTypeAnalysis),
+		now,
+		false,
+		false,
+		[]string{},
+		[]string{},
+	)
+	insertBuilder.SQL("ON CONFLICT (singleton) DO NOTHING")
+
+	sqlQuery, args := insertBuilder.Build()
 
 	commandTag, err = s.db.Exec(ctx, sqlQuery, args...)
 	if err != nil {

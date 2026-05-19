@@ -35,9 +35,9 @@ import (
 // formatting (tabs, newlines) is not load-bearing — token order, table
 // name, column names, parameter shape and the ON CONFLICT clause are.
 const (
-	expectedSelectSQL = `SELECT requested_by, request_type, requested_at, delete_all_graph, delete_sourceless_graph, delete_source_kinds, delete_relationships FROM analysis_request_switch LIMIT 1`
+	expectedSelectSQL = `SELECT requested_by, request_type, requested_at, delete_all_graph, delete_sourceless_graph, delete_source_kinds, delete_relationships FROM analysis_request_switch LIMIT $1`
 
-	expectedInsertSQL = `INSERT INTO analysis_request_switch("requested_by", "request_type", "requested_at", "delete_all_graph", "delete_sourceless_graph", "delete_source_kinds", "delete_relationships") VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (singleton) DO NOTHING`
+	expectedInsertSQL = `INSERT INTO analysis_request_switch (requested_by, request_type, requested_at, delete_all_graph, delete_sourceless_graph, delete_source_kinds, delete_relationships) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (singleton) DO NOTHING`
 )
 
 func newTestStore(t *testing.T) (*appdb.Store, pgxmock.PgxPoolIface) {
@@ -73,7 +73,7 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 			store, pool = newTestStore(t)
 		)
 
-		pool.ExpectQuery(expectedSelectSQL).WillReturnRows(
+		pool.ExpectQuery(expectedSelectSQL).WithArgs(pgxmock.AnyArg()).WillReturnRows(
 			pool.NewRows(analysisRequestRowColumns()).AddRow(
 				expected.RequestedBy,
 				string(expected.RequestType),
@@ -94,7 +94,7 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 	t.Run("returns ErrNotFound when no rows are found", func(t *testing.T) {
 		store, pool := newTestStore(t)
 
-		pool.ExpectQuery(expectedSelectSQL).WillReturnError(pgx.ErrNoRows)
+		pool.ExpectQuery(expectedSelectSQL).WithArgs(pgxmock.AnyArg()).WillReturnError(pgx.ErrNoRows)
 
 		_, err := store.GetAnalysisRequest(ctx)
 		assert.ErrorIs(t, err, service.ErrNotFound)
@@ -107,7 +107,7 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 			store, pool = newTestStore(t)
 		)
 
-		pool.ExpectQuery(expectedSelectSQL).WillReturnError(expectedErr)
+		pool.ExpectQuery(expectedSelectSQL).WithArgs(pgxmock.AnyArg()).WillReturnError(expectedErr)
 
 		_, err := store.GetAnalysisRequest(ctx)
 		assert.ErrorIs(t, err, expectedErr)
@@ -136,7 +136,7 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 			).
 			WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
-		pool.ExpectQuery(expectedSelectSQL).WillReturnRows(
+		pool.ExpectQuery(expectedSelectSQL).WithArgs(pgxmock.AnyArg()).WillReturnRows(
 			pool.NewRows(analysisRequestRowColumns()).AddRow(
 				requester,
 				string(service.RequestedAnalysisTypeAnalysis),
@@ -180,7 +180,7 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 			).
 			WillReturnResult(pgxmock.NewResult("INSERT", 0))
 
-		pool.ExpectQuery(expectedSelectSQL).WillReturnRows(
+		pool.ExpectQuery(expectedSelectSQL).WithArgs(pgxmock.AnyArg()).WillReturnRows(
 			pool.NewRows(analysisRequestRowColumns()).AddRow(
 				existing.RequestedBy,
 				string(existing.RequestType),
@@ -225,7 +225,7 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 			WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(),
 				pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg()).
 			WillReturnResult(pgxmock.NewResult("INSERT", 1))
-		pool.ExpectQuery(expectedSelectSQL).WillReturnError(expectedErr)
+		pool.ExpectQuery(expectedSelectSQL).WithArgs(pgxmock.AnyArg()).WillReturnError(expectedErr)
 
 		_, _, err := store.CreateAnalysisRequest(ctx, requester)
 		assert.ErrorIs(t, err, expectedErr)
