@@ -51,6 +51,12 @@ type ADCSCache struct {
 	certTemplateControllers         map[graph.ID][]*graph.Node // principals that have privileges on a cert template via `owner`, `generic all`, `write dacl`, `write owner` edges
 	enterpriseCAEnrollers           map[graph.ID][]*graph.Node // principals that have enrollment rights on an enterprise ca via `enroll` edge
 	publishedTemplateCache          map[graph.ID][]*graph.Node // cert templates that are published to an enterprise ca
+
+	// ESC4-specific caches: principals with specific rights on cert templates, pre-computed to avoid per-ECA DB queries
+	certTemplateGenericWriters              map[graph.ID][]*graph.Node // principals with GenericWrite on a cert template
+	certTemplateEnrollOrAllExtendedRighters map[graph.ID][]*graph.Node // principals with Enroll or AllExtendedRights on a cert template
+	certTemplateWritePKINameFlaggers        map[graph.ID][]*graph.Node // principals with WritePKINameFlag on a cert template
+	certTemplateWritePKIEnrollmentFlaggers  map[graph.ID][]*graph.Node // principals with WritePKIEnrollmentFlag on a cert template
 	hasUPNCertMappingInForest       cardinality.Duplex[uint64] // domains where at least one DC in the forest has Schannel UPN cert mapping enabled
 	hasWeakCertBindingInForest      cardinality.Duplex[uint64] // domains where at least one DC in the forest has Kerberos weak cert binding enabled
 }
@@ -66,9 +72,13 @@ func NewADCSCache() ADCSCache {
 		enterpriseCAHasSpecialEnrollers: make(map[graph.ID]bool),
 		certTemplateEnrollers:           make(map[graph.ID][]*graph.Node),
 		certTemplateControllers:         make(map[graph.ID][]*graph.Node),
-		enterpriseCAEnrollers:           make(map[graph.ID][]*graph.Node),
-		publishedTemplateCache:          make(map[graph.ID][]*graph.Node),
-		hasUPNCertMappingInForest:       cardinality.NewBitmap64(),
+		enterpriseCAEnrollers:                  make(map[graph.ID][]*graph.Node),
+		publishedTemplateCache:                 make(map[graph.ID][]*graph.Node),
+		certTemplateGenericWriters:             make(map[graph.ID][]*graph.Node),
+		certTemplateEnrollOrAllExtendedRighters: make(map[graph.ID][]*graph.Node),
+		certTemplateWritePKINameFlaggers:        make(map[graph.ID][]*graph.Node),
+		certTemplateWritePKIEnrollmentFlaggers:  make(map[graph.ID][]*graph.Node),
+		hasUPNCertMappingInForest:              cardinality.NewBitmap64(),
 		hasWeakCertBindingInForest:      cardinality.NewBitmap64(),
 	}
 }
@@ -138,6 +148,35 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				)
 			} else {
 				s.certTemplateControllers[ct.ID] = firstDegreePrincipals.Slice()
+			}
+
+			// ESC4-specific principal caches
+			if principals, err := FetchPrincipalsWithGenericWriteOnCertTemplate(tx, ct); err != nil {
+				slog.ErrorContext(ctx, "Error fetching principals with GenericWrite on cert template",
+					slog.Uint64("cert_template", uint64(ct.ID)), attr.Error(err))
+			} else {
+				s.certTemplateGenericWriters[ct.ID] = principals.Slice()
+			}
+
+			if principals, err := FetchPrincipalsWithEnrollOrAllExtendedRightsOnCertTemplate(tx, ct); err != nil {
+				slog.ErrorContext(ctx, "Error fetching principals with Enroll/AllExtendedRights on cert template",
+					slog.Uint64("cert_template", uint64(ct.ID)), attr.Error(err))
+			} else {
+				s.certTemplateEnrollOrAllExtendedRighters[ct.ID] = principals.Slice()
+			}
+
+			if principals, err := FetchPrincipalsWithWritePKINameFlagOnCertTemplate(tx, ct); err != nil {
+				slog.ErrorContext(ctx, "Error fetching principals with WritePKINameFlag on cert template",
+					slog.Uint64("cert_template", uint64(ct.ID)), attr.Error(err))
+			} else {
+				s.certTemplateWritePKINameFlaggers[ct.ID] = principals.Slice()
+			}
+
+			if principals, err := FetchPrincipalsWithWritePKIEnrollmentFlagOnCertTemplate(tx, ct); err != nil {
+				slog.ErrorContext(ctx, "Error fetching principals with WritePKIEnrollmentFlag on cert template",
+					slog.Uint64("cert_template", uint64(ct.ID)), attr.Error(err))
+			} else {
+				s.certTemplateWritePKIEnrollmentFlaggers[ct.ID] = principals.Slice()
 			}
 		}
 
@@ -368,6 +407,34 @@ func (s *ADCSCache) GetCertTemplateControllers(id graph.ID) []*graph.Node {
 	defer s.mu.RUnlock()
 
 	return s.certTemplateControllers[id]
+}
+
+func (s *ADCSCache) GetCertTemplateGenericWriters(id graph.ID) []*graph.Node {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.certTemplateGenericWriters[id]
+}
+
+func (s *ADCSCache) GetCertTemplateEnrollOrAllExtendedRighters(id graph.ID) []*graph.Node {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.certTemplateEnrollOrAllExtendedRighters[id]
+}
+
+func (s *ADCSCache) GetCertTemplateWritePKINameFlaggers(id graph.ID) []*graph.Node {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.certTemplateWritePKINameFlaggers[id]
+}
+
+func (s *ADCSCache) GetCertTemplateWritePKIEnrollmentFlaggers(id graph.ID) []*graph.Node {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.certTemplateWritePKIEnrollmentFlaggers[id]
 }
 
 func (s *ADCSCache) GetEnterpriseCAEnrollers(id graph.ID) []*graph.Node {
