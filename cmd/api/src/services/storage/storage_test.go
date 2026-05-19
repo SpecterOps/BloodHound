@@ -468,14 +468,14 @@ func TestLocalFileService_WriteTempFile(t *testing.T) {
 					content, err := io.ReadAll(reader)
 					require.NoError(t, err)
 					require.Equal(t, "content", string(content))
-					require.Regexp(t, `^prefix/tmp-[0-9a-f]{32}$`, name)
+					require.Regexp(t, `^prefix_tmp-[0-9a-f]{32}$`, name)
 
 					writtenPath = name
 					return testCase.putErr
 				})
 
 			// Act
-			tempPath, err := fileService.WriteTempFile(ctx, "prefix", strings.NewReader("content"), options)
+			tempPath, err := fileService.WriteTempFile(ctx, "prefix_", strings.NewReader("content"), options)
 
 			// Assert
 			if testCase.expected.errIs != nil {

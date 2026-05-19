@@ -24,7 +24,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"path"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
@@ -177,7 +176,7 @@ func (s *LocalFileService) WriteTempFile(ctx context.Context, prefix string, rea
 		return "", err
 	}
 
-	tempPath := path.Join(prefix, "tmp-"+id)
+	tempPath := prefix + "tmp-" + id
 	if err := s.Storage.Put(ctx, tempPath, reader, opts); err != nil {
 		return "", err
 	}

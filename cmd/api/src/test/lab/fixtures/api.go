@@ -60,8 +60,9 @@ func NewCustomApiFixture(cfgFixture *lab.Fixture[config.Configuration]) *lab.Fix
 				defer wg.Done()
 
 				initializer := bootstrap.Initializer[*database.BloodhoundDB, *graph.DatabaseSwitch]{
-					Configuration: cfg,
-					DBConnector:   services.ConnectDatabases,
+					Configuration:       cfg,
+					DBConnector:         services.ConnectDatabases,
+					RuntimeDependencies: services.CreateRuntimeDependencies,
 					Entrypoint: func(ctx context.Context, cfg config.Configuration, databaseConnections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], deps bootstrap.RuntimeDependencies) ([]daemons.Daemon, error) {
 						if err := databaseConnections.RDMS.Wipe(ctx); err != nil {
 							return nil, err

@@ -114,7 +114,7 @@ func WriteArchiveFileToStorage(ctx context.Context, fileService storage.FileServ
 		ctx,
 		prefix,
 		normalizedFile,
-		storage.WriteOptions{}, // TODO MC: include write options?
+		storage.WriteOptions{},
 	)
 	if err != nil {
 		return "", fmt.Errorf("write archive file %q to stroage: %w", archiveFile.Name, err)
