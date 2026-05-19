@@ -43,7 +43,7 @@ func TestDeleteAllData(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "base.json"),
+			"base.json",
 		}
 	)
 	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
@@ -94,7 +94,7 @@ func TestDeleteAllData_Alternative(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "base.json"),
+			"base.json",
 		}
 	)
 	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
@@ -142,7 +142,7 @@ func TestDeleteSourcelessData(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "base.json"),
+			"base.json",
 		}
 	)
 	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
@@ -189,7 +189,7 @@ func TestDeleteSourceKindsData(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "base.json"),
+			"base.json",
 		}
 	)
 	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)

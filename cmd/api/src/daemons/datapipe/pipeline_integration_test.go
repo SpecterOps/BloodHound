@@ -45,7 +45,7 @@ func TestDeleteData_Sourceless(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "base.json"),
+			"base.json",
 		}
 	)
 	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
@@ -97,7 +97,7 @@ func TestDeleteData_SourceKinds(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "base.json"),
+			"base.json",
 		}
 	)
 	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
@@ -149,7 +149,7 @@ func TestDeleteData_All(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "base.json"),
+			"base.json",
 		}
 	)
 	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
@@ -211,7 +211,7 @@ func TestPartialIngest(t *testing.T) {
 	ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 
 	fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, ingestFileService, model.IngestTask{
-		StoredFileName: path.Join(testSuite.WorkDir, "oneGoodOneInvalidRel.json"),
+		StoredFileName: "oneGoodOneInvalidRel.json",
 		FileType:       model.FileTypeJson,
 	})
 	require.NoError(t, err)

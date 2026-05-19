@@ -40,14 +40,14 @@ func TestVersion5IngestJSON(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "computers.json"),
-			path.Join(testSuite.WorkDir, "containers.json"),
-			path.Join(testSuite.WorkDir, "domains.json"),
-			path.Join(testSuite.WorkDir, "gpos.json"),
-			path.Join(testSuite.WorkDir, "groups.json"),
-			path.Join(testSuite.WorkDir, "ous.json"),
-			path.Join(testSuite.WorkDir, "sessions.json"),
-			path.Join(testSuite.WorkDir, "users.json"),
+			"computers.json",
+			"containers.json",
+			"domains.json",
+			"gpos.json",
+			"groups.json",
+			"ous.json",
+			"sessions.json",
+			"users.json",
 		}
 	)
 	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
@@ -86,7 +86,7 @@ func TestVersion5IngestZIP(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "archive.zip"),
+			"archive.zip",
 		}
 	)
 	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
@@ -125,19 +125,19 @@ func TestVersion6ADCSJSON(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "aiacas.json"),
-			path.Join(testSuite.WorkDir, "certtemplates.json"),
-			path.Join(testSuite.WorkDir, "computers.json"),
-			path.Join(testSuite.WorkDir, "containers.json"),
-			path.Join(testSuite.WorkDir, "domains.json"),
-			path.Join(testSuite.WorkDir, "enterprisecas.json"),
-			path.Join(testSuite.WorkDir, "gpos.json"),
-			path.Join(testSuite.WorkDir, "groups.json"),
-			path.Join(testSuite.WorkDir, "issuancepolicies.json"),
-			path.Join(testSuite.WorkDir, "ntauthstores.json"),
-			path.Join(testSuite.WorkDir, "ous.json"),
-			path.Join(testSuite.WorkDir, "rootcas.json"),
-			path.Join(testSuite.WorkDir, "users.json"),
+			"aiacas.json",
+			"certtemplates.json",
+			"computers.json",
+			"containers.json",
+			"domains.json",
+			"enterprisecas.json",
+			"gpos.json",
+			"groups.json",
+			"issuancepolicies.json",
+			"ntauthstores.json",
+			"ous.json",
+			"rootcas.json",
+			"users.json",
 		}
 	)
 	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
@@ -176,7 +176,7 @@ func TestVersion6ADCSZIP(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "archive.zip"),
+			"archive.zip",
 		}
 	)
 	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
@@ -215,19 +215,19 @@ func TestVersion6AllJSON(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "aiacas.json"),
-			path.Join(testSuite.WorkDir, "certtemplates.json"),
-			path.Join(testSuite.WorkDir, "computers.json"),
-			path.Join(testSuite.WorkDir, "containers.json"),
-			path.Join(testSuite.WorkDir, "domains.json"),
-			path.Join(testSuite.WorkDir, "enterprisecas.json"),
-			path.Join(testSuite.WorkDir, "gpos.json"),
-			path.Join(testSuite.WorkDir, "groups.json"),
-			path.Join(testSuite.WorkDir, "issuancepolicies.json"),
-			path.Join(testSuite.WorkDir, "ntauthstores.json"),
-			path.Join(testSuite.WorkDir, "ous.json"),
-			path.Join(testSuite.WorkDir, "rootcas.json"),
-			path.Join(testSuite.WorkDir, "users.json"),
+			"aiacas.json",
+			"certtemplates.json",
+			"computers.json",
+			"containers.json",
+			"domains.json",
+			"enterprisecas.json",
+			"gpos.json",
+			"groups.json",
+			"issuancepolicies.json",
+			"ntauthstores.json",
+			"ous.json",
+			"rootcas.json",
+			"users.json",
 		}
 	)
 	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
@@ -266,7 +266,7 @@ func TestVersion6AllZIP(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "archive.zip"),
+			"archive.zip",
 		}
 	)
 	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
@@ -305,14 +305,14 @@ func TestVersion6IngestJSON(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "computers.json"),
-			path.Join(testSuite.WorkDir, "containers.json"),
-			path.Join(testSuite.WorkDir, "domains.json"),
-			path.Join(testSuite.WorkDir, "gpos.json"),
-			path.Join(testSuite.WorkDir, "groups.json"),
-			path.Join(testSuite.WorkDir, "ous.json"),
-			path.Join(testSuite.WorkDir, "sessions.json"),
-			path.Join(testSuite.WorkDir, "users.json"),
+			"computers.json",
+			"containers.json",
+			"domains.json",
+			"gpos.json",
+			"groups.json",
+			"ous.json",
+			"sessions.json",
+			"users.json",
 		}
 	)
 	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
@@ -351,7 +351,7 @@ func TestVersion6IngestZIP(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "archive.zip"),
+			"archive.zip",
 		}
 	)
 	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)

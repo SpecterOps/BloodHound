@@ -111,6 +111,25 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 			},
 		},
 		{
+			name: "Error: file service resolver error - Internal Server Error",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/collectors/azurehound/latest",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceCollectors).Return(nil, errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
 			name: "Success: download collector not-latest release - OK",
 			buildRequest: func() *http.Request {
 				return &http.Request{
@@ -255,6 +274,25 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceCollectors).Return(mock.mockFS, nil)
 				mock.mockFS.EXPECT().ReadFile(gomock.Any(), "azurehound/azurehound-latest.zip.sha256").Return([]byte{}, errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: file service resolver error - Internal Server Error",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/collectors/azurehound/latest/checksum",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceCollectors).Return(nil, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,

@@ -104,7 +104,9 @@ func WriteAndValidateFile(ctx context.Context, fileService storage.FileService, 
 				tempFileName),
 			attr.Error(validationErr),
 		)
-		fileService.DeleteFile(ctx, tempFileName)
+		if tempFileName != "" {
+			fileService.DeleteFile(ctx, tempFileName)
+		}
 		return "", validationErr
 	}
 
@@ -116,7 +118,9 @@ func WriteAndValidateFile(ctx context.Context, fileService storage.FileService, 
 			slog.String("temp_file_name", tempFileName),
 			attr.Error(writeErr),
 		)
-		fileService.DeleteFile(ctx, tempFileName)
+		if tempFileName != "" {
+			fileService.DeleteFile(ctx, tempFileName)
+		}
 		return "", writeErr
 	}
 

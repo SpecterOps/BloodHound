@@ -598,6 +598,30 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 		},
 		{
+			name: "Error: file service resolver error - Internal Server Error",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/file-upload/1",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{
+						headers.ContentType.String(): []string{"application/json"},
+					},
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
+				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceIngest).Return(nil, errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"unable to resolve file service for working directories"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
 			name: "Error: error saving ingest file - Internal Server Error",
 			buildRequest: func() *http.Request {
 				data := map[string]interface{}{"name": "example", "value": 123}

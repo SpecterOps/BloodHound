@@ -181,6 +181,7 @@ func (s *OrphanFileSweeper) addExpectedLocalPath(expectedLocalFiles map[string]s
 
 // addExpectedStoragePath handles saved file paths that were saved in absolute prior to this release
 func (s *OrphanFileSweeper) addExpectedStoragePath(expectedFiles map[string]struct{}, expectedFileName string) {
+	expectedFileName = strings.TrimSpace(expectedFileName)
 	if expectedFileName == "" {
 		return
 	}
@@ -199,7 +200,12 @@ func (s *OrphanFileSweeper) addExpectedStoragePath(expectedFiles map[string]stru
 		return
 	}
 
-	expectedFiles[path.Clean(filepath.ToSlash(expectedFileName))] = struct{}{}
+	logicalPath := path.Clean(filepath.ToSlash(expectedFileName))
+	if logicalPath == "." || logicalPath == ".." || strings.HasPrefix(logicalPath, "../") {
+		return
+	}
+
+	expectedFiles[logicalPath] = struct{}{}
 }
 
 func (s *OrphanFileSweeper) clearStoredIngestFiles(ctx context.Context, ingestFileService storage.FileService, expectedFileNames []string) {
