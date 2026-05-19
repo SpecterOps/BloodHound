@@ -123,9 +123,9 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 
 func TestStore_CreateAnalysisRequest(t *testing.T) {
 	var (
-		ctx               = context.Background()
-		requester         = "test-user"
-		selectSQL, _, _   = psql.Select(
+		ctx             = context.Background()
+		requester       = "test-user"
+		selectSQL, _, _ = psql.Select(
 			sm.Columns(
 				"requested_by",
 				"request_type",
