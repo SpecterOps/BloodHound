@@ -1,0 +1,22 @@
+all: false
+dir: '{{.InterfaceDir}}/mocks'
+filename: '{{.InterfaceName | lower}}.go'
+force-file-write: true
+formatter: goimports
+generate: true
+include-auto-generated: false
+log-level: info
+structname: 'Mock{{.InterfaceName}}'
+pkgname: mocks
+recursive: false
+require-template-schema-exists: true
+template: testify
+template-data:
+  boilerplate-file: LICENSE.go.header
+packages:
+  github.com/specterops/bloodhound/server/services/analysis:
+    interfaces:
+      Database:
+  github.com/specterops/bloodhound/server/handlers/v2/analysis:
+    interfaces:
+      Analysis:
