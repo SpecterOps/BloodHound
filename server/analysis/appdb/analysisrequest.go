@@ -14,16 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package analysis
+package appdb
 
 import (
 	"time"
 
-	"github.com/specterops/bloodhound/server/services/analysis"
+	"github.com/specterops/bloodhound/server/analysis/service"
 )
 
 // analysisRequest is the package-local representation of a row in the analysis_request_switch table.
-// It exists only to hold raw scanned values; callers receive the application-level analysis.RequestedAnalysis.
+// It exists only to hold raw scanned values; callers receive the application-level service.RequestedAnalysis.
 type analysisRequest struct {
 	RequestedBy           string
 	RequestType           string
@@ -35,10 +35,10 @@ type analysisRequest struct {
 }
 
 // toRequestedAnalysis translates a raw DB row into the domain model.
-func toRequestedAnalysis(row analysisRequest) analysis.RequestedAnalysis {
-	return analysis.RequestedAnalysis{
+func toRequestedAnalysis(row analysisRequest) service.RequestedAnalysis {
+	return service.RequestedAnalysis{
 		RequestedBy:           row.RequestedBy,
-		RequestType:           analysis.RequestedAnalysisType(row.RequestType),
+		RequestType:           service.RequestedAnalysisType(row.RequestType),
 		RequestedAt:           row.RequestedAt,
 		DeleteAllGraph:        row.DeleteAllGraph,
 		DeleteSourcelessGraph: row.DeleteSourcelessGraph,

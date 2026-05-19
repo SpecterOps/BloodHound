@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package analysis_test
+package handlers_test
 
 import (
 	"encoding/json"
@@ -28,9 +28,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	analysishandlers "github.com/specterops/bloodhound/server/handlers/v2/analysis"
-	analysisMocks "github.com/specterops/bloodhound/server/handlers/v2/analysis/mocks"
-	analysisservice "github.com/specterops/bloodhound/server/services/analysis"
+	"github.com/specterops/bloodhound/server/analysis/handlers"
+	"github.com/specterops/bloodhound/server/analysis/handlers/mocks"
+	"github.com/specterops/bloodhound/server/analysis/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -59,28 +59,28 @@ func TestHandlers_GetRequest(t *testing.T) {
 
 	t.Run("returns 200 with the analysis request view on success", func(t *testing.T) {
 		var (
-			expected = analysisservice.RequestedAnalysis{
+			expected = service.RequestedAnalysis{
 				RequestedBy:         "test-user",
-				RequestType:         analysisservice.RequestedAnalysisTypeAnalysis,
+				RequestType:         service.RequestedAnalysisTypeAnalysis,
 				RequestedAt:         time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 				DeleteSourceKinds:   []string{"AZBase"},
 				DeleteRelationships: []string{"HasSession"},
 			}
-			analysisMock = analysisMocks.NewMockAnalysis(t)
-			handlers     = analysishandlers.NewHandlersContainer(analysisMock)
+			analysisMock = mocks.NewMockAnalysis(t)
+			handlerSet   = handlers.NewHandlersContainer(analysisMock)
 			recorder     = httptest.NewRecorder()
 			request      = newRequest(t)
 		)
 
 		analysisMock.EXPECT().GetRequest(mock.Anything).Return(expected, nil)
 
-		handlers.GetRequest(recorder, request)
+		handlerSet.GetRequest(recorder, request)
 
 		assert.Equal(t, http.StatusOK, recorder.Code)
 		assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
 
 		var envelope struct {
-			Data analysishandlers.RequestedAnalysisView `json:"data"`
+			Data handlers.RequestedAnalysisView `json:"data"`
 		}
 		require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &envelope))
 		assert.Equal(t, expected.RequestedBy, envelope.Data.RequestedBy)
@@ -91,15 +91,15 @@ func TestHandlers_GetRequest(t *testing.T) {
 
 	t.Run("returns 204 No Content when no request is pending", func(t *testing.T) {
 		var (
-			analysisMock = analysisMocks.NewMockAnalysis(t)
-			handlers     = analysishandlers.NewHandlersContainer(analysisMock)
+			analysisMock = mocks.NewMockAnalysis(t)
+			handlerSet   = handlers.NewHandlersContainer(analysisMock)
 			recorder     = httptest.NewRecorder()
 			request      = newRequest(t)
 		)
 
-		analysisMock.EXPECT().GetRequest(mock.Anything).Return(analysisservice.RequestedAnalysis{}, analysisservice.ErrNoPendingRequest)
+		analysisMock.EXPECT().GetRequest(mock.Anything).Return(service.RequestedAnalysis{}, service.ErrNoPendingRequest)
 
-		handlers.GetRequest(recorder, request)
+		handlerSet.GetRequest(recorder, request)
 
 		assert.Equal(t, http.StatusNoContent, recorder.Code)
 		assert.Empty(t, recorder.Body.Bytes())
@@ -108,15 +108,15 @@ func TestHandlers_GetRequest(t *testing.T) {
 	t.Run("returns 500 on unexpected service errors", func(t *testing.T) {
 		var (
 			unexpectedErr = errors.New("unexpected database failure")
-			analysisMock  = analysisMocks.NewMockAnalysis(t)
-			handlers      = analysishandlers.NewHandlersContainer(analysisMock)
+			analysisMock  = mocks.NewMockAnalysis(t)
+			handlerSet    = handlers.NewHandlersContainer(analysisMock)
 			recorder      = httptest.NewRecorder()
 			request       = newRequest(t)
 		)
 
-		analysisMock.EXPECT().GetRequest(mock.Anything).Return(analysisservice.RequestedAnalysis{}, unexpectedErr)
+		analysisMock.EXPECT().GetRequest(mock.Anything).Return(service.RequestedAnalysis{}, unexpectedErr)
 
-		handlers.GetRequest(recorder, request)
+		handlerSet.GetRequest(recorder, request)
 
 		assert.Equal(t, http.StatusInternalServerError, recorder.Code)
 	})
@@ -127,22 +127,22 @@ func TestHandlers_CreateRequest(t *testing.T) {
 		userID        = uuid.Must(uuid.NewV4())
 		userIDString  = userID.String()
 		requestedAt   = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-		createdResult = analysisservice.RequestedAnalysis{
+		createdResult = service.RequestedAnalysis{
 			RequestedBy: userIDString,
-			RequestType: analysisservice.RequestedAnalysisTypeAnalysis,
+			RequestType: service.RequestedAnalysisTypeAnalysis,
 			RequestedAt: requestedAt,
 		}
-		existingResult = analysisservice.RequestedAnalysis{
+		existingResult = service.RequestedAnalysis{
 			RequestedBy: "other-user",
-			RequestType: analysisservice.RequestedAnalysisTypeAnalysis,
+			RequestType: service.RequestedAnalysisTypeAnalysis,
 			RequestedAt: requestedAt,
 		}
 	)
 
-	decodeBody := func(t *testing.T, body []byte) analysishandlers.RequestedAnalysisView {
+	decodeBody := func(t *testing.T, body []byte) handlers.RequestedAnalysisView {
 		t.Helper()
 		var envelope struct {
-			Data analysishandlers.RequestedAnalysisView `json:"data"`
+			Data handlers.RequestedAnalysisView `json:"data"`
 		}
 		require.NoError(t, json.Unmarshal(body, &envelope))
 		return envelope.Data
@@ -150,15 +150,15 @@ func TestHandlers_CreateRequest(t *testing.T) {
 
 	t.Run("returns 202 Accepted with the new request body when this call accepted it", func(t *testing.T) {
 		var (
-			analysisMock = analysisMocks.NewMockAnalysis(t)
-			handlers     = analysishandlers.NewHandlersContainer(analysisMock)
+			analysisMock = mocks.NewMockAnalysis(t)
+			handlerSet   = handlers.NewHandlersContainer(analysisMock)
 			recorder     = httptest.NewRecorder()
 			request      = newAuthenticatedRequest(t, http.MethodPut, "/api/v2/analysis", userID)
 		)
 
 		analysisMock.EXPECT().CreateRequest(mock.Anything, userIDString).Return(createdResult, true, nil)
 
-		handlers.CreateRequest(recorder, request)
+		handlerSet.CreateRequest(recorder, request)
 
 		assert.Equal(t, http.StatusAccepted, recorder.Code)
 		assert.Equal(t, userIDString, decodeBody(t, recorder.Body.Bytes()).RequestedBy)
@@ -166,15 +166,15 @@ func TestHandlers_CreateRequest(t *testing.T) {
 
 	t.Run("returns 200 OK with the existing request body when one was already pending", func(t *testing.T) {
 		var (
-			analysisMock = analysisMocks.NewMockAnalysis(t)
-			handlers     = analysishandlers.NewHandlersContainer(analysisMock)
+			analysisMock = mocks.NewMockAnalysis(t)
+			handlerSet   = handlers.NewHandlersContainer(analysisMock)
 			recorder     = httptest.NewRecorder()
 			request      = newAuthenticatedRequest(t, http.MethodPut, "/api/v2/analysis", userID)
 		)
 
 		analysisMock.EXPECT().CreateRequest(mock.Anything, userIDString).Return(existingResult, false, nil)
 
-		handlers.CreateRequest(recorder, request)
+		handlerSet.CreateRequest(recorder, request)
 
 		assert.Equal(t, http.StatusOK, recorder.Code)
 		assert.Equal(t, existingResult.RequestedBy, decodeBody(t, recorder.Body.Bytes()).RequestedBy)
@@ -182,15 +182,15 @@ func TestHandlers_CreateRequest(t *testing.T) {
 
 	t.Run("returns 401 Unauthorized when no authenticated user is present", func(t *testing.T) {
 		var (
-			analysisMock = analysisMocks.NewMockAnalysis(t)
-			handlers     = analysishandlers.NewHandlersContainer(analysisMock)
+			analysisMock = mocks.NewMockAnalysis(t)
+			handlerSet   = handlers.NewHandlersContainer(analysisMock)
 			recorder     = httptest.NewRecorder()
 		)
 
 		req, err := http.NewRequest(http.MethodPut, "/api/v2/analysis", nil)
 		require.NoError(t, err)
 
-		handlers.CreateRequest(recorder, req)
+		handlerSet.CreateRequest(recorder, req)
 
 		assert.Equal(t, http.StatusUnauthorized, recorder.Code)
 		assert.Contains(t, recorder.Body.String(), "authentication is required")
@@ -201,15 +201,15 @@ func TestHandlers_CreateRequest(t *testing.T) {
 	t.Run("returns 500 on service error", func(t *testing.T) {
 		var (
 			expectedErr  = errors.New("db unavailable")
-			analysisMock = analysisMocks.NewMockAnalysis(t)
-			handlers     = analysishandlers.NewHandlersContainer(analysisMock)
+			analysisMock = mocks.NewMockAnalysis(t)
+			handlerSet   = handlers.NewHandlersContainer(analysisMock)
 			recorder     = httptest.NewRecorder()
 			request      = newAuthenticatedRequest(t, http.MethodPut, "/api/v2/analysis", userID)
 		)
 
-		analysisMock.EXPECT().CreateRequest(mock.Anything, userIDString).Return(analysisservice.RequestedAnalysis{}, false, expectedErr)
+		analysisMock.EXPECT().CreateRequest(mock.Anything, userIDString).Return(service.RequestedAnalysis{}, false, expectedErr)
 
-		handlers.CreateRequest(recorder, request)
+		handlerSet.CreateRequest(recorder, request)
 
 		assert.Equal(t, http.StatusInternalServerError, recorder.Code)
 	})

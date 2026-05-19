@@ -14,15 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package analysis_test
+package handlers_test
 
 import (
 	"encoding/json"
 	"testing"
 	"time"
 
-	analysishandlers "github.com/specterops/bloodhound/server/handlers/v2/analysis"
-	analysisservice "github.com/specterops/bloodhound/server/services/analysis"
+	"github.com/specterops/bloodhound/server/analysis/handlers"
+	"github.com/specterops/bloodhound/server/analysis/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -30,16 +30,16 @@ import (
 func TestBuildRequestedAnalysisView(t *testing.T) {
 	var (
 		requestedAt = time.Date(2026, 3, 15, 12, 0, 0, 0, time.UTC)
-		input       = analysisservice.RequestedAnalysis{
+		input       = service.RequestedAnalysis{
 			RequestedBy:           "analyst@example.com",
-			RequestType:           analysisservice.RequestedAnalysisTypeDeletion,
+			RequestType:           service.RequestedAnalysisTypeDeletion,
 			RequestedAt:           requestedAt,
 			DeleteAllGraph:        true,
 			DeleteSourcelessGraph: true,
 			DeleteSourceKinds:     []string{"AZBase", "AZGroup"},
 			DeleteRelationships:   []string{"HasSession", "MemberOf"},
 		}
-		view = analysishandlers.BuildRequestedAnalysisView(input)
+		view = handlers.BuildRequestedAnalysisView(input)
 	)
 
 	assert.Equal(t, input.RequestedBy, view.RequestedBy)
@@ -54,9 +54,9 @@ func TestBuildRequestedAnalysisView(t *testing.T) {
 func TestRequestedAnalysisView_View(t *testing.T) {
 	var (
 		requestedAt = time.Date(2026, 3, 15, 12, 0, 0, 0, time.UTC)
-		view        = analysishandlers.RequestedAnalysisView{
+		view        = handlers.RequestedAnalysisView{
 			RequestedBy:         "analyst@example.com",
-			RequestType:         analysisservice.RequestedAnalysisTypeAnalysis,
+			RequestType:         service.RequestedAnalysisTypeAnalysis,
 			RequestedAt:         requestedAt,
 			DeleteAllGraph:      false,
 			DeleteSourceKinds:   []string{"AZBase"},
@@ -67,7 +67,7 @@ func TestRequestedAnalysisView_View(t *testing.T) {
 	rawJSON, err := view.JSONView()
 	require.NoError(t, err)
 
-	var decoded analysishandlers.RequestedAnalysisView
+	var decoded handlers.RequestedAnalysisView
 	require.NoError(t, json.Unmarshal(rawJSON, &decoded))
 
 	assert.Equal(t, view.RequestedBy, decoded.RequestedBy)

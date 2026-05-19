@@ -16,14 +16,13 @@
 
 // Package analysis is the wireup module for the analysis feature. It is the
 // single place where the analysis store, service, handlers and routes are
-// composed; the layered packages themselves remain unaware of each other.
+// composed; the layered subpackages themselves remain unaware of each other.
 package analysis
 
 import (
-	appdb "github.com/specterops/bloodhound/server/appdb/analysis"
-	handlers "github.com/specterops/bloodhound/server/handlers/v2/analysis"
-	jsonapi "github.com/specterops/bloodhound/server/jsonapi/v2"
-	service "github.com/specterops/bloodhound/server/services/analysis"
+	"github.com/specterops/bloodhound/server/analysis/appdb"
+	"github.com/specterops/bloodhound/server/analysis/handlers"
+	"github.com/specterops/bloodhound/server/analysis/service"
 	"github.com/specterops/bloodhound/server/wireup"
 )
 
@@ -39,5 +38,5 @@ func (Module) Register(deps wireup.Deps) {
 		handlerSet = handlers.NewHandlersContainer(svc)
 	)
 
-	jsonapi.RegisterAnalysisRoutes(deps.Router, handlerSet)
+	handlers.Register(deps.Router, handlerSet)
 }

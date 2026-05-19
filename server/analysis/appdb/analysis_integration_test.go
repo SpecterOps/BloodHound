@@ -16,7 +16,7 @@
 
 //go:build slow_integration
 
-package analysis_test
+package appdb_test
 
 import (
 	"context"
@@ -31,15 +31,15 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
-	appdbAnalysis "github.com/specterops/bloodhound/server/appdb/analysis"
-	analysisservice "github.com/specterops/bloodhound/server/services/analysis"
+	"github.com/specterops/bloodhound/server/analysis/appdb"
+	"github.com/specterops/bloodhound/server/analysis/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // setupStore spins up an isolated postgres database via pgtestdb, applies all
 // migrations, and returns an analysis Store backed by the resulting pgx pool.
-func setupStore(t *testing.T) *appdbAnalysis.Store {
+func setupStore(t *testing.T) *appdb.Store {
 	t.Helper()
 
 	var (
@@ -58,7 +58,7 @@ func setupStore(t *testing.T) *appdbAnalysis.Store {
 
 	t.Cleanup(func() { bhDB.Close(ctx) })
 
-	return appdbAnalysis.NewStore(bhDB.Pool())
+	return appdb.NewStore(bhDB.Pool())
 }
 
 // getPostgresConfig reads the integration test connection details from the
@@ -115,7 +115,7 @@ func TestStore_CreateAnalysisRequest_Integration(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, created)
 		assert.Equal(t, "first-user", current.RequestedBy)
-		assert.Equal(t, analysisservice.RequestedAnalysisTypeAnalysis, current.RequestType)
+		assert.Equal(t, service.RequestedAnalysisTypeAnalysis, current.RequestType)
 	})
 
 	t.Run("second call is a no-op and reports created=false with the original requester", func(t *testing.T) {

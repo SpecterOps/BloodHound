@@ -21,7 +21,7 @@
 package modules
 
 import (
-	"github.com/specterops/bloodhound/server/modules/analysis"
+	"github.com/specterops/bloodhound/server/analysis"
 	"github.com/specterops/bloodhound/server/wireup"
 )
 

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package analysis
+package handlers
 
 //go:generate go tool mockery
 
@@ -25,8 +25,8 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
+	"github.com/specterops/bloodhound/server/analysis/service"
 	"github.com/specterops/bloodhound/server/jsonapi/v2/responses"
-	"github.com/specterops/bloodhound/server/services/analysis"
 )
 
 const (
@@ -35,8 +35,8 @@ const (
 
 // Analysis defines the analysis service boundary for the analysis handlers package.
 type Analysis interface {
-	GetRequest(context.Context) (analysis.RequestedAnalysis, error)
-	CreateRequest(ctx context.Context, requestedBy string) (analysis.RequestedAnalysis, bool, error)
+	GetRequest(context.Context) (service.RequestedAnalysis, error)
+	CreateRequest(ctx context.Context, requestedBy string) (service.RequestedAnalysis, bool, error)
 }
 
 // Handlers is a dependency injection container for analysis handlers
@@ -58,7 +58,7 @@ func (s Handlers) GetRequest(response http.ResponseWriter, request *http.Request
 	var ctx = request.Context()
 
 	ra, err := s.analysis.GetRequest(ctx)
-	if errors.Is(err, analysis.ErrNoPendingRequest) {
+	if errors.Is(err, service.ErrNoPendingRequest) {
 		responses.WriteNoContent(response)
 		return
 	}

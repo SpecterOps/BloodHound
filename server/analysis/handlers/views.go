@@ -14,19 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package analysis
+package handlers
 
 import (
 	"encoding/json"
 	"time"
 
-	"github.com/specterops/bloodhound/server/services/analysis"
+	"github.com/specterops/bloodhound/server/analysis/service"
 )
 
 type RequestedAnalysisView struct {
-	RequestedBy string                      `json:"requested_by"`
-	RequestType analysis.RequestedAnalysisType `json:"request_type"`
-	RequestedAt time.Time                    `json:"requested_at"`
+	RequestedBy string                        `json:"requested_by"`
+	RequestType service.RequestedAnalysisType `json:"request_type"`
+	RequestedAt time.Time                     `json:"requested_at"`
 	// Deletes all nodes and edges in the graph
 	DeleteAllGraph bool `json:"delete_all_graph"`
 	// Deletes all nodes and edges in the graph that have a type not registered in the source_kinds table
@@ -35,7 +35,7 @@ type RequestedAnalysisView struct {
 	DeleteRelationships   []string `json:"delete_relationships"`
 }
 
-func BuildRequestedAnalysisView(ra analysis.RequestedAnalysis) RequestedAnalysisView {
+func BuildRequestedAnalysisView(ra service.RequestedAnalysis) RequestedAnalysisView {
 	return RequestedAnalysisView{
 		RequestedBy:           ra.RequestedBy,
 		RequestType:           ra.RequestType,

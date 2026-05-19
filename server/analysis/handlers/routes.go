@@ -14,20 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v2
+package handlers
 
 import (
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/server/handlers/v2/analysis"
 )
 
-// RegisterAnalysisRoutes attaches the analysis request endpoints to the given router instance.
-func RegisterAnalysisRoutes(routerInst *router.Router, handlers *analysis.Handlers) {
+// Register attaches the analysis request endpoints to the given router instance.
+func Register(routerInst *router.Router, handlers *Handlers) {
 	var permissions = auth.Permissions()
 
-	// Analysis request APIs
 	routerInst.GET("/api/v2/analysis", handlers.GetRequest).RequirePermissions(permissions.AppReadApplicationConfiguration)
 	routerInst.PUT("/api/v2/analysis", handlers.CreateRequest).RequirePermissions(permissions.AppWriteApplicationConfiguration)
-	// routerInst.DELETE("/api/v2/analysis", handlers.CancelRequest).RequirePermissions(permissions.AppWriteApplicationConfiguration)
 }
