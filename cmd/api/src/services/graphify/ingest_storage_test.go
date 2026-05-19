@@ -351,7 +351,7 @@ func TestWriteArchiveFileToStorage(t *testing.T) {
 			writeErr: errWrite,
 			expected: expected{
 				errIs:       errWrite,
-				errContains: `write archive file "file.json" to stroage`,
+				errContains: `write archive file "file.json" to storage`,
 			},
 		},
 	}
@@ -572,7 +572,7 @@ func TestExtractIngestFiles(t *testing.T) {
 					{
 						Name:       "one.json",
 						ParentFile: "provided.zip",
-						Errors:     []string{`write archive file "one.json" to stroage: write failed`},
+						Errors:     []string{`write archive file "one.json" to storage: write failed`},
 					},
 					{
 						Name:       "two.json",

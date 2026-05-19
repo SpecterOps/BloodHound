@@ -77,7 +77,7 @@ func TestNewFileService(t *testing.T) {
 	require.Same(t, mockStorage, fileService.Storage)
 }
 
-func TestLocalFileService_GetFile(t *testing.T) {
+func TestStorageFileService_GetFile(t *testing.T) {
 	t.Parallel()
 
 	var (
@@ -148,7 +148,7 @@ func TestLocalFileService_GetFile(t *testing.T) {
 	}
 }
 
-func TestLocalFileService_ReadFile(t *testing.T) {
+func TestStorageFileService_ReadFile(t *testing.T) {
 	t.Parallel()
 
 	var (
@@ -244,7 +244,7 @@ func TestLocalFileService_ReadFile(t *testing.T) {
 	}
 }
 
-func TestLocalFileService_WriteFile(t *testing.T) {
+func TestStorageFileService_WriteFile(t *testing.T) {
 	t.Parallel()
 
 	var errPut = errors.New("put failed")
@@ -307,7 +307,7 @@ func TestLocalFileService_WriteFile(t *testing.T) {
 	}
 }
 
-func TestLocalFileService_WriteFileFromReader(t *testing.T) {
+func TestStorageFileService_WriteFileFromReader(t *testing.T) {
 	t.Parallel()
 
 	var errPut = errors.New("put failed")
@@ -365,7 +365,7 @@ func TestLocalFileService_WriteFileFromReader(t *testing.T) {
 	}
 }
 
-func TestLocalFileService_DeleteFile(t *testing.T) {
+func TestStorageFileService_DeleteFile(t *testing.T) {
 	t.Parallel()
 
 	var errDelete = errors.New("delete failed")
@@ -421,7 +421,7 @@ func TestLocalFileService_DeleteFile(t *testing.T) {
 	}
 }
 
-func TestLocalFileService_WriteTempFile(t *testing.T) {
+func TestStorageFileService_WriteTempFile(t *testing.T) {
 	t.Parallel()
 
 	var errPut = errors.New("put failed")
@@ -489,7 +489,7 @@ func TestLocalFileService_WriteTempFile(t *testing.T) {
 	}
 }
 
-func TestLocalFileService_MoveFile(t *testing.T) {
+func TestStorageFileService_MoveFile(t *testing.T) {
 	t.Parallel()
 
 	var errMove = errors.New("move failed")
@@ -546,7 +546,7 @@ func TestLocalFileService_MoveFile(t *testing.T) {
 	}
 }
 
-func TestLocalFileService_ListFiles(t *testing.T) {
+func TestStorageFileService_ListFiles(t *testing.T) {
 	t.Parallel()
 
 	var (
@@ -1042,10 +1042,10 @@ func TestNewDefaultFileServices(t *testing.T) {
 	require.Len(t, fileServices, 4)
 
 	for _, fileService := range fileServices {
-		localFileService, ok := fileService.(*storage.LocalFileService)
+		storageFileService, ok := fileService.(*storage.StorageFileService)
 		require.True(t, ok)
 
-		localStore, ok := localFileService.Storage.(*storage.LocalStore)
+		localStore, ok := storageFileService.Storage.(*storage.LocalStore)
 		require.True(t, ok)
 		require.NoError(t, localStore.Close())
 	}

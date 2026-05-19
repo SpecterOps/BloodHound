@@ -128,12 +128,12 @@ type FileService interface {
 	ListFiles(ctx context.Context, name string, opts ListOptions) ([]FileInfo, error)
 }
 
-type LocalFileService struct {
+type StorageFileService struct {
 	Storage Storage
 }
 
-func NewFileService(storage Storage) *LocalFileService {
-	return &LocalFileService{Storage: storage}
+func NewFileService(storage Storage) *StorageFileService {
+	return &StorageFileService{Storage: storage}
 }
 
 func randomID() (string, error) {
@@ -144,11 +144,11 @@ func randomID() (string, error) {
 	return hex.EncodeToString(b[:]), nil
 }
 
-func (s *LocalFileService) GetFile(ctx context.Context, name string) (io.ReadCloser, FileInfo, error) {
+func (s *StorageFileService) GetFile(ctx context.Context, name string) (io.ReadCloser, FileInfo, error) {
 	return s.Storage.Get(ctx, name)
 }
 
-func (s *LocalFileService) ReadFile(ctx context.Context, name string) ([]byte, error) {
+func (s *StorageFileService) ReadFile(ctx context.Context, name string) ([]byte, error) {
 	rc, _, err := s.Storage.Get(ctx, name)
 	if err != nil {
 		return nil, err
@@ -158,19 +158,19 @@ func (s *LocalFileService) ReadFile(ctx context.Context, name string) ([]byte, e
 	return io.ReadAll(rc)
 }
 
-func (s *LocalFileService) WriteFile(ctx context.Context, name string, data []byte, opts WriteOptions) error {
+func (s *StorageFileService) WriteFile(ctx context.Context, name string, data []byte, opts WriteOptions) error {
 	return s.Storage.Put(ctx, name, bytes.NewReader(data), opts)
 }
 
-func (s *LocalFileService) WriteFileFromReader(ctx context.Context, name string, reader io.Reader, opts WriteOptions) error {
+func (s *StorageFileService) WriteFileFromReader(ctx context.Context, name string, reader io.Reader, opts WriteOptions) error {
 	return s.Storage.Put(ctx, name, reader, opts)
 }
 
-func (s *LocalFileService) DeleteFile(ctx context.Context, name string) error {
+func (s *StorageFileService) DeleteFile(ctx context.Context, name string) error {
 	return s.Storage.Delete(ctx, name)
 }
 
-func (s *LocalFileService) WriteTempFile(ctx context.Context, prefix string, reader io.Reader, opts WriteOptions) (string, error) {
+func (s *StorageFileService) WriteTempFile(ctx context.Context, prefix string, reader io.Reader, opts WriteOptions) (string, error) {
 	id, err := randomID()
 	if err != nil {
 		return "", err
@@ -184,11 +184,11 @@ func (s *LocalFileService) WriteTempFile(ctx context.Context, prefix string, rea
 	return tempPath, nil
 }
 
-func (s *LocalFileService) MoveFile(ctx context.Context, srcName, dstName string, options WriteOptions) error {
+func (s *StorageFileService) MoveFile(ctx context.Context, srcName, dstName string, options WriteOptions) error {
 	return s.Storage.Move(ctx, srcName, dstName, options)
 }
 
-func (s *LocalFileService) ListFiles(ctx context.Context, name string, options ListOptions) ([]FileInfo, error) {
+func (s *StorageFileService) ListFiles(ctx context.Context, name string, options ListOptions) ([]FileInfo, error) {
 	return s.Storage.List(ctx, name, options)
 }
 

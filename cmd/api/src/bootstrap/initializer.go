@@ -33,7 +33,7 @@ type DatabaseConnections[DBType database.Database, GraphType graph.Database] str
 }
 
 type DatabaseConstructor[DBType database.Database, GraphType graph.Database] func(ctx context.Context, cfg config.Configuration) (DatabaseConnections[DBType, GraphType], error)
-type RuntimeDependenciesConstructor[DBType database.Database, GraphType graph.Database] func(ctx context.Context, cfg config.Configuration, conections DatabaseConnections[DBType, GraphType]) (RuntimeDependencies, error)
+type RuntimeDependenciesConstructor[DBType database.Database, GraphType graph.Database] func(ctx context.Context, cfg config.Configuration, connections DatabaseConnections[DBType, GraphType]) (RuntimeDependencies, error)
 type InitializerLogic[DBType database.Database, GraphType graph.Database] func(ctx context.Context, cfg config.Configuration, databaseConnections DatabaseConnections[DBType, GraphType], deps RuntimeDependencies) ([]daemons.Daemon, error)
 
 type Initializer[DBType database.Database, GraphType graph.Database] struct {
