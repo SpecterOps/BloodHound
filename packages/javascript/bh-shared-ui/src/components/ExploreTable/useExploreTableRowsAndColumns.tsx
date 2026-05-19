@@ -25,6 +25,7 @@ import React, {
     type KeyboardEvent as ReactKeyboardEvent,
     type MouseEvent as ReactMouseEvent,
 } from 'react';
+import { useAnnounce } from '../../providers';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { formatPotentiallyUnknownLabel } from '../../utils/entityInfoDisplay';
 import {
@@ -56,7 +57,8 @@ const useExploreTableRowsAndColumns = ({
 }: UseExploreTableRowsAndColumnsProps) => {
     const [sortBy, setSortBy] = useState<keyof MungedTableRowWithId>();
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>();
-    const [announcement, setAnnouncement] = useState('');
+    // const [announcement, setAnnouncement] = useState('');
+    const announce = useAnnounce();
 
     const rows: MungedTableRowWithId[] = useMemo(
         () =>
@@ -86,19 +88,19 @@ const useExploreTableRowsAndColumns = ({
                 // first sort of a new column
                 setSortBy(sortByColumn);
                 setSortOrder('asc');
-                setAnnouncement(`Column sorted by ${sortByColumn}, sort order is ascending`);
+                announce(`Column sorted by ${sortByColumn}, sort order is ascending`);
             } else if (sortOrder === 'asc') {
                 // second sort, swap the sort direction
                 setSortOrder('desc');
-                setAnnouncement(`Column sorted by ${sortByColumn}, sort order is descending`);
+                announce(`Column sorted by ${sortByColumn}, sort order is descending`);
             } else {
                 // on third sort, reset the sort state to default
                 setSortBy(undefined);
                 setSortOrder(undefined);
-                setAnnouncement('Column sorting reverted to default');
+                announce('Column sorting reverted to default');
             }
         },
-        [sortBy, sortOrder]
+        [sortBy, sortOrder, announce]
     );
 
     const handleKebabMenuClick = useCallback(
@@ -249,7 +251,6 @@ const useExploreTableRowsAndColumns = ({
         columnOrderArr,
         columnOrder,
         setColumnOrder,
-        announcement,
     };
 };
 

@@ -17,6 +17,13 @@
 import { useContext } from 'react';
 import { AnnouncementContext } from './AnnouncementProvider';
 
+// Usage:
+// const announce = useAnnounce();
+// // defaults to polite (waits for user to finish current interaction)
+// announce('Search results loaded: 42 nodes found');
+// // assertive (interrupts immediately – use sparingly for errors)
+// announce('Error: Session expired', 'assertive');
+
 export const useAnnounce = () => {
     const announce = useContext(AnnouncementContext);
     if (!announce) {
