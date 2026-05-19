@@ -25,37 +25,38 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/specterops/bloodhound/server/models"
-	"github.com/stephenafamo/bob/dialect/psql"
-	"github.com/stephenafamo/bob/dialect/psql/im"
-	"github.com/stephenafamo/bob/dialect/psql/sm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestStore_GetAnalysisRequest(t *testing.T) {
-	var (
-		ctx               = context.Background()
-		expectedSQL, _, _ = psql.Select(
-			sm.Columns(
-				"requested_by",
-				"request_type",
-				"requested_at",
-				"delete_all_graph",
-				"delete_sourceless_graph",
-				"delete_source_kinds",
-				"delete_relationships",
-			),
-			sm.From("analysis_request_switch"),
-			sm.Limit(1),
-		).Build(ctx)
-	)
+// Literal SQL strings expected by the Store. These are compared via
+// pgxmock.QueryMatcherEqual, which whitespace-normalises both sides, so
+// formatting (tabs, newlines) is not load-bearing — token order, table
+// name, column names, parameter shape and the ON CONFLICT clause are.
+const (
+	expectedSelectSQL = `SELECT requested_by, request_type, requested_at, delete_all_graph, delete_sourceless_graph, delete_source_kinds, delete_relationships FROM analysis_request_switch LIMIT 1`
 
-	newStore := func(t *testing.T) (*Store, pgxmock.PgxPoolIface) {
-		pool, err := pgxmock.NewPool(pgxmock.QueryMatcherOption(pgxmock.QueryMatcherEqual))
-		require.NoError(t, err)
-		t.Cleanup(pool.Close)
-		return &Store{db: pool}, pool
+	expectedInsertSQL = `INSERT INTO analysis_request_switch("requested_by", "request_type", "requested_at", "delete_all_graph", "delete_sourceless_graph", "delete_source_kinds", "delete_relationships") VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (singleton) DO NOTHING`
+)
+
+func newTestStore(t *testing.T) (*Store, pgxmock.PgxPoolIface) {
+	t.Helper()
+	pool, err := pgxmock.NewPool(pgxmock.QueryMatcherOption(pgxmock.QueryMatcherEqual))
+	require.NoError(t, err)
+	t.Cleanup(pool.Close)
+	return &Store{db: pool}, pool
+}
+
+func analysisRequestRowColumns() []string {
+	return []string{
+		"requested_by", "request_type", "requested_at",
+		"delete_all_graph", "delete_sourceless_graph",
+		"delete_source_kinds", "delete_relationships",
 	}
+}
+
+func TestStore_GetAnalysisRequest(t *testing.T) {
+	ctx := context.Background()
 
 	t.Run("successfully returns an analysis request", func(t *testing.T) {
 		var (
@@ -68,19 +69,11 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 				DeleteSourceKinds:     []string{"AZBase"},
 				DeleteRelationships:   []string{"HasSession"},
 			}
-			store, pool = newStore(t)
+			store, pool = newTestStore(t)
 		)
 
-		pool.ExpectQuery(expectedSQL).WillReturnRows(
-			pool.NewRows([]string{
-				"requested_by",
-				"request_type",
-				"requested_at",
-				"delete_all_graph",
-				"delete_sourceless_graph",
-				"delete_source_kinds",
-				"delete_relationships",
-			}).AddRow(
+		pool.ExpectQuery(expectedSelectSQL).WillReturnRows(
+			pool.NewRows(analysisRequestRowColumns()).AddRow(
 				expected.RequestedBy,
 				string(expected.RequestType),
 				expected.RequestedAt,
@@ -98,9 +91,9 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 	})
 
 	t.Run("returns ErrNotFound when no rows are found", func(t *testing.T) {
-		store, pool := newStore(t)
+		store, pool := newTestStore(t)
 
-		pool.ExpectQuery(expectedSQL).WillReturnError(pgx.ErrNoRows)
+		pool.ExpectQuery(expectedSelectSQL).WillReturnError(pgx.ErrNoRows)
 
 		_, err := store.GetAnalysisRequest(ctx)
 		assert.ErrorIs(t, err, ErrNotFound)
@@ -110,10 +103,10 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 	t.Run("propagates other database errors", func(t *testing.T) {
 		var (
 			expectedErr = errors.New("connection refused")
-			store, pool = newStore(t)
+			store, pool = newTestStore(t)
 		)
 
-		pool.ExpectQuery(expectedSQL).WillReturnError(expectedErr)
+		pool.ExpectQuery(expectedSelectSQL).WillReturnError(expectedErr)
 
 		_, err := store.GetAnalysisRequest(ctx)
 		assert.ErrorIs(t, err, expectedErr)
@@ -123,49 +116,14 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 
 func TestStore_CreateAnalysisRequest(t *testing.T) {
 	var (
-		ctx             = context.Background()
-		requester       = "test-user"
-		selectSQL, _, _ = psql.Select(
-			sm.Columns(
-				"requested_by",
-				"request_type",
-				"requested_at",
-				"delete_all_graph",
-				"delete_sourceless_graph",
-				"delete_source_kinds",
-				"delete_relationships",
-			),
-			sm.From("analysis_request_switch"),
-			sm.Limit(1),
-		).Build(ctx)
-		insertSQL, _, _ = psql.Insert(
-			im.Into("analysis_request_switch",
-				"requested_by",
-				"request_type",
-				"requested_at",
-				"delete_all_graph",
-				"delete_sourceless_graph",
-				"delete_source_kinds",
-				"delete_relationships",
-			),
-			im.Values(psql.Arg(
-				"", "", time.Time{}, false, false, []string{}, []string{},
-			)),
-		).Build(ctx)
+		ctx       = context.Background()
+		requester = "test-user"
 	)
 
-	newStore := func(t *testing.T) (*Store, pgxmock.PgxPoolIface) {
-		pool, err := pgxmock.NewPool(pgxmock.QueryMatcherOption(pgxmock.QueryMatcherEqual))
-		require.NoError(t, err)
-		t.Cleanup(pool.Close)
-		return &Store{db: pool}, pool
-	}
+	t.Run("returns created=true and the new request when no row exists", func(t *testing.T) {
+		store, pool := newTestStore(t)
 
-	t.Run("inserts row when no request exists", func(t *testing.T) {
-		store, pool := newStore(t)
-
-		pool.ExpectQuery(selectSQL).WillReturnError(pgx.ErrNoRows)
-		pool.ExpectExec(insertSQL).
+		pool.ExpectExec(expectedInsertSQL).
 			WithArgs(
 				requester,
 				string(models.RequestedAnalysisTypeAnalysis),
@@ -177,62 +135,98 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 			).
 			WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
-		require.NoError(t, store.CreateAnalysisRequest(ctx, requester))
+		pool.ExpectQuery(expectedSelectSQL).WillReturnRows(
+			pool.NewRows(analysisRequestRowColumns()).AddRow(
+				requester,
+				string(models.RequestedAnalysisTypeAnalysis),
+				time.Now().UTC(),
+				false,
+				false,
+				[]string{},
+				[]string{},
+			),
+		)
+
+		current, created, err := store.CreateAnalysisRequest(ctx, requester)
+		require.NoError(t, err)
+		assert.True(t, created)
+		assert.Equal(t, requester, current.RequestedBy)
 		require.NoError(t, pool.ExpectationsWereMet())
 	})
 
-	t.Run("no-ops when a request already exists", func(t *testing.T) {
+	t.Run("returns created=false and the existing request when a row already exists", func(t *testing.T) {
 		var (
-			store, pool = newStore(t)
+			store, pool = newTestStore(t)
 			existing    = models.RequestedAnalysis{
 				RequestedBy: "other-user",
 				RequestType: models.RequestedAnalysisTypeAnalysis,
-				RequestedAt: time.Now(),
+				RequestedAt: time.Now().UTC(),
 			}
 		)
 
-		pool.ExpectQuery(selectSQL).WillReturnRows(
-			pool.NewRows([]string{
-				"requested_by", "request_type", "requested_at",
-				"delete_all_graph", "delete_sourceless_graph",
-				"delete_source_kinds", "delete_relationships",
-			}).AddRow(
-				existing.RequestedBy, string(existing.RequestType), existing.RequestedAt,
-				false, false, []string{}, []string{},
+		// ON CONFLICT DO NOTHING reports 0 rows affected when the singleton row
+		// already exists — the INSERT is still issued, the conflict is silently
+		// resolved at the DB level.
+		pool.ExpectExec(expectedInsertSQL).
+			WithArgs(
+				requester,
+				string(models.RequestedAnalysisTypeAnalysis),
+				pgxmock.AnyArg(),
+				false,
+				false,
+				[]string{},
+				[]string{},
+			).
+			WillReturnResult(pgxmock.NewResult("INSERT", 0))
+
+		pool.ExpectQuery(expectedSelectSQL).WillReturnRows(
+			pool.NewRows(analysisRequestRowColumns()).AddRow(
+				existing.RequestedBy,
+				string(existing.RequestType),
+				existing.RequestedAt,
+				false,
+				false,
+				[]string{},
+				[]string{},
 			),
 		)
-		// No Exec expectation — the insert must NOT be called.
 
-		require.NoError(t, store.CreateAnalysisRequest(ctx, requester))
+		current, created, err := store.CreateAnalysisRequest(ctx, requester)
+		require.NoError(t, err)
+		assert.False(t, created)
+		assert.Equal(t, existing.RequestedBy, current.RequestedBy)
 		require.NoError(t, pool.ExpectationsWereMet())
 	})
 
-	t.Run("propagates select error", func(t *testing.T) {
-		var (
-			expectedErr = errors.New("db unavailable")
-			store, pool = newStore(t)
-		)
-
-		pool.ExpectQuery(selectSQL).WillReturnError(expectedErr)
-
-		err := store.CreateAnalysisRequest(ctx, requester)
-		assert.ErrorIs(t, err, expectedErr)
-		require.NoError(t, pool.ExpectationsWereMet())
-	})
-
-	t.Run("propagates insert error", func(t *testing.T) {
+	t.Run("propagates insert errors", func(t *testing.T) {
 		var (
 			expectedErr = errors.New("insert failed")
-			store, pool = newStore(t)
+			store, pool = newTestStore(t)
 		)
 
-		pool.ExpectQuery(selectSQL).WillReturnError(pgx.ErrNoRows)
-		pool.ExpectExec(insertSQL).
+		pool.ExpectExec(expectedInsertSQL).
 			WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(),
 				pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg()).
 			WillReturnError(expectedErr)
 
-		err := store.CreateAnalysisRequest(ctx, requester)
+		_, _, err := store.CreateAnalysisRequest(ctx, requester)
+		assert.ErrorIs(t, err, expectedErr)
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+
+	t.Run("propagates select errors after a successful insert", func(t *testing.T) {
+		var (
+			expectedErr = errors.New("connection lost")
+			store, pool = newTestStore(t)
+		)
+
+		pool.ExpectExec(expectedInsertSQL).
+			WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(),
+				pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg()).
+			WillReturnResult(pgxmock.NewResult("INSERT", 1))
+		pool.ExpectQuery(expectedSelectSQL).WillReturnError(expectedErr)
+
+		_, _, err := store.CreateAnalysisRequest(ctx, requester)
 		assert.ErrorIs(t, err, expectedErr)
 		require.NoError(t, pool.ExpectationsWereMet())
 	})

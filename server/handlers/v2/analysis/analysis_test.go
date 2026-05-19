@@ -128,7 +128,7 @@ func TestHandlers_CreateRequest(t *testing.T) {
 		)
 
 		// No auth context present — handler falls back to "unknown-user".
-		analysisMock.EXPECT().CreateRequest(mock.Anything, "unknown-user").Return(nil)
+		analysisMock.EXPECT().CreateRequest(mock.Anything, "unknown-user").Return(models.RequestedAnalysis{}, true, nil)
 
 		handlers.CreateRequest(recorder, request)
 
@@ -144,7 +144,7 @@ func TestHandlers_CreateRequest(t *testing.T) {
 			request      = newRequest(t)
 		)
 
-		analysisMock.EXPECT().CreateRequest(mock.Anything, "unknown-user").Return(expectedErr)
+		analysisMock.EXPECT().CreateRequest(mock.Anything, "unknown-user").Return(models.RequestedAnalysis{}, false, expectedErr)
 
 		handlers.CreateRequest(recorder, request)
 

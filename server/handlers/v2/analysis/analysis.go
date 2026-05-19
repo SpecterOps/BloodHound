@@ -34,7 +34,7 @@ import (
 // Analysis defines the analysis service boundary for the analysis handlers package.
 type Analysis interface {
 	GetRequest(context.Context) (models.RequestedAnalysis, error)
-	CreateRequest(ctx context.Context, requestedBy string) error
+	CreateRequest(ctx context.Context, requestedBy string) (models.RequestedAnalysis, bool, error)
 }
 
 // Handlers is a dependency injection container for analysis handlers
@@ -80,7 +80,7 @@ func (h Handlers) CreateRequest(response http.ResponseWriter, request *http.Requ
 		userID = user.ID.String()
 	}
 
-	err := h.analysis.CreateRequest(ctx, userID)
+	_, _, err := h.analysis.CreateRequest(ctx, userID)
 	if err != nil {
 		responses.WriteInternalServerError(request, err, response)
 		return

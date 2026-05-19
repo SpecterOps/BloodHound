@@ -54,20 +54,35 @@ func (_m *MockAnalysis) EXPECT() *MockAnalysis_Expecter {
 }
 
 // CreateRequest provides a mock function for the type MockAnalysis
-func (_mock *MockAnalysis) CreateRequest(ctx context.Context, requestedBy string) error {
+func (_mock *MockAnalysis) CreateRequest(ctx context.Context, requestedBy string) (models.RequestedAnalysis, bool, error) {
 	ret := _mock.Called(ctx, requestedBy)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateRequest")
 	}
 
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) error); ok {
+	var r0 models.RequestedAnalysis
+	var r1 bool
+	var r2 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (models.RequestedAnalysis, bool, error)); ok {
+		return returnFunc(ctx, requestedBy)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) models.RequestedAnalysis); ok {
 		r0 = returnFunc(ctx, requestedBy)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(models.RequestedAnalysis)
 	}
-	return r0
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) bool); ok {
+		r1 = returnFunc(ctx, requestedBy)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+	if returnFunc, ok := ret.Get(2).(func(context.Context, string) error); ok {
+		r2 = returnFunc(ctx, requestedBy)
+	} else {
+		r2 = ret.Error(2)
+	}
+	return r0, r1, r2
 }
 
 // MockAnalysis_CreateRequest_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateRequest'
@@ -100,12 +115,12 @@ func (_c *MockAnalysis_CreateRequest_Call) Run(run func(ctx context.Context, req
 	return _c
 }
 
-func (_c *MockAnalysis_CreateRequest_Call) Return(err error) *MockAnalysis_CreateRequest_Call {
-	_c.Call.Return(err)
+func (_c *MockAnalysis_CreateRequest_Call) Return(requestedAnalysis models.RequestedAnalysis, b bool, err error) *MockAnalysis_CreateRequest_Call {
+	_c.Call.Return(requestedAnalysis, b, err)
 	return _c
 }
 
-func (_c *MockAnalysis_CreateRequest_Call) RunAndReturn(run func(ctx context.Context, requestedBy string) error) *MockAnalysis_CreateRequest_Call {
+func (_c *MockAnalysis_CreateRequest_Call) RunAndReturn(run func(ctx context.Context, requestedBy string) (models.RequestedAnalysis, bool, error)) *MockAnalysis_CreateRequest_Call {
 	_c.Call.Return(run)
 	return _c
 }

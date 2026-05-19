@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/server/appdb/pgxutils"
 	"github.com/specterops/bloodhound/server/models"
@@ -89,26 +90,20 @@ func (s *Store) GetAnalysisRequest(ctx context.Context) (models.RequestedAnalysi
 	return toRequestedAnalysis(row), nil
 }
 
-// CreateAnalysisRequest inserts a new analysis request for the given user.
-// If a request of any type already exists the call is a no-op (matching the
-// legacy setAnalysisRequest behaviour: an incoming analysis request never
-// overwrites an existing one).
-func (s *Store) CreateAnalysisRequest(ctx context.Context, requestedBy string) error {
+// CreateAnalysisRequest atomically inserts a new analysis request for the given user when none
+// is currently pending. The analysis_request_switch table is a DB-level singleton (PRIMARY KEY
+// (singleton) with CHECK (singleton)), so INSERT ... ON CONFLICT (singleton) DO NOTHING is
+// race-free and idempotent. The currently-pending request is returned alongside a boolean
+// indicating whether this call created it (true) or a request was already pending (false).
+func (s *Store) CreateAnalysisRequest(ctx context.Context, requestedBy string) (models.RequestedAnalysis, bool, error) {
 	var (
-		err      error
-		now      = time.Now().UTC()
-		sqlQuery string
-		args     []any
+		now            = time.Now().UTC()
+		sqlQuery       string
+		args           []any
+		err            error
+		commandTag     pgconn.CommandTag
+		currentRequest models.RequestedAnalysis
 	)
-
-	_, err = s.GetAnalysisRequest(ctx)
-	if err == nil {
-		// A request already exists — no-op.
-		return nil
-	}
-	if !errors.Is(err, ErrNotFound) {
-		return err
-	}
 
 	sqlQuery, args, err = psql.Insert(
 		im.Into("analysis_request_switch",
@@ -129,11 +124,21 @@ func (s *Store) CreateAnalysisRequest(ctx context.Context, requestedBy string) e
 			[]string{},
 			[]string{},
 		)),
+		im.OnConflict("singleton").DoNothing(),
 	).Build(ctx)
 	if err != nil {
-		return err
+		return models.RequestedAnalysis{}, false, err
 	}
 
-	_, err = s.db.Exec(ctx, sqlQuery, args...)
-	return err
+	commandTag, err = s.db.Exec(ctx, sqlQuery, args...)
+	if err != nil {
+		return models.RequestedAnalysis{}, false, err
+	}
+
+	currentRequest, err = s.GetAnalysisRequest(ctx)
+	if err != nil {
+		return models.RequestedAnalysis{}, false, err
+	}
+
+	return currentRequest, commandTag.RowsAffected() == 1, nil
 }

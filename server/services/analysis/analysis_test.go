@@ -87,15 +87,42 @@ func TestService_CreateRequest(t *testing.T) {
 		requester = "test-user"
 	)
 
-	t.Run("returns nil on success", func(t *testing.T) {
+	t.Run("returns created=true and the new request on success", func(t *testing.T) {
 		var (
+			expected = models.RequestedAnalysis{
+				RequestedBy: requester,
+				RequestType: models.RequestedAnalysisTypeAnalysis,
+				RequestedAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			}
 			databaseMock = analysisMocks.NewMockDatabase(t)
 			svc          = analysis.NewService(databaseMock)
 		)
 
-		databaseMock.EXPECT().CreateAnalysisRequest(ctx, requester).Return(nil)
+		databaseMock.EXPECT().CreateAnalysisRequest(ctx, requester).Return(expected, true, nil)
 
-		require.NoError(t, svc.CreateRequest(ctx, requester))
+		current, created, err := svc.CreateRequest(ctx, requester)
+		require.NoError(t, err)
+		assert.True(t, created)
+		assert.Equal(t, expected, current)
+	})
+
+	t.Run("returns created=false and the existing request when one is already pending", func(t *testing.T) {
+		var (
+			existing = models.RequestedAnalysis{
+				RequestedBy: "other-user",
+				RequestType: models.RequestedAnalysisTypeAnalysis,
+				RequestedAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			}
+			databaseMock = analysisMocks.NewMockDatabase(t)
+			svc          = analysis.NewService(databaseMock)
+		)
+
+		databaseMock.EXPECT().CreateAnalysisRequest(ctx, requester).Return(existing, false, nil)
+
+		current, created, err := svc.CreateRequest(ctx, requester)
+		require.NoError(t, err)
+		assert.False(t, created)
+		assert.Equal(t, existing, current)
 	})
 
 	t.Run("propagates database errors", func(t *testing.T) {
@@ -105,9 +132,9 @@ func TestService_CreateRequest(t *testing.T) {
 			svc          = analysis.NewService(databaseMock)
 		)
 
-		databaseMock.EXPECT().CreateAnalysisRequest(ctx, requester).Return(expectedErr)
+		databaseMock.EXPECT().CreateAnalysisRequest(ctx, requester).Return(models.RequestedAnalysis{}, false, expectedErr)
 
-		err := svc.CreateRequest(ctx, requester)
+		_, _, err := svc.CreateRequest(ctx, requester)
 		assert.ErrorIs(t, err, expectedErr)
 	})
 }

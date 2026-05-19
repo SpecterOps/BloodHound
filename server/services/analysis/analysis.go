@@ -34,7 +34,7 @@ var ErrNoPendingRequest = errors.New("no pending analysis request")
 // so that the Service can map them to its own failure-mode errors.
 type Database interface {
 	GetAnalysisRequest(ctx context.Context) (models.RequestedAnalysis, error)
-	CreateAnalysisRequest(ctx context.Context, requestedBy string) error
+	CreateAnalysisRequest(ctx context.Context, requestedBy string) (models.RequestedAnalysis, bool, error)
 }
 
 // Service implements the analysis use cases on top of a Database implementation.
@@ -57,8 +57,9 @@ func (s *Service) GetRequest(ctx context.Context) (models.RequestedAnalysis, err
 	return analysisRequest, err
 }
 
-// CreateRequest submits a new analysis request attributed to the given user.
-// If a request of any type is already pending, the call is a no-op.
-func (s *Service) CreateRequest(ctx context.Context, requestedBy string) error {
+// CreateRequest submits a new analysis request attributed to the given user. The currently
+// pending request is returned along with a boolean indicating whether this call created it
+// (true) or a request was already pending (false).
+func (s *Service) CreateRequest(ctx context.Context, requestedBy string) (models.RequestedAnalysis, bool, error) {
 	return s.db.CreateAnalysisRequest(ctx, requestedBy)
 }
