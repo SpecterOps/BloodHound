@@ -25,6 +25,8 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
@@ -311,6 +313,8 @@ func TestTagAssetGroupNodesForTag(t *testing.T) {
 	)
 
 	t.Run("removes the tag kind from every previously tagged node when no selector references them", func(t *testing.T) {
+		pzNodeTagCounterVec.Reset()
+
 		tag, err := bhDB.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, testActor, "regression label all", "", null.Int32{}, null.Bool{}, null.String{})
 		require.NoError(t, err)
 
@@ -353,9 +357,13 @@ func TestTagAssetGroupNodesForTag(t *testing.T) {
 			_, present := nodesToUpdate[nodeId.Uint64()]
 			assert.Truef(t, present, "expected node %d to be queued for kind removal", nodeId)
 		}
+
+		assert.Equal(t, 0.0, testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_added", "tag": tag.Name})))
+		assert.Equal(t, float64(nodeCount), testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_removed", "tag": tag.Name})))
 	})
 
 	t.Run("preserves the tag on selected nodes and removes it from no longer selected nodes", func(t *testing.T) {
+		pzNodeTagCounterVec.Reset()
 		tag, err := bhDB.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, testActor, "regression label mixed", "", null.Int32{}, null.Bool{}, null.String{})
 		require.NoError(t, err)
 
@@ -418,5 +426,8 @@ func TestTagAssetGroupNodesForTag(t *testing.T) {
 		}
 		_, selectedEnqueued := nodesToUpdate[selectedNodeId.Uint64()]
 		assert.Falsef(t, selectedEnqueued, "expected selected node %d to NOT be queued for kind removal", selectedNodeId)
+
+		assert.Equal(t, 0.0, testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_added", "tag": tag.Name})))
+		assert.Equal(t, float64(len(expectedRemovals)), testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_removed", "tag": tag.Name})))
 	})
 }
