@@ -35,6 +35,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
+	appdbAnalysis "github.com/specterops/bloodhound/server/appdb/analysis"
+	analysisHandlers "github.com/specterops/bloodhound/server/handlers/v2/analysis"
+	analysisService "github.com/specterops/bloodhound/server/services/analysis"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -161,10 +164,24 @@ func getAnalysisPostgresConfig(t *testing.T) pgtestdb.Config {
 	}
 }
 
+// newAnalysisHandler wires the pgx-backed analysis stack from a BloodhoundDB
+// and returns its GET handler ready to pass to runGetAnalysisStatusSuite.
+func newAnalysisHandler(db *database.BloodhoundDB) http.HandlerFunc {
+	store := appdbAnalysis.NewStore(db.Pool())
+	svc := analysisService.NewService(store)
+	return analysisHandlers.NewHandlersContainer(svc).GetRequest
+}
+
 func TestGetAnalysisStatus(t *testing.T) {
 	t.Run("legacy handler", func(t *testing.T) {
 		db := setupAnalysisDB(t)
 		resources := v2.Resources{DB: db}
 		runGetAnalysisStatusSuite(t, db, resources.GetAnalysisRequest)
 	})
+
+	// Uncomment once the new handler is ready to be validated for compatibility:
+	// t.Run("new handler", func(t *testing.T) {
+	// 	db := setupAnalysisDB(t)
+	// 	runGetAnalysisStatusSuite(t, db, newAnalysisHandler(db))
+	// })
 }
