@@ -32,22 +32,23 @@ import { usePermissions } from '../usePermissions';
 /** Makes a paginated request for File Upload Jobs, returned as a TanStack Query */
 export const useGetFileUploadsQuery = ({ page, rowsPerPage, filters }: FileUploadParams) => {
     const { checkPermission, isSuccess: permissionsLoaded } = usePermissions();
-    const hasPermission =
+    const hasViewPermission =
         (permissionsLoaded && checkPermission(Permission.GRAPH_DB_INGEST)) ||
-        (permissionsLoaded && checkPermission(Permission.AUTH_READ_USERS));
+        (permissionsLoaded && checkPermission(Permission.AUTH_MANAGE_SELF));
+    //const hasAuthReadUsersPermission = permissionsLoaded && checkPermission(Permission.AUTH_READ_USERS);
 
     const { addNotification, dismissNotification } = useNotifications();
 
     useEffect(() => {
-        if (!hasPermission) {
+        if (!hasViewPermission) {
             addNotification(FILE_INGEST_NO_PERMISSION_MESSAGE, FILE_INGEST_NO_PERMISSION_KEY, PERSIST_NOTIFICATION);
         }
 
         return () => dismissNotification(FILE_INGEST_NO_PERMISSION_KEY);
-    }, [addNotification, dismissNotification, hasPermission]);
+    }, [addNotification, dismissNotification, hasViewPermission]);
 
     return useQuery<ListFileIngestJobsResponse>({
-        enabled: Boolean(permissionsLoaded && hasPermission),
+        enabled: hasViewPermission,
         keepPreviousData: true, // Prevent count from resetting to 0 between page fetches
         onError: () => addNotification(FILE_INGEST_FETCH_ERROR_MESSAGE, FILE_INGEST_FETCH_ERROR_KEY),
         queryFn: ({ signal }) =>
