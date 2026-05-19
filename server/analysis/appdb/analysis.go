@@ -24,20 +24,27 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/specterops/bloodhound/server/analysis/service"
-	"github.com/specterops/bloodhound/server/pgxutils"
 	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/im"
 	"github.com/stephenafamo/bob/dialect/psql/sm"
 )
 
+// pgxQuerier is the minimal pgx surface the analysis Store relies on. Each
+// appdb package defines its own copy so the abstraction stays scoped to the
+// methods actually exercised here.
+type pgxQuerier interface {
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+}
+
 // Store performs analysis-request persistence operations directly against a PostgreSQL
 // connection. Callers receive appdb-level sentinels rather than raw driver errors.
 type Store struct {
-	db pgxutils.PgxQuerier
+	db pgxQuerier
 }
 
 // NewStore returns a Store backed by the provided pgx connection pool.
-func NewStore(db pgxutils.PgxQuerier) *Store {
+func NewStore(db pgxQuerier) *Store {
 	return &Store{db: db}
 }
 
