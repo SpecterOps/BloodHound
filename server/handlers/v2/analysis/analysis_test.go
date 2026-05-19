@@ -24,6 +24,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	analysishandlers "github.com/specterops/bloodhound/server/handlers/v2/analysis"
 	analysisMocks "github.com/specterops/bloodhound/server/handlers/v2/analysis/mocks"
 	"github.com/specterops/bloodhound/server/models"
@@ -32,6 +36,19 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
+
+// newAuthenticatedRequest returns an *http.Request whose context carries a
+// bhctx.Context with the supplied user wired in as the auth Owner. This mirrors
+// what the auth middleware does for real requests.
+func newAuthenticatedRequest(t *testing.T, method, target string, userID uuid.UUID) *http.Request {
+	t.Helper()
+	req, err := http.NewRequest(method, target, nil)
+	require.NoError(t, err)
+	bhCtx := &bhctx.Context{
+		AuthCtx: auth.Context{Owner: model.User{Unique: model.Unique{ID: userID}}},
+	}
+	return bhctx.SetRequestContext(req, bhCtx)
+}
 
 func TestHandlers_GetRequest(t *testing.T) {
 	newRequest := func(t *testing.T) *http.Request {
@@ -73,7 +90,7 @@ func TestHandlers_GetRequest(t *testing.T) {
 		assert.Equal(t, expected.DeleteRelationships, envelope.Data.DeleteRelationships)
 	})
 
-	t.Run("returns 200 with a zero-value view when no request is pending", func(t *testing.T) {
+	t.Run("returns 404 with an error envelope when no request is pending", func(t *testing.T) {
 		var (
 			analysisMock = analysisMocks.NewMockAnalysis(t)
 			handlers     = analysishandlers.NewHandlersContainer(analysisMock)
@@ -85,13 +102,9 @@ func TestHandlers_GetRequest(t *testing.T) {
 
 		handlers.GetRequest(recorder, request)
 
-		assert.Equal(t, http.StatusOK, recorder.Code)
-
-		var envelope struct {
-			Data analysishandlers.RequestedAnalysisView `json:"data"`
-		}
-		require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &envelope))
-		assert.Empty(t, envelope.Data.RequestedBy)
+		assert.Equal(t, http.StatusNotFound, recorder.Code)
+		assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
+		assert.Contains(t, recorder.Body.String(), "no analysis request is currently pending")
 	})
 
 	t.Run("returns 500 on unexpected service errors", func(t *testing.T) {
@@ -112,27 +125,79 @@ func TestHandlers_GetRequest(t *testing.T) {
 }
 
 func TestHandlers_CreateRequest(t *testing.T) {
-	newRequest := func(t *testing.T) *http.Request {
+	var (
+		userID        = uuid.Must(uuid.NewV4())
+		userIDString  = userID.String()
+		requestedAt   = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+		createdResult = models.RequestedAnalysis{
+			RequestedBy: userIDString,
+			RequestType: models.RequestedAnalysisTypeAnalysis,
+			RequestedAt: requestedAt,
+		}
+		existingResult = models.RequestedAnalysis{
+			RequestedBy: "other-user",
+			RequestType: models.RequestedAnalysisTypeAnalysis,
+			RequestedAt: requestedAt,
+		}
+	)
+
+	decodeBody := func(t *testing.T, body []byte) analysishandlers.RequestedAnalysisView {
 		t.Helper()
-		req, err := http.NewRequest(http.MethodPut, "/api/v2/analysis", nil)
-		require.NoError(t, err)
-		return req
+		var envelope struct {
+			Data analysishandlers.RequestedAnalysisView `json:"data"`
+		}
+		require.NoError(t, json.Unmarshal(body, &envelope))
+		return envelope.Data
 	}
 
-	t.Run("returns 202 Accepted on success", func(t *testing.T) {
+	t.Run("returns 201 Created with the new request body when this call accepted it", func(t *testing.T) {
 		var (
 			analysisMock = analysisMocks.NewMockAnalysis(t)
 			handlers     = analysishandlers.NewHandlersContainer(analysisMock)
 			recorder     = httptest.NewRecorder()
-			request      = newRequest(t)
+			request      = newAuthenticatedRequest(t, http.MethodPut, "/api/v2/analysis", userID)
 		)
 
-		// No auth context present — handler falls back to "unknown-user".
-		analysisMock.EXPECT().CreateRequest(mock.Anything, "unknown-user").Return(models.RequestedAnalysis{}, true, nil)
+		analysisMock.EXPECT().CreateRequest(mock.Anything, userIDString).Return(createdResult, true, nil)
 
 		handlers.CreateRequest(recorder, request)
 
-		assert.Equal(t, http.StatusAccepted, recorder.Code)
+		assert.Equal(t, http.StatusCreated, recorder.Code)
+		assert.Equal(t, userIDString, decodeBody(t, recorder.Body.Bytes()).RequestedBy)
+	})
+
+	t.Run("returns 200 OK with the existing request body when one was already pending", func(t *testing.T) {
+		var (
+			analysisMock = analysisMocks.NewMockAnalysis(t)
+			handlers     = analysishandlers.NewHandlersContainer(analysisMock)
+			recorder     = httptest.NewRecorder()
+			request      = newAuthenticatedRequest(t, http.MethodPut, "/api/v2/analysis", userID)
+		)
+
+		analysisMock.EXPECT().CreateRequest(mock.Anything, userIDString).Return(existingResult, false, nil)
+
+		handlers.CreateRequest(recorder, request)
+
+		assert.Equal(t, http.StatusOK, recorder.Code)
+		assert.Equal(t, existingResult.RequestedBy, decodeBody(t, recorder.Body.Bytes()).RequestedBy)
+	})
+
+	t.Run("returns 401 Unauthorized when no authenticated user is present", func(t *testing.T) {
+		var (
+			analysisMock = analysisMocks.NewMockAnalysis(t)
+			handlers     = analysishandlers.NewHandlersContainer(analysisMock)
+			recorder     = httptest.NewRecorder()
+		)
+
+		req, err := http.NewRequest(http.MethodPut, "/api/v2/analysis", nil)
+		require.NoError(t, err)
+
+		handlers.CreateRequest(recorder, req)
+
+		assert.Equal(t, http.StatusUnauthorized, recorder.Code)
+		assert.Contains(t, recorder.Body.String(), "authentication is required")
+		// The service must not be invoked when authentication fails.
+		analysisMock.AssertNotCalled(t, "CreateRequest", mock.Anything, mock.Anything)
 	})
 
 	t.Run("returns 500 on service error", func(t *testing.T) {
@@ -141,10 +206,10 @@ func TestHandlers_CreateRequest(t *testing.T) {
 			analysisMock = analysisMocks.NewMockAnalysis(t)
 			handlers     = analysishandlers.NewHandlersContainer(analysisMock)
 			recorder     = httptest.NewRecorder()
-			request      = newRequest(t)
+			request      = newAuthenticatedRequest(t, http.MethodPut, "/api/v2/analysis", userID)
 		)
 
-		analysisMock.EXPECT().CreateRequest(mock.Anything, "unknown-user").Return(models.RequestedAnalysis{}, false, expectedErr)
+		analysisMock.EXPECT().CreateRequest(mock.Anything, userIDString).Return(models.RequestedAnalysis{}, false, expectedErr)
 
 		handlers.CreateRequest(recorder, request)
 

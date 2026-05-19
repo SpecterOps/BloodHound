@@ -28,11 +28,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	appdbAnalysis "github.com/specterops/bloodhound/server/appdb/analysis"
 	analysisHandlers "github.com/specterops/bloodhound/server/handlers/v2/analysis"
@@ -40,6 +43,19 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// injectAuthMiddleware wraps the given handler, attaching a bhctx.Context that
+// identifies the supplied user as the request owner. This stands in for the
+// production auth middleware so the analysis handler can resolve a user without
+// requiring the full auth stack.
+func injectAuthMiddleware(handler http.HandlerFunc, userID uuid.UUID) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		bhCtx := &bhctx.Context{
+			AuthCtx: auth.Context{Owner: model.User{Unique: model.Unique{ID: userID}}},
+		}
+		handler(w, bhctx.SetRequestContext(r, bhCtx))
+	}
+}
 
 // analysisStatusEnvelope is a minimal JSON envelope covering the fields
 // returned by the GET /api/v2/analysis handler.
@@ -72,16 +88,12 @@ func runGetAnalysisStatusSuite(t *testing.T, db *database.BloodhoundDB, handler 
 		return req
 	}
 
-	t.Run("returns 200 with empty data when no request is pending", func(t *testing.T) {
+	t.Run("returns 404 when no request is pending", func(t *testing.T) {
 		resp, err := http.DefaultClient.Do(newGetRequest(t))
 		require.NoError(t, err)
 		defer resp.Body.Close()
 
-		assert.Equal(t, http.StatusOK, resp.StatusCode)
-
-		var envelope analysisStatusEnvelope
-		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
-		assert.Empty(t, envelope.Data.RequestedBy)
+		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 	})
 
 	t.Run("returns 200 with requester details when a request is pending", func(t *testing.T) {
@@ -182,16 +194,17 @@ func TestGetAnalysisStatus(t *testing.T) {
 }
 
 // newCreateAnalysisHandler wires the pgx-backed analysis stack from a BloodhoundDB
-// and returns its PUT handler ready to pass to runCreateAnalysisRequestSuite.
-func newCreateAnalysisHandler(db *database.BloodhoundDB) http.HandlerFunc {
+// and returns its PUT handler (wrapped with auth-injecting middleware) ready to
+// pass to runCreateAnalysisRequestSuite.
+func newCreateAnalysisHandler(db *database.BloodhoundDB, userID uuid.UUID) http.HandlerFunc {
 	store := appdbAnalysis.NewStore(db.Pool())
 	svc := analysisService.NewService(store)
-	return analysisHandlers.NewHandlersContainer(svc).CreateRequest
+	return injectAuthMiddleware(analysisHandlers.NewHandlersContainer(svc).CreateRequest, userID)
 }
 
 // runCreateAnalysisRequestSuite exercises PUT /api/v2/analysis.
 // It shares the same GET handler infrastructure to verify end-to-end state.
-func runCreateAnalysisRequestSuite(t *testing.T, db *database.BloodhoundDB, putHandler http.HandlerFunc) {
+func runCreateAnalysisRequestSuite(t *testing.T, db *database.BloodhoundDB, userID uuid.UUID, putHandler http.HandlerFunc) {
 	t.Helper()
 
 	var (
@@ -218,12 +231,29 @@ func runCreateAnalysisRequestSuite(t *testing.T, db *database.BloodhoundDB, putH
 		return req
 	}
 
-	t.Run("returns 202 Accepted when analysis request is submitted", func(t *testing.T) {
+	t.Run("returns 201 Created and persists the new request on first PUT", func(t *testing.T) {
+		require.NoError(t, db.DeleteAnalysisRequest(ctx))
+
 		resp, err := http.DefaultClient.Do(newPutRequest(t))
 		require.NoError(t, err)
 		defer resp.Body.Close()
 
-		assert.Equal(t, http.StatusAccepted, resp.StatusCode)
+		assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+		var envelope analysisStatusEnvelope
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+		assert.Equal(t, userID.String(), envelope.Data.RequestedBy)
+		assert.Equal(t, "analysis", envelope.Data.RequestType)
+	})
+
+	t.Run("returns 200 OK with the existing request on a second PUT", func(t *testing.T) {
+		// Following the previous subtest, a request is already pending. A second
+		// PUT must be idempotent and return the existing request with 200 OK.
+		resp, err := http.DefaultClient.Do(newPutRequest(t))
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
 	})
 
 	t.Run("GET reflects pending request after PUT", func(t *testing.T) {
@@ -232,7 +262,7 @@ func runCreateAnalysisRequestSuite(t *testing.T, db *database.BloodhoundDB, putH
 		resp, err := http.DefaultClient.Do(newPutRequest(t))
 		require.NoError(t, err)
 		defer resp.Body.Close()
-		require.Equal(t, http.StatusAccepted, resp.StatusCode)
+		require.Equal(t, http.StatusCreated, resp.StatusCode)
 
 		resp, err = http.DefaultClient.Do(newGetRequest(t))
 		require.NoError(t, err)
@@ -248,7 +278,10 @@ func runCreateAnalysisRequestSuite(t *testing.T, db *database.BloodhoundDB, putH
 
 func TestCreateAnalysisRequest(t *testing.T) {
 	t.Run("new handler", func(t *testing.T) {
-		db := setupAnalysisDB(t)
-		runCreateAnalysisRequestSuite(t, db, newCreateAnalysisHandler(db))
+		var (
+			db     = setupAnalysisDB(t)
+			userID = uuid.Must(uuid.NewV4())
+		)
+		runCreateAnalysisRequestSuite(t, db, userID, newCreateAnalysisHandler(db, userID))
 	})
 }

@@ -21,7 +21,6 @@ package analysis
 import (
 	"context"
 	"errors"
-	"log/slog"
 	"net/http"
 
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -29,6 +28,11 @@ import (
 	"github.com/specterops/bloodhound/server/jsonapi/v2/responses"
 	"github.com/specterops/bloodhound/server/models"
 	"github.com/specterops/bloodhound/server/services/analysis"
+)
+
+const (
+	errMessageNoPendingRequest = "no analysis request is currently pending"
+	errMessageUnauthenticated  = "authentication is required to submit an analysis request"
 )
 
 // Analysis defines the analysis service boundary for the analysis handlers package.
@@ -49,14 +53,18 @@ func NewHandlersContainer(analysis Analysis) *Handlers {
 	}
 }
 
-// GetRequest returns the currently pending analysis request.
-// A 200 with a zero-value body is returned when no request is pending; 200
-// with the request details otherwise.
-func (h Handlers) GetRequest(response http.ResponseWriter, request *http.Request) {
+// GetRequest returns the currently pending analysis request. Returns 200 with the
+// request details when one is pending, or 404 with an error envelope when no request
+// is currently pending.
+func (s Handlers) GetRequest(response http.ResponseWriter, request *http.Request) {
 	var ctx = request.Context()
 
-	ra, err := h.analysis.GetRequest(ctx)
-	if err != nil && !errors.Is(err, analysis.ErrNoPendingRequest) {
+	ra, err := s.analysis.GetRequest(ctx)
+	if errors.Is(err, analysis.ErrNoPendingRequest) {
+		responses.WriteError(ctx, http.StatusNotFound, errMessageNoPendingRequest, response)
+		return
+	}
+	if err != nil {
 		responses.WriteInternalServerError(request, err, response)
 		return
 	}
@@ -65,26 +73,27 @@ func (h Handlers) GetRequest(response http.ResponseWriter, request *http.Request
 }
 
 // CreateRequest submits a new analysis request attributed to the authenticated user.
-// Returns 202 Accepted on success. If no auth context is present, the request is
-// attributed to "unknown-user" (matching legacy behaviour).
-func (h Handlers) CreateRequest(response http.ResponseWriter, request *http.Request) {
-	var (
-		ctx    = request.Context()
-		userID string
-	)
+// Returns 201 Created when this call accepted the request, 200 OK when a request was
+// already pending (the body in both cases describes the currently pending request), or
+// 401 Unauthorized when no authenticated user can be resolved from the request.
+func (s Handlers) CreateRequest(response http.ResponseWriter, request *http.Request) {
+	var ctx = request.Context()
 
-	if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
-		slog.WarnContext(ctx, "Encountered request analysis for unknown user, this shouldn't happen")
-		userID = "unknown-user"
-	} else {
-		userID = user.ID.String()
+	user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx)
+	if !isUser {
+		responses.WriteError(ctx, http.StatusUnauthorized, errMessageUnauthenticated, response)
+		return
 	}
 
-	_, _, err := h.analysis.CreateRequest(ctx, userID)
+	current, created, err := s.analysis.CreateRequest(ctx, user.ID.String())
 	if err != nil {
 		responses.WriteInternalServerError(request, err, response)
 		return
 	}
 
-	response.WriteHeader(http.StatusAccepted)
+	statusCode := http.StatusOK
+	if created {
+		statusCode = http.StatusCreated
+	}
+	responses.WriteBasic(ctx, BuildRequestedAnalysisView(current), statusCode, response)
 }
