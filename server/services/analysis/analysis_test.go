@@ -80,3 +80,34 @@ func TestService_GetRequest(t *testing.T) {
 		assert.ErrorIs(t, err, unexpectedErr)
 	})
 }
+
+func TestService_CreateRequest(t *testing.T) {
+	var (
+		ctx       = context.Background()
+		requester = "test-user"
+	)
+
+	t.Run("returns nil on success", func(t *testing.T) {
+		var (
+			databaseMock = analysisMocks.NewMockDatabase(t)
+			svc          = analysis.NewService(databaseMock)
+		)
+
+		databaseMock.EXPECT().CreateAnalysisRequest(ctx, requester).Return(nil)
+
+		require.NoError(t, svc.CreateRequest(ctx, requester))
+	})
+
+	t.Run("propagates database errors", func(t *testing.T) {
+		var (
+			expectedErr  = errors.New("db unavailable")
+			databaseMock = analysisMocks.NewMockDatabase(t)
+			svc          = analysis.NewService(databaseMock)
+		)
+
+		databaseMock.EXPECT().CreateAnalysisRequest(ctx, requester).Return(expectedErr)
+
+		err := svc.CreateRequest(ctx, requester)
+		assert.ErrorIs(t, err, expectedErr)
+	})
+}
