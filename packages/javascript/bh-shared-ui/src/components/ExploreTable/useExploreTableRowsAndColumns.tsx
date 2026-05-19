@@ -57,7 +57,6 @@ const useExploreTableRowsAndColumns = ({
 }: UseExploreTableRowsAndColumnsProps) => {
     const [sortBy, setSortBy] = useState<keyof MungedTableRowWithId>();
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>();
-    // const [announcement, setAnnouncement] = useState('');
     const announce = useAnnounce();
 
     const rows: MungedTableRowWithId[] = useMemo(
@@ -165,6 +164,9 @@ const useExploreTableRowsAndColumns = ({
                 id: 'action-menu',
                 size: 50,
                 maxSize: 50,
+                header: () => {
+                    return <span className='sr-only'>Action Menu</span>;
+                },
                 cell: ({ row }) => (
                     <div
                         tabIndex={0}
