@@ -32,7 +32,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	appdbAnalysis "github.com/specterops/bloodhound/server/appdb/analysis"
-	"github.com/specterops/bloodhound/server/models"
+	analysisservice "github.com/specterops/bloodhound/server/services/analysis"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -115,7 +115,7 @@ func TestStore_CreateAnalysisRequest_Integration(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, created)
 		assert.Equal(t, "first-user", current.RequestedBy)
-		assert.Equal(t, models.RequestedAnalysisTypeAnalysis, current.RequestType)
+		assert.Equal(t, analysisservice.RequestedAnalysisTypeAnalysis, current.RequestType)
 	})
 
 	t.Run("second call is a no-op and reports created=false with the original requester", func(t *testing.T) {

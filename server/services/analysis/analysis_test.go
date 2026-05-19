@@ -22,8 +22,6 @@ import (
 	"testing"
 	"time"
 
-	appdbAnalysis "github.com/specterops/bloodhound/server/appdb/analysis"
-	"github.com/specterops/bloodhound/server/models"
 	"github.com/specterops/bloodhound/server/services/analysis"
 	analysisMocks "github.com/specterops/bloodhound/server/services/analysis/mocks"
 	"github.com/stretchr/testify/assert"
@@ -35,9 +33,9 @@ func TestService_GetRequest(t *testing.T) {
 
 	t.Run("returns the analysis request on success", func(t *testing.T) {
 		var (
-			expected = models.RequestedAnalysis{
+			expected = analysis.RequestedAnalysis{
 				RequestedBy:           "test-user",
-				RequestType:           models.RequestedAnalysisTypeAnalysis,
+				RequestType:           analysis.RequestedAnalysisTypeAnalysis,
 				RequestedAt:           time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 				DeleteAllGraph:        true,
 				DeleteSourcelessGraph: false,
@@ -61,7 +59,7 @@ func TestService_GetRequest(t *testing.T) {
 			svc          = analysis.NewService(databaseMock)
 		)
 
-		databaseMock.EXPECT().GetAnalysisRequest(ctx).Return(models.RequestedAnalysis{}, appdbAnalysis.ErrNotFound)
+		databaseMock.EXPECT().GetAnalysisRequest(ctx).Return(analysis.RequestedAnalysis{}, analysis.ErrNotFound)
 
 		_, err := svc.GetRequest(ctx)
 		assert.ErrorIs(t, err, analysis.ErrNoPendingRequest)
@@ -74,7 +72,7 @@ func TestService_GetRequest(t *testing.T) {
 			svc           = analysis.NewService(databaseMock)
 		)
 
-		databaseMock.EXPECT().GetAnalysisRequest(ctx).Return(models.RequestedAnalysis{}, unexpectedErr)
+		databaseMock.EXPECT().GetAnalysisRequest(ctx).Return(analysis.RequestedAnalysis{}, unexpectedErr)
 
 		_, err := svc.GetRequest(ctx)
 		assert.ErrorIs(t, err, unexpectedErr)
@@ -89,9 +87,9 @@ func TestService_CreateRequest(t *testing.T) {
 
 	t.Run("returns created=true and the new request on success", func(t *testing.T) {
 		var (
-			expected = models.RequestedAnalysis{
+			expected = analysis.RequestedAnalysis{
 				RequestedBy: requester,
-				RequestType: models.RequestedAnalysisTypeAnalysis,
+				RequestType: analysis.RequestedAnalysisTypeAnalysis,
 				RequestedAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			}
 			databaseMock = analysisMocks.NewMockDatabase(t)
@@ -108,9 +106,9 @@ func TestService_CreateRequest(t *testing.T) {
 
 	t.Run("returns created=false and the existing request when one is already pending", func(t *testing.T) {
 		var (
-			existing = models.RequestedAnalysis{
+			existing = analysis.RequestedAnalysis{
 				RequestedBy: "other-user",
-				RequestType: models.RequestedAnalysisTypeAnalysis,
+				RequestType: analysis.RequestedAnalysisTypeAnalysis,
 				RequestedAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			}
 			databaseMock = analysisMocks.NewMockDatabase(t)
@@ -132,7 +130,7 @@ func TestService_CreateRequest(t *testing.T) {
 			svc          = analysis.NewService(databaseMock)
 		)
 
-		databaseMock.EXPECT().CreateAnalysisRequest(ctx, requester).Return(models.RequestedAnalysis{}, false, expectedErr)
+		databaseMock.EXPECT().CreateAnalysisRequest(ctx, requester).Return(analysis.RequestedAnalysis{}, false, expectedErr)
 
 		_, _, err := svc.CreateRequest(ctx, requester)
 		assert.ErrorIs(t, err, expectedErr)

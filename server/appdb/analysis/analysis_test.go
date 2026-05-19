@@ -24,7 +24,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/pashagolub/pgxmock/v4"
-	"github.com/specterops/bloodhound/server/models"
+	"github.com/specterops/bloodhound/server/services/analysis"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -60,9 +60,9 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 
 	t.Run("successfully returns an analysis request", func(t *testing.T) {
 		var (
-			expected = models.RequestedAnalysis{
+			expected = analysis.RequestedAnalysis{
 				RequestedBy:           "test-user",
-				RequestType:           models.RequestedAnalysisTypeAnalysis,
+				RequestType:           analysis.RequestedAnalysisTypeAnalysis,
 				RequestedAt:           time.Now(),
 				DeleteAllGraph:        true,
 				DeleteSourcelessGraph: false,
@@ -96,7 +96,7 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 		pool.ExpectQuery(expectedSelectSQL).WillReturnError(pgx.ErrNoRows)
 
 		_, err := store.GetAnalysisRequest(ctx)
-		assert.ErrorIs(t, err, ErrNotFound)
+		assert.ErrorIs(t, err, analysis.ErrNotFound)
 		require.NoError(t, pool.ExpectationsWereMet())
 	})
 
@@ -126,7 +126,7 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 		pool.ExpectExec(expectedInsertSQL).
 			WithArgs(
 				requester,
-				string(models.RequestedAnalysisTypeAnalysis),
+				string(analysis.RequestedAnalysisTypeAnalysis),
 				pgxmock.AnyArg(), // now
 				false,
 				false,
@@ -138,7 +138,7 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 		pool.ExpectQuery(expectedSelectSQL).WillReturnRows(
 			pool.NewRows(analysisRequestRowColumns()).AddRow(
 				requester,
-				string(models.RequestedAnalysisTypeAnalysis),
+				string(analysis.RequestedAnalysisTypeAnalysis),
 				time.Now().UTC(),
 				false,
 				false,
@@ -157,9 +157,9 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 	t.Run("returns created=false and the existing request when a row already exists", func(t *testing.T) {
 		var (
 			store, pool = newTestStore(t)
-			existing    = models.RequestedAnalysis{
+			existing    = analysis.RequestedAnalysis{
 				RequestedBy: "other-user",
-				RequestType: models.RequestedAnalysisTypeAnalysis,
+				RequestType: analysis.RequestedAnalysisTypeAnalysis,
 				RequestedAt: time.Now().UTC(),
 			}
 		)
@@ -170,7 +170,7 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 		pool.ExpectExec(expectedInsertSQL).
 			WithArgs(
 				requester,
-				string(models.RequestedAnalysisTypeAnalysis),
+				string(analysis.RequestedAnalysisTypeAnalysis),
 				pgxmock.AnyArg(),
 				false,
 				false,

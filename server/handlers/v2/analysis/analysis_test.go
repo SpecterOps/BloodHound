@@ -30,7 +30,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	analysishandlers "github.com/specterops/bloodhound/server/handlers/v2/analysis"
 	analysisMocks "github.com/specterops/bloodhound/server/handlers/v2/analysis/mocks"
-	"github.com/specterops/bloodhound/server/models"
 	analysisservice "github.com/specterops/bloodhound/server/services/analysis"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -60,9 +59,9 @@ func TestHandlers_GetRequest(t *testing.T) {
 
 	t.Run("returns 200 with the analysis request view on success", func(t *testing.T) {
 		var (
-			expected = models.RequestedAnalysis{
+			expected = analysisservice.RequestedAnalysis{
 				RequestedBy:         "test-user",
-				RequestType:         models.RequestedAnalysisTypeAnalysis,
+				RequestType:         analysisservice.RequestedAnalysisTypeAnalysis,
 				RequestedAt:         time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 				DeleteSourceKinds:   []string{"AZBase"},
 				DeleteRelationships: []string{"HasSession"},
@@ -98,7 +97,7 @@ func TestHandlers_GetRequest(t *testing.T) {
 			request      = newRequest(t)
 		)
 
-		analysisMock.EXPECT().GetRequest(mock.Anything).Return(models.RequestedAnalysis{}, analysisservice.ErrNoPendingRequest)
+		analysisMock.EXPECT().GetRequest(mock.Anything).Return(analysisservice.RequestedAnalysis{}, analysisservice.ErrNoPendingRequest)
 
 		handlers.GetRequest(recorder, request)
 
@@ -115,7 +114,7 @@ func TestHandlers_GetRequest(t *testing.T) {
 			request       = newRequest(t)
 		)
 
-		analysisMock.EXPECT().GetRequest(mock.Anything).Return(models.RequestedAnalysis{}, unexpectedErr)
+		analysisMock.EXPECT().GetRequest(mock.Anything).Return(analysisservice.RequestedAnalysis{}, unexpectedErr)
 
 		handlers.GetRequest(recorder, request)
 
@@ -128,14 +127,14 @@ func TestHandlers_CreateRequest(t *testing.T) {
 		userID        = uuid.Must(uuid.NewV4())
 		userIDString  = userID.String()
 		requestedAt   = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-		createdResult = models.RequestedAnalysis{
+		createdResult = analysisservice.RequestedAnalysis{
 			RequestedBy: userIDString,
-			RequestType: models.RequestedAnalysisTypeAnalysis,
+			RequestType: analysisservice.RequestedAnalysisTypeAnalysis,
 			RequestedAt: requestedAt,
 		}
-		existingResult = models.RequestedAnalysis{
+		existingResult = analysisservice.RequestedAnalysis{
 			RequestedBy: "other-user",
-			RequestType: models.RequestedAnalysisTypeAnalysis,
+			RequestType: analysisservice.RequestedAnalysisTypeAnalysis,
 			RequestedAt: requestedAt,
 		}
 	)
@@ -208,7 +207,7 @@ func TestHandlers_CreateRequest(t *testing.T) {
 			request      = newAuthenticatedRequest(t, http.MethodPut, "/api/v2/analysis", userID)
 		)
 
-		analysisMock.EXPECT().CreateRequest(mock.Anything, userIDString).Return(models.RequestedAnalysis{}, false, expectedErr)
+		analysisMock.EXPECT().CreateRequest(mock.Anything, userIDString).Return(analysisservice.RequestedAnalysis{}, false, expectedErr)
 
 		handlers.CreateRequest(recorder, request)
 

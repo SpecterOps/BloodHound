@@ -22,7 +22,7 @@ package mocks
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/server/models"
+	analysis "github.com/specterops/bloodhound/server/services/analysis"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -54,23 +54,23 @@ func (_m *MockAnalysis) EXPECT() *MockAnalysis_Expecter {
 }
 
 // CreateRequest provides a mock function for the type MockAnalysis
-func (_mock *MockAnalysis) CreateRequest(ctx context.Context, requestedBy string) (models.RequestedAnalysis, bool, error) {
+func (_mock *MockAnalysis) CreateRequest(ctx context.Context, requestedBy string) (analysis.RequestedAnalysis, bool, error) {
 	ret := _mock.Called(ctx, requestedBy)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateRequest")
 	}
 
-	var r0 models.RequestedAnalysis
+	var r0 analysis.RequestedAnalysis
 	var r1 bool
 	var r2 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (models.RequestedAnalysis, bool, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (analysis.RequestedAnalysis, bool, error)); ok {
 		return returnFunc(ctx, requestedBy)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) models.RequestedAnalysis); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) analysis.RequestedAnalysis); ok {
 		r0 = returnFunc(ctx, requestedBy)
 	} else {
-		r0 = ret.Get(0).(models.RequestedAnalysis)
+		r0 = ret.Get(0).(analysis.RequestedAnalysis)
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string) bool); ok {
 		r1 = returnFunc(ctx, requestedBy)
@@ -115,33 +115,33 @@ func (_c *MockAnalysis_CreateRequest_Call) Run(run func(ctx context.Context, req
 	return _c
 }
 
-func (_c *MockAnalysis_CreateRequest_Call) Return(requestedAnalysis models.RequestedAnalysis, b bool, err error) *MockAnalysis_CreateRequest_Call {
+func (_c *MockAnalysis_CreateRequest_Call) Return(requestedAnalysis analysis.RequestedAnalysis, b bool, err error) *MockAnalysis_CreateRequest_Call {
 	_c.Call.Return(requestedAnalysis, b, err)
 	return _c
 }
 
-func (_c *MockAnalysis_CreateRequest_Call) RunAndReturn(run func(ctx context.Context, requestedBy string) (models.RequestedAnalysis, bool, error)) *MockAnalysis_CreateRequest_Call {
+func (_c *MockAnalysis_CreateRequest_Call) RunAndReturn(run func(ctx context.Context, requestedBy string) (analysis.RequestedAnalysis, bool, error)) *MockAnalysis_CreateRequest_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // GetRequest provides a mock function for the type MockAnalysis
-func (_mock *MockAnalysis) GetRequest(context1 context.Context) (models.RequestedAnalysis, error) {
+func (_mock *MockAnalysis) GetRequest(context1 context.Context) (analysis.RequestedAnalysis, error) {
 	ret := _mock.Called(context1)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetRequest")
 	}
 
-	var r0 models.RequestedAnalysis
+	var r0 analysis.RequestedAnalysis
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context) (models.RequestedAnalysis, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context) (analysis.RequestedAnalysis, error)); ok {
 		return returnFunc(context1)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context) models.RequestedAnalysis); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context) analysis.RequestedAnalysis); ok {
 		r0 = returnFunc(context1)
 	} else {
-		r0 = ret.Get(0).(models.RequestedAnalysis)
+		r0 = ret.Get(0).(analysis.RequestedAnalysis)
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
 		r1 = returnFunc(context1)
@@ -175,12 +175,12 @@ func (_c *MockAnalysis_GetRequest_Call) Run(run func(context1 context.Context)) 
 	return _c
 }
 
-func (_c *MockAnalysis_GetRequest_Call) Return(requestedAnalysis models.RequestedAnalysis, err error) *MockAnalysis_GetRequest_Call {
+func (_c *MockAnalysis_GetRequest_Call) Return(requestedAnalysis analysis.RequestedAnalysis, err error) *MockAnalysis_GetRequest_Call {
 	_c.Call.Return(requestedAnalysis, err)
 	return _c
 }
 
-func (_c *MockAnalysis_GetRequest_Call) RunAndReturn(run func(context1 context.Context) (models.RequestedAnalysis, error)) *MockAnalysis_GetRequest_Call {
+func (_c *MockAnalysis_GetRequest_Call) RunAndReturn(run func(context1 context.Context) (analysis.RequestedAnalysis, error)) *MockAnalysis_GetRequest_Call {
 	_c.Call.Return(run)
 	return _c
 }

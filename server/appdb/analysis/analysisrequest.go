@@ -19,11 +19,11 @@ package analysis
 import (
 	"time"
 
-	"github.com/specterops/bloodhound/server/models"
+	"github.com/specterops/bloodhound/server/services/analysis"
 )
 
 // analysisRequest is the package-local representation of a row in the analysis_request_switch table.
-// It exists only to hold raw scanned values; callers receive the application-level models.RequestedAnalysis.
+// It exists only to hold raw scanned values; callers receive the application-level analysis.RequestedAnalysis.
 type analysisRequest struct {
 	RequestedBy           string
 	RequestType           string
@@ -34,11 +34,11 @@ type analysisRequest struct {
 	DeleteRelationships   []string
 }
 
-// toRequestedAnalysis translates a raw DB row into the shared application model.
-func toRequestedAnalysis(row analysisRequest) models.RequestedAnalysis {
-	return models.RequestedAnalysis{
+// toRequestedAnalysis translates a raw DB row into the domain model.
+func toRequestedAnalysis(row analysisRequest) analysis.RequestedAnalysis {
+	return analysis.RequestedAnalysis{
 		RequestedBy:           row.RequestedBy,
-		RequestType:           models.RequestedAnalysisType(row.RequestType),
+		RequestType:           analysis.RequestedAnalysisType(row.RequestType),
 		RequestedAt:           row.RequestedAt,
 		DeleteAllGraph:        row.DeleteAllGraph,
 		DeleteSourcelessGraph: row.DeleteSourcelessGraph,

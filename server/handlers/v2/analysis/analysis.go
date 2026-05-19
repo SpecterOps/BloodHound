@@ -26,7 +26,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/server/jsonapi/v2/responses"
-	"github.com/specterops/bloodhound/server/models"
 	"github.com/specterops/bloodhound/server/services/analysis"
 )
 
@@ -36,8 +35,8 @@ const (
 
 // Analysis defines the analysis service boundary for the analysis handlers package.
 type Analysis interface {
-	GetRequest(context.Context) (models.RequestedAnalysis, error)
-	CreateRequest(ctx context.Context, requestedBy string) (models.RequestedAnalysis, bool, error)
+	GetRequest(context.Context) (analysis.RequestedAnalysis, error)
+	CreateRequest(ctx context.Context, requestedBy string) (analysis.RequestedAnalysis, bool, error)
 }
 
 // Handlers is a dependency injection container for analysis handlers

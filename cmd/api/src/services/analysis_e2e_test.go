@@ -37,7 +37,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
-	appdbAnalysis "github.com/specterops/bloodhound/server/appdb/analysis"
+	analysisAppdb "github.com/specterops/bloodhound/server/appdb/analysis"
 	analysisHandlers "github.com/specterops/bloodhound/server/handlers/v2/analysis"
 	analysisService "github.com/specterops/bloodhound/server/services/analysis"
 	"github.com/stretchr/testify/assert"
@@ -181,7 +181,7 @@ func getAnalysisPostgresConfig(t *testing.T) pgtestdb.Config {
 // newAnalysisHandler wires the pgx-backed analysis stack from a BloodhoundDB
 // and returns its GET handler ready to pass to runGetAnalysisStatusSuite.
 func newAnalysisHandler(db *database.BloodhoundDB) http.HandlerFunc {
-	store := appdbAnalysis.NewStore(db.Pool())
+	store := analysisAppdb.NewStore(db.Pool())
 	svc := analysisService.NewService(store)
 	return analysisHandlers.NewHandlersContainer(svc).GetRequest
 }
@@ -197,7 +197,7 @@ func TestGetAnalysisStatus(t *testing.T) {
 // and returns its PUT handler (wrapped with auth-injecting middleware) ready to
 // pass to runCreateAnalysisRequestSuite.
 func newCreateAnalysisHandler(db *database.BloodhoundDB, userID uuid.UUID) http.HandlerFunc {
-	store := appdbAnalysis.NewStore(db.Pool())
+	store := analysisAppdb.NewStore(db.Pool())
 	svc := analysisService.NewService(store)
 	return injectAuthMiddleware(analysisHandlers.NewHandlersContainer(svc).CreateRequest, userID)
 }
