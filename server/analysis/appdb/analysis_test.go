@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package appdb
+package appdb_test
 
 import (
 	"context"
@@ -24,6 +24,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/pashagolub/pgxmock/v4"
+	"github.com/specterops/bloodhound/server/analysis/appdb"
 	"github.com/specterops/bloodhound/server/analysis/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -39,12 +40,12 @@ const (
 	expectedInsertSQL = `INSERT INTO analysis_request_switch("requested_by", "request_type", "requested_at", "delete_all_graph", "delete_sourceless_graph", "delete_source_kinds", "delete_relationships") VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (singleton) DO NOTHING`
 )
 
-func newTestStore(t *testing.T) (*Store, pgxmock.PgxPoolIface) {
+func newTestStore(t *testing.T) (*appdb.Store, pgxmock.PgxPoolIface) {
 	t.Helper()
 	pool, err := pgxmock.NewPool(pgxmock.QueryMatcherOption(pgxmock.QueryMatcherEqual))
 	require.NoError(t, err)
 	t.Cleanup(pool.Close)
-	return &Store{db: pool}, pool
+	return appdb.NewStore(pool), pool
 }
 
 func analysisRequestRowColumns() []string {

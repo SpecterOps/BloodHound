@@ -23,7 +23,6 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/server/analysis/service"
 	"github.com/specterops/bloodhound/server/pgxutils"
 	"github.com/stephenafamo/bob/dialect/psql"
@@ -38,8 +37,8 @@ type Store struct {
 }
 
 // NewStore returns a Store backed by the provided pgx connection pool.
-func NewStore(pool *pgxpool.Pool) *Store {
-	return &Store{db: pool}
+func NewStore(db pgxutils.PgxQuerier) *Store {
+	return &Store{db: db}
 }
 
 // GetAnalysisRequest returns the currently pending analysis request, or ErrNotFound when
