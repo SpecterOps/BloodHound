@@ -524,11 +524,8 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 		firstDegreeSets []cardinality.Duplex[uint64]
 		unrolledSets    [][]cardinality.Duplex[uint64]
 
-		// This is the set we use as a reference set to check against checkset
+		// This is the set we use as a reference set to check against the materialized check set
 		unrolledRefSet = cardinality.NewBitmap64()
-
-		// This is the set we use to aggregate multiple sets together it should have all the valid principals from all other sets at this point
-		checkSet = cardinality.CommutativeDuplexes[uint64]{}
 
 		// This is our set of entities that have the complete cross product of permissions
 		resultEntities = cardinality.NewBitmap64()
@@ -610,15 +607,25 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 	}
 
 	// This means that len(firstDegreeSets) must be greater than or equal to 2 i.e. we have at least two nodesets (unrolled) without Auth. Users/Everyone
-	checkSet.Or(cardinality.CommutativeOr(unrolledSets[1]...))
+	// Materialize the check set as a single bitmap by Or-ing all component bitmaps within each set,
+	// then And-ing across sets. This replaces the lazy CommutativeDuplexes approach which required
+	// per-element binary searches and was the dominant bottleneck (86.9% of CPU in profiling).
+	materializedCheckSet := cardinality.NewBitmap64()
+	for _, bm := range unrolledSets[1] {
+		materializedCheckSet.Or(bm)
+	}
 
 	for _, unrolledSet := range unrolledSets[2:] {
-		checkSet.And(cardinality.CommutativeOr(unrolledSet...))
+		setUnion := cardinality.NewBitmap64()
+		for _, bm := range unrolledSet {
+			setUnion.Or(bm)
+		}
+		materializedCheckSet.And(setUnion)
 	}
 
 	// Check first degree principals in our reference set (firstDegreeSets[0]) first
 	firstDegreeSets[0].Each(func(id uint64) bool {
-		if checkSet.Contains(id) {
+		if materializedCheckSet.Contains(id) {
 			resultEntities.Add(id)
 		} else {
 			localGroupData.GroupMembershipCache.OrReach(id, graph.DirectionInbound, unrolledRefSet)
@@ -667,7 +674,7 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 			continue
 		}
 
-		if checkSet.Contains(groupId) {
+		if materializedCheckSet.Contains(groupId) {
 			// If this entity is a cross product, add it to result entities, remove the group id from the second set and remove the group's membership from the result set
 			resultEntities.Add(groupId)
 
@@ -687,13 +694,11 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 		}
 	}
 
-	unrolledRefSet.Each(func(remainder uint64) bool {
-		if checkSet.Contains(remainder) {
-			resultEntities.Add(remainder)
-		}
-
-		return true
-	})
+	// Use bitmap-level intersection instead of per-element Contains checks.
+	// The previous approach iterated every member in unrolledRefSet calling checkSet.Contains()
+	// which did per-element binary searches across component bitmaps — this was 86.9% of CPU.
+	unrolledRefSet.And(materializedCheckSet)
+	resultEntities.Or(unrolledRefSet)
 
 	return resultEntities
 }
