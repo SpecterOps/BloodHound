@@ -25,7 +25,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/specterops/bloodhound/server/analysis/appdb"
-	"github.com/specterops/bloodhound/server/analysis/service"
+	"github.com/specterops/bloodhound/server/analysis/services"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -61,9 +61,9 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 
 	t.Run("successfully returns an analysis request", func(t *testing.T) {
 		var (
-			expected = service.RequestedAnalysis{
+			expected = services.RequestedAnalysis{
 				RequestedBy:           "test-user",
-				RequestType:           service.RequestedAnalysisTypeAnalysis,
+				RequestType:           services.RequestedAnalysisTypeAnalysis,
 				RequestedAt:           time.Now(),
 				DeleteAllGraph:        true,
 				DeleteSourcelessGraph: false,
@@ -73,7 +73,7 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 			store, pool = newTestStore(t)
 		)
 
-		pool.ExpectQuery(expectedSelectSQL).WithArgs(pgxmock.AnyArg()).WillReturnRows(
+		pool.ExpectQuery(expectedSelectSQL).WithArgs(1).WillReturnRows(
 			pool.NewRows(analysisRequestRowColumns()).AddRow(
 				expected.RequestedBy,
 				string(expected.RequestType),
@@ -94,10 +94,10 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 	t.Run("returns ErrNotFound when no rows are found", func(t *testing.T) {
 		store, pool := newTestStore(t)
 
-		pool.ExpectQuery(expectedSelectSQL).WithArgs(pgxmock.AnyArg()).WillReturnError(pgx.ErrNoRows)
+		pool.ExpectQuery(expectedSelectSQL).WithArgs(1).WillReturnError(pgx.ErrNoRows)
 
 		_, err := store.GetAnalysisRequest(ctx)
-		assert.ErrorIs(t, err, service.ErrNotFound)
+		assert.ErrorIs(t, err, services.ErrNotFound)
 		require.NoError(t, pool.ExpectationsWereMet())
 	})
 
@@ -107,7 +107,7 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 			store, pool = newTestStore(t)
 		)
 
-		pool.ExpectQuery(expectedSelectSQL).WithArgs(pgxmock.AnyArg()).WillReturnError(expectedErr)
+		pool.ExpectQuery(expectedSelectSQL).WithArgs(1).WillReturnError(expectedErr)
 
 		_, err := store.GetAnalysisRequest(ctx)
 		assert.ErrorIs(t, err, expectedErr)
@@ -127,7 +127,7 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 		pool.ExpectExec(expectedInsertSQL).
 			WithArgs(
 				requester,
-				string(service.RequestedAnalysisTypeAnalysis),
+				string(services.RequestedAnalysisTypeAnalysis),
 				pgxmock.AnyArg(), // now
 				false,
 				false,
@@ -136,10 +136,10 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 			).
 			WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
-		pool.ExpectQuery(expectedSelectSQL).WithArgs(pgxmock.AnyArg()).WillReturnRows(
+		pool.ExpectQuery(expectedSelectSQL).WithArgs(1).WillReturnRows(
 			pool.NewRows(analysisRequestRowColumns()).AddRow(
 				requester,
-				string(service.RequestedAnalysisTypeAnalysis),
+				string(services.RequestedAnalysisTypeAnalysis),
 				time.Now().UTC(),
 				false,
 				false,
@@ -158,9 +158,9 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 	t.Run("returns created=false and the existing request when a row already exists", func(t *testing.T) {
 		var (
 			store, pool = newTestStore(t)
-			existing    = service.RequestedAnalysis{
+			existing    = services.RequestedAnalysis{
 				RequestedBy: "other-user",
-				RequestType: service.RequestedAnalysisTypeAnalysis,
+				RequestType: services.RequestedAnalysisTypeAnalysis,
 				RequestedAt: time.Now().UTC(),
 			}
 		)
@@ -171,8 +171,8 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 		pool.ExpectExec(expectedInsertSQL).
 			WithArgs(
 				requester,
-				string(service.RequestedAnalysisTypeAnalysis),
-				pgxmock.AnyArg(),
+				string(services.RequestedAnalysisTypeAnalysis),
+				pgxmock.AnyArg(), // now
 				false,
 				false,
 				[]string{},
@@ -180,7 +180,7 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 			).
 			WillReturnResult(pgxmock.NewResult("INSERT", 0))
 
-		pool.ExpectQuery(expectedSelectSQL).WithArgs(pgxmock.AnyArg()).WillReturnRows(
+		pool.ExpectQuery(expectedSelectSQL).WithArgs(1).WillReturnRows(
 			pool.NewRows(analysisRequestRowColumns()).AddRow(
 				existing.RequestedBy,
 				string(existing.RequestType),
@@ -206,8 +206,15 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 		)
 
 		pool.ExpectExec(expectedInsertSQL).
-			WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(),
-				pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg()).
+			WithArgs(
+				requester,
+				string(services.RequestedAnalysisTypeAnalysis),
+				pgxmock.AnyArg(), // now
+				false,
+				false,
+				[]string{},
+				[]string{},
+			).
 			WillReturnError(expectedErr)
 
 		_, _, err := store.CreateAnalysisRequest(ctx, requester)
@@ -222,10 +229,17 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 		)
 
 		pool.ExpectExec(expectedInsertSQL).
-			WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(),
-				pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg()).
+			WithArgs(
+				requester,
+				string(services.RequestedAnalysisTypeAnalysis),
+				pgxmock.AnyArg(), // now
+				false,
+				false,
+				[]string{},
+				[]string{},
+			).
 			WillReturnResult(pgxmock.NewResult("INSERT", 1))
-		pool.ExpectQuery(expectedSelectSQL).WithArgs(pgxmock.AnyArg()).WillReturnError(expectedErr)
+		pool.ExpectQuery(expectedSelectSQL).WithArgs(1).WillReturnError(expectedErr)
 
 		_, _, err := store.CreateAnalysisRequest(ctx, requester)
 		assert.ErrorIs(t, err, expectedErr)

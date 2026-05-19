@@ -30,7 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/server/analysis/handlers"
 	"github.com/specterops/bloodhound/server/analysis/handlers/mocks"
-	"github.com/specterops/bloodhound/server/analysis/service"
+	"github.com/specterops/bloodhound/server/analysis/services"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -59,9 +59,9 @@ func TestHandlers_GetRequest(t *testing.T) {
 
 	t.Run("returns 200 with the analysis request view on success", func(t *testing.T) {
 		var (
-			expected = service.RequestedAnalysis{
+			expected = services.RequestedAnalysis{
 				RequestedBy:         "test-user",
-				RequestType:         service.RequestedAnalysisTypeAnalysis,
+				RequestType:         services.RequestedAnalysisTypeAnalysis,
 				RequestedAt:         time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 				DeleteSourceKinds:   []string{"AZBase"},
 				DeleteRelationships: []string{"HasSession"},
@@ -72,7 +72,7 @@ func TestHandlers_GetRequest(t *testing.T) {
 			request      = newRequest(t)
 		)
 
-		analysisMock.EXPECT().GetRequest(mock.Anything).Return(expected, nil)
+		analysisMock.EXPECT().GetRequest(request.Context()).Return(expected, nil)
 
 		handlerSet.GetRequest(recorder, request)
 
@@ -97,7 +97,7 @@ func TestHandlers_GetRequest(t *testing.T) {
 			request      = newRequest(t)
 		)
 
-		analysisMock.EXPECT().GetRequest(mock.Anything).Return(service.RequestedAnalysis{}, service.ErrNoPendingRequest)
+		analysisMock.EXPECT().GetRequest(request.Context()).Return(services.RequestedAnalysis{}, services.ErrNoPendingRequest)
 
 		handlerSet.GetRequest(recorder, request)
 
@@ -114,7 +114,7 @@ func TestHandlers_GetRequest(t *testing.T) {
 			request       = newRequest(t)
 		)
 
-		analysisMock.EXPECT().GetRequest(mock.Anything).Return(service.RequestedAnalysis{}, unexpectedErr)
+		analysisMock.EXPECT().GetRequest(request.Context()).Return(services.RequestedAnalysis{}, unexpectedErr)
 
 		handlerSet.GetRequest(recorder, request)
 
@@ -127,14 +127,14 @@ func TestHandlers_CreateRequest(t *testing.T) {
 		userID        = uuid.Must(uuid.NewV4())
 		userIDString  = userID.String()
 		requestedAt   = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-		createdResult = service.RequestedAnalysis{
+		createdResult = services.RequestedAnalysis{
 			RequestedBy: userIDString,
-			RequestType: service.RequestedAnalysisTypeAnalysis,
+			RequestType: services.RequestedAnalysisTypeAnalysis,
 			RequestedAt: requestedAt,
 		}
-		existingResult = service.RequestedAnalysis{
+		existingResult = services.RequestedAnalysis{
 			RequestedBy: "other-user",
-			RequestType: service.RequestedAnalysisTypeAnalysis,
+			RequestType: services.RequestedAnalysisTypeAnalysis,
 			RequestedAt: requestedAt,
 		}
 	)
@@ -156,7 +156,7 @@ func TestHandlers_CreateRequest(t *testing.T) {
 			request      = newAuthenticatedRequest(t, http.MethodPut, "/api/v2/analysis", userID)
 		)
 
-		analysisMock.EXPECT().CreateRequest(mock.Anything, userIDString).Return(createdResult, true, nil)
+		analysisMock.EXPECT().CreateRequest(request.Context(), userIDString).Return(createdResult, true, nil)
 
 		handlerSet.CreateRequest(recorder, request)
 
@@ -172,7 +172,7 @@ func TestHandlers_CreateRequest(t *testing.T) {
 			request      = newAuthenticatedRequest(t, http.MethodPut, "/api/v2/analysis", userID)
 		)
 
-		analysisMock.EXPECT().CreateRequest(mock.Anything, userIDString).Return(existingResult, false, nil)
+		analysisMock.EXPECT().CreateRequest(request.Context(), userIDString).Return(existingResult, false, nil)
 
 		handlerSet.CreateRequest(recorder, request)
 
@@ -207,7 +207,7 @@ func TestHandlers_CreateRequest(t *testing.T) {
 			request      = newAuthenticatedRequest(t, http.MethodPut, "/api/v2/analysis", userID)
 		)
 
-		analysisMock.EXPECT().CreateRequest(mock.Anything, userIDString).Return(service.RequestedAnalysis{}, false, expectedErr)
+		analysisMock.EXPECT().CreateRequest(request.Context(), userIDString).Return(services.RequestedAnalysis{}, false, expectedErr)
 
 		handlerSet.CreateRequest(recorder, request)
 

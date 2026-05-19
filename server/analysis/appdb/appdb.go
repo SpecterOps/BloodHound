@@ -24,7 +24,7 @@ import (
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/specterops/bloodhound/server/analysis/service"
+	"github.com/specterops/bloodhound/server/analysis/services"
 )
 
 // pgxQuerier is the minimal pgx surface the analysis Store relies on. Each
@@ -48,7 +48,7 @@ func NewStore(db pgxQuerier) *Store {
 
 // GetAnalysisRequest returns the currently pending analysis request, or ErrNotFound when
 // no request is present.
-func (s *Store) GetAnalysisRequest(ctx context.Context) (service.RequestedAnalysis, error) {
+func (s *Store) GetAnalysisRequest(ctx context.Context) (services.RequestedAnalysis, error) {
 	var (
 		row analysisRequest
 		err error
@@ -79,10 +79,10 @@ func (s *Store) GetAnalysisRequest(ctx context.Context) (service.RequestedAnalys
 		&row.DeleteRelationships,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return service.RequestedAnalysis{}, service.ErrNotFound
+		return services.RequestedAnalysis{}, services.ErrNotFound
 	}
 	if err != nil {
-		return service.RequestedAnalysis{}, err
+		return services.RequestedAnalysis{}, err
 	}
 	return toRequestedAnalysis(row), nil
 }
@@ -92,12 +92,12 @@ func (s *Store) GetAnalysisRequest(ctx context.Context) (service.RequestedAnalys
 // (singleton) with CHECK (singleton)), so INSERT ... ON CONFLICT (singleton) DO NOTHING is
 // race-free and idempotent. The currently-pending request is returned alongside a boolean
 // indicating whether this call created it (true) or a request was already pending (false).
-func (s *Store) CreateAnalysisRequest(ctx context.Context, requestedBy string) (service.RequestedAnalysis, bool, error) {
+func (s *Store) CreateAnalysisRequest(ctx context.Context, requestedBy string) (services.RequestedAnalysis, bool, error) {
 	var (
 		now            = time.Now().UTC()
 		err            error
 		commandTag     pgconn.CommandTag
-		currentRequest service.RequestedAnalysis
+		currentRequest services.RequestedAnalysis
 	)
 
 	insertBuilder := sqlbuilder.PostgreSQL.NewInsertBuilder()
@@ -113,7 +113,7 @@ func (s *Store) CreateAnalysisRequest(ctx context.Context, requestedBy string) (
 	)
 	insertBuilder.Values(
 		requestedBy,
-		string(service.RequestedAnalysisTypeAnalysis),
+		string(services.RequestedAnalysisTypeAnalysis),
 		now,
 		false,
 		false,
@@ -126,12 +126,12 @@ func (s *Store) CreateAnalysisRequest(ctx context.Context, requestedBy string) (
 
 	commandTag, err = s.db.Exec(ctx, sqlQuery, args...)
 	if err != nil {
-		return service.RequestedAnalysis{}, false, err
+		return services.RequestedAnalysis{}, false, err
 	}
 
 	currentRequest, err = s.GetAnalysisRequest(ctx)
 	if err != nil {
-		return service.RequestedAnalysis{}, false, err
+		return services.RequestedAnalysis{}, false, err
 	}
 
 	return currentRequest, commandTag.RowsAffected() == 1, nil

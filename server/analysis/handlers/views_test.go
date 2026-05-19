@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/server/analysis/handlers"
-	"github.com/specterops/bloodhound/server/analysis/service"
+	"github.com/specterops/bloodhound/server/analysis/services"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -30,9 +30,9 @@ import (
 func TestBuildRequestedAnalysisView(t *testing.T) {
 	var (
 		requestedAt = time.Date(2026, 3, 15, 12, 0, 0, 0, time.UTC)
-		input       = service.RequestedAnalysis{
+		input       = services.RequestedAnalysis{
 			RequestedBy:           "analyst@example.com",
-			RequestType:           service.RequestedAnalysisTypeDeletion,
+			RequestType:           services.RequestedAnalysisTypeDeletion,
 			RequestedAt:           requestedAt,
 			DeleteAllGraph:        true,
 			DeleteSourcelessGraph: true,
@@ -56,7 +56,7 @@ func TestRequestedAnalysisView_View(t *testing.T) {
 		requestedAt = time.Date(2026, 3, 15, 12, 0, 0, 0, time.UTC)
 		view        = handlers.RequestedAnalysisView{
 			RequestedBy:         "analyst@example.com",
-			RequestType:         service.RequestedAnalysisTypeAnalysis,
+			RequestType:         services.RequestedAnalysisTypeAnalysis,
 			RequestedAt:         requestedAt,
 			DeleteAllGraph:      false,
 			DeleteSourceKinds:   []string{"AZBase"},

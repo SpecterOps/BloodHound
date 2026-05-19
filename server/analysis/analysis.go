@@ -22,7 +22,7 @@ package analysis
 import (
 	"github.com/specterops/bloodhound/server/analysis/appdb"
 	"github.com/specterops/bloodhound/server/analysis/handlers"
-	"github.com/specterops/bloodhound/server/analysis/service"
+	"github.com/specterops/bloodhound/server/analysis/services"
 	"github.com/specterops/bloodhound/server/wireup"
 )
 
@@ -34,7 +34,7 @@ type Module struct{}
 func (Module) Register(deps wireup.Deps) {
 	var (
 		store      = appdb.NewStore(deps.Pool)
-		svc        = service.NewService(store)
+		svc        = services.NewService(store)
 		handlerSet = handlers.NewHandlersContainer(svc)
 	)
 

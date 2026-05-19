@@ -25,7 +25,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
-	"github.com/specterops/bloodhound/server/analysis/service"
+	"github.com/specterops/bloodhound/server/analysis/services"
 	"github.com/specterops/bloodhound/server/jsonapiv2/responses"
 )
 
@@ -35,8 +35,8 @@ const (
 
 // Analysis defines the analysis service boundary for the analysis handlers package.
 type Analysis interface {
-	GetRequest(context.Context) (service.RequestedAnalysis, error)
-	CreateRequest(ctx context.Context, requestedBy string) (service.RequestedAnalysis, bool, error)
+	GetRequest(context.Context) (services.RequestedAnalysis, error)
+	CreateRequest(ctx context.Context, requestedBy string) (services.RequestedAnalysis, bool, error)
 }
 
 // Handlers is a dependency injection container for analysis handlers
@@ -58,7 +58,7 @@ func (s Handlers) GetRequest(response http.ResponseWriter, request *http.Request
 	var ctx = request.Context()
 
 	ra, err := s.analysis.GetRequest(ctx)
-	if errors.Is(err, service.ErrNoPendingRequest) {
+	if errors.Is(err, services.ErrNoPendingRequest) {
 		responses.WriteNoContent(response)
 		return
 	}

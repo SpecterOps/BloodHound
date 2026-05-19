@@ -27,7 +27,7 @@ recursive: false
 require-template-schema-exists: true
 template: testify
 packages:
-  github.com/specterops/bloodhound/server/analysis/service:
+  github.com/specterops/bloodhound/server/analysis/services:
     interfaces:
       Database:
   github.com/specterops/bloodhound/server/analysis/handlers:

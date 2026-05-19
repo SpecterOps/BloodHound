@@ -19,11 +19,11 @@ package appdb
 import (
 	"time"
 
-	"github.com/specterops/bloodhound/server/analysis/service"
+	"github.com/specterops/bloodhound/server/analysis/services"
 )
 
 // analysisRequest is the package-local representation of a row in the analysis_request_switch table.
-// It exists only to hold raw scanned values; callers receive the application-level service.RequestedAnalysis.
+// It exists only to hold raw scanned values; callers receive the application-level services.RequestedAnalysis.
 type analysisRequest struct {
 	RequestedBy           string
 	RequestType           string
@@ -35,10 +35,10 @@ type analysisRequest struct {
 }
 
 // toRequestedAnalysis translates a raw DB row into the domain model.
-func toRequestedAnalysis(row analysisRequest) service.RequestedAnalysis {
-	return service.RequestedAnalysis{
+func toRequestedAnalysis(row analysisRequest) services.RequestedAnalysis {
+	return services.RequestedAnalysis{
 		RequestedBy:           row.RequestedBy,
-		RequestType:           service.RequestedAnalysisType(row.RequestType),
+		RequestType:           services.RequestedAnalysisType(row.RequestType),
 		RequestedAt:           row.RequestedAt,
 		DeleteAllGraph:        row.DeleteAllGraph,
 		DeleteSourcelessGraph: row.DeleteSourcelessGraph,

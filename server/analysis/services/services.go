@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package service
+package services
 
 //go:generate go tool mockery
 

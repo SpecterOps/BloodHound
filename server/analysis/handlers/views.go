@@ -20,13 +20,13 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/specterops/bloodhound/server/analysis/service"
+	"github.com/specterops/bloodhound/server/analysis/services"
 )
 
 type RequestedAnalysisView struct {
-	RequestedBy string                        `json:"requested_by"`
-	RequestType service.RequestedAnalysisType `json:"request_type"`
-	RequestedAt time.Time                     `json:"requested_at"`
+	RequestedBy string                         `json:"requested_by"`
+	RequestType services.RequestedAnalysisType `json:"request_type"`
+	RequestedAt time.Time                      `json:"requested_at"`
 	// Deletes all nodes and edges in the graph
 	DeleteAllGraph bool `json:"delete_all_graph"`
 	// Deletes all nodes and edges in the graph that have a type not registered in the source_kinds table
@@ -35,7 +35,7 @@ type RequestedAnalysisView struct {
 	DeleteRelationships   []string `json:"delete_relationships"`
 }
 
-func BuildRequestedAnalysisView(ra service.RequestedAnalysis) RequestedAnalysisView {
+func BuildRequestedAnalysisView(ra services.RequestedAnalysis) RequestedAnalysisView {
 	return RequestedAnalysisView{
 		RequestedBy:           ra.RequestedBy,
 		RequestType:           ra.RequestType,
