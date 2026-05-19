@@ -1,0 +1,43 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+// Package analysis is the wireup module for the analysis feature. It is the
+// single place where the analysis store, service, handlers and routes are
+// composed; the layered packages themselves remain unaware of each other.
+package analysis
+
+import (
+	appdb "github.com/specterops/bloodhound/server/appdb/analysis"
+	handlers "github.com/specterops/bloodhound/server/handlers/v2/analysis"
+	jsonapi "github.com/specterops/bloodhound/server/jsonapi/v2"
+	service "github.com/specterops/bloodhound/server/services/analysis"
+	"github.com/specterops/bloodhound/server/wireup"
+)
+
+// Module wires the analysis feature into the server.
+type Module struct{}
+
+// Register builds the analysis store -> service -> handler chain and attaches
+// the analysis routes to the router supplied via deps.
+func (Module) Register(deps wireup.Deps) {
+	var (
+		store      = appdb.NewStore(deps.Pool)
+		svc        = service.NewService(store)
+		handlerSet = handlers.NewHandlersContainer(svc)
+	)
+
+	jsonapi.RegisterAnalysisRoutes(deps.Router, handlerSet)
+}
