@@ -26,6 +26,7 @@ import (
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/specterops/bloodhound/server/models"
 	"github.com/stephenafamo/bob/dialect/psql"
+	"github.com/stephenafamo/bob/dialect/psql/im"
 	"github.com/stephenafamo/bob/dialect/psql/sm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -115,6 +116,123 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 		pool.ExpectQuery(expectedSQL).WillReturnError(expectedErr)
 
 		_, err := store.GetAnalysisRequest(ctx)
+		assert.ErrorIs(t, err, expectedErr)
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+}
+
+func TestStore_CreateAnalysisRequest(t *testing.T) {
+	var (
+		ctx               = context.Background()
+		requester         = "test-user"
+		selectSQL, _, _   = psql.Select(
+			sm.Columns(
+				"requested_by",
+				"request_type",
+				"requested_at",
+				"delete_all_graph",
+				"delete_sourceless_graph",
+				"delete_source_kinds",
+				"delete_relationships",
+			),
+			sm.From("analysis_request_switch"),
+			sm.Limit(1),
+		).Build(ctx)
+		insertSQL, _, _ = psql.Insert(
+			im.Into("analysis_request_switch",
+				"requested_by",
+				"request_type",
+				"requested_at",
+				"delete_all_graph",
+				"delete_sourceless_graph",
+				"delete_source_kinds",
+				"delete_relationships",
+			),
+			im.Values(psql.Arg(
+				"", "", time.Time{}, false, false, []string{}, []string{},
+			)),
+		).Build(ctx)
+	)
+
+	newStore := func(t *testing.T) (*Store, pgxmock.PgxPoolIface) {
+		pool, err := pgxmock.NewPool(pgxmock.QueryMatcherOption(pgxmock.QueryMatcherEqual))
+		require.NoError(t, err)
+		t.Cleanup(pool.Close)
+		return &Store{db: pool}, pool
+	}
+
+	t.Run("inserts row when no request exists", func(t *testing.T) {
+		store, pool := newStore(t)
+
+		pool.ExpectQuery(selectSQL).WillReturnError(pgx.ErrNoRows)
+		pool.ExpectExec(insertSQL).
+			WithArgs(
+				requester,
+				string(models.RequestedAnalysisTypeAnalysis),
+				pgxmock.AnyArg(), // now
+				false,
+				false,
+				[]string{},
+				[]string{},
+			).
+			WillReturnResult(pgxmock.NewResult("INSERT", 1))
+
+		require.NoError(t, store.CreateAnalysisRequest(ctx, requester))
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+
+	t.Run("no-ops when a request already exists", func(t *testing.T) {
+		var (
+			store, pool = newStore(t)
+			existing    = models.RequestedAnalysis{
+				RequestedBy: "other-user",
+				RequestType: models.RequestedAnalysisTypeAnalysis,
+				RequestedAt: time.Now(),
+			}
+		)
+
+		pool.ExpectQuery(selectSQL).WillReturnRows(
+			pool.NewRows([]string{
+				"requested_by", "request_type", "requested_at",
+				"delete_all_graph", "delete_sourceless_graph",
+				"delete_source_kinds", "delete_relationships",
+			}).AddRow(
+				existing.RequestedBy, string(existing.RequestType), existing.RequestedAt,
+				false, false, []string{}, []string{},
+			),
+		)
+		// No Exec expectation — the insert must NOT be called.
+
+		require.NoError(t, store.CreateAnalysisRequest(ctx, requester))
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+
+	t.Run("propagates select error", func(t *testing.T) {
+		var (
+			expectedErr = errors.New("db unavailable")
+			store, pool = newStore(t)
+		)
+
+		pool.ExpectQuery(selectSQL).WillReturnError(expectedErr)
+
+		err := store.CreateAnalysisRequest(ctx, requester)
+		assert.ErrorIs(t, err, expectedErr)
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+
+	t.Run("propagates insert error", func(t *testing.T) {
+		var (
+			expectedErr = errors.New("insert failed")
+			store, pool = newStore(t)
+		)
+
+		pool.ExpectQuery(selectSQL).WillReturnError(pgx.ErrNoRows)
+		pool.ExpectExec(insertSQL).
+			WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(),
+				pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg()).
+			WillReturnError(expectedErr)
+
+		err := store.CreateAnalysisRequest(ctx, requester)
 		assert.ErrorIs(t, err, expectedErr)
 		require.NoError(t, pool.ExpectationsWereMet())
 	})

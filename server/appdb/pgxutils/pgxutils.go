@@ -19,9 +19,13 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
-// PgxQuerier is a minimal interface that matches the pgxpool.Pool and pgx.Conn QueryRow methods.
+// PgxQuerier is a minimal interface covering the pgxpool.Pool methods used by
+// the server/appdb stores. It intentionally excludes transaction and batch
+// APIs that are not yet required.
 type PgxQuerier interface {
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
 }

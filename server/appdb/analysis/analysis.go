@@ -19,12 +19,14 @@ package analysis
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/server/appdb/pgxutils"
 	"github.com/specterops/bloodhound/server/models"
 	"github.com/stephenafamo/bob/dialect/psql"
+	"github.com/stephenafamo/bob/dialect/psql/im"
 	"github.com/stephenafamo/bob/dialect/psql/sm"
 )
 
@@ -85,4 +87,53 @@ func (s *Store) GetAnalysisRequest(ctx context.Context) (models.RequestedAnalysi
 		return models.RequestedAnalysis{}, err
 	}
 	return toRequestedAnalysis(row), nil
+}
+
+// CreateAnalysisRequest inserts a new analysis request for the given user.
+// If a request of any type already exists the call is a no-op (matching the
+// legacy setAnalysisRequest behaviour: an incoming analysis request never
+// overwrites an existing one).
+func (s *Store) CreateAnalysisRequest(ctx context.Context, requestedBy string) error {
+	var (
+		err      error
+		now      = time.Now().UTC()
+		sqlQuery string
+		args     []any
+	)
+
+	_, err = s.GetAnalysisRequest(ctx)
+	if err == nil {
+		// A request already exists — no-op.
+		return nil
+	}
+	if !errors.Is(err, ErrNotFound) {
+		return err
+	}
+
+	sqlQuery, args, err = psql.Insert(
+		im.Into("analysis_request_switch",
+			"requested_by",
+			"request_type",
+			"requested_at",
+			"delete_all_graph",
+			"delete_sourceless_graph",
+			"delete_source_kinds",
+			"delete_relationships",
+		),
+		im.Values(psql.Arg(
+			requestedBy,
+			string(models.RequestedAnalysisTypeAnalysis),
+			now,
+			false,
+			false,
+			[]string{},
+			[]string{},
+		)),
+	).Build(ctx)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.db.Exec(ctx, sqlQuery, args...)
+	return err
 }
