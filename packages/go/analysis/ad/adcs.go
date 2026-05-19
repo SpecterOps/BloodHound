@@ -77,7 +77,7 @@ func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 		operation.Stats.Merge(step1Stats)
 		operation.Stats.Merge(step2Stats)
 
-		for _, certChains := range cache.GetChainedDomains() {
+		for _, certChains := range cache.GetECAHostedChainedDomains() {
 			processEnterpriseCAWithValidCertChainToDomain(certChains, localGroupData, cache, operation)
 		}
 
@@ -117,7 +117,7 @@ func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseC
 
 // postADCSPreProcessStep2 Processes the edges that are dependent on those processed in postADCSPreProcessStep1
 func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache *ADCSCache) (*post.AtomicPostProcessingStats, error) {
-		defer measure.ContextMeasure(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"ADCS Post-processing Step 2",

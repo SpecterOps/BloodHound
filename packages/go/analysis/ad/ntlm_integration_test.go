@@ -42,34 +42,35 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func setupCoerceAndNTLMToADCS(ctx context.Context, db graph.Database, opMessage string) error {
+	operation := post.NewPostRelationshipOperation(ctx, db, opMessage)
+
+	if localGroupData, cache, err := FetchADCSPrereqs(db); err != nil {
+		return err
+	} else if ntlmCache, err := adAnalysis.NewNTLMCache(ctx, db, localGroupData); err != nil {
+		return err
+	} else if err := adAnalysis.PostCoerceAndRelayNTLMToADCS(ctx, operation, cache, ntlmCache); err != nil {
+		return err
+	} else {
+		return nil
+	}
+}
+
 func TestPostNTLMRelayADCS(t *testing.T) {
-	// TODO: Add some negative tests here
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.NTLMCoerceAndRelayNTLMToADCS.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToADCS")
+		require.NoError(t, setupCoerceAndNTLMToADCS(t.Context(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToADCS"))
 
-		localGroupData, cache, err := FetchADCSPrereqs(db)
-		require.NoError(t, err)
-
-		ntlmCache, err := adAnalysis.NewNTLMCache(context.Background(), db, localGroupData)
-		require.NoError(t, err)
-
-		err = adAnalysis.PostCoerceAndRelayNTLMToADCS(context.Background(), operation, cache, ntlmCache)
-		require.NoError(t, err)
-
-		operation.Done()
-
-		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+		db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
 			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
 				return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToADCS)
 			})); err != nil {
 				t.Fatalf("error fetching ntlm to smb edges in integration test; %v", err)
 			} else {
-
 				require.Len(t, results, 1)
 				rel := results[0]
 
@@ -91,20 +92,9 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 		harness.NTLMCoerceAndRelayNTLMToADCS.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM Composition Test - CoerceAndRelayNTLMToADCS")
+		require.NoError(t, setupCoerceAndNTLMToADCS(t.Context(), db, "NTLM Composition Test - CoerceAndRelayNTLMToADCS"))
 
-		localGroupData, cache, err := FetchADCSPrereqs(db)
-		require.NoError(t, err)
-
-		ntlmCache, err := adAnalysis.NewNTLMCache(context.Background(), db, localGroupData)
-		require.NoError(t, err)
-
-		err = adAnalysis.PostCoerceAndRelayNTLMToADCS(context.Background(), operation, cache, ntlmCache)
-		require.NoError(t, err)
-
-		operation.Done()
-
-		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+		db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
 			if edge, err := tx.Relationships().Filterf(
 				func() graph.Criteria {
 					return query.And(
@@ -115,7 +105,7 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 
 				t.Fatalf("error fetching NTLM to ADCS edge in integration test: %v", err)
 			} else {
-				composition, err := adAnalysis.GetCoerceAndRelayNTLMtoADCSEdgeComposition(context.Background(), db, edge)
+				composition, err := adAnalysis.GetCoerceAndRelayNTLMtoADCSEdgeComposition(t.Context(), db, edge)
 				require.Nil(t, err)
 
 				nodes := composition.AllNodes()
@@ -137,7 +127,7 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 
 func TestCoerceAndRelayNTLMToADCSTrust(t *testing.T) {
 	var (
-		ctx        = context.Background()
+		ctx        = t.Context()
 		graphDB    = newNTLMIntegrationGraph(t, ctx)
 		testEdges  []arrows.Edge
 		otherEdges []arrows.Edge
@@ -160,26 +150,7 @@ func TestCoerceAndRelayNTLMToADCSTrust(t *testing.T) {
 	err = arrows.WriteGraphToDatabase(graphDB, &fixture)
 	require.NoError(t, err)
 
-	localGroupData, err := adAnalysis.FetchLocalGroupData(ctx, graphDB)
-	require.NoError(t, err)
-
-	ntlmCache, err := adAnalysis.NewNTLMCache(ctx, graphDB, localGroupData)
-	require.NoError(t, err)
-
-	enterpriseCertAuthorities, err := adAnalysis.FetchNodesByKind(ctx, graphDB, ad.EnterpriseCA)
-	require.NoError(t, err)
-
-	certTemplates, err := adAnalysis.FetchNodesByKind(ctx, graphDB, ad.CertTemplate)
-	require.NoError(t, err)
-
-	adcsCache := adAnalysis.NewADCSCache()
-	err = adcsCache.BuildCache(ctx, graphDB, enterpriseCertAuthorities, certTemplates)
-	require.NoError(t, err)
-
-	operation := post.NewPostRelationshipOperation(ctx, graphDB, "CoerceAndRelayNTLMToADCS Trust Post Processing")
-	err = adAnalysis.PostCoerceAndRelayNTLMToADCS(adcsCache, operation, ntlmCache)
-	require.NoError(t, err)
-	require.NoError(t, operation.Done())
+	require.NoError(t, setupCoerceAndNTLMToADCS(ctx, graphDB, "CoerceAndRelayNTLMToADCS Trust Post Processing"))
 
 	err = graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if results, err := ops.FetchRelationshipIDs(tx.Relationships().Filterf(func() graph.Criteria {
@@ -191,9 +162,9 @@ func TestCoerceAndRelayNTLMToADCSTrust(t *testing.T) {
 		}
 
 		for _, testEdge := range testEdges {
-			if fromNode, found := findNTLMFixtureNodeByID(fixture.Nodes, testEdge.FromID); !found {
+			if fromNode, found := findFixtureNodeByID(fixture.Nodes, testEdge.FromID); !found {
 				t.Fatalf("error finding source node with ID %s; %v", testEdge.FromID, err)
-			} else if toNode, found := findNTLMFixtureNodeByID(fixture.Nodes, testEdge.ToID); !found {
+			} else if toNode, found := findFixtureNodeByID(fixture.Nodes, testEdge.ToID); !found {
 				t.Fatalf("error finding destination node with ID %s; %v", testEdge.ToID, err)
 			} else if fromGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
 				return query.Equals(query.NodeProperty(common.Name.String()), fromNode.Caption)
@@ -256,7 +227,7 @@ func newNTLMIntegrationGraph(t *testing.T, ctx context.Context) graph.Database {
 	return graphDB
 }
 
-func findNTLMFixtureNodeByID(nodes []arrows.Node, id string) (*arrows.Node, bool) {
+func findFixtureNodeByID(nodes []arrows.Node, id string) (*arrows.Node, bool) {
 	for i := range nodes {
 		if nodes[i].ID == id {
 			return &nodes[i], true
@@ -272,11 +243,11 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 			harness.NTLMCoerceAndRelayNTLMToSMB.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToSMB")
+			operation := post.NewPostRelationshipOperation(t.Context(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToSMB")
 
-			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
+			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(t.Context(), db)
 			require.NoError(t, err)
-			ntlmCache, err := adAnalysis.NewNTLMCache(context.Background(), db, grouplocalGroupData)
+			ntlmCache, err := adAnalysis.NewNTLMCache(t.Context(), db, grouplocalGroupData)
 			require.NoError(t, err)
 
 			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
@@ -298,7 +269,7 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 			require.NoError(t, err)
 
 			// Test start node
-			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
 				if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
 					return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToSMB)
 				})); err != nil {
@@ -313,10 +284,10 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 						switch start.ID {
 						case harness.NTLMCoerceAndRelayNTLMToSMB.Group2.ID:
 							assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Computer9.ID)
-							coercionTargets, err := adAnalysis.GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(context.Background(), db, result)
+							coercionTargets, err := adAnalysis.GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(t.Context(), db, result)
 							assert.NoError(t, err)
 							assert.Contains(t, coercionTargets.IDs(), harness.NTLMCoerceAndRelayNTLMToSMB.Computer8.ID)
-							composition, err := adAnalysis.GetEdgeCompositionPath(context.Background(), db, result)
+							composition, err := adAnalysis.GetEdgeCompositionPath(t.Context(), db, result)
 							assert.NoError(t, err)
 							nodes := composition.AllNodes().IDs()
 							assert.Contains(t, nodes, harness.NTLMCoerceAndRelayNTLMToSMB.Group8.ID)
@@ -324,10 +295,10 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 							assert.Contains(t, nodes, harness.NTLMCoerceAndRelayNTLMToSMB.Computer8.ID)
 						case harness.NTLMCoerceAndRelayNTLMToSMB.Group1.ID:
 							assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Computer2.ID)
-							coercionTargets, err := adAnalysis.GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(context.Background(), db, result)
+							coercionTargets, err := adAnalysis.GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(t.Context(), db, result)
 							assert.NoError(t, err)
 							assert.Contains(t, coercionTargets.IDs(), harness.NTLMCoerceAndRelayNTLMToSMB.Computer1.ID)
-							composition, err := adAnalysis.GetEdgeCompositionPath(context.Background(), db, result)
+							composition, err := adAnalysis.GetEdgeCompositionPath(t.Context(), db, result)
 							assert.NoError(t, err)
 							nodes := composition.AllNodes().IDs()
 							assert.Contains(t, nodes, harness.NTLMCoerceAndRelayNTLMToSMB.Computer1.ID)
@@ -348,11 +319,11 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 			harness.NTLMCoerceAndRelayNTLMToSMBSelfRelay.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM - CoerceAndRelayNTLMToSMB - Relay To Self")
+			operation := post.NewPostRelationshipOperation(t.Context(), db, "NTLM - CoerceAndRelayNTLMToSMB - Relay To Self")
 
-			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
+			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(t.Context(), db)
 			require.NoError(t, err)
-			ntlmCache, err := adAnalysis.NewNTLMCache(context.Background(), db, grouplocalGroupData)
+			ntlmCache, err := adAnalysis.NewNTLMCache(t.Context(), db, grouplocalGroupData)
 			require.NoError(t, err)
 
 			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
@@ -378,7 +349,7 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 			err = operation.Done()
 			require.NoError(t, err)
 
-			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
 				if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
 					return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToSMB)
 				})); err != nil {
@@ -400,11 +371,11 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 		harness.NTLMCoerceAndRelayNTLMToSMB.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM Composition Test - CoerceAndRelayNTLMToSMB")
+		operation := post.NewPostRelationshipOperation(t.Context(), db, "NTLM Composition Test - CoerceAndRelayNTLMToSMB")
 
-		grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
+		grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(t.Context(), db)
 		require.NoError(t, err)
-		ntlmCache, err := adAnalysis.NewNTLMCache(context.Background(), db, grouplocalGroupData)
+		ntlmCache, err := adAnalysis.NewNTLMCache(t.Context(), db, grouplocalGroupData)
 		require.NoError(t, err)
 
 		err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
@@ -425,7 +396,7 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 		err = operation.Done()
 		require.NoError(t, err)
 
-		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+		db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
 			if edge, err := tx.Relationships().Filterf(
 				func() graph.Criteria {
 					return query.And(
@@ -435,7 +406,7 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 				}).First(); err != nil {
 				t.Fatalf("error fetching NTLM to SMB edge in integration test: %v", err)
 			} else {
-				relayTargets, err := adAnalysis.GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(context.Background(), db, edge)
+				relayTargets, err := adAnalysis.GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(t.Context(), db, edge)
 				require.NoError(t, err)
 
 				require.Len(t, relayTargets, 1)
@@ -444,7 +415,7 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 			return nil
 		})
 
-		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+		db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
 			if edge, err := tx.Relationships().Filterf(
 				func() graph.Criteria {
 					return query.And(
@@ -454,7 +425,7 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 				}).First(); err != nil {
 				t.Fatalf("error fetching NTLM to SMB edge in integration test: %v", err)
 			} else {
-				relayTargets, err := adAnalysis.GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(context.Background(), db, edge)
+				relayTargets, err := adAnalysis.GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(t.Context(), db, edge)
 				require.NoError(t, err)
 
 				require.Len(t, relayTargets, 1)
@@ -472,15 +443,15 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 			harness.NTLMCoerceAndRelayNTLMToLDAP.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAP")
+			operation := post.NewPostRelationshipOperation(t.Context(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAP")
 
-			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
+			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(t.Context(), db)
 			require.NoError(t, err)
 
-			ldapSigningCache, err := adAnalysis.FetchLDAPSigningCache(testContext.Context(), db)
+			ldapSigningCache, err := adAnalysis.FetchLDAPSigningCache(t.Context(), db)
 			require.NoError(t, err)
 
-			protectedUsersCache, err := adAnalysis.FetchProtectedUsersMappedToDomains(testContext.Context(), db, grouplocalGroupData)
+			protectedUsersCache, err := adAnalysis.FetchProtectedUsersMappedToDomains(t.Context(), db, grouplocalGroupData)
 			require.NoError(t, err)
 
 			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
@@ -510,7 +481,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 			err = operation.Done()
 			require.NoError(t, err)
 
-			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
 				if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
 					return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToLDAP)
 				})); err != nil {
@@ -522,7 +493,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 						start, end, err := ops.FetchRelationshipNodes(tx, result)
 						require.NoError(t, err)
 
-						dcSet, err := adAnalysis.GetVulnerableDomainControllersForRelayNTLMtoLDAP(context.Background(), db, result)
+						dcSet, err := adAnalysis.GetVulnerableDomainControllersForRelayNTLMtoLDAP(t.Context(), db, result)
 						require.NoError(t, err)
 
 						switch start.ID {
@@ -549,15 +520,15 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 			harness.NTLMCoerceAndRelayNTLMToLDAPS.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAPS")
+			operation := post.NewPostRelationshipOperation(t.Context(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAPS")
 
-			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
+			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(t.Context(), db)
 			require.NoError(t, err)
 
-			ldapSigningCache, err := adAnalysis.FetchLDAPSigningCache(testContext.Context(), db)
+			ldapSigningCache, err := adAnalysis.FetchLDAPSigningCache(t.Context(), db)
 			require.NoError(t, err)
 
-			protectedUsersCache, err := adAnalysis.FetchProtectedUsersMappedToDomains(testContext.Context(), db, grouplocalGroupData)
+			protectedUsersCache, err := adAnalysis.FetchProtectedUsersMappedToDomains(t.Context(), db, grouplocalGroupData)
 			require.NoError(t, err)
 
 			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
@@ -585,7 +556,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 			err = operation.Done()
 			require.NoError(t, err)
 
-			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
 				if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
 					return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToLDAPS)
 				})); err != nil {
@@ -597,7 +568,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 						start, end, err := ops.FetchRelationshipNodes(tx, result)
 						require.NoError(t, err)
 
-						dcSet, err := adAnalysis.GetVulnerableDomainControllersForRelayNTLMtoLDAPS(context.Background(), db, result)
+						dcSet, err := adAnalysis.GetVulnerableDomainControllersForRelayNTLMtoLDAPS(t.Context(), db, result)
 						require.NoError(t, err)
 
 						switch start.ID {
@@ -625,15 +596,15 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 			harness.NTLMCoerceAndRelayToLDAPSSelfRelay.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAPS - Self Relay")
+			operation := post.NewPostRelationshipOperation(t.Context(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAPS - Self Relay")
 
-			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
+			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(t.Context(), db)
 			require.NoError(t, err)
 
-			ldapSigningCache, err := adAnalysis.FetchLDAPSigningCache(testContext.Context(), db)
+			ldapSigningCache, err := adAnalysis.FetchLDAPSigningCache(t.Context(), db)
 			require.NoError(t, err)
 
-			protectedUsersCache, err := adAnalysis.FetchProtectedUsersMappedToDomains(testContext.Context(), db, grouplocalGroupData)
+			protectedUsersCache, err := adAnalysis.FetchProtectedUsersMappedToDomains(t.Context(), db, grouplocalGroupData)
 			require.NoError(t, err)
 
 			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
@@ -661,7 +632,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 			err = operation.Done()
 			require.NoError(t, err)
 
-			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
 				if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
 					return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToLDAPS)
 				})); err != nil {
@@ -680,15 +651,15 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 			harness.NTLMCoerceAndRelayToLDAPSelfRelay.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := post.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAP - Self Relay")
+			operation := post.NewPostRelationshipOperation(t.Context(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAP - Self Relay")
 
-			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
+			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(t.Context(), db)
 			require.NoError(t, err)
 
-			ldapSigningCache, err := adAnalysis.FetchLDAPSigningCache(testContext.Context(), db)
+			ldapSigningCache, err := adAnalysis.FetchLDAPSigningCache(t.Context(), db)
 			require.NoError(t, err)
 
-			protectedUsersCache, err := adAnalysis.FetchProtectedUsersMappedToDomains(testContext.Context(), db, grouplocalGroupData)
+			protectedUsersCache, err := adAnalysis.FetchProtectedUsersMappedToDomains(t.Context(), db, grouplocalGroupData)
 			require.NoError(t, err)
 
 			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
@@ -716,7 +687,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 			err = operation.Done()
 			require.NoError(t, err)
 
-			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
 				if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
 					return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToLDAP)
 				})); err != nil {
@@ -730,20 +701,20 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 	})
 }
 
-func fetchNTLMPrereqs(db graph.Database) (localGroupData *adAnalysis.LocalGroupData, computers []*graph.Node, domains []*graph.Node, authenticatedUsers map[string]graph.ID, err error) {
+func fetchNTLMPrereqs(ctx context.Context, db graph.Database) (localGroupData *adAnalysis.LocalGroupData, computers []*graph.Node, domains []*graph.Node, authenticatedUsers map[string]graph.ID, err error) {
 	cache := make(map[string]graph.ID)
-	if localGroupData, err = adAnalysis.FetchLocalGroupData(context.Background(), db); err != nil {
+	if localGroupData, err = adAnalysis.FetchLocalGroupData(ctx, db); err != nil {
 		return nil, nil, nil, cache, err
-	} else if computers, err = adAnalysis.FetchNodesByKind(context.Background(), db, ad.Computer); err != nil {
+	} else if computers, err = adAnalysis.FetchNodesByKind(ctx, db, ad.Computer); err != nil {
 		return nil, nil, nil, cache, err
-	} else if err = db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+	} else if err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if cache, err = adAnalysis.FetchAuthUsersMappedToDomains(tx); err != nil {
 			return err
 		}
 		return nil
 	}); err != nil {
 		return nil, nil, nil, cache, err
-	} else if domains, err = adAnalysis.FetchNodesByKind(context.Background(), db, ad.Domain); err != nil {
+	} else if domains, err = adAnalysis.FetchNodesByKind(ctx, db, ad.Domain); err != nil {
 		return nil, nil, nil, cache, err
 	} else {
 		return localGroupData, computers, domains, cache, nil

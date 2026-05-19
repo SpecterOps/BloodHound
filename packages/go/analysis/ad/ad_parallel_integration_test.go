@@ -87,7 +87,7 @@ func TestPostADCSESC6a_ManagedServiceAccounts(t *testing.T) {
 	localGroupData, cache, err := FetchADCSPrereqs(suite.GraphDB)
 	require.NoError(t, err)
 
-	for _, certChains := range cache.GetChainedDomains() {
+	for _, certChains := range cache.GetECAHostedChainedDomains() {
 		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 			if err := adAnalysis.PostADCSESC6a(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 				t.Logf("failed post processing for %s: %v", ad.ADCSESC6a.String(), err)

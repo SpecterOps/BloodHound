@@ -62,6 +62,7 @@ type ADCSCache struct {
 	enterpriseCAEnrollers           map[graph.ID][]*graph.Node // principals that have enrollment rights on an enterprise ca via `enroll` edge
 	publishedTemplateCache          map[graph.ID][]*graph.Node // cert templates that are published to an enterprise ca
 	authUsersByDomain               map[graph.ID]graph.ID      // domain node ID → Authenticated Users group node ID
+	ecasWithHostingComputers        cardinality.Duplex[uint64] // enterprise CAs with at least one hosting computer where the computer is enabled
 	hasUPNCertMappingInForest       cardinality.Duplex[uint64] // domains where at least one DC in the forest has Schannel UPN cert mapping enabled
 	hasWeakCertBindingInForest      cardinality.Duplex[uint64] // domains where at least one DC in the forest has Kerberos weak cert binding enabled
 }
@@ -77,6 +78,7 @@ func NewADCSCache() *ADCSCache {
 		enterpriseCAEnrollers:           make(map[graph.ID][]*graph.Node),
 		publishedTemplateCache:          make(map[graph.ID][]*graph.Node),
 		authUsersByDomain:               make(map[graph.ID]graph.ID),
+		ecasWithHostingComputers:        cardinality.NewBitmap64(),
 		hasUPNCertMappingInForest:       cardinality.NewBitmap64(),
 		hasWeakCertBindingInForest:      cardinality.NewBitmap64(),
 	}
@@ -98,9 +100,8 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 
 		var (
-			hasHostingComputerECAs = cardinality.NewBitmap64()
-			domains                []*graph.Node
-			err                    error
+			domains []*graph.Node
+			err     error
 		)
 
 		if domains, err = FetchNodesByKind(ctx, db, ad.Domain); err != nil {
@@ -109,7 +110,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 			s.certTemplates = certTemplates
 			s.enterpriseCertAuthorities = enterpriseCertAuthorities
 		}
-		
+
 		certTemplateMeasure := measure.ContextMeasure(
 			ctx,
 			slog.LevelInfo,
@@ -221,7 +222,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				}
 
 				if hasHostingComputer {
-					hasHostingComputerECAs.Add(eca.ID.Uint64())
+					s.ecasWithHostingComputers.Add(eca.ID.Uint64())
 				}
 			}
 		}
@@ -255,7 +256,6 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 			} else {
 				var ecas = graph.NodeSetToDuplex(authStoreForNodes)
 				ecas.And(graph.NodeSetToDuplex((rootCaForNodes)))
-				ecas.And(hasHostingComputerECAs)
 
 				ecas.Each(func(ecaID uint64) bool {
 					if ecaNode, ok := authStoreForNodes[graph.ID(ecaID)]; !ok {
@@ -318,6 +318,21 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 	}
 
 	return err
+}
+
+func (s *ADCSCache) GetECAHostedChainedDomains() map[uint64]*EnterpriseCAChainedDomains {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
+	filtered := make(map[uint64]*EnterpriseCAChainedDomains)
+
+	for ecaID, chainedDomains := range s.chainedDomainsByEnterpriseCA {
+		if s.ecasWithHostingComputers.Contains(ecaID) {
+			filtered[ecaID] = chainedDomains
+		}
+	}
+
+	return filtered
 }
 
 func (s *ADCSCache) GetChainedDomains() map[uint64]*EnterpriseCAChainedDomains {

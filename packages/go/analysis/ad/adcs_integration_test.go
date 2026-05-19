@@ -466,7 +466,7 @@ func TestGoldenCert(t *testing.T) {
 		_, cache, err := FetchADCSPrereqs(db)
 		require.Nil(t, err)
 
-		for _, certChains := range cache.GetChainedDomains() {
+		for _, certChains := range cache.GetECAHostedChainedDomains() {
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 				if err := adAnalysis.PostGoldenCert(ctx, tx, outC, certChains); err != nil {
 					t.Logf("failed post processing for %s: %v", ad.GoldenCert.String(), err)
@@ -513,7 +513,7 @@ func TestADCSESC1(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC1(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC1.String(), err)
@@ -617,7 +617,7 @@ func TestADCSESC1(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC1(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC1.String(), err)
@@ -659,7 +659,7 @@ func TestADCSESC3(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC3(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC3.String(), err)
@@ -700,7 +700,7 @@ func TestADCSESC3(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC3(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC3.String(), err)
@@ -753,7 +753,7 @@ func TestADCSESC3(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC3(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC3.String(), err)
@@ -805,7 +805,7 @@ func TestADCSESC4(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC4(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
@@ -861,7 +861,7 @@ func TestADCSESC4(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC4(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
@@ -922,7 +922,7 @@ func TestADCSESC4(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC4(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
@@ -964,7 +964,7 @@ func TestADCSESC4(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC4(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
@@ -1010,7 +1010,7 @@ func TestADCSESC4Composition(t *testing.T) {
 		localGroupData, cache, err := FetchADCSPrereqs(db)
 		require.Nil(t, err)
 
-		for _, certChains := range cache.GetChainedDomains() {
+		for _, certChains := range cache.GetECAHostedChainedDomains() {
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 				if err := adAnalysis.PostADCSESC4(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 					t.Logf("failed post processing for %s: %v", ad.ADCSESC4.String(), err)
@@ -1225,7 +1225,7 @@ func TestADCSESC6a(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC6a(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6a.String(), err)
@@ -1265,7 +1265,7 @@ func TestADCSESC6a(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC6a(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6a.String(), err)
@@ -1304,7 +1304,7 @@ func TestADCSESC6a(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC6a(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6a.String(), err)
@@ -1397,7 +1397,7 @@ func TestADCSESC6a(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC6a(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6a.String(), err)
@@ -1442,7 +1442,7 @@ func TestADCSESC6b(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC6b(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6b.String(), err)
@@ -1537,7 +1537,7 @@ func TestADCSESC6b(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC6b(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6b.String(), err)
@@ -1577,7 +1577,7 @@ func TestADCSESC6b(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC6b(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6b.String(), err)
@@ -1617,7 +1617,7 @@ func TestADCSESC6b(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC6b(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6b.String(), err)
@@ -1663,7 +1663,7 @@ func TestADCSESC6b(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC6b(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6b.String(), err)
@@ -1703,7 +1703,7 @@ func TestADCSESC6b(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC6b(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC6b.String(), err)
@@ -1743,7 +1743,7 @@ func TestADCSESC10a(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC10a(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10a.String(), err)
@@ -1787,7 +1787,7 @@ func TestADCSESC10a(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC10a(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10a.String(), err)
@@ -1828,7 +1828,7 @@ func TestADCSESC10a(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC10a(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10a.String(), err)
@@ -1870,7 +1870,7 @@ func TestADCSESC10a(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC10a(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10a.String(), err)
@@ -1941,7 +1941,7 @@ func TestADCSESC10a(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC10a(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10a.String(), err)
@@ -1981,7 +1981,7 @@ func TestADCSESC10a(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC10a(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10a.String(), err)
@@ -2021,7 +2021,7 @@ func TestADCSESC10a(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC10a(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10a.String(), err)
@@ -2062,7 +2062,7 @@ func TestADCSESC10b(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC10b(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10b.String(), err)
@@ -2104,7 +2104,7 @@ func TestADCSESC10b(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC10b(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10b.String(), err)
@@ -2144,7 +2144,7 @@ func TestADCSESC10b(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC10b(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10b.String(), err)
@@ -2184,7 +2184,7 @@ func TestADCSESC10b(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC10b(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10b.String(), err)
@@ -2256,7 +2256,7 @@ func TestADCSESC10b(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC10b(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10b.String(), err)
@@ -2296,7 +2296,7 @@ func TestADCSESC10b(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC10b(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10b.String(), err)
@@ -2336,7 +2336,7 @@ func TestADCSESC10b(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC10b(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC10b.String(), err)
@@ -2377,7 +2377,7 @@ func TestADCSESC13(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC13(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC13.String(), err)
@@ -2432,7 +2432,7 @@ func TestADCSESC13(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC13(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC13.String(), err)
@@ -2492,7 +2492,7 @@ func TestADCSESC13(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			for _, certChains := range cache.GetChainedDomains() {
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
 				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 					if err := adAnalysis.PostADCSESC13(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC13.String(), err)

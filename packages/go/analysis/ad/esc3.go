@@ -172,27 +172,27 @@ func PostEnrollOnBehalfOf(cache *ADCSCache, operation post.StatTrackedOperation[
 		versionTwoTemplates = make([]*graph.Node, 0)
 	)
 
-	for _, node := range cache.GetCertTemplates() {
-		if version, err := node.Properties.Get(ad.SchemaVersion.String()).Float64(); errors.Is(err, graph.ErrPropertyNotFound) {
+	for _, certTemplate := range cache.GetCertTemplates() {
+		if version, err := certTemplate.Properties.Get(ad.SchemaVersion.String()).Float64(); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.Warn(
 				"Did not get schema version for cert template",
-				slog.Uint64("cert_template_id", uint64(node.ID)),
+				slog.Uint64("cert_template_id", uint64(certTemplate.ID)),
 				attr.Error(err),
 			)
 		} else if err != nil {
 			slog.Error(
 				"Error getting schema version for cert template",
-				slog.Uint64("cert_template_id", uint64(node.ID)),
+				slog.Uint64("cert_template_id", uint64(certTemplate.ID)),
 				attr.Error(err),
 			)
 		} else if version == 1 {
-			versionOneTemplates = append(versionOneTemplates, node)
+			versionOneTemplates = append(versionOneTemplates, certTemplate)
 		} else if version >= 2 {
-			versionTwoTemplates = append(versionTwoTemplates, node)
+			versionTwoTemplates = append(versionTwoTemplates, certTemplate)
 		} else {
 			slog.Warn(
 				"Got cert template with an invalid version",
-				slog.Uint64("cert_template_id", uint64(node.ID)),
+				slog.Uint64("cert_template_id", uint64(certTemplate.ID)),
 				slog.Float64("version", version),
 			)
 		}

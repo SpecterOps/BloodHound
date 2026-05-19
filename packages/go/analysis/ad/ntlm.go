@@ -240,13 +240,13 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 	}
 
 	if domainsid, err := startNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-			slog.WarnContext(
-				ctx,
-				"Error getting domain SID for start node",
-				slog.Uint64("node_id", uint64(startNode.ID)),
-				attr.Error(err),
-			)
-			return nil, err
+		slog.WarnContext(
+			ctx,
+			"Error getting domain SID for start node",
+			slog.Uint64("node_id", uint64(startNode.ID)),
+			attr.Error(err),
+		)
+		return nil, err
 	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		domainNode, err = tx.Nodes().Filter(query.And(
 			query.Equals(query.NodeProperty(common.ObjectID.String()), domainsid),
@@ -277,7 +277,7 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 
 				if certTemplateNode == nil || enterpriseCANode == nil {
 					return nil
-				} else if valid, err := isCertTemplateValidForADCSRelay(certTemplateNode); err != nil || !valid {
+				} else if valid := isCertTemplateValidForADCSRelay(ctx, certTemplateNode); !valid {
 					return nil
 				}
 
@@ -351,7 +351,7 @@ func coerceAndRelayNTLMtoADCSPath1Pattern(domainID graph.ID) traversal.PatternCo
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.RootCAFor),
-			// query.Equals(query.EndID(), domainID),
+			query.Equals(query.EndID(), domainID),
 		))
 }
 
@@ -370,12 +370,12 @@ func coerceAndRelayNTLMtoADCSPath2Pattern(domainID graph.ID, enterpriseCAs cardi
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.NTAuthStoreFor),
-			// query.Equals(query.EndID(), domainID),
+			query.Equals(query.EndID(), domainID),
 		))
 }
 
 func PostCoerceAndRelayNTLMToADCS(ctx context.Context, operation post.StatTrackedOperation[post.EnsureRelationshipJob], adcsCache *ADCSCache, ntlmCache NTLMCache) error {
-	for eca, chains := range adcsCache.GetChainedDomains() {
+	for eca, chains := range adcsCache.GetECAHostedChainedDomains() {
 		ecaID := graph.ID(eca)
 
 		if vulnerable := hasVulnerableEndpoint(chains.EnterpriseCA); !vulnerable {
@@ -393,8 +393,13 @@ func PostCoerceAndRelayNTLMToADCS(ctx context.Context, operation post.StatTracke
 				} else if certTemplateEnrollers := adcsCache.GetCertTemplateEnrollers(certTemplate.ID); len(certTemplateEnrollers) == 0 {
 					continue
 				} else {
-
-					victims := getVictimBitmap(ntlmCache.LocalGroupData, certTemplateEnrollers, ecaEnrollers, adcsCache.GetCertTemplateHasSpecialEnrollers(certTemplate.ID), adcsCache.GetEnterpriseCAHasSpecialEnrollers(ecaID))
+					victims := getVictimBitmap(
+						ntlmCache.LocalGroupData,
+						certTemplateEnrollers,
+						ecaEnrollers,
+						adcsCache.GetCertTemplateHasSpecialEnrollers(certTemplate.ID),
+						adcsCache.GetEnterpriseCAHasSpecialEnrollers(ecaID),
+					)
 
 					victims.And(ntlmCache.UnprotectedComputersCache)
 
