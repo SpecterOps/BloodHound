@@ -56,7 +56,6 @@ func (h Handlers) GetRequest(response http.ResponseWriter, request *http.Request
 	var ctx = request.Context()
 
 	ra, err := h.analysis.GetRequest(ctx)
-
 	if err != nil && !errors.Is(err, analysis.ErrNoPendingRequest) {
 		responses.WriteInternalServerError(request, err, response)
 		return
@@ -81,7 +80,8 @@ func (h Handlers) CreateRequest(response http.ResponseWriter, request *http.Requ
 		userID = user.ID.String()
 	}
 
-	if err := h.analysis.CreateRequest(ctx, userID); err != nil {
+	err := h.analysis.CreateRequest(ctx, userID)
+	if err != nil {
 		responses.WriteInternalServerError(request, err, response)
 		return
 	}
