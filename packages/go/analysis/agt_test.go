@@ -358,8 +358,8 @@ func TestTagAssetGroupNodesForTag(t *testing.T) {
 			assert.Truef(t, present, "expected node %d to be queued for kind removal", nodeId)
 		}
 
-		assert.Equal(t, 0.0, testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_added", "tag": tag.Name})))
-		assert.Equal(t, float64(nodeCount), testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_removed", "tag": tag.Name})))
+		assert.Equal(t, 0.0, testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_added", "position": "label"})))
+		assert.Equal(t, float64(nodeCount), testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_removed", "position": "label"})))
 	})
 
 	t.Run("preserves the tag on selected nodes and removes it from no longer selected nodes", func(t *testing.T) {
@@ -427,7 +427,7 @@ func TestTagAssetGroupNodesForTag(t *testing.T) {
 		_, selectedEnqueued := nodesToUpdate[selectedNodeId.Uint64()]
 		assert.Falsef(t, selectedEnqueued, "expected selected node %d to NOT be queued for kind removal", selectedNodeId)
 
-		assert.Equal(t, 0.0, testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_added", "tag": tag.Name})))
-		assert.Equal(t, float64(len(expectedRemovals)), testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_removed", "tag": tag.Name})))
+		assert.Equal(t, 0.0, testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_added", "position": "label"})))
+		assert.Equal(t, float64(len(expectedRemovals)), testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_removed", "position": "label"})))
 	})
 }

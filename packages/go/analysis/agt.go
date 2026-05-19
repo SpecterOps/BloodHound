@@ -857,8 +857,8 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 			return err
 		}
 
-		pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_added", "tag": tag.Name}).Add(float64(countNewTagged))
-		pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_removed", "tag": tag.Name}).Add(float64(oldTaggedNodes.Cardinality()))
+		pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_added", "position": tagToPosition(tag)}).Add(float64(countNewTagged))
+		pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_removed", "position": tagToPosition(tag)}).Add(float64(oldTaggedNodes.Cardinality()))
 
 		slog.InfoContext(
 			ctx,

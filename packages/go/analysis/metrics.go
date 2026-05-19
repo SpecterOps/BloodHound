@@ -18,6 +18,7 @@ package analysis
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -25,6 +26,8 @@ import (
 
 var (
 	// pzNodeTagCounterVec counts tag_added and tag_removed events that occur during AGT analysis.
+	// The "position" label is the tier position for tiers (e.g. "1", "2") and the tag type for
+	// labels and owned tags ("label", "owned").
 	pzNodeTagCounterVec = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: model.Namespace,
 		Subsystem: "analysis",
@@ -32,9 +35,28 @@ var (
 		Help:      "Total number of privilege zone tag additions and removals applied to graph nodes during analysis.",
 	}, []string{
 		"action",
-		"tag",
+		"position",
 	})
 )
+
+// tagToPosition returns the value used for the "position" label on pzNodeTagCounterVec.
+// Tiers use their numeric position (e.g. "1", "2"). Labels and owned tags are grouped
+// under their type name since they have no meaningful position.
+func tagToPosition(tag model.AssetGroupTag) string {
+	switch tag.Type {
+	case model.AssetGroupTagTypeTier:
+		if !tag.Position.Valid {
+			return "unknown"
+		}
+		return strconv.Itoa(int(tag.Position.Int32))
+	case model.AssetGroupTagTypeLabel:
+		return "label"
+	case model.AssetGroupTagTypeOwned:
+		return "owned"
+	default:
+		return "unknown"
+	}
+}
 
 // RegisterAnalysisMetrics registers all analysis-subsystem Prometheus metrics
 // with the provided registerer. Additional analysis metrics should be added here.
