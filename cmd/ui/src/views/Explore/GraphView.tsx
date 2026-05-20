@@ -47,6 +47,7 @@ import {
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataFileUploadDialogWithLinks } from 'src/components/NoDataFileUploadDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
@@ -263,6 +264,9 @@ const GraphView: FC = () => {
             className='relative h-full w-full overflow-hidden'
             data-testid='explore'
             onContextMenu={(e) => e.preventDefault()}>
+            <Helmet>
+                <title>Explore | BloodHound Community Edition</title>
+            </Helmet>
             <SigmaChart
                 graph={graphologyGraph}
                 highlightedItem={selectedItem}

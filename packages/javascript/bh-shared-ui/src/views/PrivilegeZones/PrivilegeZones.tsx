@@ -19,6 +19,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { CircularProgress } from '@mui/material';
 import { Badge, Tabs, TabsList, TabsTrigger } from 'doodle-ui';
 import React, { FC, Suspense } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams, useRoleBasedFiltering } from '../../hooks';
 import {
@@ -114,6 +115,9 @@ const PrivilegeZones: FC = () => {
 
     return (
         <main>
+            <Helmet>
+                <title>Privilege Zones | BloodHound Enterprise</title>
+            </Helmet>
             <div className='h-dvh min-w-full px-8'>
                 <div className='flex items-center justify-between pt-8'>
                     <h1 className='text-4xl font-bold'>Zone Builder</h1>

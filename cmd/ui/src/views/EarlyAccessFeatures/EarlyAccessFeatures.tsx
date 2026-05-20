@@ -156,7 +156,7 @@ const EarlyAccessFeatures: FC = () => {
                     (isLoading ? (
                         <div className='bg-neutral-2'>
                             <div className='p-4'>
-                                <Typography variant='h6'>
+                                <Typography variant='h6' component='div'>
                                     <Skeleton />
                                 </Typography>
                                 <Typography variant='body1'>
@@ -172,7 +172,7 @@ const EarlyAccessFeatures: FC = () => {
                     ) : data!.filter((flag) => flag.user_updatable).length === 0 ? (
                         <div className='bg-neutral-2'>
                             <div className='p-4'>
-                                <Typography variant='h6'>No Early Access Features Available</Typography>
+                                <Typography variant='h2'>No Early Access Features Available</Typography>
                                 <Typography variant='body1'>
                                     There are no early access features available at this time. Please check back later.
                                 </Typography>
