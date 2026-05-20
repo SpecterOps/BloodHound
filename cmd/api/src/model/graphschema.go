@@ -229,18 +229,18 @@ func (s SchemaFindingType) String() string {
 // DisplayName is the canonical UI title for the finding. For built-in findings it is populated
 // from title.md by schemagen (e.g. "RDP Users on Tier Zero Computers"). For OpenGraph extension
 // findings it is the display name provided by the extension author at install time.
-// TieringDisplayName is the Privilege Zone variant shown when Tiering is enabled and the finding
-// does not apply to Tier Zero or Hygiene specifically (e.g. "RDP Users on Computers in Privilege Zone").
+// ZoneDisplayName is the zone variant shown when the finding applies to a non-Tier-Zero,
+// non-Hygiene zone (e.g. "RDP Users on Computers in Zone").
 type SchemaFinding struct {
-	ID                 int32
-	Type               SchemaFindingType
-	SchemaExtensionId  int32
-	EnvironmentId      int32
-	KindId             int32
-	Name               string
-	DisplayName        string
-	TieringDisplayName string
-	CreatedAt          time.Time
+	ID                int32
+	Type              SchemaFindingType
+	SchemaExtensionId int32
+	EnvironmentId     int32
+	KindId            int32
+	Name              string
+	DisplayName       string
+	ZoneDisplayName   string
+	CreatedAt         time.Time
 
 	// This is the kind that the finding is associated with based on the kind_id, it is enriched by db getters
 	Kind graph.Kind `gorm:"-"`
@@ -299,7 +299,7 @@ func (s SchemaFinding) IsSortable(column string) bool {
 	switch column {
 	case "name",
 		"display_name",
-		"tiering_display_name",
+		"zone_display_name",
 		"type",
 		"id",
 		"created_at":
@@ -313,7 +313,7 @@ func (SchemaFinding) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
 		"name":                 {Equals, NotEquals, ApproximatelyEquals},
 		"display_name":         {Equals, NotEquals, ApproximatelyEquals},
-		"tiering_display_name": {Equals, NotEquals, ApproximatelyEquals},
+		"zone_display_name": {Equals, NotEquals, ApproximatelyEquals},
 		"id":                   {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"created_at":           {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"extension_name":       {Equals, NotEquals, ApproximatelyEquals},
