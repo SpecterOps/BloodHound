@@ -52,7 +52,7 @@ export const getColumns = (sortOrder?: string | null, handleSort?: (sortBy: stri
                 return <span className='sr-only'>Action Menu</span>;
             },
             cell: () => (
-                <button className='pl-4' tabIndex={0}>
+                <button className='pl-4' tabIndex={0} aria-label='action-menu'>
                     <FontAwesomeIcon icon={faEllipsis} className='rotate-90 dark:text-neutral-light-1' />
                 </button>
             ),
