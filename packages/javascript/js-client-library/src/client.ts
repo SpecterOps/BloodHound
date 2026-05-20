@@ -769,6 +769,9 @@ class BHEAPIClient {
             )
         );
 
+    requestClientAuditLogs = (clientId: string, options?: RequestOptions) =>
+        this.baseClient.post(`/api/v2/clients/${clientId}/audit-logs`, {}, options);
+
     createClient = (
         client: CreateSharpHoundClientRequest | CreateAzureHoundClientRequest | CreateOpenHoundClientRequest,
         options?: RequestOptions
