@@ -955,7 +955,7 @@ func (s *BloodhoundDB) CreateSchemaFinding(ctx context.Context, findingType mode
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		INSERT INTO %s (type, schema_extension_id, kind_id, environment_id, name, display_name, created_at)
 		VALUES (?, ?, ?, ?, ?, ?, NOW())
-		RETURNING id, type, schema_extension_id, kind_id, environment_id, name, display_name, created_at`,
+		RETURNING id, type, schema_extension_id, kind_id, environment_id, name, display_name, COALESCE(tiering_display_name, ''), created_at`,
 		finding.TableName()),
 		findingType, extensionId, kindId, environmentId, name, displayName).Scan(&finding); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
@@ -975,15 +975,16 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 		aliasedSorts   = make(model.Sort, 0, len(sort))
 
 		schemaFindingsColumnAliases = map[string]string{
-			"extension_id":   "sf.schema_extension_id",
-			"extension_name": "se.name",
-			"id":             "sf.id",
-			"name":           "sf.name",
-			"type":           "sf.type",
-			"is_builtin":     "se.is_builtin",
-			"kind":           "k.name",
-			"display_name":   "sf.display_name",
-			"created_at":     "sf.created_at",
+			"extension_id":         "sf.schema_extension_id",
+			"extension_name":       "se.name",
+			"id":                   "sf.id",
+			"name":                 "sf.name",
+			"type":                 "sf.type",
+			"is_builtin":           "se.is_builtin",
+			"kind":                 "k.name",
+			"display_name":         "sf.display_name",
+			"tiering_display_name": "sf.tiering_display_name",
+			"created_at":           "sf.created_at",
 		}
 	)
 
@@ -1012,7 +1013,7 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 		return nil, 0, err
 	} else {
 		sqlStr := fmt.Sprintf(`
-		SELECT sf.id, sf.type, sf.schema_extension_id, sf.kind_id, environment_id, sf.name, sf.display_name, sf.created_at,
+		SELECT sf.id, sf.type, sf.schema_extension_id, sf.kind_id, environment_id, sf.name, sf.display_name, COALESCE(sf.tiering_display_name, ''), sf.created_at,
 		       se.id, se.name, se.display_name, se.version, se.is_builtin, se.namespace, se.created_at,
 		       k.name,
 		       ARRAY_REMOVE(ARRAY_AGG(sfs.subtype), NULL)
@@ -1037,7 +1038,7 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 					subtypes pq.StringArray
 				)
 				if err := rows.Scan(
-					&finding.ID, &finding.Type, &finding.SchemaExtensionId, &finding.KindId, &finding.EnvironmentId, &finding.Name, &finding.DisplayName, &finding.CreatedAt,
+					&finding.ID, &finding.Type, &finding.SchemaExtensionId, &finding.KindId, &finding.EnvironmentId, &finding.Name, &finding.DisplayName, &finding.TieringDisplayName, &finding.CreatedAt,
 					&finding.Extension.ID, &finding.Extension.Name, &finding.Extension.DisplayName, &finding.Extension.Version, &finding.Extension.IsBuiltin, &finding.Extension.Namespace, &finding.Extension.CreatedAt,
 					&kindName,
 					&subtypes,
@@ -1115,13 +1116,13 @@ func (s *BloodhoundDB) DeleteSchemaFinding(ctx context.Context, findingId int32)
 }
 
 // UpdateSchemaFinding - updates the type, display_name, kind_id, and environment_id of an existing
-// schema finding by id. Type is included because findings may transition between SchemaFindingTypeRelationship
-// and SchemaFindingTypeList as extension definitions evolve.
+// schema finding by id. Type is included because findings may transition between
+// SchemaFindingTypeRelationship and SchemaFindingTypeList as extension definitions evolve.
 func (s *BloodhoundDB) UpdateSchemaFinding(ctx context.Context, finding model.SchemaFinding) (model.SchemaFinding, error) {
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		UPDATE %s SET type = ?, display_name = ?, kind_id = ?, environment_id = ?
 		WHERE id = ?
-		RETURNING id, type, schema_extension_id, kind_id, environment_id, name, display_name, created_at`,
+		RETURNING id, type, schema_extension_id, kind_id, environment_id, name, display_name, COALESCE(tiering_display_name, ''), created_at`,
 		finding.TableName()),
 		finding.Type, finding.DisplayName, finding.KindId, finding.EnvironmentId, finding.ID).Scan(&finding); result.Error != nil {
 		return model.SchemaFinding{}, CheckError(result)
