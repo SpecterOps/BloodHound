@@ -403,9 +403,10 @@ func PostCoerceAndRelayNTLMToADCS(ctx context.Context, operation post.StatTracke
 
 					victims.And(ntlmCache.UnprotectedComputersCache)
 
+					var submitErr error
 					chains.Domains.Each(func(domain uint64) bool {
 						if authUsersGroup, ok := adcsCache.GetAuthUserForDomain(graph.ID(domain)); ok {
-							operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+							if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 								victims.Each(func(target uint64) bool {
 									outC <- post.EnsureRelationshipJob{
 										FromID: authUsersGroup,
@@ -415,10 +416,16 @@ func PostCoerceAndRelayNTLMToADCS(ctx context.Context, operation post.StatTracke
 									return true
 								})
 								return nil
-							})
+							}); err != nil {
+								submitErr = err
+								return false
+							}
 						}
 						return true
 					})
+					if submitErr != nil {
+						return submitErr
+					}
 				}
 			}
 		}
