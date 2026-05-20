@@ -157,6 +157,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
             return columnsProp.concat([
                 columnHelper.display({
                     id: 'empty-column',
+                    header: () => <span className='sr-only'>empty placeholder column</span>,
                 }),
             ]);
         }
