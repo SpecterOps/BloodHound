@@ -19,6 +19,7 @@ import React from 'react';
 import { Theme, ThemeOptions, createTheme } from '@mui/material/styles';
 import { CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material';
 import { render, renderHook, RenderHookOptions, RenderHookResult, RenderResult } from '@testing-library/react';
+import { HelmetProvider } from 'react-helmet-async';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { NotificationsProvider } from './providers';
@@ -50,18 +51,20 @@ const createProviders = ({
 }) => {
     window.history.pushState({}, 'Initialize', route);
     return (
-        <QueryClientProvider client={queryClient}>
-            <StyledEngineProvider injectFirst>
-                <ThemeProvider theme={theme}>
-                    <NotificationsProvider>
-                        <CssBaseline />
-                        <BrowserRouter future={reactRouterFutureFlags}>
-                            <SnackbarProvider>{children}</SnackbarProvider>
-                        </BrowserRouter>
-                    </NotificationsProvider>
-                </ThemeProvider>
-            </StyledEngineProvider>
-        </QueryClientProvider>
+        <HelmetProvider>
+            <QueryClientProvider client={queryClient}>
+                <StyledEngineProvider injectFirst>
+                    <ThemeProvider theme={theme}>
+                        <NotificationsProvider>
+                            <CssBaseline />
+                            <BrowserRouter future={reactRouterFutureFlags}>
+                                <SnackbarProvider>{children}</SnackbarProvider>
+                            </BrowserRouter>
+                        </NotificationsProvider>
+                    </ThemeProvider>
+                </StyledEngineProvider>
+            </QueryClientProvider>
+        </HelmetProvider>
     );
 };
 
