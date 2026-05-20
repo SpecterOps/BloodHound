@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -39,15 +40,15 @@ func TestAnalysisRequest(t *testing.T) {
 
 	analysisRequest, err := dbInst.GetAnalysisRequest(testCtx)
 	require.Nil(t, err)
-	require.Equal(t, analysisRequest.RequestType, model.AnalysisRequestAnalysis)
-	require.Equal(t, analysisRequest.RequestedBy, "test")
-	require.False(t, analysisRequest.RequestedAt.IsZero())
+	assert.Equal(t, analysisRequest.RequestType, model.AnalysisRequestAnalysis)
+	assert.Equal(t, analysisRequest.RequestedBy, "test")
+	assert.False(t, analysisRequest.RequestedAt.IsZero())
 
 	err = dbInst.DeleteAnalysisRequest(testCtx)
 	require.Nil(t, err)
 
 	_, err = dbInst.GetAnalysisRequest(testCtx)
-	require.ErrorIs(t, err, database.ErrNotFound)
+	assert.ErrorIs(t, err, database.ErrNotFound)
 }
 
 func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
@@ -69,8 +70,8 @@ func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
 
 		queued, err := dbInst.GetAnalysisRequest(testCtx)
 		require.NoError(t, err)
-		require.Equal(t, model.AnalysisStepAll, queued.AnalysisStep)
-		require.Equal(t, "tag-editor", queued.RequestedBy, "audit fields preserve the original requester")
+		assert.Equal(t, model.AnalysisStepAll, queued.AnalysisStep)
+		assert.Equal(t, "tag-editor", queued.RequestedBy, "audit fields preserve the original requester")
 	})
 
 	t.Run("subsequent narrower request does not downgrade queued bits", func(t *testing.T) {
@@ -81,8 +82,8 @@ func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
 
 		queued, err := dbInst.GetAnalysisRequest(testCtx)
 		require.NoError(t, err)
-		require.Equal(t, model.AnalysisStepAll, queued.AnalysisStep, "narrower follow-up request must not downgrade queued steps")
-		require.Equal(t, "admin", queued.RequestedBy)
+		assert.Equal(t, model.AnalysisStepAll, queued.AnalysisStep, "narrower follow-up request must not downgrade queued steps")
+		assert.Equal(t, "admin", queued.RequestedBy)
 	})
 
 	t.Run("identical bits are a no-op and leave the row untouched", func(t *testing.T) {
@@ -96,9 +97,9 @@ func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
 		queued, err := dbInst.GetAnalysisRequest(testCtx)
 		require.NoError(t, err)
 
-		require.Equal(t, model.AnalysisStepTaggingToCompletion, queued.AnalysisStep)
-		require.Equal(t, "tag-editor-1", queued.RequestedBy)
-		require.Equal(t, original.RequestedAt, queued.RequestedAt, "row must not be updated when bits don't change")
+		assert.Equal(t, model.AnalysisStepTaggingToCompletion, queued.AnalysisStep)
+		assert.Equal(t, "tag-editor-1", queued.RequestedBy)
+		assert.Equal(t, original.RequestedAt, queued.RequestedAt, "row must not be updated when bits don't change")
 	})
 
 	t.Run("disjoint bits union into the queued row", func(t *testing.T) {
@@ -109,8 +110,8 @@ func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
 
 		queued, err := dbInst.GetAnalysisRequest(testCtx)
 		require.NoError(t, err)
-		require.Equal(t, model.AnalysisStepADPostProcessing|model.AnalysisStepTaggingToCompletion, queued.AnalysisStep)
-		require.Equal(t, "post-proc", queued.RequestedBy)
+		assert.Equal(t, model.AnalysisStepADPostProcessing|model.AnalysisStepTaggingToCompletion, queued.AnalysisStep)
+		assert.Equal(t, "post-proc", queued.RequestedBy)
 	})
 }
 
@@ -131,68 +132,67 @@ func TestAnalysisRequestPrecedence(t *testing.T) {
 		}
 	)
 
-	type op struct {
+	type operation struct {
 		isDeletion bool
 		step       model.AnalysisStep
 	}
 
+	type want struct {
+		requestType model.AnalysisRequestType
+		step        model.AnalysisStep // only checked when requestType == AnalysisRequestAnalysis
+	}
+
 	testCases := []struct {
 		name     string
-		seed     *op // nil means start with an empty table
-		incoming op
-		wantType model.AnalysisRequestType
-		wantStep model.AnalysisStep // only checked when wantType == AnalysisRequestAnalysis
+		seed     *operation // nil means start with an empty table
+		incoming operation
+		want     want
 	}{
 		{
 			name:     "empty table, incoming partial inserts partial",
 			seed:     nil,
-			incoming: op{step: partialStep},
-			wantType: model.AnalysisRequestAnalysis,
-			wantStep: partialStep,
+			incoming: operation{step: partialStep},
+			want:     want{requestType: model.AnalysisRequestAnalysis, step: partialStep},
 		},
 		{
 			name:     "empty table, incoming full inserts full",
 			seed:     nil,
-			incoming: op{step: fullStep},
-			wantType: model.AnalysisRequestAnalysis,
-			wantStep: fullStep,
+			incoming: operation{step: fullStep},
+			want:     want{requestType: model.AnalysisRequestAnalysis, step: fullStep},
 		},
 		{
 			name:     "existing partial, incoming full upgrades to full",
-			seed:     &op{step: partialStep},
-			incoming: op{step: fullStep},
-			wantType: model.AnalysisRequestAnalysis,
-			wantStep: fullStep,
+			seed:     &operation{step: partialStep},
+			incoming: operation{step: fullStep},
+			want:     want{requestType: model.AnalysisRequestAnalysis, step: fullStep},
 		},
 		{
 			name:     "existing full, incoming partial stays full",
-			seed:     &op{step: fullStep},
-			incoming: op{step: partialStep},
-			wantType: model.AnalysisRequestAnalysis,
-			wantStep: fullStep,
+			seed:     &operation{step: fullStep},
+			incoming: operation{step: partialStep},
+			want:     want{requestType: model.AnalysisRequestAnalysis, step: fullStep},
 		},
 		{
 			name:     "existing partial, incoming partial stays partial",
-			seed:     &op{step: partialStep},
-			incoming: op{step: partialStep},
-			wantType: model.AnalysisRequestAnalysis,
-			wantStep: partialStep,
+			seed:     &operation{step: partialStep},
+			incoming: operation{step: partialStep},
+			want:     want{requestType: model.AnalysisRequestAnalysis, step: partialStep},
 		},
 		{
 			name:     "existing analysis, incoming deletion overwrites to deletion",
-			seed:     &op{step: fullStep},
-			incoming: op{isDeletion: true},
-			wantType: model.AnalysisRequestDeletion,
+			seed:     &operation{step: fullStep},
+			incoming: operation{isDeletion: true},
+			want:     want{requestType: model.AnalysisRequestDeletion},
 		},
 		{
 			name:     "existing deletion, incoming analysis stays deletion",
-			seed:     &op{isDeletion: true},
-			incoming: op{step: fullStep},
-			wantType: model.AnalysisRequestDeletion,
+			seed:     &operation{isDeletion: true},
+			incoming: operation{step: fullStep},
+			want:     want{requestType: model.AnalysisRequestDeletion},
 		},
 	}
 
-	apply := func(t *testing.T, action op) {
+	apply := func(t *testing.T, action operation) {
 		t.Helper()
 		if action.isDeletion {
 			require.Nil(t, dbInst.RequestCollectedGraphDataDeletion(testCtx, deletionRequest))
@@ -212,10 +212,10 @@ func TestAnalysisRequestPrecedence(t *testing.T) {
 
 			got, err := dbInst.GetAnalysisRequest(testCtx)
 			require.Nil(t, err)
-			require.Equal(t, testCase.wantType, got.RequestType)
-			if testCase.wantType == model.AnalysisRequestAnalysis {
-				require.Equal(t, testCase.wantStep, got.AnalysisStep,
-					"expected analysis_step=%d, got %d", testCase.wantStep, got.AnalysisStep)
+			assert.Equal(t, testCase.want.requestType, got.RequestType)
+			if testCase.want.requestType == model.AnalysisRequestAnalysis {
+				assert.Equal(t, testCase.want.step, got.AnalysisStep,
+					"expected analysis_step=%d, got %d", testCase.want.step, got.AnalysisStep)
 			}
 		})
 	}
