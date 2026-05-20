@@ -36,7 +36,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
-	"github.com/specterops/dawgs/drivers"
+	"github.com/specterops/dawgs/drivers/pg"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -247,7 +247,7 @@ func (s *BloodhoundDB) Transaction(ctx context.Context, fn func(tx *BloodhoundDB
 	}, opts...)
 }
 
-func OpenDatabase(cfg drivers.DatabaseConfiguration) (*gorm.DB, *pgxpool.Pool, error) {
+func OpenDatabase(cfg config.DatabaseConfiguration) (*gorm.DB, *pgxpool.Pool, error) {
 	gormConfig := &gorm.Config{
 		Logger: &GormLogAdapter{
 			SlowQueryErrorThreshold: time.Second * 30,
@@ -255,9 +255,7 @@ func OpenDatabase(cfg drivers.DatabaseConfiguration) (*gorm.DB, *pgxpool.Pool, e
 		},
 	}
 
-	// Use standard pgxpool instead of dawgs pg.NewPool to avoid graph-specific
-	// composite type checks that cause warnings when using Neo4j for graph data
-	pool, err := pgxpool.New(context.Background(), cfg.PostgreSQLConnectionString())
+	pool, err := pg.NewPool(cfg)
 	if err != nil {
 		return nil, nil, err
 	}
