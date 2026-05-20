@@ -101,5 +101,6 @@ specification {
   tag react
   tag graphdb
   tag relationaldb
+  tag featureFlags
 }
 

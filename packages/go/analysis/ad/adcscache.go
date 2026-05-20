@@ -94,6 +94,15 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 			s.enterpriseCertAuthorities = enterpriseCertAuthorities
 			s.domains = domains
 		}
+		certTemplateMeasure := measure.ContextMeasure(
+			ctx,
+			slog.LevelInfo,
+			"BuildCache cert template loop",
+			attr.Namespace("analysis"),
+			attr.Function("BuildCache.CertTemplates"),
+			attr.Scope("routine"),
+		)
+
 		for _, ct := range s.certTemplates {
 			// cert template enrollers
 			if firstDegreePrincipals, err := fetchFirstDegreeNodes(tx, ct, ad.Enroll, ad.GenericAll, ad.AllExtendedRights); err != nil {
@@ -131,6 +140,17 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				s.certTemplateControllers[ct.ID] = firstDegreePrincipals.Slice()
 			}
 		}
+
+		certTemplateMeasure()
+
+		ecaMeasure := measure.ContextMeasure(
+			ctx,
+			slog.LevelInfo,
+			"BuildCache enterprise CA loop",
+			attr.Namespace("analysis"),
+			attr.Function("BuildCache.EnterpriseCAs"),
+			attr.Scope("routine"),
+		)
 
 		for _, eca := range s.enterpriseCertAuthorities {
 			if firstDegreeEnrollers, err := fetchFirstDegreeNodes(tx, eca, ad.Enroll); err != nil {
@@ -186,6 +206,17 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				s.hasHostingComputer[eca.ID] = hasHostingComputer
 			}
 		}
+
+		ecaMeasure()
+
+		domainMeasure := measure.ContextMeasure(
+			ctx,
+			slog.LevelInfo,
+			"BuildCache domain loop",
+			attr.Namespace("analysis"),
+			attr.Function("BuildCache.Domains"),
+			attr.Scope("routine"),
+		)
 
 		for _, domain := range s.domains {
 			//TODO: This code is necessary for ADCS composition during post, but we have scrapped that as part of this initiative. Leaving this code for later use
@@ -248,6 +279,8 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				s.hasWeakCertBindingInForest.Add(domain.ID.Uint64())
 			}
 		}
+
+		domainMeasure()
 
 		return nil
 	})

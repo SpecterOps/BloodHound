@@ -101,7 +101,10 @@ export const FileIngestTable: FC = () => {
                             rowsPerPage,
                             count,
                             onPageChange: (_event, page) => setPage(page),
-                            onRowsPerPageChange: (event) => setRowsPerPage(parseInt(event.target.value)),
+                            onRowsPerPageChange: (event) => {
+                                setRowsPerPage(parseInt(event.target.value));
+                                setPage(0);
+                            },
                         }}
                         showPaginationControls
                     />

@@ -243,6 +243,8 @@ describe('CypherSearch', () => {
             await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
 
             expect(mockClearSelectedItem).not.toHaveBeenCalled();
+            expect(mockOnExploreMenuCollapse).toHaveBeenCalled();
+            mockOnExploreMenuCollapse.mockClear();
 
             mockCypherEndpoint(zeroNodeGraphResponse);
             await user.click(screen.getByRole('button', { name: /run cypher query/i }));
@@ -253,7 +255,7 @@ describe('CypherSearch', () => {
             expect(mockOnExploreMenuCollapse).not.toHaveBeenCalled();
         });
 
-        it('does not close explore search tab menu or entity info panel when search returns one node', async () => {
+        it('closes explore search tab menu when search returns one node, entity info panel remains open', async () => {
             mockCypherEndpoint(singleNodeGraphResponse);
             const { screen, user } = await setup(cypherSearchState, cypherSearchRoute);
 
@@ -268,15 +270,16 @@ describe('CypherSearch', () => {
             await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
 
             expect(mockClearSelectedItem).not.toHaveBeenCalled();
-            expect(mockOnExploreMenuCollapse).not.toHaveBeenCalled();
+            expect(mockOnExploreMenuCollapse).toHaveBeenCalled();
             expect(mockSetSelectedItem).toHaveBeenCalledWith('108');
         });
 
         it('calls onExploreMenuCollapse again when user reopens widget and runs another multi-node query', async () => {
             mockCypherEndpoint(singleNodeGraphResponse);
             const { screen, user } = await setup(cypherSearchState, cypherSearchRoute);
-
+            await waitFor(() => expect(mockOnExploreMenuCollapse).toHaveBeenCalledTimes(1));
             await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
+            mockOnExploreMenuCollapse.mockClear();
 
             mockCypherEndpoint(multiNodeGraphResponse);
             await user.click(screen.getByRole('button', { name: /run cypher query/i }));
