@@ -1,0 +1,475 @@
+// BHCE Server – LikeC4 views
+//
+// Each view is a C4-level projection of the model defined in model.c4.
+// Navigate the hierarchy: index → containers → apiServerComponents → analysisInternals
+//
+// Render with:  npx -y likec4@latest serve
+// Export with:  npx -y likec4@latest export png -o ./diagrams
+
+views {
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Level 1 – System Context
+  //
+  // Who uses BloodHound Community Edition and what external systems does it touch?
+  // ──────────────────────────────────────────────────────────────────────────
+
+  view index {
+    title       'BloodHound Community Edition – System Context'
+    description '''
+      The highest-level view: BloodHound Community Edition as a single system, its
+      human users, and the external systems it interacts with.
+
+      Audience: any stakeholder.  Next: click BHCE to see its internal containers.
+    '''
+
+    include operator, analyst, bhce, adTenant
+    include operator  -> bhce
+    include analyst   -> bhce
+    include bhce       -> adTenant
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Level 2 – Container Diagram
+  //
+  // What deployable pieces make up BloodHound Community Edition?
+  // ──────────────────────────────────────────────────────────────────────────
+
+  view containers of bhce {
+    title       'BloodHound Community Edition – Containers'
+    description '''
+      The deployable units inside BloodHound Community Edition: the web UI served to
+      browsers, the Go API server, PostgreSQL, and Neo4j.
+
+      Audience: developers and architects.  Next: click the API Server to see
+      its internal Go packages.
+    '''
+
+    include *
+    include operator, analyst
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Level 3 – API Server Components
+  //
+  // What Go packages make up the API server, and how are they connected?
+  // ──────────────────────────────────────────────────────────────────────────
+
+  view apiServerComponents of bhce.apiServer {
+    title       'BHCE API Server – Components'
+    description '''
+      The Go packages inside the BHCE API server.
+
+      Infrastructure packages (wireup, modules, responses) are shared across all
+      features.  Feature packages (analysis, …) are self-contained vertical
+      slices registered through the module system.
+
+      Startup order:
+        1. modules.RegisterAll(wireup.Deps{Router, Pool}) is called
+        2. Each Module function (e.g. analysis.Register) receives Deps
+        3. The module builds its layer chain and registers its HTTP routes
+
+      Audience: Go developers.  Next: click the analysis module to see its
+      internal layer architecture.
+    '''
+
+    include *
+    include bhce.postgres
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Level 4 – Analysis Feature: Internal Packages
+  //
+  // How are handlers, services, and appdb related inside a single feature?
+  // ──────────────────────────────────────────────────────────────────────────
+
+  view analysisInternals of bhce.apiServer.analysisFeature {
+    title       'Analysis Feature – Internal Layer Architecture'
+    description '''
+      The four-layer architecture that every feature module follows.
+
+      Each layer depends only on the layer directly below it via an interface
+      it defines itself (Dependency Inversion Principle).  No layer reaches
+      across or skips a boundary.
+
+      Layer responsibilities:
+        handlers  – HTTP concerns only: auth, status codes, JSON marshalling
+        services  – domain logic and error mapping; owns domain types
+        appdb     – SQL execution; maps driver errors to domain sentinels
+        postgres  – the actual data store
+
+      Interface boundaries (enabling independent unit testing):
+        handlers.Analysis  interface  → implemented by services.Service
+        services.Database  interface  → implemented by appdb.Store
+
+      This view focuses on the call relationships between layers.
+      See analysisTypeImports for import relationships.
+      See analysisGetFlow and analysisPutFlow for detailed request traces.
+
+      Audience: Go developers working on the analysis feature.
+    '''
+
+    include *
+    include bhce.apiServer.httpRouter
+    include bhce.apiServer.responsesPkg
+    include bhce.postgres
+
+    include bhce.apiServer.httpRouter -> bhce.apiServer.analysisFeature.analysisHandlers
+    include bhce.apiServer.analysisFeature.analysisHandlers -> bhce.apiServer.responsesPkg
+    include bhce.apiServer.analysisFeature.analysisHandlers -> bhce.apiServer.analysisFeature.analysisServices
+    include bhce.apiServer.analysisFeature.analysisServices -> bhce.apiServer.analysisFeature.analysisAppdb
+    include bhce.apiServer.analysisFeature.analysisAppdb    -> bhce.postgres
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Analysis Type Imports and Dependency Inversion
+  //
+  // Shows ONLY the import relationships (not call relationships)
+  // ──────────────────────────────────────────────────────────────────────────
+
+  view analysisTypeImports of bhce.apiServer.analysisFeature {
+    title       'Analysis Feature – Type Imports (Dependency Inversion)'
+    description '''
+      The Go package import relationships that demonstrate Dependency Inversion.
+      This view shows ONLY imports, not runtime calls.
+
+      Key architectural principles:
+        1. Each layer defines the interface it NEEDS from the layer below
+        2. Lower layers import domain types FROM upper layers (dependency inversion)
+        3. This enables independent testing at each layer
+
+      Import patterns (what gets imported, not called):
+        handlers/handlers.go imports "../services":
+          import "github.com/specterops/bloodhound/bhce/server/analysis/services"
+          - Uses services.RequestedAnalysis (domain type for interface returns)
+          - Uses services.ErrNoPendingRequest (for error comparison in if statements)
+          - Uses services.RequestedAnalysisType (embedded in view type)
+
+        services/services.go imports nothing from handlers or appdb:
+          - Defines Database interface (consumed by appdb.Store)
+          - Defines domain types: RequestedAnalysis, RequestedAnalysisType
+          - Defines sentinel errors: ErrNotFound (for appdb), ErrNoPendingRequest (for handlers)
+          - This layer is the "center" - it depends on nothing below or above
+
+        appdb/appdb.go imports "../services":
+          import "github.com/specterops/bloodhound/bhce/server/analysis/services"
+          - Uses services.RequestedAnalysis (return type for interface methods)
+          - Uses services.ErrNotFound (must return this sentinel on pgx.ErrNoRows)
+          - Uses services.RequestedAnalysisType (for string-to-type conversion)
+
+      Why this matters:
+        - handlers can be tested with a mock Analysis (mockery generates from services interface)
+        - services can be tested with a mock Database (mockery generates from services interface)
+        - appdb can be tested with pgxmock (no services business logic needed)
+        - Each layer remains independently testable and loosely coupled
+
+      Note: This view excludes call relationships.
+      See analysisInternals for the full layer architecture.
+      See analysisGetFlow and analysisPutFlow for request traces.
+
+      Audience: Go developers learning the layered architecture pattern.
+    '''
+
+    include *
+
+    // Only show import relationships, not call relationships
+    include bhce.apiServer.analysisFeature.analysisHandlers -[imports]-> bhce.apiServer.analysisFeature.analysisServices
+    include bhce.apiServer.analysisFeature.analysisAppdb -[imports]-> bhce.apiServer.analysisFeature.analysisServices
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // GET Request Flow with Type Details
+  //
+  // Step-by-step trace of a GET /api/v2/analysis request
+  // ──────────────────────────────────────────────────────────────────────────
+
+  view analysisGetFlow of bhce.apiServer.analysisFeature {
+    title       'Analysis Feature – GET Request Flow (GET /api/v2/analysis)'
+    description '''
+      Step-by-step execution flow for GET /api/v2/analysis when a request is pending.
+
+      HTTP Route (registered in handlers/routes.go):
+        routerInst.GET("/api/v2/analysis", handlers.GetRequest).
+          RequirePermissions(permissions.AppReadApplicationConfiguration)
+
+      Request Flow:
+        1. Router receives HTTP GET /api/v2/analysis
+           → Checks permissions (AppReadApplicationConfiguration)
+           → Calls handlers.GetRequest(response, request)
+
+        2. handlers.GetRequest extracts context
+           → ctx := request.Context()
+           → Calls s.analysis.GetRequest(ctx) via Analysis interface
+              (s.analysis is services.Service, injected at construction)
+
+        3. services.GetRequest queries database
+           → Calls s.db.GetAnalysisRequest(ctx) via Database interface
+              (s.db is appdb.Store, injected at construction)
+
+        4. appdb.GetAnalysisRequest builds and executes SQL
+           → Builds: SELECT requested_by, request_type, ... FROM analysis_request_switch LIMIT 1
+           → Executes via pgx: s.db.QueryRow(ctx, sqlQuery, args...).Scan(...)
+           → Returns services.RequestedAnalysis{} (defined by services layer)
+           → If no rows: returns services.ErrNotFound
+
+        5. services.GetRequest maps appdb error to domain error
+           → If errors.Is(err, ErrNotFound): return ErrNoPendingRequest
+           → Otherwise returns RequestedAnalysis and any error
+
+        6. handlers.GetRequest maps domain error to HTTP status
+           → If errors.Is(err, services.ErrNoPendingRequest): responses.WriteNoContent(response) → 204
+           → If other error: responses.WriteInternalServerError(ctx, err, response) → 500
+           → Otherwise: responses.WriteBasic(ctx, BuildRequestedAnalysisView(ra), 200, response)
+
+        7. BuildRequestedAnalysisView projects domain type to view type
+           → Converts services.RequestedAnalysis → handlers.RequestedAnalysisView
+           → JSONView() marshals to JSON for HTTP response body
+
+      Type flow (when request found):
+        PostgreSQL row → analysisRequest (appdb-local struct, package-private)
+                      → services.RequestedAnalysis (domain type, crosses boundary)
+                      → handlers.RequestedAnalysisView (JSON wire format)
+                      → HTTP 200 OK with JSON body
+
+      Error flow (when no request pending):
+        pgx.ErrNoRows → services.ErrNotFound (at appdb boundary)
+                      → services.ErrNoPendingRequest (at service logic)
+                      → HTTP 204 No Content (at handler boundary)
+
+      Audience: Go developers debugging GET requests or adding similar read operations.
+    '''
+
+    include *
+    include bhce.apiServer.httpRouter
+    include bhce.apiServer.responsesPkg
+    include bhce.postgres
+
+    include bhce.apiServer.httpRouter -> bhce.apiServer.analysisFeature.analysisHandlers
+    include bhce.apiServer.analysisFeature.analysisHandlers -> bhce.apiServer.responsesPkg
+    include bhce.apiServer.analysisFeature.analysisHandlers -> bhce.apiServer.analysisFeature.analysisServices
+    include bhce.apiServer.analysisFeature.analysisServices -> bhce.apiServer.analysisFeature.analysisAppdb
+    include bhce.apiServer.analysisFeature.analysisAppdb -> bhce.postgres
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // PUT Request Flow with Concurrency Handling
+  //
+  // Step-by-step trace of a PUT /api/v2/analysis request
+  // ──────────────────────────────────────────────────────────────────────────
+
+  view analysisPutFlow of bhce.apiServer.analysisFeature {
+    title       'Analysis Feature – PUT Request Flow (PUT /api/v2/analysis)'
+    description '''
+      Step-by-step execution flow for PUT /api/v2/analysis creating a new analysis request.
+
+      HTTP Route (registered in handlers/routes.go):
+        routerInst.PUT("/api/v2/analysis", handlers.CreateRequest).
+          RequirePermissions(permissions.AppWriteApplicationConfiguration)
+
+      Request Flow:
+        1. Router receives HTTP PUT /api/v2/analysis
+           → Checks permissions (AppWriteApplicationConfiguration)
+           → Calls handlers.CreateRequest(response, request)
+
+        2. handlers.CreateRequest extracts authenticated user
+           → user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx)
+           → If !isUser: responses.WriteError(ctx, 401, "authentication required", response)
+           → Calls s.analysis.CreateRequest(ctx, user.ID.String())
+
+        3. services.CreateRequest attempts to create request
+           → Calls s.db.CreateAnalysisRequest(ctx, requestedBy) via Database interface
+           → Returns (RequestedAnalysis, bool, error) - bool indicates if THIS call created it
+
+        4. appdb.CreateAnalysisRequest handles concurrency atomically
+           → now := time.Now().UTC()
+           → Builds: INSERT INTO analysis_request_switch (requested_by, ...) VALUES (...)
+                    ON CONFLICT (singleton) DO NOTHING
+           → Executes via pgx: s.db.Exec(ctx, sqlQuery, args...)
+           → Checks commandTag.RowsAffected():
+              - If 1: this call created the request (returns true)
+              - If 0: request already existed (returns false)
+           → Calls GetAnalysisRequest() to fetch current request
+           → Returns (currentRequest, wasCreated, nil)
+
+        5. services.CreateRequest returns the result unchanged
+           → Passes through (RequestedAnalysis, bool, error) to handlers
+
+        6. handlers.CreateRequest maps result to HTTP status
+           → If created == true: statusCode = 202 Accepted (this call accepted the request)
+           → If created == false: statusCode = 200 OK (request was already pending)
+           → responses.WriteBasic(ctx, BuildRequestedAnalysisView(current), statusCode, response)
+
+        7. BuildRequestedAnalysisView projects domain type to view type
+           → Converts services.RequestedAnalysis → handlers.RequestedAnalysisView
+           → JSONView() marshals to JSON for HTTP response body
+
+      Concurrency handling:
+        The analysis_request_switch table has PRIMARY KEY (singleton) with CHECK (singleton)
+        ensuring only ONE row can ever exist. INSERT ... ON CONFLICT (singleton) DO NOTHING
+        is race-free and idempotent:
+          - First PUT: INSERT succeeds (1 row affected) → 202 Accepted
+          - Concurrent PUTs: INSERT conflicts (0 rows affected) → 200 OK with existing request
+
+      Type flow:
+        User input → requestedBy string
+                  → INSERT SQL → PostgreSQL
+                  → SELECT SQL → analysisRequest (appdb-local)
+                  → services.RequestedAnalysis (domain type)
+                  → handlers.RequestedAnalysisView (JSON)
+                  → HTTP 202/200 with JSON body
+
+      Audience: Go developers debugging write operations or implementing idempotent handlers.
+    '''
+
+    include *
+    include bhce.apiServer.httpRouter
+    include bhce.apiServer.responsesPkg
+    include bhce.postgres
+
+    include bhce.apiServer.httpRouter -> bhce.apiServer.analysisFeature.analysisHandlers
+    include bhce.apiServer.analysisFeature.analysisHandlers -> bhce.apiServer.responsesPkg
+    include bhce.apiServer.analysisFeature.analysisHandlers -> bhce.apiServer.analysisFeature.analysisServices
+    include bhce.apiServer.analysisFeature.analysisServices -> bhce.apiServer.analysisFeature.analysisAppdb
+    include bhce.apiServer.analysisFeature.analysisAppdb -> bhce.postgres
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Cross-Feature Database Table Sharing
+  //
+  // How multiple features can access the same database tables independently
+  // ──────────────────────────────────────────────────────────────────────────
+
+  view sharedDatabaseAccess {
+    title       'Cross-Feature Database Access Pattern'
+    description '''
+      How multiple features independently access shared database tables without
+      creating coupling between feature packages.
+
+      Scenario:
+        The analysis feature "owns" the analysis_request_switch table logically
+        (it writes to it via POST/PUT endpoints), but a hypothetical reporting
+        feature needs to READ from that same table to generate analysis history
+        reports.
+
+      The WRONG approach (creates tight coupling):
+        reporting imports analysis.appdb or analysis.services
+        → Creates package dependency between features
+        → Violates feature independence
+        → Makes testing harder
+
+      The RIGHT approach (independent database access):
+        1. reporting defines its own Database interface in reporting/services
+           Example: GetRecentAnalysisRequests(ctx, limit) ([]ReportAnalysisRequest, error)
+
+        2. reporting implements that interface in reporting/appdb
+           - Directly queries analysis_request_switch table using SQL
+           - Returns reporting's own domain types (e.g., ReportAnalysisRequest)
+           - No import of analysis feature packages
+
+        3. Both features share the same pgxpool.Pool via wireup.Deps
+           - analysis.appdb.Store wraps the pool
+           - reporting.appdb.Store wraps the same pool
+           - Both execute SQL independently against PostgreSQL
+
+      Key principles:
+        - Table "ownership" is logical, not enforced by code
+        - Features share the database schema, not Go packages
+        - Each feature defines minimal interfaces for its needs
+        - SQL is the shared contract, not Go types
+        - Features remain independently testable and deployable
+
+      Real-world example from codebase:
+        - lib/go/database/findings.go defines Database interface with:
+          GetListFindings(), GetRelationshipFindings(), etc.
+        - Multiple parts of the system query list_findings and relationship_findings
+        - Each consumer defines only the methods it needs
+        - No single feature "owns" findings - it's a shared data model
+
+      Testing strategy when features share tables:
+        - Use pgtestdb for integration tests (real PostgreSQL with migrations)
+        - Test each feature's database layer independently
+        - Verify SQL queries match schema expectations
+        - Don't mock cross-feature database interactions - test them
+
+      Audience: Architects designing feature boundaries and database access patterns.
+    '''
+
+    include bhce.postgres
+
+    include bhce.apiServer.analysisFeature
+    include bhce.apiServer.analysisFeature.analysisAppdb
+    include bhce.apiServer.reportingFeature
+    include bhce.apiServer.reportingFeature.reportingAppdb
+
+    include bhce.apiServer.analysisFeature.analysisAppdb -> bhce.postgres
+    include bhce.apiServer.reportingFeature.reportingAppdb -> bhce.postgres
+
+    // Show that both features access the same database independently
+    // No direct relationship between the feature packages themselves
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Feature Module Registration and Startup Flow
+  //
+  // How features are discovered and initialized at server startup
+  // ──────────────────────────────────────────────────────────────────────────
+
+  view moduleRegistrationFlow of bhce.apiServer {
+    title       'Feature Module Registration and Startup'
+    description '''
+      The initialization sequence that wires up all feature modules at server startup.
+
+      Startup sequence (from cmd/api/main.go or equivalent):
+        1. Create shared infrastructure:
+           - pgxPool := pgxpool.New(connString)  // PostgreSQL connection pool
+           - router := router.New()               // HTTP router with middleware
+
+        2. Build wireup.Deps container:
+           deps := wireup.Deps{
+             Router: router,
+             Pool:   pgxPool,
+           }
+
+        3. Call modules.RegisterAll(deps):
+           - Iterates through modules.all slice in declaration order
+           - Calls each Module function: analysis.Register(deps), etc.
+
+        4. Each Module function (e.g., analysis.Register):
+           func Register(deps wireup.Deps) {
+             store      := appdb.NewStore(deps.Pool)      // Wrap pool
+             svc        := services.NewService(store)     // Inject store
+             handlerSet := handlers.NewHandlersContainer(svc)  // Inject service
+             handlers.Register(deps.Router, handlerSet)   // Attach routes
+           }
+
+        5. Server is ready to handle requests
+           - All routes registered on router
+           - Each handler has full dependency chain to PostgreSQL
+           - Features are isolated but share infrastructure
+
+      Why this pattern:
+        - Features are self-contained modules with a single entry point
+        - Adding a new feature = append to modules.all, no other changes
+        - wireup.Deps can grow without changing every feature
+        - Module registry has no compile-time coupling to feature packages
+        - Each feature controls its own layer construction
+
+      Module order matters only when:
+        - Feature B depends on middleware registered by Feature A
+        - Feature B's routes need to be registered after Feature A's
+        In practice, most features are order-independent
+
+      Audience: Developers adding new features or debugging startup issues.
+    '''
+
+    include *
+    exclude bhce.postgres
+    exclude bhce.neo4j
+
+    include bhce.apiServer.modulesPkg       -> bhce.apiServer.wireupPkg
+    include bhce.apiServer.modulesPkg       -[registers]-> bhce.apiServer.analysisFeature
+    include bhce.apiServer.modulesPkg       -[registers]-> bhce.apiServer.reportingFeature
+    include bhce.apiServer.analysisFeature  -> bhce.apiServer.wireupPkg
+    include bhce.apiServer.reportingFeature -> bhce.apiServer.wireupPkg
+  }
+}

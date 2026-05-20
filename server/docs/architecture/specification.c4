@@ -1,0 +1,76 @@
+// BHE Server – LikeC4 element and relationship specification
+//
+// This file defines the vocabulary (element kinds, relationship kinds, tags,
+// and visual styles) used across all model and view files.  Edit this file when
+// you need to introduce a new architectural concept – not when you want to add
+// a concrete element; do that in model.c4 instead.
+
+specification {
+
+  // ── Element kinds ──────────────────────────────────────────────────────────
+
+  // A human user who interacts with the system.
+  element person {
+    notation 'Person'
+    style {
+      shape  person
+      color  green
+    }
+  }
+
+  // A complete, deployable software system (C4 Level 1).
+  element system {
+    notation 'System'
+    style {
+      color blue
+    }
+  }
+
+  // A deployable unit inside a system: process, service, SPA, etc. (C4 Level 2).
+  element container {
+    notation 'Container'
+    style {
+      color secondary
+    }
+  }
+
+  // A persistent data store (database, object store, etc.).
+  element database {
+    notation 'Database'
+    style {
+      shape  storage
+      color  amber
+    }
+  }
+
+  // A Go package inside a container (C4 Level 3 / 4).
+  element goPackage {
+    notation 'Go Package'
+    style {
+      color primary
+    }
+  }
+
+  // ── Relationship kinds ─────────────────────────────────────────────────────
+
+  relationship uses      { notation 'uses'      }
+  relationship reads     { notation 'reads'     }
+  relationship writes    { notation 'writes'    }
+  relationship calls     { notation 'calls'     }
+  relationship registers { notation 'registers' }
+  relationship imports   { notation 'imports'   }
+
+  // ── Tags ──────────────────────────────────────────────────────────────────
+
+  // Applied to systems/persons that live outside BHE's boundary.
+  tag external
+
+  // Applied to generated artefacts (mocks, OpenAPI stubs).
+  tag generated
+
+  // Applied to packages/elements that exist only in test code.
+  tag test
+
+  // Applied to hypothetical/example elements used for documentation.
+  tag example
+}

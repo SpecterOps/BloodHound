@@ -1,0 +1,190 @@
+// BHCE Server – architecture model
+//
+// Defines every architectural element and relationship at all four C4 levels.
+// Add new feature modules as goPackage children of `bhce.apiServer`, following
+// the same nested structure as `analysisFeature`.
+
+model {
+
+  // ── Level 1: Actors ───────────────────────────────────────────────────────
+
+  operator = person 'Security Operator' {
+    description 'Configures BloodHound Community Edition, manages collectors, and reviews findings.'
+  }
+
+  analyst = person 'Security Analyst' {
+    description 'Investigates attack paths, triages exposures, and tracks remediation.'
+  }
+
+  // ── Level 1: Systems ──────────────────────────────────────────────────────
+
+  adTenant = system 'AD / Azure Tenant' {
+    #external
+    description 'Customer Active Directory and Azure AD environment. Primary source of identity, permission, and group-membership data ingested by BHCE collectors.'
+    technology 'Active Directory · Azure AD'
+  }
+
+  bhce = system 'BloodHound Community Edition' {
+    description 'Attack-path management platform. Discovers, maps, and prioritises Active Directory and Azure attack paths so security teams can eliminate them.'
+
+    // ── Level 2: Containers ───────────────────────────────────────────────
+
+    webUI = container 'Web Browser' {
+      description 'React single-page application. Provides the operator and analyst interface: dashboards, investigation UI, configuration panels.'
+      technology 'TypeScript · React'
+    }
+
+    apiServer = container 'BHCE API Server' {
+      description 'Go HTTP server. Handles all REST API requests, enforces RBAC, runs business logic, and persists state to PostgreSQL.'
+      technology 'Go'
+
+      // ── Level 3: Infrastructure packages ─────────────────────────────
+
+      httpRouter = goPackage 'HTTP Router' {
+        description 'Registers routes with permission middleware; dispatches requests to feature handlers. Provided at startup via wireup.Deps.'
+        technology 'cmd/api/src/api/router'
+      }
+
+      wireupPkg = goPackage 'wireup' {
+        description 'Defines Deps (shared infrastructure container) and the Module function type. Carries no feature imports, preventing import cycles.'
+        technology 'bhce/server/wireup'
+      }
+
+      modulesPkg = goPackage 'modules' {
+        description 'Ordered registry of all feature modules. Calls RegisterAll(Deps) at startup, invoking each Module function in declaration order.'
+        technology 'bhce/server/modules'
+      }
+
+      responsesPkg = goPackage 'jsonapiv2/responses' {
+        description 'Shared HTTP response helpers: BasicResponse envelope, ErrorWrapper, and status-code utilities (WriteBasic, WriteError, WriteNoContent, WriteInternalServerError).'
+        technology 'bhce/server/jsonapiv2/responses'
+      }
+
+      // ── Level 3: Analysis feature module ─────────────────────────────
+
+      analysisFeature = goPackage 'analysis' {
+        description 'Feature module: manages the analysis-request lifecycle. Owns its own HTTP handlers, business logic, and persistence. Registered via analysis.Register(wireup.Deps).'
+        technology 'bhce/server/analysis'
+
+        // ── Level 4: Internal packages ────────────────────────────────
+
+        analysisHandlers = goPackage 'handlers' {
+          description 'HTTP layer. Defines the Analysis interface (contract for the service), extracts auth context, maps domain errors to HTTP status codes, and writes JSON responses.'
+          technology 'bhce/server/analysis/handlers'
+        }
+
+        analysisServices = goPackage 'services' {
+          description 'Business-logic layer. Owns domain types (RequestedAnalysis, RequestedAnalysisType, ErrNoPendingRequest). Defines the Database interface consumed by appdb.'
+          technology 'bhce/server/analysis/services'
+        }
+
+        analysisAppdb = goPackage 'appdb' {
+          description 'Persistence layer. Builds SQL with go-sqlbuilder, executes it against PostgreSQL via pgx, and maps driver errors (pgx.ErrNoRows) to domain sentinels (ErrNotFound).'
+          technology 'bhce/server/analysis/appdb'
+        }
+      }
+
+      // ── Level 3: Example second feature (hypothetical) ───────────────
+      // Demonstrates how features can share database tables
+
+      reportingFeature = goPackage 'reporting' {
+        #example
+        description 'Hypothetical feature module: generates reports on analysis history. Reads from analysis_request_switch table that analysis feature "owns", but does so independently through its own appdb layer.'
+        technology 'bhce/server/reporting'
+
+        reportingHandlers = goPackage 'handlers' {
+          #example
+          description 'HTTP layer for reporting endpoints. Defines Reporting interface.'
+          technology 'bhce/server/reporting/handlers'
+        }
+
+        reportingServices = goPackage 'services' {
+          #example
+          description 'Business-logic layer for reports. Defines its own Database interface with only the methods it needs (e.g., GetRecentAnalysisRequests).'
+          technology 'bhce/server/reporting/services'
+        }
+
+        reportingAppdb = goPackage 'appdb' {
+          #example
+          description 'Persistence layer for reporting. Directly queries analysis_request_switch table (and any other tables) via SQL. No import of analysis feature packages needed.'
+          technology 'bhce/server/reporting/appdb'
+        }
+      }
+    }
+
+    postgres = database 'PostgreSQL' {
+      description 'Relational database. Stores analysis requests, users, audit logs, RBAC configuration, and collector state.'
+      technology 'PostgreSQL 14+'
+    }
+
+    neo4j = database 'Neo4j' {
+      description 'Graph database. Stores AD and Azure objects as nodes and attack-path relationships as edges. Queried for path-finding and exposure scoring.'
+      technology 'Neo4j'
+    }
+  }
+
+
+  // ── Relationships: Level 1 ────────────────────────────────────────────────
+
+  operator    -> bhce       'manages via'
+  analyst     -> bhce       'investigates attack paths via'
+  bhce         -> adTenant  'collects identity and permission data from'
+
+  // ── Relationships: Level 2 ────────────────────────────────────────────────
+
+  operator -> bhce.webUI    'opens in browser'
+  analyst  -> bhce.webUI    'opens in browser'
+  bhce.webUI     -> bhce.apiServer  'HTTPS REST requests'
+  bhce.apiServer -> bhce.postgres   'reads / writes via pgx'
+  bhce.apiServer -> bhce.neo4j      'queries attack paths via Bolt'
+
+  // ── Relationships: Level 3 (startup wiring) ───────────────────────────────
+
+  bhce.apiServer.modulesPkg       -> bhce.apiServer.wireupPkg                 'uses Deps and Module types from'
+  bhce.apiServer.modulesPkg       -[registers]-> bhce.apiServer.analysisFeature 'calls Register(Deps) on'
+  bhce.apiServer.modulesPkg       -[registers]-> bhce.apiServer.reportingFeature 'calls Register(Deps) on'
+  bhce.apiServer.analysisFeature  -> bhce.apiServer.wireupPkg                 'receives Deps from'
+  bhce.apiServer.reportingFeature -> bhce.apiServer.wireupPkg                 'receives Deps from'
+
+  // ── Relationships: Level 3 (request path) ────────────────────────────────
+
+  bhce.apiServer.httpRouter                       -[calls]-> bhce.apiServer.analysisFeature.analysisHandlers 'dispatches HTTP requests to'
+  bhce.apiServer.httpRouter                       -[calls]-> bhce.apiServer.reportingFeature.reportingHandlers 'dispatches HTTP requests to'
+  bhce.apiServer.analysisFeature.analysisHandlers -> bhce.apiServer.responsesPkg 'uses response helpers from'
+  bhce.apiServer.reportingFeature.reportingHandlers -> bhce.apiServer.responsesPkg 'uses response helpers from'
+
+  // ── Relationships: Level 4 (analysis internal) ───────────────────────────
+
+  bhce.apiServer.analysisFeature.analysisHandlers -> bhce.apiServer.analysisFeature.analysisServices 'calls via Analysis interface'
+  bhce.apiServer.analysisFeature.analysisServices -> bhce.apiServer.analysisFeature.analysisAppdb    'calls via Database interface'
+  bhce.apiServer.analysisFeature.analysisAppdb    -> bhce.postgres                                   'executes SQL against'
+
+  // ── Type import relationships (showing dependency inversion) ──────────────
+  // These imports enable the layered architecture while maintaining testability
+
+  // handlers imports services for:
+  //   - services.RequestedAnalysis (domain type in return values)
+  //   - services.ErrNoPendingRequest (for error comparison)
+  //   - services.RequestedAnalysisType (used in view types)
+  bhce.apiServer.analysisFeature.analysisHandlers -[imports]-> bhce.apiServer.analysisFeature.analysisServices 'imports domain types and errors'
+
+  // appdb imports services for:
+  //   - services.RequestedAnalysis (return type, satisfies Database interface)
+  //   - services.ErrNotFound (sentinel error defined by consumer)
+  //   - services.RequestedAnalysisType (for type conversion)
+  bhce.apiServer.analysisFeature.analysisAppdb -[imports]-> bhce.apiServer.analysisFeature.analysisServices 'imports domain types and sentinel errors'
+
+  // ── Relationships: Reporting feature (hypothetical example) ───────────────
+  // Shows how a second feature can access the same database tables independently
+
+  bhce.apiServer.reportingFeature.reportingHandlers -> bhce.apiServer.reportingFeature.reportingServices 'calls via Reporting interface'
+  bhce.apiServer.reportingFeature.reportingServices -> bhce.apiServer.reportingFeature.reportingAppdb    'calls via Database interface'
+  bhce.apiServer.reportingFeature.reportingAppdb    -> bhce.postgres                                     'executes SQL against (same tables as analysis)'
+
+  // Type imports for reporting (same pattern as analysis)
+  bhce.apiServer.reportingFeature.reportingHandlers -[imports]-> bhce.apiServer.reportingFeature.reportingServices 'imports domain types and errors'
+  bhce.apiServer.reportingFeature.reportingAppdb    -[imports]-> bhce.apiServer.reportingFeature.reportingServices 'imports domain types and sentinel errors'
+
+  // Key insight: reporting.appdb queries analysis_request_switch table directly
+  // No import of analysis feature packages is needed - only SQL access to shared PostgreSQL
+}
