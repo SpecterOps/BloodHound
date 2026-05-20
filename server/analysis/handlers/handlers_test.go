@@ -17,6 +17,7 @@
 package handlers_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -32,7 +33,6 @@ import (
 	"github.com/specterops/bloodhound/server/analysis/handlers/mocks"
 	"github.com/specterops/bloodhound/server/analysis/services"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -57,160 +57,168 @@ func TestHandlers_GetRequest(t *testing.T) {
 		return req
 	}
 
-	t.Run("returns 200 with the analysis request view on success", func(t *testing.T) {
-		var (
-			expected = services.RequestedAnalysis{
-				RequestedBy:         "test-user",
-				RequestType:         services.RequestedAnalysisTypeAnalysis,
-				RequestedAt:         time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-				DeleteSourceKinds:   []string{"AZBase"},
-				DeleteRelationships: []string{"HasSession"},
-			}
-			analysisMock = mocks.NewMockAnalysis(t)
-			handlerSet   = handlers.NewHandlersContainer(analysisMock)
-			recorder     = httptest.NewRecorder()
-			request      = newRequest(t)
-		)
-
-		analysisMock.EXPECT().GetRequest(request.Context()).Return(expected, nil)
-
-		handlerSet.GetRequest(recorder, request)
-
-		assert.Equal(t, http.StatusOK, recorder.Code)
-		assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
-
-		var envelope struct {
-			Data handlers.RequestedAnalysisView `json:"data"`
+	var (
+		unexpectedErr = errors.New("unexpected database failure")
+		expected      = services.RequestedAnalysis{
+			RequestedBy:         "test-user",
+			RequestType:         services.RequestedAnalysisTypeAnalysis,
+			RequestedAt:         time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			DeleteSourceKinds:   []string{"AZBase"},
+			DeleteRelationships: []string{"HasSession"},
 		}
-		require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &envelope))
-		assert.Equal(t, expected.RequestedBy, envelope.Data.RequestedBy)
-		assert.Equal(t, expected.RequestType, envelope.Data.RequestType)
-		assert.Equal(t, expected.DeleteSourceKinds, envelope.Data.DeleteSourceKinds)
-		assert.Equal(t, expected.DeleteRelationships, envelope.Data.DeleteRelationships)
-	})
+	)
 
-	t.Run("returns 204 No Content when no request is pending", func(t *testing.T) {
-		var (
-			analysisMock = mocks.NewMockAnalysis(t)
-			handlerSet   = handlers.NewHandlersContainer(analysisMock)
-			recorder     = httptest.NewRecorder()
-			request      = newRequest(t)
-		)
+	tests := []struct {
+		name       string
+		svcResult  services.RequestedAnalysis
+		svcErr     error
+		wantStatus int
+		assertBody func(t *testing.T, body []byte)
+	}{
+		{
+			name:       "returns 200 with the analysis request view on success",
+			svcResult:  expected,
+			wantStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body []byte) {
+				var envelope struct {
+					Data handlers.RequestedAnalysisView `json:"data"`
+				}
+				require.NoError(t, json.Unmarshal(body, &envelope))
+				assert.Equal(t, expected.RequestedBy, envelope.Data.RequestedBy)
+				assert.Equal(t, expected.RequestType, envelope.Data.RequestType)
+				assert.Equal(t, expected.DeleteSourceKinds, envelope.Data.DeleteSourceKinds)
+				assert.Equal(t, expected.DeleteRelationships, envelope.Data.DeleteRelationships)
+			},
+		},
+		{
+			name:       "returns 204 No Content when no request is pending",
+			svcErr:     services.ErrNoPendingRequest,
+			wantStatus: http.StatusNoContent,
+			assertBody: func(t *testing.T, body []byte) {
+				assert.Empty(t, body)
+			},
+		},
+		{
+			name:       "returns 500 on unexpected service errors",
+			svcErr:     unexpectedErr,
+			wantStatus: http.StatusInternalServerError,
+		},
+	}
 
-		analysisMock.EXPECT().GetRequest(request.Context()).Return(services.RequestedAnalysis{}, services.ErrNoPendingRequest)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				analysisMock = mocks.NewMockAnalysis(t)
+				handlerSet   = handlers.NewHandlersContainer(analysisMock)
+				recorder     = httptest.NewRecorder()
+				request      = newRequest(t)
+			)
 
-		handlerSet.GetRequest(recorder, request)
+			analysisMock.EXPECT().GetRequest(request.Context()).Return(tt.svcResult, tt.svcErr)
 
-		assert.Equal(t, http.StatusNoContent, recorder.Code)
-		assert.Empty(t, recorder.Body.Bytes())
-	})
+			handlerSet.GetRequest(recorder, request)
 
-	t.Run("returns 500 on unexpected service errors", func(t *testing.T) {
-		var (
-			unexpectedErr = errors.New("unexpected database failure")
-			analysisMock  = mocks.NewMockAnalysis(t)
-			handlerSet    = handlers.NewHandlersContainer(analysisMock)
-			recorder      = httptest.NewRecorder()
-			request       = newRequest(t)
-		)
-
-		analysisMock.EXPECT().GetRequest(request.Context()).Return(services.RequestedAnalysis{}, unexpectedErr)
-
-		handlerSet.GetRequest(recorder, request)
-
-		assert.Equal(t, http.StatusInternalServerError, recorder.Code)
-	})
+			assert.Equal(t, tt.wantStatus, recorder.Code)
+			if tt.assertBody != nil {
+				tt.assertBody(t, recorder.Body.Bytes())
+			}
+		})
+	}
 }
 
 func TestHandlers_CreateRequest(t *testing.T) {
 	var (
-		userID        = uuid.Must(uuid.NewV4())
-		userIDString  = userID.String()
-		requestedAt   = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-		createdResult = services.RequestedAnalysis{
-			RequestedBy: userIDString,
-			RequestType: services.RequestedAnalysisTypeAnalysis,
-			RequestedAt: requestedAt,
-		}
-		existingResult = services.RequestedAnalysis{
-			RequestedBy: "other-user",
-			RequestType: services.RequestedAnalysisTypeAnalysis,
-			RequestedAt: requestedAt,
-		}
+		userID         = uuid.Must(uuid.NewV4())
+		userIDString   = userID.String()
+		requestedAt    = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+		serviceErr     = errors.New("db unavailable")
+		createdResult  = services.RequestedAnalysis{RequestedBy: userIDString, RequestType: services.RequestedAnalysisTypeAnalysis, RequestedAt: requestedAt}
+		existingResult = services.RequestedAnalysis{RequestedBy: "other-user", RequestType: services.RequestedAnalysisTypeAnalysis, RequestedAt: requestedAt}
 	)
 
-	decodeBody := func(t *testing.T, body []byte) handlers.RequestedAnalysisView {
+	decodeRequestedBy := func(t *testing.T, body []byte) string {
 		t.Helper()
 		var envelope struct {
 			Data handlers.RequestedAnalysisView `json:"data"`
 		}
 		require.NoError(t, json.Unmarshal(body, &envelope))
-		return envelope.Data
+		return envelope.Data.RequestedBy
 	}
 
-	t.Run("returns 202 Accepted with the new request body when this call accepted it", func(t *testing.T) {
-		var (
-			analysisMock = mocks.NewMockAnalysis(t)
-			handlerSet   = handlers.NewHandlersContainer(analysisMock)
-			recorder     = httptest.NewRecorder()
-			request      = newAuthenticatedRequest(t, http.MethodPut, "/api/v2/analysis", userID)
-		)
+	// expect configures the mock for the service call the handler is expected
+	// to make. nil means the handler should short-circuit before reaching the
+	// service (mockery's strict mode then guarantees no call is made).
+	tests := []struct {
+		name             string
+		authenticated    bool
+		expect           func(m *mocks.MockAnalysis, ctx context.Context)
+		wantStatus       int
+		wantRequestedBy  string // empty means do not assert on body
+		wantBodyContains string
+	}{
+		{
+			name:          "returns 202 Accepted with the new request body when this call accepted it",
+			authenticated: true,
+			expect: func(m *mocks.MockAnalysis, ctx context.Context) {
+				m.EXPECT().CreateRequest(ctx, userIDString).Return(createdResult, true, nil)
+			},
+			wantStatus:      http.StatusAccepted,
+			wantRequestedBy: userIDString,
+		},
+		{
+			name:          "returns 200 OK with the existing request body when one was already pending",
+			authenticated: true,
+			expect: func(m *mocks.MockAnalysis, ctx context.Context) {
+				m.EXPECT().CreateRequest(ctx, userIDString).Return(existingResult, false, nil)
+			},
+			wantStatus:      http.StatusOK,
+			wantRequestedBy: existingResult.RequestedBy,
+		},
+		{
+			name:             "returns 401 Unauthorized when no authenticated user is present",
+			authenticated:    false,
+			wantStatus:       http.StatusUnauthorized,
+			wantBodyContains: "authentication is required",
+		},
+		{
+			name:          "returns 500 on service error",
+			authenticated: true,
+			expect: func(m *mocks.MockAnalysis, ctx context.Context) {
+				m.EXPECT().CreateRequest(ctx, userIDString).Return(services.RequestedAnalysis{}, false, serviceErr)
+			},
+			wantStatus: http.StatusInternalServerError,
+		},
+	}
 
-		analysisMock.EXPECT().CreateRequest(request.Context(), userIDString).Return(createdResult, true, nil)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				analysisMock = mocks.NewMockAnalysis(t)
+				handlerSet   = handlers.NewHandlersContainer(analysisMock)
+				recorder     = httptest.NewRecorder()
+				request      *http.Request
+			)
 
-		handlerSet.CreateRequest(recorder, request)
+			if tt.authenticated {
+				request = newAuthenticatedRequest(t, http.MethodPut, "/api/v2/analysis", userID)
+			} else {
+				req, err := http.NewRequest(http.MethodPut, "/api/v2/analysis", nil)
+				require.NoError(t, err)
+				request = req
+			}
+			if tt.expect != nil {
+				tt.expect(analysisMock, request.Context())
+			}
 
-		assert.Equal(t, http.StatusAccepted, recorder.Code)
-		assert.Equal(t, userIDString, decodeBody(t, recorder.Body.Bytes()).RequestedBy)
-	})
+			handlerSet.CreateRequest(recorder, request)
 
-	t.Run("returns 200 OK with the existing request body when one was already pending", func(t *testing.T) {
-		var (
-			analysisMock = mocks.NewMockAnalysis(t)
-			handlerSet   = handlers.NewHandlersContainer(analysisMock)
-			recorder     = httptest.NewRecorder()
-			request      = newAuthenticatedRequest(t, http.MethodPut, "/api/v2/analysis", userID)
-		)
-
-		analysisMock.EXPECT().CreateRequest(request.Context(), userIDString).Return(existingResult, false, nil)
-
-		handlerSet.CreateRequest(recorder, request)
-
-		assert.Equal(t, http.StatusOK, recorder.Code)
-		assert.Equal(t, existingResult.RequestedBy, decodeBody(t, recorder.Body.Bytes()).RequestedBy)
-	})
-
-	t.Run("returns 401 Unauthorized when no authenticated user is present", func(t *testing.T) {
-		var (
-			analysisMock = mocks.NewMockAnalysis(t)
-			handlerSet   = handlers.NewHandlersContainer(analysisMock)
-			recorder     = httptest.NewRecorder()
-		)
-
-		req, err := http.NewRequest(http.MethodPut, "/api/v2/analysis", nil)
-		require.NoError(t, err)
-
-		handlerSet.CreateRequest(recorder, req)
-
-		assert.Equal(t, http.StatusUnauthorized, recorder.Code)
-		assert.Contains(t, recorder.Body.String(), "authentication is required")
-		// The service must not be invoked when authentication fails.
-		analysisMock.AssertNotCalled(t, "CreateRequest", mock.Anything, mock.Anything)
-	})
-
-	t.Run("returns 500 on service error", func(t *testing.T) {
-		var (
-			expectedErr  = errors.New("db unavailable")
-			analysisMock = mocks.NewMockAnalysis(t)
-			handlerSet   = handlers.NewHandlersContainer(analysisMock)
-			recorder     = httptest.NewRecorder()
-			request      = newAuthenticatedRequest(t, http.MethodPut, "/api/v2/analysis", userID)
-		)
-
-		analysisMock.EXPECT().CreateRequest(request.Context(), userIDString).Return(services.RequestedAnalysis{}, false, expectedErr)
-
-		handlerSet.CreateRequest(recorder, request)
-
-		assert.Equal(t, http.StatusInternalServerError, recorder.Code)
-	})
+			assert.Equal(t, tt.wantStatus, recorder.Code)
+			if tt.wantRequestedBy != "" {
+				assert.Equal(t, tt.wantRequestedBy, decodeRequestedBy(t, recorder.Body.Bytes()))
+			}
+			if tt.wantBodyContains != "" {
+				assert.Contains(t, recorder.Body.String(), tt.wantBodyContains)
+			}
+		})
+	}
 }

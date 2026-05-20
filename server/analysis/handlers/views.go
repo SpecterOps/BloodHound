@@ -23,6 +23,9 @@ import (
 	"github.com/specterops/bloodhound/server/analysis/services"
 )
 
+// RequestedAnalysisView is the JSON shape returned by the analysis handlers for
+// a pending analysis request. It is decoupled from services.RequestedAnalysis so
+// the wire format can evolve independently of the domain model.
 type RequestedAnalysisView struct {
 	RequestedBy string                         `json:"requested_by"`
 	RequestType services.RequestedAnalysisType `json:"request_type"`
@@ -35,6 +38,8 @@ type RequestedAnalysisView struct {
 	DeleteRelationships   []string `json:"delete_relationships"`
 }
 
+// BuildRequestedAnalysisView projects a services.RequestedAnalysis into the
+// view type the handlers return in their JSON envelope.
 func BuildRequestedAnalysisView(ra services.RequestedAnalysis) RequestedAnalysisView {
 	return RequestedAnalysisView{
 		RequestedBy:           ra.RequestedBy,
@@ -47,6 +52,8 @@ func BuildRequestedAnalysisView(ra services.RequestedAnalysis) RequestedAnalysis
 	}
 }
 
-func (rav RequestedAnalysisView) JSONView() ([]byte, error) {
-	return json.Marshal(rav)
+// JSONView marshals the view to the byte slice expected by responses.WriteBasic,
+// satisfying the responses.JSONViewer contract.
+func (s RequestedAnalysisView) JSONView() ([]byte, error) {
+	return json.Marshal(s)
 }

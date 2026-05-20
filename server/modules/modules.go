@@ -30,7 +30,7 @@ import (
 // has attached to the router (e.g. middleware) — the analysis module has no
 // such dependency today.
 var all = []wireup.Module{
-	analysis.Module{},
+	analysis.Register,
 }
 
 // RegisterAll registers every configured feature module with the server,
@@ -39,11 +39,11 @@ func RegisterAll(deps wireup.Deps) {
 	register(deps, all)
 }
 
-// register iterates the supplied modules and invokes Register on each. It is
-// the unit of work behind RegisterAll, separated so it can be exercised with
-// fake modules in tests.
+// register iterates the supplied modules and invokes each in turn. It is the
+// unit of work behind RegisterAll, separated so it can be exercised with fake
+// modules in tests.
 func register(deps wireup.Deps, modules []wireup.Module) {
 	for _, module := range modules {
-		module.Register(deps)
+		module(deps)
 	}
 }

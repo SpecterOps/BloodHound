@@ -29,110 +29,127 @@ import (
 )
 
 func TestService_GetRequest(t *testing.T) {
-	var ctx = context.Background()
+	var (
+		ctx           = context.Background()
+		unexpectedErr = errors.New("connection refused")
+		expected      = services.RequestedAnalysis{
+			RequestedBy:           "test-user",
+			RequestType:           services.RequestedAnalysisTypeAnalysis,
+			RequestedAt:           time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			DeleteAllGraph:        true,
+			DeleteSourcelessGraph: false,
+			DeleteSourceKinds:     []string{"AZBase"},
+			DeleteRelationships:   []string{"HasSession"},
+		}
+	)
 
-	t.Run("returns the analysis request on success", func(t *testing.T) {
-		var (
-			expected = services.RequestedAnalysis{
-				RequestedBy:           "test-user",
-				RequestType:           services.RequestedAnalysisTypeAnalysis,
-				RequestedAt:           time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-				DeleteAllGraph:        true,
-				DeleteSourcelessGraph: false,
-				DeleteSourceKinds:     []string{"AZBase"},
-				DeleteRelationships:   []string{"HasSession"},
+	tests := []struct {
+		name      string
+		dbResult  services.RequestedAnalysis
+		dbErr     error
+		wantResult services.RequestedAnalysis
+		wantErr   error
+	}{
+		{
+			name:       "returns the analysis request on success",
+			dbResult:   expected,
+			wantResult: expected,
+		},
+		{
+			name:    "maps ErrNotFound to ErrNoPendingRequest",
+			dbErr:   services.ErrNotFound,
+			wantErr: services.ErrNoPendingRequest,
+		},
+		{
+			name:    "propagates unexpected database errors",
+			dbErr:   unexpectedErr,
+			wantErr: unexpectedErr,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				databaseMock = mocks.NewMockDatabase(t)
+				svc          = services.NewService(databaseMock)
+			)
+
+			databaseMock.EXPECT().GetAnalysisRequest(ctx).Return(tt.dbResult, tt.dbErr)
+
+			result, err := svc.GetRequest(ctx)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.wantResult, result)
 			}
-			databaseMock = mocks.NewMockDatabase(t)
-			svc          = services.NewService(databaseMock)
-		)
-
-		databaseMock.EXPECT().GetAnalysisRequest(ctx).Return(expected, nil)
-
-		result, err := svc.GetRequest(ctx)
-		require.NoError(t, err)
-		assert.Equal(t, expected, result)
-	})
-
-	t.Run("maps ErrNotFound to ErrNoPendingRequest", func(t *testing.T) {
-		var (
-			databaseMock = mocks.NewMockDatabase(t)
-			svc          = services.NewService(databaseMock)
-		)
-
-		databaseMock.EXPECT().GetAnalysisRequest(ctx).Return(services.RequestedAnalysis{}, services.ErrNotFound)
-
-		_, err := svc.GetRequest(ctx)
-		assert.ErrorIs(t, err, services.ErrNoPendingRequest)
-	})
-
-	t.Run("propagates unexpected database errors", func(t *testing.T) {
-		var (
-			unexpectedErr = errors.New("connection refused")
-			databaseMock  = mocks.NewMockDatabase(t)
-			svc           = services.NewService(databaseMock)
-		)
-
-		databaseMock.EXPECT().GetAnalysisRequest(ctx).Return(services.RequestedAnalysis{}, unexpectedErr)
-
-		_, err := svc.GetRequest(ctx)
-		assert.ErrorIs(t, err, unexpectedErr)
-	})
+		})
+	}
 }
 
 func TestService_CreateRequest(t *testing.T) {
 	var (
-		ctx       = context.Background()
-		requester = "test-user"
+		ctx         = context.Background()
+		requester   = "test-user"
+		requestedAt = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+		expectedErr = errors.New("db unavailable")
+		created     = services.RequestedAnalysis{
+			RequestedBy: requester,
+			RequestType: services.RequestedAnalysisTypeAnalysis,
+			RequestedAt: requestedAt,
+		}
+		existing = services.RequestedAnalysis{
+			RequestedBy: "other-user",
+			RequestType: services.RequestedAnalysisTypeAnalysis,
+			RequestedAt: requestedAt,
+		}
 	)
 
-	t.Run("returns created=true and the new request on success", func(t *testing.T) {
-		var (
-			expected = services.RequestedAnalysis{
-				RequestedBy: requester,
-				RequestType: services.RequestedAnalysisTypeAnalysis,
-				RequestedAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+	tests := []struct {
+		name        string
+		dbResult    services.RequestedAnalysis
+		dbCreated   bool
+		dbErr       error
+		wantResult  services.RequestedAnalysis
+		wantCreated bool
+		wantErr     error
+	}{
+		{
+			name:        "returns created=true and the new request on success",
+			dbResult:    created,
+			dbCreated:   true,
+			wantResult:  created,
+			wantCreated: true,
+		},
+		{
+			name:       "returns created=false and the existing request when one is already pending",
+			dbResult:   existing,
+			wantResult: existing,
+		},
+		{
+			name:    "propagates database errors",
+			dbErr:   expectedErr,
+			wantErr: expectedErr,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				databaseMock = mocks.NewMockDatabase(t)
+				svc          = services.NewService(databaseMock)
+			)
+
+			databaseMock.EXPECT().CreateAnalysisRequest(ctx, requester).Return(tt.dbResult, tt.dbCreated, tt.dbErr)
+
+			current, gotCreated, err := svc.CreateRequest(ctx, requester)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.wantCreated, gotCreated)
+				assert.Equal(t, tt.wantResult, current)
 			}
-			databaseMock = mocks.NewMockDatabase(t)
-			svc          = services.NewService(databaseMock)
-		)
-
-		databaseMock.EXPECT().CreateAnalysisRequest(ctx, requester).Return(expected, true, nil)
-
-		current, created, err := svc.CreateRequest(ctx, requester)
-		require.NoError(t, err)
-		assert.True(t, created)
-		assert.Equal(t, expected, current)
-	})
-
-	t.Run("returns created=false and the existing request when one is already pending", func(t *testing.T) {
-		var (
-			existing = services.RequestedAnalysis{
-				RequestedBy: "other-user",
-				RequestType: services.RequestedAnalysisTypeAnalysis,
-				RequestedAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-			}
-			databaseMock = mocks.NewMockDatabase(t)
-			svc          = services.NewService(databaseMock)
-		)
-
-		databaseMock.EXPECT().CreateAnalysisRequest(ctx, requester).Return(existing, false, nil)
-
-		current, created, err := svc.CreateRequest(ctx, requester)
-		require.NoError(t, err)
-		assert.False(t, created)
-		assert.Equal(t, existing, current)
-	})
-
-	t.Run("propagates database errors", func(t *testing.T) {
-		var (
-			expectedErr  = errors.New("db unavailable")
-			databaseMock = mocks.NewMockDatabase(t)
-			svc          = services.NewService(databaseMock)
-		)
-
-		databaseMock.EXPECT().CreateAnalysisRequest(ctx, requester).Return(services.RequestedAnalysis{}, false, expectedErr)
-
-		_, _, err := svc.CreateRequest(ctx, requester)
-		assert.ErrorIs(t, err, expectedErr)
-	})
+		})
+	}
 }

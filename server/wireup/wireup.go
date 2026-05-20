@@ -34,10 +34,9 @@ type Deps struct {
 	Pool   *pgxpool.Pool
 }
 
-// Module is implemented by a feature's wireup package. Register is invoked
-// once during server startup and is responsible for building the module's
-// store -> service -> handler chain from the supplied Deps and attaching any
-// routes or other entry points the module exposes.
-type Module interface {
-	Register(deps Deps)
-}
+// Module is a feature's wireup entry point. It is invoked once during server
+// startup and is responsible for building the module's store -> service ->
+// handler chain from the supplied Deps and attaching any routes or other
+// entry points the module exposes. A function type is sufficient because a
+// module exposes no other behaviour beyond registration.
+type Module func(deps Deps)

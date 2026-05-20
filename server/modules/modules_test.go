@@ -26,31 +26,34 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// recordingModule captures every Register invocation so tests can assert that
-// the registry walked the slice in order and forwarded the supplied Deps.
-type recordingModule struct {
+// recorder captures every invocation of a wireup.Module produced by its
+// module helper so tests can assert that the registry walked the slice in
+// order and forwarded the supplied Deps.
+type recorder struct {
 	name   string
 	order  *[]string
 	called []wireup.Deps
 }
 
-func (s *recordingModule) Register(deps wireup.Deps) {
-	if s.order != nil {
-		*s.order = append(*s.order, s.name)
+func (s *recorder) module() wireup.Module {
+	return func(deps wireup.Deps) {
+		if s.order != nil {
+			*s.order = append(*s.order, s.name)
+		}
+		s.called = append(s.called, deps)
 	}
-	s.called = append(s.called, deps)
 }
 
 func TestRegister_InvokesEachModuleOnceWithTheSuppliedDeps(t *testing.T) {
 	var (
-		first  = &recordingModule{name: "first"}
-		second = &recordingModule{name: "second"}
+		first  = &recorder{name: "first"}
+		second = &recorder{name: "second"}
 		// Non-zero pointer fields so the assertion exercises identity rather
 		// than zero-value equality.
 		deps = wireup.Deps{Router: &router.Router{}, Pool: &pgxpool.Pool{}}
 	)
 
-	register(deps, []wireup.Module{first, second})
+	register(deps, []wireup.Module{first.module(), second.module()})
 
 	require.Len(t, first.called, 1)
 	require.Len(t, second.called, 1)
@@ -61,11 +64,10 @@ func TestRegister_InvokesEachModuleOnceWithTheSuppliedDeps(t *testing.T) {
 func TestRegister_PreservesSliceOrder(t *testing.T) {
 	var (
 		order   []string
-		modules = []wireup.Module{
-			&recordingModule{name: "first", order: &order},
-			&recordingModule{name: "second", order: &order},
-			&recordingModule{name: "third", order: &order},
-		}
+		first   = &recorder{name: "first", order: &order}
+		second  = &recorder{name: "second", order: &order}
+		third   = &recorder{name: "third", order: &order}
+		modules = []wireup.Module{first.module(), second.module(), third.module()}
 	)
 
 	register(wireup.Deps{}, modules)

@@ -32,6 +32,8 @@ import (
 const errorMessageInternalServerError = "an internal error has occurred that is preventing the service from servicing this request"
 const failedToMarshalMessage = "Failed to marshal response. Try again later."
 
+// JSONViewer is implemented by view types that can marshal themselves to the
+// JSON byte slice used as the `data` payload of a BasicResponse.
 type JSONViewer interface {
 	JSONView() ([]byte, error)
 }
@@ -99,9 +101,9 @@ func WriteNoContent(response http.ResponseWriter) {
 // WriteInternalServerError writes a generic 500 error response and logs the underlying cause.
 // Use this when a service returns an error that the handler cannot map to a more specific
 // failure mode.
-func WriteInternalServerError(request *http.Request, cause error, response http.ResponseWriter) {
-	slog.ErrorContext(request.Context(), "Unexpected service error", attr.Error(cause))
-	WriteError(request.Context(), http.StatusInternalServerError, errorMessageInternalServerError, response)
+func WriteInternalServerError(ctx context.Context, cause error, response http.ResponseWriter) {
+	slog.ErrorContext(ctx, "Unexpected service error", attr.Error(cause))
+	WriteError(ctx, http.StatusInternalServerError, errorMessageInternalServerError, response)
 }
 
 func writeJSON[T BasicResponse | ErrorWrapper](requestCtx context.Context, message T, statusCode int, response http.ResponseWriter) {

@@ -52,8 +52,8 @@ func NewHandlersContainer(analysis Analysis) *Handlers {
 }
 
 // GetRequest returns the currently pending analysis request. Returns 200 with the
-// request details when one is pending, or 404 with an error envelope when no request
-// is currently pending.
+// request details when one is pending, or 204 No Content when no request is
+// currently pending.
 func (s Handlers) GetRequest(response http.ResponseWriter, request *http.Request) {
 	var ctx = request.Context()
 
@@ -63,7 +63,7 @@ func (s Handlers) GetRequest(response http.ResponseWriter, request *http.Request
 		return
 	}
 	if err != nil {
-		responses.WriteInternalServerError(request, err, response)
+		responses.WriteInternalServerError(ctx, err, response)
 		return
 	}
 
@@ -71,7 +71,7 @@ func (s Handlers) GetRequest(response http.ResponseWriter, request *http.Request
 }
 
 // CreateRequest submits a new analysis request attributed to the authenticated user.
-// Returns 201 Created when this call accepted the request, 200 OK when a request was
+// Returns 202 Accepted when this call accepted the request, 200 OK when a request was
 // already pending (the body in both cases describes the currently pending request), or
 // 401 Unauthorized when no authenticated user can be resolved from the request.
 func (s Handlers) CreateRequest(response http.ResponseWriter, request *http.Request) {
@@ -85,7 +85,7 @@ func (s Handlers) CreateRequest(response http.ResponseWriter, request *http.Requ
 
 	current, created, err := s.analysis.CreateRequest(ctx, user.ID.String())
 	if err != nil {
-		responses.WriteInternalServerError(request, err, response)
+		responses.WriteInternalServerError(ctx, err, response)
 		return
 	}
 
