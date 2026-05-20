@@ -46,13 +46,16 @@ func setupCoerceAndNTLMToADCS(ctx context.Context, db graph.Database, opMessage 
 	operation := post.NewPostRelationshipOperation(ctx, db, opMessage)
 
 	if localGroupData, cache, err := FetchADCSPrereqs(db); err != nil {
+		operation.Done()
 		return err
 	} else if ntlmCache, err := adAnalysis.NewNTLMCache(ctx, db, localGroupData); err != nil {
+		operation.Done()
 		return err
 	} else if err := adAnalysis.PostCoerceAndRelayNTLMToADCS(ctx, operation, cache, ntlmCache); err != nil {
+		operation.Done()
 		return err
 	} else {
-		return nil
+		return operation.Done()
 	}
 }
 

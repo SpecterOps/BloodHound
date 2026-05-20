@@ -25,6 +25,7 @@ import (
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -58,7 +59,12 @@ func TestPostADCSESC6a_ManagedServiceAccounts(t *testing.T) {
 		gmsaUser     = NewActiveDirectoryUser(t, &suite, "GMSAUser", domainSID)
 		smsaUser     = NewActiveDirectoryUser(t, &suite, "SMSAUser", domainSID)
 		computer     = NewActiveDirectoryComputer(t, &suite, "Computer", domainSID)
+		ecaHost      = NewActiveDirectoryComputer(t, &suite, "ECA Host", domainSID)
 	)
+
+	ecaHost.Properties.Set(common.Enabled.String(), true)
+	UpdateNode(t, &suite, ecaHost)
+	NewRelationship(t, &suite, ecaHost, enterpriseCA, ad.HostsCAService)
 
 	gmsaUser.Properties.Set(ad.GMSA.String(), true)
 	UpdateNode(t, &suite, gmsaUser)

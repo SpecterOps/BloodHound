@@ -41,9 +41,7 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 
 	// 2. iterate certtemplates that have an outbound `PublishedTo` edge to eca
 	for _, certTemplate := range publishedTemplates {
-		if !isCertTemplateValidForESC4(ctx, certTemplate) {
-			continue
-		} else if principalsWithGenericWrite, err := FetchPrincipalsWithGenericWriteOnCertTemplate(tx, certTemplate); err != nil {
+		if principalsWithGenericWrite, err := FetchPrincipalsWithGenericWriteOnCertTemplate(tx, certTemplate); err != nil {
 			slog.WarnContext(
 				ctx,
 				"Error fetching principals with GenericWrite on cert template",
@@ -109,6 +107,11 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 					principalsWithEnrollOrAllExtendedRights.Slice(),
 				),
 			)
+
+			// 2c. kick out early if cert template does meet conditions for ESC4
+			if !isCertTemplateValidForESC4(ctx, certTemplate) {
+				continue
+			}
 
 			// 2d. principals with `Enroll/AllExtendedRights` + `WritePKINameFlag` + `WritePKIEnrollmentFlag` on the cert template
 			principals.Or(CalculateCrossProductNodeSets(
