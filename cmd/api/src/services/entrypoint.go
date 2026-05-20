@@ -41,6 +41,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/cache"
@@ -74,14 +75,33 @@ func ConnectDatabases(ctx context.Context, cfg config.Configuration) (bootstrap.
 	}
 }
 
+// CreateRuntimeDependencies creates the needed dependencies prior to migration. For instance, the FileService is needed for
+// IngestControl which occurs prior to migration. This function can be used to make the struct to contain the services that
+// are necessary for the application.
+func CreateRuntimeDependencies(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) (bootstrap.RuntimeDependencies, error) {
+	var dependencies = bootstrap.RuntimeDependencies{}
+	if fileServices, err := storage.NewDefaultFileServices(cfg); err != nil {
+		return dependencies, fmt.Errorf("failed to initialize file services: %w", err)
+	} else if fileServiceResolver, err := storage.NewFileServiceResolver(fileServices); err != nil {
+		return dependencies, fmt.Errorf("failed to initialize file service resolver: %w", err)
+		// The FileServiceRetained is necessary for the PreMigrationDaemons where it is used in IngestControl for Cleanup.
+		// Checking it here ensures we have the service prior to running the application.
+	} else if _, err := fileServiceResolver.Resolve(storage.FileServiceRetained); err != nil {
+		return dependencies, fmt.Errorf("failed to resolve retained file service: %w", err)
+	} else {
+		dependencies.FileServiceResolver = fileServiceResolver
+		return dependencies, nil
+	}
+}
+
 // PreMigrationDaemons Word of caution: These daemons will be launched prior to any migration starting
-func PreMigrationDaemons(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) ([]daemons.Daemon, error) {
+func PreMigrationDaemons(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], dependencies bootstrap.RuntimeDependencies) ([]daemons.Daemon, error) {
 	return []daemons.Daemon{
 		toolapi.NewDaemon(ctx, connections, cfg, schema.DefaultGraphSchema()),
 	}, nil
 }
 
-func Entrypoint(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) ([]daemons.Daemon, error) {
+func Entrypoint(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], dependencies bootstrap.RuntimeDependencies) ([]daemons.Daemon, error) {
 
 	dogtagsService := dogtags.NewDefaultService()
 
