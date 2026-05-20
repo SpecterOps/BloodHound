@@ -259,6 +259,10 @@ func (s Configuration) ScratchDirectory() string {
 	return filepath.Join(s.WorkDir, "ingest_scratch")
 }
 
+func (s Configuration) ScratchDirectory() string {
+	return filepath.Join(s.WorkDir, "ingest_scratch")
+}
+
 func (s Configuration) TempDirectory() string {
 	return filepath.Join(s.WorkDir, "tmp")
 }
