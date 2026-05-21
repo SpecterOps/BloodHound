@@ -59,7 +59,7 @@ func OpenGraphDB(t *testing.T, schema graph.Schema) graph.Database {
 		connConf := pgtestdb.Custom(t, GetPostgresConfig(cfg), pgtestdb.NoopMigrator{})
 		cfg.Database.Connection = connConf.URL()
 
-		pool, err := dbpool.NewPool(cfg.Database)
+		pool, err := dbpool.NewDawgsPool(cfg.Database)
 		test.RequireNilErrf(t, err, "Failed to create new pgx pool: %v", err)
 		graphDatabase, err = dawgs.Open(context.Background(), cfg.GraphDriver, dawgs.Config{
 			ConnectionString: cfg.Database.PostgreSQLConnectionString(),

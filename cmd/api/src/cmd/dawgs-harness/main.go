@@ -53,7 +53,7 @@ func RunTestSuite(ctx context.Context, connectionStr, driverName string, cfg con
 	)
 
 	if driverName == pg.DriverName {
-		pool, err = dbpool.NewPool(cfg)
+		pool, err = dbpool.NewDawgsPool(cfg)
 		if err != nil {
 			fatalf("Failed creating a new pgxpool: %s", err)
 		}

@@ -417,7 +417,7 @@ func getNodesAndEdges(ctx context.Context, database graph.Database) ([]*graph.No
 }
 
 func initializeGraphDatabase(ctx context.Context, cfg config.Configuration) (graph.Database, error) {
-	if pool, err := dbpool.NewPool(cfg.Database); err != nil {
+	if pool, err := dbpool.NewDawgsPool(cfg.Database); err != nil {
 		return nil, fmt.Errorf("error creating postgres connection: %w", err)
 	} else if database, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
 		GraphQueryMemoryLimit: size.Gibibyte,

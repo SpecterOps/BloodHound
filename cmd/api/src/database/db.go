@@ -29,6 +29,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database/migration"
@@ -259,16 +260,16 @@ func OpenDatabase(cfg config.DatabaseConfiguration) (*gorm.DB, *pgxpool.Pool, er
 	// NOTE: We intentionally do NOT use dbpool.NewPool here, which registers AfterConnect/AfterRelease
 	// hooks for graph composite types (nodecomposite, edgecomposite, etc). Registering those hooks causes warning log spam
 	// when Neo4j is the graph driver.
-	pool, err := pgxpool.New(context.Background(), cfg.PostgreSQLConnectionString())
+	pool, err := dbpool.NewAppPool(cfg)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	dbPool := stdlib.OpenDBFromPool(pool)
+	dbConn := stdlib.OpenDBFromPool(pool)
 
-	db, err := gorm.Open(postgres.New(postgres.Config{Conn: dbPool}), gormConfig)
+	db, err := gorm.Open(postgres.New(postgres.Config{Conn: dbConn}), gormConfig)
 	if err != nil {
-		_ = dbPool.Close()
+		_ = dbConn.Close()
 		pool.Close()
 		return nil, nil, err
 	}

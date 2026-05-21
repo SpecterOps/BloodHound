@@ -85,8 +85,7 @@ func newHarness() *Harness {
 		os.Exit(1)
 	}
 
-	pool, err := dbpool.NewPool(cfg.Database)
-
+	pool, err := dbpool.NewDawgsPool(cfg.Database)
 	if err != nil {
 		slog.Error("Failed to connect", attr.Error(err))
 		os.Exit(1)

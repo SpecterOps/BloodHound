@@ -62,7 +62,7 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 
 	cfg.Database.Connection = connConf.URL()
 
-	pool, err := dbpool.NewPool(cfg.Database)
+	pool, err := dbpool.NewDawgsPool(cfg.Database)
 	require.NoError(t, err)
 
 	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)

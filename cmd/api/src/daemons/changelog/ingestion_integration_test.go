@@ -101,7 +101,7 @@ func setupIntegrationTest(t *testing.T) IntegrationTestSuite {
 	require.NoError(t, err)
 
 	// Create connection pool
-	pool, err := dbpool.NewPool(cfg.Database)
+	pool, err := dbpool.NewDawgsPool(cfg.Database)
 	require.NoError(t, err)
 
 	// Open graph database

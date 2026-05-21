@@ -56,7 +56,7 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 	cfg, err := config.NewDefaultConnectionConfiguration(connConf.URL())
 	require.NoError(t, err)
 
-	pool, err := dbpool.NewPool(cfg.Database)
+	pool, err := dbpool.NewDawgsPool(cfg.Database)
 	require.NoError(t, err)
 
 	graphDB, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
