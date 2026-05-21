@@ -34,8 +34,19 @@ runs:
       name: Fetch Collector Versions
       shell: bash
       run: |
+        set -euo pipefail
         sharphound_version="$(gh api repos/SpecterOps/SharpHound/releases/latest --jq .tag_name)"
         azurehound_version="$(gh api repos/SpecterOps/AzureHound/releases/latest --jq .tag_name)"
+
+        version_regex='^v[0-9]+\.[0-9]+\.[0-9]+$'
+        if [[ ! "${sharphound_version}" =~ ${version_regex} ]]; then
+          echo "::error::Invalid SharpHound version resolved: '${sharphound_version:-<empty>}'"
+          exit 1
+        fi
+        if [[ ! "${azurehound_version}" =~ ${version_regex} ]]; then
+          echo "::error::Invalid AzureHound version resolved: '${azurehound_version:-<empty>}'"
+          exit 1
+        fi
 
         # Output versions
         echo "sharphound_version=${sharphound_version}" >> "${GITHUB_OUTPUT}"
