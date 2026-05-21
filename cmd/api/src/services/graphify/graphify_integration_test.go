@@ -33,6 +33,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -107,9 +108,14 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 
 	cfg.WorkDir = workDir
 
+	fileServices, err := storage.NewDefaultFileServices(cfg)
+	require.NoError(t, err, "error creating default file services")
+	fileServiceResolver, err := storage.NewFileServiceResolver(fileServices)
+	require.NoError(t, err, "error creating fileServiceResolver")
+
 	return IntegrationTestSuite{
 		Context:         ctx,
-		GraphifyService: graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, nil),
+		GraphifyService: graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, fileServiceResolver, nil),
 		GraphDB:         graphDB,
 		BHDatabase:      db,
 		WorkDir:         workDir,
