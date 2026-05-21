@@ -235,9 +235,35 @@ func TestOrphanFileSweeper_ClearLegacyLocalIngestFiles(t *testing.T) {
 			},
 		},
 	}, nil)
+	mockFileOps.EXPECT().RemoveAll(filepath.Join(tempDirectory, "nested")).Return(nil)
 	mockFileOps.EXPECT().RemoveAll(filepath.Join(tempDirectory, "old.json")).Return(nil)
 
 	sweeper.clearLegacyLocalIngestFiles(context.Background(), []string{"expected.json", "../old.json"})
+}
+
+func TestOrphanFileSweeper_ClearLegacyLocalIngestFilesRemovesOrphanDirectories(t *testing.T) {
+	t.Parallel()
+
+	var (
+		mockCtrl      = gomock.NewController(t)
+		mockFileOps   = mocks.NewMockFileOperations(mockCtrl)
+		tempDirectory = t.TempDir()
+		sweeper       = NewOrphanFileSweeper(mockFileOps, tempDirectory, t.TempDir())
+	)
+
+	mockFileOps.EXPECT().ReadDir(tempDirectory).Return([]os.DirEntry{
+		cleanupInternalDirEntry{
+			name:  "orphan",
+			isDir: true,
+		},
+		cleanupInternalDirEntry{
+			name:  "expected-parent",
+			isDir: true,
+		},
+	}, nil)
+	mockFileOps.EXPECT().RemoveAll(filepath.Join(tempDirectory, "orphan")).Return(nil)
+
+	sweeper.clearLegacyLocalIngestFiles(context.Background(), []string{"expected-parent/file.json"})
 }
 
 func TestClearLocalIngestScratch(t *testing.T) {
