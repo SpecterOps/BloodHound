@@ -20,6 +20,9 @@
             ]
           }
         ]
+      },
+      "propertyNames": {
+        "pattern": "^[a-z0-9_-]+$"
       }
     },
     "endpoint": {
