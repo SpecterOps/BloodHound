@@ -23,11 +23,26 @@ import (
 	"path/filepath"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
+	storagemocks "github.com/specterops/bloodhound/cmd/api/src/services/storage/mocks"
 	"go.uber.org/mock/gomock"
 )
+
+type fileInfo struct {
+	name    string
+	modTime time.Time
+}
+
+func (s fileInfo) Name() string       { return s.name }
+func (s fileInfo) Size() int64        { return 0 }
+func (s fileInfo) Mode() fs.FileMode  { return 0 }
+func (s fileInfo) ModTime() time.Time { return s.modTime }
+func (s fileInfo) IsDir() bool        { return false }
+func (s fileInfo) Sys() any           { return nil }
 
 type dirEntry struct {
 	name    string
@@ -55,14 +70,16 @@ func (s dirEntry) Info() (fs.FileInfo, error) {
 
 func TestOrphanFileSweeper_Clear(t *testing.T) {
 	const workDir = "/fake/work/dir"
+	const scratchDir = "/fake/work/dir/scratch"
 
 	t.Run("Allow Only One Goroutine", func(t *testing.T) {
 		var (
-			mockCtrl       = gomock.NewController(t)
-			mockFileOps    = mocks.NewMockFileOperations(mockCtrl)
-			sweeper        = datapipe.NewOrphanFileSweeper(mockFileOps, workDir)
-			wgCoordination = &sync.WaitGroup{}
-			wgReadDir      = &sync.WaitGroup{}
+			mockCtrl        = gomock.NewController(t)
+			mockFileOps     = mocks.NewMockFileOperations(mockCtrl)
+			mockFileService = storagemocks.NewMockFileService(mockCtrl)
+			sweeper         = datapipe.NewOrphanFileSweeper(mockFileOps, workDir, scratchDir, "")
+			wgCoordination  = &sync.WaitGroup{}
+			wgReadDir       = &sync.WaitGroup{}
 		)
 
 		defer mockCtrl.Finish()
@@ -70,6 +87,10 @@ func TestOrphanFileSweeper_Clear(t *testing.T) {
 		// Prep the wait groups for coordination
 		wgCoordination.Add(1)
 		wgReadDir.Add(1)
+
+		mockFileService.EXPECT().
+			ListFiles(gomock.Any(), "", storage.ListOptions{Recursive: true}).
+			Return(nil, nil)
 
 		mockFileOps.EXPECT().ReadDir(workDir).DoAndReturn(func(path string) ([]os.DirEntry, error) {
 			// Release the coordination wait group
@@ -82,13 +103,13 @@ func TestOrphanFileSweeper_Clear(t *testing.T) {
 		})
 
 		// Launch the clear function in a goroutine. The wait group will cause this call to block
-		go sweeper.Clear(context.Background(), []string{})
+		go sweeper.Clear(context.Background(), mockFileService, []string{})
 
 		// Wait for the go routine to reach the ReadDir function
 		wgCoordination.Wait()
 
 		// Run the clear function in the current thread context as this should exit without blocking
-		sweeper.Clear(context.Background(), []string{})
+		sweeper.Clear(context.Background(), mockFileService, []string{})
 
 		// Release the wait group to complete the test
 		wgReadDir.Done()
@@ -96,32 +117,72 @@ func TestOrphanFileSweeper_Clear(t *testing.T) {
 
 	t.Run("Clear Orphan Files", func(t *testing.T) {
 		var (
-			mockCtrl    = gomock.NewController(t)
-			mockFileOps = mocks.NewMockFileOperations(mockCtrl)
-			sweeper     = datapipe.NewOrphanFileSweeper(mockFileOps, workDir)
+			mockCtrl        = gomock.NewController(t)
+			mockFileOps     = mocks.NewMockFileOperations(mockCtrl)
+			mockFileService = storagemocks.NewMockFileService(mockCtrl)
+			sweeper         = datapipe.NewOrphanFileSweeper(mockFileOps, workDir, scratchDir, "")
 		)
 
 		defer mockCtrl.Finish()
 
+		mockFileService.EXPECT().
+			ListFiles(gomock.Any(), "", storage.ListOptions{Recursive: true}).
+			Return(nil, nil)
+
 		mockFileOps.EXPECT().ReadDir(workDir).Return([]os.DirEntry{
 			dirEntry{
 				name: "1",
+				info: fileInfo{
+					name:    "1",
+					modTime: time.Now().Add(-25 * time.Hour),
+				},
 			},
 		}, nil)
 
 		mockFileOps.EXPECT().RemoveAll(filepath.Join(workDir, "1")).Return(nil)
 
-		sweeper.Clear(context.Background(), []string{})
+		sweeper.Clear(context.Background(), mockFileService, []string{})
+	})
+
+	t.Run("FileService - Clear Orphan Files", func(t *testing.T) {
+		var (
+			mockCtrl        = gomock.NewController(t)
+			mockFileOps     = mocks.NewMockFileOperations(mockCtrl)
+			mockFileService = storagemocks.NewMockFileService(mockCtrl)
+			sweeper         = datapipe.NewOrphanFileSweeper(mockFileOps, workDir, scratchDir, "")
+		)
+
+		defer mockCtrl.Finish()
+
+		mockFileService.EXPECT().
+			ListFiles(gomock.Any(), "", storage.ListOptions{Recursive: true}).
+			Return([]storage.FileInfo{
+				{
+					Path:         "1",
+					LastModified: time.Now().Add(-25 * time.Hour),
+				},
+			}, nil)
+
+		mockFileService.EXPECT().DeleteFile(gomock.Any(), "1").Return(nil)
+
+		mockFileOps.EXPECT().ReadDir(workDir).Return(nil, nil)
+
+		sweeper.Clear(context.Background(), mockFileService, []string{})
 	})
 
 	t.Run("Exclude Expected Files", func(t *testing.T) {
 		var (
-			mockCtrl    = gomock.NewController(t)
-			mockFileOps = mocks.NewMockFileOperations(mockCtrl)
-			sweeper     = datapipe.NewOrphanFileSweeper(mockFileOps, workDir)
+			mockCtrl        = gomock.NewController(t)
+			mockFileOps     = mocks.NewMockFileOperations(mockCtrl)
+			mockFileService = storagemocks.NewMockFileService(mockCtrl)
+			sweeper         = datapipe.NewOrphanFileSweeper(mockFileOps, workDir, scratchDir, "")
 		)
 
 		defer mockCtrl.Finish()
+
+		mockFileService.EXPECT().
+			ListFiles(gomock.Any(), "", storage.ListOptions{Recursive: true}).
+			Return(nil, nil)
 
 		mockFileOps.EXPECT().ReadDir(workDir).Return([]os.DirEntry{
 			dirEntry{
@@ -132,17 +193,22 @@ func TestOrphanFileSweeper_Clear(t *testing.T) {
 		// This one is a negative assertion. Because we're passing in "1" to be excluded the listed dirEntries will be
 		// empty and therefore the sweeper MUST NOT call RemoveAll() on the FileOperations mock. If RemoveAll() is
 		// called then this test MUST fail.
-		sweeper.Clear(context.Background(), []string{"1"})
+		sweeper.Clear(context.Background(), mockFileService, []string{"1"})
 	})
 
 	t.Run("Exclude Files With Paths", func(t *testing.T) {
 		var (
-			mockCtrl    = gomock.NewController(t)
-			mockFileOps = mocks.NewMockFileOperations(mockCtrl)
-			sweeper     = datapipe.NewOrphanFileSweeper(mockFileOps, workDir)
+			mockCtrl        = gomock.NewController(t)
+			mockFileOps     = mocks.NewMockFileOperations(mockCtrl)
+			mockFileService = storagemocks.NewMockFileService(mockCtrl)
+			sweeper         = datapipe.NewOrphanFileSweeper(mockFileOps, workDir, scratchDir, "")
 		)
 
 		defer mockCtrl.Finish()
+
+		mockFileService.EXPECT().
+			ListFiles(gomock.Any(), "", storage.ListOptions{Recursive: true}).
+			Return(nil, nil)
 
 		mockFileOps.EXPECT().ReadDir(workDir).Return([]os.DirEntry{
 			dirEntry{
@@ -156,17 +222,22 @@ func TestOrphanFileSweeper_Clear(t *testing.T) {
 		// This one is a negative assertion. Because we're passing in paths to be excluded the listed dirEntries will be
 		// empty and therefore the sweeper MUST NOT call RemoveAll() on the FileOperations mock. If RemoveAll() is
 		// called then this test MUST fail.
-		sweeper.Clear(context.Background(), []string{"1", workDir + "/2"})
+		sweeper.Clear(context.Background(), mockFileService, []string{"1", workDir + "/2"})
 	})
 
 	t.Run("Exit on Context Cancellation", func(t *testing.T) {
 		var (
-			mockCtrl    = gomock.NewController(t)
-			mockFileOps = mocks.NewMockFileOperations(mockCtrl)
-			sweeper     = datapipe.NewOrphanFileSweeper(mockFileOps, workDir)
+			mockCtrl        = gomock.NewController(t)
+			mockFileOps     = mocks.NewMockFileOperations(mockCtrl)
+			mockFileService = storagemocks.NewMockFileService(mockCtrl)
+			sweeper         = datapipe.NewOrphanFileSweeper(mockFileOps, workDir, scratchDir, "")
 		)
 
 		defer mockCtrl.Finish()
+
+		mockFileService.EXPECT().
+			ListFiles(gomock.Any(), "", storage.ListOptions{Recursive: true}).
+			Return(nil, nil)
 
 		mockFileOps.EXPECT().ReadDir(workDir).Return([]os.DirEntry{
 			dirEntry{
@@ -179,6 +250,6 @@ func TestOrphanFileSweeper_Clear(t *testing.T) {
 		done()
 
 		// When passed in with the cancelled context the sweeper should not call os.RemoveAll("1")
-		sweeper.Clear(ctx, []string{})
+		sweeper.Clear(ctx, mockFileService, []string{})
 	})
 }

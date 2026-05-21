@@ -17,15 +17,16 @@
 package upload
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
-	"os"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/headers"
@@ -35,7 +36,7 @@ import (
 
 var ErrInvalidJSON = errors.New("file is not valid json")
 
-func SaveIngestFile(location string, request *http.Request, validator IngestValidator, jobID int64) (IngestTaskParams, error) {
+func SaveIngestFile(ctx context.Context, fileService storage.FileService, request *http.Request, validator IngestValidator, jobID int64) (IngestTaskParams, error) {
 	fileData := request.Body
 
 	var (
@@ -54,7 +55,7 @@ func SaveIngestFile(location string, request *http.Request, validator IngestVali
 		return IngestTaskParams{}, fmt.Errorf("invalid content type for ingest file")
 	}
 
-	if tempFileName, err := WriteAndValidateFileWithPrefix(fileData, location, ingestFileTempPrefix(jobID), validationFn); err != nil {
+	if tempFileName, err := WriteAndValidateFile(ctx, fileService, fileData, fmt.Sprintf("file_upload_job%d_", jobID), validationFn); err != nil {
 		// Record validation failure metric
 		metrics.RecordIngestTask(metrics.IngestCollectorManual, fileFormatFromFileType(fileType), metrics.IngestTaskStatusFailed)
 		return IngestTaskParams{}, err
@@ -64,16 +65,17 @@ func SaveIngestFile(location string, request *http.Request, validator IngestVali
 			FileType: fileType,
 		}, nil
 	}
-
 }
 
-func ingestFileTempPrefix(jobID int64) string {
-	return fmt.Sprintf("file_upload_job%d_", jobID)
-}
+func WriteAndValidateFile(ctx context.Context, fileService storage.FileService, fileData io.Reader, prefix string, validationFunc FileValidator) (string, error) {
+	// Create a pipe: pr (read end) and pw (write end).
+	// Data written to pw can be read from pr.
+	pr, pw := io.Pipe()
 
-func WriteAndValidateFile(fileData io.Reader, location string, jobID int64, validationFunc FileValidator) (string, error) {
-	return WriteAndValidateFileWithPrefix(fileData, location, ingestFileTempPrefix(jobID), validationFunc)
-}
+	// validationErrCh carries the result of the validation goroutine.
+	// Using a buffered channel (size 1) ensures the goroutine never blocks on send,
+	// and gives the main goroutine a synchronization point to wait for the result.
+	validationErrCh := make(chan error, 1)
 
 func WriteAndValidateFileWithPrefix(fileData io.Reader, location string, tempFilePrefix string, validationFunc FileValidator) (string, error) {
 	if validationFunc == nil {
@@ -86,40 +88,56 @@ func WriteAndValidateFileWithPrefix(fileData io.Reader, location string, tempFil
 		err           error
 		validationErr error
 	)
+	// Start validation in a separate goroutine.
+	// validationFunc reads from pr, writes to io.Discard.
+	// This validates the stream without storing the data twice.
+	go func() {
+		_, err := validationFunc(pr, io.Discard)
+		pr.Close()
+		validationErrCh <- err
+	}()
 
-	// Write a temp file. If it passes validation, keep it around and return the filename. Otherwise destroy it.
-	if tempFile, err = os.CreateTemp(location, tempFilePrefix); err != nil {
-		return "", fmt.Errorf("error creating ingest file: %w", err)
-	}
+	// TeeReader: as we read fileData, a copy is written to pw and flows to the goroutine via pr.
+	teeReader := io.TeeReader(fileData, pw)
 
-	// Save this for later
-	tempFileName = tempFile.Name()
+	// Write to storage while validation happens concurrently.
+	tempFileName, writeErr := fileService.WriteTempFile(ctx, prefix, teeReader, storage.WriteOptions{})
 
-	// Run validation on the file to see if we even want to keep it
-	_, validationErr = validationFunc(fileData, tempFile)
+	// Closing pw signals EOF to the validation goroutine so it can finish.
+	pw.Close()
 
-	// We close the file next, not last. We can't defer this if we might want to delete it.
-	// Note: fileData does not need to be closed because the HTTP server manages it's lifecyle
-	if closeErr := tempFile.Close(); closeErr != nil {
-		slog.Error(
-			"Error closing temp file",
-			slog.String("file", tempFileName),
-			attr.Error(closeErr),
-		)
-	}
+	// Wait for the validation goroutine to finish and collect its result.
+	validationErr := <-validationErrCh
 
-	// If the validation was not successful, after we close the file, we remove it and return the error
+	// Check if validation failed first; the temp file should be cleaned up.
 	if validationErr != nil {
-		if removeErr := os.Remove(tempFileName); removeErr != nil {
-			slog.Error(
-				"Error deleting temp file",
-				slog.String("file", tempFileName),
-				attr.Error(removeErr),
-			)
+		slog.ErrorContext(
+			ctx,
+			"Validation failed",
+			slog.String("temp_file_name",
+				tempFileName),
+			attr.Error(validationErr),
+		)
+		if tempFileName != "" {
+			fileService.DeleteFile(ctx, tempFileName)
 		}
 		return "", validationErr
 	}
 
-	// Assuming no other errors, return the name of the closed temp file
+	// Check if writing failed; the temp file should be cleaned up.
+	if writeErr != nil {
+		slog.ErrorContext(
+			ctx,
+			"Write failed",
+			slog.String("temp_file_name", tempFileName),
+			attr.Error(writeErr),
+		)
+		if tempFileName != "" {
+			fileService.DeleteFile(ctx, tempFileName)
+		}
+		return "", writeErr
+	}
+
+	slog.InfoContext(ctx, "File written and validated", slog.String("temp_file_name", tempFileName))
 	return tempFileName, nil
 }

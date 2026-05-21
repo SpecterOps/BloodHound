@@ -35,6 +35,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/packages/go/cache"
@@ -108,10 +109,15 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 	err = os.CopyFS(workDir, os.DirFS(fixturesPath))
 	require.NoError(t, err)
 
-	err = os.Mkdir(path.Join(workDir, "tmp"), 0755)
+	err = os.Mkdir(path.Join(workDir, "tmp"), 0o755)
 	require.NoError(t, err)
 
 	cfg.WorkDir = workDir
+
+	fileServices, err := storage.NewDefaultFileServices(cfg)
+	require.NoError(t, err, "error creating the default file services")
+	fileServiceResolver, err := storage.NewFileServiceResolver(fileServices)
+	require.NoError(t, err, "error creating file service resolver")
 
 	cl := changelog.NewChangelog(graphDB, db, changelog.DefaultOptions())
 
@@ -120,11 +126,11 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 
 	return IntegrationTestSuite{
 		Context:         ctx,
-		GraphifyService: graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, cl),
+		GraphifyService: graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, fileServiceResolver, cl),
 		GraphDB:         graphDB,
 		BHDatabase:      db,
 		WorkDir:         workDir,
-		Daemon:          datapipe.NewPipeline(ctx, cfg, db, graphDB, cache, ingestSchema, cl),
+		Daemon:          datapipe.NewPipeline(ctx, cfg, db, graphDB, cache, ingestSchema, fileServiceResolver, cl),
 	}
 }
 

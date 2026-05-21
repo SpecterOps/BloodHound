@@ -22,7 +22,6 @@ import (
 	"log/slog"
 	"mime"
 	"net/http"
-	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -38,6 +37,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/headers"
 
 	"github.com/specterops/bloodhound/cmd/api/src/services/job"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
@@ -146,7 +146,9 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 		api.HandleDatabaseError(request, response, err)
 	} else if ingestJob.Status != model.JobStatusRunning {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "job must be in running status to attach files", request), response)
-	} else if ingestTaskParams, err := upload.SaveIngestFile(s.Config.TempDirectory(), request, validator, ingestJob.ID); errors.Is(err, upload.ErrInvalidJSON) {
+	} else if ingestFileService, err := s.FileServiceResolver.Resolve(storage.FileServiceIngest); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unable to resolve file service for working directories", request), response)
+	} else if ingestTaskParams, err := upload.SaveIngestFile(request.Context(), ingestFileService, request, validator, ingestJob.ID); errors.Is(err, upload.ErrInvalidJSON) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 	} else if report, ok := err.(upload.ValidationReport); ok {
 		var (
@@ -169,7 +171,7 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 	} else if _, err = upload.CreateIngestTask(request.Context(), s.DB, upload.IngestTaskParams{Filename: ingestTaskParams.Filename, ProvidedFileName: checkFileName(fileName, ingestTaskParams.FileType), FileType: ingestTaskParams.FileType, RequestID: requestId, JobID: int64(jobID)}); err != nil {
-		if removeErr := os.Remove(ingestTaskParams.Filename); removeErr != nil {
+		if removeErr := ingestFileService.DeleteFile(request.Context(), ingestTaskParams.Filename); removeErr != nil {
 			slog.WarnContext(request.Context(), "Failed to clean up file after task creation error", attr.Error(removeErr))
 		}
 		api.HandleDatabaseError(request, response, err)

@@ -18,108 +18,616 @@ package graphify_test
 
 import (
 	"archive/zip"
+	"bytes"
 	"context"
+	"errors"
+	"io"
 	"os"
-	"path/filepath"
+	"strings"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
+	storagemocks "github.com/specterops/bloodhound/cmd/api/src/services/storage/mocks"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
-type zipTestFile struct {
+type ingestStorageTrackingReadCloser struct {
+	reader io.Reader
+	closed bool
+}
+
+func (s *ingestStorageTrackingReadCloser) Read(p []byte) (int, error) {
+	return s.reader.Read(p)
+}
+
+func (s *ingestStorageTrackingReadCloser) Close() error {
+	s.closed = true
+	return nil
+}
+
+type ingestStorageErrorReadCloser struct {
+	err    error
+	closed bool
+}
+
+func (s *ingestStorageErrorReadCloser) Read([]byte) (int, error) {
+	return 0, s.err
+}
+
+func (s *ingestStorageErrorReadCloser) Close() error {
+	s.closed = true
+	return nil
+}
+
+type ingestStorageZipEntry struct {
 	name    string
-	content []byte
+	content string
+	isDir   bool
 }
 
-func writeZipFile(t *testing.T, archivePath string, files []zipTestFile) {
-	var (
-		archiveFile *os.File
-		zipWriter   *zip.Writer
-		err         error
-	)
+func buildIngestStorageZip(t *testing.T, entries ...ingestStorageZipEntry) []byte {
+	t.Helper()
 
-	archiveFile, err = os.Create(archivePath)
-	require.NoError(t, err)
-	defer archiveFile.Close()
+	var archive bytes.Buffer
+	archiveWriter := zip.NewWriter(&archive)
 
-	zipWriter = zip.NewWriter(archiveFile)
-	defer zipWriter.Close()
+	for _, entry := range entries {
+		if entry.isDir {
+			_, err := archiveWriter.Create(entry.name)
+			require.NoError(t, err)
+			continue
+		}
 
-	for _, file := range files {
-		fileWriter, err := zipWriter.Create(file.name)
+		entryWriter, err := archiveWriter.Create(entry.name)
 		require.NoError(t, err)
 
-		_, err = fileWriter.Write(file.content)
+		_, err = entryWriter.Write([]byte(entry.content))
 		require.NoError(t, err)
 	}
 
-	_, err = zipWriter.Create("empty-directory/")
-	require.NoError(t, err)
+	require.NoError(t, archiveWriter.Close())
+	return archive.Bytes()
 }
 
-func TestExtractIngestFilesReturnsJSONFile(t *testing.T) {
-	var (
-		ctx              = context.Background()
-		configuration    = config.Configuration{WorkDir: t.TempDir()}
-		storedFileName   = filepath.Join(configuration.WorkDir, "ingest.json")
-		providedFileName = "provided.json"
-	)
+func openIngestStorageZipFile(t *testing.T, archiveBytes []byte, fileName string) *zip.File {
+	t.Helper()
 
-	fileData, err := graphify.ExtractIngestFiles(ctx, configuration, storedFileName, providedFileName, model.FileTypeJson, "unused")
+	archiveReader, err := zip.NewReader(bytes.NewReader(archiveBytes), int64(len(archiveBytes)))
 	require.NoError(t, err)
-	require.Equal(t, []graphify.IngestFileData{
-		{
-			Name:   providedFileName,
-			Path:   storedFileName,
-			Errors: []string{},
-		},
-	}, fileData)
-}
 
-func TestExtractIngestFilesExpandsZIPIntoTempDirectory(t *testing.T) {
-	var (
-		ctx              = context.Background()
-		configuration    = config.Configuration{WorkDir: t.TempDir()}
-		archivePath      = filepath.Join(configuration.WorkDir, "archive.zip")
-		providedFileName = "archive.zip"
-		tempFilePrefix   = "file_upload_job7_"
-		bomFileContent   = append([]byte{0xEF, 0xBB, 0xBF}, []byte(`{"meta":{"type":"domains","version":5,"count":0},"data":[]}`)...)
-		plainFileContent = []byte(`{"meta":{"type":"users","version":5,"count":0},"data":[]}`)
-	)
-
-	require.NoError(t, os.MkdirAll(configuration.TempDirectory(), 0o755))
-	writeZipFile(t, archivePath, []zipTestFile{
-		{
-			name:    "domains.json",
-			content: bomFileContent,
-		},
-		{
-			name:    "users.json",
-			content: plainFileContent,
-		},
-	})
-
-	fileData, err := graphify.ExtractIngestFiles(ctx, configuration, archivePath, providedFileName, model.FileTypeZip, tempFilePrefix)
-	require.NoError(t, err)
-	require.Len(t, fileData, 2)
-	require.NoFileExists(t, archivePath)
-
-	for _, file := range fileData {
-		require.Equal(t, providedFileName, file.ParentFile)
-		require.Empty(t, file.Errors)
-		require.DirExists(t, filepath.Dir(file.Path))
-		require.FileExists(t, file.Path)
-		require.Contains(t, filepath.Base(file.Path), tempFilePrefix)
+	for _, archiveFile := range archiveReader.File {
+		if archiveFile.Name == fileName {
+			return archiveFile
+		}
 	}
 
-	domainsContent, err := os.ReadFile(fileData[0].Path)
-	require.NoError(t, err)
-	require.Equal(t, []byte(`{"meta":{"type":"domains","version":5,"count":0},"data":[]}`), domainsContent)
+	t.Fatalf("archive file %q not found", fileName)
+	return nil
+}
 
-	usersContent, err := os.ReadFile(fileData[1].Path)
+func requireScratchDirectoryEmpty(t *testing.T, scratchDirectory string) {
+	t.Helper()
+
+	entries, err := os.ReadDir(scratchDirectory)
 	require.NoError(t, err)
-	require.Equal(t, plainFileContent, usersContent)
+	require.Empty(t, entries)
+}
+
+func requireReadFile(t *testing.T, filePath string) []byte {
+	t.Helper()
+
+	data, err := os.ReadFile(filePath)
+	require.NoError(t, err)
+	return data
+}
+
+func TestSpoolToScratch(t *testing.T) {
+	t.Parallel()
+
+	var (
+		errGet  = errors.New("get failed")
+		errRead = errors.New("read failed")
+	)
+
+	type expected struct {
+		errIs       error
+		errContains string
+		content     string
+		closed      bool
+	}
+
+	type testData struct {
+		name       string
+		storedName string
+		setupMock  func(t *testing.T, ctx context.Context, mockFileService *storagemocks.MockFileService) io.ReadCloser
+		expected   expected
+		verify     func(t *testing.T, scratchDirectory string, scratchPath string)
+	}
+
+	tests := []testData{
+		{
+			name:       "copies stored file to scratch",
+			storedName: "stored.json",
+			setupMock: func(t *testing.T, ctx context.Context, mockFileService *storagemocks.MockFileService) io.ReadCloser {
+				readCloser := &ingestStorageTrackingReadCloser{reader: strings.NewReader("stored content")}
+				mockFileService.EXPECT().
+					GetFile(ctx, "stored.json").
+					Return(readCloser, storage.FileInfo{}, nil)
+
+				return readCloser
+			},
+			expected: expected{
+				content: "stored content",
+				closed:  true,
+			},
+		},
+		{
+			name:       "get error returns wrapped error",
+			storedName: "missing.json",
+			setupMock: func(t *testing.T, ctx context.Context, mockFileService *storagemocks.MockFileService) io.ReadCloser {
+				mockFileService.EXPECT().
+					GetFile(ctx, "missing.json").
+					Return(nil, storage.FileInfo{}, errGet)
+
+				return nil
+			},
+			expected: expected{
+				errIs:       errGet,
+				errContains: `open stored ingest file "missing.json"`,
+			},
+			verify: func(t *testing.T, scratchDirectory string, scratchPath string) {
+				require.Empty(t, scratchPath)
+				requireScratchDirectoryEmpty(t, scratchDirectory)
+			},
+		},
+		{
+			name:       "copy error removes scratch file",
+			storedName: "stored.json",
+			setupMock: func(t *testing.T, ctx context.Context, mockFileService *storagemocks.MockFileService) io.ReadCloser {
+				readCloser := &ingestStorageErrorReadCloser{err: errRead}
+				mockFileService.EXPECT().
+					GetFile(ctx, "stored.json").
+					Return(readCloser, storage.FileInfo{}, nil)
+
+				return readCloser
+			},
+			expected: expected{
+				errIs:       errRead,
+				errContains: `copy stored ingest file "stored.json" to scratch`,
+				closed:      true,
+			},
+			verify: func(t *testing.T, scratchDirectory string, scratchPath string) {
+				require.Empty(t, scratchPath)
+				requireScratchDirectoryEmpty(t, scratchDirectory)
+			},
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			var (
+				ctx              = context.Background()
+				scratchDirectory = t.TempDir()
+				mockFileService  = storagemocks.NewMockFileService(gomock.NewController(t))
+				readCloser       = testCase.setupMock(t, ctx, mockFileService)
+			)
+
+			// Act
+			scratchPath, err := graphify.SpoolToScratch(ctx, scratchDirectory, mockFileService, testCase.storedName)
+
+			// Assert
+			if testCase.expected.errIs != nil {
+				require.ErrorIs(t, err, testCase.expected.errIs)
+				require.Contains(t, err.Error(), testCase.expected.errContains)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, testCase.expected.content, string(requireReadFile(t, scratchPath)))
+			}
+
+			if readCloser != nil {
+				switch typedReadCloser := readCloser.(type) {
+				case *ingestStorageTrackingReadCloser:
+					require.Equal(t, testCase.expected.closed, typedReadCloser.closed)
+				case *ingestStorageErrorReadCloser:
+					require.Equal(t, testCase.expected.closed, typedReadCloser.closed)
+				}
+			}
+
+			if testCase.verify != nil {
+				testCase.verify(t, scratchDirectory, scratchPath)
+			}
+		})
+	}
+}
+
+func TestOpenScratchReadSeeker(t *testing.T) {
+	t.Parallel()
+
+	var errGet = errors.New("get failed")
+
+	type expected struct {
+		errIs   error
+		content string
+	}
+
+	type testData struct {
+		name       string
+		storedName string
+		setupMock  func(t *testing.T, ctx context.Context, mockFileService *storagemocks.MockFileService)
+		expected   expected
+	}
+
+	tests := []testData{
+		{
+			name:       "opens copied scratch file",
+			storedName: "stored.json",
+			setupMock: func(t *testing.T, ctx context.Context, mockFileService *storagemocks.MockFileService) {
+				mockFileService.EXPECT().
+					GetFile(ctx, "stored.json").
+					Return(io.NopCloser(strings.NewReader("stored content")), storage.FileInfo{}, nil)
+			},
+			expected: expected{
+				content: "stored content",
+			},
+		},
+		{
+			name:       "spool error returns error",
+			storedName: "missing.json",
+			setupMock: func(t *testing.T, ctx context.Context, mockFileService *storagemocks.MockFileService) {
+				mockFileService.EXPECT().
+					GetFile(ctx, "missing.json").
+					Return(nil, storage.FileInfo{}, errGet)
+			},
+			expected: expected{
+				errIs: errGet,
+			},
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			var (
+				ctx              = context.Background()
+				scratchDirectory = t.TempDir()
+				mockFileService  = storagemocks.NewMockFileService(gomock.NewController(t))
+			)
+
+			testCase.setupMock(t, ctx, mockFileService)
+
+			// Act
+			scratchFile, scratchPath, err := graphify.OpenScratchReadSeeker(ctx, scratchDirectory, mockFileService, testCase.storedName)
+
+			// Assert
+			if testCase.expected.errIs != nil {
+				require.ErrorIs(t, err, testCase.expected.errIs)
+				require.Nil(t, scratchFile)
+				require.Empty(t, scratchPath)
+				return
+			}
+
+			require.NoError(t, err)
+			defer os.Remove(scratchPath)
+			defer scratchFile.Close()
+
+			content, err := io.ReadAll(scratchFile)
+			require.NoError(t, err)
+			require.Equal(t, testCase.expected.content, string(content))
+		})
+	}
+}
+
+func TestWriteArchiveFileToStorage(t *testing.T) {
+	t.Parallel()
+
+	var errWrite = errors.New("write failed")
+
+	type expected struct {
+		errIs       error
+		errContains string
+		path        string
+		content     string
+	}
+
+	type testData struct {
+		name     string
+		content  string
+		writeErr error
+		expected expected
+	}
+
+	tests := []testData{
+		{
+			name:    "writes normalized archive file content to storage",
+			content: string([]byte{0xEF, 0xBB, 0xBF}) + "stored content",
+			expected: expected{
+				path:    "prefix/tmp-file",
+				content: "stored content",
+			},
+		},
+		{
+			name:     "write error returns wrapped error",
+			content:  "stored content",
+			writeErr: errWrite,
+			expected: expected{
+				errIs:       errWrite,
+				errContains: `write archive file "file.json" to storage`,
+			},
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			var (
+				ctx             = context.Background()
+				archiveBytes    = buildIngestStorageZip(t, ingestStorageZipEntry{name: "file.json", content: testCase.content})
+				archiveFile     = openIngestStorageZipFile(t, archiveBytes, "file.json")
+				mockFileService = storagemocks.NewMockFileService(gomock.NewController(t))
+			)
+
+			mockFileService.EXPECT().
+				WriteTempFile(ctx, "prefix", gomock.Any(), storage.WriteOptions{}).
+				DoAndReturn(func(_ context.Context, _ string, reader io.Reader, _ storage.WriteOptions) (string, error) {
+					content, err := io.ReadAll(reader)
+					require.NoError(t, err)
+					if testCase.expected.content != "" {
+						require.Equal(t, testCase.expected.content, string(content))
+					}
+
+					return "prefix/tmp-file", testCase.writeErr
+				})
+
+			// Act
+			extractedPath, err := graphify.WriteArchiveFileToStorage(ctx, mockFileService, archiveFile, "prefix")
+
+			// Assert
+			if testCase.expected.errIs != nil {
+				require.ErrorIs(t, err, testCase.expected.errIs)
+				require.Contains(t, err.Error(), testCase.expected.errContains)
+				require.Empty(t, extractedPath)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, testCase.expected.path, extractedPath)
+		})
+	}
+}
+
+func TestExtractIngestFiles(t *testing.T) {
+	t.Parallel()
+
+	var (
+		errGet   = errors.New("get failed")
+		errWrite = errors.New("write failed")
+	)
+
+	type expected struct {
+		errIs    error
+		fileData []graphify.IngestFileData
+	}
+
+	type testData struct {
+		name             string
+		fileType         model.FileType
+		providedFileName string
+		setupMock        func(t *testing.T, ctx context.Context, mockFileService *storagemocks.MockFileService)
+		expected         expected
+		verify           func(t *testing.T, scratchDirectory string)
+	}
+
+	tests := []testData{
+		{
+			name:             "json file returns stored path without storage calls",
+			fileType:         model.FileTypeJson,
+			providedFileName: "provided.json",
+			expected: expected{
+				fileData: []graphify.IngestFileData{
+					{
+						Name: "provided.json",
+						Path: "stored.json",
+					},
+				},
+			},
+		},
+		{
+			name:     "zip file extracts files and deletes archive",
+			fileType: model.FileTypeZip,
+			setupMock: func(t *testing.T, ctx context.Context, mockFileService *storagemocks.MockFileService) {
+				archiveBytes := buildIngestStorageZip(t,
+					ingestStorageZipEntry{name: "nested/", isDir: true},
+					ingestStorageZipEntry{name: "nested/one.json", content: "one"},
+					ingestStorageZipEntry{name: "two.json", content: "two"},
+				)
+
+				mockFileService.EXPECT().
+					GetFile(ctx, "stored.json").
+					Return(io.NopCloser(bytes.NewReader(archiveBytes)), storage.FileInfo{}, nil)
+				gomock.InOrder(
+					mockFileService.EXPECT().
+						WriteTempFile(ctx, "prefix", gomock.Any(), storage.WriteOptions{}).
+						DoAndReturn(func(_ context.Context, _ string, reader io.Reader, _ storage.WriteOptions) (string, error) {
+							content, err := io.ReadAll(reader)
+							require.NoError(t, err)
+							require.Equal(t, "one", string(content))
+
+							return "prefix/tmp-one", nil
+						}),
+					mockFileService.EXPECT().
+						WriteTempFile(ctx, "prefix", gomock.Any(), storage.WriteOptions{}).
+						DoAndReturn(func(_ context.Context, _ string, reader io.Reader, _ storage.WriteOptions) (string, error) {
+							content, err := io.ReadAll(reader)
+							require.NoError(t, err)
+							require.Equal(t, "two", string(content))
+
+							return "prefix/tmp-two", nil
+						}),
+				)
+				mockFileService.EXPECT().
+					DeleteFile(ctx, "stored.json").
+					Return(nil)
+			},
+			expected: expected{
+				fileData: []graphify.IngestFileData{
+					{
+						Name:       "nested/one.json",
+						ParentFile: "provided.zip",
+						Path:       "prefix/tmp-one",
+					},
+					{
+						Name:       "two.json",
+						ParentFile: "provided.zip",
+						Path:       "prefix/tmp-two",
+					},
+				},
+			},
+			verify: func(t *testing.T, scratchDirectory string) {
+				requireScratchDirectoryEmpty(t, scratchDirectory)
+			},
+		},
+		{
+			name:     "spool error returns file data with error",
+			fileType: model.FileTypeZip,
+			setupMock: func(t *testing.T, ctx context.Context, mockFileService *storagemocks.MockFileService) {
+				mockFileService.EXPECT().
+					GetFile(ctx, "stored.json").
+					Return(nil, storage.FileInfo{}, errGet)
+			},
+			expected: expected{
+				errIs: errGet,
+				fileData: []graphify.IngestFileData{
+					{
+						Name:   "provided.zip",
+						Path:   "stored.json",
+						Errors: []string{`Error spooling archive to scratch: open stored ingest file "stored.json": get failed`},
+					},
+				},
+			},
+			verify: func(t *testing.T, scratchDirectory string) {
+				requireScratchDirectoryEmpty(t, scratchDirectory)
+			},
+		},
+		{
+			name:     "bad zip returns file data with error",
+			fileType: model.FileTypeZip,
+			setupMock: func(t *testing.T, ctx context.Context, mockFileService *storagemocks.MockFileService) {
+				mockFileService.EXPECT().
+					GetFile(ctx, "stored.json").
+					Return(io.NopCloser(strings.NewReader("not a zip")), storage.FileInfo{}, nil)
+			},
+			expected: expected{
+				errIs: zip.ErrFormat,
+				fileData: []graphify.IngestFileData{
+					{
+						Name:   "provided.zip",
+						Path:   "stored.json",
+						Errors: []string{"Error opening archive: zip: not a valid zip file"},
+					},
+				},
+			},
+			verify: func(t *testing.T, scratchDirectory string) {
+				requireScratchDirectoryEmpty(t, scratchDirectory)
+			},
+		},
+		{
+			name:     "archive file write error records file error and continues",
+			fileType: model.FileTypeZip,
+			setupMock: func(t *testing.T, ctx context.Context, mockFileService *storagemocks.MockFileService) {
+				archiveBytes := buildIngestStorageZip(t,
+					ingestStorageZipEntry{name: "one.json", content: "one"},
+					ingestStorageZipEntry{name: "two.json", content: "two"},
+				)
+
+				mockFileService.EXPECT().
+					GetFile(ctx, "stored.json").
+					Return(io.NopCloser(bytes.NewReader(archiveBytes)), storage.FileInfo{}, nil)
+				gomock.InOrder(
+					mockFileService.EXPECT().
+						WriteTempFile(ctx, "prefix", gomock.Any(), storage.WriteOptions{}).
+						DoAndReturn(func(_ context.Context, _ string, reader io.Reader, _ storage.WriteOptions) (string, error) {
+							_, err := io.ReadAll(reader)
+							require.NoError(t, err)
+
+							return "", errWrite
+						}),
+					mockFileService.EXPECT().
+						WriteTempFile(ctx, "prefix", gomock.Any(), storage.WriteOptions{}).
+						DoAndReturn(func(_ context.Context, _ string, reader io.Reader, _ storage.WriteOptions) (string, error) {
+							content, err := io.ReadAll(reader)
+							require.NoError(t, err)
+							require.Equal(t, "two", string(content))
+
+							return "prefix/tmp-two", nil
+						}),
+				)
+				mockFileService.EXPECT().
+					DeleteFile(ctx, "stored.json").
+					Return(nil)
+			},
+			expected: expected{
+				fileData: []graphify.IngestFileData{
+					{
+						Name:       "one.json",
+						ParentFile: "provided.zip",
+						Errors:     []string{`write archive file "one.json" to storage: write failed`},
+					},
+					{
+						Name:       "two.json",
+						ParentFile: "provided.zip",
+						Path:       "prefix/tmp-two",
+					},
+				},
+			},
+			verify: func(t *testing.T, scratchDirectory string) {
+				requireScratchDirectoryEmpty(t, scratchDirectory)
+			},
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			var (
+				ctx              = context.Background()
+				scratchDirectory = t.TempDir()
+				mockFileService  = storagemocks.NewMockFileService(gomock.NewController(t))
+			)
+
+			if testCase.setupMock != nil {
+				testCase.setupMock(t, ctx, mockFileService)
+			}
+			providedFileName := testCase.providedFileName
+			if providedFileName == "" {
+				providedFileName = "provided.zip"
+			}
+
+			// Act
+			fileData, err := graphify.ExtractIngestFiles(ctx, scratchDirectory, mockFileService, "stored.json", providedFileName, testCase.fileType, "prefix")
+
+			// Assert
+			if testCase.expected.errIs != nil {
+				require.ErrorIs(t, err, testCase.expected.errIs)
+			} else {
+				require.NoError(t, err)
+			}
+			require.Equal(t, testCase.expected.fileData, fileData)
+
+			if testCase.verify != nil {
+				testCase.verify(t, scratchDirectory)
+			}
+		})
+	}
 }
