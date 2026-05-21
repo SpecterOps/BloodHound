@@ -35,7 +35,7 @@ import { blendHexColors, getNodeRadius } from 'src/rendering/utils/utils';
 import { useAppSelector } from 'src/store';
 import { preventAllDefaults } from 'src/utils';
 import { sequentialLayout, standardLayout } from 'src/views/Explore/utils';
-import { getHighlightedEntities, getIsHighlightedItemInGraph } from './utils';
+import { getFullPathHighlightedEntities, getIsHighlightedItemInGraph } from './utils';
 
 interface SigmaChartRef {
     resetCamera: () => void;
@@ -95,6 +95,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const theme = useTheme();
+    const isExploreGraphHighlight = useAppSelector((state) => state.global.view.isExploreGraphHighlight);
 
     const sigma = useSigma();
     const graph = sigma.getGraph();
@@ -284,7 +285,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
     );
 
     const { highlightedNodeIds, highlightedEdgeIds } = useMemo(
-        () => getHighlightedEntities(graph, highlightedItem),
+        () => getFullPathHighlightedEntities(graph, highlightedItem),
         [graph, highlightedItem]
     );
 
@@ -299,7 +300,11 @@ export const GraphEvents = forwardRef(function GraphEvents(
         setSettings({
             nodeReducer: (node, data) => {
                 const camera = sigma.getCamera();
-                const isDimmed = !!highlightedItem && !highlightedNodeIds.has(node) && isHighlightedItemInGraph;
+                const isDimmed =
+                    isExploreGraphHighlight !== false &&
+                    !!highlightedItem &&
+                    !highlightedNodeIds.has(node) &&
+                    isHighlightedItemInGraph;
 
                 return {
                     ...data,
@@ -318,7 +323,11 @@ export const GraphEvents = forwardRef(function GraphEvents(
             },
             edgeReducer: (edge, data) => {
                 const camera = sigma.getCamera();
-                const isDimmed = !!highlightedItem && !highlightedEdgeIds.has(edge);
+                const isDimmed =
+                    isExploreGraphHighlight !== false &&
+                    !!highlightedItem &&
+                    !highlightedEdgeIds.has(edge) &&
+                    isHighlightedItemInGraph;
 
                 const newData: Attributes = {
                     ...data,
@@ -353,6 +362,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
         sigma,
         theme.neutral.primary,
         isHighlightedItemInGraph,
+        isExploreGraphHighlight,
     ]);
 
     // Toggle off edge labels when dragging a node to avoid performance hit

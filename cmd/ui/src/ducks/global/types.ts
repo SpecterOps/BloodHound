@@ -33,6 +33,7 @@ const GLOBAL_SET_AUTO_RUN_QUERIES = 'app/global/GLOBALSETAUTORUNQUERIES';
 const GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS = 'app/global/GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS';
 const GLOBAL_SET_PINNED_EXPLORE_TABLE_COLUMNS = 'app/global/GLOBAL_SET_PINNED_EXPLORE_TABLE_COLUMNS';
 const GLOBAL_SET_TIMEOUT_SETTING = 'app/global/GLOBALSETTIMEOUTSETTING';
+const GLOBAL_SET_IS_EXPLORE_GRAPH_HIGHLIGHT = 'app/global/GLOBAL_SET_IS_EXPLORE_GRAPH_HIGHLIGHT';
 
 export {
     GLOBAL_ADD_SNACKBAR,
@@ -47,6 +48,7 @@ export {
     GLOBAL_SET_DOMAIN,
     GLOBAL_SET_EXPANDED,
     GLOBAL_SET_EXPLORE_LAYOUT,
+    GLOBAL_SET_IS_EXPLORE_GRAPH_HIGHLIGHT,
     GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED,
     GLOBAL_SET_PINNED_EXPLORE_TABLE_COLUMNS,
     GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS,
@@ -58,6 +60,7 @@ export interface GlobalViewState {
     darkMode: boolean;
     autoRunQueries: boolean;
     timeoutSetting: boolean;
+    isExploreGraphHighlight: boolean;
     // Future dev: exploreLayout and isExploreTableSelected are undefined until a user selects a layout. After that, the layout is persisted in localStorage (until cache clears)
     exploreLayout?: BaseGraphLayoutOptions;
     isExploreTableSelected?: boolean;
@@ -120,7 +123,8 @@ export type GlobalViewActionTypes =
     | SetAutoRunQueriesAction
     | SetSelectedExploreTableColumns
     | SetPinnedExploreTableColumns
-    | SetTimeoutSettingAction;
+    | SetTimeoutSettingAction
+    | SetIsExploreGraphHighlightAction;
 
 export interface SetDomainAction {
     type: typeof GLOBAL_SET_DOMAIN;
@@ -156,6 +160,11 @@ export interface SetSelectedExploreTableColumns {
 export interface SetPinnedExploreTableColumns {
     type: typeof GLOBAL_SET_PINNED_EXPLORE_TABLE_COLUMNS;
     pinnedExploreTableColumns: string[];
+}
+
+export interface SetIsExploreGraphHighlightAction {
+    type: typeof GLOBAL_SET_IS_EXPLORE_GRAPH_HIGHLIGHT;
+    isExploreGraphHighlight: boolean;
 }
 
 export type GlobalOptionsActionTypes =

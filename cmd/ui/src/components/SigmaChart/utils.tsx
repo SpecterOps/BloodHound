@@ -9,36 +9,12 @@ export const getIsHighlightedItemInGraph = (
 };
 
 // Compute which nodes and edges should remain fully visible when an item is selected.
-// Nodes: the selected node itself + all its direct neighbors.
-// Edges: all edges directly connected to the selected node/edge endpoints.
-export const getSingleHopHighlightedEntities = (
-    graph: AbstractGraph<Attributes, Attributes, Attributes>,
-    highlightedItem: string | null
-) => {
-    const highlightedNodeIds = new Set<string>();
-    const highlightedEdgeIds = new Set<string>();
-
-    if (highlightedItem) {
-        if (graph.hasNode(highlightedItem)) {
-            highlightedNodeIds.add(highlightedItem);
-            graph.neighbors(highlightedItem).forEach((directNodes) => highlightedNodeIds.add(directNodes));
-            graph.edges(highlightedItem).forEach((directEdges) => highlightedEdgeIds.add(directEdges));
-        } else if (graph.hasEdge(highlightedItem)) {
-            highlightedEdgeIds.add(highlightedItem);
-            graph.extremities(highlightedItem).forEach((directNodes) => highlightedNodeIds.add(directNodes));
-        }
-    }
-
-    return { highlightedNodeIds, highlightedEdgeIds };
-};
-
-// Compute which nodes and edges should remain fully visible when an item is selected.
 // Nodes: two independent directional BFS passes from the selected node —
 //   outbound (follows edges pointing away) and inbound (follows edges pointing toward).
 //   This highlights the whole directed path in both directions without mixing traversal directions.
 // Edges: all edges directly connected to the selected edge endpoints (1-hop, unchanged).
 
-export const getHighlightedEntities = (
+export const getFullPathHighlightedEntities = (
     graph: AbstractGraph<Attributes, Attributes, Attributes>,
     highlightedItem: string | null
 ) => {
