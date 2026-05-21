@@ -6981,7 +6981,7 @@ __metadata:
     immer: "npm:^10.0.2"
     jest-webgl-canvas-mock: "npm:^2.5.0"
     js-client-library: "workspace:*"
-    js-cookie: "npm:^3.0.1"
+    js-cookie: "npm:^3.0.7"
     js-file-download: "npm:^0.4.12"
     jsdom: "npm:^27.0.0"
     json-2-csv: "npm:^5.5.9"
@@ -10732,10 +10732,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"js-cookie@npm:^3.0.1":
-  version: 3.0.5
-  resolution: "js-cookie@npm:3.0.5"
-  checksum: 10/366494b1630b9fb8abaef3659748db5dfd52c58c6fc3459b9f0a03b492593bc1b01c6dfcc066b46f6413c28edb3a00cc68fb61ea8cdf6991bedf1f100f8a389d
+"js-cookie@npm:^3.0.7":
+  version: 3.0.7
+  resolution: "js-cookie@npm:3.0.7"
+  checksum: 10/c0542acd416806182baaaecaae9a1dd7754b48699589c5c3a088495cee9fc2e44f81e66567b6e76e16d29c469655fdc9cd948edb2cfd9ece446f8817b9046ce9
   languageName: node
   linkType: hard
 
