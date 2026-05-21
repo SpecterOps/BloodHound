@@ -29,7 +29,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
-	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database/migration"
@@ -248,14 +247,19 @@ func (s *BloodhoundDB) Transaction(ctx context.Context, fn func(tx *BloodhoundDB
 }
 
 func OpenDatabase(cfg config.DatabaseConfiguration) (*gorm.DB, *pgxpool.Pool, error) {
-	gormConfig := &gorm.Config{
-		Logger: &GormLogAdapter{
-			SlowQueryErrorThreshold: time.Second * 30,
-			SlowQueryWarnThreshold:  time.Second * 10,
-		},
-	}
+	var (
+		gormConfig = &gorm.Config{
+			Logger: &GormLogAdapter{
+				SlowQueryErrorThreshold: time.Second * 30,
+				SlowQueryWarnThreshold:  time.Second * 10,
+			},
+		}
+	)
 
-	pool, err := dbpool.NewPool(cfg)
+	// NOTE: We intentionally do NOT use dbpool.NewPool here, which registers AfterConnect/AfterRelease
+	// hooks for graph composite types (nodecomposite, edgecomposite, etc). Registering those hooks causes warning log spam
+	// when Neo4j is the graph driver.
+	pool, err := pgxpool.New(context.Background(), cfg.PostgreSQLConnectionString())
 	if err != nil {
 		return nil, nil, err
 	}
