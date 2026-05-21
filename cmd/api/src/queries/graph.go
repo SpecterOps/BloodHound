@@ -385,17 +385,20 @@ type NodeSearchResults struct {
 }
 
 func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip int, limit int) ([]*graph.Node, error) {
-	if nodes, err := s.searchExactAndFuzzyMatchedNodes(ctx, nodeKinds, strings.ToUpper(nameOrObjectIdQuery)); err != nil {
+	if nodes, err := s.searchExactAndFuzzyMatchedNodes(ctx, nodeKinds, strings.ToUpper(nameOrObjectIdQuery), skip, limit); err != nil {
 		return []*graph.Node{}, err
 	} else {
-		return sortAndSliceResults(nodes, limit, skip), nil
+		return sortAndSliceResults(nodes, limit, skip), nil //TODO
 	}
 }
 
-func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kinds graph.Kinds, formattedQuery string) (NodeSearchResults, error) {
+func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kinds graph.Kinds, formattedQuery string, skip int, limit int) (NodeSearchResults, error) {
 	var results = NodeSearchResults{}
+
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if exactMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createNodeSearchGraphCriteria(kinds, formattedQuery, true)...))); err != nil {
+		filterCriteria := query.And(createNodeSearchGraphCriteria(kinds, formattedQuery, true)...)
+		nodeQuery := tx.Nodes().Filter(filterCriteria).Limit(limit).Offset(skip)
+		if exactMatchNodes, err := ops.FetchNodes(nodeQuery); err != nil {
 			return err
 		} else {
 			results.ExactResults = append(results.ExactResults, exactMatchNodes...)
