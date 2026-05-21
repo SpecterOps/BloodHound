@@ -253,6 +253,30 @@ func (s *OrphanFileSweeper) clearStoredIngestFiles(ctx context.Context, ingestFi
 	}
 }
 
+func isExpectedLocalEntry(expectedLocalFiles map[string]struct{}, localPath string, isDirectory bool) bool {
+	localPath = filepath.Clean(localPath)
+	if _, ok := expectedLocalFiles[localPath]; ok {
+		return true
+	}
+
+	if !isDirectory {
+		return false
+	}
+
+	for expectedLocalFile := range expectedLocalFiles {
+		relativePath, err := filepath.Rel(localPath, expectedLocalFile)
+		if err != nil {
+			continue
+		}
+
+		if relativePath != "." && relativePath != ".." && !strings.HasPrefix(relativePath, ".."+string(filepath.Separator)) && !filepath.IsAbs(relativePath) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (s *OrphanFileSweeper) clearLegacyLocalIngestFiles(ctx context.Context, expectedFileNames []string) {
 	expectedLocalFiles := map[string]struct{}{}
 
@@ -272,12 +296,14 @@ func (s *OrphanFileSweeper) clearLegacyLocalIngestFiles(ctx context.Context, exp
 		if ctx.Err() != nil {
 			return
 		}
-		if entry.IsDir() {
+
+		fullPath := filepath.Join(s.tempDirectoryRootPath, entry.Name())
+		if isExpectedLocalEntry(expectedLocalFiles, fullPath, entry.IsDir()) {
 			continue
 		}
 
-		fullPath := filepath.Join(s.tempDirectoryRootPath, entry.Name())
-		if _, ok := expectedLocalFiles[filepath.Clean(fullPath)]; ok {
+		if entry.IsDir() {
+			_ = s.fileOps.RemoveAll(fullPath)
 			continue
 		}
 
