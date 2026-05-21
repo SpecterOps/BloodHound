@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bomenc"
+	"github.com/specterops/dawgs/util"
 )
 
 func SpoolToScratch(ctx context.Context, scratchDirectory string, fileService storage.FileService, storedFileName string) (string, error) {
@@ -158,7 +159,11 @@ func ExtractIngestFiles(ctx context.Context, scratchDirectory string, fileServic
 	}
 	defer archive.Close()
 
-	fileData := make([]IngestFileData, 0)
+	var (
+		errs     = util.NewErrorCollector()
+		fileData = make([]IngestFileData, 0)
+	)
+
 	for _, archiveFile := range archive.File {
 		if archiveFile.FileInfo().IsDir() {
 			continue
@@ -171,6 +176,7 @@ func ExtractIngestFiles(ctx context.Context, scratchDirectory string, fileServic
 
 		if extractedPath, err := WriteArchiveFileToStorage(ctx, fileService, archiveFile, prefix); err != nil {
 			processedFileData.Errors = []string{err.Error()}
+			errs.Add(fmt.Errorf("error extracting file %s in archive %s: %w", archiveFile.Name, storedFileName, err))
 		} else {
 			processedFileData.Path = extractedPath
 		}
@@ -187,5 +193,5 @@ func ExtractIngestFiles(ctx context.Context, scratchDirectory string, fileServic
 		)
 	}
 
-	return fileData, nil
+	return fileData, errs.Combined()
 }
