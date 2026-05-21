@@ -25,6 +25,7 @@ import (
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
@@ -255,7 +256,7 @@ type PGMigrator struct {
 	migrationCancelFunc func()
 	State               MigratorState
 	lock                *sync.Mutex
-	Cfg                 config.Configuration
+	cfg                 config.Configuration
 }
 
 func NewPGMigrator(serverCtx context.Context, cfg config.Configuration, graphSchema graph.Schema, graphDBSwitch *graph.DatabaseSwitch) *PGMigrator {
@@ -265,7 +266,7 @@ func NewPGMigrator(serverCtx context.Context, cfg config.Configuration, graphSch
 		ServerCtx:     serverCtx,
 		State:         StateIdle,
 		lock:          &sync.Mutex{},
-		Cfg:           cfg,
+		cfg:           cfg,
 	}
 }
 
@@ -297,7 +298,7 @@ func (s *PGMigrator) SwitchPostgreSQL(response http.ResponseWriter, request *htt
 		}, http.StatusInternalServerError, response)
 	} else if err := pgDB.AssertSchema(request.Context(), s.graphSchema); err != nil {
 		slog.ErrorContext(request.Context(), "Unable to assert graph schema in PostgreSQL", attr.Error(err))
-	} else if err := SetGraphDriver(request.Context(), s.Cfg, pg.DriverName); err != nil {
+	} else if err := SetGraphDriver(request.Context(), s.cfg, pg.DriverName); err != nil {
 		api.WriteJSONResponse(request.Context(), map[string]any{
 			"error": fmt.Errorf("failed updating graph database driver preferences: %w", err),
 		}, http.StatusInternalServerError, response)
@@ -314,7 +315,7 @@ func (s *PGMigrator) SwitchNeo4j(response http.ResponseWriter, request *http.Req
 		api.WriteJSONResponse(request.Context(), map[string]any{
 			"error": fmt.Errorf("failed connecting to Neo4j: %w", err),
 		}, http.StatusInternalServerError, response)
-	} else if err := SetGraphDriver(request.Context(), s.Cfg, neo4j.DriverName); err != nil {
+	} else if err := SetGraphDriver(request.Context(), s.cfg, neo4j.DriverName); err != nil {
 		api.WriteJSONResponse(request.Context(), map[string]any{
 			"error": fmt.Errorf("failed updating graph database driver preferences: %w", err),
 		}, http.StatusInternalServerError, response)
@@ -449,12 +450,12 @@ func (s *PGMigrator) MigrationStatus(response http.ResponseWriter, request *http
 }
 
 func (s *PGMigrator) OpenPostgresGraphConnection() (graph.Database, error) {
-	if pool, err := pg.NewPool(s.Cfg.Database); err != nil {
+	if pool, err := dbpool.NewPool(s.cfg.Database); err != nil {
 		return nil, err
 	} else {
 		return dawgs.Open(s.ServerCtx, pg.DriverName, dawgs.Config{
 			GraphQueryMemoryLimit: size.Gibibyte,
-			ConnectionString:      s.Cfg.Database.PostgreSQLConnectionString(),
+			ConnectionString:      s.cfg.Database.PostgreSQLConnectionString(),
 			Pool:                  pool,
 		})
 	}
@@ -463,6 +464,6 @@ func (s *PGMigrator) OpenPostgresGraphConnection() (graph.Database, error) {
 func (s *PGMigrator) OpenNeo4jGraphConnection() (graph.Database, error) {
 	return dawgs.Open(s.ServerCtx, neo4j.DriverName, dawgs.Config{
 		GraphQueryMemoryLimit: size.Gibibyte,
-		ConnectionString:      s.Cfg.Neo4J.Neo4jConnectionString(),
+		ConnectionString:      s.cfg.Neo4J.Neo4JConnectionString(),
 	})
 }

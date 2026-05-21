@@ -29,12 +29,12 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/cmd/dawgs-harness/tests"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/packages/go/bhlog"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs"
-	"github.com/specterops/dawgs/drivers"
 	"github.com/specterops/dawgs/drivers/neo4j"
 	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"
@@ -46,14 +46,14 @@ func fatalf(format string, args ...any) {
 	os.Exit(1)
 }
 
-func RunTestSuite(ctx context.Context, connectionStr, driverName string, cfg drivers.DatabaseConfiguration) tests.TestSuite {
+func RunTestSuite(ctx context.Context, connectionStr, driverName string, cfg config.DatabaseConfiguration) tests.TestSuite {
 	var (
 		pool *pgxpool.Pool
 		err  error
 	)
 
 	if driverName == pg.DriverName {
-		pool, err = pg.NewPool(cfg)
+		pool, err = dbpool.NewPool(cfg)
 		if err != nil {
 			fatalf("Failed creating a new pgxpool: %s", err)
 		}
