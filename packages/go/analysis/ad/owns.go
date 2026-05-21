@@ -101,42 +101,60 @@ func postOwnsEdges(ctx context.Context, db graph.Database, sink *post.FilteredRe
 			slog.ErrorContext(ctx, "Failed to fetch OwnsRaw relationships for postownsandwriteowner", attr.Error(err))
 			return err
 		} else {
+			// When anyEnforced, batch-fetch all target nodes upfront instead of one query per relationship.
+			// This replaces O(N) individual ops.FetchNode calls with a single bulk query.
+			var targetNodes graph.NodeSet
+			if anyEnforced {
+				endIDs := collectUniqueEndIDs(relationships)
+				if fetched, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
+					return query.InIDs(query.NodeID(), endIDs...)
+				})); err != nil {
+					slog.ErrorContext(ctx, "Failed bulk-fetching OwnsRaw target nodes for postownsandwriteowner", attr.Error(err))
+					return err
+				} else {
+					targetNodes = fetched
+				}
+			}
+
 			for _, rel := range relationships {
 
 				// Check if ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1)
 				if anyEnforced {
 
-					// Get the target node of the OwnsRaw relationship
-					if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
-						slog.ErrorContext(ctx, "Failed fetching OwnsRaw target node for postownsandwriteowner", attr.Error(err))
+					// Look up the target node from the pre-fetched set
+					targetNode, ok := targetNodes[rel.EndID]
+					if !ok {
+						slog.ErrorContext(ctx, "Failed fetching OwnsRaw target node for postownsandwriteowner (not in bulk result)",
+							slog.Uint64("end_id", uint64(rel.EndID)))
 						continue
+					}
 
-					} else if domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String(); err != nil {
+					domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String()
+					if err != nil {
 						// Get the domain SID of the target node
 						slog.ErrorContext(ctx, "Failed fetching domain SID for postownsandwriteowner", attr.Error(err))
 						continue
+					}
 
-					} else {
-						enforced, ok := dsHeuristicsCache[domainSid]
-						if !ok {
-							enforced = false
+					enforced, ok := dsHeuristicsCache[domainSid]
+					if !ok {
+						enforced = false
+					}
+					// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the Owns edge
+					if !enforced {
+						result := createPostRelFromRaw(rel, ad.Owns)
+						if !sink.Submit(ctx, result) {
+							return fmt.Errorf("unable to submit to channel in postOwnsEdges")
 						}
-						// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the Owns edge
-						if !enforced {
-							result := createPostRelFromRaw(rel, ad.Owns)
-							if !sink.Submit(ctx, result) {
-								return fmt.Errorf("unable to submit to channel in postOwnsEdges")
-							}
-						} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err != nil {
-							// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
-							continue
-						} else if (isComputerDerived && adminGroupIds != nil && adminGroupIds.Contains(rel.StartID.Uint64())) || !isComputerDerived {
-							// If the target node is a computer or derived object, add the Owns edge if the owning principal is a member of DA/EA (or is either group's SID)
-							// If the target node is NOT a computer or derived object, add the Owns edge
-							result := createPostRelFromRaw(rel, ad.Owns)
-							if !sink.Submit(ctx, result) {
-								return fmt.Errorf("unable to submit to channel in postOwnsEdges")
-							}
+					} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err != nil {
+						// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
+						continue
+					} else if (isComputerDerived && adminGroupIds != nil && adminGroupIds.Contains(rel.StartID.Uint64())) || !isComputerDerived {
+						// If the target node is a computer or derived object, add the Owns edge if the owning principal is a member of DA/EA (or is either group's SID)
+						// If the target node is NOT a computer or derived object, add the Owns edge
+						result := createPostRelFromRaw(rel, ad.Owns)
+						if !sink.Submit(ctx, result) {
+							return fmt.Errorf("unable to submit to channel in postOwnsEdges")
 						}
 					}
 				} else {
@@ -163,41 +181,58 @@ func postWriteOwnerEdges(ctx context.Context, db graph.Database, sink *post.Filt
 			slog.ErrorContext(ctx, "Failed to fetch WriteOwnerRaw relationships for postownsandwriteowner", attr.Error(err))
 			return err
 		} else {
+			// When anyEnforced, batch-fetch all target nodes upfront instead of one query per relationship.
+			var targetNodes graph.NodeSet
+			if anyEnforced {
+				endIDs := collectUniqueEndIDs(relationships)
+				if fetched, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
+					return query.InIDs(query.NodeID(), endIDs...)
+				})); err != nil {
+					slog.ErrorContext(ctx, "Failed bulk-fetching WriteOwnerRaw target nodes for postownsandwriteowner", attr.Error(err))
+					return err
+				} else {
+					targetNodes = fetched
+				}
+			}
+
 			for _, rel := range relationships {
 
 				// Check if ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1)
 				if anyEnforced {
 
-					// Get the target node of the WriteOwnerRaw relationship
-					if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
-						slog.ErrorContext(ctx, "Failed fetching WriteOwnerRaw target node for postownsandwriteowner", attr.Error(err))
+					// Look up the target node from the pre-fetched set
+					targetNode, ok := targetNodes[rel.EndID]
+					if !ok {
+						slog.ErrorContext(ctx, "Failed fetching WriteOwnerRaw target node for postownsandwriteowner (not in bulk result)",
+							slog.Uint64("end_id", uint64(rel.EndID)))
 						continue
+					}
 
-					} else if domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String(); err != nil {
+					domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String()
+					if err != nil {
 						// Get the domain SID of the target node
 						slog.ErrorContext(ctx, "Failed fetching domain SID for postownsandwriteowner", attr.Error(err))
 						continue
+					}
 
-					} else {
-						enforced, ok := dsHeuristicsCache[domainSid]
-						if !ok {
-							enforced = false
+					enforced, ok := dsHeuristicsCache[domainSid]
+					if !ok {
+						enforced = false
+					}
+
+					// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the WriteOwner edge
+					if !enforced {
+						result := createPostRelFromRaw(rel, ad.WriteOwner)
+						if !sink.Submit(ctx, result) {
+							return fmt.Errorf("unable to submit to channel in postWriteOwnerEdges")
 						}
-
-						// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the WriteOwner edge
-						if !enforced {
+					} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err == nil {
+						// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
+						if !isComputerDerived {
+							// If the target node is NOT a computer or derived object, add the WriteOwner edge
 							result := createPostRelFromRaw(rel, ad.WriteOwner)
 							if !sink.Submit(ctx, result) {
 								return fmt.Errorf("unable to submit to channel in postWriteOwnerEdges")
-							}
-						} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err == nil {
-							// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
-							if !isComputerDerived {
-								// If the target node is NOT a computer or derived object, add the WriteOwner edge
-								result := createPostRelFromRaw(rel, ad.WriteOwner)
-								if !sink.Submit(ctx, result) {
-									return fmt.Errorf("unable to submit to channel in postWriteOwnerEdges")
-								}
 							}
 						}
 					}
@@ -212,6 +247,19 @@ func postWriteOwnerEdges(ctx context.Context, db graph.Database, sink *post.Filt
 		}
 		return nil
 	})
+}
+
+// collectUniqueEndIDs extracts all unique EndIDs from a slice of relationships for bulk node fetching.
+func collectUniqueEndIDs(relationships []*graph.Relationship) []graph.ID {
+	seen := make(map[graph.ID]struct{}, len(relationships))
+	ids := make([]graph.ID, 0, len(relationships))
+	for _, rel := range relationships {
+		if _, ok := seen[rel.EndID]; !ok {
+			seen[rel.EndID] = struct{}{}
+			ids = append(ids, rel.EndID)
+		}
+	}
+	return ids
 }
 
 func createPostRelFromRaw(rel *graph.Relationship, kind graph.Kind) post.EnsureRelationshipJob {
