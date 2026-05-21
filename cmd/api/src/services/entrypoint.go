@@ -97,12 +97,23 @@ func CreateRuntimeDependencies(ctx context.Context, cfg config.Configuration, co
 
 // PreMigrationDaemons Word of caution: These daemons will be launched prior to any migration starting
 func PreMigrationDaemons(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], dependencies bootstrap.RuntimeDependencies) ([]daemons.Daemon, error) {
-	return []daemons.Daemon{
-		toolapi.NewDaemon(ctx, connections, cfg, schema.DefaultGraphSchema()),
-	}, nil
+	if dependencies.FileServiceResolver == nil {
+		return nil, fmt.Errorf("file service resolver is required")
+	}
+
+	if retainedFileService, err := dependencies.FileServiceResolver.Resolve(storage.FileServiceRetained); err != nil {
+		return nil, fmt.Errorf("error resolving FileServiceRetained: %w", err)
+	} else {
+		return []daemons.Daemon{
+			toolapi.NewDaemon(ctx, connections, cfg, schema.DefaultGraphSchema(), retainedFileService),
+		}, nil
+	}
 }
 
 func Entrypoint(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], dependencies bootstrap.RuntimeDependencies) ([]daemons.Daemon, error) {
+	if dependencies.FileServiceResolver == nil {
+		return nil, fmt.Errorf("file service resolver is required")
+	}
 
 	dogtagsService := dogtags.NewDefaultService()
 
@@ -158,7 +169,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 
 		var (
 			cl                     = changelog.NewChangelog(connections.Graph, connections.RDMS, changelog.DefaultOptions())
-			pipeline               = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema, cl)
+			pipeline               = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema, dependencies.FileServiceResolver, cl)
 			graphQuery             = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)
 			authorizer             = auth.NewAuthorizer(connections.RDMS)
 			datapipeDaemon         = datapipe.NewDaemon(pipeline, startDelay, time.Duration(cfg.DatapipeInterval)*time.Second, connections.RDMS)

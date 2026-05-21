@@ -19,14 +19,18 @@ package graphify
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"log/slog"
+	"os"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/errorlist"
 	"github.com/specterops/dawgs/graph"
 )
@@ -44,12 +48,77 @@ func (s *GraphifyService) clearFileTask(ingestTask model.IngestTask) {
 	}
 }
 
+type IngestFileData struct {
+	Name         string
+	ParentFile   string
+	Path         string
+	Errors       []string
+	UserDataErrs []string
+}
+
+func processSingleFile(ctx context.Context, fileService storage.FileService, tempDirectory string, fileData IngestFileData, ingestContext *IngestContext, readOpts ReadOptions) error {
+	defer measure.ContextLogAndMeasureWithThreshold(ctx, slog.LevelDebug, "processing single file for ingest", slog.String("filepath", fileData.Path))()
+
+	file, scratchPath, err := OpenScratchReadSeeker(ctx, tempDirectory, fileService, fileData.Path)
+	if err != nil {
+		slog.ErrorContext(
+			ctx,
+			"Error opening ingest file",
+			slog.String("filepath", fileData.Path),
+			attr.Error(err),
+		)
+		return err
+	}
+
+	defer func() {
+		if err := file.Close(); err != nil {
+			slog.WarnContext(
+				ctx,
+				"Error closing ingest scratch file",
+				slog.String("scratch_path", scratchPath),
+				attr.Error(err),
+			)
+		}
+
+		// Always remove the file after attempting to ingest it. Even if it failed.
+		if err := os.Remove(scratchPath); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			slog.WarnContext(
+				ctx,
+				"Error removing ingest scratch file",
+				slog.String("scratch_path", scratchPath),
+				attr.Error(err),
+			)
+		}
+
+		if err := fileService.DeleteFile(ctx, fileData.Path); err != nil {
+			slog.WarnContext(
+				ctx,
+				"Error removing ingest file",
+				slog.String("storage_path", fileData.Path),
+				attr.Error(err),
+			)
+		}
+	}()
+
+	if err := ReadFileForIngest(ingestContext, file, readOpts); err != nil {
+		slog.ErrorContext(
+			ctx,
+			"Error reading ingest file",
+			slog.String("storage_path", fileData.Path),
+			attr.Error(err),
+		)
+		return err
+	}
+
+	return nil
+}
+
 // ProcessIngestFile reads the files at the path supplied, and returns the total number of files in the
 // archive, the number of files that failed to ingest as JSON, and an error
-func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.IngestTask) ([]IngestFileData, error) {
+func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, fileService storage.FileService, task model.IngestTask) ([]IngestFileData, error) {
 	// Try to pre-process the file. If any of them fail, stop processing and return the error
-	if fileData, err := ExtractIngestFiles(s.ctx, s.cfg, task.StoredFileName, task.OriginalFileName, task.FileType, "bh"); err != nil {
-		return []IngestFileData{}, err
+	if fileData, err := ExtractIngestFiles(ic.Ctx, s.cfg.ScratchDirectory(), fileService, task.StoredFileName, task.OriginalFileName, task.FileType, fmt.Sprintf("file_upload_job_%d_", ic.JobId)); err != nil {
+		return fileData, err
 	} else {
 		errs := errorlist.NewBuilder()
 
@@ -63,7 +132,11 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.Ingest
 					RegisterSourceKind: s.RegisterSourceKind(s.ctx),
 				}
 
-				if err := processSingleFile(ic.Ctx, data, ic, readOpts); err != nil {
+				if len(data.Errors) > 0 || data.Path == "" {
+					continue
+				}
+
+				if err := processSingleFile(ic.Ctx, fileService, s.cfg.ScratchDirectory(), data, ic, readOpts); err != nil {
 					var (
 						graphifyError errorlist.Error
 						resolutionErr endpoint.ResolutionError
@@ -125,6 +198,12 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 		return
 	}
 
+	ingestFileService, err := s.fileServiceResolver.Resolve(storage.FileServiceIngest)
+	if err != nil {
+		slog.ErrorContext(s.ctx, "Error resolving ingest file service", attr.Error(err))
+		return
+	}
+
 	start := time.Now()
 	slog.InfoContext(s.ctx,
 		"Ingest run starting",
@@ -150,7 +229,7 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 
 	for _, task := range tasks {
 		ingestCtx := s.NewIngestContext(s.ctx, time.Now().UTC(), flagChangeLogEnabled, task.JobId.ValueOrZero())
-		fileData, err := s.ProcessIngestFile(ingestCtx, task)
+		fileData, err := s.ProcessIngestFile(ingestCtx, ingestFileService, task)
 
 		switch {
 		case errors.Is(err, fs.ErrNotExist):
