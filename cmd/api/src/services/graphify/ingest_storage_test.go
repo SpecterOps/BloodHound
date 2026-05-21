@@ -414,8 +414,9 @@ func TestExtractIngestFiles(t *testing.T) {
 	)
 
 	type expected struct {
-		errIs    error
-		fileData []graphify.IngestFileData
+		errIs       error
+		errContains string
+		fileData    []graphify.IngestFileData
 	}
 
 	type testData struct {
@@ -541,7 +542,7 @@ func TestExtractIngestFiles(t *testing.T) {
 			},
 		},
 		{
-			name:     "archive file write error records file error and continues",
+			name:     "archive file write error records file error and returns aggregate error",
 			fileType: model.FileTypeZip,
 			setupMock: func(t *testing.T, ctx context.Context, mockFileService *storagemocks.MockFileService) {
 				archiveBytes := buildIngestStorageZip(t,
@@ -576,6 +577,8 @@ func TestExtractIngestFiles(t *testing.T) {
 					Return(nil)
 			},
 			expected: expected{
+				errIs:       errWrite,
+				errContains: `error extracting file one.json in archive stored.json: write archive file "one.json" to storage: write failed`,
 				fileData: []graphify.IngestFileData{
 					{
 						Name:       "one.json",
@@ -620,6 +623,9 @@ func TestExtractIngestFiles(t *testing.T) {
 			// Assert
 			if testCase.expected.errIs != nil {
 				require.ErrorIs(t, err, testCase.expected.errIs)
+				if testCase.expected.errContains != "" {
+					require.Contains(t, err.Error(), testCase.expected.errContains)
+				}
 			} else {
 				require.NoError(t, err)
 			}
