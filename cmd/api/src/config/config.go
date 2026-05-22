@@ -64,7 +64,6 @@ type DatabaseConfiguration struct {
 	Secret                string `json:"secret"`
 	MaxConcurrentSessions int    `json:"max_concurrent_sessions"`
 	EnableRDSIAMAuth      bool   `json:"enable_rds_iam_auth"`
-	Endpoint              string `json:"endpoint"`
 }
 
 func (s DatabaseConfiguration) PostgreSQLConnectionString() string {
