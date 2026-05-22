@@ -28,41 +28,27 @@ export const AnnouncementContext = createContext<AnnounceFunction | null>(null);
 // counter increments, which causes React to unmount the old <span> and mount a
 // new one — a DOM mutation the live region detects and announces. This handles
 // re-announcing the same message without needing multiple slots or setTimeout.
-type AnnouncementSlot = {
-    message: string;
-    key: number;
-};
-
-type AnnouncementState = Record<AnnouncementPriority, AnnouncementSlot>;
-
-const initialState: AnnouncementState = {
-    polite: { message: '', key: 0 },
-    assertive: { message: '', key: 0 },
-};
-
 interface AnnouncementProviderProps {
     children?: ReactNode;
 }
 
 const AnnouncementProvider = ({ children }: AnnouncementProviderProps) => {
-    const [state, setState] = useState<AnnouncementState>(initialState);
+    const [polite, setPolite] = useState({ message: '', key: 0 });
+    const [assertive, setAssertive] = useState({ message: '', key: 0 });
 
     const announce = useCallback((message: string, priority: AnnouncementPriority = 'polite') => {
-        setState((prev) => ({
-            ...prev,
-            [priority]: {
-                message,
-                key: prev[priority].key + 1,
-            },
-        }));
+        const setter = priority === 'polite' ? setPolite : setAssertive;
+        setter((prev) => ({ message, key: prev.key + 1 }));
     }, []);
+
+    const slots = { polite, assertive };
 
     return (
         <AnnouncementContext.Provider value={announce}>
             {children}
             {(['polite', 'assertive'] as const).map((priority) => (
                 <div key={priority} aria-live={priority} aria-atomic='true' className='sr-only'>
-                    <span key={state[priority].key}>{state[priority].message}</span>
+                    <span key={slots[priority].key}>{slots[priority].message}</span>
                 </div>
             ))}
         </AnnouncementContext.Provider>
