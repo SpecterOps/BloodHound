@@ -14,6 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './hooks';
 export { default as AnnouncementProvider } from './AnnouncementProvider';
-export type { AnnouncementPriority, AnnounceFunction } from './AnnouncementProvider';
+export type { AnnounceFunction, AnnouncementPriority } from './AnnouncementProvider';
+export * from './hooks';
