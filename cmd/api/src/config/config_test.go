@@ -70,7 +70,7 @@ func TestSetValuesFromEnv(t *testing.T) {
 			"bhe_database_secret=supersecretpassword",
 		}))
 
-		assert.Equal(t, "neo4j://neo4j:neo4jj@localhost:7070/neo4j", cfg.Neo4J.Neo4jConnectionString())
+		assert.Equal(t, "neo4j://neo4j:neo4jj@localhost:7070/neo4j", cfg.Neo4J.Neo4JConnectionString())
 		assert.Equal(t, "postgresql://bhe:supersecretpassword@localhost:5432/bhe", cfg.Database.PostgreSQLConnectionString())
 	})
 
