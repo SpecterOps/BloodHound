@@ -385,26 +385,41 @@ type NodeSearchResults struct {
 }
 
 func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip int, limit int) ([]*graph.Node, error) {
+	if skip < 0 {
+		return []*graph.Node{}, fmt.Errorf(utils.ErrorInvalidSkip, skip)
+	}
+	if limit < 0 {
+		return []*graph.Node{}, fmt.Errorf(utils.ErrorInvalidLimit, limit)
+	}
+
 	if nodes, err := s.searchExactAndFuzzyMatchedNodes(ctx, nodeKinds, strings.ToUpper(nameOrObjectIdQuery), skip, limit); err != nil {
 		return []*graph.Node{}, err
 	} else {
-		return sortAndSliceResults(nodes, limit, skip), nil //TODO
+		return sortAndSliceResults(nodes, limit, skip), nil
 	}
 }
 
 func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kinds graph.Kinds, formattedQuery string, skip int, limit int) (NodeSearchResults, error) {
 	var results = NodeSearchResults{}
+	// default to a limit of 10 if none is provided
+	if limit == 0 {
+		limit = 10
+	}
 
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		filterCriteria := query.And(createNodeSearchGraphCriteria(kinds, formattedQuery, true)...)
-		nodeQuery := tx.Nodes().Filter(filterCriteria).Limit(limit).Offset(skip)
+		// use skip/offset + limit to cap results so the combined exact and fuzzy results have enough data
+		// for sortAndSliceResults to apply the correct offset and limit
+		nodeQuery := tx.Nodes().Filter(filterCriteria).Limit(skip + limit)
 		if exactMatchNodes, err := ops.FetchNodes(nodeQuery); err != nil {
 			return err
 		} else {
 			results.ExactResults = append(results.ExactResults, exactMatchNodes...)
 		}
 
-		if fuzzyMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createFuzzyNodeSearchGraphCriteria(kinds, formattedQuery, true)...))); err != nil {
+		fuzzyFilterCriteria := query.And(createFuzzyNodeSearchGraphCriteria(kinds, formattedQuery, true)...)
+		nodeFuzzyQuery := tx.Nodes().Filter(fuzzyFilterCriteria).Limit(skip + limit)
+		if fuzzyMatchNodes, err := ops.FetchNodes(nodeFuzzyQuery); err != nil {
 			return err
 		} else {
 			results.FuzzyResults = append(results.FuzzyResults, fuzzyMatchNodes...)
