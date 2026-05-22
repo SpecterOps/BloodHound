@@ -268,6 +268,34 @@ func FetchNodeIDsByKind(tx graph.Transaction, targetKind graph.Kind) (cardinalit
 	return nodes, nil
 }
 
+// FetchComputerIDsWithLocalToComputer fetches a bitmap of Computer node IDs that have at least one
+// inbound LocalToComputer edge.
+func FetchComputerIDsWithLocalToComputer(tx graph.Transaction) (cardinality.Duplex[uint64], error) {
+	defer measure.LogAndMeasure(
+		slog.LevelInfo,
+		"FetchComputerIDsWithLocalToComputer",
+		attr.Namespace("analysis"),
+		attr.Function("FetchComputerIDsWithLocalToComputer"),
+		attr.Scope("routine"),
+	)()
+
+	computers := cardinality.NewBitmap64()
+
+	if err := tx.Relationships().Filterf(func() graph.Criteria {
+		return query.Kind(query.Relationship(), ad.LocalToComputer)
+	}).FetchKinds(func(cursor graph.Cursor[graph.RelationshipKindsResult]) error {
+		for result := range cursor.Chan() {
+			computers.Add(result.EndID.Uint64())
+		}
+
+		return cursor.Error()
+	}); err != nil {
+		return nil, err
+	}
+
+	return computers, nil
+}
+
 func FetchNodesByKind(ctx context.Context, db graph.Database, kinds ...graph.Kind) ([]*graph.Node, error) {
 	var nodes []*graph.Node
 	return nodes, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -634,6 +662,9 @@ type LocalGroupData struct {
 	// All computer IDs in all domains
 	Computers cardinality.Duplex[uint64]
 
+	// All computer IDs in all domains that have at least one inbound LocalToComputer edge
+	ComputersWithLocalGroups cardinality.Duplex[uint64]
+
 	// All group IDs in all domains
 	Groups cardinality.Duplex[uint64]
 
@@ -675,6 +706,12 @@ func FetchLocalGroupData(ctx context.Context, graphDB graph.Database) (*LocalGro
 			return err
 		} else {
 			localGroupData.Computers = computerIDs
+		}
+
+		if computersWithLocalGroups, err := FetchComputerIDsWithLocalToComputer(tx); err != nil {
+			return err
+		} else {
+			localGroupData.ComputersWithLocalGroups = computersWithLocalGroups
 		}
 
 		if allGroupIDs, err := FetchNodeIDsByKind(tx, ad.Group); err != nil {
