@@ -166,6 +166,25 @@ func TestTracker_HasEdge_And_DeletedEdges(t *testing.T) {
 	}
 }
 
+func TestTracker_AllSeen(t *testing.T) {
+	builder := NewTrackerBuilder()
+	require.True(t, builder.Build().AllSeen())
+
+	builder.TrackEdge(10, 1, 2, kindA, propsEmpty)
+	builder.TrackEdge(20, 3, 4, kindB, propsEmpty)
+	builder.TrackEdge(30, 5, 6, kindC, propsEmpty)
+	sub := builder.Build()
+
+	require.False(t, sub.AllSeen())
+	require.True(t, sub.HasEdge(1, 2, kindA, propsEmpty))
+	require.False(t, sub.AllSeen())
+	require.True(t, sub.HasEdge(3, 4, kindB, propsEmpty))
+	require.False(t, sub.AllSeen())
+	require.True(t, sub.HasEdge(5, 6, kindC, propsEmpty))
+	require.True(t, sub.AllSeen())
+	require.Empty(t, sub.Deleted())
+}
+
 func TestTracker_HasEdge_DuplicateCalls(t *testing.T) {
 	builder := NewTrackerBuilder()
 	builder.TrackEdge(55, 11, 22, kindA, propsEmpty)

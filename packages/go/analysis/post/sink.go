@@ -21,6 +21,7 @@ import (
 	"log/slog"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -38,13 +39,14 @@ func newPropertiesWithFirstSeen() *graph.Properties {
 
 // FilteredRelationshipSink is an asynchronous graph relationship writer that ensures only new relationships are
 // inserted and removes unused ones. It uses a delta tracker to track changes between graphs and avoids reinserting
-// existing edges. Any edge not visited during processing is treated as obsolete and will be deleted after the
-// operation completes.
+// existing edges. When finalized with Done, any edge not visited during processing is treated as obsolete and will
+// be deleted after the operation completes.
 type FilteredRelationshipSink struct {
 	operationName string
 	db            graph.Database
 	edgeTracker   *Tracker
 	jobC          chan EnsureRelationshipJob
+	deleteMissing atomic.Bool
 	stats         AtomicPostProcessingStats
 	wg            sync.WaitGroup
 }
@@ -59,6 +61,7 @@ func NewFilteredRelationshipSink(ctx context.Context, operationName string, db g
 		stats:         NewAtomicPostProcessingStats(),
 	}
 
+	newSink.deleteMissing.Store(true)
 	newSink.start(ctx)
 	return newSink
 }
@@ -110,15 +113,10 @@ func (s *FilteredRelationshipSink) deltaFilterWorker(ctx context.Context, filter
 			break
 		}
 
-		if !s.edgeTracker.HasEdge(nextJob.FromID.Uint64(), nextJob.ToID.Uint64(), nextJob.Kind, nextJob.RelProperties) {
+		if !s.hasTrackedRelationship(nextJob) {
 			if !channels.Submit(ctx, insertC, nextJob) {
 				break
 			}
-		} else {
-			postOperationsVec.With(map[string]string{
-				"kind":      nextJob.Kind.String(),
-				"operation": "filtered",
-			}).Add(1)
 		}
 	}
 }
@@ -126,7 +124,14 @@ func (s *FilteredRelationshipSink) deltaFilterWorker(ctx context.Context, filter
 // deleteMissingEdges removes any lingering edges that were not part of the current operation. This ensures
 // that only valid relationships remain after the sink completes its work.
 func (s *FilteredRelationshipSink) deleteMissingEdges(ctx context.Context) error {
+	if s.edgeTracker.AllSeen() {
+		return nil
+	}
+
 	deletedEdges := s.edgeTracker.Deleted()
+	if len(deletedEdges) == 0 {
+		return nil
+	}
 
 	if err := s.db.BatchOperation(ctx, func(batch graph.Batch) error {
 		for _, deletedEdge := range deletedEdges {
@@ -154,46 +159,109 @@ func (s *FilteredRelationshipSink) worker(ctx context.Context) {
 	defer s.wg.Done()
 
 	var (
-		filterC  = make(chan EnsureRelationshipJob)
-		insertC  = make(chan EnsureRelationshipJob)
-		filterWG sync.WaitGroup
-		insertWG sync.WaitGroup
+		filterC        chan EnsureRelationshipJob
+		insertC        chan EnsureRelationshipJob
+		filterWG       sync.WaitGroup
+		insertWG       sync.WaitGroup
+		workersStarted bool
 	)
 
-	insertWG.Add(1)
+	startWorkers := func() {
+		if workersStarted {
+			return
+		}
 
-	go func() {
-		defer insertWG.Done()
-		s.insertWorker(ctx, newPropertiesWithFirstSeen(), insertC)
-	}()
+		filterC = make(chan EnsureRelationshipJob)
+		insertC = make(chan EnsureRelationshipJob)
+		workersStarted = true
 
-	for workerID := 0; workerID < runtime.NumCPU()/2+1; workerID += 1 {
-		filterWG.Add(1)
+		insertWG.Add(1)
+		go func() {
+			defer insertWG.Done()
+			s.insertWorker(ctx, newPropertiesWithFirstSeen(), insertC)
+		}()
 
-		go func(workerID int) {
-			defer filterWG.Done()
-			s.deltaFilterWorker(ctx, filterC, insertC)
-		}(workerID)
+		for workerID := 0; workerID < runtime.NumCPU()/2+1; workerID += 1 {
+			filterWG.Add(1)
+
+			go func(workerID int) {
+				defer filterWG.Done()
+				s.deltaFilterWorker(ctx, filterC, insertC)
+			}(workerID)
+		}
+	}
+
+	stopWorkers := func() {
+		if !workersStarted {
+			return
+		}
+
+		close(filterC)
+		filterWG.Wait()
+
+		close(insertC)
+		insertWG.Wait()
 	}
 
 	for {
 		if nextJob, shouldContinue := channels.Receive(ctx, s.jobC); !shouldContinue {
 			break
-		} else if !channels.Submit(ctx, filterC, nextJob) {
-			break
+		} else {
+			startWorkers()
+			if !channels.Submit(ctx, filterC, nextJob) {
+				break
+			}
 		}
 	}
 
-	close(filterC)
-	filterWG.Wait()
+	stopWorkers()
 
-	close(insertC)
-	insertWG.Wait()
-
-	// Remove any lingering edges after the operation completes
-	if err := s.deleteMissingEdges(ctx); err != nil {
-		slog.Error("Failed deleting missing edges after ingestion sink flush", attr.Error(err))
+	if s.deleteMissing.Load() {
+		// Remove any lingering edges after the operation completes.
+		if err := s.deleteMissingEdges(ctx); err != nil {
+			slog.Error("Failed deleting missing edges after ingestion sink flush", attr.Error(err))
+		}
 	}
+}
+
+func (s *FilteredRelationshipSink) hasTrackedRelationship(nextJob EnsureRelationshipJob) bool {
+	if s.edgeTracker.HasEdge(nextJob.FromID.Uint64(), nextJob.ToID.Uint64(), nextJob.Kind, nextJob.RelProperties) {
+		postOperationsVec.With(map[string]string{
+			"kind":      nextJob.Kind.String(),
+			"operation": "filtered",
+		}).Add(1)
+
+		return true
+	}
+
+	return false
+}
+
+// Submit submits a new job to be processed by the sink.
+func (s *FilteredRelationshipSink) Submit(ctx context.Context, nextJob EnsureRelationshipJob) bool {
+	if err := ctx.Err(); err != nil {
+		return false
+	}
+
+	if s.hasTrackedRelationship(nextJob) {
+		return true
+	}
+
+	return channels.Submit(ctx, s.jobC, nextJob)
+}
+
+// Done signals the end of processing and waits for all workers to complete.
+func (s *FilteredRelationshipSink) Done() {
+	s.deleteMissing.Store(true)
+	close(s.jobC)
+	s.wg.Wait()
+}
+
+// Abort signals the end of processing without deleting unvisited tracked edges.
+func (s *FilteredRelationshipSink) Abort() {
+	s.deleteMissing.Store(false)
+	close(s.jobC)
+	s.wg.Wait()
 }
 
 // Stats returns a pointer to the atomic statistics structure tracking processed relationships.
@@ -205,15 +273,4 @@ func (s *FilteredRelationshipSink) Stats() *AtomicPostProcessingStats {
 func (s *FilteredRelationshipSink) start(ctx context.Context) {
 	s.wg.Add(1)
 	go s.worker(ctx)
-}
-
-// Submit submits a new job to be processed by the sink.
-func (s *FilteredRelationshipSink) Submit(ctx context.Context, nextJob EnsureRelationshipJob) bool {
-	return channels.Submit(ctx, s.jobC, nextJob)
-}
-
-// Done signals the end of processing and waits for all workers to complete.
-func (s *FilteredRelationshipSink) Done() {
-	close(s.jobC)
-	s.wg.Wait()
 }

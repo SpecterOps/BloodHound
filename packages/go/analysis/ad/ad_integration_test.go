@@ -2162,6 +2162,336 @@ func TestOwnsWriteOwner(t *testing.T) {
 	})
 }
 
+func TestGPOAppliesTo(t *testing.T) {
+	var (
+		testCtx                 = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		graphDB                 = testCtx.Graph.Database
+		fixtureNodes, testEdges = setupGPOAppliesToHarness(t, graphDB)
+		preservedEdgeID         graph.ID
+	)
+
+	_, err := adAnalysis.PostGPOs(testCtx.Context(), graphDB)
+	require.NoError(t, err)
+
+	requireGPOAppliesToEdges(t, testCtx.Context(), graphDB, fixtureNodes, testEdges)
+	requireNoRelationshipByNodeNames(t, testCtx.Context(), graphDB, "GPO1", "User4", ad.GPOAppliesTo)
+	requireNoRelationshipByNodeNames(t, testCtx.Context(), graphDB, "GPO1", "Computer4", ad.GPOAppliesTo)
+
+	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
+		gpoID := requireNodeIDByName(t, tx, "GPO1")
+		userID := requireNodeIDByName(t, tx, "User1")
+		preservedEdgeID = requireSingleRelationshipID(t, tx, gpoID, userID, ad.GPOAppliesTo)
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	stats, err := adAnalysis.PostGPOs(testCtx.Context(), graphDB)
+	require.NoError(t, err)
+	require.Empty(t, stats.RelationshipsCreated)
+	require.Empty(t, stats.RelationshipsDeleted)
+
+	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
+		gpoID := requireNodeIDByName(t, tx, "GPO1")
+		userID := requireNodeIDByName(t, tx, "User1")
+		require.Equal(t, preservedEdgeID, requireSingleRelationshipID(t, tx, gpoID, userID, ad.GPOAppliesTo))
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	deleteRelationshipByNodeNames(t, testCtx.Context(), graphDB, "Container1", "User1", ad.Contains)
+
+	_, err = adAnalysis.PostGPOs(testCtx.Context(), graphDB)
+	require.NoError(t, err)
+
+	requireRelationshipCount(t, testCtx.Context(), graphDB, ad.GPOAppliesTo, len(testEdges)-1)
+	requireNoRelationshipByNodeNames(t, testCtx.Context(), graphDB, "GPO1", "User1", ad.GPOAppliesTo)
+
+	deleteRelationshipByNodeNames(t, testCtx.Context(), graphDB, "GPO3", "OU2", ad.GPLink)
+
+	_, err = adAnalysis.PostGPOs(testCtx.Context(), graphDB)
+	require.NoError(t, err)
+
+	requireRelationshipCount(t, testCtx.Context(), graphDB, ad.GPOAppliesTo, len(testEdges)-5)
+	requireNoRelationshipByNodeNames(t, testCtx.Context(), graphDB, "GPO3", "User3", ad.GPOAppliesTo)
+	requireNoRelationshipByNodeNames(t, testCtx.Context(), graphDB, "GPO3", "User4", ad.GPOAppliesTo)
+}
+
+func TestCanApplyGPO(t *testing.T) {
+	var (
+		testCtx         = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		graphDB         = testCtx.Graph.Database
+		preservedEdgeID graph.ID
+	)
+
+	testCtx.Harness.GPOEnforcement.Setup(testCtx)
+	harness := testCtx.Harness.GPOEnforcement
+	delegate := testCtx.NewActiveDirectoryUser("GPO Link Delegate", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	testCtx.NewRelationship(delegate, harness.Domain, ad.WriteGPLink, integration.DefaultRelProperties)
+
+	_, err := adAnalysis.PostGPOs(testCtx.Context(), graphDB)
+	require.NoError(t, err)
+
+	expectedTargets := []graph.ID{
+		harness.UserA.ID,
+		harness.UserB.ID,
+		harness.UserC.ID,
+		harness.UserD.ID,
+	}
+
+	requireCanApplyGPOTargets(t, testCtx.Context(), graphDB, delegate.ID, expectedTargets)
+
+	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
+		preservedEdgeID = requireSingleRelationshipID(t, tx, delegate.ID, harness.UserB.ID, ad.CanApplyGPO)
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	stats, err := adAnalysis.PostGPOs(testCtx.Context(), graphDB)
+	require.NoError(t, err)
+	require.Empty(t, stats.RelationshipsCreated)
+	require.Empty(t, stats.RelationshipsDeleted)
+
+	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
+		require.Equal(t, preservedEdgeID, requireSingleRelationshipID(t, tx, delegate.ID, harness.UserB.ID, ad.CanApplyGPO))
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	deleteRelationshipByStartAndEnd(t, testCtx.Context(), graphDB, harness.OrganizationalUnitA.ID, harness.UserA.ID, ad.Contains)
+
+	_, err = adAnalysis.PostGPOs(testCtx.Context(), graphDB)
+	require.NoError(t, err)
+
+	requireCanApplyGPOTargets(t, testCtx.Context(), graphDB, delegate.ID, []graph.ID{
+		harness.UserB.ID,
+		harness.UserC.ID,
+		harness.UserD.ID,
+	})
+	requireNoRelationshipByIDs(t, testCtx.Context(), graphDB, delegate.ID, harness.UserA.ID, ad.CanApplyGPO)
+}
+
+func TestPostGPOsPreservesTrackedEdgesOnError(t *testing.T) {
+	var (
+		testCtx   = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		graphDB   = testCtx.Graph.Database
+		domainSID = integration.RandomDomainSID()
+		domain    = testCtx.NewActiveDirectoryDomain("Abort Test Domain", domainSID, false, true)
+		ou        = testCtx.NewActiveDirectoryOU("Abort Test OU", domainSID, false)
+		user      = testCtx.NewActiveDirectoryUser("Abort Test User", domainSID)
+		gpo       = testCtx.NewActiveDirectoryGPO("Abort Test GPO", domainSID)
+	)
+
+	testCtx.NewRelationship(domain, ou, ad.Contains, integration.DefaultRelProperties)
+	testCtx.NewRelationship(ou, user, ad.Contains, integration.DefaultRelProperties)
+	testCtx.NewRelationship(gpo, ou, ad.GPLink, integration.DefaultRelProperties, graph.AsProperties(graph.PropertyMap{
+		ad.Enforced: false,
+	}))
+	existingEdge := testCtx.NewRelationship(gpo, user, ad.GPOAppliesTo)
+
+	ou.Properties.Set(ad.BlocksInheritance.String(), "not-a-bool")
+	err := graphDB.WriteTransaction(testCtx.Context(), func(tx graph.Transaction) error {
+		return tx.UpdateNode(ou)
+	})
+	require.NoError(t, err)
+
+	_, err = adAnalysis.PostGPOs(testCtx.Context(), graphDB)
+	require.Error(t, err)
+
+	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
+		require.Equal(t, existingEdge.ID, requireSingleRelationshipID(t, tx, gpo.ID, user.ID, ad.GPOAppliesTo))
+
+		return nil
+	})
+	require.NoError(t, err)
+}
+
+func setupGPOAppliesToHarness(t testing.TB, graphDB graph.Database) ([]arrows.Node, []arrows.Edge) {
+	t.Helper()
+
+	fixture, err := arrows.LoadGraphFromFile(integration.Harnesses, "harnesses/GPOAppliesToHarness.json")
+	require.NoError(t, err)
+
+	var (
+		testEdges  []arrows.Edge
+		otherEdges []arrows.Edge
+	)
+
+	for _, edge := range fixture.Relationships {
+		if edge.Type == ad.GPOAppliesTo.String() {
+			testEdges = append(testEdges, edge)
+		} else {
+			otherEdges = append(otherEdges, edge)
+		}
+	}
+	fixture.Relationships = otherEdges
+
+	err = arrows.WriteGraphToDatabase(graphDB, &fixture)
+	require.NoError(t, err)
+
+	return fixture.Nodes, testEdges
+}
+
+func requireGPOAppliesToEdges(t testing.TB, ctx context.Context, graphDB graph.Database, fixtureNodes []arrows.Node, testEdges []arrows.Edge) {
+	t.Helper()
+
+	requireRelationshipCount(t, ctx, graphDB, ad.GPOAppliesTo, len(testEdges))
+
+	err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		for _, testEdge := range testEdges {
+			fromNode, found := findNodeByID(fixtureNodes, testEdge.FromID)
+			require.True(t, found, "error finding source node with ID %s", testEdge.FromID)
+
+			toNode, found := findNodeByID(fixtureNodes, testEdge.ToID)
+			require.True(t, found, "error finding destination node with ID %s", testEdge.ToID)
+
+			fromGraphNodeID := requireNodeIDByName(t, tx, fromNode.Caption)
+			toGraphNodeID := requireNodeIDByName(t, tx, toNode.Caption)
+			requireSingleRelationshipID(t, tx, fromGraphNodeID, toGraphNodeID, ad.GPOAppliesTo)
+		}
+
+		return nil
+	})
+	require.NoError(t, err)
+}
+
+func requireCanApplyGPOTargets(t testing.TB, ctx context.Context, graphDB graph.Database, delegateID graph.ID, expectedTargetIDs []graph.ID) {
+	t.Helper()
+
+	requireRelationshipCount(t, ctx, graphDB, ad.CanApplyGPO, len(expectedTargetIDs))
+
+	err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		for _, targetID := range expectedTargetIDs {
+			requireSingleRelationshipID(t, tx, delegateID, targetID, ad.CanApplyGPO)
+		}
+
+		return nil
+	})
+	require.NoError(t, err)
+}
+
+func requireRelationshipCount(t testing.TB, ctx context.Context, graphDB graph.Database, kind graph.Kind, expectedCount int) {
+	t.Helper()
+
+	err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		relationshipIDs, err := ops.FetchRelationshipIDs(tx.Relationships().Filterf(func() graph.Criteria {
+			return query.Kind(query.Relationship(), kind)
+		}))
+		require.NoError(t, err)
+		require.Len(t, relationshipIDs, expectedCount)
+
+		return nil
+	})
+	require.NoError(t, err)
+}
+
+func requireNodeIDByName(t testing.TB, tx graph.Transaction, nodeName string) graph.ID {
+	t.Helper()
+
+	nodeIDs, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+		return query.Equals(query.NodeProperty(common.Name.String()), nodeName)
+	}))
+	require.NoError(t, err)
+	require.Len(t, nodeIDs, 1, "expected one node named %s", nodeName)
+
+	return nodeIDs[0]
+}
+
+func requireSingleRelationshipID(t testing.TB, tx graph.Transaction, startID, endID graph.ID, kind graph.Kind) graph.ID {
+	t.Helper()
+
+	relationshipIDs, err := fetchRelationshipIDsByStartAndEnd(tx, startID, endID, kind)
+	require.NoError(t, err)
+	require.Len(t, relationshipIDs, 1)
+
+	return relationshipIDs[0]
+}
+
+func requireNoRelationshipByNodeNames(t testing.TB, ctx context.Context, graphDB graph.Database, startName, endName string, kind graph.Kind) {
+	t.Helper()
+
+	err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		startID := requireNodeIDByName(t, tx, startName)
+		endID := requireNodeIDByName(t, tx, endName)
+		relationshipIDs, err := fetchRelationshipIDsByStartAndEnd(tx, startID, endID, kind)
+		require.NoError(t, err)
+		require.Empty(t, relationshipIDs)
+
+		return nil
+	})
+	require.NoError(t, err)
+}
+
+func requireNoRelationshipByIDs(t testing.TB, ctx context.Context, graphDB graph.Database, startID, endID graph.ID, kind graph.Kind) {
+	t.Helper()
+
+	err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		relationshipIDs, err := fetchRelationshipIDsByStartAndEnd(tx, startID, endID, kind)
+		require.NoError(t, err)
+		require.Empty(t, relationshipIDs)
+
+		return nil
+	})
+	require.NoError(t, err)
+}
+
+func deleteRelationshipByNodeNames(t testing.TB, ctx context.Context, graphDB graph.Database, startName, endName string, kind graph.Kind) {
+	t.Helper()
+
+	var (
+		startID graph.ID
+		endID   graph.ID
+	)
+
+	err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		startID = requireNodeIDByName(t, tx, startName)
+		endID = requireNodeIDByName(t, tx, endName)
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	deleteRelationshipByStartAndEnd(t, ctx, graphDB, startID, endID, kind)
+}
+
+func deleteRelationshipByStartAndEnd(t testing.TB, ctx context.Context, graphDB graph.Database, startID, endID graph.ID, kind graph.Kind) {
+	t.Helper()
+
+	var relationshipIDs []graph.ID
+
+	err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		relationshipIDs, err = fetchRelationshipIDsByStartAndEnd(tx, startID, endID, kind)
+		return err
+	})
+	require.NoError(t, err)
+	require.NotEmpty(t, relationshipIDs)
+
+	err = graphDB.BatchOperation(ctx, func(batch graph.Batch) error {
+		for _, relationshipID := range relationshipIDs {
+			if err := batch.DeleteRelationship(relationshipID); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	require.NoError(t, err)
+}
+
+func fetchRelationshipIDsByStartAndEnd(tx graph.Transaction, startID, endID graph.ID, kind graph.Kind) ([]graph.ID, error) {
+	return ops.FetchRelationshipIDs(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Equals(query.StartID(), startID),
+			query.Equals(query.EndID(), endID),
+			query.Kind(query.Relationship(), kind),
+		)
+	}))
+}
+
 func TestHasTrustKeys(t *testing.T) {
 	var (
 		testCtx = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())

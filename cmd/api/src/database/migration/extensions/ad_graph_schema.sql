@@ -267,8 +267,8 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AllExtendedRights', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AddMember', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'HasSession', '', true);
-	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'Contains', '', true);
-	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'GPLink', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'Contains', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'GPLink', '', false);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AllowedToDelegate', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CoerceToTGT', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'GetChanges', '', false);
@@ -298,7 +298,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'RemoteInteractiveLogonRight', '', false);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'SyncLAPSPassword', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteAccountRestrictions', '', true);
-	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteGPLink', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteGPLink', '', false);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'RootCAFor', '', false);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'DCFor', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'PublishedTo', '', false);

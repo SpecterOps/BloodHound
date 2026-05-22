@@ -1856,7 +1856,6 @@ SharedRelationshipKinds: [
 	AllExtendedRights,
 	AddMember,
 	HasSession,
-	GPLink,
 	AllowedToDelegate,
 	CoerceToTGT,
 	AllowedToAct,
@@ -1876,7 +1875,6 @@ SharedRelationshipKinds: [
 	AddKeyCredentialLink,
 	SyncLAPSPassword,
 	WriteAccountRestrictions,
-	WriteGPLink,
 	GoldenCert,
 	ADCSESC1,
 	ADCSESC3,
@@ -1906,16 +1904,16 @@ SharedRelationshipKinds: [
 ]
 
 // Edges that are used during inbound traversal
-InboundRelationshipKinds: list.Concat([SharedRelationshipKinds, [Contains]])
+InboundRelationshipKinds: list.Concat([SharedRelationshipKinds])
 
 // Edges that are used during outbound traversal
-OutboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[Contains, DCFor]])
+OutboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[DCFor]])
 
 // Edges that are used in pathfinding
-PathfindingRelationships: list.Concat([SharedRelationshipKinds,[Contains, DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation]])
+PathfindingRelationships: list.Concat([SharedRelationshipKinds,[DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation]])
 
 // Edges that are used in Shortest Path and match the frontend's list of traversable edges
-PathfindingRelationshipsMatchFrontend: list.Concat([[for r in PathfindingRelationships if !list.Contains([ContainsIdentity, PropagatesACEsTo, GPOAppliesTo, CanApplyGPO], r) {r}], [ProtectAdminGroups]]),
+PathfindingRelationshipsMatchFrontend: list.Concat([PathfindingRelationships, [ProtectAdminGroups]]),
 
 
 EdgeCompositionRelationships: [
@@ -1967,14 +1965,14 @@ PostProcessedRelationships: [
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
-	GPOAppliesTo,
-	CanApplyGPO,
 	HasTrustKeys,
 ]
 
 DCAPostProcessedRelationships: [
 	Owns,
-	WriteOwner
+	WriteOwner,
+	GPOAppliesTo,
+	CanApplyGPO,
 ]
 
 // All post-processed edges

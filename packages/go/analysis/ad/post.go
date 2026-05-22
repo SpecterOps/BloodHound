@@ -877,6 +877,8 @@ func Post(ctx context.Context, db graph.Database, citrixEnabled, ntlmEnabled boo
 		return &aggregateStats, err
 	} else if ownsStats, err := PostOwnsAndWriteOwner(ctx, db, localGroupData); err != nil {
 		return &aggregateStats, err
+	} else if gpoStats, err := PostGPOs(ctx, db); err != nil {
+		return &aggregateStats, err
 	} else if ntlmStats, err := PostNTLM(ctx, db, localGroupData, adcsCache, ntlmEnabled); err != nil {
 		return &aggregateStats, err
 	} else {
@@ -889,6 +891,7 @@ func Post(ctx context.Context, db graph.Database, citrixEnabled, ntlmEnabled boo
 		aggregateStats.Merge(canRDPStats)
 		aggregateStats.Merge(adcsStats)
 		aggregateStats.Merge(ownsStats)
+		aggregateStats.Merge(gpoStats)
 		aggregateStats.Merge(ntlmStats)
 
 		return &aggregateStats, nil

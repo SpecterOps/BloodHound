@@ -184,10 +184,12 @@ type trackedEntity struct {
 // Tracker tracks edges and nodes as hashed keys that can be looked and checked. The Tracker also
 // maintains a list of seen entities and provides methods to detect deletions.
 type Tracker struct {
-	entities     []trackedEntity
-	seenKeys     map[uint64]struct{}
-	seenKeysLock sync.RWMutex
-	encoderPool  *KeyEncoderPool
+	entities      []trackedEntity
+	entitiesByKey map[uint64]trackedEntity
+	uniqueKeys    int
+	seenKeys      map[uint64]struct{}
+	seenKeysLock  sync.RWMutex
+	encoderPool   *KeyEncoderPool
 }
 
 // Seen returns the number of unique keys currently tracked and seen by either HasNode or HasEdge.
@@ -198,10 +200,22 @@ func (s *Tracker) Seen() int {
 	return len(s.seenKeys)
 }
 
+// AllSeen returns true when every unique tracked key was visited during reconciliation.
+func (s *Tracker) AllSeen() bool {
+	s.seenKeysLock.RLock()
+	defer s.seenKeysLock.RUnlock()
+
+	return len(s.seenKeys) == s.uniqueKeys
+}
+
 // Deleted returns a slice of IDs for edges that were not seen during the operation.
 func (s *Tracker) Deleted() []uint64 {
 	s.seenKeysLock.RLock()
 	defer s.seenKeysLock.RUnlock()
+
+	if len(s.seenKeys) == s.uniqueKeys {
+		return nil
+	}
 
 	deletedEdges := make([]uint64, 0, len(s.entities)-len(s.seenKeys))
 
@@ -219,22 +233,12 @@ func (s *Tracker) Deleted() []uint64 {
 // fingerprint is identical. If found, it marks the key as seen.
 func (s *Tracker) HasEdge(start, end uint64, edgeKind graph.Kind, properties map[string]any) bool {
 	var (
-		edgeKey       = s.encoderPool.EdgeKey(start, end, edgeKind)
-		propsHash     = s.encoderPool.PropertiesFingerprint(properties)
-		idx, keyFound = slices.BinarySearchFunc(s.entities, edgeKey, func(e trackedEntity, t uint64) int {
-			if e.Key < t {
-				return -1
-			}
-
-			if e.Key > t {
-				return 1
-			}
-
-			return 0
-		})
+		edgeKey             = s.encoderPool.EdgeKey(start, end, edgeKind)
+		propsHash           = s.encoderPool.PropertiesFingerprint(properties)
+		edge, keyWasTracked = s.entitiesByKey[edgeKey]
 	)
 
-	if keyFound && s.entities[idx].PropsHash == propsHash {
+	if keyWasTracked && edge.PropsHash == propsHash {
 		s.seenKeysLock.Lock()
 		s.seenKeys[edgeKey] = struct{}{}
 		s.seenKeysLock.Unlock()
@@ -269,6 +273,11 @@ func (s *EdgeTrackerBuilder) TrackEdge(edge, start, end uint64, kind graph.Kind,
 
 // Build constructs a Tracker from the accumulated edges.
 func (s *EdgeTrackerBuilder) Build() *Tracker {
+	var (
+		entitiesByKey = make(map[uint64]trackedEntity, len(s.edges))
+		uniqueKeys    int
+	)
+
 	// Sort the edges before building the tracker
 	slices.SortStableFunc(s.edges, func(a, b trackedEntity) int {
 		if a.Key < b.Key {
@@ -282,13 +291,22 @@ func (s *EdgeTrackerBuilder) Build() *Tracker {
 		return 0
 	})
 
+	for _, edge := range s.edges {
+		if _, keyAlreadyTracked := entitiesByKey[edge.Key]; !keyAlreadyTracked {
+			entitiesByKey[edge.Key] = edge
+			uniqueKeys += 1
+		}
+	}
+
 	return &Tracker{
-		entities:    s.edges,
-		encoderPool: s.encoderPool,
+		entities:      s.edges,
+		entitiesByKey: entitiesByKey,
+		uniqueKeys:    uniqueKeys,
+		encoderPool:   s.encoderPool,
 
 		// Assume that the tracker will have a high hit ratio. This may be better exposed as a function parameter
 		// but for now this seems like a safe bet.
-		seenKeys: make(map[uint64]struct{}, len(s.edges)),
+		seenKeys: make(map[uint64]struct{}, uniqueKeys),
 	}
 }
 

@@ -80,6 +80,7 @@ import AdminTo from './AdminTo/AdminTo';
 import AllExtendedRights from './AllExtendedRights/AllExtendedRights';
 import AllowedToAct from './AllowedToAct/AllowedToAct';
 import AllowedToDelegate from './AllowedToDelegate/AllowedToDelegate';
+import CanApplyGPO from './CanApplyGPO/CanApplyGPO';
 import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
 import ClaimSpecialIdentity from './ClaimSpecialIdentity/ClaimSpecialIdentity';
@@ -89,6 +90,7 @@ import CoerceAndRelayNTLMToLDAPS from './CoerceAndRelayNTLMToLDAPS/CoerceAndRela
 import CoerceAndRelayNTLMToSMB from './CoerceAndRelayNTLMToSMB/CoerceAndRelayNTLMToSMB';
 import CoerceToTGT from './CoerceToTGT/CoerceToTGT';
 import Contains from './Contains/Contains';
+import ContainsIdentity from './ContainsIdentity/ContainsIdentity';
 import CrossForestTrust from './CrossForestTrust/CrossForestTrust';
 import DCFor from './DCFor/DCFor';
 import DCSync from './DCSync/DCSync';
@@ -101,6 +103,7 @@ import ExecuteDCOM from './ExecuteDCOM/ExecuteDCOM';
 import ExtendedByPolicy from './ExtendedByPolicy/ExtendedByPolicy';
 import ForceChangePassword from './ForceChangePassword/ForceChangePassword';
 import GPLink from './GPLink/GPLink';
+import GPOAppliesTo from './GPOAppliesTo/GPOAppliesTo';
 import GenericAll from './GenericAll/GenericAll';
 import GenericWrite from './GenericWrite/GenericWrite';
 import GetChanges from './GetChanges/GetChanges';
@@ -119,6 +122,7 @@ import OIDGroupLink from './OIDGroupLink/OIDGroupLink';
 import Owns from './Owns/Owns';
 import OwnsLimitedRights from './OwnsLimitedRights/OwnsLimitedRights';
 import OwnsRaw from './OwnsRaw/OwnsRaw';
+import PropagatesACEsTo from './PropagatesACEsTo/PropagatesACEsTo';
 import ProtectAdminGroups from './ProtectAdminGroups/ProtectAdminGroups';
 import PublishedTo from './PublishedTo/PublishedTo';
 import ReadGMSAPassword from './ReadGMSAPassword/ReadGMSAPassword';
@@ -176,7 +180,9 @@ const EdgeInfoComponents = {
     GetChangesAll: GetChangesAll,
     ReadLAPSPassword: ReadLAPSPassword,
     Contains: Contains,
+    ContainsIdentity: ContainsIdentity,
     GPLink: GPLink,
+    GPOAppliesTo: GPOAppliesTo,
     AddAllowedToAct: AddAllowedToAct,
     AllowedToAct: AllowedToAct,
     SQLAdmin: SQLAdmin,
@@ -217,6 +223,7 @@ const EdgeInfoComponents = {
     DCSync: DCSync,
     SyncLAPSPassword: SyncLAPSPassword,
     WriteAccountRestrictions: WriteAccountRestrictions,
+    CanApplyGPO: CanApplyGPO,
     WriteGPLink: WriteGPLink,
     DumpSMSAPassword: DumpSMSAPassword,
     AZMGAddMember: AZMGAddMember,
@@ -276,6 +283,7 @@ const EdgeInfoComponents = {
     CoerceAndRelayNTLMToADCS: CoerceAndRelayNTLMToADCS,
     ProtectAdminGroups: ProtectAdminGroups,
     ClaimSpecialIdentity: ClaimSpecialIdentity,
+    PropagatesACEsTo: PropagatesACEsTo,
     HasTrustKeys: HasTrustKeys,
     AZAuthenticatesTo: AZAuthenticatesTo,
 };

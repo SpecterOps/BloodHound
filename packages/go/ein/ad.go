@@ -303,10 +303,21 @@ func stringToInt(itemProps map[string]any, keyName string) {
 	}
 }
 
-func ParseObjectContainer(item IngestBase, itemType graph.Kind) IngestibleRelationship {
-	containingPrincipal := item.ContainedBy
+func ParseObjectContainer(item IngestBase, itemType graph.Kind, baseNodeProps IngestibleNode) []IngestibleRelationship {
+	var (
+		relationships       = make([]IngestibleRelationship, 0, 2)
+		containingPrincipal = item.ContainedBy
+		isConfigurationNC   bool
+	)
+
+	if itemType.Is(ad.Container) {
+		if distinguishedName, ok := baseNodeProps.PropertyMap[ad.DistinguishedName.String()].(string); ok {
+			isConfigurationNC = strings.HasPrefix(strings.ToUpper(distinguishedName), "CN=CONFIGURATION,DC=")
+		}
+	}
+
 	if containingPrincipal.ObjectIdentifier != "" {
-		return NewIngestibleRelationship(
+		relationships = append(relationships, NewIngestibleRelationship(
 			IngestibleEndpoint{
 				Value: containingPrincipal.ObjectIdentifier,
 				Kind:  containingPrincipal.Kind(),
@@ -319,11 +330,27 @@ func ParseObjectContainer(item IngestBase, itemType graph.Kind) IngestibleRelati
 				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.Contains,
 			},
-		)
+		))
+
+		if !item.IsACLProtected && !isConfigurationNC {
+			relationships = append(relationships, NewIngestibleRelationship(
+				IngestibleEndpoint{
+					Value: containingPrincipal.ObjectIdentifier,
+					Kind:  containingPrincipal.Kind(),
+				},
+				IngestibleEndpoint{
+					Value: item.ObjectIdentifier,
+					Kind:  itemType,
+				},
+				IngestibleRel{
+					RelProps: map[string]any{ad.IsACL.String(): false},
+					RelType:  ad.PropagatesACEsTo,
+				},
+			))
+		}
 	}
 
-	// TODO: Decide if we even want empty rels in the first place
-	return NewIngestibleRelationship(IngestibleEndpoint{}, IngestibleEndpoint{}, IngestibleRel{})
+	return relationships
 }
 
 func ParsePrimaryGroup(item IngestBase, itemType graph.Kind, primaryGroupSid string) IngestibleRelationship {
@@ -346,6 +373,27 @@ func ParsePrimaryGroup(item IngestBase, itemType graph.Kind, primaryGroupSid str
 
 	// TODO: Decide if we even want empty rels in the first place
 	return NewIngestibleRelationship(IngestibleEndpoint{}, IngestibleEndpoint{}, IngestibleRel{})
+}
+
+func ParseDomainForIdentity(item IngestBase, itemType graph.Kind, domainSID string) IngestibleRelationship {
+	if domainSID == "" {
+		return NewIngestibleRelationship(IngestibleEndpoint{}, IngestibleEndpoint{}, IngestibleRel{})
+	}
+
+	return NewIngestibleRelationship(
+		IngestibleEndpoint{
+			Value: domainSID,
+			Kind:  ad.Domain,
+		},
+		IngestibleEndpoint{
+			Value: item.ObjectIdentifier,
+			Kind:  itemType,
+		},
+		IngestibleRel{
+			RelProps: map[string]any{ad.IsACL.String(): false},
+			RelType:  ad.ContainsIdentity,
+		},
+	)
 }
 
 // ParseGroupMiscData parses HasSIDHistory
