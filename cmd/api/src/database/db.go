@@ -257,9 +257,8 @@ func OpenDatabase(cfg config.DatabaseConfiguration) (*gorm.DB, *pgxpool.Pool, er
 		}
 	)
 
-	// NOTE: We intentionally do NOT use dbpool.NewPool here, which registers AfterConnect/AfterRelease
-	// hooks for graph composite types (nodecomposite, edgecomposite, etc). Registering those hooks causes warning log spam
-	// when Neo4j is the graph driver.
+	// NewAppPool creates a relational database pool without graph composite type hooks,
+	// keeping the relational and graph connection concerns separate.
 	pool, err := dbpool.NewAppPool(cfg)
 	if err != nil {
 		return nil, nil, err
