@@ -85,6 +85,13 @@ export const setIsExploreTableSelected = (isExploreTableSelected: boolean): type
     };
 };
 
+export const setIsExploreLayoutSelected = (isExploreLayoutSelected: boolean): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_IS_EXPLORE_LAYOUT_SELECTED,
+        isExploreLayoutSelected,
+    };
+};
+
 export const setSelectedExploreTableColumns = (
     selectedExploreTableColumns: Record<string, boolean>
 ): types.GlobalViewActionTypes => {
