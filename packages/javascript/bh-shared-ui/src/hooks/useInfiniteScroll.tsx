@@ -28,6 +28,8 @@ export const useInfiniteScroll = ({
         [fetchMore, isFetching, canFetchMore, threshold]
     );
 
+    // Checks if we need to fetch more rows immediately after render instead of waiting for onScroll to fire -- handles the case
+    // where the first page of results does not fill the table height.
     useEffect(() => {
         fetchMoreDataOnBottomReached(scrollRef.current);
     }, [fetchMoreDataOnBottomReached, loadedCount]);
