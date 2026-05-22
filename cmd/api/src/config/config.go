@@ -88,14 +88,10 @@ func (s DatabaseConfiguration) RDSIAMAuthConnectionString() string {
 		slog.Error("AWS Config Loading Error", slog.String("err", err.Error()))
 	} else {
 		// Must use instance endpoint with IAM auth
-		var endpoint string
-		if s.Endpoint != "" {
-			endpoint = s.Endpoint
-		} else {
-			endpoint = s.LookupEndpoint()
-		}
+		endpoint := s.LookupEndpoint()
 
 		slog.Info("Requesting RDS IAM Auth Token")
+
 		if authenticationToken, err := auth.BuildAuthToken(context.TODO(), endpoint, cfg.Region, s.Username, cfg.Credentials); err != nil {
 			slog.Error("RDS IAM Auth Token Request Error", slog.String("err", err.Error()))
 		} else {
