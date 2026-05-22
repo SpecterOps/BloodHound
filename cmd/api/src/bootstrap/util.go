@@ -23,6 +23,7 @@ import (
 	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/tools"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/dawgs"
@@ -92,13 +93,13 @@ func ConnectGraph(ctx context.Context, cfg config.Configuration) (*graph.Databas
 	switch driverName {
 	case neo4j.DriverName:
 		slog.InfoContext(ctx, "Connecting to graph using Neo4j")
-		connectionString = cfg.Neo4J.Neo4jConnectionString()
+		connectionString = cfg.Neo4J.Neo4JConnectionString()
 
 	case pg.DriverName:
 		slog.InfoContext(ctx, "Connecting to graph using PostgreSQL")
 		connectionString = cfg.Database.PostgreSQLConnectionString()
 
-		pool, err = pg.NewPool(cfg.Database)
+		pool, err = dbpool.NewDawgsPool(cfg.Database)
 		if err != nil {
 			return nil, err
 		}
