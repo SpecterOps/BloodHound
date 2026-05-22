@@ -15,12 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Link, LinkProps, Path } from 'react-router-dom';
-import {
-    AppNavigateProps,
-    GloballySupportedSearchParams,
-    applyPreservedParams,
-    persistSearchParams,
-} from '../../utils/searchParams/searchParams';
+import { GloballySupportedSearchParams } from '../../hooks/useGlobalParamsExtension';
+import { AppNavigateProps, applyPreservedParams, persistSearchParams } from '../../utils/searchParams/searchParams';
 
 export const AppLink = ({ children, to, discardQueryParams, ...props }: LinkProps & AppNavigateProps) => {
     const path = typeof to === 'string' ? to : (to as Partial<Path>).pathname || '';

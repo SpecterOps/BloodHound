@@ -15,12 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import React from 'react';
 import { Navigate, NavigateProps } from 'react-router-dom';
-import {
-    AppNavigateProps,
-    GloballySupportedSearchParams,
-    applyPreservedParams,
-    persistSearchParams,
-} from '../../utils/searchParams/searchParams';
+import { GloballySupportedSearchParams } from '../../hooks';
+import { AppNavigateProps, applyPreservedParams, persistSearchParams } from '../../utils/searchParams/searchParams';
 
 export const AppNavigate: React.FC<NavigateProps & AppNavigateProps> = (props) => {
     const { discardQueryParams, to, ...rest } = props;

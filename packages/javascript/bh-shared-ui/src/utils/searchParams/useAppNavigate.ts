@@ -15,12 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { NavigateOptions, To, useNavigate } from 'react-router-dom';
-import {
-    AppNavigateProps,
-    GloballySupportedSearchParams,
-    applyPreservedParams,
-    persistSearchParams,
-} from './searchParams';
+import { GloballySupportedSearchParams } from '../../hooks/useGlobalParamsExtension';
+import { AppNavigateProps, applyPreservedParams, persistSearchParams } from './searchParams';
 
 export type AppNavigateOptions = NavigateOptions & AppNavigateProps;
 

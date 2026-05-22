@@ -37,6 +37,7 @@ export * from './useFileIngest';
 export * from './useFileUploadDialogContext';
 export * from './useFileUploadQuery';
 export * from './useFinishedJobs';
+export * from './useGlobalParamsExtension';
 export * from './useGraphHasData';
 export * from './useGraphItem';
 export * from './useInitialEnvironment';

@@ -16,7 +16,7 @@
 
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
-import { GloballySupportedSearchParams } from '../..';
+import { GloballySupportedSearchParams } from '../../hooks/useGlobalParamsExtension';
 import { render } from '../../test-utils';
 import { AppLink } from './AppLink';
 
