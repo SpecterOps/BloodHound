@@ -25,9 +25,8 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, target
                 The {sourceType} {sourceName} can apply a GPO to the {targetType} {targetName}.
             </Typography>
             <Typography variant='body2'>
-                This edge is created when the principal has write access to the gPLink attribute of the domain or
-                organizational unit (OU) containing the account, allowing them to link a GPO that will affect the
-                target.
+                This edge is created when the principal has write access to the gPLink attribute of an organizational
+                unit (OU) containing the account, allowing them to link a GPO that will affect the target.
             </Typography>
             <Typography variant='body2'>
                 Click the Composition accordion to view where the principal has write access to gPLink.

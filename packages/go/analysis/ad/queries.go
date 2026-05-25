@@ -397,6 +397,11 @@ func GetGPOAffectedObjectsPath(tx graph.Transaction, gpo *graph.Node, targetID g
 
 		if endNode, err := ops.FetchNode(tx, relationship.EndID); err != nil {
 			return nil, err
+		} else if targetID == endNode.ID && (len(targetKinds) == 0 || endNode.Kinds.ContainsOneOf(targetKinds...)) {
+			pathSet.AddPath(graph.Path{
+				Nodes: []*graph.Node{gpo, endNode},
+				Edges: []*graph.Relationship{relationship},
+			})
 		} else if paths, err := ops.TraversePaths(tx, ops.TraversalPlan{
 			Root:        endNode,
 			Direction:   graph.DirectionOutbound,

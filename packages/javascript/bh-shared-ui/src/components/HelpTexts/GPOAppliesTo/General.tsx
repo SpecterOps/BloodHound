@@ -25,8 +25,9 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, target
                 The {sourceType} {sourceName} applies to the {targetType} {targetName}.
             </Typography>
             <Typography variant='body2'>
-                This relationship is created when the GPO is linked to the domain or an organizational unit (OU)
-                containing the account. Click on the Composition accordion item to see where the GPO is linked.
+                This relationship is created when the GPO is linked to the target domain or an organizational unit (OU)
+                containing the target account. Domain-linked GPOs are represented on the domain node instead of every
+                contained account. Click on the Composition accordion item to see where the GPO is linked.
             </Typography>
             <Typography variant='body2'>
                 BloodHound will not generate this edge if GPO inheritance is blocked and prevents the GPO from applying.

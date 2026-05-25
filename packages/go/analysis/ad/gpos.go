@@ -78,7 +78,7 @@ func PostGPOs(ctx context.Context, db graph.Database) (*post.AtomicPostProcessin
 
 	for _, domainNode := range domainNodes {
 		if err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-			return processGPOs(ctx, tx, sink, domainNode, nil, nil, nil, 0)
+			return processGPOs(ctx, tx, sink, domainNode, nil, nil, nil, nil, 0)
 		}); err != nil {
 			return sink.Stats(), fmt.Errorf("failed processing GPOs for domain %d: %w", domainNode.ID, err)
 		}
@@ -88,12 +88,13 @@ func PostGPOs(ctx context.Context, db graph.Database) (*post.AtomicPostProcessin
 	return sink.Stats(), nil
 }
 
-func processGPOs(ctx context.Context, tx graph.Transaction, sink *post.FilteredRelationshipSink, node *graph.Node, inheritedGPOs, inheritedEnforcedGPOs, inheritedGPOAppliers []graph.ID, depth int) error {
+func processGPOs(ctx context.Context, tx graph.Transaction, sink *post.FilteredRelationshipSink, node *graph.Node, inheritedGPOs, inheritedEnforcedGPOs, inheritedGPOAppliers, excludedGPOAppliers []graph.ID, depth int) error {
 	var (
-		applyingGPOs         []graph.ID
-		currentGPOAppliers   = appendUniqueGraphIDs(nil, inheritedGPOAppliers...)
-		nextEnforcedGPOs     = appendUniqueGraphIDs(nil, inheritedEnforcedGPOs...)
-		blocksGPOInheritance bool
+		applyingGPOs               []graph.ID
+		currentGPOAppliers         = appendUniqueGraphIDs(nil, inheritedGPOAppliers...)
+		currentExcludedGPOAppliers = appendUniqueGraphIDs(nil, excludedGPOAppliers...)
+		nextEnforcedGPOs           = appendUniqueGraphIDs(nil, inheritedEnforcedGPOs...)
+		blocksGPOInheritance       bool
 	)
 
 	if err := ctx.Err(); err != nil {
@@ -105,14 +106,39 @@ func processGPOs(ctx context.Context, tx graph.Transaction, sink *post.FilteredR
 	}
 
 	if node.Kinds.ContainsOneOf(ad.Domain, ad.OU) {
-		if additionalGPOAppliers, err := fetchAdditionalGPOAppliers(tx, node.ID, currentGPOAppliers); err != nil {
-			return fmt.Errorf("failed fetching GPO appliers on node %d: %w", node.ID, err)
-		} else {
-			currentGPOAppliers = appendUniqueGraphIDs(currentGPOAppliers, additionalGPOAppliers...)
+		if node.Kinds.ContainsOneOf(ad.Domain) {
+			if controlledGPOAppliers, directDomainGPOAppliers, err := fetchDomainGPOControlPrincipals(tx, node.ID); err != nil {
+				return fmt.Errorf("failed fetching domain GPO appliers on node %d: %w", node.ID, err)
+			} else {
+				currentExcludedGPOAppliers = appendUniqueGraphIDs(currentExcludedGPOAppliers, controlledGPOAppliers...)
+
+				for _, directDomainGPOApplierID := range directDomainGPOAppliers {
+					if !sink.Submit(ctx, post.EnsureRelationshipJob{FromID: directDomainGPOApplierID, ToID: node.ID, Kind: ad.CanApplyGPO}) {
+						return fmt.Errorf("unable to submit CanApplyGPO relationship")
+					}
+				}
+			}
+		} else if node.Kinds.ContainsOneOf(ad.OU) {
+			ignoredGPOAppliers := appendUniqueGraphIDs(nil, currentGPOAppliers...)
+			ignoredGPOAppliers = appendUniqueGraphIDs(ignoredGPOAppliers, currentExcludedGPOAppliers...)
+
+			if additionalGPOAppliers, err := fetchAdditionalGPOAppliers(tx, node.ID, ignoredGPOAppliers); err != nil {
+				return fmt.Errorf("failed fetching GPO appliers on node %d: %w", node.ID, err)
+			} else {
+				currentGPOAppliers = appendUniqueGraphIDs(currentGPOAppliers, additionalGPOAppliers...)
+			}
 		}
 
 		if directlyLinkedGPOs, directlyLinkedEnforcedGPOs, err := fetchGPOLinkedDirectly(tx, node.ID); err != nil {
 			return fmt.Errorf("failed fetching directly linked GPOs on node %d: %w", node.ID, err)
+		} else if node.Kinds.ContainsOneOf(ad.Domain) {
+			for _, gpoID := range directlyLinkedEnforcedGPOs {
+				if !sink.Submit(ctx, post.EnsureRelationshipJob{FromID: gpoID, ToID: node.ID, Kind: ad.GPOAppliesTo}) {
+					return fmt.Errorf("unable to submit GPOAppliesTo relationship")
+				}
+			}
+
+			applyingGPOs = appendUniqueGraphIDs(applyingGPOs, excludeGraphIDs(directlyLinkedGPOs, directlyLinkedEnforcedGPOs)...)
 		} else {
 			applyingGPOs = appendUniqueGraphIDs(applyingGPOs, directlyLinkedGPOs...)
 			nextEnforcedGPOs = appendUniqueGraphIDs(nextEnforcedGPOs, directlyLinkedEnforcedGPOs...)
@@ -150,7 +176,7 @@ func processGPOs(ctx context.Context, tx graph.Transaction, sink *post.FilteredR
 		}
 
 		for _, childContainer := range childContainers {
-			if err = processGPOs(ctx, tx, sink, childContainer, applyingGPOs, nextEnforcedGPOs, currentGPOAppliers, depth+1); err != nil {
+			if err = processGPOs(ctx, tx, sink, childContainer, applyingGPOs, nextEnforcedGPOs, currentGPOAppliers, currentExcludedGPOAppliers, depth+1); err != nil {
 				return err
 			}
 		}
@@ -180,6 +206,25 @@ func appendUniqueGraphIDs(target []graph.ID, values ...graph.ID) []graph.ID {
 	return result
 }
 
+func excludeGraphIDs(values []graph.ID, excludedValues []graph.ID) []graph.ID {
+	var (
+		excludedIDs = make(map[graph.ID]struct{}, len(excludedValues))
+		result      = make([]graph.ID, 0, len(values))
+	)
+
+	for _, excludedValue := range excludedValues {
+		excludedIDs[excludedValue] = struct{}{}
+	}
+
+	for _, value := range values {
+		if _, excluded := excludedIDs[value]; !excluded {
+			result = append(result, value)
+		}
+	}
+
+	return result
+}
+
 func fetchAdditionalGPOAppliers(tx graph.Transaction, containerID graph.ID, ignoredAppliers []graph.ID) ([]graph.ID, error) {
 	criteria := []graph.Criteria{
 		query.KindIn(query.Start(), ad.Group, ad.User, ad.Computer),
@@ -194,6 +239,44 @@ func fetchAdditionalGPOAppliers(tx graph.Transaction, containerID graph.ID, igno
 	return ops.FetchStartNodeIDs(tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(criteria...)
 	}))
+}
+
+func fetchDomainGPOControlPrincipals(tx graph.Transaction, domainID graph.ID) ([]graph.ID, []graph.ID, error) {
+	var (
+		allControlPrincipals      []graph.ID
+		controlRelationships      []*graph.Relationship
+		err                       error
+		seenAllControlPrincipals  = map[graph.ID]struct{}{}
+		seenWriteGPLinkPrincipals = map[graph.ID]struct{}{}
+		writeGPLinkPrincipals     []graph.ID
+	)
+
+	controlRelationships, err = ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.KindIn(query.Start(), ad.Group, ad.User, ad.Computer),
+			query.KindIn(query.Relationship(), ad.WriteGPLink, ad.GenericWrite, ad.GenericAll, ad.WriteDACL, ad.Owns, ad.WriteOwner),
+			query.Equals(query.EndID(), domainID),
+		)
+	}))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for _, controlRelationship := range controlRelationships {
+		if _, seen := seenAllControlPrincipals[controlRelationship.StartID]; !seen {
+			seenAllControlPrincipals[controlRelationship.StartID] = struct{}{}
+			allControlPrincipals = append(allControlPrincipals, controlRelationship.StartID)
+		}
+
+		if controlRelationship.Kind == ad.WriteGPLink {
+			if _, seen := seenWriteGPLinkPrincipals[controlRelationship.StartID]; !seen {
+				seenWriteGPLinkPrincipals[controlRelationship.StartID] = struct{}{}
+				writeGPLinkPrincipals = append(writeGPLinkPrincipals, controlRelationship.StartID)
+			}
+		}
+	}
+
+	return allControlPrincipals, writeGPLinkPrincipals, nil
 }
 
 func fetchGPOLinkedDirectly(tx graph.Transaction, containerID graph.ID) ([]graph.ID, []graph.ID, error) {
@@ -273,6 +356,7 @@ func GetGPOAppliesToComposition(ctx context.Context, db graph.Database, edge *gr
 func GetCanApplyGPOComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	var (
 		startNode     *graph.Node
+		endNode       *graph.Node
 		traversalInst = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		paths         = graph.PathSet{}
 	)
@@ -284,9 +368,37 @@ func GetCanApplyGPOComposition(ctx context.Context, db graph.Database, edge *gra
 			return err
 		}
 
+		if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
+			return err
+		}
+
+		if endNode.Kinds.ContainsOneOf(ad.Domain) {
+			var directWriteGPLinkRelationships []*graph.Relationship
+			if directWriteGPLinkRelationships, err = ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.And(
+					query.Equals(query.StartID(), edge.StartID),
+					query.Kind(query.Relationship(), ad.WriteGPLink),
+					query.Equals(query.EndID(), edge.EndID),
+				)
+			})); err != nil {
+				return err
+			}
+
+			for _, directWriteGPLinkRelationship := range directWriteGPLinkRelationships {
+				paths.AddPath(graph.Path{
+					Nodes: []*graph.Node{startNode, endNode},
+					Edges: []*graph.Relationship{directWriteGPLinkRelationship},
+				})
+			}
+		}
+
 		return nil
 	}); err != nil {
 		return nil, err
+	}
+
+	if endNode.Kinds.ContainsOneOf(ad.Domain) {
+		return paths, nil
 	}
 
 	if err := traversalInst.BreadthFirst(ctx,
@@ -295,7 +407,7 @@ func GetCanApplyGPOComposition(ctx context.Context, db graph.Database, edge *gra
 			Driver: traversal.NewPattern().
 				OutboundWithDepth(1, 1, query.And(
 					query.KindIn(query.Relationship(), ad.WriteGPLink, ad.GenericWrite, ad.GenericAll, ad.WriteDACL, ad.Owns, ad.WriteOwner),
-					query.KindIn(query.End(), ad.OU, ad.Domain),
+					query.KindIn(query.End(), ad.OU),
 				)).
 				OutboundWithDepth(0, 0, query.KindIn(query.Relationship(), ad.Contains)).
 				Outbound(query.And(

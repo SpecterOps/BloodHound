@@ -21,7 +21,8 @@ const Abuse: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                Control over the GPO can be abused to compromise the AD account by modifying the GPO policy settings.
+                Control over the GPO can be abused to compromise affected AD principals by modifying the GPO policy
+                settings.
             </Typography>
             <Typography variant='body2'>Refer to the inbound edges on the GPO node for more details.</Typography>
         </>

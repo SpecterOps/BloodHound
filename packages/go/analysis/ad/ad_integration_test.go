@@ -2164,23 +2164,47 @@ func TestOwnsWriteOwner(t *testing.T) {
 
 func TestGPOAppliesTo(t *testing.T) {
 	var (
-		testCtx                 = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		graphDB                 = testCtx.Graph.Database
-		fixtureNodes, testEdges = setupGPOAppliesToHarness(t, graphDB)
-		preservedEdgeID         graph.ID
+		testCtx                          = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		graphDB                          = testCtx.Graph.Database
+		fixtureNodes, testEdges          = setupGPOAppliesToHarness(t, graphDB)
+		domainNode                       *graph.Node
+		enforcedDomainGPO                = testCtx.NewActiveDirectoryGPO("Domain Enforced GPO", integration.RandomDomainSID())
+		preservedEnforcedDomainEdgeID    graph.ID
+		preservedNonEnforcedDomainEdgeID graph.ID
 	)
 
-	_, err := adAnalysis.PostGPOs(testCtx.Context(), graphDB)
+	err := graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
+		var err error
+
+		if domainNode, err = ops.FetchNode(tx, requireNodeIDByName(t, tx, "Domain")); err != nil {
+			return err
+		}
+
+		return nil
+	})
 	require.NoError(t, err)
 
-	requireGPOAppliesToEdges(t, testCtx.Context(), graphDB, fixtureNodes, testEdges)
+	testCtx.NewRelationship(enforcedDomainGPO, domainNode, ad.GPLink, graph.AsProperties(graph.PropertyMap{
+		ad.Enforced: true,
+	}))
+
+	_, err = adAnalysis.PostGPOs(testCtx.Context(), graphDB)
+	require.NoError(t, err)
+
+	requireGPOAppliesToEdges(t, testCtx.Context(), graphDB, fixtureNodes, testEdges, len(testEdges)+1)
+	requireNoRelationshipByNodeNames(t, testCtx.Context(), graphDB, "GPO1", "Domain", ad.GPOAppliesTo)
 	requireNoRelationshipByNodeNames(t, testCtx.Context(), graphDB, "GPO1", "User4", ad.GPOAppliesTo)
 	requireNoRelationshipByNodeNames(t, testCtx.Context(), graphDB, "GPO1", "Computer4", ad.GPOAppliesTo)
+	for _, nodeName := range []string{"User1", "User2", "User3", "User4", "Computer1", "Computer2", "Computer3", "Computer4"} {
+		requireNoRelationshipByNodeNames(t, testCtx.Context(), graphDB, "Domain Enforced GPO", nodeName, ad.GPOAppliesTo)
+	}
 
 	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
 		gpoID := requireNodeIDByName(t, tx, "GPO1")
 		userID := requireNodeIDByName(t, tx, "User1")
-		preservedEdgeID = requireSingleRelationshipID(t, tx, gpoID, userID, ad.GPOAppliesTo)
+
+		preservedEnforcedDomainEdgeID = requireSingleRelationshipID(t, tx, enforcedDomainGPO.ID, domainNode.ID, ad.GPOAppliesTo)
+		preservedNonEnforcedDomainEdgeID = requireSingleRelationshipID(t, tx, gpoID, userID, ad.GPOAppliesTo)
 
 		return nil
 	})
@@ -2194,19 +2218,22 @@ func TestGPOAppliesTo(t *testing.T) {
 	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
 		gpoID := requireNodeIDByName(t, tx, "GPO1")
 		userID := requireNodeIDByName(t, tx, "User1")
-		require.Equal(t, preservedEdgeID, requireSingleRelationshipID(t, tx, gpoID, userID, ad.GPOAppliesTo))
+
+		require.Equal(t, preservedEnforcedDomainEdgeID, requireSingleRelationshipID(t, tx, enforcedDomainGPO.ID, domainNode.ID, ad.GPOAppliesTo))
+		require.Equal(t, preservedNonEnforcedDomainEdgeID, requireSingleRelationshipID(t, tx, gpoID, userID, ad.GPOAppliesTo))
 
 		return nil
 	})
 	require.NoError(t, err)
 
-	deleteRelationshipByNodeNames(t, testCtx.Context(), graphDB, "Container1", "User1", ad.Contains)
+	deleteRelationshipByNodeNames(t, testCtx.Context(), graphDB, "OU1", "User2", ad.Contains)
 
 	_, err = adAnalysis.PostGPOs(testCtx.Context(), graphDB)
 	require.NoError(t, err)
 
 	requireRelationshipCount(t, testCtx.Context(), graphDB, ad.GPOAppliesTo, len(testEdges)-1)
-	requireNoRelationshipByNodeNames(t, testCtx.Context(), graphDB, "GPO1", "User1", ad.GPOAppliesTo)
+	requireNoRelationshipByNodeNames(t, testCtx.Context(), graphDB, "GPO1", "User2", ad.GPOAppliesTo)
+	requireNoRelationshipByNodeNames(t, testCtx.Context(), graphDB, "GPO2", "User2", ad.GPOAppliesTo)
 
 	deleteRelationshipByNodeNames(t, testCtx.Context(), graphDB, "GPO3", "OU2", ad.GPLink)
 
@@ -2220,34 +2247,97 @@ func TestGPOAppliesTo(t *testing.T) {
 
 func TestCanApplyGPO(t *testing.T) {
 	var (
-		testCtx         = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		graphDB         = testCtx.Graph.Database
-		preservedEdgeID graph.ID
+		testCtx               = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		graphDB               = testCtx.Graph.Database
+		domainCanApplyGPO     *graph.Relationship
+		preservedDomainEdgeID graph.ID
+		preservedOUEdgeID     graph.ID
 	)
 
 	testCtx.Harness.GPOEnforcement.Setup(testCtx)
 	harness := testCtx.Harness.GPOEnforcement
-	delegate := testCtx.NewActiveDirectoryUser("GPO Link Delegate", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
-	testCtx.NewRelationship(delegate, harness.Domain, ad.WriteGPLink, integration.DefaultRelProperties)
+	ouDelegate := testCtx.NewActiveDirectoryUser("OU GPO Link Delegate", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	testCtx.NewRelationship(ouDelegate, harness.OrganizationalUnitB, ad.WriteGPLink, integration.DefaultRelProperties)
+
+	domainControlDelegates := []struct {
+		delegate          *graph.Node
+		relationshipKind  graph.Kind
+		createsDomainEdge bool
+	}{
+		{
+			delegate:          testCtx.NewActiveDirectoryUser("Domain WriteGPLink And OU GPO Link Delegate", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID),
+			relationshipKind:  ad.WriteGPLink,
+			createsDomainEdge: true,
+		},
+		{
+			delegate:         testCtx.NewActiveDirectoryUser("Domain GenericWrite And OU GPO Link Delegate", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID),
+			relationshipKind: ad.GenericWrite,
+		},
+		{
+			delegate:         testCtx.NewActiveDirectoryUser("Domain GenericAll And OU GPO Link Delegate", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID),
+			relationshipKind: ad.GenericAll,
+		},
+		{
+			delegate:         testCtx.NewActiveDirectoryUser("Domain WriteDACL And OU GPO Link Delegate", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID),
+			relationshipKind: ad.WriteDACL,
+		},
+		{
+			delegate:         testCtx.NewActiveDirectoryUser("Domain Owns And OU GPO Link Delegate", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID),
+			relationshipKind: ad.Owns,
+		},
+		{
+			delegate:         testCtx.NewActiveDirectoryUser("Domain WriteOwner And OU GPO Link Delegate", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID),
+			relationshipKind: ad.WriteOwner,
+		},
+	}
+
+	for _, domainControlDelegate := range domainControlDelegates {
+		testCtx.NewRelationship(domainControlDelegate.delegate, harness.Domain, domainControlDelegate.relationshipKind, integration.DefaultRelProperties)
+		testCtx.NewRelationship(domainControlDelegate.delegate, harness.OrganizationalUnitB, ad.WriteGPLink, integration.DefaultRelProperties)
+	}
 
 	_, err := adAnalysis.PostGPOs(testCtx.Context(), graphDB)
 	require.NoError(t, err)
 
 	expectedTargets := []graph.ID{
-		harness.UserA.ID,
 		harness.UserB.ID,
-		harness.UserC.ID,
 		harness.UserD.ID,
 	}
 
-	requireCanApplyGPOTargets(t, testCtx.Context(), graphDB, delegate.ID, expectedTargets)
+	requireCanApplyGPOTargets(t, testCtx.Context(), graphDB, ouDelegate.ID, expectedTargets, len(expectedTargets)+1)
+	for _, domainControlDelegate := range domainControlDelegates {
+		requireNoRelationshipByIDs(t, testCtx.Context(), graphDB, domainControlDelegate.delegate.ID, harness.UserA.ID, ad.CanApplyGPO)
+		requireNoRelationshipByIDs(t, testCtx.Context(), graphDB, domainControlDelegate.delegate.ID, harness.UserB.ID, ad.CanApplyGPO)
+		requireNoRelationshipByIDs(t, testCtx.Context(), graphDB, domainControlDelegate.delegate.ID, harness.UserC.ID, ad.CanApplyGPO)
+		requireNoRelationshipByIDs(t, testCtx.Context(), graphDB, domainControlDelegate.delegate.ID, harness.UserD.ID, ad.CanApplyGPO)
+
+		if domainControlDelegate.createsDomainEdge {
+			continue
+		}
+		requireNoRelationshipByIDs(t, testCtx.Context(), graphDB, domainControlDelegate.delegate.ID, harness.Domain.ID, ad.CanApplyGPO)
+	}
 
 	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
-		preservedEdgeID = requireSingleRelationshipID(t, tx, delegate.ID, harness.UserB.ID, ad.CanApplyGPO)
+		var err error
+
+		preservedDomainEdgeID = requireSingleRelationshipID(t, tx, domainControlDelegates[0].delegate.ID, harness.Domain.ID, ad.CanApplyGPO)
+		preservedOUEdgeID = requireSingleRelationshipID(t, tx, ouDelegate.ID, harness.UserB.ID, ad.CanApplyGPO)
+
+		if domainCanApplyGPO, err = ops.FetchRelationship(tx, preservedDomainEdgeID); err != nil {
+			return err
+		}
 
 		return nil
 	})
 	require.NoError(t, err)
+
+	domainComposition, err := adAnalysis.GetCanApplyGPOComposition(testCtx.Context(), graphDB, domainCanApplyGPO)
+	require.NoError(t, err)
+	require.Len(t, domainComposition, 1)
+	require.Len(t, domainComposition[0].Edges, 1)
+	require.Equal(t, ad.WriteGPLink, domainComposition[0].Edges[0].Kind)
+	require.Equal(t, domainControlDelegates[0].delegate.ID, domainComposition[0].Edges[0].StartID)
+	require.Equal(t, harness.Domain.ID, domainComposition[0].Edges[0].EndID)
 
 	stats, err := adAnalysis.PostGPOs(testCtx.Context(), graphDB)
 	require.NoError(t, err)
@@ -2255,23 +2345,29 @@ func TestCanApplyGPO(t *testing.T) {
 	require.Empty(t, stats.RelationshipsDeleted)
 
 	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
-		require.Equal(t, preservedEdgeID, requireSingleRelationshipID(t, tx, delegate.ID, harness.UserB.ID, ad.CanApplyGPO))
+		require.Equal(t, preservedDomainEdgeID, requireSingleRelationshipID(t, tx, domainControlDelegates[0].delegate.ID, harness.Domain.ID, ad.CanApplyGPO))
+		require.Equal(t, preservedOUEdgeID, requireSingleRelationshipID(t, tx, ouDelegate.ID, harness.UserB.ID, ad.CanApplyGPO))
 
 		return nil
 	})
 	require.NoError(t, err)
 
-	deleteRelationshipByStartAndEnd(t, testCtx.Context(), graphDB, harness.OrganizationalUnitA.ID, harness.UserA.ID, ad.Contains)
+	deleteRelationshipByStartAndEnd(t, testCtx.Context(), graphDB, harness.OrganizationalUnitB.ID, harness.UserB.ID, ad.Contains)
 
 	_, err = adAnalysis.PostGPOs(testCtx.Context(), graphDB)
 	require.NoError(t, err)
 
-	requireCanApplyGPOTargets(t, testCtx.Context(), graphDB, delegate.ID, []graph.ID{
-		harness.UserB.ID,
-		harness.UserC.ID,
+	requireCanApplyGPOTargets(t, testCtx.Context(), graphDB, ouDelegate.ID, []graph.ID{
 		harness.UserD.ID,
+	}, 2)
+	requireNoRelationshipByIDs(t, testCtx.Context(), graphDB, ouDelegate.ID, harness.UserB.ID, ad.CanApplyGPO)
+
+	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
+		require.Equal(t, preservedDomainEdgeID, requireSingleRelationshipID(t, tx, domainControlDelegates[0].delegate.ID, harness.Domain.ID, ad.CanApplyGPO))
+
+		return nil
 	})
-	requireNoRelationshipByIDs(t, testCtx.Context(), graphDB, delegate.ID, harness.UserA.ID, ad.CanApplyGPO)
+	require.NoError(t, err)
 }
 
 func TestPostGPOsPreservesTrackedEdgesOnError(t *testing.T) {
@@ -2335,10 +2431,10 @@ func setupGPOAppliesToHarness(t testing.TB, graphDB graph.Database) ([]arrows.No
 	return fixture.Nodes, testEdges
 }
 
-func requireGPOAppliesToEdges(t testing.TB, ctx context.Context, graphDB graph.Database, fixtureNodes []arrows.Node, testEdges []arrows.Edge) {
+func requireGPOAppliesToEdges(t testing.TB, ctx context.Context, graphDB graph.Database, fixtureNodes []arrows.Node, testEdges []arrows.Edge, expectedRelationshipCount int) {
 	t.Helper()
 
-	requireRelationshipCount(t, ctx, graphDB, ad.GPOAppliesTo, len(testEdges))
+	requireRelationshipCount(t, ctx, graphDB, ad.GPOAppliesTo, expectedRelationshipCount)
 
 	err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		for _, testEdge := range testEdges {
@@ -2358,10 +2454,10 @@ func requireGPOAppliesToEdges(t testing.TB, ctx context.Context, graphDB graph.D
 	require.NoError(t, err)
 }
 
-func requireCanApplyGPOTargets(t testing.TB, ctx context.Context, graphDB graph.Database, delegateID graph.ID, expectedTargetIDs []graph.ID) {
+func requireCanApplyGPOTargets(t testing.TB, ctx context.Context, graphDB graph.Database, delegateID graph.ID, expectedTargetIDs []graph.ID, expectedRelationshipCount int) {
 	t.Helper()
 
-	requireRelationshipCount(t, ctx, graphDB, ad.CanApplyGPO, len(expectedTargetIDs))
+	requireRelationshipCount(t, ctx, graphDB, ad.CanApplyGPO, expectedRelationshipCount)
 
 	err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		for _, targetID := range expectedTargetIDs {
