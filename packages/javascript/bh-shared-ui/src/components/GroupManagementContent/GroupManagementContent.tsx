@@ -16,8 +16,8 @@
 
 import { faExternalLink, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Grid, Typography } from '@mui/material';
-import { Badge, Button } from 'doodle-ui';
+import { Grid } from '@mui/material';
+import { Badge, Button, Typography } from 'doodle-ui';
 import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
 import { FC, HTMLProps, ReactNode, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
@@ -142,7 +142,9 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
             {isRoleBasedFiltering && (
                 <Badge
                     data-testid='explore_entity-information-panel-badge-etac-filtering'
-                    className='w-full justify-center text-sm text-neutral-dark-1 bg-[#F8EEFD] dark:bg-[#472E54] dark:text-neutral-light-1 border-0 mb-2'
+                    variant='fill'
+                    color='primary'
+                    className='px-2 py-1'
                     icon={<FontAwesomeIcon icon={faEyeSlash} className='mr-2' />}
                     label='This account does not have access to this page. Please contact an administrator if this message is in error.'
                 />
@@ -152,7 +154,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                     <div className='mb-2'>
                         <Grid container className='bg-neutral-2'>
                             <Grid item sm={4} className={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
-                                <Typography variant='button'>Group:</Typography>
+                                <Typography className='font-medium text-sm uppercase'>Group:</Typography>
                             </Grid>
                             <Grid item xs={12} xl={8}>
                                 <div className='p-2'>
@@ -165,7 +167,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                                 </div>
                             </Grid>
                             <Grid item xs={4} className={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
-                                <Typography variant='button'>Environment:</Typography>
+                                <Typography className='font-medium text-sm uppercase'>Environment:</Typography>
                             </Grid>
                             <Grid item xs={12} xl={8} className='p-2'>
                                 <SimpleEnvironmentSelector
@@ -208,7 +210,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                             style={{ borderRadius: '4px', marginTop: '8px', width: '100%' }}
                             onClick={onShowNodeInExplore}>
                             <FontAwesomeIcon icon={faExternalLink} />
-                            <Typography ml='8px'>Open in Explore</Typography>
+                            <Typography className='ml-2'>Open in Explore</Typography>
                         </Button>
                     )}
                 </Grid>

@@ -15,6 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package dogtags
 
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/dogtags.go -package=mocks . Service
+
 // Service defines the interface for the dogtags service
 type Service interface {
 	ProviderName() string

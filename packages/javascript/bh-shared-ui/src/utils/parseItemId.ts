@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { escapeCypherString } from './cypher';
+
 interface ParsedQueryItem {
     itemType: 'edge' | 'node';
     cypherQuery: string;
@@ -52,7 +54,7 @@ export const parseItemId = (itemId: string): ParsedQueryItem => {
     if (match) {
         return {
             itemType: 'node',
-            cypherQuery: `MATCH (n) WHERE n.objectid = '${match[1]}' RETURN n LIMIT 1`,
+            cypherQuery: `MATCH (n) WHERE n.objectid = ${escapeCypherString(match[1])} RETURN n LIMIT 1`,
         };
     }
 
@@ -62,7 +64,7 @@ export const parseItemId = (itemId: string): ParsedQueryItem => {
         const [, sourceObjectId, edgeType, targetObjectId] = match;
         return {
             itemType: 'edge',
-            cypherQuery: `MATCH p=(s)-[r:${edgeType}]->(t) WHERE s.objectid = '${sourceObjectId}' AND t.objectid = '${targetObjectId}'  RETURN p LIMIT 1`,
+            cypherQuery: `MATCH p=(s)-[r:${edgeType}]->(t) WHERE s.objectid = ${escapeCypherString(sourceObjectId)} AND t.objectid = ${escapeCypherString(targetObjectId)}  RETURN p LIMIT 1`,
         };
     }
 

@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, AlertTitle, CircularProgress, Grid, Typography } from '@mui/material';
-import { Button, Switch } from 'doodle-ui';
+import { Alert, AlertTitle, CircularProgress, Grid } from '@mui/material';
+import { Button, Switch, Typography } from 'doodle-ui';
 import { PutUserAuthSecretRequest } from 'js-client-library';
 import { useState } from 'react';
 import { useMutation } from 'react-query';
@@ -192,9 +192,7 @@ const UserProfile = () => {
             title='My Profile'
             data-testid='my-profile'
             pageDescription={
-                <Typography variant='body2' paragraph>
-                    Review your account and configure user-managed settings.
-                </Typography>
+                <Typography variant='body2'>Review your account and configure user-managed settings.</Typography>
             }>
             <Typography variant='h2'>User Information</Typography>
             {profileContent()}

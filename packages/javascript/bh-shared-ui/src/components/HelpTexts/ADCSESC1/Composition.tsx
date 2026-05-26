@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Skeleton, Typography } from '@mui/material';
+import { Alert, Box, Skeleton } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 import { EdgeInfoProps } from '..';
 import { EdgeInfoItems, useEdgeInfoItems } from '../../../hooks/useExploreGraph/useEdgeInfoItems';
