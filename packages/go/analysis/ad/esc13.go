@@ -18,7 +18,6 @@ package ad
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"sync"
 
@@ -33,34 +32,34 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, eca *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
-	if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
+func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, certChains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
+	if publishedCertTemplates := cache.GetPublishedTemplateCache(certChains.EnterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else {
-		ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID)
+		ecaEnrollers := cache.GetEnterpriseCAEnrollers(certChains.EnterpriseCA.ID)
+
 		for _, template := range publishedCertTemplates {
-			if isValid, err := isCertTemplateValidForESC13(template); errors.Is(err, graph.ErrPropertyNotFound) {
-				slog.WarnContext(ctx, "Checking esc13 cert template PostADCSESC13", attr.Error(err))
-			} else if err != nil {
-				slog.ErrorContext(ctx, "Error checking esc13 cert template PostADCSESC13", attr.Error(err))
-			} else if !isValid {
+			if !isCertTemplateValidForESC13(ctx, template) {
 				continue
 			} else if groupNodes, err := getCertTemplateGroupLinks(template, tx); err != nil {
 				slog.ErrorContext(ctx, "Error getting cert template group links", attr.Error(err))
+				continue
 			} else if len(groupNodes) == 0 {
 				continue
 			} else {
 				controlBitmap := CalculateCrossProductNodeSets(localGroupData, ecaEnrollers, cache.GetCertTemplateEnrollers(template.ID))
+
 				if filtered, err := filterUserDNSResults(tx, controlBitmap, template); err != nil {
 					slog.WarnContext(ctx, "Error filtering users from victims for esc13", attr.Error(err))
 					continue
 				} else {
 					for _, group := range groupNodes.Slice() {
-						for _, domain := range targetDomains.Slice() {
-							if groupIsContainedOrTrusted(tx, group, domain) {
-								filtered.Each(func(value uint64) bool {
+						for _, domain := range certChains.Domains.Slice() {
+							domainID := graph.ID(domain)
+							if groupIsContainedOrTrusted(tx, group, domainID) {
+								filtered.Each(func(source uint64) bool {
 									channels.Submit(ctx, outC, post.EnsureRelationshipJob{
-										FromID: graph.ID(value),
+										FromID: graph.ID(source),
 										ToID:   group.ID,
 										Kind:   ad.ADCSESC13,
 									})
@@ -77,7 +76,7 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- post.E
 	}
 }
 
-func groupIsContainedOrTrusted(tx graph.Transaction, group, domain *graph.Node) bool {
+func groupIsContainedOrTrusted(tx graph.Transaction, group *graph.Node, domain graph.ID) bool {
 	var (
 		matchFound    = false
 		visitedBitmap = cardinality.NewBitmap64()
@@ -97,7 +96,7 @@ func groupIsContainedOrTrusted(tx graph.Transaction, group, domain *graph.Node) 
 		pathVisitor = func(ctx *ops.TraversalContext, segment *graph.PathSegment) error {
 			//Check to make sure that this segment contains our target domain id
 			segment.WalkReverse(func(nextSegment *graph.PathSegment) bool {
-				if nextSegment.Node.ID == domain.ID {
+				if nextSegment.Node.ID == domain {
 					matchFound = true
 					return false
 				}
@@ -121,23 +120,27 @@ func groupIsContainedOrTrusted(tx graph.Transaction, group, domain *graph.Node) 
 
 }
 
-func isCertTemplateValidForESC13(ct *graph.Node) (bool, error) {
+func isCertTemplateValidForESC13(ctx context.Context, ct *graph.Node) bool {
 	if reqManagerApproval, err := ct.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if reqManagerApproval {
-		return false, nil
+		return false
 	} else if authenticationEnabled, err := ct.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if !authenticationEnabled {
-		return false, nil
+		return false
 	} else if schemaVersion, err := ct.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if authorizedSignatures, err := ct.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if schemaVersion > 1 && authorizedSignatures > 0 {
-		return false, nil
+		return false
 	} else {
-		return true, nil
+		return true
 	}
 }
 
