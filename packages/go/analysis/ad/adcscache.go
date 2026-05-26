@@ -57,29 +57,29 @@ type ADCSCache struct {
 	certTemplateEnrollOrAllExtendedRighters map[graph.ID][]*graph.Node // principals with Enroll or AllExtendedRights on a cert template
 	certTemplateWritePKINameFlaggers        map[graph.ID][]*graph.Node // principals with WritePKINameFlag on a cert template
 	certTemplateWritePKIEnrollmentFlaggers  map[graph.ID][]*graph.Node // principals with WritePKIEnrollmentFlag on a cert template
-	hasUPNCertMappingInForest       cardinality.Duplex[uint64] // domains where at least one DC in the forest has Schannel UPN cert mapping enabled
-	hasWeakCertBindingInForest      cardinality.Duplex[uint64] // domains where at least one DC in the forest has Kerberos weak cert binding enabled
+	hasUPNCertMappingInForest               cardinality.Duplex[uint64] // domains where at least one DC in the forest has Schannel UPN cert mapping enabled
+	hasWeakCertBindingInForest              cardinality.Duplex[uint64] // domains where at least one DC in the forest has Kerberos weak cert binding enabled
 }
 
 func NewADCSCache() ADCSCache {
 	return ADCSCache{
-		mu:                              &sync.RWMutex{},
-		authStoreForChainValid:          make(map[graph.ID]cardinality.Duplex[uint64]),
-		rootCAForChainValid:             make(map[graph.ID]cardinality.Duplex[uint64]),
-		hasHostingComputer:              make(map[graph.ID]bool),
-		expandedCertTemplateControllers: make(map[graph.ID]cardinality.Duplex[uint64]),
-		certTemplateHasSpecialEnrollers: make(map[graph.ID]bool),
-		enterpriseCAHasSpecialEnrollers: make(map[graph.ID]bool),
-		certTemplateEnrollers:           make(map[graph.ID][]*graph.Node),
-		certTemplateControllers:         make(map[graph.ID][]*graph.Node),
-		enterpriseCAEnrollers:                  make(map[graph.ID][]*graph.Node),
-		publishedTemplateCache:                 make(map[graph.ID][]*graph.Node),
-		certTemplateGenericWriters:             make(map[graph.ID][]*graph.Node),
+		mu:                                      &sync.RWMutex{},
+		authStoreForChainValid:                  make(map[graph.ID]cardinality.Duplex[uint64]),
+		rootCAForChainValid:                     make(map[graph.ID]cardinality.Duplex[uint64]),
+		hasHostingComputer:                      make(map[graph.ID]bool),
+		expandedCertTemplateControllers:         make(map[graph.ID]cardinality.Duplex[uint64]),
+		certTemplateHasSpecialEnrollers:         make(map[graph.ID]bool),
+		enterpriseCAHasSpecialEnrollers:         make(map[graph.ID]bool),
+		certTemplateEnrollers:                   make(map[graph.ID][]*graph.Node),
+		certTemplateControllers:                 make(map[graph.ID][]*graph.Node),
+		enterpriseCAEnrollers:                   make(map[graph.ID][]*graph.Node),
+		publishedTemplateCache:                  make(map[graph.ID][]*graph.Node),
+		certTemplateGenericWriters:              make(map[graph.ID][]*graph.Node),
 		certTemplateEnrollOrAllExtendedRighters: make(map[graph.ID][]*graph.Node),
 		certTemplateWritePKINameFlaggers:        make(map[graph.ID][]*graph.Node),
 		certTemplateWritePKIEnrollmentFlaggers:  make(map[graph.ID][]*graph.Node),
-		hasUPNCertMappingInForest:              cardinality.NewBitmap64(),
-		hasWeakCertBindingInForest:      cardinality.NewBitmap64(),
+		hasUPNCertMappingInForest:               cardinality.NewBitmap64(),
+		hasWeakCertBindingInForest:              cardinality.NewBitmap64(),
 	}
 }
 
