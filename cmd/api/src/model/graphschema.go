@@ -225,12 +225,6 @@ func (s SchemaFindingType) String() string {
 }
 
 // SchemaFinding represents an individual finding (e.g., T0WriteOwner, T0ADCSESC1, T0DCSync)
-//
-// DisplayName is the canonical UI title for the finding. For built-in findings it is populated
-// from title.md by schemagen (e.g. "RDP Users on Tier Zero Computers"). For OpenGraph extension
-// findings it is the display name provided by the extension author at install time.
-// ZoneDisplayName is the zone variant shown when the finding applies to a non-Tier-Zero,
-// non-Hygiene zone (e.g. "RDP Users on Computers in Zone").
 type SchemaFinding struct {
 	ID                int32
 	Type              SchemaFindingType
@@ -238,9 +232,11 @@ type SchemaFinding struct {
 	EnvironmentId     int32
 	KindId            int32
 	Name              string
-	DisplayName       string
-	ZoneDisplayName   string
-	CreatedAt         time.Time
+	// Default UI Title
+	DisplayName string
+	// Zone Variant Display Title
+	ZoneDisplayName string
+	CreatedAt       time.Time
 
 	// This is the kind that the finding is associated with based on the kind_id, it is enriched by db getters
 	Kind graph.Kind `gorm:"-"`
@@ -311,15 +307,15 @@ func (s SchemaFinding) IsSortable(column string) bool {
 
 func (SchemaFinding) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
-		"name":                 {Equals, NotEquals, ApproximatelyEquals},
-		"display_name":         {Equals, NotEquals, ApproximatelyEquals},
+		"name":              {Equals, NotEquals, ApproximatelyEquals},
+		"display_name":      {Equals, NotEquals, ApproximatelyEquals},
 		"zone_display_name": {Equals, NotEquals, ApproximatelyEquals},
-		"id":                   {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"created_at":           {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"extension_name":       {Equals, NotEquals, ApproximatelyEquals},
-		"extension_id":         {Equals, NotEquals},
-		"is_builtin":           {Equals, NotEquals},
-		"kind":                 {Equals, NotEquals},
+		"id":                {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"created_at":        {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"extension_name":    {Equals, NotEquals, ApproximatelyEquals},
+		"extension_id":      {Equals, NotEquals},
+		"is_builtin":        {Equals, NotEquals},
+		"kind":              {Equals, NotEquals},
 	}
 }
 

@@ -130,9 +130,9 @@ get:
           examples:
             Unified CSV export:
               value: |
-                severity,finding,title,title_privilege_zone,finding_type,platform,environment_id,zone_id,zone_name,source_principal_id,source_principal_kind,source_principal_name,target_principal_id,target_principal_kind,target_principal_name,status,first_seen,last_seen
-                critical,T0GenericWrite,Tier Zero Generic Write,Generic Write on Privilege Zone Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
-                high,Kerberoasting,Kerberoasting,,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,Tier Zero,,,,User,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
+                severity,finding,title,finding_type,platform,environment_id,zone_id,zone_name,source_principal_id,source_principal_kind,source_principal_name,target_principal_id,target_principal_kind,target_principal_name,status,first_seen,last_seen
+                critical,T0GenericWrite,GenericWrite Privileges on Objects in Privilege Zone,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
+                high,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,Tier Zero,,,,User,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
         application/json:
           schema:
             allOf:
@@ -157,10 +157,7 @@ get:
                           description: Finding name.
                         title:
                           type: string
-                          description: Human-readable finding title sourced from schema_findings.title (falls back to display_name and finally the finding name).
-                        title_privilege_zone:
-                          type: string
-                          description: Privilege Zone variant of the finding title. Omitted when no Privilege Zone variant exists for this finding.
+                          description: Human-readable finding title. Returns the Privilege Zone variant when the requested zone is not the standard Tier Zero tag, otherwise returns the Tier Zero variant. Falls back to the finding name if no title is available.
                         platform:
                           type: string
                           description: Platform the finding belongs to.

@@ -1115,16 +1115,16 @@ func (s *BloodhoundDB) DeleteSchemaFinding(ctx context.Context, findingId int32)
 	return nil
 }
 
-// UpdateSchemaFinding - updates the type, display_name, kind_id, and environment_id of an existing
-// schema finding by id. Type is included because findings may transition between
+// UpdateSchemaFinding - updates the type, display_name, zone_display_name, kind_id, and environment_id
+// of an existing schema finding by id. Type is included because findings may transition between
 // SchemaFindingTypeRelationship and SchemaFindingTypeList as extension definitions evolve.
 func (s *BloodhoundDB) UpdateSchemaFinding(ctx context.Context, finding model.SchemaFinding) (model.SchemaFinding, error) {
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		UPDATE %s SET type = ?, display_name = ?, kind_id = ?, environment_id = ?
+		UPDATE %s SET type = ?, display_name = ?, zone_display_name = ?, kind_id = ?, environment_id = ?
 		WHERE id = ?
 		RETURNING id, type, schema_extension_id, kind_id, environment_id, name, display_name, COALESCE(zone_display_name, ''), created_at`,
 		finding.TableName()),
-		finding.Type, finding.DisplayName, finding.KindId, finding.EnvironmentId, finding.ID).Scan(&finding); result.Error != nil {
+		finding.Type, finding.DisplayName, finding.ZoneDisplayName, finding.KindId, finding.EnvironmentId, finding.ID).Scan(&finding); result.Error != nil {
 		return model.SchemaFinding{}, CheckError(result)
 	} else if result.RowsAffected == 0 {
 		return model.SchemaFinding{}, ErrNotFound

@@ -3586,7 +3586,8 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 					finding.KindId == want.KindId &&
 					finding.EnvironmentId == want.EnvironmentId &&
 					finding.Name == want.Name &&
-					finding.DisplayName == want.DisplayName {
+					finding.DisplayName == want.DisplayName &&
+					finding.ZoneDisplayName == want.ZoneDisplayName {
 
 					// Additional validations for the found item
 					assert.GreaterOrEqualf(t, finding.ID, int32(1), "Finding %v - ID is invalid", finding.Name)
@@ -4354,6 +4355,16 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 		expectedFindings = append(expectedFindings, finding)
 	}
 
+	// Update zone_display_name on three findings to enable sort/filter coverage.
+	// Findings at index 1, 3, 5 (F_1, F_3, F_5) get zone display names in alphabetical order.
+	for idx, zoneName := range map[int]string{1: "Aaa Zone", 3: "Bbb Zone", 5: "Ccc Zone"} {
+		expectedFindings[idx].ZoneDisplayName = zoneName
+		updated, err := testSuite.BHDatabase.UpdateSchemaFinding(testCtx, expectedFindings[idx])
+		require.NoError(t, err)
+		expectedFindings[idx] = updated
+		expectedFindings[idx].Kind = graph.StringKind("K_" + strconv.Itoa(idx))
+	}
+
 	t.Run("returns all schema findings", func(t *testing.T) {
 		// Retrieve all findings
 		findings, totalFindings, err := testSuite.BHDatabase.GetSchemaFindings(testCtx, nil, model.Sort{}, 0, 0)
@@ -4525,6 +4536,37 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 		assert.Equal(t, 7, totalFindings, "expected total count of 7 regardless of skip and limit")
 		assert.Equal(t, "F_2", findings[0].Name, "expected first finding with skip=2,limit=2 to be F_2")
 		assert.Equal(t, "F_3", findings[1].Name, "expected second finding with skip=2,limit=2 to be F_3")
+	})
+
+	// PostgreSQL sorts NULLs last for ASC by default, so the three named findings come first.
+	t.Run("sorting by zone_display_name ascending returns named findings before null entries", func(t *testing.T) {
+		findings, totalFindings, err := testSuite.BHDatabase.GetSchemaFindings(
+			testCtx,
+			nil,
+			model.Sort{{Column: "zone_display_name", Direction: model.AscendingSortDirection}},
+			0, 0,
+		)
+		require.NoError(t, err)
+		assert.Equal(t, 7, totalFindings, "expected total count of 7")
+		require.Len(t, findings, 7)
+		assert.Equal(t, "Aaa Zone", findings[0].ZoneDisplayName, "expected Aaa Zone first when sorted ascending by zone_display_name")
+		assert.Equal(t, "Bbb Zone", findings[1].ZoneDisplayName, "expected Bbb Zone second when sorted ascending by zone_display_name")
+		assert.Equal(t, "Ccc Zone", findings[2].ZoneDisplayName, "expected Ccc Zone third when sorted ascending by zone_display_name")
+		assert.Equal(t, "", findings[3].ZoneDisplayName, "expected empty zone_display_name for remaining findings")
+	})
+
+	t.Run("filtering by zone_display_name returns only matching findings", func(t *testing.T) {
+		findings, totalFindings, err := testSuite.BHDatabase.GetSchemaFindings(
+			testCtx,
+			model.Filters{"zone_display_name": []model.Filter{{Value: "Bbb Zone", Operator: model.Equals}}},
+			model.Sort{},
+			0, 0,
+		)
+		require.NoError(t, err)
+		assert.Equal(t, 1, totalFindings, "expected exactly 1 finding with zone_display_name = 'Bbb Zone'")
+		require.Len(t, findings, 1)
+		assert.Equal(t, "F_3", findings[0].Name, "expected F_3 to be the matching finding")
+		assert.Equal(t, "Bbb Zone", findings[0].ZoneDisplayName)
 	})
 }
 
@@ -4734,8 +4776,9 @@ func TestUpdateEnvironment(t *testing.T) {
 
 func TestUpdateSchemaFinding(t *testing.T) {
 	type args struct {
-		displayName string
-		findingType model.SchemaFindingType
+		displayName     string
+		zoneDisplayName string
+		findingType     model.SchemaFindingType
 	}
 	type testData struct {
 		name   string
@@ -4744,26 +4787,31 @@ func TestUpdateSchemaFinding(t *testing.T) {
 		assert func(t *testing.T, existing model.SchemaFinding, updated model.SchemaFinding, err error)
 	}
 
+	sharedSetup := func(t *testing.T) (IntegrationTestSuite, model.SchemaFinding) {
+		t.Helper()
+		testSuite := setupIntegrationTestSuite(t)
+		ext := createTestExtension(t, testSuite, "update-finding-ext", "Update Finding Ext", "1.0", "test")
+		envKind := registerAndGetKind(t, testSuite, "UpdFindEnvKind")
+		srcKind := registerAndGetKind(t, testSuite, "UpdFindSrcKind")
+		relKind := registerAndGetKind(t, testSuite, "UpdFindRelKind")
+		env := createTestEnvironment(t, testSuite, ext.ID, int32(envKind.ID), int32(srcKind.ID))
+		finding := createTestFinding(t, testSuite, model.SchemaFinding{
+			Type:              model.SchemaFindingTypeRelationship,
+			SchemaExtensionId: ext.ID,
+			KindId:            int32(relKind.ID),
+			EnvironmentId:     env.ID,
+			Name:              "TestFinding",
+			DisplayName:       "Original Display Name",
+		})
+		return testSuite, finding
+	}
+
 	tt := []testData{
 		{
 			name: "Success: updates type, display_name, kind_id, environment_id and preserves id and name",
 			args: args{displayName: "Updated Display Name", findingType: model.SchemaFindingTypeRelationship},
 			setup: func() (IntegrationTestSuite, model.SchemaFinding) {
-				testSuite := setupIntegrationTestSuite(t)
-				ext := createTestExtension(t, testSuite, "update-finding-ext", "Update Finding Ext", "1.0", "test")
-				envKind := registerAndGetKind(t, testSuite, "UpdFindEnvKind")
-				srcKind := registerAndGetKind(t, testSuite, "UpdFindSrcKind")
-				relKind := registerAndGetKind(t, testSuite, "UpdFindRelKind")
-				env := createTestEnvironment(t, testSuite, ext.ID, int32(envKind.ID), int32(srcKind.ID))
-				finding := createTestFinding(t, testSuite, model.SchemaFinding{
-					Type:              model.SchemaFindingTypeRelationship,
-					SchemaExtensionId: ext.ID,
-					KindId:            int32(relKind.ID),
-					EnvironmentId:     env.ID,
-					Name:              "TestFinding",
-					DisplayName:       "Original Display Name",
-				})
-				return testSuite, finding
+				return sharedSetup(t)
 			},
 			assert: func(t *testing.T, existing model.SchemaFinding, updated model.SchemaFinding, err error) {
 				t.Helper()
@@ -4772,6 +4820,38 @@ func TestUpdateSchemaFinding(t *testing.T) {
 				assert.Equal(t, existing.Name, updated.Name)
 				assert.Equal(t, "Updated Display Name", updated.DisplayName)
 				assert.Equal(t, model.SchemaFindingTypeRelationship, updated.Type)
+				assert.Equal(t, "", updated.ZoneDisplayName, "zone_display_name should remain empty when not set")
+			},
+		},
+		{
+			name: "Success: updates zone_display_name and returns it on the finding",
+			args: args{displayName: "Original Display Name", zoneDisplayName: "Custom Zone Title", findingType: model.SchemaFindingTypeRelationship},
+			setup: func() (IntegrationTestSuite, model.SchemaFinding) {
+				return sharedSetup(t)
+			},
+			assert: func(t *testing.T, existing model.SchemaFinding, updated model.SchemaFinding, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.Equal(t, existing.ID, updated.ID)
+				assert.Equal(t, existing.Name, updated.Name)
+				assert.Equal(t, "Custom Zone Title", updated.ZoneDisplayName)
+			},
+		},
+		{
+			name: "Success: updates zone_display_name to empty string when finding already has a zone display name",
+			args: args{displayName: "Original Display Name", zoneDisplayName: "", findingType: model.SchemaFindingTypeRelationship},
+			setup: func() (IntegrationTestSuite, model.SchemaFinding) {
+				testSuite, finding := sharedSetup(t)
+				finding.ZoneDisplayName = "Existing Zone Display Name"
+				updated, err := testSuite.BHDatabase.UpdateSchemaFinding(testSuite.Context, finding)
+				require.NoError(t, err)
+				return testSuite, updated
+			},
+			assert: func(t *testing.T, existing model.SchemaFinding, updated model.SchemaFinding, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.Equal(t, existing.ID, updated.ID)
+				assert.Equal(t, "", updated.ZoneDisplayName, "zone_display_name should be empty after updating to an empty string")
 			},
 		},
 	}
@@ -4782,6 +4862,7 @@ func TestUpdateSchemaFinding(t *testing.T) {
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
 			finding.DisplayName = testCase.args.displayName
+			finding.ZoneDisplayName = testCase.args.zoneDisplayName
 			finding.Type = testCase.args.findingType
 
 			updated, err := testSuite.BHDatabase.UpdateSchemaFinding(testSuite.Context, finding)
