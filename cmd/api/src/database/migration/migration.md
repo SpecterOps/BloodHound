@@ -75,7 +75,10 @@ table against any new available migration files and automatically applies pendin
 
 **Handling Migrations From Other Branches**
 
--   If you are testing someone else's branch locally that has a migration, that migration will be applied to your local database. Once you switch back to your branch or main, goose will fail since there will be a version in the `goose_db_version` table but there is no corresponding file. To fix this, delete the row from your database and run a `just goose-status` to verify the state is clean.
+-   If you test another branch that has migrations, those migrations will be applied to your local database. Once you switch back to your own branch or main, any goose command will fail because a version exists in `goose_db_version` with no corresponding file.
+
+    -   **Proactive (recommended):** Before switching branches, run `just goose-down-all` to roll back all local migrations, leaving your database clean.
+    -   **Reactive:** If you have already switched branches, delete the orphaned row(s) from `goose_db_version` and run `just goose-status` to verify the state is clean.
 
 ## Troubleshooting
 
