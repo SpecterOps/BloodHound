@@ -607,9 +607,7 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 	}
 
 	// This means that len(firstDegreeSets) must be greater than or equal to 2 i.e. we have at least two nodesets (unrolled) without Auth. Users/Everyone
-	// Materialize the check set as a single bitmap by Or-ing all component bitmaps within each set,
-	// then And-ing across sets. This replaces the lazy CommutativeDuplexes approach which required
-	// per-element binary searches and was the dominant bottleneck (86.9% of CPU in profiling).
+	// Materialize the check set as a single bitmap by Or-ing all component bitmaps within each set, then And-ing across sets.
 	materializedCheckSet := cardinality.NewBitmap64()
 	for _, bm := range unrolledSets[1] {
 		materializedCheckSet.Or(bm)
@@ -694,9 +692,7 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 		}
 	}
 
-	// Use bitmap-level intersection instead of per-element Contains checks.
-	// The previous approach iterated every member in unrolledRefSet calling checkSet.Contains()
-	// which did per-element binary searches across component bitmaps — this was 86.9% of CPU.
+	// Use bitmap-level intersection to confirm membership in check set.
 	unrolledRefSet.And(materializedCheckSet)
 	resultEntities.Or(unrolledRefSet)
 
