@@ -152,29 +152,45 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 
 			// ESC4-specific principal caches
 			if principals, err := FetchPrincipalsWithGenericWriteOnCertTemplate(tx, ct); err != nil {
-				slog.ErrorContext(ctx, "Error fetching principals with GenericWrite on cert template",
-					slog.Uint64("cert_template", uint64(ct.ID)), attr.Error(err))
+				slog.ErrorContext(
+					ctx,
+					"Error fetching principals with GenericWrite on cert template",
+					slog.Uint64("cert_template", uint64(ct.ID)),
+					attr.Error(err),
+				)
 			} else {
 				s.certTemplateGenericWriters[ct.ID] = principals.Slice()
 			}
 
 			if principals, err := FetchPrincipalsWithEnrollOrAllExtendedRightsOnCertTemplate(tx, ct); err != nil {
-				slog.ErrorContext(ctx, "Error fetching principals with Enroll/AllExtendedRights on cert template",
-					slog.Uint64("cert_template", uint64(ct.ID)), attr.Error(err))
+				slog.ErrorContext(
+					ctx,
+					"Error fetching principals with Enroll/AllExtendedRights on cert template",
+					slog.Uint64("cert_template", uint64(ct.ID)),
+					attr.Error(err),
+				)
 			} else {
 				s.certTemplateEnrollOrAllExtendedRighters[ct.ID] = principals.Slice()
 			}
 
 			if principals, err := FetchPrincipalsWithWritePKINameFlagOnCertTemplate(tx, ct); err != nil {
-				slog.ErrorContext(ctx, "Error fetching principals with WritePKINameFlag on cert template",
-					slog.Uint64("cert_template", uint64(ct.ID)), attr.Error(err))
+				slog.ErrorContext(
+					ctx,
+					"Error fetching principals with WritePKINameFlag on cert template",
+					slog.Uint64("cert_template", uint64(ct.ID)),
+					attr.Error(err),
+				)
 			} else {
 				s.certTemplateWritePKINameFlaggers[ct.ID] = principals.Slice()
 			}
 
 			if principals, err := FetchPrincipalsWithWritePKIEnrollmentFlagOnCertTemplate(tx, ct); err != nil {
-				slog.ErrorContext(ctx, "Error fetching principals with WritePKIEnrollmentFlag on cert template",
-					slog.Uint64("cert_template", uint64(ct.ID)), attr.Error(err))
+				slog.ErrorContext(
+					ctx,
+					"Error fetching principals with WritePKIEnrollmentFlag on cert template",
+					slog.Uint64("cert_template", uint64(ct.ID)),
+					attr.Error(err),
+				)
 			} else {
 				s.certTemplateWritePKIEnrollmentFlaggers[ct.ID] = principals.Slice()
 			}
