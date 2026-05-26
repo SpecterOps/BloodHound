@@ -243,7 +243,7 @@ func TestUpload_WriteAndValidateFile(t *testing.T) {
 					return testCase.tempFileName, testCase.writeErr
 				})
 			if testCase.expectDelete {
-				mockFileService.EXPECT().DeleteFile(ctx, testCase.tempFileName).Return(nil)
+				mockFileService.EXPECT().DeleteFile(gomock.Any(), testCase.tempFileName).Return(nil)
 			}
 
 			// Act
