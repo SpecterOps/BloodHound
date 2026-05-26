@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -235,7 +236,7 @@ type SchemaFinding struct {
 	// Default UI Title
 	DisplayName string
 	// Zone Variant Display Title
-	ZoneDisplayName string
+	ZoneDisplayName null.String
 	CreatedAt       time.Time
 
 	// This is the kind that the finding is associated with based on the kind_id, it is enriched by db getters

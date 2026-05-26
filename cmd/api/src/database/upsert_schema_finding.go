@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
@@ -39,7 +40,7 @@ func (s *BloodhoundDB) resolveFindingFKs(ctx context.Context, input model.Relati
 func applyFindingInput(existing model.SchemaFinding, relKindId, environmentId int32, input model.RelationshipFindingInput) model.SchemaFinding {
 	existing.Type = model.SchemaFindingTypeRelationship
 	existing.DisplayName = input.DisplayName
-	existing.ZoneDisplayName = input.ZoneDisplayName
+	existing.ZoneDisplayName = null.NewString(input.ZoneDisplayName, input.ZoneDisplayName != "")
 	existing.KindId = relKindId
 	existing.EnvironmentId = environmentId
 	return existing
