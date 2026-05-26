@@ -102,7 +102,6 @@ func postOwnsEdges(ctx context.Context, db graph.Database, sink *post.FilteredRe
 			return err
 		} else {
 			// When anyEnforced, batch-fetch all target nodes upfront instead of one query per relationship.
-			// This replaces O(N) individual ops.FetchNode calls with a single bulk query.
 			var targetNodes graph.NodeSet
 			if anyEnforced {
 				endIDs := collectUniqueEndIDs(relationships)
