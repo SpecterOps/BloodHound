@@ -41,6 +41,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/cache"
@@ -74,14 +75,37 @@ func ConnectDatabases(ctx context.Context, cfg config.Configuration) (bootstrap.
 	}
 }
 
-// PreMigrationDaemons Word of caution: These daemons will be launched prior to any migration starting
-func PreMigrationDaemons(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) ([]daemons.Daemon, error) {
-	return []daemons.Daemon{
-		toolapi.NewDaemon(ctx, connections, cfg, schema.DefaultGraphSchema()),
-	}, nil
+// CreateRuntimeDependencies creates the needed dependencies prior to migration. For instance, the FileService is needed for
+// IngestControl which occurs prior to migration. This function can be used to make the struct to contain the services that
+// are necessary for the application.
+func CreateRuntimeDependencies(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) (bootstrap.RuntimeDependencies, error) {
+	var deps = bootstrap.RuntimeDependencies{}
+	if fileServices, err := storage.NewDefaultFileServices(cfg); err != nil {
+		return deps, fmt.Errorf("failed to initialize file services: %w", err)
+	} else if fileServiceResolver, err := storage.NewFileServiceResolver(fileServices); err != nil {
+		return deps, fmt.Errorf("failed to initialize file service resolver: %w", err)
+		// The FileServiceRetained is necessary for the PreMigrationDaemons where it is used in IngestControl for Cleanup.
+		// Checking it here ensures we have the service prior to running the application.
+	} else if _, err := fileServiceResolver.Resolve(storage.FileServiceRetained); err != nil {
+		return deps, fmt.Errorf("failed to resolve FileServiceRetained which is needed for the PreMigrationDaemons: %w", err)
+	} else {
+		deps.FileServiceResolver = fileServiceResolver
+		return deps, nil
+	}
 }
 
-func Entrypoint(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) ([]daemons.Daemon, error) {
+// PreMigrationDaemons Word of caution: These daemons will be launched prior to any migration starting
+func PreMigrationDaemons(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], deps bootstrap.RuntimeDependencies) ([]daemons.Daemon, error) {
+	if retainedFileService, err := deps.FileServiceResolver.Resolve(storage.FileServiceRetained); err != nil {
+		return nil, fmt.Errorf("error resolving FileServiceRetained: %w", err)
+	} else {
+		return []daemons.Daemon{
+			toolapi.NewDaemon(ctx, connections, cfg, schema.DefaultGraphSchema(), retainedFileService),
+		}, nil
+	}
+}
+
+func Entrypoint(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], deps bootstrap.RuntimeDependencies) ([]daemons.Daemon, error) {
 
 	dogtagsService := dogtags.NewDefaultService()
 
@@ -137,7 +161,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 
 		var (
 			cl                     = changelog.NewChangelog(connections.Graph, connections.RDMS, changelog.DefaultOptions())
-			pipeline               = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema, cl)
+			pipeline               = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema, deps.FileServiceResolver, cl)
 			graphQuery             = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)
 			authorizer             = auth.NewAuthorizer(connections.RDMS)
 			datapipeDaemon         = datapipe.NewDaemon(pipeline, startDelay, time.Duration(cfg.DatapipeInterval)*time.Second, connections.RDMS)
@@ -147,7 +171,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		)
 
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator, connections.RDMS)
-		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dogtagsService, openGraphSchemaService)
+		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, deps.FileServiceResolver, dogtagsService, openGraphSchemaService)
 
 		// Set neo4j batch and flush sizes
 		neo4jParameters := appcfg.GetNeo4jParameters(ctx, connections.RDMS)
