@@ -975,16 +975,16 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 		aliasedSorts   = make(model.Sort, 0, len(sort))
 
 		schemaFindingsColumnAliases = map[string]string{
-			"extension_id":         "sf.schema_extension_id",
-			"extension_name":       "se.name",
-			"id":                   "sf.id",
-			"name":                 "sf.name",
-			"type":                 "sf.type",
-			"is_builtin":           "se.is_builtin",
-			"kind":                 "k.name",
-			"display_name":         "sf.display_name",
+			"extension_id":      "sf.schema_extension_id",
+			"extension_name":    "se.name",
+			"id":                "sf.id",
+			"name":              "sf.name",
+			"type":              "sf.type",
+			"is_builtin":        "se.is_builtin",
+			"kind":              "k.name",
+			"display_name":      "sf.display_name",
 			"zone_display_name": "sf.zone_display_name",
-			"created_at":           "sf.created_at",
+			"created_at":        "sf.created_at",
 		}
 	)
 
