@@ -181,20 +181,20 @@ func PostEnterpriseCAFor(operation post.StatTrackedOperation[post.EnsureRelation
 	return nil
 }
 
-func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, enterpriseCA *graph.Node, targetDomains *graph.NodeSet) error {
-	if hostCAServiceComputers, err := FetchHostsCAServiceComputers(tx, enterpriseCA); err != nil {
+func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, certChains *EnterpriseCAChainedDomains) error {
+	if hostCAServiceComputers, err := FetchHostsCAServiceComputers(tx, certChains.EnterpriseCA); err != nil {
 		slog.ErrorContext(
 			ctx,
 			"Error fetching host ca computer for enterprise ca",
-			slog.Uint64("enterprise_ca_id", uint64(enterpriseCA.ID)),
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
 			attr.Error(err),
 		)
 	} else {
 		for _, computer := range hostCAServiceComputers {
-			for _, domain := range targetDomains.Slice() {
+			for _, domain := range certChains.Domains.Slice() {
 				channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 					FromID: computer.ID,
-					ToID:   domain.ID,
+					ToID:   graph.ID(domain),
 					Kind:   ad.GoldenCert,
 				})
 			}
@@ -440,5 +440,23 @@ func schannelAuthenticationEnabled(certTemplate *graph.Node) (bool, error) {
 		} else {
 			return slices.Contains(effectiveekus, "1.3.6.1.5.5.7.3.2") || slices.Contains(effectiveekus, "2.5.29.37.0") || len(effectiveekus) == 0, nil
 		}
+	}
+}
+
+func logPropertyLookupFailure(ctx context.Context, node *graph.Node, err error) {
+	if errors.Is(err, graph.ErrPropertyNotFound) {
+		slog.WarnContext(
+			ctx,
+			"Property not found for node",
+			slog.Uint64("node_id", uint64(node.ID)),
+			attr.Error(err),
+		)
+	} else {
+		slog.ErrorContext(
+			ctx,
+			"Property error",
+			slog.Uint64("node_id", uint64(node.ID)),
+			attr.Error(err),
+		)
 	}
 }

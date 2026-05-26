@@ -128,7 +128,7 @@ func NewNTLMCache(ctx context.Context, db graph.Database, localGroupData *LocalG
 }
 
 // PostNTLM is the initial function used to execute our NTLM analysis
-func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroupData, adcsCache ADCSCache, ntlmEnabled bool) (*post.AtomicPostProcessingStats, error) {
+func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroupData, adcsCache *ADCSCache, ntlmEnabled bool) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -199,7 +199,7 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 		operation.Done()
 		return nil, err
 	} else {
-		if err := PostCoerceAndRelayNTLMToADCS(adcsCache, operation, ntlmCache); err != nil {
+		if err := PostCoerceAndRelayNTLMToADCS(ctx, operation, adcsCache, ntlmCache); err != nil {
 			operation.Done()
 			return nil, err
 		}
@@ -210,6 +210,7 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 
 func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	var (
+		startNode  *graph.Node
 		endNode    *graph.Node
 		domainNode *graph.Node
 		startNodes = graph.NodeSet{}
@@ -225,6 +226,8 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx); err != nil {
 			return err
+		} else if startNode, err = ops.FetchNode(tx, edge.StartID); err != nil {
+			return err
 		} else if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
 			return err
 		} else {
@@ -236,11 +239,11 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 		return nil, err
 	}
 
-	if domainsid, err := endNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+	if domainsid, err := startNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 		slog.WarnContext(
 			ctx,
-			"Error getting domain SID for domain",
-			slog.Uint64("node_id", uint64(endNode.ID)),
+			"Error getting domain SID for start node",
+			slog.Uint64("node_id", uint64(startNode.ID)),
 			attr.Error(err),
 		)
 		return nil, err
@@ -254,17 +257,29 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 		return nil, err
 	}
 
-	for _, n := range startNodes.Slice() {
+	for _, startNode := range startNodes.Slice() {
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-			Root: n,
+			Root: startNode,
 			Driver: coerceAndRelayNTLMtoADCSPath1Pattern(domainNode.ID).Do(func(terminal *graph.PathSegment) error {
-				var enterpriseCANode *graph.Node
+				var (
+					certTemplateNode *graph.Node
+					enterpriseCANode *graph.Node
+				)
+
 				terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
 					if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
 						enterpriseCANode = nextSegment.Node
+					} else if nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate) {
+						certTemplateNode = nextSegment.Node
 					}
 					return true
 				})
+
+				if certTemplateNode == nil || enterpriseCANode == nil {
+					return nil
+				} else if valid := isCertTemplateValidForADCSRelay(ctx, certTemplateNode); !valid {
+					return nil
+				}
 
 				lock.Lock()
 				candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
@@ -320,19 +335,6 @@ func coerceAndRelayNTLMtoADCSPath1Pattern(domainID graph.ID) traversal.PatternCo
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.GenericAll, ad.Enroll, ad.AllExtendedRights),
 			query.Kind(query.End(), ad.CertTemplate),
-			query.Or(
-				query.And(
-					query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
-					query.GreaterThan(query.EndProperty(ad.SchemaVersion.String()), 1),
-					query.Equals(query.EndProperty(ad.AuthorizedSignatures.String()), 0),
-					query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
-				),
-				query.And(
-					query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
-					query.Equals(query.EndProperty(ad.SchemaVersion.String()), 1),
-					query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
-				),
-			),
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.PublishedTo),
@@ -372,162 +374,95 @@ func coerceAndRelayNTLMtoADCSPath2Pattern(domainID graph.ID, enterpriseCAs cardi
 		))
 }
 
-func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob], ntlmCache NTLMCache) error {
-	for _, outerDomain := range adcsCache.GetDomains() {
-		for _, outerEnterpriseCA := range adcsCache.GetEnterpriseCertAuthorities() {
-			domain := outerDomain
-			enterpriseCA := outerEnterpriseCA
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				if publishedCertTemplates := adcsCache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
-					// If this enterprise CA has no published templates, then there's no reason to check further
-					return nil
-				} else if !adcsCache.DoesCAChainProperlyToDomain(enterpriseCA, domain) || !adcsCache.DoesCAHaveHostingComputer(enterpriseCA) {
-					// If the CA doesn't chain up to the domain properly then its invalid. It also requires a hosting computer
-					return nil
-				} else if ecaValid, err := isEnterpriseCAValidForADCS(enterpriseCA); err != nil {
-					if errors.Is(err, graph.ErrPropertyNotFound) {
-						slog.WarnContext(
-							ctx,
-							"Did not validate EnterpriseCA for ADCS relay",
-							slog.Uint64("node_id", uint64(enterpriseCA.ID)),
-							attr.Error(err),
-						)
-					} else {
-						slog.ErrorContext(
-							ctx,
-							"Error validating EnterpriseCA for ADCS relay",
-							slog.Uint64("node_id", uint64(enterpriseCA.ID)),
-							attr.Error(err),
-						)
-					}
-					return nil
-				} else if !ecaValid {
-					// Check some prereqs on the enterprise CA. If the enterprise CA is invalid, we can fast skip it
-					return nil
-				} else if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-					slog.WarnContext(
-						ctx,
-						"Error getting domainsid for domain",
-						slog.Uint64("domain_id", uint64(domain.ID)),
-						attr.Error(err),
-					)
-					return nil
-				} else if authUsersGroup, ok := ntlmCache.GetAuthenticatedUserGroupForDomain(domainsid); !ok {
-					// If we cant find an auth users group for this domain then we're not going to be able to make an edge regardless
-					slog.WarnContext(
-						ctx,
-						"Unable to find auth users group for domain",
-						slog.String("domain_sid", domainsid),
-					)
-					return nil
+func PostCoerceAndRelayNTLMToADCS(ctx context.Context, operation post.StatTrackedOperation[post.EnsureRelationshipJob], adcsCache *ADCSCache, ntlmCache NTLMCache) error {
+	for eca, chains := range adcsCache.GetECAHostedChainedDomains() {
+		ecaID := graph.ID(eca)
+
+		if vulnerable := hasVulnerableEndpoint(chains.EnterpriseCA); !vulnerable {
+			continue
+		} else if publishedCertTemplates := adcsCache.GetPublishedTemplateCache(ecaID); len(publishedCertTemplates) == 0 {
+			// If this enterprise CA has no published templates, then there's no reason to check further
+			continue
+		} else {
+			ecaEnrollers := adcsCache.GetEnterpriseCAEnrollers(ecaID)
+
+			for _, certTemplate := range publishedCertTemplates {
+				// Verify cert template enables authentication and get cert template enrollers
+				if valid := isCertTemplateValidForADCSRelay(ctx, certTemplate); !valid {
+					continue
+				} else if certTemplateEnrollers := adcsCache.GetCertTemplateEnrollers(certTemplate.ID); len(certTemplateEnrollers) == 0 {
+					continue
 				} else {
-					// If auth users doesn't have enroll rights here than it's not valid either. Unroll enrollers into a slice and check if auth users is in it
-					ecaEnrollers := adcsCache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
-					results := cardinality.NewBitmap64()
+					victims := getVictimBitmap(
+						ntlmCache.LocalGroupData,
+						certTemplateEnrollers,
+						ecaEnrollers,
+						adcsCache.GetCertTemplateHasSpecialEnrollers(certTemplate.ID),
+						adcsCache.GetEnterpriseCAHasSpecialEnrollers(ecaID),
+					)
 
-					for _, certTemplate := range publishedCertTemplates {
-						// Verify cert template enables authentication and get cert template enrollers
-						if valid, err := isCertTemplateValidForADCSRelay(certTemplate); err != nil {
-							if errors.Is(err, graph.ErrPropertyNotFound) {
-								slog.WarnContext(
-									ctx,
-									"Did not validate cert template for NTLM ADCS relay",
-									slog.Uint64("node_id", uint64(certTemplate.ID)),
-									attr.Error(err),
-								)
-							} else {
-								slog.ErrorContext(
-									ctx,
-									"Error validating cert template for NTLM ADCS relay",
-									slog.Uint64("node_id", uint64(certTemplate.ID)),
-									attr.Error(err),
-								)
+					victims.And(ntlmCache.UnprotectedComputersCache)
+
+					var submitErr error
+					chains.Domains.Each(func(domain uint64) bool {
+						if authUsersGroup, ok := adcsCache.GetAuthUserForDomain(graph.ID(domain)); ok {
+							if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+								victims.Each(func(target uint64) bool {
+									outC <- post.EnsureRelationshipJob{
+										FromID: authUsersGroup,
+										ToID:   graph.ID(target),
+										Kind:   ad.CoerceAndRelayNTLMToADCS,
+									}
+									return true
+								})
+								return nil
+							}); err != nil {
+								submitErr = err
+								return false
 							}
-							continue
-						} else if !valid {
-							continue
-						} else if certTemplateEnrollers := adcsCache.GetCertTemplateEnrollers(certTemplate.ID); len(certTemplateEnrollers) == 0 {
-							slog.DebugContext(
-								ctx,
-								"Failed to retrieve enrollers for cert template from cache",
-								slog.Uint64("cert_template_id", uint64(certTemplate.ID)),
-							)
-							continue
-						} else {
-							// Find all enrollers with enrollment rights on the cert template and the enterprise CA (no shortcutting)
-							var (
-								templateBitmap                = expandNodeSliceToBitmapWithoutGroups(certTemplateEnrollers, ntlmCache.LocalGroupData)
-								ecaBitmap                     = expandNodeSliceToBitmapWithoutGroups(ecaEnrollers, ntlmCache.LocalGroupData)
-								enrollersBitmap               = cardinality.NewBitmap64()
-								specialGroupHasECAEnroll      = adcsCache.GetEnterpriseCAHasSpecialEnrollers(enterpriseCA.ID)
-								specialGroupHasTemplateEnroll = adcsCache.GetCertTemplateHasSpecialEnrollers(certTemplate.ID)
-							)
-
-							// If no special group has enroll neither the template or enterprise CA then the enrollers are the common nodes
-							if !specialGroupHasTemplateEnroll && !specialGroupHasECAEnroll {
-								templateBitmap.And(ecaBitmap)
-								enrollersBitmap.Or(templateBitmap)
-							} else {
-
-								// If a special group has enroll on the template then all enrollers of the enterprise CA are enrollers
-								if specialGroupHasTemplateEnroll {
-									enrollersBitmap.Or(ecaBitmap)
-								}
-
-								// If a special group has enroll on the eca then all enrollers of the template are enrollers
-								if specialGroupHasECAEnroll {
-									enrollersBitmap.Or(templateBitmap)
-								}
-							}
-
-							enrollersBitmap.And(ntlmCache.UnprotectedComputersCache)
-							results.Or(enrollersBitmap)
-						}
-					}
-
-					results.Each(func(value uint64) bool {
-						outC <- post.EnsureRelationshipJob{
-							FromID: authUsersGroup,
-							ToID:   graph.ID(value),
-							Kind:   ad.CoerceAndRelayNTLMToADCS,
 						}
 						return true
 					})
-
-					return nil
+					if submitErr != nil {
+						return submitErr
+					}
 				}
-			})
+			}
 		}
 	}
 
 	return nil
 }
 
-func isEnterpriseCAValidForADCS(eca *graph.Node) (bool, error) {
+func hasVulnerableEndpoint(eca *graph.Node) bool {
 	if vulnerable, err := eca.Properties.Get(ad.HasVulnerableEndpoint.String()).Bool(); err != nil {
-		return false, err
+		return false
 	} else {
-		return vulnerable, nil
+		return vulnerable
 	}
 }
 
-func isCertTemplateValidForADCSRelay(ct *graph.Node) (bool, error) {
+func isCertTemplateValidForADCSRelay(ctx context.Context, ct *graph.Node) bool {
 	if reqManagerApproval, err := ct.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if reqManagerApproval {
-		return false, nil
+		return false
 	} else if authenticationEnabled, err := ct.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if !authenticationEnabled {
-		return false, nil
+		return false
 	} else if schemaVersion, err := ct.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if schemaVersion <= 1 {
-		return true, nil
+		return true
 	} else if authorizedSignatures, err := ct.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else {
-		return authorizedSignatures == 0, nil
+		return authorizedSignatures == 0
 	}
 }
 
@@ -605,6 +540,7 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- post.EnsureRe
 			return err
 		} else {
 			allAdminPrincipals := cardinality.NewBitmap64()
+
 			for _, principal := range firstDegreeAdmins.Slice() {
 				if principal.Kinds.ContainsOneOf(ad.Group) {
 					ntlmCache.LocalGroupData.GroupMembershipCache.OrReach(principal.ID.Uint64(), graph.DirectionInbound, allAdminPrincipals)
@@ -624,7 +560,6 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- post.EnsureRe
 					FromID: authenticatedUserID,
 					ToID:   computer.ID,
 					Kind:   ad.CoerceAndRelayNTLMToSMB,
-					// RelProperties: map[string]any{common.CompositionID.String(): compositionCounter.Get()},
 				}
 			}
 		}
