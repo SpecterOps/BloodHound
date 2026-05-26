@@ -72,7 +72,7 @@ func RegisterFossRoutes(
 	openGraphSchemaService v2.OpenGraphSchemaService,
 ) {
 	router.With(func() mux.MiddlewareFunc {
-		return middleware.DefaultRateLimitMiddleware(rdms)
+		return middleware.DefaultRateLimitMiddleware(cfg, rdms)
 	},
 		// Health Endpoint
 		routerInst.GET("/health", func(response http.ResponseWriter, _ *http.Request) {

@@ -27,4 +27,6 @@ func TestNewDefaultConfig(t *testing.T) {
 	cfg, err := config.NewDefaultConfiguration()
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	require.NotEmpty(t, cfg.Crypto.JWT.SigningKey, "Signing key should not be empty")
+	require.False(t, cfg.DisableLoginProtections)
+	require.Equal(t, int64(55), cfg.APIRateLimitRequestsPerSecond)
 }

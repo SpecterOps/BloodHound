@@ -70,6 +70,8 @@ services:
       - bhe_neo4j_connection=neo4j://${NEO4J_USER:-neo4j}:${NEO4J_SECRET:-bloodhoundcommunityedition}@graph-db:7687/
       - bhe_recreate_default_admin=${bhe_recreate_default_admin:-false}
       - bhe_graph_driver=${GRAPH_DRIVER:-neo4j}
+      - bhe_disable_login_protections=${bhe_disable_login_protections:-false}
+      - bhe_api_rate_limit_requests_per_second=${bhe_api_rate_limit_requests_per_second:-55}
       ### Add additional environment variables you wish to use here.
       ### For common configuration options that you might want to use environment variables for, see `.env.example`
       ### example: bhe_database_connection=${bhe_database_connection}
