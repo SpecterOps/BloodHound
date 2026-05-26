@@ -390,6 +390,7 @@ type RelationshipFindingsInput []RelationshipFindingInput
 type RelationshipFindingInput struct {
 	Name                 string
 	DisplayName          string
+	ZoneDisplayName      string
 	RelationshipKindName string // edge kind
 	EnvironmentKindName  string
 	RemediationInput     RemediationInput

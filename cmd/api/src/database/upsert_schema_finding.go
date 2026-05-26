@@ -39,6 +39,7 @@ func (s *BloodhoundDB) resolveFindingFKs(ctx context.Context, input model.Relati
 func applyFindingInput(existing model.SchemaFinding, relKindId, environmentId int32, input model.RelationshipFindingInput) model.SchemaFinding {
 	existing.Type = model.SchemaFindingTypeRelationship
 	existing.DisplayName = input.DisplayName
+	existing.ZoneDisplayName = input.ZoneDisplayName
 	existing.KindId = relKindId
 	existing.EnvironmentId = environmentId
 	return existing
@@ -49,7 +50,7 @@ func (s *BloodhoundDB) CreateFindingWithRemediation(ctx context.Context, extensi
 	if relKindId, environmentId, err := s.resolveFindingFKs(ctx, input); err != nil {
 		return model.SchemaFinding{}, err
 	} else if finding, err := s.CreateSchemaFinding(ctx, model.SchemaFindingTypeRelationship,
-		extensionId, relKindId, environmentId, input.Name, input.DisplayName); err != nil {
+		extensionId, relKindId, environmentId, input.Name, input.DisplayName, input.ZoneDisplayName); err != nil {
 		return model.SchemaFinding{}, fmt.Errorf("error creating finding: %w", err)
 	} else if _, err := s.CreateRemediation(ctx, finding.ID,
 		input.RemediationInput.ShortDescription, input.RemediationInput.LongDescription,

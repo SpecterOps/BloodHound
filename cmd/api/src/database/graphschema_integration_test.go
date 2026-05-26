@@ -84,7 +84,7 @@ func createTestRelationshipKind(t *testing.T, testSuite IntegrationTestSuite, na
 func createTestFinding(t *testing.T, testSuite IntegrationTestSuite, finding model.SchemaFinding) model.SchemaFinding {
 	t.Helper()
 	// Create New Finding with input arguments
-	finding, err := testSuite.BHDatabase.CreateSchemaFinding(testSuite.Context, finding.Type, finding.SchemaExtensionId, finding.KindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
+	finding, err := testSuite.BHDatabase.CreateSchemaFinding(testSuite.Context, finding.Type, finding.SchemaExtensionId, finding.KindId, finding.EnvironmentId, finding.Name, finding.DisplayName, finding.ZoneDisplayName)
 	require.NoError(t, err, "unexpected error occurred when creating finding")
 	return finding
 }
@@ -3637,7 +3637,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				}
 
 				// Create new finding
-				newFinding, err := testSuite.BHDatabase.CreateSchemaFinding(testSuite.Context, model.SchemaFindingTypeRelationship, finding.SchemaExtensionId, finding.KindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
+				newFinding, err := testSuite.BHDatabase.CreateSchemaFinding(testSuite.Context, model.SchemaFindingTypeRelationship, finding.SchemaExtensionId, finding.KindId, finding.EnvironmentId, finding.Name, finding.DisplayName, finding.ZoneDisplayName)
 				assert.NoError(t, err, "unexpected error occurred when creating finding")
 
 				// Validate created finding is as expected
@@ -3658,12 +3658,13 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 					EnvironmentId:     environment.ID,
 					Name:              "finding",
 					DisplayName:       "display name",
+					ZoneDisplayName:   "zone display name",
 				}
 
 				newFinding := createTestFinding(t, testSuite, finding)
 
 				// Create same finding again and assert error
-				_, err := testSuite.BHDatabase.CreateSchemaFinding(testSuite.Context, model.SchemaFindingTypeRelationship, newFinding.SchemaExtensionId, newFinding.KindId, newFinding.EnvironmentId, newFinding.Name, newFinding.DisplayName)
+				_, err := testSuite.BHDatabase.CreateSchemaFinding(testSuite.Context, model.SchemaFindingTypeRelationship, newFinding.SchemaExtensionId, newFinding.KindId, newFinding.EnvironmentId, newFinding.Name, newFinding.DisplayName, newFinding.ZoneDisplayName)
 				assert.ErrorIs(t, err, model.ErrDuplicateSchemaFindingName)
 			},
 		},
@@ -4341,7 +4342,7 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 			extensionId = ext2.ID
 			environmentId = env2.ID
 		}
-		finding, err := testSuite.BHDatabase.CreateSchemaFinding(testCtx, model.SchemaFindingTypeRelationship, extensionId, kind.KindId, environmentId, "F_"+strconv.Itoa(i), "")
+		finding, err := testSuite.BHDatabase.CreateSchemaFinding(testCtx, model.SchemaFindingTypeRelationship, extensionId, kind.KindId, environmentId, "F_"+strconv.Itoa(i), "", "")
 		require.NoError(t, err)
 		finding.Kind = graph.StringKind(kindName)
 
