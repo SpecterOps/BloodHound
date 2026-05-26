@@ -133,58 +133,33 @@ describe('ActiveExtensionsCard', () => {
 
         expect(await screen.findByText('Active Directory')).toBeInTheDocument();
         expect(screen.getByText('v0.0.1')).toBeInTheDocument();
+        expect(screen.getByText('AD')).toBeInTheDocument();
         expect(screen.getByText('Azure')).toBeInTheDocument();
         expect(screen.getByText('v1.0.0')).toBeInTheDocument();
+        expect(screen.getByText('AZ')).toBeInTheDocument();
         expect(screen.getByText('Custom Extension')).toBeInTheDocument();
         expect(screen.getByText('0.5.0')).toBeInTheDocument();
-    });
-
-    it('displays namespace values in the table', async () => {
-        render(<ActiveExtensionsCard />);
-
-        expect(await screen.findByText('AD')).toBeInTheDocument();
-        expect(screen.getByText('AZ')).toBeInTheDocument();
         expect(screen.getByText('CUSTOM')).toBeInTheDocument();
     });
 
-    describe('Namespace column header tooltip', () => {
-        it('renders the Namespace column header', async () => {
-            render(<ActiveExtensionsCard />);
+    it('shows tooltip content when hovering the info icon in the Namespace column header', async () => {
+        render(<ActiveExtensionsCard />);
 
-            await screen.findByText('Active Directory');
+        await screen.findByText('Active Directory');
 
-            expect(screen.getByRole('columnheader', { name: /namespace/i })).toBeInTheDocument();
-        });
+        const namespaceHeader = screen.getByRole('columnheader', { name: /namespace/i });
+        const tooltipTrigger = namespaceHeader.querySelector('[data-state]')!;
 
-        it('renders an info icon next to the Namespace column header label', async () => {
-            render(<ActiveExtensionsCard />);
+        // Radix Tooltip opens on pointerMove, not pointerEnter
+        fireEvent.pointerMove(tooltipTrigger);
 
-            await screen.findByText('Active Directory');
-
-            const namespaceHeader = screen.getByRole('columnheader', { name: /namespace/i });
-            // The Radix TooltipTrigger adds a data-state attribute to the trigger element
-            expect(namespaceHeader.querySelector('[data-state]')).toBeInTheDocument();
-        });
-
-        it('shows tooltip content when hovering the info icon in the Namespace column header', async () => {
-            render(<ActiveExtensionsCard />);
-
-            await screen.findByText('Active Directory');
-
-            const namespaceHeader = screen.getByRole('columnheader', { name: /namespace/i });
-            const tooltipTrigger = namespaceHeader.querySelector('[data-state]')!;
-
-            // Radix Tooltip opens on pointerMove, not pointerEnter
-            fireEvent.pointerMove(tooltipTrigger);
-
-            await waitFor(
-                () => {
-                    // Radix may render multiple portal instances during open animation transitions
-                    expect(screen.getAllByText(/Namespace Key is a set prefix/i).length).toBeGreaterThan(0);
-                },
-                { timeout: 2000 }
-            );
-        });
+        await waitFor(
+            () => {
+                // Radix may render multiple portal instances during open animation transitions
+                expect(screen.getAllByText(/Namespace Key is a set prefix/i).length).toBeGreaterThan(0);
+            },
+            { timeout: 2000 }
+        );
     });
 
     it('renders delete buttons for each extension', async () => {
