@@ -14,30 +14,76 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card, CardTitle, createColumnHelper, DataTable, TableCell, TableRow } from 'doodle-ui';
+import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { type ColumnDef } from '@tanstack/react-table';
+import {
+    Card,
+    CardTitle,
+    createColumnHelper,
+    DataTable,
+    TableCell,
+    TableRow,
+    TooltipContent,
+    TooltipPortal,
+    TooltipProvider,
+    TooltipRoot,
+    TooltipTrigger,
+    Typography,
+} from 'doodle-ui';
 import { type Extension } from 'js-client-library';
 import { useState } from 'react';
 import { SearchInput } from '../../components';
 import { useExtensionsQuery } from '../../hooks';
 import { DeleteExtensionButton } from './DeleteExtensionButton';
 
-const columnHelper = createColumnHelper<any>();
+const columnHelper = createColumnHelper<Extension>();
 
-const columns = [
+const columns: ColumnDef<Extension, string>[] = [
     columnHelper.accessor('name', {
         id: 'name',
         header: () => <span className='pl-6'>Name</span>,
         cell: ({ row }) => <span className='pl-6'>{row.original.name}</span>,
     }),
+    columnHelper.accessor('namespace', {
+        id: 'namespace',
+        header: () => (
+            <span className='flex items-center'>
+                Namespace
+                <TooltipProvider>
+                    <TooltipRoot>
+                        <TooltipTrigger>
+                            <div className='ml-2'>
+                                <FontAwesomeIcon size='sm' icon={faInfoCircle} />
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipPortal>
+                            <TooltipContent className='max-w-96 dark:bg-neutral-5 border-0'>
+                                <Typography variant='caption' component={'p'}>
+                                    Namespace Key is a set prefix for all node and edge kinds defined by an OpenGraph
+                                    extension (e.g. GH_User, AWS_User).
+                                </Typography>
+                                <Typography variant='caption' component={'p'} className='mt-2'>
+                                    This helps quickly inform which extension defines a node or edge kind and
+                                    differentiate common types across platforms.
+                                </Typography>
+                            </TooltipContent>
+                        </TooltipPortal>
+                    </TooltipRoot>
+                </TooltipProvider>
+            </span>
+        ),
+        cell: ({ row }) => <span>{row.original.namespace}</span>,
+    }),
     columnHelper.accessor('version', {
         id: 'version',
-        header: () => <span className=''>Version</span>,
+        header: () => <span>Version</span>,
         cell: ({ row }) => <span>{row.original.version}</span>,
     }),
-    columnHelper.accessor('delete', {
+    columnHelper.display({
         id: 'delete-item',
         header: () => <span className='opacity-0'>Delete</span>,
-        cell: ({ row }) => <DeleteExtensionButton extension={row.original as Extension} />,
+        cell: ({ row }) => <DeleteExtensionButton extension={row.original} />,
         size: 0,
     }),
 ];
