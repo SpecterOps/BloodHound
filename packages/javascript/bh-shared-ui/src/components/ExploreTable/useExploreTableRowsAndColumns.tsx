@@ -175,7 +175,7 @@ const useExploreTableRowsAndColumns = ({
                         aria-label='Row details'
                         onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
                         onKeyDown={adaptClickHandlerToKeyDown((e) => handleKebabMenuClick(e, row?.original?.id))}
-                        className='explore-table-cell-icon h-full flex justify-center items-center'>
+                        className='explore-table-cell-icon h-full flex justify-center items-center -outline-offset-4'>
                         <FontAwesomeIcon
                             icon={faEllipsis}
                             className='p-4 cursor-pointer hover:bg-transparent bg-transparent shadow-outer-0 rotate-90 dark:text-neutral-light-1 text-black'

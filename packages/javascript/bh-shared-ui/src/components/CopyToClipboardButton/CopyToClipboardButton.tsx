@@ -69,7 +69,7 @@ export const CopyToClipboardButton = ({
                     }
                 }}
                 className={cn(
-                    'cursor-pointer absolute top-1/2 left-2 -translate-x-1/2 -translate-y-1/2 opacity-0 pr-1 group-hover:opacity-100 transition-opacity ease-in',
+                    'cursor-pointer absolute top-1/2 left-2 -translate-x-1/2 -translate-y-1/2 opacity-0 pr-1 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity ease-in',
                     transitionDelay,
                     {
                         'animate-[null-animation_1s]': displayCopyCheckmark,
@@ -92,7 +92,13 @@ export const CopyToClipboardButton = ({
                     />
                 )}
             </div>
-            <span className={cn('group-hover:pl-5 transition-[padding-left] ease-in', transitionDelay)}>{value}</span>
+            <span
+                className={cn(
+                    'group-hover:pl-5 group-focus-within:pl-5 transition-[padding-left] ease-in',
+                    transitionDelay
+                )}>
+                {value}
+            </span>
         </>
     );
 };
