@@ -250,15 +250,18 @@ func postWriteOwnerEdges(ctx context.Context, db graph.Database, sink *post.Filt
 
 // collectUniqueEndIDs extracts all unique EndIDs from a slice of relationships for bulk node fetching.
 func collectUniqueEndIDs(relationships []*graph.Relationship) []graph.ID {
-	seen := make(map[graph.ID]struct{}, len(relationships))
-	uniqueEndIds := make([]graph.ID, 0, len(relationships))
+	var (
+		seen         = make(map[graph.ID]struct{}, len(relationships))
+		uniqueEndIDs = make([]graph.ID, 0, len(relationships))
+	)
+
 	for _, rel := range relationships {
 		if _, ok := seen[rel.EndID]; !ok {
 			seen[rel.EndID] = struct{}{}
-			uniqueEndIds = append(uniqueEndIds, rel.EndID)
+			uniqueEndIDs = append(uniqueEndIDs, rel.EndID)
 		}
 	}
-	return uniqueEndIds
+	return uniqueEndIDs
 }
 
 func createPostRelFromRaw(rel *graph.Relationship, kind graph.Kind) post.EnsureRelationshipJob {
