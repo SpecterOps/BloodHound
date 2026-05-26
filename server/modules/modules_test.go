@@ -21,22 +21,21 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
-	"github.com/specterops/bloodhound/server/wireup"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// recorder captures every invocation of a wireup.Module produced by its
-// module helper so tests can assert that the registry walked the slice in
-// order and forwarded the supplied Deps.
+// recorder captures every invocation of a Module produced by its module helper
+// so tests can assert that the registry walked the slice in order and forwarded
+// the supplied Deps.
 type recorder struct {
 	name   string
 	order  *[]string
-	called []wireup.Deps
+	called []Deps
 }
 
-func (s *recorder) module() wireup.Module {
-	return func(deps wireup.Deps) {
+func (s *recorder) module() Module {
+	return func(deps Deps) {
 		if s.order != nil {
 			*s.order = append(*s.order, s.name)
 		}
@@ -50,10 +49,10 @@ func TestRegister_InvokesEachModuleOnceWithTheSuppliedDeps(t *testing.T) {
 		second = &recorder{name: "second"}
 		// Non-zero pointer fields so the assertion exercises identity rather
 		// than zero-value equality.
-		deps = wireup.Deps{Router: &router.Router{}, Pool: &pgxpool.Pool{}}
+		deps = Deps{Router: &router.Router{}, Pool: &pgxpool.Pool{}}
 	)
 
-	register(deps, []wireup.Module{first.module(), second.module()})
+	register(deps, []Module{first.module(), second.module()})
 
 	require.Len(t, first.called, 1)
 	require.Len(t, second.called, 1)
@@ -63,27 +62,21 @@ func TestRegister_InvokesEachModuleOnceWithTheSuppliedDeps(t *testing.T) {
 
 func TestRegister_PreservesSliceOrder(t *testing.T) {
 	var (
-		order   []string
-		first   = &recorder{name: "first", order: &order}
-		second  = &recorder{name: "second", order: &order}
-		third   = &recorder{name: "third", order: &order}
-		modules = []wireup.Module{first.module(), second.module(), third.module()}
+		order      []string
+		first      = &recorder{name: "first", order: &order}
+		second     = &recorder{name: "second", order: &order}
+		third      = &recorder{name: "third", order: &order}
+		moduleList = []Module{first.module(), second.module(), third.module()}
 	)
 
-	register(wireup.Deps{}, modules)
+	register(Deps{}, moduleList)
 
 	assert.Equal(t, []string{"first", "second", "third"}, order)
 }
 
 func TestRegister_EmptySliceIsANoop(t *testing.T) {
 	require.NotPanics(t, func() {
-		register(wireup.Deps{}, nil)
-		register(wireup.Deps{}, []wireup.Module{})
+		register(Deps{}, nil)
+		register(Deps{}, []Module{})
 	})
-}
-
-func TestDefaultRegistry_IsNotEmpty(t *testing.T) {
-	// Catches the regression where a refactor accidentally empties the slice
-	// and silently drops every feature from the server.
-	assert.NotEmpty(t, all)
 }

@@ -15,35 +15,43 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package modules is the central registry of feature wireup modules. The
-// startup entrypoint asks this package to register every module against the
-// supplied wireup.Deps; adding a new feature is a single slice entry here
-// plus a new modules/<domain>/module.go file.
+// startup entrypoint calls RegisterAll with the shared Deps and the ordered
+// list of Module functions to invoke; adding a new feature is passing its
+// Register function to RegisterAll alongside the existing ones.
 package modules
 
 import (
-	"github.com/specterops/bloodhound/server/analysis"
-	"github.com/specterops/bloodhound/server/wireup"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 )
 
-// all is the ordered list of feature modules registered at server startup.
-// Order matters only when a later module depends on something a prior module
-// has attached to the router (e.g. middleware) — the analysis module has no
-// such dependency today.
-var all = []wireup.Module{
-	analysis.Register,
+// Deps carries the shared infrastructure that feature modules need in order to
+// construct and register their store, service and handler stacks. New cross-
+// cutting dependencies (graph database, filesystem, caches, etc.) are added
+// here so that every module has a single, consistent place to pull from.
+type Deps struct {
+	Router *router.Router
+	Pool   *pgxpool.Pool
 }
 
-// RegisterAll registers every configured feature module with the server,
-// supplying each one the shared wireup.Deps.
-func RegisterAll(deps wireup.Deps) {
-	register(deps, all)
+// Module is a feature's entry point. It is invoked once during server startup
+// and is responsible for building the module's store -> service -> handler
+// chain from the supplied Deps and attaching any routes or other entry points
+// the module exposes. A function type is sufficient because a module exposes
+// no other behaviour beyond registration.
+type Module func(deps Deps)
+
+// RegisterAll registers every supplied feature module with the server,
+// invoking each one in order with the shared Deps.
+func RegisterAll(deps Deps, mods ...Module) {
+	register(deps, mods)
 }
 
 // register iterates the supplied modules and invokes each in turn. It is the
 // unit of work behind RegisterAll, separated so it can be exercised with fake
 // modules in tests.
-func register(deps wireup.Deps, modules []wireup.Module) {
-	for _, module := range modules {
-		module(deps)
+func register(deps Deps, mods []Module) {
+	for _, mod := range mods {
+		mod(deps)
 	}
 }

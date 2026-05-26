@@ -23,13 +23,13 @@ import (
 	"github.com/specterops/bloodhound/server/analysis/appdb"
 	"github.com/specterops/bloodhound/server/analysis/handlers"
 	"github.com/specterops/bloodhound/server/analysis/services"
-	"github.com/specterops/bloodhound/server/wireup"
+	"github.com/specterops/bloodhound/server/modules"
 )
 
 // Register builds the analysis store -> service -> handler chain and attaches
 // the analysis routes to the router supplied via deps. It satisfies the
-// wireup.Module function type and is referenced from the modules registry.
-func Register(deps wireup.Deps) {
+// modules.Module function type and is referenced from the modules registry.
+func Register(deps modules.Deps) {
 	var (
 		store      = appdb.NewStore(deps.Pool)
 		svc        = services.NewService(store)
