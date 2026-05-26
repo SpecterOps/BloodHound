@@ -23,6 +23,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
@@ -61,6 +62,19 @@ func SaveIngestFile(ctx context.Context, fileService storage.FileService, reques
 			Filename: tempFileName,
 			FileType: fileType,
 		}, nil
+	}
+}
+
+func cleanupTempFile(ctx context.Context, fileService storage.FileService, tempFileName string) {
+	if tempFileName == "" {
+		return
+	}
+
+	cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+	defer cancel()
+
+	if err := fileService.DeleteFile(cleanupCtx, tempFileName); err != nil {
+		slog.ErrorContext(cleanupCtx, "Failed to delete temp file", slog.String("temp_file_name", tempFileName), attr.Error(err))
 	}
 }
 
@@ -103,22 +117,28 @@ func WriteAndValidateFileWithPrefix(fileData io.Reader, location string, tempFil
 	// Closing pw signals EOF to the validation goroutine so it can finish.
 	pw.Close()
 
-	// Wait for the validation goroutine to finish and collect its result.
-	validationErr := <-validationErrCh
-
-	// Check if validation failed first; the temp file should be cleaned up.
-	if validationErr != nil {
-		slog.ErrorContext(
-			ctx,
-			"Validation failed",
-			slog.String("temp_file_name",
-				tempFileName),
-			attr.Error(validationErr),
-		)
-		if tempFileName != "" {
-			fileService.DeleteFile(ctx, tempFileName)
+	select {
+	case validationErr := <-validationErrCh:
+		// Context cancelation wins over validation errors when both are ready
+		if err := ctx.Err(); err != nil {
+			cleanupTempFile(ctx, fileService, tempFileName)
+			return "", err
 		}
-		return "", validationErr
+
+		if validationErr != nil {
+			slog.ErrorContext(
+				ctx,
+				"Validation failed",
+				slog.String("temp_file_name",
+					tempFileName),
+				attr.Error(validationErr),
+			)
+			cleanupTempFile(ctx, fileService, tempFileName)
+			return "", validationErr
+		}
+	case <-ctx.Done():
+		cleanupTempFile(ctx, fileService, tempFileName)
+		return "", ctx.Err()
 	}
 
 	// Check if writing failed; the temp file should be cleaned up.
@@ -129,9 +149,7 @@ func WriteAndValidateFileWithPrefix(fileData io.Reader, location string, tempFil
 			slog.String("temp_file_name", tempFileName),
 			attr.Error(writeErr),
 		)
-		if tempFileName != "" {
-			fileService.DeleteFile(ctx, tempFileName)
-		}
+		cleanupTempFile(ctx, fileService, tempFileName)
 		return "", writeErr
 	}
 
