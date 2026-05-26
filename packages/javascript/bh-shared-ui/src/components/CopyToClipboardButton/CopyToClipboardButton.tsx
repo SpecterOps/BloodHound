@@ -16,9 +16,9 @@
 import { faCheck, faCopy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AnimationEvent, KeyboardEvent, MouseEvent, useState } from 'react';
+import { useAnnounce } from '../../providers';
 import { cn, copyToClipboard } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
-
 type CopyToClipboardButtonProps = {
     onAnimationStart?: (e: AnimationEvent<HTMLDivElement>) => void;
     onAnimationEnd?: (e: AnimationEvent<HTMLDivElement>) => void;
@@ -27,7 +27,6 @@ type CopyToClipboardButtonProps = {
 };
 
 const DEFAULT_TRANSITION_DELAY = 'delay-300';
-
 export const CopyToClipboardButton = ({
     onAnimationEnd = () => {},
     onAnimationStart = () => {},
@@ -35,6 +34,8 @@ export const CopyToClipboardButton = ({
     value,
 }: CopyToClipboardButtonProps) => {
     const [displayCopyCheckmark, setDisplayCopyCheckmark] = useState(false);
+    const announce = useAnnounce();
+
     const handleCopyToClipBoard = <T extends KeyboardEvent<HTMLElement> | MouseEvent<HTMLElement>>(e: T) => {
         e.stopPropagation(); // prevents the click event bubbling up the DOM and triggering the row click handler
         if (typeof value === 'string') {
@@ -43,6 +44,7 @@ export const CopyToClipboardButton = ({
             copyToClipboard(value.join(', '));
         }
         setDisplayCopyCheckmark(true);
+        announce('Value copied to clipboard');
     };
 
     return (
