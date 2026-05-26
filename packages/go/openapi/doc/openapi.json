@@ -21337,7 +21337,8 @@
                     "id",
                     "name",
                     "version",
-                    "is_builtin"
+                    "is_builtin",
+                    "namespace"
                   ],
                   "properties": {
                     "id": {
@@ -21352,6 +21353,9 @@
                     },
                     "is_builtin": {
                       "type": "boolean"
+                    },
+                    "namespace": {
+                      "type": "string"
                     }
                   }
                 }
@@ -21369,7 +21373,8 @@
                 "id": 1,
                 "name": "Active Directory",
                 "version": "v1.0.0",
-                "is_builtin": true
+                "is_builtin": true,
+                "namespace": "AD"
               }
             ]
           }
