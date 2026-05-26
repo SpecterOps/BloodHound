@@ -157,7 +157,7 @@ get:
                           description: Finding name.
                         title:
                           type: string
-                          description: Human-readable finding title. Returns the Privilege Zone variant when the requested zone is not the standard Tier Zero tag, otherwise returns the Tier Zero variant. Falls back to the finding name if no title is available.
+                          description: Human-readable finding title. May vary based on the zone context (e.g., "Tier Zero" vs "Privilege Zone" variants).
                         platform:
                           type: string
                           description: Platform the finding belongs to.
