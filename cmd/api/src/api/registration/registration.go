@@ -81,7 +81,7 @@ func RegisterFossRoutes(
 
 		// Redirect root resource to the UI
 		routerInst.GET("/", func(response http.ResponseWriter, request *http.Request) {
-			http.Redirect(response, request, "/ui", http.StatusMovedPermanently)
+			http.Redirect(response, request, api.UserInterfacePath, http.StatusMovedPermanently)
 		}),
 	)
 
