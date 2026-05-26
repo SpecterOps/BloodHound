@@ -66,7 +66,60 @@ type DatabaseConfiguration struct {
 	EnableRDSIAMAuth      bool   `json:"enable_rds_iam_auth"`
 }
 
+// missingRDSIAMAuthFields returns structured database fields required to build an RDS IAM auth token connection string.
+func (s DatabaseConfiguration) missingRDSIAMAuthFields() []string {
+	var missingFields []string
+
+	if strings.TrimSpace(s.Address) == "" {
+		missingFields = append(missingFields, "addr")
+	}
+
+	if strings.TrimSpace(s.Username) == "" {
+		missingFields = append(missingFields, "username")
+	}
+
+	if strings.TrimSpace(s.Database) == "" {
+		missingFields = append(missingFields, "database")
+	}
+
+	return missingFields
+}
+
+// PostgreSQLConnectionString returns the PostgreSQL connection string represented by this configuration.
+//
+// Control-flow gotchas:
+//   - When RDS IAM auth is enabled, this method is not a pure formatter. It loads AWS configuration,
+//     resolves the database endpoint, and attempts to generate a fresh IAM auth token before considering
+//     the raw Connection override.
+//   - The IAM path requires Address, Username, and Database to be populated because it does not parse those
+//     values out of Connection.
+//   - If IAM token generation fails, the method falls back to the non-IAM behavior: Connection when set,
+//     otherwise a DSN assembled from Username, Secret, Address, and Database.
 func (s DatabaseConfiguration) PostgreSQLConnectionString() string {
+	if s.EnableRDSIAMAuth {
+		if missingConfigFields := s.missingRDSIAMAuthFields(); len(missingConfigFields) > 0 {
+			slog.Error("RDS IAM auth is enabled but required database configuration fields are missing",
+				slog.Any("missing_fields", missingConfigFields),
+				slog.Bool("database_connection_set", s.Connection != ""))
+		} else if awsConfig, err := awsConfig.LoadDefaultConfig(context.TODO()); err != nil {
+			slog.Error("AWS Config Loading Error", slog.String("err", err.Error()))
+		} else {
+			// Must use instance awsInstanceEndpoint with IAM auth
+			awsInstanceEndpoint := s.awsEndpointLookup()
+
+			slog.Debug("Requesting RDS IAM Auth Token")
+
+			if awsAuthenticationToken, err := auth.BuildAuthToken(context.TODO(), awsInstanceEndpoint, awsConfig.Region, s.Username, awsConfig.Credentials); err != nil {
+				slog.Error("RDS IAM Auth Token Request Error", slog.String("err", err.Error()))
+			} else {
+				slog.Debug("RDS IAM Auth Token Created")
+				return fmt.Sprintf("postgresql://%s:%s@%s/%s", s.Username, url.QueryEscape(awsAuthenticationToken), awsInstanceEndpoint, s.Database)
+			}
+		}
+
+		slog.Error("Failed to create IAM auth token. Falling back to default Postgres connection string")
+	}
+
 	if s.Connection != "" {
 		return s.Connection
 	}
@@ -82,28 +135,7 @@ func (s DatabaseConfiguration) Neo4JConnectionString() string {
 	return fmt.Sprintf("neo4j://%s:%s@%s/%s", s.Username, s.Secret, s.Address, s.Database)
 }
 
-func (s DatabaseConfiguration) RDSIAMAuthConnectionString() string {
-	if cfg, err := awsConfig.LoadDefaultConfig(context.TODO()); err != nil {
-		slog.Error("AWS Config Loading Error", slog.String("err", err.Error()))
-	} else {
-		// Must use instance endpoint with IAM auth
-		endpoint := s.LookupEndpoint()
-
-		slog.Info("Requesting RDS IAM Auth Token")
-
-		if authenticationToken, err := auth.BuildAuthToken(context.TODO(), endpoint, cfg.Region, s.Username, cfg.Credentials); err != nil {
-			slog.Error("RDS IAM Auth Token Request Error", slog.String("err", err.Error()))
-		} else {
-			slog.Info("RDS IAM Auth Token Created")
-			return fmt.Sprintf("postgresql://%s:%s@%s/%s", s.Username, url.QueryEscape(authenticationToken), endpoint, s.Database)
-		}
-	}
-
-	slog.Warn("Failed to create IAM auth token. Falling back to default Postgres connection string")
-	return s.PostgreSQLConnectionString()
-}
-
-func (s DatabaseConfiguration) LookupEndpoint() string {
+func (s DatabaseConfiguration) awsEndpointLookup() string {
 	host, port, err := net.SplitHostPort(s.Address)
 	if err != nil {
 		slog.Warn("Missing port in address. Using default port 5432.", slog.String("err", err.Error()))

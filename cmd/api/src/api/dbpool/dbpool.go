@@ -42,7 +42,7 @@ func newPoolCfg(cfg config.DatabaseConfiguration) (*pgxpool.Config, error) {
 	if cfg.EnableRDSIAMAuth {
 		// Only enable the BeforeConnect handler if RDS IAM Auth is enabled
 		poolCfg.BeforeConnect = func(ctx context.Context, connCfg *pgx.ConnConfig) error {
-			if newPoolCfg, err := pgxpool.ParseConfig(cfg.RDSIAMAuthConnectionString()); err != nil {
+			if newPoolCfg, err := pgxpool.ParseConfig(cfg.PostgreSQLConnectionString()); err != nil {
 				return err
 			} else {
 				connCfg.Host = newPoolCfg.ConnConfig.Host
