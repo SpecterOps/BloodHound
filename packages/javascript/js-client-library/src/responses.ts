@@ -359,6 +359,7 @@ export type Extension = {
     id: string;
     is_builtin: boolean;
     name: string;
+    namespace: string;
     version: string;
 };
 
