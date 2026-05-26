@@ -101,6 +101,11 @@ type SAMLConfiguration struct {
 	ServiceProviderCertificateCAChain string `json:"sp_ca_chain"`
 }
 
+type TeleportConfiguration struct {
+	DialAddress string `json:"dial_address"`
+	WebAddress  string `json:"web_address"`
+}
+
 type DefaultAdminConfiguration struct {
 	PrincipalName string `json:"principal_name"`
 	Password      string `json:"password"`
@@ -144,6 +149,7 @@ type Configuration struct {
 	EnableUserAnalytics             bool                        `json:"enable_user_analytics"`
 	ForceDownloadEmbeddedCollectors bool                        `json:"force_download_embedded_collectors"`
 	EnableAuditLogStdout            bool                        `json:"enable_audit_log_stdout"`
+	Teleport                        TeleportConfiguration       `json:"teleport"`
 }
 
 func (s Configuration) TempDirectory() string {

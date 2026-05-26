@@ -104,6 +104,10 @@ func NewDefaultConfiguration() (Configuration, error) {
 			},
 			EnableUserAnalytics:  false,
 			EnableAuditLogStdout: false,
+			Teleport: TeleportConfiguration{
+				DialAddress: "teleport:3080",
+				WebAddress:  "localhost:3080",
+			},
 		}, nil
 	}
 }
