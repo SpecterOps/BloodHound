@@ -279,7 +279,9 @@ func FetchComputerIDsWithLocalToComputer(tx graph.Transaction) (cardinality.Dupl
 		attr.Scope("routine"),
 	)()
 
-	computers := cardinality.NewBitmap64()
+	var (
+		computers = cardinality.NewBitmap64()
+	)
 
 	if err := tx.Relationships().Filterf(func() graph.Criteria {
 		return query.Kind(query.Relationship(), ad.LocalToComputer)
