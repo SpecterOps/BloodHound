@@ -93,8 +93,8 @@ type Storage interface {
 	Move(ctx context.Context, srcName, dstName string, options WriteOptions) error
 }
 
-// FileService serves as an abstraction to hanlde files with different storage backends. This functions
-// are general functions that each file service must implement.
+// FileService serves as an abstraction to handle files with different storage backends. This serves as
+// a list of general functions that each file service must implement.
 type FileService interface {
 	// GetFile returns a io.ReadCloser and FileInfo for the named filed that is requested.
 	GetFile(ctx context.Context, name string) (io.ReadCloser, FileInfo, error)
