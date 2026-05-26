@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -84,7 +85,7 @@ func createTestRelationshipKind(t *testing.T, testSuite IntegrationTestSuite, na
 func createTestFinding(t *testing.T, testSuite IntegrationTestSuite, finding model.SchemaFinding) model.SchemaFinding {
 	t.Helper()
 	// Create New Finding with input arguments
-	finding, err := testSuite.BHDatabase.CreateSchemaFinding(testSuite.Context, finding.Type, finding.SchemaExtensionId, finding.KindId, finding.EnvironmentId, finding.Name, finding.DisplayName, finding.ZoneDisplayName)
+	finding, err := testSuite.BHDatabase.CreateSchemaFinding(testSuite.Context, finding.Type, finding.SchemaExtensionId, finding.KindId, finding.EnvironmentId, finding.Name, finding.DisplayName, finding.ZoneDisplayName.ValueOrZero())
 	require.NoError(t, err, "unexpected error occurred when creating finding")
 	return finding
 }
@@ -3637,7 +3638,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				}
 
 				// Create new finding
-				newFinding, err := testSuite.BHDatabase.CreateSchemaFinding(testSuite.Context, model.SchemaFindingTypeRelationship, finding.SchemaExtensionId, finding.KindId, finding.EnvironmentId, finding.Name, finding.DisplayName, finding.ZoneDisplayName)
+				newFinding, err := testSuite.BHDatabase.CreateSchemaFinding(testSuite.Context, model.SchemaFindingTypeRelationship, finding.SchemaExtensionId, finding.KindId, finding.EnvironmentId, finding.Name, finding.DisplayName, finding.ZoneDisplayName.ValueOrZero())
 				assert.NoError(t, err, "unexpected error occurred when creating finding")
 
 				// Validate created finding is as expected
@@ -3658,13 +3659,13 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 					EnvironmentId:     environment.ID,
 					Name:              "finding",
 					DisplayName:       "display name",
-					ZoneDisplayName:   "zone display name",
+					ZoneDisplayName:   null.StringFrom("zone display name"),
 				}
 
 				newFinding := createTestFinding(t, testSuite, finding)
 
 				// Create same finding again and assert error
-				_, err := testSuite.BHDatabase.CreateSchemaFinding(testSuite.Context, model.SchemaFindingTypeRelationship, newFinding.SchemaExtensionId, newFinding.KindId, newFinding.EnvironmentId, newFinding.Name, newFinding.DisplayName, newFinding.ZoneDisplayName)
+				_, err := testSuite.BHDatabase.CreateSchemaFinding(testSuite.Context, model.SchemaFindingTypeRelationship, newFinding.SchemaExtensionId, newFinding.KindId, newFinding.EnvironmentId, newFinding.Name, newFinding.DisplayName, newFinding.ZoneDisplayName.ValueOrZero())
 				assert.ErrorIs(t, err, model.ErrDuplicateSchemaFindingName)
 			},
 		},
@@ -4359,7 +4360,7 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 	// Update zone_display_name on three findings to enable sort/filter coverage.
 	// Findings at index 1, 3, 5 (F_1, F_3, F_5) get zone display names in alphabetical order.
 	for idx, zoneName := range map[int]string{1: "Aaa Zone", 3: "Bbb Zone", 5: "Ccc Zone"} {
-		expectedFindings[idx].ZoneDisplayName = zoneName
+		expectedFindings[idx].ZoneDisplayName = null.StringFrom(zoneName)
 		updated, err := testSuite.BHDatabase.UpdateSchemaFinding(testCtx, expectedFindings[idx])
 		require.NoError(t, err)
 		expectedFindings[idx] = updated
@@ -4550,10 +4551,10 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 7, totalFindings, "expected total count of 7")
 		require.Len(t, findings, 7)
-		assert.Equal(t, "Aaa Zone", findings[0].ZoneDisplayName, "expected Aaa Zone first when sorted ascending by zone_display_name")
-		assert.Equal(t, "Bbb Zone", findings[1].ZoneDisplayName, "expected Bbb Zone second when sorted ascending by zone_display_name")
-		assert.Equal(t, "Ccc Zone", findings[2].ZoneDisplayName, "expected Ccc Zone third when sorted ascending by zone_display_name")
-		assert.Equal(t, "", findings[3].ZoneDisplayName, "expected empty zone_display_name for remaining findings")
+		assert.Equal(t, "Aaa Zone", findings[0].ZoneDisplayName.ValueOrZero(), "expected Aaa Zone first when sorted ascending by zone_display_name")
+		assert.Equal(t, "Bbb Zone", findings[1].ZoneDisplayName.ValueOrZero(), "expected Bbb Zone second when sorted ascending by zone_display_name")
+		assert.Equal(t, "Ccc Zone", findings[2].ZoneDisplayName.ValueOrZero(), "expected Ccc Zone third when sorted ascending by zone_display_name")
+		assert.False(t, findings[3].ZoneDisplayName.Valid, "expected null zone_display_name for remaining findings")
 	})
 
 	t.Run("filtering by zone_display_name returns only matching findings", func(t *testing.T) {
@@ -4567,7 +4568,7 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 		assert.Equal(t, 1, totalFindings, "expected exactly 1 finding with zone_display_name = 'Bbb Zone'")
 		require.Len(t, findings, 1)
 		assert.Equal(t, "F_3", findings[0].Name, "expected F_3 to be the matching finding")
-		assert.Equal(t, "Bbb Zone", findings[0].ZoneDisplayName)
+		assert.Equal(t, "Bbb Zone", findings[0].ZoneDisplayName.ValueOrZero())
 	})
 }
 
@@ -4821,7 +4822,7 @@ func TestUpdateSchemaFinding(t *testing.T) {
 				assert.Equal(t, existing.Name, updated.Name)
 				assert.Equal(t, "Updated Display Name", updated.DisplayName)
 				assert.Equal(t, model.SchemaFindingTypeRelationship, updated.Type)
-				assert.Equal(t, "", updated.ZoneDisplayName, "zone_display_name should remain empty when not set")
+				assert.False(t, updated.ZoneDisplayName.Valid, "zone_display_name should be null when not set")
 			},
 		},
 		{
@@ -4835,7 +4836,7 @@ func TestUpdateSchemaFinding(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, existing.ID, updated.ID)
 				assert.Equal(t, existing.Name, updated.Name)
-				assert.Equal(t, "Custom Zone Title", updated.ZoneDisplayName)
+				assert.Equal(t, "Custom Zone Title", updated.ZoneDisplayName.ValueOrZero())
 			},
 		},
 		{
@@ -4843,7 +4844,7 @@ func TestUpdateSchemaFinding(t *testing.T) {
 			args: args{displayName: "Original Display Name", zoneDisplayName: "", findingType: model.SchemaFindingTypeRelationship},
 			setup: func() (IntegrationTestSuite, model.SchemaFinding) {
 				testSuite, finding := sharedSetup(t)
-				finding.ZoneDisplayName = "Existing Zone Display Name"
+				finding.ZoneDisplayName = null.StringFrom("Existing Zone Display Name")
 				updated, err := testSuite.BHDatabase.UpdateSchemaFinding(testSuite.Context, finding)
 				require.NoError(t, err)
 				return testSuite, updated
@@ -4852,7 +4853,7 @@ func TestUpdateSchemaFinding(t *testing.T) {
 				t.Helper()
 				require.NoError(t, err)
 				assert.Equal(t, existing.ID, updated.ID)
-				assert.Equal(t, "", updated.ZoneDisplayName, "zone_display_name should be empty after updating to an empty string")
+				assert.False(t, updated.ZoneDisplayName.Valid, "zone_display_name should be null after updating to an empty string")
 			},
 		},
 	}
@@ -4863,7 +4864,7 @@ func TestUpdateSchemaFinding(t *testing.T) {
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
 			finding.DisplayName = testCase.args.displayName
-			finding.ZoneDisplayName = testCase.args.zoneDisplayName
+			finding.ZoneDisplayName = null.NewString(testCase.args.zoneDisplayName, testCase.args.zoneDisplayName != "")
 			finding.Type = testCase.args.findingType
 
 			updated, err := testSuite.BHDatabase.UpdateSchemaFinding(testSuite.Context, finding)
