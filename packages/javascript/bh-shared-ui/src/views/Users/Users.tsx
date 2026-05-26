@@ -78,9 +78,6 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
     const getSelfQuery = useSelf();
     const listUsersQuery = useBloodHoundUsers();
 
-    console.log(getSelfQuery);
-    console.log(listUsersQuery);
-
     const hasSelectedSelf = getSelfQuery.data?.id === selectedUserId!;
     const isSelfSSOUser = !!getSelfQuery.data?.sso_provider_id;
 
