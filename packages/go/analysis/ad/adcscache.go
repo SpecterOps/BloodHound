@@ -76,8 +76,6 @@ type ADCSCache struct {
 	publishedTemplateCache          map[graph.ID][]*graph.Node              // cert templates that are published to an enterprise ca
 	authUsersByDomain               map[graph.ID]graph.ID                   // domain node ID → Authenticated Users group node ID
 	ecasWithHostingComputers        cardinality.Duplex[uint64]              // enterprise CAs with at least one hosting computer where the computer is enabled
-	hasUPNCertMappingInForest       cardinality.Duplex[uint64]              // domains where at least one DC in the forest has Schannel UPN cert mapping enabled
-	hasWeakCertBindingInForest      cardinality.Duplex[uint64]              // domains where at least one DC in the forest has Kerberos weak cert binding enabled
 	authStoreForChainValid          map[graph.ID]cardinality.Duplex[uint64] //Auth stores with a valid chain to the domain, key is domain ID
 	rootCAForChainValid             map[graph.ID]cardinality.Duplex[uint64] //Root CA with a valid chain to the domain, key is domain ID
 	hasHostingComputer              map[graph.ID]bool
@@ -87,6 +85,8 @@ type ADCSCache struct {
 	certTemplateEnrollOrAllExtendedRighters map[graph.ID][]*graph.Node // principals with Enroll or AllExtendedRights on a cert template
 	certTemplateWritePKINameFlaggers        map[graph.ID][]*graph.Node // principals with WritePKINameFlag on a cert template
 	certTemplateWritePKIEnrollmentFlaggers  map[graph.ID][]*graph.Node // principals with WritePKIEnrollmentFlag on a cert template
+	hasUPNCertMappingInForest               cardinality.Duplex[uint64] // domains where at least one DC in the forest has Schannel UPN cert mapping enabled
+	hasWeakCertBindingInForest              cardinality.Duplex[uint64] // domains where at least one DC in the forest has Kerberos weak cert binding enabled
 }
 
 func NewADCSCache() *ADCSCache {
