@@ -501,6 +501,7 @@ func TestResources_ListExtensions(t *testing.T) {
 						DisplayName: "Display 1",
 						Version:     "v1.0.0",
 						IsBuiltin:   true,
+						Namespace:   "Display1",
 					},
 					{
 						Serial: model.Serial{
@@ -508,6 +509,7 @@ func TestResources_ListExtensions(t *testing.T) {
 						},
 						DisplayName: "Display 2",
 						Version:     "v2.0.0",
+						Namespace:   "Display2",
 					},
 					{
 						Serial: model.Serial{
@@ -515,13 +517,14 @@ func TestResources_ListExtensions(t *testing.T) {
 						},
 						DisplayName: "Display 3",
 						Version:     "v3.0.0",
+						Namespace:   "Display3",
 					},
 				}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data": {"extensions":[{"id":1, "name":"Display 1", "version":"v1.0.0", "is_builtin":true}, {"id":2, "name":"Display 2", "version":"v2.0.0", "is_builtin":false}, {"id":3, "name":"Display 3", "version":"v3.0.0", "is_builtin":false}]}}`,
+				responseBody:   `{"data": {"extensions":[{"id":1, "name":"Display 1", "version":"v1.0.0", "is_builtin":true, "namespace": "Display1"}, {"id":2, "name":"Display 2", "version":"v2.0.0", "is_builtin":false, "namespace": "Display2"}, {"id":3, "name":"Display 3", "version":"v3.0.0", "is_builtin":false, "namespace": "Display3"}]}}`,
 			},
 		},
 	}
