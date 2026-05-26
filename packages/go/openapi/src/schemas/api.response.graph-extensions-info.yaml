@@ -30,6 +30,7 @@ properties:
             - name
             - version
             - is_builtin
+            - namespace
           properties:
             id:
               type: integer
@@ -40,6 +41,8 @@ properties:
               type: string
             is_builtin:
               type: boolean
+            namespace:
+              type: string
 required:
   - data
 example:
@@ -49,3 +52,4 @@ example:
         name: "Active Directory"
         version: "v1.0.0"
         is_builtin: true
+        namespace: "AD"
