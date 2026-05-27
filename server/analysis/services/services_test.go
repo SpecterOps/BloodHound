@@ -44,11 +44,11 @@ func TestService_GetRequest(t *testing.T) {
 	)
 
 	tests := []struct {
-		name      string
-		dbResult  services.RequestedAnalysis
-		dbErr     error
+		name       string
+		dbResult   services.RequestedAnalysis
+		dbErr      error
 		wantResult services.RequestedAnalysis
-		wantErr   error
+		wantErr    error
 	}{
 		{
 			name:       "returns the analysis request on success",

@@ -14,15 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// Package modules is the central registry of feature wireup modules. The
-// startup entrypoint calls RegisterAll with the shared Deps and the ordered
-// list of Module functions to invoke; adding a new feature is passing its
-// Register function to RegisterAll alongside the existing ones.
+// Package modules is the central registry of feature modules. The startup
+// entrypoint calls Register with the shared Deps; adding a new feature module
+// is a direct call to its Register function from within this package.
 package modules
 
 import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/server/analysis"
 )
 
 // Deps carries the shared infrastructure that feature modules need in order to
@@ -34,24 +34,9 @@ type Deps struct {
 	Pool   *pgxpool.Pool
 }
 
-// Module is a feature's entry point. It is invoked once during server startup
-// and is responsible for building the module's store -> service -> handler
-// chain from the supplied Deps and attaching any routes or other entry points
-// the module exposes. A function type is sufficient because a module exposes
-// no other behaviour beyond registration.
-type Module func(deps Deps)
-
-// RegisterAll registers every supplied feature module with the server,
-// invoking each one in order with the shared Deps.
-func RegisterAll(deps Deps, mods ...Module) {
-	register(deps, mods)
-}
-
-// register iterates the supplied modules and invokes each in turn. It is the
-// unit of work behind RegisterAll, separated so it can be exercised with fake
-// modules in tests.
-func register(deps Deps, mods []Module) {
-	for _, mod := range mods {
-		mod(deps)
-	}
+// Register wires up all feature modules with the provided infrastructure.
+// Each feature module builds its own store → service → handler chain and
+// attaches its routes to the shared router.
+func Register(deps Deps) {
+	analysis.Register(deps.Router, deps.Pool)
 }

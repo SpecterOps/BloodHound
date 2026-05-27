@@ -14,69 +14,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package modules
+package modules_test
 
 import (
 	"testing"
 
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/specterops/bloodhound/cmd/api/src/api/router"
-	"github.com/stretchr/testify/assert"
+	"github.com/specterops/bloodhound/server/modules"
 	"github.com/stretchr/testify/require"
 )
 
-// recorder captures every invocation of a Module produced by its module helper
-// so tests can assert that the registry walked the slice in order and forwarded
-// the supplied Deps.
-type recorder struct {
-	name   string
-	order  *[]string
-	called []Deps
-}
-
-func (s *recorder) module() Module {
-	return func(deps Deps) {
-		if s.order != nil {
-			*s.order = append(*s.order, s.name)
-		}
-		s.called = append(s.called, deps)
-	}
-}
-
-func TestRegister_InvokesEachModuleOnceWithTheSuppliedDeps(t *testing.T) {
-	var (
-		first  = &recorder{name: "first"}
-		second = &recorder{name: "second"}
-		// Non-zero pointer fields so the assertion exercises identity rather
-		// than zero-value equality.
-		deps = Deps{Router: &router.Router{}, Pool: &pgxpool.Pool{}}
-	)
-
-	register(deps, []Module{first.module(), second.module()})
-
-	require.Len(t, first.called, 1)
-	require.Len(t, second.called, 1)
-	assert.Equal(t, deps, first.called[0])
-	assert.Equal(t, deps, second.called[0])
-}
-
-func TestRegister_PreservesSliceOrder(t *testing.T) {
-	var (
-		order      []string
-		first      = &recorder{name: "first", order: &order}
-		second     = &recorder{name: "second", order: &order}
-		third      = &recorder{name: "third", order: &order}
-		moduleList = []Module{first.module(), second.module(), third.module()}
-	)
-
-	register(Deps{}, moduleList)
-
-	assert.Equal(t, []string{"first", "second", "third"}, order)
-}
-
-func TestRegister_EmptySliceIsANoop(t *testing.T) {
-	require.NotPanics(t, func() {
-		register(Deps{}, nil)
-		register(Deps{}, []Module{})
+func TestRegister_ForwardsToAnalysis(t *testing.T) {
+	// A zero-value Deps has a nil Router. The delegation chain
+	// (analysis.Register → handlers.Register → routerInst.GET) panics when it
+	// reaches the nil pointer, confirming that Register calls into the analysis
+	// module rather than silently no-oping.
+	require.Panics(t, func() {
+		modules.Register(modules.Deps{})
 	})
 }

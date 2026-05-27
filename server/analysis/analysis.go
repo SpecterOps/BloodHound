@@ -20,21 +20,22 @@
 package analysis
 
 import (
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/server/analysis/appdb"
 	"github.com/specterops/bloodhound/server/analysis/handlers"
 	"github.com/specterops/bloodhound/server/analysis/services"
-	"github.com/specterops/bloodhound/server/modules"
 )
 
 // Register builds the analysis store -> service -> handler chain and attaches
-// the analysis routes to the router supplied via deps. It satisfies the
-// modules.Module function type and is referenced from the modules registry.
-func Register(deps modules.Deps) {
+// the analysis routes to the provided router. It is called from the modules
+// registry and receives only the infrastructure it directly needs.
+func Register(routerInst *router.Router, pool *pgxpool.Pool) {
 	var (
-		store      = appdb.NewStore(deps.Pool)
+		store      = appdb.NewStore(pool)
 		svc        = services.NewService(store)
 		handlerSet = handlers.NewHandlersContainer(svc)
 	)
 
-	handlers.Register(deps.Router, handlerSet)
+	handlers.Register(routerInst, handlerSet)
 }

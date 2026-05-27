@@ -25,6 +25,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -104,13 +105,70 @@ func getPostgresConfig(t *testing.T) pgtestdb.Config {
 	}
 }
 
-func TestStore_CreateAnalysisRequest_Integration(t *testing.T) {
-	var (
-		ctx   = context.Background()
-		store = setupStore(t)
-	)
+func TestStore_GetAnalysisRequest_Integration(t *testing.T) {
+	t.Run("returns ErrNotFound when no request exists", func(t *testing.T) {
+		var (
+			ctx   = context.Background()
+			store = setupStore(t)
+		)
 
+		_, err := store.GetAnalysisRequest(ctx)
+		assert.ErrorIs(t, err, services.ErrNotFound)
+	})
+
+	t.Run("returns the request after one is created", func(t *testing.T) {
+		var (
+			ctx   = context.Background()
+			store = setupStore(t)
+		)
+
+		created, wasCreated, err := store.CreateAnalysisRequest(ctx, "test-user")
+		require.NoError(t, err)
+		require.True(t, wasCreated)
+
+		retrieved, err := store.GetAnalysisRequest(ctx)
+		require.NoError(t, err)
+		assert.Equal(t, created.RequestedBy, retrieved.RequestedBy)
+		assert.Equal(t, created.RequestType, retrieved.RequestType)
+		assert.Equal(t, created.DeleteAllGraph, retrieved.DeleteAllGraph)
+		assert.Equal(t, created.DeleteSourcelessGraph, retrieved.DeleteSourcelessGraph)
+		assert.Equal(t, created.DeleteSourceKinds, retrieved.DeleteSourceKinds)
+		assert.Equal(t, created.DeleteRelationships, retrieved.DeleteRelationships)
+		assert.WithinDuration(t, created.RequestedAt, retrieved.RequestedAt, 1*time.Second)
+	})
+
+	t.Run("scans all struct fields correctly using struct tags", func(t *testing.T) {
+		var (
+			ctx   = context.Background()
+			store = setupStore(t)
+		)
+
+		// Create a request first so we have data to scan
+		_, wasCreated, err := store.CreateAnalysisRequest(ctx, "scan-test-user")
+		require.NoError(t, err)
+		require.True(t, wasCreated)
+
+		result, err := store.GetAnalysisRequest(ctx)
+		require.NoError(t, err)
+
+		// Verify all fields are populated correctly
+		assert.NotEmpty(t, result.RequestedBy)
+		assert.NotEmpty(t, result.RequestType)
+		assert.False(t, result.RequestedAt.IsZero())
+		assert.False(t, result.DeleteAllGraph)
+		assert.False(t, result.DeleteSourcelessGraph)
+		assert.NotNil(t, result.DeleteSourceKinds)
+		assert.NotNil(t, result.DeleteRelationships)
+	})
+}
+
+func TestStore_CreateAnalysisRequest_Integration(t *testing.T) {
 	t.Run("first call creates the request and reports created=true", func(t *testing.T) {
+		var (
+			ctx   = context.Background()
+			store = setupStore(t)
+		)
+
 		current, created, err := store.CreateAnalysisRequest(ctx, "first-user")
 		require.NoError(t, err)
 		assert.True(t, created)
@@ -119,6 +177,17 @@ func TestStore_CreateAnalysisRequest_Integration(t *testing.T) {
 	})
 
 	t.Run("second call is a no-op and reports created=false with the original requester", func(t *testing.T) {
+		var (
+			ctx   = context.Background()
+			store = setupStore(t)
+		)
+
+		// Create the first request
+		_, created, err := store.CreateAnalysisRequest(ctx, "first-user")
+		require.NoError(t, err)
+		require.True(t, created)
+
+		// Second call should be a no-op
 		current, created, err := store.CreateAnalysisRequest(ctx, "second-user")
 		require.NoError(t, err)
 		assert.False(t, created)
@@ -126,9 +195,19 @@ func TestStore_CreateAnalysisRequest_Integration(t *testing.T) {
 	})
 
 	t.Run("GetAnalysisRequest returns the persisted request", func(t *testing.T) {
+		var (
+			ctx   = context.Background()
+			store = setupStore(t)
+		)
+
+		// Create a request first
+		_, created, err := store.CreateAnalysisRequest(ctx, "get-test-user")
+		require.NoError(t, err)
+		require.True(t, created)
+
 		current, err := store.GetAnalysisRequest(ctx)
 		require.NoError(t, err)
-		assert.Equal(t, "first-user", current.RequestedBy)
+		assert.Equal(t, "get-test-user", current.RequestedBy)
 	})
 }
 

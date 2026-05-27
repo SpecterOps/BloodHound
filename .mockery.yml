@@ -14,22 +14,20 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 all: false
-dir: '{{.InterfaceDir}}/mocks'
-filename: '{{.InterfaceName | lower}}.go'
+dir: "{{.InterfaceDir}}/mocks"
+filename: "{{.InterfaceName | lower}}.go"
 force-file-write: true
 formatter: goimports
 generate: true
 include-auto-generated: false
 log-level: info
-structname: 'Mock{{.InterfaceName}}'
+structname: "Mock{{.InterfaceName}}"
 pkgname: mocks
 recursive: false
 require-template-schema-exists: true
 template: testify
 packages:
-  github.com/specterops/bloodhound/server/analysis/services:
-    interfaces:
-      Database:
-  github.com/specterops/bloodhound/server/analysis/handlers:
-    interfaces:
-      Analysis:
+  github.com/specterops/bloodhound/server:
+    config:
+      recursive: true
+      all: true

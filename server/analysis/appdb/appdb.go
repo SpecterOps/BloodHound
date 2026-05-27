@@ -31,8 +31,34 @@ import (
 // appdb package defines its own copy so the abstraction stays scoped to the
 // methods actually exercised here.
 type pgxQuerier interface {
-	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+}
+
+// analysisRequest is the package-local representation of a row in the analysis_request_switch table.
+// It exists only to hold raw scanned values; callers receive the application-level services.RequestedAnalysis.
+// The db struct tags map column names to struct fields and enable automatic scanning via pgx.RowToStructByName.
+type analysisRequest struct {
+	RequestedBy           string    `db:"requested_by"`
+	RequestType           string    `db:"request_type"`
+	RequestedAt           time.Time `db:"requested_at"`
+	DeleteAllGraph        bool      `db:"delete_all_graph"`
+	DeleteSourcelessGraph bool      `db:"delete_sourceless_graph"`
+	DeleteSourceKinds     []string  `db:"delete_source_kinds"`
+	DeleteRelationships   []string  `db:"delete_relationships"`
+}
+
+// toRequestedAnalysis translates a raw DB row into the domain model.
+func toRequestedAnalysis(row analysisRequest) services.RequestedAnalysis {
+	return services.RequestedAnalysis{
+		RequestedBy:           row.RequestedBy,
+		RequestType:           services.RequestedAnalysisType(row.RequestType),
+		RequestedAt:           row.RequestedAt,
+		DeleteAllGraph:        row.DeleteAllGraph,
+		DeleteSourcelessGraph: row.DeleteSourcelessGraph,
+		DeleteSourceKinds:     row.DeleteSourceKinds,
+		DeleteRelationships:   row.DeleteRelationships,
+	}
 }
 
 // Store performs analysis-request persistence operations directly against a PostgreSQL
@@ -50,8 +76,9 @@ func NewStore(db pgxQuerier) *Store {
 // no request is present.
 func (s *Store) GetAnalysisRequest(ctx context.Context) (services.RequestedAnalysis, error) {
 	var (
-		row analysisRequest
-		err error
+		row  analysisRequest
+		rows pgx.Rows
+		err  error
 	)
 
 	selectBuilder := sqlbuilder.PostgreSQL.NewSelectBuilder()
@@ -69,15 +96,12 @@ func (s *Store) GetAnalysisRequest(ctx context.Context) (services.RequestedAnaly
 
 	sqlQuery, args := selectBuilder.Build()
 
-	err = s.db.QueryRow(ctx, sqlQuery, args...).Scan(
-		&row.RequestedBy,
-		&row.RequestType,
-		&row.RequestedAt,
-		&row.DeleteAllGraph,
-		&row.DeleteSourcelessGraph,
-		&row.DeleteSourceKinds,
-		&row.DeleteRelationships,
-	)
+	rows, err = s.db.Query(ctx, sqlQuery, args...)
+	if err != nil {
+		return services.RequestedAnalysis{}, err
+	}
+
+	row, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[analysisRequest])
 	if errors.Is(err, pgx.ErrNoRows) {
 		return services.RequestedAnalysis{}, services.ErrNotFound
 	}
