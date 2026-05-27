@@ -22,6 +22,7 @@ import {
     AssetGroupTagSelectorAutoCertifySeedsOnly,
     AssetGroupTagSelectorAutoCertifyType,
     GraphNode,
+    NodeSourceSeed,
     SeedTypeObjectId,
     SeedTypes,
 } from 'js-client-library';
@@ -30,14 +31,16 @@ import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
 import { FC, useCallback, useEffect, useReducer } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import { useQuery } from 'react-query';
 import { usePZPathParams } from '../../../../hooks';
-import { useCreateRule, usePatchRule, useRuleInfo } from '../../../../hooks/useAssetGroupTags';
+import { useCreateRule, useOwnedTagId, usePatchRule, useRuleInfo } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { apiClient, useAppNavigate } from '../../../../utils';
 import { SearchValue } from '../../../Explore';
 import { RulesLink } from '../../fragments';
 import { getErrorMessage, handleError } from '../utils';
 import BasicInfo from './BasicInfo';
+import { getRuleExpansionMethod } from './getRuleExpansionMethod';
 import RuleFormContext from './RuleFormContext';
 import SeedSelection from './SeedSelection';
 import { AssetGroupSelectedNodes, RuleFormInputs, RuleFormState } from './types';
@@ -90,6 +93,7 @@ const initialState: RuleFormState = {
     seeds: [],
     selectedObjects: [],
     autoCertify: AssetGroupTagSelectorAutoCertifyDisabled,
+    cypherEditorInvalid: false,
 };
 
 export type Action =
@@ -97,6 +101,7 @@ export type Action =
     | { type: 'remove-selected-object'; node: SearchValue }
     | { type: 'set-selected-objects'; nodes: AssetGroupSelectedNodes }
     | { type: 'set-rule-type'; ruleType: SeedTypes }
+    | { type: 'set-cypher-editor-validation'; cypherEditorInvalid: boolean }
     | { type: 'set-seeds'; seeds: SelectorSeedRequest[] };
 
 const reducer = (state: RuleFormState, action: Action): RuleFormState => {
@@ -126,17 +131,22 @@ const reducer = (state: RuleFormState, action: Action): RuleFormState => {
             return { ...state, ruleType: action.ruleType, seeds: [], selectedObjects: [] };
         case 'set-seeds':
             return { ...state, seeds: action.seeds };
+        case 'set-cypher-editor-validation':
+            return { ...state, cypherEditorInvalid: action.cypherEditorInvalid };
         default:
             return state;
     }
 };
 
 const RuleForm: FC = () => {
-    const { tagId, ruleId = '', tagDetailsLink, isLabelPage, tagTypeDisplay } = usePZPathParams();
+    const { tagId, ruleId = '', tagDetailsLink, isLabelPage, tagTypeDisplay, tagType } = usePZPathParams();
     const navigate = useAppNavigate();
     const { addNotification } = useNotifications();
 
-    const [{ ruleType, seeds, selectedObjects, autoCertify }, dispatch] = useReducer(reducer, initialState);
+    const [{ ruleType, seeds, selectedObjects, autoCertify, cypherEditorInvalid }, dispatch] = useReducer(
+        reducer,
+        initialState
+    );
 
     const ruleQuery = useRuleInfo(tagId, ruleId);
     const form = useForm<RuleFormInputs>();
@@ -216,14 +226,6 @@ const RuleForm: FC = () => {
         }
     }, [tagId, ruleType, form, seeds, createRuleMutation, addNotification, navigate, tagDetailsLink]);
 
-    const onSubmit: SubmitHandler<RuleFormInputs> = useCallback(() => {
-        if (ruleId !== '') {
-            handlePatchRule();
-        } else {
-            handleCreateRule();
-        }
-    }, [ruleId, handleCreateRule, handlePatchRule]);
-
     useEffect(() => {
         const abortController = new AbortController();
 
@@ -278,12 +280,50 @@ const RuleForm: FC = () => {
         return () => abortController.abort();
     }, [ruleQuery.data, form, ruleId]);
 
+    const ownedId = useOwnedTagId();
+
+    const expansion = getRuleExpansionMethod(tagId, tagType, ownedId?.toString());
+
+    const { data: sampleResults } = useQuery({
+        queryKey: ['privilege-zones', 'preview-selectors', ruleType, seeds, expansion],
+        queryFn: async ({ signal }) => {
+            return apiClient
+                .assetGroupTagsPreviewSelectors({ seeds, expansion }, { signal })
+                .then((res) => res.data.data['members']);
+        },
+        retry: false,
+        refetchOnWindowFocus: false,
+        enabled: seeds.length > 0,
+    });
+
+    const onSubmit: SubmitHandler<RuleFormInputs> = useCallback(() => {
+        const directObjects = sampleResults?.filter((objectItem) => objectItem.source === NodeSourceSeed);
+        const expandedObjects = sampleResults?.filter((objectItem) => objectItem.source > NodeSourceSeed);
+
+        if (directObjects?.length === 0 && expandedObjects?.length === 0) {
+            addNotification(
+                'Not enough stuff!! Outline cypher editor in red. Maybe add this to form validation rules?'
+            );
+
+            return dispatch({ type: 'set-cypher-editor-validation', cypherEditorInvalid: true });
+        } else if (cypherEditorInvalid) {
+            dispatch({ type: 'set-cypher-editor-validation', cypherEditorInvalid: false });
+        }
+
+        if (ruleId !== '') {
+            handlePatchRule();
+        } else {
+            handleCreateRule();
+        }
+    }, [ruleId, handleCreateRule, handlePatchRule, addNotification, sampleResults, cypherEditorInvalid]);
+
     if (ruleQuery.isLoading) return <Skeleton />;
 
     if (ruleQuery.isError) return <div>There was an error fetching the rule information.</div>;
 
     return (
-        <RuleFormContext.Provider value={{ dispatch, seeds, ruleType, selectedObjects, ruleQuery, autoCertify }}>
+        <RuleFormContext.Provider
+            value={{ dispatch, seeds, ruleType, selectedObjects, ruleQuery, autoCertify, cypherEditorInvalid }}>
             {ruleId !== '' ? (
                 <p className='mt-6'>
                     {`Update this Rule's details. ${!isLabelPage ? 'Adjust criteria, analysis, or certification settings.' : ''} Changes apply to

@@ -34,6 +34,7 @@ interface RuleFormContext {
     ruleType: SeedTypes;
     ruleQuery: UseQueryResult<AssetGroupTagSelector>;
     autoCertify: AssetGroupTagSelectorAutoCertifyType;
+    cypherEditorInvalid: boolean;
 }
 
 export const initialValue: RuleFormContext = {
@@ -48,6 +49,7 @@ export const initialValue: RuleFormContext = {
         isError: false,
         isSuccess: false,
     } as UseQueryResult<AssetGroupTagSelector>,
+    cypherEditorInvalid: false,
 };
 
 const RuleFormContext = createContext<RuleFormContext>(initialValue);

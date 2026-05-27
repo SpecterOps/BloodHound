@@ -45,7 +45,7 @@ export const PrivilegeZonesCypherEditor: FC<{
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
-    const dispatch = useContext(RuleFormContext).dispatch || emptyFunction;
+    const { dispatch = emptyFunction, cypherEditorInvalid } = useContext(RuleFormContext) || emptyFunction;
     const { hasZoneId } = usePZPathParams();
 
     const location = useLocation();
@@ -120,6 +120,7 @@ export const PrivilegeZonesCypherEditor: FC<{
                                 'bg-transparent [&_.cm-editor]:bg-transparent [&_.cm-editor_.cm-gutters]:bg-transparent [&_.cm-editor_.cm-gutters]:border-transparent dark:bg-transparent dark:[&_.cm-editor]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:border-transparent':
                                     preview,
                                 'md:min-h-[16rem] md:max-h-[16rem] h-[24rem] max-h-[24rem]': !preview,
+                                'border-error border-2': cypherEditorInvalid,
                             }
                         )}
                         ref={cypherEditorRef}

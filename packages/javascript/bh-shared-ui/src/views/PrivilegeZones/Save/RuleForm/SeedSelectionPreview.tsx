@@ -15,34 +15,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Card, CardContent, CardHeader } from 'doodle-ui';
-import {
-    NodeSourceSeed,
-    SeedExpansionMethod,
-    SeedExpansionMethodAll,
-    SeedExpansionMethodChild,
-    SeedExpansionMethodNone,
-    SeedTypeCypher,
-    SeedTypes,
-    SeedTypesMap,
-    SelectorSeedRequest,
-} from 'js-client-library';
-import { FC } from 'react';
+import { NodeSourceSeed, SeedTypeCypher, SeedTypes, SeedTypesMap, SelectorSeedRequest } from 'js-client-library';
+import { FC, useContext, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
 import { useOwnedTagId } from '../../../../hooks/useAssetGroupTags';
 import { usePZPathParams } from '../../../../hooks/usePZParams';
 import { apiClient, cn } from '../../../../utils';
+import { getRuleExpansionMethod } from './getRuleExpansionMethod';
+import RuleFormContext from './RuleFormContext';
 
-const getRuleExpansionMethod = (
-    tagId: string,
-    tagType: 'labels' | 'zones',
-    ownedId: string | undefined
-): SeedExpansionMethod => {
-    // Owned is a specific tag type that does not undergo expansion
-    if (tagId === ownedId) return SeedExpansionMethodNone;
-
-    return tagType === 'zones' ? SeedExpansionMethodAll : SeedExpansionMethodChild;
-};
+const emptyFunction = () => {};
 
 const EmptySeedResults: FC<{ className: string; displayText: string }> = ({ className, displayText }) => {
     return <p className={className}>{displayText}</p>;
@@ -56,6 +39,8 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
     const { tagType, tagId } = usePZPathParams();
 
     const ownedId = useOwnedTagId();
+
+    const { dispatch = emptyFunction, cypherEditorInvalid } = useContext(RuleFormContext);
 
     const expansion = getRuleExpansionMethod(tagId, tagType, ownedId?.toString());
 
@@ -74,6 +59,16 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
     const directObjects = sampleResults?.filter((objectItem) => objectItem.source === NodeSourceSeed);
     const expandedObjects = sampleResults?.filter((objectItem) => objectItem.source > NodeSourceSeed);
     const showViewInExploreButton = exploreUrl && ruleType === SeedTypeCypher;
+
+    useEffect(() => {
+        const cypherQueryIsEmpty = directObjects?.length !== 0 && expandedObjects?.length !== 0;
+
+        if (cypherQueryIsEmpty && !cypherEditorInvalid) {
+            dispatch({ type: 'set-cypher-editor-validation', cypherEditorInvalid: true });
+        } else if (!cypherQueryIsEmpty && cypherEditorInvalid) {
+            dispatch({ type: 'set-cypher-editor-validation', cypherEditorInvalid: false });
+        }
+    }, [directObjects, expandedObjects, cypherEditorInvalid, dispatch]);
 
     return (
         <Card className='xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem]'>
