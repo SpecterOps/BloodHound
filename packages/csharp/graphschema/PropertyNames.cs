@@ -134,7 +134,8 @@ public static readonly string LogonScriptEnabled = "logonscriptenabled";
 public static readonly string LockedOut = "lockedout";
 public static readonly string UserCannotChangePassword = "passwordcantchange";
 public static readonly string PasswordExpired = "passwordexpired";
-public static readonly string DSHeuristics = "dsheuristics";
+public static readonly string DSHeu
+istics = "dsheuristics";
 public static readonly string UserAccountControl = "useraccountcontrol";
 public static readonly string TrustAttributesInbound = "trustattributesinbound";
 public static readonly string TrustAttributesOutbound = "trustattributesoutbound";

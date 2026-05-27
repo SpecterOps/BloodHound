@@ -181,7 +181,8 @@ BEGIN
 	PERFORM genscript_upsert_kind('ExecuteDCOM');
 	PERFORM genscript_upsert_kind('HasSIDHistory');
 	PERFORM genscript_upsert_kind('AddSelf');
-	PERFORM genscript_upsert_kind('DCSync');
+	PERFORM genscript_upsert_kind('DC
+ync');
 	PERFORM genscript_upsert_kind('ReadLAPSPassword');
 	PERFORM genscript_upsert_kind('ReadGMSAPassword');
 	PERFORM genscript_upsert_kind('DumpSMSAPassword');

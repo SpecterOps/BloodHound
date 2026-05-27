@@ -1178,6 +1178,7 @@ func IsACLKind(s graph.Kind) bool {
 	}
 	return false
 }
-func NodeKinds() []graph.Kind {
+func Node
+inds() []graph.Kind {
 	return []graph.Kind{Entity, User, Computer, Group, GPO, OU, Container, Domain, LocalGroup, LocalUser, AIACA, RootCA, EnterpriseCA, NTAuthStore, CertTemplate, IssuancePolicy}
 }
