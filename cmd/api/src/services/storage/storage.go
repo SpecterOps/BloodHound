@@ -153,9 +153,14 @@ func (s *StorageFileService) ReadFile(ctx context.Context, name string) ([]byte,
 	if err != nil {
 		return nil, err
 	}
-	defer rc.Close()
-
-	return io.ReadAll(rc)
+	data, readErr := io.ReadAll(rc)
+	if closeErr := rc.Close(); closeErr != nil {
+		if readErr != nil {
+			return nil, errors.Join(readErr, closeErr)
+		}
+		return nil, closeErr
+	}
+	return data, readErr
 }
 
 func (s *StorageFileService) WriteFile(ctx context.Context, name string, data []byte, opts WriteOptions) error {
@@ -277,26 +282,41 @@ func (s *fileServiceResolver) Resolve(name FileServiceName) (FileService, error)
 func NewDefaultFileServices(cfg config.Configuration) (map[FileServiceName]FileService, error) {
 	var (
 		fileServices = make(map[FileServiceName]FileService)
+		openedStores []*LocalStore
 	)
+
+	closeOpened := func() {
+		for _, store := range openedStores {
+			_ = store.Close()
+		}
+	}
+
 	workStore, err := NewLocalStore(cfg.WorkDir)
 	if err != nil {
 		return nil, err
 	}
+	openedStores = append(openedStores, workStore)
 
 	ingestStore, err := NewLocalStore(cfg.TempDirectory())
 	if err != nil {
+		closeOpened()
 		return nil, err
 	}
+	openedStores = append(openedStores, ingestStore)
 
 	retainStore, err := NewLocalStore(cfg.RetainedFilesDirectory())
 	if err != nil {
+		closeOpened()
 		return nil, err
 	}
+	openedStores = append(openedStores, retainStore)
 
 	collectorsStore, err := NewLocalStore(cfg.CollectorsBasePath)
 	if err != nil {
+		closeOpened()
 		return nil, err
 	}
+	openedStores = append(openedStores, collectorsStore)
 
 	workService := NewFileService(workStore)
 	fileServices[FileServiceWork] = workService
