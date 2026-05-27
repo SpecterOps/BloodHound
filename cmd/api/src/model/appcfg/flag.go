@@ -49,6 +49,7 @@ const (
 	FeatureAPIKeyExpirationSupport      = "api_key_expiration_support"
 	FeatureFindingsTable                = "findings_table"
 	FeatureCollectorSupportBundle       = "collector_support_bundle"
+	FeatureAlerts                       = "alerts"
 )
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be
@@ -123,5 +124,15 @@ func GetOpenHoundEnabled(ctx context.Context, service GetFlagByKeyer) bool {
 		return false
 	} else {
 		return openHoundFlag.Enabled
+	}
+}
+
+// GetAlertsEnabled returns true if the Alerts feature flag is enabled.
+func GetAlertsEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+	if alertsFlag, err := service.GetFlagByKey(ctx, FeatureAlerts); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch alerts flag; returning false")
+		return false
+	} else {
+		return alertsFlag.Enabled
 	}
 }
