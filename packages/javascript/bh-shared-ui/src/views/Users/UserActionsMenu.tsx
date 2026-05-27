@@ -132,15 +132,14 @@ const UserActionsMenu: React.FC<UserActionsMenuProps> = ({
     };
 
     const { checkPermission } = usePermissions();
-
-    const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS);
+    const hasViewPermission = checkPermission(Permission.AUTH_READ_USERS);
 
     /* Implementation */
 
     return (
         <div>
             <IconButton
-                disabled={!hasPermission}
+                disabled={hasViewPermission}
                 data-testid='manage-users_user-row-action-menu-button'
                 aria-label='Show user actions'
                 onClick={handleOnOpen}

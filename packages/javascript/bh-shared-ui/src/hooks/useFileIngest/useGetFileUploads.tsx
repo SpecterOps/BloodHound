@@ -34,8 +34,7 @@ export const useGetFileUploadsQuery = ({ page, rowsPerPage, filters }: FileUploa
     const { checkPermission, isSuccess: permissionsLoaded } = usePermissions();
     const hasViewPermission =
         (permissionsLoaded && checkPermission(Permission.GRAPH_DB_INGEST)) ||
-        (permissionsLoaded && checkPermission(Permission.AUTH_MANAGE_SELF));
-    //const hasAuthReadUsersPermission = permissionsLoaded && checkPermission(Permission.AUTH_READ_USERS);
+        (permissionsLoaded && checkPermission(Permission.AUTH_READ_USERS));
 
     const { addNotification, dismissNotification } = useNotifications();
 
@@ -48,7 +47,7 @@ export const useGetFileUploadsQuery = ({ page, rowsPerPage, filters }: FileUploa
     }, [addNotification, dismissNotification, hasViewPermission]);
 
     return useQuery<ListFileIngestJobsResponse>({
-        enabled: hasViewPermission,
+        enabled: Boolean(permissionsLoaded && hasViewPermission),
         keepPreviousData: true, // Prevent count from resetting to 0 between page fetches
         onError: () => addNotification(FILE_INGEST_FETCH_ERROR_MESSAGE, FILE_INGEST_FETCH_ERROR_KEY),
         queryFn: ({ signal }) =>

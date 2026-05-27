@@ -34,7 +34,8 @@ export const testAuthenticatedUser = {
             permissions: [
                 {
                     authority: 'auth',
-                    name: 'ManageUsers',
+                    //name: 'ManageUsers',
+                    name: 'ReadUsers',
                 },
             ],
             id: 4,
