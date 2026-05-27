@@ -56,8 +56,8 @@
     {
       "id": "n0",
       "position": {
-        "x": 75,
-        "y": 257.1802421969478
+        "x": 150,
+        "y": 307.1802421969478
       },
       "caption": "Domain",
       "labels": [],
@@ -71,8 +71,8 @@
     {
       "id": "n1",
       "position": {
-        "x": 2573.17106492989,
-        "y": 464.3604843938956
+        "x": 2648.17106492989,
+        "y": 514.3604843938956
       },
       "caption": "NTAuthStore",
       "labels": [],
@@ -87,8 +87,8 @@
     {
       "id": "n2",
       "position": {
-        "x": 2573.17106492989,
-        "y": 257.1802421969478
+        "x": 2648.17106492989,
+        "y": 307.1802421969478
       },
       "caption": "RootCA",
       "labels": [],
@@ -103,8 +103,8 @@
     {
       "id": "n3",
       "position": {
-        "x": 2154.7487206889787,
-        "y": 1416.3540464317537
+        "x": 2229.7487206889787,
+        "y": 1466.3540464317537
       },
       "caption": "EnterpriseCA",
       "labels": [],
@@ -119,10 +119,10 @@
       }
     },
     {
-      "id": "n5",
+      "id": "n4",
       "position": {
-        "x": 127.08172111393367,
-        "y": 1416.3540464317532
+        "x": 202.08172111393367,
+        "y": 1466.3540464317532
       },
       "caption": "Group0",
       "labels": [],
@@ -134,10 +134,10 @@
       }
     },
     {
-      "id": "n6",
+      "id": "n5",
       "position": {
-        "x": 1920.8929293506103,
-        "y": 1143.2220049546156
+        "x": 1995.8929293506103,
+        "y": 1193.2220049546156
       },
       "caption": "CertTemplate1",
       "labels": [],
@@ -159,10 +159,10 @@
       }
     },
     {
-      "id": "n7",
+      "id": "n6",
       "position": {
-        "x": 1039.0469540009008,
-        "y": 1221.2271961978488
+        "x": 1114.0469540009008,
+        "y": 1271.2271961978488
       },
       "caption": "Group1",
       "labels": [],
@@ -174,10 +174,10 @@
       }
     },
     {
-      "id": "n8",
+      "id": "n7",
       "position": {
-        "x": 1920.8929293506103,
-        "y": 860.3399591567729
+        "x": 1995.8929293506103,
+        "y": 910.3399591567729
       },
       "caption": "CertTemplate2",
       "labels": [],
@@ -199,10 +199,10 @@
       }
     },
     {
-      "id": "n9",
+      "id": "n8",
       "position": {
-        "x": 1920.8929293506103,
-        "y": 567.9931433980071
+        "x": 1995.8929293506103,
+        "y": 617.9931433980071
       },
       "caption": "CertTemplate3",
       "labels": [],
@@ -224,10 +224,10 @@
       }
     },
     {
-      "id": "n10",
+      "id": "n9",
       "position": {
-        "x": 948.8251447406323,
-        "y": 1143.2220049546156
+        "x": 1023.8251447406323,
+        "y": 1193.2220049546156
       },
       "caption": "Computer1",
       "labels": [],
@@ -239,10 +239,10 @@
       }
     },
     {
-      "id": "n11",
+      "id": "n10",
       "position": {
-        "x": 1039.0469540009008,
-        "y": 1065.2168137113824
+        "x": 1114.0469540009008,
+        "y": 1115.2168137113824
       },
       "caption": "User1",
       "labels": [],
@@ -254,10 +254,10 @@
       }
     },
     {
-      "id": "n12",
+      "id": "n11",
       "position": {
-        "x": 1039.0469540009008,
-        "y": 938.3451504000061
+        "x": 1114.0469540009008,
+        "y": 988.3451504000061
       },
       "caption": "Group2",
       "labels": [],
@@ -269,10 +269,10 @@
       }
     },
     {
-      "id": "n13",
+      "id": "n12",
       "position": {
-        "x": 948.8251447406323,
-        "y": 860.3399591567729
+        "x": 1023.8251447406323,
+        "y": 910.3399591567729
       },
       "caption": "Computer2",
       "labels": [],
@@ -284,10 +284,10 @@
       }
     },
     {
-      "id": "n14",
+      "id": "n13",
       "position": {
-        "x": 1039.0469540009008,
-        "y": 782.3347679135395
+        "x": 1114.0469540009008,
+        "y": 832.3347679135395
       },
       "caption": "User2",
       "labels": [],
@@ -300,10 +300,10 @@
       }
     },
     {
-      "id": "n15",
+      "id": "n14",
       "position": {
-        "x": 1039.0469540009008,
-        "y": 645.9983346412403
+        "x": 1114.0469540009008,
+        "y": 695.9983346412403
       },
       "caption": "Group3",
       "labels": [],
@@ -315,10 +315,10 @@
       }
     },
     {
-      "id": "n16",
+      "id": "n15",
       "position": {
-        "x": 948.8251447406323,
-        "y": 567.9931433980071
+        "x": 1023.8251447406323,
+        "y": 617.9931433980071
       },
       "caption": "Computer3",
       "labels": [],
@@ -330,10 +330,10 @@
       }
     },
     {
-      "id": "n17",
+      "id": "n16",
       "position": {
-        "x": 1039.0469540009008,
-        "y": 489.9879521547739
+        "x": 1114.0469540009008,
+        "y": 539.9879521547739
       },
       "caption": "User3",
       "labels": [],
@@ -344,6 +344,20 @@
         "node-color": "#a4dd00",
         "border-color": "#73d8ff"
       }
+    },
+    {
+      "id": "n17",
+      "position": {
+        "x": 2648.17106492989,
+        "y": 1466.3540464317532
+      },
+      "caption": "EnterpriseCA host",
+      "labels": [],
+      "properties": {
+        "kind": "Computer",
+        "enabled": "true"
+      },
+      "style": {}
     }
   ],
   "relationships": [
@@ -388,34 +402,42 @@
       }
     },
     {
-      "id": "n5",
-      "fromId": "n5",
+      "id": "n4",
+      "fromId": "n4",
       "toId": "n3",
       "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n6",
-      "fromId": "n6",
+      "id": "n5",
+      "fromId": "n5",
       "toId": "n3",
       "type": "PublishedTo",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n7",
-      "fromId": "n7",
-      "toId": "n6",
+      "id": "n6",
+      "fromId": "n6",
+      "toId": "n5",
       "type": "Enroll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n7",
+      "fromId": "n6",
+      "toId": "n4",
+      "type": "MemberOf",
       "properties": {},
       "style": {}
     },
     {
       "id": "n8",
       "fromId": "n7",
-      "toId": "n5",
-      "type": "MemberOf",
+      "toId": "n3",
+      "type": "PublishedTo",
       "properties": {},
       "style": {}
     },
@@ -430,16 +452,16 @@
     {
       "id": "n10",
       "fromId": "n9",
-      "toId": "n3",
-      "type": "PublishedTo",
+      "toId": "n5",
+      "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
       "id": "n11",
-      "fromId": "n10",
-      "toId": "n6",
-      "type": "Enroll",
+      "fromId": "n9",
+      "toId": "n4",
+      "type": "MemberOf",
       "properties": {},
       "style": {}
     },
@@ -447,22 +469,22 @@
       "id": "n12",
       "fromId": "n10",
       "toId": "n5",
-      "type": "MemberOf",
+      "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
       "id": "n13",
-      "fromId": "n11",
-      "toId": "n6",
-      "type": "Enroll",
+      "fromId": "n10",
+      "toId": "n4",
+      "type": "MemberOf",
       "properties": {},
       "style": {}
     },
     {
       "id": "n14",
       "fromId": "n11",
-      "toId": "n5",
+      "toId": "n4",
       "type": "MemberOf",
       "properties": {},
       "style": {}
@@ -470,7 +492,7 @@
     {
       "id": "n15",
       "fromId": "n12",
-      "toId": "n5",
+      "toId": "n4",
       "type": "MemberOf",
       "properties": {},
       "style": {}
@@ -478,47 +500,47 @@
     {
       "id": "n16",
       "fromId": "n13",
-      "toId": "n5",
+      "toId": "n4",
       "type": "MemberOf",
       "properties": {},
       "style": {}
     },
     {
       "id": "n17",
-      "fromId": "n14",
-      "toId": "n5",
-      "type": "MemberOf",
+      "fromId": "n13",
+      "toId": "n7",
+      "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
       "id": "n18",
-      "fromId": "n14",
-      "toId": "n8",
+      "fromId": "n12",
+      "toId": "n7",
       "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
       "id": "n19",
-      "fromId": "n13",
-      "toId": "n8",
+      "fromId": "n11",
+      "toId": "n7",
       "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
       "id": "n20",
-      "fromId": "n12",
-      "toId": "n8",
-      "type": "Enroll",
+      "fromId": "n14",
+      "toId": "n4",
+      "type": "MemberOf",
       "properties": {},
       "style": {}
     },
     {
       "id": "n21",
       "fromId": "n15",
-      "toId": "n5",
+      "toId": "n4",
       "type": "MemberOf",
       "properties": {},
       "style": {}
@@ -526,23 +548,23 @@
     {
       "id": "n22",
       "fromId": "n16",
-      "toId": "n5",
+      "toId": "n4",
       "type": "MemberOf",
       "properties": {},
       "style": {}
     },
     {
       "id": "n23",
-      "fromId": "n17",
-      "toId": "n5",
-      "type": "MemberOf",
+      "fromId": "n14",
+      "toId": "n8",
+      "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
       "id": "n24",
       "fromId": "n15",
-      "toId": "n9",
+      "toId": "n8",
       "type": "Enroll",
       "properties": {},
       "style": {}
@@ -550,22 +572,24 @@
     {
       "id": "n25",
       "fromId": "n16",
-      "toId": "n9",
+      "toId": "n8",
       "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
       "id": "n26",
-      "fromId": "n17",
-      "toId": "n9",
-      "type": "Enroll",
-      "properties": {},
+      "fromId": "n15",
+      "toId": "n0",
+      "type": "ADCSESC6a",
+      "properties": {
+        "asserted": "true"
+      },
       "style": {}
     },
     {
       "id": "n27",
-      "fromId": "n16",
+      "fromId": "n14",
       "toId": "n0",
       "type": "ADCSESC6a",
       "properties": {
@@ -575,26 +599,6 @@
     },
     {
       "id": "n28",
-      "fromId": "n15",
-      "toId": "n0",
-      "type": "ADCSESC6a",
-      "properties": {
-        "asserted": "true"
-      },
-      "style": {}
-    },
-    {
-      "id": "n29",
-      "fromId": "n13",
-      "toId": "n0",
-      "type": "ADCSESC6a",
-      "properties": {
-        "asserted": "true"
-      },
-      "style": {}
-    },
-    {
-      "id": "n30",
       "fromId": "n12",
       "toId": "n0",
       "type": "ADCSESC6a",
@@ -604,7 +608,7 @@
       "style": {}
     },
     {
-      "id": "n31",
+      "id": "n29",
       "fromId": "n11",
       "toId": "n0",
       "type": "ADCSESC6a",
@@ -614,7 +618,7 @@
       "style": {}
     },
     {
-      "id": "n32",
+      "id": "n30",
       "fromId": "n10",
       "toId": "n0",
       "type": "ADCSESC6a",
@@ -624,13 +628,31 @@
       "style": {}
     },
     {
-      "id": "n33",
-      "fromId": "n7",
+      "id": "n31",
+      "fromId": "n9",
       "toId": "n0",
       "type": "ADCSESC6a",
       "properties": {
         "asserted": "true"
       },
+      "style": {}
+    },
+    {
+      "id": "n32",
+      "fromId": "n6",
+      "toId": "n0",
+      "type": "ADCSESC6a",
+      "properties": {
+        "asserted": "true"
+      },
+      "style": {}
+    },
+    {
+      "id": "n33",
+      "fromId": "n17",
+      "toId": "n3",
+      "type": "HostsCAService",
+      "properties": {},
       "style": {}
     }
   ]
