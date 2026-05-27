@@ -387,11 +387,11 @@ export type UnifiedFinding = {
     finding: string;
     finding_type: string;
     platform: string;
-    environment: string;
-    zone: number;
-    source_principal: string;
+    environment_id: string;
+    zone_id: number;
+    source_principal_id: string;
     source_principal_kind: string;
-    target_principal: string;
+    target_principal_id: string;
     target_principal_kind: string;
     status: string;
     first_seen: string;
