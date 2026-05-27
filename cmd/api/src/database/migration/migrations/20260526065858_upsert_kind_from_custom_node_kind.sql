@@ -4,11 +4,14 @@
 -- These names are reserved by the PZ system and shouldn't have slipped in here, but this is just in case.
 DELETE FROM custom_node_kinds WHERE kind_name LIKE 'Tag_%';
 
--- Upsert any kind_name values from custom_node_kinds that are not yet present in the
--- kind table. kind.id is SMALLSERIAL (max 32,767), so only genuinely missing names are inserted.
+-- Insert any kind_name values from custom_node_kinds that are not yet present in the
+-- kind table. The WHERE NOT EXISTS filter avoids using up kind IDs (a SMALLSERIAL sequence) 
+-- as would happen with ON CONFLICT DO NOTHING.
 INSERT INTO kind (name)
-SELECT kind_name FROM custom_node_kinds
-ON CONFLICT (name) DO NOTHING;
+SELECT kind_name FROM custom_node_kinds cnk
+WHERE NOT EXISTS (
+    SELECT 1 FROM kind WHERE kind.name = cnk.kind_name
+);
 
 -- Add the new kind_id FK column (SMALLINT matches kind.id SMALLSERIAL).
 ALTER TABLE custom_node_kinds ADD COLUMN IF NOT EXISTS kind_id SMALLINT;

@@ -502,6 +502,11 @@ func TestMigration_UpsertKindFromCustomNodeKind(t *testing.T) {
 			('Tag_ShouldDelete', '{}')
 	`).Error)
 
+	// read the kind_id sequence before the migration so we can assert it only
+	// advanced by the number of genuinely new kinds.
+	var kindSeqBefore int64
+	require.NoError(t, testContext.gormDB.Raw(`SELECT last_value FROM kind_id_seq`).Scan(&kindSeqBefore).Error)
+
 	// Execute the target migration.
 	_, err = provider.UpTo(testContext.ctx, targetMigrationVersion)
 	require.NoError(t, err)
@@ -529,6 +534,13 @@ func TestMigration_UpsertKindFromCustomNodeKind(t *testing.T) {
 	// BrandNewKind should exist in the kind table
 	require.NoError(t, testContext.gormDB.Raw(`SELECT COUNT(*) FROM kind WHERE name = 'BrandNewKind'`).Scan(&rowCount).Error)
 	assert.Equal(t, 1, rowCount, "BrandNewKind should have been upserted into the kind table")
+
+	// The kind sequence must have advanced by exactly 1 (BrandNewKind only).
+	// PreExistingKind was already in kind and Tag_ShouldDelete was deleted before
+	// the insert, so neither should have consumed a sequence value.
+	var kindSeqAfter int64
+	require.NoError(t, testContext.gormDB.Raw(`SELECT last_value FROM kind_id_seq`).Scan(&kindSeqAfter).Error)
+	assert.Equal(t, kindSeqBefore+1, kindSeqAfter, "kind sequence should only advance for genuinely new kinds")
 
 	// Every surviving row should have a non-null kind_id.
 	require.NoError(t, testContext.gormDB.Raw(`SELECT COUNT(*) FROM custom_node_kinds WHERE kind_id IS NULL`).Scan(&rowCount).Error)
