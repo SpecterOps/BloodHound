@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build slow_integration
+//go:build integration
 
 package appdb_test
 
