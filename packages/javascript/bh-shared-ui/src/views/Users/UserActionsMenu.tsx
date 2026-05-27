@@ -157,7 +157,6 @@ const UserActionsMenu: React.FC<UserActionsMenuProps> = ({
                         setAnchorEl(null);
                     }}>
                     <MenuItem
-                        disabled={true}
                         data-testid='manage-users_user-row-action-menu-update-user-button'
                         onClick={(e: React.MouseEvent<HTMLLIElement>) => {
                             onUpdateUser(e);
