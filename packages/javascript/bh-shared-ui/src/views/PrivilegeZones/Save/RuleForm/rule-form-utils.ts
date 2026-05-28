@@ -5,6 +5,8 @@ import {
     SeedExpansionMethodNone,
 } from 'js-client-library';
 
+export const emptyFunction = () => {};
+
 export const getRuleExpansionMethod = (
     tagId: string,
     tagType: 'labels' | 'zones',

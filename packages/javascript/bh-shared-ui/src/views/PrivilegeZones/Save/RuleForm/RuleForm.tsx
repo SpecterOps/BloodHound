@@ -224,6 +224,18 @@ const RuleForm: FC = () => {
         }
     }, [tagId, ruleType, form, seeds, createRuleMutation, addNotification, navigate, tagDetailsLink]);
 
+    const onSubmit: SubmitHandler<RuleFormInputs> = useCallback(() => {
+        if (cypherEditorInvalid) {
+            addNotification(CYPHER_MUST_HAVE_RESULTS);
+        }
+
+        if (ruleId !== '') {
+            handlePatchRule();
+        } else {
+            handleCreateRule();
+        }
+    }, [cypherEditorInvalid, addNotification, handleCreateRule, handlePatchRule, ruleId]);
+
     useEffect(() => {
         const abortController = new AbortController();
 
@@ -277,18 +289,6 @@ const RuleForm: FC = () => {
 
         return () => abortController.abort();
     }, [ruleQuery.data, form, ruleId]);
-
-    const onSubmit: SubmitHandler<RuleFormInputs> = useCallback(() => {
-        if (cypherEditorInvalid) {
-            addNotification(CYPHER_MUST_HAVE_RESULTS);
-        }
-
-        if (ruleId !== '') {
-            handlePatchRule();
-        } else {
-            handleCreateRule();
-        }
-    }, [cypherEditorInvalid, addNotification, handleCreateRule, handlePatchRule, ruleId]);
 
     if (ruleQuery.isLoading) return <Skeleton />;
 

@@ -23,13 +23,11 @@ import { useOwnedTagId, usePZPathParams } from '../../../../hooks';
 import { useNotifications } from '../../../../providers';
 import { apiClient, cn } from '../../../../utils';
 import RuleFormContext from './RuleFormContext';
-import { CYPHER_MUST_HAVE_RESULTS, getRuleExpansionMethod } from './rule-form-utils';
+import { CYPHER_MUST_HAVE_RESULTS, emptyFunction, getRuleExpansionMethod } from './rule-form-utils';
 
 const EmptySeedResults: FC<{ className: string; displayText: string }> = ({ className, displayText }) => {
     return <p className={className}>{displayText}</p>;
 };
-
-const emptyFunction = () => {};
 
 export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: SeedTypes; exploreUrl?: string }> = ({
     seeds,
