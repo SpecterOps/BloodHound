@@ -64,8 +64,7 @@ const CommonSearches = ({
     const { getSelfId } = useSelf();
     const { data: selfId } = getSelfId;
 
-    const isFiltered =
-        searchTerm.length > 2 || platform !== '' || categoryFilter.length > 0 || source !== '';
+    const isFiltered = searchTerm.length > 2 || platform !== '' || categoryFilter.length > 0 || source !== '';
 
     const filteredList = useMemo<QueryListSection[]>(() => {
         if (!isFiltered) return queryList;
