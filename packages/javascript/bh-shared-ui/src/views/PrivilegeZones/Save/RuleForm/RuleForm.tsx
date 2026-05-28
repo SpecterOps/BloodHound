@@ -22,7 +22,6 @@ import {
     AssetGroupTagSelectorAutoCertifySeedsOnly,
     AssetGroupTagSelectorAutoCertifyType,
     GraphNode,
-    NodeSourceSeed,
     SeedTypeObjectId,
     SeedTypes,
 } from 'js-client-library';
@@ -31,16 +30,14 @@ import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
 import { FC, useCallback, useEffect, useReducer } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { useQuery } from 'react-query';
 import { usePZPathParams } from '../../../../hooks';
-import { useCreateRule, useOwnedTagId, usePatchRule, useRuleInfo } from '../../../../hooks/useAssetGroupTags';
+import { useCreateRule, usePatchRule, useRuleInfo } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { apiClient, useAppNavigate } from '../../../../utils';
 import { SearchValue } from '../../../Explore';
 import { RulesLink } from '../../fragments';
 import { getErrorMessage, handleError } from '../utils';
 import BasicInfo from './BasicInfo';
-import { getRuleExpansionMethod } from './getRuleExpansionMethod';
 import RuleFormContext from './RuleFormContext';
 import SeedSelection from './SeedSelection';
 import { AssetGroupSelectedNodes, RuleFormInputs, RuleFormState } from './types';
@@ -280,34 +277,11 @@ const RuleForm: FC = () => {
         return () => abortController.abort();
     }, [ruleQuery.data, form, ruleId]);
 
-    const ownedId = useOwnedTagId();
-
-    const expansion = getRuleExpansionMethod(tagId, tagType, ownedId?.toString());
-
-    const { data: sampleResults } = useQuery({
-        queryKey: ['privilege-zones', 'preview-selectors', ruleType, seeds, expansion],
-        queryFn: async ({ signal }) => {
-            return apiClient
-                .assetGroupTagsPreviewSelectors({ seeds, expansion }, { signal })
-                .then((res) => res.data.data['members']);
-        },
-        retry: false,
-        refetchOnWindowFocus: false,
-        enabled: seeds.length > 0,
-    });
-
     const onSubmit: SubmitHandler<RuleFormInputs> = useCallback(() => {
-        const directObjects = sampleResults?.filter((objectItem) => objectItem.source === NodeSourceSeed);
-        const expandedObjects = sampleResults?.filter((objectItem) => objectItem.source > NodeSourceSeed);
-
-        if (directObjects?.length === 0 && expandedObjects?.length === 0) {
+        if (cypherEditorInvalid) {
             addNotification(
-                'Not enough stuff!! Outline cypher editor in red. Maybe add this to form validation rules?'
+                'To save a rule created using Cypher, the Cypher query must produce at least one result. Please run a different query to proceed.'
             );
-
-            return dispatch({ type: 'set-cypher-editor-validation', cypherEditorInvalid: true });
-        } else if (cypherEditorInvalid) {
-            dispatch({ type: 'set-cypher-editor-validation', cypherEditorInvalid: false });
         }
 
         if (ruleId !== '') {
@@ -315,7 +289,7 @@ const RuleForm: FC = () => {
         } else {
             handleCreateRule();
         }
-    }, [ruleId, handleCreateRule, handlePatchRule, addNotification, sampleResults, cypherEditorInvalid]);
+    }, [cypherEditorInvalid, addNotification, handleCreateRule, handlePatchRule, ruleId]);
 
     if (ruleQuery.isLoading) return <Skeleton />;
 

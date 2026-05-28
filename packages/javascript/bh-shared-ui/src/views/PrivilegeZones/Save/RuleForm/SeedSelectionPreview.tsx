@@ -19,17 +19,16 @@ import { NodeSourceSeed, SeedTypeCypher, SeedTypes, SeedTypesMap, SelectorSeedRe
 import { FC, useContext, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
-import { useOwnedTagId } from '../../../../hooks/useAssetGroupTags';
-import { usePZPathParams } from '../../../../hooks/usePZParams';
+import { useOwnedTagId, usePZPathParams } from '../../../../hooks';
 import { apiClient, cn } from '../../../../utils';
-import { getRuleExpansionMethod } from './getRuleExpansionMethod';
 import RuleFormContext from './RuleFormContext';
-
-const emptyFunction = () => {};
+import { getRuleExpansionMethod } from './getRuleExpansionMethod';
 
 const EmptySeedResults: FC<{ className: string; displayText: string }> = ({ className, displayText }) => {
     return <p className={className}>{displayText}</p>;
 };
+
+const emptyFunction = () => {};
 
 export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: SeedTypes; exploreUrl?: string }> = ({
     seeds,
@@ -58,17 +57,18 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
 
     const directObjects = sampleResults?.filter((objectItem) => objectItem.source === NodeSourceSeed);
     const expandedObjects = sampleResults?.filter((objectItem) => objectItem.source > NodeSourceSeed);
-    const showViewInExploreButton = exploreUrl && ruleType === SeedTypeCypher;
 
     useEffect(() => {
-        const cypherQueryIsEmpty = directObjects?.length !== 0 && expandedObjects?.length !== 0;
+        const cypherQueryIsEmpty = sampleResultsFetched && directObjects?.length === 0 && expandedObjects?.length === 0;
 
         if (cypherQueryIsEmpty && !cypherEditorInvalid) {
             dispatch({ type: 'set-cypher-editor-validation', cypherEditorInvalid: true });
         } else if (!cypherQueryIsEmpty && cypherEditorInvalid) {
             dispatch({ type: 'set-cypher-editor-validation', cypherEditorInvalid: false });
         }
-    }, [directObjects, expandedObjects, cypherEditorInvalid, dispatch]);
+    }, [directObjects, expandedObjects, cypherEditorInvalid, dispatch, sampleResultsFetched]);
+
+    const showViewInExploreButton = exploreUrl && ruleType === SeedTypeCypher;
 
     return (
         <Card className='xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem]'>
