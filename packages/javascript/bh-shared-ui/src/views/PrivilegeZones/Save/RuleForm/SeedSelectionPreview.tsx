@@ -35,7 +35,7 @@ import { apiClient, cn } from '../../../../utils';
 import RuleFormContext from './RuleFormContext';
 import { CYPHER_MUST_HAVE_RESULTS, emptyFunction } from './rule-form-utils';
 
-export const getRuleExpansionMethod = (
+const getRuleExpansionMethod = (
     tagId: string,
     tagType: 'labels' | 'zones',
     ownedId: string | undefined
@@ -45,6 +45,7 @@ export const getRuleExpansionMethod = (
 
     return tagType === 'zones' ? SeedExpansionMethodAll : SeedExpansionMethodChild;
 };
+
 const EmptySeedResults: FC<{ className: string; displayText: string }> = ({ className, displayText }) => {
     return <p className={className}>{displayText}</p>;
 };
