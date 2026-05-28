@@ -25,8 +25,7 @@ import { usePZPathParams } from '../../../hooks/usePZParams';
 import { cn } from '../../../utils';
 import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
 import RuleFormContext from '../Save/RuleForm/RuleFormContext';
-
-const emptyFunction = () => {};
+import { emptyFunction } from '../Save/RuleForm/rule-form-utils';
 
 const hasTagLabel = (value: string) => {
     const tagLabel = `:${TagLabelPrefix}`;

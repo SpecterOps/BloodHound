@@ -137,7 +137,7 @@ const reducer = (state: RuleFormState, action: Action): RuleFormState => {
 };
 
 const RuleForm: FC = () => {
-    const { tagId, ruleId = '', tagDetailsLink, isLabelPage, tagTypeDisplay, tagType } = usePZPathParams();
+    const { tagId, ruleId = '', tagDetailsLink, isLabelPage, tagTypeDisplay } = usePZPathParams();
     const navigate = useAppNavigate();
     const { addNotification } = useNotifications();
 
