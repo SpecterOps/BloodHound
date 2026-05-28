@@ -77,6 +77,14 @@ type FeatureFlag struct {
 	UserUpdatable bool `json:"user_updatable"`
 }
 
+func (s FeatureFlag) AuditData() model.AuditData {
+	return model.AuditData{
+		"name":    s.Name,
+		"key":     s.Key,
+		"enabled": s.Enabled,
+	}
+}
+
 // FeatureFlagSet is a collection of flags indexed by their flag Key.
 type FeatureFlagSet map[string]FeatureFlag
 
@@ -99,40 +107,26 @@ type GetFlagByKeyer interface {
 	GetFlagByKey(context.Context, string) (FeatureFlag, error)
 }
 
-// TODO Cleanup after Tiering GA
-func GetTieringEnabled(ctx context.Context, service GetFlagByKeyer) bool {
-	if tierFlag, err := service.GetFlagByKey(ctx, FeatureTierManagement); err != nil {
-		slog.WarnContext(ctx, "Failed to fetch tiering management flag; returning false")
+func GetFlagEnabled(ctx context.Context, service GetFlagByKeyer, key string) bool {
+	if flag, err := service.GetFlagByKey(ctx, key); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch feature flag; returning false", slog.String("key", key))
 		return false
 	} else {
-		return tierFlag.Enabled
+		return flag.Enabled
 	}
 }
 
-func (s FeatureFlag) AuditData() model.AuditData {
-	return model.AuditData{
-		"name":    s.Name,
-		"key":     s.Key,
-		"enabled": s.Enabled,
-	}
+// TODO Cleanup after Tiering GA
+func GetTieringEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+	return GetFlagEnabled(ctx, service, FeatureTierManagement)
 }
 
 // GetOpenHoundEnabled returns true if the OpenHound Support feature flag is enabled.
 func GetOpenHoundEnabled(ctx context.Context, service GetFlagByKeyer) bool {
-	if openHoundFlag, err := service.GetFlagByKey(ctx, FeatureOpenHoundSupport); err != nil {
-		slog.WarnContext(ctx, "Failed to fetch openhound support flag; returning false")
-		return false
-	} else {
-		return openHoundFlag.Enabled
-	}
+	return GetFlagEnabled(ctx, service, FeatureOpenHoundSupport)
 }
 
 // GetAlertsEnabled returns true if the Alerts feature flag is enabled.
 func GetAlertsEnabled(ctx context.Context, service GetFlagByKeyer) bool {
-	if alertsFlag, err := service.GetFlagByKey(ctx, FeatureAlerts); err != nil {
-		slog.WarnContext(ctx, "Failed to fetch alerts flag; returning false")
-		return false
-	} else {
-		return alertsFlag.Enabled
-	}
+	return GetFlagEnabled(ctx, service, FeatureAlerts)
 }
