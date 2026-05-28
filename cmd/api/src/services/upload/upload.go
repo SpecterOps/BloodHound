@@ -65,7 +65,7 @@ func SaveIngestFile(ctx context.Context, fileService storage.FileService, reques
 	}
 }
 
-func cleanupTempFile(ctx context.Context, fileService storage.FileService, tempFileName string) {
+func CleanupTempFile(ctx context.Context, fileService storage.FileService, tempFileName string) {
 	if tempFileName == "" {
 		return
 	}
@@ -119,7 +119,7 @@ func WriteAndValidateFile(ctx context.Context, fileService storage.FileService, 
 	case validationErr := <-validationErrCh:
 		// Context cancelation wins over validation errors when both are ready
 		if err := ctx.Err(); err != nil {
-			cleanupTempFile(ctx, fileService, tempFileName)
+			CleanupTempFile(ctx, fileService, tempFileName)
 			return "", err
 		}
 
@@ -131,11 +131,11 @@ func WriteAndValidateFile(ctx context.Context, fileService storage.FileService, 
 					tempFileName),
 				attr.Error(validationErr),
 			)
-			cleanupTempFile(ctx, fileService, tempFileName)
+			CleanupTempFile(ctx, fileService, tempFileName)
 			return "", validationErr
 		}
 	case <-ctx.Done():
-		cleanupTempFile(ctx, fileService, tempFileName)
+		CleanupTempFile(ctx, fileService, tempFileName)
 		return "", ctx.Err()
 	}
 
@@ -147,7 +147,7 @@ func WriteAndValidateFile(ctx context.Context, fileService storage.FileService, 
 			slog.String("temp_file_name", tempFileName),
 			attr.Error(writeErr),
 		)
-		cleanupTempFile(ctx, fileService, tempFileName)
+		CleanupTempFile(ctx, fileService, tempFileName)
 		return "", writeErr
 	}
 
