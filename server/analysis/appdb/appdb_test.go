@@ -72,10 +72,11 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 	)
 
 	tests := []struct {
-		name         string
-		expectations func(pool pgxmock.PgxPoolIface)
-		wantResult   services.RequestedAnalysis
-		wantErr      error
+		name            string
+		expectations    func(pool pgxmock.PgxPoolIface)
+		wantResult      services.RequestedAnalysis
+		wantErr         error
+		wantErrContains string
 	}{
 		{
 			name: "returns the analysis request on success",
@@ -95,11 +96,32 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 			wantResult: expected,
 		},
 		{
-			name: "maps pgx.ErrNoRows to services.ErrNotFound",
+			name: "maps pgx.ErrNoRows to services.ErrNoPendingRequest",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedSelectSQL).WithArgs(1).WillReturnError(pgx.ErrNoRows)
 			},
-			wantErr: services.ErrNotFound,
+			wantErr: services.ErrNoPendingRequest,
+		},
+		{
+			name: "maps CollectOneRow pgx.ErrNoRows to services.ErrNoPendingRequest",
+			expectations: func(pool pgxmock.PgxPoolIface) {
+				// Query succeeds but returns zero rows; CollectOneRow sees no data and returns pgx.ErrNoRows
+				pool.ExpectQuery(expectedSelectSQL).WithArgs(1).WillReturnRows(
+					pool.NewRows(analysisRequestRowColumns()),
+				)
+			},
+			wantErr: services.ErrNoPendingRequest,
+		},
+		{
+			name: "wraps CollectOneRow iteration error",
+			expectations: func(pool pgxmock.PgxPoolIface) {
+				// Query succeeds but the rows object carries a close error that
+				// pgx.CollectOneRow surfaces via rows.Err() when Next() returns false.
+				pool.ExpectQuery(expectedSelectSQL).WithArgs(1).WillReturnRows(
+					pool.NewRows(analysisRequestRowColumns()).CloseError(errors.New("forced iteration error")),
+				)
+			},
+			wantErrContains: "reading rows:",
 		},
 		{
 			name: "propagates other database errors",
@@ -116,9 +138,12 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 			tt.expectations(pool)
 
 			result, err := store.GetAnalysisRequest(ctx)
-			if tt.wantErr != nil {
+			switch {
+			case tt.wantErr != nil:
 				assert.ErrorIs(t, err, tt.wantErr)
-			} else {
+			case tt.wantErrContains != "":
+				assert.ErrorContains(t, err, tt.wantErrContains)
+			default:
 				require.NoError(t, err)
 				assert.Equal(t, tt.wantResult, result)
 			}

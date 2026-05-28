@@ -38,5 +38,12 @@ type Deps struct {
 // Each feature module builds its own store → service → handler chain and
 // attaches its routes to the shared router.
 func Register(deps Deps) {
+	if deps.Router == nil {
+		panic("modules: Register requires a non-nil Router")
+	}
+	if deps.Pool == nil {
+		panic("modules: Register requires a non-nil Pool")
+	}
+
 	analysis.Register(deps.Router, deps.Pool)
 }

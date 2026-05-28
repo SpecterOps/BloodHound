@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build e2e
+//go:build integration
 
 package services_test
 
@@ -31,6 +31,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/peterldowns/pgtestdb"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
@@ -57,59 +58,11 @@ func injectAuthMiddleware(handler http.HandlerFunc, userID uuid.UUID) http.Handl
 	}
 }
 
-// analysisStatusEnvelope is a minimal JSON envelope covering the fields
-// returned by the GET /api/v2/analysis handler.
-type analysisStatusEnvelope struct {
-	Data struct {
-		RequestedBy string `json:"requested_by"`
-		RequestType string `json:"request_type"`
-	} `json:"data"`
-}
-
-// runGetAnalysisStatusSuite exercises GET /api/v2/analysis against a handler.
-// A fresh httptest.Server is started without auth middleware so the test
-// focuses on handler behaviour.
-func runGetAnalysisStatusSuite(t *testing.T, db *database.BloodhoundDB, handler http.HandlerFunc) {
-	t.Helper()
-
-	var (
-		ctx       = context.Background()
-		muxRouter = mux.NewRouter()
-		server    = httptest.NewServer(muxRouter)
-	)
-
-	muxRouter.HandleFunc("/api/v2/analysis", handler).Methods(http.MethodGet)
-	t.Cleanup(server.Close)
-
-	newGetRequest := func(t *testing.T) *http.Request {
-		t.Helper()
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/analysis", nil)
-		require.NoError(t, err)
-		return req
-	}
-
-	t.Run("returns 204 when no request is pending", func(t *testing.T) {
-		resp, err := http.DefaultClient.Do(newGetRequest(t))
-		require.NoError(t, err)
-		defer resp.Body.Close()
-
-		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
-	})
-
-	t.Run("returns 200 with requester details when a request is pending", func(t *testing.T) {
-		require.NoError(t, db.RequestAnalysis(ctx, "test-user"))
-
-		resp, err := http.DefaultClient.Do(newGetRequest(t))
-		require.NoError(t, err)
-		defer resp.Body.Close()
-
-		assert.Equal(t, http.StatusOK, resp.StatusCode)
-
-		var envelope analysisStatusEnvelope
-		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
-		assert.Equal(t, "test-user", envelope.Data.RequestedBy)
-		assert.Equal(t, "analysis", envelope.Data.RequestType)
-	})
+// analysisResponseEnvelope is the full JSON envelope shape returned by the GET
+// and PUT /api/v2/analysis handlers. All seven documented fields are included so
+// the tests can verify the complete contract rather than a subset.
+type analysisResponseEnvelope struct {
+	Data handlers.RequestedAnalysisView `json:"data"`
 }
 
 // setupAnalysisDB creates an isolated test database with all migrations applied.
@@ -178,43 +131,91 @@ func getAnalysisPostgresConfig(t *testing.T) pgtestdb.Config {
 	}
 }
 
-// newAnalysisHandler wires the pgx-backed analysis stack from a BloodhoundDB
-// and returns its GET handler ready to pass to runGetAnalysisStatusSuite.
-func newAnalysisHandler(db *database.BloodhoundDB) http.HandlerFunc {
+// newAnalysisGetHandler wires the pgx-backed analysis stack from a BloodhoundDB
+// and returns its GET handler.
+func newAnalysisGetHandler(db *database.BloodhoundDB) http.HandlerFunc {
 	store := appdb.NewStore(db.Pool())
 	svc := services.NewService(store)
 	return handlers.NewHandlersContainer(svc).GetRequest
 }
 
-func TestGetAnalysisStatus(t *testing.T) {
-	t.Run("new handler", func(t *testing.T) {
-		db := setupAnalysisDB(t)
-		runGetAnalysisStatusSuite(t, db, newAnalysisHandler(db))
-	})
-}
-
 // newCreateAnalysisHandler wires the pgx-backed analysis stack from a BloodhoundDB
-// and returns its PUT handler (wrapped with auth-injecting middleware) ready to
-// pass to runCreateAnalysisRequestSuite.
+// and returns its PUT handler wrapped with auth-injecting middleware.
 func newCreateAnalysisHandler(db *database.BloodhoundDB, userID uuid.UUID) http.HandlerFunc {
 	store := appdb.NewStore(db.Pool())
 	svc := services.NewService(store)
 	return injectAuthMiddleware(handlers.NewHandlersContainer(svc).CreateRequest, userID)
 }
 
-// runCreateAnalysisRequestSuite exercises PUT /api/v2/analysis.
-// It shares the same GET handler infrastructure to verify end-to-end state.
-func runCreateAnalysisRequestSuite(t *testing.T, db *database.BloodhoundDB, userID uuid.UUID, putHandler http.HandlerFunc) {
-	t.Helper()
+// newCancelAnalysisHandler wires the DELETE /api/v2/analysis handler backed by
+// a BloodhoundDB and wrapped with auth-injecting middleware.
+func newCancelAnalysisHandler(db *database.BloodhoundDB, userID uuid.UUID) http.HandlerFunc {
+	return injectAuthMiddleware(v2.Resources{DB: db}.CancelAnalysisRequest, userID)
+}
 
+func TestGetAnalysisStatus(t *testing.T) {
 	var (
+		db        = setupAnalysisDB(t)
 		ctx       = context.Background()
 		muxRouter = mux.NewRouter()
 		server    = httptest.NewServer(muxRouter)
 	)
+	muxRouter.HandleFunc("/api/v2/analysis", newAnalysisGetHandler(db)).Methods(http.MethodGet)
+	t.Cleanup(server.Close)
 
-	muxRouter.HandleFunc("/api/v2/analysis", putHandler).Methods(http.MethodPut)
-	muxRouter.HandleFunc("/api/v2/analysis", newAnalysisHandler(db)).Methods(http.MethodGet)
+	newGetRequest := func(t *testing.T) *http.Request {
+		t.Helper()
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/analysis", nil)
+		require.NoError(t, err)
+		return req
+	}
+
+	t.Run("returns 204 No Content when no request is pending", func(t *testing.T) {
+		require.NoError(t, db.DeleteAnalysisRequest(ctx))
+
+		resp, err := http.DefaultClient.Do(newGetRequest(t))
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+		// 204 carries no body; the response must not claim JSON content.
+		assert.NotEqual(t, "application/json", resp.Header.Get("Content-Type"))
+	})
+
+	t.Run("returns 200 OK with all contract fields when a request is pending", func(t *testing.T) {
+		require.NoError(t, db.DeleteAnalysisRequest(ctx))
+		require.NoError(t, db.RequestAnalysis(ctx, "test-user"))
+		t.Cleanup(func() { _ = db.DeleteAnalysisRequest(ctx) })
+
+		resp, err := http.DefaultClient.Do(newGetRequest(t))
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
+
+		var envelope analysisResponseEnvelope
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+		assert.Equal(t, "test-user", envelope.Data.RequestedBy)
+		assert.Equal(t, services.RequestedAnalysisTypeAnalysis, envelope.Data.RequestType)
+		assert.NotZero(t, envelope.Data.RequestedAt)
+		assert.False(t, envelope.Data.DeleteAllGraph)
+		assert.False(t, envelope.Data.DeleteSourcelessGraph)
+		assert.Empty(t, envelope.Data.DeleteSourceKinds)
+		assert.Empty(t, envelope.Data.DeleteRelationships)
+	})
+}
+
+func TestCreateAnalysisRequest(t *testing.T) {
+	var (
+		db        = setupAnalysisDB(t)
+		userID    = uuid.Must(uuid.NewV4())
+		ctx       = context.Background()
+		muxRouter = mux.NewRouter()
+		server    = httptest.NewServer(muxRouter)
+	)
+	muxRouter.HandleFunc("/api/v2/analysis", newCreateAnalysisHandler(db, userID)).Methods(http.MethodPut)
+	muxRouter.HandleFunc("/api/v2/analysis", newAnalysisGetHandler(db)).Methods(http.MethodGet)
 	t.Cleanup(server.Close)
 
 	newPutRequest := func(t *testing.T) *http.Request {
@@ -231,7 +232,7 @@ func runCreateAnalysisRequestSuite(t *testing.T, db *database.BloodhoundDB, user
 		return req
 	}
 
-	t.Run("returns 202 Accepted and persists the new request on first PUT", func(t *testing.T) {
+	t.Run("returns 202 Accepted with all contract fields when no request is pending", func(t *testing.T) {
 		require.NoError(t, db.DeleteAnalysisRequest(ctx))
 
 		resp, err := http.DefaultClient.Do(newPutRequest(t))
@@ -239,25 +240,43 @@ func runCreateAnalysisRequestSuite(t *testing.T, db *database.BloodhoundDB, user
 		defer resp.Body.Close()
 
 		assert.Equal(t, http.StatusAccepted, resp.StatusCode)
+		assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
 
-		var envelope analysisStatusEnvelope
+		var envelope analysisResponseEnvelope
 		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
 		assert.Equal(t, userID.String(), envelope.Data.RequestedBy)
-		assert.Equal(t, "analysis", envelope.Data.RequestType)
+		assert.Equal(t, services.RequestedAnalysisTypeAnalysis, envelope.Data.RequestType)
+		assert.NotZero(t, envelope.Data.RequestedAt)
+		assert.False(t, envelope.Data.DeleteAllGraph)
+		assert.False(t, envelope.Data.DeleteSourcelessGraph)
+		assert.Empty(t, envelope.Data.DeleteSourceKinds)
+		assert.Empty(t, envelope.Data.DeleteRelationships)
 	})
 
-	t.Run("returns 200 OK with the existing request on a second PUT", func(t *testing.T) {
-		// Following the previous subtest, a request is already pending. A second
-		// PUT must be idempotent and return the existing request with 200 OK.
+	t.Run("returns 200 OK with the existing request body when a request is already pending", func(t *testing.T) {
+		require.NoError(t, db.DeleteAnalysisRequest(ctx))
+		// Seed a known pending request attributed to a different requester so we can
+		// verify that 200 returns the existing request body, not a new one.
+		require.NoError(t, db.RequestAnalysis(ctx, "prior-user"))
+		t.Cleanup(func() { _ = db.DeleteAnalysisRequest(ctx) })
+
 		resp, err := http.DefaultClient.Do(newPutRequest(t))
 		require.NoError(t, err)
 		defer resp.Body.Close()
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
+
+		var envelope analysisResponseEnvelope
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+		// The response must describe the existing request, not the new caller.
+		assert.Equal(t, "prior-user", envelope.Data.RequestedBy)
+		assert.Equal(t, services.RequestedAnalysisTypeAnalysis, envelope.Data.RequestType)
 	})
 
-	t.Run("GET reflects pending request after PUT", func(t *testing.T) {
+	t.Run("GET reflects the pending request created by PUT", func(t *testing.T) {
 		require.NoError(t, db.DeleteAnalysisRequest(ctx))
+		t.Cleanup(func() { _ = db.DeleteAnalysisRequest(ctx) })
 
 		resp, err := http.DefaultClient.Do(newPutRequest(t))
 		require.NoError(t, err)
@@ -269,19 +288,66 @@ func runCreateAnalysisRequestSuite(t *testing.T, db *database.BloodhoundDB, user
 		defer resp.Body.Close()
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
 
-		var envelope analysisStatusEnvelope
+		var envelope analysisResponseEnvelope
 		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
-		assert.Equal(t, "analysis", envelope.Data.RequestType)
+		assert.Equal(t, userID.String(), envelope.Data.RequestedBy)
+		assert.Equal(t, services.RequestedAnalysisTypeAnalysis, envelope.Data.RequestType)
 	})
 }
 
-func TestCreateAnalysisRequest(t *testing.T) {
-	t.Run("new handler", func(t *testing.T) {
-		var (
-			db     = setupAnalysisDB(t)
-			userID = uuid.Must(uuid.NewV4())
-		)
-		runCreateAnalysisRequestSuite(t, db, userID, newCreateAnalysisHandler(db, userID))
+func TestCancelAnalysisRequest(t *testing.T) {
+	var (
+		db        = setupAnalysisDB(t)
+		userID    = uuid.Must(uuid.NewV4())
+		ctx       = context.Background()
+		muxRouter = mux.NewRouter()
+		server    = httptest.NewServer(muxRouter)
+	)
+	muxRouter.HandleFunc("/api/v2/analysis", newCancelAnalysisHandler(db, userID)).Methods(http.MethodDelete)
+	t.Cleanup(server.Close)
+
+	newDeleteRequest := func(t *testing.T) *http.Request {
+		t.Helper()
+		req, err := http.NewRequestWithContext(ctx, http.MethodDelete, server.URL+"/api/v2/analysis", nil)
+		require.NoError(t, err)
+		return req
+	}
+
+	t.Run("returns 202 Accepted when an analysis request is pending", func(t *testing.T) {
+		require.NoError(t, db.DeleteAnalysisRequest(ctx))
+		require.NoError(t, db.RequestAnalysis(ctx, "test-user"))
+
+		resp, err := http.DefaultClient.Do(newDeleteRequest(t))
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusAccepted, resp.StatusCode)
+	})
+
+	t.Run("returns 404 Not Found when no request is pending", func(t *testing.T) {
+		require.NoError(t, db.DeleteAnalysisRequest(ctx))
+
+		resp, err := http.DefaultClient.Do(newDeleteRequest(t))
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	})
+
+	t.Run("returns 409 Conflict when a deletion request is pending", func(t *testing.T) {
+		require.NoError(t, db.DeleteAnalysisRequest(ctx))
+		require.NoError(t, db.RequestCollectedGraphDataDeletion(ctx, model.AnalysisRequest{
+			RequestedBy: "test-user",
+			RequestType: model.AnalysisRequestDeletion,
+		}))
+		t.Cleanup(func() { _ = db.DeleteAnalysisRequest(ctx) })
+
+		resp, err := http.DefaultClient.Do(newDeleteRequest(t))
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusConflict, resp.StatusCode)
 	})
 }

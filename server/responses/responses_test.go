@@ -25,11 +25,21 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
-	"github.com/specterops/bloodhound/server/jsonapiv2/responses"
-	"github.com/specterops/bloodhound/server/jsonapiv2/responses/mocks"
+	"github.com/specterops/bloodhound/server/responses"
+	"github.com/specterops/bloodhound/server/responses/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// failingWriter wraps an httptest.ResponseRecorder but returns an error from
+// Write. It is used to exercise the writeJSON write-failure log path.
+type failingWriter struct {
+	*httptest.ResponseRecorder
+}
+
+func (f *failingWriter) Write(_ []byte) (int, error) {
+	return 0, errors.New("simulated write failure")
+}
 
 func newTestContext() context.Context {
 	var bhCtx = &bhctx.Context{

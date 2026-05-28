@@ -113,7 +113,7 @@ func TestStore_GetAnalysisRequest_Integration(t *testing.T) {
 		)
 
 		_, err := store.GetAnalysisRequest(ctx)
-		assert.ErrorIs(t, err, services.ErrNotFound)
+		assert.ErrorIs(t, err, services.ErrNoPendingRequest)
 	})
 
 	t.Run("returns the request after one is created", func(t *testing.T) {
@@ -135,30 +135,6 @@ func TestStore_GetAnalysisRequest_Integration(t *testing.T) {
 		assert.Equal(t, created.DeleteSourceKinds, retrieved.DeleteSourceKinds)
 		assert.Equal(t, created.DeleteRelationships, retrieved.DeleteRelationships)
 		assert.WithinDuration(t, created.RequestedAt, retrieved.RequestedAt, 1*time.Second)
-	})
-
-	t.Run("scans all struct fields correctly using struct tags", func(t *testing.T) {
-		var (
-			ctx   = context.Background()
-			store = setupStore(t)
-		)
-
-		// Create a request first so we have data to scan
-		_, wasCreated, err := store.CreateAnalysisRequest(ctx, "scan-test-user")
-		require.NoError(t, err)
-		require.True(t, wasCreated)
-
-		result, err := store.GetAnalysisRequest(ctx)
-		require.NoError(t, err)
-
-		// Verify all fields are populated correctly
-		assert.NotEmpty(t, result.RequestedBy)
-		assert.NotEmpty(t, result.RequestType)
-		assert.False(t, result.RequestedAt.IsZero())
-		assert.False(t, result.DeleteAllGraph)
-		assert.False(t, result.DeleteSourcelessGraph)
-		assert.NotNil(t, result.DeleteSourceKinds)
-		assert.NotNil(t, result.DeleteRelationships)
 	})
 }
 
@@ -192,22 +168,6 @@ func TestStore_CreateAnalysisRequest_Integration(t *testing.T) {
 		require.NoError(t, err)
 		assert.False(t, created)
 		assert.Equal(t, "first-user", current.RequestedBy)
-	})
-
-	t.Run("GetAnalysisRequest returns the persisted request", func(t *testing.T) {
-		var (
-			ctx   = context.Background()
-			store = setupStore(t)
-		)
-
-		// Create a request first
-		_, created, err := store.CreateAnalysisRequest(ctx, "get-test-user")
-		require.NoError(t, err)
-		require.True(t, created)
-
-		current, err := store.GetAnalysisRequest(ctx)
-		require.NoError(t, err)
-		assert.Equal(t, "get-test-user", current.RequestedBy)
 	})
 }
 

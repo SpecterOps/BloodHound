@@ -19,6 +19,7 @@ package appdb
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/huandu/go-sqlbuilder"
@@ -97,16 +98,19 @@ func (s *Store) GetAnalysisRequest(ctx context.Context) (services.RequestedAnaly
 	sqlQuery, args := selectBuilder.Build()
 
 	rows, err = s.db.Query(ctx, sqlQuery, args...)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return services.RequestedAnalysis{}, services.ErrNoPendingRequest
+	}
 	if err != nil {
 		return services.RequestedAnalysis{}, err
 	}
 
 	row, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[analysisRequest])
 	if errors.Is(err, pgx.ErrNoRows) {
-		return services.RequestedAnalysis{}, services.ErrNotFound
+		return services.RequestedAnalysis{}, services.ErrNoPendingRequest
 	}
 	if err != nil {
-		return services.RequestedAnalysis{}, err
+		return services.RequestedAnalysis{}, fmt.Errorf("reading rows: %s", err)
 	}
 	return toRequestedAnalysis(row), nil
 }

@@ -26,11 +26,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/server/analysis/services"
-	"github.com/specterops/bloodhound/server/jsonapiv2/responses"
-)
-
-const (
-	errMessageUnauthenticated = "authentication is required to submit an analysis request"
+	"github.com/specterops/bloodhound/server/responses"
 )
 
 // Analysis defines the analysis service boundary for the analysis handlers package.
@@ -71,15 +67,18 @@ func (s Handlers) GetRequest(response http.ResponseWriter, request *http.Request
 }
 
 // CreateRequest submits a new analysis request attributed to the authenticated user.
-// Returns 202 Accepted when this call accepted the request, 200 OK when a request was
-// already pending (the body in both cases describes the currently pending request), or
-// 401 Unauthorized when no authenticated user can be resolved from the request.
+// Returns 202 Accepted when this call accepted the request, or 200 OK when a request
+// was already pending (the body in both cases describes the currently pending request).
+//
+// Authentication is enforced by the route middleware (RequirePermissions); if no user
+// is present on the auth context here it indicates an unexpected internal state and a
+// 500 is returned.
 func (s Handlers) CreateRequest(response http.ResponseWriter, request *http.Request) {
 	var ctx = request.Context()
 
 	user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx)
 	if !isUser {
-		responses.WriteError(ctx, http.StatusUnauthorized, errMessageUnauthenticated, response)
+		responses.WriteInternalServerError(ctx, errors.New("no user on auth context after authentication middleware"), response)
 		return
 	}
 

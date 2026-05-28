@@ -56,11 +56,6 @@ func TestService_GetRequest(t *testing.T) {
 			wantResult: expected,
 		},
 		{
-			name:    "maps ErrNotFound to ErrNoPendingRequest",
-			dbErr:   services.ErrNotFound,
-			wantErr: services.ErrNoPendingRequest,
-		},
-		{
 			name:    "propagates unexpected database errors",
 			dbErr:   unexpectedErr,
 			wantErr: unexpectedErr,

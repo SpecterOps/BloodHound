@@ -47,11 +47,6 @@ type RequestedAnalysis struct {
 	DeleteRelationships []string
 }
 
-// ErrNotFound is the sentinel that Database implementations must return when no
-// analysis request row exists. Defining it here (on the consumer side) keeps the
-// appdb store free of any import back into this package.
-var ErrNotFound = errors.New("analysis request not found")
-
 // ErrNoPendingRequest indicates that there is no analysis request currently pending.
 var ErrNoPendingRequest = errors.New("no pending analysis request")
 
@@ -76,11 +71,7 @@ func NewService(databaseInterface Database) *Service {
 // GetRequest returns the currently pending analysis request. ErrNoPendingRequest is returned
 // when no request is pending; any other error indicates a failure servicing the request.
 func (s *Service) GetRequest(ctx context.Context) (RequestedAnalysis, error) {
-	analysisRequest, err := s.db.GetAnalysisRequest(ctx)
-	if errors.Is(err, ErrNotFound) {
-		return analysisRequest, ErrNoPendingRequest
-	}
-	return analysisRequest, err
+	return s.db.GetAnalysisRequest(ctx)
 }
 
 // CreateRequest submits a new analysis request attributed to the given user. The currently

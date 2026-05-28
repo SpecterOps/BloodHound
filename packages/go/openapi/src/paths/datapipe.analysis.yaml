@@ -110,7 +110,34 @@ put:
                     items:
                       type: string
     202:
-      $ref: './../responses/no-content.yaml'
+      description: Accepted. The analysis request was created; its details are returned in the response body.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  requested_by:
+                    type: string
+                  request_type:
+                    type: string
+                  requested_at:
+                    type: string
+                    format: date-time
+                  delete_all_graph:
+                    type: boolean
+                  delete_sourceless_graph:
+                    type: boolean
+                  delete_source_kinds:
+                    type: array
+                    items:
+                      type: string
+                  delete_relationships:
+                    type: array
+                    items:
+                      type: string
     401:
       $ref: './../responses/unauthorized.yaml'
     403:

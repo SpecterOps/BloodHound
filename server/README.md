@@ -38,9 +38,10 @@ likec4 export png -o ./diagrams
 3. **API Server Components** (`apiServerComponents`) – Go packages and feature modules
 4. **Analysis Internals** (`analysisInternals`) – Four-layer architecture within a feature
 5. **Type Imports** (`analysisTypeImports`) – Shows how handlers import services types, and appdb imports services errors (dependency inversion)
-6. **Request Flow** (`analysisRequestFlow`) – Complete trace of a GET request through all layers
-7. **Shared Database Access** (`sharedDatabaseAccess`) – How multiple features independently access the same tables
-8. **Module Registration** (`moduleRegistrationFlow`) – Startup sequence and feature wireup
+6. **GET Request Flow** (`analysisGetFlow`) – Complete trace of `GET /api/v2/analysis` through all layers
+7. **PUT Request Flow** (`analysisPutFlow`) – Complete trace of `PUT /api/v2/analysis`, including idempotent insert
+8. **Shared Database Access** (`sharedDatabaseAccess`) – How multiple features independently access the same tables
+9. **Module Registration** (`moduleRegistrationFlow`) – Startup sequence and feature wireup
 
 | View | C4 Level | What it shows |
 |------|----------|---------------|
@@ -59,45 +60,43 @@ npx likec4 serve bhce/server/docs/architecture/
 
 ```
 server/
-├── wireup/          # Shared dependency container and Module type definition
-├── modules/         # Ordered registry of all feature modules
+├── modules/        # Shared Deps container and module registry
 ├── jsonapiv2/
-│   └── responses/   # Shared HTTP response helpers (envelopes, error wrappers)
-└── <feature>/       # One directory per vertical feature slice
-    ├── <feature>.go         # Register(wireup.Deps) entry point
-    ├── appdb/               # Persistence layer (SQL via go-sqlbuilder + pgx)
-    ├── handlers/            # HTTP layer (handlers, routes, JSON views)
-    └── services/            # Business-logic layer (domain types, interfaces)
+│   └── responses/  # Shared HTTP response helpers (envelopes, error wrappers)
+├── docs/
+│   └── architecture/   # LikeC4 (C4 model) source for the diagrams above
+└── <feature>/      # One directory per vertical feature slice
+    ├── <feature>.go        # Register entry point
+    ├── appdb/              # Persistence layer (SQL via go-sqlbuilder + pgx)
+    ├── handlers/           # HTTP layer (handlers, routes, JSON views)
+    └── services/           # Business-logic layer (domain types, interfaces)
 ```
 
 Each feature is a self-contained vertical slice. It owns every layer from HTTP to SQL; nothing bleeds across feature boundaries.
 
 ## The module system
 
-At startup, `lib/go/services/entrypoint.go` calls:
+At startup, both `lib/go/services/entrypoint.go` and `bhce/cmd/api/src/services/entrypoint.go` call:
 
 ```go
-modules.RegisterAll(wireup.Deps{
+modules.Register(modules.Deps{
     Router: &routerInst,
     Pool:   connections.RDMS.Pool(),
 })
 ```
 
-`RegisterAll` iterates the `all` slice in `server/modules/modules.go` and calls each `wireup.Module` function with the shared `Deps`. Every feature module is a plain function that matches this signature:
+`modules.Deps` is the shared dependency container; new cross-cutting infrastructure (graph database, filesystem, caches, etc.) is added to that struct so every feature module pulls from a single, consistent place.
+
+`modules.Register` is the central dispatcher — it calls each feature module's `Register` function with the dependencies that module needs:
 
 ```go
-// wireup.Module is the contract every feature module must satisfy.
-type Module func(deps Deps)
-```
-
-Adding a feature to the registry is a single line in `modules.go`:
-
-```go
-var all = []wireup.Module{
-    analysis.Register,
-    myNewFeature.Register, // ← add here
+// server/modules/modules.go
+func Register(deps Deps) {
+    analysis.Register(deps.Router, deps.Pool)
 }
 ```
+
+Adding a feature is a one-line change in `modules.go`: import the new package and add a call to its `Register` function.
 
 ## Layer architecture
 
@@ -133,14 +132,18 @@ HTTP request
            PostgreSQL
 ```
 
-The `Register` function wires the chain and registers routes:
+The `Register` function wires the chain and registers routes. It takes only the infrastructure it directly needs from `modules.Deps` (the router and pgx pool today), making the dependency surface explicit:
 
 ```go
-func Register(deps wireup.Deps) {
-    store      := appdb.NewStore(deps.Pool)
-    svc        := services.NewService(store)
-    handlerSet := handlers.NewHandlersContainer(svc)
-    handlers.Register(deps.Router, handlerSet)
+// server/analysis/analysis.go
+func Register(routerInst *router.Router, pool *pgxpool.Pool) {
+    var (
+        store      = appdb.NewStore(pool)
+        svc        = services.NewService(store)
+        handlerSet = handlers.NewHandlersContainer(svc)
+    )
+
+    handlers.Register(routerInst, handlerSet)
 }
 ```
 
@@ -227,27 +230,47 @@ func Register(routerInst *router.Router, handlers *Handlers) {
 
 ### 6. Wire all layers in `myfeature/myfeature.go`
 
+The feature's `Register` accepts only the infrastructure it actually uses (here, the router and pgx pool):
+
 ```go
 package myfeature
 
-func Register(deps wireup.Deps) {
-    store      := appdb.NewStore(deps.Pool)
-    svc        := services.NewService(store)
-    handlerSet := handlers.NewHandlersContainer(svc)
-    handlers.Register(deps.Router, handlerSet)
+import (
+    "github.com/jackc/pgx/v5/pgxpool"
+    "github.com/specterops/bloodhound/cmd/api/src/api/router"
+    "github.com/specterops/bloodhound/server/myfeature/appdb"
+    "github.com/specterops/bloodhound/server/myfeature/handlers"
+    "github.com/specterops/bloodhound/server/myfeature/services"
+)
+
+func Register(routerInst *router.Router, pool *pgxpool.Pool) {
+    var (
+        store      = appdb.NewStore(pool)
+        svc        = services.NewService(store)
+        handlerSet = handlers.NewHandlersContainer(svc)
+    )
+
+    handlers.Register(routerInst, handlerSet)
 }
 ```
 
 ### 7. Add to the module registry
 
-In `server/modules/modules.go`, append your module to the `all` slice:
+In `server/modules/modules.go`, import the new package and call its `Register` from `modules.Register`:
 
 ```go
-var all = []wireup.Module{
-    analysis.Register,
-    myfeature.Register, // ← new
+import (
+    "github.com/specterops/bloodhound/server/analysis"
+    "github.com/specterops/bloodhound/server/myfeature" // ← new
+)
+
+func Register(deps Deps) {
+    analysis.Register(deps.Router, deps.Pool)
+    myfeature.Register(deps.Router, deps.Pool) // ← new
 }
 ```
+
+If the new feature needs infrastructure that isn't on `Deps` yet (graph database, filesystem, caches, etc.), add the field to the `Deps` struct in `modules.go` and populate it from each entrypoint that calls `modules.Register`.
 
 ### 8. Add mock targets to `.mockery.yml` and regenerate
 

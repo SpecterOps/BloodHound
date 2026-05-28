@@ -175,10 +175,12 @@ func TestHandlers_CreateRequest(t *testing.T) {
 			wantRequestedBy: existingResult.RequestedBy,
 		},
 		{
-			name:             "returns 401 Unauthorized when no authenticated user is present",
-			authenticated:    false,
-			wantStatus:       http.StatusUnauthorized,
-			wantBodyContains: "authentication is required",
+			// The route middleware (RequirePermissions) guarantees an authenticated
+			// caller, so this branch is only reachable if something upstream is broken.
+			// The handler treats that as an internal error rather than a 401.
+			name:          "returns 500 when the auth context has no user (defensive guard past middleware)",
+			authenticated: false,
+			wantStatus:    http.StatusInternalServerError,
 		},
 		{
 			name:          "returns 500 on service error",

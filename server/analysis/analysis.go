@@ -24,6 +24,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/server/analysis/appdb"
 	"github.com/specterops/bloodhound/server/analysis/handlers"
+	"github.com/specterops/bloodhound/server/analysis/routes"
 	"github.com/specterops/bloodhound/server/analysis/services"
 )
 
@@ -37,5 +38,5 @@ func Register(routerInst *router.Router, pool *pgxpool.Pool) {
 		handlerSet = handlers.NewHandlersContainer(svc)
 	)
 
-	handlers.Register(routerInst, handlerSet)
+	routes.Register(routerInst, handlerSet)
 }
