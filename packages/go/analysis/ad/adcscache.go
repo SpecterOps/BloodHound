@@ -188,7 +188,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 			}
 
 			// ESC4-specific principal caches
-			if principals, err := FetchPrincipalsWithGenericWriteOnCertTemplate(tx, ct); err != nil {
+			if principals, err := fetchFirstDegreeNodes(tx, ct, ad.GenericWrite); err != nil {
 				slog.ErrorContext(
 					ctx,
 					"Error fetching principals with GenericWrite on cert template",
@@ -199,7 +199,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				s.certTemplateGenericWriters[ct.ID] = principals.Slice()
 			}
 
-			if principals, err := FetchPrincipalsWithEnrollOrAllExtendedRightsOnCertTemplate(tx, ct); err != nil {
+			if principals, err := fetchFirstDegreeNodes(tx, ct, ad.Enroll, ad.AllExtendedRights); err != nil {
 				slog.ErrorContext(
 					ctx,
 					"Error fetching principals with Enroll/AllExtendedRights on cert template",
@@ -210,7 +210,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				s.certTemplateEnrollOrAllExtendedRighters[ct.ID] = principals.Slice()
 			}
 
-			if principals, err := FetchPrincipalsWithWritePKINameFlagOnCertTemplate(tx, ct); err != nil {
+			if principals, err := fetchFirstDegreeNodes(tx, ct, ad.WritePKINameFlag); err != nil {
 				slog.ErrorContext(
 					ctx,
 					"Error fetching principals with WritePKINameFlag on cert template",
@@ -221,7 +221,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				s.certTemplateWritePKINameFlaggers[ct.ID] = principals.Slice()
 			}
 
-			if principals, err := FetchPrincipalsWithWritePKIEnrollmentFlagOnCertTemplate(tx, ct); err != nil {
+			if principals, err := fetchFirstDegreeNodes(tx, ct, ad.WritePKIEnrollmentFlag); err != nil {
 				slog.ErrorContext(
 					ctx,
 					"Error fetching principals with WritePKIEnrollmentFlag on cert template",

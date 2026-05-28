@@ -160,71 +160,7 @@ func isCertTemplateValidForESC4(ctx context.Context, ct *graph.Node) bool {
 	}
 }
 
-func FetchPrincipalsWithGenericWriteOnCertTemplate(tx graph.Transaction, certTemplate *graph.Node) (graph.NodeSet, error) {
-	if nodes, err := ops.FetchStartNodes(tx.Relationships().Filterf(
-		func() graph.Criteria {
-			return query.And(
-				query.Equals(query.EndID(), certTemplate.ID),
-				query.Kind(query.Relationship(), ad.GenericWrite),
-			)
-		},
-	)); err != nil {
-		return nil, err
-	} else {
-		return nodes, nil
-	}
-}
 
-func FetchPrincipalsWithEnrollOrAllExtendedRightsOnCertTemplate(tx graph.Transaction, certTemplate *graph.Node) (graph.NodeSet, error) {
-	if nodes, err := ops.FetchStartNodes(
-		tx.Relationships().Filterf(
-			func() graph.Criteria {
-				return query.And(
-					query.Equals(query.EndID(), certTemplate.ID),
-					query.Or(
-						query.Kind(query.Relationship(), ad.Enroll),
-						query.Kind(query.Relationship(), ad.AllExtendedRights),
-					),
-				)
-			},
-		)); err != nil {
-		return nil, err
-	} else {
-		return nodes, nil
-	}
-}
-
-func FetchPrincipalsWithWritePKINameFlagOnCertTemplate(tx graph.Transaction, certTemplate *graph.Node) (graph.NodeSet, error) {
-	if nodes, err := ops.FetchStartNodes(
-		tx.Relationships().Filterf(
-			func() graph.Criteria {
-				return query.And(
-					query.Equals(query.EndID(), certTemplate.ID),
-					query.Kind(query.Relationship(), ad.WritePKINameFlag),
-				)
-			},
-		)); err != nil {
-		return nil, err
-	} else {
-		return nodes, nil
-	}
-}
-
-func FetchPrincipalsWithWritePKIEnrollmentFlagOnCertTemplate(tx graph.Transaction, certTemplate *graph.Node) (graph.NodeSet, error) {
-	if nodes, err := ops.FetchStartNodes(
-		tx.Relationships().Filterf(
-			func() graph.Criteria {
-				return query.And(
-					query.Equals(query.EndID(), certTemplate.ID),
-					query.Kind(query.Relationship(), ad.WritePKIEnrollmentFlag),
-				)
-			},
-		)); err != nil {
-		return nil, err
-	} else {
-		return nodes, nil
-	}
-}
 
 // composition: p1
 func findPathsToDomainThroughCertTemplateWithGenericAll(
