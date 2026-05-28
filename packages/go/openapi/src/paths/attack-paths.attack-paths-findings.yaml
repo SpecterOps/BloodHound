@@ -130,9 +130,9 @@ get:
           examples:
             Unified CSV export:
               value: |
-                severity,finding,title,finding_type,platform,environment_id,zone_id,zone_name,source_principal_id,source_principal_kind,source_principal_name,target_principal_id,target_principal_kind,target_principal_name,status,first_seen,last_seen
-                critical,T0GenericWrite,GenericWrite Privileges on Objects in Privilege Zone,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
-                high,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,Tier Zero,,,,User,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
+                Severity,Finding,Title,FindingType,Platform,EnvironmentID,ZoneID,SourcePrincipalID,SourcePrincipalKind,TargetPrincipalID,TargetPrincipalKind,Status,FirstSeen,LastSeen
+                critical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,1,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
+                high,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,1,,,PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
         application/json:
           schema:
             allOf:
@@ -209,8 +209,9 @@ get:
                 limit: 10
                 data:
                   - severity: "critical"
+                    finding: "T0GenericWrite"
+                    title: "GenericWrite Privileges on Tier Zero Objects"
                     finding_type: "relationship"
-                    finding: "Tier Zero Generic Write"
                     platform: "Active Directory"
                     environment_id: "S-1-5-21-1974516972-3116780949-2584384717"
                     zone_id: 1
@@ -225,8 +226,9 @@ get:
                     first_seen: "2026-04-11T00:30:18.491666Z"
                     last_seen: "2026-04-14T16:57:35.675609Z"
                   - severity: "high"
-                    finding_type: "list"
                     finding: "Kerberoasting"
+                    title: "Kerberoastable User Accounts"
+                    finding_type: "list"
                     platform: "Active Directory"
                     environment_id: "S-1-5-21-1974516972-3116780949-2584384717"
                     zone_id: 1
