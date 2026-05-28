@@ -136,7 +136,19 @@ const Wrapper = () => {
     );
 };
 
-describe('File Upload Button', () => {
+const selfHandler = (roles: { name: string; permissions: { authority: string; name: string }[] }[]) =>
+    rest.get(`/api/v2/self`, async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    id: '1',
+                    roles,
+                },
+            })
+        );
+    });
+
+describe('File Ingest Upload Button', () => {
     const testFile = new File([JSON.stringify({ value: 'test' })], 'test.json', { type: 'application/json' });
     const errorFile = new File(['test text'], 'test.txt', { type: 'text/plain' });
 
@@ -182,26 +194,17 @@ describe('File Upload Button', () => {
 
     it('disables the upload button when user has AUTH_READ_USERS permission', async () => {
         server.use(
-            rest.get(`/api/v2/self`, async (req, res, ctx) => {
-                return res(
-                    ctx.json({
-                        data: {
-                            id: '1',
-                            roles: [
-                                {
-                                    name: 'Read Only',
-                                    permissions: [
-                                        {
-                                            authority: 'auth',
-                                            name: 'ReadUsers',
-                                        },
-                                    ],
-                                },
-                            ],
+            selfHandler([
+                {
+                    name: 'Read Only',
+                    permissions: [
+                        {
+                            authority: 'auth',
+                            name: 'ReadUsers',
                         },
-                    })
-                );
-            })
+                    ],
+                },
+            ])
         );
         checkPermissionMock.mockImplementation((permission) => {
             return permission === Permission.AUTH_READ_USERS;
@@ -213,30 +216,21 @@ describe('File Upload Button', () => {
 
     it('enables the upload button when user has AUTH_MANAGE_USERS permission', async () => {
         server.use(
-            rest.get(`/api/v2/self`, async (req, res, ctx) => {
-                return res(
-                    ctx.json({
-                        data: {
-                            id: '1',
-                            roles: [
-                                {
-                                    name: 'Administrator',
-                                    permissions: [
-                                        {
-                                            authority: 'auth',
-                                            name: 'ManageUsers',
-                                        },
-                                        {
-                                            authority: 'graph',
-                                            name: 'Ingest',
-                                        },
-                                    ],
-                                },
-                            ],
+            selfHandler([
+                {
+                    name: 'Administrator',
+                    permissions: [
+                        {
+                            authority: 'auth',
+                            name: 'ManageUsers',
                         },
-                    })
-                );
-            })
+                        {
+                            authority: 'graph',
+                            name: 'Ingest',
+                        },
+                    ],
+                },
+            ])
         );
         checkPermissionMock.mockImplementation((permission) => {
             return permission === Permission.AUTH_READ_USERS || permission === Permission.GRAPH_DB_INGEST;
