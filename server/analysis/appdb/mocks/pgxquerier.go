@@ -135,8 +135,8 @@ func (_c *MockpgxQuerier_Exec_Call) RunAndReturn(run func(ctx context.Context, s
 	return _c
 }
 
-// QueryRow provides a mock function for the type MockpgxQuerier
-func (_mock *MockpgxQuerier) QueryRow(ctx context.Context, sql string, args ...any) pgx.Row {
+// Query provides a mock function for the type MockpgxQuerier
+func (_mock *MockpgxQuerier) Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
 	var tmpRet mock.Arguments
 	if len(args) > 0 {
 		tmpRet = _mock.Called(ctx, sql, args)
@@ -146,35 +146,44 @@ func (_mock *MockpgxQuerier) QueryRow(ctx context.Context, sql string, args ...a
 	ret := tmpRet
 
 	if len(ret) == 0 {
-		panic("no return value specified for QueryRow")
+		panic("no return value specified for Query")
 	}
 
-	var r0 pgx.Row
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, ...any) pgx.Row); ok {
+	var r0 pgx.Rows
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, ...any) (pgx.Rows, error)); ok {
+		return returnFunc(ctx, sql, args...)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, ...any) pgx.Rows); ok {
 		r0 = returnFunc(ctx, sql, args...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(pgx.Row)
+			r0 = ret.Get(0).(pgx.Rows)
 		}
 	}
-	return r0
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, ...any) error); ok {
+		r1 = returnFunc(ctx, sql, args...)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
 }
 
-// MockpgxQuerier_QueryRow_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'QueryRow'
-type MockpgxQuerier_QueryRow_Call struct {
+// MockpgxQuerier_Query_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Query'
+type MockpgxQuerier_Query_Call struct {
 	*mock.Call
 }
 
-// QueryRow is a helper method to define mock.On call
+// Query is a helper method to define mock.On call
 //   - ctx context.Context
 //   - sql string
 //   - args ...any
-func (_e *MockpgxQuerier_Expecter) QueryRow(ctx interface{}, sql interface{}, args ...interface{}) *MockpgxQuerier_QueryRow_Call {
-	return &MockpgxQuerier_QueryRow_Call{Call: _e.mock.On("QueryRow",
+func (_e *MockpgxQuerier_Expecter) Query(ctx interface{}, sql interface{}, args ...interface{}) *MockpgxQuerier_Query_Call {
+	return &MockpgxQuerier_Query_Call{Call: _e.mock.On("Query",
 		append([]interface{}{ctx, sql}, args...)...)}
 }
 
-func (_c *MockpgxQuerier_QueryRow_Call) Run(run func(ctx context.Context, sql string, args ...any)) *MockpgxQuerier_QueryRow_Call {
+func (_c *MockpgxQuerier_Query_Call) Run(run func(ctx context.Context, sql string, args ...any)) *MockpgxQuerier_Query_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -199,12 +208,12 @@ func (_c *MockpgxQuerier_QueryRow_Call) Run(run func(ctx context.Context, sql st
 	return _c
 }
 
-func (_c *MockpgxQuerier_QueryRow_Call) Return(row pgx.Row) *MockpgxQuerier_QueryRow_Call {
-	_c.Call.Return(row)
+func (_c *MockpgxQuerier_Query_Call) Return(rows pgx.Rows, err error) *MockpgxQuerier_Query_Call {
+	_c.Call.Return(rows, err)
 	return _c
 }
 
-func (_c *MockpgxQuerier_QueryRow_Call) RunAndReturn(run func(ctx context.Context, sql string, args ...any) pgx.Row) *MockpgxQuerier_QueryRow_Call {
+func (_c *MockpgxQuerier_Query_Call) RunAndReturn(run func(ctx context.Context, sql string, args ...any) (pgx.Rows, error)) *MockpgxQuerier_Query_Call {
 	_c.Call.Return(run)
 	return _c
 }
