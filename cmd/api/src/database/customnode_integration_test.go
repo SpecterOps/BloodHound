@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -539,6 +540,14 @@ func TestEnsureStubbedCustomNodeKindForIngest(t *testing.T) {
 		}, customNodeKind.Config)
 		assert.Equal(t, int64(1), countKindRows(t, testSuite, "RegisteredCustomKind"))
 		assert.Equal(t, int64(1), countCustomNodeKindRows(t, testSuite, "RegisteredCustomKind"))
+	})
+
+	t.Run("extended kind is rejected", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		err := testSuite.BHDatabase.EnsureStubbedCustomNodeKindForIngest(testSuite.Context, common.MigrationData.String())
+		require.EqualError(t, err, "invalid kind name")
 	})
 }
 

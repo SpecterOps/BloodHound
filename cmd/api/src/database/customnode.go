@@ -25,6 +25,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/dawgs/graph"
 	"gorm.io/gorm"
 )
 
@@ -46,7 +47,7 @@ type CustomNodeKindData interface {
 }
 
 func (s *BloodhoundDB) EnsureStubbedCustomNodeKindForIngest(ctx context.Context, name string) error {
-	if name == "" {
+	if name == "" || model.IsExtendedNodeKind(graph.StringKind(name)) {
 		return errors.New("invalid kind name")
 	}
 
