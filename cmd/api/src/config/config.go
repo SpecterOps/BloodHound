@@ -275,6 +275,10 @@ func (s Configuration) CollectorsDirectory() string {
 	return s.CollectorsBasePath
 }
 
+func (s Configuration) CollectorArtifactDirectory() string {
+	return filepath.Join(s.WorkDir, "collector_artifacts")
+}
+
 func WriteConfigurationFile(path string, config Configuration) error {
 	if fout, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644); err != nil {
 		return fmt.Errorf("failed opening configuration file %s: %w", path, err)

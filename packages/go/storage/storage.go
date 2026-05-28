@@ -31,11 +31,12 @@ import (
 type FileServiceName string
 
 const (
-	FileServiceIngest     FileServiceName = "ingest"
-	FileServiceRetained   FileServiceName = "retained"
-	FileServiceCollectors FileServiceName = "collectors"
-	FileServiceJobLogs    FileServiceName = "job_logs"
-	FileServiceWork       FileServiceName = "work"
+	FileServiceIngest             FileServiceName = "ingest"
+	FileServiceRetained           FileServiceName = "retained"
+	FileServiceCollectors         FileServiceName = "collectors"
+	FileServiceJobLogs            FileServiceName = "job_logs"
+	FileServiceWork               FileServiceName = "work"
+	FileServiceCollectorArtifacts FileServiceName = "collector_artifacts"
 )
 
 var ErrFileServiceNotFound = errors.New("file service not found")
@@ -93,8 +94,11 @@ type Storage interface {
 // FileService serves as an abstraction to handle files with different storage backends. This serves as
 // a list of general functions that each file service must implement.
 type FileService interface {
-	// GetFile returns a io.ReadCloser and FileInfo for the named filed that is requested.
+	// GetFile returns a io.ReadCloser and FileInfo for the named file that is requested.
 	GetFile(ctx context.Context, name string) (io.ReadCloser, FileInfo, error)
+
+	// GetFileInfo returns just the FileInfo of the file requested.
+	GetFileInfo(ctx context.Context, name string) (FileInfo, error)
 
 	// ReadFile returns the byte information of the file that is requested.
 	ReadFile(ctx context.Context, name string) ([]byte, error)
@@ -143,6 +147,10 @@ func randomID() (string, error) {
 
 func (s *StorageFileService) GetFile(ctx context.Context, name string) (io.ReadCloser, FileInfo, error) {
 	return s.Storage.Get(ctx, name)
+}
+
+func (s *StorageFileService) GetFileInfo(ctx context.Context, name string) (FileInfo, error) {
+	return s.Storage.Stat(ctx, name)
 }
 
 func (s *StorageFileService) ReadFile(ctx context.Context, name string) ([]byte, error) {
