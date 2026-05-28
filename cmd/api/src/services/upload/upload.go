@@ -53,7 +53,7 @@ func SaveIngestFile(location string, request *http.Request, validator IngestVali
 		return IngestTaskParams{}, fmt.Errorf("invalid content type for ingest file")
 	}
 
-	if tempFileName, err := WriteAndValidateFile(fileData, location, jobID, validationFn); err != nil {
+	if tempFileName, err := WriteAndValidateFileWithPrefix(fileData, location, ingestFileTempPrefix(jobID), validationFn); err != nil {
 		return IngestTaskParams{}, err
 	} else {
 		return IngestTaskParams{
@@ -64,18 +64,32 @@ func SaveIngestFile(location string, request *http.Request, validator IngestVali
 
 }
 
+func ingestFileTempPrefix(jobID int64) string {
+	return fmt.Sprintf("file_upload_job%d_", jobID)
+}
+
 func WriteAndValidateFile(fileData io.Reader, location string, jobID int64, validationFunc FileValidator) (string, error) {
+	return WriteAndValidateFileWithPrefix(fileData, location, ingestFileTempPrefix(jobID), validationFunc)
+}
+
+func WriteAndValidateFileWithPrefix(fileData io.Reader, location string, tempFilePrefix string, validationFunc FileValidator) (string, error) {
+	var (
+		tempFile      *os.File
+		tempFileName  string
+		err           error
+		validationErr error
+	)
+
 	// Write a temp file. If it passes validation, keep it around and return the filename. Otherwise destroy it.
-	tempFile, err := os.CreateTemp(location, fmt.Sprintf("file_upload_job%d_", jobID))
-	if err != nil {
+	if tempFile, err = os.CreateTemp(location, tempFilePrefix); err != nil {
 		return "", fmt.Errorf("error creating ingest file: %w", err)
 	}
 
 	// Save this for later
-	tempFileName := tempFile.Name()
+	tempFileName = tempFile.Name()
 
 	// Run validation on the file to see if we even want to keep it
-	_, validationErr := validationFunc(fileData, tempFile)
+	_, validationErr = validationFunc(fileData, tempFile)
 
 	// We close the file next, not last. We can't defer this if we might want to delete it.
 	// Note: fileData does not need to be closed because the HTTP server manages it's lifecyle
