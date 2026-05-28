@@ -1828,7 +1828,7 @@ func FetchEnterpriseCAsRootCAForPathToDomainFull(tx graph.Transaction, domain *g
 	})
 }
 
-func DoesCertTemplateLinkToDomain(tx graph.Transaction, certTemplate, domainNode *graph.Node) (bool, error) {
+func DoesCertTemplateLinkToDomain(tx graph.Transaction, certTemplate, domainNode graph.ID) (bool, error) {
 	if pathSet, err := FetchCertTemplatePathToDomain(tx, certTemplate, domainNode); err != nil {
 		return false, err
 	} else {
@@ -1836,16 +1836,16 @@ func DoesCertTemplateLinkToDomain(tx graph.Transaction, certTemplate, domainNode
 	}
 }
 
-func FetchCertTemplatePathToDomain(tx graph.Transaction, certTemplate, domain *graph.Node) (graph.PathSet, error) {
+func FetchCertTemplatePathToDomain(tx graph.Transaction, certTemplate, domain graph.ID) (graph.PathSet, error) {
 	var (
 		paths = graph.NewPathSet()
 	)
 
 	return paths, tx.Relationships().Filter(
 		query.And(
-			query.Equals(query.StartID(), certTemplate.ID),
+			query.Equals(query.StartID(), certTemplate),
 			query.KindIn(query.Relationship(), ad.PublishedTo, ad.IssuedSignedBy, ad.EnterpriseCAFor, ad.RootCAFor),
-			query.Equals(query.EndID(), domain.ID),
+			query.Equals(query.EndID(), domain),
 		),
 	).FetchAllShortestPaths(func(cursor graph.Cursor[graph.Path]) error {
 		for path := range cursor.Chan() {
