@@ -124,15 +124,15 @@ prune-my-branches nuclear='no':
 
 # run docker compose commands for the BH dev profile (Default: up)
 bh-dev *ARGS='up':
-  @just _bh-compose dev {{ARGS}}
+  @docker compose --profile dev -f docker-compose.dev.yml {{ARGS}}
 
 # run docker compose commands for the BH debug profile (Default: up)
 bh-debug *ARGS='up':
-  @just _bh-compose debug-api {{ARGS}}
+  @docker compose --profile debug-api -f docker-compose.dev.yml {{ARGS}}
 
 # run docker compose commands for the BH api-only profile (Default: up)
 bh-api-only *ARGS='up':
-  @just _bh-compose api-only {{ARGS}}
+  @docker compose --profile api-only -f docker-compose.dev.yml {{ARGS}}
 
 # run docker compose commands for the BH ui-only profile (Default: up)
 bh-ui-only *ARGS='up':
@@ -144,7 +144,7 @@ pg-only *ARGS='up':
 
 # run docker compose commands for the BH dev profile with SSO IDP Authentik (Default: up)
 bh-sso *ARGS='up':
-  @just _bh-compose sso {{ARGS}}
+  @docker compose --profile sso -f docker-compose.dev.yml {{ARGS}}
 
 # run docker compose commands for the SSO IDP Authentik only (Default: up)
 bh-sso-only *ARGS='up':
@@ -156,21 +156,12 @@ bh-testing *ARGS='up -d':
 
 # build BH target cleanly (default profile dev with --no-cache flag)
 bh-clean-docker-build target='dev' *ARGS='':
-  #!/usr/bin/env bash
-  set -euo pipefail
   # Ensure the target is down first
-  docker compose --profile {{target}} -f docker-compose.dev.yml down
+  @docker compose --profile {{target}} -f docker-compose.dev.yml down
   # Pull any updated images
-  docker compose --profile {{target}} -f docker-compose.dev.yml pull
-  # Fetch collector versions if needed for profile
-  case "{{target}}" in
-    dev|api-only|debug-api|sso)
-      collector_version_env="$(just _collector-version-env)"
-      eval "$collector_version_env"
-      ;;
-  esac
+  @docker compose --profile {{target}} -f docker-compose.dev.yml pull
   # Build without cache
-  docker compose --profile {{target}} -f docker-compose.dev.yml build --no-cache {{ARGS}}
+  @docker compose --profile {{target}} -f docker-compose.dev.yml build --no-cache {{ARGS}}
 
 # use docker compose watch to dynamically restart/rebuild containers (requires docker compose v2.22.0+)
 bh-watch target='dev' *ARGS='--no-up':
@@ -178,19 +169,7 @@ bh-watch target='dev' *ARGS='--no-up':
 
 # build local BHCE container image (ex: just build-bhce-container <linux/arm64|linux/amd64> edge v5.0.0)
 build-bhce-container platform='linux/amd64' tag='edge' version='v5.0.0' *ARGS='':
-  #!/usr/bin/env bash
-  set -euo pipefail
-  collector_version_env="$(just _collector-version-env)"
-  eval "$collector_version_env"
-  docker buildx build \
-    -f dockerfiles/bloodhound.Dockerfile \
-    -t specterops/bloodhound:{{tag}} \
-    --platform={{platform}} \
-    --load \
-    --build-arg version={{version}}-{{tag}} \
-    --build-arg SHARPHOUND_VERSION="$SHARPHOUND_VERSION" \
-    --build-arg AZUREHOUND_VERSION="$AZUREHOUND_VERSION" \
-    {{ARGS}} .
+  @docker buildx build -f dockerfiles/bloodhound.Dockerfile -t specterops/bloodhound:{{tag}} --platform={{platform}} --load --build-arg version={{version}}-{{tag}} {{ARGS}} .
 
 # run local BHCE container image (ex: just build-bhce-container <linux/arm64|linux/amd64> custom v5.0.0)
 run-bhce-container platform='linux/amd64' tag='custom' version='v5.0.0' *ARGS='':
@@ -216,7 +195,7 @@ init wipe="":
   echo "Init BloodHound CE"
 
   echo "Make local copies of configuration files"
-  if [[ -f "./local-harnesses/build.config.json" ]] && [[ "{{wipe}}" != "clean" ]]; then
+    if [[ -f "./local-harnesses/build.config.json" ]] && [[ "{{wipe}}" != "clean" ]]; then
     echo "Not copying build.config.json since it already exists"
   elif [[ -f "./local-harnesses/build.config.json" ]]; then
     echo "Backing up build.config.json and resetting"
@@ -244,7 +223,7 @@ init wipe="":
     cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
   fi
 
-  if [[ -f "./local-harnesses/postgresql.conf" ]] && [[ "{{wipe}}" != "clean" ]]; then
+    if [[ -f "./local-harnesses/postgresql.conf" ]] && [[ "{{wipe}}" != "clean" ]]; then
     echo "Not copying postgresql.conf since it already exists"
   elif [[ -f "./local-harnesses/postgresql.conf" ]]; then
     echo "Backing up postgresql.conf and resetting"
@@ -298,50 +277,6 @@ init wipe="":
   fi
 
   echo "BloodHound CE Init Complete"
-
-# Compose wrapper that checks if collector versions are needed and supplies them as args to docker compose
-_bh-compose profile *ARGS:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  if just --quiet _needs-collector-versions {{ARGS}}; then
-    collector_version_env="$(just _collector-version-env)"
-    eval "$collector_version_env"
-  fi
-  docker compose --profile "{{profile}}" -f docker-compose.dev.yml {{ARGS}}
-
-# Returns true if args may build images (e.g. matches "build", "up", or "--build") false otherwise
-_needs-collector-versions *ARGS:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  args="$*"
-  case " $args " in
-    *" build "*|*" --build "*|*" up "*)
-      exit 0
-      ;;
-    *)
-      exit 1
-      ;;
-  esac
-
-# Fetches latest collector versions for SH and AZH from github
-_collector-version-env:
-  #!/usr/bin/env bash
-  set -eo pipefail
-  # Fetch latest versions from gh api
-  sharphound_version="${SHARPHOUND_VERSION:-$(wget -qO- https://api.github.com/repos/SpecterOps/SharpHound/releases/latest | sed -n 's/.*"tag_name": "\([^"]*\)".*/\1/p')}"
-  azurehound_version="${AZUREHOUND_VERSION:-$(wget -qO- https://api.github.com/repos/SpecterOps/AzureHound/releases/latest | sed -n 's/.*"tag_name": "\([^"]*\)".*/\1/p')}"
-  # Validate version strings
-  version_regex='^v[0-9]+\.[0-9]+\.[0-9]+$'
-  if [[ ! "$sharphound_version" =~ $version_regex ]]; then
-    echo "SHARPHOUND_VERSION must match vX.Y.Z, got '${sharphound_version:-<empty>}'" >&2
-    exit 1
-  elif [[ ! "$azurehound_version" =~ $version_regex ]]; then
-    echo "AZUREHOUND_VERSION must match vX.Y.Z, got '${azurehound_version:-<empty>}'" >&2
-    exit 1
-  fi
-  # Export versions as shell variables
-  printf 'export SHARPHOUND_VERSION=%q\n' "$sharphound_version"
-  printf 'export AZUREHOUND_VERSION=%q\n' "$azurehound_version"
 
 # create new migration file
 goose-create name:

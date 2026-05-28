@@ -29,26 +29,9 @@ jobs:
     name: Run Slow Go Tests
     uses: ./.github/workflows/run-slow-go-tests.yml
 
-  resolve-collector-versions:
-    name: Resolve Collector Versions
-    runs-on: ubuntu-latest
-    outputs:
-      sharphound_version: ${{ steps.resolve-collector-versions.outputs.sharphound_version }}
-      azurehound_version: ${{ steps.resolve-collector-versions.outputs.azurehound_version }}
-    steps:
-      - name: Checkout Source Code Repository
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # ratchet:actions/checkout@v5
-
-      - id: resolve-collector-versions
-        uses: ./.github/actions/resolve-collector-versions
-        with:
-          gh_token: ${{ github.token }}
-
   bloodhound-container-image:
     name: Build and Publish BloodHound Container Image
-    needs:
-      - run-slow-go-tests
-      - resolve-collector-versions
+    needs: run-slow-go-tests
     uses: ./.github/workflows/reusable.build-container-image.yml
     with:
       container_image_repository_name: docker.io/specterops/bloodhound
@@ -68,8 +51,6 @@ jobs:
         type=semver,pattern={{major}},enable=${{ ! contains(github.ref_name, '-rc') }}
       build_args: |
         checkout_hash=${{ github.sha }}
-        SHARPHOUND_VERSION=${{ needs.resolve-collector-versions.outputs.sharphound_version }}
-        AZUREHOUND_VERSION=${{ needs.resolve-collector-versions.outputs.azurehound_version }}
         ${{ github.ref_name != 'main' && format('version={0}', github.ref_name) }}
     secrets:
       dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
