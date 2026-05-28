@@ -26,6 +26,7 @@ import (
 	"testing"
 
 	"github.com/peterldowns/pgtestdb"
+	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -61,7 +62,7 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 
 	cfg.Database.Connection = connConf.URL()
 
-	pool, err := pg.NewPool(cfg.Database)
+	pool, err := dbpool.NewDawgsPool(cfg.Database)
 	require.NoError(t, err)
 
 	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
