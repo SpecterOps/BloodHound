@@ -77,7 +77,7 @@ const SaveQueryDialog: React.FC<{
     const [localCypherQuery, setLocalCypherQuery] = useState('');
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
-    const { selectedQuery } = useSavedQueriesContext();
+    const { selected, selectedQuery } = useSavedQueriesContext();
 
     const { cypherQuery } = cypherSearchState;
 
@@ -94,8 +94,12 @@ const SaveQueryDialog: React.FC<{
     }, [selectedQuery]);
 
     useEffect(() => {
-        setLocalCypherQuery(cypherQuery);
-    }, [cypherQuery]);
+        if (saveAction === 'edit' && selected.query) {
+            setLocalCypherQuery(selected.query);
+        } else {
+            setLocalCypherQuery(cypherQuery);
+        }
+    }, [cypherQuery, selected.query, saveAction]);
 
     const saveDisabled = name?.trim() === '' || saveUpdatePending;
 
