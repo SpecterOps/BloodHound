@@ -954,7 +954,7 @@ func (s *BloodhoundDB) CreateSchemaFinding(ctx context.Context, findingType mode
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		INSERT INTO %s (type, schema_extension_id, kind_id, environment_id, name, display_name, zone_display_name, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+		VALUES (?, ?, ?, ?, ?, ?, NULLIF(?, ''), NOW())
 		RETURNING id, type, schema_extension_id, kind_id, environment_id, name, display_name, zone_display_name, created_at`,
 		finding.TableName()),
 		findingType, extensionId, kindId, environmentId, name, displayName, zoneDisplayName).Scan(&finding); result.Error != nil {
