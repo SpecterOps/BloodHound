@@ -19,6 +19,7 @@ package model
 import (
 	"strings"
 
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
@@ -27,7 +28,7 @@ import (
 // that should not be treated as a user-ingested node kind.
 func IsExtendedNodeKind(kind graph.Kind) bool {
 	return strings.HasPrefix(kind.String(), AssetGroupTagKindPrefix) ||
-		kind.Is(common.MigrationData, graph.StringKind("Meta"), graph.StringKind("MetaDetail"))
+		kind.Is(common.MigrationData, graphschema.Meta, graphschema.MetaDetail)
 }
 
 type Kind struct {

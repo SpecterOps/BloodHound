@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/mocks"
 	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -220,7 +221,7 @@ func TestIngestGenericData_RegisterNodeKind(t *testing.T) {
 		assert.ElementsMatch(t, []string{"UnknownKindA", "UnknownKindB"}, called)
 	})
 
-	for _, kind := range []graph.Kind{graph.StringKind("Tag_Custom"), graph.StringKind("Meta"), graph.StringKind("MetaDetail"), common.MigrationData} {
+	for _, kind := range []graph.Kind{graph.StringKind("Tag_Custom"), graphschema.Meta, graphschema.MetaDetail, common.MigrationData} {
 		t.Run(fmt.Sprintf("extended kind %s does not call registrar", kind), func(t *testing.T) {
 			var (
 				ctrl             = gomock.NewController(t)
