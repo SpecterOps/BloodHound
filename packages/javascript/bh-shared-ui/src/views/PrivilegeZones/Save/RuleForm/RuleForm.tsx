@@ -38,6 +38,7 @@ import { SearchValue } from '../../../Explore';
 import { RulesLink } from '../../fragments';
 import { getErrorMessage, handleError } from '../utils';
 import BasicInfo from './BasicInfo';
+import { CYPHER_MUST_HAVE_RESULTS } from './rule-form-utils';
 import RuleFormContext from './RuleFormContext';
 import SeedSelection from './SeedSelection';
 import { AssetGroupSelectedNodes, RuleFormInputs, RuleFormState } from './types';
@@ -279,9 +280,7 @@ const RuleForm: FC = () => {
 
     const onSubmit: SubmitHandler<RuleFormInputs> = useCallback(() => {
         if (cypherEditorInvalid) {
-            addNotification(
-                'To save a rule created using Cypher, the Cypher query must produce at least one result. Please run a different query to proceed.'
-            );
+            addNotification(CYPHER_MUST_HAVE_RESULTS);
         }
 
         if (ruleId !== '') {
