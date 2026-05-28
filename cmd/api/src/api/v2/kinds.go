@@ -26,13 +26,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
-
-func isExtendedNodeKind(kind graph.Kind) bool {
-	return strings.HasPrefix(kind.String(), model.AssetGroupTagKindPrefix) || kind.Is(graph.StringKind("Meta"), graph.StringKind("MetaDetail"), common.MigrationData)
-}
 
 type ListKindsResponse struct {
 	Kinds graph.Kinds `json:"kinds"`
@@ -112,7 +107,7 @@ func (s Resources) ListKinds(response http.ResponseWriter, request *http.Request
 					for _, kind := range kinds {
 						var isNodeKind bool
 						// Asset group tags are node kinds as well as meta / migrationData kinds
-						if validNodeKinds[kind] || isExtendedNodeKind(kind) {
+						if validNodeKinds[kind] || model.IsExtendedNodeKind(kind) {
 							isNodeKind = true
 						}
 
