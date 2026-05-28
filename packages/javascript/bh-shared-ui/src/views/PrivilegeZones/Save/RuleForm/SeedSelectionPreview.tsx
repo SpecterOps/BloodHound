@@ -15,7 +15,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Card, CardContent, CardHeader } from 'doodle-ui';
-import { NodeSourceSeed, SeedTypeCypher, SeedTypes, SeedTypesMap, SelectorSeedRequest } from 'js-client-library';
+import {
+    NodeSourceSeed,
+    SeedExpansionMethod,
+    SeedExpansionMethodAll,
+    SeedExpansionMethodChild,
+    SeedExpansionMethodNone,
+    SeedTypeCypher,
+    SeedTypes,
+    SeedTypesMap,
+    SelectorSeedRequest,
+} from 'js-client-library';
 import { FC, useContext, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
@@ -23,8 +33,18 @@ import { useOwnedTagId, usePZPathParams } from '../../../../hooks';
 import { useNotifications } from '../../../../providers';
 import { apiClient, cn } from '../../../../utils';
 import RuleFormContext from './RuleFormContext';
-import { CYPHER_MUST_HAVE_RESULTS, emptyFunction, getRuleExpansionMethod } from './rule-form-utils';
+import { CYPHER_MUST_HAVE_RESULTS, emptyFunction } from './rule-form-utils';
 
+export const getRuleExpansionMethod = (
+    tagId: string,
+    tagType: 'labels' | 'zones',
+    ownedId: string | undefined
+): SeedExpansionMethod => {
+    // Owned is a specific tag type that does not undergo expansion
+    if (tagId === ownedId) return SeedExpansionMethodNone;
+
+    return tagType === 'zones' ? SeedExpansionMethodAll : SeedExpansionMethodChild;
+};
 const EmptySeedResults: FC<{ className: string; displayText: string }> = ({ className, displayText }) => {
     return <p className={className}>{displayText}</p>;
 };
