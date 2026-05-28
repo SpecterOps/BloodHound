@@ -107,6 +107,8 @@ const (
 	AuditLogActionUpdateClient       AuditLogAction = "UpdateClient"
 	AuditLogActionStartClientJob     AuditLogAction = "StartClientJob"
 
+	AuditLogActionUploadSupportBundle AuditLogAction = "UploadSupportBundle"
+
 	AuditLogActionImportSavedQuery   AuditLogAction = "ImportSavedQueries"
 	AuditLogActionExportSavedQuery   AuditLogAction = "ExportSavedQuery"
 	AuditLogActionExportSavedQueries AuditLogAction = "ExportSavedQueries"
