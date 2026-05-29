@@ -19,13 +19,12 @@ package tools
 import (
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	"github.com/teambition/rrule-go"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 )
 
 type ScheduledAnalysisConfiguration struct {
@@ -33,7 +32,6 @@ type ScheduledAnalysisConfiguration struct {
 	RRule   string `json:"rrule"`
 }
 
-const ErrInvalidRrule = "invalid rrule specified: %v"
 const ErrFailedRetrievingData = "error retrieving configuration data: %v"
 
 func (s ToolContainer) GetScheduledAnalysisConfiguration(response http.ResponseWriter, request *http.Request) {
@@ -68,7 +66,7 @@ func (s ToolContainer) SetScheduledAnalysisConfiguration(response http.ResponseW
 			}
 		}
 	} else {
-		if rule, err := validateRRule(config.RRule); err != nil {
+		if rule, err := validation.ValidateRRule(config.RRule); err != nil {
 			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		} else {
 			nextParameter := appcfg.ScheduledAnalysisParameter{
@@ -91,23 +89,6 @@ func (s ToolContainer) SetScheduledAnalysisConfiguration(response http.ResponseW
 				}
 
 			}
-		}
-	}
-}
-
-// Validates that the rrule is valid. Valid rules require a DTSTART to keep scheduling consistent.
-// Valid rules do not contain UNTIL/COUNT because it will most likely break the pipeline once it's hit without being invalid.
-func validateRRule(RRuleParam string) (*rrule.RRule, error) {
-	if rule, err := rrule.StrToRRule(RRuleParam); err != nil {
-		return rule, fmt.Errorf(ErrInvalidRrule, err)
-	} else {
-		RRuleParam = strings.ToUpper(RRuleParam)
-		if strings.Contains(RRuleParam, "UNTIL") || strings.Contains(RRuleParam, "COUNT") {
-			return rule, fmt.Errorf(ErrInvalidRrule, "count/until not supported")
-		} else if !strings.Contains(RRuleParam, "DTSTART") {
-			return rule, fmt.Errorf(ErrInvalidRrule, "dtstart is required")
-		} else {
-			return rule, nil
 		}
 	}
 }

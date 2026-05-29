@@ -213,7 +213,7 @@ func TestToolContainer_SetScheduledAnalysisConfiguration(t *testing.T) {
 			router.ServeHTTP(response, req)
 
 			require.Equal(t, http.StatusBadRequest, response.Code)
-			require.Contains(t, response.Body.String(), "invalid rrule specified: count/until not supported")
+			require.Contains(t, response.Body.String(), "invalid rrule specified: count not supported")
 		}
 	})
 
@@ -245,7 +245,7 @@ func TestToolContainer_SetScheduledAnalysisConfiguration(t *testing.T) {
 			router.ServeHTTP(response, req)
 
 			require.Equal(t, http.StatusBadRequest, response.Code)
-			require.Contains(t, response.Body.String(), "invalid rrule specified: count/until not supported")
+			require.Contains(t, response.Body.String(), "invalid rrule specified: until not supported")
 		}
 	})
 
