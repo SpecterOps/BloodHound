@@ -29,7 +29,7 @@
   "resolutions": {
     "@types/react": "18.2.x",
     "@isaacs/brace-expansion": "^5.0.1",
-    "axios": "1.15.2",
+    "axios": "^1.16.0",
     "braces": ">=3.0.3 <4.0.0",
     "cross-spawn": "^7.0.5",
     "dompurify": "3.2.4",
