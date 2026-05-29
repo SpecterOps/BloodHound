@@ -54,17 +54,33 @@ get:
       schema:
         $ref: "./../schemas/api.params.predicate.filter.string.yaml"
     - name: environment_id
-      description: Filter by environment identifier.
+      description: |
+        Filter by one or more environment identifiers. Repeat the parameter to include multiple environments — results are the union of all specified values.
       in: query
+      style: form
+      explode: true
       schema:
-        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+        type: array
+        items:
+          type: string
     - name: environment_name
       description: Filter by environment display name.
       in: query
       schema:
         $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: asset_group_tag_id
+      description: |
+        Filter by one or more asset group tag identifiers. Repeat the parameter to include multiple asset group tags — results are the union of all specified values.
+        Cannot be combined with the `zone_id` filter.
+      in: query
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: integer
     - name: zone_id
-      description: Filter by zone identifier.
+      description: Filter by a single zone identifier. Cannot be combined with `asset_group_tag_id`.
       in: query
       schema:
         $ref: "./../schemas/api.params.predicate.filter.string.yaml"
