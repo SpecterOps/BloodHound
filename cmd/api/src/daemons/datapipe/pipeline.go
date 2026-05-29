@@ -263,7 +263,7 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 		)()
 
 		if err := s.db.SetLastAnalysisStartTime(ctx); err != nil {
-			slog.ErrorContext(ctx, "error setting last analysis start time", attr.Error(err))
+			slog.ErrorContext(ctx, "Error setting last analysis start time", attr.Error(err))
 		}
 
 		if err := analysis.RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg); err != nil {
