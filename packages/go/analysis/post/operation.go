@@ -25,10 +25,16 @@ import (
 	"github.com/specterops/dawgs/ops"
 )
 
+// MaximumDatabaseParallelWorkers is the upper bound on the number of concurrent
+// reader goroutines used when constructing a new operation context. A single
+// writer is always used to serialise graph mutations.
 const (
 	MaximumDatabaseParallelWorkers = 6
 )
 
+// NewPropertiesWithLastSeen returns a new graph.Properties instance pre-populated
+// with the current UTC time set as the lastseen property. This is used as the
+// base set of properties applied to every relationship created during post-processing.
 func NewPropertiesWithLastSeen() *graph.Properties {
 	newProperties := graph.NewProperties()
 	newProperties.Set(common.LastSeen.String(), time.Now().UTC())
@@ -36,11 +42,28 @@ func NewPropertiesWithLastSeen() *graph.Properties {
 	return newProperties
 }
 
+// StatTrackedOperation couples an ongoing graph operation with an
+// AtomicPostProcessingStats collector so that callers can observe how many
+// relationships were created or deleted over the lifetime of the operation.
+// The type parameter T is the job type consumed by the operation's writer.
 type StatTrackedOperation[T any] struct {
-	Stats     AtomicPostProcessingStats
+	// Stats accumulates relationship create/delete counts in a thread-safe manner.
+	Stats AtomicPostProcessingStats
+	// Operation is the underlying concurrent graph operation that manages reader
+	// and writer goroutines.
 	Operation *ops.Operation[T]
 }
 
+// NewPostRelationshipOperation creates and starts a StatTrackedOperation that processes
+// EnsureRelationshipJob values. A single writer goroutine is registered that batches
+// relationship creation against the provided database. For each job:
+//   - If the job carries additional RelProperties they are merged (via clone) on top
+//     of the shared LastSeen properties so that base properties are not mutated.
+//   - The relationship is inserted by node ID using the job's Kind.
+//   - The Stats counter for that Kind is incremented atomically.
+//
+// Callers must submit jobs through the operation's reader pipeline and then call
+// Done to flush all pending writes and obtain any batch error.
 func NewPostRelationshipOperation(ctx context.Context, db graph.Database, operationName string) StatTrackedOperation[EnsureRelationshipJob] {
 	operation := StatTrackedOperation[EnsureRelationshipJob]{}
 	operation.NewOperation(ctx, db)
@@ -71,6 +94,10 @@ func NewPostRelationshipOperation(ctx context.Context, db graph.Database, operat
 	return operation
 }
 
+// NewOperation initialises the Stats collector and starts a new underlying graph
+// operation configured with MaximumDatabaseParallelWorkers readers and a single
+// writer. It is called automatically by NewPostRelationshipOperation but can also
+// be used directly when constructing a StatTrackedOperation for custom job types.
 func (s *StatTrackedOperation[T]) NewOperation(ctx context.Context, db graph.Database) {
 	s.Stats = NewAtomicPostProcessingStats()
 	s.Operation = ops.StartNewOperation[T](ops.OperationContext{
@@ -81,6 +108,9 @@ func (s *StatTrackedOperation[T]) NewOperation(ctx context.Context, db graph.Dat
 	})
 }
 
+// Done signals that no more jobs will be submitted, waits for all in-flight
+// reader and writer goroutines to finish, and returns the first error encountered
+// during the operation, if any.
 func (s *StatTrackedOperation[T]) Done() error {
 	return s.Operation.Done()
 }

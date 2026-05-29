@@ -19,7 +19,6 @@ package config
 import (
 	"fmt"
 
-	dawgs "github.com/specterops/dawgs/drivers"
 	"github.com/specterops/dawgs/drivers/neo4j"
 
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
@@ -87,10 +86,10 @@ func NewDefaultConfiguration() (Configuration, error) {
 			TLS:                             TLSConfiguration{},
 			SAML:                            SAMLConfiguration{},
 			GraphDriver:                     neo4j.DriverName, // Default to PG as the graph driver
-			Database: dawgs.DatabaseConfiguration{
+			Database: DatabaseConfiguration{
 				MaxConcurrentSessions: 10,
 			},
-			Neo4J: dawgs.DatabaseConfiguration{
+			Neo4J: DatabaseConfiguration{
 				MaxConcurrentSessions: 10,
 			},
 			Crypto: CryptoConfiguration{
