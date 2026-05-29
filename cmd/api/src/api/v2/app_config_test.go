@@ -231,7 +231,8 @@ func Test_SetApplicationConfiguration(t *testing.T) {
 
 	t.Run("Scheduled Analysis updates next scheduled analysis start time", func(t *testing.T) {
 		var (
-			validRRule = "RRULE:FREQ=DAILY;INTERVAL=1;DTSTART=20240101T100000Z"
+			futureTime = time.Now().Add(48 * time.Hour).Format("20060102T150405Z")
+			validRRule = fmt.Sprintf("FREQ=DAILY;INTERVAL=1;DTSTART=%s", futureTime)
 
 			scheduledAnalysisRequest = appcfg.AppConfigUpdateRequest{
 				Key: string(appcfg.ScheduledAnalysis),

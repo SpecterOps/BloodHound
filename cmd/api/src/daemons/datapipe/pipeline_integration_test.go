@@ -248,4 +248,16 @@ func TestAnalyze_LastAnalysisTimestampUpdated(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, updatedDatapipeStatus.LastAnalysisRunAt.IsZero())
 	require.Greater(t, updatedDatapipeStatus.LastAnalysisRunAt, datapipeStatus.LastAnalysisRunAt)
+
+	// request analysis again
+	err = testSuite.BHDatabase.RequestAnalysis(ctx, "test")
+	require.NoError(t, err)
+
+	err = testSuite.Daemon.Analyze(ctx)
+	require.NoError(t, err)
+
+	// confirm that the last analysis run timestamp is updated again
+	finalDataPipeStatus, err := testSuite.BHDatabase.GetDatapipeStatus(ctx)
+	require.NoError(t, err)
+	require.Greater(t, finalDataPipeStatus.LastAnalysisRunAt, updatedDatapipeStatus.LastAnalysisRunAt)
 }
