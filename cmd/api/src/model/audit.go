@@ -122,6 +122,12 @@ const (
 	AuditLogActionInvalidateAllSupportUserSessions AuditLogAction = "InvalidateAllSupportUserSessions"
 
 	AuditLogActionRunCypherQuery AuditLogAction = "RunCypherQuery"
+
+	AuditLogActionCreateAlertWebhook AuditLogAction = "CreateAlertWebhook"
+	AuditLogActionUpdateAlertWebhook AuditLogAction = "UpdateAlertWebhook"
+	AuditLogActionDeleteAlertWebhook AuditLogAction = "DeleteAlertWebhook"
+
+	AuditLogActionRotateAlertWebhookSecret AuditLogAction = "RotateAlertWebhookSecret"
 )
 
 // TODO embed Basic into this struct instead of declaring the ID and CreatedAt fields. This will require a migration

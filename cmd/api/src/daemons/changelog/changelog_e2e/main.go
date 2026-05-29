@@ -26,6 +26,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
@@ -84,8 +85,7 @@ func newHarness() *Harness {
 		os.Exit(1)
 	}
 
-	pool, err := pg.NewPool(cfg.Database)
-
+	pool, err := dbpool.NewDawgsPool(cfg.Database)
 	if err != nil {
 		slog.Error("Failed to connect", attr.Error(err))
 		os.Exit(1)
