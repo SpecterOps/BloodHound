@@ -81,12 +81,13 @@ func RegisterFossRoutes(
 
 		// Redirect root resource to the UI
 		routerInst.GET("/", func(response http.ResponseWriter, request *http.Request) {
-			http.Redirect(response, request, "/ui", http.StatusMovedPermanently)
+			http.Redirect(response, request, api.UserInterfacePath, http.StatusMovedPermanently)
 		}),
-
-		// Static asset handling for the UI
-		routerInst.PathPrefix("/ui", static.AssetHandler),
 	)
+
+	// Static asset handling for the UI. This route intentionally sits outside the default API rate limiter
+	// because a single page load can request many static HTML, JavaScript, CSS, and media assets.
+	routerInst.PathPrefix(api.UserInterfacePath, static.AssetHandler)
 
 	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator, ingestSchema, dogtagsService, openGraphSchemaService)
 	NewV2API(resources, routerInst)
