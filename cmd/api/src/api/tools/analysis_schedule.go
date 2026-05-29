@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
@@ -45,35 +46,30 @@ func (s ToolContainer) GetScheduledAnalysisConfiguration(response http.ResponseW
 
 func (s ToolContainer) SetScheduledAnalysisConfiguration(response http.ResponseWriter, request *http.Request) {
 	var config ScheduledAnalysisConfiguration
+	ctx := request.Context()
 
 	if err := api.ReadJSONRequestPayloadLimited(&config, request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorParseParams, request), response)
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorParseParams, request), response)
 	} else if !config.Enabled {
 		nextParameter := appcfg.ScheduledAnalysisParameter{
 			Enabled: false,
 		}
 
 		if val, err := types.NewJSONBObject(nextParameter); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("failed to convert value to JSONBObject: %v", err), request), response)
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("failed to convert value to JSONBObject: %v", err), request), response)
 		} else {
 			updatedParameter := appcfg.Parameter{
 				Key:   appcfg.ScheduledAnalysis,
 				Value: val,
 			}
 
-			if err := s.db.SetConfigurationParameter(request.Context(), updatedParameter); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error updating database: %v", api.FormatDatabaseError(err)), request), response)
+			if err := s.db.SetConfigurationParameter(ctx, updatedParameter); err != nil {
+				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error updating database: %v", api.FormatDatabaseError(err)), request), response)
 			}
 		}
 	} else {
-		//Validate that the rrule is a good rule. We're going to require a DTSTART to keep scheduling consistent.
-		//We're also going to reject UNTIL/COUNT because it will most likely break the pipeline once it's hit without being invalid
-		if _, err := rrule.StrToRRule(config.RRule); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(ErrInvalidRrule, err), request), response)
-		} else if strings.Contains(strings.ToUpper(config.RRule), "UNTIL") || strings.Contains(strings.ToUpper(config.RRule), "COUNT") {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(ErrInvalidRrule, "count/until not supported"), request), response)
-		} else if !strings.Contains(strings.ToUpper(config.RRule), "DTSTART") {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(ErrInvalidRrule, "dtstart is required"), request), response)
+		if rule, err := validateRRule(config.RRule); err != nil {
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		} else {
 			nextParameter := appcfg.ScheduledAnalysisParameter{
 				Enabled: true,
@@ -81,17 +77,37 @@ func (s ToolContainer) SetScheduledAnalysisConfiguration(response http.ResponseW
 			}
 
 			if val, err := types.NewJSONBObject(nextParameter); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("failed to convert value to JSONBObject: %v", err), request), response)
+				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("failed to convert value to JSONBObject: %v", err), request), response)
 			} else {
 				updatedParameter := appcfg.Parameter{
 					Key:   appcfg.ScheduledAnalysis,
 					Value: val,
 				}
 
-				if err := s.db.SetConfigurationParameter(request.Context(), updatedParameter); err != nil {
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error updating database: %v", api.FormatDatabaseError(err)), request), response)
+				if err := s.db.SetConfigurationParameter(ctx, updatedParameter); err != nil {
+					api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error setting analysis schedule: %v", api.FormatDatabaseError(err)), request), response)
+				} else if err = s.db.SetNextScheduledAnalysisStartTime(ctx, rule.After(time.Now(), true)); err != nil {
+					api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("scheduled analysis updated, but there was an error updating the next scheduled analysis start time: %v", api.FormatDatabaseError(err)), request), response)
 				}
+
 			}
+		}
+	}
+}
+
+// Validates that the rrule is valid. Valid rules require a DTSTART to keep scheduling consistent.
+// Valid rules do not contain UNTIL/COUNT because it will most likely break the pipeline once it's hit without being invalid.
+func validateRRule(RRuleParam string) (*rrule.RRule, error) {
+	if rule, err := rrule.StrToRRule(RRuleParam); err != nil {
+		return rule, fmt.Errorf(ErrInvalidRrule, err)
+	} else {
+		RRuleParam = strings.ToUpper(RRuleParam)
+		if strings.Contains(RRuleParam, "UNTIL") || strings.Contains(RRuleParam, "COUNT") {
+			return rule, fmt.Errorf(ErrInvalidRrule, "count/until not supported")
+		} else if !strings.Contains(RRuleParam, "DTSTART") {
+			return rule, fmt.Errorf(ErrInvalidRrule, "dtstart is required")
+		} else {
+			return rule, nil
 		}
 	}
 }
