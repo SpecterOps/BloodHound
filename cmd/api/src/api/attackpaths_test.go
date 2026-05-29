@@ -60,7 +60,7 @@ func TestParseOptionalAssetGroupTagIds(t *testing.T) {
 			want:      want{tagIds: nil, err: true},
 		},
 		{
-			name:      "tagIdParam 0 reurns hygiene id",
+			name:      "tagIdParam 0 returns hygiene id",
 			args:      args{tagIdParams: []string{"0"}},
 			setupMock: func(mockDB *mocks.MockDatabase) {},
 			want:      want{tagIds: []int{model.AssetGroupTierHygienePlaceholderId}, err: false},
