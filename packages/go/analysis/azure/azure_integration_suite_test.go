@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/peterldowns/pgtestdb"
+	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
@@ -55,7 +56,7 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 	cfg, err := config.NewDefaultConnectionConfiguration(connConf.URL())
 	require.NoError(t, err)
 
-	pool, err := pg.NewPool(cfg.Database)
+	pool, err := dbpool.NewDawgsPool(cfg.Database)
 	require.NoError(t, err)
 
 	graphDB, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
