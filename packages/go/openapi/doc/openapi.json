@@ -13976,6 +13976,14 @@
                         "last_complete_analysis_at": {
                           "type": "string",
                           "format": "date-time"
+                        },
+                        "last_analysis_run_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "next_scheduled_analysis_at": {
+                          "type": "string",
+                          "format": "date-time"
                         }
                       }
                     }
