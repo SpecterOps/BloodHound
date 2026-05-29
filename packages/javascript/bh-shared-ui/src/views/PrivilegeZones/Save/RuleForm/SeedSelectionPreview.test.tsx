@@ -18,8 +18,10 @@ import { AssetGroupTagMember, SelectorSeedRequest } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { zoneHandlers } from '../../../../mocks';
-import { render, screen, within } from '../../../../test-utils';
+import { useNotifications } from '../../../../providers';
+import { render, screen, waitFor, within } from '../../../../test-utils';
 import { SeedSelectionPreview } from './SeedSelectionPreview';
+import { CYPHER_MUST_HAVE_RESULTS } from './rule-form-utils';
 
 const EXPLORE_URL =
     '/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=TUFUQ0ggKG46R3JvdXApIFdIRVJFIG4ubmFtZSA9ICIkMTQxMDAwLUxEVjlNUzkwVEtOSkBXUkFJVEguQ09SUCIgUkVUVVJOIG4K';
@@ -181,5 +183,22 @@ describe('Seed Selection Results', () => {
         expect(directObjectsEmptyMessage).toBeInTheDocument();
         expect(expandedObjectsListTitle).toBeInTheDocument();
         expect(expandedObjectsEmptyMessage).toBeInTheDocument();
+    });
+    it('shows a warning notification when attempting to create a rule with seeds that have no results', async () => {
+        setPreviewResultsTestData([]);
+
+        const mockAddNotification = vi.fn();
+        vi.mocked(useNotifications).mockReturnValue({
+            addNotification: mockAddNotification,
+            notifications: [],
+            removeNotification: vi.fn(),
+            dismissNotification: vi.fn(),
+        });
+
+        render(<SeedSelectionPreview seeds={TestSeeds} ruleType={2} />);
+
+        await waitFor(() => {
+            expect(mockAddNotification).toHaveBeenCalledWith(CYPHER_MUST_HAVE_RESULTS);
+        });
     });
 });
