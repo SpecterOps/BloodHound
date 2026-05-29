@@ -226,7 +226,7 @@ const RuleForm: FC = () => {
 
     const onSubmit: SubmitHandler<RuleFormInputs> = useCallback(() => {
         if (cypherEditorInvalid) {
-            addNotification(CYPHER_MUST_HAVE_RESULTS);
+            return addNotification(CYPHER_MUST_HAVE_RESULTS);
         }
 
         if (ruleId !== '') {
