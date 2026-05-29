@@ -18,10 +18,23 @@ import { AssetGroupTagMember, SelectorSeedRequest } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { zoneHandlers } from '../../../../mocks';
-import { useNotifications } from '../../../../providers';
 import { render, screen, waitFor, within } from '../../../../test-utils';
 import { SeedSelectionPreview } from './SeedSelectionPreview';
 import { CYPHER_MUST_HAVE_RESULTS } from './rule-form-utils';
+
+const mockAddNotification = vi.fn();
+vi.mock('../../../../providers', async (importOriginal) => {
+    const original: Record<string, any> = await importOriginal();
+    return {
+        ...original,
+        useNotifications: vi.fn(() => ({
+            addNotification: mockAddNotification,
+            notifications: [],
+            removeNotification: vi.fn(),
+            dismissNotification: vi.fn(),
+        })),
+    };
+});
 
 const EXPLORE_URL =
     '/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=TUFUQ0ggKG46R3JvdXApIFdIRVJFIG4ubmFtZSA9ICIkMTQxMDAwLUxEVjlNUzkwVEtOSkBXUkFJVEguQ09SUCIgUkVUVVJOIG4K';
@@ -186,14 +199,6 @@ describe('Seed Selection Results', () => {
     });
     it('shows a warning notification when attempting to create a rule with seeds that have no results', async () => {
         setPreviewResultsTestData([]);
-
-        const mockAddNotification = vi.fn();
-        vi.mocked(useNotifications).mockReturnValue({
-            addNotification: mockAddNotification,
-            notifications: [],
-            removeNotification: vi.fn(),
-            dismissNotification: vi.fn(),
-        });
 
         render(<SeedSelectionPreview seeds={TestSeeds} ruleType={2} />);
 
