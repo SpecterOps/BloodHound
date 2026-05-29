@@ -774,6 +774,66 @@ func nodeSchemaFailureCases() []genericIngestAssertion {
 				{"nodes[0] validation failed with 1 error(s)", "kind 'tag' uses reserved namespace 'tag'"},
 			},
 		},
+		{
+			name: "node validation: property keys cannot use uppercase characters",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:         "1234",
+						Kinds:      []string{"test"},
+						Properties: map[string]any{"TESTKey": "asdf"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"nodes[0] schema validation failed with 1 error(s)", "invalid propertyName 'TESTKey'\n- at '': 'TESTKey' does not match pattern"},
+			},
+		},
+		{
+			name: "node validation: property keys cannot be empty",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:         "1234",
+						Kinds:      []string{"test"},
+						Properties: map[string]any{"": "asdf"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"nodes[0] schema validation failed with 1 error(s)", "invalid propertyName ''\n- at '': '' does not match pattern"},
+			},
+		},
+		{
+			name: "node validation: property keys cannot contain spaces",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:         "1234",
+						Kinds:      []string{"test"},
+						Properties: map[string]any{"test prop": "asdf"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"nodes[0] schema validation failed with 1 error(s)", "invalid propertyName 'test prop'\n- at '': 'test prop' does not match pattern"},
+			},
+		},
+		{
+			name: "node validation: property keys cannot be longer than 128 chars",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:         "1234",
+						Kinds:      []string{"test"},
+						Properties: map[string]any{strings.Repeat("a", 129): "asdf"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"nodes[0] schema validation failed with 1 error(s)", "invalid propertyName 'aaaaaaaaaaa", "aaaaaaaaaaa' does not match pattern"},
+			},
+		},
 	}
 }
 
@@ -1076,6 +1136,70 @@ func edgeSchemaFailureCases() []genericIngestAssertion {
 			},
 			validationErrContains: [][]string{
 				{"edges[0]", "at '/start/match_by'", "value must be one of 'id', 'name'"},
+			},
+		},
+		{
+			name: "edge validation: property keys cannot use uppercase characters",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind:       "test",
+						Start:      &edgePiece{Value: "1234"},
+						End:        &edgePiece{Value: "5678"},
+						Properties: map[string]any{"TESTKey": "asdf"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0] schema validation failed with 1 error(s)", "invalid propertyName 'TESTKey'\n- at '': 'TESTKey' does not match pattern"},
+			},
+		},
+		{
+			name: "edge validation: property keys cannot be empty",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind:       "test",
+						Start:      &edgePiece{Value: "1234"},
+						End:        &edgePiece{Value: "5678"},
+						Properties: map[string]any{"": "asdf"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0] schema validation failed with 1 error(s)", "invalid propertyName ''\n- at '': '' does not match pattern"},
+			},
+		},
+		{
+			name: "edge validation: property keys cannot contain spaces",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind:       "test",
+						Start:      &edgePiece{Value: "1234"},
+						End:        &edgePiece{Value: "5678"},
+						Properties: map[string]any{"test prop": "asdf"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0] schema validation failed with 1 error(s)", "invalid propertyName 'test prop'\n- at '': 'test prop' does not match pattern"},
+			},
+		},
+		{
+			name: "edge validation: property keys cannot be longer than 128 chars",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind:       "test",
+						Start:      &edgePiece{Value: "1234"},
+						End:        &edgePiece{Value: "5678"},
+						Properties: map[string]any{strings.Repeat("a", 129): "asdf"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0] schema validation failed with 1 error(s)", "invalid propertyName 'aaaaaaaaaaa", "aaaaaaaaaaa' does not match pattern"},
 			},
 		},
 	}
