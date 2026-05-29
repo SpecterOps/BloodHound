@@ -3030,6 +3030,34 @@ func (mr *MockDatabaseMockRecorder) SetFlag(ctx, value any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFlag", reflect.TypeOf((*MockDatabase)(nil).SetFlag), ctx, value)
 }
 
+// SetLastAnalysisStartTime mocks base method.
+func (m *MockDatabase) SetLastAnalysisStartTime(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetLastAnalysisStartTime", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetLastAnalysisStartTime indicates an expected call of SetLastAnalysisStartTime.
+func (mr *MockDatabaseMockRecorder) SetLastAnalysisStartTime(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLastAnalysisStartTime", reflect.TypeOf((*MockDatabase)(nil).SetLastAnalysisStartTime), ctx)
+}
+
+// SetNextScheduledAnalysisStartTime mocks base method.
+func (m *MockDatabase) SetNextScheduledAnalysisStartTime(ctx context.Context, arg1 time.Time) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetNextScheduledAnalysisStartTime", ctx, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetNextScheduledAnalysisStartTime indicates an expected call of SetNextScheduledAnalysisStartTime.
+func (mr *MockDatabaseMockRecorder) SetNextScheduledAnalysisStartTime(ctx, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetNextScheduledAnalysisStartTime", reflect.TypeOf((*MockDatabase)(nil).SetNextScheduledAnalysisStartTime), ctx, arg1)
+}
+
 // SetUserSessionFlag mocks base method.
 func (m *MockDatabase) SetUserSessionFlag(ctx context.Context, userSession *model.UserSession, key model.SessionFlagKey, state bool) error {
 	m.ctrl.T.Helper()
