@@ -25,11 +25,15 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/version"
-	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -47,9 +51,168 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 	}
 }
 
+func Version_910_Migration(ctx context.Context, db graph.Database) error {
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove AD Group kind from non-AD nodes")()
+
+	criteria := query.And(
+		query.Not(query.KindIn(query.Node(), ad.Entity)),
+		query.KindIn(query.Node(), ad.Group),
+	)
+
+	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		if nodes, err := ops.FetchNodes(tx.Nodes().Filter(criteria)); err != nil {
+			return err
+		} else {
+			for _, node := range nodes {
+				node.DeleteKinds(ad.Group)
+				if err := tx.UpdateNode(node); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+}
+
+func Version_900_Migration(ctx context.Context, db graph.Database) error {
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove environment_id property from nodes and reassign to environmentid property")()
+
+	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		if nodes, err := ops.FetchNodes(
+			tx.Nodes().Filter(query.IsNotNull(query.NodeProperty("environment_id"))),
+		); err != nil {
+			return err
+		} else {
+			for _, node := range nodes {
+				// move environment_id -> environmentid
+				environmentID, err := node.Properties.Get("environment_id").String()
+				if err != nil {
+					return err
+				}
+				node.Properties.Set(graphschema.EnvironmentIDKey, environmentID)
+				node.Properties.Delete("environment_id")
+
+				// and delete the old key
+				if err := tx.UpdateNode(node); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	})
+}
+
+func Version_860_Migration(ctx context.Context, db graph.Database) error {
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove AZOwner edges to AZDevice")()
+
+	targetCriteria := query.And(
+		query.Kind(query.Start(), azure.Entity),
+		query.Kind(query.Relationship(), azure.Owns),
+		query.Kind(query.End(), azure.Device),
+	)
+
+	return db.BatchOperation(ctx, func(batch graph.Batch) error {
+		rels, err := ops.FetchRelationships(batch.Relationships().Filter(targetCriteria))
+
+		if err != nil {
+			return err
+		}
+
+		for _, rel := range rels {
+			if err := batch.DeleteRelationship(rel.ID); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
+func Version_852_Migration(ctx context.Context, db graph.Database) error {
+	const removalQuery = `
+		delete from edge e
+		where e.kind_id = any(
+			select id from kind k where k.name = any(array['AdminTo', 'ExecuteDCOM', 'CanPSRemote', 'CanRDP'])
+		);`
+
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to cleanup bad LocalGroup edges from 8.5.1")()
+
+	// The incorrectly assigned edges were only created in PG. Due to the way translation
+	// works, edge queries match on nodes and will not be able to address edges created
+	// with non-existent node IDs.
+	if pg.IsPostgreSQLGraph(db) {
+		return db.Run(ctx, removalQuery, nil)
+	}
+
+	return nil
+}
+
+func Version_830_Migration(ctx context.Context, db graph.Database) error {
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to cleanup bad `lastseen` properties from 7.4.0")()
+
+	// This is a bit gross, but we can't use `query.Equals` here because we need to
+	// force a string comparison, otherwise there is no value we can pass that will
+	// correctly map to the "{}" string value we need.
+	targetCriteria := query.And(
+		query.StringStartsWith(query.RelationshipProperty(common.LastSeen.String()), "{}"),
+		query.StringEndsWith(query.RelationshipProperty(common.LastSeen.String()), "{}"),
+	)
+
+	return db.BatchOperation(ctx, func(batch graph.Batch) error {
+		rels, err := ops.FetchRelationships(batch.Relationships().Filter(targetCriteria))
+		if err != nil {
+			return err
+		}
+
+		for _, rel := range rels {
+			if err := batch.DeleteRelationship(rel.ID); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
+func Version_813_Migration(ctx context.Context, db graph.Database) error {
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to revert MemberOf between well known groups")()
+
+	targetCriteria := query.And(
+		query.Kind(query.Start(), ad.Group),
+		query.Kind(query.End(), ad.Group),
+		query.Kind(query.Relationship(), ad.MemberOf),
+		query.Or(
+			query.And(
+				query.StringEndsWith(query.StartProperty(common.ObjectID.String()), wellknown.AuthenticatedUsersSIDSuffix.String()),
+				query.StringEndsWith(query.EndProperty(common.ObjectID.String()), wellknown.AuthenticatedUsersSIDSuffix.String()),
+			),
+			query.And(
+				query.StringEndsWith(query.StartProperty(common.ObjectID.String()), wellknown.EveryoneSIDSuffix.String()),
+				query.StringEndsWith(query.EndProperty(common.ObjectID.String()), wellknown.EveryoneSIDSuffix.String()),
+			),
+		),
+	)
+
+	return db.BatchOperation(ctx, func(batch graph.Batch) error {
+		rels, err := ops.FetchRelationships(batch.Relationships().Filter(targetCriteria))
+		if err != nil {
+			return err
+		}
+
+		for _, rel := range rels {
+			if err := batch.DeleteRelationship(rel.ID); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
 // Version_740_Migration is intended to split the TrustedBy edge to into SameForestTrust and CrossForestTrust edges
 func Version_740_Migration(ctx context.Context, db graph.Database) error {
-	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to split the TrustedBy edges")()
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to split the TrustedBy edges")()
 
 	targetCriteria := query.And(
 		query.Kind(query.Start(), ad.Domain),
@@ -100,7 +263,7 @@ func Version_740_Migration(ctx context.Context, db graph.Database) error {
 func Version_730_Migration(ctx context.Context, db graph.Database) error {
 	const adminRightsCount = "adminrightscount"
 
-	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to remove admin_rights_count property from user nodes and smbsigning from computer nodes")
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove admin_rights_count property from user nodes and smbsigning from computer nodes")
 
 	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		// MATCH(n:User) WHERE n.adminrightscount <> null
@@ -142,7 +305,7 @@ func Version_730_Migration(ctx context.Context, db graph.Database) error {
 // Version_620_Migration is intended to rename the RemoteInteractiveLogonPrivilege edge to RemoteInteractiveLogonRight
 // See: https://specterops.atlassian.net/browse/BED-4428
 func Version_620_Migration(ctx context.Context, db graph.Database) error {
-	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to rename RemoteInteractiveLogonPrivilege edges")()
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to rename RemoteInteractiveLogonPrivilege edges")()
 
 	// MATCH p=(n:Base)-[:RemoteInteractiveLogonPrivilege]->(m:Base) RETURN p
 	targetCriteria := query.And(
@@ -183,7 +346,7 @@ func Version_620_Migration(ctx context.Context, db graph.Database) error {
 // node.Kinds = Kinds{ad.Entity, ad.User, ad.Computer} must be reset to:
 // node.Kinds = Kinds{ad.Entity}
 func Version_513_Migration(ctx context.Context, db graph.Database) error {
-	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to remove incorrectly ingested labels")()
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove incorrectly ingested labels")()
 
 	// Cypher for the below filter is: size(labels(n)) > 2 and not (n:Group and n:ADLocalGroup) or size(labels(n)) > 3 and (n:Group and n:ADLocalGroup)
 	targetCriteria := query.Or(
@@ -197,7 +360,7 @@ func Version_513_Migration(ctx context.Context, db graph.Database) error {
 		),
 	)
 
-	if nodes, err := ops.ParallelFetchNodes(ctx, db, targetCriteria, analysis.MaximumDatabaseParallelWorkers); err != nil {
+	if nodes, err := ops.ParallelFetchNodes(ctx, db, targetCriteria, post.MaximumDatabaseParallelWorkers); err != nil {
 		return err
 	} else if err := db.BatchOperation(ctx, func(batch graph.Batch) error {
 		for _, node := range nodes {
@@ -230,7 +393,10 @@ func Version_513_Migration(ctx context.Context, db graph.Database) error {
 			}
 		}
 
-		slog.Info(fmt.Sprintf("Migration removed all non-entity kinds from %d incorrectly labeled nodes", nodes.Len()))
+		slog.Info(
+			"Migration removed all non-entity kinds from incorrectly labeled nodes",
+			slog.Int("num_nodes", nodes.Len()),
+		)
 		return nil
 	}); err != nil {
 		return err
@@ -240,7 +406,7 @@ func Version_513_Migration(ctx context.Context, db graph.Database) error {
 }
 
 func Version_508_Migration(ctx context.Context, db graph.Database) error {
-	defer measure.Measure(slog.LevelInfo, "Migrating Azure Owns to Owner")()
+	defer measure.MeasureWithThreshold(slog.LevelInfo, "Migrating Azure Owns to Owner")()
 
 	return db.BatchOperation(ctx, func(batch graph.Batch) error {
 		return batch.Relationships().Filterf(func() graph.Criteria {
@@ -273,7 +439,7 @@ func Version_508_Migration(ctx context.Context, db graph.Database) error {
 }
 
 func Version_277_Migration(ctx context.Context, db graph.Database) error {
-	defer measure.Measure(slog.LevelInfo, "Migrating node property casing")()
+	defer measure.MeasureWithThreshold(slog.LevelInfo, "Migrating node property casing")()
 
 	return db.BatchOperation(ctx, func(batch graph.Batch) error {
 		if err := batch.Nodes().Filterf(func() graph.Criteria {
@@ -285,7 +451,11 @@ func Version_277_Migration(ctx context.Context, db graph.Database) error {
 				var dirty = false
 
 				if objectId, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-					slog.Error(fmt.Sprintf("Error getting objectid for node %d: %v", node.ID, err))
+					slog.Error(
+						"Error getting objectid for node",
+						slog.Uint64("node_id", uint64(node.ID)),
+						attr.Error(err),
+					)
 					continue
 				} else if objectId != strings.ToUpper(objectId) {
 					dirty = true
@@ -316,7 +486,10 @@ func Version_277_Migration(ctx context.Context, db graph.Database) error {
 					} else if node.Kinds.ContainsOneOf(azure.Entity) {
 						identityKind = azure.Entity
 					} else {
-						slog.Error(fmt.Sprintf("Unable to figure out base kind of node %d", node.ID))
+						slog.Error(
+							"Unable to figure out base kind of node",
+							slog.Uint64("node_id", uint64(node.ID)),
+						)
 					}
 
 					if identityKind != nil {
@@ -325,17 +498,27 @@ func Version_277_Migration(ctx context.Context, db graph.Database) error {
 							IdentityKind:       identityKind,
 							IdentityProperties: []string{common.ObjectID.String()},
 						}); err != nil {
-							slog.Error(fmt.Sprintf("Error updating node %d: %v", node.ID, err))
+							slog.Error(
+								"Error updating node",
+								slog.Uint64("node_id", uint64(node.ID)),
+								attr.Error(err),
+							)
 						}
 					}
 				}
 
 				if count++; count%10000 == 0 {
-					slog.Info(fmt.Sprintf("Completed %d nodes in migration", count))
+					slog.Info(
+						"Nodes completed so far",
+						slog.Int("count", count),
+					)
 				}
 			}
 
-			slog.Info(fmt.Sprintf("Completed %d nodes in migration", count))
+			slog.Info(
+				"Nodes completed in migration",
+				slog.Int("count", count),
+			)
 			return cursor.Error()
 		}); err != nil {
 			return err
@@ -349,7 +532,7 @@ var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 2, Minor: 3, Patch: 0},
 		Execute: func(ctx context.Context, db graph.Database) error {
-			defer measure.Measure(slog.LevelInfo, "Deleting all existing role nodes")()
+			defer measure.MeasureWithThreshold(slog.LevelInfo, "Deleting all existing role nodes")()
 
 			return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 				return tx.Nodes().Filterf(func() graph.Criteria {
@@ -361,7 +544,7 @@ var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 2, Minor: 6, Patch: 3},
 		Execute: func(ctx context.Context, db graph.Database) error {
-			defer measure.Measure(slog.LevelInfo, "Deleting all LocalToComputer/RemoteInteractiveLogin edges and ADLocalGroup labels")()
+			defer measure.MeasureWithThreshold(slog.LevelInfo, "Deleting all LocalToComputer/RemoteInteractiveLogin edges and ADLocalGroup labels")()
 
 			// This kind has long since gone missing from our schemas but the assert below reintroduces it for the
 			// purposes of running this migration
@@ -435,16 +618,28 @@ var Manifest = []Migration{
 		Version: version.Version{Major: 7, Minor: 4, Patch: 0},
 		Execute: Version_740_Migration,
 	},
-}
-
-func LatestGraphMigrationVersion() version.Version {
-	var latestVersion version.Version
-
-	for _, migration := range Manifest {
-		if migration.Version.GreaterThan(latestVersion) {
-			latestVersion = migration.Version
-		}
-	}
-
-	return latestVersion
+	{
+		Version: version.Version{Major: 8, Minor: 1, Patch: 3},
+		Execute: Version_813_Migration,
+	},
+	{
+		Version: version.Version{Major: 8, Minor: 3, Patch: 0},
+		Execute: Version_830_Migration,
+	},
+	{
+		Version: version.Version{Major: 8, Minor: 5, Patch: 2},
+		Execute: Version_852_Migration,
+	},
+	{
+		Version: version.Version{Major: 8, Minor: 6, Patch: 0},
+		Execute: Version_860_Migration,
+	},
+	{
+		Version: version.Version{Major: 9, Minor: 0, Patch: 0},
+		Execute: Version_900_Migration,
+	},
+	{
+		Version: version.Version{Major: 9, Minor: 1, Patch: 0},
+		Execute: Version_910_Migration,
+	},
 }

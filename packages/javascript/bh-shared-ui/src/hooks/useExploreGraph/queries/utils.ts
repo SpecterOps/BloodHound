@@ -16,8 +16,8 @@
 
 import { FlatGraphResponse, GraphResponse, StyledGraphEdge, StyledGraphNode, type GraphData } from 'js-client-library';
 import { UseQueryOptions } from 'react-query';
-import { ExploreQueryParams } from '../../useExploreParams';
-import { extractEdgeTypes, getInitialPathFilters } from '../utils';
+import { BUILTIN_EDGE_CATEGORIES } from '../../../views/Explore/ExploreSearch/EdgeFilter/edgeCategories';
+import { getInitialPathFilters } from '../utils';
 
 type QueryKeys = ('explore-graph-query' | string | undefined)[];
 
@@ -33,14 +33,13 @@ export type GraphItemMutationFn = (items: any) => unknown;
 export type ExploreGraphQueryError = { message: string; key: string };
 
 export type ExploreGraphQuery = {
-    getQueryConfig: (paramOptions: Partial<ExploreQueryParams>) => ExploreGraphQueryOptions;
+    getQueryConfig: () => ExploreGraphQueryOptions;
     getErrorMessage: (error: any) => ExploreGraphQueryError;
 };
 
 export const ExploreGraphQueryKey = 'explore-graph-query';
 
-export const INITIAL_FILTERS = getInitialPathFilters();
-export const INITIAL_FILTER_TYPES = extractEdgeTypes(INITIAL_FILTERS);
+export const INITIAL_FILTERS = getInitialPathFilters(BUILTIN_EDGE_CATEGORIES);
 export const EMPTY_FILTER_VALUE = 'empty';
 
 export const sharedGraphQueryOptions: ExploreGraphQueryOptions = {
@@ -48,11 +47,13 @@ export const sharedGraphQueryOptions: ExploreGraphQueryOptions = {
     refetchOnWindowFocus: false,
 };
 
-// creates a filter string in our API format, handling the case that our 'empty' value is in the url param
+// Checks if a list of path filters consists of the string 'empty', which indicates all filters are unchecked
+export const areFiltersEmpty = (types: string[] | null | undefined) => {
+    return !!(types && types[0] === EMPTY_FILTER_VALUE);
+};
+
+// Creates an inclusive filter string formatted for the API from a list of edge types
 export const createPathFilterString = (types: string[]) => {
-    if (types[0] === EMPTY_FILTER_VALUE) {
-        return `nin:${INITIAL_FILTER_TYPES.join(',')}`;
-    }
     return `in:${types.join(',')}`;
 };
 
@@ -70,6 +71,7 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
             result.nodes[key] = {
                 label: node.label.text || '',
                 kind: node.data.nodetype || '',
+                kinds: node.data.kinds || [],
                 objectId: node.data.objectid || '',
                 isTierZero: !!(node.data.system_tags && node.data.system_tags.indexOf('admin_tier_0') !== -1),
                 isOwnedObject: !!(node.data.system_tags && node.data.system_tags.indexOf('owned') !== -1),
@@ -91,53 +93,6 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
         }
     }
 
-    return result;
-};
-
-// Converts the same data types in the opposite direction. We have some typing issues here due to the "lastSeen" property we are adding that should be addressed
-export const transformToFlatGraphResponse = (graph: GraphResponse) => {
-    const result: any = {};
-    for (const [key, value] of Object.entries(graph.data.nodes)) {
-        const lastSeen = getLastSeenValue(value);
-        // Check and add needed system_tags to node
-        const tags = [];
-        {
-            value.isTierZero ? tags.push('admin_tier_0') : null;
-        }
-        {
-            value.isOwnedObject ? tags.push('owned') : null;
-        }
-        result[key] = {
-            label: {
-                text: value.label,
-            },
-            data: {
-                nodetype: value.kind,
-                name: value.label,
-                objectid: value.objectId,
-                system_tags: tags.join(' '),
-                lastseen: lastSeen,
-                isTierZero: value.isTierZero,
-                ...(value?.properties || {}),
-            },
-        };
-    }
-    for (const edge of graph.data.edges) {
-        const lastSeen = getLastSeenValue(edge);
-        result[`${edge.source}_${edge.kind}_${edge.target}`] = {
-            id1: edge.source,
-            id2: edge.target,
-            label: {
-                text: edge.label,
-            },
-            lastSeen: lastSeen,
-            data: {
-                ...(edge.data || {}),
-                lastseen: lastSeen,
-                ...(edge.data?.properties || {}),
-            },
-        };
-    }
     return result;
 };
 

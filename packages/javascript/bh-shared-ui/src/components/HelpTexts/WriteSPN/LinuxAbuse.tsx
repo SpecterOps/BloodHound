@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link, Typography } from '@mui/material';
+import { Link } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 import { EdgeInfoProps } from '../index';
 
@@ -23,7 +24,10 @@ const LinuxAbuse: FC<EdgeInfoProps> = () => {
         <>
             <Typography variant='body2'>
                 A targeted kerberoast attack can be performed using{' '}
-                <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/targetedKerberoast'>
+                <Link
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    href='https://github.com/ShutdownRepo/targetedKerberoast'>
                     targetedKerberoast.py
                 </Link>
                 .

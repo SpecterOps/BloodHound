@@ -21,6 +21,7 @@ package database_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
@@ -28,6 +29,46 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/stretchr/testify/require"
 )
+
+func TestDatabase_DeleteAssetGroupHistory(t *testing.T) {
+	t.Parallel()
+	var (
+		testCtx   = context.Background()
+		testActor = model.User{
+			EmailAddress: null.StringFrom("user@example.com"),
+			Unique:       model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")},
+		}
+		testTarget        = "test target"
+		testAssetGroupTag = 1
+		testSuite         = setupIntegrationTestSuite(t)
+	)
+
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	t.Run("delete by createdAt date", func(t *testing.T) {
+		var deleteTime time.Time
+		for i := range 7 {
+			err := testSuite.BHDatabase.CreateAssetGroupHistoryRecord(testCtx, testActor.ID.String(), testActor.EmailAddress.ValueOrZero(), testTarget, model.AssetGroupHistoryActionCreateSelector, testAssetGroupTag, null.String{}, null.String{})
+			require.NoError(t, err)
+			if i == 4 {
+				deleteTime = time.Now().UTC()
+				time.Sleep(2 * time.Second)
+			}
+		}
+
+		records, _, err := testSuite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}, 0, 0)
+		require.NoError(t, err)
+		require.Len(t, records, 7)
+
+		countDeleted, err := testSuite.BHDatabase.DeleteAssetGroupHistoryRecordsByCreatedDate(testCtx, deleteTime)
+		require.Equal(t, int64(5), countDeleted)
+		require.NoError(t, err)
+
+		records, _, err = testSuite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}, 0, 0)
+		require.NoError(t, err)
+		require.Len(t, records, 2)
+	})
+}
 
 func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 	var (

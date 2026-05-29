@@ -22,7 +22,7 @@ import (
 	"log"
 
 	"github.com/specterops/bloodhound/cmd/api/src/bootstrap"
-	schema "github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/packages/go/lab"
 	"github.com/specterops/dawgs/graph"
 )
@@ -30,15 +30,16 @@ import (
 var GraphDBFixture = NewGraphDBFixture()
 
 func NewGraphDBFixture() *lab.Fixture[*graph.DatabaseSwitch] {
+	ctx := context.Background()
 	fixture := lab.NewFixture(func(harness *lab.Harness) (*graph.DatabaseSwitch, error) {
 		if config, ok := lab.Unpack(harness, ConfigFixture); !ok {
 			return nil, fmt.Errorf("unable to unpack ConfigFixture")
-		} else if graphdb, err := bootstrap.ConnectGraph(context.TODO(), config); err != nil {
+		} else if graphdb, err := bootstrap.ConnectGraph(ctx, config); err != nil {
 			return nil, err
-		} else if err := bootstrap.MigrateGraph(context.Background(), graphdb, schema.DefaultGraphSchema()); err != nil {
+		} else if err := migrations.NewGraphMigrator(graphdb).Migrate(ctx); err != nil {
 			return nil, fmt.Errorf("failed migrating Graph database: %v", err)
 		} else {
-			return graph.NewDatabaseSwitch(context.Background(), graphdb), nil
+			return graph.NewDatabaseSwitch(ctx, graphdb), nil
 		}
 	}, nil)
 

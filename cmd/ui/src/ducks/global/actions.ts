@@ -57,6 +57,19 @@ export const setDarkMode = (darkMode: boolean): types.GlobalViewActionTypes => {
         darkMode,
     };
 };
+export const setAutoRunQueries = (autoRunQueries: boolean): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_AUTO_RUN_QUERIES,
+        autoRunQueries,
+    };
+};
+
+export const setTimeoutSetting = (timeoutSetting: boolean): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_TIMEOUT_SETTING,
+        timeoutSetting,
+    };
+};
 
 export const setExploreLayout = (exploreLayout: BaseGraphLayoutOptions): types.GlobalViewActionTypes => {
     return {
@@ -72,6 +85,13 @@ export const setIsExploreTableSelected = (isExploreTableSelected: boolean): type
     };
 };
 
+export const setIsExploreLayoutSelected = (isExploreLayoutSelected: boolean): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_IS_EXPLORE_LAYOUT_SELECTED,
+        isExploreLayoutSelected,
+    };
+};
+
 export const setSelectedExploreTableColumns = (
     selectedExploreTableColumns: Record<string, boolean>
 ): types.GlobalViewActionTypes => {
@@ -80,6 +100,14 @@ export const setSelectedExploreTableColumns = (
         selectedExploreTableColumns,
     };
 };
+
+export const setPinnedExploreTableColumns = (pinnedExploreTableColumns: string[]): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_PINNED_EXPLORE_TABLE_COLUMNS,
+        pinnedExploreTableColumns,
+    };
+};
+
 export const setExpanded = (expanded: { [key: string]: symbol[] }): types.GlobalAccordionsActionTypes => {
     return {
         type: types.GLOBAL_SET_EXPANDED,

@@ -17,9 +17,12 @@ import { useQuery } from 'react-query';
 import { SNACKBAR_DURATION_LONG } from '../../constants';
 import { useNotifications } from '../../providers';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
+
+import { useTimeoutLimitConfiguration } from '../useConfiguration';
 import {
-    CypherExploreGraphQuery,
     ExploreGraphQuery,
+    ExploreGraphQueryOptions,
+    aclInheritanceSearchQuery,
     compositionSearchQuery,
     cypherSearchQuery,
     fallbackQuery,
@@ -28,57 +31,79 @@ import {
     relationshipSearchQuery,
 } from './queries';
 
-type UseExploreGraphParams = {
-    includeProperties?: boolean;
-    enabled?: boolean;
-};
-
 export function exploreGraphQueryFactory(
-    paramOptions: Partial<ExploreQueryParams>
-): ExploreGraphQuery | CypherExploreGraphQuery {
+    paramOptions: Partial<ExploreQueryParams>,
+    userSettings: UserSettings
+): ExploreGraphQuery {
     switch (paramOptions.searchType) {
         case 'node':
-            return nodeSearchQuery;
+            return nodeSearchQuery(paramOptions);
         case 'pathfinding':
-            return pathfindingSearchQuery;
+            return pathfindingSearchQuery(paramOptions);
         case 'relationship':
-            return relationshipSearchQuery;
+            return relationshipSearchQuery(paramOptions);
         case 'composition':
-            return compositionSearchQuery;
+            return compositionSearchQuery(paramOptions);
         case 'cypher':
-            return cypherSearchQuery;
+            return cypherSearchQuery(paramOptions, userSettings);
+        case 'aclinheritance':
+            return aclInheritanceSearchQuery(paramOptions);
         default:
             return fallbackQuery;
     }
 }
 
-const DEFAULT_USE_EXPLORE_GRAPH_PARAMS = { includeProperties: false, enabled: true };
-
 // Hook for maintaining the top level graph query powering the explore page
-export const useExploreGraph = ({
-    includeProperties = DEFAULT_USE_EXPLORE_GRAPH_PARAMS.includeProperties,
-    enabled = DEFAULT_USE_EXPLORE_GRAPH_PARAMS.enabled,
-}: UseExploreGraphParams = DEFAULT_USE_EXPLORE_GRAPH_PARAMS) => {
+export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
     const params = useExploreParams();
+    const { onError, ...rest } = options;
 
     const { addNotification } = useNotifications();
+    const userSettings = useUserSettings();
 
-    const query = exploreGraphQueryFactory(params);
+    const query = exploreGraphQueryFactory(params, userSettings);
 
-    const queryConfig =
-        params?.searchType === 'cypher'
-            ? query.getQueryConfig(params, includeProperties)
-            : query.getQueryConfig(params);
+    const queryConfig = query.getQueryConfig();
 
-    const shouldFetch = Boolean(enabled && queryConfig?.queryFn);
     return useQuery({
         ...queryConfig,
         onError: (error: any) => {
             const { message, key } = query.getErrorMessage(error);
+            if (onError) {
+                onError(message);
+            }
+
             addNotification(message, key, {
                 autoHideDuration: SNACKBAR_DURATION_LONG,
             });
         },
-        enabled: shouldFetch,
+        ...rest,
+        ...userSettings,
     });
+};
+
+export type UserSettings = {
+    headers?: {
+        Prefer: string;
+    };
+};
+
+export const useUserSettings = () => {
+    const timeoutLimitEnabled = useTimeoutLimitConfiguration();
+
+    const persistedStateString = localStorage.getItem('persistedState');
+    const persistedState = persistedStateString !== null ? JSON.parse(persistedStateString) : null;
+    const isDisableQueryLimit = persistedState?.global?.view?.timeoutSetting;
+
+    const settings: UserSettings = {
+        headers: { Prefer: '' },
+    };
+
+    if (isDisableQueryLimit && timeoutLimitEnabled === false) {
+        settings.headers = { Prefer: 'wait=-1' };
+    } else {
+        delete settings.headers;
+    }
+
+    return settings;
 };

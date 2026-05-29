@@ -17,22 +17,25 @@
 package apitest
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	apimocks "github.com/specterops/bloodhound/cmd/api/src/api/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/auth"
 	authPkg "github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"go.uber.org/mock/gomock"
 )
 
-func NewAuthManagementResource(mockCtrl *gomock.Controller) (auth.ManagementResource, *mocks.MockDatabase) {
+func NewAuthManagementResource(mockCtrl *gomock.Controller) (auth.ManagementResource, *mocks.MockDatabase, *mocks_graph.MockGraph) {
 	cfg, err := config.NewDefaultConfiguration()
 	if err != nil {
-		slog.Error(fmt.Sprintf("Failed to create default configuration: %v", err))
+		slog.Error("Failed to create default configuration", attr.Error(err))
 		os.Exit(1)
 	}
 
@@ -40,7 +43,9 @@ func NewAuthManagementResource(mockCtrl *gomock.Controller) (auth.ManagementReso
 	cfg.Crypto.Argon2.NumThreads = 1
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
-	resources := auth.NewManagementResource(cfg, mockDB, authPkg.NewAuthorizer(mockDB), api.NewAuthenticator(cfg, mockDB, mocks.NewMockAuthContextInitializer(mockCtrl)))
+	mockGraphDB := mocks_graph.NewMockGraph(mockCtrl)
+	mockDogTagsService := dogtags.NewTestService(dogtags.TestOverrides{})
+	resources := auth.NewManagementResource(cfg, mockDB, authPkg.NewAuthorizer(mockDB), api.NewAuthenticator(cfg, mockDB, apimocks.NewMockAuthExtensions(mockCtrl)), mockGraphDB, mockDogTagsService)
 
-	return resources, mockDB
+	return resources, mockDB, mockGraphDB
 }

@@ -57,7 +57,7 @@ export const AdcsEsc14ScenarioALinux: FC = () => (
             The last requirement does not have to be met if a DC has UPN mapping disabled (see{' '}
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/ff520074(v=ws.10)'>
                 How to disable the Subject Alternative Name for UPN mapping
             </Link>
@@ -155,7 +155,7 @@ export const AdcsEsc14ScenarioAWindows: FC = () => {
                 The last requirement does not have to be met if a DC has UPN mapping disabled (see{' '}
                 <Link
                     target='_blank'
-                    rel='noopener'
+                    rel='noopener noreferrer'
                     href='https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/ff520074(v=ws.10)'>
                     How to disable the Subject Alternative Name for UPN mapping
                 </Link>

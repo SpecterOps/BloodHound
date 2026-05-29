@@ -190,10 +190,17 @@ type testEdge struct {
 	Properties map[string]any `json:"properties"`
 }
 
+type propertyMatcher struct {
+	Key      string `json:"key"`
+	Operator string `json:"operator"`
+	Value    any    `json:"value"`
+}
+
 type edgePiece struct {
-	Value   string `json:"value,omitempty"`
-	MatchBy string `json:"match_by,omitempty"`
-	Kind    string `json:"kind,omitempty"`
+	Value            string            `json:"value,omitempty"`
+	MatchBy          string            `json:"match_by,omitempty"`
+	PropertyMatchers []propertyMatcher `json:"property_matchers,omitempty"`
+	Kind             string            `json:"kind,omitempty"`
 }
 
 type testPayload struct {
@@ -332,7 +339,7 @@ func positiveGenericIngestCases() []genericIngestAssertion {
 					{
 						Start: &edgePiece{Value: "1"},
 						End:   &edgePiece{Value: "2"},
-						Kind:  "a",
+						Kind:  "KindA",
 						Properties: map[string]any{
 							"arr": []string{"one", "two"},
 						},
@@ -351,7 +358,7 @@ func positiveGenericIngestCases() []genericIngestAssertion {
 						End: &edgePiece{
 							Value: "5678",
 						},
-						Kind: "kind A",
+						Kind: "kindA",
 						Properties: map[string]any{
 							"hello": "world",
 							"true":  false,
@@ -397,6 +404,25 @@ func positiveGenericIngestCases() []genericIngestAssertion {
 				},
 			},
 		},
+		{
+			name: "kind merely starts with 'tag' substring is not reserved",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:         "1234",
+						Kinds:      []string{"TaggingService"},
+						Properties: map[string]any{},
+					},
+				},
+				Edges: []testEdge{
+					{
+						Start: &edgePiece{Value: "1234"},
+						End:   &edgePiece{Value: "5678"},
+						Kind:  "Tagged_By",
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -417,7 +443,7 @@ func complexNestedPropertyCases() []genericIngestAssertion {
 					},
 				},
 			},
-			validationErrContains: [][]string{{"nodes[0] schema validation", "objects are not allowed in the property bag"}},
+			validationErrContains: [][]string{{"nodes[0] schema validation", "got object, want array"}},
 		},
 		{
 			name: "node cannot have objects inside an array in the property bag",
@@ -436,7 +462,7 @@ func complexNestedPropertyCases() []genericIngestAssertion {
 					},
 				},
 			},
-			validationErrContains: [][]string{{"nodes[0] schema validation", "Arrays must contain only primitive values"}},
+			validationErrContains: [][]string{{"nodes[0] schema validation", "got object, want boolean"}},
 		},
 		{
 			name: "node cannot have an array with mixed types",
@@ -451,7 +477,7 @@ func complexNestedPropertyCases() []genericIngestAssertion {
 					},
 				},
 			},
-			validationErrContains: [][]string{{"nodes[0] schema validation", "contains a mixed-type array"}},
+			validationErrContains: [][]string{{"nodes[0] schema validation", "got number, want boolean"}},
 		},
 		{
 			name: "edge cannot have an array with mixed types",
@@ -467,7 +493,7 @@ func complexNestedPropertyCases() []genericIngestAssertion {
 					},
 				},
 			},
-			validationErrContains: [][]string{{"edges[0] schema validation", "contains a mixed-type array"}},
+			validationErrContains: [][]string{{"edges[0] schema validation", "got array, want string"}},
 		},
 		{
 			name: "edge cannot have a nested object in properties",
@@ -485,7 +511,7 @@ func complexNestedPropertyCases() []genericIngestAssertion {
 					},
 				},
 			},
-			validationErrContains: [][]string{{"edges[0] schema validation", "objects are not allowed in the property bag"}},
+			validationErrContains: [][]string{{"edges[0] schema validation", "got object, want string"}},
 		},
 		{
 			name: "edge cannot have an array with a nested object",
@@ -501,7 +527,7 @@ func complexNestedPropertyCases() []genericIngestAssertion {
 					},
 				},
 			},
-			validationErrContains: [][]string{{"edges[0] schema validation", "Arrays must contain only primitive values"}},
+			validationErrContains: [][]string{{"edges[0] schema validation", "got array, want string"}},
 		},
 	}
 }
@@ -659,14 +685,121 @@ func nodeSchemaFailureCases() []genericIngestAssertion {
 				{"nodes[0]", "at '/kinds': maxItems: got 4, want 3"},
 			},
 		},
+		{
+			name: "node validation: kind uses reserved namespace 'tag' as prefix",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:         "1234",
+						Kinds:      []string{"Tag_Foo"},
+						Properties: map[string]any{},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"nodes[0] validation failed with 1 error(s)", "kind 'Tag_Foo' uses reserved namespace 'tag'"},
+			},
+		},
+		{
+			name: "node validation: kind is the reserved namespace 'tag' (lowercase)",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:         "1234",
+						Kinds:      []string{"tag"},
+						Properties: map[string]any{},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"nodes[0] validation failed with 1 error(s)", "kind 'tag' uses reserved namespace 'tag'"},
+			},
+		},
+		{
+			name: "node validation: kind uses reserved namespace 'TAG' (uppercase prefix)",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:         "1234",
+						Kinds:      []string{"TAG_Thing"},
+						Properties: map[string]any{},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"nodes[0] validation failed with 1 error(s)", "kind 'TAG_Thing' uses reserved namespace 'tag'"},
+			},
+		},
+		{
+			name: "node validation: multiple reserved kinds aggregate into one report line",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:         "1234",
+						Kinds:      []string{"Tag_Foo", "tag_bar"},
+						Properties: map[string]any{},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"nodes[0] validation failed with 2 error(s)", "kind 'Tag_Foo' uses reserved namespace 'tag'", "kind 'tag_bar' uses reserved namespace 'tag'"},
+			},
+		},
+		{
+			name: "node validation: reserved kind error reported alongside schema error",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:    "",
+						Kinds: []string{"Tag_Foo"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"nodes[0] schema validation", "at '': missing property 'id'"},
+				{"nodes[0] validation failed with 1 error(s)", "kind 'Tag_Foo' uses reserved namespace 'tag'"},
+			},
+		},
+		{
+			name: "node validation: reserved kind error reported alongside multiple schema errors",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						Kinds: []string{"tag", "a", "b", "c"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"nodes[0] schema validation", "at '': missing property 'id'", "at '/kinds': maxItems: got 4, want 3"},
+				{"nodes[0] validation failed with 1 error(s)", "kind 'tag' uses reserved namespace 'tag'"},
+			},
+		},
 	}
 }
+
+// TODO: Fixup tests for allOf
 
 // these test cases represent all the ways an edge can fail schema validation.
 func edgeSchemaFailureCases() []genericIngestAssertion {
 	return []genericIngestAssertion{
 		{
 			name: "edge validation: start not provided",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						End: &edgePiece{
+							Value: "a5678",
+						},
+						Kind: "kind A",
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0]", "at '/start': got null, want object"},
+			},
+		},
+		{
+			name: "edge validation: match_by property without properties fiel",
 			payload: &testPayload{
 				Edges: []testEdge{
 					{
@@ -690,7 +823,7 @@ func edgeSchemaFailureCases() []genericIngestAssertion {
 						End: &edgePiece{
 							Value: "a5678",
 						},
-						Kind: "kind A",
+						Kind: "KindA",
 					},
 				},
 			},
@@ -721,7 +854,7 @@ func edgeSchemaFailureCases() []genericIngestAssertion {
 					{
 						Start: &edgePiece{Value: "1234"},
 						End:   &edgePiece{},
-						Kind:  "kind A",
+						Kind:  "KindA",
 					},
 				},
 			},
@@ -736,7 +869,7 @@ func edgeSchemaFailureCases() []genericIngestAssertion {
 					{
 						Start: &edgePiece{Value: "1234"},
 						End:   &edgePiece{Value: ""},
-						Kind:  "kind A",
+						Kind:  "KindA",
 					},
 				},
 			},
@@ -760,6 +893,156 @@ func edgeSchemaFailureCases() []genericIngestAssertion {
 			},
 			validationErrContains: [][]string{
 				{"edges[0]", "at '': missing property 'kind'"},
+			},
+		},
+		{
+			name: "edge validation: kind name contains a dash",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind: "invalid-name",
+						Start: &edgePiece{
+							Value: "1234",
+						},
+						End: &edgePiece{
+							Value: "5678",
+						},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0]", "at '/kind': 'invalid-name' does not match pattern '^[A-Za-z0-9_]+$']"},
+			},
+		},
+		{
+			name: "edge validation: kind name contains a space",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind: "invalid name",
+						Start: &edgePiece{
+							Value: "1234",
+						},
+						End: &edgePiece{
+							Value: "5678",
+						},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0]", "at '/kind': 'invalid name' does not match pattern '^[A-Za-z0-9_]+$']"},
+			},
+		},
+		{
+			name: "edge validation: kind name contains backticks",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind: "`invalidName`",
+						Start: &edgePiece{
+							Value: "1234",
+						},
+						End: &edgePiece{
+							Value: "5678",
+						},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0]", "at '/kind': '`invalidName`' does not match pattern '^[A-Za-z0-9_]+$']"},
+			},
+		},
+		{
+			name: "edge validation: kind name contains special characters",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind: "invalid!!*name!!",
+						Start: &edgePiece{
+							Value: "1234",
+						},
+						End: &edgePiece{
+							Value: "5678",
+						},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0]", "at '/kind': 'invalid!!*name!!' does not match pattern '^[A-Za-z0-9_]+$']"},
+			},
+		},
+		{
+			name: "edge validation: kind uses reserved namespace 'tag' as prefix",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind:  "Tag_Related",
+						Start: &edgePiece{Value: "1234"},
+						End:   &edgePiece{Value: "5678"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0] validation failed with 1 error(s)", "kind 'Tag_Related' uses reserved namespace 'tag'"},
+			},
+		},
+		{
+			name: "edge validation: kind is the reserved namespace 'Tag' exactly (mixed case)",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind:  "Tag",
+						Start: &edgePiece{Value: "1234"},
+						End:   &edgePiece{Value: "5678"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0] validation failed with 1 error(s)", "kind 'Tag' uses reserved namespace 'tag'"},
+			},
+		},
+		{
+			name: "edge validation: kind uses reserved namespace 'tag' with lowercase prefix",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind:  "tag_has_relationship",
+						Start: &edgePiece{Value: "1234"},
+						End:   &edgePiece{Value: "5678"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0] validation failed with 1 error(s)", "kind 'tag_has_relationship' uses reserved namespace 'tag'"},
+			},
+		},
+		{
+			name: "edge validation: reserved kind error reported alongside schema error",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind: "Tag_Related",
+						End:  &edgePiece{Value: "5678"},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0] schema validation", "at '/start': got null, want object"},
+				{"edges[0] validation failed with 1 error(s)", "kind 'Tag_Related' uses reserved namespace 'tag'"},
+			},
+		},
+		{
+			name: "edge validation: reserved kind error reported alongside multiple schema errors",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind: "tag",
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0] schema validation", "at '/start': got null, want object", "at '/end': got null, want object"},
+				{"edges[0] validation failed with 1 error(s)", "kind 'tag' uses reserved namespace 'tag'"},
 			},
 		},
 		{

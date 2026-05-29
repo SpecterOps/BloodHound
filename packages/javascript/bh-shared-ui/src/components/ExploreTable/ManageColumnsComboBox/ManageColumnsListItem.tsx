@@ -13,10 +13,12 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Checkbox } from '@bloodhoundenterprise/doodleui';
 import { faThumbTack } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Checkbox } from 'doodle-ui';
 import { UseComboboxPropGetters, useMultipleSelection } from 'downshift';
+import { cn } from '../../../utils';
+import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox';
 
 type ManageColumnsListItemProps = {
@@ -26,32 +28,63 @@ type ManageColumnsListItemProps = {
         | ReturnType<typeof useMultipleSelection<ManageColumnsComboBoxOption>>['removeSelectedItem']
         | ReturnType<typeof useMultipleSelection<ManageColumnsComboBoxOption>>['addSelectedItem'];
     itemProps: ReturnType<UseComboboxPropGetters<ManageColumnsComboBoxOption>['getItemProps']>;
+    onPinClick: (item: ManageColumnsComboBoxOption) => void;
 };
 
-const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps }: ManageColumnsListItemProps) => (
+const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps, onPinClick }: ManageColumnsListItemProps) => (
     <li
-        className={`p-2 m-0 w-full ${isSelected ? 'cursor-default dark:bg-neutral-dark-2' : 'cursor-pointer'} ${item.isPinned ? 'bg-gray-100' : 'hover:bg-gray-100 dark:hover:bg-neutral-dark-4'}`}
+        role='button' // eslint-disable-line
+        tabIndex={0}
+        className='p-2 m-0 w-full hover:bg-gray-100 dark:hover:bg-neutral-dark-4 cursor-pointer flex items-center'
         {...itemProps}
-        aria-disabled={item?.isPinned}
         onClick={(e) => {
             e.stopPropagation();
             onClick(item);
-        }}>
-        <button
-            className={`w-full text-left flex justify-between items-center ${item.isPinned ? 'cursor-default' : 'cursor-pointer'}`}>
-            <div>
-                <Checkbox className={`mr-2 ${isSelected ? '*:bg-blue-800' : ''}`} checked={isSelected} />
+        }}
+        onKeyDown={adaptClickHandlerToKeyDown((event) => {
+            event.stopPropagation();
+            onClick(item);
+        })}>
+        <div className='w-full text-left flex justify-between items-center'>
+            <div className='flex justify-between items-center'>
+                <Checkbox
+                    ref={(checkbox) => {
+                        checkbox?.setAttribute('inert', '');
+                    }}
+                    disabled
+                    role='presentation'
+                    className={cn('mr-2 *:text-white', {
+                        '*:bg-primary dark:border-none': isSelected,
+                        'dark:border-white': !isSelected,
+                    })}
+                    style={{
+                        opacity: 'initial',
+                    }}
+                    checked={isSelected}
+                />
                 <span>{item.value}</span>
             </div>
-            {item.isPinned && (
-                <FontAwesomeIcon
-                    fill='white'
-                    stroke=''
-                    className='justify-self-end stroke-cyan-300'
-                    icon={faThumbTack}
-                />
-            )}
-        </button>
+        </div>
+        <div>
+            <FontAwesomeIcon
+                color={item.isPinned ? 'grey' : 'var(--neutral-4)'}
+                icon={faThumbTack}
+                role='button'
+                tabIndex={0}
+                aria-label={item.isPinned ? 'Unpin column' : 'Pin column'}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onPinClick(item);
+                }}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        onPinClick(item);
+                    }
+                }}
+            />
+        </div>
     </li>
 );
 

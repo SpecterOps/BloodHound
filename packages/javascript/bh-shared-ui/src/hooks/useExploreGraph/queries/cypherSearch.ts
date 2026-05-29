@@ -14,8 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import isEmpty from 'lodash/isEmpty';
 import { apiClient } from '../../../utils';
 import { ExploreQueryParams } from '../../useExploreParams';
+import { UserSettings } from '../useExploreGraph';
 import { decodeCypherQuery } from '../utils';
 import {
     ExploreGraphQuery,
@@ -25,9 +27,11 @@ import {
     sharedGraphQueryOptions,
 } from './utils';
 
+const CYPHER_SEARCH_EMPTY_RESPONSE_ERROR = 'CypherSearchEmptyResponse';
+
 export const cypherSearchGraphQuery = (
     paramOptions: Partial<ExploreQueryParams>,
-    includeProperties = false
+    userSettings: UserSettings
 ): ExploreGraphQueryOptions => {
     const { searchType, cypherSearch } = paramOptions;
 
@@ -37,16 +41,29 @@ export const cypherSearchGraphQuery = (
 
     const decoded = decodeCypherQuery(cypherSearch);
 
-    const queryKey = [ExploreGraphQueryKey, searchType, cypherSearch];
+    const queryKey = [ExploreGraphQueryKey, searchType, cypherSearch, userSettings.headers?.Prefer];
 
-    if (includeProperties) {
-        queryKey.push('includeProperties');
-    }
+    const includeProperties = true;
 
     return {
         ...sharedGraphQueryOptions,
         queryKey,
-        queryFn: ({ signal }) => apiClient.cypherSearch(decoded, { signal }, includeProperties).then((res) => res.data),
+        queryFn: ({ signal }) =>
+            apiClient
+                .cypherSearch(
+                    decoded,
+                    {
+                        signal,
+                        ...userSettings,
+                    },
+                    includeProperties
+                )
+                .then((res) => {
+                    if (isEmpty(res.data.data.nodes) && isEmpty(res.data.data.edges)) {
+                        throw new Error(CYPHER_SEARCH_EMPTY_RESPONSE_ERROR);
+                    }
+                    return res.data;
+                }),
         retry: false,
         enabled: !!(searchType && cypherSearch),
     };
@@ -56,8 +73,13 @@ const getCypherErrorMessage = (error: any): ExploreGraphQueryError => {
     const status = error?.response?.status;
     const message = error?.response?.data?.errors?.[0]?.message;
 
-    if (status === 404) {
-        return { message: 'No results match your criteria', key: 'CypherSearchEmptyResponse' };
+    if (status === 404 || error.message === CYPHER_SEARCH_EMPTY_RESPONSE_ERROR) {
+        return { message: 'No results match your criteria', key: CYPHER_SEARCH_EMPTY_RESPONSE_ERROR };
+    } else if (status === 504) {
+        return {
+            message: 'The results took too long to compute, possibly due to the complexity of the query.',
+            key: 'CypherSearchQueryTimeout',
+        };
     } else if (message) {
         return { message, key: 'CypherSearchBadRequest' };
     } else {
@@ -65,14 +87,12 @@ const getCypherErrorMessage = (error: any): ExploreGraphQueryError => {
     }
 };
 
-export type CypherExploreGraphQuery = ExploreGraphQuery & {
-    getQueryConfig: (
-        paramOptions: Partial<ExploreQueryParams>,
-        includeProperties?: boolean
-    ) => ExploreGraphQueryOptions;
-};
-
-export const cypherSearchQuery: CypherExploreGraphQuery = {
-    getQueryConfig: cypherSearchGraphQuery,
-    getErrorMessage: getCypherErrorMessage,
+export const cypherSearchQuery = (
+    paramOptions: Partial<ExploreQueryParams>,
+    userSettings: UserSettings
+): ExploreGraphQuery => {
+    return {
+        getQueryConfig: () => cypherSearchGraphQuery(paramOptions, userSettings),
+        getErrorMessage: getCypherErrorMessage,
+    };
 };

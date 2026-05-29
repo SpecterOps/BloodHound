@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/fs"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/cache"
@@ -70,6 +71,9 @@ type UpdateUserRequest struct {
 	SAMLProviderID string     `json:"saml_provider_id"`
 	SSOProviderID  null.Int32 `json:"sso_provider_id"`
 	IsDisabled     *bool      `json:"is_disabled,omitempty"`
+
+	AllEnvironments                  null.Bool              `json:"all_environments"`
+	EnvironmentTargetedAccessControl *UpdateUserETACRequest `json:"environment_targeted_access_control,omitempty"`
 }
 
 type CreateUserRequest struct {
@@ -112,6 +116,8 @@ type Resources struct {
 	Authenticator              api.Authenticator
 	IngestSchema               upload.IngestSchema
 	FileService                fs.Service
+	OpenGraphSchemaService     OpenGraphSchemaService
+	DogTags                    dogtags.Service
 }
 
 func NewResources(
@@ -124,6 +130,8 @@ func NewResources(
 	authorizer auth.Authorizer,
 	authenticator api.Authenticator,
 	ingestSchema upload.IngestSchema,
+	dogtagsService dogtags.Service,
+	openGraphSchemaService OpenGraphSchemaService,
 ) Resources {
 	return Resources{
 		Decoder:                    schema.NewDecoder(),
@@ -138,5 +146,7 @@ func NewResources(
 		Authenticator:              authenticator,
 		IngestSchema:               ingestSchema,
 		FileService:                &fs.Client{},
+		DogTags:                    dogtagsService,
+		OpenGraphSchemaService:     openGraphSchemaService,
 	}
 }

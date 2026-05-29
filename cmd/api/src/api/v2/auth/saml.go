@@ -38,6 +38,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/crypto"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
@@ -345,18 +347,27 @@ func (s ManagementResource) ServeMetadata(response http.ResponseWriter, request 
 	} else {
 		// Note: This is the samlsp metadata tied to authenticate flow and will not be the same as the XML metadata used to import the SAML provider initially
 		if content, err := xml.MarshalIndent(serviceProvider.Metadata(), "", "  "); err != nil {
-			slog.ErrorContext(request.Context(), fmt.Sprintf("[SAML] XML marshalling failure during service provider encoding for %s: %v", ssoProvider.SAMLProvider.IssuerURI, err))
+			slog.ErrorContext(
+				request.Context(),
+				"[SAML] XML marshalling failure during service provider encoding for",
+				slog.String("issuer_uri", ssoProvider.SAMLProvider.IssuerURI),
+				attr.Error(err),
+			)
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		} else {
 			response.Header().Set(headers.ContentType.String(), mediatypes.ApplicationSamlmetadataXml.String())
 			if _, err := response.Write(content); err != nil {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("[SAML] Failed to write response for serving metadata: %v", err))
+				slog.ErrorContext(
+					request.Context(),
+					"[SAML] Failed to write response for serving metadata",
+					attr.Error(err),
+				)
 			}
 		}
 	}
 }
 
-// Provide the saml provider certifcate
+// Provide the saml provider certificate
 func (s ManagementResource) ServeSigningCertificate(response http.ResponseWriter, request *http.Request) {
 	rawProviderID := mux.Vars(request)[api.URIPathVariableSSOProviderID]
 
@@ -370,7 +381,11 @@ func (s ManagementResource) ServeSigningCertificate(response http.ResponseWriter
 		// Note this is the public cert not necessarily the IDP cert
 		response.Header().Set(headers.ContentDisposition.String(), fmt.Sprintf("attachment; filename=\"%s-signing-certificate.pem\"", ssoProvider.Slug))
 		if _, err := response.Write([]byte(crypto.FormatCert(s.config.SAML.ServiceProviderCertificate))); err != nil {
-			slog.ErrorContext(request.Context(), fmt.Sprintf("[SAML] Failed to write response for serving signing certificate: %v", err))
+			slog.ErrorContext(
+				request.Context(),
+				"[SAML] Failed to write response for serving signing certificate",
+				attr.Error(err),
+			)
 		}
 	}
 }
@@ -381,7 +396,11 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 		// SAML misconfiguration scenario
 		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
-		slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Service provider creation failed: %v", err))
+		slog.WarnContext(
+			request.Context(),
+			"[SAML] Service provider creation failed",
+			attr.Error(err),
+		)
 		// Technical issues scenario
 		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 	} else {
@@ -396,7 +415,11 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 
 		// TODO: add actual relay state support - BED-5071
 		if authReq, err := s.SAML.MakeAuthenticationRequest(serviceProvider, bindingLocation, binding, saml.HTTPPostBinding); err != nil {
-			slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Failed creating SAML authentication request: %v", err))
+			slog.WarnContext(
+				request.Context(),
+				"[SAML] Failed creating SAML authentication request",
+				attr.Error(err),
+			)
 			// SAML misconfiguration or technical issue
 			// Since this likely indicates a configuration problem, we treat it as a misconfiguration scenario
 			api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
@@ -404,7 +427,12 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 			switch binding {
 			case saml.HTTPRedirectBinding:
 				if redirectURL, err := authReq.Redirect("", &serviceProvider); err != nil {
-					slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Failed to format a redirect for SAML provider %s: %v", serviceProvider.EntityID, err))
+					slog.WarnContext(
+						request.Context(),
+						"[SAML] Failed to format a redirect for SAML provider",
+						slog.String("entity_id", serviceProvider.EntityID),
+						attr.Error(err),
+					)
 					// Likely a technical or configuration issue
 					api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 				} else {
@@ -418,13 +446,21 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 				response.WriteHeader(http.StatusOK)
 
 				if _, err := fmt.Fprintf(response, authInitiationContentBodyFormat, authReq.Post("")); err != nil {
-					slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Failed to write response with HTTP POST binding: %v", err))
+					slog.WarnContext(
+						request.Context(),
+						"[SAML] Failed to write response with HTTP POST binding",
+						attr.Error(err),
+					)
 					// Technical issues scenario
 					api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 				}
 
 			default:
-				slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Unhandled binding type %s", binding))
+				slog.WarnContext(
+					request.Context(),
+					"[SAML] Unhandled binding type",
+					slog.String("binding", binding),
+				)
 				// Treating unknown binding as a misconfiguration
 				api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 			}
@@ -438,31 +474,59 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 		// SAML misconfiguration
 		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
-		slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Service provider creation failed: %v", err))
+		slog.WarnContext(
+			request.Context(),
+			"[SAML] Service provider creation failed",
+			attr.Error(err),
+		)
 		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 	} else if err := request.ParseForm(); err != nil {
-		slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Failed to parse form POST: %v", err))
+		slog.WarnContext(
+			request.Context(),
+			"[SAML] Failed to parse form POST",
+			attr.Error(err),
+		)
 		// Technical issues or invalid form data
 		api.RedirectToLoginURL(response, request, fmt.Sprintf("Invalid SSO response %s", err.Error()))
 	} else if assertion, err := s.SAML.ParseResponse(serviceProvider, request, nil); err != nil {
 		var typedErr *saml.InvalidResponseError
 		switch {
 		case errors.As(err, &typedErr):
-			slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Failed to parse ACS response for provider %s: %v - %s", ssoProvider.SAMLProvider.IssuerURI, typedErr.PrivateErr, typedErr.Response))
+			slog.WarnContext(
+				request.Context(),
+				"[SAML] Failed to parse ACS response for provider",
+				slog.String("issuer_uri", ssoProvider.SAMLProvider.IssuerURI),
+				attr.Error(typedErr.PrivateErr),
+				slog.String("response", typedErr.Response),
+			)
 		default:
-			slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Failed to parse ACS response for provider %s: %v", ssoProvider.SAMLProvider.IssuerURI, err))
+			slog.WarnContext(
+				request.Context(),
+				"[SAML] Failed to parse ACS response for provider",
+				slog.String("issuer_uri", ssoProvider.SAMLProvider.IssuerURI),
+				attr.Error(err),
+			)
 		}
 		// SAML credentials issue scenario (authentication failed)
 		api.RedirectToLoginURL(response, request, fmt.Sprintf("Invalid SSO response: Failed to parse ACS response %s", err.Error()))
 	} else if principalName, err := ssoProvider.SAMLProvider.GetSAMLUserPrincipalNameFromAssertion(assertion); err != nil {
-		slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Failed to lookup user for SAML provider %s: %v", ssoProvider.Name, err))
+		slog.WarnContext(
+			request.Context(),
+			"[SAML] Failed to lookup user for SAML provider",
+			slog.String("provider_name", ssoProvider.Name),
+			attr.Error(err),
+		)
 		// SAML credentials issue scenario again
 		api.RedirectToLoginURL(response, request, "Invalid assertion: no valid email address found")
 	} else {
 		if ssoProvider.Config.AutoProvision.Enabled {
-			if err := jitSAMLUserUpsert(request.Context(), ssoProvider, principalName, assertion, s.db); err != nil {
+			if err := jitSAMLUserUpsert(request.Context(), ssoProvider, principalName, assertion, s.db, s.DogTags); err != nil {
 				// It is safe to let this request drop into the CreateSSOSession function below to ensure proper audit logging
-				slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Error during JIT User Creation: %v", err))
+				slog.WarnContext(
+					request.Context(),
+					"[SAML] Error during JIT User Creation",
+					attr.Error(err),
+				)
 			}
 		}
 
@@ -470,14 +534,14 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 	}
 }
 
-func jitSAMLUserUpsert(ctx context.Context, ssoProvider model.SSOProvider, principalName string, assertion *saml.Assertion, u jitUserUpserter) error {
+func jitSAMLUserUpsert(ctx context.Context, ssoProvider model.SSOProvider, principalName string, assertion *saml.Assertion, u jitUserUpserter, dogTagsService dogtags.Service) error {
 	if roles, err := SanitizeAndGetRoles(ctx, ssoProvider.Config.AutoProvision, ssoProvider.SAMLProvider.GetSAMLUserRolesFromAssertion(assertion), u); err != nil {
 		return fmt.Errorf("sanitize roles: %v", err)
 	} else if len(roles) != 1 {
 		return fmt.Errorf("invalid roles detected")
 	} else if user, err := u.LookupUser(ctx, principalName); err != nil {
 		if errors.Is(err, database.ErrNotFound) {
-			return jitSAMLUserCreate(ctx, ssoProvider, principalName, assertion, u, roles)
+			return jitSAMLUserCreate(ctx, ssoProvider, principalName, assertion, u, roles, dogTagsService)
 		}
 		return fmt.Errorf("lookup user: %v", err)
 	} else if ssoProvider.Config.AutoProvision.RoleProvision && !user.Roles.Has(roles[0]) {
@@ -491,7 +555,7 @@ func jitSAMLUserUpsert(ctx context.Context, ssoProvider model.SSOProvider, princ
 	return nil
 }
 
-func jitSAMLUserCreate(ctx context.Context, ssoProvider model.SSOProvider, principalName string, assertion *saml.Assertion, u jitUserUpserter, roles model.Roles) error {
+func jitSAMLUserCreate(ctx context.Context, ssoProvider model.SSOProvider, principalName string, assertion *saml.Assertion, u jitUserUpserter, roles model.Roles, dogTagsService dogtags.Service) error {
 	user := model.User{
 		EmailAddress:  null.StringFrom(principalName),
 		PrincipalName: principalName,
@@ -508,6 +572,12 @@ func jitSAMLUserCreate(ctx context.Context, ssoProvider model.SSOProvider, princ
 
 	if surname, err := ssoProvider.SAMLProvider.GetSAMLUserSurnameFromAssertion(assertion); err == nil {
 		user.LastName = null.StringFrom(surname)
+	}
+
+	if dogTagsService.GetFlagAsBool(dogtags.ETAC_ENABLED) {
+		user.AllEnvironments = !hasValidRolesForETAC(roles)
+	} else {
+		user.AllEnvironments = true
 	}
 
 	if _, err := u.CreateUser(ctx, user); err != nil {

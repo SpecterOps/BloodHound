@@ -17,6 +17,7 @@
 package v2_test
 
 import (
+	"archive/zip"
 	"bytes"
 	"context"
 	"database/sql"
@@ -102,7 +103,7 @@ func TestResources_ListFileUploadJobs(t *testing.T) {
 					apitest.AddQueryParam(input, "user_id", "eq:123")
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetAllIngestJobs(gomock.Any(), 1, 2, "start_time", model.SQLFilter{SQLString: "user_id = 123"}).Return([]model.IngestJob{}, 0, nil)
+					mockDB.EXPECT().GetAllIngestJobs(gomock.Any(), 1, 2, "start_time", model.SQLFilter{SQLString: "user_id = '123'"}).Return([]model.IngestJob{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -198,7 +199,7 @@ func TestResources_StartIngestJob(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().CreateIngestJob(gomock.Any(), gomock.Any()).Return(model.IngestJob{
-					UserID:           uuid.FromStringOrNil("id"),
+					UserID:           uuid.NullUUID{UUID: uuid.FromStringOrNil("id"), Valid: true},
 					UserEmailAddress: null.NewString("email@notreal.com", true),
 					User: model.User{
 						PrincipalName: "name",
@@ -214,7 +215,7 @@ func TestResources_StartIngestJob(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusCreated,
-				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "end_time":"0001-01-01T00:00:00Z", "failed_files":0, "id":0, "last_ingest":"0001-01-01T00:00:00Z", "start_time":"0001-01-01T00:00:00Z", "status":1, "status_message":"", "total_files":0, "updated_at":"0001-01-01T00:00:00Z", "user_email_address": "email@notreal.com", "user_id":"00000000-0000-0000-0000-000000000000"}}`,
+				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "end_time":"0001-01-01T00:00:00Z", "failed_files":0, "id":0, "last_ingest":"0001-01-01T00:00:00Z", "partial_failed_files":0, "start_time":"0001-01-01T00:00:00Z", "status":1, "status_message":"", "total_files":0, "updated_at":"0001-01-01T00:00:00Z", "user_email_address": "email@notreal.com", "user_id":"00000000-0000-0000-0000-000000000000"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -293,7 +294,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   `{"errors":[{"context":"", "message":"id is malformed."}], "http_status":400, "request_id":"id", "timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"", "message":"id is malformed"}], "http_status":400, "request_id":"id", "timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -317,7 +318,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), gomock.Any()).Return(model.IngestJob{
-					UserID:           uuid.FromStringOrNil("id"),
+					UserID:           uuid.NullUUID{UUID: uuid.FromStringOrNil("id"), Valid: true},
 					UserEmailAddress: null.NewString("email@notreal.com", true),
 					User:             model.User{PrincipalName: "name"},
 					Status:           model.JobStatusComplete,
@@ -349,7 +350,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), gomock.Any()).Return(model.IngestJob{
-					UserID:           uuid.FromStringOrNil("id"),
+					UserID:           uuid.NullUUID{UUID: uuid.FromStringOrNil("id"), Valid: true},
 					UserEmailAddress: null.NewString("email@notreal.com", true),
 					User:             model.User{PrincipalName: "name"},
 					Status:           model.JobStatusRunning,
@@ -409,7 +410,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), gomock.Any()).Return(model.IngestJob{
-					UserID:           uuid.FromStringOrNil("id"),
+					UserID:           uuid.NullUUID{UUID: uuid.FromStringOrNil("id"), Valid: true},
 					UserEmailAddress: null.NewString("email@notreal.com", true),
 					User:             model.User{PrincipalName: "name"},
 					Status:           model.JobStatusRunning,
@@ -528,7 +529,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   `{"errors":[{"context":"","message":"id is malformed."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"id is malformed"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -547,7 +548,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{}, errors.New("error"))
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -571,7 +572,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{}, nil)
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
@@ -600,7 +601,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{}, nil)
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -624,7 +625,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{}, nil)
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
 				mock.mockDatabase.EXPECT().CreateIngestTask(gomock.Any(), gomock.Any()).Return(model.IngestTask{}, errors.New("error"))
 			},
 			expected: expected{
@@ -649,7 +650,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{}, nil)
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
 				mock.mockDatabase.EXPECT().CreateIngestTask(gomock.Any(), gomock.Any()).Return(model.IngestTask{}, nil)
 				mock.mockDatabase.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
@@ -660,7 +661,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: file uploaded - Accepted",
+			name: "Success: file uploaded - Accepted Unknown Json File",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
@@ -675,8 +676,84 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{}, nil)
-				mock.mockDatabase.EXPECT().CreateIngestTask(gomock.Any(), gomock.Any()).Return(model.IngestTask{}, nil)
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
+				mock.mockDatabase.EXPECT().CreateIngestTask(gomock.Any(), gomock.Cond(func(x model.IngestTask) bool {
+					return x.OriginalFileName == "UnknownFileName.json"
+				})).Return(model.IngestTask{}, nil)
+				mock.mockDatabase.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusAccepted,
+				responseHeader: http.Header{},
+			},
+		},
+		{
+			name: "Success: file uploaded - Accepted Named Json File",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/file-upload/1",
+					},
+					Method: http.MethodPost,
+					Body:   io.NopCloser(bytes.NewReader([]byte(`{"meta": {"type": "domains", "version": 4, "count": 1}, "data": [{"domain": "example.com"}]}`))),
+					Header: http.Header{
+						headers.ContentType.String(): []string{"application/json"},
+						v2.FileUploadFileNameHeader:  []string{"Testing.json"},
+					},
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
+				mock.mockDatabase.EXPECT().CreateIngestTask(gomock.Any(), gomock.Cond(func(x model.IngestTask) bool {
+					return x.OriginalFileName == "Testing.json"
+				})).Return(model.IngestTask{}, nil)
+				mock.mockDatabase.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusAccepted,
+				responseHeader: http.Header{},
+			},
+		},
+		{
+			name: "Success: file uploaded - Accepted Named Zip File",
+			buildRequest: func() *http.Request {
+				buf := new(bytes.Buffer)
+				zipWriter := zip.NewWriter(buf)
+
+				zipFile, err := zipWriter.Create("example.json")
+				if err != nil {
+					t.Fatalf("error creating zip file: %v", err)
+				}
+
+				_, err = zipFile.Write([]byte(`{"meta": {"type": "domains", "version": 4, "count": 1}, "data": [{"domain": "example.com"}]}`))
+				if err != nil {
+					t.Fatalf("error creating zip file: %v", err)
+				}
+
+				err = zipWriter.Close()
+				if err != nil {
+					t.Fatalf("error closing zip file: %v", err)
+				}
+
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/file-upload/1",
+					},
+					Method: http.MethodPost,
+					Body:   io.NopCloser(buf),
+					Header: http.Header{
+						headers.ContentType.String(): []string{"application/zip"},
+						v2.FileUploadFileNameHeader:  []string{"Testing.zip"},
+					},
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
+				mock.mockDatabase.EXPECT().CreateIngestTask(gomock.Any(), gomock.Cond(func(x model.IngestTask) bool {
+					return x.OriginalFileName == "Testing.zip"
+				})).Return(model.IngestTask{}, nil)
 				mock.mockDatabase.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expected: expected{

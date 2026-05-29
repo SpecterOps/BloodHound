@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Switch } from '@bloodhoundenterprise/doodleui';
-import { Alert, FormControl, FormControlLabel, Grid, InputLabel, MenuItem, Select, Typography } from '@mui/material';
+import { Alert, FormControl, FormControlLabel, Grid, InputLabel, MenuItem, Select } from '@mui/material';
 import clsx from 'clsx';
+import { Switch, Typography } from 'doodle-ui';
 import {
     Role,
     SSOProviderConfiguration,
@@ -67,7 +67,7 @@ const SSOProviderConfigForm: FC<{
                         label={
                             <Typography
                                 className={clsx(
-                                    `ml-4 ${!watch('config.auto_provision.enabled') && 'dark:text-white dark:text-opacity-50 text-black text-opacity-40'}`
+                                    `ml-4 ${!watch('config.auto_provision.enabled') && 'dark:text-white dark:text-opacity-75 text-black text-opacity-75'}`
                                 )}>
                                 Automatically create new users on login
                             </Typography>
@@ -94,7 +94,7 @@ const SSOProviderConfigForm: FC<{
                         label={
                             <Typography
                                 className={clsx(
-                                    `ml-4 ${!watch('config.auto_provision.role_provision') && 'dark:text-white dark:text-opacity-50 text-black text-opacity-40'}`
+                                    `ml-4 ${!watch('config.auto_provision.role_provision') && 'dark:text-white dark:text-opacity-75 text-black text-opacity-75'}`
                                 )}>
                                 Allow SSO Provider to modify roles
                             </Typography>

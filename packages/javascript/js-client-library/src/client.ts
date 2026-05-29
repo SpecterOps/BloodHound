@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import {
     ClearDatabaseRequest,
     CreateAssetGroupRequest,
@@ -22,27 +22,34 @@ import {
     CreateAzureHoundClientRequest,
     CreateAzureHoundEventRequest,
     CreateOIDCProviderRequest,
+    CreateOpenHoundClientRequest,
     CreateScheduledJobRequest,
     CreateSelectorRequest,
     CreateSharpHoundClientRequest,
     CreateSharpHoundEventRequest,
     CreateUserQueryRequest,
     CreateUserRequest,
+    DeleteUserQueryPermissionsRequest,
     LoginRequest,
     PostureRequest,
     PreviewSelectorsRequest,
     PutUserAuthSecretRequest,
+    QueryScope,
     RequestOptions,
     UpdateAssetGroupRequest,
     UpdateAssetGroupSelectorRequest,
     UpdateAssetGroupTagRequest,
     UpdateAzureHoundClientRequest,
     UpdateAzureHoundEventRequest,
+    UpdateCertificationRequest,
     UpdateConfigurationRequest,
     UpdateOIDCProviderRequest,
+    UpdateOpenHoundClientRequest,
     UpdateSelectorRequest,
     UpdateSharpHoundClientRequest,
     UpdateSharpHoundEventRequest,
+    UpdateUserQueryPermissionsRequest,
+    UpdateUserQueryRequest,
     UpdateUserRequest,
 } from './requests';
 import {
@@ -53,8 +60,11 @@ import {
     AssetGroupTagMemberInfoResponse,
     AssetGroupTagMembersResponse,
     AssetGroupTagResponse,
+    AssetGroupTagsCertification,
+    AssetGroupTagSearchResponse,
     AssetGroupTagSelectorResponse,
     AssetGroupTagSelectorsResponse,
+    AssetGroupTagsHistory,
     AssetGroupTagsResponse,
     AzureDataQualityResponse,
     BasicResponse,
@@ -62,11 +72,20 @@ import {
     DatapipeStatusResponse,
     EndFileIngestResponse,
     Environment,
+    FileIngestCompletedTasksResponse,
+    FindingSchemaResponse,
+    GetClientResponse,
     GetCollectorsResponse,
     GetCommunityCollectorsResponse,
     GetConfigurationResponse,
     GetCustomNodeKindsResponse,
+    GetEdgeTypesResponse,
     GetEnterpriseCollectorsResponse,
+    GetExportQueryResponse,
+    GetExtensionsResponse,
+    GetScheduledJobDisplayResponse,
+    GetSelfResponse,
+    GraphKindsResponse,
     GraphResponse,
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
@@ -77,11 +96,20 @@ import {
     PostureResponse,
     PreviewSelectorsResponse,
     SavedQuery,
+    SavedQueryPermissionsResponse,
     StartFileIngestResponse,
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
 } from './responses';
 import * as types from './types';
+import { FindingAssetsResponse } from './types';
+
+/** Return the value as a string with the given prefix */
+const prefixValue = (prefix: string, value: any) => (value ? `${prefix}:${value.toString()}` : undefined);
+
+/** Return a copy of the object with all keys having undefined values have been stripped out  */
+const omitUndefined = (obj: Record<string, unknown>) =>
+    Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined));
 
 class BHEAPIClient {
     baseClient: AxiosInstance;
@@ -110,9 +138,6 @@ class BHEAPIClient {
                         q: keyword,
                         type: type,
                     },
-                    headers: {
-                        Prefer: 'wait=60',
-                    },
                 },
                 options
             )
@@ -122,18 +147,19 @@ class BHEAPIClient {
     cypherSearch = (query: string, options?: RequestOptions, includeProperties?: boolean) => {
         return this.baseClient.post<GraphResponse>(
             '/api/v2/graphs/cypher',
-            { query, include_properties: includeProperties || false },
+            { query, include_properties: includeProperties || false, headers: options?.headers },
             options
         );
     };
 
-    getUserSavedQueries = (options?: RequestOptions) => {
+    getUserSavedQueries = (scope: QueryScope, options?: RequestOptions) => {
         return this.baseClient.get<PaginatedResponse<SavedQuery[]>>(
             '/api/v2/saved-queries',
             Object.assign(
                 {
                     params: {
                         sort_by: 'name',
+                        scope: scope,
                     },
                 },
                 options
@@ -145,12 +171,78 @@ class BHEAPIClient {
         return this.baseClient.post<BasicResponse<SavedQuery>>('/api/v2/saved-queries', payload, options);
     };
 
+    updateUserQuery = (payload: UpdateUserQueryRequest) => {
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+        return this.baseClient.put<BasicResponse<SavedQuery>>(`/api/v2/saved-queries/${payload.id}`, payload, {
+            headers,
+        });
+    };
+
     deleteUserQuery = (queryId: number, options?: RequestOptions) => {
         return this.baseClient.delete(`/api/v2/saved-queries/${queryId}`, options);
     };
 
-    getKinds = (options?: RequestOptions) =>
-        this.baseClient.get<BasicResponse<{ kinds: string[] }>>('/api/v2/graphs/kinds', options);
+    getExportCypherQueries = (): Promise<any> =>
+        this.baseClient.get(
+            `/api/v2/saved-queries/export?scope=all`,
+            Object.assign({
+                responseType: 'blob',
+            })
+        );
+
+    getExportCypherQuery = (id: number, options?: RequestOptions): Promise<GetExportQueryResponse> =>
+        this.baseClient.get(
+            `/api/v2/saved-queries/${id}/export`,
+            Object.assign(
+                {
+                    responseType: 'blob',
+                },
+                options
+            )
+        );
+
+    importUserQuery = (payload: FormData | Blob | object, options?: RequestOptions) => {
+        const cfg: AxiosRequestConfig = { ...(options ?? {}) };
+        if (payload instanceof FormData) {
+            // Let the browser set multipart/form-data with boundary
+        } else if (payload instanceof Blob) {
+            cfg.headers = { ...(options?.headers ?? {}), 'Content-Type': payload.type || 'application/octet-stream' };
+        } else {
+            cfg.headers = { ...(options?.headers ?? {}), 'Content-Type': 'application/json' };
+        }
+        return this.baseClient.post<BasicResponse<any>>('/api/v2/saved-queries/import', payload as any, cfg);
+    };
+
+    getUserQueryPermissions = (queryId: number, options?: RequestOptions) =>
+        this.baseClient.get<BasicResponse<SavedQueryPermissionsResponse>>(
+            `/api/v2/saved-queries/${queryId}/permissions`,
+            options
+        );
+
+    updateUserQueryPermissions = (
+        queryId: number,
+        queryPermissionsPayload: UpdateUserQueryPermissionsRequest,
+        options?: RequestOptions
+    ) => this.baseClient.put(`/api/v2/saved-queries/${queryId}/permissions`, queryPermissionsPayload, options);
+
+    deleteUserQueryPermissions = (
+        queryId: number,
+        queryPermissionsPayload: DeleteUserQueryPermissionsRequest,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.delete(
+            `/api/v2/saved-queries/${queryId}/permissions`,
+            Object.assign(
+                {
+                    data: queryPermissionsPayload,
+                },
+                options
+            )
+        );
+
+    getKinds = (options?: RequestOptions) => this.baseClient.get<GraphKindsResponse>('/api/v2/graphs/kinds', options);
 
     getSourceKinds = (options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<{ kinds: { id: number; name: string }[] }>>(
@@ -170,8 +262,40 @@ class BHEAPIClient {
 
     /* asset group tags (AGT) */
 
+    getAssetGroupTagHistory = (options?: RequestOptions) =>
+        this.baseClient.get<AssetGroupTagsHistory>(`/api/v2/asset-group-tags-history`, {
+            paramsSerializer: {
+                indexes: null,
+            },
+            ...options,
+        });
+
+    searchAssetGroupTagHistory = (query: string, options?: RequestOptions) =>
+        this.baseClient.post<AssetGroupTagsHistory>(
+            `/api/v2/asset-group-tags-history`,
+            { query },
+            {
+                paramsSerializer: {
+                    indexes: null,
+                },
+                ...options,
+            }
+        );
+
+    getAssetGroupTagsCertifications = (options?: RequestOptions) => {
+        return this.baseClient.get<AssetGroupTagsCertification>(`/api/v2/asset-group-tags/certifications`, {
+            paramsSerializer: {
+                indexes: null,
+            },
+            ...options,
+        });
+    };
+
     getAssetGroupTags = (options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagsResponse>(`/api/v2/asset-group-tags`, options);
+
+    searchAssetGroupTags = (body: { query: string; tag_type: number }, options?: RequestOptions) =>
+        this.baseClient.post<AssetGroupTagSearchResponse>(`/api/v2/asset-group-tags/search`, body, options);
 
     getAssetGroupTag = (tagId: number | string, options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagResponse>(`/api/v2/asset-group-tags/${tagId}`, options);
@@ -200,11 +324,14 @@ class BHEAPIClient {
         );
 
     getAssetGroupTagSelectors = (tagId: number | string, options?: RequestOptions) =>
-        this.baseClient.get<AssetGroupTagSelectorsResponse>(`/api/v2/asset-group-tags/${tagId}/selectors`, options);
+        this.baseClient.get<AssetGroupTagSelectorsResponse>(`/api/v2/asset-group-tags/${tagId}/selectors`, {
+            ...options,
+            paramsSerializer: { indexes: null },
+        });
 
-    getAssetGroupTagSelector = (tagId: number | string, selectorId: number | string, options?: RequestOptions) =>
+    getAssetGroupTagSelector = (tagId: number | string, ruleId: number | string, options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagSelectorResponse>(
-            `/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`,
+            `/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}`,
             options
         );
 
@@ -213,69 +340,94 @@ class BHEAPIClient {
 
     updateAssetGroupTagSelector = (
         tagId: number | string,
-        selectorId: number | string,
+        ruleId: number | string,
         updatedValues: UpdateSelectorRequest,
         options?: RequestOptions
-    ) => this.baseClient.patch(`/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`, updatedValues, options);
+    ) => this.baseClient.patch(`/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}`, updatedValues, options);
 
-    deleteAssetGroupTagSelector = (tagId: string | number, selectorId: string | number, options?: RequestOptions) =>
-        this.baseClient.delete(`/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`, options);
+    deleteAssetGroupTagSelector = (tagId: string | number, ruleId: string | number, options?: RequestOptions) =>
+        this.baseClient.delete(`/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}`, options);
 
     getAssetGroupTagMembers = (
         assetGroupTagId: number | string,
         skip: number | string,
         limit: number,
         sort_by: string,
+        environments?: string[],
+        primary_kind?: string,
         options?: RequestOptions
     ) =>
-        this.baseClient.get<AssetGroupTagMembersResponse>(
-            `/api/v2/asset-group-tags/${assetGroupTagId}/members`,
-            Object.assign(
-                {
-                    params: {
-                        skip,
-                        limit,
-                        sort_by,
-                    },
-                },
-                options
-            )
-        );
+        this.baseClient.get<AssetGroupTagMembersResponse>(`/api/v2/asset-group-tags/${assetGroupTagId}/members`, {
+            ...options,
+            params: {
+                ...options?.params,
+                environments,
+                primary_kind: primary_kind ? `eq:${primary_kind}` : undefined,
+                skip,
+                limit,
+                sort_by,
+            },
+            paramsSerializer: { indexes: null },
+        });
 
     getAssetGroupTagSelectorMembers = (
         tagId: number | string,
-        selectorId: number | string,
+        ruleId: number | string,
         skip: number,
         limit: number,
         sort_by: string,
+        environments?: string[],
+        primary_kind?: string,
         options?: RequestOptions
     ) =>
         this.baseClient.get<AssetGroupTagMembersResponse>(
-            `/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}/members`,
-            Object.assign(
-                {
-                    params: {
-                        skip,
-                        limit,
-                        sort_by,
-                    },
+            `/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}/members`,
+            {
+                ...options,
+                params: {
+                    ...options?.params,
+                    environments,
+                    primary_kind: primary_kind ? `eq:${primary_kind}` : undefined,
+                    skip,
+                    limit,
+                    sort_by,
                 },
-                options
-            )
+                paramsSerializer: { indexes: null },
+            }
         );
 
-    getAssetGroupTagMembersCount = (tagId: string, options?: RequestOptions) =>
+    getAssetGroupTagMembersCount = (tagId: string, environments?: string[], options?: RequestOptions) =>
+        this.baseClient.get<AssetGroupMemberCountsResponse>(`/api/v2/asset-group-tags/${tagId}/members/counts`, {
+            ...options,
+            params: { ...options?.params, environments },
+            paramsSerializer: { indexes: null },
+        });
+
+    getAssetGroupTagRuleMembersCount = (
+        tagId: string,
+        ruleId: string,
+        environments?: string[],
+        options?: RequestOptions
+    ) =>
         this.baseClient.get<AssetGroupMemberCountsResponse>(
-            `/api/v2/asset-group-tags/${tagId}/members/counts`,
-            options
+            `/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}/members/counts`,
+            {
+                ...options,
+                params: { ...options?.params, environments },
+                paramsSerializer: { indexes: null },
+            }
         );
 
-    assetGroupTagsPreviewSelectors = (seeds: PreviewSelectorsRequest, options: RequestOptions) => {
+    assetGroupTagsPreviewSelectors = (payload: PreviewSelectorsRequest, options: RequestOptions) => {
         return this.baseClient.post<PreviewSelectorsResponse>(
             '/api/v2/asset-group-tags/preview-selectors',
-            { ...seeds },
+            payload,
             options
         );
+    };
+
+    updateAssetGroupTagCertification = (requestBody: UpdateCertificationRequest) => {
+        return this.baseClient.post('/api/v2/asset-group-tags/certifications', requestBody);
     };
 
     /* asset group isolation (AGI) */
@@ -340,6 +492,9 @@ class BHEAPIClient {
     getLatestMetaNode = (environmentId: string, options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<types.FlatGraphResponse>>(`/api/v2/meta-nodes/${environmentId}`, options);
 
+    getFindings = (key: string, options?: RequestOptions) =>
+        this.baseClient.get<BasicResponse<FindingAssetsResponse>>(`/api/v2/findings/${key}`, options);
+
     /**
      * getFindingDetails returns data associated with a finding for a given environment
      */
@@ -390,7 +545,7 @@ class BHEAPIClient {
 
     changeFindingAcceptance = (
         attackPathId: string,
-        findingType: string,
+        findingName: string,
         accepted: boolean,
         acceptUntil?: Date,
         options?: RequestOptions
@@ -398,14 +553,16 @@ class BHEAPIClient {
         this.baseClient.put(
             `/api/v2/attack-paths/${attackPathId}/acceptance`,
             {
-                risk_type: findingType,
+                risk_type: findingName,
                 accepted: accepted,
                 accept_until: acceptUntil && acceptUntil.toISOString(),
             },
             options
         );
 
-    requestAnalysis = (options?: RequestOptions) => this.baseClient.put('/api/v2/attack-paths', options);
+    requestAttackPaths = (options?: RequestOptions) => this.baseClient.put('/api/v2/attack-paths', options);
+
+    requestAnalysis = (options?: RequestOptions) => this.baseClient.put('/api/v2/analysis', options);
 
     /**
      * getAvailableFindingTypes returns a list of findings that were discovered through the most recent analysis for a given environment
@@ -413,13 +570,19 @@ class BHEAPIClient {
     getAvailableFindingTypes = (environmentId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/domains/${environmentId}/available-types`, options);
 
-    exportRiskFindings = (environmentId: string, findingType: string, accepted?: boolean, options?: RequestOptions) =>
+    getFindingSchemas = (skip: number = 0, options?: RequestOptions) =>
+        this.baseClient.get<FindingSchemaResponse>(
+            '/api/v2/extensions-findings',
+            Object.assign({ params: { skip } }, options)
+        );
+
+    exportRiskFindings = (environmentId: string, findingName: string, accepted?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/domains/${environmentId}/attack-path-findings`,
             Object.assign(
                 {
                     params: {
-                        finding: findingType,
+                        finding: findingName,
                         accepted: accepted,
                     },
                     responseType: 'blob',
@@ -591,7 +754,7 @@ class BHEAPIClient {
         hydrateOUs?: boolean,
         options?: RequestOptions
     ) =>
-        this.baseClient.get(
+        this.baseClient.get<GetClientResponse>(
             '/api/v2/clients',
             Object.assign(
                 {
@@ -606,15 +769,17 @@ class BHEAPIClient {
             )
         );
 
-    createClient = (client: CreateSharpHoundClientRequest | CreateAzureHoundClientRequest, options?: RequestOptions) =>
-        this.baseClient.post('/api/v2/clients', client, options);
+    createClient = (
+        client: CreateSharpHoundClientRequest | CreateAzureHoundClientRequest | CreateOpenHoundClientRequest,
+        options?: RequestOptions
+    ) => this.baseClient.post('/api/v2/clients', client, options);
 
     getClient = (clientId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/clients/${clientId}`, options);
 
     updateClient = (
         clientId: string,
-        client: UpdateSharpHoundClientRequest | UpdateAzureHoundClientRequest,
+        client: UpdateSharpHoundClientRequest | UpdateAzureHoundClientRequest | UpdateOpenHoundClientRequest,
         options?: RequestOptions
     ) => this.baseClient.put(`/api/v2/clients/${clientId}`, client, options);
 
@@ -642,22 +807,59 @@ class BHEAPIClient {
         this.baseClient.post(`/api/v2/clients/${clientId}/jobs`, scheduledJob, options);
 
     getFinishedJobs = (
-        skip: number,
-        limit: number,
-        hydrateDomains?: boolean,
-        hydrateOUs?: boolean,
+        {
+            limit,
+            skip,
+            status,
+            start_time,
+            end_time,
+            client_id,
+            ad_structure_collection,
+            ca_registry_collection,
+            cert_services_collection,
+            dc_registry_collection,
+            hydrate_domains = false,
+            hydrate_ous = false,
+            local_group_collection,
+            session_collection,
+        }: {
+            limit: number;
+            skip: number;
+            status?: number;
+            start_time?: string;
+            end_time?: string;
+            client_id?: string;
+            ad_structure_collection?: boolean;
+            ca_registry_collection?: boolean;
+            cert_services_collection?: boolean;
+            dc_registry_collection?: boolean;
+            hydrate_domains?: boolean;
+            hydrate_ous?: boolean;
+            local_group_collection?: boolean;
+            session_collection?: boolean;
+        },
         options?: RequestOptions
     ) =>
-        this.baseClient.get(
-            `/api/v2/jobs/finished`,
+        this.baseClient.get<GetScheduledJobDisplayResponse>(
+            '/api/v2/jobs/finished',
             Object.assign(
                 {
-                    params: {
+                    params: omitUndefined({
                         skip,
                         limit,
-                        hydrate_domains: hydrateDomains,
-                        hydrate_ous: hydrateOUs,
-                    },
+                        hydrate_domains,
+                        hydrate_ous,
+                        status: prefixValue('eq', status),
+                        start_time: prefixValue('gte', start_time),
+                        end_time: prefixValue('lte', end_time),
+                        client_id: prefixValue('eq', client_id),
+                        ad_structure_collection: prefixValue('eq', ad_structure_collection),
+                        ca_registry_collection: prefixValue('eq', ca_registry_collection),
+                        cert_services_collection: prefixValue('eq', cert_services_collection),
+                        dc_registry_collection: prefixValue('eq', dc_registry_collection),
+                        local_group_collection: prefixValue('eq', local_group_collection),
+                        session_collection: prefixValue('eq', session_collection),
+                    }),
                 },
                 options
             )
@@ -699,32 +901,80 @@ class BHEAPIClient {
         this.baseClient.delete(`/api/v2/events/${eventId}`, options);
 
     /* file ingest */
-    listFileIngestJobs = (skip?: number, limit?: number, sortBy?: string) =>
+    listFileIngestJobs = (
+        {
+            skip,
+            limit,
+            sortBy,
+            status,
+            user_id,
+            start_time,
+            end_time,
+        }: {
+            skip?: number;
+            limit?: number;
+            sortBy?: string;
+            status?: number;
+            user_id?: string;
+            start_time?: string;
+            end_time?: string;
+        },
+        options?: RequestOptions
+    ) =>
         this.baseClient.get<ListFileIngestJobsResponse>(
             'api/v2/file-upload',
-            Object.assign({
-                params: {
-                    skip,
-                    limit,
-                    sort_by: sortBy,
+            Object.assign(
+                {
+                    params: omitUndefined({
+                        skip,
+                        limit,
+                        sort_by: sortBy,
+                        status: prefixValue('eq', status),
+                        user_id: prefixValue('eq', user_id),
+                        start_time: prefixValue('gte', start_time),
+                        end_time: prefixValue('lte', end_time),
+                    }),
                 },
-            })
+                options
+            )
         );
 
     listFileTypesForIngest = () =>
         this.baseClient.get<ListFileTypesForIngestResponse>('/api/v2/file-upload/accepted-types');
 
-    startFileIngest = () => this.baseClient.post<StartFileIngestResponse>('/api/v2/file-upload/start');
-
-    uploadFileToIngestJob = (ingestId: string, json: any, contentType: string) => {
-        const headers = {
-            'Content-Type': contentType,
-        };
-        return this.baseClient.post<UploadFileToIngestResponse>(`/api/v2/file-upload/${ingestId}`, json, { headers });
+    startFileIngest = () => {
+        return this.baseClient.post<StartFileIngestResponse>('/api/v2/file-upload/start');
     };
+
+    uploadFileToIngestJob = (
+        ingestId: string,
+        json: any,
+        contentType: string,
+        options: AxiosRequestConfig<any> = {}
+    ) => {
+        const mergedOptions: AxiosRequestConfig<any> = {
+            ...options,
+            headers: {
+                ...(options?.headers ?? {}),
+                'Content-Type': contentType,
+                'X-File-Upload-Name': json.name,
+            },
+        };
+
+        return this.baseClient.post<UploadFileToIngestResponse>(`/api/v2/file-upload/${ingestId}`, json, mergedOptions);
+    };
+
+    getFileUpload = (uploadId: string, options?: RequestOptions) =>
+        this.baseClient.get<FileIngestCompletedTasksResponse>(
+            `/api/v2/file-upload/${uploadId}/completed-tasks`,
+            options
+        );
 
     endFileIngest = (ingestId: string) =>
         this.baseClient.post<EndFileIngestResponse>(`/api/v2/file-upload/${ingestId}/end`);
+
+    uploadSchemaFile = (json: any, options?: RequestOptions) =>
+        this.baseClient.put('/api/v2/extensions', json, options);
 
     /* custom node kinds */
     getCustomNodeKinds = (options?: RequestOptions) =>
@@ -757,7 +1007,7 @@ class BHEAPIClient {
     login = (credentials: LoginRequest, options?: RequestOptions) =>
         this.baseClient.post<types.LoginResponse>('/api/v2/login', credentials, options);
 
-    getSelf = (options?: RequestOptions) => this.baseClient.get('/api/v2/self', options);
+    getSelf = (options?: RequestOptions) => this.baseClient.get<GetSelfResponse>('/api/v2/self', options);
 
     logout = (options?: RequestOptions) => this.baseClient.post('/api/v2/logout', options);
 
@@ -854,39 +1104,17 @@ class BHEAPIClient {
     listUsers = (options?: RequestOptions) =>
         this.baseClient.get<types.ListUsersResponse>('/api/v2/bloodhound-users', options);
 
+    listUsersMinimal = (options?: RequestOptions) =>
+        this.baseClient.get<types.ListUsersResponse>('/api/v2/bloodhound-users-minimal', options);
+
     getUser = (userId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/bloodhound-users/${userId}`, options);
 
     createUser = (user: CreateUserRequest, options?: RequestOptions) =>
-        this.baseClient.post(
-            '/api/v2/bloodhound-users',
-            {
-                first_name: user.firstName,
-                last_name: user.lastName,
-                email_address: user.emailAddress,
-                principal: user.principal,
-                roles: user.roles,
-                sso_provider_id: user.SSOProviderId,
-                secret: user.password,
-                needs_password_reset: user.needsPasswordReset,
-            },
-            options
-        );
+        this.baseClient.post('/api/v2/bloodhound-users', user, options);
 
     updateUser = (userId: string, user: UpdateUserRequest, options?: RequestOptions) =>
-        this.baseClient.patch(
-            `/api/v2/bloodhound-users/${userId}`,
-            {
-                first_name: user.firstName,
-                last_name: user.lastName,
-                email_address: user.emailAddress,
-                principal: user.principal,
-                roles: user.roles,
-                sso_provider_id: user.SSOProviderId,
-                is_disabled: user.is_disabled,
-            },
-            options
-        );
+        this.baseClient.patch(`/api/v2/bloodhound-users/${userId}`, user, options);
 
     deleteUser = (userId: string, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/bloodhound-users/${userId}`, options);
@@ -908,7 +1136,7 @@ class BHEAPIClient {
     enrollMFA = (userId: string, data: { secret: string }, options?: RequestOptions) =>
         this.baseClient.post(`/api/v2/bloodhound-users/${userId}/mfa`, data, options);
 
-    disenrollMFA = (userId: string, data: { secret: string }, options?: RequestOptions) =>
+    disenrollMFA = (userId: string, data: { secret?: string }, options?: RequestOptions) =>
         this.baseClient.delete(
             `/api/v2/bloodhound-users/${userId}/mfa`,
             Object.assign(
@@ -1549,6 +1777,21 @@ class BHEAPIClient {
             )
         );
 
+    getDomainADCSEscalationsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/domains/${id}/adcs-escalations`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
     getGPOV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/gpos/${id}`,
@@ -2083,6 +2326,21 @@ class BHEAPIClient {
             )
         );
 
+    getAIACAPKIHierarchyV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/aiacas/${id}/pki-hierarchy`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
     getRootCAV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/rootcas/${id}`,
@@ -2099,6 +2357,21 @@ class BHEAPIClient {
     getRootCAControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/rootcas/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getRootCAPKIHierarchyV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/rootcas/${id}/pki-hierarchy`,
             Object.assign(
                 {
                     params: {
@@ -2145,6 +2418,48 @@ class BHEAPIClient {
             )
         );
 
+    getEnterpriseCAPKIHierarchyV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/enterprisecas/${id}/pki-hierarchy`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getEnterpriseCAPublishedTemplatesV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/enterprisecas/${id}/published-templates`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
     getNTAuthStoreV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/ntauthstores/${id}`,
@@ -2179,6 +2494,21 @@ class BHEAPIClient {
             )
         );
 
+    getNTAuthStoreTrustedCAsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/ntauthstores/${id}/trusted-cas`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
     getCertTemplateV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/certtemplates/${id}`,
@@ -2201,6 +2531,27 @@ class BHEAPIClient {
     ) =>
         this.baseClient.get(
             `/api/v2/certtemplates/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getCertTemplatePublishedToCAsV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/certtemplates/${id}/published-to-cas`,
             Object.assign(
                 {
                     params: {
@@ -2279,6 +2630,7 @@ class BHEAPIClient {
                         start_node: startNode,
                         end_node: endNode,
                         relationship_kinds: relationshipKinds,
+                        only_traversable: true,
                     },
                 },
                 options
@@ -2315,6 +2667,21 @@ class BHEAPIClient {
             )
         );
 
+    getACLInheritance = (sourceNode: number, targetNode: number, edgeType: string, options?: RequestOptions) =>
+        this.baseClient.get<GraphResponse>(
+            '/api/v2/graphs/acl-inheritance',
+            Object.assign(
+                {
+                    params: {
+                        source_node: sourceNode,
+                        target_node: targetNode,
+                        edge_type: edgeType,
+                    },
+                },
+                options
+            )
+        );
+
     /* remote assets */
     getRemoteAsset = (assetPath: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/assets/${assetPath}`, options);
@@ -2325,6 +2692,17 @@ class BHEAPIClient {
 
     updateConfiguration = (payload: UpdateConfigurationRequest, options?: RequestOptions) =>
         this.baseClient.put<UpdateConfigurationResponse>('/api/v2/config', payload, options);
+
+    getEdgeTypes = (options?: RequestOptions) =>
+        this.baseClient.get<GetEdgeTypesResponse>('/api/v2/extensions-edges', options);
+
+    getDogTags = (options?: RequestOptions) => this.baseClient.get('/api/v2/dog-tags', options);
+
+    getExtensions = (options?: RequestOptions) =>
+        this.baseClient.get<GetExtensionsResponse>('/api/v2/extensions', options);
+
+    deleteExtension = (extensionId: string, options?: RequestOptions): Promise<AxiosResponse<void>> =>
+        this.baseClient.delete(`/api/v2/extensions/${extensionId}`, options);
 }
 
 export default BHEAPIClient;

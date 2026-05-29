@@ -25,8 +25,9 @@ import (
 
 // VersionResponse holds data returned in a version query
 type VersionResponse struct {
-	API    APIVersions `json:"API"`
-	Server string      `json:"server_version"`
+	API            APIVersions `json:"API"`
+	Server         string      `json:"server_version"`
+	ProductEdition string      `json:"product_edition"`
 }
 
 // APIVersions holds the 2 supported API versions
@@ -42,6 +43,7 @@ func GetVersion(response http.ResponseWriter, request *http.Request) {
 			CurrentVersion:    "v2",
 			DeprecatedVersion: "none",
 		},
-		Server: version.GetVersion().String(),
+		Server:         version.GetVersion().String(),
+		ProductEdition: "community",
 	}, http.StatusOK, response)
 }

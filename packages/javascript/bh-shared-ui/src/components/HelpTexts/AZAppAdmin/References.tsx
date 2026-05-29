@@ -19,10 +19,17 @@ import { FC } from 'react';
 
 const References: FC = () => {
     return (
-        <Box sx={{ overflowX: 'auto' }}>
+        <Box className='overflow-x-auto'>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
+                href='https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/permissions-reference#application-administrator'>
+                Microsoft Entra built-in roles: Application Administrator
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
                 href='https://dirkjanm.io/azure-ad-privilege-escalation-application-admin/'>
                 https://dirkjanm.io/azure-ad-privilege-escalation-application-admin/
             </Link>

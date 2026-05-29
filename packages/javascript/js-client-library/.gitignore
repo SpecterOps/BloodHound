@@ -11,6 +11,12 @@
 .pnp.*
 
 node_modules
-package-lock.json
 
 !dist
+
+# coverage files
+coverage
+
+# allure
+allure-report
+allure-results

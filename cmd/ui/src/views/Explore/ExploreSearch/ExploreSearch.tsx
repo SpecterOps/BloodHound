@@ -16,7 +16,7 @@
 
 import { faCode, faDirections, faMinus, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
+import { Tab, Tabs } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import {
     CypherSearch,
@@ -35,6 +35,8 @@ import {
     usePathfindingSearch,
 } from 'bh-shared-ui';
 import React, { useState } from 'react';
+import { setAutoRunQueries, setTimeoutSetting } from 'src/ducks/global/actions';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
@@ -47,8 +49,6 @@ const useStyles = makeStyles((theme) => ({
         height: '40px',
         boxSizing: 'border-box',
         padding: theme.spacing(2),
-        fontSize: theme.typography.fontSize,
-        color: theme.palette.color.primary,
     },
 }));
 
@@ -57,6 +57,21 @@ const tabMap = {
     pathfinding: 1,
     cypher: 2,
 } satisfies MappedStringLiteral<ExploreSearchTab, number>;
+
+const tabs = [
+    {
+        label: 'Search',
+        icon: faSearch,
+    },
+    {
+        label: 'Pathfinding',
+        icon: faDirections,
+    },
+    {
+        label: 'Cypher',
+        icon: faCode,
+    },
+];
 
 const getTab = (exploreSearchTab: ExploreQueryParams['exploreSearchTab']) => {
     if (exploreSearchTab && exploreSearchTab in tabMap) return exploreSearchTab as keyof typeof tabMap;
@@ -67,15 +82,12 @@ const ExploreSearch: React.FC = () => {
     /* Hooks */
     const classes = useStyles();
 
-    const theme = useTheme();
-
-    const matches = useMediaQuery(theme.breakpoints.down('md'));
-
     const { exploreSearchTab, setExploreParams } = useExploreParams();
 
     const nodeSearchState = useNodeSearch();
     const pathfindingSearchState = usePathfindingSearch();
     const cypherSearchState = useCypherSearch();
+
     // We can move this back down into the filter modal once we remove the redux implementation
     const pathfindingFilterState = usePathfindingFilters();
 
@@ -140,26 +152,38 @@ const ExploreSearch: React.FC = () => {
             params.exploreSearchTab = 'pathfinding';
         }
         if (tab === 'cypher') {
-            params.searchType = 'cypher';
+            if (cypherSearchState.cypherQuery) {
+                params.searchType = 'cypher';
+            }
             params.cypherSearch = encodeCypherQuery(cypherSearchState.cypherQuery);
             params.exploreSearchTab = 'cypher';
         }
         return params;
     };
 
+    //auto run queries
+    const autoRun = useAppSelector((state) => state.global.view.autoRunQueries);
+    const dispatch = useAppDispatch();
+    const handleAutoRunChange = (autoRun: boolean) => {
+        dispatch(setAutoRunQueries(autoRun));
+    };
+
+    // disable query timeout
+    const disableTimeout = useAppSelector((state) => state.global.view.timeoutSetting);
+    const handleDisableTimeoutChange = (disableTimeout: boolean) => {
+        dispatch(setTimeoutSetting(disableTimeout));
+    };
+
     return (
-        <div
-            data-testid='explore_search-container'
-            className={cn('h-full min-h-0 w-[410px] flex gap-4 flex-col rounded-lg shadow-[1px solid white]', {
-                'w-[600px]': activeTab === 'cypher' && showSearchWidget,
-            })}>
+        <div data-testid='explore_search-container' className='h-full min-h-0 w-[600px] flex gap-4 flex-col rounded'>
             <div
-                className='h-10 w-full flex gap-1 rounded-lg pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'
+                className='h-10 w-full flex gap-1 rounded-lg shadow-outer-1 pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'
                 data-testid='explore_search-container_header'>
                 <Icon
+                    tip='Toggle search widget'
                     data-testid='explore_search-container_header_expand-collapse-button'
                     className={classes.icon}
-                    click={() => {
+                    onClick={() => {
                         setShowSearchWidget((v) => !v);
                     }}>
                     <FontAwesomeIcon icon={showSearchWidget ? faMinus : faPlus} />
@@ -173,13 +197,24 @@ const ExploreSearch: React.FC = () => {
                     TabIndicatorProps={{
                         className: 'h-[3px]',
                     }}>
-                    {getTabsContent(matches)}
+                    {tabs.map(({ label, icon }) => (
+                        <Tab
+                            data-testid={`explore_search-container_header_${label.toLowerCase()}-tab`}
+                            label={label}
+                            key={label}
+                            icon={<FontAwesomeIcon icon={icon} />}
+                            iconPosition='start'
+                            title={label}
+                            className='h-10 min-h-10'
+                        />
+                    ))}
                 </Tabs>
             </div>
 
             <div
-                className={cn('hidden min-h-0 p-2 rounded-lg pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]', {
+                className={cn('hidden min-h-0 rounded pointer-events-auto', {
                     block: showSearchWidget,
+                    'p-2 bg-[#f4f4f4] dark:bg-[#222222]': activeTab !== 'cypher',
                 })}>
                 <TabPanels
                     tabs={[
@@ -190,7 +225,14 @@ const ExploreSearch: React.FC = () => {
                             pathfindingSearchState={pathfindingSearchState}
                             pathfindingFilterState={pathfindingFilterState}
                         />,
-                        <CypherSearch cypherSearchState={cypherSearchState} />,
+                        <CypherSearch
+                            cypherSearchState={cypherSearchState}
+                            autoRun={autoRun}
+                            setAutoRun={handleAutoRunChange}
+                            disableQueryLimit={disableTimeout}
+                            setDisableQueryLimit={handleDisableTimeoutChange}
+                            onExploreMenuCollapse={() => setShowSearchWidget(false)}
+                        />,
                         /* eslint-enable react/jsx-key */
                     ]}
                     activeTab={tabMap[activeTab]}
@@ -198,35 +240,6 @@ const ExploreSearch: React.FC = () => {
             </div>
         </div>
     );
-};
-
-const getTabsContent = (matches: boolean) => {
-    const tabs = [
-        {
-            label: 'Search',
-            icon: faSearch,
-        },
-        {
-            label: 'Pathfinding',
-            icon: faDirections,
-        },
-        {
-            label: 'Cypher',
-            icon: faCode,
-        },
-    ];
-
-    return tabs.map(({ label, icon }) => (
-        <Tab
-            data-testid={`explore_search-container_header_${label.toLowerCase()}-tab`}
-            label={matches ? '' : label}
-            key={label}
-            icon={<FontAwesomeIcon icon={icon} />}
-            iconPosition='start'
-            title={label}
-            className='h-10 min-h-10'
-        />
-    ));
 };
 
 interface TabPanelsProps {

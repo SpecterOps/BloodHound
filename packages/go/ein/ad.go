@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/bloodhound/packages/go/slicesext"
@@ -106,22 +106,51 @@ func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
 	}
 
 	if item.NTLMRegistryData.Collected {
+		// If a registry value doesn't exist, assign its item prop to nil to clear it from the node
+		itemProps[ad.RestrictOutboundNTLM.String()] = nil
+		itemProps[ad.RestrictReceivingNTLMTraffic.String()] = nil
+		itemProps[ad.RequireSecuritySignature.String()] = nil
+		itemProps[ad.EnableSecuritySignature.String()] = nil
+		itemProps[ad.NTLMMinClientSec.String()] = nil
+		itemProps[ad.NTLMMinServerSec.String()] = nil
+		itemProps[ad.LMCompatibilityLevel.String()] = nil
+		itemProps[ad.UseMachineID.String()] = nil
+		itemProps[ad.ClientAllowedNTLMServers.String()] = nil
+
 		/*
-			RestrictSendingNtlmTraffic is sent to us as an uint
+			RestrictSendingNtlmTraffic is sent to us as an uint if sent at all
 			The possible values are
 				0: Allow All
 				1: Audit All
 				2: Deny All
 		*/
-		itemProps[ad.RestrictOutboundNTLM.String()] = item.NTLMRegistryData.Result.RestrictSendingNtlmTraffic == 2
-		itemProps[ad.RestrictReceivingNTLMTraffic.String()] = item.NTLMRegistryData.Result.RestrictReceivingNTLMTraffic == 2
-		itemProps[ad.RequireSecuritySignature.String()] = item.NTLMRegistryData.Result.RequireSecuritySignature != 0
-		itemProps[ad.EnableSecuritySignature.String()] = item.NTLMRegistryData.Result.EnableSecuritySignature != 0
-		itemProps[ad.NTLMMinClientSec.String()] = item.NTLMRegistryData.Result.NtlmMinClientSec
-		itemProps[ad.NTLMMinServerSec.String()] = item.NTLMRegistryData.Result.NtlmMinServerSec
-		itemProps[ad.LMCompatibilityLevel.String()] = item.NTLMRegistryData.Result.LmCompatibilityLevel
-		itemProps[ad.UseMachineID.String()] = item.NTLMRegistryData.Result.UseMachineId != 0
-		itemProps[ad.ClientAllowedNTLMServers.String()] = item.NTLMRegistryData.Result.ClientAllowedNTLMServers
+		if item.NTLMRegistryData.Result.RestrictSendingNtlmTraffic != nil {
+			itemProps[ad.RestrictOutboundNTLM.String()] = *item.NTLMRegistryData.Result.RestrictSendingNtlmTraffic == 2
+		}
+		if item.NTLMRegistryData.Result.RestrictReceivingNTLMTraffic != nil {
+			itemProps[ad.RestrictReceivingNTLMTraffic.String()] = *item.NTLMRegistryData.Result.RestrictReceivingNTLMTraffic == 2
+		}
+		if item.NTLMRegistryData.Result.RequireSecuritySignature != nil {
+			itemProps[ad.RequireSecuritySignature.String()] = *item.NTLMRegistryData.Result.RequireSecuritySignature != 0
+		}
+		if item.NTLMRegistryData.Result.EnableSecuritySignature != nil {
+			itemProps[ad.EnableSecuritySignature.String()] = *item.NTLMRegistryData.Result.EnableSecuritySignature != 0
+		}
+		if item.NTLMRegistryData.Result.NtlmMinClientSec != nil {
+			itemProps[ad.NTLMMinClientSec.String()] = *item.NTLMRegistryData.Result.NtlmMinClientSec
+		}
+		if item.NTLMRegistryData.Result.NtlmMinServerSec != nil {
+			itemProps[ad.NTLMMinServerSec.String()] = *item.NTLMRegistryData.Result.NtlmMinServerSec
+		}
+		if item.NTLMRegistryData.Result.LmCompatibilityLevel != nil {
+			itemProps[ad.LMCompatibilityLevel.String()] = *item.NTLMRegistryData.Result.LmCompatibilityLevel
+		}
+		if item.NTLMRegistryData.Result.UseMachineId != nil {
+			itemProps[ad.UseMachineID.String()] = *item.NTLMRegistryData.Result.UseMachineId != 0
+		}
+		if item.NTLMRegistryData.Result.ClientAllowedNTLMServers != nil {
+			itemProps[ad.ClientAllowedNTLMServers.String()] = *item.NTLMRegistryData.Result.ClientAllowedNTLMServers
+		}
 	}
 
 	if ldapEnabled, ok := itemProps["ldapenabled"]; ok {
@@ -204,7 +233,7 @@ func getBaseProperties(item IngestBase, ingestTime time.Time) map[string]any {
 // This function is to support our new method of doing Owns edges and makes older data sets backwards compatible
 func convertOwnsEdgeToProperty(item IngestBase, itemProps map[string]any) {
 	for _, ace := range item.Aces {
-		if rightName, err := analysis.ParseKind(ace.RightName); err != nil {
+		if rightName, err := ParseKind(ace.RightName); err != nil {
 			continue
 		} else if rightName.Is(ad.Owns) || rightName.Is(ad.OwnsRaw) {
 			itemProps[ad.OwnerSid.String()] = ace.PrincipalSID
@@ -238,7 +267,11 @@ func stringToBool(itemProps map[string]any, keyName string) {
 		case bool:
 		// pass
 		default:
-			slog.Debug(fmt.Sprintf("Removing %s with type %T", converted, converted))
+			slog.Debug(
+				"Removing property with type",
+				slog.String("property", keyName),
+				slog.String("type", fmt.Sprintf("%T", converted)),
+			)
 			delete(itemProps, keyName)
 		}
 	}
@@ -260,24 +293,20 @@ func stringToInt(itemProps map[string]any, keyName string) {
 		case int:
 		// pass
 		default:
-			slog.Debug(fmt.Sprintf("Removing %s with type %T", keyName, converted))
+			slog.Debug(
+				"Removing property with type",
+				slog.String("property", keyName),
+				slog.String("type", fmt.Sprintf("%T", converted)),
+			)
 			delete(itemProps, keyName)
 		}
 	}
 }
 
-func ParseObjectContainer(item IngestBase, itemType graph.Kind, baseNodeProp IngestibleNode) []IngestibleRelationship {
-	isConfigurationNC := false
-	if itemType.Is(ad.Container) {
-		if dn, ok := baseNodeProp.PropertyMap[ad.DistinguishedName.String()].(string); ok {
-			isConfigurationNC = strings.HasPrefix(dn, "CN=CONFIGURATION,DC=")
-		}
-	}
-
-	rels := make([]IngestibleRelationship, 0)
+func ParseObjectContainer(item IngestBase, itemType graph.Kind) IngestibleRelationship {
 	containingPrincipal := item.ContainedBy
 	if containingPrincipal.ObjectIdentifier != "" {
-		rels = append(rels, NewIngestibleRelationship(
+		return NewIngestibleRelationship(
 			IngestibleEndpoint{
 				Value: containingPrincipal.ObjectIdentifier,
 				Kind:  containingPrincipal.Kind(),
@@ -290,27 +319,11 @@ func ParseObjectContainer(item IngestBase, itemType graph.Kind, baseNodeProp Ing
 				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.Contains,
 			},
-		))
-
-		if !item.IsACLProtected && !isConfigurationNC { // The Configuration NC is it's own partition and does not inherit ACEs
-			rels = append(rels, NewIngestibleRelationship(
-				IngestibleEndpoint{
-					Value: containingPrincipal.ObjectIdentifier,
-					Kind:  containingPrincipal.Kind(),
-				},
-				IngestibleEndpoint{
-					Value: item.ObjectIdentifier,
-					Kind:  itemType,
-				},
-				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): false},
-					RelType:  ad.PropagatesACEsTo,
-				},
-			))
-		}
+		)
 	}
 
-	return rels
+	// TODO: Decide if we even want empty rels in the first place
+	return NewIngestibleRelationship(IngestibleEndpoint{}, IngestibleEndpoint{}, IngestibleRel{})
 }
 
 func ParsePrimaryGroup(item IngestBase, itemType graph.Kind, primaryGroupSid string) IngestibleRelationship {
@@ -335,25 +348,28 @@ func ParsePrimaryGroup(item IngestBase, itemType graph.Kind, primaryGroupSid str
 	return NewIngestibleRelationship(IngestibleEndpoint{}, IngestibleEndpoint{}, IngestibleRel{})
 }
 
-func ParseDomainForIdentity(item IngestBase, itemType graph.Kind, domainSID string) IngestibleRelationship {
-	if domainSID == "" {
-		return NewIngestibleRelationship(IngestibleEndpoint{}, IngestibleEndpoint{}, IngestibleRel{})
+// ParseGroupMiscData parses HasSIDHistory
+func ParseGroupMiscData(group Group) []IngestibleRelationship {
+	data := make([]IngestibleRelationship, 0)
+
+	for _, target := range group.HasSIDHistory {
+		data = append(data, NewIngestibleRelationship(
+			IngestibleEndpoint{
+				Value: group.ObjectIdentifier,
+				Kind:  ad.Group,
+			},
+			IngestibleEndpoint{
+				Value: target.ObjectIdentifier,
+				Kind:  target.Kind(),
+			},
+			IngestibleRel{
+				RelProps: map[string]any{ad.IsACL.String(): false},
+				RelType:  ad.HasSIDHistory,
+			},
+		))
 	}
 
-	return NewIngestibleRelationship(
-		IngestibleEndpoint{
-			Value: domainSID,
-			Kind:  ad.Domain,
-		},
-		IngestibleEndpoint{
-			Value: item.ObjectIdentifier,
-			Kind:  itemType,
-		},
-		IngestibleRel{
-			RelProps: map[string]any{ad.IsACL.String(): false},
-			RelType:  ad.ContainsIdentity,
-		},
-	)
+	return data
 }
 
 func ParseGroupMembershipData(group Group) ParsedGroupMembershipData {
@@ -436,11 +452,17 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 			continue
 		}
 
-		if rightKind, err := analysis.ParseKind(ace.RightName); err != nil {
-			slog.Error(fmt.Sprintf("Error during ParseACEData: %v", err))
+		if rightKind, err := ParseKind(ace.RightName); err != nil {
+			slog.Error(
+				"Error during ParseACEData",
+				attr.Error(err),
+			)
 			continue
 		} else if !ad.IsACLKind(rightKind) {
-			slog.Error(fmt.Sprintf("Non-ace edge type given to process aces: %s", ace.RightName))
+			slog.Error(
+				"Non-ace edge type given to process aces",
+				slog.String("right_name", ace.RightName),
+			)
 			continue
 		} else if rightKind.Is(ad.Owns) || rightKind.Is(ad.OwnsRaw) {
 			// Get Owner SID from ACE granting Owns permission
@@ -642,8 +664,11 @@ func convertSPNData(spns []SPNTarget, sourceID string) []IngestibleRelationship 
 	converted := make([]IngestibleRelationship, 0, len(spns))
 
 	for _, s := range spns {
-		if kind, err := analysis.ParseKind(s.Service); err != nil {
-			slog.Error(fmt.Sprintf("Error during processSPNTargets: %v", err))
+		if kind, err := ParseKind(s.Service); err != nil {
+			slog.Error(
+				"Error during convertSPNData",
+				attr.Error(err),
+			)
 		} else {
 			converted = append(converted, NewIngestibleRelationship(
 				IngestibleEndpoint{
@@ -854,7 +879,10 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		switch converted := trust.TrustAttributes.(type) {
 		case string:
 			if i, err := strconv.Atoi(converted); err != nil {
-				slog.Warn(fmt.Sprintf("Error converting trust attributes with a string value of %s to an int", converted))
+				slog.Warn(
+					"Error converting trust attributes to an int",
+					slog.String("trust_attributes", converted),
+				)
 				invalidTrustAttribute = true
 			} else {
 				convertedTrustAttributes = i
@@ -866,7 +894,10 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		case float64:
 			convertedTrustAttributes = int(converted)
 		default:
-			slog.Warn(fmt.Sprintf("Unexpected trust attributes type of %T, failed to convert to an int", converted))
+			slog.Warn(
+				"Unexpected trust attributes type, failed to convert to an int",
+				slog.String("type", fmt.Sprintf("%T", converted)),
+			)
 			invalidTrustAttribute = true
 		}
 
@@ -877,7 +908,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		}
 
 		parsedData.ExtraNodeProps = append(parsedData.ExtraNodeProps, IngestibleNode{
-			PropertyMap: map[string]any{"name": trust.TargetDomainName},
+			PropertyMap: map[string]any{"name": trust.TargetDomainName, ad.DomainSID.String(): trust.TargetDomainSid},
 			ObjectID:    trust.TargetDomainSid,
 			Labels:      []graph.Kind{ad.Domain},
 		})
@@ -1514,9 +1545,50 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 		}
 	}
 
+	propMap[ad.VulnerableNetlogonSecurityDescriptorCollected.String()] = computer.DCRegistryData.VulnerableNetlogonSecurityDescriptor.Collected
+	if computer.DCRegistryData.VulnerableNetlogonSecurityDescriptor.Collected {
+		propMap[ad.VulnerableNetlogonSecurityDescriptor.String()] = computer.DCRegistryData.VulnerableNetlogonSecurityDescriptor.Value
+	}
+
 	return IngestibleNode{
 		ObjectID:    computer.ObjectIdentifier,
 		PropertyMap: propMap,
 		Labels:      []graph.Kind{ad.Computer},
+	}
+}
+
+// Prettified definitions for GPOStatus
+const (
+	PrettyGPOStatusNotExisting                   = "GPO Status does not exist"
+	PrettyGPOStatusEnabled                       = "Enabled"
+	PrettyGPOStatusUserConfigurationDisabled     = "User Configuration Disabled"
+	PrettyGPOStatusComputerConfigurationDisabled = "Computer Configuration Disabled"
+	PrettyGPOStatusDisabled                      = "Disabled"
+)
+
+func ParseGPOData(gpo GPO) IngestibleNode {
+	propMap := make(map[string]any)
+
+	if status, ok := gpo.Properties[ad.GPOStatus.String()]; ok {
+		propMap[ad.GPOStatusRaw.String()] = strings.TrimSpace(fmt.Sprint(status))
+
+		switch propMap[ad.GPOStatusRaw.String()] {
+		case "0":
+			propMap[ad.GPOStatus.String()] = PrettyGPOStatusEnabled
+		case "1":
+			propMap[ad.GPOStatus.String()] = PrettyGPOStatusUserConfigurationDisabled
+		case "2":
+			propMap[ad.GPOStatus.String()] = PrettyGPOStatusComputerConfigurationDisabled
+		case "3":
+			propMap[ad.GPOStatus.String()] = PrettyGPOStatusDisabled
+		default:
+			propMap[ad.GPOStatus.String()] = PrettyGPOStatusNotExisting
+		}
+	}
+
+	return IngestibleNode{
+		ObjectID:    gpo.ObjectIdentifier,
+		PropertyMap: propMap,
+		Labels:      []graph.Kind{ad.GPO},
 	}
 }

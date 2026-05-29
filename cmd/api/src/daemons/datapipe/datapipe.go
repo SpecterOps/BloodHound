@@ -18,12 +18,13 @@ package datapipe
 
 import (
 	"context"
-	"fmt"
+
 	"log/slog"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 const (
@@ -82,7 +83,6 @@ func (s *Daemon) Start(ctx context.Context) {
 	for {
 		select {
 		case <-pruningTicker.C:
-
 			s.WithDatapipeStatus(ctx, model.DatapipeStatusPruning, s.pipeline.PruneData)
 
 		case <-datapipeLoopTimer.C:
@@ -115,16 +115,16 @@ func (s *Daemon) WithDatapipeStatus(ctx context.Context, status model.DatapipeSt
 
 	defer func() {
 		if err := s.db.SetDatapipeStatus(pipelineContext, model.DatapipeStatusIdle); err != nil {
-			slog.ErrorContext(pipelineContext, "Error setting datapipe status to idle", slog.String("err", err.Error()))
+			slog.ErrorContext(pipelineContext, "Error setting datapipe status to idle", attr.Error(err))
 		}
 	}()
 
 	if err := s.db.SetDatapipeStatus(pipelineContext, status); err != nil {
-		slog.ErrorContext(pipelineContext, fmt.Sprintf("Error setting datapipe status: %v", err))
+		slog.ErrorContext(pipelineContext, "Error setting datapipe status", attr.Error(err))
 		return
 	}
 
 	if err := action(pipelineContext); err != nil {
-		slog.ErrorContext(pipelineContext, "Datapipe action failed", slog.String("err", err.Error()))
+		slog.ErrorContext(pipelineContext, "Datapipe action failed", attr.Error(err))
 	}
 }

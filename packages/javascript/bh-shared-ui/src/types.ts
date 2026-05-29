@@ -1,4 +1,4 @@
-// Copyright 2024 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,9 @@ export type DeepPartial<T> = T extends object
       }
     : T;
 
-export type SortOrder = 'asc' | 'desc' | undefined;
+export const SortOrderAscending = 'asc' as const;
+export const SortOrderDescending = 'desc' as const;
+export type SortOrder = typeof SortOrderAscending | typeof SortOrderDescending | undefined;
 
 export type ValueOf<T> = T[keyof T];
 
@@ -33,17 +35,17 @@ export type MappedStringLiteral<T extends string | number, V = ''> = {
     [key in T]: V;
 };
 
-type AdministrationItem = {
+export type SubNavItem = {
     label: string;
     path: string;
     component: React.LazyExoticComponent<React.FC>;
     adminOnly: boolean;
+    featureFlag?: string;
 };
 
-export type AdministrationSection = {
+export type SubNavSection = {
     title: string;
-    items: AdministrationItem[];
-    order: number;
+    items: SubNavItem[];
 };
 
 export type PrimaryNavItem = {
@@ -57,10 +59,46 @@ export type CommonSearchType = {
     subheader: string;
     category: string;
     queries: {
+        name: string;
         description: string;
-        cypher: string;
+        query: string;
+        id?: number;
     }[];
 };
+
+export type QueryLineItem = {
+    id?: number;
+    name: string;
+    description: string;
+    query: string;
+    canEdit?: boolean;
+    user_id?: string;
+};
+
+export type QuerySearchType = {
+    subheader: string;
+    category: string;
+    queries: {
+        name: string;
+        description: string;
+        query: string;
+        id?: number;
+        user_id?: string;
+    }[];
+};
+
+export type QueryListSection = {
+    category?: string;
+    subheader: string;
+    queries: QueryLineItem[];
+};
+
+export type SelectedQuery = {
+    query: string;
+    id?: number;
+};
+
+export type SaveQueryAction = 'edit' | 'save-as' | undefined;
 
 export type SelectedNode = {
     id: string;
@@ -72,3 +110,5 @@ export type SelectedNode = {
 export type BaseGraphLayoutOptions = 'standard' | 'sequential';
 
 export type BaseExploreLayoutOptions = BaseGraphLayoutOptions | 'table';
+
+export type IndicatorType = 'good' | 'bad' | 'pending';

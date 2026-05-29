@@ -19,6 +19,7 @@ import { Link } from '@mui/material';
 const sharpHoundCELink = (
     <Link
         target='_blank'
+        rel='noopener noreferrer'
         data-testid='download-collectors-sharphound-ce-link'
         href={'https://bloodhound.specterops.io/collect-data/ce-collection/sharphound'}>
         SharpHound Community
@@ -28,6 +29,7 @@ const sharpHoundCELink = (
 const azureHoundCELink = (
     <Link
         target='_blank'
+        rel='noopener noreferrer'
         data-testid='download-collectors-azurehound-ce-link'
         href={'https://bloodhound.specterops.io/collect-data/ce-collection/azurehound'}>
         AzureHound Community
@@ -37,6 +39,7 @@ const azureHoundCELink = (
 const samlConfigDocLink = (
     <Link
         target='_blank'
+        rel='noopener noreferrer'
         data-testid='saml-config-doc-link'
         href={'https://bloodhound.specterops.io/manage-bloodhound/auth/saml'}>
         here
@@ -46,6 +49,7 @@ const samlConfigDocLink = (
 const ManageUsersDocLink = (
     <Link
         target='_blank'
+        rel='noopener noreferrer'
         data-testid='manage-users-doc-link'
         href={'https://bloodhound.specterops.io/manage-bloodhound/auth/users-and-roles'}>
         adding users, changing their roles, or understanding role capabilities
@@ -55,6 +59,7 @@ const ManageUsersDocLink = (
 const fileIngestLink = (
     <Link
         target='_blank'
+        rel='noopener noreferrer'
         data-testid='file-upload-gettingstarted-link'
         href={'https://bloodhound.specterops.io/get-started/quickstart/community-edition-quickstart'}>
         Getting Started
@@ -64,6 +69,7 @@ const fileIngestLink = (
 const apiUsageLink = (
     <Link
         target='_blank'
+        rel='noopener noreferrer'
         data-testid='file-upload-gettingstarted-link'
         href={'https://bloodhound.specterops.io/integrations/bloodhound-api/working-with-api'}>
         Working with the BloodHound API

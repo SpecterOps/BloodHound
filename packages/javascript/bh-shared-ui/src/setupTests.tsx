@@ -19,8 +19,6 @@
 import matchers from '@testing-library/jest-dom/matchers';
 import { expect } from 'vitest';
 //@ts-ignore
-import React from 'react';
-//@ts-ignore
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import 'whatwg-fetch';
 
@@ -28,8 +26,37 @@ import 'whatwg-fetch';
 expect.extend(matchers);
 
 // mocks
+
+beforeAll(() => {
+    // DoodleUI Table uses virtualization which requires these properties to be defined or rows do not render
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+        value: 800,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
+        value: 800,
+    });
+
+    // Radix Select relies on pointer events + scroll positioning under the hood
+    // (Popper + focus management). In JSDOM, those methods (scrollIntoView,
+    // hasPointerCapture, releasePointerCapture) don’t exist by default, so Radix
+    // crashes silently when trying to open the select dropdown.
+    const g = globalThis as any;
+    const ElementCtor = g.Element as typeof Element | undefined;
+    if (!ElementCtor?.prototype) return;
+    const proto = ElementCtor.prototype as any;
+    if (typeof proto.scrollIntoView !== 'function') proto.scrollIntoView = vi.fn();
+    if (typeof proto.hasPointerCapture !== 'function') proto.hasPointerCapture = vi.fn();
+    if (typeof proto.releasePointerCapture !== 'function') proto.releasePointerCapture = vi.fn();
+});
+
 beforeEach(() => {
     vi.clearAllMocks();
+});
+
+afterEach(() => {
+    // Some of our radix components set "pointer-events: none" (such as Dialog), which in some cases does not get cleaned
+    // up correctly: https://github.com/radix-ui/primitives/issues/1241#issuecomment-2589438039
+    document.body.style.pointerEvents = '';
 });
 
 // See https://fontawesome.com/v5.15/how-to-use/on-the-web/using-with/react#unit-testing for more information
@@ -46,5 +73,8 @@ const ResizeObserverMock = vi.fn(() => ({
     unobserve: vi.fn(),
     disconnect: vi.fn(),
 }));
-
 vi.stubGlobal('ResizeObserver', ResizeObserverMock);
+
+if (typeof window.URL.createObjectURL === 'undefined') {
+    window.URL.createObjectURL = vi.fn();
+}

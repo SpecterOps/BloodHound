@@ -39,16 +39,6 @@ func TestWriteErrorResponse_InvalidFormat(t *testing.T) {
 	require.Contains(t, response.Body.String(), "internal error")
 }
 
-func TestWriteErrorResponse_V1(t *testing.T) {
-	response := httptest.NewRecorder()
-	api.WriteErrorResponse(context.Background(), &api.ErrorResponse{
-		HTTPStatus: http.StatusTeapot,
-		Error:      json.RawMessage(`{"foo":"bar"}`),
-	}, response)
-	require.Equal(t, response.Code, http.StatusTeapot)
-	require.Contains(t, response.Body.String(), "foo")
-}
-
 func TestWriteErrorResponse_V2(t *testing.T) {
 	response := httptest.NewRecorder()
 	api.WriteErrorResponse(context.Background(), &api.ErrorWrapper{

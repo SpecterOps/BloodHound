@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -26,17 +26,11 @@ const MainNavLogoData: MainNavLogoDataObject = {
     project: {
         route: '/',
         icon: <AppIcon.BHCELogo size={24} />,
-        image: {
-            imageUrl: `/test`,
-            dimensions: { height: '40px', width: '165px' },
-            classes: 'ml-4',
-            altText: 'BHE Text Logo',
-        },
     },
     specterOps: {
         image: {
             imageUrl: `/test`,
-            dimensions: { height: '40px', width: '165px' },
+            dimensions: { height: 40, width: 165 },
             classes: 'ml-4',
             altText: 'BHE Text Logo',
         },
@@ -63,7 +57,7 @@ const MainNavSecondaryListData: MainNavDataListItem[] = [
     {
         label: 'Action Item',
         icon: <AppIcon.LineChart size={24} />,
-        functionHandler: handleClick,
+        onClick: handleClick,
         testId: 'global_nav-test-action',
     },
 ];
@@ -136,66 +130,17 @@ describe('MainNav', () => {
 
         await user.click(actionItem);
 
-        expect(testLinkItem.functionHandler).toBeCalled();
+        expect(testLinkItem.onClick).toBeCalled();
     });
     it('should render a label and version number when expanded', async () => {
         const MainNavBar = await screen.findByRole('navigation');
-        expect(MainNavBar).toHaveClass('group');
 
         const versionNumberContainer = await within(MainNavBar).findByTestId('global_nav-version-number');
         const versionNumberLabel = await within(versionNumberContainer).findByText(
             `BloodHound: ${currentVersionNumber}`
         );
 
-        // ---- collapsed classes ----
-        expect(versionNumberLabel).toHaveClass('hidden');
-        expect(versionNumberLabel).toHaveClass('opacity-0');
-        // ---- collapsed classes ----
-
-        // ---- classes displayed on hover ----
-        expect(versionNumberLabel).toHaveClass('group-hover:opacity-100');
-        expect(versionNumberLabel).toHaveClass('group-hover:block');
-        // ---- classes displayed on hover ----
-    });
-    it('should only render an icon in list item when collapsed and the label should be styled to be hidden but appear on group-hover of the nav', async () => {
-        const testLinkItem = MainNavPrimaryListData[0];
-
-        const MainNavBar = screen.getByRole('navigation');
-        expect(MainNavBar).toHaveClass('group');
-
-        const primaryList = await within(MainNavBar).findByTestId('global_nav-primary-list');
-        const linkItemIcon = await within(primaryList).getAllByTestId('global_nav-item-label-icon')[0];
-        const linkItemText = await within(primaryList).findByText(testLinkItem.label as string);
-
-        expect(linkItemIcon).toBeInTheDocument();
-
-        // ---- collapsed classes ----
-        expect(linkItemText).toHaveClass('hidden');
-        expect(linkItemText).toHaveClass('opacity-0');
-        // ---- collapsed classes ----
-
-        // ---- classes displayed on hover ----
-        expect(linkItemText).toHaveClass('group-hover:opacity-100');
-        expect(linkItemText).toHaveClass('group-hover:flex');
-        // ---- classes displayed on hover ----
-    });
-    it('should style the powered-by to display when nav is expanded', async () => {
-        const MainNavBar = screen.getByRole('navigation');
-        expect(MainNavBar).toHaveClass('group');
-
-        const poweredByTextContainer = await within(MainNavBar).findByTestId('global_nav-powered-by');
-        const poweredByText = await within(poweredByTextContainer).findByText(/powered by/i);
-        expect(poweredByText).toBeInTheDocument();
-
-        // ---- collapsed classes ----
-        expect(poweredByText).toHaveClass('hidden');
-        expect(poweredByText).toHaveClass('opacity-0');
-        // ---- collapsed classes ----
-
-        // ---- classes displayed on hover ----
-        expect(poweredByText).toHaveClass('group-hover:opacity-100');
-        expect(poweredByText).toHaveClass('group-hover:flex');
-        // ---- classes displayed on hover ----
+        expect(versionNumberLabel).toBeInTheDocument();
     });
     it('should have a .z-nav class', () => {
         const navbarElement = screen.getByRole('navigation');
@@ -210,7 +155,7 @@ describe('Main Nav Route Highlighting', () => {
         });
         expect(window.location.pathname).toBe('/test');
         const elem = screen.getByTestId('global_nav-test-link').closest('li');
-        expect(elem).toHaveClass('bg-neutral-light-4');
+        expect(elem).toHaveClass('bg-neutral-4');
     });
     it('should highlight main nav route when navigating to child route', () => {
         render(<MainNav mainNavData={mainNavData} />, {
@@ -218,7 +163,26 @@ describe('Main Nav Route Highlighting', () => {
         });
         const selected = screen.getByTestId('global_nav-test-link-2').closest('li');
         const unselected = screen.getByTestId('global_nav-test-link').closest('li');
-        expect(selected).toHaveClass('bg-neutral-light-4');
+        expect(selected).toHaveClass('bg-neutral-4');
         expect(unselected).not.toHaveClass('bg-neutral-light-4');
+    });
+});
+
+describe('Keyboard shortcuts', () => {
+    it('should navigate to the correct page on alt + digit keydown', async () => {
+        const user = userEvent.setup();
+        render(<MainNav mainNavData={mainNavData} />);
+
+        await user.keyboard('{Alt>}1{/Alt}');
+
+        expect(window.location.pathname).toBe('/test');
+
+        await user.keyboard('{Alt>}2{/Alt}');
+
+        expect(window.location.pathname).toBe('/secondroute');
+
+        await user.keyboard('{Alt>}1{/Alt}');
+
+        expect(window.location.pathname).toBe('/test');
     });
 });

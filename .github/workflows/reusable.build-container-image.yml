@@ -188,7 +188,7 @@ jobs:
       image_name: ${{ steps.container-image-metadata.outputs.image_name }}
     steps:
       - name: Checkout Source Code Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # ratchet:actions/checkout@v5
         with:
           submodules: recursive
 
@@ -197,7 +197,7 @@ jobs:
       # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#allowing-access-to-components-in-a-private-repository
       - if: ${{ github.repository != 'SpecterOps/BloodHound' }}
         name: Checkout Reusable Workflows and Composite Actions
-        uses: actions/checkout@v4
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # ratchet:actions/checkout@v5
         with:
           clean: false
           repository: SpecterOps/BloodHound

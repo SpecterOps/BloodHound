@@ -15,180 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { ListSSOProvidersResponse, SAMLProviderInfo, SSOProvider, SSOProviderConfiguration } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import Users from '.';
+import { bloodHoundUsersHandlers, testAuthenticatedUser, testBloodHoundUsers, testSSOProviders } from '../../mocks';
 import { render, screen, within } from '../../test-utils';
 
-const testAuthenticatedUser = {
-    sso_provider_id: null,
-    AuthSecret: {
-        digest_method: 'argon2',
-        expires_at: '2025-01-01T12:00:00Z',
-        totp_activated: false,
-        id: 31,
-        created_at: '2024-01-01T12:00:00Z',
-        updated_at: '2024-01-01T12:00:00Z',
-        deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
-    },
-    roles: [
-        {
-            name: 'Administrator',
-            description: 'Administrator',
-            permissions: [
-                {
-                    authority: 'auth',
-                    name: 'ManageUsers',
-                },
-            ],
-            id: 4,
-            created_at: '2024-01-01T12:00:00Z',
-            updated_at: '2024-01-01T12:00:00Z',
-            deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
-        },
-    ],
-    first_name: 'Test',
-    last_name: 'Admin',
-    email_address: 'test_admin@specterops.io',
-    principal_name: 'test_admin',
-    last_login: '0001-01-01T00:00:00Z',
-    is_disabled: false,
-    eula_accepted: true,
-    id: '0',
-    created_at: '2024-01-01T12:00:00Z',
-    updated_at: '2024-01-01T12:00:00Z',
-    deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
-};
-
-const testMarshallLaw = {
-    sso_provider_id: 1,
-    AuthSecret: {
-        digest_method: 'argon2',
-        expires_at: '2025-01-01T12:00:00Z',
-        totp_activated: false,
-        id: 31,
-        created_at: '2024-01-01T12:00:00Z',
-        updated_at: '2024-01-01T12:00:00Z',
-        deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
-    },
-    roles: [
-        {
-            name: 'User',
-            description: 'User',
-            permissions: [
-                {
-                    authority: 'auth',
-                    name: 'ManageSelf',
-                },
-            ],
-            id: 4,
-            created_at: '2024-01-01T12:00:00Z',
-            updated_at: '2024-01-01T12:00:00Z',
-            deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
-        },
-    ],
-    first_name: 'Marshall',
-    last_name: 'Law',
-    email_address: 'mlaw@specterops.io',
-    principal_name: 'mlaw',
-    last_login: '0001-01-01T00:00:00Z',
-    is_disabled: false,
-    eula_accepted: true,
-    id: '1',
-    created_at: '2024-01-01T12:00:00Z',
-    updated_at: '2024-01-01T12:00:00Z',
-    deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
-};
-
-const testBloodHoundUsers = [testAuthenticatedUser, testMarshallLaw];
-
-const testSSOProviders: SSOProvider[] = [
-    {
-        name: 'saml-provider',
-        slug: 'saml-provider',
-        type: 'SAML',
-        login_uri: '',
-        callback_uri: '',
-        id: 1,
-        created_at: '2024-01-01T12:00:00Z',
-        updated_at: '2024-01-01T12:00:00Z',
-        details: {} as SAMLProviderInfo,
-        config: {} as SSOProviderConfiguration['config'],
-    },
-];
-
-const testRoles = {
-    roles: [
-        {
-            name: 'User',
-            description: 'User',
-            permissions: [
-                {
-                    authority: 'auth',
-                    name: 'ManageSelf',
-                },
-            ],
-            id: 3,
-            created_at: '2024-01-01T12:00:00Z',
-            updated_at: '2024-01-01T12:00:00Z',
-            deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
-        },
-        {
-            name: 'Administrator',
-            description: 'Administrator',
-            permissions: [
-                {
-                    authority: 'auth',
-                    name: 'ManageUsers',
-                },
-            ],
-            id: 4,
-            created_at: '2024-01-01T12:00:00Z',
-            updated_at: '2024-01-01T12:00:00Z',
-            deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
-        },
-    ],
-};
-
-const server = setupServer(
-    rest.get('/api/v2/self', (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: testAuthenticatedUser,
-            })
-        );
-    }),
-    rest.get('/api/v2/bloodhound-users', (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {
-                    users: testBloodHoundUsers,
-                },
-            })
-        );
-    }),
-    rest.get('/api/v2/bloodhound-users/1', (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: testMarshallLaw,
-            })
-        );
-    }),
-    rest.get<any, any, ListSSOProvidersResponse>('/api/v2/sso-providers', (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: testSSOProviders,
-            })
-        );
-    }),
-    rest.get('/api/v2/roles', (req, res, ctx) => {
-        return res(ctx.json({ data: testRoles }));
-    }),
-    rest.patch('/api/v2/bloodhound-users/1', (req, res, ctx) => {
-        return res(ctx.json({ data: { ...testMarshallLaw, sso_provider_id: null, AuthSecret: null } }));
-    })
-);
+const server = setupServer(...bloodHoundUsersHandlers);
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
@@ -218,7 +51,7 @@ describe('Users', () => {
         expect(within(testUserRow).getByRole('button')).toBeInTheDocument();
 
         // open the update user dialog for Marshall
-        await userEvent.click(within(testUserRow).getByRole('button', { name: 'bars' }));
+        await userEvent.click(within(testUserRow).getByRole('button', { name: 'Show user actions' }));
         await screen.findByRole('menuitem', { name: /update user/i, hidden: false });
         await userEvent.click(screen.getByRole('menuitem', { name: /update user/i, hidden: false }));
         expect(await screen.findByTestId('update-user-dialog')).toBeVisible();
@@ -229,7 +62,7 @@ describe('Users', () => {
         await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
         // the update user dialog should close and the password reset dialog should open
-        expect(await screen.findByTestId('update-user-dialog')).not.toBeVisible();
+        expect(screen.queryByTestId('update-user-dialog')).toBeNull();
         expect(await screen.findByTestId('password-dialog')).toBeVisible();
 
         // the force password reset option should be checked
@@ -247,5 +80,64 @@ describe('Users', () => {
         const rows = screen.getAllByRole('row');
         // Only the header row renders even though there is a mock endpoint that serves data
         expect(rows).toHaveLength(1);
+    });
+
+    it('does not show the "Disable MFA" context menu option for users without MFA enabled', async () => {
+        render(<Users />);
+
+        const noMFARow = await screen.findByRole('row', { name: /test_admin/i });
+
+        await userEvent.click(within(noMFARow).getByRole('button', { name: 'Show user actions' }));
+        await screen.findByRole('menuitem', { name: /update user/i, hidden: false });
+        expect(screen.queryByRole('menuitem', { name: /disable mfa/i, hidden: false })).not.toBeInTheDocument();
+    });
+
+    it('shows the "Disable MFA" context menu option for users with MFA enabled', async () => {
+        render(<Users />);
+
+        const withMFARow = await screen.findByRole('row', { name: /mfa_user/i });
+
+        await userEvent.click(within(withMFARow).getByRole('button', { name: 'Show user actions' }));
+        expect(screen.queryByRole('menuitem', { name: /disable mfa/i, hidden: false })).toBeInTheDocument();
+    });
+
+    it('requires a password to disable MFA for a user when logged in without SSO', async () => {
+        render(<Users />);
+
+        const withMFARow = await screen.findByRole('row', { name: /mfa_user/i });
+
+        await userEvent.click(within(withMFARow).getByRole('button', { name: 'Show user actions' }));
+        await userEvent.click(screen.getByRole('menuitem', { name: /disable mfa/i }));
+
+        const dialog = screen.queryByRole('dialog', { name: /disable multi-factor authentication/i });
+        const input = screen.queryByLabelText(/password/i);
+
+        expect(dialog).toBeInTheDocument();
+        expect(input).toBeInTheDocument();
+    });
+
+    it('hides the password field and removes the requirement when logged in with SSO', async () => {
+        // Override logged in admin with a SSO provider value
+        server.use(
+            rest.get('/api/v2/self', (req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: { ...testAuthenticatedUser, sso_provider_id: 1 },
+                    })
+                );
+            })
+        );
+        render(<Users />);
+
+        const withMFARow = await screen.findByRole('row', { name: /mfa_user/i });
+
+        await userEvent.click(within(withMFARow).getByRole('button', { name: 'Show user actions' }));
+        await userEvent.click(screen.getByRole('menuitem', { name: /disable mfa/i }));
+
+        const dialog = screen.queryByRole('dialog', { name: /disable multi-factor authentication/i });
+        const input = screen.queryByLabelText(/password/i);
+
+        expect(dialog).toBeInTheDocument();
+        expect(input).not.toBeInTheDocument();
     });
 });

@@ -14,10 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, CircularProgress, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import React, { PropsWithChildren } from 'react';
 import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../../graphSchema';
 import { EntityField, format } from '../../utils';
+import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import useCollapsibleSectionStyles from './InfoStyles/CollapsibleSection';
 
 export const exclusionList = [
@@ -33,6 +35,7 @@ export const exclusionList = [
     CommonKindProperties.ObjectID,
     CommonKindProperties.DisplayName,
     AzureKindProperties.ServicePrincipalID,
+    AzureKindProperties.FederatedIdentityCredentialAppID,
     'highvalue',
     'reconcile',
     ActiveDirectoryKindProperties.InheritanceHashes,
@@ -52,10 +55,14 @@ export const Section: React.FC<PropsWithChildren<{ label?: string | null; classN
             {label && (
                 <Typography variant='h6'>
                     <span
+                        role='button'
+                        aria-label={label}
+                        tabIndex={0}
                         className={'link'}
                         onClick={(e) => {
                             e.preventDefault();
-                        }}>
+                        }}
+                        onKeyDown={adaptClickHandlerToKeyDown((e) => e.preventDefault())}>
                         {label}
                     </span>
                 </Typography>
@@ -104,13 +111,17 @@ export const FieldsContainer: React.FC<PropsWithChildren> = ({ children }) => {
 export const Field: React.FC<EntityField> = (entityField) => {
     const { label, value, keyprop } = entityField;
 
-    if (
-        value === undefined ||
-        value === '' ||
-        (Array.isArray(value) && value.length === 0) ||
-        (typeof value === 'object' && Object.keys(value).length === 0)
-    )
+    try {
+        if (
+            value === undefined ||
+            value === '' ||
+            (Array.isArray(value) && value.length === 0) ||
+            (typeof value === 'object' && Object.keys(value).length === 0)
+        )
+            return null;
+    } catch (e) {
         return null;
+    }
 
     const formattedValue = format(entityField);
 

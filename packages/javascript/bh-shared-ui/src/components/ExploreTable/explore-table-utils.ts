@@ -13,7 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { FlatGraphResponse, GraphNodeSpreadWithProperties } from 'js-client-library';
+import { FlatGraphResponse, GraphNodeSpreadWithProperties, GraphResponse } from 'js-client-library';
+import { CommonKindProperties } from '../../graphSchema';
+import { isGraphResponse } from '../../hooks/useExploreGraph/queries/utils';
+import { KnownNodeProperties } from '../../utils/entityInfoDisplay';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
 
 export const makeStoreMapFromColumnOptions = (columnOptions: ManageColumnsComboBoxOption[]) =>
@@ -28,20 +31,98 @@ export const makeStoreMapFromColumnOptions = (columnOptions: ManageColumnsComboB
 
 export type NodeClickInfo = { id: string; x: number; y: number };
 export type MungedTableRowWithId = GraphNodeSpreadWithProperties & { id: string };
+export type ExportColumns = 'all' | 'selected';
 
-const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectid', 'displayname'];
+export const DEFAULT_EXPLORE_TABLE_COLUMN_KEYS = [
+    'kind',
+    'label',
+    'objectId',
+    'isTierZero',
+] satisfies KnownNodeProperties[];
+export const KNOWN_NODE_KEYS = [
+    ...DEFAULT_EXPLORE_TABLE_COLUMN_KEYS,
+    'isOwnedObject',
+    'lastSeen',
+] satisfies KnownNodeProperties[];
+export const DEFAULT_PINNED_COLUMN_KEYS = ['action-menu', 'kind', 'label'] satisfies (
+    | 'action-menu'
+    | KnownNodeProperties
+)[];
+/**
+ * Keys that can be found in a nodes property bag that are lifted into the UnifiedNode type
+ */
+export const DUPLICATED_KNOWN_KEYS: string[] = [
+    CommonKindProperties.ObjectID,
+    CommonKindProperties.Name,
+    CommonKindProperties.LastSeen,
+];
 
-export const requiredColumns = Object.fromEntries(REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.map((key) => [key, true]));
+export const getExploreTableData = (graphData: GraphResponse | FlatGraphResponse | undefined) => {
+    if (!graphData || !isGraphResponse(graphData)) return;
+
+    const nodes = graphData.data.nodes;
+    const unknownNodeKeys = graphData.data.node_keys ?? [];
+
+    const completeNodeKeys = unknownNodeKeys
+        .filter((key) => !DUPLICATED_KNOWN_KEYS.includes(key)) // remove property bag duplicates of the known keys
+        .concat(KNOWN_NODE_KEYS); // add known keys
+
+    return {
+        nodes,
+        node_keys: completeNodeKeys,
+    };
+};
+
+export const createColumnStateFromKeys = (keys: string[]): Record<string, boolean> => {
+    return Object.fromEntries(keys.map((key) => [key, true]));
+};
+
+export const defaultColumns = createColumnStateFromKeys(DEFAULT_EXPLORE_TABLE_COLUMN_KEYS);
+export const isRequiredColumn = (value: string): value is (typeof DEFAULT_EXPLORE_TABLE_COLUMN_KEYS)[number] => {
+    return defaultColumns[value];
+};
+
+export const compareForExploreTableSort = (a: any, b: any) => {
+    if (typeof a === 'number' || typeof b === 'number') {
+        if (typeof a === 'number' && typeof b === 'number') {
+            if (a === b) return 0;
+
+            return a > b ? 1 : -1;
+        }
+        if (!b) return 1;
+        if (!a) return -1;
+    }
+
+    if (typeof a === 'boolean' || typeof b === 'boolean') {
+        if (a === b) return 0;
+        if (a === true && !b) return 1;
+        if (b === true && !a) return -1;
+    }
+
+    if (typeof a === 'undefined' || typeof b === 'undefined') {
+        if (a === undefined && b === undefined) return 0;
+        if (b === undefined) return 1;
+        if (a === undefined) return -1;
+    }
+
+    if ((typeof a === 'object' && Object.is(a, null)) || (typeof b === 'object' && Object.is(b, null))) {
+        if (a === null && b === null) return 0;
+        if (b === null) return 1;
+        if (a === null) return -1;
+    }
+
+    return a.toString().localeCompare(b.toString(), undefined, { numeric: true });
+};
+
+export const isSmallColumn = (key: string, type: string) =>
+    key === 'kind' || key === 'isTierZero' || type === 'boolean';
 
 export interface ExploreTableProps {
     open?: boolean;
     onClose?: () => void;
-    data?: FlatGraphResponse;
     selectedColumns?: Record<string, boolean>;
-    onRowClick?: (row: MungedTableRowWithId) => void;
-    allColumnKeys?: string[];
+    pinnedColumns?: string[];
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
-    selectedNode: string | null;
-    onDownloadClick: () => void;
+    onChangePinnedColumns?: (columns: string[]) => void;
     onKebabMenuClick: (clickInfo: NodeClickInfo) => void;
 }

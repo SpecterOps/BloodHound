@@ -19,15 +19,15 @@ import { FC } from 'react';
 
 const References: FC = () => {
     return (
-        <Box sx={{ overflowX: 'auto' }}>
+        <Box className='overflow-x-auto'>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755321(v=ws.10)'>
                 Microsoft AD Trust Technical Documentation
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://exploit.ph/external-trusts-are-evil.html'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://exploit.ph/external-trusts-are-evil.html'>
                 External trusts are evil
             </Link>
             <br />

@@ -19,6 +19,7 @@ package middleware
 import (
 	"compress/gzip"
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -31,14 +32,18 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/unrolled/secure"
+
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/headers"
-	"github.com/unrolled/secure"
 )
 
 // Wrapper is an iterator for middleware function application that wraps around a http.Handler.
@@ -81,75 +86,95 @@ func getScheme(request *http.Request) string {
 	}
 }
 
-func RequestWaitDuration(request *http.Request) (time.Duration, error) {
+// RequestWaitDuration is responsible for returning a time.Duration if the Prefer header is specified.
+// When bypassLimitsParam is false and wait=-1 is specified, returns -1 to indicate no timeout.
+// Returns an error if the header value is invalid or if bypass is requested but not enabled.
+func RequestWaitDuration(request *http.Request, bypassLimitsParam bool) (time.Duration, error) {
 	var (
 		requestedWaitDuration time.Duration
 		err                   error
+		canBypassLimits       = !bypassLimitsParam // if bypassLimitsParam == true -> limits can not be bypassed thus canBypassLimits == false
 	)
+	const bypassLimit = time.Second * time.Duration(-1)
 
 	if preferValue := request.Header.Get(headers.Prefer.String()); len(preferValue) > 0 {
 		if requestedWaitDuration, err = parsePreferHeaderWait(preferValue); err != nil {
 			return 0, err
+		} else if requestedWaitDuration < bypassLimit {
+			return 0, errors.New("incorrect bypass limit value")
+		} else if requestedWaitDuration == bypassLimit && !canBypassLimits {
+			return 0, errors.New("failed to bypass limits: feature disabled")
 		}
 	}
 	return requestedWaitDuration, nil
 }
 
 // ContextMiddleware is a middleware function that sets the BloodHound context per-request. It also sets the request ID.
-func ContextMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-		var (
-			startTime = time.Now()
-			requestID string
-		)
-
-		if newUUID, err := uuid.NewV4(); err != nil {
-			slog.ErrorContext(request.Context(), fmt.Sprintf("Failed generating a new request UUID: %v", err))
-			requestID = "ERROR"
-		} else {
-			requestID = newUUID.String()
-		}
-
-		if requestedWaitDuration, err := RequestWaitDuration(request); err != nil {
-			// If there is a failure or other expectation mismatch with the client, respond right away with the relevant
-			// error information
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Prefer header has an invalid value: %v", err), request), response)
-		} else {
-			// Set the request ID and applied preferences headers
-			response.Header().Set(headers.RequestID.String(), requestID)
-			response.Header().Set(headers.StrictTransportSecurity.String(), utils.HSTSSetting)
-
+// bypassLimitsParam determines whether endpoints can bypass timeout limits entirely via the prefer:wait=-1 header.
+func ContextMiddleware(bypassLimitsParam bool) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			var (
-				requestCtx = request.Context()
-				cancel     context.CancelFunc
+				startTime       = time.Now()
+				requestID       string
+				canBypassLimits = !bypassLimitsParam // if bypassLimitsParam == true -> limits can not be bypassed thus canBypassLimits == false
 			)
 
-			// API requests don't have a timeout set by default. Below, we set a custom timeout to the request only if specified in the prefer header
-			if requestedWaitDuration > 0 {
-				response.Header().Set(headers.PreferenceApplied.String(), fmt.Sprintf("wait=%.2f", requestedWaitDuration.Seconds()))
-
-				requestCtx, cancel = context.WithTimeout(request.Context(), requestedWaitDuration)
-				defer cancel()
+			if newUUID, err := uuid.NewV4(); err != nil {
+				slog.ErrorContext(
+					request.Context(),
+					"Failed generating a new request UUID",
+					attr.Error(err),
+				)
+				requestID = "ERROR"
+			} else {
+				requestID = newUUID.String()
 			}
 
-			// Insert the bh context
-			requestCtx = ctx.Set(requestCtx, &ctx.Context{
-				StartTime: startTime,
-				RequestID: requestID,
-				Timeout:   requestedWaitDuration,
-				Host: &url.URL{
-					Scheme: getScheme(request),
-					Host:   request.Host,
-				},
-				RequestedURL: model.AuditableURL(request.URL.String()),
-				RequestIP:    parseUserIP(request),
-				RemoteAddr:   request.RemoteAddr,
-			})
+			if requestedWaitDuration, err := RequestWaitDuration(request, bypassLimitsParam); err != nil {
+				// If there is a failure or other expectation mismatch with the client, respond right away with the relevant
+				// error information
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Prefer header has an invalid value: %v", err), request), response)
+			} else {
+				// Set the request ID and applied preferences headers
+				response.Header().Set(headers.RequestID.String(), requestID)
+				response.Header().Set(headers.StrictTransportSecurity.String(), utils.HSTSSetting)
 
-			// Route the request with the embedded context
-			next.ServeHTTP(response, request.WithContext(requestCtx))
-		}
-	})
+				var (
+					requestCtx = request.Context()
+					cancel     context.CancelFunc
+				)
+				const bypassLimit = time.Second * time.Duration(-1)
+
+				// API requests don't have a timeout set by default. Below, we set a custom timeout to the request only if specified in the prefer header
+				if requestedWaitDuration > 0 {
+					response.Header().Set(headers.PreferenceApplied.String(), fmt.Sprintf("wait=%.2f", requestedWaitDuration.Seconds()))
+
+					requestCtx, cancel = context.WithTimeout(request.Context(), requestedWaitDuration)
+					defer cancel()
+				} else if requestedWaitDuration == bypassLimit && canBypassLimits {
+					response.Header().Set(headers.PreferenceApplied.String(), "wait=-1; bypass=enabled")
+				}
+
+				// Insert the bh context
+				requestCtx = ctx.Set(requestCtx, &ctx.Context{
+					StartTime: startTime,
+					RequestID: requestID,
+					Timeout:   max(requestedWaitDuration, 0),
+					Host: &url.URL{
+						Scheme: getScheme(request),
+						Host:   request.Host,
+					},
+					RequestedURL: model.AuditableURL(request.URL.String()),
+					RequestIP:    parseUserIP(request),
+					RemoteAddr:   request.RemoteAddr,
+				})
+
+				// Route the request with the embedded context
+				next.ServeHTTP(response, request.WithContext(requestCtx))
+			}
+		})
+	}
 }
 
 func parseUserIP(r *http.Request) string {
@@ -157,14 +182,22 @@ func parseUserIP(r *http.Request) string {
 
 	// The point of this code is to strip the port, so we don't need to save it.
 	if host, _, err := net.SplitHostPort(r.RemoteAddr); err != nil {
-		slog.WarnContext(r.Context(), fmt.Sprintf("Error parsing remoteAddress '%s': %s", r.RemoteAddr, err))
+		slog.WarnContext(
+			r.Context(),
+			"Error parsing remoteAddress",
+			slog.String("remote_address", r.RemoteAddr),
+			attr.Error(err),
+		)
 		remoteIp = r.RemoteAddr
 	} else {
 		remoteIp = host
 	}
 
 	if result := r.Header.Get("X-Forwarded-For"); result == "" {
-		slog.DebugContext(r.Context(), "No data found in X-Forwarded-For header")
+		slog.DebugContext(
+			r.Context(),
+			"No data found in X-Forwarded-For header",
+		)
 		return remoteIp
 	} else {
 		result += "," + remoteIp
@@ -204,7 +237,7 @@ func parsePreferHeaderWait(value string) (time.Duration, error) {
 			return time.Second * time.Duration(parsedNumSeconds), nil
 		}
 	} else {
-		return 0, nil
+		return 0, errors.New("leave field empty or specify with : 'wait=x'")
 	}
 }
 
@@ -246,7 +279,7 @@ func SecureHandlerMiddleware(cfg config.Configuration, contentSecurityPolicy str
 		STSPreload:           true,
 		STSIncludeSubdomains: true,
 
-		//Referrer-Policy
+		// Referrer-Policy
 		ReferrerPolicy: referrerPolicy,
 
 		// Permissions Policy
@@ -297,6 +330,86 @@ func EnsureRequestBodyClosed() mux.MiddlewareFunc {
 					b.Close()
 				}
 			}
+		})
+	}
+}
+
+// unmatchedRouteLabel is the bounded "handler" label value used when an incoming request does not match any registered
+// route (e.g. 404 responses). Keeping the fallback as a single constant preserves the cardinality guarantees described
+// in metrics.go.
+const unmatchedRouteLabel = "unmatched"
+
+// routeTemplateFor returns the gorilla/mux path template that would match r, or unmatchedRouteLabel when no route
+// matches or the matched route has no retrievable template. The match is performed without dispatching the request so
+// it is safe to call from pre-route middleware.
+func routeTemplateFor(muxRouter *mux.Router, r *http.Request) string {
+	var routeMatch mux.RouteMatch
+	if !muxRouter.Match(r, &routeMatch) || routeMatch.Route == nil {
+		return unmatchedRouteLabel
+	}
+	template, err := routeMatch.Route.GetPathTemplate()
+	if err != nil {
+		return unmatchedRouteLabel
+	}
+	return template
+}
+
+// highValueHandlers defines the set of API endpoints that should receive detailed
+// per-handler metrics. These are Tier 1 endpoints representing critical business
+// logic, performance-sensitive operations, and frequently-used functionality.
+//
+// All other endpoints will be grouped under the "other" handler label to limit
+// cardinality in the ApiRequestDuration metric while maintaining visibility into
+// the most important endpoints.
+var highValueHandlers = map[string]bool{
+	// Graph Query & Search - Core functionality
+	"/api/v2/graphs/cypher":        true, // Primary graph query endpoint
+	"/api/v2/graphs/shortest-path": true, // Pathfinding queries
+	"/api/v2/pathfinding":          true, // Alternative pathfinding
+	"/api/v2/search":               true, // Global search
+	"/api/v2/graph-search":         true, // Graph-specific search
+
+	// Data Ingestion - Performance critical
+	"/api/v2/ingest":                           true, // Primary collector ingestion
+	"/api/v2/file-upload/start":                true, // Generic file upload
+	"/api/v2/file-upload/{file_upload_job_id}": true, // File processing
+}
+
+// normalizeHandlerLabel takes a route template and returns either the template
+// itself (if it's a high-value endpoint) or "other" (to limit cardinality).
+//
+// This prevents cardinality explosion in ApiRequestDuration by only tracking
+// detailed metrics for Tier 1 endpoints while still counting all requests.
+func normalizeHandlerLabel(template string) string {
+	if template == unmatchedRouteLabel {
+		return unmatchedRouteLabel
+	}
+	if highValueHandlers[template] {
+		return template
+	}
+	return "other"
+}
+
+// MetricsMiddleware wires the API request pipeline to the Prometheus metrics declared in metrics.go. It must be
+// registered as pre-route middleware so that unmatched requests are still counted; the muxRouter argument is used to
+// resolve the matched route template for the "handler" label without dispatching the request twice.
+func MetricsMiddleware(muxRouter *mux.Router) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handlerLabel := routeTemplateFor(muxRouter, r)
+			curriedDuration, err := ApiRequestDuration.CurryWith(prometheus.Labels{"handler": normalizeHandlerLabel(handlerLabel)})
+			if err != nil {
+				slog.ErrorContext(r.Context(), "Failed to curry request duration metric", attr.Error(err))
+				next.ServeHTTP(w, r)
+				return
+			}
+			promhttp.InstrumentHandlerInFlight(ApiInFlightGauge,
+				promhttp.InstrumentHandlerDuration(curriedDuration,
+					promhttp.InstrumentHandlerCounter(ApiTotalRequests,
+						promhttp.InstrumentHandlerResponseSize(ApiResponseSize, next),
+					),
+				),
+			).ServeHTTP(w, r)
 		})
 	}
 }

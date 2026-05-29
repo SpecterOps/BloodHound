@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { combineReducers } from '@reduxjs/toolkit';
+import { DEFAULT_PINNED_COLUMN_KEYS, defaultColumns, defaultGraphLayout } from 'bh-shared-ui';
 import { castDraft, produce } from 'immer';
 import assign from 'lodash/assign';
 import * as types from './types';
@@ -22,9 +23,13 @@ import * as types from './types';
 const initialGlobalState: types.GlobalViewState = {
     notifications: [],
     darkMode: false,
-    exploreLayout: undefined,
+    autoRunQueries: true,
+    exploreLayout: defaultGraphLayout,
     isExploreTableSelected: false,
-    selectedExploreTableColumns: undefined,
+    isExploreLayoutSelected: false,
+    selectedExploreTableColumns: defaultColumns,
+    pinnedExploreTableColumns: DEFAULT_PINNED_COLUMN_KEYS,
+    timeoutSetting: false,
 };
 
 const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewActionTypes) => {
@@ -45,8 +50,16 @@ const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewA
             draft.exploreLayout = action.exploreLayout;
         } else if (action.type === types.GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED) {
             draft.isExploreTableSelected = action.isExploreTableSelected;
+        } else if (action.type === types.GLOBAL_SET_IS_EXPLORE_LAYOUT_SELECTED) {
+            draft.isExploreLayoutSelected = action.isExploreLayoutSelected;
+        } else if (action.type === types.GLOBAL_SET_AUTO_RUN_QUERIES) {
+            draft.autoRunQueries = action.autoRunQueries;
+        } else if (action.type === types.GLOBAL_SET_TIMEOUT_SETTING) {
+            draft.timeoutSetting = action.timeoutSetting;
         } else if (action.type === types.GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS) {
             draft.selectedExploreTableColumns = action.selectedExploreTableColumns;
+        } else if (action.type === types.GLOBAL_SET_PINNED_EXPLORE_TABLE_COLUMNS) {
+            draft.pinnedExploreTableColumns = action.pinnedExploreTableColumns;
         }
     });
 };

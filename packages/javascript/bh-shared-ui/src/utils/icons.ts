@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,9 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { library } from '@fortawesome/fontawesome-svg-core';
+import { icon, IconParams, library } from '@fortawesome/fontawesome-svg-core';
 import {
-    IconDefinition,
     faArrowsLeftRightToLine,
     faBolt,
     faBox,
@@ -29,26 +28,23 @@ import {
     faCube,
     faCubes,
     faDesktop,
-    faGem,
     faGlobe,
     faIdCard,
     faKey,
     faLandmark,
     faList,
     faLock,
-    faMinus,
     faObjectGroup,
-    faPlus,
     faQuestion,
     faRobot,
+    fas,
     faServer,
     faSitemap,
-    faSkull,
     faStore,
     faUser,
     faUsers,
     faWindowRestore,
-    fas,
+    IconDefinition,
 } from '@fortawesome/free-solid-svg-icons';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
 
@@ -64,22 +60,16 @@ export type IconDictionary = {
     [index: string]: IconInfo;
 };
 
-export type GlyphIconInfo = IconInfo & { iconColor: string };
+export const NODE_SCALE = '0.6';
+export const GLYPH_SCALE = '0.5';
 
-export type GlyphDictionary = {
-    [index: string]: GlyphIconInfo;
-};
+export const DEFAULT_ICON_COLOR = '#000000';
+export const DEFAULT_ICON_BACKGROUND_COLOR = '#FFFFFF';
 
-export enum GlyphKind {
-    TIER_ZERO,
-    TIER_ZERO_DARK,
-    OWNED_OBJECT,
-    OWNED_OBJECT_DARK,
-    EXPAND,
-    COLLAPSE,
-}
+export const DEFAULT_GLYPH_BACKGROUND_COLOR = DEFAULT_ICON_COLOR;
+export const DEFAULT_GLYPH_COLOR = DEFAULT_ICON_BACKGROUND_COLOR;
 
-export const NODE_ICON: IconDictionary = {
+export const NODE_ICONS: IconDictionary = {
     [ActiveDirectoryNodeKind.User]: {
         icon: faUser,
         color: '#17E625',
@@ -237,38 +227,10 @@ export const NODE_ICON: IconDictionary = {
         icon: faSitemap,
         color: '#BD93D8',
     },
-};
 
-export const GLYPHS: GlyphDictionary = {
-    [GlyphKind.TIER_ZERO]: {
-        icon: faGem,
-        color: '#000000',
-        iconColor: '#FFFFFF',
-    },
-    [GlyphKind.TIER_ZERO_DARK]: {
-        icon: faGem,
-        color: '#FFFFFF',
-        iconColor: '#000000',
-    },
-    [GlyphKind.OWNED_OBJECT]: {
-        icon: faSkull,
-        color: '#000000',
-        iconColor: '#FFFFFF',
-    },
-    [GlyphKind.OWNED_OBJECT_DARK]: {
-        icon: faSkull,
-        color: '#FFFFFF',
-        iconColor: '#000000',
-    },
-    [GlyphKind.EXPAND]: {
-        icon: faPlus,
-        color: '#FFFFFF',
-        iconColor: '#000000',
-    },
-    [GlyphKind.COLLAPSE]: {
-        icon: faMinus,
-        color: '#FFFFFF',
-        iconColor: '#000000',
+    [AzureNodeKind.FederatedIdentityCredential]: {
+        icon: faKey,
+        color: '#FFEE8C',
     },
 };
 
@@ -276,8 +238,6 @@ export const UNKNOWN_ICON: IconInfo = {
     icon: faQuestion,
     color: '#FFFFFF',
 };
-
-export const DEFAULT_ICON_BACKGROUND = '#FFFFFF';
 
 /**
  * Returns icon metadata for a given icon name.
@@ -292,9 +252,25 @@ export const GetIconInfo = (iconName: string, customIcons: IconDictionary): Icon
         return customIcons[iconName];
     }
 
-    if (iconName in NODE_ICON) {
-        return NODE_ICON[iconName];
+    if (iconName in NODE_ICONS) {
+        return NODE_ICONS[iconName];
     }
 
     return UNKNOWN_ICON;
+};
+
+export const getModifiedSvgUrlFromIcon = (iconDefinition: IconDefinition, iconParams?: IconParams): string => {
+    const params = iconParams ?? { styles: { 'transform-origin': 'center' } };
+
+    const modifiedIcon = icon(iconDefinition, {
+        styles: { 'transform-origin': 'center', ...params.styles },
+    });
+
+    const svg = modifiedIcon.html[0];
+
+    const amendedSvg = svg.replace(/<svg/, '<svg width="200" height="200"');
+
+    const blob = new Blob([amendedSvg], { type: 'image/svg+xml' });
+
+    return URL.createObjectURL(blob);
 };

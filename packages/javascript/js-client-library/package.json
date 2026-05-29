@@ -9,6 +9,7 @@
         "README.md"
     ],
     "scripts": {
+        "audit": "yarn npm audit --recursive",
         "build": "yarn check-types && rollup --config rollup.config.js",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "test": "echo \"Warning: no test specified\"",
@@ -17,21 +18,22 @@
         "check-format": "prettier  --list-different \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\""
     },
     "dependencies": {
-        "axios": "^1.8.2"
+        "axios": "1.15.2"
     },
     "devDependencies": {
+        "@eslint/eslintrc": "^3.3.5",
+        "@eslint/js": "^10.0.1",
         "@rollup/plugin-typescript": "^11.1.6",
         "@typescript-eslint/eslint-plugin": "^7.3.0",
         "@typescript-eslint/parser": "^7.3.0",
-        "eslint": "^8.57.0",
+        "@vitest/coverage-v8": "^3.2.4",
+        "eslint": "^9.26.0",
         "eslint-config-prettier": "^9.1.0",
+        "globals": "^17.4.0",
         "prettier": "^3.2.5",
         "prettier-plugin-organize-imports": "^4.1.0",
-        "rollup": "^4.13.2",
+        "rollup": "^4.59.0",
         "rollup-plugin-delete": "^2.0.0",
-        "typescript": "^5.1.6"
-    },
-    "installConfig": {
-        "hoistingLimits": "workspaces"
+        "typescript": "^5.9.3"
     }
 }

@@ -15,27 +15,27 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { Screen, act, render } from '../../../test-utils';
+import { act, render, screen } from '../../../test-utils';
 import CodeController from './CodeController';
 
 describe('CodeController', () => {
     const defaultExpected = 'testing some code to display';
     const setup = async (code = defaultExpected) => {
         const user = userEvent.setup();
-        const screen: Screen = await act(async () => {
+        await act(async () => {
             return render(<CodeController>{code}</CodeController>);
         });
-        return { user, screen };
+        return { user };
     };
 
     it('displays the value thats passed via children', async () => {
-        const { screen } = await setup();
+        await setup();
 
         expect(screen.getByText(defaultExpected)).toBeInTheDocument();
     });
 
     it('defaults to wrapped and removes .wrapped class when unwrap btn is clicked', async () => {
-        const { screen, user } = await setup();
+        const { user } = await setup();
 
         expect(screen.getByText(defaultExpected).className.includes('wrapped')).toBeTruthy();
 
@@ -45,7 +45,7 @@ describe('CodeController', () => {
     });
 
     it('copys children value to clipboard after clicking the copy btn', async () => {
-        const { screen, user } = await setup();
+        const { user } = await setup();
 
         await user.click(screen.getByText('copy'));
 
@@ -56,7 +56,7 @@ describe('CodeController', () => {
 
     it('indicates the code container is scrollable when the code is unwrapped', async () => {
         const expected = Array(10).fill('testing large code block').join(' ');
-        const { screen, user } = await setup(expected);
+        const { user } = await setup(expected);
 
         await user.click(screen.getByText('Unwrap'));
 

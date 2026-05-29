@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
@@ -37,7 +38,7 @@ func GetAllIngestJobs(ctx context.Context, db JobData, skip int, limit int, orde
 
 func StartIngestJob(ctx context.Context, db JobData, user model.User) (model.IngestJob, error) {
 	job := model.IngestJob{
-		UserID:     user.ID,
+		UserID:     uuid.NullUUID{UUID: user.ID, Valid: true},
 		User:       user,
 		Status:     model.JobStatusRunning,
 		StartTime:  time.Now().UTC(),

@@ -111,12 +111,12 @@ describe('GroupManagement', () => {
     it('displays default text for domain selector when globalDomain is null', async () => {
         const { screen } = await setup();
 
-        expect(screen.getByTestId('data-selector')).toBeInTheDocument();
+        expect(screen.getByTestId('data-quality_context-selector')).toBeInTheDocument();
     });
 
     it('renders an edit form for the selected asset group when a user has graph write permissions', async () => {
         const { screen } = await setup();
-        const input = screen.getByRole('combobox');
+        const input = screen.getByTestId('group-management_asset-group-edit-combobox');
         expect(input).toBeInTheDocument();
     });
 
@@ -130,8 +130,9 @@ describe('GroupManagement', () => {
                 );
             })
         );
+
         const { screen } = await setup();
-        const input = screen.queryByRole('combobox');
+        const input = screen.queryByTestId('group-management_asset-group-edit-combobox');
         expect(input).toBeNull();
     });
 

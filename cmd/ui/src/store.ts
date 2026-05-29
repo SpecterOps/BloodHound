@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { combineReducers, configureStore, PreloadedState } from '@reduxjs/toolkit';
-import { edgeinfo } from 'bh-shared-ui';
 import { enableMapSet } from 'immer';
 import Cookies from 'js-cookie';
 import throttle from 'lodash/throttle';
@@ -31,7 +30,6 @@ const sagaMiddleware = createSagaMiddleware();
 
 const appReducer = combineReducers({
     ...reducers,
-    edgeinfo,
 });
 
 export type RootState = ReturnType<typeof appReducer>;
@@ -66,9 +64,14 @@ type PersistedState = {
     global: {
         view: {
             darkMode: GlobalViewState['darkMode'];
+            autoRunQueries: GlobalViewState['autoRunQueries'];
             notifications: GlobalViewState['notifications'];
             exploreLayout: GlobalViewState['exploreLayout'];
+            isExploreTableSelected: GlobalViewState['isExploreTableSelected'];
+            isExploreLayoutSelected: GlobalViewState['isExploreLayoutSelected'];
             selectedExploreTableColumns: GlobalViewState['selectedExploreTableColumns'];
+            pinnedExploreTableColumns?: string[];
+            timeoutSetting: GlobalViewState['timeoutSetting'];
         };
     };
 };
@@ -112,9 +115,14 @@ store.subscribe(
             global: {
                 view: {
                     darkMode: state.global.view.darkMode,
+                    autoRunQueries: state.global.view.autoRunQueries,
                     notifications: [],
                     exploreLayout: state.global.view.exploreLayout,
+                    isExploreTableSelected: state.global.view.isExploreTableSelected,
+                    isExploreLayoutSelected: state.global.view.isExploreLayoutSelected,
                     selectedExploreTableColumns: state.global.view.selectedExploreTableColumns,
+                    pinnedExploreTableColumns: state.global.view.pinnedExploreTableColumns,
+                    timeoutSetting: state.global.view.timeoutSetting,
                 },
             },
         });

@@ -26,7 +26,7 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/internal/nodeprops"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
-	"github.com/specterops/bloodhound/packages/go/analysis/impact"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -67,6 +67,7 @@ func FetchWellKnownTierZeroEntities(ctx context.Context, db graph.Database, doma
 				return query.And(
 					// Make sure we have the Group or User label. This should cover the case for URA as well as filter out all the other localgroups
 					query.KindIn(query.Node(), ad.Group, ad.User),
+					query.KindIn(query.Node(), ad.Entity),
 					query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), wellKnownSIDSuffix),
 					query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSID),
 				)
@@ -102,7 +103,14 @@ func FetchWellKnownTierZeroEntities(ctx context.Context, db graph.Database, doma
 }
 
 func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Fix well known node types")()
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Fix well known node types",
+		attr.Namespace("analysis"),
+		attr.Function("FixWellKnownNodeTypes"),
+		attr.Scope("process"),
+	)()
 
 	groupSuffixes := []string{
 		wellknown.EnterpriseKeyAdminsGroupSIDSuffix.String(),
@@ -122,6 +130,7 @@ func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
 				return query.And(
 					query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), suffix),
 					query.Not(query.KindIn(query.Node(), ad.Group, ad.LocalGroup)),
+					query.KindIn(query.Node(), ad.Entity),
 				)
 			})); err != nil && !graph.IsErrNotFound(err) {
 				return err
@@ -142,7 +151,14 @@ func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
 }
 
 func RunDomainAssociations(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Domain Associations")()
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Domain Associations",
+		attr.Namespace("analysis"),
+		attr.Function("RunDomainAssociations"),
+		attr.Scope("process"),
+	)()
 
 	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		if domainNamesByObjectID, err := grabDomainInformation(tx); err != nil {
@@ -183,9 +199,17 @@ func grabDomainInformation(tx graph.Transaction) (map[string]string, error) {
 	}).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 		for node := range cursor.Chan() {
 			if domainObjectID, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-				slog.Error(fmt.Sprintf("Domain node %d does not have a valid object ID", node.ID))
+				slog.Error(
+					"Domain node does not have a valid object ID",
+					slog.Uint64("node_id", uint64(node.ID)),
+					attr.Error(err),
+				)
 			} else if domainName, err := node.Properties.Get(common.Name.String()).String(); err != nil {
-				slog.Error(fmt.Sprintf("Domain node %d does not have a valid name", node.ID))
+				slog.Error(
+					"Domain node does not have a valid name",
+					slog.Uint64("node_id", uint64(node.ID)),
+					attr.Error(err),
+				)
 			} else {
 				domainNamesByObjectID[domainObjectID] = domainName
 			}
@@ -200,7 +224,14 @@ func grabDomainInformation(tx graph.Transaction) (map[string]string, error) {
 }
 
 func LinkWellKnownNodes(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Link well-known nodes")()
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Link well-known nodes",
+		attr.Namespace("analysis"),
+		attr.Function("LinkWellKnownNodes"),
+		attr.Scope("process"),
+	)()
 
 	var (
 		errors        = util.NewErrorCollector()
@@ -216,11 +247,12 @@ func LinkWellKnownNodes(ctx context.Context, db graph.Database) error {
 
 	for _, domain := range domains {
 		if err := linkWellKnownNodesForDomain(ctx, db, domain, domains.Slice(), newProperties); err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf(
-				"Error linking well-known nodes for domain %d: %v",
-				domain.ID,
-				err,
-			))
+			slog.ErrorContext(
+				ctx,
+				"Error linking well-known nodes for domain",
+				slog.Uint64("domain_id", uint64(domain.ID)),
+				attr.Error(err),
+			)
 			errors.Add(fmt.Errorf("failed linking well-known nodes for domain %d: %w", domain.ID, err))
 		}
 	}
@@ -228,10 +260,15 @@ func LinkWellKnownNodes(ctx context.Context, db graph.Database) error {
 	return errors.Combined()
 }
 
-func linkWellKnownNodesForDomain(ctx context.Context, db graph.Database, domain *graph.Node, allDomains []*graph.Node, newProperties *graph.Properties) error {
+func linkWellKnownNodesForDomain(ctx context.Context, db graph.Database, domain *graph.Node, _ []*graph.Node, newProperties *graph.Properties) error {
 	domainSid, domainName, err := nodeprops.ReadDomainIDandNameAsString(domain)
 	if err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error getting domain sid or name for domain %d: %v", domain.ID, err))
+		slog.ErrorContext(
+			ctx,
+			"Error getting domain sid or name for domain",
+			slog.Uint64("domain_id", uint64(domain.ID)),
+			attr.Error(err),
+		)
 		return err
 	}
 
@@ -249,7 +286,7 @@ func linkWellKnownNodesForDomain(ctx context.Context, db graph.Database, domain 
 			return err
 		}
 
-		return handleTrustRelationships(ctx, tx, domain, allDomains, wellKnownNodes.Everyone, wellKnownNodes.AuthUsers, newProperties)
+		return nil
 	})
 }
 
@@ -397,68 +434,6 @@ func handleGuestNodeSpecialCase(tx graph.Transaction, domainSid string, everyone
 	return nil
 }
 
-func handleTrustRelationships(ctx context.Context, tx graph.Transaction, domain *graph.Node, allDomains []*graph.Node, everyoneNode, authUsersNode *graph.Node, newProperties *graph.Properties) error {
-	trustingDomains, err := fetchFirstDegreeNodes(tx, domain, ad.SameForestTrust, ad.CrossForestTrust)
-	if err != nil {
-		return fmt.Errorf("error getting trusting domains for domain %d: %w", domain.ID, err)
-	}
-
-	for _, trustingDomain := range trustingDomains {
-		if !domainsContain(allDomains, trustingDomain) {
-			continue // Make sure it is collected
-		}
-
-		trustingDomainSid, trustingDomainName, err := nodeprops.ReadDomainIDandNameAsString(trustingDomain)
-		if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Error getting domain sid or name for domain %d: %v", trustingDomain.ID, err))
-			continue
-		}
-
-		// Get/create special identity nodes in trusting domain
-		everyoneNodeTrustingDomain, err := getOrCreateWellKnownGroup(
-			tx,
-			wellknown.EveryoneSIDSuffix,
-			trustingDomainSid,
-			trustingDomainName,
-			wellknown.DefineNodeName(wellknown.EveryoneNodeNamePrefix, trustingDomainName),
-		)
-		if err != nil {
-			return fmt.Errorf("error getting everyone for domain %d: %w", trustingDomain.ID, err)
-		}
-
-		authUsersNodeTrustingDomain, err := getOrCreateWellKnownGroup(
-			tx,
-			wellknown.AuthenticatedUsersSIDSuffix,
-			trustingDomainSid,
-			trustingDomainName,
-			wellknown.DefineNodeName(wellknown.AuthenticatedUsersNodeNamePrefix, trustingDomainName),
-		)
-		if err != nil {
-			return fmt.Errorf("error getting auth users node for domain %d: %w", trustingDomain.ID, err)
-		}
-
-		// Create cross-domain trust links
-		if err := createOrUpdateWellKnownLink(tx, authUsersNode, authUsersNodeTrustingDomain, newProperties, ad.MemberOf); err != nil {
-			return err
-		}
-
-		if err := createOrUpdateWellKnownLink(tx, everyoneNode, everyoneNodeTrustingDomain, newProperties, ad.MemberOf); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func domainsContain(domains []*graph.Node, target *graph.Node) bool {
-	for _, domain := range domains {
-		if domain.ID == target.ID {
-			return true
-		}
-	}
-	return false
-}
-
 func getOrCreateWellKnownGroup(
 	tx graph.Transaction,
 	wellKnownSid wellknown.SIDSuffix,
@@ -537,7 +512,7 @@ func createOrUpdateWellKnownLink(
 
 // CalculateCrossProductNodeSets finds the intersection of the given sets of nodes.
 // See CalculateCrossProductNodeSetsDoc.md for explaination of the specialGroups (Authenticated Users and Everyone) and why we treat them the way we do
-func CalculateCrossProductNodeSets(tx graph.Transaction, groupExpansions impact.PathAggregator, nodeSlices ...[]*graph.Node) cardinality.Duplex[uint64] {
+func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ...[]*graph.Node) cardinality.Duplex[uint64] {
 	if len(nodeSlices) < 2 {
 		slog.Error("Cross products require at least 2 nodesets")
 		return cardinality.NewBitmap64()
@@ -547,54 +522,75 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, groupExpansions impact.
 	var (
 		// Temporary storage for first degree and unrolled sets without auth users/everyone
 		firstDegreeSets []cardinality.Duplex[uint64]
-		unrolledSets    []cardinality.Duplex[uint64]
+		unrolledSets    [][]cardinality.Duplex[uint64]
 
 		// This is the set we use as a reference set to check against checkset
 		unrolledRefSet = cardinality.NewBitmap64()
 
 		// This is the set we use to aggregate multiple sets together it should have all the valid principals from all other sets at this point
-		checkSet = cardinality.NewBitmap64()
+		checkSet = cardinality.CommutativeDuplexes[uint64]{}
 
 		// This is our set of entities that have the complete cross product of permissions
 		resultEntities = cardinality.NewBitmap64()
 	)
 
-	// Get the IDs of the Auth. Users and Everyone groups
-	specialGroups, err := FetchAuthUsersAndEveryoneGroups(tx)
-	if err != nil {
-		slog.Error(fmt.Sprintf("Could not fetch groups: %s", err.Error()))
-	}
-
 	// Unroll all nodesets
 	for _, nodeSlice := range nodeSlices {
 		var (
-			firstDegreeSet = cardinality.NewBitmap64()
-			unrolledSet    = cardinality.NewBitmap64()
+			// Skip sets containing Auth. Users or Everyone
+			nodeExcluded = false
+
+			firstDegreeSet     = cardinality.NewBitmap64()
+			entityReachBitmap  = cardinality.NewBitmap64()
+			entityReachBitmaps = []cardinality.Duplex[uint64]{entityReachBitmap}
 		)
 
 		for _, entity := range nodeSlice {
 			entityID := entity.ID.Uint64()
 
 			firstDegreeSet.Add(entityID)
-			unrolledSet.Add(entityID)
+			entityReachBitmap.Add(entityID)
 
+			// When encountering a node that is a group or a local group, the algorithm here must expand all of the members
+			// of the group or local group
 			if entity.Kinds.ContainsOneOf(ad.Group, ad.LocalGroup) {
-				unrolledSet.Or(groupExpansions.Cardinality(entity.ID.Uint64()))
+				// If this group is one of the excluded groups
+				if localGroupData.ExcludedShortcutGroups.Contains(entityID) {
+					// If this group is excluded, do not continue expanding the rest of the nodes in the set
+					nodeExcluded = true
+				} else {
+					// If this is not an excluded group then unroll the group's membership. This is represented as a slice of bitmaps to
+					// avoid merging them down. This means that each bitmap must be iterated through below
+					entityReachSets := localGroupData.GroupMembershipCache.ReachSliceOfComponentContainingMember(entityID, graph.DirectionInbound)
+					entityReachBitmaps = append(entityReachBitmaps, entityReachSets...)
+
+					for _, entityReachSet := range entityReachSets {
+						if entityReachSet.Cardinality() > 0 {
+							// Search each membership set to see if one of the excluded shortcut groups is a member and if so
+							// this entire set of nodes should shortcut
+							for _, excludedGroup := range localGroupData.ExcludedShortcutGroupsSlice {
+								if entityReachSet.Contains(excludedGroup) {
+									nodeExcluded = true
+									break
+								}
+							}
+						}
+
+						if nodeExcluded {
+							break
+						}
+					}
+				}
 			}
-		}
 
-		// Skip sets containing Auth. Users or Everyone
-		hasSpecialGroup := false
-
-		for _, specialGroup := range specialGroups {
-			if unrolledSet.Contains(specialGroup.ID.Uint64()) {
-				hasSpecialGroup = true
+			if nodeExcluded {
 				break
 			}
 		}
 
-		if !hasSpecialGroup {
-			unrolledSets = append(unrolledSets, unrolledSet)
+		// If the node is not excluded, include all group members
+		if !nodeExcluded {
+			unrolledSets = append(unrolledSets, entityReachBitmaps)
 			firstDegreeSets = append(firstDegreeSets, firstDegreeSet)
 		}
 	}
@@ -608,15 +604,16 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, groupExpansions impact.
 		}
 
 		return resultEntities
-	} else if len(firstDegreeSets) == 1 { // If every nodeset (unrolled) except one includes Auth. Users/Everyone then return that one nodeset (first degree)
+	} else if len(firstDegreeSets) == 1 {
+		// If every nodeset (unrolled) except one includes Auth. Users/Everyone then return that one nodeset (first degree)
 		return firstDegreeSets[0]
-	} else {
-		// This means that len(firstDegreeSets) must be greater than or equal to 2 i.e. we have at least two nodesets (unrolled) without Auth. Users/Everyone
-		checkSet.Or(unrolledSets[1])
+	}
 
-		for _, unrolledSet := range unrolledSets[2:] {
-			checkSet.And(unrolledSet)
-		}
+	// This means that len(firstDegreeSets) must be greater than or equal to 2 i.e. we have at least two nodesets (unrolled) without Auth. Users/Everyone
+	checkSet.Or(cardinality.CommutativeOr(unrolledSets[1]...))
+
+	for _, unrolledSet := range unrolledSets[2:] {
+		checkSet.And(cardinality.CommutativeOr(unrolledSet...))
 	}
 
 	// Check first degree principals in our reference set (firstDegreeSets[0]) first
@@ -624,7 +621,7 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, groupExpansions impact.
 		if checkSet.Contains(id) {
 			resultEntities.Add(id)
 		} else {
-			unrolledRefSet.Or(groupExpansions.Cardinality(id))
+			localGroupData.GroupMembershipCache.OrReach(id, graph.DirectionInbound, unrolledRefSet)
 		}
 
 		return true
@@ -632,10 +629,19 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, groupExpansions impact.
 
 	// Find all the groups in our secondary targets and map them to their cardinality in our expansions
 	// Saving off to a map to prevent multiple lookups on the expansions
-	tempMap := map[uint64]uint64{}
+	var (
+		tempMap    = map[uint64]uint64{}
+		tempBitmap = cardinality.NewBitmap64()
+	)
+
 	unrolledRefSet.Each(func(id uint64) bool {
 		// If group expansions contains this ID and its cardinality is > 0, it's a group/localgroup
-		idCardinality := groupExpansions.Cardinality(id).Cardinality()
+		localGroupData.GroupMembershipCache.OrReach(id, graph.DirectionInbound, tempBitmap)
+		idCardinality := tempBitmap.Cardinality()
+
+		// Clear the bitmap eagerly
+		tempBitmap.Clear()
+
 		if idCardinality > 0 {
 			tempMap[id] = idCardinality
 		}
@@ -662,11 +668,19 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, groupExpansions impact.
 		}
 
 		if checkSet.Contains(groupId) {
-			// If this entity is a cross product, add it to result entities, remove the group id from the second set and xor the group's membership with the result set
+			// If this entity is a cross product, add it to result entities, remove the group id from the second set and remove the group's membership from the result set
 			resultEntities.Add(groupId)
 
 			unrolledRefSet.Remove(groupId)
-			unrolledRefSet.Xor(groupExpansions.Cardinality(groupId))
+			// Use ReachSliceOfComponentContainingMember with iterative AndNot instead of XorReach.
+			// XorReach toggles bits, which re-adds members that were previously removed when they
+			// belong to multiple matching groups, causing false-positive result entries.
+			// Iterative AndNot only removes: A & ~(B₁|B₂|…|Bₖ) = A&~B₁&~B₂&…&~Bₖ
+			// This also avoids the two bitmap allocations XorReach requires (merge + clone),
+			// since ReachSliceOfComponentContainingMember returns shared component bitmaps directly.
+			for _, componentBitmap := range localGroupData.GroupMembershipCache.ReachSliceOfComponentContainingMember(groupId, graph.DirectionInbound) {
+				unrolledRefSet.AndNot(componentBitmap)
+			}
 		} else {
 			// If this isn't a match, remove it from the second set to ensure we don't check it again, but leave its membership
 			unrolledRefSet.Remove(groupId)
@@ -714,11 +728,6 @@ func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.
 			pathSet, err = GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx, db, edge)
 		case ad.CoerceAndRelayNTLMToSMB:
 			pathSet, err = GetCoerceAndRelayNTLMtoSMBEdgeComposition(ctx, db, edge)
-		case ad.GPOAppliesTo:
-			pathSet, err = GetGPOAppliesToComposition(ctx, db, edge)
-		case ad.CanApplyGPO:
-			pathSet, err = GetCanApplyGPOComposition(ctx, db, edge)
-
 		}
 		return err
 	}); err != nil {

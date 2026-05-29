@@ -14,8 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../graphSchema';
 import {
+    ActiveDirectoryKindProperties,
+    ActiveDirectoryNodeKind,
+    AzureKindProperties,
+    CommonKindProperties,
+} from '../graphSchema';
+import { SelectedNode } from '../types';
+import {
+    AD_NEVER_VALUE,
+    AD_UNKNOWN_VALUE,
     ADSpecificTimeProperties,
     DATE_FIELDS,
     EntityField,
@@ -25,22 +33,24 @@ import {
     formatList,
     formatNumber,
     formatPrimitive,
+    getEntityName,
+    NoEntitySelectedHeader,
     validateProperty,
 } from './entityInfoDisplay';
 
 describe('Handling value formatting for Active Directory entity properties lastlogon, lastlogontimestamp, whencreated, and pwdlastset', () => {
     test('whencreated', () => {
-        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.WHEN_CREATED)).toEqual('UNKNOWN');
-        expect(formatADSpecificTime(0, ADSpecificTimeProperties.WHEN_CREATED)).toEqual('UNKNOWN');
+        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.WHEN_CREATED)).toEqual(AD_UNKNOWN_VALUE);
+        expect(formatADSpecificTime(0, ADSpecificTimeProperties.WHEN_CREATED)).toEqual(AD_UNKNOWN_VALUE);
         expect(formatADSpecificTime(1694549003, ADSpecificTimeProperties.WHEN_CREATED)).toEqual(
             '2023-09-12 13:03 PDT (GMT-0700)'
         );
     });
     test('lastlogon, lastlogontimestamp', () => {
-        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.LAST_LOGON)).toEqual('NEVER');
-        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.LAST_LOGON_TIMESTAMP)).toEqual('NEVER');
-        expect(formatADSpecificTime(0, ADSpecificTimeProperties.LAST_LOGON)).toEqual('UNKNOWN');
-        expect(formatADSpecificTime(0, ADSpecificTimeProperties.LAST_LOGON_TIMESTAMP)).toEqual('UNKNOWN');
+        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.LAST_LOGON)).toEqual(AD_NEVER_VALUE);
+        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.LAST_LOGON_TIMESTAMP)).toEqual(AD_NEVER_VALUE);
+        expect(formatADSpecificTime(0, ADSpecificTimeProperties.LAST_LOGON)).toEqual(AD_UNKNOWN_VALUE);
+        expect(formatADSpecificTime(0, ADSpecificTimeProperties.LAST_LOGON_TIMESTAMP)).toEqual(AD_UNKNOWN_VALUE);
         expect(formatADSpecificTime(1694549003, ADSpecificTimeProperties.LAST_LOGON)).toEqual(
             '2023-09-12 13:03 PDT (GMT-0700)'
         );
@@ -49,7 +59,7 @@ describe('Handling value formatting for Active Directory entity properties lastl
         );
     });
     test('pwdlastset', () => {
-        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.PASSWORD_LAST_SET)).toEqual('NEVER');
+        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.PASSWORD_LAST_SET)).toEqual(AD_NEVER_VALUE);
         expect(formatADSpecificTime(0, ADSpecificTimeProperties.PASSWORD_LAST_SET)).toEqual(
             'ACCOUNT CREATED BUT NO PASSWORD SET'
         );
@@ -72,7 +82,7 @@ describe('Formatting number properties', () => {
     });
 
     it('handles specific Active Directory properties differently than Azure derived properties', () => {
-        expect(formatNumber(0, 'ad', 'whencreated')).toEqual('UNKNOWN');
+        expect(formatNumber(0, 'ad', 'whencreated')).toEqual(AD_UNKNOWN_VALUE);
         //A value of 0 will not be held by azure property whencreated but this demonstrated handling the values differently
         expect(formatNumber(0, 'az', 'whencreated')).toEqual('0');
     });
@@ -109,9 +119,9 @@ describe('Formatting strings via formatPrimive', () => {
         expect(formatPrimitive('2016', null, 'any_other_field')).toEqual('2016');
         expect(formatPrimitive('2016', null, 'any_other_field')).not.toEqual('2016-01-01 00:00 PST (GMT-0800)');
 
-        // With no field supplied, parse as a date
-        expect(formatPrimitive('2016')).toEqual('2016-01-01 00:00 PST (GMT-0800)');
-        expect(formatPrimitive('2016')).not.toEqual('2016');
+        // With no field supplied, do not parse as a date
+        expect(formatPrimitive('2016')).toEqual('2016');
+        expect(formatPrimitive('2016')).not.toEqual('2016-01-01 00:00 PST (GMT-0800)');
     });
 });
 
@@ -143,5 +153,21 @@ describe('validating a node property against the shared generated schema', () =>
     });
     it('should return an object denoting that the property is not in the schema when it is unrecognized', () => {
         expect(validateProperty('notInSchema')).toEqual({ isKnownProperty: false, kind: null });
+    });
+});
+
+describe('Evaluating the entity display name from a given entity', () => {
+    it('should handle an undefined or null entity', () => {
+        expect(getEntityName(null)).toBe(NoEntitySelectedHeader);
+        expect(getEntityName(undefined)).toBe(NoEntitySelectedHeader);
+    });
+    it('should handle an entity that has an empty name property', () => {
+        expect(getEntityName({ id: '1', type: ActiveDirectoryNodeKind.User, name: '' })).toBe('Name not found');
+    });
+    it('should handle an entity that has no name property', () => {
+        expect(getEntityName({ id: '1', type: ActiveDirectoryNodeKind.User } as SelectedNode)).toBe('Name not found');
+    });
+    it('should handle the well formed entities', () => {
+        expect(getEntityName({ id: '1', type: ActiveDirectoryNodeKind.User, name: 'foo' })).toBe('foo');
     });
 });

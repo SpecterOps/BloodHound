@@ -17,8 +17,8 @@ import { Skeleton } from '@mui/material';
 import { FC, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import { usePreviousValue } from '../../../hooks';
-import { SelectedEdge } from '../../../store';
 import { EntityField, apiClient, formatObjectInfoFields } from '../../../utils';
+import { SelectedEdge } from '../ExploreSearch/EdgeFilter/edgeCategories';
 import { FieldsContainer, ObjectInfoFields } from '../fragments';
 import { useObjectInfoPanelContext } from '../providers';
 import EdgeInfoCollapsibleSection from './EdgeInfoCollapsibleSection';
@@ -41,7 +41,7 @@ const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
         data: cypherResponse,
         isLoading,
         isError,
-    } = useQuery([selectedEdge.id], ({ signal }) => {
+    } = useQuery([selectedEdge.id], async ({ signal }) => {
         return apiClient
             .cypherSearch(
                 selectedEdgeCypherQuery(selectedEdge.sourceNode.id, selectedEdge.targetNode.id, selectedEdge.name),
@@ -55,7 +55,7 @@ const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
     });
 
     if (isLoading) {
-        return <Skeleton variant='rectangular' sx={{}} />;
+        return <Skeleton variant='rectangular' />;
     }
 
     const sourceNodeField: EntityField = {

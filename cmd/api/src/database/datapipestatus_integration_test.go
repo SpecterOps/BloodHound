@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //go:build integration
-// +build integration
 
 package database_test
 
@@ -38,15 +37,6 @@ func TestDatapipeStatus(t *testing.T) {
 	status, err := db.GetDatapipeStatus(testCtx)
 	require.Nil(t, err)
 	assert.Equal(t, model.DatapipeStatusIdle, status.Status)
-
-	oldAnalysisTime := status.LastAnalysisRunAt
-	err = db.SetDatapipeStatus(testCtx, model.DatapipeStatusAnalyzing)
-	require.Nil(t, err)
-	status, err = db.GetDatapipeStatus(testCtx)
-	require.Nil(t, err)
-	assert.Equal(t, model.DatapipeStatusAnalyzing, status.Status)
-	assert.True(t, oldAnalysisTime.Before(status.LastAnalysisRunAt))
-	assert.True(t, status.LastCompleteAnalysisAt.IsZero())
 
 	err = db.SetDatapipeStatus(testCtx, model.DatapipeStatusIdle)
 	require.Nil(t, err)

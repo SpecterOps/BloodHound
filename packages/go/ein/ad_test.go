@@ -20,6 +20,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/specterops/dawgs/graph"
+
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/stretchr/testify/assert"
@@ -247,6 +249,8 @@ func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
 }
 
 func TestConvertComputerToNode(t *testing.T) {
+	var restrictSendingNtlmTraffic uint = 2
+
 	computer := ein.Computer{
 		IngestBase: ein.IngestBase{
 			Properties: map[string]any{
@@ -258,7 +262,7 @@ func TestConvertComputerToNode(t *testing.T) {
 				Collected: true,
 			},
 			Result: ein.NTLMRegistryInfo{
-				RestrictSendingNtlmTraffic: 2,
+				RestrictSendingNtlmTraffic: &restrictSendingNtlmTraffic,
 			},
 		},
 		IsWebClientRunning: ein.BoolAPIResult{
@@ -282,4 +286,220 @@ func TestConvertComputerToNode(t *testing.T) {
 	assert.Equal(t, true, result.PropertyMap[ad.WebClientRunning.String()])
 	assert.Equal(t, true, result.PropertyMap[ad.RestrictOutboundNTLM.String()])
 	assert.Equal(t, true, result.PropertyMap[ad.SMBSigning.String()])
+}
+
+func TestParseGroupMiscData(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		group ein.Group
+	}
+	type testData struct {
+		name     string
+		args     args
+		expected []ein.IngestibleRelationship
+	}
+
+	tt := []testData{
+		{
+			name: "ParseGroupMiscData without SIDHistory",
+			args: args{
+				group: ein.Group{
+					IngestBase: ein.IngestBase{
+						ObjectIdentifier: "groupBase",
+					},
+					HasSIDHistory: make([]ein.TypedPrincipal, 0),
+				},
+			},
+			expected: make([]ein.IngestibleRelationship, 0),
+		},
+		{
+			name: "ParseGroupMiscData with SIDHistory",
+			args: args{
+				group: ein.Group{
+					IngestBase: ein.IngestBase{
+						ObjectIdentifier: "groupBase",
+					},
+					HasSIDHistory: []ein.TypedPrincipal{
+						{
+							ObjectIdentifier: "historySID",
+							ObjectType:       ad.User.String(),
+						},
+					},
+				},
+			},
+			expected: []ein.IngestibleRelationship{
+				{
+					Source: ein.IngestibleEndpoint{
+						Value:   "groupBase",
+						MatchBy: "",
+						Kind:    graph.StringKind(ad.Group.String()),
+					},
+					Target: ein.IngestibleEndpoint{
+						Value: "historySID",
+						Kind:  graph.StringKind(ad.User.String()),
+					},
+					RelType:  ad.HasSIDHistory,
+					RelProps: map[string]any{"isacl": false},
+				},
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := ein.ParseGroupMiscData(testCase.args.group)
+			assert.Equal(t, testCase.expected, result)
+		})
+	}
+}
+
+func TestParseGPOData(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		gpo ein.GPO
+	}
+	type testData struct {
+		name     string
+		args     args
+		expected ein.IngestibleNode
+	}
+
+	tt := []testData{
+		{
+			name: "ParseGPOData without Properties",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with GPO Enabled",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): "0"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "0", ad.GPOStatus.String(): ein.PrettyGPOStatusEnabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with GPO UserConfigurationDisabled",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): "1"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "1", ad.GPOStatus.String(): ein.PrettyGPOStatusUserConfigurationDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with GPO ComputerConfigurationDisabled",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): "2"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "2", ad.GPOStatus.String(): ein.PrettyGPOStatusComputerConfigurationDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with GPO Disabled",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): "3"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "3", ad.GPOStatus.String(): ein.PrettyGPOStatusDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with Invalid GPO Status",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): "4"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "4", ad.GPOStatus.String(): ein.PrettyGPOStatusNotExisting},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with numeric status (int)",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): 2},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "2", ad.GPOStatus.String(): ein.PrettyGPOStatusComputerConfigurationDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with numeric status (float64)",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): float64(3)},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "3", ad.GPOStatus.String(): ein.PrettyGPOStatusDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with whitespace-padded string",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): " 1 "},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "1", ad.GPOStatus.String(): ein.PrettyGPOStatusUserConfigurationDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := ein.ParseGPOData(testCase.args.gpo)
+			assert.Equal(t, testCase.expected, result)
+		})
+	}
 }

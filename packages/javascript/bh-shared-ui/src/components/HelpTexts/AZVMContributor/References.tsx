@@ -19,10 +19,10 @@ import { FC } from 'react';
 
 const References: FC = () => {
     return (
-        <Box sx={{ overflowX: 'auto' }}>
+        <Box className='overflow-x-auto'>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://blog.netspi.com/running-powershell-scripts-on-azure-vms/'>
                 https://blog.netspi.com/running-powershell-scripts-on-azure-vms/
             </Link>

@@ -23,13 +23,14 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"reflect"
 	"strings"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/santhosh-tekuri/jsonschema/v6/kind"
 
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}
@@ -43,18 +44,18 @@ var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}
 // presence and structure of a "graph" tag alongside the metadata.
 //
 // If readToEnd is set to true, the stream will read to the end of the file (needed for TeeReader)
-func ParseAndValidatePayload(reader io.Reader, schema IngestSchema, shouldValidateGraph, readToEnd bool) (ingest.Metadata, error) {
+func ParseAndValidatePayload(reader io.Reader, schema IngestSchema, shouldValidateGraph, readToEnd bool) (ingest.OriginalMetadata, error) {
 	decoder := json.NewDecoder(reader)
 	scanner := newTagScanner(decoder)
 
 	meta, err := scanAndDetectMetaOrGraph(scanner, shouldValidateGraph, schema)
 	if err != nil {
-		return ingest.Metadata{}, err
+		return ingest.OriginalMetadata{}, err
 	}
 
 	if readToEnd {
 		if _, err := io.Copy(io.Discard, reader); err != nil {
-			return ingest.Metadata{}, err
+			return ingest.OriginalMetadata{}, err
 		}
 	}
 
@@ -181,23 +182,23 @@ func (s *tagScanner) nextToken() (json.Token, error) {
 	return tok, nil
 }
 
-func decodeMetaTag(decoder *json.Decoder) (ingest.Metadata, error) {
-	var m ingest.Metadata
+func decodeMetaTag(decoder *json.Decoder) (ingest.OriginalMetadata, error) {
+	var m ingest.OriginalMetadata
 	if err := decoder.Decode(&m); err != nil {
-		slog.Warn("Found invalid metatag, skipping", slog.String("err", err.Error()))
-		return ingest.Metadata{}, nil
+		slog.Warn("Found invalid metatag, skipping", attr.Error(err))
+		return ingest.OriginalMetadata{}, nil
 	}
-	if !m.Type.IsValid() {
-		return ingest.Metadata{}, ingest.ErrMetaTagNotFound
+	if !m.Type.IsValidOriginalType() {
+		return ingest.OriginalMetadata{}, ingest.ErrMetaTagNotFound
 	}
 	return m, nil
 }
 
-func scanAndDetectMetaOrGraph(scanner *tagScanner, shouldValidateGraph bool, schema IngestSchema) (ingest.Metadata, error) {
+func scanAndDetectMetaOrGraph(scanner *tagScanner, shouldValidateGraph bool, schema IngestSchema) (ingest.OriginalMetadata, error) {
 	var (
 		dataFound bool
 		metaFound bool
-		meta      ingest.Metadata
+		meta      ingest.OriginalMetadata
 	)
 
 	for {
@@ -208,38 +209,38 @@ func scanAndDetectMetaOrGraph(scanner *tagScanner, shouldValidateGraph bool, sch
 			case "meta":
 				if m, err := decodeMetaTag(scanner.decoder); err != nil {
 					return m, err
-				} else if m.Type.IsValid() {
+				} else if m.Type.IsValidOriginalType() {
 					meta = m
 					metaFound = true
 				}
 			case "data":
 				// Validate that the data key is followed by an opening '[' array delimiter
 				if tok, err := scanner.nextToken(); err != nil {
-					return ingest.Metadata{}, ErrInvalidJSON
+					return ingest.OriginalMetadata{}, ErrInvalidJSON
 				} else if delim, ok := tok.(json.Delim); !ok || delim != ingest.DelimOpenSquareBracket {
-					slog.Warn("expected '[' after data key", slog.Any("got", tok))
-					return ingest.Metadata{}, ingest.ErrDataTagNotFound
+					slog.Warn("Expected '[' after data key", slog.Any("got", tok))
+					return ingest.OriginalMetadata{}, ingest.ErrDataTagNotFound
 				}
 				dataFound = true
 			case "metadata":
 				var item map[string]any
 				if err := scanner.decoder.Decode(&item); err != nil {
-					return ingest.Metadata{}, fmt.Errorf("error decoding metadata tag: %w", err)
+					return ingest.OriginalMetadata{}, fmt.Errorf("error decoding metadata tag: %w", err)
 				} else if err := schema.MetaSchema.Validate(item); err != nil {
-					return ingest.Metadata{}, fmt.Errorf("error validating metadata tag: %w", err)
+					return ingest.OriginalMetadata{}, fmt.Errorf("error validating metadata tag: %w", err)
 				}
 			case "graph":
 				// enforce mutual exclusivity
 				if dataFound || metaFound {
-					return ingest.Metadata{}, ingest.ErrMixedIngestFormat
+					return ingest.OriginalMetadata{}, ingest.ErrMixedIngestFormat
 				}
 
 				// opengraph ingest path
-				meta = ingest.Metadata{Type: ingest.DataTypeOpenGraph}
+				meta = ingest.OriginalMetadata{Type: ingest.DataTypeOpenGraph}
 				if shouldValidateGraph {
 					if err := ValidateGraph(scanner.decoder, schema); err != nil {
 						if report, ok := err.(ValidationReport); ok {
-							slog.With("validation", report).Warn("opengraph ingest failed")
+							slog.Warn("Opengraph ingest failed", slog.Any("validation", report))
 						}
 						return meta, err
 					}
@@ -254,8 +255,8 @@ func scanAndDetectMetaOrGraph(scanner *tagScanner, shouldValidateGraph bool, sch
 	}
 }
 
-func handleScannerError(err error, dataFound, metaFound bool) (ingest.Metadata, error) {
-	var m ingest.Metadata
+func handleScannerError(err error, dataFound, metaFound bool) (ingest.OriginalMetadata, error) {
+	var m ingest.OriginalMetadata
 	if errors.Is(err, io.EOF) {
 		if !dataFound && !metaFound {
 			return m, ingest.ErrNoTagFound
@@ -294,13 +295,13 @@ func (s ValidationReport) BuildAPIError() []string {
 func (s ValidationReport) Error() string {
 	var sb strings.Builder
 	if len(s.CriticalErrors) > 0 {
-		sb.WriteString(fmt.Sprintf("(%d) critical error(s): [%s]", len(s.CriticalErrors), formatAggregateErrors(s.CriticalErrors)))
+		fmt.Fprintf(&sb, "(%d) critical error(s): [%s]", len(s.CriticalErrors), formatAggregateErrors(s.CriticalErrors))
 		if len(s.ValidationErrors) > 0 {
 			sb.WriteString(", ")
 		}
 	}
 	if len(s.ValidationErrors) > 0 {
-		sb.WriteString(fmt.Sprintf("(%d) validation error(s): [%s]", len(s.ValidationErrors), formatAggregateErrors(s.ValidationErrors)))
+		fmt.Fprintf(&sb, "(%d) validation error(s): [%s]", len(s.ValidationErrors), formatAggregateErrors(s.ValidationErrors))
 	}
 	return sb.String()
 }
@@ -309,7 +310,7 @@ func formatSchemaValidationError(arrayName string, index int, err error) string 
 	var sb strings.Builder
 	if ve, ok := err.(*jsonschema.ValidationError); ok {
 		numberOfViolations := len(ve.Causes)
-		sb.WriteString(fmt.Sprintf("%s[%d] schema validation failed with %d error(s): ", arrayName, index, numberOfViolations))
+		fmt.Fprintf(&sb, "%s[%d] schema validation failed with %d error(s): ", arrayName, index, numberOfViolations)
 
 		sb.WriteString("[")
 
@@ -327,17 +328,13 @@ func formatSchemaValidationError(arrayName string, index int, err error) string 
 			switch {
 			// Case: property value is an object (not allowed)
 			case isPropertyError && isTypeError(cause, "object"):
-				sb.WriteString(fmt.Sprintf(
-					"Invalid property '%s': objects are not allowed in the property bag. Use only strings, numbers, booleans, nulls, or arrays of these types.",
-					propertyName,
-				))
+				fmt.Fprintf(&sb, "Invalid property '%s': objects are not allowed in the property bag. Use only strings, numbers, booleans, nulls, or arrays of these types.",
+					propertyName)
 
 			// Case: array contains a nested object (also not allowed)
 			case isPropertyError && isNotError(cause):
-				sb.WriteString(fmt.Sprintf(
-					"Invalid property '%s': array contains an object. Arrays must contain only primitive values (string, number, boolean, or null).",
-					propertyName,
-				))
+				fmt.Fprintf(&sb, "Invalid property '%s': array contains an object. Arrays must contain only primitive values (string, number, boolean, or null).",
+					propertyName)
 
 			default:
 				sb.WriteString(cause.Error())
@@ -370,20 +367,6 @@ func formatAggregateErrors(errs []validationError) string {
 		sb.WriteString(e.Message)
 	}
 	return sb.String()
-}
-
-func isHomogeneousArray(arr []any) bool {
-	if len(arr) == 0 {
-		return true
-	}
-
-	firstType := reflect.TypeOf(arr[0])
-	for _, v := range arr[1:] {
-		if reflect.TypeOf(v) != firstType {
-			return false
-		}
-	}
-	return true
 }
 
 // ReadZippedFile - Util Function to help read zipped files
@@ -455,15 +438,16 @@ func (v *validator) validateArray(arrayName string, schema *jsonschema.Schema) {
 			default:
 				v.reportCritical(index, fmt.Sprintf("%s[%d] syntax error: %s", arrayName, index, err))
 			}
-		} else if err := schema.Validate(item); err != nil {
-			v.reportValidation(index, formatSchemaValidationError(arrayName, index, err))
-		}
-
-		if props, ok := item["properties"].(map[string]any); ok {
-			for key, val := range props {
-				if arr, ok := val.([]any); ok && !isHomogeneousArray(arr) {
-					v.reportValidation(index, fmt.Sprintf("%s[%d] schema validation error. properties[\"%s\"] contains a mixed-type array", arrayName, index, key))
+		} else {
+			if err := schema.Validate(item); err != nil {
+				v.reportValidation(index, formatSchemaValidationError(arrayName, index, err))
+			}
+			if kindErrors := validateKinds(arrayName, item); len(kindErrors) > 0 {
+				causes := make([]string, len(kindErrors))
+				for i, kindError := range kindErrors {
+					causes[i] = kindError.Error()
 				}
+				v.reportValidation(index, fmt.Sprintf("%s[%d] validation failed with %d error(s): [%s]", arrayName, index, len(causes), strings.Join(causes, ", ")))
 			}
 		}
 
@@ -486,4 +470,38 @@ func (v *validator) report() error {
 		}
 	}
 	return nil
+}
+
+// validateKinds enforces the reserved-kind-namespace policy on a single
+// decoded node or edge item and returns one error per offending kind. Nodes
+// are checked via the "kinds" array, edges via the "kind" field. This function
+// performs defensive type checking with type assertions to safely handle items
+// that may not conform to the schema, ensuring reserved-kind violations are
+// always reported regardless of other validation failures. The reserved
+// namespaces and the ReservedKindError type are defined in the model package.
+func validateKinds(arrayName string, item map[string]any) []error {
+	var (
+		kindsToCheck []string
+		kindErrors   []error
+	)
+	switch arrayName {
+	case "nodes":
+		if rawKinds, ok := item["kinds"].([]any); ok {
+			for _, rawKind := range rawKinds {
+				if kindName, ok := rawKind.(string); ok {
+					kindsToCheck = append(kindsToCheck, kindName)
+				}
+			}
+		}
+	case "edges":
+		if kindName, ok := item["kind"].(string); ok {
+			kindsToCheck = append(kindsToCheck, kindName)
+		}
+	}
+	for _, kindName := range kindsToCheck {
+		if namespace, reserved := model.MatchReservedGraphKindNamespace(kindName); reserved {
+			kindErrors = append(kindErrors, &model.ReservedKindError{KindName: kindName, Namespace: namespace})
+		}
+	}
+	return kindErrors
 }

@@ -14,20 +14,23 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Paper, Skeleton, Typography, useTheme } from '@mui/material';
-import { CollectorCardList, DocumentationLinks, PageWithTitle, apiClient } from 'bh-shared-ui';
+import { Alert, Box, Link, Paper, Skeleton } from '@mui/material';
+import { CollectorCardList, DocumentationLinks, PageWithTitle, apiClient, useFeatureFlag } from 'bh-shared-ui';
+import { Typography } from 'doodle-ui';
 import { CommunityCollectorType } from 'js-client-library';
 import fileDownload from 'js-file-download';
-import { useDispatch } from 'react-redux';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { useGetCollectorsByType } from 'src/hooks/useCollectors';
+import { useAppDispatch } from 'src/store';
 
 const DownloadCollectors = () => {
     /* Hooks */
-    const theme = useTheme();
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const sharpHoundCollectorsQuery = useGetCollectorsByType('sharphound');
     const azureHoundCollectorsQuery = useGetCollectorsByType('azurehound');
+    const { data: openHoundEnabled } = useFeatureFlag('openhound_support');
+
+    const openHoundHref = 'https://hub.docker.com/r/specterops/openhound';
 
     /* Event Handlers */
     const downloadCollector = (collectorType: CommunityCollectorType, version: string) => {
@@ -76,14 +79,27 @@ const DownloadCollectors = () => {
             title='Download Collectors'
             data-testid='download-collectors'
             pageDescription={
-                <Typography variant='body2' paragraph>
-                    To get started, collect data using SharpHound or AzureHound.
-                    <br />
-                    BloodHound CE supports both {DocumentationLinks.sharpHoundCELink} and{' '}
-                    {DocumentationLinks.azureHoundCELink} collectors.
-                </Typography>
+                openHoundEnabled?.enabled ? (
+                    <Typography variant='body2'>
+                        To get started, collect data using SharpHound, AzureHound, or OpenHound.
+                        <br />
+                        BloodHound CE supports {DocumentationLinks.sharpHoundCELink},{' '}
+                        {DocumentationLinks.azureHoundCELink}, and{' '}
+                        <Link target='_blank' data-testid='download-collectors-openhound-link' href={openHoundHref}>
+                            OpenHound
+                        </Link>
+                        .
+                    </Typography>
+                ) : (
+                    <Typography variant='body2'>
+                        To get started, collect data using SharpHound or AzureHound.
+                        <br />
+                        BloodHound CE supports both {DocumentationLinks.sharpHoundCELink} and{' '}
+                        {DocumentationLinks.azureHoundCELink} collectors.
+                    </Typography>
+                )
             }>
-            <Box display='grid' gap={theme.spacing(4)}>
+            <div className='grid gap-8 py-4'>
                 {(sharpHoundCollectorsQuery.isError ||
                     azureHoundCollectorsQuery.isError ||
                     sharpHoundCollectorsQuery.data?.data.versions.length === 0) && (
@@ -161,7 +177,21 @@ const DownloadCollectors = () => {
                         />
                     )}
                 </Box>
-            </Box>
+                {openHoundEnabled?.enabled && (
+                    <Box>
+                        <Typography variant='h2'>OpenHound</Typography>
+                        <Paper>
+                            <Box p={2}>
+                                <Typography variant='body1'>
+                                    <Link href={openHoundHref} target='_blank'>
+                                        Download OpenHound on Docker Hub
+                                    </Link>
+                                </Typography>
+                            </Box>
+                        </Paper>
+                    </Box>
+                )}
+            </div>
         </PageWithTitle>
     );
 };

@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 
 const LinuxAbuse: FC = () => {
@@ -22,7 +23,7 @@ const LinuxAbuse: FC = () => {
         <>
             <Typography variant='body2'>An attacker may perform this attack in the following steps:</Typography>
             <Typography variant='body2'>
-                <Box component='span' sx={{ fontWeight: 'bold' }}>
+                <Box component='span' className='font-bold'>
                     Step 1:
                 </Box>{' '}
                 Use Certipy to request enrollment in the affected template, specifying the target enterprise CA and
@@ -43,7 +44,7 @@ const LinuxAbuse: FC = () => {
                 default.
             </Typography>
             <Typography variant='body2'>
-                <Box component='span' sx={{ fontWeight: 'bold' }}>
+                <Box component='span' className='font-bold'>
                     Step 2:
                 </Box>{' '}
                 Request a ticket granting ticket (TGT) from the domain, specifying the certificate created in Step 1 and

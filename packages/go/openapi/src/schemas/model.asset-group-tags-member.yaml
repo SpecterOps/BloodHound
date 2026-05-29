@@ -19,6 +19,8 @@ properties:
     type: integer
   object_id:
     type: string
+  environment_id:
+    type: string
   primary_kind:
     type: string
   name:

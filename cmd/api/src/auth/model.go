@@ -24,13 +24,12 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 const (
@@ -40,18 +39,6 @@ const (
 
 	HMAC_SHA2_256 = "hmac-sha2-256"
 )
-
-type SessionData struct {
-	jwt.StandardClaims
-}
-
-func (s SessionData) SessionID() (int64, error) {
-	return strconv.ParseInt(s.Id, 10, 64)
-}
-
-func (s SessionData) UserID() (uuid.UUID, error) {
-	return uuid.FromString(s.Subject)
-}
 
 type PermissionOverrides struct {
 	Enabled     bool
@@ -163,10 +150,10 @@ func (s Authorizer) AuditLogUnauthorizedAccess(request *http.Request) {
 	if request.Method != "GET" {
 		data := model.AuditData{"endpoint": request.Method + " " + request.URL.Path}
 		if auditEntry, err := model.NewAuditEntry(model.AuditLogActionUnauthorizedAccessAttempt, model.AuditLogStatusFailure, data); err != nil {
-			slog.ErrorContext(request.Context(), fmt.Sprintf("Error creating audit log for unauthorized access: %s", err.Error()))
+			slog.ErrorContext(request.Context(), "Error creating audit log for unauthorized access", attr.Error(err))
 			return
 		} else if err = s.auditLogger.AppendAuditLog(request.Context(), auditEntry); err != nil {
-			slog.ErrorContext(request.Context(), fmt.Sprintf("Error creating audit log for unauthorized access: %s", err.Error()))
+			slog.ErrorContext(request.Context(), "Error appending audit log for unauthorized access", attr.Error(err))
 		}
 	}
 }
@@ -194,7 +181,7 @@ func GetUserFromAuthCtx(ctx Context) (model.User, bool) {
 //
 // This isn't an ideal location for this function but it was determined to be the best place "for now".
 // See https://specterops.atlassian.net/browse/BED-3367
-func NewUserAuthToken(ownerId string, tokenName string, hmacMethod string) (model.AuthToken, error) {
+func NewUserAuthToken(ownerId string, tokenName string, hmacMethod string, createdById uuid.UUID) (model.AuthToken, error) {
 	var (
 		tokenBytes = make([]byte, 40)
 	)
@@ -209,6 +196,7 @@ func NewUserAuthToken(ownerId string, tokenName string, hmacMethod string) (mode
 		HmacMethod: hmacMethod,
 		LastAccess: time.Now().UTC(),
 		Name:       null.StringFrom(tokenName),
+		CreatedBy:  uuid.NullUUID{UUID: createdById, Valid: true},
 	}
 
 	if hmacMethod != HMAC_SHA2_256 {

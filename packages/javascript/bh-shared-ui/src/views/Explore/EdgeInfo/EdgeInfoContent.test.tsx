@@ -16,8 +16,15 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { SelectedEdge } from '../../../store';
+import { INHERITANCE_DROPDOWN_DESCRIPTION } from '../../../components/HelpTexts/shared/ACLInheritance';
+import {
+    ActiveDirectoryKindProperties,
+    ActiveDirectoryNodeKind,
+    ActiveDirectoryRelationshipKind,
+    CommonKindProperties,
+} from '../../../graphSchema';
 import { render, screen, waitFor } from '../../../test-utils';
+import { SelectedEdge } from '../ExploreSearch/EdgeFilter/edgeCategories';
 import { ObjectInfoPanelContextProvider } from '../providers';
 import EdgeInfoContent from './EdgeInfoContent';
 
@@ -78,10 +85,31 @@ const server = setupServer(
             })
         );
     }),
+    rest.get(`/api/v2/groups/testing-node-456`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    props: {
+                        objectid: 'testing-node-456',
+                    },
+                },
+            })
+        );
+    }),
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(
             ctx.json({
                 data: [],
+            })
+        );
+    }),
+    rest.get('/api/v2/graphs/acl-inheritance', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    nodes: {},
+                    edges: [],
+                },
             })
         );
     })
@@ -90,45 +118,109 @@ const server = setupServer(
 const selectedEdge: SelectedEdge = {
     id: 'rel_1',
     name: 'CustomEdge',
-    data: { isACL: false, lastseen: '2023-09-07T11:10:33.664596893Z' },
+    data: {
+        [ActiveDirectoryKindProperties.IsACL]: false,
+        [CommonKindProperties.LastSeen]: '2023-09-07T11:10:33.664596893Z',
+    },
     sourceNode: {
         name: 'source node',
         id: '1',
         objectId: '1',
-        type: 'User',
+        type: ActiveDirectoryNodeKind.User,
     },
-    targetNode: { name: 'target node', id: '2', objectId: '2', type: 'User' },
+    targetNode: {
+        name: 'target node',
+        id: '2',
+        objectId: '2',
+        type: ActiveDirectoryNodeKind.User,
+    },
 };
 
 const selectedEdgeHasLapsEnabled: SelectedEdge = {
     id: '2',
-    name: 'GenericAll',
-    data: { isACL: false, lastseen: '2023-09-07T11:10:33.664596893Z' },
+    name: ActiveDirectoryRelationshipKind.GenericAll,
+    data: {
+        [ActiveDirectoryKindProperties.IsACL]: false,
+        [CommonKindProperties.LastSeen]: '2023-09-07T11:10:33.664596893Z',
+    },
     sourceNode: {
         name: 'source node',
         id: '1',
         objectId: '1',
-        type: 'User',
+        type: ActiveDirectoryNodeKind.User,
     },
-    targetNode: { name: 'target node', id: '3', objectId: 'testing-node-123', type: 'Computer' },
+    targetNode: {
+        name: 'target node',
+        id: '3',
+        objectId: 'testing-node-123',
+        type: ActiveDirectoryNodeKind.Computer,
+    },
 };
 
 const selectedEdgeHasLapsDisabled: SelectedEdge = {
     id: '3',
-    name: 'GenericAll',
-    data: { isACL: false, lastseen: '2023-09-07T11:10:33.664596893Z' },
+    name: ActiveDirectoryRelationshipKind.GenericAll,
+    data: {
+        [ActiveDirectoryKindProperties.IsACL]: false,
+        [CommonKindProperties.LastSeen]: '2023-09-07T11:10:33.664596893Z',
+    },
     sourceNode: {
         name: 'source node',
         id: '1',
         objectId: '1',
-        type: 'User',
+        type: ActiveDirectoryNodeKind.User,
     },
-    targetNode: { name: 'target node', id: '4', objectId: 'testing-node-456', type: 'Computer' },
+    targetNode: {
+        name: 'target node',
+        id: '4',
+        objectId: 'testing-node-456',
+        type: ActiveDirectoryNodeKind.Computer,
+    },
 };
 
 const selectedEdgeADCSESC4: SelectedEdge = {
     ...selectedEdge,
-    name: 'ADCSESC4',
+    name: ActiveDirectoryRelationshipKind.ADCSESC4,
+};
+
+const selectedEdgeHidden: SelectedEdge = {
+    id: 'HIDDEN',
+    name: '*** Hidden Edge ***',
+    data: {},
+    sourceNode: {
+        name: 'hidden',
+        id: 'hidden',
+        objectId: 'hidden',
+        type: 'hidden',
+    },
+    targetNode: {
+        name: 'hidden',
+        id: 'hidden',
+        objectId: 'hidden',
+        type: 'hidden',
+    },
+};
+
+const selectedEdgeACLInheritance: SelectedEdge = {
+    id: '3',
+    name: ActiveDirectoryRelationshipKind.WriteOwner,
+    data: {
+        [ActiveDirectoryKindProperties.IsACL]: true,
+        [CommonKindProperties.IsInherited]: true,
+        [ActiveDirectoryKindProperties.InheritanceHash]: 'test_hash',
+    },
+    sourceNode: {
+        name: 'source node',
+        id: '1',
+        objectId: '1',
+        type: ActiveDirectoryNodeKind.Group,
+    },
+    targetNode: {
+        name: 'target node',
+        id: '4',
+        objectId: 'testing-node-456',
+        type: ActiveDirectoryNodeKind.Group,
+    },
 };
 
 const windowsAbuseHasLapsText = (sourceName: string, targetName: string) => {
@@ -197,6 +289,15 @@ describe('EdgeInfoContent', () => {
 
         expect(screen.queryByText(hasLapsDisabledTestText, { exact: false })).not.toBeInTheDocument();
     });
+    test('Selecting an edge that meets ACL inheritance criteria shows the "ACE Inherited From" dropdown', async () => {
+        render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeACLInheritance} />);
+
+        const user = userEvent.setup();
+        const inheritanceAccordion = screen.getByText('ACE Inherited From');
+        await user.click(inheritanceAccordion);
+
+        expect(screen.queryByText(INHERITANCE_DROPDOWN_DESCRIPTION)).toBeInTheDocument();
+    });
     describe('EdgeInfoContent support for Deep Linking', () => {
         const test_id = selectedEdgeADCSESC4.id;
         const setup = () => {
@@ -238,6 +339,46 @@ describe('EdgeInfoContent', () => {
             await waitFor(() => expect(window.location.search).toContain('expandedPanelSections=general'));
             expect(window.location.search).not.toContain('searchType');
             expect(window.location.search).not.toContain(`relationshipQueryItemId=${test_id}`);
+        });
+    });
+
+    describe('EdgeInfoContent support for hidden edges', () => {
+        const setup = () => {
+            const screen = render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeHidden} />);
+            const user = userEvent.setup();
+
+            server.use(
+                rest.post(`/api/v2/graphs/cypher`, (req, res, ctx) => {
+                    return res(
+                        ctx.json({
+                            data: {
+                                nodes: {},
+                                edges: [
+                                    {
+                                        id: 'HIDDEN',
+                                        source: 'HIDDEN',
+                                        target: 'HIDDEN',
+                                        label: 'HIDDEN',
+                                        kind: 'HIDDEN',
+                                    },
+                                ],
+                            },
+                        })
+                    );
+                })
+            );
+
+            return { screen, user };
+        };
+
+        it('displays contact admin message when hidden edge is true', async () => {
+            const { screen } = setup();
+
+            expect(
+                await screen.findByText(
+                    "This edge's information is not disclosed. Please contact your admin in order to get access."
+                )
+            ).toBeInTheDocument();
         });
     });
 });

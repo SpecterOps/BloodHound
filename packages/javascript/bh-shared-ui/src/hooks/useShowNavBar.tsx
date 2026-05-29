@@ -15,13 +15,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useLocation } from 'react-router-dom';
+import { Routable } from '../routes';
 
-export const useShowNavBar = (routes: any) => {
+export const useShowNavBar = (routes: Routable[]) => {
     const location = useLocation();
-    return routes.find((routeItem: any) => {
+
+    return routes.find((routeItem) => {
         const getPathName = (pathUrl: string) => pathUrl.split('/')[1];
         const matchedPath = getPathName(location.pathname) === getPathName(routeItem.path);
+
         if (!matchedPath) return;
+
         return matchedPath && routeItem.navigation;
     });
 };

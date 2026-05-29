@@ -85,7 +85,9 @@ func (s *BloodhoundDB) GetAllIngestJobs(ctx context.Context, skip int, limit int
 		return nil, int(count), CheckError(result)
 	} else {
 		for idx := range jobs {
-			jobs[idx].UserEmailAddress = jobs[idx].User.EmailAddress
+			if !jobs[idx].User.EmailAddress.IsZero() {
+				jobs[idx].UserEmailAddress = jobs[idx].User.EmailAddress
+			}
 		}
 		return jobs, int(count), nil
 	}

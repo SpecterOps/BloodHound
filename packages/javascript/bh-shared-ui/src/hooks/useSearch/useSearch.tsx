@@ -14,9 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { isAxiosError } from 'js-client-library';
 import { useQuery } from 'react-query';
-import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
-import { EntityKinds, apiClient } from '../../utils';
+import { apiClient } from '../../utils';
+import { useTimeoutLimitConfiguration } from '../useConfiguration';
+import { useGraphNodeKinds } from '../useGraphKinds';
 
 export type SearchResult = {
     distinguishedname?: string;
@@ -30,63 +32,65 @@ export type SearchResults = SearchResult[];
 
 export const searchKeys = {
     all: ['search'] as const,
-    detail: (keyword: string, type: EntityKinds | undefined) => [...searchKeys.all, keyword, type] as const,
+    detail: (keyword: string, type: string | undefined) => [...searchKeys.all, keyword, type] as const,
 };
 
-export const useSearch = (keyword: string, type: EntityKinds | undefined) => {
-    return useQuery<SearchResults, any>(
-        searchKeys.detail(keyword, type),
-        ({ signal }) => {
+export const useSearch = (keyword: string, type: string | undefined) => {
+    const timeoutLimitEnabled = useTimeoutLimitConfiguration();
+    const timeout = timeoutLimitEnabled ? 60000 : 0;
+
+    const kindsQuery = useGraphNodeKinds();
+    const kinds = kindsQuery.data?.kinds ?? [];
+
+    // the current behavior is to case insensitive match the kind name from the input
+    // find and use the case sensitive kind name because the API requires the correct case
+    const kind = kinds.find((kind) => kind.toLocaleLowerCase() === type?.toLocaleLowerCase()) ?? type;
+
+    return useQuery<SearchResults, any>({
+        queryKey: searchKeys.detail(keyword, type),
+        queryFn: ({ signal }) => {
             if (keyword === '') return [];
-            return apiClient.searchHandler(keyword, type, { signal }).then((result) => {
+            return apiClient.searchHandler(keyword, kind, { signal, timeout }).then((result) => {
                 if (!result.data.data) return [];
                 return result.data.data;
             });
         },
-        {
-            keepPreviousData: true,
-            retry: false,
-        }
-    );
+        enabled: kindsQuery.isSuccess,
+        keepPreviousData: true,
+        retry: false,
+    });
 };
 
-export const getKeywordAndTypeValues = (inputValue = ''): { keyword: string; type: EntityKinds | undefined } => {
+export const getKeywordAndTypeValues = (inputValue = ''): { keyword: string; type: string | undefined } => {
     const splitValue = inputValue.split(':');
 
-    let keyword = '';
-    let type: EntityKinds | undefined = undefined;
+    let keyword: string;
+    let type: string | undefined = undefined;
 
     if (splitValue.length > 1) {
-        type = validateNodeType(splitValue[0]);
+        type = splitValue[0];
         keyword = splitValue.slice(1).join(':');
     } else keyword = splitValue[0];
 
     return { keyword: keyword, type: type };
 };
 
-export const validateNodeType = (type: string): EntityKinds | undefined => {
-    let result = undefined;
+const getErrorText = (error: any, type: string | undefined): string => {
+    let errorMessage = 'An error has occurred. Please try again.';
 
-    if (type?.toLowerCase() === 'meta') result = 'Meta' as EntityKinds;
+    if (error.response?.status === 504) errorMessage = 'Search has timed out. Please try again.';
 
-    Object.values(ActiveDirectoryNodeKind).forEach((activeDirectoryType) => {
-        if (activeDirectoryType.localeCompare(type, undefined, { sensitivity: 'base' }) === 0)
-            result = activeDirectoryType;
-    });
+    if (isAxiosError(error)) {
+        const errors = error.response?.data?.errors;
+        if (errors?.length) errorMessage = errors[0].message;
+        if (errorMessage === 'Invalid type parameter' && type !== undefined)
+            errorMessage = `Invalid node kind: ${type}`;
+    }
 
-    Object.values(AzureNodeKind).forEach((azureType) => {
-        if (azureType.localeCompare(type, undefined, { sensitivity: 'base' }) === 0) result = azureType;
-    });
-
-    return result;
+    return errorMessage;
 };
 
-const getErrorText = (error: any): string => {
-    if (error.response?.status === 504) return 'Search has timed out. Please try again.';
-    else return 'An error has occurred. Please try again.';
-};
-
-const getNoDataText = (debouncedInputValue: string, type: EntityKinds | undefined, keyword: string): string => {
+const getNoDataText = (debouncedInputValue: string, type: string | undefined, keyword: string): string => {
     if (debouncedInputValue === '' && type === undefined)
         return 'Begin typing to search. Prepend a type followed by a colon to search by type, e.g., user:bob';
     else if (debouncedInputValue === '' && type !== undefined)
@@ -102,14 +106,14 @@ export const getEmptyResultsText = (
     isError: boolean,
     error: any,
     debouncedInputValue: string,
-    type: EntityKinds | undefined,
+    type: string | undefined,
     keyword: string,
     data: SearchResults | undefined
 ): string => {
     if (isLoading || isFetching) {
         return 'Loading...';
     } else if (isError) {
-        return getErrorText(error);
+        return getErrorText(error, type);
     } else if (data?.length === 0) {
         return getNoDataText(debouncedInputValue, type, keyword);
     } else return '';

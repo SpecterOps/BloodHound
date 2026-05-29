@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link, Typography } from '@mui/material';
+import { Link } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 import { AdcsEsc14ScenarioALinux } from '../AdcsEsc14ScenarioA';
 import { EdgeInfoProps } from '../index';
@@ -41,7 +42,10 @@ const LinuxAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
 
                     <Typography variant='body2'>
                         It can also be done with pass-the-hash using{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/byt3bl33d3r/pth-toolkit'>
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/byt3bl33d3r/pth-toolkit'>
                             pth-toolkit's net tool
                         </Link>
                         . If the LM hash is not known, use 'ffffffffffffffffffffffffffffffff'.
@@ -71,7 +75,10 @@ const LinuxAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
 
                     <Typography variant='body2'>
                         A targeted kerberoast attack can be performed using{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/targetedKerberoast'>
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/ShutdownRepo/targetedKerberoast'>
                             targetedKerberoast.py
                         </Link>
                         .
@@ -95,7 +102,10 @@ const LinuxAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
 
                     <Typography variant='body2'>
                         To abuse this permission, use{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/ShutdownRepo/pywhisker'>
                             pyWhisker
                         </Link>
                         .
@@ -151,7 +161,10 @@ const LinuxAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
                     <Typography variant='body1'> Shadow Credentials attack </Typography>
                     <Typography variant='body2'>
                         To abuse this permission, use{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/ShutdownRepo/pywhisker'>
                             pyWhisker
                         </Link>
                         .
@@ -180,7 +193,7 @@ const LinuxAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
                     </Typography>
 
                     <Typography variant='body2'>
-                        <Link target='_blank' rel='noopener' href='https://github.com/Hackndo/pyGPOAbuse'>
+                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/Hackndo/pyGPOAbuse'>
                             pyGPOAbuse.py
                         </Link>{' '}
                         can be used for that purpose.
@@ -196,52 +209,96 @@ const LinuxAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
                 </>
             );
         case 'OU':
-        case 'Domain':
             return (
                 <>
                     <Typography variant='body2'>
-                        An attacker with permission to modify the gPLink attribute can link GPOs to the object,
-                        affecting all contained users and computers. The GPO can be weaponized by injecting a malicious
-                        configuration, such as a scheduled task executing a malicious script.
+                        With GenericWrite permissions over an OU, you may make modifications to the gPLink attribute of
+                        the OU. The ability to alter the gPLink attribute of an OU may allow an attacker to apply a
+                        malicious Group Policy Object (GPO) to all of the OU's child user and computer objects
+                        (including the ones located in nested sub-OUs). This can be exploited to make said child items
+                        execute arbitrary commands through an immediate scheduled task, thus compromising them.
                     </Typography>
+
                     <Typography variant='body2'>
-                        The GPO can be linked as enforced to bypass blocked GPO inheritance. WMI or security filtering
-                        can be used to limit the impact to specific accounts, which is important in environments with
-                        many users or computers under the affected scope.
+                        Successful exploitation will require the possibility to add non-existing DNS records to the
+                        domain and to create machine accounts. Alternatively, an already compromised domain-joined
+                        machine may be used to perform the attack. Note that the attack vector implementation is not
+                        trivial and will require some setup.
                     </Typography>
+
                     <Typography variant='body2'>
-                        Refer to{' '}
-                        <Link target='_blank' rel='noopener' href='https://wald0.com/?p=179'>
-                            A Red Teamer's Guide to GPOs and OUs
-                        </Link>
-                        for details about the abuse technique, and check out{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/Hackndo/pyGPOAbuse'>
-                            pyGPOAbuse.py
-                        </Link>{' '}
-                        for practical exploitation.
-                    </Typography>
-                    <Typography variant='body2'>
-                        <b>Without control over a GPO</b>
-                        <br />
-                        An attacker can still execute the attack without control over a GPO by setting up a fake LDAP
-                        server to host a GPO. This approach requires the ability to add non-existent DNS records and
-                        create machine accounts, or access to a compromised domain-joined machine. However, this method
-                        is complex and requires significant setup.
-                        <br />
-                        <br />
-                        From a Linux machine, the write access to the gPLink attribute may be abused using the{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/synacktiv/OUned'>
+                        From a Linux machine, the gPLink manipulation attack vector may be exploited using the{' '}
+                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/synacktiv/OUned'>
                             OUned.py
                         </Link>{' '}
-                        exploitation tool. For a detailed outline of exploit requirements and implementation, you can
-                        refer to{' '}
+                        tool. For a detailed outline of exploit requirements and implementation, you can refer to{' '}
                         <Link
                             target='_blank'
-                            rel='noopener'
+                            rel='noopener noreferrer'
                             href='https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory'>
                             the article associated to the OUned.py tool
                         </Link>
                         .
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Be mindful of the number of users and computers that are in the given OU as they all will
+                        attempt to fetch and apply the malicious GPO.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Alternatively, the ability to modify the gPLink attribute of an OU can be exploited in
+                        conjunction with write permissions on a GPO. In such a situation, an attacker could first inject
+                        a malicious scheduled task in the controlled GPO, and then link the GPO to the target OU through
+                        its gPLink attribute, making all child users and computers apply the malicious GPO and execute
+                        arbitrary commands.
+                    </Typography>
+                </>
+            );
+        case 'Domain':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        With GenericWrite permission over a domain object, you may make modifications to the gPLink
+                        attribute of the domain. The ability to alter the gPLink attribute of a domain may allow an
+                        attacker to apply a malicious Group Policy Object (GPO) to all of the domain user and computer
+                        objects (including the ones located in nested OUs). This can be exploited to make said child
+                        items execute arbitrary commands through an immediate scheduled task, thus compromising them.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Successful exploitation will require the possibility to add non-existing DNS records to the
+                        domain and to create machine accounts. Alternatively, an already compromised domain-joined
+                        machine may be used to perform the attack. Note that the attack vector implementation is not
+                        trivial and will require some setup.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        From a Linux machine, the gPLink manipulation attack vector may be exploited using the{' '}
+                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/synacktiv/OUned'>
+                            OUned.py
+                        </Link>{' '}
+                        tool. For a detailed outline of exploit requirements and implementation, you can refer to{' '}
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory'>
+                            the article associated to the OUned.py tool
+                        </Link>
+                        .
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Be mindful of the number of users and computers that are in the given domain as they all will
+                        attempt to fetch and apply the malicious GPO.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Alternatively, the ability to modify the gPLink attribute of a domain can be exploited in
+                        conjunction with write permissions on a GPO. In such a situation, an attacker could first inject
+                        a malicious scheduled task in the controlled GPO, and then link the GPO to the target domain
+                        through its gPLink attribute, making all child users and computers apply the malicious GPO and
+                        execute arbitrary commands.
                     </Typography>
                 </>
             );

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 import { EdgeInfoProps } from '../index';
 
@@ -23,8 +23,8 @@ const General: FC<EdgeInfoProps> = ({ sourceName }) => {
         <>
             <Typography variant='body2'>
                 The principal {sourceName} has the "Manage Certificates", also known as "CA Officer", permission on the
-                Enterprise CA. This permission allows the principal to force the CA to issue certificates that the CA
-                had previously denied issuance of.
+                Enterprise CA. This permission allows the principal to approve certificate requests that require manager
+                approval.
             </Typography>
         </>
     );

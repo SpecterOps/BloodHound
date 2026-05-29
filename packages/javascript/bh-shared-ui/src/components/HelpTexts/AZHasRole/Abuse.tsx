@@ -14,15 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 
 const Abuse: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                No abuse is necessary. This edge only indicates that the principal has been granted a particular AzureAD
-                admin role.
+                No abuse is necessary. This edge only indicates that the principal has been granted a particular Entra
+                ID role.
             </Typography>
         </>
     );

@@ -31,24 +31,30 @@ jobs:
 
     steps:
       - name: Checkout source code for this repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # ratchet:actions/checkout@v5
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # ratchet:actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Install Yarn
+      - name: Enable Corepack
         run: |
-          npm install --global yarn
+          corepack enable
+          corepack install
+          yarn --version
 
-      - name: Install Deps
+      - name: Install Dependencies
         run: |
           cd cmd/ui && yarn
 
-      - name: Format js-client-library with Prettier
+      - name: Audit Dependencies
         run: |
-          cd packages/javascript/js-client-library && yarn format && cd ../bh-shared-ui/ && yarn format && cd ../../../cmd/ui/ && yarn format
+          yarn audit
+
+      - name: Run eslint
+        run: |
+          yarn lint
 
       - name: Run Build
         run: |

@@ -22,11 +22,15 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
 
 const (
-	AssetGroupActorSystem              = "SYSTEM"
+	AssetGroupActorBloodHound          = "BloodHound"
 	AssetGroupTierZeroPosition         = 1
 	AssetGroupTierHygienePlaceholderId = 0
 )
@@ -49,10 +53,10 @@ const (
 type AssetGroupCertification int
 
 const (
-	AssetGroupCertificationRevoked AssetGroupCertification = -1
-	AssetGroupCertificationNone    AssetGroupCertification = 0
-	AssetGroupCertificationManual  AssetGroupCertification = 1
-	AssetGroupCertificationAuto    AssetGroupCertification = 2
+	AssetGroupCertificationPending AssetGroupCertification = 0
+	AssetGroupCertificationRevoked AssetGroupCertification = 1
+	AssetGroupCertificationManual  AssetGroupCertification = 2
+	AssetGroupCertificationAuto    AssetGroupCertification = 3
 )
 
 type AssetGroupSelectorNodeSource int
@@ -72,6 +76,30 @@ const (
 	AssetGroupExpansionMethodParents  AssetGroupExpansionMethod = 3
 )
 
+type SelectorAutoCertifyMethod int
+
+const (
+	SelectorAutoCertifyMethodDisabled   SelectorAutoCertifyMethod = 0
+	SelectorAutoCertifyMethodAllMembers SelectorAutoCertifyMethod = 1
+	SelectorAutoCertifyMethodSeedsOnly  SelectorAutoCertifyMethod = 2
+)
+
+const (
+	TierZeroGlyph           = "gem"
+	OwnedGlyph              = "skull"
+	AssetGroupTagKindPrefix = "Tag_"
+)
+
+type AssetGroupTagCounts struct {
+	Members           int64 `json:"members"`
+	Selectors         int   `json:"selectors"`
+	CustomSelectors   int   `json:"custom_selectors"`
+	DefaultSelectors  int   `json:"default_selectors"`
+	DisabledSelectors int   `json:"disabled_selectors"`
+}
+
+type AssetGroupTagCountsMap map[int]AssetGroupTagCounts
+
 type AssetGroupTag struct {
 	ID              int               `json:"id"`
 	Type            AssetGroupTagType `json:"type" validate:"required"`
@@ -87,6 +115,7 @@ type AssetGroupTag struct {
 	Position        null.Int32        `json:"position"`
 	RequireCertify  null.Bool         `json:"require_certify"`
 	AnalysisEnabled null.Bool         `json:"analysis_enabled"`
+	Glyph           null.String       `json:"glyph"`
 }
 
 type AssetGroupTags []AssetGroupTag
@@ -105,6 +134,7 @@ func (s AssetGroupTag) AuditData() AuditData {
 		"position":         s.Position,
 		"require_certify":  s.RequireCertify,
 		"analysis_enabled": s.AnalysisEnabled,
+		"glyph":            s.Glyph,
 	}
 }
 
@@ -113,11 +143,11 @@ func (s AssetGroupTag) ToKind() graph.Kind {
 }
 
 func (s AssetGroupTag) KindName() string {
-	return fmt.Sprintf("Tag_%s", strings.ReplaceAll(s.Name, " ", "_"))
+	return fmt.Sprintf("%s%s", AssetGroupTagKindPrefix, strings.ReplaceAll(s.Name, " ", "_"))
 }
 
 func (s AssetGroupTag) IsStringColumn(filter string) bool {
-	return filter == "name" || filter == "description"
+	return filter == "name" || filter == "description" || filter == "glyph"
 }
 
 func (s AssetGroupTag) ValidFilters() map[string][]FilterOperator {
@@ -133,6 +163,7 @@ func (s AssetGroupTag) ValidFilters() map[string][]FilterOperator {
 		"deleted_by":       {Equals, NotEquals},
 		"require_certify":  {Equals, NotEquals},
 		"analysis_enabled": {Equals, NotEquals},
+		"glyph":            {Equals, NotEquals, ApproximatelyEquals},
 	}
 }
 
@@ -162,6 +193,10 @@ func (s AssetGroupTag) GetExpansionMethod() AssetGroupExpansionMethod {
 	}
 }
 
+func (s AssetGroupTag) IsTierZero() bool {
+	return s.Position.ValueOrZero() == AssetGroupTierZeroPosition
+}
+
 type SelectorSeeds []SelectorSeed
 
 type SelectorSeed struct {
@@ -188,19 +223,19 @@ func (s SelectorSeed) ValidFilters() map[string][]FilterOperator {
 type AssetGroupTagSelectors []AssetGroupTagSelector
 
 type AssetGroupTagSelector struct {
-	ID              int         `json:"id"`
-	AssetGroupTagId int         `json:"asset_group_tag_id"`
-	CreatedAt       time.Time   `json:"created_at"`
-	CreatedBy       string      `json:"created_by"`
-	UpdatedAt       time.Time   `json:"updated_at"`
-	UpdatedBy       string      `json:"updated_by"`
-	DisabledAt      null.Time   `json:"disabled_at"`
-	DisabledBy      null.String `json:"disabled_by"`
-	Name            string      `json:"name" validate:"required"`
-	Description     string      `json:"description"`
-	AutoCertify     null.Bool   `json:"auto_certify"`
-	IsDefault       bool        `json:"is_default"`
-	AllowDisable    bool        `json:"allow_disable"`
+	ID              int                       `json:"id"`
+	AssetGroupTagId int                       `json:"asset_group_tag_id"`
+	CreatedAt       time.Time                 `json:"created_at"`
+	CreatedBy       string                    `json:"created_by"`
+	UpdatedAt       time.Time                 `json:"updated_at"`
+	UpdatedBy       string                    `json:"updated_by"`
+	DisabledAt      null.Time                 `json:"disabled_at"`
+	DisabledBy      null.String               `json:"disabled_by"`
+	Name            string                    `json:"name" validate:"required"`
+	Description     string                    `json:"description"`
+	AutoCertify     SelectorAutoCertifyMethod `json:"auto_certify"`
+	IsDefault       bool                      `json:"is_default"`
+	AllowDisable    bool                      `json:"allow_disable"`
 
 	Seeds []SelectorSeed `json:"seeds,omitempty" validate:"required" gorm:"-"`
 }
@@ -224,6 +259,15 @@ func (s AssetGroupTagSelector) IsStringColumn(filter string) bool {
 	return filter == "name" || filter == "description"
 }
 
+func (s AssetGroupTagSelector) IsSortable(criteria string) bool {
+	switch criteria {
+	case "id", "name", "created_at":
+		return true
+	default:
+		return false
+	}
+}
+
 func (s AssetGroupTagSelector) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
 		"auto_certify": {Equals, NotEquals},
@@ -242,15 +286,56 @@ func (s AssetGroupTagSelector) ValidFilters() map[string][]FilterOperator {
 type AssetGroupSelectorNodes []AssetGroupSelectorNode
 
 type AssetGroupSelectorNode struct {
-	SelectorId  int                          `json:"selector_id"`
-	NodeId      graph.ID                     `json:"node_id"`
-	Certified   AssetGroupCertification      `json:"certified"`
-	CertifiedBy null.String                  `json:"certified_by"`
-	Source      AssetGroupSelectorNodeSource `json:"source"`
-	CreatedAt   time.Time                    `json:"created_at"`
-	UpdatedAt   time.Time                    `json:"updated_at"`
+	SelectorId        int                          `json:"selector_id"`
+	NodeId            graph.ID                     `json:"node_id"`
+	Certified         AssetGroupCertification      `json:"certified"`
+	CertifiedBy       null.String                  `json:"certified_by"`
+	Source            AssetGroupSelectorNodeSource `json:"source"`
+	CreatedAt         time.Time                    `json:"created_at"`
+	UpdatedAt         time.Time                    `json:"updated_at"`
+	NodePrimaryKind   string                       `json:"node_primary_kind"`
+	NodeEnvironmentId string                       `json:"node_environment_id"`
+	NodeObjectId      string                       `json:"node_object_id"`
+	NodeName          string                       `json:"node_name"`
 }
 
 func (s AssetGroupSelectorNode) TableName() string {
 	return "asset_group_tag_selector_nodes"
+}
+
+func (s AssetGroupSelectorNode) IsStringColumn(filter string) bool {
+	switch filter {
+	case "primary_kind",
+		"name",
+		"object_id":
+		return true
+	default:
+		return false
+	}
+}
+
+func (s AssetGroupSelectorNode) ValidFilters() map[string][]FilterOperator {
+	return map[string][]FilterOperator{
+		"name":         {Equals, NotEquals, ApproximatelyEquals},
+		"object_id":    {Equals, NotEquals, ApproximatelyEquals},
+		"primary_kind": {Equals, NotEquals, ApproximatelyEquals},
+	}
+}
+
+/*
+These are the relevant properties for asset group tags. This method serves to keep consistency across the feature
+*/
+func GetAssetGroupMemberProperties(primaryDisplayKinds graphschema.PrimaryDisplayKinds, node *graph.Node) (primaryKind, displayName, objectId, envId string) {
+	primaryKind = graphschema.GetNodeKindDisplayLabel(primaryDisplayKinds, node)
+	displayName, _ = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
+	objectId, _ = node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
+	envId, _ = node.Properties.GetWithFallback(ad.DomainSID.String(), "", azure.TenantID.String(), graphschema.EnvironmentIDKey).String()
+
+	return primaryKind, displayName, objectId, envId
+}
+
+type AssetGroupSelectorNodeExpanded struct {
+	AssetGroupSelectorNode
+	AssetGroupTagId int `json:"asset_group_tag_id"`
+	Position        int `json:"position"`
 }

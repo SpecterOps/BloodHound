@@ -31,5 +31,3 @@ export const DownArrow: React.FC<BaseSVGProps> = (props) => {
         </BaseSVG>
     );
 };
-
-export default DownArrow;

@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link, Typography } from '@mui/material';
+import { Link } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 
 const Abuse: FC = () => {
@@ -22,21 +23,21 @@ const Abuse: FC = () => {
         <>
             <Typography variant='body2'>
                 Scott Sutherland (
-                <Link target='_blank' rel='noopener' href='https://twitter.com/_nullbind'>
+                <Link target='_blank' rel='noopener noreferrer' href='https://twitter.com/_nullbind'>
                     @nullbind
                 </Link>
                 ) from NetSPI has authored PowerUpSQL, a PowerShell Toolkit for Attacking SQL Server. Major contributors
                 include Antti Rantasaari, Eric Gruber (
-                <Link target='_blank' rel='noopener' href='https://twitter.com/egru'>
+                <Link target='_blank' rel='noopener noreferrer' href='https://twitter.com/egru'>
                     @egru
                 </Link>
                 ), and Thomas Elling (
-                <Link target='_blank' rel='noopener' href='https://github.com/thomaselling'>
+                <Link target='_blank' rel='noopener noreferrer' href='https://github.com/thomaselling'>
                     @thomaselling
                 </Link>
                 ). Before executing any of the below commands, download PowerUpSQL and load it into your PowerShell
                 instance. Get PowerUpSQL here:{' '}
-                <Link target='_blank' rel='noopener' href='https://github.com/NetSPI/PowerUpSQL'>
+                <Link target='_blank' rel='noopener noreferrer' href='https://github.com/NetSPI/PowerUpSQL'>
                     https://github.com/NetSPI/PowerUpSQL
                 </Link>
                 .

@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link, Typography } from '@mui/material';
+import { Link } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 import CodeController from '../CodeController/CodeController';
 
@@ -42,7 +43,7 @@ const Abuse: FC = () => {
                 key and tools like krbrelayx.py. (See reference:{' '}
                 <Link
                     target='_blank'
-                    rel='noopener'
+                    rel='noopener noreferrer'
                     href='https://snovvcrash.rocks/2021/05/21/calculating-kerberos-keys.html'>
                     A Note on Calculating Kerberos Keys for AD Accounts
                 </Link>{' '}

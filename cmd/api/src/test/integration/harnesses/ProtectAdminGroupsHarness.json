@@ -1,0 +1,243 @@
+{
+    "nodes": [
+        {
+            "id": "n0",
+            "position": {
+                "x": 0,
+                "y": 0
+            },
+            "caption": "AdminSDHolder1",
+            "style": {},
+            "labels": ["Container"],
+            "properties": {
+                "distinguishedname": "CN=ADMINSDHOLDER,CN=SYSTEM,DC=CONTOSO,DC=COM",
+                "domainsid": "S1"
+            }
+        },
+        {
+            "id": "n1",
+            "position": {
+                "x": 525.5,
+                "y": 0
+            },
+            "caption": "User1",
+            "style": {},
+            "labels": ["User"],
+            "properties": {
+                "domainsid": "S1",
+                "adminsdholderprotected": "BOOL:TRUE"
+            }
+        },
+        {
+            "id": "n2",
+            "position": {
+                "x": 525.5,
+                "y": 248.16666412353516
+            },
+            "caption": "Group1",
+            "style": {},
+            "labels": ["Group"],
+            "properties": {
+                "domainsid": "S1",
+                "adminsdholderprotected": "BOOL:TRUE"
+            }
+        },
+        {
+            "id": "n3",
+            "position": {
+                "x": 525.5,
+                "y": 479.16666412353516
+            },
+            "caption": "Computer1",
+            "style": {},
+            "labels": ["Computer"],
+            "properties": {
+                "domainsid": "S1",
+                "adminsdholderprotected": "BOOL:TRUE"
+            }
+        },
+        {
+            "id": "n4",
+            "position": {
+                "x": -496.5,
+                "y": 479.16666412353516
+            },
+            "caption": "GPO1",
+            "style": {},
+            "labels": ["GPO"],
+            "properties": {
+                "domainsid": "S1"
+            }
+        },
+        {
+            "id": "n5",
+            "position": {
+                "x": -496.5,
+                "y": 108
+            },
+            "caption": "User2",
+            "style": {},
+            "labels": ["User"],
+            "properties": {
+                "domainsid": "S1",
+                "adminsdholderprotected": "BOOL:FALSE"
+            }
+        },
+        {
+            "id": "n6",
+            "position": {
+                "x": -522.5,
+                "y": 674.1666641235352
+            },
+            "caption": "User3",
+            "style": {},
+            "labels": ["User"],
+            "properties": {
+                "domainsid": "S3",
+                "adminsdholderprotected": "BOOL:TRUE"
+            }
+        },
+        {
+            "id": "n7",
+            "position": {
+                "x": 26.5,
+                "y": 674.1666641235352
+            },
+            "caption": "AdminSDHolder3",
+            "style": {},
+            "labels": ["Container"],
+            "properties": {
+                "domainsid": "S3",
+                "distinguishedname": "CN=ADMINSDHOLDER,CN=SYSTEM,DC=PLATAPUS,DC=COM"
+            }
+        },
+        {
+            "id": "n8",
+            "position": {
+                "x": -496.5,
+                "y": 293.5833320617676
+            },
+            "caption": "User4",
+            "style": {},
+            "labels": ["User"],
+            "properties": {
+                "domainsid": "S1"
+            }
+        },
+        {
+            "id": "n9",
+            "position": {
+                "x": -522.5,
+                "y": 974.1666641235352
+            },
+            "caption": "Domain1",
+            "style": {},
+            "labels": ["Domain"],
+            "properties": {
+                "domainsid": "S1",
+                "collected": "BOOL:TRUE"
+            }
+        },
+        {
+            "id": "n10",
+            "position": {
+                "x": -522.5,
+                "y": 1159.7499961853027
+            },
+            "caption": "Domain3",
+            "style": {},
+            "labels": ["Domain"],
+            "properties": {
+                "domainsid": "S3",
+                "collected": "BOOL:TRUE"
+            }
+        }
+    ],
+    "relationships": [
+        {
+            "id": "n0",
+            "type": "ProtectAdminGroups",
+            "style": {},
+            "properties": {},
+            "fromId": "n0",
+            "toId": "n1"
+        },
+        {
+            "id": "n1",
+            "type": "ProtectAdminGroups",
+            "style": {},
+            "properties": {},
+            "fromId": "n0",
+            "toId": "n2"
+        },
+        {
+            "id": "n2",
+            "type": "ProtectAdminGroups",
+            "style": {},
+            "properties": {},
+            "fromId": "n0",
+            "toId": "n3"
+        },
+        {
+            "id": "n3",
+            "type": "ProtectAdminGroups",
+            "style": {},
+            "properties": {},
+            "fromId": "n7",
+            "toId": "n6"
+        }
+    ],
+    "style": {
+        "font-family": "sans-serif",
+        "background-color": "#ffffff",
+        "background-image": "",
+        "background-size": "100%",
+        "node-color": "#ffffff",
+        "border-width": 4,
+        "border-color": "#000000",
+        "radius": 50,
+        "node-padding": 5,
+        "node-margin": 2,
+        "outside-position": "auto",
+        "node-icon-image": "",
+        "node-background-image": "",
+        "icon-position": "inside",
+        "icon-size": 64,
+        "caption-position": "inside",
+        "caption-max-width": 200,
+        "caption-color": "#000000",
+        "caption-font-size": 50,
+        "caption-font-weight": "normal",
+        "label-position": "inside",
+        "label-display": "pill",
+        "label-color": "#000000",
+        "label-background-color": "#ffffff",
+        "label-border-color": "#000000",
+        "label-border-width": 4,
+        "label-font-size": 40,
+        "label-padding": 5,
+        "label-margin": 4,
+        "directionality": "directed",
+        "detail-position": "inline",
+        "detail-orientation": "parallel",
+        "arrow-width": 5,
+        "arrow-color": "#000000",
+        "margin-start": 5,
+        "margin-end": 5,
+        "margin-peer": 20,
+        "attachment-start": "normal",
+        "attachment-end": "normal",
+        "relationship-icon-image": "",
+        "type-color": "#000000",
+        "type-background-color": "#ffffff",
+        "type-border-color": "#000000",
+        "type-border-width": 0,
+        "type-font-size": 16,
+        "type-padding": 5,
+        "property-position": "outside",
+        "property-alignment": "colon",
+        "property-color": "#000000",
+        "property-font-size": 16,
+        "property-font-weight": "normal"
+    }
+}

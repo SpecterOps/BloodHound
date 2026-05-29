@@ -19,10 +19,21 @@ import { act, render } from '../../../test-utils';
 import { ObjectInfoPanelContext } from '../providers';
 import EdgeInfoHeader, { HeaderProps } from './EdgeInfoHeader';
 
+const mockClearSelectedItem = vi.fn();
+
+vi.mock('../../../hooks', async () => {
+    const actual = await vi.importActual('../../../hooks');
+
+    return {
+        ...actual,
+        useExploreSelectedItem: () => ({
+            clearSelectedItem: mockClearSelectedItem,
+            selectedItem: '123',
+        }),
+    };
+});
 const testProps: HeaderProps = {
-    expanded: true,
     name: 'testName',
-    onToggleExpanded: vi.fn(),
 };
 
 const setIsObjectInfoPanelOpen = (newValue: boolean) => {
@@ -53,24 +64,51 @@ const setup = async () => {
 
 describe('EdgeInfoHeader', async () => {
     it('should render', async () => {
-        const { screen } = await setup();
+        const { screen, user } = await setup();
 
-        const collapsePanelButton = screen.getByRole('button', { name: /minus/i });
+        const clearItemButton = screen.getByRole('button', { name: 'Clear selected item' });
+        await user.hover(clearItemButton);
+        expect(await screen.findByRole('tooltip', { name: /Clear selected item/ })).toBeInTheDocument();
+
+        const collapseAllButton = screen.getByRole('button', { name: 'Collapse All' });
+        await user.hover(collapseAllButton);
+        expect(await screen.findByRole('tooltip', { name: /collapse all/i })).toBeInTheDocument();
+
         const edgeTitle = screen.getByRole('heading');
-        const collapseAllButton = screen.getByRole('button', { name: /collapse all/i });
-
-        expect(collapsePanelButton).toBeInTheDocument();
         expect(edgeTitle).toBeInTheDocument();
         expect(edgeTitle).toHaveTextContent(testProps.name);
-        expect(collapseAllButton).toBeInTheDocument();
     });
     it('should on clicking collapse all remove expandedPanelSections param from url and set isObjectInfoPanelOpen in context to false', async () => {
         const { screen, user } = await setup();
-        const collapseAllButton = screen.getByRole('button', { name: /collapse all/i });
+        const collapseAllButton = screen.getByRole('button', { name: 'Collapse All' });
 
         await user.click(collapseAllButton);
 
         expect(window.location.search).not.toContain('expandedPanelSections');
         expect(mockContextValue.isObjectInfoPanelOpen).toBe(false);
+    });
+    it('should on clicking remove call clearSelectedItem', async () => {
+        const { screen, user } = await setup();
+        const clearItemButton = screen.getByRole('button', { name: 'Clear selected item' });
+
+        await user.click(clearItemButton);
+
+        expect(mockClearSelectedItem).toBeCalled();
+    });
+    it('should display hidden label for hidden edge', async () => {
+        const url = `?expandedPanelSections=['test','test1']`;
+
+        const hiddenEdgeTestProps: HeaderProps = {
+            name: '** Hidden Edge **',
+        };
+
+        const screen = render(
+            <ObjectInfoPanelContext.Provider value={mockContextValue}>
+                <EdgeInfoHeader {...hiddenEdgeTestProps} />
+            </ObjectInfoPanelContext.Provider>,
+            { route: url }
+        );
+
+        expect(await screen.findByText('** Hidden Edge **')).toBeInTheDocument();
     });
 });

@@ -20,19 +20,24 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database/migration"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dataquality"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/dawgs/drivers"
+	"github.com/specterops/dawgs/drivers/pg"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -44,11 +49,13 @@ var (
 var (
 	ErrDuplicateAGName             = errors.New("duplicate asset group name")
 	ErrDuplicateAGTag              = errors.New("duplicate asset group tag")
+	ErrDuplicateAGTagSelectorName  = errors.New("duplicate asset group tag selector name")
 	ErrDuplicateSSOProviderName    = errors.New("duplicate sso provider name")
 	ErrDuplicateUserPrincipal      = errors.New("duplicate user principal name")
 	ErrDuplicateEmail              = errors.New("duplicate user email address")
 	ErrDuplicateCustomNodeKindName = errors.New("duplicate custom node kind name")
 	ErrDuplicateKindName           = errors.New("duplicate kind name")
+	ErrDuplicateGlyph              = errors.New("duplicate glyph")
 	ErrPositionOutOfRange          = errors.New("position out of range")
 )
 
@@ -75,21 +82,11 @@ type Database interface {
 	GetIngestTasksForJob(ctx context.Context, jobID int64) (model.IngestTasks, error)
 
 	// Asset Groups
-	agi.AgiData
-	CreateAssetGroup(ctx context.Context, name, tag string, systemGroup bool) (model.AssetGroup, error)
-	UpdateAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
-	DeleteAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
-	SweepAssetGroupCollections(ctx context.Context)
-	GetAssetGroupCollections(ctx context.Context, assetGroupID int32, order string, filter model.SQLFilter) (model.AssetGroupCollections, error)
-	GetLatestAssetGroupCollection(ctx context.Context, assetGroupID int32) (model.AssetGroupCollection, error)
-	GetTimeRangedAssetGroupCollections(ctx context.Context, assetGroupID int32, from int64, to int64, order string) (model.AssetGroupCollections, error)
-	GetAssetGroupSelector(ctx context.Context, id int32) (model.AssetGroupSelector, error)
-	DeleteAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error
-	UpdateAssetGroupSelectors(ctx context.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error)
-	DeleteAssetGroupSelectorsForAssetGroups(ctx context.Context, assetGroupIds []int) error
+	AgiData
 
 	Wipe(ctx context.Context) error
 	Migrate(ctx context.Context) error
+	PopulateExtensionData(ctx context.Context) error
 	CreateInstallation(ctx context.Context) (model.Installation, error)
 	GetInstallation(ctx context.Context) (model.Installation, error)
 	HasInstallation(ctx context.Context) (bool, error)
@@ -119,9 +116,12 @@ type Database interface {
 	// Auth
 	CreateAuthToken(ctx context.Context, authToken model.AuthToken) (model.AuthToken, error)
 	UpdateAuthToken(ctx context.Context, authToken model.AuthToken) error
+	UpdateAuthTokenExpiration(ctx context.Context) error
 	GetAllAuthTokens(ctx context.Context, order string, filter model.SQLFilter) (model.AuthTokens, error)
 	GetAuthToken(ctx context.Context, id uuid.UUID) (model.AuthToken, error)
 	GetUserToken(ctx context.Context, userId, tokenId uuid.UUID) (model.AuthToken, error)
+	DeleteExpiredAuthTokens(ctx context.Context) error
+	DeleteAllAuthTokens(ctx context.Context) error
 	DeleteAuthToken(ctx context.Context, authToken model.AuthToken) error
 	CreateAuthSecret(ctx context.Context, authSecret model.AuthSecret) (model.AuthSecret, error)
 	GetAuthSecret(ctx context.Context, id int32) (model.AuthSecret, error)
@@ -143,7 +143,7 @@ type Database interface {
 	SweepSessions(ctx context.Context)
 
 	// Data Quality
-	dataquality.DataQualityData
+	DataQualityData
 	GetADDataQualityStats(ctx context.Context, domainSid string, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.ADDataQualityStats, int, error)
 	GetAggregateADDataQualityStats(ctx context.Context, domainSIDs []string, start time.Time, end time.Time) (model.ADDataQualityStats, error)
 	GetADDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.ADDataQualityAggregations, int, error)
@@ -174,19 +174,44 @@ type Database interface {
 
 	// Source Kinds
 	SourceKindsData
+
+	// Environment Targeted Access Control
+	EnvironmentTargetedAccessControlData
+
+	// OpenGraph Schema
+	OpenGraphSchema
+
+	// Kind
+	Kind
 }
 
 type BloodhoundDB struct {
 	db         *gorm.DB
 	idResolver auth.IdentityResolver // TODO: this really needs to be elsewhere. something something separation of concerns
+	config     config.Configuration
+	pool       *pgxpool.Pool
 }
 
 func (s *BloodhoundDB) Close(ctx context.Context) {
 	if sqlDBRef, err := s.db.WithContext(ctx).DB(); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Failed to fetch SQL DB reference from GORM: %v", err))
+		slog.ErrorContext(ctx, "Failed to fetch SQL DB reference from GORM", attr.Error(err))
 	} else if err := sqlDBRef.Close(); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Failed closing database: %v", err))
+		slog.ErrorContext(ctx, "Failed closing database", attr.Error(err))
 	}
+
+	if s.pool != nil {
+		s.pool.Close() // pgxpool must be closed separately
+	}
+}
+
+// SQLDB returns the underlying *sql.DB handle managed by GORM.
+func (s *BloodhoundDB) SQLDB() (*sql.DB, error) {
+	return s.db.DB()
+}
+
+// Pool returns the underlying pgx connection pool.
+func (s *BloodhoundDB) Pool() *pgxpool.Pool {
+	return s.pool
 }
 
 func (s *BloodhoundDB) preload(associations []string) *gorm.DB {
@@ -207,23 +232,44 @@ func (s *BloodhoundDB) Scope(scopeFuncs ...ScopeFunc) *gorm.DB {
 	return s.db.Scopes(scopes...)
 }
 
-func NewBloodhoundDB(db *gorm.DB, idResolver auth.IdentityResolver) *BloodhoundDB {
-	return &BloodhoundDB{db: db, idResolver: idResolver}
+func NewBloodhoundDB(db *gorm.DB, pool *pgxpool.Pool, idResolver auth.IdentityResolver, cfg config.Configuration) *BloodhoundDB {
+	return &BloodhoundDB{db: db, pool: pool, idResolver: idResolver, config: cfg}
 }
 
-func OpenDatabase(connection string) (*gorm.DB, error) {
+// Transaction executes the given function within a database transaction.
+// The function receives a new BloodhoundDB instance backed by the transaction,
+// allowing all existing methods to participate in the transaction.
+// If the function returns an error, the transaction is rolled back.
+// If the function returns nil, the transaction is committed.
+// Optional sql.TxOptions can be provided to configure isolation level and read-only mode.
+func (s *BloodhoundDB) Transaction(ctx context.Context, fn func(tx *BloodhoundDB) error, opts ...*sql.TxOptions) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return fn(NewBloodhoundDB(tx, s.pool, s.idResolver, s.config))
+	}, opts...)
+}
+
+func OpenDatabase(cfg drivers.DatabaseConfiguration) (*gorm.DB, *pgxpool.Pool, error) {
 	gormConfig := &gorm.Config{
 		Logger: &GormLogAdapter{
-			SlowQueryErrorThreshold: time.Second * 10,
-			SlowQueryWarnThreshold:  time.Second * 1,
+			SlowQueryErrorThreshold: time.Second * 30,
+			SlowQueryWarnThreshold:  time.Second * 10,
 		},
 	}
-
-	if db, err := gorm.Open(postgres.Open(connection), gormConfig); err != nil {
-		return nil, err
-	} else {
-		return db, nil
+	pool, err := pg.NewPool(cfg)
+	if err != nil {
+		return nil, nil, err
 	}
+
+	dbPool := stdlib.OpenDBFromPool(pool)
+
+	db, err := gorm.Open(postgres.New(postgres.Config{Conn: dbPool}), gormConfig)
+	if err != nil {
+		_ = dbPool.Close()
+		pool.Close()
+		return nil, nil, err
+	}
+
+	return db, pool, nil
 }
 
 func (s *BloodhoundDB) RawDelete(value any) error {
@@ -234,12 +280,12 @@ func (s *BloodhoundDB) Wipe(ctx context.Context) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var tables []string
 
-		if result := tx.Raw("select table_name from information_schema.tables where table_schema = current_schema() and not table_name ilike '%pg_stat%'").Scan(&tables); result.Error != nil {
+		if result := tx.Raw("SELECT table_name FROM information_schema.tables WHERE table_schema = CURRENT_SCHEMA() AND NOT table_name ILIKE '%pg_stat%'").Scan(&tables); result.Error != nil {
 			return result.Error
 		}
 
 		for _, table := range tables {
-			stmt := fmt.Sprintf(`drop table if exists "%s" cascade`, table)
+			stmt := fmt.Sprintf(`DROP TABLE IF EXISTS "%s" CASCADE`, table)
 
 			if err := tx.Exec(stmt).Error; err != nil {
 				return err
@@ -252,8 +298,27 @@ func (s *BloodhoundDB) Wipe(ctx context.Context) error {
 
 func (s *BloodhoundDB) Migrate(ctx context.Context) error {
 	// Run the migrator
-	if err := migration.NewMigrator(s.db.WithContext(ctx)).ExecuteStepwiseMigrations(); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error during SQL database migration phase: %v", err))
+	migrator, err := migration.NewMigrator(s.db.WithContext(ctx))
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to create migrator: %v", attr.Error(err))
+		return err
+	}
+	if err := migrator.ExecuteGooseMigrations(ctx); err != nil {
+		slog.ErrorContext(ctx, "Failed to execute migrations: %v", attr.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+func (s *BloodhoundDB) PopulateExtensionData(ctx context.Context) error {
+	migrator, err := migration.NewMigrator(s.db.WithContext(ctx))
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to create migrator: %v", attr.Error(err))
+		return err
+	}
+	if err := migrator.ExecuteExtensionDataPopulation(); err != nil {
+		slog.ErrorContext(ctx, "Failed to execute extension data population", attr.Error(err))
 		return err
 	}
 

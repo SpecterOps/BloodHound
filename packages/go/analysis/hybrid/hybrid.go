@@ -22,10 +22,11 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
-	"github.com/specterops/bloodhound/packages/go/analysis/azure"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	adSchema "github.com/specterops/bloodhound/packages/go/graphschema/ad"
-	azureSchema "github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
@@ -33,20 +34,46 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+func fetchTenants(ctx context.Context, db graph.Database) (graph.NodeSet, error) {
+	var nodeSet graph.NodeSet
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		if nodeSet, err = ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
+			return query.Kind(query.Node(), azure.Tenant)
+		})); err != nil {
+			return err
+		} else {
+			return nil
+		}
+	}); err != nil {
+		return nil, err
+	} else {
+		return nodeSet, nil
+	}
+}
+
+func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
+	defer measure.ContextLogAndMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Post-processing AD-Azure Hybrid Edges",
+		attr.Namespace("analysis"),
+		attr.Function("PostHybrid"),
+		attr.Scope("process"),
+	)()
+
 	// Fetch all Azure tenants first
-	tenants, err := azure.FetchTenants(ctx, db)
+	tenants, err := fetchTenants(ctx, db)
 	if err != nil {
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("fetching Entra tenants: %w", err)
+		emptyStats := post.NewAtomicPostProcessingStats()
+		return &emptyStats, fmt.Errorf("fetching Entra tenants: %w", err)
 	}
 
 	// Spin up a new parallel operation to speed up processing
-	operation := analysis.NewPostRelationshipOperation(ctx, db, "Hybrid Attack Paths Post Processing")
+	operation := post.NewPostRelationshipOperation(ctx, db, "Hybrid Attack Paths Post Processing")
 
 	err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		var (
-			// entraObjIDMap is used to index AD user objectids by Entra node ids
-			entraObjIDMap = make(map[graph.ID]string, 1024)
 			// adObjIDMap is used as a reverse mapping of a list of Entra node ids indexed by the AD user objectids
 			adObjIDMap = make(map[string][]graph.ID, 1024)
 			// entraToADMap is the final mapping between an Entra user node id to an AD user node id
@@ -70,13 +97,8 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 					} else if err != nil {
 						return err
 					} else {
-						// We know this user has an onPrem counterpart, so add the node id and onPremID to our three maps
+						// We know this user has an onPrem counterpart, so add the node id and onPremID to our mapping inputs.
 						adObjIDMap[onPremID] = append(adObjIDMap[onPremID], tenantUser.ID)
-						entraObjIDMap[tenantUser.ID] = onPremID
-
-						// Initialize the current user id as an index in the entraToADMap, but use 0 as the nodeid for AD since we
-						// currently don't know it and 0 is never going to be a valid user node id
-						entraToADMap[tenantUser.ID] = 0
 					}
 				}
 			}
@@ -93,7 +115,7 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 				if objectID, err := adUser.Properties.Get(common.ObjectID.String()).String(); err != nil {
 					return err
 				} else if azUsers, ok := adObjIDMap[objectID]; !ok {
-					// Skip adding this relationship if we've already seen it before as that implies it will be created
+					// Skip AD users that do not correspond to any synced Entra users.
 					continue
 				} else {
 					// Because there could theoretically be more than one Entra user mapped to this objectid, we want to loop through all when adding our current id to the final map
@@ -104,34 +126,22 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 			}
 		}
 
-		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-			for azUser, potentialADUser := range entraToADMap {
-				var adUser = potentialADUser
-
-				// The 0 value should never be a valid id for an AD user node, just by the nature of the graph, so we're cheating
-				// by checking if we set it to 0 as a flag that this node was never actually found, meaning it needs to be created first
-				if potentialADUser == 0 {
-					if adUserNode, err := createMissingADUser(ctx, db, entraObjIDMap[azUser]); err != nil {
-						return err
-					} else {
-						adUser = adUserNode.ID
-					}
-				}
-
-				SyncedToEntraUserRelationship := analysis.CreatePostRelationshipJob{
+		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+			for azUser, adUser := range entraToADMap {
+				SyncedToEntraUserRelationship := post.EnsureRelationshipJob{
 					FromID: adUser,
 					ToID:   azUser,
-					Kind:   adSchema.SyncedToEntraUser,
+					Kind:   azure.SyncedToEntraUser,
 				}
 
 				if !channels.Submit(ctx, outC, SyncedToEntraUserRelationship) {
 					return nil
 				}
 
-				SyncedToADUserRelationship := analysis.CreatePostRelationshipJob{
+				SyncedToADUserRelationship := post.EnsureRelationshipJob{
 					FromID: azUser,
 					ToID:   adUser,
-					Kind:   azureSchema.SyncedToADUser,
+					Kind:   adSchema.SyncedToADUser,
 				}
 
 				if !channels.Submit(ctx, outC, SyncedToADUserRelationship) {
@@ -159,11 +169,11 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 // hasOnPremUser takes a node and returns the OnPremID as a string, whether the node has an onPrem user defined as a bool
 // and any errors in negotiation of the required properties
 func hasOnPremUser(node *graph.Node) (string, bool, error) {
-	if onPremSyncEnabled, err := node.Properties.Get(azureSchema.OnPremSyncEnabled.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
+	if onPremSyncEnabled, err := node.Properties.Get(azure.OnPremSyncEnabled.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
 		return "", false, nil
 	} else if err != nil {
 		return "", false, err
-	} else if onPremID, err := node.Properties.Get(azureSchema.OnPremID.String()).String(); errors.Is(err, graph.ErrPropertyNotFound) {
+	} else if onPremID, err := node.Properties.Get(azure.OnPremID.String()).String(); errors.Is(err, graph.ErrPropertyNotFound) {
 		return onPremID, false, nil
 	} else if err != nil {
 		return onPremID, false, err
@@ -172,42 +182,13 @@ func hasOnPremUser(node *graph.Node) (string, bool, error) {
 	}
 }
 
-// createMissingADUser will create a new standalone AD User node with the required objectID for displaying in hybrid graphs
-func createMissingADUser(ctx context.Context, db graph.Database, objectID string) (*graph.Node, error) {
-	var (
-		err     error
-		newNode *graph.Node
-	)
-
-	slog.DebugContext(ctx, fmt.Sprintf("Matching AD User node with objectID %s not found, creating a new one", objectID))
-	properties := graph.AsProperties(map[string]any{
-		common.ObjectID.String(): objectID,
-	})
-
-	err = db.WriteTransaction(ctx, func(tx graph.Transaction) error {
-		if newNode, err = analysis.FetchNodeByObjectID(tx, objectID); errors.Is(err, graph.ErrNoResultsFound) {
-			if newNode, err = tx.CreateNode(properties, adSchema.Entity, adSchema.User); err != nil {
-				return fmt.Errorf("create missing ad user: %w", err)
-			} else {
-				return nil
-			}
-		} else if err != nil {
-			return fmt.Errorf("create missing ad user precheck: %w", err)
-		} else {
-			return nil
-		}
-	})
-
-	return newNode, err
-}
-
 // fetchEntraUsers fetches all the Entra users for a given root node (generally the tenant node)
 func fetchEntraUsers(tx graph.Transaction, root *graph.Node) (graph.NodeSet, error) {
 	return ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
 			query.InIDs(query.StartID(), root.ID),
-			query.Kind(query.Relationship(), azureSchema.Contains),
-			query.KindIn(query.End(), azureSchema.User),
+			query.Kind(query.Relationship(), azure.Contains),
+			query.KindIn(query.End(), azure.User),
 		)
 	}))
 }

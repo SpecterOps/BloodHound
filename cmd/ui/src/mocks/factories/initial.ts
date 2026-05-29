@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faker } from '@faker-js/faker';
+import { faker } from '@faker-js/faker/locale/en';
 import { ActiveDirectoryNodeKind } from 'bh-shared-ui';
 
 export const createDatapipeStatus = (updated_at?: Date) => {

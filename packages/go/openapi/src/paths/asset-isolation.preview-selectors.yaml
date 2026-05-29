@@ -36,6 +36,13 @@ post:
               type: array
               items:
                 $ref: './../schemas/model.asset-group-tags-selector-seed.yaml'
+            expansion:
+              description: Determine which expansion approach to use for member seeds. 0 - No expansion, 1 - Expand all, 2 - Expand containing members, 3 - Expand containing members and members containing the seed. Default fallback will be 1 - Expand all
+              type: integer
+              enum: [0, 1, 2, 3]
+          required:
+            - seeds
+
   responses:
     200:
       description: OK
@@ -62,7 +69,9 @@ post:
                           type: object
                           additionalProperties: true
                       source:
+                        description: Describes which phase of tagging resulted in this member being tagged, 1 - direct object, 2 - expanded downward, 3 - expanded upward
                         type: integer
+                        enum: [1, 2, 3]
     400:
       $ref: './../responses/bad-request.yaml'
     401:

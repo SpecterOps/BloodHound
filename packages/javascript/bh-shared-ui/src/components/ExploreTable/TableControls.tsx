@@ -14,13 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Input, InputProps } from '@bloodhoundenterprise/doodleui';
 import { faClose, faDownload, faExpand, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ColumnDef } from '@tanstack/react-table';
+import { Button, Input, InputProps, Menu, MenuContent, MenuItem, MenuTrigger } from 'doodle-ui';
 import { useMemo } from 'react';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
+import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
+import { ExportColumns } from './explore-table-utils';
 
 const ICON_CLASSES = 'cursor-pointer bg-slate-200 p-2 h-4 w-4 rounded-full dark:text-black';
 
@@ -32,10 +34,12 @@ type TableControlsProps<TData, TValue> = {
     resultsCount?: number;
     tableName?: string;
     className?: string;
-    onDownloadClick?: () => void;
+    onDownloadClick?: (columns: ExportColumns) => void;
     onExpandClick?: () => void;
     onCloseClick?: () => void;
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
+    onChangePinnedColumns?: (columns: string[]) => void;
+    onResetColumnSize?: () => void;
 };
 
 const TableControls = <TData, TValue>({
@@ -50,16 +54,25 @@ const TableControls = <TData, TValue>({
     onCloseClick,
     onExpandClick,
     onManageColumnsChange,
+    onChangePinnedColumns,
+    onResetColumnSize,
 }: TableControlsProps<TData, TValue>) => {
     const parsedColumns: ManageColumnsComboBoxOption[] = useMemo(
         () =>
-            columns?.slice(1).map((columnDef: ColumnDef<TData, TValue>) => ({
+            columns?.map((columnDef: ColumnDef<TData, TValue>) => ({
                 id: columnDef?.id || '',
                 value: formatPotentiallyUnknownLabel(columnDef?.id || ''),
                 isPinned: pinnedColumns[columnDef?.id || ''] || false,
             })),
         [columns, pinnedColumns]
     );
+
+    const DISABLED_CLASSNAME = 'pointer-events-none *:dark:text-neutral-500 *:text-neutral-400';
+    const noResults = !resultsCount;
+
+    const handleConfirmExport = (columns: ExportColumns) => {
+        onDownloadClick?.(columns);
+    };
 
     return (
         <div className={cn('flex p-3 justify-between relative', className)}>
@@ -71,33 +84,68 @@ const TableControls = <TData, TValue>({
                 {SearchInputProps && (
                     <div className='flex justify-center items-center relative'>
                         <Input
-                            className='border-0 w-48 rounded-none border-b-2 border-black bg-inherit'
+                            data-testid='explore-table-search'
+                            disabled={noResults}
+                            className={cn('border-0 w-48 rounded-none border-b-2 border-black bg-inherit', {
+                                [DISABLED_CLASSNAME]: noResults,
+                                'border-neutral-400': noResults,
+                            })}
                             {...SearchInputProps}
                         />
-                        <FontAwesomeIcon icon={faSearch} className='absolute right-2' />
+                        <FontAwesomeIcon
+                            className={cn('absolute right-2', { [DISABLED_CLASSNAME]: noResults })}
+                            icon={faSearch}
+                        />
                     </div>
                 )}
                 {onDownloadClick && (
-                    <div>
-                        <FontAwesomeIcon onClick={onDownloadClick} className={ICON_CLASSES} icon={faDownload} />
-                    </div>
+                    <Menu>
+                        <MenuTrigger asChild>
+                            <button
+                                aria-disabled={noResults}
+                                data-testid='download-button'
+                                aria-label='Download CSV'
+                                className={cn({ [DISABLED_CLASSNAME]: noResults })}
+                                disabled={noResults}>
+                                <FontAwesomeIcon className={ICON_CLASSES} icon={faDownload} />
+                            </button>
+                        </MenuTrigger>
+                        <MenuContent align='start'>
+                            <MenuItem onSelect={() => handleConfirmExport('all')}>All Columns</MenuItem>
+                            <MenuItem onSelect={() => handleConfirmExport('selected')}>Selected Columns</MenuItem>
+                        </MenuContent>
+                    </Menu>
                 )}
                 {onExpandClick && (
-                    <div>
-                        <FontAwesomeIcon onClick={onExpandClick} className={ICON_CLASSES} icon={faExpand} />
+                    <div
+                        role='button'
+                        tabIndex={0}
+                        onClick={onExpandClick}
+                        onKeyDown={adaptClickHandlerToKeyDown(onExpandClick)}
+                        data-testid='expand-button'
+                        aria-label='Expand table view'>
+                        <FontAwesomeIcon className={ICON_CLASSES} icon={faExpand} />
                     </div>
                 )}
                 {onManageColumnsChange && (
                     <ManageColumnsComboBox
+                        disabled={noResults}
                         allColumns={parsedColumns}
                         selectedColumns={selectedColumns}
                         onChange={onManageColumnsChange}
+                        onChangePinnedColumns={onChangePinnedColumns}
+                        onResetColumnSize={onResetColumnSize}
                     />
                 )}
                 {onCloseClick && (
-                    <div>
-                        <FontAwesomeIcon onClick={onCloseClick} className={ICON_CLASSES} icon={faClose} />
-                    </div>
+                    <Button
+                        variant='text'
+                        onClick={onCloseClick}
+                        onKeyDown={adaptClickHandlerToKeyDown(onCloseClick)}
+                        data-testid='close-button'
+                        aria-label='Close table view'>
+                        <FontAwesomeIcon className={ICON_CLASSES} icon={faClose} />
+                    </Button>
                 )}
             </div>
         </div>

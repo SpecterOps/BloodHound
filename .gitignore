@@ -1,12 +1,11 @@
 ################
 # Project Level Git Ignore
 ################################
+# Codex
+.codex
 
 # Temporary backup files
 *.bak
-
-# beagle state
-.beagle
 
 # pprof results
 *.pprof
@@ -459,3 +458,8 @@ local-harnesses/*
 go.work*
 
 !go.work.template
+
+# integration tests allure results
+allure-results
+allure-report
+go-test-results.json

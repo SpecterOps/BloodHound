@@ -33,7 +33,7 @@ const DeleteConfirmationDialog: React.FC<{
                 <>
                     Continuing onwards will delete {itemName} and all associated configurations and findings.
                     <br />
-                    <span className='font-bold text-red'>Warning: This change is irreversible.</span>
+                    <span className='font-bold text-error'>Warning: This change is irreversible.</span>
                 </>
             }
             challengeTxt={`Delete this ${itemType}`}

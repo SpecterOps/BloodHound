@@ -19,8 +19,8 @@
 ########
 # Global build args
 ################
-ARG SHARPHOUND_VERSION=v2.6.7
-ARG AZUREHOUND_VERSION=v2.6.0
+ARG SHARPHOUND_VERSION=v2.12.0
+ARG AZUREHOUND_VERSION=v2.12.1
 
 ########
 # Package remote assets
@@ -72,7 +72,7 @@ RUN yarn build
 ########
 # Version Build
 ################
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.24.4-alpine3.22 AS ldflag-builder
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.26.2-alpine3.22 AS ldflag-builder
 ENV VERSION_PKG="github.com/specterops/bloodhound/cmd/api/src/version"
 RUN apk add --update --no-cache git
 WORKDIR /build
@@ -84,17 +84,17 @@ RUN git --no-pager -c 'versionsort.suffix=-rc' tag --list v*.*.* --sort=-v:refna
   -F'[.+-]' \
   -v pkg="$VERSION_PKG" \
   '{ major = $1; minor = $2; patch = $3; pre = ""; if ($4) pre = $4; \
-    printf("-X '\''%s.majorVersion=%s'\'' ", pkg, major); \
-    printf("-X '\''%s.minorVersion=%s'\'' ", pkg, minor); \
-    printf("-X '\''%s.patchVersion=%s'\''", pkg, patch); \
-    if (pre != "") \
-      printf(" -X '\''%s.prereleaseVersion=%s'\''", pkg, pre); \
+  printf("-X '\''%s.majorVersion=%s'\'' ", pkg, major); \
+  printf("-X '\''%s.minorVersion=%s'\'' ", pkg, minor); \
+  printf("-X '\''%s.patchVersion=%s'\''", pkg, patch); \
+  if (pre != "") \
+  printf(" -X '\''%s.prereleaseVersion=%s'\''", pkg, pre); \
   }' > LDFLAGS
 
 ########
 # API Build
 ################
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.24.4-alpine3.22 AS api-builder
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.26.2-alpine3.22 AS api-builder
 
 ARG TARGETOS
 ARG TARGETARCH
@@ -112,9 +112,9 @@ COPY --from=ui-builder /build/cmd/ui/dist ./cmd/api/src/api/static/assets
 RUN --mount=type=cache,target=/go/pkg/mod go build -C cmd/api/src -o /bloodhound -ldflags "$(cat LDFLAGS)" github.com/specterops/bloodhound/cmd/api/src/cmd/bhapi
 
 ########
-# Package Bloodhound
+# Package BloodHound
 ################
-FROM gcr.io/distroless/static-debian11 AS bloodhound
+FROM gcr.io/distroless/static-debian12 AS bloodhound
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 

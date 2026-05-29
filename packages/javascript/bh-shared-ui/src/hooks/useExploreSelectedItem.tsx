@@ -14,12 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { parseItemId } from '../utils';
 import { useExploreParams } from './useExploreParams';
 import { useGraphItem } from './useGraphItem';
 
 export const useExploreSelectedItem = () => {
+    const [previousSelectedItem, setPreviousSelectedItem] = useState<string | null>();
     const { selectedItem, setExploreParams } = useExploreParams();
 
     const selectedItemQuery = useGraphItem(selectedItem!);
@@ -28,6 +29,7 @@ export const useExploreSelectedItem = () => {
     const setSelectedItem = useCallback(
         (itemId: string) => {
             if (itemId !== selectedItem) {
+                setPreviousSelectedItem(selectedItem);
                 setExploreParams({
                     expandedPanelSections: null,
                     selectedItem: itemId,
@@ -37,15 +39,46 @@ export const useExploreSelectedItem = () => {
         [selectedItem, setExploreParams]
     );
 
+    const clearSelectedItem = useCallback(() => {
+        if (selectedItem) {
+            setExploreParams({
+                expandedPanelSections: null,
+                selectedItem: null,
+            });
+        }
+    }, [setExploreParams, selectedItem]);
+
     const selectedItemType = useMemo(
         () => (selectedItem ? parseItemId(selectedItem).itemType : undefined),
         [selectedItem]
     );
+
+    const selectedHiddenEdge = {
+        id: selectedItem ? selectedItem : 'Hidden',
+        name: '** Hidden Edge **',
+        data: {},
+        sourceNode: {
+            id: 'HIDDEN',
+            objectId: 'HIDDEN',
+            name: 'HIDDEN',
+            type: 'HIDDEN',
+        },
+        targetNode: {
+            id: 'HIDDEN',
+            objectId: 'HIDDEN',
+            name: 'HIDDEN',
+            type: 'HIDDEN',
+        },
+    };
 
     return {
         selectedItem,
         selectedItemQuery,
         setSelectedItem,
         selectedItemType,
+        clearSelectedItem,
+        selectedHiddenEdge,
+        previousSelectedItem,
+        setPreviousSelectedItem,
     };
 };

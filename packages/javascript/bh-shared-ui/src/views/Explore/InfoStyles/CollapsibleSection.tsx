@@ -56,16 +56,17 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
     },
     edgeAccordionDetails: {
         padding: theme.spacing(0, 0, 0, 1),
-        '& p.MuiTypography-body1': {
+        '& p.typography-body1': {
             marginTop: '8px',
             fontSize: '0.875rem',
             textDecoration: 'underline',
             padding: theme.spacing(0.5, 0.5),
             borderRadius: theme.shape.borderRadius,
         },
-        '& p.MuiTypography-body2': {
+        '& p.typography-body2, & p.edge-accordion-body2': {
             marginTop: '8px',
             fontSize: '0.75rem',
+            lineHeight: '1.43',
             backgroundColor: theme.palette.neutral.tertiary,
             padding: theme.spacing(0.5, 1),
             borderRadius: theme.shape.borderRadius,
@@ -73,14 +74,19 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
         '& a': {
             fontSize: '0.75rem',
             marginTop: '4px',
-            whiteSpace: 'nowrap',
+            whiteSpace: 'normal',
+            overflowWrap: 'anywhere',
+            wordBreak: 'break-word',
+            textDecoration: 'underline',
+            color: theme.palette.color.links,
+            cursor: 'pointer',
         },
         '& pre': {
             fontFamily: '"source-code-pro", "Menlo", "Monaco", "Consolas", "Courier New", "monospace"',
             whiteSpace: 'pre-line',
             fontSize: '0.75rem',
+            lineHeight: '1.5',
             wordBreak: 'break-all',
-
             margin: theme.spacing(1, 0),
             padding: theme.spacing(0.5, 1),
             backgroundColor: theme.palette.neutral.quinary,

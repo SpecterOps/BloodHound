@@ -16,6 +16,11 @@
 name: Run UI Tests
 
 on:
+  workflow_call:
+    outputs:
+      run_id:
+        description: "workflow run_id"
+        value: ${{ jobs.provide.outputs.run_id }}
   pull_request:
     branches:
       - main
@@ -25,18 +30,27 @@ on:
       - synchronize
 
 jobs:
+  provide:
+    runs-on: ubuntu-latest
+    outputs:
+      run_id: ${{ steps.set_run_id.outputs.run_id }}
+    steps:
+      - id: set_run_id
+        run: echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
+
   run-tests:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source code for this repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # ratchet:actions/checkout@v5
 
       - name: Install Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # ratchet:actions/setup-go@v5
         with:
-          go-version: "~1.24.4"
+          go-version-file: go.mod
           cache: true
+          check-latest: true
 
       # Telling yarn that CI is false because of flap
       - name: Run Tests
@@ -44,3 +58,9 @@ jobs:
           export CI=false
           go tool stbernard deps
           go tool stbernard test -y
+
+      - name: Upload Allure Results
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # ratchet:actions/upload-artifact@v4
+        with:
+          name: allure-results-ui
+          path: allure-results

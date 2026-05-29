@@ -14,16 +14,24 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Theme } from '@mui/material';
-import { GetIconInfo, GlyphKind, IconDictionary } from 'bh-shared-ui';
+import { faGem, faSkull } from '@fortawesome/free-solid-svg-icons';
+import {
+    GLYPH_SCALE,
+    GetIconInfo,
+    IconDictionary,
+    TagGlyphs,
+    Theme,
+    getGlyphFromKinds,
+    getModifiedSvgUrlFromIcon,
+    getNodeSource,
+} from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
-import { GraphData, GraphEdges, GraphNodes } from 'js-client-library';
-import { RankDirection, layoutDagre } from 'src/hooks/useLayoutDagre/useLayoutDagre';
-import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
+import { GraphData, GraphEdge, GraphEdges, GraphNode, GraphNodes } from 'js-client-library';
+import { Glyph, GlyphLocation } from 'src/rendering/programs/node.glyphs';
+import { RankDirection, setDagreLayout } from 'src/rendering/utils/dagre';
 import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
-import { GLYPHS } from './svgIcons';
 
 export const standardLayout = (graph: MultiDirectedGraph) => {
     forceAtlas2.assign(graph, {
@@ -36,7 +44,7 @@ export const standardLayout = (graph: MultiDirectedGraph) => {
 };
 
 export const sequentialLayout = (graph: MultiDirectedGraph) => {
-    const { assign: assignDagre } = layoutDagre(
+    const { assign: assignDagre } = setDagreLayout(
         {
             graph: {
                 rankdir: RankDirection.LEFT_RIGHT,
@@ -49,82 +57,137 @@ export const sequentialLayout = (graph: MultiDirectedGraph) => {
     assignDagre();
 };
 
-export const initGraph = (
-    graph: MultiDirectedGraph,
-    items: GraphData,
-    theme: Theme,
-    darkMode: boolean,
-    customIcons: IconDictionary,
-    hideNodes: boolean
-) => {
-    const { nodes, edges } = items;
+type GraphOptions = {
+    theme: Theme;
+    darkMode: boolean;
+    customIcons: IconDictionary;
+    hideNodes: boolean;
+    tagGlyphs: TagGlyphs;
+    pzFeatureFlagEnabled: boolean | undefined;
+    themedOptions?: ThemedOptions;
+};
 
+export const initGraph = (items: GraphData, options: GraphOptions) => {
+    const graph = new MultiDirectedGraph();
+
+    const { nodes, edges } = items;
+    const { theme } = options;
     const themedOptions = {
         labels: {
-            labelColor: theme.palette.color.primary,
-            backgroundColor: theme.palette.neutral.secondary,
-            highlightedBackground: theme.palette.color.links,
-            highlightedText: darkMode ? theme.palette.common.black : theme.palette.common.white,
+            labelColor: theme.contrast,
+            backgroundColor: theme.neutral.primary,
+            highlightedBackground: theme.link,
+            highlightedText: theme.neutral.primary,
         },
-        nodeBorderColor: theme.palette.color.primary,
+        nodeBorderColor: theme.contrast,
         glyph: {
             colors: {
-                backgroundColor: theme.palette.color.primary,
-                color: theme.palette.neutral.primary, //border
+                backgroundColor: theme.contrast,
+                color: theme.neutral.primary, //border
             },
-            tierZeroGlyph: darkMode ? GLYPHS[GlyphKind.TIER_ZERO_DARK] : GLYPHS[GlyphKind.TIER_ZERO],
-            ownedObjectGlyph: darkMode ? GLYPHS[GlyphKind.OWNED_OBJECT_DARK] : GLYPHS[GlyphKind.OWNED_OBJECT],
         },
     };
 
-    initGraphNodes(graph, nodes, themedOptions, customIcons, hideNodes);
-    initGraphEdges(graph, edges, themedOptions);
+    initGraphNodes(graph, nodes, { ...options, themedOptions });
+    initGraphEdges(graph, edges, { ...options, themedOptions });
 
     random.assign(graph, { scale: 1000 });
 
     // RUN DEFAULT LAYOUT
     sequentialLayout(graph);
+
+    return graph;
+};
+
+const GLYPHS = {
+    TIER_ZERO: getModifiedSvgUrlFromIcon(faGem, {
+        styles: { color: '#FFFFFF', scale: GLYPH_SCALE },
+    }),
+    TIER_ZERO_DARK: getModifiedSvgUrlFromIcon(faGem, {
+        styles: { color: '#000000', scale: GLYPH_SCALE },
+    }),
+    OWNED_OBJECT: getModifiedSvgUrlFromIcon(faSkull, {
+        styles: { color: '#FFFFFF', scale: GLYPH_SCALE },
+    }),
+    OWNED_OBJECT_DARK: getModifiedSvgUrlFromIcon(faSkull, {
+        styles: { color: '#000000', scale: GLYPH_SCALE },
+    }),
+};
+
+export const getNodeGlyphs = (
+    node: GraphNode,
+    options: GraphOptions & { themedOptions: ThemedOptions },
+    standardGlyphs: typeof GLYPHS
+) => {
+    const { themedOptions, pzFeatureFlagEnabled, tagGlyphs } = options;
+    const glyphs: Glyph[] = [];
+
+    if (pzFeatureFlagEnabled) {
+        if (node.kinds.includes(tagGlyphs.owned)) {
+            glyphs.push({
+                location: GlyphLocation.BOTTOM_RIGHT,
+                image: tagGlyphs.ownedGlyph,
+                ...themedOptions.glyph.colors,
+            });
+        }
+
+        const glyphImage = getGlyphFromKinds(node.kinds, tagGlyphs);
+        if (glyphImage) {
+            glyphs.push({
+                location: GlyphLocation.TOP_RIGHT,
+                image: glyphImage,
+                ...themedOptions.glyph.colors,
+            });
+        }
+    } else {
+        if (node.isOwnedObject) {
+            glyphs.push({
+                location: GlyphLocation.BOTTOM_RIGHT,
+                image: options.darkMode ? standardGlyphs.OWNED_OBJECT_DARK : standardGlyphs.OWNED_OBJECT,
+                ...themedOptions.glyph.colors,
+            });
+        }
+
+        if (node.isTierZero) {
+            glyphs.push({
+                location: GlyphLocation.TOP_RIGHT,
+                image: options.darkMode ? standardGlyphs.TIER_ZERO_DARK : standardGlyphs.TIER_ZERO,
+                ...themedOptions.glyph.colors,
+            });
+        }
+    }
+
+    return glyphs;
 };
 
 const initGraphNodes = (
     graph: MultiDirectedGraph,
     nodes: GraphNodes,
-    themedOptions: ThemedOptions,
-    customIcons: IconDictionary,
-    hideNodes: boolean
+    options: GraphOptions & { themedOptions: ThemedOptions }
 ) => {
+    const { themedOptions, customIcons, hideNodes } = options;
+
     Object.keys(nodes).forEach((key: string) => {
         const node = nodes[key];
         // Set default node parameters
         const nodeParams: Partial<NodeParams> = {
             type: 'combined',
             label: node.label,
+            source: getNodeSource(node.kinds),
+            kind: node.kind,
             forceLabel: true,
             hidden: hideNodes,
             ...themedOptions.labels,
         };
 
-        const icon = GetIconInfo(node.kind, customIcons);
-        nodeParams.color = icon.color;
-        nodeParams.image = icon.url || '';
-        nodeParams.glyphs = [];
+        const iconInfo = GetIconInfo(node.kind, customIcons);
+        nodeParams.color = iconInfo.color;
+        nodeParams.image = iconInfo.url || '';
 
-        // Tier zero nodes should be marked with a gem glyph
-        if (node.isTierZero) {
+        const glyphs = getNodeGlyphs(node, options, GLYPHS);
+        if (glyphs.length > 0) {
+            nodeParams.glyphs = glyphs;
             nodeParams.type = 'glyphs';
-            nodeParams.glyphs.push({
-                location: GlyphLocation.TOP_RIGHT,
-                image: themedOptions.glyph.tierZeroGlyph.url || '',
-                ...themedOptions.glyph.colors,
-            });
-        }
-        if (node.isOwnedObject) {
-            nodeParams.type = 'glyphs';
-            nodeParams.glyphs.push({
-                location: GlyphLocation.BOTTOM_RIGHT,
-                image: themedOptions.glyph.ownedObjectGlyph.url || '',
-                ...themedOptions.glyph.colors,
-            });
         }
 
         graph.addNode(key, {
@@ -135,16 +198,28 @@ const initGraphNodes = (
     });
 };
 
-const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, themedOptions: ThemedOptions) => {
-    // Group edges with the same start and end nodes into arrays. Should be grouped regardless of direction
-    const groupedEdges = edges.reduce<Record<string, GraphEdges>>((groups, edge) => {
-        const identifiers = [edge.source, edge.target].sort();
-        const id = `${identifiers[0]}_${identifiers[1]}`;
+const initGraphEdges = (
+    graph: MultiDirectedGraph,
+    edges: GraphEdges,
+    options: GraphOptions & { themedOptions: ThemedOptions }
+) => {
+    const { themedOptions } = options;
 
-        if (!groups[id]) {
-            groups[id] = [];
+    // Group edges with the same start and end nodes into arrays. Should be grouped regardless of direction
+    const lookupSet = new Set<string>();
+    const groupedEdges = edges.reduce<Record<string, GraphEdges>>((groups, edge) => {
+        const groupKey = getEdgeGroupKey(edge);
+        const edgeKey = getEdgeKey(edge);
+
+        if (!groups[groupKey]) {
+            groups[groupKey] = [];
         }
-        groups[id].push(edge);
+
+        // Dedupe edges before they are added to groups so that curved edges get counted and rendered correctly
+        if (!lookupSet.has(edgeKey)) {
+            lookupSet.add(edgeKey);
+            groups[groupKey].push(edge);
+        }
 
         return groups;
     }, {});
@@ -154,11 +229,12 @@ const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, themedOpti
         const groupSize = groupedEdges[group].length;
 
         for (const [i, edge] of groupedEdges[group].entries()) {
-            const key = `${edge.source}_${edge.kind}_${edge.target}`;
+            const key = getEdgeKey(edge);
 
             // Set default values for single edges
             const edgeParams: Partial<EdgeParams> = {
-                size: 3,
+                size: 4,
+                color: options.darkMode ? '#6c6c6c' : '#55595C',
                 type: 'arrow',
                 label: edge.label,
                 groupPosition: 0,
@@ -192,4 +268,13 @@ const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, themedOpti
             graph.addEdgeWithKey(key, edge.source, edge.target, edgeParams);
         }
     }
+};
+
+const getEdgeKey = (edge: GraphEdge) => {
+    return `${edge.source}_${edge.kind}_${edge.target}`;
+};
+
+const getEdgeGroupKey = (edge: GraphEdge) => {
+    const identifiers = [edge.source, edge.target].sort();
+    return `${identifiers[0]}_${identifiers[1]}`;
 };

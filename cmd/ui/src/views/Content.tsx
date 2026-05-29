@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -16,17 +16,25 @@
 
 import { Box, CircularProgress } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { GenericErrorBoundaryFallback } from 'bh-shared-ui';
+import {
+    FileUploadDialog,
+    GenericErrorBoundaryFallback,
+    useExecuteOnFileDrag,
+    useFileUploadDialogContext,
+    useKeybindings,
+    useKeyboardShortcutsDialogContext,
+    useQuickUploadEnabled,
+} from 'bh-shared-ui';
 import React, { Suspense, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
+import KeyboardShortcutsDialog from 'src/components/KeyboardShortcutsDialog';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { fetchAssetGroups } from 'src/ducks/global/actions';
 import { ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
-
 const useStyles = makeStyles({
     content: {
         position: 'relative',
@@ -40,6 +48,8 @@ const Content: React.FC = () => {
     const classes = useStyles();
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
+    const { showFileIngestDialog, setShowFileIngestDialog } = useFileUploadDialogContext();
+    const { showKeyboardShortcutsDialog, setShowKeyboardShortcutsDialog } = useKeyboardShortcutsDialogContext();
     const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
 
     useEffect(() => {
@@ -48,6 +58,24 @@ const Content: React.FC = () => {
             dispatch(ListAssetGroups());
         }
     }, [authState, isFullyAuthenticated, dispatch]);
+
+    const isQuickUploadEnabled = useQuickUploadEnabled();
+    const permitFileUploadModalLaunch = isFullyAuthenticated && isQuickUploadEnabled;
+
+    // Display ingest dialog when a processable file is dragged into the browser client
+    useExecuteOnFileDrag(() => setShowFileIngestDialog(true), {
+        condition: () => permitFileUploadModalLaunch,
+        acceptedTypes: ['application/json', 'application/zip'],
+    });
+
+    useKeybindings({
+        KeyH: () => {
+            if (isFullyAuthenticated) setShowKeyboardShortcutsDialog(!showKeyboardShortcutsDialog);
+        },
+        KeyU: () => {
+            if (isFullyAuthenticated) setShowFileIngestDialog(!showFileIngestDialog);
+        },
+    });
 
     return (
         <Box className={classes.content}>
@@ -73,11 +101,8 @@ const Content: React.FC = () => {
                                 <Route
                                     path={route.path}
                                     element={
-                                        // Note: We add a left padding value to account for pages that have nav bar, h-full is because when adding the div it collapsed the views
                                         <AuthenticatedRoute>
-                                            <div className={`h-full ${route.navigation && 'pl-nav-width'} `}>
-                                                <route.component />
-                                            </div>
+                                            <route.component />
                                         </AuthenticatedRoute>
                                     }
                                     key={route.path}
@@ -87,6 +112,18 @@ const Content: React.FC = () => {
                             );
                         })}
                     </Routes>
+                    {isFullyAuthenticated && (
+                        <>
+                            <KeyboardShortcutsDialog
+                                open={showKeyboardShortcutsDialog}
+                                onClose={() => setShowKeyboardShortcutsDialog(false)}
+                            />
+                            <FileUploadDialog
+                                open={showFileIngestDialog}
+                                onClose={() => setShowFileIngestDialog(false)}
+                            />
+                        </>
+                    )}
                 </Suspense>
             </ErrorBoundary>
         </Box>

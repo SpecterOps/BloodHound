@@ -14,19 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/mock.go -package=mocks . AgiData
 package agi
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"slices"
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -34,12 +33,6 @@ import (
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 )
-
-type AgiData interface {
-	GetAllAssetGroups(ctx context.Context, order string, filter model.SQLFilter) (model.AssetGroups, error)
-	GetAssetGroup(ctx context.Context, id int32) (model.AssetGroup, error)
-	CreateAssetGroupCollection(ctx context.Context, collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
-}
 
 func FetchAssetGroupNodes(tx graph.Transaction, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error) {
 	var (
@@ -72,10 +65,18 @@ func FetchAssetGroupNodes(tx graph.Transaction, assetGroupTag string, isSystemGr
 	return assetGroupNodes, err
 }
 
-func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Asset Group Isolation Collections")()
+type agiGetter interface {
+	GetAllAssetGroups(ctx context.Context, order string, filter model.SQLFilter) (model.AssetGroups, error)
+	GetPrimaryDisplayKinds(ctx context.Context) (graphschema.PrimaryDisplayKinds, error)
+	CreateAssetGroupCollection(ctx context.Context, collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
+}
+
+func RunAssetGroupIsolationCollections(ctx context.Context, db agiGetter, graphDB graph.Database, nodeLabelFn func(graphschema.PrimaryDisplayKinds, *graph.Node) string) error {
+	defer measure.ContextMeasureWithThreshold(ctx, slog.LevelInfo, "Asset Group Isolation Collections")()
 
 	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
+		return err
+	} else if primaryDisplayKinds, err := db.GetPrimaryDisplayKinds(ctx); err != nil {
 		return err
 	} else {
 		return graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
@@ -93,11 +94,17 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB 
 					idx := 0
 					for _, node := range assetGroupNodes {
 						if objectID, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-							slog.ErrorContext(ctx, fmt.Sprintf("Node %d that does not have valid %s property", node.ID, common.ObjectID))
+							slog.ErrorContext(
+								ctx,
+								"Node that does not have valid property",
+								slog.Uint64("node_id", uint64(node.ID)),
+								slog.String("property", string(common.ObjectID)),
+								attr.Error(err),
+							)
 						} else {
 							entries[idx] = model.AssetGroupCollectionEntry{
 								ObjectID:   objectID,
-								NodeLabel:  analysis.GetNodeKindDisplayLabel(node),
+								NodeLabel:  nodeLabelFn(primaryDisplayKinds, node),
 								Properties: node.Properties.Map,
 							}
 						}

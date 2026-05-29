@@ -17,15 +17,22 @@
 package migration
 
 import (
+	"database/sql"
 	"embed"
+	"fmt"
 	"io/fs"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/cmd/api/src/version"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"gorm.io/gorm"
 )
 
 //go:embed migrations
 var FossMigrations embed.FS
+
+//go:embed extensions
+var ExtensionMigrations embed.FS
 
 // Source is meant to be a file system source that contains SQL migration files.
 type Source struct {
@@ -33,25 +40,44 @@ type Source struct {
 	Directory  string
 }
 
-// Migration contains information about a specific migration such as the file location, it's Source, and Version.
+// Migrator is the main SQL migration tool for BloodHound.
+type Migrator struct {
+	Sources        []Source // Deprecated: Sources supports legacy v8 stepwise migrations.  Can be removed after v11 is released
+	ExtensionsData []Source
+	DB             *gorm.DB
+	SqlDB          *sql.DB
+	GooseFS        fs.FS
+}
+
+// Migration contains information about a specific migration such as the file location, it's Source, and Version. Can be removed after v11 release
 type Migration struct {
 	Filename string
 	Source   fs.FS
 	Version  version.Version
 }
 
-// Migrator is the main SQL migration tool for BloodHound.
-type Migrator struct {
-	Sources []Source
-	DB      *gorm.DB
-}
-
 // NewMigrator returns a new Migrator with the FossMigrations Source predefined.
-func NewMigrator(db *gorm.DB) *Migrator {
-	return &Migrator{
-		Sources: []Source{
-			{FileSystem: FossMigrations, Directory: "migrations"},
-		},
-		DB: db,
+func NewMigrator(db *gorm.DB) (*Migrator, error) {
+	sqlDB, err := db.DB()
+	if err != nil {
+		slog.Error("Failed to connect to database: %v", attr.Error(err))
+		return nil, fmt.Errorf("failed to connect to database: %v", err)
 	}
+	fossMigrationsSubFS, err := fs.Sub(FossMigrations, "migrations")
+	if err != nil {
+		slog.Error("Failed to open foss migrations directory: %v", attr.Error(err))
+		return nil, fmt.Errorf("failed to open foss migrations directory: %v", err)
+	}
+	return &Migrator{
+		// Deprecated: Sources supports legacy v8 stepwise migrations. Can be removed after v11 is released.
+		Sources: []Source{
+			{FileSystem: FossMigrations, Directory: "migrations/legacy"},
+		},
+		ExtensionsData: []Source{
+			{FileSystem: ExtensionMigrations, Directory: "extensions"},
+		},
+		GooseFS: MergedFS(fossMigrationsSubFS),
+		DB:      db,
+		SqlDB:   sqlDB,
+	}, nil
 }

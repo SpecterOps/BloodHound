@@ -18,11 +18,12 @@ package azure
 
 import (
 	"context"
-	"fmt"
+
 	"log/slog"
 	"strings"
 
 	"github.com/RoaringBitmap/roaring/v2/roaring64"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -56,10 +57,14 @@ func GetCollectedTenants(ctx context.Context, db graph.Database) (graph.NodeSet,
 }
 
 func FetchGraphDBTierZeroTaggedAssets(tx graph.Transaction, tenant *graph.Node) (graph.NodeSet, error) {
-	defer measure.LogAndMeasure(slog.LevelInfo, "FetchGraphDBTierZeroTaggedAssets", "tenant_id", tenant.ID)()
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "FetchGraphDBTierZeroTaggedAssets", slog.Int64("tenant_id", tenant.ID.Int64()))()
 
 	if tenantObjectID, err := tenant.Properties.Get(common.ObjectID.String()).String(); err != nil {
-		slog.Error(fmt.Sprintf("Tenant node %d does not have a valid %s property: %v", tenant.ID, common.ObjectID, err))
+		slog.Error(
+			"Tenant node does not have a valid object ID",
+			slog.Uint64("tenant_id", uint64(tenant.ID)),
+			attr.Error(err),
+		)
 		return nil, err
 	} else {
 		if nodeSet, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
@@ -77,7 +82,7 @@ func FetchGraphDBTierZeroTaggedAssets(tx graph.Transaction, tenant *graph.Node) 
 }
 
 func FetchAzureAttackPathRoots(tx graph.Transaction, tenant *graph.Node) (graph.NodeSet, error) {
-	defer measure.LogAndMeasure(slog.LevelDebug, "FetchAzureAttackPathRoots", "tenant_id", tenant.ID)()
+	defer measure.LogAndMeasureWithThreshold(slog.LevelDebug, "FetchAzureAttackPathRoots", slog.Int64("tenant_id", tenant.ID.Int64()))()
 
 	attackPathRoots := graph.NewNodeKindSet()
 
@@ -260,6 +265,49 @@ func FetchEntityRoles(tx graph.Transaction, node *graph.Node, skip, limit int) (
 	return ops.AcyclicTraverseTerminals(tx, fetchRolesTraversalPlan(node))
 }
 
+func FetchEntityEligibleRolePaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:          node,
+		Direction:     graph.DirectionOutbound,
+		BranchQuery:   FilterEntityEligibleRoles,
+		DescentFilter: roleDescentFilter,
+		PathFilter:    RoleTerminalPathFilter})
+}
+
+func FetchEntityEligibleRoles(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:          node,
+		Direction:     graph.DirectionOutbound,
+		Skip:          skip,
+		Limit:         limit,
+		BranchQuery:   FilterEntityEligibleRoles,
+		DescentFilter: roleDescentFilter,
+		PathFilter:    RoleTerminalPathFilter,
+	})
+}
+
+func FetchEntityApproverRolePaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:          node,
+		Direction:     graph.DirectionOutbound,
+		BranchQuery:   FilterRoleApprovers,
+		DescentFilter: roleDescentFilter,
+		PathFilter:    RoleTerminalPathFilter,
+	})
+}
+
+func FetchEntityApproverRoles(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:          node,
+		Direction:     graph.DirectionOutbound,
+		Skip:          skip,
+		Limit:         limit,
+		BranchQuery:   FilterRoleApprovers,
+		DescentFilter: roleDescentFilter,
+		PathFilter:    RoleTerminalPathFilter,
+	})
+}
+
 func FetchAbusableAppRoleAssignments(tx graph.Transaction, root *graph.Node, direction graph.Direction, skip, limit int) (graph.NodeSet, error) {
 	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
 		Root:        root,
@@ -334,6 +382,10 @@ func OutboundControlDescentFilter(_ *ops.TraversalContext, segment *graph.PathSe
 
 func OutboundControlPathFilter(_ *ops.TraversalContext, segment *graph.PathSegment) bool {
 	return !segment.Edge.Kind.Is(azure.MemberOf, azure.Contains)
+}
+
+func RoleTerminalPathFilter(_ *ops.TraversalContext, segment *graph.PathSegment) bool {
+	return segment.Node.Kinds.ContainsOneOf(azure.Role)
 }
 
 func FetchOutboundEntityObjectControlPaths(tx graph.Transaction, root *graph.Node) (graph.PathSet, error) {
@@ -563,8 +615,51 @@ func FetchApplicationServicePrincipals(tx graph.Transaction, app *graph.Node) (g
 	}))
 }
 
+func FetchApplicationFederatedIdentityCredentialPaths(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:      node,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.And(
+				query.Kind(query.Start(), azure.FederatedIdentityCredential),
+				query.Kind(query.Relationship(), azure.AZAuthenticatesTo),
+				query.Equals(query.EndID(), node.ID),
+			)
+		},
+	})
+}
+
+func FetchApplicationFederatedIdentityCredentialList(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:      node,
+		Direction: graph.DirectionInbound,
+		Skip:      skip,
+		Limit:     limit,
+		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			return segment.Depth() <= 1
+		},
+		BranchQuery: func() graph.Criteria {
+			return query.And(
+				query.Kind(query.Start(), azure.FederatedIdentityCredential),
+				query.Kind(query.Relationship(), azure.AZAuthenticatesTo),
+				query.Equals(query.EndID(), node.ID),
+			)
+		},
+	})
+}
+
+func FetchApplicationFederatedIdentityCredentials(tx graph.Transaction, app *graph.Node) (graph.NodeSet, error) {
+	return ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Kind(query.Start(), azure.FederatedIdentityCredential),
+			query.Kind(query.Relationship(), azure.AZAuthenticatesTo),
+			query.Equals(query.EndID(), app.ID),
+		)
+	}))
+}
+
 func FetchServicePrincipalApplications(tx graph.Transaction, servicePrincipal *graph.Node) (graph.NodeSet, error) {
-	return ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
+	return ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
 			query.Kind(query.Start(), azure.App),
 			query.Kind(query.Relationship(), azure.RunsAs),
@@ -745,9 +840,7 @@ func fetchRolesTraversalPlan(root *graph.Node) ops.TraversalPlan {
 			)
 		},
 		DescentFilter: roleDescentFilter,
-		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			return segment.Node.Kinds.ContainsOneOf(azure.Role)
-		},
+		PathFilter:    RoleTerminalPathFilter,
 	}
 }
 

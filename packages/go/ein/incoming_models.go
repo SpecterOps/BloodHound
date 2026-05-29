@@ -17,7 +17,6 @@
 package ein
 
 import (
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/graph"
 )
@@ -32,7 +31,7 @@ const (
 )
 
 func parseADKind(rawKindStr string) graph.Kind {
-	if kind, err := analysis.ParseKind(rawKindStr); err != nil {
+	if kind, err := ParseKind(rawKindStr); err != nil {
 		// TODO: Figure out a logging strategy for this since the context is wrapped in a very tight loop. It is
 		//       possible that careless logging here may flood application logs and potentially DOS centralized
 		//       logging infrastructure.
@@ -145,8 +144,9 @@ type CARegistryData struct {
 }
 
 type DCRegistryData struct {
-	CertificateMappingMethods           CertificateMappingMethods
-	StrongCertificateBindingEnforcement StrongCertificateBindingEnforcement
+	CertificateMappingMethods            CertificateMappingMethods
+	StrongCertificateBindingEnforcement  StrongCertificateBindingEnforcement
+	VulnerableNetlogonSecurityDescriptor VulnerableNetlogonSecurityDescriptor
 }
 
 type CertificateMappingMethods struct {
@@ -157,6 +157,11 @@ type CertificateMappingMethods struct {
 type StrongCertificateBindingEnforcement struct {
 	APIResult
 	Value int
+}
+
+type VulnerableNetlogonSecurityDescriptor struct {
+	APIResult
+	Value string
 }
 
 type GPO IngestBase
@@ -209,7 +214,8 @@ type Session struct {
 
 type Group struct {
 	IngestBase
-	Members []TypedPrincipal
+	Members       []TypedPrincipal
+	HasSIDHistory []TypedPrincipal
 }
 
 type User struct {
@@ -308,15 +314,15 @@ type NTLMRegistryDataAPIResult struct {
 }
 
 type NTLMRegistryInfo struct {
-	RestrictSendingNtlmTraffic   uint
-	RequireSecuritySignature     uint
-	EnableSecuritySignature      uint
-	RestrictReceivingNTLMTraffic uint
-	NtlmMinServerSec             uint
-	NtlmMinClientSec             uint
-	LmCompatibilityLevel         uint
-	UseMachineId                 uint
-	ClientAllowedNTLMServers     []string
+	RestrictSendingNtlmTraffic   *uint
+	RequireSecuritySignature     *uint
+	EnableSecuritySignature      *uint
+	RestrictReceivingNTLMTraffic *uint
+	NtlmMinServerSec             *uint
+	NtlmMinClientSec             *uint
+	LmCompatibilityLevel         *uint
+	UseMachineId                 *uint
+	ClientAllowedNTLMServers     *[]string
 }
 
 type Computer struct {
@@ -362,20 +368,27 @@ type GenericMetadata struct {
 }
 
 type GenericNode struct {
-	ID         string
-	Kinds      []string
-	Properties map[string]any
+	ID         string         `json:"id"`
+	Kinds      []string       `json:"kinds"`
+	Properties map[string]any `json:"properties"`
 }
 
 type GenericEdge struct {
-	Start      EdgeEndpoint
-	End        EdgeEndpoint
-	Kind       string
-	Properties map[string]any
+	Start      EdgeEndpoint   `json:"start"`
+	End        EdgeEndpoint   `json:"end"`
+	Kind       string         `json:"kind"`
+	Properties map[string]any `json:"properties"`
+}
+
+type PropertyMatcher struct {
+	Key      string `json:"key"`
+	Operator string `json:"operator"`
+	Value    any    `json:"value"`
 }
 
 type EdgeEndpoint struct {
-	Value   string
-	Kind    string
-	MatchBy string `json:"match_by"`
+	Value            string            `json:"value"`
+	Kind             string            `json:"kind"`
+	MatchBy          string            `json:"match_by"`
+	PropertyMatchers []PropertyMatcher `json:"property_matchers"`
 }

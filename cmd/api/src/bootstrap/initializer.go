@@ -54,10 +54,6 @@ func (s Initializer[DBType, GraphType]) Launch(parentCtx context.Context, handle
 		ctx = NewDaemonContext(parentCtx)
 	}
 
-	if err := InitializeLogging(s.Configuration); err != nil {
-		return fmt.Errorf("log initialization error: %w", err)
-	}
-
 	if err := EnsureServerDirectories(s.Configuration); err != nil {
 		return fmt.Errorf("failed to ensure server directories: %w", err)
 	}

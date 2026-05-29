@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
-import { Alert, AlertTitle, Box, CircularProgress, Grid, Switch, Typography } from '@mui/material';
+import { Alert, AlertTitle, CircularProgress, Grid } from '@mui/material';
+import { Button, Switch, Typography } from 'doodle-ui';
 import { PutUserAuthSecretRequest } from 'js-client-library';
 import { useState } from 'react';
-import { useMutation, useQuery } from 'react-query';
+import { useMutation } from 'react-query';
 
 import {
     Disable2FADialog,
@@ -28,7 +28,8 @@ import {
     TextWithFallback,
     UserTokenManagementDialog,
 } from '../../components';
-import useApiVersion from '../../hooks/useApiVersion';
+import { useAPITokensConfiguration } from '../../hooks';
+import { useSelf } from '../../hooks/useBloodHoundUsers';
 import { useNotifications } from '../../providers';
 import { apiClient, getUsername } from '../../utils';
 
@@ -44,12 +45,8 @@ const UserProfile = () => {
     const [disable2FAError, setDisable2FAError] = useState('');
     const [disable2FASecret, setDisable2FASecret] = useState('');
 
-    const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
-        apiClient.getSelf({ signal }).then((res) => res.data.data)
-    );
-
-    const { data: apiVersionResponse, isSuccess } = useApiVersion();
-    const apiVersion = isSuccess && apiVersionResponse?.server_version;
+    const getSelfQuery = useSelf();
+    const apiTokensEnabled = useAPITokensConfiguration();
 
     const updateUserPasswordMutation = useMutation(
         ({ userId, ...payload }: { userId: string } & PutUserAuthSecretRequest) =>
@@ -77,9 +74,9 @@ const UserProfile = () => {
     const profileContent = () => {
         if (getSelfQuery.isLoading) {
             return (
-                <Box p={4} textAlign='center'>
+                <div className='p-4 text-center'>
                     <CircularProgress />
-                </Box>
+                </div>
             );
         }
 
@@ -92,20 +89,13 @@ const UserProfile = () => {
                         <br />
                         Please try refreshing the page or logging in again.
                     </Alert>
-                    <Box sx={{ flexGrow: 1, alignContent: 'flex-end' }}>BloodHound: {apiVersion}</Box>
                 </>
             );
         }
 
         return (
-            <Box
-                display={'flex'}
-                flexDirection={'column'}
-                justifyContent={'space-between'}
-                height={'80vh'}
-                margin={'0'}
-                padding={'0'}>
-                <Box>
+            <div className='flex flex-col justify-between h-[80vh] m-0 p-0'>
+                <div>
                     <Grid container spacing={2} alignItems='center'>
                         <Grid item xs={3}>
                             <Typography variant='body1'>Email</Typography>
@@ -133,24 +123,26 @@ const UserProfile = () => {
                         </Grid>
                     </Grid>
 
-                    <Box mt={2}>
+                    <div className='mt-4'>
                         <Typography variant='h2'>Authentication</Typography>
-                    </Box>
+                    </div>
                     <Grid container spacing={2} alignItems='center'>
-                        <Grid container item>
-                            <Grid item xs={3}>
-                                <Typography variant='body1'>API Key Management</Typography>
+                        {apiTokensEnabled && (
+                            <Grid container item>
+                                <Grid item xs={3}>
+                                    <Typography variant='body1'>API Key Management</Typography>
+                                </Grid>
+                                <Grid item xs={2}>
+                                    <Button
+                                        style={{ width: '100%' }}
+                                        onClick={() => setUserTokenManagementDialogOpen(true)}
+                                        data-testid='my-profile_button-api-key-management'>
+                                        API Key Management
+                                    </Button>
+                                </Grid>
                             </Grid>
-                            <Grid item xs={2}>
-                                <Button
-                                    style={{ width: '100%' }}
-                                    onClick={() => setUserTokenManagementDialogOpen(true)}
-                                    data-testid='my-profile_button-api-key-management'>
-                                    API Key Management
-                                </Button>
-                            </Grid>
-                        </Grid>
-                        {user.sso_provider_id === null && (
+                        )}
+                        {user && user.sso_provider_id === null && (
                             <>
                                 <Grid container item>
                                     <Grid item xs={3}>
@@ -171,31 +163,27 @@ const UserProfile = () => {
                                         <Typography variant='body1'>Multi-Factor Authentication</Typography>
                                     </Grid>
                                     <Grid item xs={9}>
-                                        <Box display='flex' alignItems='center'>
+                                        <div className='flex items-center'>
                                             <Switch
-                                                inputProps={{
-                                                    'aria-label': 'Multi-Factor Authentication Enabled',
-                                                }}
-                                                checked={user.AuthSecret?.totp_activated}
-                                                onChange={() => {
-                                                    if (!user.AuthSecret?.totp_activated) setEnable2FADialogOpen(true);
-                                                    else setDisable2FADialogOpen(true);
-                                                }}
-                                                color='primary'
+                                                aria-label={`Multi-Factor Authentication ${user?.AuthSecret?.totp_activated ? 'Enabled' : 'Disabled'}`}
+                                                checked={user?.AuthSecret?.totp_activated || false}
                                                 data-testid='my-profile_switch-multi-factor-authentication'
+                                                label={user?.AuthSecret?.totp_activated ? 'Enabled' : 'Disabled'}
+                                                id='multi-factor-authentication'
+                                                onCheckedChange={() => {
+                                                    !user?.AuthSecret?.totp_activated
+                                                        ? setEnable2FADialogOpen(true)
+                                                        : setDisable2FADialogOpen(true);
+                                                }}
                                             />
-                                            {user.AuthSecret?.totp_activated && (
-                                                <Typography variant='body1'>Enabled</Typography>
-                                            )}
-                                        </Box>
+                                        </div>
                                     </Grid>
                                 </Grid>
                             </>
                         )}
                     </Grid>
-                </Box>
-                <Box sx={{ flexGrow: 1, alignContent: 'flex-end' }}>BloodHound: {apiVersion}</Box>
-            </Box>
+                </div>
+            </div>
         );
     };
 
@@ -204,9 +192,7 @@ const UserProfile = () => {
             title='My Profile'
             data-testid='my-profile'
             pageDescription={
-                <Typography variant='body2' paragraph>
-                    Review your account and configure user-managed settings.
-                </Typography>
+                <Typography variant='body2'>Review your account and configure user-managed settings.</Typography>
             }>
             <Typography variant='h2'>User Information</Typography>
             {profileContent()}
@@ -215,7 +201,7 @@ const UserProfile = () => {
                     <PasswordDialog
                         open={changePasswordDialogOpen}
                         onClose={() => setChangePasswordDialogOpen(false)}
-                        userId={user.id}
+                        userId={user?.id || ''}
                         requireCurrentPassword={true}
                         showNeedsPasswordReset={false}
                         onSave={updateUserPasswordMutation.mutate}
@@ -224,7 +210,7 @@ const UserProfile = () => {
                     <UserTokenManagementDialog
                         open={userTokenManagementDialogOpen}
                         onClose={() => setUserTokenManagementDialogOpen(false)}
-                        userId={user.id}
+                        userId={user?.id || ''}
                     />
 
                     <Enable2FADialog
@@ -244,7 +230,7 @@ const UserProfile = () => {
                         onSavePassword={(password) => {
                             setEnable2FAError('');
                             return apiClient
-                                .enrollMFA(user.id, {
+                                .enrollMFA(user?.id || '', {
                                     secret: password,
                                 })
                                 .then((response) => {
@@ -260,7 +246,7 @@ const UserProfile = () => {
                         onSaveOTP={(OTP) => {
                             setEnable2FAError('');
                             return apiClient
-                                .activateMFA(user.id, {
+                                .activateMFA(user?.id || '', {
                                     otp: OTP,
                                 })
                                 .then(() => {
@@ -296,7 +282,7 @@ const UserProfile = () => {
                         onSave={(secret: string) => {
                             setDisable2FAError('');
                             apiClient
-                                .disenrollMFA(user.id, { secret })
+                                .disenrollMFA(user?.id || '', { secret })
                                 .then(() => {
                                     setDisable2FADialogOpen(false);
                                     setDisable2FAError('');

@@ -181,6 +181,7 @@ export const GraphEdgeEvents: FC<GraphEdgeEventProps> = ({ onClickEdge }) => {
             onMouseDown={handleEdgeEvents}
             onWheel={handleEdgeEvents}
             onMouseOut={handleEdgeEvents}
+            onBlur={handleEdgeEvents}
             onMouseMove={handleEdgeEvents}
             onMouseUp={handleEdgeEvents}></canvas>
     );

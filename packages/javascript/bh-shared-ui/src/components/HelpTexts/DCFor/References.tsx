@@ -19,8 +19,8 @@ import { FC } from 'react';
 
 const References: FC = () => {
     return (
-        <Box sx={{ overflowX: 'auto' }}>
-            <Link target='_blank' rel='noopener' href='https://adsecurity.org/?p=3700'>
+        <Box className='overflow-x-auto'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://adsecurity.org/?p=3700'>
                 Beyond Domain Admins
             </Link>
             <br />

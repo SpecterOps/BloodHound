@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 
 const WindowsAbuse: FC = () => {
@@ -27,7 +27,12 @@ const WindowsAbuse: FC = () => {
                 <br />
                 <br />
                 Please refer to the abuse info for the specific privileges granted to OWNER RIGHTS at
-                https://bloodhound.specterops.io/home/articles/17224136169371-About-BloodHound-Edges
+                <a
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    href='https://bloodhound.specterops.io/home/articles/17224136169371-About-BloodHound-Edges'>
+                    https://bloodhound.specterops.io/home/articles/17224136169371-About-BloodHound-Edges
+                </a>
             </Typography>
         </>
     );

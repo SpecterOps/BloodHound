@@ -17,7 +17,6 @@
 package middleware
 
 import (
-	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
@@ -27,6 +26,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/middleware/stdlib"
 	"github.com/ulule/limiter/v3/drivers/store/memory"
@@ -42,30 +42,52 @@ func rateLimitMiddleware(db database.Database, limiter *limiter.Limiter) mux.Mid
 			trustedProxies := appcfg.GetTrustedProxiesParameters(r.Context(), db)
 
 			if host, _, err := net.SplitHostPort(r.RemoteAddr); err != nil {
-				slog.WarnContext(r.Context(), fmt.Sprintf("Error parsing remoteAddress '%s': %s", r.RemoteAddr, err))
+				slog.WarnContext(
+					r.Context(),
+					"Error parsing remoteAddress",
+					slog.String("remote_addr", r.RemoteAddr),
+					attr.Error(err),
+				)
 				remoteIP = r.RemoteAddr
 			} else {
 				remoteIP = host
 			}
 
 			if trustedProxies <= 0 {
-				slog.DebugContext(r.Context(), "Using direct remote IP Address for rate limiting", "IP Address", remoteIP)
+				slog.DebugContext(
+					r.Context(),
+					"Using direct remote IP Address for rate limiting",
+					slog.String("ip_address", remoteIP),
+				)
 				return remoteIP
 			} else if xff := r.Header.Get("X-Forwarded-For"); xff == "" {
-				slog.DebugContext(r.Context(), "Expected X-Forwarded-For header for rate limiting but none found. Defaulted to remote IP Address", "IP Address", remoteIP)
+				slog.DebugContext(
+					r.Context(),
+					"Expected X-Forwarded-For header for rate limiting but none found. Defaulted to remote IP Address",
+					slog.String("ip_address", remoteIP),
+				)
 				return remoteIP
 			} else {
 				ips := strings.Split(xff, ",")
 
 				idxIP := len(ips) - trustedProxies
 				if idxIP < 0 {
-					slog.WarnContext(r.Context(), "Not enough IPs in X-Forwarded-For, defaulting to first IP", "X-Forwarded-For", xff)
+					slog.WarnContext(
+						r.Context(),
+						"Not enough IPs in X-Forwarded-For, defaulting to first IP",
+						slog.String("x_forwarded_for", xff),
+					)
 					idxIP = 0
 				}
 
 				finalIP := strings.TrimSpace(ips[idxIP])
 
-				slog.DebugContext(r.Context(), "Found client IP Address for rate limiting in XFF", "IP Address", finalIP, "X-Forwarded-For", xff)
+				slog.DebugContext(
+					r.Context(),
+					"Found client IP Address for rate limiting in XFF",
+					slog.String("ip_address", finalIP),
+					slog.String("x_forwarded_for", xff),
+				)
 				return finalIP
 			}
 		},

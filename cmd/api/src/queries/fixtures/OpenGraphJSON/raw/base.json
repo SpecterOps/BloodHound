@@ -1,0 +1,168 @@
+{
+    "metadata": {},
+    "graph": {
+        "nodes": [
+            {
+                "id": "2",
+                "kinds": ["Base", "User"],
+                "properties": {
+                    "hello": "world",
+                    "name": "USER NUMBER ONE"
+                }
+            },
+            {
+                "id": "3",
+                "kinds": ["Base", "User"],
+                "properties": {
+                    "hello": "world",
+                    "name": "USER NUMBER TWO"
+                }
+            },
+            {
+                "id": "4",
+                "kinds": ["Base", "User"],
+                "properties": {
+                    "hello": "world",
+                    "name": "USER NUMBER THREE"
+                }
+            },
+            {
+                "id": "5",
+                "kinds": ["Base", "User"],
+                "properties": {
+                    "hello": "world",
+                    "name": "USER NUMBER FOUR"
+                }
+            },
+            {
+                "id": "6",
+                "kinds": ["Base", "User"],
+                "properties": {
+                    "hello": "world",
+                    "name": "USER NUMBER FIVE"
+                }
+            },
+            {
+                "id": "7",
+                "kinds": ["Employee", "Person"],
+                "properties": {
+                    "hello": "world",
+                    "name": "PERSON ONE"
+                }
+            },
+            {
+                "id": "8",
+                "kinds": ["Employee", "Person"],
+                "properties": {
+                    "hello": "world",
+                    "name": "PERSON TWO"
+                }
+            },
+            {
+                "id": "9",
+                "kinds": ["Person"],
+                "properties": { "hello": "world", "name": "PERSON THREE" }
+            },
+            {
+                "id": "10",
+                "kinds": ["ADLocalGroup", "Base"],
+                "properties": {
+                    "name": "REMOTE DESKTOP USERS"
+                }
+            },
+            {
+                "id": "11",
+                "kinds": ["ADLocalGroup", "Base", "Group"],
+                "properties": {
+                    "name": "ACCOUNT OPERATORS"
+                }
+            },
+            {
+                "id": "12",
+                "kinds": ["Person"],
+                "properties": {
+                    "name": "ALICE"
+                }
+            }
+        ],
+        "edges": [
+            {
+                "kind": "Knows",
+                "start": {
+                    "value": "7",
+                    "match_by": "id"
+                },
+                "end": {
+                    "value": "8",
+                    "match_by": "id"
+                }
+            },
+            {
+                "kind": "Knows",
+                "start": {
+                    "value": "8",
+                    "match_by": "id"
+                },
+                "end": {
+                    "value": "9",
+                    "match_by": "id"
+                }
+            },
+            {
+                "kind": "Knows",
+                "start": {
+                    "value": "9",
+                    "match_by": "id"
+                },
+                "end": {
+                    "value": "12",
+                    "match_by": "id"
+                }
+            },
+            {
+                "kind": "IsParent",
+                "start": {
+                    "value": "7",
+                    "match_by": "id"
+                },
+                "end": {
+                    "value": "12",
+                    "match_by": "id"
+                }
+            },
+            {
+                "kind": "Contains",
+                "start": {
+                    "value": "5",
+                    "match_by": "id"
+                },
+                "end": {
+                    "value": "10",
+                    "match_by": "id"
+                }
+            },
+            {
+                "kind": "Contains",
+                "start": {
+                    "value": "6",
+                    "match_by": "id"
+                },
+                "end": {
+                    "value": "10",
+                    "match_by": "id"
+                }
+            },
+            {
+                "kind": "Contains",
+                "start": {
+                    "value": "7",
+                    "match_by": "id"
+                },
+                "end": {
+                    "value": "10",
+                    "match_by": "id"
+                }
+            }
+        ]
+    }
+}

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { useQuery } from 'react-query';
-import { useSearchParams } from 'react-router-dom';
+import { useExploreParams } from '../../hooks';
 import { EntityInfoDataTableProps, entityRelationshipEndpoints } from '../../utils';
 import EntityInfoCollapsibleSection from '../EntityInfo/EntityInfoCollapsibleSection';
 import InfiniteScrollingTable from '../InfiniteScrollingTable';
@@ -27,10 +27,11 @@ export const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     sections,
     parentLabels = [],
 }) => {
-    const [searchParams, setSearchParams] = useSearchParams();
+    // expandedPanelSections originates from explore page
+    const { setExploreParams, expandedPanelSections } = useExploreParams();
 
     const endpoint = queryType ? entityRelationshipEndpoints[queryType] : undefined;
-    const isExpandedPanelSection = (searchParams.getAll('expandedPanelSections') as string[]).includes(label);
+    const isExpandedPanelSection = !!expandedPanelSections?.includes(label);
 
     const countQuery = useQuery(
         ['relatedCount', label, id],
@@ -51,31 +52,22 @@ export const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     );
 
     const removeExpandedPanelSectionParams = () => {
-        setSearchParams({ expandedPanelSections: parentLabels });
-    };
-
-    const setParentExpandedSectionParam = () => {
-        const labelList = [...(parentLabels as string[]), label];
-
-        setSearchParams({ expandedPanelSections: labelList });
+        setExploreParams({
+            expandedPanelSections: parentLabels,
+        });
     };
 
     const setExpandedPanelSectionsParams = () => {
         const labelList = [...(parentLabels as string[]), label];
 
-        setSearchParams({ expandedPanelSections: labelList });
+        setExploreParams({
+            expandedPanelSections: labelList,
+        });
     };
 
     const handleOnChange = (isOpen: boolean) => {
-        if (isOpen) handleSetGraph();
+        if (isOpen) setExpandedPanelSectionsParams();
         else removeExpandedPanelSectionParams();
-    };
-    const handleSetGraph = async () => {
-        if (!endpoint) {
-            setParentExpandedSectionParam();
-        } else {
-            setExpandedPanelSectionsParams();
-        }
     };
 
     let count: number | undefined;

@@ -17,6 +17,7 @@
 package model
 
 import (
+	"database/sql"
 	"fmt"
 	"net/url"
 	"time"
@@ -151,6 +152,8 @@ type AuthToken struct {
 	Key        string        `json:"key,omitempty"`
 	HmacMethod string        `json:"hmac_method"`
 	LastAccess time.Time     `json:"last_access"`
+	ExpiresAt  sql.NullTime  `json:"expires_at"`
+	CreatedBy  uuid.NullUUID `json:"created_by" gorm:"type:text"`
 
 	Unique
 }
@@ -160,8 +163,10 @@ func (s AuthToken) AuditData() AuditData {
 		"id":          s.ID,
 		"user_id":     s.UserID,
 		"client_id":   s.ClientID,
+		"created_by":  s.CreatedBy,
 		"name":        s.Name,
 		"last_access": s.LastAccess,
+		"expires_at":  s.ExpiresAt,
 	}
 }
 
@@ -169,11 +174,13 @@ func (s AuthToken) StripKey() AuthToken {
 	return AuthToken{
 		UserID:     s.UserID,
 		ClientID:   s.ClientID,
+		CreatedBy:  s.CreatedBy,
 		Key:        "",
 		HmacMethod: s.HmacMethod,
 		LastAccess: s.LastAccess,
 		Unique:     s.Unique,
 		Name:       s.Name,
+		ExpiresAt:  s.ExpiresAt,
 	}
 }
 
@@ -185,7 +192,8 @@ func (s AuthTokens) IsSortable(column string) bool {
 		"last_access",
 		"created_at",
 		"updated_at",
-		"deleted_at":
+		"deleted_at",
+		"expires_at":
 		return true
 	default:
 		return false
@@ -199,10 +207,12 @@ func (s AuthTokens) ValidFilters() map[string][]FilterOperator {
 		"key":         {Equals, NotEquals},
 		"hmac_method": {Equals, NotEquals},
 		"id":          {Equals, NotEquals},
+		"created_by":  {Equals, NotEquals},
 		"last_access": {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"created_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"updated_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"deleted_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"expires_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 	}
 }
 
@@ -424,21 +434,27 @@ func UserAssociations() []string {
 		"AuthSecret",
 		"AuthTokens",
 		"Roles.Permissions",
+		"EnvironmentTargetedAccessControl",
 	}
 }
 
 type User struct {
-	SSOProvider   *SSOProvider `json:"-" `
-	SSOProviderID null.Int32   `json:"sso_provider_id,omitempty"`
-	AuthSecret    *AuthSecret  `gorm:"constraint:OnDelete:CASCADE;"`
-	AuthTokens    AuthTokens   `json:"-" gorm:"constraint:OnDelete:CASCADE;"`
-	Roles         Roles        `json:"roles" gorm:"many2many:users_roles"`
-	FirstName     null.String  `json:"first_name"`
-	LastName      null.String  `json:"last_name"`
-	EmailAddress  null.String  `json:"email_address"`
-	PrincipalName string       `json:"principal_name" gorm:"unique;index"`
-	LastLogin     time.Time    `json:"last_login"`
-	IsDisabled    bool         `json:"is_disabled"`
+	SSOProvider                      *SSOProvider                       `json:"-" `
+	SSOProviderID                    null.Int32                         `json:"sso_provider_id,omitempty"`
+	AuthSecret                       *AuthSecret                        `gorm:"constraint:OnDelete:CASCADE;"`
+	AuthTokens                       AuthTokens                         `json:"-" gorm:"constraint:OnDelete:CASCADE;"`
+	Roles                            Roles                              `json:"roles" gorm:"many2many:users_roles"`
+	FirstName                        null.String                        `json:"first_name"`
+	LastName                         null.String                        `json:"last_name"`
+	EmailAddress                     null.String                        `json:"email_address"`
+	PrincipalName                    string                             `json:"principal_name" gorm:"unique;index"`
+	LastLogin                        time.Time                          `json:"last_login"`
+	IsDisabled                       bool                               `json:"is_disabled"`
+	AllEnvironments                  bool                               `json:"all_environments"`
+	EnvironmentTargetedAccessControl []EnvironmentTargetedAccessControl `json:"environment_targeted_access_control"`
+
+	// SupportAccount should never be settable by a user. It is used to determine if a user is a support account.
+	SupportAccount bool `json:"-"`
 
 	// EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users.
 	// This value is automatically set to true for Bloodhound Community Edition in the patchEULAAcceptance and CreateUser functions.
@@ -449,15 +465,16 @@ type User struct {
 
 func (s *User) AuditData() AuditData {
 	return AuditData{
-		"id":              s.ID,
-		"principal_name":  s.PrincipalName,
-		"first_name":      s.FirstName.ValueOrZero(),
-		"last_name":       s.LastName.ValueOrZero(),
-		"email_address":   s.EmailAddress.ValueOrZero(),
-		"roles":           s.Roles.IDs(),
-		"sso_provider_id": s.SSOProviderID.ValueOrZero(),
-		"is_disabled":     s.IsDisabled,
-		"eula_accepted":   s.EULAAccepted,
+		"id":               s.ID,
+		"principal_name":   s.PrincipalName,
+		"first_name":       s.FirstName.ValueOrZero(),
+		"last_name":        s.LastName.ValueOrZero(),
+		"email_address":    s.EmailAddress.ValueOrZero(),
+		"roles":            s.Roles.IDs(),
+		"sso_provider_id":  s.SSOProviderID.ValueOrZero(),
+		"is_disabled":      s.IsDisabled,
+		"eula_accepted":    s.EULAAccepted,
+		"all_environments": s.AllEnvironments,
 	}
 }
 
@@ -542,15 +559,17 @@ func UserSessionAssociations() []string {
 		"User.AuthSecret",
 		"User.AuthTokens",
 		"User.Roles.Permissions",
+		"User.EnvironmentTargetedAccessControl",
 	}
 }
 
 type SessionAuthProvider int
 
 const (
-	SessionAuthProviderSecret SessionAuthProvider = 0
-	SessionAuthProviderSAML   SessionAuthProvider = 1
-	SessionAuthProviderOIDC   SessionAuthProvider = 2
+	SessionAuthProviderSecret      SessionAuthProvider = 0
+	SessionAuthProviderSAML        SessionAuthProvider = 1
+	SessionAuthProviderOIDC        SessionAuthProvider = 2
+	SessionAuthProviderBearerToken SessionAuthProvider = 3
 )
 
 func (s SessionAuthProvider) String() string {
@@ -561,6 +580,8 @@ func (s SessionAuthProvider) String() string {
 		return "SAML"
 	case SessionAuthProviderOIDC:
 		return "OIDC"
+	case SessionAuthProviderBearerToken:
+		return "Bearer Token"
 	default:
 		return "Unknown"
 	}

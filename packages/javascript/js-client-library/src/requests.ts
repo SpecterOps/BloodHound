@@ -17,8 +17,13 @@
 import { AxiosRequestConfig } from 'axios';
 import {
     AssetGroupTagSelector,
+    AssetGroupTagSelectorAutoCertifyType,
     AssetGroupTagSelectorSeed,
-    AssetGroupTagTypes,
+    AssetGroupTagType,
+    AuthenticationMethod,
+    CertificationManual,
+    CertificationRevoked,
+    SeedExpansionMethod,
     SSOProviderConfiguration,
 } from './types';
 import { ConfigurationPayload } from './utils';
@@ -35,29 +40,34 @@ export interface LoginRequest {
 export type CreateAssetGroupTagRequest = {
     name: string;
     description: string;
-    position: number | null;
-    type: AssetGroupTagTypes;
-    requireCertify?: boolean;
+    type: AssetGroupTagType;
+    glyph?: string;
+    position?: number | null;
+    require_certify?: boolean | null;
 };
 
 export type UpdateAssetGroupTagRequest = Partial<
-    Partial<CreateAssetGroupTagRequest> & { analysis_enabled?: string | boolean | undefined }
+    Partial<CreateAssetGroupTagRequest> & { analysis_enabled?: boolean | undefined }
 >;
 
-export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[] };
+export type UpdateCertificationRequest = {
+    member_ids: number[];
+    action: typeof CertificationRevoked | typeof CertificationManual;
+    note?: string;
+};
 
-// This type makes it so that `selector_id` is optional in the selector seed request shape.
-// The `selector_id` will only be available when updating an already existing selector.
-export type SelectorSeedRequest = Omit<AssetGroupTagSelectorSeed, 'selector_id'> & Partial<AssetGroupTagSelectorSeed>;
+export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[]; expansion: SeedExpansionMethod };
 
-export type CreateSelectorRequest = Pick<AssetGroupTagSelector, 'name'> &
-    Partial<Pick<AssetGroupTagSelector, 'description' | 'auto_certify'>> & {
-        seeds: SelectorSeedRequest[];
-    };
+export type SelectorSeedRequest = Pick<AssetGroupTagSelectorSeed, 'type' | 'value'>;
 
-export type UpdateSelectorRequest = Partial<
-    Omit<CreateSelectorRequest, 'id' | 'disabled_at'> & { disabled: boolean | string } & PreviewSelectorsRequest
->;
+export type CreateSelectorRequest = {
+    name: string;
+    description?: string;
+    auto_certify?: AssetGroupTagSelectorAutoCertifyType | null;
+} & { seeds: SelectorSeedRequest[] };
+
+export type UpdateSelectorRequest = Partial<CreateSelectorRequest & { disabled: boolean }> &
+    Pick<AssetGroupTagSelector, 'id'>;
 
 export interface CreateAssetGroupRequest {
     name: string;
@@ -85,6 +95,9 @@ export interface CreateSharpHoundClientRequest {
     name: string;
     events?: any[];
     type: 'sharphound';
+    auth_type?: AuthenticationMethod;
+    issuer_address?: string;
+    issuer_address_override?: string;
 }
 
 export interface CreateAzureHoundClientRequest {
@@ -93,12 +106,25 @@ export interface CreateAzureHoundClientRequest {
     type: 'azurehound';
 }
 
+export interface CreateOpenHoundClientRequest {
+    name: string;
+    events?: any[];
+    type: 'openhound';
+}
+
 export interface UpdateSharpHoundClientRequest {
     domain_controller: string;
     name: string;
+    auth_type?: AuthenticationMethod;
+    issuer_address?: string;
+    issuer_address_override?: string;
 }
 
 export interface UpdateAzureHoundClientRequest {
+    name: string;
+}
+
+export interface UpdateOpenHoundClientRequest {
     name: string;
 }
 
@@ -149,6 +175,11 @@ export interface CreateAzureHoundEventRequest {
     rrule: string;
 }
 
+export interface CreateOpenHoundEventRequest {
+    client_id: string;
+    rrule: string;
+}
+
 export interface UpdateSharpHoundEventRequest {
     client_id: string;
     rrule: string;
@@ -164,6 +195,11 @@ export interface UpdateSharpHoundEventRequest {
 }
 
 export interface UpdateAzureHoundEventRequest {
+    client_id: string;
+    rrule: string;
+}
+
+export interface UpdateOpenHoundEventRequest {
     client_id: string;
     rrule: string;
 }
@@ -197,9 +233,32 @@ export type RiskDetailsRequest = {
     Accepted?: string;
 };
 
+export enum QueryScope {
+    ALL = 'all',
+    OWNED = 'owned',
+    PUBLIC = 'public',
+    SHARED = 'shared',
+}
+
 export interface CreateUserQueryRequest {
     name: string;
+    description?: string;
     query: string;
+}
+
+export interface UpdateUserQueryRequest {
+    id: number;
+    name: string;
+    description?: string;
+    query: string;
+}
+export interface UpdateUserQueryPermissionsRequest {
+    user_ids: string[];
+    public: boolean;
+}
+
+export interface DeleteUserQueryPermissionsRequest {
+    user_ids: string[];
 }
 
 export interface ClearDatabaseRequest {
@@ -208,23 +267,31 @@ export interface ClearDatabaseRequest {
     deleteDataQualityHistory: boolean;
     deleteFileIngestHistory: boolean;
     deleteSourceKinds: number[];
+    deleteRelationships: string[];
+}
+
+export interface EnvironmentRequest {
+    environment_id?: string;
 }
 
 export interface UpdateUserRequest {
-    firstName: string;
-    lastName: string;
-    emailAddress: string;
+    first_name: string;
+    last_name: string;
+    email_address: string;
     principal: string;
     roles: number[];
-    SSOProviderId?: number;
+    sso_provider_id?: number;
     is_disabled?: boolean;
+    all_environments?: boolean;
+    environment_targeted_access_control?: {
+        environments?: EnvironmentRequest[] | null;
+    };
     /** @deprecated: this is left to maintain backwards compatability, please use SSOProviderId instead */
     SAMLProviderId?: string;
 }
-
 export interface CreateUserRequest extends Omit<UpdateUserRequest, 'is_disabled'> {
-    password?: string;
-    needsPasswordReset?: boolean;
+    secret?: string;
+    needs_password_reset?: boolean;
 }
 
 export type UpdateConfigurationRequest = ConfigurationPayload;

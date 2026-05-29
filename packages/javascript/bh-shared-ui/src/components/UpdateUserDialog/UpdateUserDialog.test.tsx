@@ -94,6 +94,7 @@ const testUser = {
     email_address: 'testuser@example.com',
     principal_name: 'testuser',
     id: '1',
+    all_environments: true,
 };
 
 const server = setupServer(
@@ -115,6 +116,13 @@ const server = setupServer(
     }),
     rest.get('/api/v2/bloodhound-users/1', (req, res, ctx) => {
         return res(ctx.json({ data: testUser }));
+    }),
+    rest.get('/api/v2/available-domains', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
     })
 );
 
@@ -126,11 +134,12 @@ describe('UpdateUserDialog', () => {
     type SetupOptions = {
         renderErrors?: boolean;
         renderLoading?: boolean;
+        renderShowEnvironmentAccessControls?: boolean;
     };
 
-    const setup = (options?: SetupOptions) => {
+    const updateDialogInitSetup = (options?: SetupOptions) => {
         const user = userEvent.setup();
-        const testOnClose = vi.fn();
+        const testOnToggle = vi.fn();
         const testOnSave = vi.fn(() => Promise.resolve({ data: {} }));
         const testUser = {
             emailAddress: 'testuser@example.com',
@@ -144,32 +153,35 @@ describe('UpdateUserDialog', () => {
 
         render(
             <UpdateUserDialog
-                userId={'1'}
-                open={true}
-                onClose={testOnClose}
-                onSave={testOnSave}
-                isLoading={options?.renderLoading || false}
                 error={options?.renderErrors}
                 hasSelectedSelf={false}
+                isLoading={options?.renderLoading || false}
+                onToggle={testOnToggle}
+                onSave={testOnSave}
+                open={true}
+                showEnvironmentAccessControls={options?.renderShowEnvironmentAccessControls || false}
+                userId={'1'}
             />
         );
 
         return {
             user,
             testUser,
-            testOnClose,
+            testOnToggle,
             testOnSave,
         };
     };
 
     it('should render an update user form', async () => {
-        setup();
+        updateDialogInitSetup();
 
-        expect(screen.getByText('Update User')).toBeInTheDocument();
+        const editUserText = await waitFor(() => screen.getByText('Edit User'));
+
+        expect(editUserText).toBeInTheDocument();
 
         expect(await screen.findByLabelText('Email Address')).toBeInTheDocument();
 
-        expect(screen.getByLabelText('Principal Name')).toBeInTheDocument();
+        expect(await screen.findByLabelText('Principal Name')).toBeInTheDocument();
 
         expect(screen.getByLabelText('First Name')).toBeInTheDocument();
 
@@ -184,18 +196,8 @@ describe('UpdateUserDialog', () => {
         expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
     });
 
-    it('should call onClose when Close button is clicked', async () => {
-        const { user, testOnClose } = setup();
-
-        const cancelButton = await screen.findByRole('button', { name: 'Cancel' });
-
-        await user.click(cancelButton);
-
-        expect(testOnClose).toHaveBeenCalled();
-    });
-
     it('should not call onSave when Save button is clicked and form input is invalid', async () => {
-        const { user, testOnSave } = setup();
+        const { user, testOnSave } = updateDialogInitSetup();
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });
 
@@ -209,7 +211,7 @@ describe('UpdateUserDialog', () => {
     });
 
     it('should call onSave when Save button is clicked and form input is valid', async () => {
-        const { user, testUser, testOnSave } = setup();
+        const { user, testUser, testOnSave } = updateDialogInitSetup();
 
         expect(await screen.findByLabelText('Email Address')).toBeInTheDocument();
 
@@ -227,11 +229,11 @@ describe('UpdateUserDialog', () => {
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
-        await waitFor(() => expect(testOnSave).toHaveBeenCalled(), { timeout: 30000 });
+        await waitFor(() => expect(testOnSave).toHaveBeenCalled());
     });
 
     it('should display all available roles', async () => {
-        const { user } = setup();
+        const { user } = updateDialogInitSetup();
 
         await user.click(await screen.findByLabelText('Role'));
 
@@ -241,7 +243,7 @@ describe('UpdateUserDialog', () => {
     });
 
     it('should display all available SSO providers', async () => {
-        const { user } = setup();
+        const { user } = updateDialogInitSetup();
 
         await user.click(await screen.findByLabelText('Authentication Method'));
 
@@ -261,7 +263,7 @@ describe('UpdateUserDialog', () => {
     });
 
     it('should disable Cancel and Save buttons while isLoading is true', async () => {
-        setup({ renderLoading: true });
+        updateDialogInitSetup({ renderLoading: true });
 
         expect(await screen.findByRole('button', { name: 'Cancel' })).toBeDisabled();
 
@@ -269,15 +271,15 @@ describe('UpdateUserDialog', () => {
     });
 
     it('should display error message when error prop is provided', async () => {
-        setup({ renderErrors: true });
+        updateDialogInitSetup({ renderErrors: true });
 
         expect(await screen.findByText('An unexpected error occurred. Please try again.')).toBeInTheDocument();
     });
 
     it('should clear out the sso provider id from submission data when the authentication method is changed', async () => {
-        const { user, testUser, testOnSave } = setup();
+        const { user, testUser, testOnSave } = updateDialogInitSetup();
 
-        const saveButton = await screen.findByRole('button', { name: 'Save' });
+        const saveButton = await screen.findByRole('button', { name: /save/i });
 
         await user.clear(screen.getByLabelText('Email Address'));
         await user.type(screen.getByLabelText('Email Address'), testUser.emailAddress);
@@ -302,11 +304,8 @@ describe('UpdateUserDialog', () => {
 
         await user.click(saveButton);
 
-        await waitFor(
-            () => expect(testOnSave).toHaveBeenCalledWith(expect.objectContaining({ SSOProviderId: undefined })),
-            {
-                timeout: 30000,
-            }
+        await waitFor(() =>
+            expect(testOnSave).toHaveBeenCalledWith(expect.objectContaining({ sso_provider_id: undefined }))
         );
     });
 });

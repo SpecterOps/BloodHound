@@ -16,7 +16,7 @@
 
 import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
 import { apiClient } from 'bh-shared-ui';
-import { PutUserAuthSecretRequest } from 'js-client-library';
+import { PutUserAuthSecretRequest, Self } from 'js-client-library';
 import { DateTime } from 'luxon';
 
 import { queryClient } from 'src/queryClient';
@@ -85,11 +85,15 @@ export const login = createAsyncThunk(
 );
 
 export const logout = createAsyncThunk('auth/logout', async () => {
-    return await apiClient.logout().catch(() => {});
+    try {
+        await apiClient.logout();
+    } catch (e) {
+        console.warn(e);
+    }
 });
 
 export const initialize = createAsyncThunk<
-    types.getSelfResponse,
+    Self,
     void,
     {
         dispatch: AppDispatch;
@@ -117,7 +121,7 @@ export const initialize = createAsyncThunk<
 });
 
 export const updateExpiredPassword = createAsyncThunk<
-    types.getSelfResponse,
+    Self,
     PutUserAuthSecretRequest,
     {
         dispatch: AppDispatch;

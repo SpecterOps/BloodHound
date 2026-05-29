@@ -17,11 +17,13 @@ import { SeedTypeCypher } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
+import * as hooks from '../../hooks';
 import { zoneHandlers } from '../../mocks';
+import { zonesPath } from '../../routes';
 import { render, screen, waitForElementToBeRemoved } from '../../test-utils';
-import { EntityInfoDataTableProps, EntityKinds } from '../../utils';
+import { EntityKinds } from '../../utils';
 import { ObjectInfoPanelContextProvider } from '../../views';
-import EntitySelectorsInformation from '../../views/ZoneManagement/Details/EntitySelectorsInformation';
+import EntitysRulesInformation from '../../views/PrivilegeZones/Details/EntityRulesInformation';
 import { EntityInfoDataTable } from '../EntityInfoDataTable';
 import EntityInfoContent from './EntityInfoContent';
 
@@ -64,8 +66,8 @@ const EntityInfoContentWithProvider = ({
     nodeType: EntityKinds | string;
     databaseId?: string;
     additionalTables?: {
-        sectionProps: EntityInfoDataTableProps;
-        TableComponent: React.FC<EntityInfoDataTableProps>;
+        sectionProps: any;
+        TableComponent: React.FC<any>;
     }[];
 }) => (
     <ObjectInfoPanelContextProvider>
@@ -79,14 +81,30 @@ const EntityInfoContentWithProvider = ({
     </ObjectInfoPanelContextProvider>
 );
 
+vi.mock('../../hooks', async () => {
+    const actual = await vi.importActual('../../hooks');
+    return {
+        ...actual,
+        useExploreParams: vi.fn(),
+        usePZQueryParams: vi.fn(),
+    };
+});
+
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('EntityInfoDataTableList', () => {
-    it('Displays selector information if additionalSections is true', async () => {
+    it('Displays the selectors list if passed in through additional sections', async () => {
         const testId = '1';
         const nodeType = ActiveDirectoryNodeKind.User;
+
+        vi.mocked(hooks.useExploreParams).mockReturnValue({ selectedItem: '7' } as unknown as ReturnType<
+            typeof hooks.useExploreParams
+        >);
+        vi.mocked(hooks.usePZQueryParams).mockReturnValue({ assetGroupTagId: 1 } as unknown as ReturnType<
+            typeof hooks.usePZQueryParams
+        >);
 
         render(
             <EntityInfoContentWithProvider
@@ -94,8 +112,8 @@ describe('EntityInfoDataTableList', () => {
                 nodeType={nodeType}
                 additionalTables={[
                     {
-                        sectionProps: { label: 'Selectors', id: '1' },
-                        TableComponent: EntitySelectorsInformation,
+                        sectionProps: { tagType: zonesPath },
+                        TableComponent: EntitysRulesInformation,
                     },
                 ]}
             />
@@ -103,10 +121,14 @@ describe('EntityInfoDataTableList', () => {
 
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
 
-        screen.debug(undefined, Infinity);
+        const list = screen.getByTestId('entity-info-data-table-list');
+        let listContainsSelectorsSection = false;
 
-        const selectorsInfoSectionTitle = await screen.findByText(/selectors/i);
-        expect(selectorsInfoSectionTitle).toBeInTheDocument();
+        list.childNodes.forEach((child) => {
+            if (child.textContent?.includes('Rules')) listContainsSelectorsSection = true;
+        });
+
+        expect(listContainsSelectorsSection).toBeTruthy();
     });
 
     it('Hides selector information if additionalSections is false', async () => {
@@ -117,7 +139,7 @@ describe('EntityInfoDataTableList', () => {
 
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
 
-        const selectorsInfoSectionTitle = await screen.queryByText(/selectors/i);
+        const selectorsInfoSectionTitle = await screen.queryByText(/rules/i);
         expect(selectorsInfoSectionTitle).not.toBeInTheDocument();
     });
 });

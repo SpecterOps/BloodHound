@@ -21,8 +21,6 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
-	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 )
@@ -34,17 +32,26 @@ const (
 	ErrResponseDetailsColumnNotSortable           = "the specified column cannot be sorted"
 )
 
-type DomainSelector struct {
-	Type        string `json:"type"`
-	Name        string `json:"name"`
-	ObjectID    string `json:"id"`
-	Collected   bool   `json:"collected"`
-	ImpactValue *int   `json:"impactValue,omitempty"`
+type EnvironmentSelector struct {
+	Type               string    `json:"type"`
+	Name               string    `json:"name"`
+	ObjectID           string    `json:"id"`
+	Collected          bool      `json:"collected"`
+	ImpactValue        *int      `json:"impactValue,omitempty"`
+	HygieneAttackPaths *int64    `json:"hygiene_attack_paths,omitempty"` // caution: if value is bigger than maxsafeint, the UI will truncate the value
+	Exposures          Exposures `json:"exposures,omitempty"`
 }
 
-type DomainSelectors []DomainSelector
+type EnvironmentSelectors []EnvironmentSelector
 
-func (s DomainSelectors) IsSortable(column string) bool {
+type Exposure struct {
+	ExposurePercent int           `json:"exposure_percent"`
+	AssetGroupTag   AssetGroupTag `json:"asset_group_tag"`
+}
+
+type Exposures []Exposure
+
+func (s EnvironmentSelectors) IsSortable(column string) bool {
 	switch column {
 	case "objectid",
 		"name":
@@ -54,7 +61,7 @@ func (s DomainSelectors) IsSortable(column string) bool {
 	}
 }
 
-func (s DomainSelectors) ValidFilters() map[string][]FilterOperator {
+func (s EnvironmentSelectors) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
 		"objectid":  {Equals, NotEquals},
 		"name":      {Equals, NotEquals},
@@ -62,18 +69,19 @@ func (s DomainSelectors) ValidFilters() map[string][]FilterOperator {
 	}
 }
 
-func (s DomainSelectors) IsString(column string) bool {
+func (s EnvironmentSelectors) IsString(column string) bool {
 	switch column {
 	case "name",
-		"objectid",
-		"collected":
+		"objectid":
 		return true
+	case "collected":
+		return false
 	default:
 		return false
 	}
 }
 
-func (s DomainSelectors) GetFilterableColumns() []string {
+func (s EnvironmentSelectors) GetFilterableColumns() []string {
 	var columns = make([]string, 0)
 	for column := range s.ValidFilters() {
 		columns = append(columns, column)
@@ -81,7 +89,7 @@ func (s DomainSelectors) GetFilterableColumns() []string {
 	return columns
 }
 
-func (s DomainSelectors) GetValidFilterPredicatesAsStrings(column string) ([]string, error) {
+func (s EnvironmentSelectors) GetValidFilterPredicatesAsStrings(column string) ([]string, error) {
 	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
 		return []string{}, errors.New(ErrResponseDetailsColumnNotFilterable)
 	} else {
@@ -93,7 +101,7 @@ func (s DomainSelectors) GetValidFilterPredicatesAsStrings(column string) ([]str
 	}
 }
 
-func (s DomainSelectors) GetFilterCriteria(request *http.Request) (graph.Criteria, error) {
+func (s EnvironmentSelectors) GetFilterCriteria(request *http.Request, environmentKinds []graph.Kind) (graph.Criteria, error) {
 	var (
 		queryParameterFilterParser = NewQueryParameterFilterParser()
 		criteria                   graph.Criteria
@@ -118,7 +126,8 @@ func (s DomainSelectors) GetFilterCriteria(request *http.Request) (graph.Criteri
 			}
 		}
 		// ignoring the error here as this would've failed at ParseQueryParameterFilters before getting here
-		criteria = query.And(queryFilters.BuildGDBNodeFilter(), query.KindIn(query.Node(), ad.Domain, azure.Tenant))
+
+		criteria = query.And(queryFilters.BuildGDBNodeFilter(), query.KindIn(query.Node(), environmentKinds...))
 		return criteria, nil
 	}
 }

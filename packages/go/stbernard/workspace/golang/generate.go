@@ -109,7 +109,13 @@ func parallelGenerateModulePackages(jobC <-chan GoPackage, waitGroup *sync.WaitG
 						args    = []string{"generate", nextPackage.Dir}
 					)
 
-					if _, err := cmdrunner.Run(command, args, nextPackage.Dir, env); err != nil {
+					executionPlan := cmdrunner.ExecutionPlan{
+						Command: command,
+						Args:    args,
+						Path:    nextPackage.Dir,
+						Env:     env.Slice(),
+					}
+					if _, err := cmdrunner.Run(context.TODO(), executionPlan); err != nil {
 						addErr(err)
 					}
 				}
@@ -120,7 +126,7 @@ func parallelGenerateModulePackages(jobC <-chan GoPackage, waitGroup *sync.WaitG
 
 // WorkspaceGenerate runs go generate ./... for all module paths passed
 func WorkspaceGenerate(modPath string, env environment.Environment) error {
-	defer measure.LogAndMeasure(slog.LevelDebug, "WorkspaceGenerate")()
+	defer measure.LogAndMeasureWithThreshold(slog.LevelDebug, "WorkspaceGenerate")()
 	var (
 		errs     []error
 		errsLock = &sync.Mutex{}
@@ -139,7 +145,7 @@ func WorkspaceGenerate(modPath string, env environment.Environment) error {
 	go parallelGenerateModulePackages(jobC, waitGroup, env, addErr)
 
 	// For each known module path attempt generation of each module package
-	if modulePackages, err := moduleListPackages(modPath); err != nil {
+	if modulePackages, err := moduleListPackages(modPath, env); err != nil {
 		return fmt.Errorf("getting module packages for %s: %w", modPath, err)
 	} else {
 		for _, modulePackage := range modulePackages {

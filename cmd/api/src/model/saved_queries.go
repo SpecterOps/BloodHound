@@ -16,7 +16,9 @@
 
 package model
 
-import "errors"
+import (
+	"errors"
+)
 
 type SavedQuery struct {
 	UserID      string `json:"user_id" gorm:"index:,unique,composite:compositeIndex"`
@@ -29,7 +31,7 @@ type SavedQuery struct {
 
 type SavedQueries []SavedQuery
 
-type SavedQueryResponse struct {
+type ScopedSavedQuery struct {
 	SavedQuery
 	Scope string `json:"scope"`
 }

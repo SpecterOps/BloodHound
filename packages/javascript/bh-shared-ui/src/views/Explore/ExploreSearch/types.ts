@@ -23,7 +23,17 @@ export interface SearchNodeType {
     name?: string;
 }
 
+export type CypherSearchState = {
+    cypherQuery: string;
+    setCypherQuery: (query: string) => void;
+    performSearch: (query?: string) => void;
+};
+
 //The search value usually aligns with the results from hitting the search endpoint but when
 //we are pulling the data from a different page and filling out the value ourselves it might
 //not conform to our expected type
 export type SearchValue = SearchNodeType | SearchResult;
+
+export type DisableQueryLimit = {
+    disableQueryLimit: boolean;
+};

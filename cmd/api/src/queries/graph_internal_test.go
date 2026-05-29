@@ -26,6 +26,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	graph_mocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/cache"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -175,87 +177,48 @@ func Test_cacheQueryResult(t *testing.T) {
 	graphQuery.cacheQueryResult(time.Now().Add(-time.Hour), cacheKey, result)
 }
 
-func Test_formatSearchResults_sorting(t *testing.T) {
+func Test_sortAndSliceResults_sorting(t *testing.T) {
 	var (
-		exactMatches = []model.SearchResult{
-			{Name: "b@c.com"},
-		}
-		fuzzyMatches = []model.SearchResult{
-			{Name: "bab@c.com"},
-			{Name: "ab@c.com"},
+		matches = NodeSearchResults{
+			ExactResults: []*graph.Node{
+				graph.NewNode(1, graph.NewProperties().Set(common.Name.String(), "b@c.com"), ad.Entity)},
+			FuzzyResults: []*graph.Node{
+				graph.NewNode(2, graph.NewProperties().Set(common.Name.String(), "bab@c.com"), ad.Entity),
+				graph.NewNode(3, graph.NewProperties().Set(common.Name.String(), "ab@c.com"), ad.Entity),
+			},
 		}
 		skip     = 0
 		limit    = 10
-		expected = []model.SearchResult{
-			exactMatches[0], fuzzyMatches[1], fuzzyMatches[0], // manually put fuzzyMatches' elements in alphabetical order for assertion
+		expected = []*graph.Node{
+			matches.ExactResults[0], matches.FuzzyResults[1], matches.FuzzyResults[0], // manually put fuzzyMatches' elements in alphabetical order for assertion
 		}
 	)
 
-	actual := formatSearchResults(exactMatches, fuzzyMatches, limit, skip)
+	actual := sortAndSliceResults(matches, limit, skip)
 
 	require.Equal(t, 3, len(actual))
 	require.Equal(t, actual, expected)
 }
 
-func Test_formatSearchResults_limit(t *testing.T) {
+func Test_sortAndSliceResults_limit(t *testing.T) {
 	var (
-		exactMatches = []model.SearchResult{
-			{Name: "b@c.com"},
-			{Name: "b@c.com"},
-			{Name: "b@c.com"},
-		}
-		fuzzyMatches = []model.SearchResult{
-			{Name: "ab@c.com"},
+		matches = NodeSearchResults{
+			ExactResults: []*graph.Node{
+				graph.NewNode(1, graph.NewProperties().Set(common.Name.String(), "b@c.com"), ad.Entity),
+				graph.NewNode(2, graph.NewProperties().Set(common.Name.String(), "b@c.com"), ad.Entity),
+				graph.NewNode(3, graph.NewProperties().Set(common.Name.String(), "b@c.com"), ad.Entity),
+			},
+			FuzzyResults: []*graph.Node{
+				graph.NewNode(4, graph.NewProperties().Set(common.Name.String(), "ab@c.com"), ad.Entity),
+			},
 		}
 		skip     = 0
 		limit    = 3
-		expected = exactMatches
+		expected = matches.ExactResults
 	)
 
-	actual := formatSearchResults(exactMatches, fuzzyMatches, limit, skip)
+	actual := sortAndSliceResults(matches, limit, skip)
 
 	require.Equal(t, 3, len(actual))
 	require.Equal(t, actual, expected)
-}
-
-func Test_nodesToSearchResult(t *testing.T) {
-	var (
-		inputNodeProps = graph.NewProperties().
-				Set("name", "this is a name").
-				Set("objectid", "object id").
-				Set("distinguishedname", "ze most distinguished")
-
-		input = []*graph.Node{
-			{Properties: inputNodeProps},
-		}
-	)
-
-	actual := nodesToSearchResult(input...)
-
-	expectedName, _ := inputNodeProps.Get("name").String()
-	expectedObjectId, _ := inputNodeProps.Get("objectid").String()
-	expectedDistinguishedName, _ := inputNodeProps.Get("distinguishedname").String()
-
-	require.Equal(t, 1, len(actual))
-	require.Equal(t, expectedName, "this is a name")
-	require.Equal(t, expectedObjectId, "object id")
-	require.Equal(t, expectedDistinguishedName, "ze most distinguished")
-}
-
-func Test_nodesToSearchResult_default(t *testing.T) {
-	var (
-		input = []*graph.Node{
-			{Properties: graph.NewProperties()},
-		}
-		expectedName              = "NO NAME"
-		expectedObjectId          = "NO OBJECT ID"
-		expectedDistinguishedName = ""
-	)
-
-	actual := nodesToSearchResult(input...)
-
-	require.Equal(t, 1, len(actual))
-	require.Equal(t, expectedName, actual[0].Name)
-	require.Equal(t, expectedObjectId, actual[0].ObjectID)
-	require.Equal(t, expectedDistinguishedName, actual[0].DistinguishedName)
 }

@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { GraphNode } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import startCase from 'lodash/startCase';
 import { DateTime } from 'luxon';
@@ -22,11 +23,14 @@ import { ZERO_VALUE_API_DATE } from '../constants';
 import {
     ActiveDirectoryKindProperties,
     ActiveDirectoryKindPropertiesToDisplay,
+    ActiveDirectoryNodeKind,
     AzureKindProperties,
     AzureKindPropertiesToDisplay,
+    AzureNodeKind,
     CommonKindProperties,
     CommonKindPropertiesToDisplay,
 } from '../graphSchema';
+import { MappedStringLiteral, SelectedNode } from '../types';
 import { LuxonFormat } from './datetime';
 
 export const formatPotentiallyUnknownLabel = (propKey: string) => {
@@ -40,7 +44,8 @@ export const formatObjectInfoFields = (props: any): EntityField[] => {
     const propKeys = Object.keys(props || {});
 
     for (let i = 0; i < propKeys.length; i++) {
-        const value = props[propKeys[i]];
+        const key = propKeys[i];
+        const value = props[key];
         // Don't display empty fields or fields with zero date values
         if (
             value === undefined ||
@@ -50,13 +55,16 @@ export const formatObjectInfoFields = (props: any): EntityField[] => {
         )
             continue;
 
-        const { kind } = validateProperty(propKeys[i]);
+        // prevent rendering the zone property twice if it exists since there is explicit handling for it in EntityObjectInformation
+        if (key === 'zone') continue;
+
+        const { kind } = validateProperty(key);
 
         mappedFields.push({
             kind: kind,
-            label: `${formatPotentiallyUnknownLabel(propKeys[i])}:`,
+            label: `${formatPotentiallyUnknownLabel(key)}:`,
             value: value,
-            keyprop: propKeys[i],
+            keyprop: key,
         });
     }
 
@@ -88,17 +96,43 @@ export const makeFormattedObjectInfoFieldsMap = (props: any) => {
     }
 };
 
+// Convert *KindProperties enums to a map to for quick lookup and defined outside of the typeguard so we perform enumerations once
+const activeDirectoryKindPropertiesMap = Object.fromEntries(
+    Object.values(ActiveDirectoryKindProperties).map((value) => [value, true])
+);
 const isActiveDirectoryProperty = (enumValue: ActiveDirectoryKindProperties): boolean => {
-    return Object.values(ActiveDirectoryKindProperties).includes(enumValue);
+    return !!activeDirectoryKindPropertiesMap[enumValue];
 };
 
+const azureKindPropertiesMap = Object.fromEntries(Object.values(AzureKindProperties).map((value) => [value, true]));
 const isAzureProperty = (enumValue: AzureKindProperties): boolean => {
-    return Object.values(AzureKindProperties).includes(enumValue);
+    return !!azureKindPropertiesMap[enumValue];
 };
 
+const commonKindPropertiesMap = Object.fromEntries(Object.values(CommonKindProperties).map((value) => [value, true]));
 const isCommonProperty = (enumValue: CommonKindProperties): boolean => {
-    return Object.values(CommonKindProperties).includes(enumValue);
+    return commonKindPropertiesMap[enumValue];
 };
+
+export type KnownNodeProperties = keyof Omit<GraphNode, 'properties'> | 'nodeType';
+/**
+ * The intent is to standardize keys and their display label in the UI.
+ * The keys below are either deduped with their property bag counterpart, or are assigned a label for standardization across the UI.
+ */
+export const KnownNodePropertiesToDisplay = {
+    /**
+     * nodeType is actually a prop defined on EntityInfoContentProps, but we include it with other node properties in BasicObjectInfoFieldsProps.
+     * In theory we could refactor this prop to be "kind", however, that seems out of scope for this refactor.
+     */
+    nodeType: 'Node Type',
+    kind: 'Node Type',
+    kinds: 'Node Kinds',
+    isTierZero: 'Tier Zero',
+    isOwnedObject: 'Is Owned',
+    label: CommonKindPropertiesToDisplay(CommonKindProperties.Name)!,
+    objectId: CommonKindPropertiesToDisplay(CommonKindProperties.ObjectID)!,
+    lastSeen: CommonKindPropertiesToDisplay(CommonKindProperties.LastSeen)!,
+} as const satisfies MappedStringLiteral<KnownNodeProperties, string>;
 
 export type ValidatedProperty = {
     isKnownProperty: boolean;
@@ -110,10 +144,11 @@ export const validateProperty = (enumValue: string): ValidatedProperty => {
         return { isKnownProperty: true, kind: 'ad' };
     if (isAzureProperty(enumValue as AzureKindProperties)) return { isKnownProperty: true, kind: 'az' };
     if (isCommonProperty(enumValue as CommonKindProperties)) return { isKnownProperty: true, kind: 'cm' };
+    if (enumValue in KnownNodePropertiesToDisplay) return { isKnownProperty: true, kind: 'ov' };
     return { isKnownProperty: false, kind: null };
 };
 
-const getFieldLabel = (kind: string, key: string): string => {
+const getFieldLabel = (kind: EntityPropertyKind, key: string): string => {
     let label: string;
 
     switch (kind) {
@@ -126,6 +161,9 @@ const getFieldLabel = (kind: string, key: string): string => {
         case 'cm':
             label = CommonKindPropertiesToDisplay(key as CommonKindProperties)!;
             break;
+        case 'ov':
+            label = KnownNodePropertiesToDisplay[key as KnownNodeProperties]!;
+            break;
         default:
             label = key;
     }
@@ -133,7 +171,7 @@ const getFieldLabel = (kind: string, key: string): string => {
     return label;
 };
 
-export type EntityPropertyKind = 'ad' | 'az' | 'cm' | null;
+export type EntityPropertyKind = 'ad' | 'az' | 'cm' | 'ov' | null;
 
 export type EntityField = {
     label: string | JSX.Element;
@@ -152,6 +190,16 @@ export enum ADSpecificTimeProperties {
 export const NoEntitySelectedMessage = 'Select a node to view the associated information';
 export const NoEntitySelectedHeader = 'None Selected';
 
+export const getEntityName = (selectedEntity: SelectedNode | null | undefined) => {
+    if (!selectedEntity) return NoEntitySelectedHeader;
+
+    const { name } = selectedEntity;
+
+    if (!name) return 'Name not found';
+
+    return name;
+};
+
 export const getNodeByDatabaseIdCypher = (id: string): string => `MATCH (n) WHERE ID(n) = ${id} RETURN n LIMIT 1`;
 
 // Map containing all properties that should display as bitwise integers in the entity panel.
@@ -162,24 +210,23 @@ const BitwiseInts = new Map([['certificatemappingmethodsraw', 2]]);
 //Here is some related documentation:
 //https://learn.microsoft.com/en-us/windows/win32/adschema/a-lastlogon
 //https://social.technet.microsoft.com/wiki/contents/articles/22461.understanding-the-ad-account-attributes-lastlogon-lastlogontimestamp-and-lastlogondate.aspx
+export const AD_NEVER_VALUE = 'NEVER';
+export const AD_UNKNOWN_VALUE = 'UNKNOWN';
 export const formatADSpecificTime = (timeValue: number, keyprop: ADSpecificTimeProperties): string => {
-    const unknownValue = 'UNKNOWN';
-    const neverValue = 'NEVER';
-
     switch (keyprop) {
         case ADSpecificTimeProperties.WHEN_CREATED: {
-            if (timeValue === 0 || timeValue === -1) return unknownValue;
+            if (timeValue === 0 || timeValue === -1) return AD_UNKNOWN_VALUE;
             return DateTime.fromSeconds(timeValue).toFormat(LuxonFormat.DATETIME);
         }
         case ADSpecificTimeProperties.LAST_LOGON: //fallthrough
         case ADSpecificTimeProperties.LAST_LOGON_TIMESTAMP: {
-            if (timeValue === 0) return unknownValue;
-            if (timeValue === -1) return neverValue;
+            if (timeValue === 0) return AD_UNKNOWN_VALUE;
+            if (timeValue === -1) return AD_NEVER_VALUE;
             return DateTime.fromSeconds(timeValue).toFormat(LuxonFormat.DATETIME);
         }
         case ADSpecificTimeProperties.PASSWORD_LAST_SET:
             if (timeValue === 0) return 'ACCOUNT CREATED BUT NO PASSWORD SET';
-            if (timeValue === -1) return neverValue;
+            if (timeValue === -1) return AD_NEVER_VALUE;
             return DateTime.fromSeconds(timeValue).toFormat(LuxonFormat.DATETIME);
         default:
             return '';
@@ -228,7 +275,16 @@ export const formatDateString = (value: string) => {
     return value;
 };
 
-export const DATE_FIELDS = ['lastseen', 'whencreated', 'lastlogontimestamp', 'lastlogon', 'pwdlastset'];
+export const DATE_FIELDS = [
+    'lastseen',
+    'whencreated',
+    'lastlogontimestamp',
+    'lastlogon',
+    'pwdlastset',
+    'lastsuccessfulsignindatetime',
+    'lastcollected',
+    'firstseen',
+];
 
 export const formatPrimitive = (
     value: string | number | boolean,
@@ -243,7 +299,7 @@ export const formatPrimitive = (
             return formatBoolean(value);
         }
         case 'string':
-            if (!keyprop || DATE_FIELDS.includes(keyprop)) {
+            if (keyprop && DATE_FIELDS.includes(keyprop)) {
                 return formatDateString(value);
             }
 
@@ -270,4 +326,11 @@ export const format = (field: EntityField): string | string[] => {
     } else {
         return formatPrimitive(value, kind, keyprop);
     }
+};
+
+// To do: Better way to do this ?
+export const getNodeSource = (kinds: string[]): string | undefined => {
+    if (kinds.includes(AzureNodeKind.Entity)) return 'Azure';
+    if (kinds.includes(ActiveDirectoryNodeKind.Entity)) return 'Active Directory';
+    return 'OpenGraph';
 };

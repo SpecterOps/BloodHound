@@ -28,7 +28,10 @@ const WindowsAbuse: FC<EdgeInfoProps> = () => {
             <Typography variant='body2'>
                 Alternatively, the write access to the SPN enable a targeted Kerberoasting attack against user accounts
                 with a weak password. See the{' '}
-                <Link target='_blank' rel='noopener' href='https://bloodhound.specterops.io/resources/edges/write-spn'>
+                <Link
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    href='https://bloodhound.specterops.io/resources/edges/write-spn'>
                     WriteSPN
                 </Link>{' '}
                 edge for more details.

@@ -22,15 +22,15 @@ import (
 	"os"
 	"path"
 	"testing"
-	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
 	"github.com/stretchr/testify/require"
 )
 
 func TestVersion5IngestJSON(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -53,10 +53,19 @@ func TestVersion5IngestJSON(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
+
+		failed := 0
+		for _, data := range fileData {
+			if len(data.Errors) > 0 {
+				failed++
+			}
+		}
+
 		require.Zero(t, failed)
-		require.Equal(t, 1, total)
+		require.Equal(t, 1, len(fileData))
 	}
 
 	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "Version5JSON", "ingest")), "ingested.json")
@@ -65,7 +74,6 @@ func TestVersion5IngestJSON(t *testing.T) {
 }
 
 func TestVersion5IngestZIP(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -81,10 +89,19 @@ func TestVersion5IngestZIP(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeZip}, time.Now())
+		ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip})
 		require.NoError(t, err)
+
+		failed := 0
+		for _, data := range fileData {
+			if len(data.Errors) > 0 {
+				failed++
+			}
+		}
+
 		require.Zero(t, failed)
-		require.Equal(t, 8, total)
+		require.Equal(t, 8, len(fileData))
 	}
 
 	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "Version5ZIP", "ingest")), "ingested.json")
@@ -93,7 +110,6 @@ func TestVersion5IngestZIP(t *testing.T) {
 }
 
 func TestVersion6ADCSJSON(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -121,10 +137,19 @@ func TestVersion6ADCSJSON(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
+
+		failed := 0
+		for _, data := range fileData {
+			if len(data.Errors) > 0 {
+				failed++
+			}
+		}
+
 		require.Zero(t, failed)
-		require.Equal(t, 1, total)
+		require.Equal(t, 1, len(fileData))
 	}
 
 	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "Version6ADCSJSON", "ingest")), "ingested.json")
@@ -133,7 +158,6 @@ func TestVersion6ADCSJSON(t *testing.T) {
 }
 
 func TestVersion6ADCSZIP(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -149,10 +173,19 @@ func TestVersion6ADCSZIP(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeZip}, time.Now())
+		ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip})
 		require.NoError(t, err)
+
+		failed := 0
+		for _, data := range fileData {
+			if len(data.Errors) > 0 {
+				failed++
+			}
+		}
+
 		require.Zero(t, failed)
-		require.Equal(t, 13, total)
+		require.Equal(t, 13, len(fileData))
 	}
 
 	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "Version6ADCSZIP", "ingest")), "ingested.json")
@@ -161,7 +194,6 @@ func TestVersion6ADCSZIP(t *testing.T) {
 }
 
 func TestVersion6AllJSON(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -189,10 +221,19 @@ func TestVersion6AllJSON(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
+
+		failed := 0
+		for _, data := range fileData {
+			if len(data.Errors) > 0 {
+				failed++
+			}
+		}
+
 		require.Zero(t, failed)
-		require.Equal(t, 1, total)
+		require.Equal(t, 1, len(fileData))
 	}
 
 	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "Version6AllJSON", "ingest")), "ingested.json")
@@ -201,7 +242,6 @@ func TestVersion6AllJSON(t *testing.T) {
 }
 
 func TestVersion6AllZIP(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -217,10 +257,19 @@ func TestVersion6AllZIP(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeZip}, time.Now())
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip})
 		require.NoError(t, err)
+
+		failed := 0
+		for _, data := range fileData {
+			if len(data.Errors) > 0 {
+				failed++
+			}
+		}
+
 		require.Zero(t, failed)
-		require.Equal(t, 13, total)
+		require.Equal(t, 13, len(fileData))
 	}
 
 	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "Version6AllZIP", "ingest")), "ingested.json")
@@ -229,7 +278,6 @@ func TestVersion6AllZIP(t *testing.T) {
 }
 
 func TestVersion6IngestJSON(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -252,10 +300,19 @@ func TestVersion6IngestJSON(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
+
+		failed := 0
+		for _, data := range fileData {
+			if len(data.Errors) > 0 {
+				failed++
+			}
+		}
+
 		require.Zero(t, failed)
-		require.Equal(t, 1, total)
+		require.Equal(t, 1, len(fileData))
 	}
 
 	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "Version6JSON", "ingest")), "ingested.json")
@@ -264,7 +321,6 @@ func TestVersion6IngestJSON(t *testing.T) {
 }
 
 func TestVersion6IngestZIP(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -280,10 +336,19 @@ func TestVersion6IngestZIP(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeZip}, time.Now())
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip})
 		require.NoError(t, err)
+
+		failed := 0
+		for _, data := range fileData {
+			if len(data.Errors) > 0 {
+				failed++
+			}
+		}
+
 		require.Zero(t, failed)
-		require.Equal(t, 8, total)
+		require.Equal(t, 8, len(fileData))
 	}
 
 	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "Version6ZIP", "ingest")), "ingested.json")

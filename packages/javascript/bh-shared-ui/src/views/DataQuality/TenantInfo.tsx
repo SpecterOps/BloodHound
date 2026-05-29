@@ -19,7 +19,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { AzureDataQualityStat } from 'js-client-library';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { NodeIcon } from '../../components';
 import { AzureNodeKind } from '../../graphSchema';
 import { useAzureDataQualityStatsQuery, useAzurePlatformsDataQualityStatsQuery } from '../../hooks';
@@ -74,12 +74,7 @@ export const TenantInfo: React.FC<{ contextId: string; headers?: boolean; onData
     headers = false,
     onDataError = () => {},
 }) => {
-    const { data, isLoading, isError } = useAzureDataQualityStatsQuery(contextId);
-    const [tenantData, setTenantData] = useState(data || null);
-
-    useEffect(() => {
-        if (data && data.data) setTenantData(data);
-    }, [data, contextId]);
+    const { data: tenantData, isLoading, isError } = useAzureDataQualityStatsQuery(contextId);
 
     useEffect(() => {
         if (isError) onDataError();
@@ -89,8 +84,8 @@ export const TenantInfo: React.FC<{ contextId: string; headers?: boolean; onData
         return <Layout stats={null} headers={headers} loading={true} />;
     }
 
-    if (isError || !tenantData) {
-        return <Layout stats={null} headers={headers} loading={false} />;
+    if (isError || !tenantData || !tenantData.data.length) {
+        return null;
     }
 
     const stats = tenantData.data[0];
@@ -99,23 +94,18 @@ export const TenantInfo: React.FC<{ contextId: string; headers?: boolean; onData
 };
 
 export const AzurePlatformInfo: React.FC<{ onDataError?: () => void }> = ({ onDataError = () => {} }) => {
-    const { data, isLoading, isError } = useAzurePlatformsDataQualityStatsQuery();
-    const [platformData, setPlatformData] = useState(data || null);
-
-    useEffect(() => {
-        if (data && data.data) setPlatformData(data);
-    }, [data]);
+    const { data: platformData, isLoading, isError } = useAzurePlatformsDataQualityStatsQuery();
 
     useEffect(() => {
         if (isError) onDataError();
     }, [isError, onDataError]);
 
-    if (isLoading || !platformData) {
+    if (isLoading) {
         return <Layout stats={null} loading={true} />;
     }
 
-    if (isError) {
-        return <Layout stats={null} loading={false} />;
+    if (isError || !platformData || !platformData.data.length) {
+        return null;
     }
 
     const stats = platformData.data[0];

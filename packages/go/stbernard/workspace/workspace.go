@@ -17,10 +17,13 @@
 package workspace
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
@@ -86,6 +89,14 @@ func FindPaths(env environment.Environment) (WorkspacePaths, error) {
 		return WorkspacePaths{}, fmt.Errorf("parsing yarn workspace: %w", err)
 	}
 
+	slog.Info(
+		"Detected Workspace",
+		slog.String("root", cwd),
+		slog.String("submodules", strings.Join(subPaths, "|")),
+		slog.String("assets", yarnWorkspaces.AssetsDir),
+		slog.String("yarn_workspaces", strings.Join(yarnWorkspaces.Workspaces, "|")),
+	)
+
 	return WorkspacePaths{
 		Root:           cwd,
 		Coverage:       path,
@@ -111,7 +122,13 @@ func GenerateSchema(cwd string, env environment.Environment) error {
 		args = append(args, "github.com/specterops/bloodhound-enterprise/cmd/schemagen")
 	}
 
-	if _, err := cmdrunner.Run(command, args, cwd, env); err != nil {
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command: command,
+		Args:    args,
+		Path:    cwd,
+		Env:     env.Slice(),
+	}
+	if _, err := cmdrunner.Run(context.TODO(), executionPlan); err != nil {
 		return fmt.Errorf("running schemagen: %w", err)
 	} else {
 		return nil

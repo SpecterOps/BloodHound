@@ -18,23 +18,13 @@ import isEmpty from 'lodash/isEmpty';
 import { useEffect, useMemo, useState } from 'react';
 import { isGraphResponse, useExploreGraph } from '../useExploreGraph';
 import { useExploreParams } from '../useExploreParams';
-import { useFeatureFlag } from '../useFeatureFlags';
-
-interface UseExploreTableAutoDisplayParams {
-    /**
-     * If preconditions are met that disable the auto-display, we should be able
-     * to disable any expensive calculations in this hook if the auto-display isnt required
-     */
-    enabled: boolean;
-}
 
 // This should be able to detect when the Explore Table should display automatically and when NOT to display it.
 // Auto display when current search is cypher and returned data contains nodes but not edges.
 // And dont auto display if the auto display has been closed.
-export const useExploreTableAutoDisplay = ({ enabled }: UseExploreTableAutoDisplayParams) => {
-    const { data: graphData, isFetching } = useExploreGraph({ includeProperties: true, enabled });
+export const useExploreTableAutoDisplay = (enabled: boolean) => {
+    const { data: graphData, isFetching } = useExploreGraph();
     const { searchType } = useExploreParams();
-    const { data: featureFlag } = useFeatureFlag('explore_table_view');
 
     // Tracks if the current query has triggered the table.
     // Resets when the query fetches, which includes initial fetch and fetches from the cache
@@ -47,6 +37,7 @@ export const useExploreTableAutoDisplay = ({ enabled }: UseExploreTableAutoDispl
         graphData && // type check the response for type safety
         isGraphResponse(graphData)
     );
+
     // Resets the trigger on every fetch of a query, even fetches from the cache.
     useEffect(() => {
         if (enabled && isFetching) {
@@ -56,22 +47,22 @@ export const useExploreTableAutoDisplay = ({ enabled }: UseExploreTableAutoDispl
 
     // Memoized this because it could be semi-expensive when checking if nodes are empty and
     // we dont need to recalculate it on every rerender.
-    const [emptyEdges, containsNodes] = useMemo(() => {
+    const [emptyEdges, containsNodes, nodesLength] = useMemo(() => {
         if (enabled && autoDisplayTableQueryCandidate) {
             const emptyEdges = isEmpty(graphData.data.edges);
             const containsNodes = !isEmpty(graphData.data.nodes);
+            const nodesLength = Object.keys(graphData?.data.nodes).length;
 
-            return [emptyEdges, containsNodes];
+            return [emptyEdges, containsNodes, nodesLength];
         }
-        return [false, false];
+        return [false, false, 0];
     }, [autoDisplayTableQueryCandidate, enabled, graphData]);
 
     // checks if current query is a candidate to auto display the table
     // if it is, and the query is nodes only then call setAutoDisplayTable.
     useEffect(() => {
-        if (!featureFlag?.enabled || !enabled || hasTriggered) return;
-
-        const shouldAutoDisplay = autoDisplayTableQueryCandidate && emptyEdges && containsNodes;
+        if (!enabled || hasTriggered) return;
+        const shouldAutoDisplay = autoDisplayTableQueryCandidate && emptyEdges && containsNodes && nodesLength > 1;
 
         if (shouldAutoDisplay) {
             // set triggered to true so that we dont try to reopen the table until a new query is executed.
@@ -82,9 +73,9 @@ export const useExploreTableAutoDisplay = ({ enabled }: UseExploreTableAutoDispl
     }, [
         autoDisplayTableQueryCandidate,
         containsNodes,
+        nodesLength,
         emptyEdges,
         enabled,
-        featureFlag?.enabled,
         hasTriggered,
         setAutoDisplayTable,
     ]);

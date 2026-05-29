@@ -14,17 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, AlertTitle, Box, Container } from '@mui/material';
+import { Alert, AlertTitle, Container } from '@mui/material';
 
 const GenericErrorBoundaryFallback = () => {
     return (
         <Container maxWidth='xl'>
-            <Box py={2} sx={{ display: 'flex', justifyContent: 'flex-end' }} data-testid='error-boundary'>
+            <div className='py-4 flex justify-end' data-testid='error-boundary'>
                 <Alert severity='error'>
                     <AlertTitle>Error</AlertTitle>
                     An unexpected error has occurred. Please refresh the page and try again.
                 </Alert>
-            </Box>
+            </div>
         </Container>
     );
 };

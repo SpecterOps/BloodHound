@@ -17,7 +17,7 @@
 package golang
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -34,28 +34,34 @@ import (
 func Run(cwd string, modPath string, env environment.Environment) (codeclimate.SeverityMap, error) {
 	var (
 		lintEntries []codeclimate.Entry
-		output      *bytes.Buffer
 		command     = "go"
 		args        = []string{"tool", "golangci-lint", "run", "--fix", "--config", ".golangci.json", "--output.code-climate.path", "stdout", "--"}
 	)
 
 	args = append(args, filepath.Join(modPath, "..."))
 
-	if result, err := cmdrunner.Run(command, args, cwd, env); err != nil {
-		var errResult *cmdrunner.ExecutionError
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command:        command,
+		Args:           args,
+		Path:           cwd,
+		Env:            env.Slice(),
+		SuppressErrors: true,
+	}
 
-		// exit code 1 is for major or higher analyzer output, higher exit codes indicate something wrong with golangci-lint
-		// or its environment, so make sure to fail out
-		if !errors.As(err, &errResult) || errResult.ReturnCode > 1 {
+	result, err := cmdrunner.Run(context.TODO(), executionPlan)
+	if err != nil {
+		if !errors.Is(err, cmdrunner.ErrCmdExecutionFailed) {
 			return nil, fmt.Errorf("golangci-lint execution: %w", err)
 		}
 
-		output = errResult.StandardOutput
-	} else {
-		output = result.StandardOutput
+		// exit code 1 is for major or higher analyzer output, higher exit codes indicate something wrong with golangci-lint
+		// or its environment, so make sure to fail out
+		if result.ReturnCode > 1 {
+			return nil, fmt.Errorf("golangci-lint execution: exit code %d", result.ReturnCode)
+		}
 	}
 
-	if err := json.NewDecoder(output).Decode(&lintEntries); err != nil {
+	if err := json.NewDecoder(result.StandardOutput).Decode(&lintEntries); err != nil {
 		return nil, fmt.Errorf("golangci-lint decoding output: %w", err)
 	}
 

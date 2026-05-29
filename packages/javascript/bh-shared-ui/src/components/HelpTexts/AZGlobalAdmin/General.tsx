@@ -14,15 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 
 const General: FC = () => {
     return (
         <Typography variant='body2'>
-            This edge indicates the principal has the Global Admin role active against the target tenant. In other
-            words, the principal is a Global Admin. Global Admins can do almost anything against almost every object
-            type in the tenant, this is the highest privilege role in Azure.
+            The principal has the Global Administrator Entra ID role active against the target tenant. In other words,
+            the principal is a Global Admin. Global Admins can do almost anything against almost every object type in
+            the tenant, this is the highest privilege role in Azure.
         </Typography>
     );
 };

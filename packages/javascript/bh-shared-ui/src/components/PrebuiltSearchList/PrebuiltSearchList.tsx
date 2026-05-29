@@ -13,130 +13,149 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-import { Button } from '@bloodhoundenterprise/doodleui';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-    Box,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    DialogTitle,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemText,
-    ListSubheader,
-} from '@mui/material';
+import { Box } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { FC, useState } from 'react';
-
+import { Button, Typography } from 'doodle-ui';
+import groupBy from 'lodash/groupBy';
+import { FC, useCallback } from 'react';
+import { QueryListSection } from '../../types';
+import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
+import { useSavedQueriesContext } from '../../views/Explore/providers/SavedQueriesProvider';
+import ListItemActionMenu from './ListItemActionMenu';
 interface PrebuiltSearchListProps {
-    listSections: ListSection[];
-    clickHandler: (query: string) => void;
+    listSections: QueryListSection[];
+    showCommonQueries: boolean;
+    clickHandler: (query: string, id?: number) => void;
     deleteHandler?: (id: number) => void;
+    clearFiltersHandler: () => void;
 }
-
-type ListSection = {
-    subheader: string;
-    lineItems: LineItem[];
-};
-
-export type LineItem = {
-    id?: number;
-    description: string;
-    cypher: string;
-    canEdit?: boolean;
-};
 
 const useStyles = makeStyles((theme) => ({
     subheader: {
-        color: theme.palette.color.primary,
-        backgroundColor: theme.palette.neutral.tertiary,
-        borderRadius: '8px',
-        fontWeight: 'bold',
+        color: theme.palette?.color.primary,
+        backgroundColor: theme.palette?.neutral.tertiary,
+        paddingLeft: '8px',
+        paddingRight: '8px',
+    },
+    selected: {
+        backgroundColor: theme.palette?.neutral.quaternary,
+        '&:hover': {
+            backgroundColor: theme.palette?.neutral.quaternary,
+        },
     },
 }));
 
-const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHandler, deleteHandler }) => {
-    const [open, setOpen] = useState(false);
-    const [queryId, setQueryId] = useState<number>();
+const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
+    listSections,
+    clickHandler,
+    deleteHandler,
+    clearFiltersHandler,
+}) => {
+    const { selectedQuery } = useSavedQueriesContext();
     const styles = useStyles();
+    const groupedQueries = groupBy(listSections, 'category');
 
-    const handleOpen = () => {
-        setOpen(true);
+    const isSelectedQuery = (name: string, id?: number) => {
+        if (!selectedQuery) return false;
+
+        if (id && id === selectedQuery.id) {
+            return true;
+        } else if (name && name === selectedQuery.name) {
+            return true;
+        }
+
+        return false;
     };
 
-    const handleClose = () => {
-        setOpen(false);
-        setQueryId(undefined);
-    };
+    const scrollSelectedItemIntoView = useCallback((e: HTMLLIElement | null) => {
+        if (e) e.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, []);
 
     return (
         <>
-            <List dense disablePadding>
-                {listSections.map((section) => {
-                    const { subheader, lineItems } = section;
-
-                    return (
-                        <Box key={subheader}>
-                            <ListSubheader className={styles.subheader}>{subheader} </ListSubheader>
-
-                            {lineItems?.map((lineItem, idx) => {
-                                const { id, description, cypher, canEdit = false } = lineItem;
-
+            {listSections && (
+                <div data-testid='list-sections'>
+                    {Object.entries(groupedQueries).map(([category, queryData]) => (
+                        <div key={category} className='relative'>
+                            {category && queryData.some((q) => q.queries.length) && (
+                                <div className={`${styles.subheader} font-bold sticky top-0 z-[2] py-2`}>
+                                    {category}
+                                </div>
+                            )}
+                            {queryData.map((queryItem, i) => {
+                                const { subheader, queries } = queryItem;
                                 return (
-                                    <ListItem
-                                        disablePadding
-                                        key={`${id}-${idx}`}
-                                        sx={{ borderRadius: '8px', py: '4px' }}
-                                        secondaryAction={
-                                            canEdit && (
-                                                <Button
-                                                    aria-label='Delete Query'
-                                                    size='small'
-                                                    variant='secondary'
-                                                    onClick={() => {
-                                                        setQueryId(id);
-                                                        handleOpen();
-                                                    }}>
-                                                    <FontAwesomeIcon icon={faTrash} />
-                                                </Button>
-                                            )
-                                        }>
-                                        <ListItemButton onClick={() => clickHandler(cypher)}>
-                                            <ListItemText primary={description} />
-                                        </ListItemButton>
-                                    </ListItem>
+                                    <div key={i}>
+                                        {subheader && !!queries.length && (
+                                            <div className={`${styles.subheader} sticky top-9 z-[1] py-2`}>
+                                                {subheader}
+                                            </div>
+                                        )}
+                                        <ul className='list-none'>
+                                            {queries?.map((lineItem, idx) => {
+                                                const { id, name, description, query, canEdit = false } = lineItem;
+                                                return (
+                                                    <li
+                                                        className={`p-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-3 dark:hover:bg-neutral-dark-3 justify-between pl-8 list-none ${
+                                                            isSelectedQuery(name, id) ? styles.selected : ''
+                                                        }`}
+                                                        style={
+                                                            isSelectedQuery(name, id)
+                                                                ? { scrollMarginTop: '72px' }
+                                                                : undefined
+                                                        }
+                                                        key={`${id}-${idx}`}
+                                                        ref={
+                                                            isSelectedQuery(name, id)
+                                                                ? scrollSelectedItemIntoView
+                                                                : null
+                                                        }>
+                                                        <div
+                                                            role='button'
+                                                            tabIndex={0}
+                                                            className='w-full h-full'
+                                                            key={`${id}-${idx}`}
+                                                            aria-label={`Run pre-built search query: ${name || description || ''}`.trimEnd()}
+                                                            onClick={() => clickHandler(query, id)}
+                                                            onKeyDown={adaptClickHandlerToKeyDown(() =>
+                                                                clickHandler(query, id)
+                                                            )}>
+                                                            {name ? (
+                                                                <p className='mb-0 leading-none'>{name}</p>
+                                                            ) : (
+                                                                <p className='mb-0 leading-none'>{description}</p>
+                                                            )}
+                                                        </div>
+                                                        {canEdit && typeof id === 'number' && (
+                                                            <ListItemActionMenu
+                                                                id={id}
+                                                                query={query}
+                                                                deleteQuery={() => {
+                                                                    if (deleteHandler) deleteHandler(id);
+                                                                }}
+                                                            />
+                                                        )}
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    </div>
                                 );
                             })}
-                        </Box>
-                    );
-                })}
-            </List>
-
-            <Dialog open={open} onClose={handleClose} maxWidth={'xs'} fullWidth>
-                <DialogTitle>Delete Query</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>Are you sure you want to delete this query?</DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button variant='tertiary' onClick={handleClose}>
-                        Cancel
+                        </div>
+                    ))}
+                </div>
+            )}
+            {!listSections.length && (
+                <Box className='min-h-40 flex flex-col items-center justify-center'>
+                    <Typography variant='h6' className='mb-2'>
+                        No Results
+                    </Typography>
+                    <Button variant='primary' size='small' onClick={clearFiltersHandler}>
+                        Reset Filters
                     </Button>
-                    <Button
-                        onClick={() => {
-                            if (deleteHandler) deleteHandler(queryId!);
-                            handleClose();
-                        }}
-                        color='primary'
-                        autoFocus>
-                        Confirm
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                </Box>
+            )}
         </>
     );
 };

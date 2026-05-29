@@ -14,19 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
-import { Alert, Box, Checkbox, FormControl, FormControlLabel, FormGroup, Typography } from '@mui/material';
+import { Alert, Box, Checkbox, FormControl, FormControlLabel, FormGroup } from '@mui/material';
 import {
     DeleteConfirmationDialog,
     FeatureFlag,
+    GraphDataCheckboxes,
     PageWithTitle,
     Permission,
-    SourceKindsCheckboxes,
     apiClient,
     useMountEffect,
     useNotifications,
     usePermissions,
+    type GraphDataSelections,
 } from 'bh-shared-ui';
+import { Button, Typography } from 'doodle-ui';
 import { ClearDatabaseRequest } from 'js-client-library';
 import { FC, useReducer } from 'react';
 import { useMutation } from 'react-query';
@@ -40,6 +41,7 @@ const initialState: State = {
     deleteDataQualityHistory: false,
     deleteFileIngestHistory: false,
     deleteSourceKinds: [],
+    deleteRelationships: [],
 
     noSelectionError: false,
     mutationError: false,
@@ -56,6 +58,7 @@ type State = {
     deleteDataQualityHistory: boolean;
     deleteFileIngestHistory: boolean;
     deleteSourceKinds: number[];
+    deleteRelationships: string[];
 
     // error state
     noSelectionError: boolean;
@@ -72,7 +75,7 @@ type Action =
     | { type: 'mutation_error'; message?: string }
     | { type: 'mutation_success' }
     | { type: 'selection'; targetName: string; checked: boolean }
-    | { type: 'source_kinds'; checked: number[] }
+    | { type: 'graph_data'; checked: GraphDataSelections }
     | { type: 'open_dialog' }
     | { type: 'close_dialog' };
 
@@ -103,6 +106,7 @@ const reducer = (state: State, action: Action): State => {
                 deleteDataQualityHistory: false,
                 deleteFileIngestHistory: false,
                 deleteSourceKinds: [],
+                deleteRelationships: [],
 
                 showSuccessMessage: true,
             };
@@ -115,11 +119,12 @@ const reducer = (state: State, action: Action): State => {
                 noSelectionError: false,
             };
         }
-        case 'source_kinds': {
+        case 'graph_data': {
             const { checked } = action;
             return {
                 ...state,
-                deleteSourceKinds: checked,
+                deleteSourceKinds: checked.sourceKinds,
+                deleteRelationships: checked.relationships,
                 noSelectionError: false,
             };
         }
@@ -131,7 +136,9 @@ const reducer = (state: State, action: Action): State => {
                     state.deleteCustomHighValueSelectors,
                     state.deleteDataQualityHistory,
                     state.deleteFileIngestHistory,
-                ].filter(Boolean).length === 0 && state.deleteSourceKinds.length === 0;
+                ].filter(Boolean).length === 0 &&
+                state.deleteSourceKinds.length === 0 &&
+                state.deleteRelationships.length === 0;
 
             if (noSelection) {
                 return {
@@ -171,6 +178,7 @@ const useDatabaseManagement = () => {
         deleteDataQualityHistory,
         deleteFileIngestHistory,
         deleteSourceKinds,
+        deleteRelationships,
     } = state;
 
     const mutation = useMutation({
@@ -216,6 +224,7 @@ const useDatabaseManagement = () => {
                 deleteCollectedGraphData,
                 deleteDataQualityHistory,
                 deleteFileIngestHistory,
+                deleteRelationships,
                 deleteSourceKinds,
             },
         });
@@ -255,6 +264,7 @@ const DatabaseManagement: FC = () => {
         deleteDataQualityHistory,
         deleteFileIngestHistory,
         deleteSourceKinds,
+        deleteRelationships,
     } = state;
 
     const handleCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -265,9 +275,9 @@ const DatabaseManagement: FC = () => {
         });
     };
 
-    const setSourceKinds = (checked: number[]) => {
+    const setGraphData = (checked: GraphDataSelections) => {
         dispatch({
-            type: 'source_kinds',
+            type: 'graph_data',
             checked,
         });
     };
@@ -277,20 +287,17 @@ const DatabaseManagement: FC = () => {
             title='Database Management'
             data-testid='database-management'
             pageDescription={
-                <Typography variant='body2' paragraph>
+                <Typography variant='body2'>
                     Manage your BloodHound data. Select from the options below which data should be deleted.
                 </Typography>
             }>
             <Box>
-                <Alert severity='warning' sx={{ mt: '1rem' }}>
+                <Alert severity='warning'>
                     <strong>Caution: </strong> This change is irreversible and will delete data from your environment.
                 </Alert>
 
                 <Box display='flex' flexDirection='column' alignItems='start'>
-                    <FormControl
-                        variant='standard'
-                        sx={{ paddingBlock: 2 }}
-                        error={state.noSelectionError || state.mutationError}>
+                    <FormControl variant='standard' error={state.noSelectionError || state.mutationError}>
                         {state.noSelectionError ? <Alert severity='error'>Please make a selection.</Alert> : null}
                         {state.mutationError ? (
                             <Alert severity='error'>
@@ -306,14 +313,15 @@ const DatabaseManagement: FC = () => {
                             </Alert>
                         ) : null}
 
-                        <FormGroup sx={{ paddingTop: 1 }}>
+                        <FormGroup className='pt-2'>
                             <FeatureFlag
                                 flagKey='clear_graph_data'
                                 enabled={
-                                    <SourceKindsCheckboxes
-                                        checked={deleteSourceKinds}
+                                    <GraphDataCheckboxes
+                                        checkedSourceKinds={deleteSourceKinds}
+                                        checkedRelationships={deleteRelationships}
                                         disabled={!hasPermission}
-                                        onChange={setSourceKinds}
+                                        onChange={setGraphData}
                                     />
                                 }
                             />

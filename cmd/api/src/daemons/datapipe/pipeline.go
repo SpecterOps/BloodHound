@@ -23,12 +23,15 @@ import (
 	"log/slog"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/job"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -47,9 +50,10 @@ type BHCEPipeline struct {
 	ingestSchema        upload.IngestSchema
 	jobService          job.JobService
 	graphifyService     graphify.GraphifyService
+	changelog           *changelog.Changelog
 }
 
-func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Database, graphDB graph.Database, cache cache.Cache, ingestSchema upload.IngestSchema) *BHCEPipeline {
+func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Database, graphDB graph.Database, cache cache.Cache, ingestSchema upload.IngestSchema, cl *changelog.Changelog) *BHCEPipeline {
 	return &BHCEPipeline{
 		db:                  db,
 		graphdb:             graphDB,
@@ -58,7 +62,8 @@ func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Data
 		orphanedFileSweeper: NewOrphanFileSweeper(NewOSFileOperations(), cfg.TempDirectory()),
 		ingestSchema:        ingestSchema,
 		jobService:          job.NewJobService(ctx, db),
-		graphifyService:     graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema),
+		graphifyService:     graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, cl),
+		changelog:           cl,
 	}
 }
 
@@ -78,36 +83,71 @@ func (s *BHCEPipeline) DeleteData(ctx context.Context) error {
 	}()
 	defer measure.LogAndMeasure(slog.LevelInfo, "Purge Graph Data")()
 
-	slog.Info("Begin Purge Graph Data")
+	slog.InfoContext(
+		ctx,
+		"Begin Purge Graph Data",
+	)
 
 	if err := s.db.CancelAllIngestJobs(ctx); err != nil {
 		return fmt.Errorf("cancelling jobs during data deletion: %v", err)
 	} else if err := s.db.DeleteAllIngestTasks(ctx); err != nil {
 		return fmt.Errorf("deleting ingest tasks during data deletion: %v", err)
-	} else if sourceKinds, err := s.db.GetSourceKinds(ctx); err != nil {
-		return fmt.Errorf("getting source kinds during data deletion: %v", err)
-	} else {
-		var (
-			kinds         graph.Kinds
-			filteredKinds graph.Kinds
-		)
-		for _, k := range sourceKinds {
-			kinds = append(kinds, k.Name)
-		}
-		// Filter out reserved kinds before removing records from source_kinds table
-		for _, kind := range kinds {
-			if !kind.Is(ad.Entity) && !kind.Is(azure.Entity) {
-				filteredKinds = append(filteredKinds, kind)
-			}
-		}
+	} else if err := PurgeGraphData(ctx, deleteRequest, s.graphdb, s.db); err != nil {
+		return fmt.Errorf("purging graph data failed: %w", err)
+	}
 
-		if err := DeleteCollectedGraphData(ctx, s.graphdb, deleteRequest, kinds); err != nil {
-			return fmt.Errorf("deleting graph data: %v", err)
-		} else if err := s.db.DeleteSourceKindsByName(ctx, filteredKinds); err != nil {
-			return fmt.Errorf("deleting source kinds: %v", err)
+	// Clear changelog cache to ensure consistency after graph data deletion
+	if s.changelog != nil {
+		s.changelog.ClearCache(ctx)
+	}
+
+	return nil
+}
+
+func PurgeGraphData(
+	ctx context.Context,
+	deleteRequest model.AnalysisRequest,
+	graphdb graph.Database,
+	db database.SourceKindsData,
+) error {
+	sourceKinds, err := db.GetSourceKinds(ctx)
+	if err != nil {
+		return fmt.Errorf("getting source kinds: %w", err)
+	}
+
+	allSourceKinds := extractKindNames(sourceKinds)
+	filteredKinds := filterDeletableKinds(deleteRequest.DeleteSourceKinds)
+
+	if err := DeleteCollectedGraphData(ctx, graphdb, deleteRequest, allSourceKinds); err != nil {
+		return fmt.Errorf("deleting graph data: %w", err)
+	}
+
+	if err := db.DeleteSourceKindsByName(ctx, filteredKinds...); err != nil {
+		return fmt.Errorf("deleting source kinds: %w", err)
+	}
+
+	return nil
+}
+
+func extractKindNames(sourceKinds []model.SourceKind) graph.Kinds {
+	var kinds graph.Kinds
+	for _, k := range sourceKinds {
+		kinds = append(kinds, k.ToKind())
+	}
+	return kinds
+}
+
+// if the delete request specifies any source_kinds for deletion we want to remove them from the source_kinds table.
+// we want to remove 3rd party source_kinds when requested(e.g. GithubBase, HelloBase), but this ensures that we never remove Base and AZBase.
+func filterDeletableKinds(kindsToDelete []string) []string {
+	var filtered []string
+	for _, kind := range kindsToDelete {
+		k := graph.StringKind(kind)
+		if !k.Is(ad.Entity) && !k.Is(azure.Entity) {
+			filtered = append(filtered, kind)
 		}
 	}
-	return nil
+	return filtered
 }
 
 // This is called on Daemon start. We get a list of all filenames we know/expect and delete any
@@ -119,7 +159,7 @@ func (s *BHCEPipeline) PruneData(ctx context.Context) error {
 		expectedFiles := make([]string, len(ingestTasks))
 
 		for idx, ingestTask := range ingestTasks {
-			expectedFiles[idx] = ingestTask.FileName
+			expectedFiles[idx] = ingestTask.StoredFileName
 		}
 
 		go s.orphanedFileSweeper.Clear(ctx, expectedFiles)
@@ -144,15 +184,51 @@ func (s *BHCEPipeline) IngestTasks(ctx context.Context) error {
 // updateJobFunc generates a valid graphify.UpdateJobFunc by injecting the parent context and database interface
 // Only used as a callback, so not exposed
 func updateJobFunc(ctx context.Context, db database.Database) graphify.UpdateJobFunc {
-	return func(jobID int64, totalFiles int, totalFailed int) {
+	return func(jobID int64, fileData []graphify.IngestFileData) {
 		if job, err := db.GetIngestJob(ctx, jobID); err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed to fetch job for ingest task %d: %v", jobID, err))
+			slog.ErrorContext(
+				ctx,
+				"Failed to fetch job for ingest task",
+				slog.Int64("job_id", jobID),
+				attr.Error(err),
+			)
 		} else {
-			job.TotalFiles += totalFiles
-			job.FailedFiles += totalFailed
+			for _, file := range fileData {
+				job.TotalFiles += 1
+				completedTask := model.CompletedTask{
+					IngestJobId:    job.ID,
+					FileName:       file.Name,
+					ParentFileName: file.ParentFile,
+					Errors:         []string{},
+					Warnings:       []string{},
+				}
+
+				if len(file.Errors) > 0 {
+					job.FailedFiles += 1
+					completedTask.Errors = file.Errors
+				}
+				if len(file.UserDataErrs) > 0 {
+					job.PartialFailedFiles += 1
+					completedTask.Warnings = file.UserDataErrs
+				}
+
+				if _, err = db.CreateCompletedTask(ctx, completedTask); err != nil {
+					slog.ErrorContext(
+						ctx,
+						"Failed to create completed task for ingest task",
+						slog.Int64("job_id", job.ID),
+						attr.Error(err),
+					)
+				}
+			}
 
 			if err = db.UpdateIngestJob(ctx, job); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed to update number of failed files for ingest job ID %d: %v", job.ID, err))
+				slog.ErrorContext(
+					ctx,
+					"Failed to update number of failed files for ingest job ID",
+					slog.Int64("job_id", job.ID),
+					attr.Error(err),
+				)
 			}
 		}
 	}
@@ -178,12 +254,18 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 			return ErrAnalysisDisabled
 		}
 
-		defer measure.LogAndMeasure(slog.LevelInfo, "Graph Analysis")()
+		defer measure.LogAndMeasure(
+			slog.LevelInfo,
+			"Graph Analysis",
+			attr.Namespace("analysis"),
+			attr.Function("Analyze"),
+			attr.Scope("summary"),
+		)()
 
-		if err := RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg); err != nil {
-			if errors.Is(err, ErrAnalysisFailed) {
+		if err := analysis.RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg); err != nil {
+			if errors.Is(err, analysis.ErrAnalysisFailed) {
 				s.jobService.FailAnalyzedIngestJobs()
-			} else if errors.Is(err, ErrAnalysisPartiallyCompleted) {
+			} else if errors.Is(err, analysis.ErrAnalysisPartiallyCompleted) {
 				s.jobService.PartialCompleteIngestJobs()
 			}
 			return fmt.Errorf("analysis failure: %v", err)
@@ -194,11 +276,24 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 
 			// This is cacheclearing. The analysis is still successful here
 			if _, err := s.db.GetFlagByKey(ctx, appcfg.FeatureEntityPanelCaching); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error retrieving entity panel caching flag: %v", err))
+				slog.ErrorContext(
+					ctx,
+					"Error retrieving entity panel caching flag",
+					attr.Error(err),
+				)
 			} else if err := s.cache.Reset(); err != nil {
-				slog.Error(fmt.Sprintf("Error while resetting the cache: %v", err))
+				slog.ErrorContext(
+					ctx,
+					"Error while resetting the cache",
+					attr.Error(err),
+				)
 			} else {
-				slog.Info("Cache successfully reset by datapipe daemon")
+				slog.InfoContext(
+					ctx,
+					"Cache successfully reset by datapipe daemon",
+					attr.Namespace("analysis"),
+					attr.Function("Analyze"),
+				)
 			}
 
 			return nil

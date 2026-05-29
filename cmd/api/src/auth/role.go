@@ -23,6 +23,7 @@ import (
 const (
 	RoleUploadOnly    = "Upload-Only"
 	RoleReadOnly      = "Read-Only"
+	RoleAuditor       = "Auditor"
 	RoleUser          = "User"
 	RolePowerUser     = "Power User"
 	RoleAdministrator = "Administrator"
@@ -49,6 +50,7 @@ func Roles() map[string]RoleTemplate {
 				permissions.AuthManageSelf,
 				permissions.GraphDBRead,
 				permissions.SavedQueriesRead,
+				permissions.OpenGraphRead,
 			},
 		},
 		RoleUploadOnly: {
@@ -57,6 +59,23 @@ func Roles() map[string]RoleTemplate {
 			Permissions: model.Permissions{
 				permissions.ClientsTasking,
 				permissions.GraphDBIngest,
+			},
+		},
+		RoleAuditor: {
+			Name:        RoleAuditor,
+			Description: "Can read data and audit logs",
+			Permissions: model.Permissions{
+				permissions.AppReadApplicationConfiguration,
+				permissions.APsGenerateReport,
+				permissions.AuthCreateToken,
+				permissions.AuditLogRead,
+				permissions.AuthManageSelf,
+				permissions.AuthReadUsers,
+				permissions.ClientsRead,
+				permissions.GraphDBRead,
+				permissions.SavedQueriesRead,
+				permissions.CollectionReadJobs,
+				permissions.OpenGraphRead,
 			},
 		},
 		RoleUser: {
@@ -71,12 +90,14 @@ func Roles() map[string]RoleTemplate {
 				permissions.GraphDBRead,
 				permissions.SavedQueriesRead,
 				permissions.SavedQueriesWrite,
+				permissions.OpenGraphRead,
 			},
 		},
 		RolePowerUser: {
 			Name:        RolePowerUser,
 			Description: "Can upload data, manage clients, and perform any action a User can",
 			Permissions: model.Permissions{
+				permissions.AppReadApplicationConfiguration,
 				permissions.APsGenerateReport,
 				permissions.APsManageAPs,
 				permissions.AuthCreateToken,
@@ -91,6 +112,7 @@ func Roles() map[string]RoleTemplate {
 				permissions.SavedQueriesRead,
 				permissions.SavedQueriesWrite,
 				permissions.GraphDBMutate,
+				permissions.OpenGraphRead,
 			},
 		},
 		RoleAdministrator: {

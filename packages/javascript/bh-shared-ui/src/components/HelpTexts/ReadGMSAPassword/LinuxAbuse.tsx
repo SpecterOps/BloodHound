@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link, Typography } from '@mui/material';
+import { Link } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 
 const LinuxAbuse: FC = () => {
@@ -36,7 +37,7 @@ const LinuxAbuse: FC = () => {
             <Typography variant='body2'>
                 Finally, it is possible to remotely retrieve the password for the GMSA and convert that password to its
                 equivalent NT hash.
-                <Link target='_blank' rel='noopener' href='https://github.com/micahvandeusen/gMSADumper'>
+                <Link target='_blank' rel='noopener noreferrer' href='https://github.com/micahvandeusen/gMSADumper'>
                     gMSADumper.py
                 </Link>{' '}
                 can be used for that purpose.

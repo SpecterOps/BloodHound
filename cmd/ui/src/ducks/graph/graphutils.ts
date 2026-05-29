@@ -216,7 +216,7 @@ const ICONS: { [id in GraphNodeTypes]: string } = {
     [GraphNodeTypes.AZSubscription]: 'fa-key',
     [GraphNodeTypes.AZTenant]: 'fa-cloud',
     [GraphNodeTypes.AZUser]: 'fa-user',
-    [GraphNodeTypes.AZVM]: 'fa-dekstop',
+    [GraphNodeTypes.AZVM]: 'fa-desktop',
     [GraphNodeTypes.AZManagedCluster]: 'fa-cubes',
     [GraphNodeTypes.AZContainerRegistry]: 'fa-box-open',
     [GraphNodeTypes.AZWebApp]: 'fa-object-group',
@@ -246,7 +246,6 @@ const setFontIcons = (data: Items): void => {
 };
 
 export {
-    ICONS,
     applyRelWidths,
     findRootId,
     findRootRelsIds,
@@ -256,6 +255,7 @@ export {
     getLinksIndex,
     getNodesIndex,
     handleLabels,
+    ICONS,
     setFontIcons,
     withLinkImact,
 };

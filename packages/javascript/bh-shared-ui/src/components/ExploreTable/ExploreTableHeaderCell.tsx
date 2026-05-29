@@ -13,9 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Tooltip } from '@mui/material';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
+import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
+import { AppIcon } from '../AppIcon';
 import { MungedTableRowWithId } from './explore-table-utils';
 
 const ExploreTableHeaderCell = ({
@@ -26,20 +27,36 @@ const ExploreTableHeaderCell = ({
 }: {
     headerKey: keyof MungedTableRowWithId;
     sortBy?: keyof MungedTableRowWithId;
+    dataType: string;
     sortOrder?: string;
     onClick: () => void;
 }) => {
+    const label = formatPotentiallyUnknownLabel(String(headerKey));
+
+    let IconComponent = AppIcon.SortEmpty;
+    if (sortBy !== headerKey) {
+        IconComponent = AppIcon.SortEmpty;
+    } else {
+        if (sortOrder === 'asc') IconComponent = AppIcon.SortAsc;
+        if (sortOrder === 'desc') IconComponent = AppIcon.SortDesc;
+    }
+
     return (
-        <div
-            className='flex items-center p-1 m-0 cursor-pointer h-full hover:bg-neutral-100 dark:hover:bg-neutral-dark-4'
-            onClick={onClick}>
-            <div>{formatPotentiallyUnknownLabel(String(headerKey))}</div>
-            <div className={cn('pl-2', { ['opacity-0']: sortBy !== headerKey })}>
-                {!sortOrder && <FontAwesomeIcon icon={faCaretDown} />}
-                {sortOrder === 'asc' && <FontAwesomeIcon icon={faCaretUp} />}
-                {sortOrder === 'desc' && <FontAwesomeIcon icon={faCaretDown} />}
+        <Tooltip title={<p>{label}</p>}>
+            <div
+                role='button'
+                tabIndex={0}
+                className={cn(
+                    'flex items-center m-0 cursor-pointer h-full w-full hover:bg-neutral-100 dark:hover:bg-neutral-dark-4'
+                )}
+                onClick={onClick}
+                onKeyDown={adaptClickHandlerToKeyDown(onClick)}>
+                <div className='truncate'>{label}</div>
+                <div className='pl-2'>
+                    <IconComponent size={12} />
+                </div>
             </div>
-        </div>
+        </Tooltip>
     );
 };
 

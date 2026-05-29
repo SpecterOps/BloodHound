@@ -22,6 +22,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 )
 
+// AssetGroupHistoryRecordRollingWindow This defines the rolling window in days that the asset group history table will be truncated down to at the end of a successful analysis run
+const AssetGroupHistoryRecordRollingWindow = 90
+
 type AssetGroupHistoryAction string
 
 const (
@@ -35,7 +38,24 @@ const (
 	AssetGroupHistoryActionCreateSelector AssetGroupHistoryAction = "CreateSelector"
 	AssetGroupHistoryActionUpdateSelector AssetGroupHistoryAction = "UpdateSelector"
 	AssetGroupHistoryActionDeleteSelector AssetGroupHistoryAction = "DeleteSelector"
+
+	AssetGroupHistoryActionCertifyNodeAuto    AssetGroupHistoryAction = "CertifyNodeAuto"
+	AssetGroupHistoryActionCertifyNodeManual  AssetGroupHistoryAction = "CertifyNodeManual"
+	AssetGroupHistoryActionCertifyNodeRevoked AssetGroupHistoryAction = "CertifyNodeRevoked"
 )
+
+func ToAssetGroupHistoryActionFromAssetGroupCertification(certifyValue AssetGroupCertification) AssetGroupHistoryAction {
+	switch certifyValue {
+	case AssetGroupCertificationRevoked:
+		return AssetGroupHistoryActionCertifyNodeRevoked
+	case AssetGroupCertificationManual:
+		return AssetGroupHistoryActionCertifyNodeManual
+	case AssetGroupCertificationAuto:
+		return AssetGroupHistoryActionCertifyNodeAuto
+	default:
+		return "UnknownHistoryAction"
+	}
+}
 
 // AssetGroupHistory is the record of CRUD changes associated with v2 of the asset groups feature
 type AssetGroupHistory struct {

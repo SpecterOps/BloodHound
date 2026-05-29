@@ -31,79 +31,126 @@ import (
 )
 
 func DeleteCollectedGraphData(ctx context.Context, graphDB graph.Database, deleteRequest model.AnalysisRequest, sourceKinds graph.Kinds) error {
-	slog.Info("DeleteCollectedGraphData",
-		slog.Bool("delete all data", deleteRequest.DeleteAllGraph),
-		slog.Bool("delete sourceless data", deleteRequest.DeleteSourcelessGraph),
-		slog.String("delete source kinds", strings.Join(deleteRequest.DeleteSourceKinds, ",")))
+	slog.InfoContext(
+		ctx,
+		"DeleteCollectedGraphData",
+		slog.Bool("delete_all_data", deleteRequest.DeleteAllGraph),
+		slog.Bool("delete_sourceless_data", deleteRequest.DeleteSourcelessGraph),
+		slog.String("delete_source_kinds", strings.Join(deleteRequest.DeleteSourceKinds, ",")),
+		slog.String("delete_relationships", strings.Join(deleteRequest.DeleteRelationships, ",")),
+	)
 
-	operation := ops.StartNewOperation[graph.ID](ops.OperationContext{
-		Parent:     ctx,
-		DB:         graphDB,
-		NumReaders: 1,
-		NumWriters: 1,
-	})
+	if deleteRequest.DeleteAllGraph || deleteRequest.DeleteSourcelessGraph || len(deleteRequest.DeleteSourceKinds) > 0 {
+		nodeOperation := ops.StartNewOperation[graph.ID](ops.OperationContext{
+			Parent:     ctx,
+			DB:         graphDB,
+			NumReaders: 1,
+			NumWriters: 1,
+		})
 
-	deleteSourceKinds := make(graph.Kinds, len(deleteRequest.DeleteSourceKinds))
-	for i, s := range deleteRequest.DeleteSourceKinds {
-		deleteSourceKinds[i] = graph.StringKind(s)
+		deleteSourceKinds := make(graph.Kinds, len(deleteRequest.DeleteSourceKinds))
+		for i, sourceKind := range deleteRequest.DeleteSourceKinds {
+			deleteSourceKinds[i] = graph.StringKind(sourceKind)
+		}
+
+		nodeOperation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- graph.ID) error {
+			var (
+				nodeQuery graph.NodeQuery
+				filters   []graph.Criteria
+			)
+
+			// Always exclude MigrationData
+			migrationFilter := query.Not(query.Kind(query.Node(), common.MigrationData))
+
+			if !deleteRequest.DeleteAllGraph {
+				if deleteRequest.DeleteSourcelessGraph {
+					filters = append(filters,
+						query.Not(query.KindIn(query.Node(), sourceKinds...)),
+					)
+				}
+
+				if len(deleteSourceKinds) > 0 {
+					filters = append(filters,
+						query.KindIn(query.Node(), deleteSourceKinds...),
+					)
+				}
+			}
+
+			if len(filters) > 0 {
+				nodeQuery = tx.Nodes().Filter(
+					query.And(
+						migrationFilter,
+						query.Or(filters...),
+					),
+				)
+			} else {
+				nodeQuery = tx.Nodes().Filter(migrationFilter)
+			}
+
+			return nodeQuery.FetchIDs(func(cursor graph.Cursor[graph.ID]) error {
+				channels.PipeAll(ctx, cursor.Chan(), outC)
+				return cursor.Error()
+			})
+		})
+
+		nodeOperation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan graph.ID) error {
+			for {
+				if nextID, hasNextID := channels.Receive(ctx, inC); hasNextID {
+					if err := batch.DeleteNode(nextID); err != nil {
+						return err
+					}
+				} else {
+					break
+				}
+			}
+
+			return nil
+		})
+
+		if err := nodeOperation.Done(); err != nil {
+			return fmt.Errorf("error deleting graph nodes: %w", err)
+		}
 	}
 
-	operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- graph.ID) error {
-		var (
-			nodeQuery graph.NodeQuery
-			filters   []graph.Criteria
-		)
-
-		// Always exclude MigrationData
-		migrationFilter := query.Not(query.Kind(query.Node(), common.MigrationData))
-
-		if !deleteRequest.DeleteAllGraph {
-			if deleteRequest.DeleteSourcelessGraph {
-				filters = append(filters,
-					query.Not(query.KindIn(query.Node(), sourceKinds...)),
-				)
-			}
-
-			if len(deleteSourceKinds) > 0 {
-				filters = append(filters,
-					query.KindIn(query.Node(), deleteSourceKinds...),
-				)
-			}
-		}
-
-		if len(filters) > 0 {
-			nodeQuery = tx.Nodes().Filter(
-				query.And(
-					migrationFilter,
-					query.Or(filters...),
-				),
-			)
-		} else {
-			nodeQuery = tx.Nodes().Filter(migrationFilter)
-		}
-
-		return nodeQuery.FetchIDs(func(cursor graph.Cursor[graph.ID]) error {
-			channels.PipeAll(ctx, cursor.Chan(), outC)
-			return cursor.Error()
+	if len(deleteRequest.DeleteRelationships) > 0 {
+		edgeOperation := ops.StartNewOperation[graph.ID](ops.OperationContext{
+			Parent:     ctx,
+			DB:         graphDB,
+			NumReaders: 1,
+			NumWriters: 1,
 		})
-	})
 
-	operation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan graph.ID) error {
-		for {
-			if nextID, hasNextID := channels.Receive(ctx, inC); hasNextID {
-				if err := batch.DeleteNode(nextID); err != nil {
-					return err
-				}
-			} else {
-				break
-			}
+		deleteRelationshipKinds := make(graph.Kinds, len(deleteRequest.DeleteRelationships))
+		for i, relationshipKind := range deleteRequest.DeleteRelationships {
+			deleteRelationshipKinds[i] = graph.StringKind(relationshipKind)
 		}
 
-		return nil
-	})
+		edgeOperation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- graph.ID) error {
+			edgeQuery := tx.Relationships().Filter(query.KindIn(query.Relationship(), deleteRelationshipKinds...))
 
-	if err := operation.Done(); err != nil {
-		return fmt.Errorf("error deleting graph nodes: %w", err)
+			return edgeQuery.FetchIDs(func(cursor graph.Cursor[graph.ID]) error {
+				channels.PipeAll(ctx, cursor.Chan(), outC)
+				return cursor.Error()
+			})
+		})
+
+		edgeOperation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan graph.ID) error {
+			for {
+				if nextID, hasNextID := channels.Receive(ctx, inC); hasNextID {
+					if err := batch.DeleteRelationship(nextID); err != nil {
+						return err
+					}
+				} else {
+					break
+				}
+			}
+
+			return nil
+		})
+
+		if err := edgeOperation.Done(); err != nil {
+			return fmt.Errorf("error deleting graph edges: %w", err)
+		}
 	}
 
 	return nil

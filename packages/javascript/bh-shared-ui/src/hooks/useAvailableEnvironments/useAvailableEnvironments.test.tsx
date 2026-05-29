@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { faCircleNodes, faCloud, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import * as ReactQuery from 'react-query';
@@ -34,7 +35,14 @@ const fakeDomainB = {
     collected: true,
     id: 'b',
 };
-const fakeDomains = [fakeDomainA, fakeDomainB];
+const fakeDomainC = {
+    type: 'Dog_Park',
+    impactValue: 12,
+    name: 'Large Dog Park Area',
+    collected: true,
+    id: 'Large Dog Park Area',
+};
+const fakeDomains = [fakeDomainA, fakeDomainB, fakeDomainC];
 
 const server = setupServer(
     rest.get('/api/v2/available-domains', (req, res, ctx) => {
@@ -62,24 +70,75 @@ describe('useAvailableEnvironments', () => {
         it('returns the full environment for the environmentid passed', async () => {
             const actual = renderHook(() => useSelectedEnvironment(fakeDomainA.id));
 
-            await waitFor(() => expect(actual.result.current.data).toEqual(fakeDomainA));
+            await waitFor(() => expect(actual.result.current.environment).toEqual(fakeDomainA));
         });
         it('returns the full environment of the environmentId found in the search params', async () => {
             const url = `/test?environmentId=${fakeDomainA.id}`;
             const actual = renderHook(() => useSelectedEnvironment(fakeDomainA.id), { route: url });
 
-            await waitFor(() => expect(actual.result.current.data).toEqual(fakeDomainA));
+            await waitFor(() => expect(actual.result.current.environment).toEqual(fakeDomainA));
         });
         it('returns undefined if environmentId searched for is not found', async () => {
             const fakeEnvId = 'nonexistent';
             const actual = renderHook(() => useSelectedEnvironment(fakeEnvId));
 
-            await waitFor(() => expect(actual.result.current.data).toBeUndefined());
+            await waitFor(() => expect(actual.result.current.environment).toBeUndefined());
 
             const url = `/test?environmentId=${fakeEnvId}`;
             const actual2 = renderHook(() => useSelectedEnvironment(), { route: url });
 
-            await waitFor(() => expect(actual2.result.current.data).toBeUndefined());
+            await waitFor(() => expect(actual2.result.current.environment).toBeUndefined());
+        });
+
+        it('returns active-directory environmentInfo when environmentAggregation param is active-directory', async () => {
+            const url = `/test?environmentId=${fakeDomainA.id}&environmentAggregation=active-directory`;
+            const actual = renderHook(() => useSelectedEnvironment(), { route: url });
+
+            await waitFor(() =>
+                expect(actual.result.current.environmentInfo).toEqual(
+                    expect.objectContaining({
+                        aggregationDisplayName: 'All Active Directory Domains',
+                        displayName: 'Active Directory',
+                        icon: faGlobe,
+                        memberType: 'Domain',
+                        type: 'active-directory',
+                    })
+                )
+            );
+        });
+
+        it('returns azure environmentInfo when environmentAggregation param is azure', async () => {
+            const url = `/test?environmentId=${fakeDomainA.id}&environmentAggregation=azure`;
+            const actual = renderHook(() => useSelectedEnvironment(), { route: url });
+
+            await waitFor(() =>
+                expect(actual.result.current.environmentInfo).toEqual(
+                    expect.objectContaining({
+                        aggregationDisplayName: 'All Azure Tenants',
+                        displayName: 'Azure',
+                        icon: faCloud,
+                        memberType: 'Tenant',
+                        type: 'azure',
+                    })
+                )
+            );
+        });
+
+        it('returns the OpenGraph environmentInfo when environmentAggregation param is not a known type', async () => {
+            const url = `/test?environmentId=${fakeDomainA.id}&environmentAggregation=Dog+Park`;
+            const actual = renderHook(() => useSelectedEnvironment(), { route: url });
+
+            await waitFor(() =>
+                expect(actual.result.current.environmentInfo).toEqual(
+                    expect.objectContaining({
+                        aggregationDisplayName: 'All Dog Park Environments',
+                        displayName: 'Dog Park',
+                        icon: faCircleNodes,
+                        memberType: 'Name',
+                        type: 'Dog Park',
+                    })
+                )
+            );
         });
     });
 });

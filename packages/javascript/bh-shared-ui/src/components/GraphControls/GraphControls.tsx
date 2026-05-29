@@ -14,21 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    TooltipContent,
-    TooltipPortal,
-    TooltipProvider,
-    TooltipRoot,
-    TooltipTrigger,
-} from '@bloodhoundenterprise/doodleui';
 import { faCropAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { MenuItem, Popper } from '@mui/material';
-import { GraphNodes } from 'js-client-library';
+import { TooltipContent, TooltipPortal, TooltipProvider, TooltipRoot, TooltipTrigger } from 'doodle-ui';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
 import { useRef, useState } from 'react';
-import { useFeatureFlag } from '../../hooks/useFeatureFlags';
+import { useExploreParams, useKeybindings } from '../../hooks';
+import { cn } from '../../utils';
 import { exportToJson } from '../../utils/exportGraphData';
 import GraphButton from '../GraphButton';
 import GraphMenu from '../GraphMenu';
@@ -40,12 +34,14 @@ interface GraphControlsProps<T extends readonly string[]> {
     onToggleNodeLabels: () => void;
     onToggleEdgeLabels: () => void;
     onSearchedNodeClick: (node: FlatNode) => void;
+    isExploreTableSelected?: boolean;
+    isExploreLayoutSelected?: boolean;
     layoutOptions: T;
-    selectedLayout: T[number];
+    selectedLayout?: T[number];
     showNodeLabels: boolean;
     showEdgeLabels: boolean;
     jsonData: Record<string, any> | undefined;
-    currentNodes: GraphNodes;
+    currentNodes: Record<string, any> | undefined;
 }
 
 function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>) {
@@ -55,19 +51,27 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         onToggleNodeLabels,
         onToggleEdgeLabels,
         onSearchedNodeClick,
+        isExploreTableSelected,
+        isExploreLayoutSelected,
         layoutOptions,
         selectedLayout,
         showNodeLabels,
         showEdgeLabels,
         jsonData,
-        currentNodes,
+        currentNodes = {},
     } = props;
-
-    const { data: featureFlag } = useFeatureFlag('explore_table_view');
-
+    const { searchType } = useExploreParams();
     const [isCurrentSearchOpen, setIsCurrentSearchOpen] = useState(false);
 
     const currentSearchAnchorElement = useRef(null);
+    useKeybindings({
+        shift: {
+            Slash: () => {
+                setIsCurrentSearchOpen(!isCurrentSearchOpen);
+            },
+        },
+        KeyG: onReset,
+    });
 
     const handleToggleAllLabels = () => {
         if (showNodeLabels && showEdgeLabels) {
@@ -130,22 +134,23 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 </GraphMenu>
 
                 <GraphMenu label='Layout'>
-                    {layoutOptions
-                        .filter((layout) => {
-                            if (!featureFlag?.enabled) {
-                                return layout !== 'table';
-                            }
-                            return true;
-                        })
-                        .map((layout) => (
+                    {layoutOptions.map((buttonLabel) => {
+                        const tableViewIsSelected = isExploreTableSelected && searchType === 'cypher';
+                        const isSelected = tableViewIsSelected
+                            ? buttonLabel === 'table' && isExploreLayoutSelected
+                            : buttonLabel === selectedLayout && isExploreLayoutSelected;
+
+                        return (
                             <MenuItem
-                                data-testid={`explore_graph-controls_${layout}-layout`}
-                                key={layout}
-                                selected={featureFlag?.enabled ? selectedLayout === layout : undefined}
-                                onClick={() => onLayoutChange(layout)}>
-                                {capitalize(layout)}
+                                data-testid={`explore_graph-controls_${buttonLabel}-buttonLabel`}
+                                key={buttonLabel}
+                                selected={isSelected}
+                                onClick={() => onLayoutChange(buttonLabel)}
+                                className={cn({ '!bg-primary text-white dark:text-[#121212]': isSelected })}>
+                                {capitalize(buttonLabel)}
                             </MenuItem>
-                        ))}
+                        );
+                    })}
                 </GraphMenu>
 
                 <GraphMenu label='Export'>
@@ -155,9 +160,9 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 </GraphMenu>
 
                 <GraphButton
-                    aria-label='Search Current Results'
+                    aria-label='Search node in results'
                     onClick={() => setIsCurrentSearchOpen(true)}
-                    displayText={'Search Current Results'}
+                    displayText={'Search'}
                     disabled={isCurrentSearchOpen}
                     data-testid='explore_graph-controls_search-current-results'
                 />
@@ -167,13 +172,11 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 anchorEl={currentSearchAnchorElement.current}
                 placement='top'
                 disablePortal
+                aria-label='Search Current Nodes'
                 className='w-[90%] z-[1]'>
                 <div className='pointer-events-auto' data-testid='explore_graph-controls_search-current-nodes-popper'>
                     <SearchCurrentNodes
-                        sx={{
-                            padding: 1,
-                            marginBottom: 1,
-                        }}
+                        className='p-2 mb-2'
                         currentNodes={currentNodes}
                         onSelect={(node) => {
                             onSearchedNodeClick(node);

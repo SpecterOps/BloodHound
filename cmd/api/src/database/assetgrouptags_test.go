@@ -22,7 +22,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sort"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -37,6 +39,7 @@ import (
 )
 
 func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
+	t.Parallel()
 	var (
 		dbInst          = integration.SetupDB(t)
 		testCtx         = context.Background()
@@ -45,7 +48,7 @@ func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
 		testDescription = "test description"
 		isDefault       = false
 		allowDisable    = true
-		autoCertify     = null.BoolFrom(false)
+		autoCertify     = model.SelectorAutoCertifyMethodAllMembers
 		testSeeds       = []model.SelectorSeed{
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
@@ -86,7 +89,7 @@ func TestDatabase_GetAssetGroupTagSelectorBySelectorId(t *testing.T) {
 		testDescription = "test description"
 		isDefault       = false
 		allowDisable    = true
-		autoCertify     = null.BoolFrom(false)
+		autoCertify     = model.SelectorAutoCertifyMethodAllMembers
 		testSeeds       = []model.SelectorSeed{
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
@@ -128,8 +131,8 @@ func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
 		updateDescription = "updated description"
 		isDefault         = false
 		allowDisable      = true
-		autoCertify       = null.BoolFrom(false)
-		updateAutoCert    = null.BoolFrom(true)
+		autoCertify       = model.SelectorAutoCertifyMethodDisabled
+		updateAutoCert    = model.SelectorAutoCertifyMethodSeedsOnly
 		disabledTime      = null.TimeFrom(time.Date(2025, time.March, 25, 12, 0, 0, 0, time.UTC))
 		testSeeds         = []model.SelectorSeed{
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
@@ -188,13 +191,14 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		position               = null.Int32{}
 		requireCertifyTier     = null.BoolFrom(true)
 		requireCertifyLabel    = null.Bool{}
+		glyph                  = null.StringFrom("rocket")
 		sortAscendingCreatedAt = model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}
 	)
 
 	t.Run("successfully creates tier", func(t *testing.T) {
 		dbInst := integration.SetupDB(t)
 
-		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testActor, testName, testDescription, position, requireCertifyTier)
+		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testActor, testName, testDescription, position, requireCertifyTier, glyph)
 		require.NoError(t, err)
 		require.Equal(t, tagTypeTier, tag.Type)
 		require.False(t, tag.CreatedAt.IsZero())
@@ -208,6 +212,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, null.Int32From(2), tag.Position)
 		require.Equal(t, null.BoolFrom(true), tag.RequireCertify)
 		require.Equal(t, null.BoolFrom(false), tag.AnalysisEnabled)
+		require.Equal(t, glyph, tag.Glyph)
 
 		tag, err = dbInst.GetAssetGroupTag(testCtx, tag.ID)
 		require.NoError(t, err)
@@ -223,6 +228,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, null.Int32From(2), tag.Position)
 		require.Equal(t, null.BoolFrom(true), tag.RequireCertify)
 		require.Equal(t, null.BoolFrom(false), tag.AnalysisEnabled)
+		require.Equal(t, glyph, tag.Glyph)
 
 		// verify history record was also created
 		history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, sortAscendingCreatedAt, 0, 0)
@@ -234,7 +240,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 	t.Run("successfully creates label", func(t *testing.T) {
 		dbInst := integration.SetupDB(t)
 
-		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeLabel, testActor, testName2, testDescription, position, requireCertifyLabel)
+		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeLabel, testActor, testName2, testDescription, position, requireCertifyLabel, glyph)
 		require.NoError(t, err)
 		require.Equal(t, tagTypeLabel, tag.Type)
 		require.False(t, tag.CreatedAt.IsZero())
@@ -248,6 +254,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, null.Int32{}, tag.Position)
 		require.Equal(t, null.Bool{}, tag.RequireCertify)
 		require.Equal(t, null.Bool{}, tag.AnalysisEnabled)
+		require.Equal(t, glyph, tag.Glyph)
 
 		tag, err = dbInst.GetAssetGroupTag(testCtx, tag.ID)
 		require.NoError(t, err)
@@ -263,6 +270,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, null.Int32{}, tag.Position)
 		require.Equal(t, null.Bool{}, tag.RequireCertify)
 		require.Equal(t, null.Bool{}, tag.AnalysisEnabled)
+		require.Equal(t, glyph, tag.Glyph)
 	})
 
 	t.Run("successfully creates and shifts tiers", func(t *testing.T) {
@@ -272,7 +280,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 			dbInst    = integration.SetupDB(t)
 		)
 
-		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testActor, testName3, testDescription, position2, requireCertifyTier)
+		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testActor, testName3, testDescription, position2, requireCertifyTier, null.String{})
 		require.NoError(t, err)
 
 		tag, err = dbInst.GetAssetGroupTag(testCtx, tag.ID)
@@ -280,7 +288,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, position2, tag.Position)
 
 		// Create another tag at an existing position, forcing the first tag down
-		tag2, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testActor, testName4, testDescription, position2, requireCertifyTier)
+		tag2, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testActor, testName4, testDescription, position2, requireCertifyTier, null.String{})
 		require.NoError(t, err)
 
 		tag2, err = dbInst.GetAssetGroupTag(testCtx, tag2.ID)
@@ -300,11 +308,32 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[2].Action)
 	})
 
-	t.Run("Non existant tag errors out", func(t *testing.T) {
+	t.Run("Non existent tag errors out", func(t *testing.T) {
 		dbInst := integration.SetupDB(t)
 
 		_, err := dbInst.GetAssetGroupTag(testCtx, 1234)
 		require.Error(t, err)
+	})
+
+	t.Run("Duplicate null glyph is accepted", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
+
+		_, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "t1 name", "", null.Int32{}, null.Bool{}, null.String{})
+		require.NoError(t, err)
+
+		_, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "t2 name", "", null.Int32{}, null.Bool{}, null.String{})
+		require.NoError(t, err)
+	})
+
+	t.Run("Duplicate glyph errors out", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
+
+		_, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "t1 name", "", null.Int32{}, null.Bool{}, glyph)
+		require.NoError(t, err)
+
+		_, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "t2 name", "", null.Int32{}, null.Bool{}, glyph)
+		require.Error(t, err)
+		require.EqualError(t, err, "duplicate glyph: ERROR: duplicate key value violates unique constraint \"asset_group_tags_glyph_key\" (SQLSTATE 23505)")
 	})
 
 }
@@ -326,6 +355,7 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 			"orig desc",
 			null.Int32From(2),
 			null.BoolFrom(false),
+			null.String{},
 		)
 		require.NoError(t, err)
 
@@ -333,6 +363,7 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 		toUpdate.Name = "updated name"
 		toUpdate.Description = "updated desc"
 		toUpdate.RequireCertify.SetValid(true)
+		toUpdate.Glyph = null.StringFrom("rocket")
 
 		updatedTier, err := dbInst.UpdateAssetGroupTag(testCtx, testActor, toUpdate)
 		require.NoError(t, err)
@@ -340,6 +371,7 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 		require.Equal(t, toUpdate.Name, updatedTier.Name)
 		require.Equal(t, toUpdate.Description, updatedTier.Description)
 		require.Equal(t, toUpdate.RequireCertify, updatedTier.RequireCertify)
+		require.Equal(t, toUpdate.Glyph, updatedTier.Glyph)
 
 		// verify history records were created
 		history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}, 0, 0)
@@ -359,6 +391,7 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 			"",
 			null.Int32From(2),
 			null.BoolFrom(false),
+			null.String{},
 		)
 		require.NoError(t, err)
 		origTier, err := dbInst.CreateAssetGroupTag(
@@ -369,6 +402,7 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 			"",
 			null.Int32From(3),
 			null.BoolFrom(false),
+			null.String{},
 		)
 		require.NoError(t, err)
 
@@ -389,6 +423,7 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 			"",
 			null.Int32From(2),
 			null.BoolFrom(false),
+			null.String{},
 		)
 		require.NoError(t, err)
 
@@ -408,6 +443,7 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 			"",
 			null.Int32{},
 			null.Bool{},
+			null.String{},
 		)
 		require.NoError(t, err)
 
@@ -427,6 +463,7 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 			"",
 			null.Int32{},
 			null.Bool{},
+			null.String{},
 		)
 		require.NoError(t, err)
 
@@ -446,6 +483,7 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 			"",
 			null.Int32From(2),
 			null.Bool{},
+			null.String{},
 		)
 		require.NoError(t, err)
 
@@ -465,6 +503,7 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 			"",
 			null.Int32From(2),
 			null.Bool{},
+			null.String{},
 		)
 		require.NoError(t, err)
 
@@ -492,13 +531,13 @@ func TestDatabase_UpdateAssetGroupTag_shifting(t *testing.T) {
 	t.Run("shifts tier higher successfully", func(t *testing.T) {
 		dbInst := integration.SetupDB(t)
 
-		tag1, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "upshift1", "", null.Int32From(2), null.Bool{})
+		tag1, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "upshift1", "", null.Int32From(2), null.Bool{}, null.String{})
 		require.NoError(t, err)
-		tag2, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "upshift2", "", null.Int32From(3), null.Bool{})
+		tag2, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "upshift2", "", null.Int32From(3), null.Bool{}, null.String{})
 		require.NoError(t, err)
-		tag3, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "upshift3", "", null.Int32From(4), null.Bool{})
+		tag3, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "upshift3", "", null.Int32From(4), null.Bool{}, null.String{})
 		require.NoError(t, err)
-		tag4, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "upshift4", "", null.Int32From(5), null.Bool{})
+		tag4, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "upshift4", "", null.Int32From(5), null.Bool{}, null.String{})
 		require.NoError(t, err)
 
 		toUpdate := tag3
@@ -546,13 +585,13 @@ func TestDatabase_UpdateAssetGroupTag_shifting(t *testing.T) {
 	t.Run("shifts tier lower successfully", func(t *testing.T) {
 		dbInst := integration.SetupDB(t)
 
-		tag1, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "downshift1", "", null.Int32From(2), null.Bool{})
+		tag1, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "downshift1", "", null.Int32From(2), null.Bool{}, null.String{})
 		require.NoError(t, err)
-		tag2, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "downshift2", "", null.Int32From(3), null.Bool{})
+		tag2, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "downshift2", "", null.Int32From(3), null.Bool{}, null.String{})
 		require.NoError(t, err)
-		tag3, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "downshift3", "", null.Int32From(4), null.Bool{})
+		tag3, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "downshift3", "", null.Int32From(4), null.Bool{}, null.String{})
 		require.NoError(t, err)
-		tag4, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "downshift4", "", null.Int32From(5), null.Bool{})
+		tag4, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "downshift4", "", null.Int32From(5), null.Bool{}, null.String{})
 		require.NoError(t, err)
 
 		toUpdate := tag1
@@ -617,6 +656,7 @@ func TestDatabase_DeleteAssetGroupTag(t *testing.T) {
 		position2              = null.Int32From(3)
 		requireCertifyTier     = null.BoolFrom(true)
 		sortAscendingCreatedAt = model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}
+		glyph                  = null.String{}
 	)
 
 	getTagOrder := func(orderedTags []model.AssetGroupTag) []int {
@@ -630,13 +670,13 @@ func TestDatabase_DeleteAssetGroupTag(t *testing.T) {
 	t.Run("successfully deletes asset group tag tier", func(t *testing.T) {
 		dbInst := integration.SetupDB(t)
 
-		assetGroupTagTier, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testUser, testName, testDescription, position, requireCertifyTier)
+		assetGroupTagTier, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testUser, testName, testDescription, position, requireCertifyTier, glyph)
 		require.NoError(t, err)
 		require.Equal(t, model.AssetGroupTagTypeTier, assetGroupTagTier.Type)
 		require.Equal(t, testName, assetGroupTagTier.Name)
 		require.Equal(t, testDescription, assetGroupTagTier.Description)
 
-		assetGroupTagTier2, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testUser2, testName2, testDescription2, position2, requireCertifyTier)
+		assetGroupTagTier2, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testUser2, testName2, testDescription2, position2, requireCertifyTier, glyph)
 		require.NoError(t, err)
 		require.Equal(t, model.AssetGroupTagTypeTier, assetGroupTagTier2.Type)
 		require.Equal(t, testName2, assetGroupTagTier2.Name)
@@ -666,7 +706,7 @@ func TestDatabase_DeleteAssetGroupTag(t *testing.T) {
 	t.Run("successfully deletes asset group label", func(t *testing.T) {
 		dbInst := integration.SetupDB(t)
 
-		assetGroupTagLabel4, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, testUser4, testName4, testDescription4, null.Int32{}, null.Bool{})
+		assetGroupTagLabel4, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, testUser4, testName4, testDescription4, null.Int32{}, null.Bool{}, glyph)
 		require.NoError(t, err)
 		require.Equal(t, model.AssetGroupTagTypeLabel, assetGroupTagLabel4.Type)
 		require.Equal(t, testName4, assetGroupTagLabel4.Name)
@@ -683,7 +723,7 @@ func TestDatabase_DeleteAssetGroupTag(t *testing.T) {
 		require.Equal(t, model.AssetGroupHistoryActionDeleteTag, history[1].Action)
 	})
 
-	t.Run("Non existant asset group tag errors out", func(t *testing.T) {
+	t.Run("Non existent asset group tag errors out", func(t *testing.T) {
 		dbInst := integration.SetupDB(t)
 
 		_, err := dbInst.GetAssetGroupTag(testCtx, 1234)
@@ -703,13 +743,13 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 		label1, label2 model.AssetGroupTag
 		tier1, tier2   model.AssetGroupTag
 	)
-	label1, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label 1", testDescription, null.Int32{}, null.Bool{})
+	label1, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label 1", testDescription, null.Int32{}, null.Bool{}, null.String{})
 	require.NoError(t, err)
-	label2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label 2", testDescription, null.Int32{}, null.Bool{})
+	label2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label 2", testDescription, null.Int32{}, null.Bool{}, null.String{})
 	require.NoError(t, err)
-	tier1, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, model.User{}, "tier 1", testDescription, null.Int32From(2), null.BoolFrom(false))
+	tier1, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, model.User{}, "tier 1", testDescription, null.Int32From(2), null.BoolFrom(false), null.String{})
 	require.NoError(t, err)
-	tier2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, model.User{}, "tier 2", testDescription, null.Int32From(3), null.BoolFrom(false))
+	tier2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, model.User{}, "tier 2", testDescription, null.Int32From(3), null.BoolFrom(false), null.String{})
 	require.NoError(t, err)
 
 	t.Run("filtering for Label returns labels", func(t *testing.T) {
@@ -722,7 +762,7 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(items), 2)
 		for _, itm := range items {
-			if itm.CreatedBy == model.AssetGroupActorSystem {
+			if itm.CreatedBy == model.AssetGroupActorBloodHound {
 				continue
 			}
 			require.Equal(t, itm.Type, model.AssetGroupTagTypeLabel)
@@ -740,7 +780,7 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(items), 2)
 		for _, itm := range items {
-			if itm.CreatedBy == model.AssetGroupActorSystem {
+			if itm.CreatedBy == model.AssetGroupActorBloodHound {
 				continue
 			}
 			require.Equal(t, itm.Type, model.AssetGroupTagTypeTier)
@@ -764,7 +804,7 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(items), 4)
 		for _, itm := range items {
-			if itm.CreatedBy == model.AssetGroupActorSystem {
+			if itm.CreatedBy == model.AssetGroupActorBloodHound {
 				continue
 			}
 			require.Contains(t, types, itm.Type)
@@ -775,8 +815,10 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 
 func TestDatabase_GetAssetGroupTagSelectorCounts(t *testing.T) {
 	var (
-		dbInst  = integration.SetupDB(t)
-		testCtx = context.Background()
+		dbInst       = integration.SetupDB(t)
+		testCtx      = context.Background()
+		user         = model.User{}
+		disabledTime = null.TimeFrom(time.Date(2025, time.March, 25, 12, 0, 0, 0, time.UTC))
 	)
 
 	var (
@@ -784,63 +826,101 @@ func TestDatabase_GetAssetGroupTagSelectorCounts(t *testing.T) {
 		label1, label2 model.AssetGroupTag
 	)
 
-	label1, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label 1", "", null.Int32{}, null.Bool{})
+	label1, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label 1", "", null.Int32{}, null.Bool{}, null.String{})
 	require.NoError(t, err)
-	label2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label 2", "", null.Int32{}, null.Bool{})
-	require.NoError(t, err)
-
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
-	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
-	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	label2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label 2", "", null.Int32{}, null.Bool{}, null.String{})
 	require.NoError(t, err)
 
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	// label1 selectors
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "1", "", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "2", "", false, true, model.SelectorAutoCertifyMethodAllMembers, []model.SelectorSeed{})
+	require.NoError(t, err)
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "3", "", false, false, model.SelectorAutoCertifyMethodSeedsOnly, []model.SelectorSeed{})
+	require.NoError(t, err)
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "4", "", true, false, model.SelectorAutoCertifyMethodSeedsOnly, []model.SelectorSeed{})
+	require.NoError(t, err)
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "5", "", true, false, model.SelectorAutoCertifyMethodSeedsOnly, []model.SelectorSeed{})
+	require.NoError(t, err)
+	selector6, err := dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "6", "", true, true, model.SelectorAutoCertifyMethodSeedsOnly, []model.SelectorSeed{})
+	require.NoError(t, err)
+	selector6.DisabledAt = disabledTime
+	selector6.DisabledBy = null.StringFrom(user.ID.String())
+	_, err = dbInst.UpdateAssetGroupTagSelector(testCtx, user.ID.String(), "someEmail@whatever.com", selector6)
 	require.NoError(t, err)
 
-	t.Run("single item count", func(t *testing.T) {
-		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID})
+	// label2 selectors
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "7", "", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	require.NoError(t, err)
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "8", "", false, false, model.SelectorAutoCertifyMethodAllMembers, []model.SelectorSeed{})
+	require.NoError(t, err)
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "9", "", true, false, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	require.NoError(t, err)
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "10", "", true, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	require.NoError(t, err)
+
+	t.Run("single asset group tag selector(s) count", func(t *testing.T) {
+		selectorCounts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID})
+		counts := selectorCounts[label1.ID]
 		require.NoError(t, err)
-		require.Equal(t, 1, len(counts))
-		require.Equal(t, 3, counts[label1.ID])
+
+		require.Equal(t, 6, counts.Selectors)
+		require.Equal(t, 3, counts.CustomSelectors)
+		require.Equal(t, 2, counts.DefaultSelectors)
+		require.Equal(t, 1, counts.DisabledSelectors)
 	})
 
-	t.Run("multi item count", func(t *testing.T) {
-		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID, label2.ID})
+	t.Run("multiple asset group tag selectors count", func(t *testing.T) {
+		selectorCounts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID, label2.ID})
+		counts1 := selectorCounts[label1.ID]
+		counts2 := selectorCounts[label2.ID]
 		require.NoError(t, err)
-		require.Equal(t, 2, len(counts))
-		require.Equal(t, 3, counts[label1.ID])
-		require.Equal(t, 2, counts[label2.ID])
+
+		// label1
+		require.Equal(t, 6, counts1.Selectors)
+		require.Equal(t, 3, counts1.CustomSelectors)
+		require.Equal(t, 2, counts1.DefaultSelectors)
+		require.Equal(t, 1, counts1.DisabledSelectors)
+
+		// label2
+		require.Equal(t, 4, counts2.Selectors)
+		require.Equal(t, 2, counts2.CustomSelectors)
+		require.Equal(t, 2, counts2.DefaultSelectors)
+		require.Equal(t, 0, counts2.DisabledSelectors)
 	})
 
-	t.Run("single value set for id with no results", func(t *testing.T) {
+	t.Run("single asset group tag value set for id with no results", func(t *testing.T) {
 		nonexistentId := 1234
-		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{nonexistentId})
+		selectorCounts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{nonexistentId})
+		counts := selectorCounts[nonexistentId]
+
 		require.NoError(t, err)
-		require.Equal(t, 1, len(counts))
-		require.Equal(t, 0, counts[nonexistentId])
+		require.Equal(t, 0, counts.Selectors)
+		require.Equal(t, 0, counts.CustomSelectors)
+		require.Equal(t, 0, counts.DefaultSelectors)
+		require.Equal(t, 0, counts.DisabledSelectors)
 	})
 
-	t.Run("multi value set for id with no results", func(t *testing.T) {
+	t.Run("multiple asset group tag values set for id with no results", func(t *testing.T) {
 		nonexistentId := 1234
-		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID, nonexistentId})
+		selectorCounts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID, nonexistentId})
+		counts := selectorCounts[label1.ID]
+
 		require.NoError(t, err)
-		require.Equal(t, 2, len(counts))
-		require.Equal(t, 3, counts[label1.ID])
-		require.Equal(t, 0, counts[nonexistentId])
+		require.Equal(t, 6, counts.Selectors)
+		require.Equal(t, 3, counts.CustomSelectors)
+		require.Equal(t, 2, counts.DefaultSelectors)
+		require.Equal(t, 1, counts.DisabledSelectors)
 	})
 }
 
-func TestDatabase_GetAssetGroupTagSelectorsBySelectorId(t *testing.T) {
+func TestDatabase_GetAssetGroupTagSelectorsBySelectorIdFilteredAndPaginated(t *testing.T) {
 	var (
 		dbInst        = integration.SetupDB(t)
 		testCtx       = context.Background()
 		isDefault     = false
 		allowDisable  = true
-		autoCertify   = null.BoolFrom(false)
+		autoCertify   = model.SelectorAutoCertifyMethodAllMembers
 		test1Selector = model.AssetGroupTagSelector{
 			Name:            "test selector name",
 			Description:     "test description",
@@ -849,7 +929,7 @@ func TestDatabase_GetAssetGroupTagSelectorsBySelectorId(t *testing.T) {
 				{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			},
 			AllowDisable: true,
-			AutoCertify:  autoCertify,
+			AutoCertify:  model.SelectorAutoCertifyMethodAllMembers,
 		}
 		test2Selector = model.AssetGroupTagSelector{
 			Name:            "test2 selector name",
@@ -859,7 +939,7 @@ func TestDatabase_GetAssetGroupTagSelectorsBySelectorId(t *testing.T) {
 				{Type: model.SelectorTypeCypher, Value: "MATCH (n:User) RETURN n LIMIT 1;"},
 			},
 			AllowDisable: true,
-			AutoCertify:  autoCertify,
+			AutoCertify:  model.SelectorAutoCertifyMethodAllMembers,
 		}
 	)
 
@@ -871,17 +951,17 @@ func TestDatabase_GetAssetGroupTagSelectorsBySelectorId(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("successfully returns an array of selectors, no filters", func(t *testing.T) {
-		orig_results, _, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{}, 0, 0)
+		orig_results, _, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1)
 		require.NoError(t, err)
 
 		results := make(model.AssetGroupTagSelectors, 0, 2)
 		for _, n := range orig_results {
-			if n.CreatedBy != model.AssetGroupActorSystem {
+			if n.CreatedBy != model.AssetGroupActorBloodHound {
 				results = append(results, n)
 			}
 		}
 
-		require.Equal(t, 2, len(results))
+		require.Len(t, results, 2)
 		require.Equal(t, test1Selector.Name, results[0].Name)
 		require.Equal(t, test2Selector.Name, results[1].Name)
 		require.Equal(t, test1Selector.Description, results[0].Description)
@@ -908,17 +988,17 @@ func TestDatabase_GetAssetGroupTagSelectorsBySelectorId(t *testing.T) {
 	})
 
 	t.Run("successfully returns an array of seed selector filters", func(t *testing.T) {
-		orig_results, _, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{SQLString: "type = 2"}, 0, 0)
+		orig_results, _, err := dbInst.GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(testCtx, 1, model.SQLFilter{}, model.SQLFilter{SQLString: "type = 2"}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
 
 		results := make(model.AssetGroupTagSelectors, 0, 1)
 		for _, n := range orig_results {
-			if n.CreatedBy != model.AssetGroupActorSystem {
+			if n.CreatedBy != model.AssetGroupActorBloodHound {
 				results = append(results, n)
 			}
 		}
 
-		require.Equal(t, 1, len(results))
+		require.Len(t, results, 1)
 		for idx, seed := range test2Selector.Seeds {
 			require.Equal(t, seed.Type, results[0].Seeds[idx].Type)
 			require.Equal(t, seed.Value, results[0].Seeds[idx].Value)
@@ -926,28 +1006,38 @@ func TestDatabase_GetAssetGroupTagSelectorsBySelectorId(t *testing.T) {
 	})
 
 	t.Run("successfully returns an array of selector filters", func(t *testing.T) {
-		results, _, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{created_at}}, model.SQLFilter{}, 0, 0)
+		results, _, err := dbInst.GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{created_at}}, model.SQLFilter{}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
 
-		require.Equal(t, 1, len(results))
+		require.Len(t, results, 1)
 		require.True(t, results[0].CreatedAt.After(created_at))
 
 	})
 
 	t.Run("successfully returns an array using the skip param", func(t *testing.T) {
-		results, count, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{test_started_at}}, model.SQLFilter{}, 1, 0)
+		results, count, err := dbInst.GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{test_started_at}}, model.SQLFilter{}, model.Sort{}, 1, 0)
 		require.NoError(t, err)
 
-		require.Equal(t, 1, len(results))
+		require.Len(t, results, 1)
 		require.Equal(t, 2, count)
 		require.Equal(t, test2Selector.Name, results[0].Name)
 	})
 
-	t.Run("successfully returns an array using the limit param", func(t *testing.T) {
-		results, count, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{test_started_at}}, model.SQLFilter{}, 0, 1)
+	t.Run("successfully returns an array sorted by name desc", func(t *testing.T) {
+		results, _, err := dbInst.GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(testCtx, 1, model.SQLFilter{}, model.SQLFilter{}, model.Sort{{Direction: model.DescendingSortDirection, Column: "name"}}, 0, 0)
 		require.NoError(t, err)
 
-		require.Equal(t, 1, len(results))
+		require.Greater(t, len(results), 1)
+		require.True(t, sort.SliceIsSorted(results, func(i, j int) bool {
+			return strings.ReplaceAll(strings.ToLower(results[i].Name), " ", "") > strings.ReplaceAll(strings.ToLower(results[j].Name), " ", "")
+		}))
+	})
+
+	t.Run("successfully returns an array using the limit param", func(t *testing.T) {
+		results, count, err := dbInst.GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{test_started_at}}, model.SQLFilter{}, model.Sort{}, 0, 1)
+		require.NoError(t, err)
+
+		require.Len(t, results, 1)
 		require.Equal(t, 2, count)
 		require.Equal(t, test1Selector.Name, results[0].Name)
 	})
@@ -967,7 +1057,7 @@ func TestDatabase_GetSelectorsByMemberId(t *testing.T) {
 		testMemberId    = 1
 		isDefault       = false
 		allowDisable    = true
-		autoCertify     = null.BoolFrom(false)
+		autoCertify     = model.SelectorAutoCertifyMethodSeedsOnly
 		test1Selector   = model.AssetGroupTagSelector{
 			Name:            "test selector name",
 			Description:     "test description",
@@ -979,11 +1069,11 @@ func TestDatabase_GetSelectorsByMemberId(t *testing.T) {
 	)
 	_, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
 	require.NoError(t, err)
-	err = dbInst.InsertSelectorNode(testCtx, testSelectorId, graph.ID(testNodeId), model.AssetGroupCertification(certified), certifiedBy, model.AssetGroupSelectorNodeSource(source))
+	err = dbInst.InsertSelectorNode(testCtx, 1, testSelectorId, graph.ID(testNodeId), model.AssetGroupCertification(certified), certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
 	require.NoError(t, err)
 	selectors, err := dbInst.GetSelectorsByMemberId(testCtx, testMemberId, test1Selector.AssetGroupTagId)
 	require.NoError(t, err)
-	require.Equal(t, testSelectorId, selectors[0].AssetGroupTagId)
+	require.Equal(t, testSelectorId, selectors[0].ID)
 }
 func TestDatabase_DeleteAssetGroupTagSelector(t *testing.T) {
 	var (
@@ -993,7 +1083,7 @@ func TestDatabase_DeleteAssetGroupTagSelector(t *testing.T) {
 		testDescription = "test description"
 		isDefault       = false
 		allowDisable    = true
-		autoCertify     = null.BoolFrom(false)
+		autoCertify     = model.SelectorAutoCertifyMethodSeedsOnly
 		testSeeds       = []model.SelectorSeed{
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
@@ -1034,7 +1124,7 @@ func TestDatabase_GetOrderedAssetGroupTagTiers(t *testing.T) {
 
 	// Create tiers
 	for i := range 5 {
-		tag, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, user, fmt.Sprintf("tag %d", i), "", null.Int32From(int32(i+2)), null.Bool{})
+		tag, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, user, fmt.Sprintf("tag %d", i), "", null.Int32From(int32(i+2)), null.Bool{}, null.String{})
 		require.NoError(t, err)
 		// Delete the fourth entry to ensure positions are changed
 		if i == 3 {
@@ -1061,7 +1151,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		testCtx       = context.Background()
 		isDefault     = false
 		allowDisable  = true
-		autoCertify   = null.BoolFrom(false)
+		autoCertify   = model.SelectorAutoCertifyMethodDisabled
 		test1Selector = model.AssetGroupTagSelector{
 			Name:        "test selector name",
 			Description: "test description",
@@ -1087,5 +1177,410 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		items, err := dbInst.GetAssetGroupTagSelectors(testCtx, model.SQLFilter{}, 0)
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(items), 2)
+	})
+}
+
+func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
+	t.Parallel()
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		testCtx              = context.Background()
+		testNote             = null.StringFrom("test")
+		testAssetGroupTagId1 = 1
+		testSelectorId1      = 1
+		testSelectorId2      = 2
+		testMemberId1        = 1
+		testNodeId1          = graph.ID(uint64(testMemberId1))
+		testMemberId2        = 2
+		testNodeId2          = graph.ID(uint64(testMemberId2))
+		certifiedBy          = null.StringFrom("testy")
+		source               = 1
+		isDefault            = false
+		allowDisable         = true
+		autoCertify          = model.SelectorAutoCertifyMethodSeedsOnly
+		test1Selector        = model.AssetGroupTagSelector{
+			Name:        "test selector name",
+			Description: "test description",
+			Seeds: []model.SelectorSeed{
+				{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
+			},
+		}
+		updateInputCertify = database.UpdateCertificationBySelectorNodeInput{AssetGroupTagId: testAssetGroupTagId1, SelectorId: testSelectorId1, CertifiedBy: certifiedBy, CertificationStatus: model.AssetGroupCertificationManual, NodeId: testNodeId1, NodeName: test1Selector.Name, Note: testNote}
+		updateInputPending = database.UpdateCertificationBySelectorNodeInput{AssetGroupTagId: testAssetGroupTagId1, SelectorId: testSelectorId2, CertifiedBy: certifiedBy, CertificationStatus: model.AssetGroupCertificationPending, NodeId: testNodeId1, NodeName: test1Selector.Name, Note: testNote}
+		updateInputNode2   = database.UpdateCertificationBySelectorNodeInput{AssetGroupTagId: testAssetGroupTagId1, SelectorId: testSelectorId1, CertifiedBy: certifiedBy, CertificationStatus: model.AssetGroupCertificationManual, NodeId: testNodeId2, NodeName: test1Selector.Name, Note: testNote}
+		sort               = make(model.Sort, 0)
+	)
+	_, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, testAssetGroupTagId1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
+	require.NoError(t, err)
+
+	// insert selector nodes
+	err = suite.BHDatabase.InsertSelectorNode(testCtx, testAssetGroupTagId1, testSelectorId1, testNodeId1, model.AssetGroupCertificationRevoked, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
+	require.NoError(t, err)
+	err = suite.BHDatabase.InsertSelectorNode(testCtx, testAssetGroupTagId1, testSelectorId1, testNodeId2, model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
+	require.NoError(t, err)
+	err = suite.BHDatabase.InsertSelectorNode(testCtx, testAssetGroupTagId1, testSelectorId2, testNodeId1, model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
+	require.NoError(t, err)
+
+	t.Run("updates certification by selector node, certified", func(t *testing.T) {
+		inputs := []database.UpdateCertificationBySelectorNodeInput{updateInputCertify}
+		sqlFilter := model.SQLFilter{SQLString: "AND node_id = ?", Params: []any{updateInputCertify.NodeId}}
+		_, rowCountBefore, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
+		require.NoError(t, err)
+		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, inputs)
+		require.NoError(t, err)
+		// confirm selector was updated
+		selectorNodes, count, err := suite.BHDatabase.GetSelectorNodesBySelectorIdsFilteredAndPaginated(testCtx, sqlFilter, sort, 0, 100, updateInputCertify.SelectorId)
+		require.NoError(t, err)
+		require.Equal(t, 1, count)
+		require.Equal(t, model.AssetGroupCertificationManual, selectorNodes[0].Certified)
+
+		//confirm only one history record was created
+		_, rowCountAfter, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
+		require.NoError(t, err)
+		require.Equal(t, rowCountBefore+1, rowCountAfter)
+	})
+
+	t.Run("updates certification by selector node, pending", func(t *testing.T) {
+		inputs := []database.UpdateCertificationBySelectorNodeInput{updateInputPending}
+		sqlFilter := model.SQLFilter{SQLString: "AND node_id = ?", Params: []any{updateInputPending.NodeId}}
+		_, rowCountBefore, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
+		require.NoError(t, err)
+		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, inputs)
+		require.NoError(t, err)
+		// confirm selectors were updated
+		selectorNodes, count, err := suite.BHDatabase.GetSelectorNodesBySelectorIdsFilteredAndPaginated(testCtx, sqlFilter, sort, 0, 100, updateInputPending.SelectorId)
+		require.NoError(t, err)
+		require.Equal(t, 1, count)
+		require.Equal(t, model.AssetGroupCertificationPending, selectorNodes[0].Certified)
+
+		//confirm no history record were created
+		_, rowCountAfter, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
+		require.NoError(t, err)
+		require.Equal(t, rowCountBefore, rowCountAfter)
+	})
+
+	t.Run("updates certification by selector node, mix of pending and certified for single node ID", func(t *testing.T) {
+		inputs := []database.UpdateCertificationBySelectorNodeInput{updateInputCertify, updateInputPending}
+		sqlFilter := model.SQLFilter{SQLString: "AND node_id = ?", Params: []any{updateInputCertify.NodeId}}
+		_, rowCountBefore, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
+		require.NoError(t, err)
+		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, inputs)
+		require.NoError(t, err)
+		// confirm selectors were updated
+		selectorNodes, count, err := suite.BHDatabase.GetSelectorNodesBySelectorIdsFilteredAndPaginated(testCtx, sqlFilter, sort, 0, 100, updateInputCertify.SelectorId, updateInputPending.SelectorId)
+		require.NoError(t, err)
+		require.Equal(t, 2, count)
+		require.Equal(t, model.AssetGroupCertificationManual, selectorNodes[0].Certified)
+		require.Equal(t, model.AssetGroupCertificationPending, selectorNodes[1].Certified)
+
+		//confirm only one history record was created
+		_, rowCountAfter, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
+		require.NoError(t, err)
+		require.Equal(t, rowCountBefore+1, rowCountAfter)
+	})
+
+	t.Run("updates certification by selector node, 2 nodes", func(t *testing.T) {
+		inputs := []database.UpdateCertificationBySelectorNodeInput{updateInputCertify, updateInputNode2}
+		_, rowCountBefore, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
+		require.NoError(t, err)
+		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, inputs)
+		require.NoError(t, err)
+		// confirm selectors were updated
+		selectors, err := suite.BHDatabase.GetSelectorNodesBySelectorIds(testCtx, testSelectorId1)
+		require.NoError(t, err)
+		require.Equal(t, 2, len(selectors))
+		require.Equal(t, model.AssetGroupCertificationManual, selectors[0].Certified)
+		require.Equal(t, model.AssetGroupCertificationManual, selectors[1].Certified)
+
+		//confirm two history records created
+		_, rowCountAfter, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
+		require.NoError(t, err)
+		require.Equal(t, rowCountBefore+2, rowCountAfter)
+	})
+}
+
+func TestDatabase_GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(t *testing.T) {
+	t.Parallel()
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		testCtx         = context.Background()
+		testActor       = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
+		testName        = "test selector name"
+		testDescription = "test description"
+		certifiedBy     = null.StringFrom("testy")
+		testObjectId1   = 1
+		testObjectId2   = 2
+		testNodeId1     = uint64(testObjectId1)
+		testNodeId2     = uint64(testObjectId2)
+		source          = 1
+		isDefault       = false
+		allowDisable    = true
+		autoCertify     = model.SelectorAutoCertifyMethodDisabled
+		testSeeds       = []model.SelectorSeed{
+			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
+			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
+		}
+	)
+
+	tierTag, err := suite.BHDatabase.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, model.User{}, "tier 1", testDescription, null.Int32From(2), null.BoolFrom(false), null.String{})
+	require.NoError(t, err)
+
+	labelTag, err := suite.BHDatabase.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label", testDescription, null.Int32{}, null.Bool{}, null.String{})
+	require.NoError(t, err)
+
+	selector, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, tierTag.ID, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
+	require.NoError(t, err)
+
+	err = suite.BHDatabase.InsertSelectorNode(testCtx, tierTag.ID, selector.ID, graph.ID(testNodeId1), model.AssetGroupCertificationManual, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
+	require.NoError(t, err)
+
+	err = suite.BHDatabase.InsertSelectorNode(testCtx, tierTag.ID, selector.ID, graph.ID(testNodeId2), model.AssetGroupCertificationManual, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
+	require.NoError(t, err)
+
+	err = suite.BHDatabase.InsertSelectorNode(testCtx, tierTag.ID, selector.ID, graph.ID(testNodeId1), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
+	require.NoError(t, err)
+
+	err = suite.BHDatabase.InsertSelectorNode(testCtx, labelTag.ID, selector.ID, graph.ID(testNodeId1), model.AssetGroupCertificationManual, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
+	require.NoError(t, err)
+
+	tests := map[string]struct {
+		Input          []int
+		ExpectedLength int
+	}{
+		"returns all selected nodes, ignores tags": {
+			Input:          []int{testObjectId1, testObjectId2},
+			ExpectedLength: 2,
+		},
+		"returns empty slice if no nodes found": {
+			Input:          []int{3},
+			ExpectedLength: 0,
+		},
+		"returns empty slice if no node IDs passed in": {
+			Input:          nil,
+			ExpectedLength: 0,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			if got, err := suite.BHDatabase.GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(testCtx, test.Input...); err != nil {
+				t.Fatalf("error getting selector node expanded ignore autocertify: %v", err)
+			} else if len(got) != test.ExpectedLength {
+				t.Fatalf("got %d expected %d", len(got), test.ExpectedLength)
+			}
+		})
+	}
+}
+
+func TestDatabase_GetAggregatedSelectorNodesCertification(t *testing.T) {
+	t.Parallel()
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		testCtx         = context.Background()
+		testActor       = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
+		testCertifiedBy = "testy"
+		certifiedBy     = null.StringFrom(testCertifiedBy)
+		source          = 1
+	)
+
+	// Enable require certify on tier 0
+	tier0, err := suite.BHDatabase.GetAssetGroupTag(testCtx, 1)
+	require.NoError(t, err)
+	tier0.RequireCertify = null.BoolFrom(true)
+	tier0, err = suite.BHDatabase.UpdateAssetGroupTag(testCtx, model.User{}, tier0)
+	require.NoError(t, err)
+
+	// create a test zone at position 2
+	tier1, err := suite.BHDatabase.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "Test T1 Zone", "Test zone description", null.Int32From(2), null.BoolFrom(true), null.String{})
+	require.NoError(t, err)
+
+	// create a test zone at position 3
+	tier2, err := suite.BHDatabase.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "Test T2 Zone", "Test zone description", null.Int32From(3), null.BoolFrom(true), null.String{})
+	require.NoError(t, err)
+
+	// Zone 0 is added by the migration and is ID 1
+	sel0, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, "Test T0 selector", "description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	require.NoError(t, err)
+
+	sel0_1, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, "Test T0 selector number 2", "description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	require.NoError(t, err)
+
+	sel0_2, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, "Test T0 selector number 3", "description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	require.NoError(t, err)
+
+	sel0_3, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, "Test T0 selector number 4", "description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	require.NoError(t, err)
+
+	sel1, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, tier1.ID, model.User{}, "Test T1 selector", "description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	require.NoError(t, err)
+
+	sel2, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, tier2.ID, model.User{}, "Test T2 selector", "description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	require.NoError(t, err)
+
+	t.Run("Multiple nodes - verify highest tier wins", func(t *testing.T) {
+		testNodeId := uint64(1)
+
+		// a selector for T0 selects this node
+		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0")
+		require.NoError(t, err)
+
+		// a selector for T1 also selects this node
+		err = suite.BHDatabase.InsertSelectorNode(testCtx, tier1.ID, sel1.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_1", "environment", "objid", "NodeSelectedByT1")
+		require.NoError(t, err)
+
+		// a selector for T2 also selects this node
+		err = suite.BHDatabase.InsertSelectorNode(testCtx, tier2.ID, sel2.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_2", "environment", "objid", "NodeSelectedByT2")
+		require.NoError(t, err)
+
+		// filtering on the nodes from this test only
+		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 1"}, 0, 0)
+		require.NoError(t, err)
+
+		// there should only be a single node returned
+		require.Equal(t, 1, count)
+		// it should be the one associated with T0
+		require.Equal(t, "NodeSelectedByT0", nodeCertifications[0].NodeName)
+	})
+
+	t.Run("Multiple nodes - verify correct hybrid output", func(t *testing.T) {
+		testNodeId := uint64(30)
+
+		// a selector for T0 selects this node
+		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, null.StringFrom("Sel0_1_NoCertifier"), model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0")
+		require.NoError(t, err)
+
+		timeBeforeSel0_1_NodeInserted := time.Now().UTC()
+
+		// another selector for T0 selects this node
+		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_1.ID, graph.ID(testNodeId), model.AssetGroupCertificationManual, null.StringFrom("Sel0_1_ManualCertifier"), model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0")
+		require.NoError(t, err)
+
+		// a selector for T1 also selects this node
+		err = suite.BHDatabase.InsertSelectorNode(testCtx, tier1.ID, sel1.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_1", "environment", "objid", "NodeSelectedByT1")
+		require.NoError(t, err)
+
+		// a selector for T2 also selects this node
+		err = suite.BHDatabase.InsertSelectorNode(testCtx, tier2.ID, sel2.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_2", "environment", "objid", "NodeSelectedByT2")
+		require.NoError(t, err)
+
+		// filtering on the nodes from this test only
+		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 30"}, 0, 0)
+		require.NoError(t, err)
+
+		// there should only be a single node returned
+		require.Equal(t, 1, count)
+		// it should have the highest certification value associated with T0
+		require.Equal(t, model.AssetGroupCertificationManual, nodeCertifications[0].Certified)
+		// it should be associated with T0
+		require.Equal(t, 1, nodeCertifications[0].AssetGroupTagId)
+		// it should have a timestamp of the first node inserted for this tier
+		require.True(t, nodeCertifications[0].CreatedAt.Before(timeBeforeSel0_1_NodeInserted))
+	})
+
+	t.Run("Multiple nodes - verify highest certify wins", func(t *testing.T) {
+		testNodeId := uint64(2)
+		// this one has certification revoked
+		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(testNodeId), model.AssetGroupCertificationRevoked, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_CertRevoked")
+		require.NoError(t, err)
+
+		// no certification
+		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_1.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_CertNone")
+		require.NoError(t, err)
+
+		// manual certification
+		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_2.ID, graph.ID(testNodeId), model.AssetGroupCertificationManual, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_CertManual")
+		require.NoError(t, err)
+
+		// auto certification
+		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_3.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_CertAuto")
+		require.NoError(t, err)
+
+		// filtering on the nodes from this test only
+		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 2"}, 0, 0)
+		require.NoError(t, err)
+
+		// there should only be a single node returned
+		require.Equal(t, 1, count)
+		// it should be the one that had auto certify
+		require.Equal(t, "NodeSelectedByT0_CertAuto", nodeCertifications[0].NodeName)
+		require.Equal(t, model.AssetGroupCertificationAuto, nodeCertifications[0].Certified)
+	})
+
+	t.Run("Multiple nodes - verify earliest create date wins", func(t *testing.T) {
+		testNodeId := uint64(3)
+		// created first
+		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_First")
+		require.NoError(t, err)
+
+		// created second
+		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_1.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_Second")
+		require.NoError(t, err)
+
+		// created third
+		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_2.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_Third")
+		require.NoError(t, err)
+
+		// created fourth
+		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_3.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_Fourth")
+		require.NoError(t, err)
+
+		// filtering on the nodes from this test only
+		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 3"}, 0, 0)
+		require.NoError(t, err)
+
+		// there should only be a single node returned
+		require.Equal(t, 1, count)
+		// it should be the one created first
+		require.Equal(t, "NodeSelectedByT0_First", nodeCertifications[0].NodeName)
+	})
+
+	t.Run("test pagination", func(t *testing.T) {
+		// create some nodes, all selected by a t0 selector
+		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(uint64(10)), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_First")
+		require.NoError(t, err)
+
+		// created second
+		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(uint64(11)), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_Second")
+		require.NoError(t, err)
+
+		// created third
+		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(uint64(12)), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_Third")
+		require.NoError(t, err)
+
+		// created fourth
+		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(uint64(13)), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_Fourth")
+		require.NoError(t, err)
+
+		// filtering on the nodes from this test only
+		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 0, 0)
+		require.NoError(t, err)
+
+		// verify 4 out of 4 nodes returned
+		require.Equal(t, 4, len(nodeCertifications))
+		require.Equal(t, 4, count)
+
+		// skip the first 2
+		nodeCertifications, count, err = suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 2, 0)
+		require.NoError(t, err)
+
+		// verify 2 out of 4 nodes returned
+		require.Equal(t, 2, len(nodeCertifications))
+		require.Equal(t, 4, count)
+		require.Equal(t, "NodeSelectedByT0_Third", nodeCertifications[0].NodeName)
+
+		// limit to 2
+		nodeCertifications, count, err = suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 0, 2)
+		require.NoError(t, err)
+
+		// verify 2 out of 4 nodes returned
+		require.Equal(t, 2, len(nodeCertifications))
+		require.Equal(t, 4, count)
+		require.Equal(t, "NodeSelectedByT0_First", nodeCertifications[0].NodeName)
 	})
 }

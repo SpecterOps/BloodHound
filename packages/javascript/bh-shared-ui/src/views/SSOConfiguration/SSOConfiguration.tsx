@@ -16,7 +16,8 @@
 
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Grid, Paper, TextField, Typography, useTheme } from '@mui/material';
+import { Box, Grid, TextField } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { SSOProvider, UpsertOIDCProviderRequest, UpsertSAMLProviderFormInputs } from 'js-client-library';
 import { ChangeEvent, FC, useMemo, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
@@ -29,7 +30,7 @@ import {
     SSOProviderTable,
 } from '../../components';
 import { UpsertOIDCProviderDialog, UpsertSAMLProviderDialog } from '../../components/UpsertSSOProviders';
-import { useFeatureFlag, useMountEffect, usePermissions } from '../../hooks';
+import { useFeatureFlag, useMountEffect, usePermissions, useTheme } from '../../hooks';
 import { useNotifications } from '../../providers';
 import { SortOrder } from '../../types';
 import { Permission, apiClient } from '../../utils';
@@ -260,13 +261,13 @@ const SSOConfiguration: FC = () => {
                 title='SSO Configuration'
                 data-testid='sso-configuration'
                 pageDescription={
-                    <Typography variant='body2' paragraph>
+                    <Typography variant='body2'>
                         BloodHound supports SAML {flag?.enabled ? 'and OIDC ' : ''}for single sign-on (SSO). Learn how
                         to deploy {flag?.enabled ? 'SSO' : 'SAML'} with BloodHound{' '}
                         {DocumentationLinks.samlConfigDocLink}.
                     </Typography>
                 }>
-                <Grid container spacing={theme.spacing(2)}>
+                <Grid container spacing='1rem'>
                     <Grid item display='flex' alignItems='center' justifyContent='end' minHeight='24px' mb={2} xs={12}>
                         <CreateMenu
                             disabled={!hasPermission}
@@ -280,14 +281,12 @@ const SSOConfiguration: FC = () => {
                         />
                     </Grid>
                     <Grid item xs={6}>
-                        <Paper>
+                        <div className='bg-neutral-2 rounded-lg shadow-outer-1 pt-2'>
                             <Box display='flex' justifyContent='space-between'>
-                                <Box display='flex' alignItems='center' ml={theme.spacing(3)} pt={theme.spacing(2)}>
-                                    <Typography fontWeight='bold' variant='h5'>
-                                        Providers
-                                    </Typography>
+                                <Box className='flex items-center ml-6'>
+                                    <Typography variant='h5'>Providers</Typography>
                                 </Box>
-                                <Box display='flex' alignItems='center' mr={theme.spacing(3)}>
+                                <div className='flex mr-6 items-center'>
                                     <TextField
                                         onChange={onChangeNameFilter}
                                         variant='standard'
@@ -302,7 +301,7 @@ const SSOConfiguration: FC = () => {
                                             </Box>
                                         }
                                     />
-                                </Box>
+                                </div>
                             </Box>
                             <SSOProviderTable
                                 ssoProviders={ssoProviders}
@@ -313,7 +312,7 @@ const SSOConfiguration: FC = () => {
                                 typeSortOrder={typeSortOrder}
                                 onToggleTypeSortOrder={toggleTypeSortOrder}
                             />
-                        </Paper>
+                        </div>
                     </Grid>
                     {selectedSSOProvider && (
                         <Grid item xs={6}>

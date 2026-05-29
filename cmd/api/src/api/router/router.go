@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 )
 
 // With takes a function returning a mux.MiddlewareFunc type and applies it the to variadic list of routes
@@ -90,6 +91,17 @@ func (s *Route) RequireUserId() *Route {
 	return s
 }
 
+// SupportsETAC wraps the ETAC middleware which allows or denies a user access to an environment (domainid, tenantid), when it is used in a route's path parameter
+func (s *Route) SupportsETAC(db database.Database, dogTagsService dogtags.Service) *Route {
+	s.handler.Use(middleware.SupportsETACMiddleware(db, dogTagsService))
+	return s
+}
+
+func (s *Route) RequireAllEnvironmentAccess(dogTagsService dogtags.Service) *Route {
+	s.handler.Use(middleware.RequireAllEnvironmentAccessMiddleware(dogTagsService))
+	return s
+}
+
 func (s *Route) CheckFeatureFlag(db database.Database, flagKey string) *Route {
 	s.handler.Use(middleware.FeatureFlagMiddleware(db, flagKey))
 	return s
@@ -115,6 +127,12 @@ func (s Router) UsePostrouting(middleware ...mux.MiddlewareFunc) {
 // matches to a valid route.
 func (s *Router) UsePrerouting(middleware ...mux.MiddlewareFunc) {
 	s.globalMiddleware = append(s.globalMiddleware, middleware...)
+}
+
+// MuxRouter returns the underlying *mux.Router. It is intended for pre-route middleware that needs to resolve the
+// matched route template without dispatching the request, e.g. the Prometheus metrics middleware.
+func (s Router) MuxRouter() *mux.Router {
+	return s.mux
 }
 
 func (s Router) Handler() http.Handler {

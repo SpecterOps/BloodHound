@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Paper, useTheme } from '@mui/material';
+import { Box, Paper } from '@mui/material';
 import {
     AssetGroup,
     AssetGroupMemberCounts,
@@ -23,9 +23,10 @@ import {
 } from 'js-client-library';
 import { FC, useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
+import { useTheme } from '../../hooks/useTheme';
 import { useNotifications } from '../../providers';
 import { apiClient } from '../../utils';
-import { SubHeader } from '../../views/Explore';
+import { SubHeader } from '../../views/Explore/fragments';
 import AssetGroupAutocomplete from './AssetGroupAutocomplete';
 import AssetGroupChangelogTable from './AssetGroupChangelogTable';
 import { AssetGroupChangelog, AssetGroupChangelogEntry, ChangelogAction } from './types';
@@ -93,7 +94,7 @@ const AssetGroupEdit: FC<{
     };
 
     return (
-        <Box component={Paper} elevation={0} padding={1} bgcolor={theme.palette.neutral.secondary}>
+        <Box component={Paper} elevation={0} padding={1} bgcolor={theme.neutral.secondary}>
             <SubHeader label='Total Count' count={memberCounts?.total_count} />
             {isEditable && (
                 <>

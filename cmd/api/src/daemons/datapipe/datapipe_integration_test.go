@@ -29,11 +29,14 @@ import (
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/pg"
@@ -50,6 +53,7 @@ type IntegrationTestSuite struct {
 	GraphDB         graph.Database
 	BHDatabase      *database.BloodhoundDB
 	WorkDir         string
+	Daemon          *datapipe.BHCEPipeline
 }
 
 // setupIntegrationTestSuite initializes and returns a test suite containing
@@ -64,14 +68,17 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 		workDir  = t.TempDir()
 	)
 
+	cfg, err := config.NewDefaultConnectionConfiguration(connConf.URL())
+	require.NoError(t, err)
+
 	//#region Setup for dbs
-	pool, err := pg.NewPool(connConf.URL())
+	pool, err := pg.NewPool(cfg.Database)
 	require.NoError(t, err)
 
-	gormDB, err := database.OpenDatabase(connConf.URL())
+	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
 	require.NoError(t, err)
 
-	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
+	db := database.NewBloodhoundDB(gormDB, dbPool, auth.NewIdentityResolver(), config.Configuration{})
 
 	graphDB, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
 		GraphQueryMemoryLimit: 1024 * 1024 * 1024 * 2,
@@ -80,13 +87,16 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 	})
 	require.NoError(t, err)
 
-	err = migrations.NewGraphMigrator(graphDB).Migrate(ctx, graphschema.DefaultGraphSchema())
+	err = migrations.NewGraphMigrator(graphDB).Migrate(ctx)
 	require.NoError(t, err)
 
 	err = db.Migrate(ctx)
 	require.NoError(t, err)
 
 	err = graphDB.AssertSchema(ctx, graphschema.DefaultGraphSchema())
+	require.NoError(t, err)
+
+	err = db.PopulateExtensionData(ctx)
 	require.NoError(t, err)
 
 	ingestSchema, err := upload.LoadIngestSchema()
@@ -100,16 +110,17 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 	err = os.Mkdir(path.Join(workDir, "tmp"), 0755)
 	require.NoError(t, err)
 
-	cfg := config.Configuration{
-		WorkDir: workDir,
-	}
+	cfg.WorkDir = workDir
+
+	cl := changelog.NewChangelog(graphDB, db, changelog.DefaultOptions())
 
 	return IntegrationTestSuite{
 		Context:         ctx,
-		GraphifyService: graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema),
+		GraphifyService: graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, cl),
 		GraphDB:         graphDB,
 		BHDatabase:      db,
 		WorkDir:         workDir,
+		Daemon:          datapipe.NewPipeline(ctx, cfg, db, graphDB, cache.Cache{}, ingestSchema, cl),
 	}
 }
 

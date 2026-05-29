@@ -13,43 +13,53 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Box, Paper, SxProps } from '@mui/material';
-import React, { useState } from 'react';
-import { SelectedEdge } from '../../../store';
-import { usePaneStyles } from '../InfoStyles';
+import { faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Badge } from 'doodle-ui';
+import React, { HTMLProps } from 'react';
+import useRoleBasedFiltering from '../../../hooks/useRoleBasedFiltering';
+import { cn } from '../../../utils';
+import { SelectedEdge } from '../ExploreSearch/EdgeFilter/edgeCategories';
 import { ObjectInfoPanelContextProvider } from '../providers';
 import EdgeInfoContent from './EdgeInfoContent';
 import Header from './EdgeInfoHeader';
 
 interface EdgeInfoPaneProps {
-    sx?: SxProps;
     selectedEdge: SelectedEdge | null;
+    className?: HTMLProps<HTMLDivElement>['className'];
 }
 
-const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ sx, selectedEdge }) => {
-    const styles = usePaneStyles();
-    const [expanded, setExpanded] = useState(true);
+const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ className, selectedEdge }) => {
+    const isRoleBasedFiltering = useRoleBasedFiltering();
 
     return (
-        <Box sx={sx} className={styles.container} data-testid='explore_edge-information-pane'>
-            <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
-                <Header
-                    name={selectedEdge?.name || 'None'}
-                    expanded={expanded}
-                    onToggleExpanded={(expanded: boolean) => {
-                        setExpanded(expanded);
-                    }}
+        <div
+            className={cn(
+                'flex flex-col pointer-events-none overflow-y-hidden h-full w-[400px] max-w-[400px] gap-2',
+                className
+            )}
+            data-testid='explore_edge-information-pane'>
+            {isRoleBasedFiltering && (
+                <Badge
+                    data-testid='explore_entity-information-panel-badge-etac-filtering'
+                    variant='fill'
+                    color='primary'
+                    className='px-2 py-1'
+                    icon={<FontAwesomeIcon icon={faEyeSlash} />}
+                    label='Role-based access filtering applied'
                 />
-            </Paper>
-            <Paper
-                elevation={0}
-                classes={{ root: styles.contentPaperRoot }}
-                style={{
-                    display: expanded ? 'initial' : 'none',
-                }}>
-                {selectedEdge === null ? 'No information to display.' : <EdgeInfoContent selectedEdge={selectedEdge} />}
-            </Paper>
-        </Box>
+            )}
+            {selectedEdge && (
+                <>
+                    <div className='bg-neutral-2 pointer-events-auto rounded-lg shadow-outer-1'>
+                        <Header name={selectedEdge?.name || 'None'} />
+                    </div>
+                    <div className='bg-neutral-2 mt-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded-lg shadow-outer-1'>
+                        <EdgeInfoContent selectedEdge={selectedEdge} />
+                    </div>
+                </>
+            )}
+        </div>
     );
 };
 

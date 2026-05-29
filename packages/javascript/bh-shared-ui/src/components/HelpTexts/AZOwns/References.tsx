@@ -14,19 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Link } from '@mui/material';
 import { FC } from 'react';
 
 const References: FC = () => {
     return (
-        <Box sx={{ overflowX: 'auto' }}>
-            <Link
+        <div className='overflow-x-auto'>
+            <a
                 target='_blank'
-                rel='noopener'
-                href='https://blog.netspi.com/attacking-azure-with-custom-script-extensions/'>
-                https://blog.netspi.com/attacking-azure-with-custom-script-extensions/
-            </Link>
-        </Box>
+                rel='noopener noreferrer'
+                href='https://specterops.io/blog/2022/08/03/introducing-bloodhound-4-2-the-azure-refactor/'>
+                https://specterops.io/blog/2022/08/03/introducing-bloodhound-4-2-the-azure-refactor/
+            </a>
+        </div>
     );
 };
 
