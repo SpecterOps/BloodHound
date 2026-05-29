@@ -115,13 +115,16 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 
 	cl := changelog.NewChangelog(graphDB, db, changelog.DefaultOptions())
 
+	cache, err := cache.NewCache(cache.Config{MaxSize: 1})
+	require.NoError(t, err)
+
 	return IntegrationTestSuite{
 		Context:         ctx,
 		GraphifyService: graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, cl),
 		GraphDB:         graphDB,
 		BHDatabase:      db,
 		WorkDir:         workDir,
-		Daemon:          datapipe.NewPipeline(ctx, cfg, db, graphDB, cache.Cache{}, ingestSchema, cl),
+		Daemon:          datapipe.NewPipeline(ctx, cfg, db, graphDB, cache, ingestSchema, cl),
 	}
 }
 

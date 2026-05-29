@@ -222,3 +222,30 @@ func TestPartialIngest(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, edgeCount, "THIS_EDGE_GETS_CREATED was not created")
 }
+
+func TestAnalyze_LastAnalysisTimestampUpdated(t *testing.T) {
+	var (
+		ctx              = context.Background()
+		ingestedFilePath = path.Join("fixtures", "OpenGraphJSON", "raw")
+		testSuite        = setupIntegrationTestSuite(t, ingestedFilePath)
+	)
+
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	datapipeStatus, err := testSuite.BHDatabase.GetDatapipeStatus(ctx)
+	require.NoError(t, err)
+	require.True(t, datapipeStatus.LastAnalysisRunAt.IsZero())
+
+	// request analysis so that Analyze will run
+	err = testSuite.BHDatabase.RequestAnalysis(ctx, "test")
+	require.NoError(t, err)
+
+	err = testSuite.Daemon.Analyze(ctx)
+	require.NoError(t, err)
+
+	// confirm that the last analysis run timestamp is updated
+	updatedDatapipeStatus, err := testSuite.BHDatabase.GetDatapipeStatus(ctx)
+	require.NoError(t, err)
+	require.False(t, updatedDatapipeStatus.LastAnalysisRunAt.IsZero())
+	require.Greater(t, updatedDatapipeStatus.LastAnalysisRunAt, datapipeStatus.LastAnalysisRunAt)
+}
