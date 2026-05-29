@@ -17,7 +17,7 @@
 import { Link } from '@mui/material';
 import { Typography } from 'doodle-ui';
 import { FC } from 'react';
-import { AdcsEsc14ScenarioAWindows, AltSecIdenitiesBlurb } from '../AdcsEsc14ScenarioA';
+import { AdcsEsc14ScenarioAWindows, AltSecIdentitiesBlurb } from '../AdcsEsc14ScenarioA';
 import CodeController from '../CodeController/CodeController';
 import { EdgeInfoProps } from '../index';
 
@@ -161,7 +161,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         equivalent to the "AddKeyCredentialLink" edge.
                     </Typography>
 
-                    <AltSecIdenitiesBlurb />
+                    <AltSecIdentitiesBlurb />
 
                     <Typography variant='body2'>
                         Alternatively, GenericAll enables {sourceName} to set a ServicePrincipalName (SPN) on the
@@ -328,7 +328,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                             Constrained Delegation attack.
                         </Typography>
 
-                        <AltSecIdenitiesBlurb />
+                        <AltSecIdentitiesBlurb />
 
                         <Typography variant='body1'> Retrieve LAPS Password </Typography>
                         <Typography variant='body2'>
@@ -510,7 +510,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                             Constrained Delegation attack.
                         </Typography>
 
-                        <AltSecIdenitiesBlurb />
+                        <AltSecIdentitiesBlurb />
 
                         <Typography variant='body1'> Shadow Credentials attack </Typography>
 

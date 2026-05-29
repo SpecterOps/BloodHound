@@ -14,4 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { AdcsEsc14ScenarioALinux, AdcsEsc14ScenarioAWindows } from './AdcsEsc14ScenarioA';
+export { AdcsEsc14ScenarioALinux, AdcsEsc14ScenarioAWindows, AltSecIdentitiesBlurb } from './AdcsEsc14ScenarioA';
