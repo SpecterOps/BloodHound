@@ -22,14 +22,11 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"io"
 	"time"
-
-	"github.com/specterops/bloodhound/cmd/api/src/config"
 )
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/fs.go -package=mocks . Storage,FileService,FileServiceResolver
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/fs.go -package=mocks . Storage,FileService
 
 type FileServiceName string
 
@@ -222,113 +219,4 @@ func MoveFileBetweenServices(
 	}
 
 	return sourceService.DeleteFile(ctx, sourceName)
-}
-
-// FileServiceResolver is an interface that is used to resolve the actual FileService needed for
-// a specific use case. This is ultimately map backed.
-type FileServiceResolver interface {
-	// Resolve returns a FileService interface if a FileService is found with the given name.
-	// Otherwise, an error is returned.
-	Resolve(name FileServiceName) (FileService, error)
-}
-
-type fileServiceResolver struct {
-	services map[FileServiceName]FileService
-}
-
-func NewFileServiceResolver(services map[FileServiceName]FileService) (FileServiceResolver, error) {
-	var (
-		serviceName    FileServiceName
-		fileService    FileService
-		copiedServices = make(map[FileServiceName]FileService, len(services))
-	)
-
-	for serviceName, fileService = range services {
-		if serviceName == "" {
-			return nil, errors.New("file service name is required")
-		}
-		if fileService == nil {
-			return nil, fmt.Errorf("file service %q is nil", serviceName)
-		}
-
-		copiedServices[serviceName] = fileService
-	}
-
-	return &fileServiceResolver{
-		services: copiedServices,
-	}, nil
-}
-
-func (s *fileServiceResolver) Resolve(name FileServiceName) (FileService, error) {
-	var (
-		fileService FileService
-		found       bool
-	)
-
-	if name == "" {
-		return nil, fmt.Errorf("%w: empty name", ErrFileServiceNotFound)
-	}
-
-	fileService, found = s.services[name]
-	if !found {
-		return nil, fmt.Errorf("%w: %s", ErrFileServiceNotFound, name)
-	}
-
-	return fileService, nil
-}
-
-// NewDefaultFileServices creates the file services that should be considered default with
-// BloodHound. Additional FileServices can still be created prior to creating a Resolver.
-func NewDefaultFileServices(cfg config.Configuration) (map[FileServiceName]FileService, error) {
-	var (
-		fileServices = make(map[FileServiceName]FileService)
-		openedStores []*LocalStore
-	)
-
-	closeOpened := func() {
-		for _, store := range openedStores {
-			_ = store.Close()
-		}
-	}
-
-	workStore, err := NewLocalStore(cfg.WorkDir)
-	if err != nil {
-		return nil, err
-	}
-	openedStores = append(openedStores, workStore)
-
-	ingestStore, err := NewLocalStore(cfg.TempDirectory())
-	if err != nil {
-		closeOpened()
-		return nil, err
-	}
-	openedStores = append(openedStores, ingestStore)
-
-	retainStore, err := NewLocalStore(cfg.RetainedFilesDirectory())
-	if err != nil {
-		closeOpened()
-		return nil, err
-	}
-	openedStores = append(openedStores, retainStore)
-
-	collectorsStore, err := NewLocalStore(cfg.CollectorsBasePath)
-	if err != nil {
-		closeOpened()
-		return nil, err
-	}
-	openedStores = append(openedStores, collectorsStore)
-
-	workService := NewFileService(workStore)
-	fileServices[FileServiceWork] = workService
-
-	ingestService := NewFileService(ingestStore)
-	fileServices[FileServiceIngest] = ingestService
-
-	retainService := NewFileService(retainStore)
-	fileServices[FileServiceRetained] = retainService
-
-	collectorsService := NewFileService(collectorsStore)
-	fileServices[FileServiceCollectors] = collectorsService
-
-	return fileServices, nil
 }

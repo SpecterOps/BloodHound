@@ -30,7 +30,7 @@ import (
 	io "io"
 	reflect "reflect"
 
-	storage "github.com/specterops/bloodhound/cmd/api/src/services/storage"
+	storage "github.com/specterops/bloodhound/packages/go/storage"
 	gomock "go.uber.org/mock/gomock"
 )
 
