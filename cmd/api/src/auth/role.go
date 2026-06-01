@@ -65,20 +65,7 @@ func Roles() map[string]RoleTemplate {
 		RoleAuditor: {
 			Name:        RoleAuditor,
 			Description: "Can read data and audit logs",
-			Permissions: model.Permissions{
-				permissions.AppReadApplicationConfiguration,
-				permissions.APsGenerateReport,
-				permissions.AuthCreateToken,
-				permissions.AuditLogRead,
-				permissions.AuthManageSelf,
-				permissions.AuthReadUsers,
-				permissions.AuthReadUsersMinimal,
-				permissions.ClientsRead,
-				permissions.GraphDBRead,
-				permissions.SavedQueriesRead,
-				permissions.CollectionReadJobs,
-				permissions.OpenGraphRead,
-			},
+			Permissions: append(permissions.ReadAll(), permissions.AuthCreateToken, permissions.AuthManageSelf),
 		},
 		RoleUser: {
 			Name:        RoleUser,

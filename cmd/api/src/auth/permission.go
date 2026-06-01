@@ -88,6 +88,21 @@ func (s PermissionSet) All() model.Permissions {
 	}
 }
 
+func (s PermissionSet) ReadAll() model.Permissions {
+	return model.Permissions{
+		s.AppReadApplicationConfiguration,
+		s.APsGenerateReport,
+		s.AuditLogRead,
+		s.AuthReadUsers,
+		s.AuthReadUsersMinimal,
+		s.ClientsRead,
+		s.GraphDBRead,
+		s.SavedQueriesRead,
+		s.CollectionReadJobs,
+		s.OpenGraphRead,
+	}
+}
+
 // Permissions Note: Not the only source of truth, changes here must be added to a migration *.sql file to update the permissions table
 func Permissions() PermissionSet {
 	return PermissionSet{

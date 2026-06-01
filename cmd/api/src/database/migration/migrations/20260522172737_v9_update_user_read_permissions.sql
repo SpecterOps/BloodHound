@@ -34,10 +34,20 @@ SELECT r.id, p.id
 FROM roles r
 JOIN permissions p
     ON (
-      (r.name IN ('User', 'Read-Only', 'Power User', 'Auditor', 'Administrator') AND (p.authority, p.name) IN (
+      (r.name IN ('User', 'Read-Only', 'Power User') AND (p.authority, p.name) IN (
             ('auth', 'ReadUsersMinimal')
       ))
 )
+ON CONFLICT DO NOTHING;
+
+INSERT INTO roles_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles_permissions r
+JOIN permissions f
+    ON f.id = r.permission_id
+JOIN permissions p
+    ON (p.authority, p.name) = ('auth', 'ReadUsersMinimal')
+WHERE (f.authority, f.name) = ('auth', 'ReadUsers')
 ON CONFLICT DO NOTHING;
 
 -- +goose Down
