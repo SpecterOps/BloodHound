@@ -26,7 +26,7 @@ import (
 	"time"
 )
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/fs.go -package=mocks . Storage,FileService
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../LICENSE.header -destination=./mocks/storage.go -package=mocks . Storage,FileService
 
 type FileServiceName string
 
