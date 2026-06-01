@@ -26,3 +26,14 @@ JOIN permissions p
 ON CONFLICT DO NOTHING;
 
 -- +goose Down
+INSERT INTO roles_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p ON (p.authority, p.name) = ('auth', 'ReadUsers')
+WHERE r.name IN ('User', 'Read-Only', 'Power User')
+ON CONFLICT DO NOTHING;
+
+DELETE FROM roles_permissions
+WHERE permission_id = (SELECT id FROM permissions WHERE authority = 'auth' AND name = 'ReadUsersMinimal');
+
+DELETE FROM permissions WHERE authority = 'auth' AND name = 'ReadUsersMinimal';

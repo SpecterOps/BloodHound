@@ -71,6 +71,7 @@ func Roles() map[string]RoleTemplate {
 				permissions.AuditLogRead,
 				permissions.AuthManageSelf,
 				permissions.AuthReadUsers,
+				permissions.AuthReadUsersMinimal,
 				permissions.ClientsRead,
 				permissions.GraphDBRead,
 				permissions.SavedQueriesRead,
