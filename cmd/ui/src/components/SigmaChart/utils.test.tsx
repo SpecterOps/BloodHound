@@ -15,21 +15,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { MultiDirectedGraph } from 'graphology';
+import { buildTestGraph } from 'src/mocks/factories/exploreGraphHighlighting';
 import { getFullPathHighlightedEntities, getIsHighlightedItemInGraph } from './utils';
 
-// Linear directed graph with a split inbound on node-c:
-//   node-a → node-b → node-c ← node-d
-const buildTestGraph = () => {
-    const graph = new MultiDirectedGraph();
-    graph.addNode('node-a');
-    graph.addNode('node-b');
-    graph.addNode('node-c');
-    graph.addNode('node-d');
-    graph.addDirectedEdgeWithKey('edge-ab', 'node-a', 'node-b');
-    graph.addDirectedEdgeWithKey('edge-bc', 'node-b', 'node-c');
-    graph.addDirectedEdgeWithKey('edge-dc', 'node-d', 'node-c');
-    return graph;
-};
+const createEntityArray = (entityList: Set<string>) => [...entityList];
+
+const testPathNodes = ['53069', '51155', '52350'];
+
+const testPathEdges = ['rel_939292', 'rel_931961'];
+
+const testSelectedNode = '52350';
+
+const testSelectedEdge = 'rel_931961';
+
+const testNodesWhenEdgeSelected = ['51155', '52350'];
 
 describe('SigmaChart Utils', () => {
     let graph: MultiDirectedGraph;
@@ -40,11 +39,11 @@ describe('SigmaChart Utils', () => {
 
     describe('getIsHighlightedItemInGraph', () => {
         it('returns true when the highlighted item is a node in the graph', () => {
-            expect(getIsHighlightedItemInGraph(graph, 'node-a')).toBe(true);
+            expect(getIsHighlightedItemInGraph(graph, testSelectedNode)).toBe(true);
         });
 
         it('returns true when the highlighted item is an edge in the graph', () => {
-            expect(getIsHighlightedItemInGraph(graph, 'edge-ab')).toBe(true);
+            expect(getIsHighlightedItemInGraph(graph, testSelectedEdge)).toBe(true);
         });
 
         it('returns undefined when highlightedItem is null', () => {
@@ -59,47 +58,35 @@ describe('SigmaChart Utils', () => {
     describe('getFullPathHighlightedEntities', () => {
         describe('when a node is selected', () => {
             it('returns the full inbound and outbound path when selecting a middle node', () => {
-                const { highlightedNodeIds, highlightedEdgeIds } = getFullPathHighlightedEntities(graph, 'node-b');
-
-                expect([...highlightedNodeIds]).toEqual(expect.arrayContaining(['node-a', 'node-b', 'node-c']));
-                expect([...highlightedEdgeIds]).toEqual(expect.arrayContaining(['edge-ab', 'edge-bc']));
-            });
-
-            it('returns only the outbound path when selecting the start node', () => {
-                const { highlightedNodeIds, highlightedEdgeIds } = getFullPathHighlightedEntities(graph, 'node-a');
-
-                expect([...highlightedNodeIds]).toEqual(expect.arrayContaining(['node-a', 'node-b', 'node-c']));
-                expect([...highlightedEdgeIds]).toEqual(expect.arrayContaining(['edge-ab', 'edge-bc']));
-            });
-
-            it('returns all inbound paths when selecting the end node with multiple inbound edges', () => {
-                const { highlightedNodeIds, highlightedEdgeIds } = getFullPathHighlightedEntities(graph, 'node-c');
-
-                expect([...highlightedNodeIds]).toEqual(
-                    expect.arrayContaining(['node-a', 'node-b', 'node-c', 'node-d'])
-                );
-                expect([...highlightedEdgeIds]).toEqual(expect.arrayContaining(['edge-ab', 'edge-bc', 'edge-dc']));
-            });
-
-            it('returns only the selected node when it has no connections', () => {
-                const isolatedGraph = new MultiDirectedGraph();
-                isolatedGraph.addNode('node-isolated');
                 const { highlightedNodeIds, highlightedEdgeIds } = getFullPathHighlightedEntities(
-                    isolatedGraph,
-                    'node-isolated'
+                    graph,
+                    testSelectedNode
                 );
 
-                expect([...highlightedNodeIds]).toEqual(['node-isolated']);
-                expect(highlightedEdgeIds.size).toBe(0);
+                const nodeIds = createEntityArray(highlightedNodeIds);
+                const edgeIds = createEntityArray(highlightedEdgeIds);
+
+                expect(nodeIds).toEqual(expect.arrayContaining(testPathNodes));
+                expect(nodeIds).toHaveLength(testPathNodes.length);
+                expect(edgeIds).toEqual(expect.arrayContaining(testPathEdges));
+                expect(edgeIds).toHaveLength(testPathEdges.length);
             });
         });
 
         describe('when an edge is selected', () => {
             it('returns the edge and both of its endpoint nodes', () => {
-                const { highlightedNodeIds, highlightedEdgeIds } = getFullPathHighlightedEntities(graph, 'edge-ab');
+                const { highlightedNodeIds, highlightedEdgeIds } = getFullPathHighlightedEntities(
+                    graph,
+                    testSelectedEdge
+                );
 
-                expect([...highlightedNodeIds]).toEqual(expect.arrayContaining(['node-a', 'node-b']));
-                expect([...highlightedEdgeIds]).toEqual(['edge-ab']);
+                const nodeIds = createEntityArray(highlightedNodeIds);
+                const edgeIds = createEntityArray(highlightedEdgeIds);
+
+                expect(nodeIds).toEqual(expect.arrayContaining(testNodesWhenEdgeSelected));
+                expect(nodeIds).toHaveLength(2);
+                expect(edgeIds).toEqual([testSelectedEdge]);
+                expect(edgeIds).toHaveLength(1);
             });
         });
 

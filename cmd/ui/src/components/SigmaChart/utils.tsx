@@ -28,7 +28,7 @@ export const getIsHighlightedItemInGraph = (
 // Nodes: two independent directional BFS passes from the selected node —
 //   outbound (follows edges pointing away) and inbound (follows edges pointing toward).
 //   This highlights the whole directed path in both directions without mixing traversal directions.
-// Edges: all edges directly connected to the selected edge endpoints (1-hop, unchanged).
+// Edges: all edges directly connected to above nodes.
 
 export const getFullPathHighlightedEntities = (
     graph: AbstractGraph<Attributes, Attributes, Attributes>,
