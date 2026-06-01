@@ -22,12 +22,29 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func buildValidator(t *testing.T, expectedContent string, validationErr error) FileValidator {
+	t.Helper()
+
+	return func(src io.Reader, dst io.Writer) (ingest.OriginalMetadata, error) {
+		content, err := io.ReadAll(src)
+		require.NoError(t, err)
+		require.Equal(t, expectedContent, string(content))
+
+		_, err = dst.Write(content)
+		require.NoError(t, err)
+
+		return ingest.OriginalMetadata{}, validationErr
+	}
+}
 
 func TestWriteAndValidateZip(t *testing.T) {
 	t.Run("valid zip file is ok", func(t *testing.T) {
@@ -137,6 +154,41 @@ func TestWriteAndValidateJSON_NormalizationError(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, ErrInvalidJSON)
+}
+
+func TestWriteAndValidateFileWithPrefix(t *testing.T) {
+	t.Parallel()
+
+	var (
+		errValidation  = errors.New("validation failed")
+		tempFilePrefix = "custom_prefix_"
+	)
+
+	t.Run("writes validated file using caller supplied prefix", func(t *testing.T) {
+		t.Parallel()
+
+		tempDirectory := t.TempDir()
+		fileName, err := WriteAndValidateFileWithPrefix(strings.NewReader("content"), tempDirectory, tempFilePrefix, buildValidator(t, "content", nil))
+		require.NoError(t, err)
+		require.Contains(t, filepath.Base(fileName), tempFilePrefix)
+
+		fileContent, err := os.ReadFile(fileName)
+		require.NoError(t, err)
+		require.Equal(t, "content", string(fileContent))
+	})
+
+	t.Run("validation error deletes temp file", func(t *testing.T) {
+		t.Parallel()
+
+		tempDirectory := t.TempDir()
+		fileName, err := WriteAndValidateFileWithPrefix(strings.NewReader("content"), tempDirectory, tempFilePrefix, buildValidator(t, "content", errValidation))
+		require.ErrorIs(t, err, errValidation)
+		require.Empty(t, fileName)
+
+		files, err := filepath.Glob(filepath.Join(tempDirectory, tempFilePrefix+"*"))
+		require.NoError(t, err)
+		require.Empty(t, files)
+	})
 }
 
 // ErrorReader is a mock reader that always returns an error

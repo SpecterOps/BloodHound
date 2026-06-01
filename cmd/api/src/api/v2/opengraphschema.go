@@ -259,6 +259,7 @@ type ExtensionsResponse struct {
 type ExtensionInfo struct {
 	ID        int32  `json:"id"`
 	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
 	Version   string `json:"version"`
 	IsBuiltIn bool   `json:"is_builtin"`
 }
@@ -279,6 +280,7 @@ func (s Resources) ListExtensions(response http.ResponseWriter, request *http.Re
 				Name:      extension.DisplayName,
 				Version:   extension.Version,
 				IsBuiltIn: extension.IsBuiltin,
+				Namespace: extension.Namespace,
 			}
 		}
 

@@ -36,6 +36,7 @@ type GraphifyData interface {
 	GetFlagByKey(context.Context, string) (appcfg.FeatureFlag, error)
 
 	RegisterSourceKind(context.Context) func(sourceKind graph.Kind) error
+	EnsureStubbedCustomNodeKindForIngest(context.Context, string) error
 }
 
 type GraphifyService struct {
