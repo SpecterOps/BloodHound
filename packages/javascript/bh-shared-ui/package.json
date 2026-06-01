@@ -96,7 +96,7 @@
         "tailwindcss": "^3.4.17",
         "typescript": "^5.9.3",
         "vite": "^6.4.2",
-        "vitest": "^4.1.0",
+        "vitest": "npm:^4.1.0",
         "whatwg-fetch": "^3.6.2"
     },
     "peerDependencies": {
