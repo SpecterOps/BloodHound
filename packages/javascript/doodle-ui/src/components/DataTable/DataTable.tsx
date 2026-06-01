@@ -409,7 +409,6 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
     const announcements: Announcements = {
         onDragStart({ active }: DragStartEvent) {
             const item = active.id;
-            console.log(table.getAllColumns());
             return `Picked up sortable item ${item}.`;
         },
         onDragOver({ active, over }: DragOverEvent) {
