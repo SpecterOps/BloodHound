@@ -23,7 +23,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/packages/go/storage"
 	"github.com/specterops/bloodhound/packages/go/storage/mocks"
 	"github.com/stretchr/testify/require"
