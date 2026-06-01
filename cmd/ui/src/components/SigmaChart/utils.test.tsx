@@ -20,15 +20,15 @@ import { getFullPathHighlightedEntities, getIsHighlightedItemInGraph } from './u
 
 const createEntityArray = (entityList: Set<string>) => [...entityList];
 
-const testPathNodes = ['53069', '51155', '52350'];
+const testPathNodes = ['203', '1434', '104'];
 
-const testPathEdges = ['rel_939292', 'rel_931961'];
+const testPathEdges = ['1434_Enroll_203', '104_MemberOf_1434'];
 
-const testSelectedNode = '52350';
+const testSelectedNode = '203';
 
-const testSelectedEdge = 'rel_931961';
+const testSelectedEdge = '1434_Enroll_203';
 
-const testNodesWhenEdgeSelected = ['51155', '52350'];
+const testNodesWhenEdgeSelected = ['1434', '203'];
 
 describe('SigmaChart Utils', () => {
     let graph: MultiDirectedGraph;

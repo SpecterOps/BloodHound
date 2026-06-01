@@ -352,7 +352,11 @@ export const buildTestGraph = () => {
         graph.addNode(key);
     }
     testEdges.forEach((edgeItem) => {
-        graph.addDirectedEdgeWithKey(edgeItem.exploreGraphId, edgeItem.source, edgeItem.target);
+        graph.addDirectedEdgeWithKey(
+            `${edgeItem.source}_${edgeItem.kind}_${edgeItem.target}`,
+            edgeItem.source,
+            edgeItem.target
+        );
     });
 
     return graph;
