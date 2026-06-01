@@ -389,9 +389,12 @@ export type UnifiedFinding = {
     platform: string;
     environment_id: string;
     zone_id: number;
+    zone_name: string;
     source_principal_id: string;
+    source_principal_name: string;
     source_principal_kind: string;
     target_principal_id: string;
+    target_principal_name: string;
     target_principal_kind: string;
     status: string;
     first_seen: string;
