@@ -23,7 +23,6 @@ import (
 	"testing"
 
 	"github.com/peterldowns/pgtestdb"
-	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
@@ -211,7 +210,7 @@ func newNTLMIntegrationGraph(t *testing.T, ctx context.Context) graph.Database {
 	connConf := pgtestdb.Custom(t, integration.GetPostgresConfig(cfg), pgtestdb.NoopMigrator{})
 	cfg.Database.Connection = connConf.URL()
 
-	pool, err := dbpool.NewDawgsPool(cfg.Database)
+	pool, err := pg.NewPool(cfg.Database)
 	require.NoError(t, err)
 
 	graphDB, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
