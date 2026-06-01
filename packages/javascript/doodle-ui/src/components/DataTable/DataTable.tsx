@@ -415,7 +415,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         onDragOver({ active, over }: DragOverEvent) {
             if (over) {
                 const item = active.id;
-                return `Sortable item ${item} was moved over over.id`;
+                return `Sortable item ${item} was moved over ${over.id}.`;
             }
         },
         onDragEnd({ active, over }: DragEndEvent) {
