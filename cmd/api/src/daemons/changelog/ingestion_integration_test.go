@@ -28,6 +28,7 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/peterldowns/pgtestdb"
+	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -100,7 +101,7 @@ func setupIntegrationTest(t *testing.T) IntegrationTestSuite {
 	require.NoError(t, err)
 
 	// Create connection pool
-	pool, err := pg.NewPool(cfg.Database)
+	pool, err := dbpool.NewDawgsPool(cfg.Database)
 	require.NoError(t, err)
 
 	// Open graph database

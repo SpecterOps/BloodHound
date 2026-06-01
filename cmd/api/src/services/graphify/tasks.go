@@ -95,6 +95,7 @@ func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.
 	opts := []IngestOption{
 		WithIngestTime(ingestTime),
 		WithEndpointResolver(s.endpointResolver),
+		WithNodeKindRegistrar(s.RegisterNodeKind(ctx)),
 	}
 
 	if useChangelog {
@@ -197,5 +198,19 @@ func (s *GraphifyService) RegisterSourceKind(ctx context.Context) func(kind grap
 		} else {
 			return s.graphdb.RefreshKinds(ctx)
 		}
+	}
+}
+
+func (s *GraphifyService) RegisterNodeKind(ctx context.Context) func(kind graph.Kind) error {
+	return func(kind graph.Kind) error {
+		if kind == nil || kind == graph.EmptyKind {
+			return nil
+		}
+
+		if err := s.db.EnsureStubbedCustomNodeKindForIngest(ctx, kind.String()); err != nil {
+			return err
+		}
+
+		return s.graphdb.RefreshKinds(ctx)
 	}
 }
