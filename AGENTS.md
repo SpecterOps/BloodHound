@@ -36,7 +36,11 @@
 ## Database migration instructions
 
 -   Migration files must use goose annotations: `-- +goose Up` and `-- +goose Down`
--   Migration filenames must follow the pattern: `YYYYMMDDHHMMSS_descriptive_name.sql`
+-   Migration filenames must follow the pattern: `<timestamp>_<version>_<name>.sql`
+    -   Timestamp: `YYYYMMDDHHMMSS`
+    -   Version: `v9`, `v10`, etc. (current major release)
+    -   Name: descriptive snake_case name
+    -   Example: `20260514120000_v9_add_feature_flags.sql`
 -   Never modify baseline migrations (`00000000000001_init.sql` or `00000000000002_init.sql`)
 -   Never modify migrations that have already been merged to main. The user should create a new migration instead
 -   Migration locations:

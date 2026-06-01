@@ -33,31 +33,23 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
-	if isUserSpecifiesSanEnabledCollected, err := enterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabledCollected.String()).Bool(); err != nil {
+func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, certChains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
+	if isUserSpecifiesSanEnabledCollected, err := certChains.EnterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabledCollected.String()).Bool(); err != nil {
 		return err
 	} else if !isUserSpecifiesSanEnabledCollected {
 		return nil
-	} else if isUserSpecifiesSanEnabled, err := enterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabled.String()).Bool(); err != nil {
+	} else if isUserSpecifiesSanEnabled, err := certChains.EnterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabled.String()).Bool(); err != nil {
 		return err
 	} else if !isUserSpecifiesSanEnabled {
 		return nil
-	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
+	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(certChains.EnterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else {
-		enterpriseCAEnrollers := cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
+		enterpriseCAEnrollers := cache.GetEnterpriseCAEnrollers(certChains.EnterpriseCA.ID)
 
 		for _, publishedCertTemplate := range publishedCertTemplates {
 
-			if valid, err := isCertTemplateValidForESC6(publishedCertTemplate, false); err != nil {
-				slog.WarnContext(
-					ctx,
-					"Error validating cert template",
-					slog.Uint64("published_cert_template_id", uint64(publishedCertTemplate.ID)),
-					attr.Error(err),
-				)
-				continue
-			} else if !valid {
+			if !isCertTemplateValidForESC6(ctx, publishedCertTemplate, false) {
 				continue
 			} else {
 				enrollers := CalculateCrossProductNodeSets(localGroupData, cache.GetCertTemplateEnrollers(publishedCertTemplate.ID), enterpriseCAEnrollers)
@@ -71,11 +63,11 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- post.E
 					)
 					continue
 				} else {
-					filteredEnrollers.Each(func(value uint64) bool {
-						for _, domain := range targetDomains.Slice() {
+					filteredEnrollers.Each(func(source uint64) bool {
+						for _, domain := range certChains.Domains.Slice() {
 							channels.Submit(ctx, outC, post.EnsureRelationshipJob{
-								FromID: graph.ID(value),
-								ToID:   domain.ID,
+								FromID: graph.ID(source),
+								ToID:   graph.ID(domain),
 								Kind:   ad.ADCSESC6a,
 							})
 						}
@@ -88,31 +80,23 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- post.E
 	return nil
 }
 
-func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
-	if isUserSpecifiesSanEnabledCollected, err := enterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabledCollected.String()).Bool(); err != nil {
+func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, chains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
+	if isUserSpecifiesSanEnabledCollected, err := chains.EnterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabledCollected.String()).Bool(); err != nil {
 		return err
 	} else if !isUserSpecifiesSanEnabledCollected {
 		return nil
-	} else if isUserSpecifiesSanEnabled, err := enterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabled.String()).Bool(); err != nil {
+	} else if isUserSpecifiesSanEnabled, err := chains.EnterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabled.String()).Bool(); err != nil {
 		return err
 	} else if !isUserSpecifiesSanEnabled {
 		return nil
-	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
+	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(chains.EnterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else {
-		enterpriseCAEnrollers := cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
+		enterpriseCAEnrollers := cache.GetEnterpriseCAEnrollers(chains.EnterpriseCA.ID)
 
 		for _, publishedCertTemplate := range publishedCertTemplates {
 
-			if valid, err := isCertTemplateValidForESC6(publishedCertTemplate, true); err != nil {
-				slog.WarnContext(
-					ctx,
-					"Error validating cert template",
-					slog.Uint64("published_cert_template_id", uint64(publishedCertTemplate.ID)),
-					attr.Error(err),
-				)
-				continue
-			} else if !valid {
+			if !isCertTemplateValidForESC6(ctx, publishedCertTemplate, true) {
 				continue
 			} else {
 				enrollers := CalculateCrossProductNodeSets(localGroupData, cache.GetCertTemplateEnrollers(publishedCertTemplate.ID), enterpriseCAEnrollers)
@@ -126,12 +110,12 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- post.E
 					)
 					continue
 				} else {
-					filteredEnrollers.Each(func(value uint64) bool {
-						for _, domain := range targetDomains.Slice() {
-							if cache.HasUPNCertMappingInForest(domain.ID.Uint64()) {
+					filteredEnrollers.Each(func(source uint64) bool {
+						for _, domain := range chains.Domains.Slice() {
+							if cache.HasUPNCertMappingInForest(domain) {
 								channels.Submit(ctx, outC, post.EnsureRelationshipJob{
-									FromID: graph.ID(value),
-									ToID:   domain.ID,
+									FromID: graph.ID(source),
+									ToID:   graph.ID(domain),
 									Kind:   ad.ADCSESC6b,
 								})
 							}
@@ -145,36 +129,42 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- post.E
 	return nil
 }
 
-func isCertTemplateValidForESC6(ct *graph.Node, scenarioB bool) (bool, error) {
+func isCertTemplateValidForESC6(ctx context.Context, ct *graph.Node, scenarioB bool) bool {
 	if reqManagerApproval, err := ct.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if reqManagerApproval {
-		return false, nil
+		return false
 	} else if schemaVersion, err := ct.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if authorizedSignatures, err := ct.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if schemaVersion > 1 && authorizedSignatures > 0 {
-		return false, nil
+		return false
 	} else if !scenarioB {
 		if noSecurityExtension, err := ct.Properties.Get(ad.NoSecurityExtension.String()).Bool(); err != nil {
-			return false, err
+			logPropertyLookupFailure(ctx, ct, err)
+			return false
 		} else if !noSecurityExtension {
-			return false, nil
+			return false
 		} else if authenticationEnabled, err := ct.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
-			return false, err
+			logPropertyLookupFailure(ctx, ct, err)
+			return false
 		} else if !authenticationEnabled {
-			return false, nil
+			return false
 		} else {
-			return true, nil
+			return true
 		}
 	} else {
-		if schannelAuthenticationEnabled, err := schannelAuthenticationEnabled(ct); err != nil {
-			return false, err
-		} else if !schannelAuthenticationEnabled {
-			return false, nil
+		if schannelAuthEnabled, err := schannelAuthenticationEnabled(ct); err != nil {
+			logPropertyLookupFailure(ctx, ct, err)
+			return false
+		} else if !schannelAuthEnabled {
+			return false
 		} else {
-			return true, nil
+			return true
 		}
 	}
 }

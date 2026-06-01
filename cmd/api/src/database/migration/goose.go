@@ -103,7 +103,7 @@ func (s *Migrator) ExecuteGooseMigrations(ctx context.Context) error {
 
 	if hasLegacyTable {
 		// Existing database - check if behind and run v8 stepwise migrations if needed
-		// This logic can be removed once v10 is released
+		// This logic can be removed once v11 is released
 		if err := s.runLegacyMigrationsIfNeeded(); err != nil {
 			return fmt.Errorf("failed to run legacy migrations: %w", err)
 		}
@@ -144,7 +144,7 @@ func (s *Migrator) ExecuteGooseMigrations(ctx context.Context) error {
 }
 
 // runLegacyMigrationsIfNeeded checks if the database is behind on v8 stepwise migrations
-// and runs them if needed. This can be removed once v10 is released.
+// and runs them if needed. This can be removed once v11 is released.
 func (s *Migrator) runLegacyMigrationsIfNeeded() error {
 	lastMigration, err := s.LatestMigration()
 	if err != nil {
@@ -202,9 +202,16 @@ func (s *Migrator) dropLegacyMigrationTable() error {
 }
 
 func (s *Migrator) populateMigrationDescription(provider *goose.Provider) error {
+	// use a transaction so failures don't congest the connection pool
+	tx, err := s.SqlDB.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
 
-	if _, err := s.SqlDB.Exec(`
-        ALTER TABLE goose_db_version 
+	defer tx.Rollback()
+
+	if _, err = tx.Exec(`
+        ALTER TABLE goose_db_version
         ADD COLUMN IF NOT EXISTS description TEXT
     `); err != nil {
 		return err
@@ -219,14 +226,14 @@ func (s *Migrator) populateMigrationDescription(provider *goose.Provider) error 
 		if len(parts) > 1 {
 			description = strings.ReplaceAll(parts[1], "_", " ")
 		}
-		if _, err := s.SqlDB.Exec(`
-            UPDATE goose_db_version 
-            SET description = $1 
+		if _, err = tx.Exec(`
+            UPDATE goose_db_version
+            SET description = $1
             WHERE version_id = $2 AND (description IS NULL OR description = '')
         `, description, source.Version); err != nil {
 			return err
 		}
 	}
 
-	return nil
+	return tx.Commit()
 }

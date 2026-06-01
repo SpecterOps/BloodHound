@@ -525,6 +525,130 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 				responseBody:   `{"data":[{"type":"HeeHaw","name":"HeeHaw Name","id":"1","collected":true}]}`,
 			},
 		},
+		{
+			name: "success - filter by name",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/available-domains",
+						RawQuery: "name=eq:basic",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(gomock.Any(), true).
+					Return(graph.Kinds{ad.Domain}, map[string]string{ad.Domain.String(): "Active Directory"}, nil)
+				mock.mockGraphQuery.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).
+					Return([]*graph.Node{{
+						Properties: graph.AsProperties(map[string]any{
+							common.Name.String():      "basic",
+							common.ObjectID.String():  "99",
+							common.Collected.String(): false,
+						}),
+						Kinds: graph.Kinds{ad.Domain},
+					}}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"data":[{"type":"active-directory","name":"basic","id":"99","collected":false}]}`,
+			},
+		},
+		{
+			name: "success - boolean-like string filter",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/available-domains",
+						RawQuery: "name=eq:true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(gomock.Any(), true).
+					Return(graph.Kinds{ad.Domain}, map[string]string{ad.Domain.String(): "Active Directory"}, nil)
+				mock.mockGraphQuery.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).
+					Return([]*graph.Node{{
+						Properties: graph.AsProperties(map[string]any{
+							common.Name.String():      "true",
+							common.ObjectID.String():  "100",
+							common.Collected.String(): false,
+						}),
+						Kinds: graph.Kinds{ad.Domain},
+					}}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"data":[{"type":"active-directory","name":"true","id":"100","collected":false}]}`,
+			},
+		},
+		{
+			name: "success - numeric string filter",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/available-domains",
+						RawQuery: "name=eq:123",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(gomock.Any(), true).
+					Return(graph.Kinds{ad.Domain}, map[string]string{ad.Domain.String(): "Active Directory"}, nil)
+				mock.mockGraphQuery.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).
+					Return([]*graph.Node{{
+						Properties: graph.AsProperties(map[string]any{
+							common.Name.String():      "123",
+							common.ObjectID.String():  "101",
+							common.Collected.String(): false,
+						}),
+						Kinds: graph.Kinds{ad.Domain},
+					}}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"data":[{"type":"active-directory","name":"123","id":"101","collected":false}]}`,
+			},
+		},
+		{
+			name: "success - boolean filter",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/available-domains",
+						RawQuery: "collected=eq:true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(gomock.Any(), true).
+					Return(graph.Kinds{ad.Domain}, map[string]string{ad.Domain.String(): "Active Directory"}, nil)
+				mock.mockGraphQuery.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).
+					Return([]*graph.Node{{
+						Properties: graph.AsProperties(map[string]any{
+							common.Name.String():      "domain1",
+							common.ObjectID.String():  "102",
+							common.Collected.String(): true,
+						}),
+						Kinds: graph.Kinds{ad.Domain},
+					}}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"data":[{"type":"active-directory","name":"domain1","id":"102","collected":true}]}`,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

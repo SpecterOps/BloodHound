@@ -147,21 +147,26 @@ export default {
 
                 // 'menu-bg': 'var(--menu-bg)',
 
-                // 'badge-error': 'var(--badge-error)',
-                // 'badge-error-hover': 'var(--badge-error-hover)',
-                // 'badge-warning': 'var(--badge-warning)',
-                // 'badge-warning-hover': 'var(--badge-warning-hover)',
-                // 'badge-success': 'var(--badge-success)',
-                // 'badge-success-hover': 'var(--badge-success-hover)',
-                // 'badge-info': 'var(--badge-info)',
-                // 'badge-info-hover': 'var(--badge-info-hover)',
-                // 'badge-indeterminate': 'var(--badge-indeterminate)',
+                'badge-primary-fill': 'var(--badge-primary-fill)',
+                'badge-primary-outline': 'var(--badge-primary-outline)',
 
-                // 'chip-indeterminate': 'var(--chip-indeterminate)',
-                // 'chip-indeterminate-hover': 'var(--chip-indeterminate-hover)',
-                // 'chip-outline-fill': 'var(--chip-outline-fill)',
-                // 'chip-outline-hover': 'var(--chip-outline-hover)',
-                // 'chip-outline-active': 'var(--chip-outline-active)',
+                'badge-secondary-fill': 'var(--badge-secondary-fill)',
+                'badge-secondary-outline': 'var(--badge-secondary-outline)',
+
+                'badge-grey-fill': 'var(--badge-grey-fill)',
+                'badge-grey-outline': 'var(--badge-grey-outline)',
+
+                'badge-red-fill': 'var(--badge-red-fill)',
+                'badge-red-outline': 'var(--badge-red-outline)',
+
+                'badge-orange-fill': 'var(--badge-orange-fill)',
+                'badge-orange-outline': 'var(--badge-orange-outline)',
+
+                'badge-green-fill': 'var(--badge-green-fill)',
+                'badge-green-outline': 'var(--badge-green-outline)',
+
+                'badge-blue-fill': 'var(--badge-blue-fill)',
+                'badge-blue-outline': 'var(--badge-blue-outline)',
 
                 // 'sidenav-bg': 'var(--sidenav-bg)',
                 // 'sidenav-bg-hover': 'var(--sidenav-bg-hover)',

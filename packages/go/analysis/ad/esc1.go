@@ -32,22 +32,14 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
+func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, certChains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
 	results := cardinality.NewBitmap64()
-	if publishedCertTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
+	if publishedCertTemplates := cache.GetPublishedTemplateCache(certChains.EnterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else {
-		ecaEnrollers := cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
+		ecaEnrollers := cache.GetEnterpriseCAEnrollers(certChains.EnterpriseCA.ID)
 		for _, certTemplate := range publishedCertTemplates {
-			if valid, err := isCertTemplateValidForEsc1(certTemplate); err != nil {
-				slog.WarnContext(
-					ctx,
-					"Error validating cert template",
-					slog.Uint64("cert_template_id", uint64(certTemplate.ID)),
-					attr.Error(err),
-				)
-				continue
-			} else if !valid {
+			if !isCertTemplateValidForEsc1(ctx, certTemplate) {
 				continue
 			} else {
 				results.Or(CalculateCrossProductNodeSets(localGroupData, cache.GetCertTemplateEnrollers(certTemplate.ID), ecaEnrollers))
@@ -55,11 +47,11 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 		}
 	}
 
-	results.Each(func(value uint64) bool {
-		for _, domain := range targetDomains.Slice() {
+	results.Each(func(source uint64) bool {
+		for _, domain := range certChains.Domains.Slice() {
 			channels.Submit(ctx, outC, post.EnsureRelationshipJob{
-				FromID: graph.ID(value),
-				ToID:   domain.ID,
+				FromID: graph.ID(source),
+				ToID:   graph.ID(domain),
 				Kind:   ad.ADCSESC1,
 			})
 		}
@@ -68,27 +60,32 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 	return nil
 }
 
-func isCertTemplateValidForEsc1(ct *graph.Node) (bool, error) {
+func isCertTemplateValidForEsc1(ctx context.Context, ct *graph.Node) bool {
 	if reqManagerApproval, err := ct.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if reqManagerApproval {
-		return false, nil
+		return false
 	} else if authenticationEnabled, err := ct.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if !authenticationEnabled {
-		return false, nil
+		return false
 	} else if enrolleeSuppliesSubject, err := ct.Properties.Get(ad.EnrolleeSuppliesSubject.String()).Bool(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if !enrolleeSuppliesSubject {
-		return false, nil
+		return false
 	} else if schemaVersion, err := ct.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if authorizedSignatures, err := ct.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if schemaVersion > 1 && authorizedSignatures > 0 {
-		return false, nil
+		return false
 	} else {
-		return true, nil
+		return true
 	}
 }
 

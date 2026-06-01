@@ -29,13 +29,14 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-var (
-	ErrNoCertParent     = errors.New("cert has no parent")
+var ErrNoCertParent = errors.New("cert has no parent")
+
+const (
 	EkuAnyPurpose       = "2.5.29.37.0"
 	EkuCertRequestAgent = "1.3.6.1.4.1.311.20.2.1"
 )
 
-func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (*post.AtomicPostProcessingStats, ADCSCache, error) {
+func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (*post.AtomicPostProcessingStats, *ADCSCache, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -46,6 +47,7 @@ func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 	)()
 
 	var cache = NewADCSCache()
+
 	if enterpriseCertAuthorities, err := FetchNodesByKind(ctx, db, ad.EnterpriseCA); err != nil {
 		return &post.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed fetching enterpriseCA nodes: %w", err)
 	} else if rootCertAuthorities, err := FetchNodesByKind(ctx, db, ad.RootCA); err != nil {
@@ -61,32 +63,40 @@ func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 	} else if step2Stats, err := postADCSPreProcessStep2(ctx, db, cache); err != nil {
 		return &post.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed adcs pre-processing step 2: %w", err)
 	} else {
+		defer measure.ContextMeasure(
+			ctx,
+			slog.LevelInfo,
+			"ADCS ESC Processing",
+			attr.Namespace("analysis"),
+			attr.Function("PostADCS"),
+			attr.Scope("routine"),
+		)()
+
 		operation := post.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
 
 		operation.Stats.Merge(step1Stats)
 		operation.Stats.Merge(step2Stats)
 
-		for _, enterpriseCA := range cache.GetEnterpriseCertAuthorities() {
-			innerEnterpriseCA := enterpriseCA
-
-			targetDomains := &graph.NodeSet{}
-			for _, domain := range cache.GetDomains() {
-				innerDomain := domain
-
-				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) && cache.DoesCAHaveHostingComputer(innerEnterpriseCA) {
-					targetDomains.Add(innerDomain)
-				}
-			}
-			processEnterpriseCAWithValidCertChainToDomain(innerEnterpriseCA, targetDomains, localGroupData, cache, operation)
+		for _, certChains := range cache.GetECAHostedChainedDomains() {
+			processEnterpriseCAWithValidCertChainToDomain(certChains, localGroupData, cache, operation)
 		}
+
 		return &operation.Stats, cache, operation.Done()
 	}
 }
 
 // postADCSPreProcessStep1 processes the edges that are not dependent on any other post-processed edges
 func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities, certTemplates []*graph.Node) (*post.AtomicPostProcessingStats, error) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"ADCS Post-processing Step 1",
+		attr.Namespace("analysis"),
+		attr.Function("postADCSPreProcessStep1"),
+		attr.Scope("routine"),
+	)()
+
 	operation := post.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 1")
-	// TODO clean up the operation.Done() calls below
 
 	if err := PostTrustedForNTAuth(ctx, db, operation); err != nil {
 		operation.Done()
@@ -106,7 +116,16 @@ func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseC
 }
 
 // postADCSPreProcessStep2 Processes the edges that are dependent on those processed in postADCSPreProcessStep1
-func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache ADCSCache) (*post.AtomicPostProcessingStats, error) {
+func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache *ADCSCache) (*post.AtomicPostProcessingStats, error) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"ADCS Post-processing Step 2",
+		attr.Namespace("analysis"),
+		attr.Function("postADCSPreProcessStep2"),
+		attr.Scope("routine"),
+	)()
+
 	operation := post.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 2")
 
 	if err := PostEnrollOnBehalfOf(cache, operation); err != nil {
@@ -117,9 +136,20 @@ func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache ADCSC
 	}
 }
 
-func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, targetDomains *graph.NodeSet, localGroupData *LocalGroupData, cache ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob]) {
+func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChainedDomains, localGroupData *LocalGroupData, cache *ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob]) {
+
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		if err := PostGoldenCert(ctx, tx, outC, enterpriseCA, targetDomains); errors.Is(err, graph.ErrPropertyNotFound) {
+		defer measure.ContextMeasureWithThreshold(
+			ctx,
+			slog.LevelInfo,
+			"Post-processing GoldenCert",
+			attr.Namespace("analysis"),
+			attr.Function("processEnterpriseCAWithValidCertChainToDomain"),
+			attr.Scope("routine"),
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
+		)()
+
+		if err := PostGoldenCert(ctx, tx, outC, certChains); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for GoldenCert missing property",
@@ -136,7 +166,17 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		if err := PostADCSESC1(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		defer measure.ContextMeasureWithThreshold(
+			ctx,
+			slog.LevelInfo,
+			"Post-processing ADCSESC1",
+			attr.Namespace("analysis"),
+			attr.Function("processEnterpriseCAWithValidCertChainToDomain"),
+			attr.Scope("routine"),
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
+		)()
+
+		if err := PostADCSESC1(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC1 missing property",
@@ -153,7 +193,17 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		if err := PostADCSESC3(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		defer measure.ContextMeasureWithThreshold(
+			ctx,
+			slog.LevelInfo,
+			"Post-processing ADCSESC3",
+			attr.Namespace("analysis"),
+			attr.Function("processEnterpriseCAWithValidCertChainToDomain"),
+			attr.Scope("routine"),
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
+		)()
+
+		if err := PostADCSESC3(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC3 missing property",
@@ -170,7 +220,17 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		if err := PostADCSESC4(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		defer measure.ContextMeasureWithThreshold(
+			ctx,
+			slog.LevelInfo,
+			"Post-processing ADCSESC4",
+			attr.Namespace("analysis"),
+			attr.Function("processEnterpriseCAWithValidCertChainToDomain"),
+			attr.Scope("routine"),
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
+		)()
+
+		if err := PostADCSESC4(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC4 missing property",
@@ -187,7 +247,17 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		if err := PostADCSESC6a(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		defer measure.ContextMeasureWithThreshold(
+			ctx,
+			slog.LevelInfo,
+			"Post-processing ADCSESC6a",
+			attr.Namespace("analysis"),
+			attr.Function("processEnterpriseCAWithValidCertChainToDomain"),
+			attr.Scope("routine"),
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
+		)()
+
+		if err := PostADCSESC6a(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC6a missing property",
@@ -204,7 +274,17 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		if err := PostADCSESC6b(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		defer measure.ContextMeasureWithThreshold(
+			ctx,
+			slog.LevelInfo,
+			"Post-processing ADCSESC6b",
+			attr.Namespace("analysis"),
+			attr.Function("processEnterpriseCAWithValidCertChainToDomain"),
+			attr.Scope("routine"),
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
+		)()
+
+		if err := PostADCSESC6b(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC6b missing property",
@@ -221,7 +301,17 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		if err := PostADCSESC9a(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		defer measure.ContextMeasureWithThreshold(
+			ctx,
+			slog.LevelInfo,
+			"Post-processing ADCSESC9a",
+			attr.Namespace("analysis"),
+			attr.Function("processEnterpriseCAWithValidCertChainToDomain"),
+			attr.Scope("routine"),
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
+		)()
+
+		if err := PostADCSESC9a(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC9a missing property",
@@ -238,7 +328,17 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		if err := PostADCSESC9b(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		defer measure.ContextMeasureWithThreshold(
+			ctx,
+			slog.LevelInfo,
+			"Post-processing ADCSESC9b",
+			attr.Namespace("analysis"),
+			attr.Function("processEnterpriseCAWithValidCertChainToDomain"),
+			attr.Scope("routine"),
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
+		)()
+
+		if err := PostADCSESC9b(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC9b missing property",
@@ -255,7 +355,17 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		if err := PostADCSESC10a(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		defer measure.ContextMeasureWithThreshold(
+			ctx,
+			slog.LevelInfo,
+			"Post-processing ADCSESC10a",
+			attr.Namespace("analysis"),
+			attr.Function("processEnterpriseCAWithValidCertChainToDomain"),
+			attr.Scope("routine"),
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
+		)()
+
+		if err := PostADCSESC10a(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC10a missing property",
@@ -272,7 +382,17 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		if err := PostADCSESC10b(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		defer measure.ContextMeasureWithThreshold(
+			ctx,
+			slog.LevelInfo,
+			"Post-processing ADCSESC10b",
+			attr.Namespace("analysis"),
+			attr.Function("processEnterpriseCAWithValidCertChainToDomain"),
+			attr.Scope("routine"),
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
+		)()
+
+		if err := PostADCSESC10b(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC10b missing property",
@@ -289,7 +409,17 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		if err := PostADCSESC13(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		defer measure.ContextMeasureWithThreshold(
+			ctx,
+			slog.LevelInfo,
+			"Post-processing ADCSESC13",
+			attr.Namespace("analysis"),
+			attr.Function("processEnterpriseCAWithValidCertChainToDomain"),
+			attr.Scope("routine"),
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
+		)()
+
+		if err := PostADCSESC13(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC13 missing property",

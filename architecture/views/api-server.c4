@@ -26,6 +26,11 @@ views {
       notation "Data access layer"
       color muted
     }
+
+    style bloodhound.apiServer.featureFlagClient {
+      notation "Feature flag client"
+      color slate
+    }
   }
 }
 
