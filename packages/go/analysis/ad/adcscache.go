@@ -49,8 +49,8 @@ type EnterpriseCAChainedDomains struct {
 
 // NewEnterpriseCAChainedDomains creates an EnterpriseCAChainedDomains for the
 // given Enterprise CA node, seeded with a single domain node ID.
-func NewEnterpriseCAChainedDomains(enterpriseCA *graph.Node, domainID uint64) *EnterpriseCAChainedDomains {
-	return &EnterpriseCAChainedDomains{EnterpriseCA: enterpriseCA, Domains: cardinality.NewBitmap64With(domainID)}
+func NewEnterpriseCAChainedDomains(enterpriseCA *graph.Node) *EnterpriseCAChainedDomains {
+	return &EnterpriseCAChainedDomains{EnterpriseCA: enterpriseCA, Domains: cardinality.NewBitmap64()}
 }
 
 // AddDomain adds a domain node ID to the set of domains reachable from this
@@ -59,40 +59,35 @@ func (s *EnterpriseCAChainedDomains) AddDomain(domainID uint64) {
 	s.Domains.CheckedAdd(domainID)
 }
 
-// Clone returns a deep copy of the EnterpriseCAChainedDomains. The EnterpriseCA
-// pointer is shared (graph nodes are immutable after construction), but the
-// Domains bitmap is cloned so callers cannot mutate the cache's internal state.
-func (s *EnterpriseCAChainedDomains) Clone() *EnterpriseCAChainedDomains {
-	return &EnterpriseCAChainedDomains{
-		EnterpriseCA: s.EnterpriseCA,
-		Domains:      s.Domains.Clone(),
-	}
-}
-
 type ADCSCache struct {
 	mutex *sync.RWMutex
 
 	enterpriseCertAuthorities []*graph.Node
 	certTemplates             []*graph.Node
+	domains                   []*graph.Node
 
 	// To discourage direct access without getting a read lock, these are private
-	chainedDomainsByEnterpriseCA    map[uint64]*EnterpriseCAChainedDomains // chainedDomainsByEnterpriseCA maps each Enterprise CA node ID to the domains reachable from it through a valid certificate chain (RootCAFor ∩ TrustedForNTAuth).
-	certTemplateHasSpecialEnrollers map[graph.ID]bool                      // whether Auth. Users or Everyone has enrollment rights on templates
-	enterpriseCAHasSpecialEnrollers map[graph.ID]bool                      // whether Auth. Users or Everyone has enrollment rights on enterprise CAs
-	certTemplateEnrollers           map[graph.ID][]*graph.Node             // principals that have enrollment on a cert template via `enroll`, `generic all`, `all extended rights` edges
-	certTemplateControllers         map[graph.ID][]*graph.Node             // principals that have privileges on a cert template via `owner`, `generic all`, `write dacl`, `write owner` edges
-	enterpriseCAEnrollers           map[graph.ID][]*graph.Node             // principals that have enrollment rights on an enterprise ca via `enroll` edge
-	publishedTemplateCache          map[graph.ID][]*graph.Node             // cert templates that are published to an enterprise ca
-	authUsersByDomain               map[graph.ID]graph.ID                  // domain node ID → Authenticated Users group node ID
-	ecasWithHostingComputers        cardinality.Duplex[uint64]             // enterprise CAs with at least one hosting computer where the computer is enabled
-	hasUPNCertMappingInForest       cardinality.Duplex[uint64]             // domains where at least one DC in the forest has Schannel UPN cert mapping enabled
-	hasWeakCertBindingInForest      cardinality.Duplex[uint64]             // domains where at least one DC in the forest has Kerberos weak cert binding enabled
+	authStoreForChainValid          map[graph.ID]cardinality.Duplex[uint64] //Auth stores with a valid chain to the domain, key is domain ID
+	rootCAForChainValid             map[graph.ID]cardinality.Duplex[uint64] //Root CA with a valid chain to the domain, key is domain ID
+	hasHostingComputer              map[graph.ID]bool
+	certTemplateHasSpecialEnrollers map[graph.ID]bool          // whether Auth. Users or Everyone has enrollment rights on templates
+	enterpriseCAHasSpecialEnrollers map[graph.ID]bool          // whether Auth. Users or Everyone has enrollment rights on enterprise CAs
+	certTemplateEnrollers           map[graph.ID][]*graph.Node // principals that have enrollment on a cert template via `enroll`, `generic all`, `all extended rights` edges
+	certTemplateControllers         map[graph.ID][]*graph.Node // principals that have privileges on a cert template via `owner`, `generic all`, `write dacl`, `write owner` edges
+	enterpriseCAEnrollers           map[graph.ID][]*graph.Node // principals that have enrollment rights on an enterprise ca via `enroll` edge
+	publishedTemplateCache          map[graph.ID][]*graph.Node // cert templates that are published to an enterprise ca
+	authUsersByDomain               map[graph.ID]graph.ID      // domain node ID → Authenticated Users group node ID
+	ecasWithHostingComputers        cardinality.Duplex[uint64] // enterprise CAs with at least one hosting computer where the computer is enabled
+	hasUPNCertMappingInForest       cardinality.Duplex[uint64] // domains where at least one DC in the forest has Schannel UPN cert mapping enabled
+	hasWeakCertBindingInForest      cardinality.Duplex[uint64] // domains where at least one DC in the forest has Kerberos weak cert binding enabled
 }
 
 func NewADCSCache() *ADCSCache {
 	return &ADCSCache{
 		mutex:                           &sync.RWMutex{},
-		chainedDomainsByEnterpriseCA:    make(map[uint64]*EnterpriseCAChainedDomains),
+		authStoreForChainValid:          make(map[graph.ID]cardinality.Duplex[uint64]),
+		rootCAForChainValid:             make(map[graph.ID]cardinality.Duplex[uint64]),
+		hasHostingComputer:              make(map[graph.ID]bool),
 		certTemplateHasSpecialEnrollers: make(map[graph.ID]bool),
 		enterpriseCAHasSpecialEnrollers: make(map[graph.ID]bool),
 		certTemplateEnrollers:           make(map[graph.ID][]*graph.Node),
@@ -121,16 +116,12 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 
 	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 
-		var (
-			domains []*graph.Node
-			err     error
-		)
-
-		if domains, err = FetchNodesByKind(ctx, db, ad.Domain); err != nil {
+		if domains, err := FetchNodesByKind(ctx, db, ad.Domain); err != nil {
 			return fmt.Errorf("failed fetching domain nodes: %w", err)
 		} else {
 			s.certTemplates = certTemplates
 			s.enterpriseCertAuthorities = enterpriseCertAuthorities
+			s.domains = domains
 		}
 
 		// Fetch Auth. Users and Everyone groups once for the entire BuildCache transaction
@@ -249,10 +240,8 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 						break
 					}
 				}
+				s.hasHostingComputer[eca.ID] = hasHostingComputer
 
-				if hasHostingComputer {
-					s.ecasWithHostingComputers.Add(eca.ID.Uint64())
-				}
 			}
 		}
 
@@ -267,7 +256,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 			attr.Scope("routine"),
 		)
 
-		for _, domain := range domains {
+		for _, domain := range s.domains {
 			if rootCaForNodes, err := FetchEnterpriseCAsRootCAForPathToDomain(tx, domain); err != nil {
 				slog.ErrorContext(
 					ctx,
@@ -283,19 +272,8 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 					attr.Error(err),
 				)
 			} else {
-				var ecas = graph.NodeSetToDuplex(authStoreForNodes)
-				ecas.And(graph.NodeSetToDuplex((rootCaForNodes)))
-
-				ecas.Each(func(ecaID uint64) bool {
-					if ecaNode, ok := authStoreForNodes[graph.ID(ecaID)]; !ok {
-						return true
-					} else if _, ok := s.chainedDomainsByEnterpriseCA[ecaID]; !ok {
-						s.chainedDomainsByEnterpriseCA[ecaID] = NewEnterpriseCAChainedDomains(ecaNode, domain.ID.Uint64())
-					} else {
-						s.chainedDomainsByEnterpriseCA[ecaID].AddDomain((domain.ID.Uint64()))
-					}
-					return true
-				})
+				s.authStoreForChainValid[domain.ID] = graph.NodeSetToDuplex(authStoreForNodes)
+				s.rootCAForChainValid[domain.ID] = graph.NodeSetToDuplex(rootCaForNodes)
 			}
 
 			// Check for weak cert config on DCs
@@ -349,16 +327,49 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 	return err
 }
 
+func (s *ADCSCache) DoesCAChainProperlyToDomain(enterpriseCA, domain *graph.Node) bool {
+	var domainID = domain.ID
+	var caID = enterpriseCA.ID.Uint64()
+
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	if _, ok := s.rootCAForChainValid[domainID]; !ok {
+		return false
+	} else if _, ok := s.authStoreForChainValid[domainID]; !ok {
+		return false
+	} else {
+		return s.rootCAForChainValid[domainID].Contains(caID) && s.authStoreForChainValid[domainID].Contains(caID)
+	}
+}
+
+func (s *ADCSCache) DoesCAHaveHostingComputer(enterpriseCA *graph.Node) bool {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	if hasHost, ok := s.hasHostingComputer[enterpriseCA.ID]; !ok {
+		return false
+	} else {
+		return hasHost
+	}
+}
+
 func (s *ADCSCache) GetECAHostedChainedDomains() map[uint64]*EnterpriseCAChainedDomains {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
 	filtered := make(map[uint64]*EnterpriseCAChainedDomains)
 
-	for ecaID, chainedDomains := range s.chainedDomainsByEnterpriseCA {
-		if s.ecasWithHostingComputers.Contains(ecaID) {
-			filtered[ecaID] = chainedDomains.Clone()
+	for _, enterpriseCA := range s.enterpriseCertAuthorities {
+		innerEnterpriseCA := enterpriseCA
+
+		targetDomains := NewEnterpriseCAChainedDomains(enterpriseCA)
+		for _, domain := range s.domains {
+			innerDomain := domain
+
+			if s.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) && s.DoesCAHaveHostingComputer(innerEnterpriseCA) {
+				targetDomains.AddDomain(innerDomain.ID.Uint64())
+			}
 		}
+		filtered[enterpriseCA.ID.Uint64()] = targetDomains
 	}
 
 	return filtered
@@ -368,13 +379,23 @@ func (s *ADCSCache) GetChainedDomains() map[uint64]*EnterpriseCAChainedDomains {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
-	result := make(map[uint64]*EnterpriseCAChainedDomains, len(s.chainedDomainsByEnterpriseCA))
+	filtered := make(map[uint64]*EnterpriseCAChainedDomains)
 
-	for ecaID, chainedDomains := range s.chainedDomainsByEnterpriseCA {
-		result[ecaID] = chainedDomains.Clone()
+	for _, enterpriseCA := range s.enterpriseCertAuthorities {
+		innerEnterpriseCA := enterpriseCA
+
+		targetDomains := NewEnterpriseCAChainedDomains(enterpriseCA)
+		for _, domain := range s.domains {
+			innerDomain := domain
+
+			if s.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
+				targetDomains.AddDomain(innerDomain.ID.Uint64())
+			}
+		}
+		filtered[enterpriseCA.ID.Uint64()] = targetDomains
 	}
 
-	return result
+	return filtered
 }
 
 func (s *ADCSCache) GetCertTemplateHasSpecialEnrollers(id graph.ID) bool {
