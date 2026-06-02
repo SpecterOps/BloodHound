@@ -81,10 +81,27 @@ func detectContentType(name string) string {
 	return "application/octet-stream"
 }
 
+// syncDir is used to ensure that once the entry in a directory
+// is changed, to sync the change with the parent directory. While
+// this error does not mean the bytes of the file were not saved,
+// it may be helpful for troubleshooting if the otherwise successfully
+// saved file does not appear.
+func syncDir(root *os.Root, dir string) error {
+	dirFile, err := root.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer dirFile.Close()
+
+	return dirFile.Sync()
+}
+
 // writeAtomic streams src into a temp file under dir(name), then publishes it at name.
 // If failIfExists is true, publish uses link+unlink and returns an error satisfying
 // errors.Is(err, fs.ErrExist) on collision. Otherwise, publish uses rename and silently
 // replaces any existing file at name. The temp file is removed on every failure path.
+// However, failed or crash-lost temp cleanup may leak .temp-* which can be picked up by
+// a sweeper.
 func (s *LocalStore) writeAtomic(ctx context.Context, name string, src io.Reader, failIfExists bool) error {
 	var (
 		dir     = path.Dir(name)
@@ -142,12 +159,21 @@ func (s *LocalStore) writeAtomic(ctx context.Context, name string, src io.Reader
 		if err = s.root.Link(tmpName, name); err != nil {
 			return err
 		}
+		if err = syncDir(s.root, dir); err != nil {
+			return err
+		}
+
 		// Publish is durable, a failed Remove leaks a .tmp-... that a sweeper can reclaim
 		_ = s.root.Remove(tmpName)
 		return nil
 	}
-	err = s.root.Rename(tmpName, name)
-	return err
+	if err = s.root.Rename(tmpName, name); err != nil {
+		return err
+	}
+	if err = syncDir(s.root, dir); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Open returns an fs.File, which must be closed.
