@@ -19,7 +19,7 @@ import { ListRolesResponse, ListSSOProvidersResponse, Role, SAMLProviderInfo, SS
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { createAuthStateWithPermissions } from '../../mocks';
-import { render, screen } from '../../test-utils';
+import { render, screen, waitFor } from '../../test-utils';
 import { Permission } from '../../utils';
 import { Roles } from '../../utils/roles';
 import SSOConfiguration from './SSOConfiguration';
@@ -98,6 +98,18 @@ interface CreateSAMLProviderResponse {
     created_at: string;
     updated_at: string;
 }
+
+const selfHandler = (roles: { name: string; permissions: { authority: string; name: string }[] }[]) =>
+    rest.get('/api/v2/self', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    id: '1',
+                    roles,
+                },
+            })
+        );
+    });
 
 const server = setupServer(
     rest.get('/api/v2/self', (req, res, ctx) => {
@@ -217,5 +229,35 @@ describe('SSOConfiguration', async () => {
         expect(screen.getByRole('button', { name: /create provider/i })).toBeDisabled();
 
         expect(screen.queryByText(newSAMLProvider.name)).toBeNull();
+    });
+
+    it('enables the create provider button when the user is admin role', async () => {
+        server.use(
+            selfHandler([
+                {
+                    name: 'Administrator',
+                    permissions: [{ authority: 'auth', name: 'ManageProviders' }],
+                },
+            ])
+        );
+
+        render(<SSOConfiguration />);
+
+        await waitFor(() => expect(screen.getByRole('button', { name: /create provider/i })).not.toBeDisabled());
+    });
+
+    it('disables the create provider button when the user is auditor role', async () => {
+        server.use(
+            selfHandler([
+                {
+                    name: 'Auditor',
+                    permissions: [{ authority: 'auth', name: 'ReadUsers' }],
+                },
+            ])
+        );
+
+        render(<SSOConfiguration />);
+
+        await waitFor(() => expect(screen.getByRole('button', { name: /create provider/i })).toBeDisabled());
     });
 });
