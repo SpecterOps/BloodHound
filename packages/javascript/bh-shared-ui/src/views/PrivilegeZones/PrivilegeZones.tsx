@@ -21,6 +21,7 @@ import { Badge, Tabs, TabsList, TabsTrigger } from 'doodle-ui';
 import React, { FC, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Route, Routes, useLocation } from 'react-router-dom';
+import { useAppName } from '../../components/PageWithTitle';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams, useRoleBasedFiltering } from '../../hooks';
 import {
     ROUTE_PZ_CERTIFICATIONS,
@@ -80,6 +81,7 @@ const PrivilegeZones: FC = () => {
 
     const { savePaths, Summary, Certification, defaultPath } = usePZContext();
     const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
+    const appName = useAppName();
 
     const isRoleBasedFiltering = useRoleBasedFiltering();
 
@@ -114,9 +116,9 @@ const PrivilegeZones: FC = () => {
     const tabValue = isCertificationsPage ? certificationsPath : isHistoryPage ? historyPath : tagType;
 
     return (
-        <main>
+        <>
             <Helmet>
-                <title>Privilege Zones | BloodHound Enterprise</title>
+                <title>Privilege Zones | {appName}</title>
             </Helmet>
             <div className='h-dvh min-w-full px-8'>
                 <div className='flex items-center justify-between pt-8'>
@@ -198,7 +200,7 @@ const PrivilegeZones: FC = () => {
                     </Suspense>
                 </div>
             </div>
-        </main>
+        </>
     );
 };
 

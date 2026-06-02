@@ -30,7 +30,7 @@ const Administration: React.FC = () => {
     return (
         <Box className='flex h-full'>
             <Box flexGrow={1} position='relative' minWidth={0}>
-                <main>
+                <div>
                     <Container maxWidth='xl'>
                         <Box py={2}>
                             <Suspense
@@ -70,7 +70,7 @@ const Administration: React.FC = () => {
                             </Suspense>
                         </Box>
                     </Container>
-                </main>
+                </div>
             </Box>
         </Box>
     );

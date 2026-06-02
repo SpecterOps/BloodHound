@@ -56,7 +56,9 @@ export const EarlyAccessFeatureToggle: React.FC<{
         <div className='bg-neutral-2 shadow-outer-1'>
             <div className='p-4 flex justify-between gap-4'>
                 <div className='overflow-hidden'>
-                    <Typography variant='h6'>{flag.name}</Typography>
+                    <Typography variant='h6' component='h2'>
+                        {flag.name}
+                    </Typography>
                     <Typography variant='body1'>{flag.description}</Typography>
                 </div>
                 <div className='flex items-center justify-center'>

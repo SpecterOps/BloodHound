@@ -32,6 +32,7 @@ import {
     isNode,
     isWebGLEnabled,
     makeStoreMapFromColumnOptions,
+    useAppName,
     useAutomaticGraphActions,
     useCustomNodeKinds,
     useExploreParams,
@@ -70,6 +71,12 @@ const GraphView: FC = () => {
     /* Hooks */
     const theme = useTheme();
     const dispatch = useAppDispatch();
+    const appName = useAppName();
+    const title = (
+        <Helmet>
+            <title>Explore | {appName}</title>
+        </Helmet>
+    );
 
     const { selectedItem, setSelectedItem, selectedItemQuery, previousSelectedItem, clearSelectedItem } =
         useExploreSelectedItem();
@@ -264,9 +271,7 @@ const GraphView: FC = () => {
             className='relative h-full w-full overflow-hidden'
             data-testid='explore'
             onContextMenu={(e) => e.preventDefault()}>
-            <Helmet>
-                <title>Explore | BloodHound Community Edition</title>
-            </Helmet>
+            {title}
             <SigmaChart
                 graph={graphologyGraph}
                 highlightedItem={selectedItem}
