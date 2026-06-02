@@ -78,6 +78,87 @@ views {
   }
 
   // ──────────────────────────────────────────────────────────────────────────
+  // Level 3 (simplified) – API Server Overview
+  //
+  // Same scope as apiServerComponents, but collapses each feature module to a
+  // single box and shows only the relationships at the component level.  Use
+  // this as the entry point; drill into apiServerComponents or analysisInternals
+  // when you need more detail.
+  // ──────────────────────────────────────────────────────────────────────────
+
+  view apiServerOverview of bhce.apiServer {
+    title       'BHCE API Server – Overview'
+    description '''
+      A simplified view of the API server: the infrastructure packages shared
+      across all features, and each feature module as a single collapsed box.
+
+      Three things to take away:
+        - httpRouter dispatches HTTP requests into a feature's handlers
+        - the modules registry wires each feature up at startup
+        - features write HTTP responses through the shared responses package
+
+      For startup wiring detail, see moduleRegistrationFlow.
+      For a feature's internal layers, see analysisInternals.
+      For request-trace detail, see analysisGetFlow / analysisPutFlow.
+
+      Audience: Go developers who want the big picture without per-feature internals.
+    '''
+
+    include
+      bhce.apiServer.httpRouter,
+      bhce.apiServer.modulesPkg,
+      bhce.apiServer.responsesPkg,
+      bhce.apiServer.analysisFeature,
+      bhce.apiServer.reportingFeature
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Request Sequence (Dynamic View)
+  //
+  // Step-by-step sequence diagram for GET /api/v2/analysis.
+  // Rendered as a swimlane sequence view in LikeC4 (toggle "Sequence" in the
+  // toolbar).  Visually distinct from the box-and-arrow views above because it
+  // shows the order of calls and the shape of data crossing each boundary.
+  // ──────────────────────────────────────────────────────────────────────────
+
+  dynamic view dataFlow {
+    title 'BHCE – GET /api/v2/analysis Request Sequence'
+    description '''
+      End-to-end sequence for a successful GET /api/v2/analysis request.
+
+      Highlights what changes shape at each boundary:
+        analyst → webUI          click triggers HTTPS GET
+        webUI → httpRouter       *http.Request (raw HTTP)
+        httpRouter → handlers    matched route + permission check
+        handlers → services      ctx only; returns domain type (RequestedAnalysis)
+        services → appdb         ctx only; returns domain type
+        appdb → postgres         SQL string + bound params
+        postgres → appdb         raw row set
+        appdb → services         services.RequestedAnalysis{} (domain type)
+        services → handlers      RequestedAnalysis{}, nil (or sentinel error)
+        handlers → responses     RequestedAnalysisView (JSON wire type)
+        responses → webUI        HTTP 200 + JSON body
+
+      Toggle "Sequence" in the LikeC4 toolbar to see swimlane layout.
+      For the error paths, see analysisGetFlow and analysisPutFlow.
+
+      Audience: developers tracing where data is shaped, validated, or marshalled.
+    '''
+
+    analyst                                                  -> bhce.webUI                                            'clicks Request Analysis'
+    bhce.webUI                                               -> bhce.apiServer.httpRouter                            'GET /api/v2/analysis'
+    bhce.apiServer.httpRouter                                -> bhce.apiServer.analysisFeature.analysisHandlers      'GetRequest(w, r)'
+    bhce.apiServer.analysisFeature.analysisHandlers          -> bhce.apiServer.analysisFeature.analysisServices      'GetRequest(ctx) via Analysis interface'
+    bhce.apiServer.analysisFeature.analysisServices          -> bhce.apiServer.analysisFeature.analysisAppdb         'GetAnalysisRequest(ctx) via Database interface'
+    bhce.apiServer.analysisFeature.analysisAppdb             -> bhce.postgres                                        'SELECT ... FROM analysis_request_switch LIMIT 1'
+    bhce.postgres                                            -> bhce.apiServer.analysisFeature.analysisAppdb         'row set'
+    bhce.apiServer.analysisFeature.analysisAppdb             -> bhce.apiServer.analysisFeature.analysisServices      'services.RequestedAnalysis{}'
+    bhce.apiServer.analysisFeature.analysisServices          -> bhce.apiServer.analysisFeature.analysisHandlers      'RequestedAnalysis{}, nil'
+    bhce.apiServer.analysisFeature.analysisHandlers          -> bhce.apiServer.responsesPkg                          'WriteBasic(BuildRequestedAnalysisView(ra), 200)'
+    bhce.apiServer.responsesPkg                              -> bhce.webUI                                           'HTTP 200 OK + JSON body'
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
   // Level 4 – Analysis Feature: Internal Packages
   //
   // How are handlers, services, and appdb related inside a single feature?
