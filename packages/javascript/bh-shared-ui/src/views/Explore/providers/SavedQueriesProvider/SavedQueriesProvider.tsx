@@ -42,8 +42,8 @@ export function SavedQueriesProvider({ children }: { children: any }) {
         performSearch(query);
     };
 
-    const editQuery = (id: number) => {
-        setSelected({ query: '', id: id });
+    const editQuery = (id: number, query: string) => {
+        setSelected({ query, id });
         setSaveAction('edit');
         setShowSaveQueryDialog(true);
     };

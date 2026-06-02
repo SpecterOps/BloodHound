@@ -25,7 +25,7 @@ interface SavedQueriesContextType {
     setShowSaveQueryDialog: Dispatch<SetStateAction<boolean>>;
     setSaveAction: Dispatch<SetStateAction<SaveQueryAction | undefined>>;
     runQuery: (query: string, id?: number) => void;
-    editQuery: (id: number) => void;
+    editQuery: (id: number, query: string) => void;
 }
 
 export const SavedQueriesContext = createContext<SavedQueriesContextType>({
