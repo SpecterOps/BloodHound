@@ -160,8 +160,6 @@ func isCertTemplateValidForESC4(ctx context.Context, ct *graph.Node) bool {
 	}
 }
 
-
-
 // composition: p1
 func findPathsToDomainThroughCertTemplateWithGenericAll(
 	ctx context.Context,
