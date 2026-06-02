@@ -29,12 +29,13 @@ type PermissionSet struct {
 
 	AuditLogRead model.Permission
 
-	AuthAcceptEULA      model.Permission
-	AuthCreateToken     model.Permission
-	AuthManageProviders model.Permission
-	AuthManageSelf      model.Permission
-	AuthManageUsers     model.Permission
-	AuthReadUsers       model.Permission
+	AuthAcceptEULA       model.Permission
+	AuthCreateToken      model.Permission
+	AuthManageProviders  model.Permission
+	AuthManageSelf       model.Permission
+	AuthManageUsers      model.Permission
+	AuthReadUsers        model.Permission
+	AuthReadUsersMinimal model.Permission
 
 	ClientsManage  model.Permission
 	ClientsRead    model.Permission
@@ -68,6 +69,8 @@ func (s PermissionSet) All() model.Permissions {
 		s.AuthManageProviders,
 		s.AuthManageSelf,
 		s.AuthManageUsers,
+		s.AuthReadUsers,
+		s.AuthReadUsersMinimal,
 		s.ClientsManage,
 		s.ClientsRead,
 		s.ClientsTasking,
@@ -81,8 +84,22 @@ func (s PermissionSet) All() model.Permissions {
 		s.OpenGraphWrite,
 		s.SavedQueriesRead,
 		s.SavedQueriesWrite,
-		s.AuthReadUsers,
 		s.WipeDB,
+	}
+}
+
+func (s PermissionSet) ReadAll() model.Permissions {
+	return model.Permissions{
+		s.AppReadApplicationConfiguration,
+		s.APsGenerateReport,
+		s.AuditLogRead,
+		s.AuthReadUsers,
+		s.AuthReadUsersMinimal,
+		s.ClientsRead,
+		s.GraphDBRead,
+		s.SavedQueriesRead,
+		s.CollectionReadJobs,
+		s.OpenGraphRead,
 	}
 }
 
@@ -97,12 +114,13 @@ func Permissions() PermissionSet {
 
 		AuditLogRead: model.NewPermission("audit_log", "Read"),
 
-		AuthAcceptEULA:      model.NewPermission("auth", "AcceptEULA"),
-		AuthCreateToken:     model.NewPermission("auth", "CreateToken"),
-		AuthManageProviders: model.NewPermission("auth", "ManageProviders"),
-		AuthManageSelf:      model.NewPermission("auth", "ManageSelf"),
-		AuthManageUsers:     model.NewPermission("auth", "ManageUsers"),
-		AuthReadUsers:       model.NewPermission("auth", "ReadUsers"),
+		AuthAcceptEULA:       model.NewPermission("auth", "AcceptEULA"),
+		AuthCreateToken:      model.NewPermission("auth", "CreateToken"),
+		AuthManageProviders:  model.NewPermission("auth", "ManageProviders"),
+		AuthManageSelf:       model.NewPermission("auth", "ManageSelf"),
+		AuthManageUsers:      model.NewPermission("auth", "ManageUsers"),
+		AuthReadUsers:        model.NewPermission("auth", "ReadUsers"),
+		AuthReadUsersMinimal: model.NewPermission("auth", "ReadUsersMinimal"),
 
 		ClientsManage:  model.NewPermission("clients", "Manage"),
 		ClientsRead:    model.NewPermission("clients", "Read"),

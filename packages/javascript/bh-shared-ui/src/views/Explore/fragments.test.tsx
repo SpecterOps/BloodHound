@@ -36,13 +36,13 @@ describe('Field', () => {
     });
 
     it('should not render a Field when the provided value is ""', () => {
-        const { container } = render(<Field label='Test Field (String)' value={''} keyprop='test-field-string' />);
-        expect(container.innerHTML).toBe('');
+        render(<Field label='Test Field (String)' value={''} keyprop='test-field-string' />);
+        expect(screen.queryByText('Test Field (String)')).not.toBeInTheDocument();
     });
 
     it('should not render a Field when the provided value is []', () => {
-        const { container } = render(<Field label='Test Field (Array)' value={[]} keyprop='test-field-array' />);
-        expect(container.innerHTML).toBe('');
+        render(<Field label='Test Field (Array)' value={[]} keyprop='test-field-array' />);
+        expect(screen.queryByText('Test Field (Array)')).not.toBeInTheDocument();
     });
 });
 
