@@ -327,31 +327,6 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 	return err
 }
 
-func (s *ADCSCache) DoesCAChainProperlyToDomain(enterpriseCA, domain *graph.Node) bool {
-	var domainID = domain.ID
-	var caID = enterpriseCA.ID.Uint64()
-
-	s.mutex.RLock()
-	defer s.mutex.RUnlock()
-	if _, ok := s.rootCAForChainValid[domainID]; !ok {
-		return false
-	} else if _, ok := s.authStoreForChainValid[domainID]; !ok {
-		return false
-	} else {
-		return s.rootCAForChainValid[domainID].Contains(caID) && s.authStoreForChainValid[domainID].Contains(caID)
-	}
-}
-
-func (s *ADCSCache) DoesCAHaveHostingComputer(enterpriseCA *graph.Node) bool {
-	s.mutex.RLock()
-	defer s.mutex.RUnlock()
-	if hasHost, ok := s.hasHostingComputer[enterpriseCA.ID]; !ok {
-		return false
-	} else {
-		return hasHost
-	}
-}
-
 func (s *ADCSCache) GetECAHostedChainedDomains() map[uint64]*EnterpriseCAChainedDomains {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
@@ -365,11 +340,22 @@ func (s *ADCSCache) GetECAHostedChainedDomains() map[uint64]*EnterpriseCAChained
 		for _, domain := range s.domains {
 			innerDomain := domain
 
-			if s.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) && s.DoesCAHaveHostingComputer(innerEnterpriseCA) {
+			if hasHost, ok := s.hasHostingComputer[innerEnterpriseCA.ID]; !ok {
+				continue
+			} else if !hasHost {
+				continue
+			} else if _, ok := s.rootCAForChainValid[innerDomain.ID]; !ok {
+				continue
+			} else if _, ok := s.authStoreForChainValid[innerDomain.ID]; !ok {
+				continue
+			} else if s.rootCAForChainValid[innerDomain.ID].Contains(innerEnterpriseCA.ID.Uint64()) && s.authStoreForChainValid[innerDomain.ID].Contains(innerEnterpriseCA.ID.Uint64()) {
 				targetDomains.AddDomain(innerDomain.ID.Uint64())
 			}
+
 		}
-		filtered[enterpriseCA.ID.Uint64()] = targetDomains
+		if targetDomains.Domains.Cardinality() > 0 {
+			filtered[enterpriseCA.ID.Uint64()] = targetDomains
+		}
 	}
 
 	return filtered
@@ -388,11 +374,18 @@ func (s *ADCSCache) GetChainedDomains() map[uint64]*EnterpriseCAChainedDomains {
 		for _, domain := range s.domains {
 			innerDomain := domain
 
-			if s.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
+			if _, ok := s.rootCAForChainValid[innerDomain.ID]; !ok {
+				continue
+			} else if _, ok := s.authStoreForChainValid[innerDomain.ID]; !ok {
+				continue
+			} else if s.rootCAForChainValid[innerDomain.ID].Contains(innerEnterpriseCA.ID.Uint64()) && s.authStoreForChainValid[innerDomain.ID].Contains(innerEnterpriseCA.ID.Uint64()) {
 				targetDomains.AddDomain(innerDomain.ID.Uint64())
 			}
+
 		}
-		filtered[enterpriseCA.ID.Uint64()] = targetDomains
+		if targetDomains.Domains.Cardinality() > 0 {
+			filtered[enterpriseCA.ID.Uint64()] = targetDomains
+		}
 	}
 
 	return filtered
