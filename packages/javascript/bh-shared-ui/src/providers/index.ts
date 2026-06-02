@@ -14,4 +14,5 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+export * from './AnnouncementProvider';
 export * from './NotificationProvider';

@@ -69,7 +69,7 @@ const UsersTable: FC<UsersTableProps> = ({
         { label: 'Role' },
         { label: 'Status' },
         { label: 'Auth Method' },
-        { label: '', alignment: 'right' as const },
+        { label: 'Action Menu', alignment: 'right' as const, srOnly: true },
     ];
 
     const getSelfQuery = useSelf();
