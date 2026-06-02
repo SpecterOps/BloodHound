@@ -41,7 +41,7 @@ JOIN permissions p
 ON CONFLICT DO NOTHING;
 
 INSERT INTO roles_permissions (role_id, permission_id)
-SELECT r.id, p.id
+SELECT r.role_id, p.id
 FROM roles_permissions r
 JOIN permissions f
     ON f.id = r.permission_id
