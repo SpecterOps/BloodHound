@@ -353,10 +353,7 @@ func containsAuthUsersOrEveryone(tx graph.Transaction, specialGroups graph.NodeS
 	}
 
 	// Build the list of special group IDs
-	specialGroupIDs := make([]graph.ID, 0, len(specialGroups))
-	for _, group := range specialGroups {
-		specialGroupIDs = append(specialGroupIDs, group.ID)
-	}
+	specialGroupIDs := specialGroups.IDs()
 
 	// Single bulk query: check if any special group is a MemberOf any of the group nodes
 	if rels, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
