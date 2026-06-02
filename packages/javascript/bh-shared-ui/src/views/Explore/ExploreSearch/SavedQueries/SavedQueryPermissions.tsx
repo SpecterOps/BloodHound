@@ -105,6 +105,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                 header: () => {
                     return (
                         <div>
+                            <span className='sr-only'>Select All</span>
                             <Checkbox
                                 checked={isPublic}
                                 onCheckedChange={handleCheckAllChange}
