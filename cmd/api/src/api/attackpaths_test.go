@@ -74,5 +74,3 @@ func TestParseAssetGroupTagIdParams(t *testing.T) {
 		})
 	}
 }
-
-
