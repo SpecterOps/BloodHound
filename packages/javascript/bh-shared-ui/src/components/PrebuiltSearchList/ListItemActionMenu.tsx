@@ -38,8 +38,8 @@ const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, query, deleteQuer
         if (selectedQuery && selectedQuery.id === id) {
             event.stopPropagation();
         }
-        if (id == null) return;
-        editQuery(id);
+        if (id == null || typeof query !== 'string') return;
+        editQuery(id, query);
     };
 
     const handleDelete = <T extends MouseEvent | KeyboardEvent>(event: T) => {
