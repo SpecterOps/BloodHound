@@ -260,6 +260,7 @@ const CypherSearchInner = ({
         if (selectedQuery) {
             if (selectedQuery.canEdit) {
                 //save existing
+                setSelected({ query: cypherQuery, id: selectedQuery.id });
                 setSaveAction('edit');
                 setShowSaveQueryDialog(true);
             } else {
