@@ -25,6 +25,8 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
@@ -311,6 +313,8 @@ func TestTagAssetGroupNodesForTag(t *testing.T) {
 	)
 
 	t.Run("removes the tag kind from every previously tagged node when no selector references them", func(t *testing.T) {
+		pzNodeTagCounterVec.Reset()
+
 		tag, err := bhDB.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, testActor, "regression label all", "", null.Int32{}, null.Bool{}, null.String{})
 		require.NoError(t, err)
 
@@ -353,9 +357,13 @@ func TestTagAssetGroupNodesForTag(t *testing.T) {
 			_, present := nodesToUpdate[nodeId.Uint64()]
 			assert.Truef(t, present, "expected node %d to be queued for kind removal", nodeId)
 		}
+
+		assert.Equal(t, 0.0, testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_added", "position": "label"})))
+		assert.Equal(t, float64(nodeCount), testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_removed", "position": "label"})))
 	})
 
 	t.Run("preserves the tag on selected nodes and removes it from no longer selected nodes", func(t *testing.T) {
+		pzNodeTagCounterVec.Reset()
 		tag, err := bhDB.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, testActor, "regression label mixed", "", null.Int32{}, null.Bool{}, null.String{})
 		require.NoError(t, err)
 
@@ -418,5 +426,90 @@ func TestTagAssetGroupNodesForTag(t *testing.T) {
 		}
 		_, selectedEnqueued := nodesToUpdate[selectedNodeId.Uint64()]
 		assert.Falsef(t, selectedEnqueued, "expected selected node %d to NOT be queued for kind removal", selectedNodeId)
+
+		assert.Equal(t, 0.0, testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_added", "position": "label"})))
+		assert.Equal(t, float64(len(expectedRemovals)), testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_removed", "position": "label"})))
+	})
+
+	t.Run("adds and removes node tags for a tier tag type, and verifies the position label is calculated correctly", func(t *testing.T) {
+		pzNodeTagCounterVec.Reset()
+
+		const (
+			tierPosition = 2
+			addedCount   = 3 // selected by a selector but none with the tag exist yet in the graph
+			removedCount = 2 // already carrying the tag kind in the graph but no longer selected
+		)
+
+		tag, err := bhDB.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "regression tier", "", null.Int32From(tierPosition), null.Bool{}, null.String{})
+		require.NoError(t, err)
+
+		selector, err := bhDB.CreateAssetGroupTagSelector(testCtx, tag.ID, testActor, "regression tier selector", "", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{
+			{Type: model.SelectorTypeObjectId, Value: "REGRESSION-TIER-NO-MATCH"},
+		})
+		require.NoError(t, err)
+
+		tagKind := tag.ToKind()
+		require.NoError(t, assertGraphKinds(testCtx, graphDB, graph.Kinds{tagKind}))
+
+		// Create nodes that are selected but do not yet carry the tag kind — these drive tag_added.
+		var addedNodeIds []graph.ID
+		require.NoError(t, graphDB.WriteTransaction(testCtx, func(tx graph.Transaction) error {
+			for i := 0; i < addedCount; i++ {
+				node, err := tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+					common.Name:     fmt.Sprintf("regression-tier-added-%d", i),
+					common.ObjectID: fmt.Sprintf("REGRESSION-TIER-ADDED-ID-%d", i),
+				}), ad.Entity, ad.User)
+				if err != nil {
+					return err
+				}
+				addedNodeIds = append(addedNodeIds, node.ID)
+			}
+			return nil
+		}))
+
+		// add these nodes to the selector so they are "selected" for this tag and should have the tag kind added
+		for i, nodeId := range addedNodeIds {
+			require.NoError(t, bhDB.InsertSelectorNode(
+				testCtx,
+				tag.ID,
+				selector.ID,
+				nodeId,
+				model.AssetGroupCertificationManual,
+				null.StringFrom(model.AssetGroupActorBloodHound),
+				model.AssetGroupSelectorNodeSourceSeed,
+				ad.User.String(),
+				"",
+				fmt.Sprintf("REGRESSION-TIER-ADDED-ID-%d", i),
+				fmt.Sprintf("regression-tier-added-%d", i),
+			))
+		}
+
+		// Create nodes that already carry the tag kind but have no selector node row — these drive tag_removed.
+		var removedNodeIds []graph.ID
+		require.NoError(t, graphDB.WriteTransaction(testCtx, func(tx graph.Transaction) error {
+			for i := 0; i < removedCount; i++ {
+				node, err := tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+					common.Name:     fmt.Sprintf("regression-tier-removed-%d", i),
+					common.ObjectID: fmt.Sprintf("REGRESSION-TIER-REMOVED-ID-%d", i),
+				}), ad.Entity, ad.User, tagKind)
+				if err != nil {
+					return err
+				}
+				removedNodeIds = append(removedNodeIds, node.ID)
+			}
+			return nil
+		}))
+
+		var (
+			exclusionSet  = cardinality.NewBitmap64()
+			nodesToUpdate = make(map[uint64]*graph.Node)
+		)
+
+		require.NoError(t, tagAssetGroupNodesForTag(testCtx, bhDB, graphDB, tag, exclusionSet, nodesToUpdate))
+
+		assert.Lenf(t, nodesToUpdate, addedCount+removedCount, "expected %d nodes queued for kind update", addedCount+removedCount)
+
+		assert.Equal(t, float64(addedCount), testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_added", "position": "2"})))
+		assert.Equal(t, float64(removedCount), testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_removed", "position": "2"})))
 	})
 }

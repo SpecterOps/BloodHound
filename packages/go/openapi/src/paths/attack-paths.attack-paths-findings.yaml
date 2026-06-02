@@ -28,7 +28,8 @@ get:
     - name: sort_by
       description: |
         Sortable columns are `severity`, `finding_type`, `finding`, `platform`, `environment_id`,
-        `zone_id`, `source_principal_id`, `source_principal_kind`, `target_principal_id`, `target_principal_kind`, `status`, `first_seen`, `last_seen`.
+        `zone_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`,
+        `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `first_seen`, `last_seen`.
       in: query
       schema:
         $ref: "./../schemas/api.params.query.sort-by.yaml"
@@ -53,12 +54,33 @@ get:
       schema:
         $ref: "./../schemas/api.params.predicate.filter.string.yaml"
     - name: environment_id
-      description: Filter by environment identifier.
+      description: |
+        Filter by one or more environment identifiers. Repeat the parameter to include multiple environments — results are the union of all specified values.
+      in: query
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: string
+    - name: asset_group_tag_id
+      description: |
+        Filter by one or more asset group tag identifiers. Repeat the parameter to include multiple asset group tags — results are the union of all specified values.
+        Cannot be combined with the `zone_id` filter.
+      in: query
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: integer
+    - name: zone_id
+      description: Filter by a single zone identifier. Cannot be combined with `asset_group_tag_id`.
       in: query
       schema:
         $ref: "./../schemas/api.params.predicate.filter.string.yaml"
-    - name: zone_id
-      description: Filter by zone identifier.
+    - name: zone_name
+      description: Filter by zone name (e.g. "Tier Zero").
       in: query
       schema:
         $ref: "./../schemas/api.params.predicate.filter.string.yaml"
@@ -72,6 +94,11 @@ get:
       in: query
       schema:
         $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: source_principal_name
+      description: Filter by source principal display name.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
     - name: target_principal_id
       description: Filter by target principal identifier.
       in: query
@@ -79,6 +106,11 @@ get:
         $ref: "./../schemas/api.params.predicate.filter.string.yaml"
     - name: target_principal_kind
       description: Filter by target principal kind.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: target_principal_name
+      description: Filter by target principal display name.
       in: query
       schema:
         $ref: "./../schemas/api.params.predicate.filter.string.yaml"
@@ -110,9 +142,9 @@ get:
           examples:
             Unified CSV export:
               value: |
-                severity,finding_type,finding,platform,environment_id,zone_id,source_principal_id,source_principal_kind,target_principal_id,target_principal_kind,status,first_seen,last_seen
-                critical,relationship,Tier Zero Generic Write,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
-                high,list,Kerberoasting,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,Tier Zero,,,,User,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
+                severity,finding_type,finding,platform,environment_id,zone_id,zone_name,source_principal_id,source_principal_kind,source_principal_name,target_principal_id,target_principal_kind,target_principal_name,status,first_seen,last_seen
+                critical,relationship,Tier Zero Generic Write,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
+                high,list,Kerberoasting,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,1,Tier Zero,,,,PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
         application/json:
           schema:
             allOf:
@@ -142,20 +174,29 @@ get:
                           type: string
                           description: Environment identifier.
                         zone_id:
+                          type: integer
+                          description: Zone identifier (asset group tag id).
+                        zone_name:
                           type: string
-                          description: Zone identifier.
+                          description: Human-readable zone name. Empty when the finding is not tied to a named zone.
                         source_principal_id:
                           type: string
                           description: Source principal identifier. Omitted for list findings.
                         source_principal_kind:
                           type: string
                           description: Source principal kind. Omitted for list findings.
+                        source_principal_name:
+                          type: string
+                          description: Source principal display name resolved from principal properties. Empty when unavailable or for list findings.
                         target_principal_id:
                           type: string
                           description: Target principal identifier.
                         target_principal_kind:
                           type: string
                           description: Target principal kind.
+                        target_principal_name:
+                          type: string
+                          description: Target principal display name resolved from principal properties. Empty when unavailable.
                         status:
                           type: string
                           description: Finding status.
@@ -181,11 +222,14 @@ get:
                     finding: "Tier Zero Generic Write"
                     platform: "Active Directory"
                     environment_id: "S-1-5-21-1974516972-3116780949-2584384717"
-                    zone_id: "Tier Zero"
+                    zone_id: 1
+                    zone_name: "Tier Zero"
                     source_principal_id: "RPATTON@CORP1.LAB.HOME-LABS.LOL"
                     source_principal_kind: "User"
+                    source_principal_name: "Robert Patton"
                     target_principal_id: "ADMIN@CORP1.LAB.HOME-LABS.LOL"
                     target_principal_kind: "User"
+                    target_principal_name: "Domain Admin"
                     status: "active"
                     first_seen: "2026-04-11T00:30:18.491666Z"
                     last_seen: "2026-04-14T16:57:35.675609Z"
@@ -194,9 +238,14 @@ get:
                     finding: "Kerberoasting"
                     platform: "Active Directory"
                     environment_id: "S-1-5-21-1974516972-3116780949-2584384717"
-                    zone_id: "Tier Zero"
+                    zone_id: 1
+                    zone_name: "Tier Zero"
+                    source_principal_id: ""
+                    source_principal_kind: ""
+                    source_principal_name: ""
                     target_principal_id: "PSX_D_BA@CORP1.LAB.HOME-LABS.LOL"
                     target_principal_kind: "User"
+                    target_principal_name: "Backup Admin"
                     status: "accepted"
                     first_seen: "2026-04-11T00:30:18.491666Z"
                     last_seen: "2026-04-14T16:57:35.675609Z"

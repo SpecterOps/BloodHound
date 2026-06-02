@@ -27,6 +27,7 @@ import (
 	"testing"
 
 	"github.com/peterldowns/pgtestdb"
+	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
@@ -72,7 +73,7 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 	require.NoError(t, err)
 
 	//#region Setup for dbs
-	pool, err := pg.NewPool(cfg.Database)
+	graphPool, err := dbpool.NewDawgsPool(cfg.Database)
 	require.NoError(t, err)
 
 	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
@@ -83,7 +84,7 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 	graphDB, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
 		GraphQueryMemoryLimit: 1024 * 1024 * 1024 * 2,
 		ConnectionString:      connConf.URL(),
-		Pool:                  pool,
+		Pool:                  graphPool,
 	})
 	require.NoError(t, err)
 
