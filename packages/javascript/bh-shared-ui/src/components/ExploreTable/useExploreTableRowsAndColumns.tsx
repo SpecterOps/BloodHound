@@ -25,6 +25,7 @@ import React, {
     type KeyboardEvent as ReactKeyboardEvent,
     type MouseEvent as ReactMouseEvent,
 } from 'react';
+import { useAnnounce } from '../../providers';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { formatPotentiallyUnknownLabel } from '../../utils/entityInfoDisplay';
 import {
@@ -56,6 +57,7 @@ const useExploreTableRowsAndColumns = ({
 }: UseExploreTableRowsAndColumnsProps) => {
     const [sortBy, setSortBy] = useState<keyof MungedTableRowWithId>();
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>();
+    const announce = useAnnounce();
 
     const rows: MungedTableRowWithId[] = useMemo(
         () =>
@@ -85,16 +87,19 @@ const useExploreTableRowsAndColumns = ({
                 // first sort of a new column
                 setSortBy(sortByColumn);
                 setSortOrder('asc');
+                announce(`Column sorted by ${sortByColumn}, sort order is ascending`);
             } else if (sortOrder === 'asc') {
                 // second sort, swap the sort direction
                 setSortOrder('desc');
+                announce(`Column sorted by ${sortByColumn}, sort order is descending`);
             } else {
                 // on third sort, reset the sort state to default
                 setSortBy(undefined);
                 setSortOrder(undefined);
+                announce('Column sorting reverted to default');
             }
         },
-        [sortBy, sortOrder]
+        [sortBy, sortOrder, announce]
     );
 
     const handleKebabMenuClick = useCallback(
@@ -159,6 +164,9 @@ const useExploreTableRowsAndColumns = ({
                 id: 'action-menu',
                 size: 50,
                 maxSize: 50,
+                header: () => {
+                    return <span className='sr-only'>Action Menu</span>;
+                },
                 cell: ({ row }) => (
                     <div
                         tabIndex={0}
@@ -167,7 +175,7 @@ const useExploreTableRowsAndColumns = ({
                         aria-label='Row details'
                         onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
                         onKeyDown={adaptClickHandlerToKeyDown((e) => handleKebabMenuClick(e, row?.original?.id))}
-                        className='explore-table-cell-icon h-full flex justify-center items-center'>
+                        className='explore-table-cell-icon h-full flex justify-center items-center -outline-offset-4'>
                         <FontAwesomeIcon
                             icon={faEllipsis}
                             className='p-4 cursor-pointer hover:bg-transparent bg-transparent shadow-outer-0 rotate-90 dark:text-neutral-light-1 text-black'
