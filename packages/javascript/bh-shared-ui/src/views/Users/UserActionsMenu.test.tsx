@@ -43,11 +43,31 @@ const CONFIG_DISABLED_RESPONSE = {
     ],
 };
 
+const createSelfResponse = (permissions: Array<{ authority: string; name: string }>) => ({
+    data: {
+        roles: [
+            {
+                permissions,
+            },
+        ],
+    },
+});
+
+const MANAGE_USERS_RESPONSE = createSelfResponse([{ authority: 'auth', name: 'ManageUsers' }]);
+const READ_USERS_RESPONSE = createSelfResponse([{ authority: 'auth', name: 'ReadUsers' }]);
+const ADMIN_RESPONSE = createSelfResponse([
+    { authority: 'auth', name: 'ManageUsers' },
+    { authority: 'auth', name: 'ReadUsers' },
+]);
+
 type ComponentProps = React.ComponentProps<typeof UserActionsMenu>;
 
 const server = setupServer(
     rest.get(`/api/v2/config`, async (_req, res, ctx) => {
         return res(ctx.json(CONFIG_ENABLED_RESPONSE));
+    }),
+    rest.get(`/api/v2/self`, async (_req, res, ctx) => {
+        return res(ctx.json(MANAGE_USERS_RESPONSE));
     })
 );
 
@@ -55,7 +75,7 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe('Api Keys', () => {
+describe('User Actions Menu', () => {
     const setup = (
         {
             userId = '',
@@ -100,26 +120,58 @@ describe('Api Keys', () => {
         return { screen, user };
     };
 
-    it('should display generate/revoke api tokens button', async () => {
-        const { user } = setup();
-        const button = screen.getByRole('button', { name: /show user actions/i });
+    describe('Api Keys', () => {
+        it('should display generate/revoke api tokens button', async () => {
+            const { user } = setup();
+            const button = screen.getByRole('button', { name: /show user actions/i });
 
-        await user.click(button);
-        await screen.findByRole('menuitem', { name: /generate \/ revoke api tokens/i });
+            await user.click(button);
+            await screen.findByRole('menuitem', { name: /generate \/ revoke api tokens/i });
+        });
+
+        it('should not display generate/revoke api tokens button', async () => {
+            server.use(
+                rest.get(`/api/v2/config`, async (_req, res, ctx) => {
+                    return res(ctx.json(CONFIG_DISABLED_RESPONSE));
+                })
+            );
+            const { user } = setup();
+            const button = screen.getByRole('button', { name: /show user actions/i });
+            await user.click(button);
+
+            await waitFor(() =>
+                expect(
+                    screen.queryByRole('menuitem', { name: /generate \/ revoke api tokens/i })
+                ).not.toBeInTheDocument()
+            );
+        });
     });
 
-    it('should not display generate/revoke api tokens button', async () => {
-        server.use(
-            rest.get(`/api/v2/config`, async (_req, res, ctx) => {
-                return res(ctx.json(CONFIG_DISABLED_RESPONSE));
-            })
-        );
-        const { user } = setup();
-        const button = screen.getByRole('button', { name: /show user actions/i });
-        await user.click(button);
+    describe('Button Menu State', () => {
+        it('enables the user actions menu for a user with the administrator role', async () => {
+            server.use(
+                rest.get(`/api/v2/self`, async (_req, res, ctx) => {
+                    return res(ctx.json(ADMIN_RESPONSE));
+                })
+            );
 
-        await waitFor(() =>
-            expect(screen.queryByRole('menuitem', { name: /generate \/ revoke api tokens/i })).not.toBeInTheDocument()
-        );
+            setup();
+            const button = screen.getByRole('button', { name: /show user actions/i });
+
+            await waitFor(() => expect(button).not.toBeDisabled());
+        });
+
+        it('disables the user actions menu for a user with the auditor role', async () => {
+            server.use(
+                rest.get(`/api/v2/self`, async (_req, res, ctx) => {
+                    return res(ctx.json(READ_USERS_RESPONSE));
+                })
+            );
+
+            setup();
+            const button = screen.getByRole('button', { name: /show user actions/i });
+
+            await waitFor(() => expect(button).toBeDisabled());
+        });
     });
 });
