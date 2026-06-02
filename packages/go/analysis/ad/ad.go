@@ -607,10 +607,10 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 	}
 
 	// This means that len(firstDegreeSets) must be greater than or equal to 2 i.e. we have at least two nodesets (unrolled) without Auth. Users/Everyone
-	// Materialize the check set as a single bitmap by Or-ing all component bitmaps within each set, then And-ing across sets.
+	// Materialize the check set as a single bitmap from the union of all component bitmaps (`Or`) within each set, then intersecting (`And`) across sets.
 	materializedCheckSet := cardinality.NewBitmap64()
-	for _, bm := range unrolledSets[1] {
-		materializedCheckSet.Or(bm)
+	for _, set := range unrolledSets[1] {
+		materializedCheckSet.Or(set)
 	}
 
 	for _, unrolledSet := range unrolledSets[2:] {
