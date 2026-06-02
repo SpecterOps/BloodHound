@@ -26,7 +26,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
+	"github.com/specterops/bloodhound/packages/go/storage"
 	"github.com/stretchr/testify/require"
 )
 
