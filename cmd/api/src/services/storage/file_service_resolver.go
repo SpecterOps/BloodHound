@@ -23,7 +23,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/storage"
 )
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/fs.go -package=mocks . FileServiceResolver
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/file_service_resolver.go -package=mocks . FileServiceResolver
 
 // FileServiceResolver is an interface that is used to resolve the actual filestorage.FileService needed for
 // a specific use case. This is ultimately map backed.
