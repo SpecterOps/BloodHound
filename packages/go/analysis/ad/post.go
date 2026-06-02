@@ -284,7 +284,10 @@ func FetchComputerIDsWithLocalToComputer(tx graph.Transaction) (cardinality.Dupl
 	)
 
 	if err := tx.Relationships().Filterf(func() graph.Criteria {
-		return query.Kind(query.Relationship(), ad.LocalToComputer)
+		return query.And(
+			query.Kind(query.Relationship(), ad.LocalToComputer),
+			query.Kind(query.End(), ad.Computer),
+		)
 	}).FetchKinds(func(cursor graph.Cursor[graph.RelationshipKindsResult]) error {
 		for result := range cursor.Chan() {
 			computers.Add(result.EndID.Uint64())
