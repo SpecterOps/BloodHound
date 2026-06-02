@@ -2,7 +2,7 @@
 
 Goose is a database migration tool that manages schema changes through versioned SQL files. Migrations are tracked via the
 `goose_db_version` table, which serves as the source of truth. Every migration should have its own file. These files have a timestamp
-based naming convention(`YYYYMMDDHHMMSS_description.sql`) which helps ensure that migrations are applied in the correct order and prevents
+based naming convention(`YYYYMMDDHHMMSS_v#_description.sql`) which helps ensure that migrations are applied in the correct order and prevents
 conflicts when multiple engineers are working simultaneously. Within each file, schema changes are split into two sections: `-- +goose Up`
 for applying a new change and `-- +goose Down` for rolling back. On the application startup, goose will compare what is currently in the
 table against any new available migration files and automatically applies pending migrations in the correct order.
@@ -13,6 +13,7 @@ table against any new available migration files and automatically applies pendin
 
 -   Files can be created via the command `just goose-create <name>`. This will create a new file for you in the `migrations` folder in
     the timestamp format: `YYYYMMDDHHMMSS_name.sql`
+    -   e.g. `20060102162005_v9_add_column_users.sql`
 -   Add the current major version at the beginning of the name chosen. e.g, `just goose-create v9_add_column_users`
 -   Choose a migration name that clearly describes the schema change being made
 -   Use underscores instead of hyphens when picking a description/name
@@ -41,7 +42,8 @@ table against any new available migration files and automatically applies pendin
 ## Common Rules
 
 -   Never modify the baseline migration(`00000000000001_init.sql`). This is a migration file all of the previous schemas before switching to goose.
--   Never modify migrations already merged into main. Create a new migration if a fix is needed
+-   Never modify migrations already merged into main or staging branches. Create a new migration if a fix is needed
+-   The `is_applied` field in the `goose_db_version` table is managed internally by goose. Do not modify this field manually. It will not re-apply or skip migrations. Use `just goose-up` and `just goose-down` commands instead.
 -   Always include a `Down` migration when possible
 -   `Down` should safely reverse an `Up`, e.g., use `IF EXISTS`, `ON CONFLICT`, etc.
 -   Always pull main before creating a new migration
@@ -70,6 +72,13 @@ table against any new available migration files and automatically applies pendin
     -   `just goose-down` - Rolls back the most recent migration (goose tracks versions, not file contents)
         -   `just goose-down-to <timestamp>` - Use this if you need to roll back multiple local migrations
     -   `just goose-up` - Re-applies the modified migration/s
+
+**Handling Migrations From Other Branches**
+
+-   If you test another branch that has migrations, those migrations will be applied to your local database. Once you switch back to your own branch or main, any goose command will fail because a version exists in `goose_db_version` with no corresponding file.
+
+    -   **Proactive (recommended):** Before switching branches, run `just goose-down-all` to roll back all local migrations, leaving your database clean.
+    -   **Reactive:** If you have already switched branches, delete the orphaned row(s) from `goose_db_version` and run `just goose-status` to verify the state is clean.
 
 ## Troubleshooting
 

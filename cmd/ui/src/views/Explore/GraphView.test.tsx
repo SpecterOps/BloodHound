@@ -15,12 +15,24 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { cypherTestResponse, mockKindsHandler } from 'bh-shared-ui';
+import { cypherTestResponse, mockKindsHandler, singleNodeResponse } from 'bh-shared-ui';
 import { GraphEdge } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, waitFor, within } from 'src/test-utils';
 import GraphView from './GraphView';
+
+const baseGlobalView = {
+    notifications: [],
+    darkMode: false,
+    autoRunQueries: true,
+    exploreLayout: undefined,
+    isExploreTableSelected: false,
+    isExploreLayoutSelected: false,
+    selectedExploreTableColumns: undefined,
+    pinnedExploreTableColumns: undefined,
+    timeoutSetting: false,
+};
 
 const searchedNode = {
     label: 'Searched Node',
@@ -260,5 +272,137 @@ describe('GraphView', () => {
         const searchNodesElAfter = screen.queryByPlaceholderText('Search Nodes');
 
         expect(searchNodesElAfter).toBeInTheDocument();
+    });
+
+    describe('Layout selection and de-selection', () => {
+        const cypherRoute = '/explore?searchType=cypher&cypherSearch=encodedquery';
+
+        it('does not auto-display the table for a node-only cypher response when the user has already selected a graph layout', async () => {
+            render(<GraphView />, {
+                route: cypherRoute,
+                initialState: {
+                    global: {
+                        view: {
+                            ...baseGlobalView,
+                            exploreLayout: 'standard',
+                            isExploreLayoutSelected: true,
+                        },
+                    },
+                },
+            });
+
+            expect(await screen.findByTestId('sigma-container-wrapper')).toBeInTheDocument();
+            expect(screen.queryByRole('table')).not.toBeInTheDocument();
+        });
+
+        it('does not auto display the table for single node responses with no edges', async () => {
+            server.use(
+                rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
+                    return res(ctx.json(singleNodeResponse));
+                })
+            );
+            render(<GraphView />, {
+                initialState: {
+                    global: {
+                        view: {
+                            ...baseGlobalView,
+                            exploreLayout: 'table',
+                            isExploreLayoutSelected: true,
+                        },
+                    },
+                },
+            });
+
+            expect(screen.queryByRole('table')).not.toBeInTheDocument();
+        });
+
+        it('reflects the persisted selected layout in the controls menu', async () => {
+            render(<GraphView />, {
+                route: cypherRoute,
+                initialState: {
+                    global: {
+                        view: {
+                            ...baseGlobalView,
+                            exploreLayout: 'standard',
+                            isExploreLayoutSelected: true,
+                        },
+                    },
+                },
+            });
+
+            const user = userEvent.setup();
+            const layoutMenu = await screen.findByText('Layout');
+            await user.click(layoutMenu);
+
+            const standardOption = await screen.findByTestId('explore_graph-controls_standard-buttonLabel');
+            expect(standardOption).toHaveClass('Mui-selected');
+
+            const sequentialOption = await screen.findByTestId('explore_graph-controls_sequential-buttonLabel');
+            expect(sequentialOption).not.toHaveClass('Mui-selected');
+
+            const tableOption = await screen.findByTestId('explore_graph-controls_table-buttonLabel');
+            expect(tableOption).not.toHaveClass('Mui-selected');
+        });
+
+        it('reverts to the default unselected state when the user de-selects the currently selected graph layout', async () => {
+            render(<GraphView />, {
+                route: cypherRoute,
+                initialState: {
+                    global: {
+                        view: {
+                            ...baseGlobalView,
+                            exploreLayout: 'standard',
+                            isExploreLayoutSelected: true,
+                        },
+                    },
+                },
+            });
+
+            const user = userEvent.setup();
+            const layoutMenu = await screen.findByText('Layout');
+            await user.click(layoutMenu);
+
+            const standardOption = await screen.findByTestId('explore_graph-controls_standard-buttonLabel');
+            await user.click(standardOption);
+
+            await user.click(layoutMenu);
+
+            const standardOptionAfter = await screen.findByTestId('explore_graph-controls_standard-buttonLabel');
+            expect(standardOptionAfter).not.toHaveClass('Mui-selected');
+
+            const sequentialOptionAfter = await screen.findByTestId('explore_graph-controls_sequential-buttonLabel');
+            expect(sequentialOptionAfter).not.toHaveClass('Mui-selected');
+
+            const tableOptionAfter = await screen.findByTestId('explore_graph-controls_table-buttonLabel');
+            expect(tableOptionAfter).not.toHaveClass('Mui-selected');
+        });
+
+        it('reverts to the default graph view when the user de-selects the currently selected table layout', async () => {
+            render(<GraphView />, {
+                route: cypherRoute,
+                initialState: {
+                    global: {
+                        view: {
+                            ...baseGlobalView,
+                            isExploreTableSelected: true,
+                            isExploreLayoutSelected: true,
+                        },
+                    },
+                },
+            });
+
+            expect(await screen.findByRole('table')).toBeInTheDocument();
+
+            const user = userEvent.setup();
+            const layoutMenu = screen.getByText('Layout');
+            await user.click(layoutMenu);
+
+            const closeTableBtn = await screen.findByTestId('close-button');
+            await user.click(closeTableBtn);
+
+            await waitFor(() => {
+                expect(screen.queryByRole('table')).not.toBeInTheDocument();
+            });
+        });
     });
 });

@@ -72,9 +72,10 @@ func (s EnvironmentSelectors) ValidFilters() map[string][]FilterOperator {
 func (s EnvironmentSelectors) IsString(column string) bool {
 	switch column {
 	case "name",
-		"objectid",
-		"collected":
+		"objectid":
 		return true
+	case "collected":
+		return false
 	default:
 		return false
 	}

@@ -106,6 +106,7 @@ const CypherSearchInner = ({
                     onExploreMenuCollapse();
                 } else if (returnedNodes.length === 1) {
                     setSelectedItem(returnedNodes[0]);
+                    onExploreMenuCollapse();
                 }
             }
         },
@@ -259,6 +260,7 @@ const CypherSearchInner = ({
         if (selectedQuery) {
             if (selectedQuery.canEdit) {
                 //save existing
+                setSelected({ query: cypherQuery, id: selectedQuery.id });
                 setSaveAction('edit');
                 setShowSaveQueryDialog(true);
             } else {

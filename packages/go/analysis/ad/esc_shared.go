@@ -181,20 +181,20 @@ func PostEnterpriseCAFor(operation post.StatTrackedOperation[post.EnsureRelation
 	return nil
 }
 
-func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, enterpriseCA *graph.Node, targetDomains *graph.NodeSet) error {
-	if hostCAServiceComputers, err := FetchHostsCAServiceComputers(tx, enterpriseCA); err != nil {
+func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, certChains *EnterpriseCAChainedDomains) error {
+	if hostCAServiceComputers, err := FetchHostsCAServiceComputers(tx, certChains.EnterpriseCA); err != nil {
 		slog.ErrorContext(
 			ctx,
 			"Error fetching host ca computer for enterprise ca",
-			slog.Uint64("enterprise_ca_id", uint64(enterpriseCA.ID)),
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
 			attr.Error(err),
 		)
 	} else {
 		for _, computer := range hostCAServiceComputers {
-			for _, domain := range targetDomains.Slice() {
+			for _, domain := range certChains.Domains.Slice() {
 				channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 					FromID: computer.ID,
-					ToID:   domain.ID,
+					ToID:   graph.ID(domain),
 					Kind:   ad.GoldenCert,
 				})
 			}
@@ -332,31 +332,41 @@ func expandNodeSliceToBitmapWithoutGroups(nodes []*graph.Node, localGroupData *L
 	return nonGroupNodes
 }
 
-func containsAuthUsersOrEveryone(tx graph.Transaction, nodes []*graph.Node) (bool, error) {
-	if specialGroups, err := FetchAuthUsersAndEveryoneGroups(tx); err != nil {
-		return false, err
-	} else {
-		for _, node := range nodes {
-			if specialGroups.Contains(node) {
-				return true, nil
-			} else if node.Kinds.ContainsOneOf(ad.Group) {
-				for _, group := range specialGroups {
-					if path, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-						return query.And(
-							query.Equals(query.StartID(), group.ID),
-							query.KindIn(query.Relationship(), ad.MemberOf),
-							query.Equals(query.EndID(), node.ID),
-						)
-					})); err != nil {
-						return false, err
-					} else if len(path) > 0 {
-						return true, nil
-					}
-				}
-			}
+func containsAuthUsersOrEveryone(tx graph.Transaction, specialGroups graph.NodeSet, nodes []*graph.Node) (bool, error) {
+	// Collect IDs of special groups and group nodes for a single bulk query
+	var groupNodeIDs []graph.ID
+
+	for _, node := range nodes {
+		// Direct membership check — is this node itself a special group?
+		if specialGroups.Contains(node) {
+			return true, nil
+		}
+
+		if node.Kinds.ContainsOneOf(ad.Group) {
+			groupNodeIDs = append(groupNodeIDs, node.ID)
 		}
 	}
-	return false, nil
+
+	// No group nodes to check transitive membership for
+	if len(groupNodeIDs) == 0 {
+		return false, nil
+	}
+
+	// Build the list of special group IDs
+	specialGroupIDs := specialGroups.IDs()
+
+	// Single bulk query: check if any special group is a MemberOf any of the group nodes
+	if rels, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.InIDs(query.StartID(), specialGroupIDs...),
+			query.KindIn(query.Relationship(), ad.MemberOf),
+			query.InIDs(query.EndID(), groupNodeIDs...),
+		)
+	})); err != nil {
+		return false, err
+	} else {
+		return len(rels) > 0, nil
+	}
 }
 
 func certTemplateValidForUserVictim(certTemplate *graph.Node) bool {
@@ -440,5 +450,23 @@ func schannelAuthenticationEnabled(certTemplate *graph.Node) (bool, error) {
 		} else {
 			return slices.Contains(effectiveekus, "1.3.6.1.5.5.7.3.2") || slices.Contains(effectiveekus, "2.5.29.37.0") || len(effectiveekus) == 0, nil
 		}
+	}
+}
+
+func logPropertyLookupFailure(ctx context.Context, node *graph.Node, err error) {
+	if errors.Is(err, graph.ErrPropertyNotFound) {
+		slog.WarnContext(
+			ctx,
+			"Property not found for node",
+			slog.Uint64("node_id", uint64(node.ID)),
+			attr.Error(err),
+		)
+	} else {
+		slog.ErrorContext(
+			ctx,
+			"Property error",
+			slog.Uint64("node_id", uint64(node.ID)),
+			attr.Error(err),
+		)
 	}
 }

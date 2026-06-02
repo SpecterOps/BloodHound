@@ -44,8 +44,7 @@ const (
 	ReconcileProperty    = "reconcile"
 )
 
-// registrationFn persists a kind encountered in the ingest payload, if it hasn't already been registered in the source_kinds table.
-// (e.g., "Base", "AZBase", "GithubBase")
+// registrationFn persists a kind encountered in the ingest payload.
 type registrationFn func(kind graph.Kind) error
 
 type ReadOptions struct {
@@ -70,14 +69,18 @@ type IngestContext struct {
 	// EndpointResolver is the endpoint matching strategy to be used when looking up
 	// entities for relationship creation
 	EndpointResolver *endpoint.Resolver
+	// RegisterNodeKind persists custom node kind stubs for newly encountered ingest kinds
+	RegisterNodeKind registrationFn
+	seenKinds        map[string]struct{}
 	// RetainIngestedFiles determines if the service should clean up working files after ingest
 	RetainIngestedFiles bool
 }
 
 func NewIngestContext(ctx context.Context, opts ...IngestOption) *IngestContext {
 	ic := &IngestContext{
-		Ctx:   ctx,
-		Stats: &IngestStats{}, // Always initialize stats
+		Ctx:       ctx,
+		Stats:     &IngestStats{}, // Always initialize stats
+		seenKinds: map[string]struct{}{},
 	}
 
 	for _, opt := range opts {
@@ -116,6 +119,12 @@ func WithChangeManager(manager ChangeManager) IngestOption {
 func WithEndpointResolver(resolver *endpoint.Resolver) IngestOption {
 	return func(s *IngestContext) {
 		s.EndpointResolver = resolver
+	}
+}
+
+func WithNodeKindRegistrar(registerNodeKind registrationFn) IngestOption {
+	return func(s *IngestContext) {
+		s.RegisterNodeKind = registerNodeKind
 	}
 }
 
@@ -248,15 +257,53 @@ func IngestBasicData(batch *IngestContext, converted ConvertedData) error {
 func IngestGenericData(batch *IngestContext, sourceKind graph.Kind, converted ConvertedData) error {
 	errs := errorlist.NewBuilder()
 
+	if err := registerGenericNodeKinds(batch, sourceKind, converted.NodeProps); err != nil {
+		errs.Add(err)
+		return errs.Build()
+	}
+
 	if err := IngestNodes(batch, sourceKind, converted.NodeProps); err != nil {
 		errs.Add(err)
 	}
 
-	if err := IngestRelationships(batch, sourceKind, converted.RelProps); err != nil {
-		errs.Add(err)
+	if len(converted.RelProps) > 0 {
+		if err := IngestRelationships(batch, sourceKind, converted.RelProps); err != nil {
+			errs.Add(err)
+		}
 	}
 
 	return errs.Build()
+}
+
+func registerGenericNodeKinds(batch *IngestContext, sourceKind graph.Kind, nodes []ein.IngestibleNode) error {
+	if batch.RegisterNodeKind == nil {
+		return nil
+	}
+
+	if batch.seenKinds == nil {
+		batch.seenKinds = map[string]struct{}{}
+	}
+
+	for _, node := range nodes {
+		for _, kind := range MergeNodeKinds(sourceKind, node.Labels...) {
+			if model.IsExtendedNodeKind(kind) {
+				continue
+			}
+
+			kindName := kind.String()
+			if _, seen := batch.seenKinds[kindName]; seen {
+				continue
+			}
+
+			if err := batch.RegisterNodeKind(kind); err != nil {
+				return err
+			}
+
+			batch.seenKinds[kindName] = struct{}{}
+		}
+	}
+
+	return nil
 }
 
 func IngestGroupData(batch *IngestContext, converted ConvertedGroupData) error {
