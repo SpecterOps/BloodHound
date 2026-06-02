@@ -25,34 +25,16 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
-// ParseOptionalAssetGroupTagIds parses the given asset group tag ID strings and returns the corresponding
-// tag IDs. When no IDs are provided it returns an empty slice. Duplicate IDs are ignored.
-func ParseOptionalAssetGroupTagIds(ctx context.Context, db database.Database, tagIdParams []string) ([]int, error) {
-	var (
-		tagIds []int
-		seen   = make(map[int]bool)
-	)
-
-	for _, tagIdParam := range tagIdParams {
-		tagId, err := strconv.Atoi(tagIdParam)
+// ParseAssetGroupTagIdParams converts raw query parameter strings to integers.
+func ParseAssetGroupTagIdParams(params []string) ([]int, error) {
+	tagIds := make([]int, 0, len(params))
+	for _, param := range params {
+		tagId, err := strconv.Atoi(param)
 		if err != nil {
 			return nil, err
 		}
-
-		if seen[tagId] {
-			continue
-		}
-		seen[tagId] = true
-
-		if tagId == 0 {
-			tagIds = append(tagIds, model.AssetGroupTierHygienePlaceholderId)
-		} else if _, err = db.GetAssetGroupTag(ctx, tagId); err != nil {
-			return nil, err
-		} else {
-			tagIds = append(tagIds, tagId)
-		}
+		tagIds = append(tagIds, tagId)
 	}
-
 	return tagIds, nil
 }
 
