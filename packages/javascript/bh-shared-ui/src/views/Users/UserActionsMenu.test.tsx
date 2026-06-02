@@ -55,10 +55,6 @@ const createSelfResponse = (permissions: Array<{ authority: string; name: string
 
 const MANAGE_USERS_RESPONSE = createSelfResponse([{ authority: 'auth', name: 'ManageUsers' }]);
 const READ_USERS_RESPONSE = createSelfResponse([{ authority: 'auth', name: 'ReadUsers' }]);
-const ADMIN_RESPONSE = createSelfResponse([
-    { authority: 'auth', name: 'ManageUsers' },
-    { authority: 'auth', name: 'ReadUsers' },
-]);
 
 type ComponentProps = React.ComponentProps<typeof UserActionsMenu>;
 
@@ -151,7 +147,7 @@ describe('User Actions Menu', () => {
         it('enables the user actions menu for a user with the administrator role', async () => {
             server.use(
                 rest.get(`/api/v2/self`, async (_req, res, ctx) => {
-                    return res(ctx.json(ADMIN_RESPONSE));
+                    return res(ctx.json(MANAGE_USERS_RESPONSE));
                 })
             );
 
