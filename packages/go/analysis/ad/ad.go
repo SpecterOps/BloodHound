@@ -613,8 +613,9 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 		materializedCheckSet.Or(set)
 	}
 
+	setUnion := cardinality.NewBitmap64()
 	for _, unrolledSet := range unrolledSets[2:] {
-		setUnion := cardinality.NewBitmap64()
+		setUnion.Clear()
 		for _, bm := range unrolledSet {
 			setUnion.Or(bm)
 		}
