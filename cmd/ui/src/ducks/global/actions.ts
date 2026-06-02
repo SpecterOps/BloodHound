@@ -155,3 +155,10 @@ export const setIsExploreGraphHighlight = (isExploreGraphHighlight: boolean): ty
         isExploreGraphHighlight,
     };
 };
+
+export const setIsExploreGraphLabelClip = (isExploreGraphLabelClip: boolean): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_IS_EXPLORE_GRAPH_LABEL_CLIP,
+        isExploreGraphLabelClip,
+    };
+};

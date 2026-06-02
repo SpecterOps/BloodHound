@@ -96,6 +96,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const theme = useTheme();
     const isExploreGraphHighlight = useAppSelector((state) => state.global.view.isExploreGraphHighlight);
+    const isExploreGraphLabelClip = useAppSelector((state) => state.global.view.isExploreGraphLabelClip);
 
     const sigma = useSigma();
     const graph = sigma.getGraph();
@@ -309,6 +310,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 return {
                     ...data,
                     highlighted: node === highlightedItem,
+                    isExploreGraphLabelClip,
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
                     isDimmed,
                     // Always pass the canvas background color so the shader can dim toward it.
