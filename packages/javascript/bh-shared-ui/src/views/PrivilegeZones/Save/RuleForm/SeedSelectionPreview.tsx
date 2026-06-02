@@ -30,10 +30,9 @@ import { FC, useContext, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
 import { useOwnedTagId, usePZPathParams } from '../../../../hooks';
-import { useNotifications } from '../../../../providers';
 import { apiClient, cn } from '../../../../utils';
 import RuleFormContext from './RuleFormContext';
-import { CYPHER_MUST_HAVE_RESULTS, emptyFunction } from './rule-form-utils';
+import { emptyFunction } from './rule-form-utils';
 
 const getRuleExpansionMethod = (
     tagId: string,
@@ -55,12 +54,11 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
     ruleType,
     exploreUrl,
 }) => {
-    const { addNotification } = useNotifications();
     const { tagType, tagId } = usePZPathParams();
 
     const ownedId = useOwnedTagId();
 
-    const { dispatch = emptyFunction, cypherEditorInvalid } = useContext(RuleFormContext);
+    const { dispatch = emptyFunction, cypherQueryYieldsNoResults } = useContext(RuleFormContext);
 
     const expansion = getRuleExpansionMethod(tagId, tagType, ownedId?.toString());
 
@@ -84,13 +82,12 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
         const undefinedResults = !directObjects && !expandedObjects;
         const cypherQueryIsEmpty = sampleResultsFetched && (emptyResults || undefinedResults);
 
-        if (cypherQueryIsEmpty && !cypherEditorInvalid) {
-            addNotification(CYPHER_MUST_HAVE_RESULTS);
-            dispatch({ type: 'set-cypher-editor-validation', cypherEditorInvalid: true });
-        } else if (!cypherQueryIsEmpty && cypherEditorInvalid) {
-            dispatch({ type: 'set-cypher-editor-validation', cypherEditorInvalid: false });
+        if (cypherQueryIsEmpty && !cypherQueryYieldsNoResults) {
+            dispatch({ type: 'set-cypher-no-results-validation-state', cypherQueryYieldsNoResults: true });
+        } else if (!cypherQueryIsEmpty && cypherQueryYieldsNoResults) {
+            dispatch({ type: 'set-cypher-no-results-validation-state', cypherQueryYieldsNoResults: false });
         }
-    }, [directObjects, expandedObjects, cypherEditorInvalid, dispatch, sampleResultsFetched, addNotification]);
+    }, [directObjects, expandedObjects, cypherQueryYieldsNoResults, dispatch, sampleResultsFetched]);
 
     const showViewInExploreButton = exploreUrl && ruleType === SeedTypeCypher;
 
