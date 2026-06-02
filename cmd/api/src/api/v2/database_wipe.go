@@ -176,7 +176,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 			userId = user.ID.String()
 		}
 
-		if err := s.DB.RequestAnalysis(request.Context(), userId, model.AnalysisStepAll); err != nil {
+		if err := s.DB.RequestAnalysis(request.Context(), userId, model.AnalysisEntrypointFull); err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return
 		}

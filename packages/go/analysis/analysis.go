@@ -127,11 +127,53 @@ var (
 	ErrAnalysisPartiallyCompleted = errors.New("analysis partially completed")
 )
 
+type analysisStepDispatch struct {
+	adPostProcessing    func()
+	azurePostProcessing func()
+	tagging             func()
+	saveDataQuality     func()
+}
+
+func runAnalysisStepOperation(operation func()) {
+	if operation != nil {
+		operation()
+	}
+}
+
+func dispatchAnalysisSteps(analysisSteps model.AnalysisSteps, dispatch analysisStepDispatch) {
+	if analysisSteps.Has(model.AnalysisStepADPostProcessing) {
+		runAnalysisStepOperation(dispatch.adPostProcessing)
+	}
+
+	if analysisSteps.Has(model.AnalysisStepAzurePostProcessing) {
+		runAnalysisStepOperation(dispatch.azurePostProcessing)
+	}
+
+	if analysisSteps.Has(model.AnalysisStepTagging) {
+		runAnalysisStepOperation(dispatch.tagging)
+	}
+
+	runAnalysisStepOperation(dispatch.saveDataQuality)
+}
+
 // TODO Cleanup tieringEnabled after Tiering GA
-func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration, steps model.AnalysisSteps) error {
+func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration, analysisSteps model.AnalysisSteps) error {
 	var (
 		collectedErrors []error
 		tieringEnabled  = appcfg.GetTieringEnabled(ctx, db)
+	)
+
+	if !appcfg.GetVariableAnalysisEntrypointEnabled(ctx, db) {
+		analysisSteps = model.FullAnalysisSteps()
+	}
+
+	slog.InfoContext(
+		ctx,
+		"Running analysis operations",
+		attr.Namespace("analysis"),
+		attr.Function("RunAnalysisOperations"),
+		slog.String("analysis_steps", analysisSteps.String()),
+		slog.Int("analysis_step_bits", analysisSteps.Bits()),
 	)
 
 	var (
@@ -142,49 +184,50 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		dataQualityFailed  = false
 	)
 
-	if steps.Has(model.AnalysisStepADPostProcessing) {
-		if ntlmFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureNTLMPostProcessing); err != nil {
-			collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving NTLM Post Processing feature flag: %w", err))
-		} else if stats, err := adAnalysis.Post(ctx, graphDB, appcfg.GetCitrixRDPSupport(ctx, db), ntlmFlag.Enabled); err != nil {
-			collectedErrors = append(collectedErrors, fmt.Errorf("error during ad post: %w", err))
-			adFailed = true
-		} else {
-			stats.LogStats()
-		}
-	}
+	dispatchAnalysisSteps(analysisSteps, analysisStepDispatch{
+		adPostProcessing: func() {
+			if ntlmFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureNTLMPostProcessing); err != nil {
+				collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving NTLM Post Processing feature flag: %w", err))
+			} else if stats, err := adAnalysis.Post(ctx, graphDB, appcfg.GetCitrixRDPSupport(ctx, db), ntlmFlag.Enabled); err != nil {
+				collectedErrors = append(collectedErrors, fmt.Errorf("error during ad post: %w", err))
+				adFailed = true
+			} else {
+				stats.LogStats()
+			}
+		},
+		azurePostProcessing: func() {
+			if stats, err := azureAnalysis.Post(ctx, graphDB); err != nil {
+				collectedErrors = append(collectedErrors, fmt.Errorf("error during azure post: %w", err))
+				azureFailed = true
+			} else {
+				stats.LogStats()
+			}
+		},
+		tagging: func() {
+			if errs := TagAssetGroupsAndTierZero(ctx, db, graphDB); len(errs) > 0 {
+				for _, err := range errs {
+					collectedErrors = append(collectedErrors, fmt.Errorf("tagging asset groups and tier zero failed: %w", err))
+				}
 
-	if steps.Has(model.AnalysisStepAzurePostProcessing) {
-		if stats, err := azureAnalysis.Post(ctx, graphDB); err != nil {
-			collectedErrors = append(collectedErrors, fmt.Errorf("error during azure post: %w", err))
-			azureFailed = true
-		} else {
-			stats.LogStats()
-		}
-	}
-
-	if steps.Has(model.AnalysisStepTagging) {
-		if errs := TagAssetGroupsAndTierZero(ctx, db, graphDB); len(errs) > 0 {
-			for _, err := range errs {
-				collectedErrors = append(collectedErrors, fmt.Errorf("tagging asset groups and tier zero failed: %w", err))
+				if ContainsOnlyCypherSelectorErrors(errs) {
+					agtPartiallyFailed = true
+				}
 			}
 
-			if ContainsOnlyCypherSelectorErrors(errs) {
-				agtPartiallyFailed = true
+			if !tieringEnabled {
+				if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB, graphschema.GetNodeKindDisplayLabel); err != nil {
+					collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
+					agiFailed = true
+				}
 			}
-		}
-
-		if !tieringEnabled {
-			if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB, graphschema.GetNodeKindDisplayLabel); err != nil {
-				collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
-				agiFailed = true
+		},
+		saveDataQuality: func() {
+			if err := dataquality.SaveDataQuality(ctx, db, graphDB); err != nil {
+				collectedErrors = append(collectedErrors, fmt.Errorf("error saving data quality stat: %v", err))
+				dataQualityFailed = true
 			}
-		}
-	}
-
-	if err := dataquality.SaveDataQuality(ctx, db, graphDB); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("error saving data quality stat: %v", err))
-		dataQualityFailed = true
-	}
+		},
+	})
 
 	if len(collectedErrors) > 0 {
 		for _, err := range collectedErrors {

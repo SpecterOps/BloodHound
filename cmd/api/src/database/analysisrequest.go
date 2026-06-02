@@ -19,12 +19,12 @@ package database
 import (
 	"context"
 	"errors"
-
 	"log/slog"
 	"time"
 
 	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"gorm.io/gorm"
 )
@@ -34,7 +34,7 @@ type AnalysisRequestData interface {
 	GetAnalysisRequest(ctx context.Context) (model.AnalysisRequest, error)
 	HasAnalysisRequest(ctx context.Context) bool
 	HasCollectedGraphDataDeletionRequest(ctx context.Context) (model.AnalysisRequest, bool)
-	RequestAnalysis(ctx context.Context, requester string, analysisStep model.AnalysisSteps) error
+	RequestAnalysis(ctx context.Context, requester string, analysisEntrypoint model.AnalysisEntrypoint) error
 	RequestCollectedGraphDataDeletion(ctx context.Context, request model.AnalysisRequest) error
 }
 
@@ -121,7 +121,7 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 	if analysisRequest, err := s.GetAnalysisRequest(ctx); err != nil && !errors.Is(err, ErrNotFound) {
 		return err
 	} else if errors.Is(err, ErrNotFound) {
-		// No request exists — insert a new one with all relevant columns
+		// No request exists; insert a new one with all relevant columns.
 		return s.db.Exec(insertSQL, args...).Error
 	} else if analysisRequest.RequestType == model.AnalysisRequestAnalysis && request.RequestType == model.AnalysisRequestDeletion {
 		// A queued analysis request is overwritten by an incoming deletion request.
@@ -139,9 +139,14 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 }
 
 // RequestAnalysis will request an analysis be executed, as long as there isn't an existing analysis request or collected graph data deletion request, then it no-ops
-func (s *BloodhoundDB) RequestAnalysis(ctx context.Context, requestedBy string, analysisStep model.AnalysisSteps) error {
-	slog.InfoContext(ctx, "Request analysis", slog.String("requested_by", requestedBy))
-	return s.setAnalysisRequest(ctx, model.AnalysisRequest{RequestType: model.AnalysisRequestAnalysis, RequestedBy: requestedBy, AnalysisSteps: analysisStep})
+func (s *BloodhoundDB) RequestAnalysis(ctx context.Context, requestedBy string, analysisEntrypoint model.AnalysisEntrypoint) error {
+	var steps = analysisEntrypoint.AnalysisSteps()
+
+	if !appcfg.GetVariableAnalysisEntrypointEnabled(ctx, s) {
+		steps = model.FullAnalysisSteps()
+	}
+
+	return s.setAnalysisRequest(ctx, model.AnalysisRequest{RequestType: model.AnalysisRequestAnalysis, RequestedBy: requestedBy, AnalysisSteps: steps})
 }
 
 // RequestCollectedGraphDataDeletion will request collected graph data be deleted, if an analysis request is present, it will overwrite that.

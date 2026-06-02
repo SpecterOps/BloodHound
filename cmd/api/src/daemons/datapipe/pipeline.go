@@ -79,7 +79,7 @@ func (s *BHCEPipeline) DeleteData(ctx context.Context) error {
 	}
 	defer func() {
 		_ = s.db.DeleteAnalysisRequest(ctx)
-		_ = s.db.RequestAnalysis(ctx, "datapipe", model.AnalysisStepAll)
+		_ = s.db.RequestAnalysis(ctx, "datapipe", model.AnalysisEntrypointFull)
 	}()
 	defer measure.LogAndMeasure(slog.LevelInfo, "Purge Graph Data")()
 
@@ -243,14 +243,14 @@ func (s *BHCEPipeline) IsPrimary(ctx context.Context, status model.DatapipeStatu
 // ingest jobs are waiting (full analysis) or an analysis request is queued (the request's merged
 // step bits). When both triggers are present the step sets are unioned.
 func (s *BHCEPipeline) Analyze(ctx context.Context) error {
-	var steps model.AnalysisSteps
+	var analysisSteps model.AnalysisSteps
 
 	hasJobsWaitingForAnalysis, err := s.jobService.HasIngestJobsWaitingForAnalysis()
 	if err != nil {
 		return fmt.Errorf("looking up jobs for analysis: %v", err)
 	}
 	if hasJobsWaitingForAnalysis {
-		steps |= model.AnalysisStepAll
+		analysisSteps = model.FullAnalysisSteps()
 	}
 
 	analysisRequest, err := s.db.GetAnalysisRequest(ctx)
@@ -258,17 +258,17 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 		return fmt.Errorf("looking up analysis request: %v", err)
 	}
 	if err == nil {
-		steps |= analysisRequest.AnalysisSteps
+		analysisSteps = analysisSteps.Merge(analysisRequest.AnalysisSteps)
 	}
 
-	if steps == 0 {
+	if analysisSteps.IsEmpty() {
 		return nil
 	}
 
-	return s.analyze(ctx, steps)
+	return s.analyze(ctx, analysisSteps)
 }
 
-func (s *BHCEPipeline) analyze(ctx context.Context, steps model.AnalysisSteps) error {
+func (s *BHCEPipeline) analyze(ctx context.Context, analysisSteps model.AnalysisSteps) error {
 	// Ensure that the user-requested analysis switch is deleted. This is done at the beginning of the
 	// function so that any re-analysis requests are caught while analysis is in-progress.
 	if err := s.db.DeleteAnalysisRequest(ctx); err != nil {
@@ -287,7 +287,7 @@ func (s *BHCEPipeline) analyze(ctx context.Context, steps model.AnalysisSteps) e
 		attr.Scope("summary"),
 	)()
 
-	if err := analysis.RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg, steps); err != nil {
+	if err := analysis.RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg, analysisSteps); err != nil {
 		if errors.Is(err, analysis.ErrAnalysisFailed) {
 			s.jobService.FailAnalyzedIngestJobs()
 		} else if errors.Is(err, analysis.ErrAnalysisPartiallyCompleted) {

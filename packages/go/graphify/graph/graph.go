@@ -194,7 +194,7 @@ func (s *CommunityGraphService) Ingest(ctx context.Context, batch *graphify.Inge
 }
 
 func (s *CommunityGraphService) RunAnalysis(ctx context.Context, graphDB graph.Database) error {
-	return analysis.RunAnalysisOperations(ctx, s.db, graphDB, config.Configuration{}, model.AnalysisStepAll)
+	return analysis.RunAnalysisOperations(ctx, s.db, graphDB, config.Configuration{}, model.FullAnalysisSteps())
 }
 
 // Run generate command

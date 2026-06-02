@@ -240,7 +240,7 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			if !config.Enabled {
-				if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String(), model.AnalysisStepTaggingToCompletion); err != nil {
+				if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String(), model.AnalysisEntrypointTagging); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				}
@@ -338,7 +338,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 				api.HandleDatabaseError(request, response, err)
 				return
 			} else if !config.Enabled {
-				if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String(), model.AnalysisStepTaggingToCompletion); err != nil {
+				if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String(), model.AnalysisEntrypointTagging); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				}
@@ -378,7 +378,7 @@ func (s *Resources) DeleteAssetGroupTagSelector(response http.ResponseWriter, re
 			api.HandleDatabaseError(request, response, err)
 			return
 		} else if !config.Enabled {
-			if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String(), model.AnalysisStepTaggingToCompletion); err != nil {
+			if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String(), model.AnalysisEntrypointTagging); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
 			}
@@ -739,7 +739,7 @@ func (s *Resources) UpdateAssetGroupTag(response http.ResponseWriter, request *h
 					api.HandleDatabaseError(request, response, err)
 					return
 				} else if !config.Enabled {
-					if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String(), model.AnalysisStepTaggingToCompletion); err != nil {
+					if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String(), model.AnalysisEntrypointTagging); err != nil {
 						api.HandleDatabaseError(request, response, err)
 						return
 					}
