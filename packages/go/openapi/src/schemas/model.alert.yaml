@@ -1,0 +1,68 @@
+# Copyright 2026 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+type: object
+description: |
+  Alert resource — a named, user-managed rule with an embedded set of
+  subscriptions that bind it to channels (webhooks) for specific event types.
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+  description:
+    type: string
+  created_at:
+    type: string
+    format: date-time
+  created_by:
+    type: string
+  updated_at:
+    type: string
+    format: date-time
+  updated_by:
+    type: string
+  disabled_at:
+    $ref: './null.time.yaml'
+  disabled_by:
+    $ref: './null.string.yaml'
+  subscriptions:
+    type: array
+    items:
+      type: object
+      description: |
+        Subscription record embedded in the Alert resource. Binds the parent alert to
+        a channel for a specific `event_type` and `version`. The parent `alert_id` is
+        implied by containment in an `AlertView` and is omitted from this view.
+      properties:
+        channel_id:
+          type: string
+          format: uuid
+          description: ID of the alert channel (webhook) this subscription targets.
+        event_type:
+          type: string
+        version:
+          type: string
+          description: Payload schema version this subscription targets.
+        created_at:
+          type: string
+          format: date-time
+        disabled_at:
+          $ref: './null.time.yaml'
+        disabled_by:
+          $ref: './null.string.yaml'
+
