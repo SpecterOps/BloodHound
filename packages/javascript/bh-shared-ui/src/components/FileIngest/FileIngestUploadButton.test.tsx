@@ -19,7 +19,6 @@ import { setupServer } from 'msw/node';
 import { useState } from 'react';
 import { FileUploadDialogContext } from '../../hooks';
 import { fireEvent, render, screen, waitFor } from '../../test-utils';
-import { Permission } from '../../utils';
 import FileUploadDialog from '../FileUploadDialog';
 import { FileIngestUploadButton } from './FileIngestUploadButton';
 
@@ -136,19 +135,7 @@ const Wrapper = () => {
     );
 };
 
-const selfHandler = (roles: { name: string; permissions: { authority: string; name: string }[] }[]) =>
-    rest.get(`/api/v2/self`, async (_req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {
-                    id: '1',
-                    roles,
-                },
-            })
-        );
-    });
-
-describe('File Ingest Upload Button', () => {
+describe('File Upload', () => {
     const testFile = new File([JSON.stringify({ value: 'test' })], 'test.json', { type: 'application/json' });
     const errorFile = new File(['test text'], 'test.txt', { type: 'text/plain' });
 
@@ -192,51 +179,13 @@ describe('File Ingest Upload Button', () => {
         expect(submitButton).toBeDisabled();
     });
 
-    it('disables the upload button when user has AUTH_READ_USERS permission', async () => {
-        server.use(
-            selfHandler([
-                {
-                    name: 'Read Only',
-                    permissions: [
-                        {
-                            authority: 'auth',
-                            name: 'ReadUsers',
-                        },
-                    ],
-                },
-            ])
-        );
-        checkPermissionMock.mockImplementation((permission) => {
-            return permission === Permission.AUTH_READ_USERS;
-        });
+    it('disables the upload button and does not populate a table if the user lacks the permission', async () => {
+        checkPermissionMock.mockImplementation(() => false);
         render(<Wrapper />);
+
+        expect(screen.queryByText('test_email@specterops.io')).toBeNull();
+        expect(screen.queryByText('1 min')).toBeNull();
 
         expect(screen.getByTestId('file-ingest_button-upload-files')).toBeDisabled();
-    });
-
-    it('enables the upload button when user has AUTH_MANAGE_USERS permission', async () => {
-        server.use(
-            selfHandler([
-                {
-                    name: 'Administrator',
-                    permissions: [
-                        {
-                            authority: 'auth',
-                            name: 'ManageUsers',
-                        },
-                        {
-                            authority: 'graph',
-                            name: 'Ingest',
-                        },
-                    ],
-                },
-            ])
-        );
-        checkPermissionMock.mockImplementation((permission) => {
-            return permission === Permission.AUTH_READ_USERS || permission === Permission.GRAPH_DB_INGEST;
-        });
-        render(<Wrapper />);
-
-        expect(screen.getByTestId('file-ingest_button-upload-files')).not.toBeDisabled();
     });
 });

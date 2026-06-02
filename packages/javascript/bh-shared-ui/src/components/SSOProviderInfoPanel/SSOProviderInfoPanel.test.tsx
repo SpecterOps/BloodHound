@@ -15,17 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { OIDCProviderInfo, SAMLProviderInfo, SSOProvider } from 'js-client-library';
-import * as permissionsHook from '../../hooks/usePermissions';
 import { render, screen } from '../../test-utils';
 
-import { Permission } from '../../utils';
 import SSOProviderInfoPanel from './SSOProviderInfoPanel';
-
-// Mock usePermissions hook
-const mockCheckPermission = vi.fn();
-vi.spyOn(permissionsHook, 'usePermissions').mockReturnValue({
-    checkPermission: mockCheckPermission,
-} as any);
 
 const samlProvider: SSOProvider = {
     id: 1,
@@ -101,23 +93,5 @@ describe('SSOProviderTable', () => {
         expect(await screen.findByText('Automatically create new users on login')).toBeInTheDocument();
         expect(await screen.findByText('Allow SSO provider to manage roles for new users')).toBeInTheDocument();
         expect(await screen.findByText('Default role when creating new users')).toBeInTheDocument();
-    });
-
-    it('disables the download certificate button when user has Auditor role (AUTH_READ_USERS permission)', async () => {
-        mockCheckPermission.mockImplementation((permission) => permission === Permission.AUTH_READ_USERS);
-
-        render(<SSOProviderInfoPanel ssoProvider={samlProvider} />);
-
-        const downloadButton = screen.getByRole('button', { name: `Download ${samlProvider.name} SP Certificate` });
-        expect(downloadButton).toBeDisabled();
-    });
-
-    it('enables the download certificate button when user has Administrator role (AUTH_MANAGE_USERS permission)', async () => {
-        mockCheckPermission.mockImplementation((permission) => permission === Permission.AUTH_MANAGE_USERS);
-
-        render(<SSOProviderInfoPanel ssoProvider={samlProvider} />);
-
-        const downloadButton = screen.getByRole('button', { name: `Download ${samlProvider.name} SP Certificate` });
-        expect(downloadButton).not.toBeDisabled();
     });
 });

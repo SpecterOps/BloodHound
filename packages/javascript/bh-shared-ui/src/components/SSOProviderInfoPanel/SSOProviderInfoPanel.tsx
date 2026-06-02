@@ -18,9 +18,8 @@ import { Button, Label } from 'doodle-ui';
 import { OIDCProviderInfo, Role, SAMLProviderInfo, SSOProvider } from 'js-client-library';
 import fileDownload from 'js-file-download';
 import { FC, useMemo } from 'react';
-import { usePermissions } from '../../hooks';
 import { useNotifications } from '../../providers';
-import { apiClient, Permission } from '../../utils';
+import { apiClient } from '../../utils';
 import { Field, FieldsContainer } from '../../views/Explore/fragments';
 import LabelWithCopy from '../LabelWithCopy';
 
@@ -76,9 +75,6 @@ const SSOProviderInfoPanel: FC<{
     roles?: Role[];
 }> = ({ ssoProvider, roles }) => {
     const { addNotification } = useNotifications();
-
-    const { checkPermission } = usePermissions();
-    const hasViewPermission = checkPermission(Permission.AUTH_READ_USERS);
 
     const defaultRoleName = useMemo(
         () => roles?.find((role) => role.id === ssoProvider.config?.auto_provision?.default_role_id)?.name,
@@ -167,7 +163,6 @@ const SSOProviderInfoPanel: FC<{
             {ssoProvider.type.toLowerCase() === 'saml' && (
                 <div className='flex justify-center mt-2'>
                     <Button
-                        disabled={hasViewPermission}
                         aria-label={`Download ${ssoProvider.name} SP Certificate`}
                         variant='secondary'
                         onClick={downloadSAMLSigningCertificate}>

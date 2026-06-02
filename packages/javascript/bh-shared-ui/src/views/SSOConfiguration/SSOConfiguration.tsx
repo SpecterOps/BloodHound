@@ -48,9 +48,7 @@ const SSOConfiguration: FC = () => {
     const theme = useTheme();
 
     const { checkPermission } = usePermissions();
-    const hasManagePermission = checkPermission(Permission.AUTH_MANAGE_PROVIDERS);
-    const hasReadPermission = checkPermission(Permission.AUTH_READ_USERS);
-    const hasPermission = hasManagePermission || hasReadPermission;
+    const hasPermission = checkPermission(Permission.AUTH_MANAGE_PROVIDERS);
 
     const { addNotification, dismissNotification } = useNotifications();
     const notificationKey = 'manage-sso-providers-permission';
@@ -272,7 +270,7 @@ const SSOConfiguration: FC = () => {
                 <Grid container spacing='1rem'>
                     <Grid item display='flex' alignItems='center' justifyContent='end' minHeight='24px' mb={2} xs={12}>
                         <CreateMenu
-                            disabled={!hasManagePermission}
+                            disabled={!hasPermission}
                             createMenuTitle={`Create ${flag?.enabled ? '' : 'SAML '}Provider`}
                             featureFlag='oidc_support'
                             featureFlagEnabledMenuItems={[
