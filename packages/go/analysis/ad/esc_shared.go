@@ -332,31 +332,44 @@ func expandNodeSliceToBitmapWithoutGroups(nodes []*graph.Node, localGroupData *L
 	return nonGroupNodes
 }
 
-func containsAuthUsersOrEveryone(tx graph.Transaction, nodes []*graph.Node) (bool, error) {
-	if specialGroups, err := FetchAuthUsersAndEveryoneGroups(tx); err != nil {
-		return false, err
-	} else {
-		for _, node := range nodes {
-			if specialGroups.Contains(node) {
-				return true, nil
-			} else if node.Kinds.ContainsOneOf(ad.Group) {
-				for _, group := range specialGroups {
-					if path, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-						return query.And(
-							query.Equals(query.StartID(), group.ID),
-							query.KindIn(query.Relationship(), ad.MemberOf),
-							query.Equals(query.EndID(), node.ID),
-						)
-					})); err != nil {
-						return false, err
-					} else if len(path) > 0 {
-						return true, nil
-					}
-				}
-			}
+func containsAuthUsersOrEveryone(tx graph.Transaction, specialGroups graph.NodeSet, nodes []*graph.Node) (bool, error) {
+	// Collect IDs of special groups and group nodes for a single bulk query
+	var groupNodeIDs []graph.ID
+
+	for _, node := range nodes {
+		// Direct membership check — is this node itself a special group?
+		if specialGroups.Contains(node) {
+			return true, nil
+		}
+
+		if node.Kinds.ContainsOneOf(ad.Group) {
+			groupNodeIDs = append(groupNodeIDs, node.ID)
 		}
 	}
-	return false, nil
+
+	// No group nodes to check transitive membership for
+	if len(groupNodeIDs) == 0 {
+		return false, nil
+	}
+
+	// Build the list of special group IDs
+	specialGroupIDs := make([]graph.ID, 0, len(specialGroups))
+	for _, group := range specialGroups {
+		specialGroupIDs = append(specialGroupIDs, group.ID)
+	}
+
+	// Single bulk query: check if any special group is a MemberOf any of the group nodes
+	if rels, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.InIDs(query.StartID(), specialGroupIDs...),
+			query.KindIn(query.Relationship(), ad.MemberOf),
+			query.InIDs(query.EndID(), groupNodeIDs...),
+		)
+	})); err != nil {
+		return false, err
+	} else {
+		return len(rels) > 0, nil
+	}
 }
 
 func certTemplateValidForUserVictim(certTemplate *graph.Node) bool {
