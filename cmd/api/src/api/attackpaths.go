@@ -25,6 +25,19 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
+// ParseAssetGroupTagIdParams converts raw query parameter strings to integers.
+func ParseAssetGroupTagIdParams(params []string) ([]int, error) {
+	tagIds := make([]int, 0, len(params))
+	for _, param := range params {
+		tagId, err := strconv.Atoi(param)
+		if err != nil {
+			return nil, err
+		}
+		tagIds = append(tagIds, tagId)
+	}
+	return tagIds, nil
+}
+
 // ParseOptionalAssetGroupTagIds parses the given asset group tag ID strings and returns the corresponding
 // tag IDs. When no IDs are provided it returns an empty slice. Duplicate IDs are ignored.
 func ParseOptionalAssetGroupTagIds(ctx context.Context, db database.Database, tagIdParams []string) ([]int, error) {

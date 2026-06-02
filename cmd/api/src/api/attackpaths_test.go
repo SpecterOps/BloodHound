@@ -19,6 +19,7 @@ package api_test
 import (
 	"context"
 	"errors"
+	"strconv"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -28,6 +29,57 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
+
+func TestParseAssetGroupTagIdParams(t *testing.T) {
+	t.Parallel()
+
+	type want struct {
+		res []int
+		err error
+	}
+
+	tests := []struct {
+		name   string
+		params []string
+		want   want
+	}{
+		{
+			name:   "Success: empty params returns empty slice",
+			params: []string{},
+			want:   want{res: []int{}, err: nil},
+		},
+		{
+			name:   "Success: single valid integer",
+			params: []string{"5"},
+			want:   want{res: []int{5}, err: nil},
+		},
+		{
+			name:   "Success: multiple valid integers",
+			params: []string{"5", "7"},
+			want:   want{res: []int{5, 7}, err: nil},
+		},
+		{
+			name:   "Error: non-numeric string returns error",
+			params: []string{"bad"},
+			want:   want{res: nil, err: strconv.ErrSyntax},
+		},
+		{
+			name:   "Error: first valid then non-numeric returns error",
+			params: []string{"5", "bad"},
+			want:   want{res: nil, err: strconv.ErrSyntax},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			tagIds, err := api.ParseAssetGroupTagIdParams(tt.params)
+			assert.ErrorIs(t, err, tt.want.err)
+			assert.Equal(t, tt.want.res, tagIds)
+		})
+	}
+}
 
 func TestParseOptionalAssetGroupTagIds(t *testing.T) {
 	t.Parallel()
