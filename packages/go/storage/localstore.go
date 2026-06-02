@@ -100,7 +100,7 @@ func syncDir(root *os.Root, dir string) error {
 // If failIfExists is true, publish uses link+unlink and returns an error satisfying
 // errors.Is(err, fs.ErrExist) on collision. Otherwise, publish uses rename and silently
 // replaces any existing file at name. The temp file is removed on every failure path.
-// However, failed or crash-lost temp cleanup may leak .temp-* which can be picked up by
+// However, failed or crash-lost temp cleanup may leak .tmp-* which can be picked up by
 // a sweeper.
 func (s *LocalStore) writeAtomic(ctx context.Context, name string, src io.Reader, failIfExists bool) error {
 	var (
@@ -269,7 +269,10 @@ func (s *LocalStore) Delete(ctx context.Context, name string) error {
 	if stat.IsDir() {
 		return fmt.Errorf("delete %q: %w", name, ErrIsDirectory)
 	}
-	return s.root.Remove(name)
+	if err := s.root.Remove(name); err != nil {
+		return err
+	}
+	return syncDir(s.root, path.Dir(name))
 }
 
 func (s *LocalStore) List(ctx context.Context, name string, options ListOptions) ([]FileInfo, error) {
@@ -375,6 +378,22 @@ func (s *LocalStore) Copy(ctx context.Context, srcName, dstName string, options 
 	return s.writeAtomic(ctx, dstName, src, options.FailIfExists)
 }
 
+func (s *LocalStore) moveSyncDir(srcDir, dstDir string) error {
+	// Starting with destDir because we are ensuring the final location is durable.
+	if err := syncDir(s.root, dstDir); err != nil {
+		return err
+	}
+
+	// Only have to sync once if the move was within the same directory.
+	if srcDir != dstDir {
+		if err := syncDir(s.root, srcDir); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // Move is able to move a file from srcName to dstName using a two-step Link+Remove. A crash between link
 // and unlink leaves both names present.
 func (s *LocalStore) Move(ctx context.Context, srcName, dstName string, options WriteOptions) error {
@@ -389,9 +408,10 @@ func (s *LocalStore) Move(ctx context.Context, srcName, dstName string, options 
 		return fmt.Errorf("move %q: %w", srcName, ErrIsDirectory)
 	}
 
-	dir := path.Dir(dstName)
-	if dir != "." {
-		if err := s.root.MkdirAll(dir, 0o750); err != nil {
+	srcDir := path.Dir(srcName)
+	dstDir := path.Dir(dstName)
+	if dstDir != "." {
+		if err := s.root.MkdirAll(dstDir, 0o750); err != nil {
 			return err
 		}
 	}
@@ -399,7 +419,24 @@ func (s *LocalStore) Move(ctx context.Context, srcName, dstName string, options 
 		if err := s.root.Link(srcName, dstName); err != nil {
 			return err
 		}
-		return s.root.Remove(srcName)
+
+		// Ensure the destination is durable before removing the source.
+		if err := syncDir(s.root, dstDir); err != nil {
+			return err
+		}
+
+		if err := s.root.Remove(srcName); err != nil {
+			return err
+		}
+
+		// Ensure the source directory is durable after the remove.
+		if err := syncDir(s.root, srcDir); err != nil {
+			return err
+		}
+		return nil
 	}
-	return s.root.Rename(srcName, dstName)
+	if err := s.root.Rename(srcName, dstName); err != nil {
+		return err
+	}
+	return s.moveSyncDir(srcDir, dstDir)
 }
