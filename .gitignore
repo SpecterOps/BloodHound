@@ -463,3 +463,7 @@ go.work*
 allure-results
 allure-report
 go-test-results.json
+
+# Playwright generated
+cmd/ui/playwright
+

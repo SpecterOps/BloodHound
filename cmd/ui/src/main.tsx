@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -60,13 +60,21 @@ const main = async () => {
     const root = createRoot(rootContainer!);
 
     if (import.meta.env.DEV && location.pathname.startsWith('/ui/')) {
-        const { worker } = await import('./mocks/browser');
-        await worker.start({
-            serviceWorker: {
-                url: '/ui/mockServiceWorker.js',
-            },
-            onUnhandledRequest: 'bypass',
-        });
+        try {
+            const { worker } = await import('./mocks/browser');
+            await worker.start({
+                serviceWorker: {
+                    url: '/ui/mockServiceWorker.js',
+                },
+                onUnhandledRequest: 'bypass',
+            });
+        } catch (err) {
+            // Service worker registration can fail in environments that disable workers (e.g.
+            // Playwright runs with `serviceWorkers: 'block'`, some incognito profiles). MSW is
+            // dev-only and currently registers no handlers, so swallow the failure and continue
+            // rendering rather than leaving the app blank.
+            console.warn('[MSW] worker.start() failed; continuing without mocks', err);
+        }
     }
 
     root.render(
