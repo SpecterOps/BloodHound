@@ -246,6 +246,7 @@ type Configuration struct {
 	EnableUserAnalytics             bool                      `json:"enable_user_analytics"`
 	ForceDownloadEmbeddedCollectors bool                      `json:"force_download_embedded_collectors"`
 	EnableAuditLogStdout            bool                      `json:"enable_audit_log_stdout"`
+	EmbeddedExtensionsBasePath      string                    `json:"embedded_extensions_base_path"`
 }
 
 func (s Configuration) TempDirectory() string {
