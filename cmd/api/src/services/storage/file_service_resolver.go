@@ -33,13 +33,15 @@ type FileServiceResolver interface {
 	Resolve(name storage.FileServiceName) (storage.FileService, error)
 }
 
+type FileServiceMap map[storage.FileServiceName]storage.FileService
+
 type fileServiceResolver struct {
-	services map[storage.FileServiceName]storage.FileService
+	services FileServiceMap
 }
 
-func NewFileServiceResolver(services map[storage.FileServiceName]storage.FileService) (FileServiceResolver, error) {
+func NewFileServiceResolver(services FileServiceMap) (FileServiceResolver, error) {
 	var (
-		copiedServices = make(map[storage.FileServiceName]storage.FileService, len(services))
+		copiedServices = make(FileServiceMap, len(services))
 	)
 
 	for serviceName, fileService := range services {
@@ -78,9 +80,9 @@ func (s *fileServiceResolver) Resolve(name storage.FileServiceName) (storage.Fil
 
 // NewDefaultFileServices creates the file services that should be considered default with
 // BloodHound. Additional FileServices can still be created prior to creating a Resolver.
-func NewDefaultFileServices(cfg config.Configuration) (map[storage.FileServiceName]storage.FileService, error) {
+func NewDefaultFileServices(cfg config.Configuration) (FileServiceMap, error) {
 	var (
-		fileServices = make(map[storage.FileServiceName]storage.FileService)
+		fileServices = make(FileServiceMap)
 		openedStores []*storage.LocalStore
 	)
 
@@ -117,8 +119,7 @@ func NewDefaultFileServices(cfg config.Configuration) (map[storage.FileServiceNa
 	}
 	openedStores = append(openedStores, collectorsStore)
 
-	workService := storage.NewFileService(workStore)
-	fileServices[storage.FileServiceWork] = workService
+	fileServices[storage.FileServiceWork] = storage.NewFileService(workStore)
 
 	ingestService := storage.NewFileService(ingestStore)
 	fileServices[storage.FileServiceIngest] = ingestService
