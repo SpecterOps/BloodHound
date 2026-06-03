@@ -193,10 +193,6 @@ func (s AssetGroupTag) GetExpansionMethod() AssetGroupExpansionMethod {
 	}
 }
 
-func (s AssetGroupTag) IsTierZero() bool {
-	return s.Type == AssetGroupTagTypeTier && s.Position.ValueOrZero() == AssetGroupTierZeroPosition
-}
-
 type SelectorSeeds []SelectorSeed
 
 type SelectorSeed struct {
