@@ -16,8 +16,8 @@
 import { CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import {
-    AppNameProvider,
     AnnouncementProvider,
+    AppNameProvider,
     AppNotifications,
     GenericErrorBoundaryFallback,
     MainNav,
@@ -137,12 +137,12 @@ const App: React.FC = () => {
                 <BrowserRouter future={reactRouterFutureFlags} basename='/ui' history={history}>
                     <AppNameProvider name='BloodHound Community Edition'>
                         <NotificationsProvider>
-                        <AnnouncementProvider>
-                            <DialogProviders>
-                                <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
-                                    <Inner />
-                                </ErrorBoundary>
-                            </DialogProviders>
+                            <AnnouncementProvider>
+                                <DialogProviders>
+                                    <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
+                                        <Inner />
+                                    </ErrorBoundary>
+                                </DialogProviders>
                             </AnnouncementProvider>
                         </NotificationsProvider>
                     </AppNameProvider>
