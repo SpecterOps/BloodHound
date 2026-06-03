@@ -70,7 +70,7 @@ var (
 		[]string{"code", "method", "handler"},
 	)
 	// ApiResponseSize is partitioned by HTTP method and response code. It records
-  	// response size observations and exports count and sum without quantile objectives.
+	// response size observations and exports count and sum without quantile objectives.
 	ApiResponseSize = prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
 			Namespace: model.Namespace,
@@ -82,7 +82,7 @@ var (
 	)
 
 	// ApiRequestSize is partitioned by HTTP method and response code. It records
-  	// request size observations and exports count and sum without quantile objectives.
+	// request size observations and exports count and sum without quantile objectives.
 	ApiRequestSize = prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
 			Namespace: model.Namespace,
