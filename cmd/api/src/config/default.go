@@ -69,6 +69,7 @@ func NewDefaultConfiguration() (Configuration, error) {
 			WorkDir:                         "/opt/bhe/work",
 			LogLevel:                        "INFO",
 			CollectorsBasePath:              "/etc/bloodhound/collectors",
+			EmbeddedExtensionsBasePath:      "/etc/bloodhound/extensions",
 			CollectorsBucketURL:             serde.MustParseURL("https://bhe-hound-artifacts.s3.amazonaws.com/"),
 			DatapipeInterval:                60,
 			EnableStartupWaitPeriod:         true,
