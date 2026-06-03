@@ -29,86 +29,116 @@ import (
 
 type CustomNodeKindData interface {
 	CreateCustomNodeKinds(ctx context.Context, customNodeKind model.CustomNodeKinds) (model.CustomNodeKinds, error)
-	GetCustomNodeKinds(ctx context.Context, filters model.Filters) ([]model.CustomNodeKind, error)
+	GetCustomNodeKinds(ctx context.Context) ([]model.CustomNodeKind, error)
 	GetCustomNodeKind(ctx context.Context, kindName string) (model.CustomNodeKind, error)
 	UpdateCustomNodeKind(ctx context.Context, customNodeKind model.CustomNodeKind) (model.CustomNodeKind, error)
 	DeleteCustomNodeKind(ctx context.Context, kindName string) error
 }
 
 func (s *BloodhoundDB) CreateCustomNodeKinds(ctx context.Context, customNodeKinds model.CustomNodeKinds) (model.CustomNodeKinds, error) {
-	var (
-		auditEntry = model.AuditEntry{
-			Action: model.AuditLogActionCreateCustomNodeKind,
-			Model:  &customNodeKinds,
-		}
-	)
+	var auditEntry = model.AuditEntry{
+		Action: model.AuditLogActionCreateCustomNodeKind,
+		Model:  &customNodeKinds,
+	}
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
 
-		for _, kind := range customNodeKinds {
-			if _, err := bhdb.UpsertKind(ctx, kind.KindName); err != nil {
-				return fmt.Errorf("failed to upsert kind %q: %w", kind.KindName, err)
+		// Upsert each kind name into the kind table and capture the assigned ID.
+		// This must happen before the custom_node_kinds insert so kind_id is populated.
+		for i := range customNodeKinds {
+			upsertedKind, err := bhdb.UpsertKind(ctx, customNodeKinds[i].KindName)
+			if err != nil {
+				return fmt.Errorf("failed to upsert kind %q: %w", customNodeKinds[i].KindName, err)
 			}
+
+			customNodeKinds[i].KindId = int16(upsertedKind.ID)
 		}
 
-		err := tx.Create(&customNodeKinds).Error
+		// Insert each custom_node_kinds row individually so we can capture the
+		// returned id and detect the unique constraint violation on kind_id.
+		for i := range customNodeKinds {
+			var newID int32
 
-		if err != nil {
-			if strings.Contains(err.Error(), "duplicate key value violates unique constraint \"custom_node_kinds_kind_name_key\"") {
-				return fmt.Errorf("%w: %v", ErrDuplicateCustomNodeKindName, err)
+			result := tx.Raw(
+				fmt.Sprintf("INSERT INTO %s (config, schema_node_kind_id, kind_id) VALUES (?, ?, ?) RETURNING id", model.CustomNodeKind{}.TableName()),
+				customNodeKinds[i].Config, customNodeKinds[i].SchemaNodeKindId, customNodeKinds[i].KindId,
+			).Scan(&newID)
+
+			if result.Error != nil {
+				if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"custom_node_kinds_kind_id_key\"") {
+					return fmt.Errorf("%w: %v", ErrDuplicateCustomNodeKindName, result.Error)
+				}
+
+				return result.Error
 			}
+
+			customNodeKinds[i].ID = newID
 		}
 
-		return err
+		return nil
 	})
 
 	return customNodeKinds, err
 }
 
-func (s *BloodhoundDB) GetCustomNodeKinds(ctx context.Context, filters model.Filters) ([]model.CustomNodeKind, error) {
+const customNodeKindsSelectQuery = `
+	SELECT cnk.id, k.name AS kind_name, cnk.kind_id, cnk.schema_node_kind_id, cnk.config
+	FROM %s cnk
+	JOIN kind k ON k.id = cnk.kind_id`
+
+func (s *BloodhoundDB) GetCustomNodeKinds(ctx context.Context) ([]model.CustomNodeKind, error) {
 	var customNodeKinds []model.CustomNodeKind
 
-	sqlFilter, err := buildSQLFilter(filters)
-	if err != nil {
-		return nil, err
-	}
-
-	whereClause := ""
-	if sqlFilter.sqlString != "" {
-		whereClause = fmt.Sprintf("WHERE %s", sqlFilter.sqlString)
-	}
-	result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, kind_name, config FROM %s %s;", model.CustomNodeKind{}.TableName(), whereClause)).Scan(&customNodeKinds)
+	result := s.db.WithContext(ctx).Raw(
+		fmt.Sprintf(customNodeKindsSelectQuery+" ORDER BY cnk.id;", model.CustomNodeKind{}.TableName()),
+	).Scan(&customNodeKinds)
 
 	return customNodeKinds, CheckError(result)
 }
 
 func (s *BloodhoundDB) GetCustomNodeKind(ctx context.Context, kindName string) (model.CustomNodeKind, error) {
 	var customNodeKind model.CustomNodeKind
-	if results, err := s.GetCustomNodeKinds(ctx, model.Filters{"kind_name": []model.Filter{{Value: kindName, Operator: model.Equals}}}); err != nil {
-		return customNodeKind, err
-	} else if len(results) == 0 {
-		return customNodeKind, ErrNotFound
-	} else {
-		return results[0], nil
+
+	result := s.db.WithContext(ctx).Raw(
+		fmt.Sprintf(customNodeKindsSelectQuery+" WHERE k.name = ?;", model.CustomNodeKind{}.TableName()),
+		kindName,
+	).Scan(&customNodeKind)
+
+	if result.Error != nil {
+		return customNodeKind, CheckError(result)
 	}
+
+	if result.RowsAffected == 0 {
+		return customNodeKind, ErrNotFound
+	}
+
+	return customNodeKind, nil
 }
 
 func (s *BloodhoundDB) UpdateCustomNodeKind(ctx context.Context, customNodeKind model.CustomNodeKind) (model.CustomNodeKind, error) {
-	var (
-		auditEntry = model.AuditEntry{
-			Action: model.AuditLogActionUpdateCustomNodeKind,
-			Model:  &customNodeKind,
-		}
-	)
+	var auditEntry = model.AuditEntry{
+		Action: model.AuditLogActionUpdateCustomNodeKind,
+		Model:  &customNodeKind,
+	}
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
-		if result := tx.Raw(fmt.Sprintf("UPDATE %s SET schema_node_kind_id = COALESCE(?, schema_node_kind_id), config = ?, updated_at = NOW() WHERE kind_name = ? RETURNING id, kind_name, schema_node_kind_id, config", model.CustomNodeKind{}.TableName()), customNodeKind.SchemaNodeKindId, customNodeKind.Config, customNodeKind.KindName).
-			Scan(&customNodeKind); result.RowsAffected == 0 {
-			return ErrNotFound
-		} else if result.Error != nil {
+
+		result := tx.Raw(
+			fmt.Sprintf(`UPDATE %s cnk
+				SET schema_node_kind_id = COALESCE(?, schema_node_kind_id), config = ?, updated_at = NOW()
+				FROM kind k
+				WHERE k.id = cnk.kind_id AND k.name = ?
+				RETURNING cnk.id, k.name AS kind_name, cnk.kind_id, cnk.schema_node_kind_id, cnk.config`,
+				model.CustomNodeKind{}.TableName()),
+			customNodeKind.SchemaNodeKindId, customNodeKind.Config, customNodeKind.KindName,
+		).Scan(&customNodeKind)
+
+		if result.Error != nil {
 			return CheckError(result)
+		} else if result.RowsAffected == 0 {
+			return ErrNotFound
 		} else if customNodeKind.SchemaNodeKindId != nil {
 			// Update the icon in the schema_node_kinds table to match the new icon, if a schema_node_kind_id exists
 			if _, err := bhdb.UpdateGraphSchemaNodeKindIconById(ctx, *customNodeKind.SchemaNodeKindId, customNodeKind.Config.Icon); err != nil {
@@ -117,7 +147,6 @@ func (s *BloodhoundDB) UpdateCustomNodeKind(ctx context.Context, customNodeKind 
 		}
 
 		return nil
-
 	})
 
 	return customNodeKind, err
@@ -134,8 +163,10 @@ func (s *BloodhoundDB) DeleteCustomNodeKind(ctx context.Context, kindName string
 	)
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		if err := tx.Raw(fmt.Sprintf("DELETE FROM %s WHERE kind_name = ? RETURNING id, config;", model.CustomNodeKind{}.TableName()), kindName).
-			Row().Scan(&customNodeKind.ID, &customNodeKind.Config); errors.Is(err, sql.ErrNoRows) {
+		if err := tx.Raw(
+			fmt.Sprintf("DELETE FROM %s cnk USING kind k WHERE k.id = cnk.kind_id AND k.name = ? RETURNING cnk.id, cnk.config;", model.CustomNodeKind{}.TableName()),
+			kindName,
+		).Row().Scan(&customNodeKind.ID, &customNodeKind.Config); errors.Is(err, sql.ErrNoRows) {
 			return ErrNotFound
 		} else {
 			return err

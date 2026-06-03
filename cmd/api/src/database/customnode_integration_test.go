@@ -189,7 +189,7 @@ func TestGetCustomNodeKinds(t *testing.T) {
 			testSuite := testCase.setup()
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
-			kinds, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context, nil)
+			kinds, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context)
 			if testCase.wantErr != nil {
 				assert.EqualError(t, err, testCase.wantErr.Error())
 			} else {

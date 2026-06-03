@@ -511,7 +511,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				require.NoError(t, err)
 				assert.True(t, updated)
 
-				icons, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context, nil)
+				icons, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context)
 				require.NoError(t, err)
 				var preserved *model.CustomNodeKind
 				for _, icon := range icons {
@@ -592,7 +592,7 @@ func assertNodeKinds(t *testing.T, testSuite IntegrationTestSuite, extensionId i
 	}
 
 	// Custom icon assertions
-	icons, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context, nil)
+	icons, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context)
 	require.NoError(t, err)
 	iconMap := make(map[string]model.CustomNodeKind, len(icons))
 	for _, icon := range icons {

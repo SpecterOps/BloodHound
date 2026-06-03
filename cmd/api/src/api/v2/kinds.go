@@ -76,7 +76,7 @@ func (s Resources) ListKinds(response http.ResponseWriter, request *http.Request
 				}
 
 				// Schemaless customnode kinds
-				if customNodeKinds, err := s.DB.GetCustomNodeKinds(ctx, nil); err != nil {
+				if customNodeKinds, err := s.DB.GetCustomNodeKinds(ctx); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				} else {

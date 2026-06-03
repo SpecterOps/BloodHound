@@ -1346,7 +1346,7 @@ func (s *BloodhoundDB) GetPrimaryDisplayKinds(ctx context.Context) (graphschema.
 		},
 	}}, model.Sort{}, 0, 0); err != nil {
 		return nil, err
-	} else if customNodeKinds, err := s.GetCustomNodeKinds(ctx, nil); err != nil {
+	} else if customNodeKinds, err := s.GetCustomNodeKinds(ctx); err != nil {
 		return nil, err
 	} else {
 		var customNames []string
