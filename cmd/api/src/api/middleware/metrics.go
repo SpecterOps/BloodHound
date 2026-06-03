@@ -69,18 +69,28 @@ var (
 		},
 		[]string{"code", "method", "handler"},
 	)
-
-	// ApiResponseSize is a zero-dimensional ObserverVec. If ever extended,
-	// follow the same "handler"-label rules rather than adding a path label.
-	ApiResponseSize = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
+	// ApiResponseSize is partitioned by HTTP method and response code. It records
+	// response size observations and exports count and sum without quantile objectives.
+	ApiResponseSize = prometheus.NewSummaryVec(
+		prometheus.SummaryOpts{
 			Namespace: model.Namespace,
 			Subsystem: "api",
 			Name:      "response_size_bytes",
-			Help:      "A histogram of response sizes for requests.",
-			Buckets:   []float64{200, 500, 900, 1500},
+			Help:      "Tracks the size of HTTP response.",
 		},
-		[]string{},
+		[]string{"method", "code"},
+	)
+
+	// ApiRequestSize is partitioned by HTTP method and response code. It records
+	// request size observations and exports count and sum without quantile objectives.
+	ApiRequestSize = prometheus.NewSummaryVec(
+		prometheus.SummaryOpts{
+			Namespace: model.Namespace,
+			Subsystem: "api",
+			Name:      "request_size_bytes",
+			Help:      "Tracks the size of HTTP requests.",
+		},
+		[]string{"method", "code"},
 	)
 )
 
@@ -94,6 +104,8 @@ func RegisterApiMiddlewareMetrics(registry prometheus.Registerer) error {
 	} else if err = registry.Register(ApiRequestDuration); err != nil {
 		return err
 	} else if err = registry.Register(ApiResponseSize); err != nil {
+		return err
+	} else if err = registry.Register(ApiRequestSize); err != nil {
 		return err
 	}
 	return nil
