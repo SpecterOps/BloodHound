@@ -16,7 +16,7 @@
 
 export type Theme = 'light' | 'dark';
 
-export const THEMES: readonly Theme[] = ['light', 'dark'] as const;
+export const THEMES: readonly Theme[] = ['light', 'dark'];
 
 // Worker-scoped Playwright option shape consumed by `defineConfig<TestOptions>` callers.
 // The fixture that declares the `theme` option lives in `./axe` so consumers that import

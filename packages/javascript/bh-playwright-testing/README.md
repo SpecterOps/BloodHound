@@ -21,8 +21,8 @@ The package is consumed via subpath imports so each consumer pulls only what it 
 
 | Subpath                                      | Exports                                                                                                       | Purpose                                                                                                                                      |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bh-playwright-testing`                      | `test`, `expect`, `WCAG_TAGS`, `attachAxeReport`, `expectNoAccessibilityViolations`, `AttachAxeReportOptions` | Default export — the axe-core fixture and reporting helpers. Convenience re-export of `./axe`.                                               |
-| `bh-playwright-testing/axe`                  | same as above                                                                                                 | Same as the default export. Use this path when you want to be explicit.                                                                      |
+| `bh-playwright-testing`                      | `test`, `expect`, `WCAG_TAGS`, `attachAxeReport`, `expectNoAccessibilityViolations`, `AttachAxeReportOptions` | Package root entry — the axe-core fixture and reporting helpers, exposed as named exports (no default export). Convenience re-export of `./axe`. |
+| `bh-playwright-testing/axe`                  | same as above                                                                                                 | Same named exports as the package root entry. Use this path when you want to be explicit.                                                    |
 | `bh-playwright-testing/themes`               | `Theme`, `THEMES`, `TestOptions`, `authStorageStateFor`                                                       | Type-only and constant helpers for the per-theme storage-state convention used by `loginAndSnapshotThemes` and Playwright configs.           |
 | `bh-playwright-testing/auth`                 | `loginAndSnapshotThemes`, `LoginAndSnapshotThemesOptions`                                                     | One-time login helper that snapshots `storageState` for both light and dark themes from a single session.                                    |
 | `bh-playwright-testing/stubs/graph-has-data` | `installGraphHasDataStub`                                                                                     | Stubs `POST /api/v2/graphs/cypher` so the `useGraphHasData` probe resolves to "true" and the "No Data Available" upload dialog stays closed. |
@@ -57,7 +57,7 @@ Without `page`, behavior is unchanged (textual attachments only).
 
 ### `themes`
 
-Type-only and constant helpers. `Theme = 'light' | 'dark'`, `THEMES` is the `readonly` tuple `['light', 'dark']`, and `TestOptions` is the worker-scoped option shape consumed at `defineConfig<TestOptions>` time.
+Type-only and constant helpers. `Theme = 'light' | 'dark'`, `THEMES: readonly Theme[]` is `['light', 'dark']`, and `TestOptions` is the worker-scoped option shape consumed at `defineConfig<TestOptions>` time.
 
 `authStorageStateFor(theme)` returns the canonical path Playwright projects should pass to `use.storageState` — `./playwright/.auth/user-<theme>.json` relative to the consumer's Playwright project root. The `auth` module writes to the same paths via the caller-supplied `storageStatePathFor` callback, so the two modules agree on the layout without one depending on the other.
 
