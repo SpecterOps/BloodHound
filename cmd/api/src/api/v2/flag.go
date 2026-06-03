@@ -71,7 +71,7 @@ func (s Resources) ToggleFlag(response http.ResponseWriter, request *http.Reques
 					userId = user.ID.String()
 				}
 
-				if err := s.DB.RequestAnalysis(request.Context(), userId, model.AnalysisEntrypointFull); err != nil {
+				if err := s.DB.RequestAnalysis(request.Context(), userId, model.AnalysisModeFull); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				}

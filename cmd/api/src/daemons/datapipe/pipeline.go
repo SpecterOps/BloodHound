@@ -79,7 +79,7 @@ func (s *BHCEPipeline) DeleteData(ctx context.Context) error {
 	}
 	defer func() {
 		_ = s.db.DeleteAnalysisRequest(ctx)
-		_ = s.db.RequestAnalysis(ctx, "datapipe", model.AnalysisEntrypointFull)
+		_ = s.db.RequestAnalysis(ctx, "datapipe", model.AnalysisModeFull)
 	}()
 	defer measure.LogAndMeasure(slog.LevelInfo, "Purge Graph Data")()
 

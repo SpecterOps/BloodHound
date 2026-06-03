@@ -34,11 +34,11 @@ const (
 	AnalysisRequestDeletion AnalysisRequestType = "deletion"
 )
 
-type AnalysisEntrypoint string
+type AnalysisMode string
 
 const (
-	AnalysisEntrypointFull    AnalysisEntrypoint = "full"
-	AnalysisEntrypointTagging AnalysisEntrypoint = "tagging"
+	AnalysisModeFull           AnalysisMode = "full"
+	AnalysisModeTaggingOnwards AnalysisMode = "tagging"
 )
 
 type AnalysisSteps struct {
@@ -199,9 +199,9 @@ func (s *AnalysisSteps) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func AnalysisStepsFromEntrypoint(entrypoint AnalysisEntrypoint) AnalysisSteps {
-	switch entrypoint {
-	case AnalysisEntrypointTagging:
+func AnalysisStepsFromMode(mode AnalysisMode) AnalysisSteps {
+	switch mode {
+	case AnalysisModeTaggingOnwards:
 		return AnalysisStepTaggingToCompletion
 	default:
 		return FullAnalysisSteps()
@@ -216,8 +216,8 @@ func FullAnalysisSteps() AnalysisSteps {
 	return AnalysisStepAll
 }
 
-func (s AnalysisEntrypoint) AnalysisSteps() AnalysisSteps {
-	return AnalysisStepsFromEntrypoint(s)
+func (s AnalysisMode) AnalysisSteps() AnalysisSteps {
+	return AnalysisStepsFromMode(s)
 }
 
 type AnalysisRequest struct {

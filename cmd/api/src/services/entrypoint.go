@@ -163,7 +163,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		} else if err := prometheus.DefaultRegisterer.Register(promRegistry); err != nil {
 			return nil, fmt.Errorf("failed to expose prometheus registry: %w", err)
 			// Trigger analysis on first start
-		} else if err := connections.RDMS.RequestAnalysis(ctx, "init", model.AnalysisEntrypointFull); err != nil {
+		} else if err := connections.RDMS.RequestAnalysis(ctx, "init", model.AnalysisModeFull); err != nil {
 			slog.WarnContext(ctx, "Failed to request init analysis", attr.Error(err))
 		}
 

@@ -34,7 +34,7 @@ type AnalysisRequestData interface {
 	GetAnalysisRequest(ctx context.Context) (model.AnalysisRequest, error)
 	HasAnalysisRequest(ctx context.Context) bool
 	HasCollectedGraphDataDeletionRequest(ctx context.Context) (model.AnalysisRequest, bool)
-	RequestAnalysis(ctx context.Context, requester string, analysisEntrypoint model.AnalysisEntrypoint) error
+	RequestAnalysis(ctx context.Context, requester string, analysisMode model.AnalysisMode) error
 	RequestCollectedGraphDataDeletion(ctx context.Context, request model.AnalysisRequest) error
 }
 
@@ -139,10 +139,10 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 }
 
 // RequestAnalysis will request an analysis be executed, as long as there isn't an existing analysis request or collected graph data deletion request, then it no-ops
-func (s *BloodhoundDB) RequestAnalysis(ctx context.Context, requestedBy string, analysisEntrypoint model.AnalysisEntrypoint) error {
-	var steps = analysisEntrypoint.AnalysisSteps()
+func (s *BloodhoundDB) RequestAnalysis(ctx context.Context, requestedBy string, analysisMode model.AnalysisMode) error {
+	var steps = analysisMode.AnalysisSteps()
 
-	if !appcfg.GetVariableAnalysisEntrypointEnabled(ctx, s) {
+	if !appcfg.GetVariableAnalysisModeEnabled(ctx, s) {
 		steps = model.FullAnalysisSteps()
 	}
 

@@ -163,7 +163,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		tieringEnabled  = appcfg.GetTieringEnabled(ctx, db)
 	)
 
-	if !appcfg.GetVariableAnalysisEntrypointEnabled(ctx, db) {
+	if !appcfg.GetVariableAnalysisModeEnabled(ctx, db) {
 		analysisSteps = model.FullAnalysisSteps()
 	}
 

@@ -30,24 +30,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setVariableAnalysisEntrypointFlag(t *testing.T, ctx context.Context, dbInst database.Database, enabled bool) {
+func setVariableAnalysisModeFlag(t *testing.T, ctx context.Context, dbInst database.Database, enabled bool) {
 	t.Helper()
 
-	var variableAnalysisEntrypointFlag appcfg.FeatureFlag
-	if existingFlag, err := dbInst.GetFlagByKey(ctx, appcfg.FeatureVariableAnalysisEntrypoint); errors.Is(err, database.ErrNotFound) {
-		variableAnalysisEntrypointFlag = appcfg.FeatureFlag{
-			Key:           appcfg.FeatureVariableAnalysisEntrypoint,
+	var variableAnalysisModeFlag appcfg.FeatureFlag
+	if existingFlag, err := dbInst.GetFlagByKey(ctx, appcfg.FeatureVariableAnalysisMode); errors.Is(err, database.ErrNotFound) {
+		variableAnalysisModeFlag = appcfg.FeatureFlag{
+			Key:           appcfg.FeatureVariableAnalysisMode,
 			Name:          "Variable Analysis Entrypoint",
 			Description:   "Enables analysis requests to run a subset of the analysis pipeline instead of always running the full pipeline.",
 			UserUpdatable: false,
 		}
 	} else {
 		require.NoError(t, err)
-		variableAnalysisEntrypointFlag = existingFlag
+		variableAnalysisModeFlag = existingFlag
 	}
 
-	variableAnalysisEntrypointFlag.Enabled = enabled
-	require.NoError(t, dbInst.SetFlag(ctx, variableAnalysisEntrypointFlag))
+	variableAnalysisModeFlag.Enabled = enabled
+	require.NoError(t, dbInst.SetFlag(ctx, variableAnalysisModeFlag))
 }
 
 func TestAnalysisRequest(t *testing.T) {
@@ -56,7 +56,7 @@ func TestAnalysisRequest(t *testing.T) {
 		dbInst  = integration.SetupDB(t)
 	)
 
-	err := dbInst.RequestAnalysis(testCtx, "test", model.AnalysisEntrypointFull)
+	err := dbInst.RequestAnalysis(testCtx, "test", model.AnalysisModeFull)
 	require.Nil(t, err)
 
 	analysisRequest, err := dbInst.GetAnalysisRequest(testCtx)
@@ -78,7 +78,7 @@ func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
 		dbInst  = integration.SetupDB(t)
 	)
 
-	setVariableAnalysisEntrypointFlag(t, testCtx, dbInst, true)
+	setVariableAnalysisModeFlag(t, testCtx, dbInst, true)
 
 	resetState := func(t *testing.T) {
 		t.Helper()
@@ -88,8 +88,8 @@ func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
 	t.Run("subsequent request widens queued analysis_step bits", func(t *testing.T) {
 		resetState(t)
 
-		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor", model.AnalysisEntrypointTagging))
-		require.NoError(t, dbInst.RequestAnalysis(testCtx, "admin", model.AnalysisEntrypointFull))
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor", model.AnalysisModeTaggingOnwards))
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "admin", model.AnalysisModeFull))
 
 		queued, err := dbInst.GetAnalysisRequest(testCtx)
 		require.NoError(t, err)
@@ -100,8 +100,8 @@ func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
 	t.Run("subsequent narrower request does not downgrade queued bits", func(t *testing.T) {
 		resetState(t)
 
-		require.NoError(t, dbInst.RequestAnalysis(testCtx, "admin", model.AnalysisEntrypointFull))
-		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor", model.AnalysisEntrypointTagging))
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "admin", model.AnalysisModeFull))
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor", model.AnalysisModeTaggingOnwards))
 
 		queued, err := dbInst.GetAnalysisRequest(testCtx)
 		require.NoError(t, err)
@@ -112,11 +112,11 @@ func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
 	t.Run("identical bits are a no-op and leave the row untouched", func(t *testing.T) {
 		resetState(t)
 
-		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor-1", model.AnalysisEntrypointTagging))
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor-1", model.AnalysisModeTaggingOnwards))
 		original, err := dbInst.GetAnalysisRequest(testCtx)
 		require.NoError(t, err)
 
-		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor-2", model.AnalysisEntrypointTagging))
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor-2", model.AnalysisModeTaggingOnwards))
 		queued, err := dbInst.GetAnalysisRequest(testCtx)
 		require.NoError(t, err)
 
@@ -127,15 +127,15 @@ func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
 
 }
 
-func TestAnalysisRequest_DisabledVariableAnalysisEntrypointQueuesFullAnalysis(t *testing.T) {
+func TestAnalysisRequest_DisabledVariableAnalysisModeQueuesFullAnalysis(t *testing.T) {
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
 	)
 
-	setVariableAnalysisEntrypointFlag(t, testCtx, dbInst, false)
+	setVariableAnalysisModeFlag(t, testCtx, dbInst, false)
 
-	require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor", model.AnalysisEntrypointTagging))
+	require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor", model.AnalysisModeTaggingOnwards))
 
 	queued, err := dbInst.GetAnalysisRequest(testCtx)
 	require.NoError(t, err)

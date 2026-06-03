@@ -37,34 +37,34 @@ var (
 	_ fmt.Stringer     = model.AnalysisSteps{}
 )
 
-func TestAnalysisStepsFromEntrypoint(t *testing.T) {
+func TestAnalysisStepsFromMode(t *testing.T) {
 	t.Parallel()
 
 	for _, testCase := range []struct {
 		name          string
-		entrypoint    model.AnalysisEntrypoint
+		mode          model.AnalysisMode
 		expectedSteps model.AnalysisSteps
 	}{
 		{
-			name:          "full entrypoint maps to all steps",
-			entrypoint:    model.AnalysisEntrypointFull,
+			name:          "full mode maps to all steps",
+			mode:          model.AnalysisModeFull,
 			expectedSteps: model.AnalysisStepAll,
 		},
 		{
-			name:          "tagging entrypoint maps to tagging through completion",
-			entrypoint:    model.AnalysisEntrypointTagging,
+			name:          "tagging mode maps to tagging through completion",
+			mode:          model.AnalysisModeTaggingOnwards,
 			expectedSteps: model.AnalysisStepTaggingToCompletion,
 		},
 		{
-			name:          "unknown entrypoint defaults to full analysis",
-			entrypoint:    model.AnalysisEntrypoint("unknown"),
+			name:          "unknown mode defaults to full analysis",
+			mode:          model.AnalysisMode("unknown"),
 			expectedSteps: model.AnalysisStepAll,
 		},
 	} {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			analysisSteps := model.AnalysisStepsFromEntrypoint(testCase.entrypoint)
+			analysisSteps := model.AnalysisStepsFromMode(testCase.mode)
 
 			require.Equal(t, testCase.expectedSteps, analysisSteps)
 		})
@@ -227,14 +227,14 @@ func TestAnalysisStepsMerge(t *testing.T) {
 	}{
 		{
 			name:          "full wins when requested before tagging",
-			firstSteps:    model.AnalysisStepsFromEntrypoint(model.AnalysisEntrypointFull),
-			secondSteps:   model.AnalysisStepsFromEntrypoint(model.AnalysisEntrypointTagging),
+			firstSteps:    model.AnalysisStepsFromMode(model.AnalysisModeFull),
+			secondSteps:   model.AnalysisStepsFromMode(model.AnalysisModeTaggingOnwards),
 			expectedSteps: model.AnalysisStepAll,
 		},
 		{
 			name:          "full wins when requested after tagging",
-			firstSteps:    model.AnalysisStepsFromEntrypoint(model.AnalysisEntrypointTagging),
-			secondSteps:   model.AnalysisStepsFromEntrypoint(model.AnalysisEntrypointFull),
+			firstSteps:    model.AnalysisStepsFromMode(model.AnalysisModeTaggingOnwards),
+			secondSteps:   model.AnalysisStepsFromMode(model.AnalysisModeFull),
 			expectedSteps: model.AnalysisStepAll,
 		},
 	} {

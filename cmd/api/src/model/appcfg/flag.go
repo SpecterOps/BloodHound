@@ -50,7 +50,7 @@ const (
 	FeatureFindingsTable                = "findings_table"
 	FeatureCollectorSupportBundle       = "collector_support_bundle"
 	FeatureAlerts                       = "alerts"
-	FeatureVariableAnalysisEntrypoint   = "variable_analysis_entrypoint"
+	FeatureVariableAnalysisMode         = "variable_analysis_mode"
 )
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be
@@ -132,10 +132,10 @@ func GetAlertsEnabled(ctx context.Context, service GetFlagByKeyer) bool {
 	return GetFlagEnabled(ctx, service, FeatureAlerts)
 }
 
-func GetVariableAnalysisEntrypointEnabled(ctx context.Context, service GetFlagByKeyer) bool {
-	if variableAnalysisEntrypointFlag, err := service.GetFlagByKey(ctx, FeatureVariableAnalysisEntrypoint); err != nil {
+func GetVariableAnalysisModeEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+	if variableAnalysisModeFlag, err := service.GetFlagByKey(ctx, FeatureVariableAnalysisMode); err != nil {
 		return false
 	} else {
-		return variableAnalysisEntrypointFlag.Enabled
+		return variableAnalysisModeFlag.Enabled
 	}
 }
