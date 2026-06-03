@@ -16,10 +16,10 @@
 
 -- +goose Up
 
--- Add the zone variant of the display_name to schema_findings.
+-- Add the PZ variant of the display_name to schema_findings.
 -- For built-in findings this is populated from tx-title.md by schemagen.
-ALTER TABLE schema_findings ADD COLUMN IF NOT EXISTS zone_display_name TEXT;
+ALTER TABLE schema_findings ADD COLUMN IF NOT EXISTS pz_display_name TEXT;
 
 -- +goose Down
 
-ALTER TABLE schema_findings DROP COLUMN IF EXISTS zone_display_name;
+ALTER TABLE schema_findings DROP COLUMN IF EXISTS pz_display_name;

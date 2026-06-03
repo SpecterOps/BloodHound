@@ -236,8 +236,8 @@ type SchemaFinding struct {
 	Name              string
 	// Default UI Title
 	DisplayName string
-	// Zone Variant Display Title
-	ZoneDisplayName null.String
+	// PZ Variant Display Title
+	PZDisplayName null.String
 	CreatedAt       time.Time
 
 	// This is the kind that the finding is associated with based on the kind_id, it is enriched by db getters
@@ -297,7 +297,7 @@ func (s SchemaFinding) IsSortable(column string) bool {
 	switch column {
 	case "name",
 		"display_name",
-		"zone_display_name",
+		"pz_display_name",
 		"type",
 		"id",
 		"created_at":
@@ -311,7 +311,7 @@ func (SchemaFinding) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
 		"name":              {Equals, NotEquals, ApproximatelyEquals},
 		"display_name":      {Equals, NotEquals, ApproximatelyEquals},
-		"zone_display_name": {Equals, NotEquals, ApproximatelyEquals},
+		"pz_display_name": {Equals, NotEquals, ApproximatelyEquals},
 		"id":                {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"created_at":        {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"extension_name":    {Equals, NotEquals, ApproximatelyEquals},
@@ -506,7 +506,7 @@ type RelationshipFindingsInput []RelationshipFindingInput
 type RelationshipFindingInput struct {
 	Name                 string
 	DisplayName          string
-	ZoneDisplayName      string
+	PZDisplayName        string
 	RelationshipKindName string // edge kind
 	EnvironmentKindName  string
 	RemediationInput     RemediationInput

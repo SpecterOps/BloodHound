@@ -85,8 +85,8 @@ func TestCreateFindingWithRemediation(t *testing.T) {
 				assert.NotZero(t, finding.ID)
 				assert.Equal(t, args.name, finding.Name)
 				assert.Equal(t, args.displayName, finding.DisplayName)
-				assert.Equal(t, args.zoneDisplayName != "", finding.ZoneDisplayName.Valid)
-				assert.Equal(t, args.zoneDisplayName, finding.ZoneDisplayName.ValueOrZero())
+				assert.Equal(t, args.zoneDisplayName != "", finding.PZDisplayName.Valid)
+				assert.Equal(t, args.zoneDisplayName, finding.PZDisplayName.ValueOrZero())
 				assert.Equal(t, model.SchemaFindingTypeRelationship, finding.Type) // All findings will be relationship type for now, update once list types are available
 			},
 		},
@@ -144,7 +144,7 @@ func TestCreateFindingWithRemediation(t *testing.T) {
 			input := model.RelationshipFindingInput{
 				Name:                 testCase.args.name,
 				DisplayName:          testCase.args.displayName,
-				ZoneDisplayName:      testCase.args.zoneDisplayName,
+				PZDisplayName:        testCase.args.zoneDisplayName,
 				RelationshipKindName: testCase.args.relationshipKindName,
 				EnvironmentKindName:  testCase.args.environmentKindName,
 				RemediationInput:     testCase.args.remediation,
@@ -160,8 +160,8 @@ func TestUpdateFindingWithRemediation(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
-		newDisplayName       string
-		newZoneDisplayName   string
+		newDisplayName     string
+		newZoneDisplayName string
 		relationshipKindName string
 		environmentKindName  string
 		remediation          model.RemediationInput
@@ -219,8 +219,8 @@ func TestUpdateFindingWithRemediation(t *testing.T) {
 				assert.Equal(t, existing.ID, updated.ID)
 				assert.Equal(t, existing.Name, updated.Name)
 				assert.Equal(t, args.newDisplayName, updated.DisplayName)
-				assert.Equal(t, args.newZoneDisplayName != "", updated.ZoneDisplayName.Valid)
-				assert.Equal(t, args.newZoneDisplayName, updated.ZoneDisplayName.ValueOrZero())
+				assert.Equal(t, args.newZoneDisplayName != "", updated.PZDisplayName.Valid)
+				assert.Equal(t, args.newZoneDisplayName, updated.PZDisplayName.ValueOrZero())
 				assert.Equal(t, model.SchemaFindingTypeRelationship, updated.Type)
 
 				remediation, err := db.GetRemediationByFindingId(context.Background(), updated.ID)
@@ -331,7 +331,7 @@ func TestUpdateFindingWithRemediation(t *testing.T) {
 			input := model.RelationshipFindingInput{
 				Name:                 finding.Name,
 				DisplayName:          testCase.args.newDisplayName,
-				ZoneDisplayName:      testCase.args.newZoneDisplayName,
+				PZDisplayName:        testCase.args.newZoneDisplayName,
 				RelationshipKindName: testCase.args.relationshipKindName,
 				EnvironmentKindName:  testCase.args.environmentKindName,
 				RemediationInput:     testCase.args.remediation,
