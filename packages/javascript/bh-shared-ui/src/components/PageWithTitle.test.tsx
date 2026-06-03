@@ -20,17 +20,17 @@ import PageWithTitle, { AppNameProvider } from './PageWithTitle';
 
 describe('PageWithTitle', () => {
     it('sets the document title using the default app name', async () => {
-        render(<PageWithTitle title='My Page' />);
-        await waitFor(() => expect(document.title).toBe('My Page | BloodHound Enterprise'));
+        render(<PageWithTitle title='Bloodhound Page' />);
+        await waitFor(() => expect(document.title).toBe('Bloodhound Page | BloodHound Enterprise'));
     });
 
     it('sets the document title using the app name from AppNameProvider', async () => {
         render(
             <AppNameProvider name='BloodHound Community Edition'>
-                <PageWithTitle title='My Page' />
+                <PageWithTitle title='Bloodhound Page' />
             </AppNameProvider>
         );
-        await waitFor(() => expect(document.title).toBe('My Page | BloodHound Community Edition'));
+        await waitFor(() => expect(document.title).toBe('Bloodhound Page | BloodHound Community Edition'));
     });
 
     it('does not set the document title when no title prop is provided', () => {
@@ -40,7 +40,7 @@ describe('PageWithTitle', () => {
     });
 
     it('renders the title as a visible h1 heading', () => {
-        render(<PageWithTitle title='My Page' />);
-        expect(screen.getByRole('heading', { level: 1, name: 'My Page' })).toBeInTheDocument();
+        render(<PageWithTitle title='Bloodhound Page' />);
+        expect(screen.getByRole('heading', { level: 1, name: 'Bloodhound Page' })).toBeInTheDocument();
     });
 });
