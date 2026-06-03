@@ -153,84 +153,63 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 		)
 
 		for _, ct := range s.certTemplates {
-			if certTemplateEnrollers, err := fetchFirstDegreeNodes(tx, ct, ad.Enroll, ad.GenericAll, ad.AllExtendedRights); err != nil {
+			// Single consolidated query fetches all first-degree principals partitioned by relationship kind,
+			// replacing 6 separate fetchFirstDegreeNodes calls per cert template.
+			nodesByRelKind, err := fetchFirstDegreeNodesByRelKind(tx, ct,
+				ad.Enroll, ad.GenericAll, ad.AllExtendedRights,
+				ad.Owns, ad.WriteDACL, ad.WriteOwner,
+				ad.GenericWrite, ad.WritePKINameFlag, ad.WritePKIEnrollmentFlag,
+			)
+			if err != nil {
 				slog.ErrorContext(
 					ctx,
-					"Error fetching enrollers for cert template",
+					"Error fetching first degree nodes for cert template",
+					slog.Uint64("cert_template", uint64(ct.ID)),
+					attr.Error(err),
+				)
+				continue
+			}
+
+			// certTemplateEnrollers = Enroll ∪ GenericAll ∪ AllExtendedRights
+			certTemplateEnrollers := graph.MergeNodeSets(
+				nodesByRelKind[ad.Enroll],
+				nodesByRelKind[ad.GenericAll],
+				nodesByRelKind[ad.AllExtendedRights],
+			)
+			s.certTemplateEnrollers[ct.ID] = certTemplateEnrollers.Slice()
+
+			// Check if Auth. Users or Everyone has enroll
+			if authUsersOrEveryoneHasEnroll, err := containsAuthUsersOrEveryone(tx, specialGroups, certTemplateEnrollers.Slice()); err != nil {
+				slog.ErrorContext(
+					ctx,
+					"Error fetching if auth. users or everyone has enroll on certtemplate",
 					slog.Uint64("cert_template", uint64(ct.ID)),
 					attr.Error(err),
 				)
 			} else {
-				s.certTemplateEnrollers[ct.ID] = certTemplateEnrollers.Slice()
-
-				// Check if Auth. Users or Everyone has enroll
-				if authUsersOrEveryoneHasEnroll, err := containsAuthUsersOrEveryone(tx, specialGroups, certTemplateEnrollers.Slice()); err != nil {
-					slog.ErrorContext(
-						ctx,
-						"Error fetching if auth. users or everyone has enroll on certtemplate",
-						slog.Uint64("cert_template", uint64(ct.ID)),
-						attr.Error(err),
-					)
-				} else {
-					s.certTemplateHasSpecialEnrollers[ct.ID] = authUsersOrEveryoneHasEnroll
-				}
+				s.certTemplateHasSpecialEnrollers[ct.ID] = authUsersOrEveryoneHasEnroll
 			}
 
-			if certTemplateControllers, err := fetchFirstDegreeNodes(tx, ct, ad.Owns, ad.GenericAll, ad.WriteDACL, ad.WriteOwner); err != nil {
-				slog.ErrorContext(
-					ctx,
-					"Error fetching controllers for cert template",
-					slog.Uint64("cert_template", uint64(ct.ID)),
-					attr.Error(err),
-				)
-			} else {
-				s.certTemplateControllers[ct.ID] = certTemplateControllers.Slice()
-			}
+			// certTemplateControllers = Owns ∪ GenericAll ∪ WriteDACL ∪ WriteOwner
+			certTemplateControllers := graph.MergeNodeSets(
+				nodesByRelKind[ad.Owns],
+				nodesByRelKind[ad.GenericAll],
+				nodesByRelKind[ad.WriteDACL],
+				nodesByRelKind[ad.WriteOwner],
+			)
+			s.certTemplateControllers[ct.ID] = certTemplateControllers.Slice()
 
 			// ESC4-specific principal caches
-			if principals, err := fetchFirstDegreeNodes(tx, ct, ad.GenericWrite); err != nil {
-				slog.ErrorContext(
-					ctx,
-					"Error fetching principals with GenericWrite on cert template",
-					slog.Uint64("cert_template", uint64(ct.ID)),
-					attr.Error(err),
-				)
-			} else {
-				s.certTemplateGenericWriters[ct.ID] = principals.Slice()
-			}
+			s.certTemplateGenericWriters[ct.ID] = nodesByRelKind[ad.GenericWrite].Slice()
 
-			if principals, err := fetchFirstDegreeNodes(tx, ct, ad.Enroll, ad.AllExtendedRights); err != nil {
-				slog.ErrorContext(
-					ctx,
-					"Error fetching principals with Enroll/AllExtendedRights on cert template",
-					slog.Uint64("cert_template", uint64(ct.ID)),
-					attr.Error(err),
-				)
-			} else {
-				s.certTemplateEnrollOrAllExtendedRighters[ct.ID] = principals.Slice()
-			}
+			enrollOrAllExtendedRighters := graph.MergeNodeSets(
+				nodesByRelKind[ad.Enroll],
+				nodesByRelKind[ad.AllExtendedRights],
+			)
+			s.certTemplateEnrollOrAllExtendedRighters[ct.ID] = enrollOrAllExtendedRighters.Slice()
 
-			if principals, err := fetchFirstDegreeNodes(tx, ct, ad.WritePKINameFlag); err != nil {
-				slog.ErrorContext(
-					ctx,
-					"Error fetching principals with WritePKINameFlag on cert template",
-					slog.Uint64("cert_template", uint64(ct.ID)),
-					attr.Error(err),
-				)
-			} else {
-				s.certTemplateWritePKINameFlaggers[ct.ID] = principals.Slice()
-			}
-
-			if principals, err := fetchFirstDegreeNodes(tx, ct, ad.WritePKIEnrollmentFlag); err != nil {
-				slog.ErrorContext(
-					ctx,
-					"Error fetching principals with WritePKIEnrollmentFlag on cert template",
-					slog.Uint64("cert_template", uint64(ct.ID)),
-					attr.Error(err),
-				)
-			} else {
-				s.certTemplateWritePKIEnrollmentFlaggers[ct.ID] = principals.Slice()
-			}
+			s.certTemplateWritePKINameFlaggers[ct.ID] = nodesByRelKind[ad.WritePKINameFlag].Slice()
+			s.certTemplateWritePKIEnrollmentFlaggers[ct.ID] = nodesByRelKind[ad.WritePKIEnrollmentFlag].Slice()
 		}
 
 		certTemplateMeasure()

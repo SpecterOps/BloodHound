@@ -1867,6 +1867,30 @@ func fetchFirstDegreeNodes(tx graph.Transaction, targetNode *graph.Node, relKind
 	))
 }
 
+// fetchFirstDegreeNodesByRelKind fetches all entities connected to targetNode in a single database query,
+// then partitions the results by relationship kind. This avoids issuing separate queries per edge kind.
+func fetchFirstDegreeNodesByRelKind(tx graph.Transaction, targetNode *graph.Node, relKinds ...graph.Kind) (map[graph.Kind]graph.NodeSet, error) {
+	nodesByKind := make(map[graph.Kind]graph.NodeSet, len(relKinds))
+	for _, kind := range relKinds {
+		nodesByKind[kind] = graph.NewNodeSet()
+	}
+
+	err := ops.ForEachStartNode(tx.Relationships().Filter(
+		query.And(
+			query.Kind(query.Start(), ad.Entity),
+			query.KindIn(query.Relationship(), relKinds...),
+			query.Equals(query.EndID(), targetNode.ID),
+		),
+	), func(relationship *graph.Relationship, node *graph.Node) error {
+		if nodeSet, ok := nodesByKind[relationship.Kind]; ok {
+			nodeSet.Add(node)
+		}
+		return nil
+	})
+
+	return nodesByKind, err
+}
+
 func FetchAttackersForEscalations9and10(tx graph.Transaction, victimBitmap cardinality.Duplex[uint64], scenarioB bool) ([]graph.ID, error) {
 	if attackers, err := ops.FetchStartNodeIDs(tx.Relationships().Filterf(func() graph.Criteria {
 		criteria := query.And(
