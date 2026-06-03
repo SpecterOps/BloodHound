@@ -44,23 +44,23 @@ func TestNewFileServiceResolver(t *testing.T) {
 
 	type testData struct {
 		name          string
-		buildServices func(t *testing.T, controller *gomock.Controller) map[storage.FileServiceName]storage.FileService
+		buildServices func(t *testing.T, controller *gomock.Controller) api_storage.FileServiceMap
 		expected      expected
 	}
 
 	tests := []testData{
 		{
 			name: "creates resolver with services",
-			buildServices: func(t *testing.T, controller *gomock.Controller) map[storage.FileServiceName]storage.FileService {
-				return map[storage.FileServiceName]storage.FileService{
+			buildServices: func(t *testing.T, controller *gomock.Controller) api_storage.FileServiceMap {
+				return api_storage.FileServiceMap{
 					storage.FileServiceWork: mocks.NewMockFileService(controller),
 				}
 			},
 		},
 		{
 			name: "empty service name returns error",
-			buildServices: func(t *testing.T, controller *gomock.Controller) map[storage.FileServiceName]storage.FileService {
-				return map[storage.FileServiceName]storage.FileService{
+			buildServices: func(t *testing.T, controller *gomock.Controller) api_storage.FileServiceMap {
+				return api_storage.FileServiceMap{
 					"": mocks.NewMockFileService(controller),
 				}
 			},
@@ -70,8 +70,8 @@ func TestNewFileServiceResolver(t *testing.T) {
 		},
 		{
 			name: "nil service returns error",
-			buildServices: func(t *testing.T, controller *gomock.Controller) map[storage.FileServiceName]storage.FileService {
-				return map[storage.FileServiceName]storage.FileService{
+			buildServices: func(t *testing.T, controller *gomock.Controller) api_storage.FileServiceMap {
+				return api_storage.FileServiceMap{
 					storage.FileServiceWork: nil,
 				}
 			},
@@ -121,7 +121,7 @@ func TestFileServiceResolver_Resolve(t *testing.T) {
 
 	controller := gomock.NewController(t)
 	workService := mocks.NewMockFileService(controller)
-	services := map[storage.FileServiceName]storage.FileService{
+	services := api_storage.FileServiceMap{
 		storage.FileServiceWork: workService,
 	}
 
@@ -180,7 +180,7 @@ func TestFileServiceResolver_CopiesServices(t *testing.T) {
 	var (
 		controller  = gomock.NewController(t)
 		workService = mocks.NewMockFileService(controller)
-		services    = map[storage.FileServiceName]storage.FileService{
+		services    = api_storage.FileServiceMap{
 			storage.FileServiceWork: workService,
 		}
 	)
