@@ -22,7 +22,7 @@ import { render, renderHook, RenderHookOptions, RenderHookResult, RenderResult }
 import { HelmetProvider } from 'react-helmet-async';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { BrowserRouter } from 'react-router-dom';
-import { NotificationsProvider } from './providers';
+import { AnnouncementProvider, NotificationsProvider } from './providers';
 import { darkPalette, reactRouterFutureFlags } from './constants';
 import { SnackbarProvider } from 'notistack';
 
@@ -56,10 +56,12 @@ const createProviders = ({
                 <StyledEngineProvider injectFirst>
                     <ThemeProvider theme={theme}>
                         <NotificationsProvider>
-                            <CssBaseline />
-                            <BrowserRouter future={reactRouterFutureFlags}>
-                                <SnackbarProvider>{children}</SnackbarProvider>
-                            </BrowserRouter>
+                            <AnnouncementProvider>
+                                <CssBaseline />
+                                <BrowserRouter future={reactRouterFutureFlags}>
+                                    <SnackbarProvider>{children}</SnackbarProvider>
+                                </BrowserRouter>
+                            </AnnouncementProvider>
                         </NotificationsProvider>
                     </ThemeProvider>
                 </StyledEngineProvider>

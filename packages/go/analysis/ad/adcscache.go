@@ -133,6 +133,13 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 			s.enterpriseCertAuthorities = enterpriseCertAuthorities
 		}
 
+		// Fetch Auth. Users and Everyone groups once for the entire BuildCache transaction
+		// instead of re-fetching per cert template / enterprise CA.
+		specialGroups, err := FetchAuthUsersAndEveryoneGroups(tx)
+		if err != nil {
+			return fmt.Errorf("failed fetching auth users and everyone groups: %w", err)
+		}
+
 		certTemplateMeasure := measure.ContextMeasure(
 			ctx,
 			slog.LevelInfo,
@@ -154,7 +161,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				s.certTemplateEnrollers[ct.ID] = certTemplateEnrollers.Slice()
 
 				// Check if Auth. Users or Everyone has enroll
-				if authUsersOrEveryoneHasEnroll, err := containsAuthUsersOrEveryone(tx, certTemplateEnrollers.Slice()); err != nil {
+				if authUsersOrEveryoneHasEnroll, err := containsAuthUsersOrEveryone(tx, specialGroups, certTemplateEnrollers.Slice()); err != nil {
 					slog.ErrorContext(
 						ctx,
 						"Error fetching if auth. users or everyone has enroll on certtemplate",
@@ -201,7 +208,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				s.enterpriseCAEnrollers[eca.ID] = enterpriseCAEnrollers.Slice()
 
 				// Check if Auth. Users or Everyone has enroll
-				if authUsersOrEveryoneHasEnroll, err := containsAuthUsersOrEveryone(tx, enterpriseCAEnrollers.Slice()); err != nil {
+				if authUsersOrEveryoneHasEnroll, err := containsAuthUsersOrEveryone(tx, specialGroups, enterpriseCAEnrollers.Slice()); err != nil {
 					slog.ErrorContext(
 						ctx,
 						"Error fetching if auth. users or everyone has enroll on enterprise ca",

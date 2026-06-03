@@ -174,7 +174,7 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 		}(workerID)
 	}
 
-	localGroupData.Computers.Each(func(nextComputer uint64) bool {
+	localGroupData.ComputersWithLocalGroups.Each(func(nextComputer uint64) bool {
 		return channels.Submit(ctx, workC, nextComputer)
 	})
 
@@ -367,7 +367,7 @@ func PostLocalGroups(parentCtx context.Context, graphDB graph.Database, localGro
 		}(workerID)
 	}
 
-	localGroupData.Computers.Each(func(value uint64) bool {
+	localGroupData.ComputersWithLocalGroups.Each(func(value uint64) bool {
 		return channels.Submit(ctx, computerC, value)
 	})
 
