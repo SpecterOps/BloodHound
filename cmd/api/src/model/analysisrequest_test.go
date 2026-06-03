@@ -14,24 +14,27 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package model
+package model_test
 
 import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"math/bits"
+	"strings"
 	"testing"
 
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	_ driver.Valuer    = AnalysisSteps{}
-	_ sql.Scanner      = (*AnalysisSteps)(nil)
-	_ json.Marshaler   = AnalysisSteps{}
-	_ json.Unmarshaler = (*AnalysisSteps)(nil)
-	_ fmt.Stringer     = AnalysisSteps{}
+	_ driver.Valuer    = model.AnalysisSteps{}
+	_ sql.Scanner      = (*model.AnalysisSteps)(nil)
+	_ json.Marshaler   = model.AnalysisSteps{}
+	_ json.Unmarshaler = (*model.AnalysisSteps)(nil)
+	_ fmt.Stringer     = model.AnalysisSteps{}
 )
 
 func TestAnalysisStepsFromEntrypoint(t *testing.T) {
@@ -39,29 +42,29 @@ func TestAnalysisStepsFromEntrypoint(t *testing.T) {
 
 	for _, testCase := range []struct {
 		name          string
-		entrypoint    AnalysisEntrypoint
-		expectedSteps AnalysisSteps
+		entrypoint    model.AnalysisEntrypoint
+		expectedSteps model.AnalysisSteps
 	}{
 		{
 			name:          "full entrypoint maps to all steps",
-			entrypoint:    AnalysisEntrypointFull,
-			expectedSteps: AnalysisStepAll,
+			entrypoint:    model.AnalysisEntrypointFull,
+			expectedSteps: model.AnalysisStepAll,
 		},
 		{
 			name:          "tagging entrypoint maps to tagging through completion",
-			entrypoint:    AnalysisEntrypointTagging,
-			expectedSteps: AnalysisStepTaggingToCompletion,
+			entrypoint:    model.AnalysisEntrypointTagging,
+			expectedSteps: model.AnalysisStepTaggingToCompletion,
 		},
 		{
 			name:          "unknown entrypoint defaults to full analysis",
-			entrypoint:    AnalysisEntrypoint("unknown"),
-			expectedSteps: AnalysisStepAll,
+			entrypoint:    model.AnalysisEntrypoint("unknown"),
+			expectedSteps: model.AnalysisStepAll,
 		},
 	} {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			analysisSteps := AnalysisStepsFromEntrypoint(testCase.entrypoint)
+			analysisSteps := model.AnalysisStepsFromEntrypoint(testCase.entrypoint)
 
 			require.Equal(t, testCase.expectedSteps, analysisSteps)
 		})
@@ -73,32 +76,32 @@ func TestAnalysisStepsString(t *testing.T) {
 
 	for _, testCase := range []struct {
 		name          string
-		analysisSteps AnalysisSteps
+		analysisSteps model.AnalysisSteps
 		expected      string
 	}{
 		{
 			name:          "full analysis",
-			analysisSteps: AnalysisStepAll,
+			analysisSteps: model.AnalysisStepAll,
 			expected:      "ad_post_processing,azure_post_processing,tagging,analysis",
 		},
 		{
 			name:          "tagging to completion",
-			analysisSteps: AnalysisStepTaggingToCompletion,
+			analysisSteps: model.AnalysisStepTaggingToCompletion,
 			expected:      "tagging,analysis",
 		},
 		{
 			name:          "empty",
-			analysisSteps: AnalysisSteps{},
+			analysisSteps: model.AnalysisSteps{},
 			expected:      "none",
 		},
 		{
 			name:          "unknown bits",
-			analysisSteps: AnalysisStepsFromBits(32),
+			analysisSteps: model.AnalysisStepsFromBits(32),
 			expected:      "unknown:32",
 		},
 		{
 			name:          "known and unknown bits",
-			analysisSteps: AnalysisStepsFromBits(AnalysisStepTagging.Bits() | 32),
+			analysisSteps: model.AnalysisStepsFromBits(model.AnalysisStepTagging.Bits() | 32),
 			expected:      "tagging,unknown:32",
 		},
 	} {
@@ -110,13 +113,21 @@ func TestAnalysisStepsString(t *testing.T) {
 	}
 }
 
+func TestAnalysisStepsStringCoversAllSteps(t *testing.T) {
+	stepNames := strings.Split(model.AnalysisStepAll.String(), ",")
+
+	require.Len(t, stepNames, bits.OnesCount(uint(model.AnalysisStepAll.Bits())))
+	require.NotContains(t, model.AnalysisStepAll.String(), "unknown:")
+	require.NotContains(t, model.AnalysisStepAll.String(), "none")
+}
+
 func TestAnalysisStepsValue(t *testing.T) {
 	t.Parallel()
 
-	value, err := AnalysisStepTaggingToCompletion.Value()
+	value, err := model.AnalysisStepTaggingToCompletion.Value()
 
 	require.NoError(t, err)
-	require.Equal(t, int64(AnalysisStepTaggingToCompletion.Bits()), value)
+	require.Equal(t, int64(model.AnalysisStepTaggingToCompletion.Bits()), value)
 }
 
 func TestAnalysisStepsScan(t *testing.T) {
@@ -124,41 +135,41 @@ func TestAnalysisStepsScan(t *testing.T) {
 
 	for _, testCase := range []struct {
 		name                 string
-		initialAnalysisSteps AnalysisSteps
+		initialAnalysisSteps model.AnalysisSteps
 		value                any
-		expected             AnalysisSteps
+		expected             model.AnalysisSteps
 		expectError          bool
 	}{
 		{
 			name:     "int64",
-			value:    int64(AnalysisStepTaggingToCompletion.Bits()),
-			expected: AnalysisStepTaggingToCompletion,
+			value:    int64(model.AnalysisStepTaggingToCompletion.Bits()),
+			expected: model.AnalysisStepTaggingToCompletion,
 		},
 		{
 			name:     "int32",
-			value:    int32(AnalysisStepTaggingToCompletion.Bits()),
-			expected: AnalysisStepTaggingToCompletion,
+			value:    int32(model.AnalysisStepTaggingToCompletion.Bits()),
+			expected: model.AnalysisStepTaggingToCompletion,
 		},
 		{
 			name:     "int",
-			value:    AnalysisStepTaggingToCompletion.Bits(),
-			expected: AnalysisStepTaggingToCompletion,
+			value:    model.AnalysisStepTaggingToCompletion.Bits(),
+			expected: model.AnalysisStepTaggingToCompletion,
 		},
 		{
 			name:     "bytes",
 			value:    []byte("12"),
-			expected: AnalysisStepTaggingToCompletion,
+			expected: model.AnalysisStepTaggingToCompletion,
 		},
 		{
 			name:     "string",
 			value:    "12",
-			expected: AnalysisStepTaggingToCompletion,
+			expected: model.AnalysisStepTaggingToCompletion,
 		},
 		{
 			name:                 "nil scans to empty steps",
-			initialAnalysisSteps: AnalysisStepAll,
+			initialAnalysisSteps: model.AnalysisStepAll,
 			value:                nil,
-			expected:             AnalysisSteps{},
+			expected:             model.AnalysisSteps{},
 		},
 		{
 			name:        "invalid type returns an error",
@@ -192,14 +203,14 @@ func TestAnalysisStepsScan(t *testing.T) {
 func TestAnalysisStepsJSON(t *testing.T) {
 	t.Parallel()
 
-	payload, err := json.Marshal(AnalysisStepTaggingToCompletion)
+	payload, err := json.Marshal(model.AnalysisStepTaggingToCompletion)
 	require.NoError(t, err)
 	require.JSONEq(t, "12", string(payload))
 
-	var analysisSteps AnalysisSteps
+	var analysisSteps model.AnalysisSteps
 	err = json.Unmarshal(payload, &analysisSteps)
 	require.NoError(t, err)
-	require.Equal(t, AnalysisStepTaggingToCompletion, analysisSteps)
+	require.Equal(t, model.AnalysisStepTaggingToCompletion, analysisSteps)
 
 	err = json.Unmarshal([]byte(`"tagging"`), &analysisSteps)
 	require.Error(t, err)
@@ -210,21 +221,21 @@ func TestAnalysisStepsMerge(t *testing.T) {
 
 	for _, testCase := range []struct {
 		name          string
-		firstSteps    AnalysisSteps
-		secondSteps   AnalysisSteps
-		expectedSteps AnalysisSteps
+		firstSteps    model.AnalysisSteps
+		secondSteps   model.AnalysisSteps
+		expectedSteps model.AnalysisSteps
 	}{
 		{
 			name:          "full wins when requested before tagging",
-			firstSteps:    AnalysisStepsFromEntrypoint(AnalysisEntrypointFull),
-			secondSteps:   AnalysisStepsFromEntrypoint(AnalysisEntrypointTagging),
-			expectedSteps: AnalysisStepAll,
+			firstSteps:    model.AnalysisStepsFromEntrypoint(model.AnalysisEntrypointFull),
+			secondSteps:   model.AnalysisStepsFromEntrypoint(model.AnalysisEntrypointTagging),
+			expectedSteps: model.AnalysisStepAll,
 		},
 		{
 			name:          "full wins when requested after tagging",
-			firstSteps:    AnalysisStepsFromEntrypoint(AnalysisEntrypointTagging),
-			secondSteps:   AnalysisStepsFromEntrypoint(AnalysisEntrypointFull),
-			expectedSteps: AnalysisStepAll,
+			firstSteps:    model.AnalysisStepsFromEntrypoint(model.AnalysisEntrypointTagging),
+			secondSteps:   model.AnalysisStepsFromEntrypoint(model.AnalysisEntrypointFull),
+			expectedSteps: model.AnalysisStepAll,
 		},
 	} {
 		t.Run(testCase.name, func(t *testing.T) {

@@ -18,10 +18,13 @@
 
 -- Add analysis_step column to analysis_request_switch to allow callers to specify
 -- which steps of the analysis pipeline should run. The column stores an AnalysisStep
--- bitmask (ADPostProcessing=1, AzurePostProcessing=2, Tagging=4, Analysis=8). The
--- default value of 15 corresponds to AnalysisStepAll, which selects every step.
+-- bitmask (ADPostProcessing=1, AzurePostProcessing=2, Tagging=4, Analysis=8). 
 ALTER TABLE analysis_request_switch
-  ADD COLUMN IF NOT EXISTS analysis_step integer NOT NULL DEFAULT 15;
+  ADD COLUMN IF NOT EXISTS analysis_step integer;
+
+-- If there currently is an analysis request in the DB set it to full analysis.
+UPDATE analysis_request_switch
+SET analysis_step = 15;
 
 -- +goose Down
 
