@@ -194,7 +194,7 @@ func (s AssetGroupTag) GetExpansionMethod() AssetGroupExpansionMethod {
 }
 
 func (s AssetGroupTag) IsTierZero() bool {
-	return s.Position.ValueOrZero() == AssetGroupTierZeroPosition
+	return s.Type == AssetGroupTagTypeTier && s.Position.ValueOrZero() == AssetGroupTierZeroPosition
 }
 
 type SelectorSeeds []SelectorSeed

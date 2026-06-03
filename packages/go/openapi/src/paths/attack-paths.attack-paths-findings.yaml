@@ -151,9 +151,9 @@ get:
           examples:
             Unified CSV export:
               value: |
-                Severity,Finding,Title,FindingType,Platform,EnvironmentID,EnvironmentName,ZoneID,SourcePrincipalID,SourcePrincipalKind,TargetPrincipalID,TargetPrincipalKind,Status,FirstSeen,LastSeen
-                critical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,1,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
-                high,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,1,,,PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
+                Severity,Finding,Title,FindingType,Platform,EnvironmentID,EnvironmentName,ZoneID,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen
+                critical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
+                high,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
         application/json:
           schema:
             allOf:
