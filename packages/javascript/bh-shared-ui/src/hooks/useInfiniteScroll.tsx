@@ -31,13 +31,18 @@ export const useInfiniteScroll = ({
     threshold = 100,
 }: InfiniteScrollOptions) => {
     const scrollRef = useRef<HTMLDivElement>(null);
+    const isFetchMorePendingRef = useRef(false);
 
     const fetchMoreDataOnBottomReached = useCallback(
         (e?: HTMLDivElement | null) => {
-            if (!e || isFetching || !canFetchMore) return;
+            if (!e || isFetching || isFetchMorePendingRef.current || !canFetchMore) return;
 
             if (e.scrollHeight - e.scrollTop - e.clientHeight < threshold) {
-                fetchMore();
+                // Use the ref here to prevent multiple scroll events from triggering multiple fetchMore calls
+                isFetchMorePendingRef.current = true;
+                fetchMore().finally(() => {
+                    isFetchMorePendingRef.current = false;
+                });
             }
         },
         [fetchMore, isFetching, canFetchMore, threshold]
