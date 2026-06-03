@@ -15,7 +15,7 @@ export const useSortParams = <TSortColumn extends string>({
 
     const sortBy = useMemo(() => {
         if (!sortColumn || !sortOrder) return undefined;
-        return [`${sortOrder === 'desc' ? '-' : ''}${sortColumn}`];
+        return `${sortOrder === 'desc' ? '-' : ''}${sortColumn}`;
     }, [sortColumn, sortOrder]);
 
     const clearSort = () => {
