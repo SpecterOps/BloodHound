@@ -67,37 +67,49 @@ type ADCSCache struct {
 	domains                   []*graph.Node
 
 	// To discourage direct access without getting a read lock, these are private
+	chainedDomainsByEnterpriseCA    map[uint64]*EnterpriseCAChainedDomains  // chainedDomainsByEnterpriseCA maps each Enterprise CA node ID to the domains reachable from it through a valid certificate chain (RootCAFor ∩ TrustedForNTAuth).
+	certTemplateHasSpecialEnrollers map[graph.ID]bool                       // whether Auth. Users or Everyone has enrollment rights on templates
+	enterpriseCAHasSpecialEnrollers map[graph.ID]bool                       // whether Auth. Users or Everyone has enrollment rights on enterprise CAs
+	certTemplateEnrollers           map[graph.ID][]*graph.Node              // principals that have enrollment on a cert template via `enroll`, `generic all`, `all extended rights` edges
+	certTemplateControllers         map[graph.ID][]*graph.Node              // principals that have privileges on a cert template via `owner`, `generic all`, `write dacl`, `write owner` edges
+	enterpriseCAEnrollers           map[graph.ID][]*graph.Node              // principals that have enrollment rights on an enterprise ca via `enroll` edge
+	publishedTemplateCache          map[graph.ID][]*graph.Node              // cert templates that are published to an enterprise ca
+	authUsersByDomain               map[graph.ID]graph.ID                   // domain node ID → Authenticated Users group node ID
+	ecasWithHostingComputers        cardinality.Duplex[uint64]              // enterprise CAs with at least one hosting computer where the computer is enabled
+	hasUPNCertMappingInForest       cardinality.Duplex[uint64]              // domains where at least one DC in the forest has Schannel UPN cert mapping enabled
+	hasWeakCertBindingInForest      cardinality.Duplex[uint64]              // domains where at least one DC in the forest has Kerberos weak cert binding enabled
 	authStoreForChainValid          map[graph.ID]cardinality.Duplex[uint64] //Auth stores with a valid chain to the domain, key is domain ID
 	rootCAForChainValid             map[graph.ID]cardinality.Duplex[uint64] //Root CA with a valid chain to the domain, key is domain ID
 	hasHostingComputer              map[graph.ID]bool
-	certTemplateHasSpecialEnrollers map[graph.ID]bool          // whether Auth. Users or Everyone has enrollment rights on templates
-	enterpriseCAHasSpecialEnrollers map[graph.ID]bool          // whether Auth. Users or Everyone has enrollment rights on enterprise CAs
-	certTemplateEnrollers           map[graph.ID][]*graph.Node // principals that have enrollment on a cert template via `enroll`, `generic all`, `all extended rights` edges
-	certTemplateControllers         map[graph.ID][]*graph.Node // principals that have privileges on a cert template via `owner`, `generic all`, `write dacl`, `write owner` edges
-	enterpriseCAEnrollers           map[graph.ID][]*graph.Node // principals that have enrollment rights on an enterprise ca via `enroll` edge
-	publishedTemplateCache          map[graph.ID][]*graph.Node // cert templates that are published to an enterprise ca
-	authUsersByDomain               map[graph.ID]graph.ID      // domain node ID → Authenticated Users group node ID
-	ecasWithHostingComputers        cardinality.Duplex[uint64] // enterprise CAs with at least one hosting computer where the computer is enabled
-	hasUPNCertMappingInForest       cardinality.Duplex[uint64] // domains where at least one DC in the forest has Schannel UPN cert mapping enabled
-	hasWeakCertBindingInForest      cardinality.Duplex[uint64] // domains where at least one DC in the forest has Kerberos weak cert binding enabled
+
+	// ESC4-specific caches: principals with specific rights on cert templates, pre-computed to avoid per-ECA DB queries
+	certTemplateGenericWriters              map[graph.ID][]*graph.Node // principals with GenericWrite on a cert template
+	certTemplateEnrollOrAllExtendedRighters map[graph.ID][]*graph.Node // principals with Enroll or AllExtendedRights on a cert template
+	certTemplateWritePKINameFlaggers        map[graph.ID][]*graph.Node // principals with WritePKINameFlag on a cert template
+	certTemplateWritePKIEnrollmentFlaggers  map[graph.ID][]*graph.Node // principals with WritePKIEnrollmentFlag on a cert template
 }
 
 func NewADCSCache() *ADCSCache {
 	return &ADCSCache{
-		mutex:                           &sync.RWMutex{},
-		authStoreForChainValid:          make(map[graph.ID]cardinality.Duplex[uint64]),
-		rootCAForChainValid:             make(map[graph.ID]cardinality.Duplex[uint64]),
-		hasHostingComputer:              make(map[graph.ID]bool),
-		certTemplateHasSpecialEnrollers: make(map[graph.ID]bool),
-		enterpriseCAHasSpecialEnrollers: make(map[graph.ID]bool),
-		certTemplateEnrollers:           make(map[graph.ID][]*graph.Node),
-		certTemplateControllers:         make(map[graph.ID][]*graph.Node),
-		enterpriseCAEnrollers:           make(map[graph.ID][]*graph.Node),
-		publishedTemplateCache:          make(map[graph.ID][]*graph.Node),
-		authUsersByDomain:               make(map[graph.ID]graph.ID),
-		ecasWithHostingComputers:        cardinality.NewBitmap64(),
-		hasUPNCertMappingInForest:       cardinality.NewBitmap64(),
-		hasWeakCertBindingInForest:      cardinality.NewBitmap64(),
+		mutex:                                   &sync.RWMutex{},
+		chainedDomainsByEnterpriseCA:            make(map[uint64]*EnterpriseCAChainedDomains),
+		certTemplateHasSpecialEnrollers:         make(map[graph.ID]bool),
+		enterpriseCAHasSpecialEnrollers:         make(map[graph.ID]bool),
+		authStoreForChainValid:                  make(map[graph.ID]cardinality.Duplex[uint64]),
+		rootCAForChainValid:                     make(map[graph.ID]cardinality.Duplex[uint64]),
+		hasHostingComputer:                      make(map[graph.ID]bool),
+		certTemplateEnrollers:                   make(map[graph.ID][]*graph.Node),
+		certTemplateControllers:                 make(map[graph.ID][]*graph.Node),
+		enterpriseCAEnrollers:                   make(map[graph.ID][]*graph.Node),
+		publishedTemplateCache:                  make(map[graph.ID][]*graph.Node),
+		authUsersByDomain:                       make(map[graph.ID]graph.ID),
+		ecasWithHostingComputers:                cardinality.NewBitmap64(),
+		hasUPNCertMappingInForest:               cardinality.NewBitmap64(),
+		certTemplateGenericWriters:              make(map[graph.ID][]*graph.Node),
+		certTemplateEnrollOrAllExtendedRighters: make(map[graph.ID][]*graph.Node),
+		certTemplateWritePKINameFlaggers:        make(map[graph.ID][]*graph.Node),
+		certTemplateWritePKIEnrollmentFlaggers:  make(map[graph.ID][]*graph.Node),
+		hasWeakCertBindingInForest:              cardinality.NewBitmap64(),
 	}
 }
 
@@ -173,6 +185,50 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				)
 			} else {
 				s.certTemplateControllers[ct.ID] = certTemplateControllers.Slice()
+			}
+
+			// ESC4-specific principal caches
+			if principals, err := FetchPrincipalsWithGenericWriteOnCertTemplate(tx, ct); err != nil {
+				slog.ErrorContext(
+					ctx,
+					"Error fetching principals with GenericWrite on cert template",
+					slog.Uint64("cert_template", uint64(ct.ID)),
+					attr.Error(err),
+				)
+			} else {
+				s.certTemplateGenericWriters[ct.ID] = principals.Slice()
+			}
+
+			if principals, err := FetchPrincipalsWithEnrollOrAllExtendedRightsOnCertTemplate(tx, ct); err != nil {
+				slog.ErrorContext(
+					ctx,
+					"Error fetching principals with Enroll/AllExtendedRights on cert template",
+					slog.Uint64("cert_template", uint64(ct.ID)),
+					attr.Error(err),
+				)
+			} else {
+				s.certTemplateEnrollOrAllExtendedRighters[ct.ID] = principals.Slice()
+			}
+
+			if principals, err := FetchPrincipalsWithWritePKINameFlagOnCertTemplate(tx, ct); err != nil {
+				slog.ErrorContext(
+					ctx,
+					"Error fetching principals with WritePKINameFlag on cert template",
+					slog.Uint64("cert_template", uint64(ct.ID)),
+					attr.Error(err),
+				)
+			} else {
+				s.certTemplateWritePKINameFlaggers[ct.ID] = principals.Slice()
+			}
+
+			if principals, err := FetchPrincipalsWithWritePKIEnrollmentFlagOnCertTemplate(tx, ct); err != nil {
+				slog.ErrorContext(ctx,
+					"Error fetching principals with WritePKIEnrollmentFlag on cert template",
+					slog.Uint64("cert_template", uint64(ct.ID)),
+					attr.Error(err),
+				)
+			} else {
+				s.certTemplateWritePKIEnrollmentFlaggers[ct.ID] = principals.Slice()
 			}
 		}
 
@@ -417,6 +473,34 @@ func (s *ADCSCache) GetCertTemplateControllers(id graph.ID) []*graph.Node {
 	defer s.mutex.RUnlock()
 
 	return s.certTemplateControllers[id]
+}
+
+func (s *ADCSCache) GetCertTemplateGenericWriters(id graph.ID) []*graph.Node {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
+	return s.certTemplateGenericWriters[id]
+}
+
+func (s *ADCSCache) GetCertTemplateEnrollOrAllExtendedRighters(id graph.ID) []*graph.Node {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
+	return s.certTemplateEnrollOrAllExtendedRighters[id]
+}
+
+func (s *ADCSCache) GetCertTemplateWritePKINameFlaggers(id graph.ID) []*graph.Node {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
+	return s.certTemplateWritePKINameFlaggers[id]
+}
+
+func (s *ADCSCache) GetCertTemplateWritePKIEnrollmentFlaggers(id graph.ID) []*graph.Node {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
+	return s.certTemplateWritePKIEnrollmentFlaggers[id]
 }
 
 func (s *ADCSCache) GetEnterpriseCAEnrollers(id graph.ID) []*graph.Node {
