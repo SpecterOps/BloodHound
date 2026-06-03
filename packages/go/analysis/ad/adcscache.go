@@ -222,7 +222,8 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 			}
 
 			if principals, err := FetchPrincipalsWithWritePKIEnrollmentFlagOnCertTemplate(tx, ct); err != nil {
-				slog.ErrorContext(ctx,
+				slog.ErrorContext(
+					ctx,
 					"Error fetching principals with WritePKIEnrollmentFlag on cert template",
 					slog.Uint64("cert_template", uint64(ct.ID)),
 					attr.Error(err),
