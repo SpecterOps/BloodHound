@@ -19,9 +19,21 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import Users from '.';
 import { bloodHoundUsersHandlers, testAuthenticatedUser, testBloodHoundUsers, testSSOProviders } from '../../mocks';
-import { render, screen, within } from '../../test-utils';
+import { render, screen, waitFor, within } from '../../test-utils';
 
 const server = setupServer(...bloodHoundUsersHandlers);
+
+const selfHandler = (roles: { name: string; permissions: { authority: string; name: string }[] }[]) =>
+    rest.get('/api/v2/self', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    id: '1',
+                    roles,
+                },
+            })
+        );
+    });
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
@@ -80,6 +92,74 @@ describe('Users', () => {
         const rows = screen.getAllByRole('row');
         // Only the header row renders even though there is a mock endpoint that serves data
         expect(rows).toHaveLength(1);
+    });
+
+    it('enables the create user button when the user is admin role', async () => {
+        server.use(
+            selfHandler([
+                {
+                    name: 'Administrator',
+                    permissions: [{ authority: 'auth', name: 'ManageUsers' }],
+                },
+            ])
+        );
+
+        render(<Users />);
+
+        await waitFor(() => expect(screen.getByTestId('manage-users_button-create-user')).not.toBeDisabled());
+    });
+
+    it('disables the create user button when the user is auditor role', async () => {
+        server.use(
+            selfHandler([
+                {
+                    name: 'Auditor',
+                    permissions: [{ authority: 'auth', name: 'ReadUsers' }],
+                },
+            ])
+        );
+
+        render(<Users />);
+
+        await waitFor(() => expect(screen.getByTestId('manage-users_button-create-user')).toBeDisabled());
+    });
+
+    it('enables the user actions menu when the user is admin role', async () => {
+        server.use(
+            selfHandler([
+                {
+                    name: 'Administrator',
+                    permissions: [{ authority: 'auth', name: 'ManageUsers' }],
+                },
+            ])
+        );
+
+        render(<Users />);
+
+        const testAdminRow = await screen.findByRole('row', { name: /test_admin/i });
+
+        await waitFor(() =>
+            expect(within(testAdminRow).getByRole('button', { name: 'Show user actions' })).not.toBeDisabled()
+        );
+    });
+
+    it('disables the user actions menu when the user is auditor role', async () => {
+        server.use(
+            selfHandler([
+                {
+                    name: 'Auditor',
+                    permissions: [{ authority: 'auth', name: 'ReadUsers' }],
+                },
+            ])
+        );
+
+        render(<Users />);
+
+        const testAdminRow = await screen.findByRole('row', { name: /test_admin/i });
+
+        await waitFor(() =>
+            expect(within(testAdminRow).getByRole('button', { name: 'Show user actions' })).toBeDisabled()
+        );
     });
 
     it('does not show the "Disable MFA" context menu option for users without MFA enabled', async () => {
