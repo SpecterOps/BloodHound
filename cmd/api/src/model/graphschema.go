@@ -234,7 +234,6 @@ type SchemaFinding struct {
 	EnvironmentId     int32
 	KindId            int32
 	Name              string
-	// Default UI Title
 	DisplayName string
 	// PZ Variant Display Title
 	PZDisplayName null.String

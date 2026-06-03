@@ -180,10 +180,6 @@ func (s AssetGroupTag) ToType() string {
 	}
 }
 
-func (s AssetGroupTag) IsTierZero() bool {
-	return s.Type == AssetGroupTagTypeTier && s.Position.Valid && s.Position.Int32 == AssetGroupTierZeroPosition
-}
-
 func (s AssetGroupTag) GetExpansionMethod() AssetGroupExpansionMethod {
 	switch s.Type {
 	case AssetGroupTagTypeTier:
@@ -195,6 +191,10 @@ func (s AssetGroupTag) GetExpansionMethod() AssetGroupExpansionMethod {
 	default:
 		return AssetGroupExpansionMethodNone
 	}
+}
+
+func (s AssetGroupTag) IsTierZero() bool {
+	return s.Position.ValueOrZero() == AssetGroupTierZeroPosition
 }
 
 type SelectorSeeds []SelectorSeed
