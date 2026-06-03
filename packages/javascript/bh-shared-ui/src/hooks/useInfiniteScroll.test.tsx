@@ -53,7 +53,7 @@ const callOnScroll = (onScroll: ReturnType<typeof useInfiniteScroll>['onScroll']
 };
 
 const setup = (options: Partial<Parameters<typeof useInfiniteScroll>[0]> = {}) => {
-    const fetchMore = vi.fn();
+    const fetchMore = vi.fn().mockResolvedValue(undefined);
     const renderResult = renderHook(() =>
         useInfiniteScroll({
             canFetchMore: true,
@@ -104,7 +104,7 @@ describe('useInfiniteScroll', () => {
     });
 
     it('checks whether more data is needed when loadedCount changes', async () => {
-        const fetchMore = vi.fn();
+        const fetchMore = vi.fn().mockResolvedValue(undefined);
         const { result, rerender } = renderHook(
             ({ loadedCount }) =>
                 useInfiniteScroll({
