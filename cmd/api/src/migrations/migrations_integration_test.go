@@ -23,6 +23,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
@@ -159,8 +160,8 @@ func TestVersion_930_Migration(t *testing.T) {
 		}
 		require.NotNil(t, backfilledKind, "SchemalessKind must be present in custom_node_kinds after backfill")
 		require.Equal(t, graphschema.DisplayNodeTypeFontAwesome, backfilledKind.Config.Icon.Type)
-		require.Equal(t, "question", backfilledKind.Config.Icon.Name)
-		require.Equal(t, "#FFFFFF", backfilledKind.Config.Icon.Color)
+		require.Equal(t, database.CustomNodeKindStubConfig.Icon.Name, backfilledKind.Config.Icon.Name)
+		require.Equal(t, database.CustomNodeKindStubConfig.Icon.Color, backfilledKind.Config.Icon.Color)
 	})
 
 	t.Run("does not backfill a kind already present in custom_node_kinds", func(t *testing.T) {

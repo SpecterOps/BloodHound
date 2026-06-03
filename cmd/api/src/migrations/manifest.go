@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
@@ -108,13 +109,7 @@ func Version_930_Migration(nodeKindData schemalessNodeKindBackfillData) func(ctx
 			if nodeFound {
 				kindsToCreate = append(kindsToCreate, model.CustomNodeKind{
 					KindName: kind.String(),
-					Config: model.CustomNodeKindConfig{
-						Icon: graphschema.DisplayNodeIcon{
-							Type:  graphschema.DisplayNodeTypeFontAwesome,
-							Color: "#FFFFFF",
-							Name:  "question",
-						},
-					},
+					Config:   database.CustomNodeKindStubConfig,
 				})
 			}
 		}

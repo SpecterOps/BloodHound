@@ -29,7 +29,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var ingestCustomNodeKindStubConfig = model.CustomNodeKindConfig{
+var CustomNodeKindStubConfig = model.CustomNodeKindConfig{
 	Icon: graphschema.DisplayNodeIcon{
 		Name:  "question",
 		Type:  graphschema.DisplayNodeTypeFontAwesome,
@@ -51,7 +51,7 @@ func (s *BloodhoundDB) EnsureStubbedCustomNodeKindForIngest(ctx context.Context,
 		return errors.New("invalid kind name")
 	}
 
-	if result := s.db.WithContext(ctx).Exec("SELECT ensure_stubbed_custom_node_kind_for_ingest(?, ?);", name, ingestCustomNodeKindStubConfig); result.Error != nil {
+	if result := s.db.WithContext(ctx).Exec("SELECT ensure_stubbed_custom_node_kind_for_ingest(?, ?);", name, CustomNodeKindStubConfig); result.Error != nil {
 		return fmt.Errorf("failed to ensure custom node kind stub %q: %w", name, result.Error)
 	}
 
