@@ -27,6 +27,8 @@ import (
 	"path"
 	"strings"
 	"sync"
+
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
 
 var ErrIsDirectory = errors.New("is a directory")
@@ -74,11 +76,11 @@ func (s *LocalStore) Close() error {
 
 func detectContentType(name string) string {
 	if ext := path.Ext(name); ext != "" {
-		if ct := mime.TypeByExtension(ext); ct != "" {
-			return ct
+		if contentType := mime.TypeByExtension(ext); contentType != "" {
+			return contentType
 		}
 	}
-	return "application/octet-stream"
+	return mediatypes.ApplicationOctetStream.String()
 }
 
 // syncDir is used to ensure that once the entry in a directory
