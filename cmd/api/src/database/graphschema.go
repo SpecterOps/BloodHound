@@ -69,7 +69,7 @@ type OpenGraphSchema interface {
 	GetEnvironmentsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaEnvironment, error)
 	DeleteEnvironment(ctx context.Context, environmentId int32) error
 
-	CreateSchemaFinding(ctx context.Context, findingType model.SchemaFindingType, extensionId, kindId, environmentId int32, name, displayName, zoneDisplayName string) (model.SchemaFinding, error)
+	CreateSchemaFinding(ctx context.Context, findingType model.SchemaFindingType, extensionId, kindId, environmentId int32, name, displayName, pzDisplayName string) (model.SchemaFinding, error)
 	GetSchemaFindings(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) ([]model.SchemaFinding, int, error)
 	GetSchemaFindingsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaFinding, error)
 	GetSchemaFindingById(ctx context.Context, findingId int32) (model.SchemaFinding, error)
@@ -975,16 +975,16 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 		aliasedSorts   = make(model.Sort, 0, len(sort))
 
 		schemaFindingsColumnAliases = map[string]string{
-			"extension_id":      "sf.schema_extension_id",
-			"extension_name":    "se.name",
-			"id":                "sf.id",
-			"name":              "sf.name",
-			"type":              "sf.type",
-			"is_builtin":        "se.is_builtin",
-			"kind":              "k.name",
-			"display_name":      "sf.display_name",
+			"extension_id":    "sf.schema_extension_id",
+			"extension_name":  "se.name",
+			"id":              "sf.id",
+			"name":            "sf.name",
+			"type":            "sf.type",
+			"is_builtin":      "se.is_builtin",
+			"kind":            "k.name",
+			"display_name":    "sf.display_name",
 			"pz_display_name": "sf.pz_display_name",
-			"created_at":        "sf.created_at",
+			"created_at":      "sf.created_at",
 		}
 	)
 

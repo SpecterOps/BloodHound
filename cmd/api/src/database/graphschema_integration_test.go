@@ -4778,9 +4778,9 @@ func TestUpdateEnvironment(t *testing.T) {
 
 func TestUpdateSchemaFinding(t *testing.T) {
 	type args struct {
-		displayName     string
-		zoneDisplayName string
-		findingType     model.SchemaFindingType
+		displayName   string
+		pzDisplayName string
+		findingType   model.SchemaFindingType
 	}
 	type testData struct {
 		name   string
@@ -4827,7 +4827,7 @@ func TestUpdateSchemaFinding(t *testing.T) {
 		},
 		{
 			name: "Success: updates pz_display_name and returns it on the finding",
-			args: args{displayName: "Original Display Name", zoneDisplayName: "Custom Zone Title", findingType: model.SchemaFindingTypeRelationship},
+			args: args{displayName: "Original Display Name", pzDisplayName: "Custom Zone Title", findingType: model.SchemaFindingTypeRelationship},
 			setup: func() (IntegrationTestSuite, model.SchemaFinding) {
 				return sharedSetup(t)
 			},
@@ -4841,7 +4841,7 @@ func TestUpdateSchemaFinding(t *testing.T) {
 		},
 		{
 			name: "Success: updates pz_display_name to empty string when finding already has a pz display name",
-			args: args{displayName: "Original Display Name", zoneDisplayName: "", findingType: model.SchemaFindingTypeRelationship},
+			args: args{displayName: "Original Display Name", pzDisplayName: "", findingType: model.SchemaFindingTypeRelationship},
 			setup: func() (IntegrationTestSuite, model.SchemaFinding) {
 				testSuite, finding := sharedSetup(t)
 				finding.PZDisplayName = null.StringFrom("Existing Zone Display Name")
@@ -4864,7 +4864,7 @@ func TestUpdateSchemaFinding(t *testing.T) {
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
 			finding.DisplayName = testCase.args.displayName
-			finding.PZDisplayName = null.NewString(testCase.args.zoneDisplayName, testCase.args.zoneDisplayName != "")
+			finding.PZDisplayName = null.NewString(testCase.args.pzDisplayName, testCase.args.pzDisplayName != "")
 			finding.Type = testCase.args.findingType
 
 			updated, err := testSuite.BHDatabase.UpdateSchemaFinding(testSuite.Context, finding)
