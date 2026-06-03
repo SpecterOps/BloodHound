@@ -611,9 +611,9 @@ func (m *MockDatabase) CreateSchemaFinding(ctx context.Context, findingType mode
 }
 
 // CreateSchemaFinding indicates an expected call of CreateSchemaFinding.
-func (mr *MockDatabaseMockRecorder) CreateSchemaFinding(ctx, findingType, extensionId, kindId, environmentId, name, displayName, zoneDisplayName any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateSchemaFinding(ctx, findingType, extensionId, kindId, environmentId, name, displayName, pzDisplayName any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaFinding", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaFinding), ctx, findingType, extensionId, kindId, environmentId, name, displayName, zoneDisplayName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaFinding", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaFinding), ctx, findingType, extensionId, kindId, environmentId, name, displayName, pzDisplayName)
 }
 
 // CreateSchemaFindingSubtype mocks base method.

@@ -180,6 +180,10 @@ func (s AssetGroupTag) ToType() string {
 	}
 }
 
+func (s AssetGroupTag) IsTierZero() bool {
+	return s.Type == AssetGroupTagTypeTier && s.Position.Valid && s.Position.Int32 == AssetGroupTierZeroPosition
+}
+
 func (s AssetGroupTag) GetExpansionMethod() AssetGroupExpansionMethod {
 	switch s.Type {
 	case AssetGroupTagTypeTier:
