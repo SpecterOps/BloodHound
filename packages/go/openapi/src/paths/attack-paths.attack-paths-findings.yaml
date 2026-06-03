@@ -27,7 +27,7 @@ get:
   parameters:
     - name: sort_by
       description: |
-        Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`,
+        Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`, `environment_name`,
         `zone_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `first_seen`, `last_seen`.
       in: query
       schema:
@@ -67,6 +67,11 @@ get:
         type: array
         items:
           type: string
+    - name: environment_name
+      description: Filter by environment display name.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
     - name: asset_group_tag_id
       description: |
         Filter by one or more asset group tag identifiers. Repeat the parameter to include multiple asset group tags — results are the union of all specified values.
@@ -146,7 +151,7 @@ get:
           examples:
             Unified CSV export:
               value: |
-                Severity,Finding,Title,FindingType,Platform,EnvironmentID,ZoneID,SourcePrincipalID,SourcePrincipalKind,TargetPrincipalID,TargetPrincipalKind,Status,FirstSeen,LastSeen
+                Severity,Finding,Title,FindingType,Platform,EnvironmentID,EnvironmentName,ZoneID,SourcePrincipalID,SourcePrincipalKind,TargetPrincipalID,TargetPrincipalKind,Status,FirstSeen,LastSeen
                 critical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,1,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
                 high,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,1,,,PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
         application/json:
@@ -180,6 +185,9 @@ get:
                         environment_id:
                           type: string
                           description: Environment identifier.
+                        environment_name:
+                          type: string
+                          description: Human-readable environment display name resolved from the graph. Falls back to environment_id when unavailable.
                         zone_id:
                           type: integer
                           description: Zone identifier (asset group tag id).
@@ -230,6 +238,7 @@ get:
                     finding_type: "relationship"
                     platform: "Active Directory"
                     environment_id: "S-1-5-21-1974516972-3116780949-2584384717"
+                    environment_name: "CORP1.LAB.HOME-LABS.LOL"
                     zone_id: 1
                     zone_name: "Tier Zero"
                     source_principal_id: "RPATTON@CORP1.LAB.HOME-LABS.LOL"
@@ -247,6 +256,7 @@ get:
                     finding_type: "list"
                     platform: "Active Directory"
                     environment_id: "S-1-5-21-1974516972-3116780949-2584384717"
+                    environment_name: "CORP1.LAB.HOME-LABS.LOL"
                     zone_id: 1
                     zone_name: "Tier Zero"
                     source_principal_id: ""

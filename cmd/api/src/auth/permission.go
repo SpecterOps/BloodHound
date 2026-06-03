@@ -21,6 +21,9 @@ import (
 )
 
 type PermissionSet struct {
+	AlertsRead   model.Permission
+	AlertsManage model.Permission
+
 	AppReadApplicationConfiguration  model.Permission
 	AppWriteApplicationConfiguration model.Permission
 
@@ -60,6 +63,8 @@ type PermissionSet struct {
 
 func (s PermissionSet) All() model.Permissions {
 	return model.Permissions{
+		s.AlertsRead,
+		s.AlertsManage,
 		s.AppReadApplicationConfiguration,
 		s.AppWriteApplicationConfiguration,
 		s.APsGenerateReport,
@@ -90,22 +95,26 @@ func (s PermissionSet) All() model.Permissions {
 
 func (s PermissionSet) ReadAll() model.Permissions {
 	return model.Permissions{
+		s.AlertsRead,
 		s.AppReadApplicationConfiguration,
 		s.APsGenerateReport,
 		s.AuditLogRead,
 		s.AuthReadUsers,
 		s.AuthReadUsersMinimal,
 		s.ClientsRead,
-		s.GraphDBRead,
-		s.SavedQueriesRead,
 		s.CollectionReadJobs,
+		s.GraphDBRead,
 		s.OpenGraphRead,
+		s.SavedQueriesRead,
 	}
 }
 
 // Permissions Note: Not the only source of truth, changes here must be added to a migration *.sql file to update the permissions table
 func Permissions() PermissionSet {
 	return PermissionSet{
+		AlertsRead:   model.NewPermission("alerts", "Read"),
+		AlertsManage: model.NewPermission("alerts", "Manage"),
+
 		AppReadApplicationConfiguration:  model.NewPermission("app", "ReadAppConfig"),
 		AppWriteApplicationConfiguration: model.NewPermission("app", "WriteAppConfig"),
 
