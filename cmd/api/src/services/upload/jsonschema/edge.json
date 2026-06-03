@@ -41,7 +41,8 @@
             "type": "object",
             "properties": {
               "key": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^[a-z0-9_-]{1,128}$"
               },
               "operator": {
                 "type": "string",

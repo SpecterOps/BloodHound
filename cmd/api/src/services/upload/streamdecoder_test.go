@@ -1202,6 +1202,74 @@ func edgeSchemaFailureCases() []genericIngestAssertion {
 				{"edges[0] schema validation failed with 1 error(s)", "invalid propertyName 'aaaaaaaaaaa", "aaaaaaaaaaa' does not match pattern"},
 			},
 		},
+		{
+			name: "edge validation: property_matchers key values cannot use uppercase characters",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind:  "test",
+						Start: &edgePiece{Value: "1234"},
+						End: &edgePiece{MatchBy: "property", PropertyMatchers: []propertyMatcher{
+							propertyMatcher{Key: "TESTKey", Operator: "equals", Value: "asdf"},
+						}},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0] schema validation failed with 1 error(s)", "at '/end/property_matchers/0/key': 'TESTKey' does not match pattern"},
+			},
+		},
+		{
+			name: "edge validation: property_matchers key values cannot be empty",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind:  "test",
+						Start: &edgePiece{Value: "1234"},
+						End: &edgePiece{MatchBy: "property", PropertyMatchers: []propertyMatcher{
+							propertyMatcher{Key: "", Operator: "equals", Value: "asdf"},
+						}},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0] schema validation failed with 1 error(s)", "at '/end/property_matchers/0/key': '' does not match pattern"},
+			},
+		},
+		{
+			name: "edge validation: property_matchers key values cannot contain spaces",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind:  "test",
+						Start: &edgePiece{Value: "1234"},
+						End: &edgePiece{MatchBy: "property", PropertyMatchers: []propertyMatcher{
+							propertyMatcher{Key: "test prop", Operator: "equals", Value: "asdf"},
+						}},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0] schema validation failed with 1 error(s)", "at '/end/property_matchers/0/key': 'test prop' does not match pattern"},
+			},
+		},
+		{
+			name: "edge validation: property_matchers key values cannot be longer than 128 chars",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind:  "test",
+						Start: &edgePiece{Value: "1234"},
+						End: &edgePiece{MatchBy: "property", PropertyMatchers: []propertyMatcher{
+							propertyMatcher{Key: strings.Repeat("a", 129), Operator: "equals", Value: "asdf"},
+						}},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0] schema validation failed with 1 error(s)", "at '/end/property_matchers/0/key': 'aaaaaaaaaaa", "aaaaaaaaaaa' does not match pattern"},
+			},
+		},
 	}
 }
 
