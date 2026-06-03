@@ -234,7 +234,7 @@ type SchemaFinding struct {
 	EnvironmentId     int32
 	KindId            int32
 	Name              string
-	DisplayName string
+	DisplayName       string
 	// PZ Variant Display Title
 	PZDisplayName null.String
 	CreatedAt     time.Time
@@ -265,6 +265,10 @@ func (s SchemaFinding) FindingKind() graph.Kind {
 
 func (s SchemaFinding) GetDisplayName() string {
 	return s.DisplayName
+}
+
+func (s SchemaFinding) GetPZDisplayName() string {
+	return s.PZDisplayName.String
 }
 
 func (s SchemaFinding) GetExtensionName() string {
