@@ -106,13 +106,13 @@ func (s *BloodhoundDB) CreateCustomNodeKinds(ctx context.Context, customNodeKind
 const customNodeKindsSelectQuery = `
 	SELECT cnk.id, k.name AS kind_name, cnk.kind_id, cnk.schema_node_kind_id, cnk.config
 	FROM %s cnk
-	JOIN kind k ON k.id = cnk.kind_id`
+	JOIN %s k ON k.id = cnk.kind_id`
 
 func (s *BloodhoundDB) GetCustomNodeKinds(ctx context.Context) ([]model.CustomNodeKind, error) {
 	var customNodeKinds []model.CustomNodeKind
 
 	result := s.db.WithContext(ctx).Raw(
-		fmt.Sprintf(customNodeKindsSelectQuery+" ORDER BY cnk.id;", model.CustomNodeKind{}.TableName()),
+		fmt.Sprintf(customNodeKindsSelectQuery+" ORDER BY cnk.id;", model.CustomNodeKind{}.TableName(), model.Kind{}.TableName()),
 	).Scan(&customNodeKinds)
 
 	return customNodeKinds, CheckError(result)
@@ -122,7 +122,7 @@ func (s *BloodhoundDB) GetCustomNodeKind(ctx context.Context, kindName string) (
 	var customNodeKind model.CustomNodeKind
 
 	result := s.db.WithContext(ctx).Raw(
-		fmt.Sprintf(customNodeKindsSelectQuery+" WHERE k.name = ?;", model.CustomNodeKind{}.TableName()),
+		fmt.Sprintf(customNodeKindsSelectQuery+" WHERE k.name = ?;", model.CustomNodeKind{}.TableName(), model.Kind{}.TableName()),
 		kindName,
 	).Scan(&customNodeKind)
 

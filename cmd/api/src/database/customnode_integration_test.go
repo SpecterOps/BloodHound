@@ -616,7 +616,7 @@ func countCustomNodeKindRows(t *testing.T, testSuite IntegrationTestSuite, kindN
 	t.Helper()
 
 	var count int64
-	result := testSuite.DB.WithContext(testSuite.Context).Raw(fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE kind_name = ?", model.CustomNodeKind{}.TableName()), kindName).Scan(&count)
+	result := testSuite.DB.WithContext(testSuite.Context).Raw(fmt.Sprintf("SELECT COUNT(*) FROM %s cnk JOIN %s k ON k.id = cnk.kind_id WHERE k.name = ?", model.CustomNodeKind{}.TableName(), model.Kind{}.TableName()), kindName).Scan(&count)
 	require.NoError(t, result.Error)
 	return count
 }
