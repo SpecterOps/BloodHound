@@ -406,7 +406,9 @@ func MetricsMiddleware(muxRouter *mux.Router) mux.MiddlewareFunc {
 			promhttp.InstrumentHandlerInFlight(ApiInFlightGauge,
 				promhttp.InstrumentHandlerDuration(curriedDuration,
 					promhttp.InstrumentHandlerCounter(ApiTotalRequests,
-						promhttp.InstrumentHandlerResponseSize(ApiResponseSize, next),
+						promhttp.InstrumentHandlerRequestSize(ApiRequestSize,
+							promhttp.InstrumentHandlerResponseSize(ApiResponseSize, next),
+						),
 					),
 				),
 			).ServeHTTP(w, r)
