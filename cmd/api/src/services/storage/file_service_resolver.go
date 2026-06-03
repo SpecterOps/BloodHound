@@ -39,12 +39,10 @@ type fileServiceResolver struct {
 
 func NewFileServiceResolver(services map[storage.FileServiceName]storage.FileService) (FileServiceResolver, error) {
 	var (
-		serviceName    storage.FileServiceName
-		fileService    storage.FileService
 		copiedServices = make(map[storage.FileServiceName]storage.FileService, len(services))
 	)
 
-	for serviceName, fileService = range services {
+	for serviceName, fileService := range services {
 		if serviceName == "" {
 			return nil, errors.New("file service name is required")
 		}
