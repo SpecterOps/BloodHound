@@ -1136,6 +1136,20 @@ func (mr *MockDatabaseMockRecorder) EndUserSession(ctx, userSession any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndUserSession", reflect.TypeOf((*MockDatabase)(nil).EndUserSession), ctx, userSession)
 }
 
+// EnsureStubbedCustomNodeKindForIngest mocks base method.
+func (m *MockDatabase) EnsureStubbedCustomNodeKindForIngest(ctx context.Context, name string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnsureStubbedCustomNodeKindForIngest", ctx, name)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EnsureStubbedCustomNodeKindForIngest indicates an expected call of EnsureStubbedCustomNodeKindForIngest.
+func (mr *MockDatabaseMockRecorder) EnsureStubbedCustomNodeKindForIngest(ctx, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureStubbedCustomNodeKindForIngest", reflect.TypeOf((*MockDatabase)(nil).EnsureStubbedCustomNodeKindForIngest), ctx, name)
+}
+
 // GetADDataQualityAggregations mocks base method.
 func (m *MockDatabase) GetADDataQualityAggregations(ctx context.Context, start, end time.Time, sort_by string, limit, skip int) (model.ADDataQualityAggregations, int, error) {
 	m.ctrl.T.Helper()
