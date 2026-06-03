@@ -45,7 +45,6 @@ func (s *BloodhoundDB) CreateCustomNodeKinds(ctx context.Context, customNodeKind
 		bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
 
 		// Upsert each kind name into the kind table and capture the assigned ID.
-		// This must happen before the custom_node_kinds insert so kind_id is populated.
 		for i := range customNodeKinds {
 			upsertedKind, err := bhdb.UpsertKind(ctx, customNodeKinds[i].KindName)
 			if err != nil {
@@ -55,8 +54,7 @@ func (s *BloodhoundDB) CreateCustomNodeKinds(ctx context.Context, customNodeKind
 			customNodeKinds[i].KindId = int16(upsertedKind.ID)
 		}
 
-		// Insert each custom_node_kinds row individually so we can capture the
-		// returned id and detect the unique constraint violation on kind_id.
+		// Insert each custom_node_kinds row individually so we can capture the returned id and detect the unique constraint violation on kind_id.
 		for i := range customNodeKinds {
 			var newID int32
 
