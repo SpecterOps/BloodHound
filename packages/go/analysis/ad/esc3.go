@@ -113,7 +113,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 									certTemplateEnrollersTwo,
 									cache.GetEnterpriseCAEnrollers(eca1.ID),
 									ecaEnrollersTwo,
-									delegatedAgents.Slice())
+									NewCachedPrincipalSet(delegatedAgents.Slice()))
 
 								// Add principals to result set unless it's a user and DNS is required
 								if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {
