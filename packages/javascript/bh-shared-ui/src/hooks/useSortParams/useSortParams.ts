@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { SortOrder } from '../../types';
+import { SortOrder, SortOrderAscending, SortOrderDescending } from '../../types';
 
 type UseSortParamsOptions<TSortColumn extends string> = {
     initialSortColumn?: TSortColumn;
     initialSortOrder?: SortOrder;
 };
 
+// Reusable hook for managing a table's sorting state and formatting a valid sort_by query parameter
 export const useSortParams = <TSortColumn extends string>({
     initialSortColumn,
     initialSortOrder,
@@ -15,7 +16,7 @@ export const useSortParams = <TSortColumn extends string>({
 
     const sortBy = useMemo(() => {
         if (!sortColumn || !sortOrder) return undefined;
-        return `${sortOrder === 'desc' ? '-' : ''}${sortColumn}`;
+        return `${sortOrder === SortOrderDescending ? '-' : ''}${sortColumn}`;
     }, [sortColumn, sortOrder]);
 
     const clearSort = () => {
@@ -26,9 +27,9 @@ export const useSortParams = <TSortColumn extends string>({
     const handleSortChange = (column: TSortColumn) => {
         if (sortColumn !== column || sortOrder === undefined) {
             setSortColumn(column);
-            setSortOrder('desc');
-        } else if (sortOrder === 'desc') {
-            setSortOrder('asc');
+            setSortOrder(SortOrderDescending);
+        } else if (sortOrder === SortOrderDescending) {
+            setSortOrder(SortOrderAscending);
         } else {
             clearSort();
         }
