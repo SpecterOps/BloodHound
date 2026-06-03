@@ -2,11 +2,11 @@
 
 Playwright test suites and shared scaffolding for the `bloodhound-ui` workspace (`cmd/ui`).
 
-This directory is the entry point for browser-driven tests that run against the BloodHound UI. It is organized into per-suite subdirectories (today only `a11y/`) so additional suites with different purposes — end-to-end, visual regression, and so on — can be added as siblings without disturbing existing scaffolding. Each suite gets its own Playwright config, `testMatch` pattern, and artifact subfolder under `cmd/ui/playwright/`. Unit tests live next to their source under `cmd/ui/src/**/*.test.ts(x)` and are run with Vitest — they are not part of this directory.
+This directory is the entry point for browser-driven tests that run against the BloodHound UI. It is organized into per-suite subdirectories (today only `a11y/`) so additional suites with different purposes — end-to-end, visual regression, and so on — can be added as siblings without disturbing existing scaffolding. Each suite gets its own Playwright config, `testMatch` pattern, and artifact subfolder under `cmd/ui/playwright/`. Unit tests live next to their source under `cmd/ui/src/**/*.test.ts(x)` and are run with Vitest — they are not part of this directory. Vitest is configured (in `cmd/ui/vite.config.ts`) to exclude `tests/**` from collection, so `yarn test` will not pick up the `*.a11y.spec.ts` files; the Playwright suite only runs via `yarn test:a11y`.
 
 ## Layout
 
-```
+```text
 tests/
 ├── global.setup.ts   # Playwright "setup" project: logs in once and snapshots auth storage state
 ├── fixtures.ts       # Shared wrapper around bh-playwright-testing's `test` that installs stubs
@@ -66,7 +66,7 @@ yarn test:a11y --ui
 
 The `bhce/` script delegates to the `bloodhound-ui` workspace, whose `test:a11y` script clears the playwright artifact directory (`cmd/ui/playwright`) and runs the a11y test suite as configured in `playwright.a11y.config.ts` — the clean step is baked in so every run starts with a fresh `playwright/` directory. CI-mode behavior (single worker, 1 retry, `forbidOnly`) is auto-enabled when `process.env.CI` is set, so there is no separate `:ci` script. Note that a full CI mode process is not yet integrated other than config values. The Playwright config (`cmd/ui/playwright.a11y.config.ts`) generates a project matrix of `chromium-light`, `chromium-dark`, `firefox-light`, `firefox-dark`, each depending on the `setup` project.
 
-By default, the full 2x2 matrix (browsers x themes) is run, but projects me be individually specified:
+By default, the full 2x2 matrix (browsers x themes) is run, but projects may be individually specified:
 
 ```sh
 # Ex. Running light and dark Chromium browser projects
@@ -89,7 +89,7 @@ Each run writes to `cmd/ui/playwright/a11y/`:
 -   `html-report/` — Playwright HTML report (browsable as-is).
 -   `allure-results/` — Allure raw results (`*-result.json`). See [Viewing The Reports](#viewing-the-reports) below for how to render it.
 
-Every assertion via `expectNoAccessibilityViolations` attaches `axe-results.json` (always) and `a11y-violations.md` (only when violations exist) to the Playwright test result, which surfaces in both the HTML and Allure reports. The specs in this suite pass `{ page }` as the third argument, which adds per-node element screenshots (`a11y-<rule>-<n>.png`, up to 5 nodes per violation, excess viloations are ignore to reduce redundancy) so each violation has a visual indicator next to its textual description.
+Every assertion via `expectNoAccessibilityViolations` attaches `axe-results.json` (always) and `a11y-violations.md` (only when violations exist) to the Playwright test result, which surfaces in both the HTML and Allure reports. The specs in this suite pass `{ page }` as the third argument, which adds per-node element screenshots (`a11y-<rule>-<n>.png`, up to 5 nodes per violation, excess violations are ignored to reduce redundancy) so each violation has a visual indicator next to its textual description.
 
 The artifacts described above are produced and consumed locally; CI integration is a separate follow-up.
 
@@ -130,7 +130,7 @@ npm i -g allure-commandline      # cross-platform, requires Java on PATH
 ```sh
 # 1. Run the suite. The `test:a11y` script first clears the `cmd/ui/playwright/`
 #    folder, otherwise the Allure reporter would append across runs, bleeding
-#    in stale results. If this step is not ran first, user will see the error
+#    in stale results. If this step is not run first, user will see the error
 #    "does not exist" as the Allure results directory will be empty.
 yarn test:a11y
 

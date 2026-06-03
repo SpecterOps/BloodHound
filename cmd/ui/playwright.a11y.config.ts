@@ -28,7 +28,7 @@ dotenv.config({ path: path.resolve(__dirname, '.env') });
 const baseURL = `${process.env.A11Y_TEST_URL}`;
 
 // Address and port dev web server will run on
-const { hostname, port = '3000' } = new URL(baseURL);
+const { hostname, port } = new URL(baseURL);
 
 // When true, browser will run tests on Vite web server (API service must still be running)
 // Set to false when testing against http://bloodhound.localhost or https://test.bloodhoundenterprise.io
@@ -44,7 +44,7 @@ const browsers = [
 ] as const;
 
 const webServer = {
-    command: `yarn dev --host ${hostname} --port ${port}`,
+    command: `yarn dev --host ${hostname} --port ${port || '3000'}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,

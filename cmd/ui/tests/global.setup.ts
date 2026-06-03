@@ -24,8 +24,12 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const username = process.env.A11Y_TEST_USERNAME || '';
-const password = process.env.A11Y_TEST_PASSWORD || '';
+const username = process.env.A11Y_TEST_USERNAME;
+const password = process.env.A11Y_TEST_PASSWORD;
+
+if (!username || !password) {
+    throw new Error('A11Y_TEST_USERNAME and A11Y_TEST_PASSWORD must be set (see .env.example).');
+}
 
 setup('Generate and cache auth state for light and dark theme', async ({ page }) => {
     // Install the cypher stub before navigation so `useGraphHasData` resolves to "true" and
