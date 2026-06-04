@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/dawgs/graph"
 )
@@ -234,7 +235,9 @@ type SchemaFinding struct {
 	KindId            int32
 	Name              string
 	DisplayName       string
-	CreatedAt         time.Time
+	// PZ Variant Display Title
+	PZDisplayName null.String
+	CreatedAt     time.Time
 
 	// This is the kind that the finding is associated with based on the kind_id, it is enriched by db getters
 	Kind graph.Kind `gorm:"-"`
@@ -262,6 +265,10 @@ func (s SchemaFinding) FindingKind() graph.Kind {
 
 func (s SchemaFinding) GetDisplayName() string {
 	return s.DisplayName
+}
+
+func (s SchemaFinding) GetPZDisplayName() string {
+	return s.PZDisplayName.String
 }
 
 func (s SchemaFinding) GetExtensionName() string {
@@ -293,6 +300,7 @@ func (s SchemaFinding) IsSortable(column string) bool {
 	switch column {
 	case "name",
 		"display_name",
+		"pz_display_name",
 		"type",
 		"id",
 		"created_at":
@@ -304,14 +312,15 @@ func (s SchemaFinding) IsSortable(column string) bool {
 
 func (SchemaFinding) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
-		"name":           {Equals, NotEquals, ApproximatelyEquals},
-		"display_name":   {Equals, NotEquals, ApproximatelyEquals},
-		"id":             {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"created_at":     {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"extension_name": {Equals, NotEquals, ApproximatelyEquals},
-		"extension_id":   {Equals, NotEquals},
-		"is_builtin":     {Equals, NotEquals},
-		"kind":           {Equals, NotEquals},
+		"name":            {Equals, NotEquals, ApproximatelyEquals},
+		"display_name":    {Equals, NotEquals, ApproximatelyEquals},
+		"pz_display_name": {Equals, NotEquals, ApproximatelyEquals},
+		"id":              {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"created_at":      {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"extension_name":  {Equals, NotEquals, ApproximatelyEquals},
+		"extension_id":    {Equals, NotEquals},
+		"is_builtin":      {Equals, NotEquals},
+		"kind":            {Equals, NotEquals},
 	}
 }
 
@@ -500,6 +509,7 @@ type RelationshipFindingsInput []RelationshipFindingInput
 type RelationshipFindingInput struct {
 	Name                 string
 	DisplayName          string
+	PZDisplayName        string
 	RelationshipKindName string // edge kind
 	EnvironmentKindName  string
 	RemediationInput     RemediationInput
