@@ -32,42 +32,23 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
+func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, certChains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
 	// 1.
-	principals := cardinality.NewBitmap64()
-	publishedTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID)
+	var (
+		principals         = cardinality.NewBitmap64()
+		publishedTemplates = cache.GetPublishedTemplateCache(certChains.EnterpriseCA.ID)
+	)
 
 	// 2. iterate certtemplates that have an outbound `PublishedTo` edge to eca
 	for _, certTemplate := range publishedTemplates {
-		if principalsWithGenericWrite, err := FetchPrincipalsWithGenericWriteOnCertTemplate(tx, certTemplate); err != nil {
-			slog.WarnContext(
-				ctx,
-				"Error fetching principals with GenericWrite on cert template",
-				slog.Uint64("cert_template_id", uint64(certTemplate.ID)),
-				attr.Error(err),
-			)
-		} else if principalsWithEnrollOrAllExtendedRights, err := FetchPrincipalsWithEnrollOrAllExtendedRightsOnCertTemplate(tx, certTemplate); err != nil {
-			slog.WarnContext(
-				ctx,
-				"Error fetching principals with Enroll or AllExtendedRights on cert template",
-				slog.Uint64("cert_template_id", uint64(certTemplate.ID)),
-				attr.Error(err),
-			)
-		} else if principalsWithPKINameFlag, err := FetchPrincipalsWithWritePKINameFlagOnCertTemplate(tx, certTemplate); err != nil {
-			slog.WarnContext(
-				ctx,
-				"Error fetching principals with WritePKINameFlag on cert template",
-				slog.Uint64("cert_template_id", uint64(certTemplate.ID)),
-				attr.Error(err),
-			)
-		} else if principalsWithPKIEnrollmentFlag, err := FetchPrincipalsWithWritePKIEnrollmentFlagOnCertTemplate(tx, certTemplate); err != nil {
-			slog.WarnContext(
-				ctx,
-				"Error fetching principals with WritePKIEnrollmentFlag on cert template",
-				slog.Uint64("cert_template_id", uint64(certTemplate.ID)),
-				attr.Error(err),
-			)
-		} else if enrolleeSuppliesSubject, err := certTemplate.Properties.Get(string(ad.EnrolleeSuppliesSubject)).Bool(); err != nil {
+		var (
+			principalsWithGenericWrite              = cache.GetCertTemplateGenericWriters(certTemplate.ID)
+			principalsWithEnrollOrAllExtendedRights = cache.GetCertTemplateEnrollOrAllExtendedRighters(certTemplate.ID)
+			principalsWithPKINameFlag               = cache.GetCertTemplateWritePKINameFlaggers(certTemplate.ID)
+			principalsWithPKIEnrollmentFlag         = cache.GetCertTemplateWritePKIEnrollmentFlaggers(certTemplate.ID)
+		)
+
+		if enrolleeSuppliesSubject, err := certTemplate.Properties.Get(string(ad.EnrolleeSuppliesSubject)).Bool(); err != nil {
 			slog.WarnContext(
 				ctx,
 				"Error fetching EnrolleeSuppliesSubject property on cert template",
@@ -84,7 +65,7 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 		} else {
 
 			var (
-				enterpriseCAEnrollers   = cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
+				enterpriseCAEnrollers   = cache.GetEnterpriseCAEnrollers(certChains.EnterpriseCA.ID)
 				certTemplateControllers = cache.GetCertTemplateControllers(certTemplate.ID)
 			)
 
@@ -101,21 +82,13 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 				CalculateCrossProductNodeSets(
 					localGroupData,
 					enterpriseCAEnrollers,
-					principalsWithGenericWrite.Slice(),
-					principalsWithEnrollOrAllExtendedRights.Slice(),
+					principalsWithGenericWrite,
+					principalsWithEnrollOrAllExtendedRights,
 				),
 			)
 
 			// 2c. kick out early if cert template does meet conditions for ESC4
-			if valid, err := isCertTemplateValidForESC4(certTemplate); err != nil {
-				slog.WarnContext(
-					ctx,
-					"Error validating cert template",
-					slog.Uint64("cert_template_id", uint64(certTemplate.ID)),
-					attr.Error(err),
-				)
-				continue
-			} else if !valid {
+			if !isCertTemplateValidForESC4(ctx, certTemplate) {
 				continue
 			}
 
@@ -123,9 +96,9 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 			principals.Or(CalculateCrossProductNodeSets(
 				localGroupData,
 				enterpriseCAEnrollers,
-				principalsWithEnrollOrAllExtendedRights.Slice(),
-				principalsWithPKINameFlag.Slice(),
-				principalsWithPKIEnrollmentFlag.Slice(),
+				principalsWithEnrollOrAllExtendedRights,
+				principalsWithPKINameFlag,
+				principalsWithPKIEnrollmentFlag,
 			))
 
 			// 2e.
@@ -134,8 +107,8 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 					CalculateCrossProductNodeSets(
 						localGroupData,
 						enterpriseCAEnrollers,
-						principalsWithEnrollOrAllExtendedRights.Slice(),
-						principalsWithPKIEnrollmentFlag.Slice(),
+						principalsWithEnrollOrAllExtendedRights,
+						principalsWithPKIEnrollmentFlag,
 					),
 				)
 			}
@@ -146,8 +119,8 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 					CalculateCrossProductNodeSets(
 						localGroupData,
 						enterpriseCAEnrollers,
-						principalsWithEnrollOrAllExtendedRights.Slice(),
-						principalsWithPKINameFlag.Slice(),
+						principalsWithEnrollOrAllExtendedRights,
+						principalsWithPKINameFlag,
 					),
 				)
 			}
@@ -155,10 +128,10 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 	}
 
 	principals.Each(func(value uint64) bool {
-		for _, domain := range targetDomains.Slice() {
+		for _, domain := range certChains.Domains.Slice() {
 			channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 				FromID: graph.ID(value),
-				ToID:   domain.ID,
+				ToID:   graph.ID(domain),
 				Kind:   ad.ADCSESC4,
 			})
 		}
@@ -168,85 +141,22 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 	return nil
 }
 
-func isCertTemplateValidForESC4(ct *graph.Node) (bool, error) {
+func isCertTemplateValidForESC4(ctx context.Context, ct *graph.Node) bool {
 	if authenticationEnabled, err := ct.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if !authenticationEnabled {
-		return false, nil
+		return false
 	} else if schemaVersion, err := ct.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if authorizedSignatures, err := ct.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if schemaVersion > 1 && authorizedSignatures > 0 {
-		return false, nil
+		return false
 	} else {
-		return true, nil
-	}
-}
-
-func FetchPrincipalsWithGenericWriteOnCertTemplate(tx graph.Transaction, certTemplate *graph.Node) (graph.NodeSet, error) {
-	if nodes, err := ops.FetchStartNodes(tx.Relationships().Filterf(
-		func() graph.Criteria {
-			return query.And(
-				query.Equals(query.EndID(), certTemplate.ID),
-				query.Kind(query.Relationship(), ad.GenericWrite),
-			)
-		},
-	)); err != nil {
-		return nil, err
-	} else {
-		return nodes, nil
-	}
-}
-
-func FetchPrincipalsWithEnrollOrAllExtendedRightsOnCertTemplate(tx graph.Transaction, certTemplate *graph.Node) (graph.NodeSet, error) {
-	if nodes, err := ops.FetchStartNodes(
-		tx.Relationships().Filterf(
-			func() graph.Criteria {
-				return query.And(
-					query.Equals(query.EndID(), certTemplate.ID),
-					query.Or(
-						query.Kind(query.Relationship(), ad.Enroll),
-						query.Kind(query.Relationship(), ad.AllExtendedRights),
-					),
-				)
-			},
-		)); err != nil {
-		return nil, err
-	} else {
-		return nodes, nil
-	}
-}
-
-func FetchPrincipalsWithWritePKINameFlagOnCertTemplate(tx graph.Transaction, certTemplate *graph.Node) (graph.NodeSet, error) {
-	if nodes, err := ops.FetchStartNodes(
-		tx.Relationships().Filterf(
-			func() graph.Criteria {
-				return query.And(
-					query.Equals(query.EndID(), certTemplate.ID),
-					query.Kind(query.Relationship(), ad.WritePKINameFlag),
-				)
-			},
-		)); err != nil {
-		return nil, err
-	} else {
-		return nodes, nil
-	}
-}
-
-func FetchPrincipalsWithWritePKIEnrollmentFlagOnCertTemplate(tx graph.Transaction, certTemplate *graph.Node) (graph.NodeSet, error) {
-	if nodes, err := ops.FetchStartNodes(
-		tx.Relationships().Filterf(
-			func() graph.Criteria {
-				return query.And(
-					query.Equals(query.EndID(), certTemplate.ID),
-					query.Kind(query.Relationship(), ad.WritePKIEnrollmentFlag),
-				)
-			},
-		)); err != nil {
-		return nil, err
-	} else {
-		return nodes, nil
+		return true
 	}
 }
 

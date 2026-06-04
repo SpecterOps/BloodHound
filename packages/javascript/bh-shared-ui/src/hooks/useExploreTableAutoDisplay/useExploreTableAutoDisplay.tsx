@@ -47,22 +47,22 @@ export const useExploreTableAutoDisplay = (enabled: boolean) => {
 
     // Memoized this because it could be semi-expensive when checking if nodes are empty and
     // we dont need to recalculate it on every rerender.
-    const [emptyEdges, containsNodes] = useMemo(() => {
+    const [emptyEdges, containsNodes, nodesLength] = useMemo(() => {
         if (enabled && autoDisplayTableQueryCandidate) {
             const emptyEdges = isEmpty(graphData.data.edges);
             const containsNodes = !isEmpty(graphData.data.nodes);
+            const nodesLength = Object.keys(graphData?.data.nodes).length;
 
-            return [emptyEdges, containsNodes];
+            return [emptyEdges, containsNodes, nodesLength];
         }
-        return [false, false];
+        return [false, false, 0];
     }, [autoDisplayTableQueryCandidate, enabled, graphData]);
 
     // checks if current query is a candidate to auto display the table
     // if it is, and the query is nodes only then call setAutoDisplayTable.
     useEffect(() => {
         if (!enabled || hasTriggered) return;
-
-        const shouldAutoDisplay = autoDisplayTableQueryCandidate && emptyEdges && containsNodes;
+        const shouldAutoDisplay = autoDisplayTableQueryCandidate && emptyEdges && containsNodes && nodesLength > 1;
 
         if (shouldAutoDisplay) {
             // set triggered to true so that we dont try to reopen the table until a new query is executed.
@@ -70,7 +70,15 @@ export const useExploreTableAutoDisplay = (enabled: boolean) => {
         }
         // This will automatically open/close the table
         setAutoDisplayTable(shouldAutoDisplay);
-    }, [autoDisplayTableQueryCandidate, containsNodes, emptyEdges, enabled, hasTriggered, setAutoDisplayTable]);
+    }, [
+        autoDisplayTableQueryCandidate,
+        containsNodes,
+        nodesLength,
+        emptyEdges,
+        enabled,
+        hasTriggered,
+        setAutoDisplayTable,
+    ]);
 
     return [autoDisplayTable, setAutoDisplayTable] as const;
 };

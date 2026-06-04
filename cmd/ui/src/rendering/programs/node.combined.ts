@@ -46,6 +46,8 @@ const POINTS = 3,
       - uvw (3xfloat) - only pass width for square texture
       - angle (1xfloat)
       - borderColor (4xbyte = 1xfloat)
+      - dim (1xfloat)
+      - bgColor (4xbyte = 1xfloat)
    */
     ATTRIBUTES = 11,
     // maximum size of single texture in atlas

@@ -103,7 +103,7 @@ func (s *Migrator) ExecuteGooseMigrations(ctx context.Context) error {
 
 	if hasLegacyTable {
 		// Existing database - check if behind and run v8 stepwise migrations if needed
-		// This logic can be removed once v10 is released
+		// This logic can be removed once v11 is released
 		if err := s.runLegacyMigrationsIfNeeded(); err != nil {
 			return fmt.Errorf("failed to run legacy migrations: %w", err)
 		}
@@ -144,7 +144,7 @@ func (s *Migrator) ExecuteGooseMigrations(ctx context.Context) error {
 }
 
 // runLegacyMigrationsIfNeeded checks if the database is behind on v8 stepwise migrations
-// and runs them if needed. This can be removed once v10 is released.
+// and runs them if needed. This can be removed once v11 is released.
 func (s *Migrator) runLegacyMigrationsIfNeeded() error {
 	lastMigration, err := s.LatestMigration()
 	if err != nil {

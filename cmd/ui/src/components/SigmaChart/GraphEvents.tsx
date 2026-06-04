@@ -35,6 +35,7 @@ import { blendHexColors, getNodeRadius } from 'src/rendering/utils/utils';
 import { useAppSelector } from 'src/store';
 import { preventAllDefaults } from 'src/utils';
 import { sequentialLayout, standardLayout } from 'src/views/Explore/utils';
+import { getFullPathHighlightedEntities, getIsHighlightedItemInGraph } from './utils';
 
 interface SigmaChartRef {
     resetCamera: () => void;
@@ -94,6 +95,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const theme = useTheme();
+    const isExploreGraphHighlight = useAppSelector((state) => state.global.view.isExploreGraphHighlight);
 
     const sigma = useSigma();
     const graph = sigma.getGraph();
@@ -277,31 +279,15 @@ export const GraphEvents = forwardRef(function GraphEvents(
         sigmaContainer,
     ]);
 
-    const isHighlightedItemInGraph = useMemo(() => {
-        if (!highlightedItem) return;
-        return graph.hasNode(highlightedItem) || graph.hasEdge(highlightedItem);
-    }, [graph, highlightedItem]);
+    const isHighlightedItemInGraph = useMemo(
+        () => getIsHighlightedItemInGraph(graph, highlightedItem),
+        [graph, highlightedItem]
+    );
 
-    // Compute which nodes and edges should remain fully visible when an item is selected.
-    // Nodes: the selected node itself + all its direct neighbors.
-    // Edges: all edges directly connected to the selected node/edge endpoints.
-    const { highlightedNodeIds, highlightedEdgeIds } = useMemo(() => {
-        const highlightedNodeIds = new Set<string>();
-        const highlightedEdgeIds = new Set<string>();
-
-        if (highlightedItem) {
-            if (graph.hasNode(highlightedItem)) {
-                highlightedNodeIds.add(highlightedItem);
-                graph.neighbors(highlightedItem).forEach((directNodes) => highlightedNodeIds.add(directNodes));
-                graph.edges(highlightedItem).forEach((directEdges) => highlightedEdgeIds.add(directEdges));
-            } else if (graph.hasEdge(highlightedItem)) {
-                highlightedEdgeIds.add(highlightedItem);
-                graph.extremities(highlightedItem).forEach((directNodes) => highlightedNodeIds.add(directNodes));
-            }
-        }
-
-        return { highlightedNodeIds, highlightedEdgeIds };
-    }, [graph, highlightedItem]);
+    const { highlightedNodeIds, highlightedEdgeIds } = useMemo(
+        () => getFullPathHighlightedEntities(graph, highlightedItem),
+        [graph, highlightedItem]
+    );
 
     useEffect(() => {
         const bgColor = theme.neutral.primary;
@@ -314,7 +300,11 @@ export const GraphEvents = forwardRef(function GraphEvents(
         setSettings({
             nodeReducer: (node, data) => {
                 const camera = sigma.getCamera();
-                const isDimmed = !!highlightedItem && !highlightedNodeIds.has(node) && isHighlightedItemInGraph;
+                const isDimmed =
+                    isExploreGraphHighlight !== false &&
+                    !!highlightedItem &&
+                    !highlightedNodeIds.has(node) &&
+                    isHighlightedItemInGraph;
 
                 return {
                     ...data,
@@ -333,7 +323,11 @@ export const GraphEvents = forwardRef(function GraphEvents(
             },
             edgeReducer: (edge, data) => {
                 const camera = sigma.getCamera();
-                const isDimmed = !!highlightedItem && !highlightedEdgeIds.has(edge);
+                const isDimmed =
+                    isExploreGraphHighlight !== false &&
+                    !!highlightedItem &&
+                    !highlightedEdgeIds.has(edge) &&
+                    isHighlightedItemInGraph;
 
                 const newData: Attributes = {
                     ...data,
@@ -368,6 +362,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
         sigma,
         theme.neutral.primary,
         isHighlightedItemInGraph,
+        isExploreGraphHighlight,
     ]);
 
     // Toggle off edge labels when dragging a node to avoid performance hit

@@ -68,7 +68,7 @@
         "domainsid": "DOMAIN123",
         "objectid": "CUserA",
         "lastlogontimestamp": "NOW()",
-        "enabled": "true"
+        "enabled": "BOOL:true"
       },
       "style": {}
     },
@@ -87,7 +87,7 @@
         "domainsid": "DOMAIN123",
         "objectid": "CUserB",
         "lastlogontimestamp": "NOW()",
-        "enabled": "true"
+        "enabled": "BOOL:true"
       },
       "style": {}
     },
@@ -106,7 +106,7 @@
         "domainsid": "DOMAIN123",
         "objectid": "CUserC",
         "lastlogontimestamp": "NOW()",
-        "enabled": "true"
+        "enabled": "BOOL:true"
       },
       "style": {}
     },
@@ -125,7 +125,7 @@
         "domainsid": "DOMAIN123",
         "objectid": "CUserD",
         "lastlogontimestamp": "NOW()",
-        "enabled": "true"
+        "enabled": "BOOL:true"
       },
       "style": {}
     },
@@ -144,7 +144,7 @@
         "domainsid": "DOMAIN123",
         "objectid": "CUserInactive",
         "lastlogontimestamp": "NOW()-10800000",
-        "enabled": "true"
+        "enabled": "BOOL:true"
       },
       "style": {}
     },
@@ -162,7 +162,7 @@
       "properties": {
         "domainsid": "DOMAIN123",
         "objectid": "CComputerA",
-        "enabled": "true"
+        "enabled": "BOOL:true"
       },
       "style": {}
     },
@@ -216,7 +216,7 @@
         "objectid": "CComputerC",
         "lastlogontimestamp": "NOW()",
         "operatingsystem": "WINDOWS",
-        "enabled": "true"
+        "enabled": "BOOL:true"
       },
       "style": {}
     },
@@ -236,7 +236,7 @@
         "objectid": "CComputerD",
         "lastlogontimestamp": "NOW()",
         "operatingsystem": "WINDOWS",
-        "enabled": "true"
+        "enabled": "BOOL:true"
       },
       "style": {}
     },
@@ -256,7 +256,7 @@
         "domainsid": "DOMAIN123",
         "objectid": "CUserDisabled",
         "lastlogontimestamp": "NOW()",
-        "enabled": "false"
+        "enabled": "BOOL:false"
       }
     }
   ],

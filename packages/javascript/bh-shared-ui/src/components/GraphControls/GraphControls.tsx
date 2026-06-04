@@ -22,6 +22,7 @@ import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
 import { useRef, useState } from 'react';
 import { useExploreParams, useKeybindings } from '../../hooks';
+import { cn } from '../../utils';
 import { exportToJson } from '../../utils/exportGraphData';
 import GraphButton from '../GraphButton';
 import GraphMenu from '../GraphMenu';
@@ -34,8 +35,9 @@ interface GraphControlsProps<T extends readonly string[]> {
     onToggleEdgeLabels: () => void;
     onSearchedNodeClick: (node: FlatNode) => void;
     isExploreTableSelected?: boolean;
+    isExploreLayoutSelected?: boolean;
     layoutOptions: T;
-    selectedLayout: T[number];
+    selectedLayout?: T[number];
     showNodeLabels: boolean;
     showEdgeLabels: boolean;
     jsonData: Record<string, any> | undefined;
@@ -50,6 +52,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         onToggleEdgeLabels,
         onSearchedNodeClick,
         isExploreTableSelected,
+        isExploreLayoutSelected,
         layoutOptions,
         selectedLayout,
         showNodeLabels,
@@ -61,7 +64,6 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
     const [isCurrentSearchOpen, setIsCurrentSearchOpen] = useState(false);
 
     const currentSearchAnchorElement = useRef(null);
-
     useKeybindings({
         shift: {
             Slash: () => {
@@ -135,15 +137,16 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                     {layoutOptions.map((buttonLabel) => {
                         const tableViewIsSelected = isExploreTableSelected && searchType === 'cypher';
                         const isSelected = tableViewIsSelected
-                            ? buttonLabel === 'table'
-                            : buttonLabel === selectedLayout;
+                            ? buttonLabel === 'table' && isExploreLayoutSelected
+                            : buttonLabel === selectedLayout && isExploreLayoutSelected;
 
                         return (
                             <MenuItem
                                 data-testid={`explore_graph-controls_${buttonLabel}-buttonLabel`}
                                 key={buttonLabel}
                                 selected={isSelected}
-                                onClick={() => onLayoutChange(buttonLabel)}>
+                                onClick={() => onLayoutChange(buttonLabel)}
+                                className={cn({ '!bg-primary text-white dark:text-[#121212]': isSelected })}>
                                 {capitalize(buttonLabel)}
                             </MenuItem>
                         );

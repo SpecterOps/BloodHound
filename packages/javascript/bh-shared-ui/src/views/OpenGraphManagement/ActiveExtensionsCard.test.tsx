@@ -19,7 +19,7 @@ import { AxiosResponse } from 'axios';
 import { Extension } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, waitFor } from '../../test-utils';
+import { fireEvent, render, screen, waitFor } from '../../test-utils';
 import { apiClient } from '../../utils';
 import {
     ActiveExtensionsCard,
@@ -55,9 +55,9 @@ vi.mock('../../hooks', async () => {
 });
 
 const mockExtensions: Extension[] = [
-    { id: '1', name: 'Active Directory', version: 'v0.0.1', is_builtin: true },
-    { id: '2', name: 'Azure', version: 'v1.0.0', is_builtin: true },
-    { id: '3', name: 'Custom Extension', version: '0.5.0', is_builtin: false },
+    { id: '1', name: 'Active Directory', namespace: 'AD', version: 'v0.0.1', is_builtin: true },
+    { id: '2', name: 'Azure', namespace: 'AZ', version: 'v1.0.0', is_builtin: true },
+    { id: '3', name: 'Custom Extension', namespace: 'CUSTOM', version: '0.5.0', is_builtin: false },
 ];
 
 const server = setupServer(
@@ -133,10 +133,33 @@ describe('ActiveExtensionsCard', () => {
 
         expect(await screen.findByText('Active Directory')).toBeInTheDocument();
         expect(screen.getByText('v0.0.1')).toBeInTheDocument();
+        expect(screen.getByText('AD')).toBeInTheDocument();
         expect(screen.getByText('Azure')).toBeInTheDocument();
         expect(screen.getByText('v1.0.0')).toBeInTheDocument();
+        expect(screen.getByText('AZ')).toBeInTheDocument();
         expect(screen.getByText('Custom Extension')).toBeInTheDocument();
         expect(screen.getByText('0.5.0')).toBeInTheDocument();
+        expect(screen.getByText('CUSTOM')).toBeInTheDocument();
+    });
+
+    it('shows tooltip content when hovering the info icon in the Namespace column header', async () => {
+        render(<ActiveExtensionsCard />);
+
+        await screen.findByText('Active Directory');
+
+        const namespaceHeader = screen.getByRole('columnheader', { name: /namespace/i });
+        const tooltipTrigger = namespaceHeader.querySelector('[data-state]')!;
+
+        // Radix Tooltip opens on pointerMove, not pointerEnter
+        fireEvent.pointerMove(tooltipTrigger);
+
+        await waitFor(
+            () => {
+                // Radix may render multiple portal instances during open animation transitions
+                expect(screen.getAllByText(/Namespace Key is a set prefix/i).length).toBeGreaterThan(0);
+            },
+            { timeout: 2000 }
+        );
     });
 
     it('renders delete buttons for each extension', async () => {
@@ -284,12 +307,11 @@ describe('ActiveExtensionsCard', () => {
         expect(confirmButton).toBeDisabled();
 
         const input = screen.getByPlaceholderText('Custom Extension');
-        await user.type(input, 'Wrong Name');
+        fireEvent.change(input, { target: { value: 'Wrong Name' } });
         expect(confirmButton).toBeDisabled();
 
-        await user.clear(input);
-        await user.type(input, 'Custom Extension');
-        expect(confirmButton).not.toBeDisabled();
+        fireEvent.change(input, { target: { value: 'Custom Extension' } });
+        await waitFor(() => expect(confirmButton).not.toBeDisabled());
     });
 
     it('clears input when dialog is closed and reopened', async () => {
@@ -324,9 +346,10 @@ describe('ActiveExtensionsCard', () => {
         await user.click(deleteButton);
 
         const input = screen.getByPlaceholderText('Custom Extension');
-        await user.type(input, 'Custom Extension');
+        fireEvent.change(input, { target: { value: 'Custom Extension' } });
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
+        await waitFor(() => expect(confirmButton).not.toBeDisabled());
         await user.click(confirmButton);
 
         expect(deleteExtensionSpy).toHaveBeenCalledWith('3');
@@ -340,9 +363,10 @@ describe('ActiveExtensionsCard', () => {
         await user.click(deleteButton);
 
         const input = screen.getByPlaceholderText('Custom Extension');
-        await user.type(input, 'Custom Extension');
+        fireEvent.change(input, { target: { value: 'Custom Extension' } });
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
+        await waitFor(() => expect(confirmButton).not.toBeDisabled());
         await user.click(confirmButton);
 
         await waitFor(() => {
@@ -364,9 +388,10 @@ describe('ActiveExtensionsCard', () => {
         await user.click(deleteButton);
 
         const input = screen.getByPlaceholderText('Custom Extension');
-        await user.type(input, 'Custom Extension');
+        fireEvent.change(input, { target: { value: 'Custom Extension' } });
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
+        await waitFor(() => expect(confirmButton).not.toBeDisabled());
         await user.click(confirmButton);
 
         await waitFor(() => {

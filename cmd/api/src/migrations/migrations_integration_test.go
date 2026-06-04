@@ -23,11 +23,12 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
-	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
@@ -130,174 +131,148 @@ func TestVersion_910_Migration(t *testing.T) {
 	})
 }
 
-// newADNode returns an unsaved AD-kinded node with the given name and type kind,
-// optionally polluted with extra kinds that the migration is expected to strip.
-func newADNode(name string, typeKind graph.Kind, extraKinds ...graph.Kind) *graph.Node {
-	return newPlatformNode(name, ad.Entity, typeKind, extraKinds...)
-}
-
-// newAzureNode returns an unsaved Azure-kinded node with the given name and type kind,
-// optionally polluted with extra kinds that the migration is expected to strip.
-func newAzureNode(name string, typeKind graph.Kind, extraKinds ...graph.Kind) *graph.Node {
-	return newPlatformNode(name, azure.Entity, typeKind, extraKinds...)
-}
-
-func newPlatformNode(name string, baseKind, typeKind graph.Kind, extraKinds ...graph.Kind) *graph.Node {
-	kinds := graph.Kinds{baseKind, typeKind}
-	kinds = append(kinds, extraKinds...)
-	return &graph.Node{
-		Kinds: kinds,
-		Properties: graph.AsProperties(graph.PropertyMap{
-			common.Name:     name,
-			common.ObjectID: name,
-		}),
-	}
-}
-
-func TestVersion_920_Migration(t *testing.T) {
-	t.Run("strips non-ad.Entity source kinds from AD nodes", func(t *testing.T) {
+func TestVersion_930_Migration(t *testing.T) {
+	t.Run("backfills custom_node_kinds for a schemaless node kind that isn't in custom_node_kinds or schema_node_kinds", func(t *testing.T) {
 		suite := setupIntegrationTestSuite(t)
 		t.Cleanup(func() { suite.teardownIntegrationTestSuite(t) })
 
-		var (
-			adUserPolluted     = newADNode("PollutedUser", ad.User, azure.Entity, graph.StringKind("CustomKind"))
-			adComputerPolluted = newADNode("PollutedComputer", ad.Computer, graph.StringKind("CustomKind"))
-			adGroupClean       = newADNode("CleanGroup", ad.Group)
-			azNodeUntouched    = &graph.Node{
-				Kinds: graph.Kinds{azure.Entity, azure.User},
-				Properties: graph.AsProperties(graph.PropertyMap{
-					common.Name:     "AZUser",
-					common.ObjectID: "AZUser",
-				}),
-			}
-			ogNodeUntouched = &graph.Node{
-				Kinds: graph.Kinds{graph.StringKind("CustomKind")},
-				Properties: graph.AsProperties(graph.PropertyMap{
-					common.Name:     "OGNode",
-					common.ObjectID: "OGNode",
-				}),
-			}
-		)
+		schemalessNode := &graph.Node{
+			Kinds: graph.Kinds{graph.StringKind("SchemalessKind")},
+			Properties: graph.AsProperties(graph.PropertyMap{
+				common.Name:     "SchemalessNode",
+				common.ObjectID: "SchemalessNode",
+			}),
+		}
+		suite.createNodes(t, schemalessNode)
 
-		suite.createNodes(t, adUserPolluted, adComputerPolluted, adGroupClean, azNodeUntouched, ogNodeUntouched)
-
-		// ad.Entity and azure.Entity are auto-registered as source kinds by the
-		// SQL migrations; only CustomKind needs to be registered explicitly.
-		require.NoError(t, suite.bhDatabase.RegisterSourceKind(suite.context)(graph.StringKind("CustomKind")))
-
-		err := migrations.Version_920_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
+		err := migrations.Version_930_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
 		require.NoError(t, err)
 
-		err = suite.graphDB.ReadTransaction(suite.context, func(tx graph.Transaction) error {
-			adUser, err := ops.FetchNode(tx, adUserPolluted.ID)
-			require.NoError(t, err)
-			require.True(t, adUser.Kinds.ContainsOneOf(ad.Entity), "ad.Entity must be preserved")
-			require.True(t, adUser.Kinds.ContainsOneOf(ad.User), "ad.User type kind must be preserved")
-			require.False(t, adUser.Kinds.ContainsOneOf(azure.Entity), "azure.Entity must be stripped")
-			require.False(t, adUser.Kinds.ContainsOneOf(graph.StringKind("CustomKind")), "CustomKind must be stripped")
-
-			adComputer, err := ops.FetchNode(tx, adComputerPolluted.ID)
-			require.NoError(t, err)
-			require.True(t, adComputer.Kinds.ContainsOneOf(ad.Entity))
-			require.True(t, adComputer.Kinds.ContainsOneOf(ad.Computer))
-			require.False(t, adComputer.Kinds.ContainsOneOf(graph.StringKind("CustomKind")))
-
-			adGroup, err := ops.FetchNode(tx, adGroupClean.ID)
-			require.NoError(t, err)
-			require.True(t, adGroup.Kinds.ContainsOneOf(ad.Entity))
-			require.True(t, adGroup.Kinds.ContainsOneOf(ad.Group))
-
-			azNode, err := ops.FetchNode(tx, azNodeUntouched.ID)
-			require.NoError(t, err)
-			require.True(t, azNode.Kinds.ContainsOneOf(azure.Entity), "azure.Entity must be preserved on clean azure nodes")
-			require.True(t, azNode.Kinds.ContainsOneOf(azure.User), "azure type kinds must be preserved")
-
-			ogNode, err := ops.FetchNode(tx, ogNodeUntouched.ID)
-			require.NoError(t, err)
-			require.True(t, ogNode.Kinds.ContainsOneOf(graph.StringKind("CustomKind")), "OpenGraph nodes must not be touched")
-
-			return nil
-		})
+		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context, nil)
 		require.NoError(t, err)
+
+		var backfilledKind *model.CustomNodeKind
+		for i, customNodeKind := range customNodeKinds {
+			if customNodeKind.KindName == "SchemalessKind" {
+				backfilledKind = &customNodeKinds[i]
+				break
+			}
+		}
+		require.NotNil(t, backfilledKind, "SchemalessKind must be present in custom_node_kinds after backfill")
+		require.Equal(t, graphschema.DisplayNodeTypeFontAwesome, backfilledKind.Config.Icon.Type)
+		require.Equal(t, database.CustomNodeKindStubConfig.Icon.Name, backfilledKind.Config.Icon.Name)
+		require.Equal(t, database.CustomNodeKindStubConfig.Icon.Color, backfilledKind.Config.Icon.Color)
 	})
 
-	t.Run("strips non-azure.Entity source kinds from Azure nodes", func(t *testing.T) {
+	t.Run("does not backfill a kind already present in custom_node_kinds", func(t *testing.T) {
 		suite := setupIntegrationTestSuite(t)
 		t.Cleanup(func() { suite.teardownIntegrationTestSuite(t) })
 
-		var (
-			azUserPolluted  = newAzureNode("PollutedAZUser", azure.User, ad.Entity, graph.StringKind("CustomKind"))
-			azGroupPolluted = newAzureNode("PollutedAZGroup", azure.Group, graph.StringKind("CustomKind"))
-			azTenantClean   = newAzureNode("CleanTenant", azure.Tenant)
-			adNodeUntouched = newADNode("ADUser", ad.User)
-			ogNodeUntouched = &graph.Node{
-				Kinds: graph.Kinds{graph.StringKind("CustomKind")},
-				Properties: graph.AsProperties(graph.PropertyMap{
-					common.Name:     "OGNode",
-					common.ObjectID: "OGNode",
-				}),
-			}
-		)
-
-		suite.createNodes(t, azUserPolluted, azGroupPolluted, azTenantClean, adNodeUntouched, ogNodeUntouched)
-
-		require.NoError(t, suite.bhDatabase.RegisterSourceKind(suite.context)(graph.StringKind("CustomKind")))
-
-		err := migrations.Version_920_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
-		require.NoError(t, err)
-
-		err = suite.graphDB.ReadTransaction(suite.context, func(tx graph.Transaction) error {
-			azUser, err := ops.FetchNode(tx, azUserPolluted.ID)
-			require.NoError(t, err)
-			require.True(t, azUser.Kinds.ContainsOneOf(azure.Entity), "azure.Entity must be preserved")
-			require.True(t, azUser.Kinds.ContainsOneOf(azure.User), "azure.User type kind must be preserved")
-			require.False(t, azUser.Kinds.ContainsOneOf(ad.Entity), "ad.Entity must be stripped")
-			require.False(t, azUser.Kinds.ContainsOneOf(graph.StringKind("CustomKind")), "CustomKind must be stripped")
-
-			azGroup, err := ops.FetchNode(tx, azGroupPolluted.ID)
-			require.NoError(t, err)
-			require.True(t, azGroup.Kinds.ContainsOneOf(azure.Entity))
-			require.True(t, azGroup.Kinds.ContainsOneOf(azure.Group))
-			require.False(t, azGroup.Kinds.ContainsOneOf(graph.StringKind("CustomKind")))
-
-			azTenant, err := ops.FetchNode(tx, azTenantClean.ID)
-			require.NoError(t, err)
-			require.True(t, azTenant.Kinds.ContainsOneOf(azure.Entity))
-			require.True(t, azTenant.Kinds.ContainsOneOf(azure.Tenant))
-
-			adNode, err := ops.FetchNode(tx, adNodeUntouched.ID)
-			require.NoError(t, err)
-			require.True(t, adNode.Kinds.ContainsOneOf(ad.Entity), "ad.Entity must be preserved on clean AD nodes")
-			require.True(t, adNode.Kinds.ContainsOneOf(ad.User), "AD type kinds must be preserved")
-
-			ogNode, err := ops.FetchNode(tx, ogNodeUntouched.ID)
-			require.NoError(t, err)
-			require.True(t, ogNode.Kinds.ContainsOneOf(graph.StringKind("CustomKind")), "OpenGraph nodes must not be touched")
-
-			return nil
+		_, err := suite.bhDatabase.CreateCustomNodeKinds(suite.context, model.CustomNodeKinds{
+			{
+				KindName: "PreExistingCustomNodeKind",
+				Config: model.CustomNodeKindConfig{
+					Icon: graphschema.DisplayNodeIcon{
+						Type:  graphschema.DisplayNodeTypeFontAwesome,
+						Color: "#FF0000",
+					},
+				},
+			},
 		})
 		require.NoError(t, err)
+
+		preExistingNode := &graph.Node{
+			Kinds: graph.Kinds{graph.StringKind("PreExistingCustomNodeKind")},
+			Properties: graph.AsProperties(graph.PropertyMap{
+				common.Name:     "PreExistingNode",
+				common.ObjectID: "PreExistingNode",
+			}),
+		}
+		suite.createNodes(t, preExistingNode)
+
+		err = migrations.Version_930_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
+		require.NoError(t, err)
+
+		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context, nil)
+		require.NoError(t, err)
+
+		var preExistingCount int
+		for _, customNodeKind := range customNodeKinds {
+			if customNodeKind.KindName == "PreExistingCustomNodeKind" {
+				preExistingCount++
+			}
+		}
+		require.Equal(t, 1, preExistingCount, "PreExistingCustomNodeKind must appear exactly once in custom_node_kinds")
 	})
 
-	t.Run("is a no-op when SourceKindsData is nil", func(t *testing.T) {
+	t.Run("does not backfill a kind already present in schema_node_kinds", func(t *testing.T) {
 		suite := setupIntegrationTestSuite(t)
 		t.Cleanup(func() { suite.teardownIntegrationTestSuite(t) })
 
-		require.NoError(t, suite.bhDatabase.RegisterSourceKind(suite.context)(graph.StringKind("CustomKind")))
-
-		adUserPolluted := newADNode("PollutedUser", ad.User, azure.Entity, graph.StringKind("CustomKind"))
-		suite.createNodes(t, adUserPolluted)
-
-		err := migrations.Version_920_Migration(nil)(suite.context, suite.graphDB)
+		schemaExtension, err := suite.bhDatabase.CreateGraphSchemaExtension(suite.context, "test-ext", "Test Extension", "1.0.0", "test")
 		require.NoError(t, err)
 
-		err = suite.graphDB.ReadTransaction(suite.context, func(tx graph.Transaction) error {
-			adUser, err := ops.FetchNode(tx, adUserPolluted.ID)
-			require.NoError(t, err)
-			require.True(t, adUser.Kinds.ContainsOneOf(azure.Entity), "azure.Entity should remain when migration is skipped")
-			require.True(t, adUser.Kinds.ContainsOneOf(graph.StringKind("CustomKind")), "CustomKind should remain when migration is skipped")
-			return nil
+		_, err = suite.bhDatabase.CreateGraphSchemaNodeKind(suite.context, "SchemaNodeKind", schemaExtension.ID, "Schema Kind", "", false, "fa-circle", "#FFFFFF")
+		require.NoError(t, err)
+
+		// RefreshKinds so that dawgs can resolve the new kind ID when creating the graph node.
+		require.NoError(t, suite.graphDB.RefreshKinds(suite.context))
+
+		schemaNode := &graph.Node{
+			Kinds: graph.Kinds{graph.StringKind("SchemaNodeKind")},
+			Properties: graph.AsProperties(graph.PropertyMap{
+				common.Name:     "SchemaNode",
+				common.ObjectID: "SchemaNode",
+			}),
+		}
+		suite.createNodes(t, schemaNode)
+
+		err = migrations.Version_930_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
+		require.NoError(t, err)
+
+		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context, nil)
+		require.NoError(t, err)
+
+		for _, customNodeKind := range customNodeKinds {
+			require.NotEqual(t, "SchemaNodeKind", customNodeKind.KindName, "schema_node_kinds entries must not be duplicated in custom_node_kinds")
+		}
+	})
+
+	t.Run("does not backfill a kind that has no nodes in the graph", func(t *testing.T) {
+		suite := setupIntegrationTestSuite(t)
+		t.Cleanup(func() { suite.teardownIntegrationTestSuite(t) })
+
+		// Create a node to register the kind in the kinds table, then immediately delete it.
+		ephemeralNode := &graph.Node{
+			Kinds: graph.Kinds{graph.StringKind("EphemeralKind")},
+			Properties: graph.AsProperties(graph.PropertyMap{
+				common.Name:     "EphemeralNode",
+				common.ObjectID: "EphemeralNode",
+			}),
+		}
+		suite.createNodes(t, ephemeralNode)
+
+		err := suite.graphDB.BatchOperation(suite.context, func(batch graph.Batch) error {
+			return batch.DeleteNode(ephemeralNode.ID)
 		})
 		require.NoError(t, err)
+
+		err = migrations.Version_930_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
+		require.NoError(t, err)
+
+		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context, nil)
+		require.NoError(t, err)
+
+		for _, customNodeKind := range customNodeKinds {
+			require.NotEqual(t, "EphemeralKind", customNodeKind.KindName, "kinds with no nodes in the graph must not be backfilled")
+		}
+	})
+
+	t.Run("returns an error when nodeKindData is nil", func(t *testing.T) {
+		suite := setupIntegrationTestSuite(t)
+		t.Cleanup(func() { suite.teardownIntegrationTestSuite(t) })
+
+		err := migrations.Version_930_Migration(nil)(suite.context, suite.graphDB)
+		require.Error(t, err)
 	})
 }
