@@ -38,10 +38,9 @@ import {
 import { AssetGroupTagSelectorAutoCertifyMap, SeedTypeCypher } from 'js-client-library';
 import { FC, useContext, useEffect } from 'react';
 import { Control } from 'react-hook-form';
-import { useQuery } from 'react-query';
 import { useLocation } from 'react-router-dom';
-import { usePZPathParams } from '../../../../hooks';
-import { apiClient, queriesAreLoadingOrErrored } from '../../../../utils';
+import { useAssetGroupTagInfo, usePZPathParams } from '../../../../hooks';
+import { queriesAreLoadingOrErrored } from '../../../../utils';
 import { PrivilegeZonesContext } from '../../PrivilegeZonesContext';
 import RuleFormContext from './RuleFormContext';
 import { RuleFormInputs } from './types';
@@ -59,14 +58,9 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
         }
     }, [dispatch, receivedData]);
 
-    const tagQuery = useQuery({
-        queryKey: ['privilege-zones', 'tags', tagId],
-        queryFn: async () => {
-            const response = await apiClient.getAssetGroupTag(tagId);
-            return response.data.data['tag'];
-        },
-        enabled: tagId !== '',
-    });
+    const tagQuery = useAssetGroupTagInfo(tagId);
+    const isCertificationDisabledOnZoneLevel = tagQuery.data?.require_certify;
+    const zoneName = tagQuery.data?.name;
 
     const { isLoading, isError } = queriesAreLoadingOrErrored(tagQuery, ruleQuery);
 
@@ -156,61 +150,71 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                                     </FormItem>
                                 )}
                             />
-                            {tagType === 'zones' && Certification && (
-                                <FormField
-                                    control={control}
-                                    name='auto_certify'
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel aria-labelledby='auto_certify'>
-                                                Automatic Certification
-                                            </FormLabel>
-                                            <div className='text-sm [&>p]:mt-2'>
-                                                Choose how new objects are certified.
-                                                <p>
-                                                    <strong>Direct Objects</strong> - Only the object explicitly
-                                                    selected either by object ID or cypher query are certified
-                                                    automatically.
-                                                </p>
-                                                <p>
-                                                    <strong>All Objects</strong> - Means every object, including those
-                                                    tied to direct objects, is certified automatically.
-                                                </p>
-                                                <p>
-                                                    <strong>Off</strong> - Means all certification is manual.
-                                                </p>
-                                            </div>
-                                            <Select
-                                                value={field.value}
-                                                onValueChange={field.onChange}
-                                                defaultValue={field.value}>
-                                                <FormControl>
-                                                    <SelectTrigger>
-                                                        <SelectValue
-                                                            data-testid='privilege-zones_save_rule-form_default-certify'
-                                                            placeholder='Off'
-                                                            {...field}
-                                                        />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectPortal>
-                                                    <SelectContent>
-                                                        {Object.entries(AssetGroupTagSelectorAutoCertifyMap).map(
-                                                            ([autoCertifyOption, displayValue]) => (
-                                                                <SelectItem
-                                                                    key={autoCertifyOption}
-                                                                    value={autoCertifyOption}>
-                                                                    {displayValue}
-                                                                </SelectItem>
-                                                            )
-                                                        )}
-                                                    </SelectContent>
-                                                </SelectPortal>
-                                            </Select>
-                                        </FormItem>
-                                    )}
-                                />
-                            )}
+                            {tagType === 'zones' &&
+                                Certification &&
+                                (isCertificationDisabledOnZoneLevel ? (
+                                    <FormField
+                                        control={control}
+                                        name='auto_certify'
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel aria-labelledby='auto_certify'>
+                                                    Automatic Certification
+                                                </FormLabel>
+                                                <div className='text-sm [&>p]:mt-2'>
+                                                    Choose how new objects are certified.
+                                                    <p>
+                                                        <strong>Direct Objects</strong> - Only the object explicitly
+                                                        selected either by object ID or cypher query are certified
+                                                        automatically.
+                                                    </p>
+                                                    <p>
+                                                        <strong>All Objects</strong> - Means every object, including
+                                                        those tied to direct objects, is certified automatically.
+                                                    </p>
+                                                    <p>
+                                                        <strong>Off</strong> - Means all certification is manual.
+                                                    </p>
+                                                </div>
+                                                <Select
+                                                    value={field.value}
+                                                    onValueChange={field.onChange}
+                                                    defaultValue={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue
+                                                                data-testid='privilege-zones_save_rule-form_default-certify'
+                                                                placeholder='Off'
+                                                                {...field}
+                                                            />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectPortal>
+                                                        <SelectContent>
+                                                            {Object.entries(AssetGroupTagSelectorAutoCertifyMap).map(
+                                                                ([autoCertifyOption, displayValue]) => (
+                                                                    <SelectItem
+                                                                        key={autoCertifyOption}
+                                                                        value={autoCertifyOption}>
+                                                                        {displayValue}
+                                                                    </SelectItem>
+                                                                )
+                                                            )}
+                                                        </SelectContent>
+                                                    </SelectPortal>
+                                                </Select>
+                                            </FormItem>
+                                        )}
+                                    />
+                                ) : (
+                                    <FormItem>
+                                        <FormLabel>Automatic Certification</FormLabel>
+                                        <p>
+                                            Certification disabled by the Zone's settings. Please edit {zoneName}{' '}
+                                            settings to manage rule-specific certification settings.
+                                        </p>
+                                    </FormItem>
+                                ))}
                         </div>
                     </div>
                 </CardContent>

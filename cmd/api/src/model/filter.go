@@ -46,19 +46,9 @@ const (
 	NotEquals           FilterOperator = "neq"
 	ApproximatelyEquals FilterOperator = "~eq"
 
-	GreaterThanSymbol         string = ">"
-	GreaterThanOrEqualsSymbol string = ">="
-	LessThanSymbol            string = "<"
-	LessThanOrEqualsSymbol    string = "<="
-	EqualsSymbol              string = "="
-	NotEqualsSymbol           string = "<>"
-	ApproximatelyEqualSymbol  string = "ILIKE"
-
-	NullString     = "null"
-	TrueString     = "true"
-	FalseString    = "false"
-	IdString       = "id"
-	ObjectIdString = "objectid"
+	NullString  = "null"
+	TrueString  = "true"
+	FalseString = "false"
 )
 
 var (
@@ -116,7 +106,7 @@ type QueryParameterFilters []QueryParameterFilter
 func (s QueryParameterFilter) BuildGDBNodeFilter() graph.Criteria {
 	var (
 		propertyRef = query.NodeProperty(s.Name)
-		value       = guessFilterValueType(s.Value)
+		value       = guessFilterValueType(s.Value, s.IsStringData)
 	)
 
 	// TODO: Investigate whether we can set the collected property for domains that originate from trusts in ParseDomainTrusts
@@ -320,7 +310,15 @@ func (s QueryParameterFilterMap) BuildSQLFilter() (SQLFilter, error) {
 	return s.BuildAliasedSQLFilter(models.EmptyOptional[string]())
 }
 
-func guessFilterValueType(raw string) any {
+// guessFilterValueType takes a raw string filter value and attempts to guess its Go type.
+// If isPropertyString is true, the raw value is returned as is. Otherwise, it
+// attempts boolean, integer, or float parsing before defaulting to string.
+func guessFilterValueType(raw string, isPropertyString bool) any {
+	// skip type guessing when the node property is a string type
+	if isPropertyString {
+		return raw
+	}
+
 	if strings.ToLower(raw) == TrueString {
 		return true
 	}
@@ -350,66 +348,6 @@ func (s QueryParameterFilterMap) BuildGDBNodeFilter() graph.Criteria {
 	}
 
 	return query.And(criteria...)
-}
-
-func (s QueryParameterFilterMap) BuildNeo4jFilter() (string, error) {
-	var (
-		result      = ""
-		firstFilter = true
-		predicate   string
-	)
-
-	for _, filters := range s {
-		for _, filter := range filters {
-			if !firstFilter {
-				result = result + " AND "
-			}
-
-			switch filter.Operator {
-			case GreaterThan:
-				predicate = GreaterThanSymbol
-			case GreaterThanOrEquals:
-				predicate = GreaterThanOrEqualsSymbol
-			case LessThan:
-				predicate = LessThanSymbol
-			case LessThanOrEquals:
-				predicate = LessThanOrEqualsSymbol
-			case Equals:
-				predicate = EqualsSymbol
-			case NotEquals:
-				predicate = NotEqualsSymbol
-			default:
-				return "", fmt.Errorf("invalid filter predicate specified")
-			}
-
-			// our structs hold the data as id but the cypher column is actually objectid
-			if filter.Name == IdString {
-				filter.Name = ObjectIdString
-			}
-
-			filter.Name = fmt.Sprintf("n.%s", filter.Name)
-
-			if filter.IsStringData {
-				// for strings, add single quotes
-				result = result + fmt.Sprintf("%s %s '%s'", filter.Name, predicate, filter.Value)
-			} else {
-				// for booleans, change the predicate to IS or IS NOT
-				if (filter.Value == TrueString || filter.Value == FalseString) && !filter.IsStringData {
-					if predicate == "=" {
-						predicate = "IS"
-					} else {
-						predicate = "IS NOT"
-					}
-				}
-
-				result = result + fmt.Sprintf("%s %s %s", filter.Name, predicate, filter.Value)
-			}
-
-			firstFilter = false
-		}
-	}
-
-	return result, nil
 }
 
 func (s QueryParameterFilterMap) FirstFilter(name string) (QueryParameterFilter, bool) {

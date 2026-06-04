@@ -17410,13 +17410,17 @@
                                   "finding_count_decrease": {
                                     "type": "integer"
                                   },
-                                  "finding_impact_count": {
+                                  "impact_count": {
                                     "type": "integer",
                                     "nullable": true
                                   },
-                                  "finding_exposure_count": {
+                                  "exposure_count": {
                                     "type": "integer",
                                     "nullable": true
+                                  },
+                                  "archived_count": {
+                                    "type": "integer",
+                                    "description": "Total number of findings of this type that were\narchived (deleted during analysis reconciliation)\nwithin the requested time window. Summed across\nall snapshots in the window.\n"
                                   }
                                 }
                               }
@@ -21333,7 +21337,8 @@
                     "id",
                     "name",
                     "version",
-                    "is_builtin"
+                    "is_builtin",
+                    "namespace"
                   ],
                   "properties": {
                     "id": {
@@ -21348,6 +21353,9 @@
                     },
                     "is_builtin": {
                       "type": "boolean"
+                    },
+                    "namespace": {
+                      "type": "string"
                     }
                   }
                 }
@@ -21365,7 +21373,8 @@
                 "id": 1,
                 "name": "Active Directory",
                 "version": "v1.0.0",
-                "is_builtin": true
+                "is_builtin": true,
+                "namespace": "AD"
               }
             ]
           }
@@ -22633,7 +22642,8 @@
           "assets",
           "session-completeness",
           "group-completeness",
-          "attack-paths"
+          "attack-paths",
+          "archived-findings"
         ]
       }
     },
@@ -22962,7 +22972,8 @@
         "Events (Schedules)",
         "Attack Paths",
         "Risk Posture",
-        "Meta Entities"
+        "Meta Entities",
+        "Alerts"
       ]
     }
   ]

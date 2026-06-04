@@ -602,18 +602,18 @@ func (mr *MockDatabaseMockRecorder) CreateSavedQueryPermissionsToUsers(ctx, quer
 }
 
 // CreateSchemaFinding mocks base method.
-func (m *MockDatabase) CreateSchemaFinding(ctx context.Context, findingType model.SchemaFindingType, extensionId, kindId, environmentId int32, name, displayName string) (model.SchemaFinding, error) {
+func (m *MockDatabase) CreateSchemaFinding(ctx context.Context, findingType model.SchemaFindingType, extensionId, kindId, environmentId int32, name, displayName, pzDisplayName string) (model.SchemaFinding, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSchemaFinding", ctx, findingType, extensionId, kindId, environmentId, name, displayName)
+	ret := m.ctrl.Call(m, "CreateSchemaFinding", ctx, findingType, extensionId, kindId, environmentId, name, displayName, pzDisplayName)
 	ret0, _ := ret[0].(model.SchemaFinding)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateSchemaFinding indicates an expected call of CreateSchemaFinding.
-func (mr *MockDatabaseMockRecorder) CreateSchemaFinding(ctx, findingType, extensionId, kindId, environmentId, name, displayName any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateSchemaFinding(ctx, findingType, extensionId, kindId, environmentId, name, displayName, pzDisplayName any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaFinding", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaFinding), ctx, findingType, extensionId, kindId, environmentId, name, displayName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaFinding", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaFinding), ctx, findingType, extensionId, kindId, environmentId, name, displayName, pzDisplayName)
 }
 
 // CreateSchemaFindingSubtype mocks base method.
@@ -1134,6 +1134,20 @@ func (m *MockDatabase) EndUserSession(ctx context.Context, userSession model.Use
 func (mr *MockDatabaseMockRecorder) EndUserSession(ctx, userSession any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndUserSession", reflect.TypeOf((*MockDatabase)(nil).EndUserSession), ctx, userSession)
+}
+
+// EnsureStubbedCustomNodeKindForIngest mocks base method.
+func (m *MockDatabase) EnsureStubbedCustomNodeKindForIngest(ctx context.Context, name string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnsureStubbedCustomNodeKindForIngest", ctx, name)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EnsureStubbedCustomNodeKindForIngest indicates an expected call of EnsureStubbedCustomNodeKindForIngest.
+func (mr *MockDatabaseMockRecorder) EnsureStubbedCustomNodeKindForIngest(ctx, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureStubbedCustomNodeKindForIngest", reflect.TypeOf((*MockDatabase)(nil).EnsureStubbedCustomNodeKindForIngest), ctx, name)
 }
 
 // GetADDataQualityAggregations mocks base method.

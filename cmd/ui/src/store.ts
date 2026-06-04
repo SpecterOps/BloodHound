@@ -68,9 +68,11 @@ type PersistedState = {
             notifications: GlobalViewState['notifications'];
             exploreLayout: GlobalViewState['exploreLayout'];
             isExploreTableSelected: GlobalViewState['isExploreTableSelected'];
+            isExploreLayoutSelected: GlobalViewState['isExploreLayoutSelected'];
             selectedExploreTableColumns: GlobalViewState['selectedExploreTableColumns'];
             pinnedExploreTableColumns?: string[];
             timeoutSetting: GlobalViewState['timeoutSetting'];
+            isExploreGraphHighlight: GlobalViewState['isExploreGraphHighlight'];
         };
     };
 };
@@ -118,9 +120,11 @@ store.subscribe(
                     notifications: [],
                     exploreLayout: state.global.view.exploreLayout,
                     isExploreTableSelected: state.global.view.isExploreTableSelected,
+                    isExploreLayoutSelected: state.global.view.isExploreLayoutSelected,
                     selectedExploreTableColumns: state.global.view.selectedExploreTableColumns,
                     pinnedExploreTableColumns: state.global.view.pinnedExploreTableColumns,
                     timeoutSetting: state.global.view.timeoutSetting,
+                    isExploreGraphHighlight: state.global.view.isExploreGraphHighlight,
                 },
             },
         });

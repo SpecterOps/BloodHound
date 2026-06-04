@@ -52,6 +52,7 @@ import { NoDataFileUploadDialogWithLinks } from 'src/components/NoDataFileUpload
 import SigmaChart from 'src/components/SigmaChart';
 import {
     setExploreLayout,
+    setIsExploreLayoutSelected,
     setIsExploreTableSelected,
     setPinnedExploreTableColumns,
     setSelectedExploreTableColumns,
@@ -90,13 +91,14 @@ const GraphView: FC = () => {
     const selectedColumns = useAppSelector((state) => state.global.view.selectedExploreTableColumns);
     const pinnedColumns = useAppSelector((state) => state.global.view.pinnedExploreTableColumns);
     const isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
+    const isExploreLayoutSelected = useAppSelector((state) => state.global.view.isExploreLayoutSelected);
 
     const customIconsQuery = useCustomNodeKinds({ select: transformIconDictionary });
 
     const { data: pzFeatureFlag } = useFeatureFlag('tier_management_engine');
     const tagGlyphs = useTagGlyphs(glyphUtils, darkMode);
 
-    const autoDisplayTableEnabled = !exploreLayout && !isExploreTableSelected;
+    const autoDisplayTableEnabled = !isExploreLayoutSelected && !isExploreTableSelected;
     const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay(autoDisplayTableEnabled);
     // TODO: incorporate into larger hook with auto display table logic
     const displayTable = searchType === 'cypher' && (isExploreTableSelected || autoDisplayTable);
@@ -187,6 +189,45 @@ const GraphView: FC = () => {
         },
     });
 
+    const resetLayoutToDefault = useCallback(() => {
+        dispatch(setExploreLayout(defaultGraphLayout));
+        dispatch(setIsExploreLayoutSelected(false));
+        dispatch(setIsExploreTableSelected(false));
+    }, [dispatch]);
+
+    const setLayout = useCallback(
+        (layout: BaseExploreLayoutOptions) => {
+            const isDeselectingTable = layout === 'table' && isExploreTableSelected;
+            const isDeselectingLayout = layout !== 'table' && exploreLayout === layout && isExploreLayoutSelected;
+
+            if (isDeselectingTable || isDeselectingLayout) {
+                resetLayoutToDefault();
+                return;
+            }
+
+            if (layout === 'table') {
+                dispatch(setIsExploreTableSelected(true));
+            } else {
+                dispatch(setExploreLayout(layout));
+                dispatch(setIsExploreLayoutSelected(true));
+                dispatch(setIsExploreTableSelected(false));
+
+                if (layout === 'standard') sigmaChartRef.current?.runStandardLayout();
+
+                if (layout === 'sequential') sigmaChartRef.current?.runSequentialLayout();
+            }
+        },
+        [exploreLayout, dispatch, isExploreTableSelected, isExploreLayoutSelected, resetLayoutToDefault]
+    );
+
+    const handleCloseTableView = useCallback(() => {
+        setAutoDisplayTable(false);
+        dispatch(setIsExploreTableSelected(false));
+        if (!isExploreLayoutSelected || !exploreLayout) {
+            dispatch(setExploreLayout(defaultGraphLayout));
+        }
+    }, [setAutoDisplayTable, dispatch, isExploreLayoutSelected, exploreLayout]);
+
     if (graphHasDataQuery.isLoading) {
         return (
             <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
@@ -217,20 +258,6 @@ const GraphView: FC = () => {
         dispatch(setPinnedExploreTableColumns(['action-menu', ...columns]));
     };
 
-    const handleLayoutChange = (layout: BaseExploreLayoutOptions) => {
-        if (layout === 'table') {
-            dispatch(setIsExploreTableSelected(true));
-            return;
-        }
-
-        dispatch(setExploreLayout(layout));
-        dispatch(setIsExploreTableSelected(false));
-
-        if (layout === 'standard') sigmaChartRef.current?.runStandardLayout();
-
-        if (layout === 'sequential') sigmaChartRef.current?.runSequentialLayout();
-    };
-
     return (
         <div
             className='relative h-full w-full overflow-hidden'
@@ -252,9 +279,10 @@ const GraphView: FC = () => {
                 <ExploreSearch />
                 <GraphControls
                     isExploreTableSelected={isExploreTableSelected}
+                    isExploreLayoutSelected={isExploreLayoutSelected}
                     layoutOptions={baseGraphLayouts}
                     selectedLayout={exploreLayout ?? defaultGraphLayout}
-                    onLayoutChange={handleLayoutChange}
+                    onLayoutChange={setLayout}
                     showNodeLabels={showNodeLabels}
                     onToggleNodeLabels={toggleShowNodeLabels}
                     showEdgeLabels={showEdgeLabels}
@@ -294,10 +322,7 @@ const GraphView: FC = () => {
                     onManageColumnsChange={handleManageColumnsChange}
                     onKebabMenuClick={handleKebabMenuClick}
                     onChangePinnedColumns={handleChangePinnedColumns}
-                    onClose={() => {
-                        setAutoDisplayTable(false);
-                        dispatch(setIsExploreTableSelected(false));
-                    }}
+                    onClose={handleCloseTableView}
                 />
             )}
         </div>

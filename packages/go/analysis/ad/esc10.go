@@ -33,26 +33,18 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, eca *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
-	if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
+func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, certChains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
+	if publishedCertTemplates := cache.GetPublishedTemplateCache(certChains.EnterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
-	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID); len(ecaEnrollers) == 0 {
+	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(certChains.EnterpriseCA.ID); ecaEnrollers.IsEmpty() {
 		return nil
 	} else {
 		results := cardinality.NewBitmap64()
 
 		for _, template := range publishedCertTemplates {
-			if valid, err := isCertTemplateValidForESC10(template, false); err != nil {
-				slog.WarnContext(
-					ctx,
-					"Error validating cert template",
-					slog.Uint64("cert_template_id", uint64(template.ID)),
-					attr.Error(err),
-				)
+			if !isCertTemplateValidForESC10(ctx, template, false) {
 				continue
-			} else if !valid {
-				continue
-			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
+			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); certTemplateEnrollers.IsEmpty() {
 				slog.DebugContext(
 					ctx,
 					"Failed to retrieve enrollers for cert template from cache",
@@ -60,7 +52,7 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- post.
 				)
 				continue
 			} else {
-				victimBitmap := getVictimBitmap(localGroupData, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecialEnrollers(template.ID), cache.GetEnterpriseCAHasSpecialEnrollers(eca.ID))
+				victimBitmap := getVictimBitmap(localGroupData, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecialEnrollers(template.ID), cache.GetEnterpriseCAHasSpecialEnrollers(certChains.EnterpriseCA.ID))
 
 				if filteredVictims, err := filterUserDNSResults(tx, victimBitmap, template); err != nil {
 					slog.WarnContext(
@@ -82,12 +74,12 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- post.
 			}
 		}
 
-		results.Each(func(value uint64) bool {
-			for _, domain := range targetDomains.Slice() {
-				if cache.HasUPNCertMappingInForest(domain.ID.Uint64()) {
+		results.Each(func(source uint64) bool {
+			for _, domain := range certChains.Domains.Slice() {
+				if cache.HasUPNCertMappingInForest(domain) {
 					channels.Submit(ctx, outC, post.EnsureRelationshipJob{
-						FromID: graph.ID(value),
-						ToID:   domain.ID,
+						FromID: graph.ID(source),
+						ToID:   graph.ID(domain),
 						Kind:   ad.ADCSESC10a,
 					})
 				}
@@ -98,26 +90,18 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- post.
 	return nil
 }
 
-func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
-	if publishedCertTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
+func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, chains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
+	if publishedCertTemplates := cache.GetPublishedTemplateCache(chains.EnterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
-	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(enterpriseCA.ID); len(ecaEnrollers) == 0 {
+	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(chains.EnterpriseCA.ID); ecaEnrollers.IsEmpty() {
 		return nil
 	} else {
 		results := cardinality.NewBitmap64()
 
 		for _, template := range publishedCertTemplates {
-			if valid, err := isCertTemplateValidForESC10(template, true); err != nil {
-				slog.WarnContext(
-					ctx,
-					"Error validating cert template",
-					slog.Uint64("cert_template_id", uint64(template.ID)),
-					attr.Error(err),
-				)
+			if !isCertTemplateValidForESC10(ctx, template, true) {
 				continue
-			} else if !valid {
-				continue
-			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
+			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); certTemplateEnrollers.IsEmpty() {
 				slog.DebugContext(
 					ctx,
 					"Failed to retrieve enrollers for cert template from cache",
@@ -125,7 +109,7 @@ func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- post.
 				)
 				continue
 			} else {
-				victimBitmap := getVictimBitmap(localGroupData, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecialEnrollers(template.ID), cache.GetEnterpriseCAHasSpecialEnrollers(enterpriseCA.ID))
+				victimBitmap := getVictimBitmap(localGroupData, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecialEnrollers(template.ID), cache.GetEnterpriseCAHasSpecialEnrollers(chains.EnterpriseCA.ID))
 
 				if attackers, err := FetchAttackersForEscalations9and10(tx, victimBitmap, true); err != nil {
 					slog.WarnContext(
@@ -140,12 +124,12 @@ func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- post.
 			}
 		}
 
-		results.Each(func(value uint64) bool {
-			for _, domain := range targetDomains.Slice() {
-				if cache.HasUPNCertMappingInForest(domain.ID.Uint64()) {
+		results.Each(func(source uint64) bool {
+			for _, domain := range chains.Domains.Slice() {
+				if cache.HasUPNCertMappingInForest(domain) {
 					channels.Submit(ctx, outC, post.EnsureRelationshipJob{
-						FromID: graph.ID(value),
-						ToID:   domain.ID,
+						FromID: graph.ID(source),
+						ToID:   graph.ID(domain),
 						Kind:   ad.ADCSESC10b,
 					})
 				}
@@ -156,42 +140,46 @@ func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- post.
 	return nil
 }
 
-func isCertTemplateValidForESC10(ct *graph.Node, scenarioB bool) (bool, error) {
+func isCertTemplateValidForESC10(ctx context.Context, ct *graph.Node, scenarioB bool) bool {
 	if reqManagerApproval, err := ct.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if reqManagerApproval {
-		return false, nil
-	} else if schannelAuthenticationEnabled, err := schannelAuthenticationEnabled(ct); err != nil {
-		return false, err
-	} else if !schannelAuthenticationEnabled {
-		return false, nil
+		return false
+	} else if schannelAuthEnabled, err := schannelAuthenticationEnabled(ct); err != nil {
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
+	} else if !schannelAuthEnabled {
+		return false
 	} else if enrolleeSuppliesSubject, err := ct.Properties.Get(ad.EnrolleeSuppliesSubject.String()).Bool(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if enrolleeSuppliesSubject {
-		return false, nil
+		return false
 	} else if schemaVersion, err := ct.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if authorizedSignatures, err := ct.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if schemaVersion > 1 && authorizedSignatures > 0 {
-		return false, nil
+		return false
 	} else if !scenarioB {
 		if subjectAltRequireUPN, err := ct.Properties.Get(ad.SubjectAltRequireUPN.String()).Bool(); err != nil {
-			return false, err
+			logPropertyLookupFailure(ctx, ct, err)
+			return false
 		} else if subjectAltRequireSPN, err := ct.Properties.Get(ad.SubjectAltRequireSPN.String()).Bool(); err != nil {
-			return false, err
-		} else if subjectAltRequireSPN || subjectAltRequireUPN {
-			return true, nil
+			logPropertyLookupFailure(ctx, ct, err)
+			return false
 		} else {
-			return false, nil
+			return subjectAltRequireSPN || subjectAltRequireUPN
 		}
 	} else {
 		if subjectAltRequireDNS, err := ct.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
-			return false, err
-		} else if subjectAltRequireDNS {
-			return true, nil
+			logPropertyLookupFailure(ctx, ct, err)
+			return false
 		} else {
-			return false, nil
+			return subjectAltRequireDNS
 		}
 	}
 }

@@ -53,89 +53,97 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 	}
 }
 
-// Version_920_Migration returns a migration that removes cross-platform kind
-// pollution from Active Directory and Azure nodes. Before BED-8158, AD and
-// Azure nodes could acquire foreign source kinds (e.g. azure.Entity on AD
-// nodes, OpenGraph custom kinds) via relationship ingest. For each platform
-// the migration strips every registered source kind from in-scope nodes
-// except the platform's own base kind (ad.Entity for AD, azure.Entity for
-// Azure), so nodes retain their platform base kind alongside their type
-// kinds (ad.User, azure.User, etc., which are not stored in the
-// source_kinds table). The list of source kinds is fetched from the
-// relational database via sourceKindsData.
-func Version_920_Migration(sourceKindsData database.SourceKindsData) func(ctx context.Context, db graph.Database) error {
+// Version_930_Migration returns a migration that backfills custom_node_kinds rows for any node kind
+// that exists in the graph but has no corresponding entry in either custom_node_kinds or schema_node_kinds.
+// This covers node kinds that entered the graph through schemaless Open Graph ingest, which were never written
+// to custom_node_kinds.
+func Version_930_Migration(nodeKindData schemalessNodeKindBackfillData) func(ctx context.Context, db graph.Database) error {
 	return func(ctx context.Context, db graph.Database) error {
-		defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove cross-platform source kinds from AD and Azure nodes")()
+		defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to backfill custom_node_kinds for schemaless ingest kinds")()
 
-		if sourceKindsData == nil {
-			slog.InfoContext(ctx, "Skipping Version_920_Migration: no SourceKindsData provider configured")
+		if nodeKindData == nil {
+			return fmt.Errorf("Version_930_Migration requires a SchemalessNodeKindBackfillData provider but none was configured")
+		}
+
+		// Fetch all kinds registered in the graph / kind table.
+		allKinds, err := db.FetchKinds(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to fetch kinds from graph: %w", err)
+		}
+
+		// Build a set of kind names already covered by custom_node_kinds.
+		existingCustomNodeKinds, err := nodeKindData.GetCustomNodeKinds(ctx, nil)
+		if err != nil {
+			return fmt.Errorf("failed to fetch custom node kinds: %w", err)
+		}
+
+		coveredKindNames := make(map[string]struct{}, len(existingCustomNodeKinds))
+		for _, customNodeKind := range existingCustomNodeKinds {
+			coveredKindNames[customNodeKind.KindName] = struct{}{}
+		}
+
+		// Extend the covered set with kind names present in schema_node_kinds.
+		schemaNodeKinds, _, err := nodeKindData.GetGraphSchemaNodeKinds(ctx, nil, model.Sort{}, 0, 0)
+		if err != nil {
+			return fmt.Errorf("failed to fetch schema node kinds: %w", err)
+		}
+		for _, schemaNodeKind := range schemaNodeKinds {
+			coveredKindNames[schemaNodeKind.Name] = struct{}{}
+		}
+
+		var kindsToCreate model.CustomNodeKinds
+		for _, kind := range allKinds {
+			// skip meta kinds, tier tags, etc.
+			if model.IsExtendedNodeKind(kind) {
+				continue
+			}
+			// skip kinds that are already covered by custom_node_kinds or schema_node_kinds
+			if _, alreadyCovered := coveredKindNames[kind.String()]; alreadyCovered {
+				continue
+			}
+
+			nodeFound, err := graphKindHasNodes(ctx, db, kind)
+			if err != nil {
+				return fmt.Errorf("failed to check graph for nodes of kind %q: %w", kind.String(), err)
+			}
+			if nodeFound {
+				kindsToCreate = append(kindsToCreate, model.CustomNodeKind{
+					KindName: kind.String(),
+					Config:   database.CustomNodeKindStubConfig,
+				})
+			}
+		}
+
+		if len(kindsToCreate) == 0 {
+			slog.InfoContext(ctx, "No schemaless node kinds require backfilling into custom_node_kinds")
 			return nil
 		}
 
-		registeredSourceKinds, err := sourceKindsData.GetSourceKinds(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to fetch source kinds: %w", err)
+		if _, err := nodeKindData.CreateCustomNodeKinds(ctx, kindsToCreate); err != nil {
+			return fmt.Errorf("failed to create custom node kinds during backfill: %w", err)
 		}
 
-		return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
-			var (
-				adKinds    graph.Kinds
-				azureKinds graph.Kinds
-			)
-			// Type kinds only — the base Entity kinds are exactly what may be polluted across platforms,
-			// so they can't be used to classify a node.
-			adKinds = ad.NodeKinds()
-			adKinds = adKinds.Remove(ad.Entity)
-			azureKinds = azure.NodeKinds()
-			azureKinds = azureKinds.Remove(azure.Entity)
-
-			if err := stripForeignSourceKinds(tx, ad.Entity, adKinds, registeredSourceKinds); err != nil {
-				return err
-			}
-			return stripForeignSourceKinds(tx, azure.Entity, azureKinds, registeredSourceKinds)
-		})
+		slog.InfoContext(ctx, "Backfilled custom_node_kinds for schemaless ingest kinds",
+			slog.Int("count", len(kindsToCreate)),
+		)
+		return nil
 	}
 }
 
-// stripForeignSourceKinds removes every registered source kind other than
-// preservedKind from each node whose kind is in platformNodeKinds. Type
-// kinds (e.g. ad.User, azure.User) are not stored in source_kinds and
-// therefore remain on the node.
-func stripForeignSourceKinds(tx graph.Transaction, preservedKind graph.Kind, platformNodeKinds []graph.Kind, registeredSourceKinds []model.SourceKind) error {
-	var removableSourceKinds graph.Kinds
-	for _, sourceKind := range registeredSourceKinds {
-		kind := sourceKind.ToKind()
-		if kind == preservedKind {
-			continue
-		}
-		removableSourceKinds = append(removableSourceKinds, kind)
-	}
-
-	if len(removableSourceKinds) == 0 {
-		return nil
-	}
-
-	nodes, err := ops.FetchNodes(tx.Nodes().Filter(query.KindIn(query.Node(), platformNodeKinds...)))
-	if err != nil {
-		return err
-	}
-
-	for _, node := range nodes {
-		var kindsToRemove graph.Kinds
-		for _, kind := range removableSourceKinds {
-			if node.Kinds.ContainsOneOf(kind) {
-				kindsToRemove = append(kindsToRemove, kind)
+// graphKindHasNodes returns true if at least one node with the kind exists in the graph.
+func graphKindHasNodes(ctx context.Context, db graph.Database, kind graph.Kind) (bool, error) {
+	var nodeFound bool
+	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if _, err := tx.Nodes().Filter(query.Kind(query.Node(), kind)).First(); err != nil {
+			if errors.Is(err, graph.ErrNoResultsFound) {
+				return nil
 			}
-		}
-		if len(kindsToRemove) == 0 {
-			continue
-		}
-		node.DeleteKinds(kindsToRemove...)
-		if err := tx.UpdateNode(node); err != nil {
 			return err
 		}
-	}
-	return nil
+		nodeFound = true
+		return nil
+	})
+	return nodeFound, err
 }
 
 func Version_910_Migration(ctx context.Context, db graph.Database) error {
@@ -618,7 +626,7 @@ func Version_277_Migration(ctx context.Context, db graph.Database) error {
 // GetManifest returns the ordered list of graph migrations. Migrations that need
 // dependencies beyond the graph database (e.g. relational source kinds) capture
 // them via the provided arguments.
-func GetManifest(sourceKindsData database.SourceKindsData) []Migration {
+func GetManifest(nodeKindData schemalessNodeKindBackfillData) []Migration {
 	return []Migration{
 		{
 			Version: version.Version{Major: 2, Minor: 3, Patch: 0},
@@ -734,8 +742,8 @@ func GetManifest(sourceKindsData database.SourceKindsData) []Migration {
 			Execute: Version_910_Migration,
 		},
 		{
-			Version: version.Version{Major: 9, Minor: 2, Patch: 0},
-			Execute: Version_920_Migration(sourceKindsData),
+			Version: version.Version{Major: 9, Minor: 3, Patch: 0},
+			Execute: Version_930_Migration(nodeKindData),
 		},
 	}
 }

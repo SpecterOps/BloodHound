@@ -17,7 +17,7 @@
 import { faClose, faDownload, faExpand, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ColumnDef } from '@tanstack/react-table';
-import { Button, Input, InputProps, Menu, MenuContent, MenuItem, MenuTrigger } from 'doodle-ui';
+import { Button, Input, InputProps, Label, Menu, MenuContent, MenuItem, MenuTrigger } from 'doodle-ui';
 import { useMemo } from 'react';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
@@ -83,7 +83,11 @@ const TableControls = <TData, TValue>({
             <div className='flex justify-end items-center w-1/2 gap-3'>
                 {SearchInputProps && (
                     <div className='flex justify-center items-center relative'>
+                        <Label htmlFor='explore-table-search' className='sr-only'>
+                            Explore Table Search
+                        </Label>
                         <Input
+                            id='explore-table-search'
                             data-testid='explore-table-search'
                             disabled={noResults}
                             className={cn('border-0 w-48 rounded-none border-b-2 border-black bg-inherit', {
@@ -112,7 +116,7 @@ const TableControls = <TData, TValue>({
                         </MenuTrigger>
                         <MenuContent align='start'>
                             <MenuItem onSelect={() => handleConfirmExport('all')}>All Columns</MenuItem>
-                            <MenuItem onSelect={() => handleConfirmExport('selected')}>Visible Columns</MenuItem>
+                            <MenuItem onSelect={() => handleConfirmExport('selected')}>Selected Columns</MenuItem>
                         </MenuContent>
                     </Menu>
                 )}
