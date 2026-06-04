@@ -56,8 +56,8 @@ const (
 	// Helpers available for ease of use.
 	// If adding individual steps above, validate whether these need updating based on expected behavior.
 	////////
-	// AnalysisTaggingOnwards runs the tagging step and every step that follows it.
-	analysisTaggingOnwards = analysisTagging | analysisGenerateFindings
+	// AnalysisNoPostProcessing skips the post processing steps.
+	analysisNoPostProcessing = analysisFull &^ analysisADPostProcessing &^ analysisAzurePostProcessing
 	// AnalysisAll selects every step in the pipeline.
 	analysisFull = analysisSentinel - 1
 )
@@ -83,8 +83,8 @@ var (
 		analysisStepGenerateFindings:    "generate_findings",
 	}
 
-	analysisStepsTaggingOnwards = AnalysisSteps{bits: analysisTaggingOnwards}
-	analysisStepsFull           = AnalysisSteps{bits: analysisFull}
+	analysisStepsNoPostProcessing = AnalysisSteps{bits: analysisNoPostProcessing}
+	analysisStepsFull             = AnalysisSteps{bits: analysisFull}
 )
 
 func AnalysisStepADPostProcessing() AnalysisSteps {
@@ -103,8 +103,8 @@ func AnalysisStepGenerateFindings() AnalysisSteps {
 	return analysisStepGenerateFindings
 }
 
-func AnalysisStepsTaggingOnwards() AnalysisSteps {
-	return AnalysisSteps{bits: analysisTaggingOnwards}
+func AnalysisStepsNoPostProcessing() AnalysisSteps {
+	return AnalysisSteps{bits: analysisNoPostProcessing}
 }
 
 func AnalysisStepsFull() AnalysisSteps {
@@ -198,8 +198,9 @@ func (s *AnalysisSteps) UnmarshalJSON(data []byte) error {
 type AnalysisMode string
 
 const (
-	AnalysisModeTaggingOnwards AnalysisMode = "tagging_onwards"
-	AnalysisModeFull           AnalysisMode = "full"
+	// This list needs to be updated when new modes are added.
+	AnalysisModeNoPostProcessing AnalysisMode = "no_post_processing"
+	AnalysisModeFull             AnalysisMode = "full"
 )
 
 // This function needs to be updated when new modes are added.
@@ -208,8 +209,8 @@ const (
 // we ensure consumers of RequestAnalysis() cannot queue arbitrary bitmasks.
 func (s AnalysisMode) AnalysisStepsFromMode() AnalysisSteps {
 	switch s {
-	case AnalysisModeTaggingOnwards:
-		return analysisStepsTaggingOnwards
+	case AnalysisModeNoPostProcessing:
+		return analysisStepsNoPostProcessing
 	case AnalysisModeFull:
 		return analysisStepsFull
 	default:

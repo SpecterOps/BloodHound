@@ -48,8 +48,8 @@ func TestAnalysisStepsFromMode(t *testing.T) {
 		},
 		{
 			name:          "tagging mode maps to tagging through completion",
-			mode:          AnalysisModeTaggingOnwards,
-			expectedSteps: AnalysisStepsTaggingOnwards(),
+			mode:          AnalysisModeNoPostProcessing,
+			expectedSteps: AnalysisStepsNoPostProcessing(),
 		},
 		{
 			name:          "unknown mode defaults to full analysis",
@@ -70,10 +70,10 @@ func TestAnalysisStepsFromMode(t *testing.T) {
 func TestAnalysisStepsValue(t *testing.T) {
 	t.Parallel()
 
-	value, err := AnalysisStepsTaggingOnwards().Value()
+	value, err := AnalysisStepsNoPostProcessing().Value()
 
 	require.NoError(t, err)
-	require.Equal(t, int32(AnalysisStepsTaggingOnwards().Bits()), value)
+	require.Equal(t, int32(AnalysisStepsNoPostProcessing().Bits()), value)
 }
 
 func TestAnalysisStepsScan(t *testing.T) {
@@ -88,28 +88,28 @@ func TestAnalysisStepsScan(t *testing.T) {
 	}{
 		{
 			name:     "int64",
-			value:    int64(AnalysisStepsTaggingOnwards().Bits()),
-			expected: AnalysisStepsTaggingOnwards(),
+			value:    int64(AnalysisStepsNoPostProcessing().Bits()),
+			expected: AnalysisStepsNoPostProcessing(),
 		},
 		{
 			name:     "int32",
-			value:    int32(AnalysisStepsTaggingOnwards().Bits()),
-			expected: AnalysisStepsTaggingOnwards(),
+			value:    int32(AnalysisStepsNoPostProcessing().Bits()),
+			expected: AnalysisStepsNoPostProcessing(),
 		},
 		{
 			name:     "int",
-			value:    AnalysisStepsTaggingOnwards().Bits(),
-			expected: AnalysisStepsTaggingOnwards(),
+			value:    AnalysisStepsNoPostProcessing().Bits(),
+			expected: AnalysisStepsNoPostProcessing(),
 		},
 		{
 			name:     "bytes",
 			value:    []byte("12"),
-			expected: AnalysisStepsTaggingOnwards(),
+			expected: analysisStepsFromBits(12),
 		},
 		{
 			name:     "string",
 			value:    "12",
-			expected: AnalysisStepsTaggingOnwards(),
+			expected: analysisStepsFromBits(12),
 		},
 		{
 			name:                 "nil scans to empty steps",
@@ -149,14 +149,14 @@ func TestAnalysisStepsScan(t *testing.T) {
 func TestAnalysisStepsJSON(t *testing.T) {
 	t.Parallel()
 
-	payload, err := json.Marshal(AnalysisStepsTaggingOnwards())
+	payload, err := json.Marshal(analysisStepsFromBits(12))
 	require.NoError(t, err)
 	require.JSONEq(t, "12", string(payload))
 
 	var analysisSteps AnalysisSteps
 	err = json.Unmarshal(payload, &analysisSteps)
 	require.NoError(t, err)
-	require.Equal(t, AnalysisStepsTaggingOnwards(), analysisSteps)
+	require.Equal(t, analysisStepsFromBits(12), analysisSteps)
 
 	err = json.Unmarshal([]byte(`"tagging"`), &analysisSteps)
 	require.Error(t, err)
@@ -165,11 +165,14 @@ func TestAnalysisStepsJSON(t *testing.T) {
 func TestAnalysisStepNames_ContainsNameForEachDefinedBit(t *testing.T) {
 	t.Parallel()
 
+	var seenNames = make(map[string]int)
+
 	for i := 1; i < int(analysisSentinel); i = i << 1 {
-		_, present := analysisStepsFromBits(i).GetNameOfAnalysisStep()
+		name, present := analysisStepsFromBits(i).GetNameOfAnalysisStep()
 
+		assert.NotContains(t, seenNames, name, "analysisStepNames has duplicate name %q (bits %d collides with bits %d)", name, i, seenNames[name])
 		assert.True(t, present, "analysisStepNames is missing a name for step with bits %d", i)
-
+		seenNames[name] = i
 	}
 }
 
@@ -185,12 +188,12 @@ func TestAnalysisStepsMerge(t *testing.T) {
 		{
 			name:          "full wins when requested before tagging",
 			firstSteps:    AnalysisModeFull.AnalysisStepsFromMode(),
-			secondSteps:   AnalysisModeTaggingOnwards.AnalysisStepsFromMode(),
+			secondSteps:   AnalysisModeNoPostProcessing.AnalysisStepsFromMode(),
 			expectedSteps: AnalysisStepsFull(),
 		},
 		{
 			name:          "full wins when requested after tagging",
-			firstSteps:    AnalysisModeTaggingOnwards.AnalysisStepsFromMode(),
+			firstSteps:    AnalysisModeNoPostProcessing.AnalysisStepsFromMode(),
 			secondSteps:   AnalysisModeFull.AnalysisStepsFromMode(),
 			expectedSteps: AnalysisStepsFull(),
 		},

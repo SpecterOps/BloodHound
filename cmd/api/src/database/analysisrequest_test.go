@@ -88,7 +88,7 @@ func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
 	t.Run("subsequent request widens queued analysis_step bits", func(t *testing.T) {
 		resetState(t)
 
-		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor", model.AnalysisModeTaggingOnwards))
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor", model.AnalysisModeNoPostProcessing))
 		require.NoError(t, dbInst.RequestAnalysis(testCtx, "admin", model.AnalysisModeFull))
 
 		queued, err := dbInst.GetAnalysisRequest(testCtx)
@@ -101,7 +101,7 @@ func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
 		resetState(t)
 
 		require.NoError(t, dbInst.RequestAnalysis(testCtx, "admin", model.AnalysisModeFull))
-		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor", model.AnalysisModeTaggingOnwards))
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor", model.AnalysisModeNoPostProcessing))
 
 		queued, err := dbInst.GetAnalysisRequest(testCtx)
 		require.NoError(t, err)
@@ -112,15 +112,15 @@ func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
 	t.Run("identical bits are a no-op and leave the row untouched", func(t *testing.T) {
 		resetState(t)
 
-		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor-1", model.AnalysisModeTaggingOnwards))
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor-1", model.AnalysisModeNoPostProcessing))
 		original, err := dbInst.GetAnalysisRequest(testCtx)
 		require.NoError(t, err)
 
-		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor-2", model.AnalysisModeTaggingOnwards))
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor-2", model.AnalysisModeNoPostProcessing))
 		queued, err := dbInst.GetAnalysisRequest(testCtx)
 		require.NoError(t, err)
 
-		require.Equal(t, model.AnalysisStepsTaggingOnwards(), queued.AnalysisSteps)
+		require.Equal(t, model.AnalysisStepsNoPostProcessing(), queued.AnalysisSteps)
 		require.Equal(t, "tag-editor-1", queued.RequestedBy)
 		require.Equal(t, original.RequestedAt, queued.RequestedAt, "row must not be updated when bits don't change")
 	})
@@ -135,7 +135,7 @@ func TestAnalysisRequest_DisabledVariableAnalysisModeQueuesFullAnalysis(t *testi
 
 	setVariableAnalysisModeFlag(t, testCtx, dbInst, false)
 
-	require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor", model.AnalysisModeTaggingOnwards))
+	require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor", model.AnalysisModeNoPostProcessing))
 
 	queued, err := dbInst.GetAnalysisRequest(testCtx)
 	require.NoError(t, err)

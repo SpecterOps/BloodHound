@@ -38,7 +38,7 @@ func TestDispatchAnalysisSteps(t *testing.T) {
 		},
 		{
 			name:          "tagging to completion skips post-processing",
-			analysisSteps: model.AnalysisStepsTaggingOnwards(),
+			analysisSteps: model.AnalysisStepsNoPostProcessing(),
 			expectedCalls: []string{"tagging", "data_quality"},
 		},
 		{

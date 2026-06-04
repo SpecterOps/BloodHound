@@ -55,7 +55,7 @@ func TestResources_GetAnalysisRequest(t *testing.T) {
 			RequestedAt:   time.Now(),
 			RequestedBy:   "test",
 			RequestType:   model.AnalysisRequestType("test-type"),
-			AnalysisSteps: model.AnalysisStepsTaggingOnwards(),
+			AnalysisSteps: model.AnalysisStepsNoPostProcessing(),
 		}
 
 		mockDB.EXPECT().GetAnalysisRequest(gomock.Any()).Return(analysisRequest, nil)

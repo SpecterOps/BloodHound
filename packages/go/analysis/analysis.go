@@ -127,6 +127,10 @@ var (
 	ErrAnalysisPartiallyCompleted = errors.New("analysis partially completed")
 )
 
+type analysisPipelineStep struct {
+	step      model.AnalysisSteps
+	operation func()
+}
 type analysisStepDispatch struct {
 	adPostProcessing    func()
 	azurePostProcessing func()

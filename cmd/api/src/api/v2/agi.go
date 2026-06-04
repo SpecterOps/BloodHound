@@ -293,7 +293,7 @@ func (s Resources) UpdateAssetGroupSelectors(response http.ResponseWriter, reque
 					userId = user.ID.String()
 				}
 
-				if err := s.DB.RequestAnalysis(request.Context(), userId, model.AnalysisModeTaggingOnwards); err != nil {
+				if err := s.DB.RequestAnalysis(request.Context(), userId, model.AnalysisModeNoPostProcessing); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				}
