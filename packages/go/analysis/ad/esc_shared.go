@@ -310,14 +310,14 @@ func findNodesByCertThumbprint(certThumbprint string, tx graph.Transaction, kind
 	}))
 }
 
-func expandNodeSliceToBitmapWithoutGroups(nodes []*graph.Node, localGroupData *LocalGroupData) cardinality.Duplex[uint64] {
+func expandCachedPrincipalsToBitmapWithoutGroups(principals CachedPrincipalSet, localGroupData *LocalGroupData) cardinality.Duplex[uint64] {
 	var (
 		nonGroupNodes = cardinality.NewBitmap64()
 	)
 
-	for _, controller := range nodes {
-		if controller.Kinds.ContainsOneOf(ad.Group) {
-			localGroupData.GroupMembershipCache.ReachOfComponentContainingMember(controller.ID.Uint64(), graph.DirectionInbound).Each(func(memberID uint64) bool {
+	principals.AllIDs.Each(func(entityID uint64) bool {
+		if principals.GroupOrLocalGroupIDs.Contains(entityID) {
+			localGroupData.GroupMembershipCache.ReachOfComponentContainingMember(entityID, graph.DirectionInbound).Each(func(memberID uint64) bool {
 				if !localGroupData.Groups.Contains(memberID) {
 					nonGroupNodes.Add(memberID)
 				}
@@ -325,9 +325,11 @@ func expandNodeSliceToBitmapWithoutGroups(nodes []*graph.Node, localGroupData *L
 				return true
 			})
 		} else {
-			nonGroupNodes.Add(controller.ID.Uint64())
+			nonGroupNodes.Add(entityID)
 		}
-	}
+
+		return true
+	})
 
 	return nonGroupNodes
 }
@@ -411,11 +413,11 @@ func filterUserDNSResults(tx graph.Transaction, bitmap cardinality.Duplex[uint64
 	return bitmap, nil
 }
 
-func getVictimBitmap(localGroupData *LocalGroupData, certTemplateControllers, ecaControllers []*graph.Node, specialGroupHasTemplateEnroll, specialGroupHasECAEnroll bool) cardinality.Duplex[uint64] {
+func getVictimBitmap(localGroupData *LocalGroupData, certTemplateControllers, ecaControllers CachedPrincipalSet, specialGroupHasTemplateEnroll, specialGroupHasECAEnroll bool) cardinality.Duplex[uint64] {
 	// Expand controllers for the eca + template completely because we don't do group shortcutting here
 	var (
-		templateBitmap = expandNodeSliceToBitmapWithoutGroups(certTemplateControllers, localGroupData)
-		ecaBitmap      = expandNodeSliceToBitmapWithoutGroups(ecaControllers, localGroupData)
+		templateBitmap = expandCachedPrincipalsToBitmapWithoutGroups(certTemplateControllers, localGroupData)
+		ecaBitmap      = expandCachedPrincipalsToBitmapWithoutGroups(ecaControllers, localGroupData)
 		victimBitmap   = cardinality.NewBitmap64()
 	)
 
