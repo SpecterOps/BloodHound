@@ -36,15 +36,15 @@ var ErrIsDirectory = errors.New("is a directory")
 // ctxReader wraps an io.Reader so that context cancellation is observed between
 // reads. io.Copy calls Read in a loop and each call checks ctx.Err() before delegating.
 type ctxReader struct {
-	ctx context.Context
-	r   io.Reader
+	ctx    context.Context
+	reader io.Reader
 }
 
-func (s *ctxReader) Read(p []byte) (int, error) {
+func (s *ctxReader) Read(buffer []byte) (int, error) {
 	if err := s.ctx.Err(); err != nil {
 		return 0, err
 	}
-	return s.r.Read(p)
+	return s.reader.Read(buffer)
 }
 
 // LocalStore is a Storage implementation backed by a sandboxed directory on the
@@ -59,13 +59,13 @@ type LocalStore struct {
 	closeErr  error
 }
 
-func NewLocalStore(root string) (*LocalStore, error) {
-	r, err := os.OpenRoot(root)
+func NewLocalStore(rootPath string) (*LocalStore, error) {
+	rootDirectory, err := os.OpenRoot(rootPath)
 	if err != nil {
 		return nil, err
 	}
 	return &LocalStore{
-		root: r,
+		root: rootDirectory,
 	}, nil
 }
 
@@ -144,7 +144,7 @@ func (s *LocalStore) writeAtomic(ctx context.Context, name string, src io.Reader
 		}
 	}()
 
-	if _, err = io.Copy(tmp, &ctxReader{ctx: ctx, r: src}); err != nil {
+	if _, err = io.Copy(tmp, &ctxReader{ctx: ctx, reader: src}); err != nil {
 		return err
 	}
 	if err = tmp.Sync(); err != nil { // flush data blocks
@@ -288,29 +288,29 @@ func (s *LocalStore) List(ctx context.Context, name string, options ListOptions)
 	fsys := s.root.FS()
 	if options.Recursive {
 		out := []FileInfo{}
-		err := fs.WalkDir(fsys, listName, func(p string, d fs.DirEntry, err error) error {
+		err := fs.WalkDir(fsys, listName, func(entryPath string, entry fs.DirEntry, err error) error {
 			if cerr := ctx.Err(); cerr != nil {
 				return cerr
 			}
 			if err != nil {
-				if errors.Is(err, fs.ErrNotExist) && p == listName {
+				if errors.Is(err, fs.ErrNotExist) && entryPath == listName {
 					return fs.SkipAll
 				}
 				return err
 			}
-			if d.IsDir() {
+			if entry.IsDir() {
 				return nil
 			}
-			info, err := d.Info()
+			info, err := entry.Info()
 			if err != nil {
 				return err
 			}
 			out = append(out, FileInfo{
-				Path:         p,
+				Path:         entryPath,
 				Size:         info.Size(),
 				LastModified: info.ModTime(),
-				IsDir:        d.IsDir(),
-				ContentType:  detectContentType(p),
+				IsDir:        entry.IsDir(),
+				ContentType:  detectContentType(entryPath),
 			})
 			if options.Limit > 0 && len(out) >= options.Limit {
 				return fs.SkipAll
