@@ -54,8 +54,8 @@ ALTER TABLE custom_node_kinds
 ALTER TABLE custom_node_kinds DROP COLUMN kind_name;
 
 
+-- we have to recreate ensure_stubbed_custom_node_kind_for_ingest to use the new kind_id column instead of kind_name
 -- +goose StatementBegin
--- we have to recreate ensure_stubbed_custom_node_kind_for_ingest to use the new upsert_kind function that relies on the kind table instead of the custom_node_kinds table, but the logic is mostly the same otherwise.
 CREATE OR REPLACE FUNCTION ensure_stubbed_custom_node_kind_for_ingest(node_kind_name TEXT, custom_node_kind_config JSONB) RETURNS void AS $$
 DECLARE
   kind_row kind%rowtype;
@@ -107,5 +107,33 @@ ALTER TABLE custom_node_kinds DROP CONSTRAINT IF EXISTS fk_custom_node_kinds_kin
 ALTER TABLE custom_node_kinds DROP CONSTRAINT IF EXISTS custom_node_kinds_kind_id_key;
 ALTER TABLE custom_node_kinds DROP COLUMN kind_id;
 
--- Finally, drop the function we updated in the Up migration, which will be re-created in the previous migration's Up function.
-DROP FUNCTION IF EXISTS ensure_stubbed_custom_node_kind_for_ingest(TEXT, JSONB);
+-- reset the function to the previous version that relies on kind_name instead of kind_id
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION ensure_stubbed_custom_node_kind_for_ingest(node_kind_name TEXT, custom_node_kind_config JSONB) RETURNS void AS $$
+DECLARE
+  kind_row kind%rowtype;
+  custom_node_kind_id INTEGER;
+BEGIN
+  -- Lock before checking existence so concurrent callers do not duplicate stubs.
+  PERFORM pg_advisory_xact_lock(hashtext(node_kind_name));
+
+  -- Try to find the existing kind
+  SELECT * INTO kind_row FROM kind WHERE name = node_kind_name;
+
+  -- If there is no kind, we should add it
+  IF kind_row.id IS NULL THEN
+
+    -- Yes, this is a select, but upsert_kind is a function that adds a kind
+    SELECT * INTO kind_row FROM upsert_kind(node_kind_name);
+  END IF;
+
+  -- See if we have an existing custom node kind (note, we skip, do not update)
+  SELECT id INTO custom_node_kind_id FROM custom_node_kinds WHERE kind_name = node_kind_name;
+  IF custom_node_kind_id IS NULL THEN
+    -- Insert based on the config 
+    INSERT INTO custom_node_kinds (kind_name, schema_node_kind_id, config)
+    VALUES (node_kind_name, NULL, custom_node_kind_config);
+  END IF;
+END $$
+LANGUAGE plpgsql;
+-- +goose StatementEnd
