@@ -1,0 +1,107 @@
+// ──────────────────────────────────────────────────────────────────────────
+// BloodHound — New Architecture: System & Go Package Model (elements)
+//
+// Self-contained model of the target server architecture, built from scratch.
+// Relationships live in model/relationships.c4.
+//
+// C4 levels covered by the views:
+//   L1 context     – operator + bhce + postgres
+//   L2 container    – apiServer (Go) + pgx + postgres
+//   L3 component    – Go packages inside apiServer
+//   L4 code        – analysis feature internals (call flow / imports / wireup)
+// ──────────────────────────────────────────────────────────────────────────
+
+model {
+
+  operator = actor 'BHE Operator' {
+    description 'Authenticated user who triggers analysis runs and reads their status through the REST API.'
+  }
+
+  // ─── External libraries (Tier 3) ───────────────────────────────
+
+  pgxPool = library 'pgx / pgxpool' {
+    #external
+    description 'PostgreSQL driver and connection pool. Executes queries and manages connections.'
+    technology 'github.com/jackc/pgx/v5'
+  }
+
+  sqlBuilder = library 'go-sqlbuilder' {
+    #external
+    description 'Fluent SQL builder used to construct parameterised PostgreSQL statements.'
+    technology 'github.com/huandu/go-sqlbuilder'
+  }
+
+  // ─── System ─────────────────────────────────────────────────────
+
+  bhce = system 'BloodHound — New Architecture' {
+    description 'Target-state attack-path management server: feature-sliced Go packages behind a single REST API, persisting to PostgreSQL.'
+
+    apiServer = container 'API Server' {
+      #go
+      description 'Go HTTP server. Routes requests, enforces RBAC, runs feature business logic, and persists state to PostgreSQL.'
+      technology 'Go'
+
+      modules = goPackage 'modules' {
+        description 'Central feature registry. Holds the shared Deps (Router, Pool) and calls each feature module Register at startup.'
+        technology 'bhce/server/modules'
+      }
+
+      httpRouter = goPackage 'router' {
+        description 'HTTP router. Binds URL + method + permission middleware to handler funcs and dispatches incoming requests.'
+        technology 'cmd/api/src/api/router'
+      }
+
+      auth = goPackage 'auth' {
+        description 'Authentication and RBAC. Exposes Permissions() and extracts the authenticated user from the request context.'
+        technology 'cmd/api/src/auth'
+      }
+
+      bhctx = goPackage 'bhctx' {
+        description 'Per-request context. Carries the authenticated user and request id for handlers and responses.'
+        technology 'cmd/api/src/bhctx'
+      }
+
+      responses = goPackage 'responses' {
+        description 'Shared HTTP response helpers: BasicResponse / ErrorWrapper envelopes and status-code writers.'
+        technology 'bhce/server/responses'
+      }
+
+      analysisFeature = goPackage 'analysis' {
+        description 'Self-contained feature slice for the analysis-request lifecycle. Owns its HTTP, domain, and persistence layers.'
+        technology 'bhce/server/analysis'
+
+        analysisWireup = goPackage 'wireup (analysis.go)' {
+          description 'Feature composition root. Register() builds appdb → services → handlers and attaches routes to the router.'
+          technology 'bhce/server/analysis'
+        }
+
+        analysisRoutes = goPackage 'routes' {
+          description 'Binds GET/PUT /api/v2/analysis to handler methods with permission middleware.'
+          technology 'bhce/server/analysis/routes'
+        }
+
+        analysisHandlers = goPackage 'handlers' {
+          description 'HTTP layer. Defines the Analysis interface, reads auth context, maps domain errors to status codes, writes JSON.'
+          technology 'bhce/server/analysis/handlers'
+        }
+
+        analysisServices = goPackage 'services' {
+          description 'Business-logic layer. Owns domain types and sentinel errors; defines the Database interface implemented by appdb.'
+          technology 'bhce/server/analysis/services'
+        }
+
+        analysisAppdb = goPackage 'appdb' {
+          description 'Persistence layer. Builds SQL with go-sqlbuilder, executes via pgx, maps driver errors to domain sentinels.'
+          technology 'bhce/server/analysis/appdb'
+        }
+      }
+    }
+  }
+
+  // ─── Datastore (peer of the system at L1) ──────────────────────
+
+  postgres = database 'PostgreSQL' {
+    description 'Relational store. Holds the analysis_request_switch singleton and other feature tables.'
+    technology 'PostgreSQL 14+'
+  }
+}

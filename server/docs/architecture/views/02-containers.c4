@@ -1,0 +1,54 @@
+// ──────────────────────────────────────────────────────────────────────────
+// L2 – Containers
+//
+// The deployable units inside the system: the Go API server and PostgreSQL.
+// The API server is collapsed here; its Go packages appear at L3.
+// ──────────────────────────────────────────────────────────────────────────
+
+views {
+
+  view bhceContainers of bhce {
+    title 'New Architecture – L2 Containers'
+    description '''
+      The two runtime units that make up the system — the Go API server and the
+      PostgreSQL relational store — plus the operator and the persistence
+      libraries the server links against.
+
+      pgx is the database driver on the wire: it sits between the API server and
+      PostgreSQL. go-sqlbuilder only constructs query strings, so it hangs off
+      the server rather than the persistence path.
+
+      Drill down: bhceComponents (L3) for the packages inside the API server.
+    '''
+
+    include
+      operator,
+      bhce.apiServer,
+      postgres,
+      pgxPool,
+      sqlBuilder
+
+    // Show the persistence path through the driver (apiServer → pgx → postgres)
+    // rather than the L3/L4 shorthand of the server calling the DB directly.
+    // The exclude must reference the bubbled container-level element, not the
+    // leaf descendant, so that LikeC4 matches it against the rendered edge.
+    exclude bhce.apiServer -[calls]-> postgres
+
+    style bhce.apiServer {
+      color primary
+    }
+
+    style postgres {
+      color green
+    }
+
+    style operator {
+      color amber
+    }
+
+    style pgxPool, sqlBuilder {
+      color muted
+    }
+  }
+
+}

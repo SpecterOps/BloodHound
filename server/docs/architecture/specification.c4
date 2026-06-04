@@ -1,0 +1,79 @@
+// ──────────────────────────────────────────────────────────────────────────
+// BloodHound — New Architecture: Specification
+//
+// Self-contained LikeC4 specification. This project is intentionally independent
+// of docs/architecture and bhce/architecture: it models the target server
+// architecture from scratch and shares no elements or kinds with them.
+// ──────────────────────────────────────────────────────────────────────────
+
+specification {
+
+  // ─── Element kinds ──────────────────────────────────────────────
+
+  element actor {
+    notation 'Human actor'
+    style {
+      shape person
+      color amber
+    }
+  }
+
+  element externalSystem {
+    notation 'External system'
+    style {
+      shape rectangle
+      color muted
+    }
+  }
+
+  element library {
+    notation 'Third-party library'
+    style {
+      shape rectangle
+      color muted
+    }
+  }
+
+  element system {
+    notation 'System'
+    style {
+      shape rectangle
+      color primary
+    }
+  }
+
+  element container {
+    notation 'Deployable container'
+    style {
+      shape rectangle
+      color secondary
+    }
+  }
+
+  element goPackage {
+    notation 'Go package'
+    style {
+      color primary
+    }
+  }
+
+  element database {
+    notation 'Data store'
+    style {
+      shape storage
+      color green
+    }
+  }
+
+  // ─── Relationship kinds ─────────────────────────────────────────
+
+  relationship uses      { notation 'uses'      }
+  relationship calls     { notation 'calls'     }
+  relationship imports   { notation 'imports'   }
+  relationship registers { notation 'registers' }
+
+  // ─── Tags ───────────────────────────────────────────────────────
+
+  tag external
+  tag go
+}

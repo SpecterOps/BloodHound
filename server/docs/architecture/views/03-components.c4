@@ -1,0 +1,42 @@
+// ──────────────────────────────────────────────────────────────────────────
+// L3 – API Server Components
+//
+// The Go packages inside the API server and how they depend on one another.
+// This is a structural dependency map: imports (compile-time), registers
+// (route wiring) and uses (external libraries). The runtime call graph is the
+// L4 concern and is excluded here so the dependency direction stays legible.
+// ──────────────────────────────────────────────────────────────────────────
+
+views {
+
+  view bhceComponents of bhce.apiServer {
+    title 'New Architecture – L3 API Server Components'
+    description '''
+      Every Go package inside the API server and the dependency edges between
+      them: imports, route registration, and external-library use.
+
+      The analysis feature is shown as a bounded group of five packages
+      (wireup, routes, handlers, services, appdb). services is the dependency
+      root of the feature — it is imported by both handlers and appdb but
+      imports neither.
+
+      Runtime call edges are intentionally hidden here; see the L4 views
+      (analysisCallFlow, analysisImports, analysisWireup) for those.
+    '''
+
+    include *
+    include pgxPool, sqlBuilder
+
+    // Keep this a dependency map — drop the runtime call graph (L4 concern).
+    exclude * -[calls]-> *
+
+    style bhce.apiServer.analysisFeature {
+      color primary
+    }
+
+    style pgxPool, sqlBuilder {
+      color muted
+    }
+  }
+
+}

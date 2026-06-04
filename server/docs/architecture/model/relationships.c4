@@ -1,0 +1,69 @@
+// ──────────────────────────────────────────────────────────────────────────
+// BloodHound — New Architecture: Relationships
+//
+// Every edge below is grounded in the actual bhce/server source:
+//   calls     – runtime execution path (interface-mediated where noted)
+//   imports   – compile-time Go import dependency
+//   registers – route/handler binding onto the router
+//   uses      – dependency on an external library
+// ──────────────────────────────────────────────────────────────────────────
+
+model {
+
+  // ─── Context / container edges ──────────────────────────────────
+
+  operator -[calls]-> bhce.apiServer 'triggers and inspects analysis via REST API'
+
+  // ─── Startup wireup (runtime construction) ──────────────────────
+
+  bhce.apiServer.modules -[calls]-> bhce.apiServer.analysisFeature.analysisWireup 'Register(deps)'
+  bhce.apiServer.analysisFeature.analysisWireup -[calls]-> bhce.apiServer.analysisFeature.analysisAppdb    'appdb.NewStore(pool)'
+  bhce.apiServer.analysisFeature.analysisWireup -[calls]-> bhce.apiServer.analysisFeature.analysisServices 'services.NewService(store)'
+  bhce.apiServer.analysisFeature.analysisWireup -[calls]-> bhce.apiServer.analysisFeature.analysisHandlers 'handlers.NewHandlersContainer(svc)'
+  bhce.apiServer.analysisFeature.analysisWireup -[calls]-> bhce.apiServer.analysisFeature.analysisRoutes   'routes.Register(router, handlers)'
+  bhce.apiServer.analysisFeature.analysisRoutes -[registers]-> bhce.apiServer.httpRouter 'GET/PUT /api/v2/analysis → handler methods'
+
+  // ─── Runtime request call flow ──────────────────────────────────
+
+  bhce.apiServer.httpRouter -[calls]-> bhce.apiServer.analysisFeature.analysisHandlers 'dispatches request to'
+  bhce.apiServer.analysisFeature.analysisHandlers -[calls]-> bhce.apiServer.analysisFeature.analysisServices 'via Analysis interface'
+  bhce.apiServer.analysisFeature.analysisHandlers -[calls]-> bhce.apiServer.responses 'writes JSON via'
+  bhce.apiServer.analysisFeature.analysisHandlers -[calls]-> bhce.apiServer.auth      'GetUserFromAuthCtx'
+  bhce.apiServer.analysisFeature.analysisHandlers -[calls]-> bhce.apiServer.bhctx     'FromRequest'
+  bhce.apiServer.analysisFeature.analysisServices -[calls]-> bhce.apiServer.analysisFeature.analysisAppdb 'via Database interface'
+  bhce.apiServer.analysisFeature.analysisAppdb -[calls]-> postgres 'executes SQL against'
+  bhce.apiServer.responses -[calls]-> bhce.apiServer.bhctx 'reads request id from'
+
+  // ─── Compile-time imports ───────────────────────────────────────
+
+  bhce.apiServer.modules -[imports]-> bhce.apiServer.analysisFeature.analysisWireup 'feature Register'
+  bhce.apiServer.modules -[imports]-> bhce.apiServer.httpRouter 'Router on Deps'
+  bhce.apiServer.modules -[imports]-> pgxPool 'Pool on Deps'
+
+  bhce.apiServer.analysisFeature.analysisWireup -[imports]-> bhce.apiServer.analysisFeature.analysisAppdb    'NewStore'
+  bhce.apiServer.analysisFeature.analysisWireup -[imports]-> bhce.apiServer.analysisFeature.analysisServices 'NewService'
+  bhce.apiServer.analysisFeature.analysisWireup -[imports]-> bhce.apiServer.analysisFeature.analysisHandlers 'NewHandlersContainer'
+  bhce.apiServer.analysisFeature.analysisWireup -[imports]-> bhce.apiServer.analysisFeature.analysisRoutes   'Register'
+
+  bhce.apiServer.analysisFeature.analysisRoutes -[imports]-> bhce.apiServer.analysisFeature.analysisHandlers 'Handlers type'
+  bhce.apiServer.analysisFeature.analysisRoutes -[imports]-> bhce.apiServer.auth 'Permissions()'
+
+  bhce.apiServer.analysisFeature.analysisHandlers -[imports]-> bhce.apiServer.analysisFeature.analysisServices 'domain types and sentinel errors'
+  bhce.apiServer.analysisFeature.analysisHandlers -[imports]-> bhce.apiServer.responses 'response writers'
+  bhce.apiServer.analysisFeature.analysisHandlers -[imports]-> bhce.apiServer.auth  'GetUserFromAuthCtx'
+  bhce.apiServer.analysisFeature.analysisHandlers -[imports]-> bhce.apiServer.bhctx 'FromRequest'
+
+  bhce.apiServer.analysisFeature.analysisAppdb -[imports]-> bhce.apiServer.analysisFeature.analysisServices 'domain types and sentinel errors'
+
+  bhce.apiServer.responses -[imports]-> bhce.apiServer.bhctx 'request id'
+
+  // ─── External library use ───────────────────────────────────────
+
+  bhce.apiServer.analysisFeature.analysisAppdb -[uses]-> sqlBuilder 'builds SQL with'
+  bhce.apiServer.analysisFeature.analysisAppdb -[uses]-> pgxPool    'executes via pgx'
+
+  // pgx is the driver on the wire to the database: it ranks between the
+  // server and postgres at L2 (the direct appdb→postgres call is the logical
+  // shorthand used at L3/L4 where the driver is hidden).
+  pgxPool -[calls]-> postgres 'executes queries against'
+}

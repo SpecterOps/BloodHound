@@ -1,0 +1,40 @@
+// ──────────────────────────────────────────────────────────────────────────
+// L1 – System Context
+//
+// Who uses the system and the third-party libraries it depends on. The system
+// is a single black box at this level; internals appear at L2 and below.
+// ──────────────────────────────────────────────────────────────────────────
+
+views {
+
+  view bhceContext {
+    title 'New Architecture – L1 System Context'
+    description '''
+      The BloodHound API server as a single system, the operator who drives it,
+      and the PostgreSQL store it persists to.
+
+      The persistence libraries (pgx, go-sqlbuilder) are implementation details
+      and appear at L2, not here.
+
+      Drill down: bhceContainers (L2) for the deployable units.
+    '''
+
+    include
+      operator,
+      bhce,
+      postgres
+
+    style bhce {
+      color primary
+    }
+
+    style postgres {
+      color green
+    }
+
+    style operator {
+      color amber
+    }
+  }
+
+}
