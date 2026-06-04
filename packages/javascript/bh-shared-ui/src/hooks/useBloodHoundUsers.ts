@@ -25,7 +25,7 @@ export const useSelf = () =>
 
 export const useBloodHoundUsers = () => {
     const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS);
+    const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS) || checkPermission(Permission.AUTH_READ_USERS);
 
     return useQuery({
         queryKey: ['listUsers'],

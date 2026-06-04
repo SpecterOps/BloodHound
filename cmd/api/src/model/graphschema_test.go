@@ -14,18 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package opengraphschema
+package model
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/stretchr/testify/require"
 )
 
-func baseExtensionInput() model.ExtensionInput {
-	return model.ExtensionInput{
+func baseExtensionInput() ExtensionInput {
+	return ExtensionInput{
 		Name:        "Test extension",
 		DisplayName: "Test extension",
 		Version:     "v1.0.0",
@@ -35,7 +34,7 @@ func baseExtensionInput() model.ExtensionInput {
 
 func Test_validateGraphExtension(t *testing.T) {
 	type args struct {
-		graphExtension model.GraphExtensionInput
+		graphExtension GraphExtensionInput
 	}
 	tests := []struct {
 		name    string
@@ -45,15 +44,15 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - empty extension name",
 			args: args{
-				graphExtension: model.GraphExtensionInput{},
+				graphExtension: GraphExtensionInput{},
 			},
 			wantErr: fmt.Errorf("graph schema extension name is required"),
 		},
 		{
 			name: "fail - empty extension version",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: ExtensionInput{
 						Name:        "Test extension",
 						DisplayName: "Test extension",
 					},
@@ -64,8 +63,8 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - invalid extension version",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: ExtensionInput{
 						Name:        "Test extension",
 						DisplayName: "Test extension",
 						Version:     "1.0",
@@ -77,8 +76,8 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - empty extension namespace",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: ExtensionInput{
 						Name:        "Test extension",
 						DisplayName: "Test extension",
 						Version:     "v1.0.0",
@@ -90,8 +89,8 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - extension namespace cannot be Tag",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: ExtensionInput{
 						Name:        "Test extension",
 						DisplayName: "Test extension",
 						Version:     "v1.0.0",
@@ -104,8 +103,8 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - extension namespace cannot be tag (lowercase)",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: ExtensionInput{
 						Name:        "Test extension",
 						DisplayName: "Test extension",
 						Version:     "v1.0.0",
@@ -118,8 +117,8 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - extension namespace cannot be TAG (uppercase)",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: ExtensionInput{
 						Name:        "Test extension",
 						DisplayName: "Test extension",
 						Version:     "v1.0.0",
@@ -132,8 +131,8 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - extension namespace cannot be tAg (mixed case)",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: ExtensionInput{
 						Name:        "Test extension",
 						DisplayName: "Test extension",
 						Version:     "v1.0.0",
@@ -146,8 +145,8 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - extension namespace cannot be prefixed by reserved namespace (tag_sub)",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: ExtensionInput{
 						Name:        "Test extension",
 						DisplayName: "Test extension",
 						Version:     "v1.0.0",
@@ -160,8 +159,8 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - extension namespace cannot be prefixed by reserved namespace mixed-case (Tag_audit)",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: ExtensionInput{
 						Name:        "Test extension",
 						DisplayName: "Test extension",
 						Version:     "v1.0.0",
@@ -174,8 +173,8 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - extension namespace cannot be prefixed by reserved namespace uppercase (TAG_x)",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: ExtensionInput{
 						Name:        "Test extension",
 						DisplayName: "Test extension",
 						Version:     "v1.0.0",
@@ -188,8 +187,8 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "pass reserved-namespace check - similar-looking namespace 'tagged' is not reserved (fails at later check)",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: ExtensionInput{
 						Name:        "Test extension",
 						DisplayName: "Test extension",
 						Version:     "v1.0.0",
@@ -202,7 +201,7 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - empty graph schema nodes",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
 				},
 			},
@@ -211,9 +210,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - duplicate kinds - two node kinds",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_node kind 1",
 						},
@@ -228,9 +227,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - node kind missing namespace",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "node_kind_1",
 						},
@@ -245,9 +244,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - node kind missing name after extension namespace",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_",
 						},
@@ -262,9 +261,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - node kind icon color is not valid hex code",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name:      "AD_Kind1",
 							IconColor: "#1234567",
@@ -277,9 +276,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - duplicate kinds - two edge kinds",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_node kind 1",
 						},
@@ -287,7 +286,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_node kind 2",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{
+					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
 						},
@@ -302,9 +301,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - edge kind missing namespace",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_node kind 1",
 						},
@@ -312,7 +311,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_node kind 2",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{
+					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
 						},
@@ -327,9 +326,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - edge kind missing name after extension namespace",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_node kind 1",
 						},
@@ -337,7 +336,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_node kind 2",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{
+					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge_kind_1",
 						},
@@ -350,44 +349,11 @@ func Test_validateGraphExtension(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema edge kind cannot be empty after the namespace prefix"),
 		},
 		{
-			name: "fail - duplicate properties",
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
-						{
-							Name: "AD_node kind 1",
-						},
-						{
-							Name: "AD_node kind 2",
-						},
-					},
-					RelationshipKindsInput: model.RelationshipsInput{
-						{
-							Name: "AD_edge kind 1",
-						},
-						{
-							Name: "AD_edge kind 2",
-						},
-					},
-					PropertiesInput: model.PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 1",
-						},
-					},
-				},
-			},
-			wantErr: fmt.Errorf("duplicate graph properties: property 1"),
-		},
-		{
 			name: "fail - duplicate kinds - same edge and node kind",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_a_duplicate_graph_kind",
 						},
@@ -395,7 +361,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_node kind 2",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{
+					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
 						},
@@ -403,7 +369,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_a_duplicate_graph_kind",
 						},
 					},
-					PropertiesInput: model.PropertiesInput{
+					PropertiesInput: PropertiesInput{
 						{
 							Name: "property 1",
 						},
@@ -418,9 +384,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - environment kind name missing namespace prefix",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_node_kind_1",
 						},
@@ -428,12 +394,12 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_node kind 2",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{
+					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: model.PropertiesInput{
+					PropertiesInput: PropertiesInput{
 						{
 							Name: "property 1",
 						},
@@ -441,7 +407,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "property 2",
 						},
 					},
-					EnvironmentsInput: model.EnvironmentsInput{
+					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "environment",
 							SourceKindName:      "",
@@ -455,9 +421,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - EnvironmentKindName cannot be empty after the namespace prefix",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_node_kind_1",
 						},
@@ -465,12 +431,12 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_node kind 2",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{
+					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: model.PropertiesInput{
+					PropertiesInput: PropertiesInput{
 						{
 							Name: "property 1",
 						},
@@ -478,7 +444,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "property 2",
 						},
 					},
-					EnvironmentsInput: model.EnvironmentsInput{
+					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_",
 							SourceKindName:      "",
@@ -492,9 +458,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - environment kind not declared as a node kind",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_node_kind_1",
 						},
@@ -502,12 +468,12 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_node kind 2",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{
+					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: model.PropertiesInput{
+					PropertiesInput: PropertiesInput{
 						{
 							Name: "property 1",
 						},
@@ -515,7 +481,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "property 2",
 						},
 					},
-					EnvironmentsInput: model.EnvironmentsInput{
+					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_environment",
 							SourceKindName:      "",
@@ -529,9 +495,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - duplicate environments",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_node_kind_1",
 						},
@@ -539,12 +505,12 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_environment",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{
+					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: model.PropertiesInput{
+					PropertiesInput: PropertiesInput{
 						{
 							Name: "property 1",
 						},
@@ -552,7 +518,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "property 2",
 						},
 					},
-					EnvironmentsInput: model.EnvironmentsInput{
+					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_environment",
 							SourceKindName:      "source_kind",
@@ -571,9 +537,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - environment source kind is empty",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_node_kind_1",
 						},
@@ -581,12 +547,12 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_env_kind",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{
+					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: model.PropertiesInput{
+					PropertiesInput: PropertiesInput{
 						{
 							Name: "property 1",
 						},
@@ -594,7 +560,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "property 2",
 						},
 					},
-					EnvironmentsInput: model.EnvironmentsInput{
+					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
 							SourceKindName:      "",
@@ -608,9 +574,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - environment source kind name conflicts with existing node kind name",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_node_kind_1",
 						},
@@ -618,12 +584,12 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_env_kind",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{
+					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: model.PropertiesInput{
+					PropertiesInput: PropertiesInput{
 						{
 							Name: "property 1",
 						},
@@ -631,7 +597,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "property 2",
 						},
 					},
-					EnvironmentsInput: model.EnvironmentsInput{
+					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
 							SourceKindName:      "AD_node_kind_1",
@@ -645,9 +611,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - environment source kind name conflicts with existing relationship kind name",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_node_kind_1",
 						},
@@ -655,12 +621,12 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_env_kind",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{
+					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: model.PropertiesInput{
+					PropertiesInput: PropertiesInput{
 						{
 							Name: "property 1",
 						},
@@ -668,7 +634,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "property 2",
 						},
 					},
-					EnvironmentsInput: model.EnvironmentsInput{
+					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
 							SourceKindName:      "AD_edge kind 1",
@@ -682,9 +648,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - environment principal kind missing namespace prefix",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_node_kind_1",
 						},
@@ -692,12 +658,12 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_env_kind",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{
+					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: model.PropertiesInput{
+					PropertiesInput: PropertiesInput{
 						{
 							Name: "property 1",
 						},
@@ -705,7 +671,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "property 2",
 						},
 					},
-					EnvironmentsInput: model.EnvironmentsInput{
+					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
 							SourceKindName:      "Base",
@@ -719,9 +685,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - environment principal kind cannot be empty after the namespace prefix",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_node_kind_1",
 						},
@@ -729,12 +695,12 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_env_kind",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{
+					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: model.PropertiesInput{
+					PropertiesInput: PropertiesInput{
 						{
 							Name: "property 1",
 						},
@@ -742,7 +708,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "property 2",
 						},
 					},
-					EnvironmentsInput: model.EnvironmentsInput{
+					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
 							SourceKindName:      "Base",
@@ -756,9 +722,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - environment principal kind not declared as a node kind",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_node_kind_1",
 						},
@@ -766,12 +732,12 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_env_kind",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{
+					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: model.PropertiesInput{
+					PropertiesInput: PropertiesInput{
 						{
 							Name: "property 1",
 						},
@@ -779,7 +745,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "property 2",
 						},
 					},
-					EnvironmentsInput: model.EnvironmentsInput{
+					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
 							SourceKindName:      "Base",
@@ -793,9 +759,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - relationship finding name missing namespace prefix",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_node_kind_1",
 						},
@@ -803,12 +769,12 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_env_kind",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{
+					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: model.PropertiesInput{
+					PropertiesInput: PropertiesInput{
 						{
 							Name: "property 1",
 						},
@@ -816,14 +782,14 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "property 2",
 						},
 					},
-					EnvironmentsInput: model.EnvironmentsInput{
+					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
 							SourceKindName:      "Base",
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
+					RelationshipFindingsInput: RelationshipFindingsInput{
 						{
 							Name: "finding_1",
 						},
@@ -835,9 +801,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - relationship finding name cannot be empty after the namespace prefix",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_node_kind_1",
 						},
@@ -845,12 +811,12 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_env_kind",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{
+					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: model.PropertiesInput{
+					PropertiesInput: PropertiesInput{
 						{
 							Name: "property 1",
 						},
@@ -858,14 +824,14 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "property 2",
 						},
 					},
-					EnvironmentsInput: model.EnvironmentsInput{
+					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
 							SourceKindName:      "Base",
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
+					RelationshipFindingsInput: RelationshipFindingsInput{
 						{
 							Name: "AD_",
 						},
@@ -877,9 +843,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - relationship finding relationship kind name missing namespace prefix",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_node_kind_1",
 						},
@@ -887,12 +853,12 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_env_kind",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{
+					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: model.PropertiesInput{
+					PropertiesInput: PropertiesInput{
 						{
 							Name: "property 1",
 						},
@@ -900,14 +866,14 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "property 2",
 						},
 					},
-					EnvironmentsInput: model.EnvironmentsInput{
+					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
 							SourceKindName:      "Base",
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
+					RelationshipFindingsInput: RelationshipFindingsInput{
 						{
 							Name:                 "AD_finding_1",
 							EnvironmentKindName:  "AD_env_kind",
@@ -921,9 +887,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - relationship finding relationship kind not declared as a relationship kind",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_node_kind_1",
 						},
@@ -931,12 +897,12 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_env_kind",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{
+					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: model.PropertiesInput{
+					PropertiesInput: PropertiesInput{
 						{
 							Name: "property 1",
 						},
@@ -944,14 +910,14 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "property 2",
 						},
 					},
-					EnvironmentsInput: model.EnvironmentsInput{
+					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
 							SourceKindName:      "Base",
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
+					RelationshipFindingsInput: RelationshipFindingsInput{
 						{
 							Name:                 "AD_finding_1",
 							EnvironmentKindName:  "AD_env_kind",
@@ -965,9 +931,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "fail - duplicate relationship findings",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name: "AD_node_kind_1",
 						},
@@ -975,7 +941,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_env_kind_1",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{
+					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge_kind_1",
 						},
@@ -983,7 +949,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_edge_kind_2",
 						},
 					},
-					PropertiesInput: model.PropertiesInput{
+					PropertiesInput: PropertiesInput{
 						{
 							Name: "property 1",
 						},
@@ -991,14 +957,14 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "property 2",
 						},
 					},
-					EnvironmentsInput: model.EnvironmentsInput{
+					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind_1",
 							SourceKindName:      "Base",
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
+					RelationshipFindingsInput: RelationshipFindingsInput{
 						{
 							Name:                 "AD_finding_1",
 							EnvironmentKindName:  "AD_env_kind_1",
@@ -1017,9 +983,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "success - valid ExtensionInput",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{{
+					NodeKindsInput: NodesInput{{
 						Name: "AD_node kind 1",
 					}},
 				},
@@ -1029,9 +995,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		{
 			name: "success - valid full ExtensionInput",
 			args: args{
-				graphExtension: model.GraphExtensionInput{
+				graphExtension: GraphExtensionInput{
 					ExtensionInput: baseExtensionInput(),
-					NodeKindsInput: model.NodesInput{
+					NodeKindsInput: NodesInput{
 						{
 							Name:          "AD_node_kind_1",
 							IconColor:     "#123456",
@@ -1043,10 +1009,10 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_env_kind_1",
 						},
 					},
-					RelationshipKindsInput: model.RelationshipsInput{{
+					RelationshipKindsInput: RelationshipsInput{{
 						Name: "AD_edge kind 1",
 					}},
-					EnvironmentsInput: model.EnvironmentsInput{
+					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind_1",
 							SourceKindName:      "Base",
@@ -1055,7 +1021,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							},
 						},
 					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
+					RelationshipFindingsInput: RelationshipFindingsInput{
 						{
 							Name:                 "AD_finding_1",
 							RelationshipKindName: "AD_edge kind 1",
@@ -1069,7 +1035,7 @@ func Test_validateGraphExtension(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := validateGraphExtension(tt.args.graphExtension); tt.wantErr != nil {
+			if err := tt.args.graphExtension.Validate(); tt.wantErr != nil {
 				require.ErrorContains(t, err, tt.wantErr.Error())
 			} else {
 				require.NoError(t, err)
