@@ -20,9 +20,9 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"slices"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/lib/pq"
@@ -64,7 +64,7 @@ const (
 	analysisFull = analysisSentinel - 1
 )
 
-// AnalysisSteps represents a set of step or single step in analysis using a bitmask.
+// AnalysisSteps represents a set of steps or single step in analysis using a bitmask.
 type AnalysisSteps struct {
 	bits int32
 }
@@ -75,9 +75,32 @@ var (
 	analysisStepTagging             = AnalysisSteps{bits: analysisTagging}
 	analysisStepGenerateFindings    = AnalysisSteps{bits: analysisGenerateFindings}
 
+	// Defines a name for a single step of analysis for string representation purposes.
+	// If adding bits (steps) to the bitmask, this needs to be updated.
+	analysisStepNames = map[AnalysisSteps]string{
+		analysisStepADPostProcessing:    "ad_post_processing",
+		analysisStepAzurePostProcessing: "azure_post_processing",
+		analysisStepTagging:             "tagging",
+		analysisStepGenerateFindings:    "generate_findings",
+	}
+
 	analysisStepsTaggingOnwards = AnalysisSteps{bits: analysisTaggingOnwards}
 	analysisStepsFull           = AnalysisSteps{bits: analysisFull}
 )
+
+func (s AnalysisSteps) GetNameOfAnalysisStep() string {
+	name, present := analysisStepNames[s]
+
+	if present {
+		return name
+	}
+
+	return "unknown"
+}
+
+func AnalysisAllStepNames() []string {
+	return slices.Collect(maps.Values(analysisStepNames))
+}
 
 func AnalysisStepADPostProcessing() AnalysisSteps {
 	return analysisStepADPostProcessing
@@ -96,7 +119,7 @@ func AnalysisStepGenerateFindings() AnalysisSteps {
 }
 
 func AnalysisStepsTaggingOnwards() AnalysisSteps {
-	return analysisStepsTaggingOnwards
+	return AnalysisSteps{bits: analysisTaggingOnwards}
 }
 
 func AnalysisStepsFull() AnalysisSteps {
@@ -120,33 +143,8 @@ func (s AnalysisSteps) IsEmpty() bool {
 	return s.bits == 0
 }
 
-func AnalysisStepsFromBits(bits int) AnalysisSteps {
+func analysisStepsFromBits(bits int) AnalysisSteps {
 	return AnalysisSteps{bits: int32(bits)}
-}
-
-func (s AnalysisSteps) String() string {
-	var (
-		stepNames = []string{}
-		knownBits = int32(0)
-	)
-
-	for _, stepDefinition := range AnalysisDefinition() {
-		knownBits |= stepDefinition.Step.bits
-
-		if s.Has(stepDefinition.Step) {
-			stepNames = append(stepNames, stepDefinition.Name)
-		}
-	}
-
-	if unknownBits := s.bits &^ knownBits; unknownBits != 0 {
-		stepNames = append(stepNames, fmt.Sprintf("unknown:%d", unknownBits))
-	}
-
-	if len(stepNames) == 0 {
-		return "none"
-	}
-
-	return strings.Join(stepNames, ",")
 }
 
 // #region DB implementation methods
@@ -160,23 +158,23 @@ func (s *AnalysisSteps) Scan(value any) error {
 	case nil:
 		*s = AnalysisSteps{}
 	case int64:
-		*s = AnalysisStepsFromBits(int(typedValue))
+		*s = analysisStepsFromBits(int(typedValue))
 	case int32:
-		*s = AnalysisStepsFromBits(int(typedValue))
+		*s = analysisStepsFromBits(int(typedValue))
 	case int:
-		*s = AnalysisStepsFromBits(typedValue)
+		*s = analysisStepsFromBits(typedValue)
 	case []byte:
 		bits, err := strconv.Atoi(string(typedValue))
 		if err != nil {
 			return err
 		}
-		*s = AnalysisStepsFromBits(bits)
+		*s = analysisStepsFromBits(bits)
 	case string:
 		bits, err := strconv.Atoi(typedValue)
 		if err != nil {
 			return err
 		}
-		*s = AnalysisStepsFromBits(bits)
+		*s = analysisStepsFromBits(bits)
 	default:
 		return fmt.Errorf("unable to scan analysis steps from %T", value)
 	}
@@ -195,7 +193,7 @@ func (s *AnalysisSteps) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	*s = AnalysisStepsFromBits(bits)
+	*s = analysisStepsFromBits(bits)
 	return nil
 }
 
@@ -210,6 +208,8 @@ const (
 
 // This function needs to be updated when new modes are added.
 // If the mode is unknown, defaults to full analysis.
+// With this function, and by making AnalysisMode a parameter for RequestAnalysis(),
+// we ensure consumers of RequestAnalysis() cannot queue arbitrary bitmasks.
 func (s AnalysisMode) AnalysisStepsFromMode() AnalysisSteps {
 	switch s {
 	case AnalysisModeTaggingOnwards:
@@ -231,41 +231,4 @@ type AnalysisRequest struct {
 	DeleteSourcelessGraph bool           `json:"delete_sourceless_graph"`                 // Deletes all nodes and edges in the graph that have a type not registered in the source_kinds table
 	DeleteSourceKinds     pq.StringArray `gorm:"type:text[];column:delete_source_kinds"`  // Deletes all nodes and edges per kind provided.
 	DeleteRelationships   pq.StringArray `gorm:"type:text[];column:delete_relationships"` // Deletes all relationships by name
-}
-
-// AnalysisPipelineStep describes a single analysis pipeline step.
-type AnalysisPipelineStep struct {
-	Step AnalysisSteps
-	Name string
-}
-
-// AnalysisPipeline describes the steps and order for a pipeline.
-type AnalysisPipeline []AnalysisPipelineStep
-
-var (
-	// analysisDefinition is the source of truth for the steps of analysis,
-	// as well as their order.
-	analysisDefinition = []AnalysisPipelineStep{
-		{
-			Step: AnalysisStepADPostProcessing(),
-			Name: "ad_post_processing",
-		},
-		{
-			Step: AnalysisStepAzurePostProcessing(),
-			Name: "azure_post_processing",
-		},
-		{
-			Step: AnalysisStepTagging(),
-			Name: "tagging",
-		},
-		{
-			Step: AnalysisStepGenerateFindings(),
-			Name: "analysis",
-		},
-	}
-)
-
-// Returns a copy to prevent callers from modifying
-func AnalysisDefinition() AnalysisPipeline {
-	return slices.Clone(analysisDefinition)
 }

@@ -69,7 +69,7 @@ func TestResources_GetAnalysisRequest(t *testing.T) {
 				"requested_by":            analysisRequest.RequestedBy,
 				"request_type":            analysisRequest.RequestType,
 				"requested_at":            analysisRequest.RequestedAt,
-				"analysis_step":           analysisRequest.AnalysisSteps.Bits(),
+				"analysis_step":           analysisRequest,
 				"delete_all_graph":        false,
 				"delete_sourceless_graph": false,
 				"delete_source_kinds":     nil,

@@ -167,14 +167,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		analysisSteps = model.AnalysisStepsFull()
 	}
 
-	slog.InfoContext(
-		ctx,
-		"Running analysis operations",
-		attr.Namespace("analysis"),
-		attr.Function("RunAnalysisOperations"),
-		slog.String("analysis_steps", analysisSteps.String()),
-		slog.Int("analysis_step_bits", analysisSteps.Bits()),
-	)
+	// TODO: refactor pipeline and add logging for string representation
 
 	var (
 		adFailed           = false
