@@ -16,7 +16,11 @@
 
 package model
 
-import "time"
+import (
+	"time"
+
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+)
 
 type DatapipeStatus string
 
@@ -34,7 +38,7 @@ type DatapipeStatusWrapper struct {
 	UpdatedAt               time.Time      `json:"updated_at"`
 	LastCompleteAnalysisAt  time.Time      `json:"last_complete_analysis_at"`
 	LastAnalysisRunAt       time.Time      `json:"last_analysis_run_at"`
-	NextScheduledAnalysisAt time.Time      `json:"next_scheduled_analysis_at"`
+	NextScheduledAnalysisAt null.Time      `json:"next_scheduled_analysis_at"`
 }
 
 func (DatapipeStatus) TableName() string {

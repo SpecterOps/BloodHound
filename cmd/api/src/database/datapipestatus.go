@@ -19,8 +19,8 @@ package database
 import (
 	"context"
 	"fmt"
-	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
@@ -29,7 +29,7 @@ type DatapipeStatusData interface {
 	UpdateLastAnalysisCompleteTime(ctx context.Context) error
 	SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus) error
 	GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error)
-	SetNextScheduledAnalysisStartTime(ctx context.Context, time time.Time) error
+	SetNextScheduledAnalysisStartTime(ctx context.Context, time null.Time) error
 }
 
 // This should be called at the start of analysis processing (not every datapipe tick, but start of real work)
@@ -61,6 +61,6 @@ func (s *BloodhoundDB) GetDatapipeStatus(ctx context.Context) (model.DatapipeSta
 }
 
 // No-op in BHCE
-func (s *BloodhoundDB) SetNextScheduledAnalysisStartTime(ctx context.Context, time time.Time) error {
+func (s *BloodhoundDB) SetNextScheduledAnalysisStartTime(ctx context.Context, time null.Time) error {
 	return nil
 }

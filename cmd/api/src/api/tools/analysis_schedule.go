@@ -23,6 +23,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 )
@@ -63,7 +64,10 @@ func (s ToolContainer) SetScheduledAnalysisConfiguration(response http.ResponseW
 
 			if err := s.db.SetConfigurationParameter(ctx, updatedParameter); err != nil {
 				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error updating database: %v", api.FormatDatabaseError(err)), request), response)
+			} else if err = s.db.SetNextScheduledAnalysisStartTime(ctx, null.Time{}); err != nil {
+				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("scheduled analysis disabled, but there was an error updating the next scheduled analysis start time: %v", api.FormatDatabaseError(err)), request), response)
 			}
+
 		}
 	} else {
 		if rule, err := validation.ValidateRRule(config.RRule); err != nil {
@@ -84,7 +88,7 @@ func (s ToolContainer) SetScheduledAnalysisConfiguration(response http.ResponseW
 
 				if err := s.db.SetConfigurationParameter(ctx, updatedParameter); err != nil {
 					api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error setting analysis schedule: %v", api.FormatDatabaseError(err)), request), response)
-				} else if err = s.db.SetNextScheduledAnalysisStartTime(ctx, rule.After(time.Now(), true)); err != nil {
+				} else if err = s.db.SetNextScheduledAnalysisStartTime(ctx, null.TimeFrom(rule.After(time.Now(), true))); err != nil {
 					api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("scheduled analysis updated, but there was an error updating the next scheduled analysis start time: %v", api.FormatDatabaseError(err)), request), response)
 				}
 

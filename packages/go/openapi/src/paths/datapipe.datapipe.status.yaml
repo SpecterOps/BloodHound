@@ -49,6 +49,7 @@ get:
                   next_scheduled_analysis_at:
                     type: string
                     format: date-time
+                    description: The next time a scheduled analysis will run. Note this field is Enterprise-Only.
     401:
       $ref: './../responses/unauthorized.yaml'
     429:

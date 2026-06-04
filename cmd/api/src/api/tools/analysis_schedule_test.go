@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api/tools"
@@ -40,7 +41,7 @@ import (
 func TestToolContainer_GetScheduledAnalysisConfiguration(t *testing.T) {
 	endpoint := "/analysis/schedule"
 
-	t.Run("happy path", func(t *testing.T) {
+	t.Run("success getting scheduled analysis", func(t *testing.T) {
 		var (
 			ctrl     = gomock.NewController(t)
 			mockDB   = mocks.NewMockDatabase(ctrl)
@@ -108,7 +109,7 @@ func TestToolContainer_SetScheduledAnalysisConfiguration(t *testing.T) {
 	endpoint := "/analysis/schedule"
 	validRRule := "FREQ=DAILY;INTERVAL=1;DTSTART=20230101T100000Z"
 
-	t.Run("happy path", func(t *testing.T) {
+	t.Run("success enabling scheduled analysis", func(t *testing.T) {
 		var (
 			ctrl     = gomock.NewController(t)
 			mockDB   = mocks.NewMockDatabase(ctrl)
@@ -137,6 +138,48 @@ func TestToolContainer_SetScheduledAnalysisConfiguration(t *testing.T) {
 
 		mockDB.EXPECT().SetConfigurationParameter(gomock.Any(), parameterConfig).Return(nil)
 		mockDB.EXPECT().SetNextScheduledAnalysisStartTime(gomock.Any(), gomock.Any()).Return(nil)
+
+		if req, err := http.NewRequestWithContext(requestCtx, http.MethodPut, endpoint, bytes.NewBuffer(reqBody)); err != nil {
+			t.Fatal(err)
+		} else {
+			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+			router := mux.NewRouter()
+			router.HandleFunc(endpoint, handlers.SetScheduledAnalysisConfiguration).Methods(http.MethodPut)
+
+			response := httptest.NewRecorder()
+			router.ServeHTTP(response, req)
+
+			require.Equal(t, http.StatusOK, response.Code)
+		}
+	})
+
+	t.Run("success -- disable scheduled analysis", func(t *testing.T) {
+		var (
+			ctrl     = gomock.NewController(t)
+			mockDB   = mocks.NewMockDatabase(ctrl)
+			handlers = tools.NewToolContainer(mockDB)
+		)
+
+		defer ctrl.Finish()
+
+		requestCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		scheduledAnalysisRequest := tools.ScheduledAnalysisConfiguration{
+			Enabled: false,
+		}
+
+		jsonValue, _ := types.NewJSONBObject(appcfg.ScheduledAnalysisParameter{
+			Enabled: false})
+
+		parameterConfig := appcfg.Parameter{
+			Key:   appcfg.ScheduledAnalysis,
+			Value: jsonValue,
+		}
+
+		reqBody, _ := json.Marshal(scheduledAnalysisRequest)
+
+		mockDB.EXPECT().SetConfigurationParameter(gomock.Any(), parameterConfig).Return(nil)
+		mockDB.EXPECT().SetNextScheduledAnalysisStartTime(gomock.Any(), time.Time{}).Return(nil)
 
 		if req, err := http.NewRequestWithContext(requestCtx, http.MethodPut, endpoint, bytes.NewBuffer(reqBody)); err != nil {
 			t.Fatal(err)

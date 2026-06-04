@@ -25,6 +25,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -94,8 +95,12 @@ func updateNextScheduledAnalysisStartTime(ctx context.Context, db database.Datap
 	} else if scheduledAnalysis.Enabled {
 		if rule, err := rrule.StrToRRule(scheduledAnalysis.RRule); err != nil {
 			slog.ErrorContext(ctx, "Error parsing scheduled analysis rrule", attr.Error(err))
-		} else if err := db.SetNextScheduledAnalysisStartTime(ctx, rule.After(time.Now(), true)); err != nil {
+		} else if err := db.SetNextScheduledAnalysisStartTime(ctx, null.TimeFrom(rule.After(time.Now(), true))); err != nil {
 			slog.ErrorContext(ctx, "Error setting next scheduled analysis start time", attr.Error(err))
+		}
+	} else {
+		if err := db.SetNextScheduledAnalysisStartTime(ctx, null.Time{}); err != nil {
+			slog.ErrorContext(ctx, "Error clearing the next scheduled analysis start time", attr.Error(err))
 		}
 	}
 }

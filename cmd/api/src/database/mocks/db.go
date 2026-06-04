@@ -3045,7 +3045,7 @@ func (mr *MockDatabaseMockRecorder) SetLastAnalysisStartTime(ctx any) *gomock.Ca
 }
 
 // SetNextScheduledAnalysisStartTime mocks base method.
-func (m *MockDatabase) SetNextScheduledAnalysisStartTime(ctx context.Context, arg1 time.Time) error {
+func (m *MockDatabase) SetNextScheduledAnalysisStartTime(ctx context.Context, arg1 null.Time) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetNextScheduledAnalysisStartTime", ctx, arg1)
 	ret0, _ := ret[0].(error)

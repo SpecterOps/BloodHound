@@ -274,4 +274,41 @@ func Test_SetApplicationConfiguration(t *testing.T) {
 				status, http.StatusOK)
 		}
 	})
+
+	t.Run("Disabling Scheduled Analysis removes the next scheduled analysis start time", func(t *testing.T) {
+		var (
+			scheduledAnalysisRequest = appcfg.AppConfigUpdateRequest{
+				Key: string(appcfg.ScheduledAnalysis),
+				Value: map[string]any{
+					"enabled": false,
+					"rrule":   "",
+				},
+			}
+
+			expectedParameter = appcfg.Parameter{
+				Key:   appcfg.ScheduledAnalysis,
+				Value: must.NewJSONBObject(map[string]any{"enabled": false, "rrule": ""}),
+			}
+		)
+
+		mockDB.EXPECT().
+			SetConfigurationParameter(gomock.Any(), expectedParameter).
+			Return(nil)
+
+		mockDB.EXPECT().
+			SetNextScheduledAnalysisStartTime(gomock.Any(), time.Time{}).
+			Return(nil)
+
+		reqBody, _ := json.Marshal(scheduledAnalysisRequest)
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/config", bytes.NewBuffer(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		resources.SetApplicationConfiguration(rec, req)
+
+		if status := rec.Code; status != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusOK)
+		}
+	})
 }
