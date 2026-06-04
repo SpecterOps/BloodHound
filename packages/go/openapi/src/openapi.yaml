@@ -194,6 +194,7 @@ x-tagGroups:
       - Attack Paths
       - Risk Posture
       - Meta Entities
+      - Alerts
 paths:
   ##
   # Community + Enterprise Endpoints
@@ -752,6 +753,30 @@ paths:
   # meta entity
   /api/v2/meta/{object_id}:
     $ref: './paths/meta-entity.meta.id.yaml'
+
+  # alerts - WIP and subject to change as development proceeds
+#  /api/v2/alert-webhooks:
+#    $ref: './paths/alerts.alert-webhooks.yaml'
+#  /api/v2/alert-webhooks/{alert_webhook_id}:
+#    $ref: './paths/alerts.alert-webhooks.id.yaml'
+#  /api/v2/alert-webhooks/{alert_webhook_id}/rotate-secret:
+#    $ref: './paths/alerts.alert-webhooks.id.rotate-secret.yaml'
+#  /api/v2/alert-webhooks/{alert_webhook_id}/test:
+#    $ref: './paths/alerts.alert-webhooks.id.test.yaml'
+#  /api/v2/alert-events:
+#    $ref: './paths/alerts.alert-events.yaml'
+#  /api/v2/alert-events/{alert_event_id}:
+#    $ref: './paths/alerts.alert-events.id.yaml'
+#  /api/v2/alert-event-types:
+#    $ref: './paths/alerts.alert-event-types.yaml'
+#  /api/v2/alerts:
+#    $ref: './paths/alerts.alerts.yaml'
+#  /api/v2/alerts/{alert_id}:
+#    $ref: './paths/alerts.alerts.id.yaml'
+#  /api/v2/alert-attempts:
+#    $ref: './paths/alerts.alert-attempts.yaml'
+#  /api/v2/alert-attempts/retry:
+#    $ref: './paths/alerts.alert-attempts.retry.yaml'
 
   # graph schema findings
   #/api/v2/extensions-findings:
