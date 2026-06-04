@@ -141,15 +141,15 @@ func runAnalysisStepOperation(operation func()) {
 }
 
 func dispatchAnalysisSteps(analysisSteps model.AnalysisSteps, dispatch analysisStepDispatch) {
-	if analysisSteps.Has(model.AnalysisStepADPostProcessing) {
+	if analysisSteps.Has(model.AnalysisStepADPostProcessing()) {
 		runAnalysisStepOperation(dispatch.adPostProcessing)
 	}
 
-	if analysisSteps.Has(model.AnalysisStepAzurePostProcessing) {
+	if analysisSteps.Has(model.AnalysisStepAzurePostProcessing()) {
 		runAnalysisStepOperation(dispatch.azurePostProcessing)
 	}
 
-	if analysisSteps.Has(model.AnalysisStepTagging) {
+	if analysisSteps.Has(model.AnalysisStepTagging()) {
 		runAnalysisStepOperation(dispatch.tagging)
 	}
 
@@ -164,7 +164,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 	)
 
 	if !appcfg.GetVariableAnalysisModeEnabled(ctx, db) {
-		analysisSteps = model.FullAnalysisSteps()
+		analysisSteps = model.AnalysisStepsFull()
 	}
 
 	slog.InfoContext(

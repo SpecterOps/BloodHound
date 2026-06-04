@@ -250,7 +250,7 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 		return fmt.Errorf("looking up jobs for analysis: %v", err)
 	}
 	if hasJobsWaitingForAnalysis {
-		analysisSteps = model.FullAnalysisSteps()
+		analysisSteps = model.AnalysisStepsFull()
 	}
 
 	analysisRequest, err := s.db.GetAnalysisRequest(ctx)

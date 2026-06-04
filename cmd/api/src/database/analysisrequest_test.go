@@ -93,7 +93,7 @@ func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
 
 		queued, err := dbInst.GetAnalysisRequest(testCtx)
 		require.NoError(t, err)
-		require.Equal(t, model.AnalysisStepAll, queued.AnalysisSteps)
+		require.Equal(t, model.AnalysisStepsFull(), queued.AnalysisSteps)
 		require.Equal(t, "tag-editor", queued.RequestedBy, "audit fields preserve the original requester")
 	})
 
@@ -105,7 +105,7 @@ func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
 
 		queued, err := dbInst.GetAnalysisRequest(testCtx)
 		require.NoError(t, err)
-		require.Equal(t, model.AnalysisStepAll, queued.AnalysisSteps, "narrower follow-up request must not downgrade queued steps")
+		require.Equal(t, model.AnalysisStepsFull(), queued.AnalysisSteps, "narrower follow-up request must not downgrade queued steps")
 		require.Equal(t, "admin", queued.RequestedBy)
 	})
 
@@ -120,7 +120,7 @@ func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
 		queued, err := dbInst.GetAnalysisRequest(testCtx)
 		require.NoError(t, err)
 
-		require.Equal(t, model.AnalysisStepTaggingToCompletion, queued.AnalysisSteps)
+		require.Equal(t, model.AnalysisStepsTaggingOnwards(), queued.AnalysisSteps)
 		require.Equal(t, "tag-editor-1", queued.RequestedBy)
 		require.Equal(t, original.RequestedAt, queued.RequestedAt, "row must not be updated when bits don't change")
 	})
@@ -139,5 +139,5 @@ func TestAnalysisRequest_DisabledVariableAnalysisModeQueuesFullAnalysis(t *testi
 
 	queued, err := dbInst.GetAnalysisRequest(testCtx)
 	require.NoError(t, err)
-	require.Equal(t, model.AnalysisStepAll, queued.AnalysisSteps)
+	require.Equal(t, model.AnalysisStepsFull, queued.AnalysisSteps)
 }

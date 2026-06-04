@@ -140,10 +140,10 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 
 // RequestAnalysis will request an analysis be executed, as long as there isn't an existing analysis request or collected graph data deletion request, then it no-ops
 func (s *BloodhoundDB) RequestAnalysis(ctx context.Context, requestedBy string, analysisMode model.AnalysisMode) error {
-	var steps = analysisMode.AnalysisSteps()
+	var steps = analysisMode.AnalysisStepsFromMode()
 
 	if !appcfg.GetVariableAnalysisModeEnabled(ctx, s) {
-		steps = model.FullAnalysisSteps()
+		steps = model.AnalysisStepsFull()
 	}
 
 	return s.setAnalysisRequest(ctx, model.AnalysisRequest{RequestType: model.AnalysisRequestAnalysis, RequestedBy: requestedBy, AnalysisSteps: steps})

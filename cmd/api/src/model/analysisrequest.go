@@ -20,6 +20,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -34,61 +35,73 @@ const (
 	AnalysisRequestDeletion AnalysisRequestType = "deletion"
 )
 
-type AnalysisMode string
-
-const (
-	AnalysisModeFull           AnalysisMode = "full"
-	AnalysisModeTaggingOnwards AnalysisMode = "tagging"
-)
-
-type AnalysisSteps struct {
-	bits analysisStepsBits
-}
-
-// analysisStepsBits is the private bits that select which steps of the
-// analysis pipeline should run. Each flag is independent, so internal callers
-// may represent any combination of steps. When steps are combined, they always
-// execute in pipeline order: AD post-processing -> Azure post-processing ->
-// Tagging -> Analysis.
-type analysisStepsBits int
-
 const (
 	////////
 	// Individual bits available to the internal bitmask
 	////////
-	// AnalysisStepADPostProcessing runs AD post-processing.
-	analysisStepADPostProcessing analysisStepsBits = 1 << iota
-	// AnalysisStepAzurePostProcessing runs Azure post-processing.
-	analysisStepAzurePostProcessing
-	// AnalysisStepTagging runs tagging of asset groups and tiers.
-	analysisStepTagging
-	// AnalysisStepGenerateFindings runs the analysis pipeline (BHE only).
-	analysisStepGenerateFindings
+	// analysisADPostProcessing runs AD post-processing.
+	analysisADPostProcessing int32 = 1 << iota
+	// analysisAzurePostProcessing runs Azure post-processing.
+	analysisAzurePostProcessing
+	// analysisTagging runs tagging of asset groups and tiers.
+	analysisTagging
+	// analysisGenerateFindings runs the analysis pipeline (BHE only).
+	analysisGenerateFindings
 
 	/////////
-	// analysisStepSentinel MUST remain the last entry in this iota block;
-	// analysisStepAll is derived from it. Add new steps above this line.
+	// analysisSentinel MUST remain the last entry in this iota block;
+	// analysisFull is derived from it. Add new steps above this line.
 	////////
-	analysisStepSentinel
+	analysisSentinel
 
 	////////
-	// Helpers available for ease of use throughout the codebase.
+	// Helpers available for ease of use.
 	// If adding individual steps above, validate whether these need updating based on expected behavior.
 	////////
-	// AnalysisStepTaggingToCompletion runs the tagging step and every step that follows it.
-	analysisStepTaggingToCompletion = analysisStepTagging | analysisStepGenerateFindings
-	// AnalysisStepAll selects every step in the pipeline.
-	analysisStepAll = analysisStepSentinel - 1
+	// AnalysisTaggingToCompletion runs the tagging step and every step that follows it.
+	analysisTaggingOnwards = analysisTagging | analysisGenerateFindings
+	// AnalysisAll selects every step in the pipeline.
+	analysisFull = analysisSentinel - 1
 )
 
+// AnalysisSteps represents a set of step or single step in analysis using a bitmask.
+type AnalysisSteps struct {
+	bits int32
+}
+
 var (
-	AnalysisStepADPostProcessing    = AnalysisSteps{bits: analysisStepADPostProcessing}
-	AnalysisStepAzurePostProcessing = AnalysisSteps{bits: analysisStepAzurePostProcessing}
-	AnalysisStepTagging             = AnalysisSteps{bits: analysisStepTagging}
-	AnalysisStepGenerateFindings    = AnalysisSteps{bits: analysisStepGenerateFindings}
-	AnalysisStepTaggingToCompletion = AnalysisSteps{bits: analysisStepTaggingToCompletion}
-	AnalysisStepAll                 = AnalysisSteps{bits: analysisStepAll}
+	analysisStepADPostProcessing    = AnalysisSteps{bits: analysisADPostProcessing}
+	analysisStepAzurePostProcessing = AnalysisSteps{bits: analysisAzurePostProcessing}
+	analysisStepTagging             = AnalysisSteps{bits: analysisTagging}
+	analysisStepGenerateFindings    = AnalysisSteps{bits: analysisGenerateFindings}
+
+	analysisStepsTaggingOnwards = AnalysisSteps{bits: analysisTaggingOnwards}
+	analysisStepsFull           = AnalysisSteps{bits: analysisFull}
 )
+
+func AnalysisStepADPostProcessing() AnalysisSteps {
+	return analysisStepADPostProcessing
+}
+
+func AnalysisStepAzurePostProcessing() AnalysisSteps {
+	return analysisStepAzurePostProcessing
+}
+
+func AnalysisStepTagging() AnalysisSteps {
+	return analysisStepTagging
+}
+
+func AnalysisStepGenerateFindings() AnalysisSteps {
+	return analysisStepGenerateFindings
+}
+
+func AnalysisStepsTaggingOnwards() AnalysisSteps {
+	return analysisStepsTaggingOnwards
+}
+
+func AnalysisStepsFull() AnalysisSteps {
+	return analysisStepsFull
+}
 
 // Has reports whether all of the bits in step are set in s.
 func (s AnalysisSteps) Has(step AnalysisSteps) bool {
@@ -107,40 +120,25 @@ func (s AnalysisSteps) IsEmpty() bool {
 	return s.bits == 0
 }
 
+func AnalysisStepsFromBits(bits int) AnalysisSteps {
+	return AnalysisSteps{bits: int32(bits)}
+}
+
 func (s AnalysisSteps) String() string {
 	var (
 		stepNames = []string{}
-		steps     = []struct {
-			step AnalysisSteps
-			name string
-		}{
-			{
-				step: AnalysisStepADPostProcessing,
-				name: "ad_post_processing",
-			},
-			{
-				step: AnalysisStepAzurePostProcessing,
-				name: "azure_post_processing",
-			},
-			{
-				step: AnalysisStepTagging,
-				name: "tagging",
-			},
-			{
-				step: AnalysisStepGenerateFindings,
-				name: "analysis",
-			},
-		}
-		unknownBits = s.bits &^ analysisStepAll
+		knownBits = int32(0)
 	)
 
-	for _, step := range steps {
-		if s.Has(step.step) {
-			stepNames = append(stepNames, step.name)
+	for _, stepDefinition := range AnalysisDefinition() {
+		knownBits |= stepDefinition.Step.bits
+
+		if s.Has(stepDefinition.Step) {
+			stepNames = append(stepNames, stepDefinition.Name)
 		}
 	}
 
-	if unknownBits != 0 {
+	if unknownBits := s.bits &^ knownBits; unknownBits != 0 {
 		stepNames = append(stepNames, fmt.Sprintf("unknown:%d", unknownBits))
 	}
 
@@ -151,8 +149,10 @@ func (s AnalysisSteps) String() string {
 	return strings.Join(stepNames, ",")
 }
 
+// #region DB implementation methods
+// AnalysisSteps implements these methods to easily Read/Write from the DB
 func (s AnalysisSteps) Value() (driver.Value, error) {
-	return int64(s.bits), nil
+	return int32(s.bits), nil
 }
 
 func (s *AnalysisSteps) Scan(value any) error {
@@ -199,25 +199,26 @@ func (s *AnalysisSteps) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func AnalysisStepsFromMode(mode AnalysisMode) AnalysisSteps {
-	switch mode {
+// #endregion
+
+type AnalysisMode string
+
+const (
+	AnalysisModeTaggingOnwards AnalysisMode = "tagging_onwards"
+	AnalysisModeFull           AnalysisMode = "full"
+)
+
+// This function needs to be updated when new modes are added.
+// If the mode is unknown, defaults to full analysis.
+func (s AnalysisMode) AnalysisStepsFromMode() AnalysisSteps {
+	switch s {
 	case AnalysisModeTaggingOnwards:
-		return AnalysisStepTaggingToCompletion
+		return analysisStepsTaggingOnwards
+	case AnalysisModeFull:
+		return analysisStepsFull
 	default:
-		return FullAnalysisSteps()
+		return analysisStepsFull
 	}
-}
-
-func AnalysisStepsFromBits(bits int) AnalysisSteps {
-	return AnalysisSteps{bits: analysisStepsBits(bits)}
-}
-
-func FullAnalysisSteps() AnalysisSteps {
-	return AnalysisStepAll
-}
-
-func (s AnalysisMode) AnalysisSteps() AnalysisSteps {
-	return AnalysisStepsFromMode(s)
 }
 
 type AnalysisRequest struct {
@@ -230,4 +231,41 @@ type AnalysisRequest struct {
 	DeleteSourcelessGraph bool           `json:"delete_sourceless_graph"`                 // Deletes all nodes and edges in the graph that have a type not registered in the source_kinds table
 	DeleteSourceKinds     pq.StringArray `gorm:"type:text[];column:delete_source_kinds"`  // Deletes all nodes and edges per kind provided.
 	DeleteRelationships   pq.StringArray `gorm:"type:text[];column:delete_relationships"` // Deletes all relationships by name
+}
+
+// AnalysisPipelineStep describes a single analysis pipeline step.
+type AnalysisPipelineStep struct {
+	Step AnalysisSteps
+	Name string
+}
+
+// AnalysisPipeline describes the steps and order for a pipeline.
+type AnalysisPipeline []AnalysisPipelineStep
+
+var (
+	// analysisDefinition is the source of truth for the steps of analysis,
+	// as well as their order.
+	analysisDefinition = []AnalysisPipelineStep{
+		{
+			Step: AnalysisStepADPostProcessing(),
+			Name: "ad_post_processing",
+		},
+		{
+			Step: AnalysisStepAzurePostProcessing(),
+			Name: "azure_post_processing",
+		},
+		{
+			Step: AnalysisStepTagging(),
+			Name: "tagging",
+		},
+		{
+			Step: AnalysisStepGenerateFindings(),
+			Name: "analysis",
+		},
+	}
+)
+
+// Returns a copy to prevent callers from modifying
+func AnalysisDefinition() AnalysisPipeline {
+	return slices.Clone(analysisDefinition)
 }

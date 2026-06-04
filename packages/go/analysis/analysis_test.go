@@ -33,17 +33,17 @@ func TestDispatchAnalysisSteps(t *testing.T) {
 	}{
 		{
 			name:          "full analysis dispatches every CE analysis stage",
-			analysisSteps: model.FullAnalysisSteps(),
+			analysisSteps: model.AnalysisStepsFull(),
 			expectedCalls: []string{"ad_post_processing", "azure_post_processing", "tagging", "data_quality"},
 		},
 		{
 			name:          "tagging to completion skips post-processing",
-			analysisSteps: model.AnalysisStepTaggingToCompletion,
+			analysisSteps: model.AnalysisStepsTaggingOnwards(),
 			expectedCalls: []string{"tagging", "data_quality"},
 		},
 		{
 			name:          "single selected stage only dispatches that stage",
-			analysisSteps: model.AnalysisStepADPostProcessing,
+			analysisSteps: model.AnalysisStepADPostProcessing(),
 			expectedCalls: []string{"ad_post_processing", "data_quality"},
 		},
 		{
