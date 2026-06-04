@@ -36,6 +36,7 @@ import (
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/smithy-go"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
 
 const (
@@ -94,15 +95,15 @@ func normalizePath(name string) (string, error) {
 func s3DetectContentType(name string) string {
 	ext := path.Ext(name)
 	if ext == "" {
-		return "application/octet-stream"
+		return mediatypes.ApplicationOctetStream.String()
 	}
 
-	ct := mime.TypeByExtension(ext)
-	if ct == "" {
-		return "application/octet-stream"
+	contentType := mime.TypeByExtension(ext)
+	if contentType == "" {
+		return mediatypes.ApplicationOctetStream.String()
 	}
 
-	return ct
+	return contentType
 }
 
 func mapExistsError(err error) error {
