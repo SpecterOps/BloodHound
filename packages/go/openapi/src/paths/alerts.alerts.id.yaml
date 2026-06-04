@@ -76,6 +76,7 @@ patch:
       application/json:
         schema:
           type: object
+          minProperties: 1
           description: |
             Partial update for an alert. All fields are optional. If `subscriptions` is
             present, the supplied array fully replaces the current subscription set for

@@ -17,7 +17,7 @@
 type: object
 description: |
   Alert resource — a named, user-managed rule with an embedded set of
-  subscriptions that bind it to channels (webhooks) for specific event types.
+  subscriptions that bind it to channels (e.g. webhooks) for specific event types.
 properties:
   id:
     type: string
@@ -52,7 +52,7 @@ properties:
         channel_id:
           type: string
           format: uuid
-          description: ID of the alert channel (webhook) this subscription targets.
+          description: ID of the alert channel (e.g. webhook) this subscription targets.
         event_type:
           type: string
         version:

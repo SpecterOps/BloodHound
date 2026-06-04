@@ -64,6 +64,7 @@ patch:
       application/json:
         schema:
           type: object
+          minProperties: 1
           description: |
             Partial update for an alert webhook. At least one field is required. Only
             fields present in the request body are modified.
