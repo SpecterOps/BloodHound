@@ -23,10 +23,13 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -125,5 +128,151 @@ func TestVersion_910_Migration(t *testing.T) {
 				return nil
 			})
 		})
+	})
+}
+
+func TestVersion_930_Migration(t *testing.T) {
+	t.Run("backfills custom_node_kinds for a schemaless node kind that isn't in custom_node_kinds or schema_node_kinds", func(t *testing.T) {
+		suite := setupIntegrationTestSuite(t)
+		t.Cleanup(func() { suite.teardownIntegrationTestSuite(t) })
+
+		schemalessNode := &graph.Node{
+			Kinds: graph.Kinds{graph.StringKind("SchemalessKind")},
+			Properties: graph.AsProperties(graph.PropertyMap{
+				common.Name:     "SchemalessNode",
+				common.ObjectID: "SchemalessNode",
+			}),
+		}
+		suite.createNodes(t, schemalessNode)
+
+		err := migrations.Version_930_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
+		require.NoError(t, err)
+
+		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context, nil)
+		require.NoError(t, err)
+
+		var backfilledKind *model.CustomNodeKind
+		for i, customNodeKind := range customNodeKinds {
+			if customNodeKind.KindName == "SchemalessKind" {
+				backfilledKind = &customNodeKinds[i]
+				break
+			}
+		}
+		require.NotNil(t, backfilledKind, "SchemalessKind must be present in custom_node_kinds after backfill")
+		require.Equal(t, graphschema.DisplayNodeTypeFontAwesome, backfilledKind.Config.Icon.Type)
+		require.Equal(t, database.CustomNodeKindStubConfig.Icon.Name, backfilledKind.Config.Icon.Name)
+		require.Equal(t, database.CustomNodeKindStubConfig.Icon.Color, backfilledKind.Config.Icon.Color)
+	})
+
+	t.Run("does not backfill a kind already present in custom_node_kinds", func(t *testing.T) {
+		suite := setupIntegrationTestSuite(t)
+		t.Cleanup(func() { suite.teardownIntegrationTestSuite(t) })
+
+		_, err := suite.bhDatabase.CreateCustomNodeKinds(suite.context, model.CustomNodeKinds{
+			{
+				KindName: "PreExistingCustomNodeKind",
+				Config: model.CustomNodeKindConfig{
+					Icon: graphschema.DisplayNodeIcon{
+						Type:  graphschema.DisplayNodeTypeFontAwesome,
+						Color: "#FF0000",
+					},
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		preExistingNode := &graph.Node{
+			Kinds: graph.Kinds{graph.StringKind("PreExistingCustomNodeKind")},
+			Properties: graph.AsProperties(graph.PropertyMap{
+				common.Name:     "PreExistingNode",
+				common.ObjectID: "PreExistingNode",
+			}),
+		}
+		suite.createNodes(t, preExistingNode)
+
+		err = migrations.Version_930_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
+		require.NoError(t, err)
+
+		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context, nil)
+		require.NoError(t, err)
+
+		var preExistingCount int
+		for _, customNodeKind := range customNodeKinds {
+			if customNodeKind.KindName == "PreExistingCustomNodeKind" {
+				preExistingCount++
+			}
+		}
+		require.Equal(t, 1, preExistingCount, "PreExistingCustomNodeKind must appear exactly once in custom_node_kinds")
+	})
+
+	t.Run("does not backfill a kind already present in schema_node_kinds", func(t *testing.T) {
+		suite := setupIntegrationTestSuite(t)
+		t.Cleanup(func() { suite.teardownIntegrationTestSuite(t) })
+
+		schemaExtension, err := suite.bhDatabase.CreateGraphSchemaExtension(suite.context, "test-ext", "Test Extension", "1.0.0", "test")
+		require.NoError(t, err)
+
+		_, err = suite.bhDatabase.CreateGraphSchemaNodeKind(suite.context, "SchemaNodeKind", schemaExtension.ID, "Schema Kind", "", false, "fa-circle", "#FFFFFF")
+		require.NoError(t, err)
+
+		// RefreshKinds so that dawgs can resolve the new kind ID when creating the graph node.
+		require.NoError(t, suite.graphDB.RefreshKinds(suite.context))
+
+		schemaNode := &graph.Node{
+			Kinds: graph.Kinds{graph.StringKind("SchemaNodeKind")},
+			Properties: graph.AsProperties(graph.PropertyMap{
+				common.Name:     "SchemaNode",
+				common.ObjectID: "SchemaNode",
+			}),
+		}
+		suite.createNodes(t, schemaNode)
+
+		err = migrations.Version_930_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
+		require.NoError(t, err)
+
+		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context, nil)
+		require.NoError(t, err)
+
+		for _, customNodeKind := range customNodeKinds {
+			require.NotEqual(t, "SchemaNodeKind", customNodeKind.KindName, "schema_node_kinds entries must not be duplicated in custom_node_kinds")
+		}
+	})
+
+	t.Run("does not backfill a kind that has no nodes in the graph", func(t *testing.T) {
+		suite := setupIntegrationTestSuite(t)
+		t.Cleanup(func() { suite.teardownIntegrationTestSuite(t) })
+
+		// Create a node to register the kind in the kinds table, then immediately delete it.
+		ephemeralNode := &graph.Node{
+			Kinds: graph.Kinds{graph.StringKind("EphemeralKind")},
+			Properties: graph.AsProperties(graph.PropertyMap{
+				common.Name:     "EphemeralNode",
+				common.ObjectID: "EphemeralNode",
+			}),
+		}
+		suite.createNodes(t, ephemeralNode)
+
+		err := suite.graphDB.BatchOperation(suite.context, func(batch graph.Batch) error {
+			return batch.DeleteNode(ephemeralNode.ID)
+		})
+		require.NoError(t, err)
+
+		err = migrations.Version_930_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
+		require.NoError(t, err)
+
+		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context, nil)
+		require.NoError(t, err)
+
+		for _, customNodeKind := range customNodeKinds {
+			require.NotEqual(t, "EphemeralKind", customNodeKind.KindName, "kinds with no nodes in the graph must not be backfilled")
+		}
+	})
+
+	t.Run("returns an error when nodeKindData is nil", func(t *testing.T) {
+		suite := setupIntegrationTestSuite(t)
+		t.Cleanup(func() { suite.teardownIntegrationTestSuite(t) })
+
+		err := migrations.Version_930_Migration(nil)(suite.context, suite.graphDB)
+		require.Error(t, err)
 	})
 }
