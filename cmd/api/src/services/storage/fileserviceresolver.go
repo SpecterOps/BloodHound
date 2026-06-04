@@ -78,57 +78,60 @@ func (s *fileServiceResolver) Resolve(name storage.FileServiceName) (storage.Fil
 	return fileService, nil
 }
 
+// createLocalStore takes a location to create the storage.LocalStore, and wraps that in a
+// storage.FileService. Both are returned. If there is an error in this process, nil is
+// returned for both structs, and the error is returned.
+func createLocalStore(location string) (*storage.LocalStore, storage.FileService, error) {
+	var (
+		localStore *storage.LocalStore
+		err        error
+	)
+
+	if localStore, err = storage.NewLocalStore(location); err != nil {
+		return nil, nil, err
+	}
+
+	return localStore, storage.NewFileService(localStore), nil
+}
+
+// closeLocalStores contains the functionality to close any storage.LocalStore that has been opened
+// if there was an error. Errors from the close are joined together and returned as well.
+func closeLocalStores(localStores []*storage.LocalStore) error {
+	var closeErr error
+
+	for _, localStore := range localStores {
+		closeErr = errors.Join(closeErr, localStore.Close())
+	}
+
+	return closeErr
+}
+
 // NewDefaultFileServices creates the file services that should be considered default with
 // BloodHound. Additional FileServices can still be created prior to creating a Resolver.
 func NewDefaultFileServices(cfg config.Configuration) (FileServiceMap, error) {
 	var (
-		fileServices = make(FileServiceMap)
+		fileServices = make(FileServiceMap, 4)
 		openedStores []*storage.LocalStore
+		definitions  = []struct {
+			name     storage.FileServiceName
+			location string
+		}{
+			{name: storage.FileServiceWork, location: cfg.WorkDir},
+			{name: storage.FileServiceIngest, location: cfg.TempDirectory()},
+			{name: storage.FileServiceRetained, location: cfg.RetainedFilesDirectory()},
+			{name: storage.FileServiceCollectors, location: cfg.CollectorsBasePath},
+		}
 	)
 
-	closeOpened := func() {
-		for _, store := range openedStores {
-			_ = store.Close()
+	for _, definition := range definitions {
+		localStore, fileService, err := createLocalStore(definition.location)
+		if err != nil {
+			return nil, errors.Join(err, closeLocalStores(openedStores))
 		}
+
+		openedStores = append(openedStores, localStore)
+		fileServices[definition.name] = fileService
 	}
-
-	workStore, err := storage.NewLocalStore(cfg.WorkDir)
-	if err != nil {
-		return nil, err
-	}
-	openedStores = append(openedStores, workStore)
-
-	ingestStore, err := storage.NewLocalStore(cfg.TempDirectory())
-	if err != nil {
-		closeOpened()
-		return nil, err
-	}
-	openedStores = append(openedStores, ingestStore)
-
-	retainStore, err := storage.NewLocalStore(cfg.RetainedFilesDirectory())
-	if err != nil {
-		closeOpened()
-		return nil, err
-	}
-	openedStores = append(openedStores, retainStore)
-
-	collectorsStore, err := storage.NewLocalStore(cfg.CollectorsBasePath)
-	if err != nil {
-		closeOpened()
-		return nil, err
-	}
-	openedStores = append(openedStores, collectorsStore)
-
-	fileServices[storage.FileServiceWork] = storage.NewFileService(workStore)
-
-	ingestService := storage.NewFileService(ingestStore)
-	fileServices[storage.FileServiceIngest] = ingestService
-
-	retainService := storage.NewFileService(retainStore)
-	fileServices[storage.FileServiceRetained] = retainService
-
-	collectorsService := storage.NewFileService(collectorsStore)
-	fileServices[storage.FileServiceCollectors] = collectorsService
 
 	return fileServices, nil
 }
