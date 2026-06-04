@@ -168,7 +168,7 @@ func TestAnalysisStepNames_ContainsNameForEachDefinedBit(t *testing.T) {
 	var seenNames = make(map[string]int)
 
 	for i := 1; i < int(analysisSentinel); i = i << 1 {
-		name, present := AnalysisStep(i).GetNameOfAnalysisStep()
+		name, present := AnalysisStepName(AnalysisStep(i))
 
 		assert.NotContains(t, seenNames, name, "analysisStepNames has duplicate name %q (bits %d collides with bits %d)", name, i, seenNames[name])
 		assert.True(t, present, "analysisStepNames is missing a name for step with bits %d", i)

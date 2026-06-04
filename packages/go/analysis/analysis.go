@@ -155,7 +155,7 @@ func (s analysisPipeline) String() string {
 	stepNames := make([]string, 0, len(s))
 
 	for _, pipelineStep := range s {
-		name, present := pipelineStep.analysisStep.GetNameOfAnalysisStep()
+		name, present := model.AnalysisStepName(pipelineStep.analysisStep)
 
 		if !present && pipelineStep.name != "" {
 			stepNames = append(stepNames, pipelineStep.name)

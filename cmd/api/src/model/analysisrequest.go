@@ -99,14 +99,14 @@ func AnalysisStepGenerateFindings() AnalysisStep {
 }
 
 // Returns false if name is not found for AnalysisStep.
-func (s AnalysisStep) GetNameOfAnalysisStep() (string, bool) {
-	name, present := analysisStepNames[s]
+func AnalysisStepName(step AnalysisStep) (string, bool) {
+	name, present := analysisStepNames[step]
 
 	if present {
 		return name, true
 	}
 
-	return fmt.Sprintf("unknown:%d", s), false
+	return fmt.Sprintf("unknown:%d", int(step)), false
 }
 
 // AnalysisSteps represents a set of steps in analysis using a bitmask.
