@@ -62,69 +62,75 @@ const (
 	analysisFull = analysisSentinel - 1
 )
 
-// AnalysisSteps represents a set of steps or single step in analysis using a bitmask.
-type AnalysisSteps struct {
-	bits int32
-}
+// AnalysisStep represents a single step in analysis
+type AnalysisStep int32
 
 var (
-	analysisStepADPostProcessing    = AnalysisSteps{bits: analysisADPostProcessing}
-	analysisStepAzurePostProcessing = AnalysisSteps{bits: analysisAzurePostProcessing}
-	analysisStepTagging             = AnalysisSteps{bits: analysisTagging}
-	analysisStepGenerateFindings    = AnalysisSteps{bits: analysisGenerateFindings}
+	analysisStepADPostProcessing    = AnalysisStep(analysisADPostProcessing)
+	analysisStepAzurePostProcessing = AnalysisStep(analysisAzurePostProcessing)
+	analysisStepTagging             = AnalysisStep(analysisTagging)
+	analysisStepGenerateFindings    = AnalysisStep(analysisGenerateFindings)
 
 	// Defines a name for a single step of analysis for string representation purposes.
 	// If adding bits (steps) to the bitmask, this needs to be updated.
 	// There is a test to make sure this stays in sync.
-	analysisStepNames = map[AnalysisSteps]string{
+	analysisStepNames = map[AnalysisStep]string{
 		analysisStepADPostProcessing:    "ad_post_processing",
 		analysisStepAzurePostProcessing: "azure_post_processing",
 		analysisStepTagging:             "tagging",
 		analysisStepGenerateFindings:    "generate_findings",
 	}
-
-	analysisStepsNoPostProcessing = AnalysisSteps{bits: analysisNoPostProcessing}
-	analysisStepsFull             = AnalysisSteps{bits: analysisFull}
 )
 
-func AnalysisStepADPostProcessing() AnalysisSteps {
+func AnalysisStepADPostProcessing() AnalysisStep {
 	return analysisStepADPostProcessing
 }
 
-func AnalysisStepAzurePostProcessing() AnalysisSteps {
+func AnalysisStepAzurePostProcessing() AnalysisStep {
 	return analysisStepAzurePostProcessing
 }
 
-func AnalysisStepTagging() AnalysisSteps {
+func AnalysisStepTagging() AnalysisStep {
 	return analysisStepTagging
 }
 
-func AnalysisStepGenerateFindings() AnalysisSteps {
+func AnalysisStepGenerateFindings() AnalysisStep {
 	return analysisStepGenerateFindings
 }
 
-func AnalysisStepsNoPostProcessing() AnalysisSteps {
-	return AnalysisSteps{bits: analysisNoPostProcessing}
-}
-
-func AnalysisStepsFull() AnalysisSteps {
-	return analysisStepsFull
-}
-
 // Returns false if name is not found for AnalysisStep.
-func (s AnalysisSteps) GetNameOfAnalysisStep() (string, bool) {
+func (s AnalysisStep) GetNameOfAnalysisStep() (string, bool) {
 	name, present := analysisStepNames[s]
 
 	if present {
 		return name, true
 	}
 
-	return "unknown", false
+	return fmt.Sprintf("unknown:%d", s), false
+}
+
+// AnalysisSteps represents a set of steps in analysis using a bitmask.
+type AnalysisSteps struct {
+	bits int32
+}
+
+var (
+	analysisStepsNoPostProcessing = AnalysisSteps{bits: analysisNoPostProcessing}
+	analysisStepsFull             = AnalysisSteps{bits: analysisFull}
+)
+
+func AnalysisStepsNoPostProcessing() AnalysisSteps {
+	return analysisStepsNoPostProcessing
+}
+
+func AnalysisStepsFull() AnalysisSteps {
+	return analysisStepsFull
 }
 
 // Has reports whether all of the bits in step are set in s.
-func (s AnalysisSteps) Has(step AnalysisSteps) bool {
-	return s.bits&step.bits == step.bits
+func (s AnalysisSteps) Has(step AnalysisStep) bool {
+	i := int32(step)
+	return s.bits&i == i
 }
 
 func (s AnalysisSteps) Merge(steps AnalysisSteps) AnalysisSteps {

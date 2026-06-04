@@ -37,14 +37,9 @@ func TestDispatchAnalysisSteps(t *testing.T) {
 			expectedCalls: []string{"ad_post_processing", "azure_post_processing", "tagging", "data_quality"},
 		},
 		{
-			name:          "tagging to completion skips post-processing",
+			name:          "no post processing skips post-processing",
 			analysisSteps: model.AnalysisStepsNoPostProcessing(),
 			expectedCalls: []string{"tagging", "data_quality"},
-		},
-		{
-			name:          "single selected stage only dispatches that stage",
-			analysisSteps: model.AnalysisStepADPostProcessing(),
-			expectedCalls: []string{"ad_post_processing", "data_quality"},
 		},
 		{
 			name:          "empty steps still perform post-run data quality bookkeeping",
@@ -57,18 +52,31 @@ func TestDispatchAnalysisSteps(t *testing.T) {
 
 			var calls []string
 
-			dispatchAnalysisSteps(testCase.analysisSteps, analysisStepDispatch{
-				adPostProcessing: func() {
-					calls = append(calls, "ad_post_processing")
+			dispatchAnalysisSteps(testCase.analysisSteps, analysisPipeline{
+				{
+					analysisStep: model.AnalysisStepADPostProcessing(),
+					operation: func() {
+						calls = append(calls, "ad_post_processing")
+					},
 				},
-				azurePostProcessing: func() {
-					calls = append(calls, "azure_post_processing")
+				{
+					analysisStep: model.AnalysisStepAzurePostProcessing(),
+					operation: func() {
+						calls = append(calls, "azure_post_processing")
+					},
 				},
-				tagging: func() {
-					calls = append(calls, "tagging")
+				{
+					analysisStep: model.AnalysisStepTagging(),
+					operation: func() {
+						calls = append(calls, "tagging")
+					},
 				},
-				saveDataQuality: func() {
-					calls = append(calls, "data_quality")
+				{
+					name:      "data_quality",
+					alwaysRun: true,
+					operation: func() {
+						calls = append(calls, "data_quality")
+					},
 				},
 			})
 

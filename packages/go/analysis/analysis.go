@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -127,37 +128,44 @@ var (
 	ErrAnalysisPartiallyCompleted = errors.New("analysis partially completed")
 )
 
-type analysisPipelineStep struct {
-	step      model.AnalysisSteps
-	operation func()
-}
-type analysisStepDispatch struct {
-	adPostProcessing    func()
-	azurePostProcessing func()
-	tagging             func()
-	saveDataQuality     func()
-}
-
 func runAnalysisStepOperation(operation func()) {
 	if operation != nil {
 		operation()
 	}
 }
 
-func dispatchAnalysisSteps(analysisSteps model.AnalysisSteps, dispatch analysisStepDispatch) {
-	if analysisSteps.Has(model.AnalysisStepADPostProcessing()) {
-		runAnalysisStepOperation(dispatch.adPostProcessing)
+func dispatchAnalysisSteps(analysisSteps model.AnalysisSteps, pipeline analysisPipeline) {
+	for _, pipelineStep := range pipeline {
+		if analysisSteps.Has(pipelineStep.analysisStep) || pipelineStep.alwaysRun {
+			runAnalysisStepOperation(pipelineStep.operation)
+		}
+	}
+}
+
+type analysisPipelineStep struct {
+	analysisStep model.AnalysisStep
+	operation    func()
+	name         string
+	alwaysRun    bool
+}
+
+type analysisPipeline []analysisPipelineStep
+
+func (s analysisPipeline) String() string {
+	stepNames := make([]string, 0, len(s))
+
+	for _, pipelineStep := range s {
+		name, present := pipelineStep.analysisStep.GetNameOfAnalysisStep()
+
+		if !present && pipelineStep.name != "" {
+			stepNames = append(stepNames, pipelineStep.name)
+		} else {
+			stepNames = append(stepNames, name)
+		}
+
 	}
 
-	if analysisSteps.Has(model.AnalysisStepAzurePostProcessing()) {
-		runAnalysisStepOperation(dispatch.azurePostProcessing)
-	}
-
-	if analysisSteps.Has(model.AnalysisStepTagging()) {
-		runAnalysisStepOperation(dispatch.tagging)
-	}
-
-	runAnalysisStepOperation(dispatch.saveDataQuality)
+	return strings.Join(stepNames, ",")
 }
 
 // TODO Cleanup tieringEnabled after Tiering GA
@@ -171,8 +179,6 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		analysisSteps = model.AnalysisStepsFull()
 	}
 
-	// TODO: refactor pipeline and add logging for string representation
-
 	var (
 		adFailed           = false
 		azureFailed        = false
@@ -181,50 +187,73 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		dataQualityFailed  = false
 	)
 
-	dispatchAnalysisSteps(analysisSteps, analysisStepDispatch{
-		adPostProcessing: func() {
-			if ntlmFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureNTLMPostProcessing); err != nil {
-				collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving NTLM Post Processing feature flag: %w", err))
-			} else if stats, err := adAnalysis.Post(ctx, graphDB, appcfg.GetCitrixRDPSupport(ctx, db), ntlmFlag.Enabled); err != nil {
-				collectedErrors = append(collectedErrors, fmt.Errorf("error during ad post: %w", err))
-				adFailed = true
-			} else {
-				stats.LogStats()
-			}
+	pipeline := analysisPipeline{
+		{
+			analysisStep: model.AnalysisStepADPostProcessing(),
+			operation: func() {
+				if ntlmFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureNTLMPostProcessing); err != nil {
+					collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving NTLM Post Processing feature flag: %w", err))
+				} else if stats, err := adAnalysis.Post(ctx, graphDB, appcfg.GetCitrixRDPSupport(ctx, db), ntlmFlag.Enabled); err != nil {
+					collectedErrors = append(collectedErrors, fmt.Errorf("error during ad post: %w", err))
+					adFailed = true
+				} else {
+					stats.LogStats()
+				}
+			},
 		},
-		azurePostProcessing: func() {
-			if stats, err := azureAnalysis.Post(ctx, graphDB); err != nil {
-				collectedErrors = append(collectedErrors, fmt.Errorf("error during azure post: %w", err))
-				azureFailed = true
-			} else {
-				stats.LogStats()
-			}
+		{
+			analysisStep: model.AnalysisStepAzurePostProcessing(),
+			operation: func() {
+				if stats, err := azureAnalysis.Post(ctx, graphDB); err != nil {
+					collectedErrors = append(collectedErrors, fmt.Errorf("error during azure post: %w", err))
+					azureFailed = true
+				} else {
+					stats.LogStats()
+				}
+			},
 		},
-		tagging: func() {
-			if errs := TagAssetGroupsAndTierZero(ctx, db, graphDB); len(errs) > 0 {
-				for _, err := range errs {
-					collectedErrors = append(collectedErrors, fmt.Errorf("tagging asset groups and tier zero failed: %w", err))
+		{
+			analysisStep: model.AnalysisStepAzurePostProcessing(),
+			operation: func() {
+				if errs := TagAssetGroupsAndTierZero(ctx, db, graphDB); len(errs) > 0 {
+					for _, err := range errs {
+						collectedErrors = append(collectedErrors, fmt.Errorf("tagging asset groups and tier zero failed: %w", err))
+					}
+
+					if ContainsOnlyCypherSelectorErrors(errs) {
+						agtPartiallyFailed = true
+					}
 				}
 
-				if ContainsOnlyCypherSelectorErrors(errs) {
-					agtPartiallyFailed = true
+				if !tieringEnabled {
+					if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB, graphschema.GetNodeKindDisplayLabel); err != nil {
+						collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
+						agiFailed = true
+					}
 				}
-			}
+			},
+		},
+		{
+			name:      "data_quality", // TODO: move to constant
+			alwaysRun: true,
+			operation: func() {
+				if err := dataquality.SaveDataQuality(ctx, db, graphDB); err != nil {
+					collectedErrors = append(collectedErrors, fmt.Errorf("error saving data quality stat: %v", err))
+					dataQualityFailed = true
+				}
+			},
+		},
+	}
 
-			if !tieringEnabled {
-				if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB, graphschema.GetNodeKindDisplayLabel); err != nil {
-					collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
-					agiFailed = true
-				}
-			}
-		},
-		saveDataQuality: func() {
-			if err := dataquality.SaveDataQuality(ctx, db, graphDB); err != nil {
-				collectedErrors = append(collectedErrors, fmt.Errorf("error saving data quality stat: %v", err))
-				dataQualityFailed = true
-			}
-		},
-	})
+	slog.InfoContext(
+		ctx,
+		"Running Analysis Operations",
+		slog.String("namespace", "analysis"),
+		slog.String("fn", "RunAnalysisOperations"),
+		slog.String("pipeline_steps", pipeline.String()),
+	)
+
+	dispatchAnalysisSteps(analysisSteps, pipeline)
 
 	if len(collectedErrors) > 0 {
 		for _, err := range collectedErrors {

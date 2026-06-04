@@ -139,5 +139,5 @@ func TestAnalysisRequest_DisabledVariableAnalysisModeQueuesFullAnalysis(t *testi
 
 	queued, err := dbInst.GetAnalysisRequest(testCtx)
 	require.NoError(t, err)
-	require.Equal(t, model.AnalysisStepsFull, queued.AnalysisSteps)
+	require.Equal(t, model.AnalysisStepsFull(), queued.AnalysisSteps)
 }
