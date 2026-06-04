@@ -76,7 +76,7 @@ const UsersTable: FC<UsersTableProps> = ({
     const listUsersQuery = useBloodHoundUsers();
 
     const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS);
+    const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS) || checkPermission(Permission.AUTH_READ_USERS);
 
     const listSSOProvidersQuery = useQuery(
         ['listSSOProviders'],
