@@ -385,6 +385,7 @@ export type GraphKindsResponse = BasicResponse<{ kinds: string[] }>;
 export type UnifiedFinding = {
     severity: string;
     finding: string;
+    title: string;
     finding_type: string;
     platform: string;
     environment_id: string;
