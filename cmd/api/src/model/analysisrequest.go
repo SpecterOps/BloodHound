@@ -20,8 +20,6 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
-	"maps"
-	"slices"
 	"strconv"
 	"time"
 
@@ -96,10 +94,6 @@ func (s AnalysisSteps) GetNameOfAnalysisStep() string {
 	}
 
 	return "unknown"
-}
-
-func AnalysisAllStepNames() []string {
-	return slices.Collect(maps.Values(analysisStepNames))
 }
 
 func AnalysisStepADPostProcessing() AnalysisSteps {
