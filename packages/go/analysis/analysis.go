@@ -213,7 +213,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 			},
 		},
 		{
-			analysisStep: model.AnalysisStepAzurePostProcessing(),
+			analysisStep: model.AnalysisStepTagging(),
 			operation: func() {
 				if errs := TagAssetGroupsAndTierZero(ctx, db, graphDB); len(errs) > 0 {
 					for _, err := range errs {
