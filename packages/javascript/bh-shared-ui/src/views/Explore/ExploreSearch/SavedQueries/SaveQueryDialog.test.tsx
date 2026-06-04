@@ -20,8 +20,19 @@ import { setupServer } from 'msw/node';
 import { mockKindsHandler } from '../../../../mocks/handlers/graphKinds';
 import { act, render, screen, waitFor } from '../../../../test-utils';
 import { mockCodemirrorLayoutMethods } from '../../../../utils/testHelpers';
-import { SavedQueriesProvider } from '../../providers';
+import { SavedQueriesContext, SavedQueriesProvider } from '../../providers';
 import SaveQueryDialog from './SaveQueryDialog';
+
+vi.mock('@neo4j-cypher/react-codemirror', async () => {
+    const { forwardRef } = await import('react');
+    return {
+        CypherEditor: forwardRef<HTMLDivElement, { value: string }>(({ value }, ref) => (
+            <div ref={ref} data-testid='cypher-editor'>
+                {value}
+            </div>
+        )),
+    };
+});
 
 const testUsers = [
     {
@@ -553,5 +564,48 @@ describe('SaveQueryDialog', () => {
         expect(nestedElement).toBeInTheDocument();
         const testTable = screen.getByRole('table');
         expect(testTable).toBeInTheDocument();
+    });
+
+    it('renders the selected query in the cypher editor when editing a query that differs from the active cypher search', () => {
+        const queryA = 'MATCH (a:User) RETURN a';
+        const queryB = 'MATCH (b:Group) RETURN b';
+
+        render(
+            <SavedQueriesContext.Provider
+                value={{
+                    selected: { query: queryB, id: 2 },
+                    selectedQuery: { id: 2, name: 'Query B', description: 'desc B', query: queryB },
+                    showSaveQueryDialog: true,
+                    saveAction: 'edit',
+                    setSelected: vi.fn(),
+                    setShowSaveQueryDialog: vi.fn(),
+                    setSaveAction: vi.fn(),
+                    runQuery: vi.fn(),
+                    editQuery: vi.fn(),
+                }}>
+                <SaveQueryDialog
+                    open
+                    onSave={testOnSave}
+                    onClose={testOnClose}
+                    error={testError}
+                    cypherSearchState={{
+                        cypherQuery: queryA,
+                        performSearch: vi.fn(),
+                        setCypherQuery: vi.fn(),
+                    }}
+                    sharedIds={[]}
+                    isPublic={false}
+                    saveAction='edit'
+                    saveUpdatePending={false}
+                    onUpdate={testOnUpdate}
+                    setSharedIds={testSetSharedIds}
+                    setIsPublic={testSetIsPublic}
+                />
+            </SavedQueriesContext.Provider>
+        );
+
+        const editor = screen.getByTestId('cypher-editor');
+        expect(editor).toHaveTextContent(queryB);
+        expect(editor).not.toHaveTextContent(queryA);
     });
 });

@@ -268,6 +268,39 @@ func FetchNodeIDsByKind(tx graph.Transaction, targetKind graph.Kind) (cardinalit
 	return nodes, nil
 }
 
+// FetchComputerIDsWithLocalToComputer fetches a bitmap of Computer node IDs that have at least one
+// inbound LocalToComputer edge.
+func FetchComputerIDsWithLocalToComputer(tx graph.Transaction) (cardinality.Duplex[uint64], error) {
+	defer measure.LogAndMeasure(
+		slog.LevelInfo,
+		"FetchComputerIDsWithLocalToComputer",
+		attr.Namespace("analysis"),
+		attr.Function("FetchComputerIDsWithLocalToComputer"),
+		attr.Scope("routine"),
+	)()
+
+	var (
+		computers = cardinality.NewBitmap64()
+	)
+
+	if err := tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Kind(query.Relationship(), ad.LocalToComputer),
+			query.Kind(query.End(), ad.Computer),
+		)
+	}).FetchKinds(func(cursor graph.Cursor[graph.RelationshipKindsResult]) error {
+		for result := range cursor.Chan() {
+			computers.Add(result.EndID.Uint64())
+		}
+
+		return cursor.Error()
+	}); err != nil {
+		return nil, err
+	}
+
+	return computers, nil
+}
+
 func FetchNodesByKind(ctx context.Context, db graph.Database, kinds ...graph.Kind) ([]*graph.Node, error) {
 	var nodes []*graph.Node
 	return nodes, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -351,7 +384,7 @@ func getLAPSSyncers(tx graph.Transaction, domain *graph.Node, localGroupData *Lo
 	} else if getChangesFilteredNodes, err := ops.FetchStartNodes(getChangesFilteredQuery); err != nil {
 		return nil, err
 	} else {
-		results := CalculateCrossProductNodeSets(localGroupData, getChangesNodes.Slice(), getChangesFilteredNodes.Slice())
+		results := CalculateCrossProductNodeSets(localGroupData, NewCachedPrincipalSet(getChangesNodes.Slice()), NewCachedPrincipalSet(getChangesFilteredNodes.Slice()))
 
 		return results, nil
 	}
@@ -368,7 +401,7 @@ func getDCSyncers(tx graph.Transaction, domain *graph.Node, localGroupData *Loca
 	} else if getChangesAllNodes, err := ops.FetchStartNodes(getChangesAllQuery); err != nil {
 		return nil, err
 	} else {
-		results := CalculateCrossProductNodeSets(localGroupData, getChangesNodes.Slice(), getChangesAllNodes.Slice())
+		results := CalculateCrossProductNodeSets(localGroupData, NewCachedPrincipalSet(getChangesNodes.Slice()), NewCachedPrincipalSet(getChangesAllNodes.Slice()))
 
 		return results, nil
 	}
@@ -573,10 +606,10 @@ func FetchCanRDPEntityBitmapForComputer(computerData *CanRDPComputerData, enforc
 
 		if !uraEnabled {
 			// In cases where we do not need to check for the existence of the RIL privilege, return the cross product of both groups
-			return CalculateCrossProductNodeSets(&computerData.LocalGroupData, []*graph.Node{computerData.RemoteDesktopUsersLocalGroup}, []*graph.Node{computerData.DAUGroup}), nil
+			return CalculateCrossProductNodeSets(&computerData.LocalGroupData, NewCachedPrincipalSet([]*graph.Node{computerData.RemoteDesktopUsersLocalGroup}), NewCachedPrincipalSet([]*graph.Node{computerData.DAUGroup})), nil
 		} else {
 			// Otherwise, return the cross product of all three criteria
-			return CalculateCrossProductNodeSets(&computerData.LocalGroupData, []*graph.Node{computerData.RemoteDesktopUsersLocalGroup}, []*graph.Node{computerData.DAUGroup}, computerData.RemoteInteractiveLogonRightEntities.Slice()), nil
+			return CalculateCrossProductNodeSets(&computerData.LocalGroupData, NewCachedPrincipalSet([]*graph.Node{computerData.RemoteDesktopUsersLocalGroup}), NewCachedPrincipalSet([]*graph.Node{computerData.DAUGroup}), NewCachedPrincipalSet(computerData.RemoteInteractiveLogonRightEntities.Slice())), nil
 		}
 	} else if canSkipURAProcessing {
 		return FetchRemoteDesktopUsersBitmapForComputerWithoutURA(computerData), nil
@@ -634,6 +667,9 @@ type LocalGroupData struct {
 	// All computer IDs in all domains
 	Computers cardinality.Duplex[uint64]
 
+	// All computer IDs in all domains that have at least one inbound LocalToComputer edge
+	ComputersWithLocalGroups cardinality.Duplex[uint64]
+
 	// All group IDs in all domains
 	Groups cardinality.Duplex[uint64]
 
@@ -675,6 +711,12 @@ func FetchLocalGroupData(ctx context.Context, graphDB graph.Database) (*LocalGro
 			return err
 		} else {
 			localGroupData.Computers = computerIDs
+		}
+
+		if computersWithLocalGroups, err := FetchComputerIDsWithLocalToComputer(tx); err != nil {
+			return err
+		} else {
+			localGroupData.ComputersWithLocalGroups = computersWithLocalGroups
 		}
 
 		if allGroupIDs, err := FetchNodeIDsByKind(tx, ad.Group); err != nil {

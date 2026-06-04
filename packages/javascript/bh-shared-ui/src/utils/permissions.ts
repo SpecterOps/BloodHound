@@ -24,6 +24,7 @@ export enum Permission {
     AUTH_MANAGE_PROVIDERS,
     AUTH_MANAGE_SELF,
     AUTH_MANAGE_USERS,
+    AUTH_READ_USERS,
     CLIENTS_MANAGE,
     CLIENTS_READ,
     CLIENTS_TASKING,
@@ -82,6 +83,10 @@ export const PERMISSIONS: PermissionDefinitions = {
     [Permission.AUTH_MANAGE_USERS]: {
         authority: 'auth',
         name: 'ManageUsers',
+    },
+    [Permission.AUTH_READ_USERS]: {
+        authority: 'auth',
+        name: 'ReadUsers',
     },
     [Permission.CLIENTS_MANAGE]: {
         authority: 'clients',

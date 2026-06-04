@@ -307,12 +307,11 @@ describe('ActiveExtensionsCard', () => {
         expect(confirmButton).toBeDisabled();
 
         const input = screen.getByPlaceholderText('Custom Extension');
-        await user.type(input, 'Wrong Name');
+        fireEvent.change(input, { target: { value: 'Wrong Name' } });
         expect(confirmButton).toBeDisabled();
 
-        await user.clear(input);
-        await user.type(input, 'Custom Extension');
-        expect(confirmButton).not.toBeDisabled();
+        fireEvent.change(input, { target: { value: 'Custom Extension' } });
+        await waitFor(() => expect(confirmButton).not.toBeDisabled());
     });
 
     it('clears input when dialog is closed and reopened', async () => {
@@ -347,9 +346,10 @@ describe('ActiveExtensionsCard', () => {
         await user.click(deleteButton);
 
         const input = screen.getByPlaceholderText('Custom Extension');
-        await user.type(input, 'Custom Extension');
+        fireEvent.change(input, { target: { value: 'Custom Extension' } });
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
+        await waitFor(() => expect(confirmButton).not.toBeDisabled());
         await user.click(confirmButton);
 
         expect(deleteExtensionSpy).toHaveBeenCalledWith('3');
@@ -363,9 +363,10 @@ describe('ActiveExtensionsCard', () => {
         await user.click(deleteButton);
 
         const input = screen.getByPlaceholderText('Custom Extension');
-        await user.type(input, 'Custom Extension');
+        fireEvent.change(input, { target: { value: 'Custom Extension' } });
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
+        await waitFor(() => expect(confirmButton).not.toBeDisabled());
         await user.click(confirmButton);
 
         await waitFor(() => {
@@ -387,9 +388,10 @@ describe('ActiveExtensionsCard', () => {
         await user.click(deleteButton);
 
         const input = screen.getByPlaceholderText('Custom Extension');
-        await user.type(input, 'Custom Extension');
+        fireEvent.change(input, { target: { value: 'Custom Extension' } });
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
+        await waitFor(() => expect(confirmButton).not.toBeDisabled());
         await user.click(confirmButton);
 
         await waitFor(() => {

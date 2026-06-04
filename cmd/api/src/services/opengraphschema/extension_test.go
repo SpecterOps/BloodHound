@@ -45,6 +45,174 @@ func baseSimpleGraphExtensionInput() model.GraphExtensionInput {
 	}
 }
 
+func TestOpenGraphSchemaService_GetGraphSchemaExtensions(t *testing.T) {
+	t.Parallel()
+
+	type mocks struct {
+		mockRepository     *schemamocks.MockOpenGraphSchemaRepository
+		mockGraphDBKindRep *schemamocks.MockGraphDBKindRepository
+	}
+	type args struct {
+		ctx     context.Context
+		filters model.Filters
+		sort    model.Sort
+		skip    int
+		limit   int
+	}
+	type expected struct {
+		extensions model.GraphSchemaExtensions
+		count      int
+		err        error
+	}
+	type testCase struct {
+		name       string
+		args       args
+		setupMocks func(t *testing.T, mocks *mocks)
+		expected   expected
+	}
+
+	var (
+		testExtension1 = model.GraphSchemaExtension{
+			Name:        "Extension1",
+			DisplayName: "Extension 1",
+			Version:     "v1.0.0",
+			Namespace:   "EXT1",
+			IsBuiltin:   false,
+		}
+		testExtension2 = model.GraphSchemaExtension{
+			Name:        "Extension2",
+			DisplayName: "Extension 2",
+			Version:     "v2.0.0",
+			Namespace:   "EXT2",
+			IsBuiltin:   true,
+		}
+		testFilters = model.Filters{"name": []model.Filter{{Operator: model.Equals, Value: "Extension1"}}}
+		testSort    = model.Sort{{Column: "name", Direction: model.AscendingSortDirection}}
+	)
+
+	tests := []testCase{
+		{
+			name: "success_-_returns_extensions_from_repository",
+			args: args{
+				ctx:     context.Background(),
+				filters: testFilters,
+				sort:    testSort,
+				skip:    0,
+				limit:   10,
+			},
+			setupMocks: func(t *testing.T, mocks *mocks) {
+				t.Helper()
+				mocks.mockRepository.EXPECT().
+					GetGraphSchemaExtensions(gomock.Any(), testFilters, testSort, 0, 10).
+					Return(model.GraphSchemaExtensions{testExtension1}, 1, nil)
+			},
+			expected: expected{
+				extensions: model.GraphSchemaExtensions{testExtension1},
+				count:      1,
+				err:        nil,
+			},
+		},
+		{
+			name: "success_-_returns_multiple_extensions",
+			args: args{
+				ctx:     context.Background(),
+				filters: model.Filters{},
+				sort:    model.Sort{},
+				skip:    0,
+				limit:   100,
+			},
+			setupMocks: func(t *testing.T, mocks *mocks) {
+				t.Helper()
+				mocks.mockRepository.EXPECT().
+					GetGraphSchemaExtensions(gomock.Any(), model.Filters{}, model.Sort{}, 0, 100).
+					Return(model.GraphSchemaExtensions{testExtension1, testExtension2}, 2, nil)
+			},
+			expected: expected{
+				extensions: model.GraphSchemaExtensions{testExtension1, testExtension2},
+				count:      2,
+				err:        nil,
+			},
+		},
+		{
+			name: "success_-_returns_empty_list_when_no_extensions_found",
+			args: args{
+				ctx:     context.Background(),
+				filters: testFilters,
+				sort:    model.Sort{},
+				skip:    0,
+				limit:   10,
+			},
+			setupMocks: func(t *testing.T, mocks *mocks) {
+				t.Helper()
+				mocks.mockRepository.EXPECT().
+					GetGraphSchemaExtensions(gomock.Any(), testFilters, model.Sort{}, 0, 10).
+					Return(model.GraphSchemaExtensions{}, 0, nil)
+			},
+			expected: expected{
+				extensions: model.GraphSchemaExtensions{},
+				count:      0,
+				err:        nil,
+			},
+		},
+		{
+			name: "error_-_repository_returns_error",
+			args: args{
+				ctx:     context.Background(),
+				filters: testFilters,
+				sort:    testSort,
+				skip:    0,
+				limit:   10,
+			},
+			setupMocks: func(t *testing.T, mocks *mocks) {
+				t.Helper()
+				mocks.mockRepository.EXPECT().
+					GetGraphSchemaExtensions(gomock.Any(), testFilters, testSort, 0, 10).
+					Return(nil, 0, errors.New("database error"))
+			},
+			expected: expected{
+				extensions: nil,
+				count:      0,
+				err:        errors.New("database error"),
+			},
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctrl := gomock.NewController(t)
+
+			mocks := &mocks{
+				mockRepository:     schemamocks.NewMockOpenGraphSchemaRepository(ctrl),
+				mockGraphDBKindRep: schemamocks.NewMockGraphDBKindRepository(ctrl),
+			}
+
+			testCase.setupMocks(t, mocks)
+
+			service := opengraphschema.NewOpenGraphSchemaService(mocks.mockRepository, mocks.mockGraphDBKindRep)
+
+			extensions, count, err := service.GetGraphSchemaExtensions(
+				testCase.args.ctx,
+				testCase.args.filters,
+				testCase.args.sort,
+				testCase.args.skip,
+				testCase.args.limit,
+			)
+
+			if testCase.expected.err != nil {
+				require.Error(t, err)
+				assert.Equal(t, testCase.expected.err.Error(), err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+
+			assert.Equal(t, testCase.expected.count, count)
+			assert.Equal(t, testCase.expected.extensions, extensions)
+		})
+	}
+}
+
 // TestOpenGraphSchemaService_UpsertGraphSchemaExtension -
 func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 	t.Parallel()

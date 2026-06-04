@@ -31,13 +31,6 @@ global.jest = vi;
 expect.extend(matchers);
 
 // mocks
-
-global.ResizeObserver = class ResizeObserver {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-};
-
 beforeAll(() => {
     // DoodleUI Table uses virtualization which requires these properties to be defined or rows do not render
     Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
@@ -92,3 +85,10 @@ vi.mock('@fortawesome/react-fontawesome', () => ({
         return <span>{props.icon.iconName}</span>;
     }),
 }));
+
+class ResizeObserverMock {
+    observe = vi.fn();
+    unobserve = vi.fn();
+    disconnect = vi.fn();
+}
+vi.stubGlobal('ResizeObserver', ResizeObserverMock);
