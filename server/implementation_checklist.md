@@ -4,13 +4,15 @@ Use this checklist when creating a new endpoint or migrating an existing one to 
 
 The pattern is **test-first migration**: write an integration test that documents the current endpoint's contract, complete the migration, then confirm the same test still passes — ideally with only the handler factory line changing.
 
+Commit after each step
+
 ---
 
 ## Step 1 – Write an e2e integration test against the existing endpoint
 
 Before touching any production code, write a test that covers the HTTP contract of the endpoint in its current form. The goal is a green baseline that will still pass after migration.
 
--   [ ] Add a `TestXxx` function to `bhce/cmd/api/src/services/<feature>_e2e_test.go`
+-   [ ] Add a `TestXxx` function to `bhce/server/<feature>/<feature>_e2e_test.go`
 -   [ ] Wire the existing (old) handler directly using the `v2.Resources` or equivalent struct, e.g.:
     ```go
     func newMyHandler(db *database.BloodhoundDB) http.HandlerFunc {
@@ -18,10 +20,10 @@ Before touching any production code, write a test that covers the HTTP contract 
     }
     ```
 -   [ ] Assert every status code and relevant JSON field the endpoint can return (happy path + error paths)
--   [ ] Confirm the test is green: `go test -tags integration ./cmd/api/src/services/...`
+-   [ ] Confirm the test is green: `go test -tags integration ./server/<feature>/...`
 
 ---
-
+// TODO: Move this before Step 1
 ## Step 2 – Scaffold the feature directory
 
 See README ["Adding a new feature module"](README.md#adding-a-new-feature-module) → sub-step 1.
@@ -52,11 +54,11 @@ See README ["Step 2"](README.md#2-define-domain-types-and-interfaces-in-services
 -   [ ] Define sentinel errors (`var ErrNotFound = errors.New(...)`)
 -   [ ] Define the `Database` interface (only the methods this feature calls)
 -   [ ] Implement the Service methods on the `Service` struct that coordinate domain logic and call the `Database` interface
+-   [ ] Implement a stub for the `Database` methods (no logic, no structs) to satisfy the interface in the service
 -   [ ] Add `//go:generate go tool mockery` at the top of the file
--   [ ] Write unit tests in `services/services_test.go` using `MockDatabase`
+-   [ ] Write unit tests in `services/services_test.go` using `MockDatabase` (AI can be helpful here)
 
 ---
-
 ## Step 4 – Implement persistence in `appdb/appdb.go`
 
 See README ["Step 3"](README.md#3-implement-persistence-in-appdbappdbgo).
