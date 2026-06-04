@@ -30,6 +30,7 @@ const initialGlobalState: types.GlobalViewState = {
     selectedExploreTableColumns: defaultColumns,
     pinnedExploreTableColumns: DEFAULT_PINNED_COLUMN_KEYS,
     timeoutSetting: false,
+    isExploreGraphHighlight: true,
 };
 
 const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewActionTypes) => {
@@ -60,6 +61,8 @@ const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewA
             draft.selectedExploreTableColumns = action.selectedExploreTableColumns;
         } else if (action.type === types.GLOBAL_SET_PINNED_EXPLORE_TABLE_COLUMNS) {
             draft.pinnedExploreTableColumns = action.pinnedExploreTableColumns;
+        } else if (action.type === types.GLOBAL_SET_IS_EXPLORE_GRAPH_HIGHLIGHT) {
+            draft.isExploreGraphHighlight = action.isExploreGraphHighlight;
         }
     });
 };

@@ -39,8 +39,8 @@ func TestCrossProduct(t *testing.T) {
 		harness.ShortcutHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, graphDB graph.Database, tx graph.Transaction) {
-		firstSet := []*graph.Node{testContext.Harness.ShortcutHarness.Group1}
-		secondSet := []*graph.Node{testContext.Harness.ShortcutHarness.Group2}
+		firstSet := ad.NewCachedPrincipalSet([]*graph.Node{testContext.Harness.ShortcutHarness.Group1})
+		secondSet := ad.NewCachedPrincipalSet([]*graph.Node{testContext.Harness.ShortcutHarness.Group2})
 
 		excludedGroups, err := ad.FetchLocalGroupData(context.Background(), graphDB)
 		require.NoError(t, err)
@@ -56,8 +56,8 @@ func TestCrossProductAuthUsers(t *testing.T) {
 		harness.ShortcutHarnessAuthUsers.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, graphDB graph.Database, tx graph.Transaction) {
-		firstSet := []*graph.Node{testContext.Harness.ShortcutHarnessAuthUsers.Group1}
-		secondSet := []*graph.Node{testContext.Harness.ShortcutHarnessAuthUsers.Group2}
+		firstSet := ad.NewCachedPrincipalSet([]*graph.Node{testContext.Harness.ShortcutHarnessAuthUsers.Group1})
+		secondSet := ad.NewCachedPrincipalSet([]*graph.Node{testContext.Harness.ShortcutHarnessAuthUsers.Group2})
 
 		excludedGroups, err := ad.FetchLocalGroupData(context.Background(), graphDB)
 		require.NoError(t, err)
@@ -73,8 +73,8 @@ func TestCrossProductEveryone(t *testing.T) {
 		harness.ShortcutHarnessEveryone.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, graphDB graph.Database, tx graph.Transaction) {
-		firstSet := []*graph.Node{testContext.Harness.ShortcutHarnessEveryone.Group1}
-		secondSet := []*graph.Node{testContext.Harness.ShortcutHarnessEveryone.Group2}
+		firstSet := ad.NewCachedPrincipalSet([]*graph.Node{testContext.Harness.ShortcutHarnessEveryone.Group1})
+		secondSet := ad.NewCachedPrincipalSet([]*graph.Node{testContext.Harness.ShortcutHarnessEveryone.Group2})
 
 		excludedGroups, err := ad.FetchLocalGroupData(context.Background(), graphDB)
 		require.NoError(t, err)
@@ -90,8 +90,8 @@ func TestCrossProductEveryone2(t *testing.T) {
 		harness.ShortcutHarnessEveryone2.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, graphDB graph.Database, tx graph.Transaction) {
-		firstSet := []*graph.Node{testContext.Harness.ShortcutHarnessEveryone2.Group1}
-		secondSet := []*graph.Node{testContext.Harness.ShortcutHarnessEveryone2.Group2}
+		firstSet := ad.NewCachedPrincipalSet([]*graph.Node{testContext.Harness.ShortcutHarnessEveryone2.Group1})
+		secondSet := ad.NewCachedPrincipalSet([]*graph.Node{testContext.Harness.ShortcutHarnessEveryone2.Group2})
 
 		excludedGroups, err := ad.FetchLocalGroupData(context.Background(), graphDB)
 		require.NoError(t, err)
@@ -126,8 +126,8 @@ func TestCrossProductSharedMemberNotDuplicated(t *testing.T) {
 		return nil
 	}, func(harness integration.HarnessDetails, graphDB graph.Database, tx graph.Transaction) {
 		var (
-			firstSet  = []*graph.Node{testContext.Harness.ShortcutHarnessSharedMember.ParentGroup}
-			secondSet = []*graph.Node{testContext.Harness.ShortcutHarnessSharedMember.SubGroup1, testContext.Harness.ShortcutHarnessSharedMember.SubGroup2}
+			firstSet  = ad.NewCachedPrincipalSet([]*graph.Node{testContext.Harness.ShortcutHarnessSharedMember.ParentGroup})
+			secondSet = ad.NewCachedPrincipalSet([]*graph.Node{testContext.Harness.ShortcutHarnessSharedMember.SubGroup1, testContext.Harness.ShortcutHarnessSharedMember.SubGroup2})
 		)
 
 		localGroupData, err := ad.FetchLocalGroupData(context.Background(), graphDB)
