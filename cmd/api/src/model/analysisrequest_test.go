@@ -161,6 +161,39 @@ func TestAnalysisStepsJSON(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestAnalysisStepNames_ContainsNameForEachDefinedBit(t *testing.T) {
+	t.Parallel()
+
+	for _, testCase := range []struct {
+		name string
+		step AnalysisSteps
+	}{
+		{
+			name: "AD post-processing has a name",
+			step: analysisStepADPostProcessing,
+		},
+		{
+			name: "Azure post-processing has a name",
+			step: analysisStepAzurePostProcessing,
+		},
+		{
+			name: "tagging has a name",
+			step: analysisStepTagging,
+		},
+		{
+			name: "generate findings has a name",
+			step: analysisStepGenerateFindings,
+		},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			_, present := analysisStepNames[testCase.step]
+			require.True(t, present, "analysisStepNames is missing a name for step with bits %d", testCase.step.bits)
+		})
+	}
+}
+
 func TestAnalysisStepsMerge(t *testing.T) {
 	t.Parallel()
 

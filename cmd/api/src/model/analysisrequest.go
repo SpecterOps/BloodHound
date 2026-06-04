@@ -58,7 +58,7 @@ const (
 	// Helpers available for ease of use.
 	// If adding individual steps above, validate whether these need updating based on expected behavior.
 	////////
-	// AnalysisTaggingToCompletion runs the tagging step and every step that follows it.
+	// AnalysisTaggingOnwards runs the tagging step and every step that follows it.
 	analysisTaggingOnwards = analysisTagging | analysisGenerateFindings
 	// AnalysisAll selects every step in the pipeline.
 	analysisFull = analysisSentinel - 1
