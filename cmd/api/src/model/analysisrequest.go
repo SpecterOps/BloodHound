@@ -110,6 +110,7 @@ func AnalysisStepName(step AnalysisStep) (string, bool) {
 }
 
 // AnalysisSteps represents a set of steps in analysis using a bitmask.
+// bits is an unexported field so callers cannot create arbitrary nonzero bitmasks.
 type AnalysisSteps struct {
 	bits int32
 }
