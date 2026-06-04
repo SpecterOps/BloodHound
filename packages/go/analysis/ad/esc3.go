@@ -113,7 +113,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 									certTemplateEnrollersTwo,
 									cache.GetEnterpriseCAEnrollers(eca1.ID),
 									ecaEnrollersTwo,
-									delegatedAgents.Slice())
+									NewCachedPrincipalSet(delegatedAgents.Slice()))
 
 								// Add principals to result set unless it's a user and DNS is required
 								if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {
@@ -204,30 +204,22 @@ func PostEnrollOnBehalfOf(cache *ADCSCache, operation post.StatTrackedOperation[
 		} else {
 			chains.Domains.Each(func(domain uint64) bool {
 
-				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if results, err := EnrollOnBehalfOfVersionTwo(tx, versionTwoTemplates, publishedCertTemplates, graph.ID(domain)); err != nil {
-						return err
-					} else {
-						for _, result := range results {
-							if !channels.Submit(ctx, outC, result) {
-								return nil
-							}
+				operation.Operation.SubmitReader(func(ctx context.Context, _ graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+					for _, result := range EnrollOnBehalfOfVersionTwo(cache, versionTwoTemplates, publishedCertTemplates, graph.ID(domain)) {
+						if !channels.Submit(ctx, outC, result) {
+							return nil
 						}
-						return nil
 					}
+					return nil
 				})
 
-				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if results, err := EnrollOnBehalfOfVersionOne(tx, versionOneTemplates, publishedCertTemplates, graph.ID(domain)); err != nil {
-						return err
-					} else {
-						for _, result := range results {
-							if !channels.Submit(ctx, outC, result) {
-								return nil
-							}
+				operation.Operation.SubmitReader(func(ctx context.Context, _ graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+					for _, result := range EnrollOnBehalfOfVersionOne(cache, versionOneTemplates, publishedCertTemplates, graph.ID(domain)) {
+						if !channels.Submit(ctx, outC, result) {
+							return nil
 						}
-						return nil
 					}
+					return nil
 				})
 
 				return true
@@ -238,7 +230,7 @@ func PostEnrollOnBehalfOf(cache *ADCSCache, operation post.StatTrackedOperation[
 	return nil
 }
 
-func EnrollOnBehalfOfVersionOne(tx graph.Transaction, versionOneCertTemplates []*graph.Node, publishedTemplates []*graph.Node, domainID graph.ID) ([]post.EnsureRelationshipJob, error) {
+func EnrollOnBehalfOfVersionOne(cache *ADCSCache, versionOneCertTemplates []*graph.Node, publishedTemplates []*graph.Node, domainID graph.ID) []post.EnsureRelationshipJob {
 	results := make([]post.EnsureRelationshipJob, 0)
 
 	for _, certTemplateOne := range publishedTemplates {
@@ -259,29 +251,23 @@ func EnrollOnBehalfOfVersionOne(tx graph.Transaction, versionOneCertTemplates []
 			continue
 		} else {
 			for _, certTemplateTwo := range versionOneCertTemplates {
-				if hasPath, err := DoesCertTemplateLinkToDomain(tx, certTemplateTwo.ID, domainID); err != nil {
-					slog.Error(
-						"Error getting domain node for certtemplate",
-						slog.Uint64("cert_template_id", uint64(certTemplateTwo.ID)),
-						attr.Error(err),
-					)
-				} else if !hasPath {
+				if !cache.CertTemplateLinksToDomain(certTemplateTwo.ID, domainID) {
 					continue
-				} else {
-					results = append(results, post.EnsureRelationshipJob{
-						FromID: certTemplateOne.ID,
-						ToID:   certTemplateTwo.ID,
-						Kind:   ad.EnrollOnBehalfOf,
-					})
 				}
+
+				results = append(results, post.EnsureRelationshipJob{
+					FromID: certTemplateOne.ID,
+					ToID:   certTemplateTwo.ID,
+					Kind:   ad.EnrollOnBehalfOf,
+				})
 			}
 		}
 	}
 
-	return results, nil
+	return results
 }
 
-func EnrollOnBehalfOfVersionTwo(tx graph.Transaction, versionTwoCertTemplates, publishedTemplates []*graph.Node, domainID graph.ID) ([]post.EnsureRelationshipJob, error) {
+func EnrollOnBehalfOfVersionTwo(cache *ADCSCache, versionTwoCertTemplates, publishedTemplates []*graph.Node, domainID graph.ID) []post.EnsureRelationshipJob {
 	results := make([]post.EnsureRelationshipJob, 0)
 	for _, certTemplateOne := range publishedTemplates {
 		if hasBadEku, err := certTemplateHasEku(certTemplateOne, EkuAnyPurpose); errors.Is(err, graph.ErrPropertyNotFound) {
@@ -332,13 +318,7 @@ func EnrollOnBehalfOfVersionTwo(tx graph.Transaction, versionTwoCertTemplates, p
 					)
 				} else if !slices.Contains(applicationPolicies, EkuCertRequestAgent) {
 					continue
-				} else if isLinked, err := DoesCertTemplateLinkToDomain(tx, certTemplateTwo.ID, domainID); err != nil {
-					slog.Error(
-						"Error fetch paths from cert template to domain",
-						slog.Uint64("cert_template_id", uint64(certTemplateTwo.ID)),
-						attr.Error(err),
-					)
-				} else if !isLinked {
+				} else if !cache.CertTemplateLinksToDomain(certTemplateTwo.ID, domainID) {
 					continue
 				} else {
 					results = append(results, post.EnsureRelationshipJob{
@@ -351,7 +331,7 @@ func EnrollOnBehalfOfVersionTwo(tx graph.Transaction, versionTwoCertTemplates, p
 		}
 	}
 
-	return results, nil
+	return results
 }
 
 func certTemplateHasEku(certTemplate *graph.Node, targetEkus ...string) (bool, error) {
