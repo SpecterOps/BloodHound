@@ -10,7 +10,7 @@
 views {
 
   view bhceComponents of bhce.apiServer {
-    title 'New Architecture – L3 API Server Components'
+    title 'Sliced Onion Architecture – L3 API Server Components'
     description '''
       Every Go package inside the API server and the dependency edges between
       them: imports, route registration, and external-library use.

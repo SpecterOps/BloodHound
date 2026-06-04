@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────────────────────────────────
-// BloodHound — New Architecture: System & Go Package Model (elements)
+// BloodHound — Sliced Onion Architecture: System & Go Package Model (elements)
 //
 // Self-contained model of the target server architecture, built from scratch.
 // Relationships live in model/relationships.c4.
@@ -33,8 +33,8 @@ model {
 
   // ─── System ─────────────────────────────────────────────────────
 
-  bhce = system 'BloodHound — New Architecture' {
-    description 'Target-state attack-path management server: feature-sliced Go packages behind a single REST API, persisting to PostgreSQL.'
+  bhce = system 'BloodHound' {
+    description 'Attack-path management server implemented as a Sliced Onion Architecture: vertical feature slices, each an onion whose services core owns the domain, with every layer depending on a port defined by its caller.'
 
     apiServer = container 'API Server' {
       #go

@@ -8,7 +8,7 @@
 views {
 
   view bhceContext {
-    title 'New Architecture – L1 System Context'
+    title 'Sliced Onion Architecture – L1 System Context'
     description '''
       The BloodHound API server as a single system, the operator who drives it,
       and the PostgreSQL store it persists to.

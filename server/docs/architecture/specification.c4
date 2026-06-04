@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────────────────────────────────
-// BloodHound — New Architecture: Specification
+// BloodHound — Sliced Onion Architecture: Specification
 //
 // Self-contained LikeC4 specification. This project is intentionally independent
 // of docs/architecture and bhce/architecture: it models the target server

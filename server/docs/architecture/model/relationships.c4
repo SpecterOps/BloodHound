@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────────────────────────────────
-// BloodHound — New Architecture: Relationships
+// BloodHound — Sliced Onion Architecture: Relationships
 //
 // Every edge below is grounded in the actual bhce/server source:
 //   calls     – runtime execution path (interface-mediated where noted)

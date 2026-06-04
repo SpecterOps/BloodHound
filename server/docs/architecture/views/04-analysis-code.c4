@@ -5,8 +5,8 @@
 //   analysisImports  – compile-time dependency graph (imports + uses only)
 //
 // The two graphs point in opposite directions across the same boundaries:
-// services calls appdb, but appdb imports services. That inversion is the
-// whole point of the layering, and the two views make it visible.
+// services calls appdb at runtime, but appdb imports services. That reversal —
+// both outer rings importing the core — is the Sliced Onion pattern made visible.
 // ──────────────────────────────────────────────────────────────────────────
 
 views {
@@ -14,14 +14,14 @@ views {
   // ── Runtime call flow ─────────────────────────────────────────────────────
 
   view analysisCallFlow of bhce.apiServer.analysisFeature {
-    title 'New Architecture – L4 Analysis: Runtime Call Flow'
+    title 'Sliced Onion Architecture – L4 Analysis: Runtime Call Flow'
     description '''
       Traces a request from the router through the feature layers at runtime.
 
       httpRouter → handlers → services → appdb → postgres, with handlers also
       reading auth/bhctx and writing through responses. Every intra-feature
-      edge crosses an interface defined in the called package and satisfied by
-      an implementation injected at startup.
+      edge crosses an interface defined by the calling layer (the consumer owns
+      the port) and satisfied by an implementation injected at startup.
 
       See analysisImports for the compile-time graph and analysisWireup for the
       startup construction sequence.
@@ -50,13 +50,14 @@ views {
   // ── Compile-time import / dependency graph ────────────────────────────────
 
   view analysisImports of bhce.apiServer.analysisFeature {
-    title 'New Architecture – L4 Analysis: Compile-time Dependencies'
+    title 'Sliced Onion Architecture – L4 Analysis: Compile-time Dependencies'
     description '''
       The explicit Go import graph of the analysis feature, plus the external
       libraries appdb links against.
 
-      services is the dependency root: it owns the domain types and sentinel
-      errors that both handlers and appdb import, and imports neither of them.
+      services is the onion core and the dependency root: it owns the domain
+      types and sentinel errors that both handlers and appdb import, and imports
+      neither of them.
       handlers and routes also import the shared auth / bhctx / responses
       packages; appdb uses go-sqlbuilder and pgx for persistence.
 

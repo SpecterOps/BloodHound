@@ -9,7 +9,7 @@
 views {
 
   view analysisWireup of bhce.apiServer.analysisFeature {
-    title 'New Architecture – L4 Analysis: Startup Wireup'
+    title 'Sliced Onion Architecture – L4 Analysis: Startup Wireup'
     description '''
       The one-time registration sequence at startup.
 

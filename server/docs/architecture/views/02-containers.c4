@@ -8,7 +8,7 @@
 views {
 
   view bhceContainers of bhce {
-    title 'New Architecture – L2 Containers'
+    title 'Sliced Onion Architecture – L2 Containers'
     description '''
       The two runtime units that make up the system — the Go API server and the
       PostgreSQL relational store — plus the operator and the persistence
