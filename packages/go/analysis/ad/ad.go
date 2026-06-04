@@ -512,8 +512,8 @@ func createOrUpdateWellKnownLink(
 
 // CalculateCrossProductNodeSets finds the intersection of the given sets of nodes.
 // See CalculateCrossProductNodeSetsDoc.md for explaination of the specialGroups (Authenticated Users and Everyone) and why we treat them the way we do
-func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ...[]*graph.Node) cardinality.Duplex[uint64] {
-	if len(nodeSlices) < 2 {
+func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, principalSets ...CachedPrincipalSet) cardinality.Duplex[uint64] {
+	if len(principalSets) < 2 {
 		slog.Error("Cross products require at least 2 nodesets")
 		return cardinality.NewBitmap64()
 	}
@@ -532,7 +532,7 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 	)
 
 	// Unroll all nodesets
-	for _, nodeSlice := range nodeSlices {
+	for _, principalSet := range principalSets {
 		var (
 			// Skip sets containing Auth. Users or Everyone
 			nodeExcluded = false
@@ -542,15 +542,13 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 			entityReachBitmaps = []cardinality.Duplex[uint64]{entityReachBitmap}
 		)
 
-		for _, entity := range nodeSlice {
-			entityID := entity.ID.Uint64()
-
+		principalSet.AllIDs.Each(func(entityID uint64) bool {
 			firstDegreeSet.Add(entityID)
 			entityReachBitmap.Add(entityID)
 
 			// When encountering a node that is a group or a local group, the algorithm here must expand all of the members
 			// of the group or local group
-			if entity.Kinds.ContainsOneOf(ad.Group, ad.LocalGroup) {
+			if principalSet.GroupOrLocalGroupIDs.Contains(entityID) {
 				// If this group is one of the excluded groups
 				if localGroupData.ExcludedShortcutGroups.Contains(entityID) {
 					// If this group is excluded, do not continue expanding the rest of the nodes in the set
@@ -574,16 +572,14 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 						}
 
 						if nodeExcluded {
-							break
+							return false
 						}
 					}
 				}
 			}
 
-			if nodeExcluded {
-				break
-			}
-		}
+			return !nodeExcluded
+		})
 
 		// If the node is not excluded, include all group members
 		if !nodeExcluded {
@@ -594,10 +590,8 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 
 	// If every nodeset (unrolled) includes Auth. Users/Everyone then return all nodesets (first degree)
 	if len(firstDegreeSets) == 0 {
-		for _, nodeSet := range nodeSlices {
-			for _, entity := range nodeSet {
-				resultEntities.Add(entity.ID.Uint64())
-			}
+		for _, principalSet := range principalSets {
+			resultEntities.Or(principalSet.AllIDs)
 		}
 
 		return resultEntities
