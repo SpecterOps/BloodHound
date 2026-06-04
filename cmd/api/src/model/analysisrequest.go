@@ -75,6 +75,7 @@ var (
 
 	// Defines a name for a single step of analysis for string representation purposes.
 	// If adding bits (steps) to the bitmask, this needs to be updated.
+	// There is a test to make sure this stays in sync.
 	analysisStepNames = map[AnalysisSteps]string{
 		analysisStepADPostProcessing:    "ad_post_processing",
 		analysisStepAzurePostProcessing: "azure_post_processing",
@@ -85,16 +86,6 @@ var (
 	analysisStepsTaggingOnwards = AnalysisSteps{bits: analysisTaggingOnwards}
 	analysisStepsFull           = AnalysisSteps{bits: analysisFull}
 )
-
-func (s AnalysisSteps) GetNameOfAnalysisStep() string {
-	name, present := analysisStepNames[s]
-
-	if present {
-		return name
-	}
-
-	return "unknown"
-}
 
 func AnalysisStepADPostProcessing() AnalysisSteps {
 	return analysisStepADPostProcessing
@@ -118,6 +109,17 @@ func AnalysisStepsTaggingOnwards() AnalysisSteps {
 
 func AnalysisStepsFull() AnalysisSteps {
 	return analysisStepsFull
+}
+
+// Returns false if name is not found for AnalysisStep.
+func (s AnalysisSteps) GetNameOfAnalysisStep() (string, bool) {
+	name, present := analysisStepNames[s]
+
+	if present {
+		return name, true
+	}
+
+	return "unknown", false
 }
 
 // Has reports whether all of the bits in step are set in s.
