@@ -78,15 +78,23 @@ func NewS3Store(bucket, prefix string, client *s3.Client) *Store {
 
 func normalizePath(name string) (string, error) {
 	name = strings.TrimSpace(name)
-	name = strings.TrimPrefix(name, "/")
 	name = strings.ReplaceAll(name, "\\", "/")
+	name = strings.TrimLeft(name, "/")
 
-	cleaned := path.Clean(name)
-	if cleaned == "." || cleaned == "" {
+	if name == "" {
 		return "", errors.New("invalid empty path")
 	}
-	if cleaned == ".." || strings.HasPrefix(cleaned, "../") {
-		return "", errors.New("path escapes storage root")
+
+	// recommendation of avoiding period-only path segments
+	for _, segment := range strings.Split(name, "/") {
+		if segment == "." || segment == ".." {
+			return "", errors.New("path contains relative segment")
+		}
+	}
+
+	cleaned := path.Clean(name)
+	if cleaned == "." || cleaned == "" || strings.HasPrefix(cleaned, "/") {
+		return "", errors.New("invalid empty path")
 	}
 
 	return cleaned, nil
