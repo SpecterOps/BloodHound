@@ -1828,34 +1828,6 @@ func FetchEnterpriseCAsRootCAForPathToDomainFull(tx graph.Transaction, domain *g
 	})
 }
 
-func DoesCertTemplateLinkToDomain(tx graph.Transaction, certTemplate, domainNode graph.ID) (bool, error) {
-	if pathSet, err := FetchCertTemplatePathToDomain(tx, certTemplate, domainNode); err != nil {
-		return false, err
-	} else {
-		return pathSet.Len() > 0, nil
-	}
-}
-
-func FetchCertTemplatePathToDomain(tx graph.Transaction, certTemplate, domain graph.ID) (graph.PathSet, error) {
-	var (
-		paths = graph.NewPathSet()
-	)
-
-	return paths, tx.Relationships().Filter(
-		query.And(
-			query.Equals(query.StartID(), certTemplate),
-			query.KindIn(query.Relationship(), ad.PublishedTo, ad.IssuedSignedBy, ad.EnterpriseCAFor, ad.RootCAFor),
-			query.Equals(query.EndID(), domain),
-		),
-	).FetchAllShortestPaths(func(cursor graph.Cursor[graph.Path]) error {
-		for path := range cursor.Chan() {
-			paths.AddPath(path)
-		}
-
-		return cursor.Error()
-	})
-}
-
 // fetchFirstDegreeNodes fetches all entities that are connected to the provided targetNode with a relationship kind that matches any of the provided relKinds
 func fetchFirstDegreeNodes(tx graph.Transaction, targetNode *graph.Node, relKinds ...graph.Kind) (graph.NodeSet, error) {
 	return ops.FetchStartNodes(tx.Relationships().Filter(
