@@ -19,6 +19,7 @@ package responses
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"log/slog"
 	"net/http"
 	"time"
@@ -38,9 +39,24 @@ type JSONViewer interface {
 	JSONView() ([]byte, error)
 }
 
+// CSVViewer is implemented by view types that can serialize themselves as CSV.
+// It mirrors JSONViewer: the view type implements the serialization method and
+// the matching WriteCSV helper sets headers and the response status.
+type CSVViewer interface {
+	WriteCSV(writer io.Writer) error
+}
+
 // BasicResponse is the envelope returned for non-paginated, non-time-windowed responses.
 type BasicResponse struct {
 	Data json.RawMessage `json:"data"`
+}
+
+// PaginatedResponse is the envelope returned for paginated list responses.
+type PaginatedResponse struct {
+	Count int             `json:"count"`
+	Limit int             `json:"limit"`
+	Skip  int             `json:"skip"`
+	Data  json.RawMessage `json:"data"`
 }
 
 // ErrorDetails describes a single error returned inside an ErrorWrapper.
@@ -68,6 +84,48 @@ func WriteBasic(ctx context.Context, data JSONViewer, statusCode int, response h
 	}
 
 	writeJSON(ctx, BasicResponse{Data: rawData}, statusCode, response)
+}
+
+// WritePaginated marshals data as the data field of a PaginatedResponse along with the
+// supplied pagination metadata and writes it with the supplied status code. A non-positive
+// limit and a negative count are omitted (left as their zero value) to match the legacy
+// pagination envelope semantics.
+func WritePaginated(ctx context.Context, data JSONViewer, limit, skip, count, statusCode int, response http.ResponseWriter) {
+	rawData, err := data.JSONView()
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed marshaling data for paginated response", attr.Error(err))
+		WriteError(ctx, http.StatusInternalServerError, failedToMarshalMessage, response)
+		return
+	}
+
+	var wrapper = PaginatedResponse{
+		Data: rawData,
+		Skip: skip,
+	}
+
+	if limit > 0 {
+		wrapper.Limit = limit
+	}
+
+	if count >= 0 {
+		wrapper.Count = count
+	}
+
+	writeJSON(ctx, wrapper, statusCode, response)
+}
+
+// WriteCSV writes data as a text/csv response with the supplied status code. The caller is
+// responsible for setting any Content-Disposition header before invoking this helper.
+func WriteCSV(ctx context.Context, data CSVViewer, statusCode int, response http.ResponseWriter) {
+	response.Header().Set(headers.ContentType.String(), mediatypes.TextCsv.String())
+
+	if err := data.WriteCSV(response); err != nil {
+		slog.ErrorContext(ctx, "Failed to write CSV response body", attr.Error(err))
+		response.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	response.WriteHeader(statusCode)
 }
 
 // WriteError writes a structured ErrorWrapper to the response with the supplied status code
@@ -106,7 +164,7 @@ func WriteInternalServerError(ctx context.Context, cause error, response http.Re
 	WriteError(ctx, http.StatusInternalServerError, errorMessageInternalServerError, response)
 }
 
-func writeJSON[T BasicResponse | ErrorWrapper](requestCtx context.Context, message T, statusCode int, response http.ResponseWriter) {
+func writeJSON[T BasicResponse | ErrorWrapper | PaginatedResponse](requestCtx context.Context, message T, statusCode int, response http.ResponseWriter) {
 	var (
 		content []byte
 		err     error
