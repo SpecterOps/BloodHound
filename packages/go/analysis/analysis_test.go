@@ -339,3 +339,17 @@ func TestNewPipelineHandlesAllBHCEAnalysisSteps(t *testing.T) {
 		require.NotContains(t, handledSteps, unsupportedStep, "unsupported BHCE analysis step %q is also handled by newPipeline; remove the unsupported entry: %s", stepName, reason)
 	}
 }
+
+func TestNewPipelineStepsAreRunnable(t *testing.T) {
+	t.Parallel()
+
+	for index, pipelineStep := range newPipeline() {
+		var (
+			hasName         = pipelineStep.name != ""
+			hasAnalysisStep = pipelineStep.analysisStep != 0
+		)
+
+		require.True(t, hasName || hasAnalysisStep, "BHCE pipeline step %d must have a name or analysis step", index)
+		require.NotNil(t, pipelineStep.operation, "BHCE pipeline step %q must have an operation", pipelineStep.String())
+	}
+}
