@@ -25,6 +25,7 @@ export const NoteCell = ({ row }: { row: { original: HistoryItem } }) => {
     const { note, id, actor } = row.original;
 
     const noteIsActive = selected?.id === id;
+    const tip = !note ? 'No notes' : noteIsActive ? 'Hide note' : 'Show note';
 
     const handleClick = () => (noteIsActive ? clearSelected() : setSelected(row.original));
 
@@ -35,9 +36,14 @@ export const NoteCell = ({ row }: { row: { original: HistoryItem } }) => {
                     <p>-</p>
                 </Tooltip>
             ) : (
-                <Tooltip tooltip={!note ? 'No notes' : noteIsActive ? 'Hide note' : 'Show note'}>
+                <Tooltip tooltip={tip}>
                     <span>
-                        <Button variant={'text'} className='disabled:opacity-25' onClick={handleClick} disabled={!note}>
+                        <Button
+                            aria-label={tip}
+                            variant='text'
+                            className='disabled:opacity-25'
+                            onClick={handleClick}
+                            disabled={!note}>
                             <AppIcon.LinedPaper size={24} className='-mb-[3px]' />
                         </Button>
                     </span>

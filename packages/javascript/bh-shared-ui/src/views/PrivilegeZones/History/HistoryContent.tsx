@@ -108,6 +108,7 @@ const HistoryContent = () => {
                         tabIndex={0}
                         className='overflow-y-auto mb-1 min-h-32'>
                         <DataTable
+                            aria-label='History Log Table'
                             data={records}
                             TableHeaderProps={tableHeaderProps}
                             TableHeadProps={tableHeadProps}
