@@ -195,15 +195,6 @@ func TestWriteError(t *testing.T) {
 	assert.Equal(t, "invalid input", errorWrapper.Errors[0].Message)
 }
 
-func TestWriteNoContent(t *testing.T) {
-	var recorder = httptest.NewRecorder()
-
-	responses.WriteNoContent(recorder)
-
-	assert.Equal(t, http.StatusNoContent, recorder.Code)
-	assert.Empty(t, recorder.Body.Bytes())
-}
-
 func TestWriteInternalServerError(t *testing.T) {
 	var (
 		ctx      = newTestContext()

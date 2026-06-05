@@ -21,10 +21,13 @@ package handlers
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 
+	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/server/analysis/services"
 	"github.com/specterops/bloodhound/server/responses"
 )
@@ -33,6 +36,7 @@ import (
 type Analysis interface {
 	GetRequest(context.Context) (services.RequestedAnalysis, error)
 	CreateRequest(ctx context.Context, requestedBy string) (services.RequestedAnalysis, bool, error)
+	CancelAnalysisRequest(ctx context.Context) error
 }
 
 // Handlers is a dependency injection container for analysis handlers
@@ -54,12 +58,8 @@ func (s Handlers) GetRequest(response http.ResponseWriter, request *http.Request
 	var ctx = request.Context()
 
 	ra, err := s.analysis.GetRequest(ctx)
-	if errors.Is(err, services.ErrNoPendingRequest) {
-		responses.WriteNoContent(response)
-		return
-	}
 	if err != nil {
-		responses.WriteInternalServerError(ctx, err, response)
+		handleAnalysisError(request, response, err)
 		return
 	}
 
@@ -84,7 +84,7 @@ func (s Handlers) CreateRequest(response http.ResponseWriter, request *http.Requ
 
 	current, created, err := s.analysis.CreateRequest(ctx, user.ID.String())
 	if err != nil {
-		responses.WriteInternalServerError(ctx, err, response)
+		handleAnalysisError(request, response, err)
 		return
 	}
 
@@ -93,4 +93,35 @@ func (s Handlers) CreateRequest(response http.ResponseWriter, request *http.Requ
 		statusCode = http.StatusAccepted
 	}
 	responses.WriteBasic(ctx, BuildRequestedAnalysisView(current), statusCode, response)
+}
+
+func (s Handlers) CancelAnalysisRequest(response http.ResponseWriter, request *http.Request) {
+	var ctx = request.Context()
+
+	_, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx)
+	if !isUser {
+		responses.WriteInternalServerError(ctx, errors.New("no user on auth context after authentication middleware"), response)
+		return
+	}
+
+	err := s.analysis.CancelAnalysisRequest(ctx)
+	if err != nil {
+		handleAnalysisError(request, response, err)
+		return
+	}
+
+	response.WriteHeader(http.StatusAccepted)
+}
+
+func handleAnalysisError(request *http.Request, response http.ResponseWriter, err error) {
+	if errors.Is(err, services.ErrNoPendingRequest) {
+		response.WriteHeader(http.StatusNoContent)
+	} else if errors.Is(err, services.ErrDeletionRequestPending) {
+		response.WriteHeader(http.StatusConflict)
+	} else if errors.Is(err, context.DeadlineExceeded) {
+		responses.WriteError(request.Context(), http.StatusInternalServerError, api.ErrorResponseRequestTimeout, response)
+	} else {
+		slog.Error("Unexpected database error", attr.Error(err))
+		responses.WriteError(request.Context(), http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, response)
+	}
 }

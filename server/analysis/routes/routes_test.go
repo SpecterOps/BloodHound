@@ -50,6 +50,7 @@ func TestRegister(t *testing.T) {
 	}{
 		{http.MethodGet, "/api/v2/analysis"},
 		{http.MethodPut, "/api/v2/analysis"},
+		{http.MethodDelete, "/api/v2/analysis"},
 	} {
 		req := httptest.NewRequest(tc.method, tc.path, nil)
 		var match mux.RouteMatch
@@ -79,6 +80,7 @@ func TestRegister_RoutesRequireAuthentication(t *testing.T) {
 	}{
 		{http.MethodGet, "/api/v2/analysis"},
 		{http.MethodPut, "/api/v2/analysis"},
+		{http.MethodDelete, "/api/v2/analysis"},
 	} {
 		t.Run(tc.method+" "+tc.path, func(t *testing.T) {
 			var (

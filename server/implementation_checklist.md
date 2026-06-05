@@ -125,7 +125,7 @@ See README ["Step 8"](README.md#8-add-to-the-module-registry).
 
 ---
 
-## Step 11 – Swap the e2e test to use the new handler
+## Step 10 – Swap the e2e test to use the new handler
 
 -   [ ] Update the handler factory in the e2e test to wire the new stack instead of the old handler:
 
@@ -147,7 +147,7 @@ See README ["Step 8"](README.md#8-add-to-the-module-registry).
 
 ---
 
-## Step 12 – Remove the old handler and route registration
+## Step 11 – Remove the old handler and route registration
 
 -   [ ] Delete the old handler method from `v2.Resources` (or wherever it lived)
 -   [ ] Remove the old route registration line from `cmd/api/src/api/registration/v2.go` (or equivalent)
@@ -156,7 +156,7 @@ See README ["Step 8"](README.md#8-add-to-the-module-registry).
 
 ---
 
-## Step 13 – Prepare for code review
+## Step 12 – Prepare for code review
 
 -   [ ] Run `just prepare-for-codereview` (runs tests, generates mocks, adds license headers, generates OpenAPI docs)
 -   [ ] Open a PR with the title format: `<conventional-commit-tag>: <Title> <Jira tag>`

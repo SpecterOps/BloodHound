@@ -27,6 +27,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
@@ -168,6 +169,88 @@ func TestStore_CreateAnalysisRequest_Integration(t *testing.T) {
 		require.NoError(t, err)
 		assert.False(t, created)
 		assert.Equal(t, "first-user", current.RequestedBy)
+	})
+}
+
+// setupStoreAndPool is like setupStore but also returns the underlying pgxpool.Pool so
+// callers that need to seed rows not exposed by the Store API can do so directly.
+func setupStoreAndPool(t *testing.T) (*appdb.Store, *pgxpool.Pool) {
+	t.Helper()
+
+	var (
+		ctx      = context.Background()
+		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
+	)
+
+	cfg, err := config.NewDefaultConnectionConfiguration(connConf.URL())
+	require.NoError(t, err)
+
+	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
+	require.NoError(t, err)
+
+	bhDB := database.NewBloodhoundDB(gormDB, dbPool, auth.NewIdentityResolver(), cfg)
+	require.NoError(t, bhDB.Migrate(ctx))
+
+	t.Cleanup(func() { bhDB.Close(ctx) })
+
+	return appdb.NewStore(bhDB.Pool()), bhDB.Pool()
+}
+
+// seedDeletionRequest inserts a deletion-type row directly into analysis_request_switch,
+// bypassing the Store API which only exposes analysis-type creation.
+func seedDeletionRequest(t *testing.T, ctx context.Context, pool *pgxpool.Pool, requestedBy string) {
+	t.Helper()
+
+	_, err := pool.Exec(ctx,
+		`INSERT INTO analysis_request_switch
+		   (requested_by, request_type, requested_at, delete_all_graph, delete_sourceless_graph, delete_source_kinds, delete_relationships)
+		   VALUES ($1, 'deletion', NOW(), false, false, '{}', '{}')`,
+		requestedBy,
+	)
+	require.NoError(t, err)
+}
+
+func TestStore_DeleteAnalysisRequest_Integration(t *testing.T) {
+	t.Run("removes the pending analysis request", func(t *testing.T) {
+		var (
+			ctx   = context.Background()
+			store = setupStore(t)
+		)
+
+		_, _, err := store.CreateAnalysisRequest(ctx, "test-user")
+		require.NoError(t, err)
+
+		require.NoError(t, store.DeleteAnalysisRequest(ctx))
+
+		_, err = store.GetAnalysisRequest(ctx)
+		assert.ErrorIs(t, err, services.ErrNoPendingRequest)
+	})
+
+	t.Run("returns ErrNoPendingRequest when no request is pending", func(t *testing.T) {
+		var (
+			ctx   = context.Background()
+			store = setupStore(t)
+		)
+
+		err := store.DeleteAnalysisRequest(ctx)
+		assert.ErrorIs(t, err, services.ErrNoPendingRequest)
+	})
+
+	t.Run("returns ErrDeletionRequestPending and leaves the row intact", func(t *testing.T) {
+		var (
+			ctx   = context.Background()
+			store, pool = setupStoreAndPool(t)
+		)
+
+		seedDeletionRequest(t, ctx, pool, "test-user")
+
+		err := store.DeleteAnalysisRequest(ctx)
+		assert.ErrorIs(t, err, services.ErrDeletionRequestPending)
+
+		// The deletion request must remain — DeleteAnalysisRequest must not remove it.
+		retrieved, getErr := store.GetAnalysisRequest(ctx)
+		require.NoError(t, getErr)
+		assert.Equal(t, services.RequestedAnalysisTypeDeletion, retrieved.RequestType)
 	})
 }
 

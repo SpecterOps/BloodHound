@@ -28,4 +28,5 @@ func Register(routerInst *router.Router, handlers *handlers.Handlers) {
 
 	routerInst.GET("/api/v2/analysis", handlers.GetRequest).RequirePermissions(permissions.AppReadApplicationConfiguration)
 	routerInst.PUT("/api/v2/analysis", handlers.CreateRequest).RequirePermissions(permissions.AppWriteApplicationConfiguration)
+	routerInst.DELETE("/api/v2/analysis", handlers.CancelAnalysisRequest).RequirePermissions(permissions.AppWriteApplicationConfiguration)
 }

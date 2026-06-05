@@ -148,3 +148,43 @@ func TestService_CreateRequest(t *testing.T) {
 		})
 	}
 }
+
+func TestService_CancelAnalysisRequest(t *testing.T) {
+	var (
+		ctx           = context.Background()
+		unexpectedErr = errors.New("db unavailable")
+	)
+
+	tests := []struct {
+		name    string
+		dbErr   error
+		wantErr error
+	}{
+		{
+			name: "returns nil on success",
+		},
+		{
+			name:    "propagates database errors",
+			dbErr:   unexpectedErr,
+			wantErr: unexpectedErr,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				databaseMock = mocks.NewMockDatabase(t)
+				svc          = services.NewService(databaseMock)
+			)
+
+			databaseMock.EXPECT().DeleteAnalysisRequest(ctx).Return(tt.dbErr)
+
+			err := svc.CancelAnalysisRequest(ctx)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}

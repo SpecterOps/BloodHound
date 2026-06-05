@@ -224,3 +224,87 @@ func TestHandlers_CreateRequest(t *testing.T) {
 		})
 	}
 }
+
+func TestHandlers_CancelAnalysisRequest(t *testing.T) {
+	var (
+		userID     = uuid.Must(uuid.NewV4())
+		serviceErr = errors.New("db unavailable")
+	)
+
+	// expect configures the mock for the service call the handler is expected
+	// to make. nil means the handler should short-circuit before reaching the
+	// service (mockery's strict mode then guarantees no call is made).
+	tests := []struct {
+		name          string
+		authenticated bool
+		expect        func(m *mocks.MockAnalysis, ctx context.Context)
+		wantStatus    int
+	}{
+		{
+			name:          "returns 202 Accepted on success",
+			authenticated: true,
+			expect: func(m *mocks.MockAnalysis, ctx context.Context) {
+				m.EXPECT().CancelAnalysisRequest(ctx).Return(nil)
+			},
+			wantStatus: http.StatusAccepted,
+		},
+		{
+			// The route middleware (RequirePermissions) guarantees an authenticated
+			// caller, so this branch is only reachable if something upstream is broken.
+			// The handler treats that as an internal error rather than a 401.
+			name:          "returns 500 when the auth context has no user (defensive guard past middleware)",
+			authenticated: false,
+			wantStatus:    http.StatusInternalServerError,
+		},
+		{
+			name:          "returns 204 No Content when no analysis request is pending",
+			authenticated: true,
+			expect: func(m *mocks.MockAnalysis, ctx context.Context) {
+				m.EXPECT().CancelAnalysisRequest(ctx).Return(services.ErrNoPendingRequest)
+			},
+			wantStatus: http.StatusNoContent,
+		},
+		{
+			name:          "returns 409 Conflict when a deletion request is pending",
+			authenticated: true,
+			expect: func(m *mocks.MockAnalysis, ctx context.Context) {
+				m.EXPECT().CancelAnalysisRequest(ctx).Return(services.ErrDeletionRequestPending)
+			},
+			wantStatus: http.StatusConflict,
+		},
+		{
+			name:          "returns 500 on unexpected service error",
+			authenticated: true,
+			expect: func(m *mocks.MockAnalysis, ctx context.Context) {
+				m.EXPECT().CancelAnalysisRequest(ctx).Return(serviceErr)
+			},
+			wantStatus: http.StatusInternalServerError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				analysisMock = mocks.NewMockAnalysis(t)
+				handlerSet   = handlers.NewHandlersContainer(analysisMock)
+				recorder     = httptest.NewRecorder()
+				request      *http.Request
+			)
+
+			if tt.authenticated {
+				request = newAuthenticatedRequest(t, http.MethodDelete, "/api/v2/analysis", userID)
+			} else {
+				req, err := http.NewRequest(http.MethodDelete, "/api/v2/analysis", nil)
+				require.NoError(t, err)
+				request = req
+			}
+			if tt.expect != nil {
+				tt.expect(analysisMock, request.Context())
+			}
+
+			handlerSet.CancelAnalysisRequest(recorder, request)
+
+			assert.Equal(t, tt.wantStatus, recorder.Code)
+		})
+	}
+}

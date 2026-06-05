@@ -38,6 +38,8 @@ const (
 	expectedSelectSQL = `SELECT requested_by, request_type, requested_at, delete_all_graph, delete_sourceless_graph, delete_source_kinds, delete_relationships FROM analysis_request_switch LIMIT $1`
 
 	expectedInsertSQL = `INSERT INTO analysis_request_switch (requested_by, request_type, requested_at, delete_all_graph, delete_sourceless_graph, delete_source_kinds, delete_relationships) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (singleton) DO NOTHING`
+
+	expectedDeleteSQL = `DELETE FROM analysis_request_switch`
 )
 
 func newTestStore(t *testing.T) (*appdb.Store, pgxmock.PgxPoolIface) {
@@ -244,6 +246,108 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, tt.wantCreated, created)
 				assert.Equal(t, tt.wantRequester, current.RequestedBy)
+			}
+			require.NoError(t, pool.ExpectationsWereMet())
+		})
+	}
+}
+
+func TestStore_DeleteAnalysisRequest(t *testing.T) {
+	var (
+		ctx        = context.Background()
+		beginTxErr = errors.New("begin tx failed")
+		selectErr  = errors.New("select failed")
+		deleteErr  = errors.New("delete failed")
+		analysisRow = func(pool pgxmock.PgxPoolIface) *pgxmock.Rows {
+			return pool.NewRows(analysisRequestRowColumns()).AddRow(
+				"test-user", string(services.RequestedAnalysisTypeAnalysis), time.Now().UTC(),
+				false, false, []string{}, []string{},
+			)
+		}
+		deletionRow = func(pool pgxmock.PgxPoolIface) *pgxmock.Rows {
+			return pool.NewRows(analysisRequestRowColumns()).AddRow(
+				"test-user", string(services.RequestedAnalysisTypeDeletion), time.Now().UTC(),
+				false, false, []string{}, []string{},
+			)
+		}
+	)
+
+	tests := []struct {
+		name            string
+		expectations    func(pool pgxmock.PgxPoolIface)
+		wantErr         error
+		wantErrContains string
+	}{
+		{
+			name: "deletes an analysis request successfully",
+			expectations: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectBeginTx(pgx.TxOptions{})
+				pool.ExpectQuery(expectedSelectSQL).WithArgs(1).WillReturnRows(analysisRow(pool))
+				pool.ExpectExec(expectedDeleteSQL).WillReturnResult(pgxmock.NewResult("DELETE", 1))
+				pool.ExpectCommit()
+			},
+		},
+		{
+			name: "returns ErrDeletionRequestPending when a deletion request is pending",
+			expectations: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectBeginTx(pgx.TxOptions{})
+				pool.ExpectQuery(expectedSelectSQL).WithArgs(1).WillReturnRows(deletionRow(pool))
+				pool.ExpectRollback()
+			},
+			wantErr: services.ErrDeletionRequestPending,
+		},
+		{
+			name: "returns ErrNoPendingRequest when no request exists",
+			expectations: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectBeginTx(pgx.TxOptions{})
+				pool.ExpectQuery(expectedSelectSQL).WithArgs(1).WillReturnRows(
+					pool.NewRows(analysisRequestRowColumns()),
+				)
+				pool.ExpectRollback()
+			},
+			wantErr: services.ErrNoPendingRequest,
+		},
+		{
+			name: "wraps BeginTx errors",
+			expectations: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectBeginTx(pgx.TxOptions{}).WillReturnError(beginTxErr)
+			},
+			wantErrContains: "beginning transaction:",
+		},
+		{
+			name: "propagates SELECT errors within the transaction",
+			expectations: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectBeginTx(pgx.TxOptions{})
+				pool.ExpectQuery(expectedSelectSQL).WithArgs(1).WillReturnError(selectErr)
+				pool.ExpectRollback()
+			},
+			wantErr: selectErr,
+		},
+		{
+			name: "wraps DELETE exec errors",
+			expectations: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectBeginTx(pgx.TxOptions{})
+				pool.ExpectQuery(expectedSelectSQL).WithArgs(1).WillReturnRows(analysisRow(pool))
+				pool.ExpectExec(expectedDeleteSQL).WillReturnError(deleteErr)
+				pool.ExpectRollback()
+			},
+			wantErrContains: "deleting analysis request:",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			store, pool := newTestStore(t)
+			tt.expectations(pool)
+
+			err := store.DeleteAnalysisRequest(ctx)
+			switch {
+			case tt.wantErr != nil:
+				assert.ErrorIs(t, err, tt.wantErr)
+			case tt.wantErrContains != "":
+				assert.ErrorContains(t, err, tt.wantErrContains)
+			default:
+				require.NoError(t, err)
 			}
 			require.NoError(t, pool.ExpectationsWereMet())
 		})

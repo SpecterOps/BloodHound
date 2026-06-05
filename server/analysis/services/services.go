@@ -50,12 +50,17 @@ type RequestedAnalysis struct {
 // ErrNoPendingRequest indicates that there is no analysis request currently pending.
 var ErrNoPendingRequest = errors.New("no pending analysis request")
 
+// ErrDeletionRequestPending is returned when a cancel is attempted against a deletion request.
+// A deletion request cannot be cancelled; only an analysis request may be withdrawn.
+var ErrDeletionRequestPending = errors.New("a deletion request is pending and cannot be cancelled")
+
 // Database describes the persistence capabilities the analysis Service requires. Implementations
 // are expected to translate driver- or ORM-specific not-found errors into appdb-level sentinels
 // so that the Service can map them to its own failure-mode errors.
 type Database interface {
 	GetAnalysisRequest(ctx context.Context) (RequestedAnalysis, error)
 	CreateAnalysisRequest(ctx context.Context, requestedBy string) (RequestedAnalysis, bool, error)
+	DeleteAnalysisRequest(ctx context.Context) error
 }
 
 // Service implements the analysis use cases on top of a Database implementation.
@@ -79,4 +84,8 @@ func (s *Service) GetRequest(ctx context.Context) (RequestedAnalysis, error) {
 // (true) or a request was already pending (false).
 func (s *Service) CreateRequest(ctx context.Context, requestedBy string) (RequestedAnalysis, bool, error) {
 	return s.db.CreateAnalysisRequest(ctx, requestedBy)
+}
+
+func (s *Service) CancelAnalysisRequest(ctx context.Context) error {
+	return s.db.DeleteAnalysisRequest(ctx)
 }

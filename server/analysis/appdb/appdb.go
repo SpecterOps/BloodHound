@@ -28,12 +28,18 @@ import (
 	"github.com/specterops/bloodhound/server/analysis/services"
 )
 
-// pgxQuerier is the minimal pgx surface the analysis Store relies on. Each
-// appdb package defines its own copy so the abstraction stays scoped to the
-// methods actually exercised here.
-type pgxQuerier interface {
+// queryExecer is the minimal surface satisfied by both *pgxpool.Pool and pgx.Tx.
+// Helpers that must run inside a transaction accept this narrower interface.
+type queryExecer interface {
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+}
+
+// pgxQuerier extends queryExecer with the ability to begin a transaction.
+// Only *pgxpool.Pool satisfies this full interface; pgx.Tx satisfies only queryExecer.
+type pgxQuerier interface {
+	queryExecer
+	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
 }
 
 // analysisRequest is the package-local representation of a row in the analysis_request_switch table.
@@ -73,9 +79,10 @@ func NewStore(db pgxQuerier) *Store {
 	return &Store{db: db}
 }
 
-// GetAnalysisRequest returns the currently pending analysis request, or ErrNotFound when
-// no request is present.
-func (s *Store) GetAnalysisRequest(ctx context.Context) (services.RequestedAnalysis, error) {
+// selectAnalysisRequest runs the SELECT query against the provided querier.
+// It is used by both GetAnalysisRequest and the transactional DeleteAnalysisRequest
+// so that the same logic executes whether or not an outer transaction is present.
+func selectAnalysisRequest(ctx context.Context, querier queryExecer) (services.RequestedAnalysis, error) {
 	var (
 		row  analysisRequest
 		rows pgx.Rows
@@ -97,7 +104,7 @@ func (s *Store) GetAnalysisRequest(ctx context.Context) (services.RequestedAnaly
 
 	sqlQuery, args := selectBuilder.Build()
 
-	rows, err = s.db.Query(ctx, sqlQuery, args...)
+	rows, err = querier.Query(ctx, sqlQuery, args...)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return services.RequestedAnalysis{}, services.ErrNoPendingRequest
 	}
@@ -110,9 +117,15 @@ func (s *Store) GetAnalysisRequest(ctx context.Context) (services.RequestedAnaly
 		return services.RequestedAnalysis{}, services.ErrNoPendingRequest
 	}
 	if err != nil {
-		return services.RequestedAnalysis{}, fmt.Errorf("reading rows: %s", err)
+		return services.RequestedAnalysis{}, fmt.Errorf("reading rows: %w", err)
 	}
 	return toRequestedAnalysis(row), nil
+}
+
+// GetAnalysisRequest returns the currently pending analysis request, or ErrNoPendingRequest when
+// no request is present.
+func (s *Store) GetAnalysisRequest(ctx context.Context) (services.RequestedAnalysis, error) {
+	return selectAnalysisRequest(ctx, s.db)
 }
 
 // CreateAnalysisRequest atomically inserts a new analysis request for the given user when none
@@ -163,4 +176,46 @@ func (s *Store) CreateAnalysisRequest(ctx context.Context, requestedBy string) (
 	}
 
 	return currentRequest, commandTag.RowsAffected() == 1, nil
+}
+
+// DeleteAnalysisRequest removes the currently pending analysis request within a transaction.
+// The row is first read under the transaction to guard against concurrent modifications.
+// If the pending request is a deletion request, ErrDeletionRequestPending is returned and
+// nothing is deleted; only an analysis request may be cancelled.
+func (s *Store) DeleteAnalysisRequest(ctx context.Context) error {
+	var (
+		tx             pgx.Tx
+		currentRequest services.RequestedAnalysis
+		err            error
+	)
+
+	tx, err = s.db.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return fmt.Errorf("beginning transaction: %s", err)
+	}
+	defer func() {
+		// Rollback is a no-op when the transaction has already been committed.
+		_ = tx.Rollback(ctx)
+	}()
+
+	currentRequest, err = selectAnalysisRequest(ctx, tx)
+	if err != nil {
+		return err
+	}
+
+	if currentRequest.RequestType == services.RequestedAnalysisTypeDeletion {
+		return services.ErrDeletionRequestPending
+	}
+
+	deleteBuilder := sqlbuilder.PostgreSQL.NewDeleteBuilder()
+	deleteBuilder.DeleteFrom("analysis_request_switch")
+
+	sqlQuery, args := deleteBuilder.Build()
+
+	_, err = tx.Exec(ctx, sqlQuery, args...)
+	if err != nil {
+		return fmt.Errorf("deleting analysis request: %s", err)
+	}
+
+	return tx.Commit(ctx)
 }
