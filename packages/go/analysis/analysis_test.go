@@ -22,7 +22,15 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+)
+
+type analysisErrorCoverage string
+
+const (
+	analysisErrorCoverageClassified analysisErrorCoverage = "classified"
+	analysisErrorCoverageIgnored    analysisErrorCoverage = "ignored"
 )
 
 func TestDispatchAnalysisSteps(t *testing.T) {
@@ -89,8 +97,8 @@ func TestDispatchAnalysisSteps(t *testing.T) {
 				analysisErrs:  &analysisErrors{},
 			})
 
-			require.Equal(t, testCase.expectedCalls, calls)
-			require.Empty(t, pipelineResult.Errors())
+			assert.Equal(t, testCase.expectedCalls, calls)
+			assert.Empty(t, pipelineResult.Errors())
 		})
 	}
 }
@@ -132,7 +140,7 @@ func TestAnalysisPipelineStepShouldRun(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			require.Equal(t, testCase.expected, testCase.pipelineStep.shouldRun(testCase.analysisSteps))
+			assert.Equal(t, testCase.expected, testCase.pipelineStep.shouldRun(testCase.analysisSteps))
 		})
 	}
 }
@@ -159,7 +167,7 @@ func TestAnalysisPipelineStepString(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			require.Equal(t, testCase.expected, testCase.pipelineStep.String())
+			assert.Equal(t, testCase.expected, testCase.pipelineStep.String())
 		})
 	}
 }
@@ -173,7 +181,7 @@ func TestAnalysisPipelineString(t *testing.T) {
 		{name: DataQuality},
 	}
 
-	require.Equal(t, "ad_post_processing,tagging,data_quality", pipeline.String())
+	assert.Equal(t, "ad_post_processing,tagging,data_quality", pipeline.String())
 }
 
 func TestAnalysisPipelineStepResultString(t *testing.T) {
@@ -184,7 +192,7 @@ func TestAnalysisPipelineStepResultString(t *testing.T) {
 		status: pipelineStepStatusSuccess,
 	}
 
-	require.Equal(t, "tagging:success", result.String())
+	assert.Equal(t, "tagging:success", result.String())
 }
 
 func TestAnalysisPipelineResultString(t *testing.T) {
@@ -196,7 +204,7 @@ func TestAnalysisPipelineResultString(t *testing.T) {
 		{name: DataQuality, status: pipelineStepStatusFailed},
 	}
 
-	require.Equal(t, "ad_post_processing:skipped,tagging:success,data_quality:failed", result.String())
+	assert.Equal(t, "ad_post_processing:skipped,tagging:success,data_quality:failed", result.String())
 }
 
 func TestAnalysisPipelineResultErrors(t *testing.T) {
@@ -215,8 +223,8 @@ func TestAnalysisPipelineResultErrors(t *testing.T) {
 	collectedErrors := result.Errors()
 
 	require.Len(t, collectedErrors, 2)
-	require.ErrorIs(t, collectedErrors[0], firstError)
-	require.ErrorIs(t, collectedErrors[1], secondError)
+	assert.ErrorIs(t, collectedErrors[0], firstError)
+	assert.ErrorIs(t, collectedErrors[1], secondError)
 }
 
 func TestAnalysisErrorsEvaluateErrors(t *testing.T) {
@@ -282,11 +290,46 @@ func TestAnalysisErrorsEvaluateErrors(t *testing.T) {
 			err := testCase.errs.evaluateErrors()
 
 			if testCase.expectedErr == nil {
-				require.NoError(t, err)
+				assert.NoError(t, err)
 			} else {
-				require.ErrorIs(t, err, testCase.expectedErr)
+				assert.ErrorIs(t, err, testCase.expectedErr)
 			}
 		})
+	}
+}
+
+func TestAnalysisErrorsCoversPipelineSteps(t *testing.T) {
+	t.Parallel()
+
+	var (
+		analysisErrorCoverageByStep = map[string]analysisErrorCoverage{
+			"ad_post_processing":    analysisErrorCoverageClassified,
+			"azure_post_processing": analysisErrorCoverageClassified,
+			"tagging":               analysisErrorCoverageClassified,
+			DataQuality:             analysisErrorCoverageClassified,
+		}
+		allowedCoverageValues = map[analysisErrorCoverage]struct{}{
+			analysisErrorCoverageClassified: {},
+			analysisErrorCoverageIgnored:    {},
+		}
+		pipelineStepNames = map[string]struct{}{}
+	)
+
+	for _, pipelineStep := range newPipeline() {
+		pipelineStepName := pipelineStep.String()
+		coverage, present := analysisErrorCoverageByStep[pipelineStepName]
+
+		if !assert.True(t, present, "BHCE pipeline step %q must be added to analysisErrors coverage or explicitly marked as %q", pipelineStepName, analysisErrorCoverageIgnored) {
+			continue
+		}
+
+		assert.Contains(t, allowedCoverageValues, coverage, "BHCE pipeline step %q has invalid analysisErrors coverage %q", pipelineStepName, coverage)
+
+		pipelineStepNames[pipelineStepName] = struct{}{}
+	}
+
+	for pipelineStepName := range analysisErrorCoverageByStep {
+		assert.Contains(t, pipelineStepNames, pipelineStepName, "analysisErrors coverage includes %q, but newPipeline does not", pipelineStepName)
 	}
 }
 
@@ -307,9 +350,9 @@ func TestNewPipelineHandlesAllBHCEAnalysisSteps(t *testing.T) {
 		}
 
 		stepName, present := model.AnalysisStepName(pipelineStep.analysisStep)
-		require.True(t, present, "BHCE pipeline step %d must have an analysis step name", pipelineStep.analysisStep)
-		require.NotContains(t, handledSteps, pipelineStep.analysisStep, "BHCE pipeline handles analysis step %q more than once", stepName)
-		require.NotNil(t, pipelineStep.operation, "BHCE pipeline step %q must have an operation", stepName)
+		assert.True(t, present, "BHCE pipeline step %d must have an analysis step name", pipelineStep.analysisStep)
+		assert.NotContains(t, handledSteps, pipelineStep.analysisStep, "BHCE pipeline handles analysis step %q more than once", stepName)
+		assert.NotNil(t, pipelineStep.operation, "BHCE pipeline step %q must have an operation", stepName)
 
 		handledSteps[pipelineStep.analysisStep] = stepName
 	}
@@ -318,7 +361,7 @@ func TestNewPipelineHandlesAllBHCEAnalysisSteps(t *testing.T) {
 		step := model.AnalysisStep(stepBits)
 		stepName, present := model.AnalysisStepName(step)
 
-		require.True(t, present, "analysis step %d must have a name", step)
+		assert.True(t, present, "analysis step %d must have a name", step)
 
 		if _, handled := handledSteps[step]; handled {
 			continue
@@ -328,15 +371,15 @@ func TestNewPipelineHandlesAllBHCEAnalysisSteps(t *testing.T) {
 			continue
 		}
 
-		require.Failf(t, "missing BHCE pipeline step", "analysis step %q must be handled by newPipeline or listed as unsupported", stepName)
+		assert.Failf(t, "missing BHCE pipeline step", "analysis step %q must be handled by newPipeline or listed as unsupported", stepName)
 	}
 
 	for unsupportedStep, reason := range unsupportedSteps {
 		stepName, present := model.AnalysisStepName(unsupportedStep)
 
-		require.True(t, present, "unsupported BHCE analysis step %d must have a name", unsupportedStep)
-		require.True(t, model.AnalysisStepsFull().Has(unsupportedStep), "unsupported BHCE analysis step %q must be part of full analysis", stepName)
-		require.NotContains(t, handledSteps, unsupportedStep, "unsupported BHCE analysis step %q is also handled by newPipeline; remove the unsupported entry: %s", stepName, reason)
+		assert.True(t, present, "unsupported BHCE analysis step %d must have a name", unsupportedStep)
+		assert.True(t, model.AnalysisStepsFull().Has(unsupportedStep), "unsupported BHCE analysis step %q must be part of full analysis", stepName)
+		assert.NotContains(t, handledSteps, unsupportedStep, "unsupported BHCE analysis step %q is also handled by newPipeline; remove the unsupported entry: %s", stepName, reason)
 	}
 }
 
@@ -349,7 +392,7 @@ func TestNewPipelineStepsAreRunnable(t *testing.T) {
 			hasAnalysisStep = pipelineStep.analysisStep != 0
 		)
 
-		require.True(t, hasName || hasAnalysisStep, "BHCE pipeline step %d must have a name or analysis step", index)
-		require.NotNil(t, pipelineStep.operation, "BHCE pipeline step %q must have an operation", pipelineStep.String())
+		assert.True(t, hasName || hasAnalysisStep, "BHCE pipeline step %d must have a name or analysis step", index)
+		assert.NotNil(t, pipelineStep.operation, "BHCE pipeline step %q must have an operation", pipelineStep.String())
 	}
 }
