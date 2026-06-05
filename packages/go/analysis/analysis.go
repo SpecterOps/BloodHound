@@ -339,7 +339,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		"Running Analysis Operations",
 		slog.String("namespace", "analysis"),
 		slog.String("fn", "RunAnalysisOperations"),
-		slog.Int("requested_analysis_steps", analysisSteps.Bits()),
+		slog.Int("analysis_steps_bits", analysisSteps.Bits()),
 	)
 
 	collectedErrors := pipeline.dispatchAnalysisSteps(ctx, db, graphDB, analysisSteps)
