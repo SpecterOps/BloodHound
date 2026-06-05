@@ -148,7 +148,7 @@ func TestVersion_930_Migration(t *testing.T) {
 		err := migrations.Version_930_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
 		require.NoError(t, err)
 
-		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context, nil)
+		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context)
 		require.NoError(t, err)
 
 		var backfilledKind *model.CustomNodeKind
@@ -193,7 +193,7 @@ func TestVersion_930_Migration(t *testing.T) {
 		err = migrations.Version_930_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
 		require.NoError(t, err)
 
-		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context, nil)
+		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context)
 		require.NoError(t, err)
 
 		var preExistingCount int
@@ -230,7 +230,7 @@ func TestVersion_930_Migration(t *testing.T) {
 		err = migrations.Version_930_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
 		require.NoError(t, err)
 
-		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context, nil)
+		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context)
 		require.NoError(t, err)
 
 		for _, customNodeKind := range customNodeKinds {
@@ -260,7 +260,7 @@ func TestVersion_930_Migration(t *testing.T) {
 		err = migrations.Version_930_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
 		require.NoError(t, err)
 
-		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context, nil)
+		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context)
 		require.NoError(t, err)
 
 		for _, customNodeKind := range customNodeKinds {
