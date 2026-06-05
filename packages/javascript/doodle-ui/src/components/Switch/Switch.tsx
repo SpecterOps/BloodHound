@@ -20,7 +20,7 @@ import { forwardRef } from 'react';
 import { cn } from '../utils';
 
 const switchWrapperStyles = cva(
-    'inline-flex items-center rounded-sm py-1 px-0.5 gap-2 focus-within:ring-2 focus-within:ring-secondary'
+    'inline-flex items-center rounded-sm py-1 px-0.5 gap-1 focus-within:ring-2 focus-within:ring-secondary'
 );
 
 const switchRootStyles = cva(
@@ -52,10 +52,11 @@ type SwitchProps = Omit<React.ComponentPropsWithoutRef<typeof SwitchPrimitives.R
     checked: boolean;
     label?: string;
     labelPosition?: 'left' | 'right';
+    labelClassName?: string;
 };
 
 const Switch = forwardRef<React.ElementRef<typeof SwitchPrimitives.Root>, SwitchProps>(
-    ({ className, disabled, id, label, labelPosition = 'right', ...props }, ref) => {
+    ({ className, disabled, id, label, labelPosition = 'right', labelClassName, ...props }, ref) => {
         const ariaLabel = label ?? 'switch';
         const generatedId = React.useId();
         const switchId = id ?? generatedId;
@@ -63,7 +64,14 @@ const Switch = forwardRef<React.ElementRef<typeof SwitchPrimitives.Root>, Switch
         return (
             <div className={cn(switchWrapperStyles(), label && 'py-0')}>
                 {labelPosition === 'left' && label && (
-                    <label className={LabelVariants({ position: 'left', disabled })} htmlFor={switchId}>
+                    <label
+                        data-state={props.checked ? 'checked' : 'unchecked'}
+                        className={cn(
+                            LabelVariants({ position: 'left', disabled }),
+                            'data-[state=checked]:font-medium',
+                            labelClassName
+                        )}
+                        htmlFor={switchId}>
                         {label}
                     </label>
                 )}
@@ -79,7 +87,14 @@ const Switch = forwardRef<React.ElementRef<typeof SwitchPrimitives.Root>, Switch
                 </SwitchPrimitives.Root>
 
                 {labelPosition !== 'left' && label && (
-                    <label className={LabelVariants({ position: 'right', disabled })} htmlFor={switchId}>
+                    <label
+                        data-state={props.checked ? 'checked' : 'unchecked'}
+                        className={cn(
+                            LabelVariants({ position: 'right', disabled }),
+                            'data-[state=checked]:font-medium',
+                            labelClassName
+                        )}
+                        htmlFor={switchId}>
                         {label}
                     </label>
                 )}

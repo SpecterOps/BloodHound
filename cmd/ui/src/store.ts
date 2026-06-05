@@ -72,6 +72,8 @@ type PersistedState = {
             selectedExploreTableColumns: GlobalViewState['selectedExploreTableColumns'];
             pinnedExploreTableColumns?: string[];
             timeoutSetting: GlobalViewState['timeoutSetting'];
+            isExploreGraphHighlight: GlobalViewState['isExploreGraphHighlight'];
+            isExploreGraphLabelClip: GlobalViewState['isExploreGraphLabelClip'];
         };
     };
 };
@@ -123,6 +125,8 @@ store.subscribe(
                     selectedExploreTableColumns: state.global.view.selectedExploreTableColumns,
                     pinnedExploreTableColumns: state.global.view.pinnedExploreTableColumns,
                     timeoutSetting: state.global.view.timeoutSetting,
+                    isExploreGraphHighlight: state.global.view.isExploreGraphHighlight,
+                    isExploreGraphLabelClip: state.global.view.isExploreGraphLabelClip,
                 },
             },
         });
