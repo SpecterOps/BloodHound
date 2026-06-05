@@ -40,7 +40,7 @@ export const NoteCell = ({ row }: { row: { original: HistoryItem } }) => {
                     <span>
                         <Button
                             aria-label={tip}
-                            variant={'text'}
+                            variant='text'
                             className='disabled:opacity-25'
                             onClick={handleClick}
                             disabled={!note}>
