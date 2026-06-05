@@ -269,8 +269,6 @@ func (s analysisPipeline) dispatchAnalysisSteps(run analysisPipelineRun) analysi
 				status, errs := pipelineStep.operation(run.ctx, run.db, run.graphDB)
 				pipelineStepResult.status = status
 				pipelineStepResult.errors = errs
-			} else {
-				pipelineStepResult.status = operationStatusSuccess
 			}
 		}
 

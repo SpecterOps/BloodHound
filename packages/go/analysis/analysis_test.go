@@ -18,6 +18,7 @@ package analysis
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -95,6 +96,201 @@ func TestDispatchAnalysisSteps(t *testing.T) {
 	}
 }
 
+func TestAnalysisPipelineStepShouldRun(t *testing.T) {
+	t.Parallel()
+
+	for _, testCase := range []struct {
+		name          string
+		pipelineStep  analysisPipelineStep
+		analysisSteps model.AnalysisSteps
+		expected      bool
+	}{
+		{
+			name:          "non selectable step always runs",
+			pipelineStep:  analysisPipelineStep{name: DataQuality},
+			analysisSteps: model.AnalysisSteps{},
+			expected:      true,
+		},
+		{
+			name:          "selected step runs",
+			pipelineStep:  analysisPipelineStep{analysisStep: model.AnalysisStepTagging()},
+			analysisSteps: model.AnalysisStepsNoPostProcessing(),
+			expected:      true,
+		},
+		{
+			name:          "unselected step does not run",
+			pipelineStep:  analysisPipelineStep{analysisStep: model.AnalysisStepADPostProcessing()},
+			analysisSteps: model.AnalysisStepsNoPostProcessing(),
+			expected:      false,
+		},
+		{
+			name:          "selected full-analysis step runs",
+			pipelineStep:  analysisPipelineStep{analysisStep: model.AnalysisStepAzurePostProcessing()},
+			analysisSteps: model.AnalysisStepsFull(),
+			expected:      true,
+		},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			require.Equal(t, testCase.expected, testCase.pipelineStep.shouldRun(testCase.analysisSteps))
+		})
+	}
+}
+
+func TestAnalysisPipelineStepString(t *testing.T) {
+	t.Parallel()
+
+	for _, testCase := range []struct {
+		name         string
+		pipelineStep analysisPipelineStep
+		expected     string
+	}{
+		{
+			name:         "known analysis step uses model step name",
+			pipelineStep: analysisPipelineStep{analysisStep: model.AnalysisStepTagging(), name: "ignored"},
+			expected:     "tagging",
+		},
+		{
+			name:         "non selectable step uses explicit name",
+			pipelineStep: analysisPipelineStep{name: DataQuality},
+			expected:     DataQuality,
+		},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			require.Equal(t, testCase.expected, testCase.pipelineStep.String())
+		})
+	}
+}
+
+func TestAnalysisPipelineString(t *testing.T) {
+	t.Parallel()
+
+	pipeline := analysisPipeline{
+		{analysisStep: model.AnalysisStepADPostProcessing()},
+		{analysisStep: model.AnalysisStepTagging()},
+		{name: DataQuality},
+	}
+
+	require.Equal(t, "ad_post_processing,tagging,data_quality", pipeline.String())
+}
+
+func TestAnalysisPipelineStepResultString(t *testing.T) {
+	t.Parallel()
+
+	result := analysisPipelineStepResult{
+		name:   "tagging",
+		status: operationStatusSuccess,
+	}
+
+	require.Equal(t, "tagging:success", result.String())
+}
+
+func TestAnalysisPipelineResultString(t *testing.T) {
+	t.Parallel()
+
+	result := analysisPipelineResult{
+		{name: "ad_post_processing", status: operationStatusSkipped},
+		{name: "tagging", status: operationStatusSuccess},
+		{name: DataQuality, status: operationStatusCompleteFailure},
+	}
+
+	require.Equal(t, "ad_post_processing:skipped,tagging:success,data_quality:complete_failure", result.String())
+}
+
+func TestAnalysisPipelineResultErrors(t *testing.T) {
+	t.Parallel()
+
+	var (
+		firstError  = errors.New("first")
+		secondError = errors.New("second")
+		result      = analysisPipelineResult{
+			{name: "ad_post_processing", errors: []error{firstError}},
+			{name: "tagging"},
+			{name: DataQuality, errors: []error{secondError}},
+		}
+	)
+
+	collectedErrors := result.Errors()
+
+	require.Len(t, collectedErrors, 2)
+	require.ErrorIs(t, collectedErrors[0], firstError)
+	require.ErrorIs(t, collectedErrors[1], secondError)
+}
+
+func TestAnalysisPipelineResultErr(t *testing.T) {
+	t.Parallel()
+
+	for _, testCase := range []struct {
+		name        string
+		result      analysisPipelineResult
+		expectedErr error
+	}{
+		{
+			name: "empty result succeeds",
+		},
+		{
+			name: "all success succeeds",
+			result: analysisPipelineResult{
+				{status: operationStatusSuccess, countsTowardCompleteFailure: true},
+				{status: operationStatusSuccess},
+			},
+		},
+		{
+			name: "skipped steps do not fail",
+			result: analysisPipelineResult{
+				{status: operationStatusSkipped, countsTowardCompleteFailure: true},
+				{status: operationStatusSkipped},
+			},
+		},
+		{
+			name: "all complete-failure-counting steps completely failed",
+			result: analysisPipelineResult{
+				{status: operationStatusCompleteFailure, countsTowardCompleteFailure: true},
+				{status: operationStatusCompleteFailure, countsTowardCompleteFailure: true},
+			},
+			expectedErr: ErrAnalysisFailed,
+		},
+		{
+			name: "complete failure with a successful counting step partially completes",
+			result: analysisPipelineResult{
+				{status: operationStatusCompleteFailure, countsTowardCompleteFailure: true},
+				{status: operationStatusSuccess, countsTowardCompleteFailure: true},
+			},
+			expectedErr: ErrAnalysisPartiallyCompleted,
+		},
+		{
+			name: "partial failure partially completes",
+			result: analysisPipelineResult{
+				{status: operationStatusPartialFailure, countsTowardCompleteFailure: true},
+				{status: operationStatusSuccess, countsTowardCompleteFailure: true},
+			},
+			expectedErr: ErrAnalysisPartiallyCompleted,
+		},
+		{
+			name: "non-counting failure partially completes",
+			result: analysisPipelineResult{
+				{status: operationStatusCompleteFailure},
+			},
+			expectedErr: ErrAnalysisPartiallyCompleted,
+		},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := testCase.result.Err()
+
+			if testCase.expectedErr == nil {
+				require.NoError(t, err)
+			} else {
+				require.ErrorIs(t, err, testCase.expectedErr)
+			}
+		})
+	}
+}
+
 func TestNewPipelineHandlesAllBHCEAnalysisSteps(t *testing.T) {
 	t.Parallel()
 
@@ -114,6 +310,7 @@ func TestNewPipelineHandlesAllBHCEAnalysisSteps(t *testing.T) {
 		stepName, present := model.AnalysisStepName(pipelineStep.analysisStep)
 		require.True(t, present, "BHCE pipeline step %d must have an analysis step name", pipelineStep.analysisStep)
 		require.NotContains(t, handledSteps, pipelineStep.analysisStep, "BHCE pipeline handles analysis step %q more than once", stepName)
+		require.NotNil(t, pipelineStep.operation, "BHCE pipeline step %q must have an operation", stepName)
 
 		handledSteps[pipelineStep.analysisStep] = stepName
 	}
