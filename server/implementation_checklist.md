@@ -4,27 +4,11 @@ Use this checklist when creating a new endpoint or migrating an existing one to 
 
 The pattern is **test-first migration**: write an integration test that documents the current endpoint's contract, complete the migration, then confirm the same test still passes — ideally with only the handler factory line changing.
 
-Commit after each step
+**Commit after each step**
 
 ---
 
-## Step 1 – Write an e2e integration test against the existing endpoint
-
-Before touching any production code, write a test that covers the HTTP contract of the endpoint in its current form. The goal is a green baseline that will still pass after migration.
-
--   [ ] Add a `TestXxx` function to `bhce/server/<feature>/<feature>_e2e_test.go`
--   [ ] Wire the existing (old) handler directly using the `v2.Resources` or equivalent struct, e.g.:
-    ```go
-    func newMyHandler(db *database.BloodhoundDB) http.HandlerFunc {
-        return v2.Resources{DB: db}.MyHandler
-    }
-    ```
--   [ ] Assert every status code and relevant JSON field the endpoint can return (happy path + error paths)
--   [ ] Confirm the test is green: `go test -tags integration ./server/<feature>/...`
-
----
-// TODO: Move this before Step 1
-## Step 2 – Scaffold the feature directory
+## Step 1 – Scaffold the feature directory
 
 See README ["Adding a new feature module"](README.md#adding-a-new-feature-module) → sub-step 1.
 
@@ -46,7 +30,36 @@ See README ["Adding a new feature module"](README.md#adding-a-new-feature-module
 
 ---
 
-## Step 3 – Define domain types and interfaces in `services/services.go`
+## Step 2 – Write an e2e integration test against the existing endpoint
+
+Before touching any production code, write a test that covers the HTTP contract of the endpoint in its current form. The goal is a green baseline that will still pass after migration.
+
+-   [ ] Add a `TestXxx` function to `bhce/server/<feature>/<feature>_e2e_test.go`
+-   [ ] Wire the existing (old) handler directly using the `v2.Resources` or equivalent struct, e.g.:
+    ```go
+    func newMyHandler(db *database.BloodhoundDB) http.HandlerFunc {
+        return v2.Resources{DB: db}.MyHandler
+    }
+    ```
+-   [ ] Assert every status code and relevant JSON field the endpoint can return (happy path + error paths)
+-   [ ] Confirm the test is green: `go test -tags integration ./server/<feature>/...`
+
+---
+
+## Step 3 – Implement persistence in `appdb/appdb.go`
+
+See README ["Step 3"](README.md#3-implement-persistence-in-appdbappdbgo).
+
+-   [ ] Define a package-local `pgxQuerier` interface with only the pgx methods this store calls
+-   [ ] Define a package-local row struct with `db:` tags for `pgx.RowToStructByName`
+-   [ ] Implement `Store` methods using `sqlbuilder.PostgreSQL` for all SQL construction
+-   [ ] Return services-layer sentinels (not driver errors) so callers can use `errors.Is` without importing `appdb`
+-   [ ] Write unit tests in `appdb/appdb_test.go` using `pgxmock`
+-   [ ] Write integration tests in `appdb/appdb_integration_test.go` using `pgtestdb` with `//go:build integration`
+
+---
+
+## Step 4 – Define domain types and interfaces in `services/services.go`
 
 See README ["Step 2"](README.md#2-define-domain-types-and-interfaces-in-servicesservicesgo).
 
@@ -57,18 +70,6 @@ See README ["Step 2"](README.md#2-define-domain-types-and-interfaces-in-services
 -   [ ] Implement a stub for the `Database` methods (no logic, no structs) to satisfy the interface in the service
 -   [ ] Add `//go:generate go tool mockery` at the top of the file
 -   [ ] Write unit tests in `services/services_test.go` using `MockDatabase` (AI can be helpful here)
-
----
-## Step 4 – Implement persistence in `appdb/appdb.go`
-
-See README ["Step 3"](README.md#3-implement-persistence-in-appdbappdbgo).
-
--   [ ] Define a package-local `pgxQuerier` interface with only the pgx methods this store calls
--   [ ] Define a package-local row struct with `db:` tags for `pgx.RowToStructByName`
--   [ ] Implement `Store` methods using `sqlbuilder.PostgreSQL` for all SQL construction
--   [ ] Return services-layer sentinels (not driver errors) so callers can use `errors.Is` without importing `appdb`
--   [ ] Write unit tests in `appdb/appdb_test.go` using `pgxmock`
--   [ ] Write integration tests in `appdb/appdb_integration_test.go` using `pgtestdb` with `//go:build integration`
 
 ---
 
@@ -121,16 +122,6 @@ See README ["Step 8"](README.md#8-add-to-the-module-registry).
 -   [ ] Import the new feature package in `server/modules/modules.go`
 -   [ ] Call `<feature>.Register(deps.Router, deps.Pool)` inside `modules.Register`
 -   [ ] If the feature needs new infrastructure, add it to the `Deps` struct first
-
----
-
-## Step 10 – Add mock targets to `.mockery.yml` and regenerate
-
-See README ["Step 9"](README.md#9-add-mock-targets-to-mockeryyml-and-regenerate).
-
--   [ ] Add entries under `packages:` for `services.Database` and `handlers.MyFeature`
--   [ ] Run `just generate` to produce the mock files
--   [ ] Confirm generated mocks compile: `go build ./server/...`
 
 ---
 
