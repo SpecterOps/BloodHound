@@ -384,7 +384,7 @@ func getLAPSSyncers(tx graph.Transaction, domain *graph.Node, localGroupData *Lo
 	} else if getChangesFilteredNodes, err := ops.FetchStartNodes(getChangesFilteredQuery); err != nil {
 		return nil, err
 	} else {
-		results := CalculateCrossProductNodeSets(localGroupData, getChangesNodes.Slice(), getChangesFilteredNodes.Slice())
+		results := CalculateCrossProductNodeSets(localGroupData, NewCachedPrincipalSet(getChangesNodes.Slice()), NewCachedPrincipalSet(getChangesFilteredNodes.Slice()))
 
 		return results, nil
 	}
@@ -401,7 +401,7 @@ func getDCSyncers(tx graph.Transaction, domain *graph.Node, localGroupData *Loca
 	} else if getChangesAllNodes, err := ops.FetchStartNodes(getChangesAllQuery); err != nil {
 		return nil, err
 	} else {
-		results := CalculateCrossProductNodeSets(localGroupData, getChangesNodes.Slice(), getChangesAllNodes.Slice())
+		results := CalculateCrossProductNodeSets(localGroupData, NewCachedPrincipalSet(getChangesNodes.Slice()), NewCachedPrincipalSet(getChangesAllNodes.Slice()))
 
 		return results, nil
 	}
@@ -606,10 +606,10 @@ func FetchCanRDPEntityBitmapForComputer(computerData *CanRDPComputerData, enforc
 
 		if !uraEnabled {
 			// In cases where we do not need to check for the existence of the RIL privilege, return the cross product of both groups
-			return CalculateCrossProductNodeSets(&computerData.LocalGroupData, []*graph.Node{computerData.RemoteDesktopUsersLocalGroup}, []*graph.Node{computerData.DAUGroup}), nil
+			return CalculateCrossProductNodeSets(&computerData.LocalGroupData, NewCachedPrincipalSet([]*graph.Node{computerData.RemoteDesktopUsersLocalGroup}), NewCachedPrincipalSet([]*graph.Node{computerData.DAUGroup})), nil
 		} else {
 			// Otherwise, return the cross product of all three criteria
-			return CalculateCrossProductNodeSets(&computerData.LocalGroupData, []*graph.Node{computerData.RemoteDesktopUsersLocalGroup}, []*graph.Node{computerData.DAUGroup}, computerData.RemoteInteractiveLogonRightEntities.Slice()), nil
+			return CalculateCrossProductNodeSets(&computerData.LocalGroupData, NewCachedPrincipalSet([]*graph.Node{computerData.RemoteDesktopUsersLocalGroup}), NewCachedPrincipalSet([]*graph.Node{computerData.DAUGroup}), NewCachedPrincipalSet(computerData.RemoteInteractiveLogonRightEntities.Slice())), nil
 		}
 	} else if canSkipURAProcessing {
 		return FetchRemoteDesktopUsersBitmapForComputerWithoutURA(computerData), nil
