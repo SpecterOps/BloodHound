@@ -83,10 +83,9 @@ func (s *BloodhoundDB) HasCollectedGraphDataDeletionRequest(ctx context.Context)
 // To request: Use the helper methods `RequestAnalysis` and `RequestCollectedGraphDataDeletion`
 func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.AnalysisRequest) error {
 	var (
-		now                 = time.Now().UTC()
-		analysisRequestType = model.AnalysisRequestAnalysis
-		args                = []any{
-			analysisRequestType,
+		now  = time.Now().UTC()
+		args = []any{
+			model.AnalysisRequestAnalysis,
 			request.RequestedBy,
 			request.RequestType,
 			now,
@@ -104,7 +103,7 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 		// analysis requests, and existing deletion requests remain unchanged.
 		upsertSQL = `
 			WITH request_constants AS (
-				SELECT ?::text AS analysis_request_type
+				SELECT ?::text AS analysis_request_analysis_type
 			)
 			INSERT INTO analysis_request_switch (
 					requested_by,
@@ -148,9 +147,9 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 					WHEN EXCLUDED.request_type = analysis_request_switch.request_type THEN analysis_request_switch.delete_relationships
 					ELSE EXCLUDED.delete_relationships
 				END
-			WHERE analysis_request_switch.request_type = (SELECT analysis_request_type FROM request_constants)
+			WHERE analysis_request_switch.request_type = (SELECT analysis_request_analysis_type FROM request_constants)
 				AND (
-					EXCLUDED.request_type <> (SELECT analysis_request_type FROM request_constants)
+					EXCLUDED.request_type <> (SELECT analysis_request_analysis_type FROM request_constants)
 					OR COALESCE(analysis_request_switch.analysis_step, 0) <> (COALESCE(analysis_request_switch.analysis_step, 0) | COALESCE(EXCLUDED.analysis_step, 0))
 				);`
 	)
