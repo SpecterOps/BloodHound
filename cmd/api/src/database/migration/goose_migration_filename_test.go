@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -50,7 +50,7 @@ func invalidGooseMigrationFilenames(t *testing.T, migrationFileSystem fs.FS, all
 	for _, directoryEntry := range directoryEntries {
 		migrationFilename := directoryEntry.Name()
 
-		// Only validate SQL migration files in the active BHE migrations directory
+		// Only validate SQL migration files in the active FOSS migrations directory
 		if directoryEntry.IsDir() || !strings.HasSuffix(migrationFilename, ".sql") {
 			continue
 		}
@@ -69,7 +69,7 @@ func invalidGooseMigrationFilenames(t *testing.T, migrationFileSystem fs.FS, all
 	return invalidMigrationFilenames
 }
 
-// TestGooseMigrationFilenameUseCurrentVersionPrefix is utilized to ensure that all migration files are named according
+// TestGooseMigrationFilenamesUseCurrentVersionPrefix is utilized to ensure that all migration files are named according
 // to the set naming convention.
 func TestGooseMigrationFilenamesUseCurrentVersionPrefix(t *testing.T) {
 	invalidMigrationFilenames := invalidGooseMigrationFilenames(t, migration.FossMigrations, fossInitBaseline)
