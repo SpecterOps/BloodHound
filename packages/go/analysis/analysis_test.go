@@ -17,9 +17,12 @@
 package analysis
 
 import (
+	"context"
 	"testing"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
 
@@ -52,35 +55,91 @@ func TestDispatchAnalysisSteps(t *testing.T) {
 
 			var calls []string
 
-			dispatchAnalysisSteps(testCase.analysisSteps, analysisPipeline{
+			pipelineResult := analysisPipeline{
 				{
 					analysisStep: model.AnalysisStepADPostProcessing(),
-					operation: func() {
+					operation: func(context.Context, database.Database, graph.Database) (operationStatus, []error) {
 						calls = append(calls, "ad_post_processing")
+						return operationStatusSuccess, nil
 					},
 				},
 				{
 					analysisStep: model.AnalysisStepAzurePostProcessing(),
-					operation: func() {
+					operation: func(context.Context, database.Database, graph.Database) (operationStatus, []error) {
 						calls = append(calls, "azure_post_processing")
+						return operationStatusSuccess, nil
 					},
 				},
 				{
 					analysisStep: model.AnalysisStepTagging(),
-					operation: func() {
+					operation: func(context.Context, database.Database, graph.Database) (operationStatus, []error) {
 						calls = append(calls, "tagging")
+						return operationStatusSuccess, nil
 					},
 				},
 				{
-					name:      "data_quality",
-					doNotSkip: true,
-					operation: func() {
+					name: DataQuality,
+					operation: func(context.Context, database.Database, graph.Database) (operationStatus, []error) {
 						calls = append(calls, "data_quality")
+						return operationStatusSuccess, nil
 					},
 				},
+			}.dispatchAnalysisSteps(analysisPipelineRun{
+				ctx:           context.Background(),
+				analysisSteps: testCase.analysisSteps,
 			})
 
 			require.Equal(t, testCase.expectedCalls, calls)
+			require.NoError(t, pipelineResult.Err())
 		})
+	}
+}
+
+func TestNewPipelineHandlesAllBHCEAnalysisSteps(t *testing.T) {
+	t.Parallel()
+
+	var (
+		handledSteps = map[model.AnalysisStep]string{}
+		// Generate findings is implemented by the BHE Butterfly pipeline, not the BHCE pipeline.
+		unsupportedSteps = map[model.AnalysisStep]string{
+			model.AnalysisStepGenerateFindings(): "BHE only",
+		}
+	)
+
+	for _, pipelineStep := range newPipeline() {
+		if pipelineStep.analysisStep == 0 {
+			continue
+		}
+
+		stepName, present := model.AnalysisStepName(pipelineStep.analysisStep)
+		require.True(t, present, "BHCE pipeline step %d must have an analysis step name", pipelineStep.analysisStep)
+		require.NotContains(t, handledSteps, pipelineStep.analysisStep, "BHCE pipeline handles analysis step %q more than once", stepName)
+
+		handledSteps[pipelineStep.analysisStep] = stepName
+	}
+
+	for stepBits := 1; stepBits <= model.AnalysisStepsFull().Bits(); stepBits = stepBits << 1 {
+		step := model.AnalysisStep(stepBits)
+		stepName, present := model.AnalysisStepName(step)
+
+		require.True(t, present, "analysis step %d must have a name", step)
+
+		if _, handled := handledSteps[step]; handled {
+			continue
+		}
+
+		if _, unsupported := unsupportedSteps[step]; unsupported {
+			continue
+		}
+
+		require.Failf(t, "missing BHCE pipeline step", "analysis step %q must be handled by newPipeline or listed as unsupported", stepName)
+	}
+
+	for unsupportedStep, reason := range unsupportedSteps {
+		stepName, present := model.AnalysisStepName(unsupportedStep)
+
+		require.True(t, present, "unsupported BHCE analysis step %d must have a name", unsupportedStep)
+		require.True(t, model.AnalysisStepsFull().Has(unsupportedStep), "unsupported BHCE analysis step %q must be part of full analysis", stepName)
+		require.NotContains(t, handledSteps, unsupportedStep, "unsupported BHCE analysis step %q is also handled by newPipeline; remove the unsupported entry: %s", stepName, reason)
 	}
 }

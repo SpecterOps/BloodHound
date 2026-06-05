@@ -142,7 +142,6 @@ type analysisOperation func(context.Context, database.Database, graph.Database) 
 // name is an optional field used for logging pipeline steps,
 // if an analysisPipelineStep does not have a related analysisStep.
 // Otherwise the analysisStep's name is used.
-// If doNotSkip is true, when the pipeline is run, that step is never skipped.
 type analysisPipelineStep struct {
 	name string
 	// analysisStep links this pipeline step to a selectable analysis bit.
@@ -150,8 +149,6 @@ type analysisPipelineStep struct {
 	analysisStep                model.AnalysisStep
 	operation                   analysisOperation
 	countsTowardCompleteFailure bool // used to determine the pipeline failure status
-
-	status operationStatus
 }
 
 func (s analysisPipelineStep) shouldRun(analysisSteps model.AnalysisSteps) bool {
@@ -162,30 +159,83 @@ func (s analysisPipelineStep) shouldRun(analysisSteps model.AnalysisSteps) bool 
 	return analysisSteps.Has(s.analysisStep)
 }
 
+func (s analysisPipelineStep) String() string {
+	name, present := model.AnalysisStepName(s.analysisStep)
+
+	if !present && s.name != "" {
+		name = s.name
+	}
+
+	return name
+}
+
 type analysisPipeline []analysisPipelineStep
 
-// Err() should return ErrAnalysisFailed if:
-// adFailed && azureFailed && agiFailed && dataQualityFailed.
-// Err() should return ErrAnalysisPartiallyCompleted if:
-// adFailed || azureFailed || agiFailed || agtPartiallyFailed || dataQualityFailed
-//
-// Pipeline failed if all countsTowardCompleteFailure steps fail.
-// Pipeline partial success if not all countsTowardCompleteFailure fail or there was a partial failure.
-func (s analysisPipeline) Err() error {
-	var hadSuccessfulOrOnlyPartialFailedMainStep = false
-	var hadAnyFailuresOrPartialFailures = false
+func (s analysisPipeline) String() string {
+	steps := make([]string, 0, len(s))
 
 	for _, pipelineStep := range s {
-		if pipelineStep.countsTowardCompleteFailure && pipelineStep.status != operationStatusCompleteFailure {
-			hadSuccessfulOrOnlyPartialFailedMainStep = true
+		steps = append(steps, pipelineStep.String())
+	}
+
+	return strings.Join(steps, ",")
+}
+
+type analysisPipelineRun struct {
+	ctx           context.Context
+	db            database.Database
+	graphDB       graph.Database
+	analysisSteps model.AnalysisSteps
+}
+
+type analysisPipelineStepResult struct {
+	name                        string
+	status                      operationStatus
+	countsTowardCompleteFailure bool
+	errors                      []error
+}
+
+func (s analysisPipelineStepResult) String() string {
+	return fmt.Sprintf("%s:%s", s.name, s.status)
+}
+
+type analysisPipelineResult []analysisPipelineStepResult
+
+func (s analysisPipelineResult) Errors() []error {
+	var collectedErrors []error
+
+	for _, pipelineStepResult := range s {
+		collectedErrors = append(collectedErrors, pipelineStepResult.errors...)
+	}
+
+	return collectedErrors
+}
+
+// Err() returns ErrAnalysisFailed if every complete-failure-counting step completely failed.
+// Skipped steps do not count as failures because they were intentionally omitted from the requested run.
+// Any partial or complete failure that does not meet the full failure condition returns ErrAnalysisPartiallyCompleted.
+func (s analysisPipelineResult) Err() error {
+	var (
+		hadCompleteFailureCountingStep                      = false
+		hadSuccessfulSkippedOrOnlyPartialFailedCountingStep = false
+		hadAnyFailuresOrPartialFailures                     = false
+	)
+
+	for _, pipelineStepResult := range s {
+		if pipelineStepResult.countsTowardCompleteFailure {
+			hadCompleteFailureCountingStep = true
+
+			if pipelineStepResult.status != operationStatusCompleteFailure {
+				hadSuccessfulSkippedOrOnlyPartialFailedCountingStep = true
+			}
 		}
 
-		if pipelineStep.status != operationStatusSuccess {
+		if pipelineStepResult.status != operationStatusSuccess && pipelineStepResult.status != operationStatusSkipped {
 			hadAnyFailuresOrPartialFailures = true
 		}
 	}
 
-	if !hadSuccessfulOrOnlyPartialFailedMainStep {
+	if hadCompleteFailureCountingStep && !hadSuccessfulSkippedOrOnlyPartialFailedCountingStep {
 		return ErrAnalysisFailed
 	} else if hadAnyFailuresOrPartialFailures {
 		return ErrAnalysisPartiallyCompleted
@@ -194,41 +244,40 @@ func (s analysisPipeline) Err() error {
 	return nil
 }
 
-func (s analysisPipeline) String() string {
+func (s analysisPipelineResult) String() string {
 	steps := make([]string, 0, len(s))
 
-	for _, pipelineStep := range s {
-		name, present := model.AnalysisStepName(pipelineStep.analysisStep)
-
-		if !present && pipelineStep.name != "" {
-			name = pipelineStep.name
-		}
-
-		steps = append(steps, fmt.Sprintf("%s:%s", name, pipelineStep.status))
+	for _, pipelineStepResult := range s {
+		steps = append(steps, pipelineStepResult.String())
 	}
 
 	return strings.Join(steps, ",")
 }
 
-// Modifies the state of the pipeline by setting success/failure/partial failure/skipped status for each step
-func (s *analysisPipeline) dispatchAnalysisSteps(ctx context.Context, db database.Database, graphDB graph.Database, analysisSteps model.AnalysisSteps) []error {
-	var collectedErrors []error
+func (s analysisPipeline) dispatchAnalysisSteps(run analysisPipelineRun) analysisPipelineResult {
+	result := make(analysisPipelineResult, 0, len(s))
 
-	for i := range *s {
-		pipelineStep := &(*s)[i]
-
-		if pipelineStep.shouldRun(analysisSteps) {
-			if pipelineStep.operation != nil {
-				status, errs := pipelineStep.operation(ctx, db, graphDB)
-				pipelineStep.status = status
-				collectedErrors = append(collectedErrors, errs...)
-			}
-		} else {
-			pipelineStep.status = operationStatusSkipped
+	for _, pipelineStep := range s {
+		pipelineStepResult := analysisPipelineStepResult{
+			name:                        pipelineStep.String(),
+			status:                      operationStatusSkipped,
+			countsTowardCompleteFailure: pipelineStep.countsTowardCompleteFailure,
 		}
+
+		if pipelineStep.shouldRun(run.analysisSteps) {
+			if pipelineStep.operation != nil {
+				status, errs := pipelineStep.operation(run.ctx, run.db, run.graphDB)
+				pipelineStepResult.status = status
+				pipelineStepResult.errors = errs
+			} else {
+				pipelineStepResult.status = operationStatusSuccess
+			}
+		}
+
+		result = append(result, pipelineStepResult)
 	}
 
-	return collectedErrors
+	return result
 }
 
 func adPostProcessingOperation(ctx context.Context, db database.Database, graphDB graph.Database) (operationStatus, []error) {
@@ -340,25 +389,32 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		slog.String("namespace", "analysis"),
 		slog.String("fn", "RunAnalysisOperations"),
 		slog.Int("analysis_steps_bits", analysisSteps.Bits()),
+		slog.String("pipeline_steps", pipeline.String()),
 	)
 
-	collectedErrors := pipeline.dispatchAnalysisSteps(ctx, db, graphDB, analysisSteps)
+	pipelineResult := pipeline.dispatchAnalysisSteps(analysisPipelineRun{
+		ctx:           ctx,
+		db:            db,
+		graphDB:       graphDB,
+		analysisSteps: analysisSteps,
+	})
 
 	slog.InfoContext(
 		ctx,
 		"Finished Running Analysis Operations",
 		slog.String("namespace", "analysis"),
 		slog.String("fn", "RunAnalysisOperations"),
-		slog.String("pipeline_status", pipeline.String()),
+		slog.String("pipeline_status", pipelineResult.String()),
 	)
 
+	collectedErrors := pipelineResult.Errors()
 	if len(collectedErrors) > 0 {
 		for _, err := range collectedErrors {
 			slog.ErrorContext(ctx, "Analysis error encountered", attr.Error(err))
 		}
 	}
 
-	if err := pipeline.Err(); err != nil {
+	if err := pipelineResult.Err(); err != nil {
 		return err
 	}
 
