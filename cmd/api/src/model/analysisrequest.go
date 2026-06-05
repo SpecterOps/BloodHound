@@ -150,6 +150,14 @@ func analysisStepsFromBits(bits int) AnalysisSteps {
 	return AnalysisSteps{bits: int32(bits)}
 }
 
+func analysisStepsFromDecodedBits(bits int) (AnalysisSteps, error) {
+	if bits < 0 {
+		return AnalysisSteps{}, fmt.Errorf("analysis steps cannot be negative: %d", bits)
+	}
+
+	return analysisStepsFromBits(bits), nil
+}
+
 // #region DB implementation methods
 // AnalysisSteps implements these methods to easily Read/Write from the DB
 func (s AnalysisSteps) Value() (driver.Value, error) {
@@ -157,31 +165,40 @@ func (s AnalysisSteps) Value() (driver.Value, error) {
 }
 
 func (s *AnalysisSteps) Scan(value any) error {
+	var bits int
+
 	switch typedValue := value.(type) {
 	case nil:
 		*s = AnalysisSteps{}
+		return nil
 	case int64:
-		*s = analysisStepsFromBits(int(typedValue))
+		bits = int(typedValue)
 	case int32:
-		*s = analysisStepsFromBits(int(typedValue))
+		bits = int(typedValue)
 	case int:
-		*s = analysisStepsFromBits(typedValue)
+		bits = typedValue
 	case []byte:
-		bits, err := strconv.Atoi(string(typedValue))
+		parsedBits, err := strconv.Atoi(string(typedValue))
 		if err != nil {
 			return err
 		}
-		*s = analysisStepsFromBits(bits)
+		bits = parsedBits
 	case string:
-		bits, err := strconv.Atoi(typedValue)
+		parsedBits, err := strconv.Atoi(typedValue)
 		if err != nil {
 			return err
 		}
-		*s = analysisStepsFromBits(bits)
+		bits = parsedBits
 	default:
 		return fmt.Errorf("unable to scan analysis steps from %T", value)
 	}
 
+	analysisSteps, err := analysisStepsFromDecodedBits(bits)
+	if err != nil {
+		return err
+	}
+
+	*s = analysisSteps
 	return nil
 }
 
@@ -196,7 +213,12 @@ func (s *AnalysisSteps) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	*s = analysisStepsFromBits(bits)
+	analysisSteps, err := analysisStepsFromDecodedBits(bits)
+	if err != nil {
+		return err
+	}
+
+	*s = analysisSteps
 	return nil
 }
 

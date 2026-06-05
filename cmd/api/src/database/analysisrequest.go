@@ -101,6 +101,8 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 		// On conflict, only existing analysis requests may be updated. Incoming analysis requests merge
 		// step bits while preserving original audit/deletion fields, incoming deletion requests overwrite
 		// analysis requests, and existing deletion requests remain unchanged.
+		// WHERE says: only update if existing row is analysis.
+		// CASE says: if incoming is analysis, merge/preserve; if incoming is deletion, overwrite.
 		upsertSQL = `
 			WITH request_constants AS (
 				SELECT ?::text AS analysis_request_analysis_type

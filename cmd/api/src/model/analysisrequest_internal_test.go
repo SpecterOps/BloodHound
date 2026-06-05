@@ -62,7 +62,7 @@ func TestAnalysisStepsFromMode(t *testing.T) {
 
 			analysisSteps := testCase.mode.AnalysisStepsFromMode()
 
-			require.Equal(t, testCase.expectedSteps, analysisSteps)
+			assert.Equal(t, testCase.expectedSteps, analysisSteps)
 		})
 	}
 }
@@ -72,8 +72,8 @@ func TestAnalysisStepsValue(t *testing.T) {
 
 	value, err := AnalysisStepsNoPostProcessing().Value()
 
-	require.NoError(t, err)
-	require.Equal(t, int32(AnalysisStepsNoPostProcessing().Bits()), value)
+	assert.NoError(t, err)
+	assert.Equal(t, int32(AnalysisStepsNoPostProcessing().Bits()), value)
 }
 
 func TestAnalysisStepsScan(t *testing.T) {
@@ -127,6 +127,31 @@ func TestAnalysisStepsScan(t *testing.T) {
 			value:       "not-a-number",
 			expectError: true,
 		},
+		{
+			name:        "negative int64 returns an error",
+			value:       int64(-1),
+			expectError: true,
+		},
+		{
+			name:        "negative int32 returns an error",
+			value:       int32(-1),
+			expectError: true,
+		},
+		{
+			name:        "negative int returns an error",
+			value:       -1,
+			expectError: true,
+		},
+		{
+			name:        "negative bytes return an error",
+			value:       []byte("-1"),
+			expectError: true,
+		},
+		{
+			name:        "negative string returns an error",
+			value:       "-1",
+			expectError: true,
+		},
 	} {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
@@ -136,12 +161,12 @@ func TestAnalysisStepsScan(t *testing.T) {
 			err := analysisSteps.Scan(testCase.value)
 
 			if testCase.expectError {
-				require.Error(t, err)
+				assert.Error(t, err)
 				return
 			}
 
-			require.NoError(t, err)
-			require.Equal(t, testCase.expected, analysisSteps)
+			assert.NoError(t, err)
+			assert.Equal(t, testCase.expected, analysisSteps)
 		})
 	}
 }
@@ -151,15 +176,18 @@ func TestAnalysisStepsJSON(t *testing.T) {
 
 	payload, err := json.Marshal(analysisStepsFromBits(12))
 	require.NoError(t, err)
-	require.JSONEq(t, "12", string(payload))
+	assert.JSONEq(t, "12", string(payload))
 
 	var analysisSteps AnalysisSteps
 	err = json.Unmarshal(payload, &analysisSteps)
 	require.NoError(t, err)
-	require.Equal(t, analysisStepsFromBits(12), analysisSteps)
+	assert.Equal(t, analysisStepsFromBits(12), analysisSteps)
 
 	err = json.Unmarshal([]byte(`"tagging"`), &analysisSteps)
-	require.Error(t, err)
+	assert.Error(t, err)
+
+	err = json.Unmarshal([]byte(`-1`), &analysisSteps)
+	assert.Error(t, err)
 }
 
 func TestAnalysisStepNames_ContainsNameForEachDefinedBit(t *testing.T) {
@@ -203,7 +231,7 @@ func TestAnalysisStepsMerge(t *testing.T) {
 
 			analysisSteps := testCase.firstSteps.Merge(testCase.secondSteps)
 
-			require.Equal(t, testCase.expectedSteps, analysisSteps)
+			assert.Equal(t, testCase.expectedSteps, analysisSteps)
 		})
 	}
 }
