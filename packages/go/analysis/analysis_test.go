@@ -57,30 +57,30 @@ func TestDispatchAnalysisSteps(t *testing.T) {
 			pipelineResult := analysisPipeline{
 				{
 					analysisStep: model.AnalysisStepADPostProcessing(),
-					operation: func(analysisPipelineRun) (operationStatus, []error) {
+					operation: func(analysisPipelineRun) (pipelineStepStatus, []error) {
 						calls = append(calls, "ad_post_processing")
-						return operationStatusSuccess, nil
+						return pipelineStepStatusSuccess, nil
 					},
 				},
 				{
 					analysisStep: model.AnalysisStepAzurePostProcessing(),
-					operation: func(analysisPipelineRun) (operationStatus, []error) {
+					operation: func(analysisPipelineRun) (pipelineStepStatus, []error) {
 						calls = append(calls, "azure_post_processing")
-						return operationStatusSuccess, nil
+						return pipelineStepStatusSuccess, nil
 					},
 				},
 				{
 					analysisStep: model.AnalysisStepTagging(),
-					operation: func(analysisPipelineRun) (operationStatus, []error) {
+					operation: func(analysisPipelineRun) (pipelineStepStatus, []error) {
 						calls = append(calls, "tagging")
-						return operationStatusSuccess, nil
+						return pipelineStepStatusSuccess, nil
 					},
 				},
 				{
 					name: DataQuality,
-					operation: func(analysisPipelineRun) (operationStatus, []error) {
+					operation: func(analysisPipelineRun) (pipelineStepStatus, []error) {
 						calls = append(calls, "data_quality")
-						return operationStatusSuccess, nil
+						return pipelineStepStatusSuccess, nil
 					},
 				},
 			}.dispatchAnalysisSteps(analysisPipelineRun{
@@ -181,7 +181,7 @@ func TestAnalysisPipelineStepResultString(t *testing.T) {
 
 	result := analysisPipelineStepResult{
 		name:   "tagging",
-		status: operationStatusSuccess,
+		status: pipelineStepStatusSuccess,
 	}
 
 	require.Equal(t, "tagging:success", result.String())
@@ -191,12 +191,12 @@ func TestAnalysisPipelineResultString(t *testing.T) {
 	t.Parallel()
 
 	result := analysisPipelineResult{
-		{name: "ad_post_processing", status: operationStatusSkipped},
-		{name: "tagging", status: operationStatusSuccess},
-		{name: DataQuality, status: operationStatusCompleteFailure},
+		{name: "ad_post_processing", status: pipelineStepStatusSkipped},
+		{name: "tagging", status: pipelineStepStatusSuccess},
+		{name: DataQuality, status: pipelineStepStatusFailed},
 	}
 
-	require.Equal(t, "ad_post_processing:skipped,tagging:success,data_quality:complete_failure", result.String())
+	require.Equal(t, "ad_post_processing:skipped,tagging:success,data_quality:failed", result.String())
 }
 
 func TestAnalysisPipelineResultErrors(t *testing.T) {
