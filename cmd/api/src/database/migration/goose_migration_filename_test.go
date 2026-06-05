@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO: Version numbers as of now are hard coded and will need to be manually updated upon next version release (v10)
 const (
 	gooseMigrationDirectory      = "migrations"
 	currentGooseMigrationVersion = "v9"
