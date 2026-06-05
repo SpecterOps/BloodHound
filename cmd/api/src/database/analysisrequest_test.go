@@ -21,8 +21,10 @@ package database_test
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 
+	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
@@ -51,6 +53,8 @@ func setVariableAnalysisModeFlag(t *testing.T, ctx context.Context, dbInst datab
 }
 
 func TestAnalysisRequest(t *testing.T) {
+	t.Parallel()
+
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
@@ -73,6 +77,8 @@ func TestAnalysisRequest(t *testing.T) {
 }
 
 func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
+	t.Parallel()
+
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
@@ -127,7 +133,140 @@ func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
 
 }
 
+func TestAnalysisRequest_RequestTypePrecedence(t *testing.T) {
+	t.Parallel()
+
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+	)
+
+	setVariableAnalysisModeFlag(t, testCtx, dbInst, true)
+
+	resetState := func(t *testing.T) {
+		t.Helper()
+		require.NoError(t, dbInst.DeleteAnalysisRequest(testCtx))
+	}
+
+	deletionRequest := func(requestedBy string) model.AnalysisRequest {
+		return model.AnalysisRequest{
+			RequestType:           model.AnalysisRequestDeletion,
+			RequestedBy:           requestedBy,
+			DeleteAllGraph:        true,
+			DeleteSourcelessGraph: true,
+			DeleteSourceKinds:     pq.StringArray{"source-kind-" + requestedBy},
+			DeleteRelationships:   pq.StringArray{"relationship-" + requestedBy},
+		}
+	}
+
+	t.Run("deletion request is queued when no request exists", func(t *testing.T) {
+		resetState(t)
+
+		require.NoError(t, dbInst.RequestCollectedGraphDataDeletion(testCtx, deletionRequest("deleter")))
+
+		queued, found := dbInst.HasCollectedGraphDataDeletionRequest(testCtx)
+		require.True(t, found)
+		require.Equal(t, model.AnalysisRequestDeletion, queued.RequestType)
+		require.Equal(t, "deleter", queued.RequestedBy)
+		require.True(t, queued.DeleteAllGraph)
+		require.True(t, queued.DeleteSourcelessGraph)
+		require.Equal(t, pq.StringArray{"source-kind-deleter"}, queued.DeleteSourceKinds)
+		require.Equal(t, pq.StringArray{"relationship-deleter"}, queued.DeleteRelationships)
+		require.False(t, queued.RequestedAt.IsZero())
+	})
+
+	t.Run("deletion request overwrites queued analysis request", func(t *testing.T) {
+		resetState(t)
+
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "tag-editor", model.AnalysisModeNoPostProcessing))
+		require.NoError(t, dbInst.RequestCollectedGraphDataDeletion(testCtx, deletionRequest("deleter")))
+
+		queued, found := dbInst.HasCollectedGraphDataDeletionRequest(testCtx)
+		require.True(t, found)
+		require.Equal(t, model.AnalysisRequestDeletion, queued.RequestType)
+		require.Equal(t, "deleter", queued.RequestedBy)
+		require.Equal(t, pq.StringArray{"source-kind-deleter"}, queued.DeleteSourceKinds)
+		require.Equal(t, pq.StringArray{"relationship-deleter"}, queued.DeleteRelationships)
+	})
+
+	t.Run("analysis request does not overwrite queued deletion request", func(t *testing.T) {
+		resetState(t)
+
+		require.NoError(t, dbInst.RequestCollectedGraphDataDeletion(testCtx, deletionRequest("deleter")))
+		original, found := dbInst.HasCollectedGraphDataDeletionRequest(testCtx)
+		require.True(t, found)
+
+		require.NoError(t, dbInst.RequestAnalysis(testCtx, "admin", model.AnalysisModeFull))
+
+		queued, found := dbInst.HasCollectedGraphDataDeletionRequest(testCtx)
+		require.True(t, found)
+		require.Equal(t, original.RequestedBy, queued.RequestedBy)
+		require.Equal(t, original.RequestedAt, queued.RequestedAt)
+		require.Equal(t, original.DeleteSourceKinds, queued.DeleteSourceKinds)
+		require.Equal(t, original.DeleteRelationships, queued.DeleteRelationships)
+	})
+
+	t.Run("deletion request does not overwrite queued deletion request", func(t *testing.T) {
+		resetState(t)
+
+		require.NoError(t, dbInst.RequestCollectedGraphDataDeletion(testCtx, deletionRequest("first-deleter")))
+		original, found := dbInst.HasCollectedGraphDataDeletionRequest(testCtx)
+		require.True(t, found)
+
+		require.NoError(t, dbInst.RequestCollectedGraphDataDeletion(testCtx, deletionRequest("second-deleter")))
+
+		queued, found := dbInst.HasCollectedGraphDataDeletionRequest(testCtx)
+		require.True(t, found)
+		require.Equal(t, original.RequestedBy, queued.RequestedBy)
+		require.Equal(t, original.RequestedAt, queued.RequestedAt)
+		require.Equal(t, original.DeleteSourceKinds, queued.DeleteSourceKinds)
+		require.Equal(t, original.DeleteRelationships, queued.DeleteRelationships)
+	})
+}
+
+func TestAnalysisRequest_ConcurrentAnalysisRequestsMerge(t *testing.T) {
+	t.Parallel()
+
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+		errs    = make(chan error, 20)
+		wg      sync.WaitGroup
+	)
+
+	setVariableAnalysisModeFlag(t, testCtx, dbInst, true)
+	require.NoError(t, dbInst.DeleteAnalysisRequest(testCtx))
+
+	for i := 0; i < 20; i++ {
+		wg.Add(1)
+
+		go func(index int) {
+			defer wg.Done()
+
+			analysisMode := model.AnalysisModeNoPostProcessing
+			if index%2 == 0 {
+				analysisMode = model.AnalysisModeFull
+			}
+
+			errs <- dbInst.RequestAnalysis(testCtx, "requester", analysisMode)
+		}(i)
+	}
+
+	wg.Wait()
+	close(errs)
+
+	for err := range errs {
+		require.NoError(t, err)
+	}
+
+	queued, err := dbInst.GetAnalysisRequest(testCtx)
+	require.NoError(t, err)
+	require.Equal(t, model.AnalysisStepsFull(), queued.AnalysisSteps)
+}
+
 func TestAnalysisRequest_DisabledVariableAnalysisModeQueuesFullAnalysis(t *testing.T) {
+	t.Parallel()
+
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)

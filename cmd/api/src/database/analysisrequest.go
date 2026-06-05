@@ -83,8 +83,10 @@ func (s *BloodhoundDB) HasCollectedGraphDataDeletionRequest(ctx context.Context)
 // To request: Use the helper methods `RequestAnalysis` and `RequestCollectedGraphDataDeletion`
 func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.AnalysisRequest) error {
 	var (
-		now  = time.Now().UTC()
-		args = []any{
+		now                 = time.Now().UTC()
+		analysisRequestType = model.AnalysisRequestAnalysis
+		args                = []any{
+			analysisRequestType,
 			request.RequestedBy,
 			request.RequestType,
 			now,
@@ -95,47 +97,65 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 			pq.StringArray(request.DeleteRelationships),
 		}
 
-		insertSQL = `
-		INSERT INTO analysis_request_switch (
-			requested_by,
-			request_type,
-			requested_at,
-			analysis_step,
-			delete_all_graph,
-			delete_sourceless_graph,
-			delete_source_kinds,
-			delete_relationships
-		)
-		VALUES (?, ?, ?, ?, ?, ?, ?::text[], ?::text[]);`
-		updateSQL = `UPDATE analysis_request_switch
-		SET
-			requested_by = ?,
-			request_type = ?,
-			requested_at = ?,
-			analysis_step = ?,
-			delete_all_graph = ?,
-			delete_sourceless_graph = ?,
-			delete_source_kinds = ?::text[],
-			delete_relationships = ?::text[];`
+		// This upsert keeps the singleton request row atomic under concurrent requests.
+		// The CTE passes the analysis request type once so the SQL does not hard-code the model value.
+		// On conflict, only existing analysis requests may be updated. Incoming analysis requests merge
+		// step bits while preserving original audit/deletion fields, incoming deletion requests overwrite
+		// analysis requests, and existing deletion requests remain unchanged.
+		upsertSQL = `
+			WITH request_constants AS (
+				SELECT ?::text AS analysis_request_type
+			)
+			INSERT INTO analysis_request_switch (
+					requested_by,
+					request_type,
+					requested_at,
+					analysis_step,
+					delete_all_graph,
+					delete_sourceless_graph,
+					delete_source_kinds,
+					delete_relationships
+				)
+			VALUES (?, ?, ?, ?, ?, ?, ?::text[], ?::text[])
+			ON CONFLICT (singleton) DO UPDATE
+			SET
+				requested_by = CASE
+					WHEN EXCLUDED.request_type = analysis_request_switch.request_type THEN analysis_request_switch.requested_by
+					ELSE EXCLUDED.requested_by
+				END,
+				request_type = EXCLUDED.request_type,
+				requested_at = CASE
+					WHEN EXCLUDED.request_type = analysis_request_switch.request_type THEN analysis_request_switch.requested_at
+					ELSE EXCLUDED.requested_at
+				END,
+				analysis_step = CASE
+					WHEN EXCLUDED.request_type = analysis_request_switch.request_type THEN COALESCE(analysis_request_switch.analysis_step, 0) | COALESCE(EXCLUDED.analysis_step, 0)
+					ELSE EXCLUDED.analysis_step
+				END,
+				delete_all_graph = CASE
+					WHEN EXCLUDED.request_type = analysis_request_switch.request_type THEN analysis_request_switch.delete_all_graph
+					ELSE EXCLUDED.delete_all_graph
+				END,
+				delete_sourceless_graph = CASE
+					WHEN EXCLUDED.request_type = analysis_request_switch.request_type THEN analysis_request_switch.delete_sourceless_graph
+					ELSE EXCLUDED.delete_sourceless_graph
+				END,
+				delete_source_kinds = CASE
+					WHEN EXCLUDED.request_type = analysis_request_switch.request_type THEN analysis_request_switch.delete_source_kinds
+					ELSE EXCLUDED.delete_source_kinds
+				END,
+				delete_relationships = CASE
+					WHEN EXCLUDED.request_type = analysis_request_switch.request_type THEN analysis_request_switch.delete_relationships
+					ELSE EXCLUDED.delete_relationships
+				END
+			WHERE analysis_request_switch.request_type = (SELECT analysis_request_type FROM request_constants)
+				AND (
+					EXCLUDED.request_type <> (SELECT analysis_request_type FROM request_constants)
+					OR COALESCE(analysis_request_switch.analysis_step, 0) <> (COALESCE(analysis_request_switch.analysis_step, 0) | COALESCE(EXCLUDED.analysis_step, 0))
+				);`
 	)
-	if analysisRequest, err := s.GetAnalysisRequest(ctx); err != nil && !errors.Is(err, ErrNotFound) {
-		return err
-	} else if errors.Is(err, ErrNotFound) {
-		// No request exists; insert a new one with all relevant columns.
-		return s.db.Exec(insertSQL, args...).Error
-	} else if analysisRequest.RequestType == model.AnalysisRequestAnalysis && request.RequestType == model.AnalysisRequestDeletion {
-		// A queued analysis request is overwritten by an incoming deletion request.
-		return s.db.Exec(updateSQL, args...).Error
-	} else if analysisRequest.RequestType == model.AnalysisRequestAnalysis && request.RequestType == model.AnalysisRequestAnalysis {
-		// Merge the requested analysis steps so a subsequent request can only widen the work, never narrow it.
-		// requested_by/requested_at are preserved from the original request.
-		merged := analysisRequest.AnalysisSteps.Merge(request.AnalysisSteps)
-		if merged == analysisRequest.AnalysisSteps {
-			return nil
-		}
-		return s.db.Exec(`UPDATE analysis_request_switch SET analysis_step = ? WHERE request_type = ?;`, merged, model.AnalysisRequestAnalysis).Error
-	}
-	return nil
+
+	return s.db.WithContext(ctx).Exec(upsertSQL, args...).Error
 }
 
 // RequestAnalysis will request an analysis be executed, as long as there isn't an existing analysis request or collected graph data deletion request, then it no-ops
