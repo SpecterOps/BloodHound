@@ -92,8 +92,8 @@ See README ["Step 5"](README.md#5-define-the-handler-interface-and-methods-in-ha
 -   [ ] Implement each `http.HandlerFunc` on `Handlers`:
     -   Extract values from the request
     -   Call the service via the interface
-    -   Map known sentinel errors to the correct HTTP status codes
     -   Write the response using the `responses` package
+-   [ ] Add a package-level `handleXxxError(request, response, err)` helper that maps sentinel errors to HTTP status codes using `errors.Is` — keeps every handler method DRY and makes the error contract visible in one place
 -   [ ] Write unit tests in `handlers/handlers_test.go` using `MockMyFeature`
 
 ---
