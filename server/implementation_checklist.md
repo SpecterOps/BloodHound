@@ -125,7 +125,7 @@ See README ["Step 8"](README.md#8-add-to-the-module-registry).
 
 ---
 
-## Step 10 – Swap the e2e test to use the new handler
+## Step 11 – Swap the e2e test to use the new handler
 
 -   [ ] Update the handler factory in the e2e test to wire the new stack instead of the old handler:
 
