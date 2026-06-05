@@ -21,9 +21,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
 
@@ -59,28 +57,28 @@ func TestDispatchAnalysisSteps(t *testing.T) {
 			pipelineResult := analysisPipeline{
 				{
 					analysisStep: model.AnalysisStepADPostProcessing(),
-					operation: func(context.Context, database.Database, graph.Database) (operationStatus, []error) {
+					operation: func(analysisPipelineRun) (operationStatus, []error) {
 						calls = append(calls, "ad_post_processing")
 						return operationStatusSuccess, nil
 					},
 				},
 				{
 					analysisStep: model.AnalysisStepAzurePostProcessing(),
-					operation: func(context.Context, database.Database, graph.Database) (operationStatus, []error) {
+					operation: func(analysisPipelineRun) (operationStatus, []error) {
 						calls = append(calls, "azure_post_processing")
 						return operationStatusSuccess, nil
 					},
 				},
 				{
 					analysisStep: model.AnalysisStepTagging(),
-					operation: func(context.Context, database.Database, graph.Database) (operationStatus, []error) {
+					operation: func(analysisPipelineRun) (operationStatus, []error) {
 						calls = append(calls, "tagging")
 						return operationStatusSuccess, nil
 					},
 				},
 				{
 					name: DataQuality,
-					operation: func(context.Context, database.Database, graph.Database) (operationStatus, []error) {
+					operation: func(analysisPipelineRun) (operationStatus, []error) {
 						calls = append(calls, "data_quality")
 						return operationStatusSuccess, nil
 					},
@@ -88,10 +86,11 @@ func TestDispatchAnalysisSteps(t *testing.T) {
 			}.dispatchAnalysisSteps(analysisPipelineRun{
 				ctx:           context.Background(),
 				analysisSteps: testCase.analysisSteps,
+				analysisErrs:  &analysisErrors{},
 			})
 
 			require.Equal(t, testCase.expectedCalls, calls)
-			require.NoError(t, pipelineResult.Err())
+			require.Empty(t, pipelineResult.Errors())
 		})
 	}
 }
@@ -220,59 +219,59 @@ func TestAnalysisPipelineResultErrors(t *testing.T) {
 	require.ErrorIs(t, collectedErrors[1], secondError)
 }
 
-func TestAnalysisPipelineResultErr(t *testing.T) {
+func TestAnalysisErrorsEvaluateErrors(t *testing.T) {
 	t.Parallel()
 
 	for _, testCase := range []struct {
 		name        string
-		result      analysisPipelineResult
+		errs        analysisErrors
 		expectedErr error
 	}{
 		{
-			name: "empty result succeeds",
+			name: "no errors succeeds",
 		},
 		{
-			name: "all success succeeds",
-			result: analysisPipelineResult{
-				{status: operationStatusSuccess, countsTowardCompleteFailure: true},
-				{status: operationStatusSuccess},
-			},
-		},
-		{
-			name: "skipped steps do not fail",
-			result: analysisPipelineResult{
-				{status: operationStatusSkipped, countsTowardCompleteFailure: true},
-				{status: operationStatusSkipped},
-			},
-		},
-		{
-			name: "all complete-failure-counting steps completely failed",
-			result: analysisPipelineResult{
-				{status: operationStatusCompleteFailure, countsTowardCompleteFailure: true},
-				{status: operationStatusCompleteFailure, countsTowardCompleteFailure: true},
+			name: "all full-failure fields failed",
+			errs: analysisErrors{
+				adPost:      true,
+				azurePost:   true,
+				agi:         true,
+				dataQuality: true,
 			},
 			expectedErr: ErrAnalysisFailed,
 		},
 		{
-			name: "complete failure with a successful counting step partially completes",
-			result: analysisPipelineResult{
-				{status: operationStatusCompleteFailure, countsTowardCompleteFailure: true},
-				{status: operationStatusSuccess, countsTowardCompleteFailure: true},
+			name: "ad post failure partially completes",
+			errs: analysisErrors{
+				adPost: true,
 			},
 			expectedErr: ErrAnalysisPartiallyCompleted,
 		},
 		{
-			name: "partial failure partially completes",
-			result: analysisPipelineResult{
-				{status: operationStatusPartialFailure, countsTowardCompleteFailure: true},
-				{status: operationStatusSuccess, countsTowardCompleteFailure: true},
+			name: "azure post failure partially completes",
+			errs: analysisErrors{
+				azurePost: true,
 			},
 			expectedErr: ErrAnalysisPartiallyCompleted,
 		},
 		{
-			name: "non-counting failure partially completes",
-			result: analysisPipelineResult{
-				{status: operationStatusCompleteFailure},
+			name: "agi failure partially completes",
+			errs: analysisErrors{
+				agi: true,
+			},
+			expectedErr: ErrAnalysisPartiallyCompleted,
+		},
+		{
+			name: "agt partial failure partially completes",
+			errs: analysisErrors{
+				agtPartial: true,
+			},
+			expectedErr: ErrAnalysisPartiallyCompleted,
+		},
+		{
+			name: "data quality failure partially completes",
+			errs: analysisErrors{
+				dataQuality: true,
 			},
 			expectedErr: ErrAnalysisPartiallyCompleted,
 		},
@@ -280,7 +279,7 @@ func TestAnalysisPipelineResultErr(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := testCase.result.Err()
+			err := testCase.errs.evaluateErrors()
 
 			if testCase.expectedErr == nil {
 				require.NoError(t, err)
