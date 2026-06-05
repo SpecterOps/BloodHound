@@ -62,6 +62,7 @@ export const TagIdField: FC<{
                             </FormControl>
                             <Button
                                 variant={'text'}
+                                aria-label={`clear ${fieldLabel}`}
                                 disabled={!field.value}
                                 className={cn('w-1/12 p-0', { invisible: !field.value })}
                                 onClick={() => {

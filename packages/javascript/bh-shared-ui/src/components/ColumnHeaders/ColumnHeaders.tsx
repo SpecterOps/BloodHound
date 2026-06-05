@@ -66,6 +66,7 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                 <TooltipTrigger asChild>
                     <div {...rest} data-testid='column-header_sort-button' className={containerClass}>
                         <Button
+                            disabled={disable}
                             aria-label={`Sort by ${title}`}
                             className={cn('p-0 font-semibold text-base hover:no-underline relative', buttonClass)}
                             onClick={onSort}
