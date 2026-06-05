@@ -73,7 +73,7 @@ func TestDispatchAnalysisSteps(t *testing.T) {
 				},
 				{
 					name:      "data_quality",
-					alwaysRun: true,
+					doNotSkip: true,
 					operation: func() {
 						calls = append(calls, "data_quality")
 					},

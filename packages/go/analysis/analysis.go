@@ -128,132 +128,229 @@ var (
 	ErrAnalysisPartiallyCompleted = errors.New("analysis partially completed")
 )
 
-func runAnalysisStepOperation(operation func()) {
-	if operation != nil {
-		operation()
-	}
-}
+type operationStatus string
 
-func dispatchAnalysisSteps(analysisSteps model.AnalysisSteps, pipeline analysisPipeline) {
-	for _, pipelineStep := range pipeline {
-		if analysisSteps.Has(pipelineStep.analysisStep) || pipelineStep.alwaysRun {
-			runAnalysisStepOperation(pipelineStep.operation)
-		}
-	}
-}
+const (
+	operationStatusPartialFailure  = "partial_failure"
+	operationStatusCompleteFailure = "complete_failure"
+	operationStatusSuccess         = "success"
+	operationStatusSkipped         = "skipped"
+)
 
+type analysisOperation func(context.Context, database.Database, graph.Database) (operationStatus, []error)
+
+// name is an optional field used for logging pipeline steps,
+// if an analysisPipelineStep does not have a related analysisStep.
+// Otherwise the analysisStep's name is used.
+// If doNotSkip is true, when the pipeline is run, that step is never skipped.
 type analysisPipelineStep struct {
-	analysisStep model.AnalysisStep
-	operation    func()
-	name         string
-	alwaysRun    bool
+	name string
+	// analysisStep links this pipeline step to a selectable analysis bit.
+	// If analysisStep is zero, the step is not selectable and always runs.
+	analysisStep                model.AnalysisStep
+	operation                   analysisOperation
+	countsTowardCompleteFailure bool // used to determine the pipeline failure status
+
+	status operationStatus
+}
+
+func (s analysisPipelineStep) shouldRun(analysisSteps model.AnalysisSteps) bool {
+	if s.analysisStep == 0 {
+		return true
+	}
+
+	return analysisSteps.Has(s.analysisStep)
 }
 
 type analysisPipeline []analysisPipelineStep
 
+// Err() should return ErrAnalysisFailed if:
+// adFailed && azureFailed && agiFailed && dataQualityFailed.
+// Err() should return ErrAnalysisPartiallyCompleted if:
+// adFailed || azureFailed || agiFailed || agtPartiallyFailed || dataQualityFailed
+//
+// Pipeline failed if all countsTowardCompleteFailure steps fail.
+// Pipeline partial success if not all countsTowardCompleteFailure fail or there was a partial failure.
+func (s analysisPipeline) Err() error {
+	var hadSuccessfulOrOnlyPartialFailedMainStep = false
+	var hadAnyFailuresOrPartialFailures = false
+
+	for _, pipelineStep := range s {
+		if pipelineStep.countsTowardCompleteFailure && pipelineStep.status != operationStatusCompleteFailure {
+			hadSuccessfulOrOnlyPartialFailedMainStep = true
+		}
+
+		if pipelineStep.status != operationStatusSuccess {
+			hadAnyFailuresOrPartialFailures = true
+		}
+	}
+
+	if !hadSuccessfulOrOnlyPartialFailedMainStep {
+		return ErrAnalysisFailed
+	} else if hadAnyFailuresOrPartialFailures {
+		return ErrAnalysisPartiallyCompleted
+	}
+
+	return nil
+}
+
 func (s analysisPipeline) String() string {
-	stepNames := make([]string, 0, len(s))
+	steps := make([]string, 0, len(s))
 
 	for _, pipelineStep := range s {
 		name, present := model.AnalysisStepName(pipelineStep.analysisStep)
 
 		if !present && pipelineStep.name != "" {
-			stepNames = append(stepNames, pipelineStep.name)
-		} else {
-			stepNames = append(stepNames, name)
+			name = pipelineStep.name
 		}
 
+		steps = append(steps, fmt.Sprintf("%s:%s", name, pipelineStep.status))
 	}
 
-	return strings.Join(stepNames, ",")
+	return strings.Join(steps, ",")
+}
+
+// Modifies the state of the pipeline by setting success/failure/partial failure/skipped status for each step
+func (s *analysisPipeline) dispatchAnalysisSteps(ctx context.Context, db database.Database, graphDB graph.Database, analysisSteps model.AnalysisSteps) []error {
+	var collectedErrors []error
+
+	for i := range *s {
+		pipelineStep := &(*s)[i]
+
+		if pipelineStep.shouldRun(analysisSteps) {
+			if pipelineStep.operation != nil {
+				status, errs := pipelineStep.operation(ctx, db, graphDB)
+				pipelineStep.status = status
+				collectedErrors = append(collectedErrors, errs...)
+			}
+		} else {
+			pipelineStep.status = operationStatusSkipped
+		}
+	}
+
+	return collectedErrors
+}
+
+func adPostProcessingOperation(ctx context.Context, db database.Database, graphDB graph.Database) (operationStatus, []error) {
+	var collectedErrors []error
+
+	if ntlmFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureNTLMPostProcessing); err != nil {
+		collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving NTLM Post Processing feature flag: %w", err))
+		return operationStatusCompleteFailure, collectedErrors
+	} else if stats, err := adAnalysis.Post(ctx, graphDB, appcfg.GetCitrixRDPSupport(ctx, db), ntlmFlag.Enabled); err != nil {
+		collectedErrors = append(collectedErrors, fmt.Errorf("error during ad post: %w", err))
+		return operationStatusCompleteFailure, collectedErrors
+	} else {
+		stats.LogStats()
+	}
+
+	return operationStatusSuccess, collectedErrors
+}
+
+func azurePostProcessingOperation(ctx context.Context, db database.Database, graphDB graph.Database) (operationStatus, []error) {
+	var collectedErrors []error
+
+	if stats, err := azureAnalysis.Post(ctx, graphDB); err != nil {
+		collectedErrors = append(collectedErrors, fmt.Errorf("error during azure post: %w", err))
+		return operationStatusCompleteFailure, collectedErrors
+	} else {
+		stats.LogStats()
+	}
+
+	return operationStatusSuccess, collectedErrors
 }
 
 // TODO Cleanup tieringEnabled after Tiering GA
-func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration, analysisSteps model.AnalysisSteps) error {
+func taggingOperation(ctx context.Context, db database.Database, graphDB graph.Database) (operationStatus, []error) {
 	var (
 		collectedErrors []error
-		tieringEnabled  = appcfg.GetTieringEnabled(ctx, db)
+		status          operationStatus = operationStatusSuccess
+		tieringEnabled                  = appcfg.GetTieringEnabled(ctx, db)
 	)
 
+	if errs := TagAssetGroupsAndTierZero(ctx, db, graphDB); len(errs) > 0 {
+		for _, err := range errs {
+			collectedErrors = append(collectedErrors, fmt.Errorf("tagging asset groups and tier zero failed: %w", err))
+		}
+
+		if ContainsOnlyCypherSelectorErrors(errs) {
+			status = operationStatusPartialFailure
+		}
+	}
+
+	if !tieringEnabled {
+		if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB, graphschema.GetNodeKindDisplayLabel); err != nil {
+			collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
+			return operationStatusCompleteFailure, collectedErrors
+		}
+	}
+
+	return status, collectedErrors
+}
+
+func dataQualityOperation(ctx context.Context, db database.Database, graphDB graph.Database) (operationStatus, []error) {
+	var collectedErrors []error
+
+	if err := dataquality.SaveDataQuality(ctx, db, graphDB); err != nil {
+		collectedErrors = append(collectedErrors, fmt.Errorf("error saving data quality stat: %v", err))
+		return operationStatusCompleteFailure, collectedErrors
+	}
+
+	return operationStatusSuccess, collectedErrors
+}
+
+const DataQuality = "data_quality"
+
+// The definition of our analysis pipeline
+func newPipeline() analysisPipeline {
+	return analysisPipeline{
+		{
+			analysisStep:                model.AnalysisStepADPostProcessing(),
+			countsTowardCompleteFailure: true,
+			operation:                   adPostProcessingOperation,
+		},
+		{
+			analysisStep:                model.AnalysisStepAzurePostProcessing(),
+			countsTowardCompleteFailure: true,
+			operation:                   azurePostProcessingOperation,
+		},
+		{
+			analysisStep:                model.AnalysisStepTagging(),
+			countsTowardCompleteFailure: false,
+			operation:                   taggingOperation,
+		},
+		{
+			name:                        DataQuality,
+			countsTowardCompleteFailure: true,
+			operation:                   dataQualityOperation,
+		},
+	}
+}
+
+func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration, analysisSteps model.AnalysisSteps) error {
 	if !appcfg.GetVariableAnalysisModeEnabled(ctx, db) {
 		analysisSteps = model.AnalysisStepsFull()
 	}
 
-	var (
-		adFailed           = false
-		azureFailed        = false
-		agiFailed          = false
-		agtPartiallyFailed = false
-		dataQualityFailed  = false
-	)
-
-	pipeline := analysisPipeline{
-		{
-			analysisStep: model.AnalysisStepADPostProcessing(),
-			operation: func() {
-				if ntlmFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureNTLMPostProcessing); err != nil {
-					collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving NTLM Post Processing feature flag: %w", err))
-				} else if stats, err := adAnalysis.Post(ctx, graphDB, appcfg.GetCitrixRDPSupport(ctx, db), ntlmFlag.Enabled); err != nil {
-					collectedErrors = append(collectedErrors, fmt.Errorf("error during ad post: %w", err))
-					adFailed = true
-				} else {
-					stats.LogStats()
-				}
-			},
-		},
-		{
-			analysisStep: model.AnalysisStepAzurePostProcessing(),
-			operation: func() {
-				if stats, err := azureAnalysis.Post(ctx, graphDB); err != nil {
-					collectedErrors = append(collectedErrors, fmt.Errorf("error during azure post: %w", err))
-					azureFailed = true
-				} else {
-					stats.LogStats()
-				}
-			},
-		},
-		{
-			analysisStep: model.AnalysisStepTagging(),
-			operation: func() {
-				if errs := TagAssetGroupsAndTierZero(ctx, db, graphDB); len(errs) > 0 {
-					for _, err := range errs {
-						collectedErrors = append(collectedErrors, fmt.Errorf("tagging asset groups and tier zero failed: %w", err))
-					}
-
-					if ContainsOnlyCypherSelectorErrors(errs) {
-						agtPartiallyFailed = true
-					}
-				}
-
-				if !tieringEnabled {
-					if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB, graphschema.GetNodeKindDisplayLabel); err != nil {
-						collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
-						agiFailed = true
-					}
-				}
-			},
-		},
-		{
-			name:      "data_quality", // TODO: move to constant
-			alwaysRun: true,
-			operation: func() {
-				if err := dataquality.SaveDataQuality(ctx, db, graphDB); err != nil {
-					collectedErrors = append(collectedErrors, fmt.Errorf("error saving data quality stat: %v", err))
-					dataQualityFailed = true
-				}
-			},
-		},
-	}
+	pipeline := newPipeline()
 
 	slog.InfoContext(
 		ctx,
 		"Running Analysis Operations",
 		slog.String("namespace", "analysis"),
 		slog.String("fn", "RunAnalysisOperations"),
-		slog.String("pipeline_steps", pipeline.String()),
+		slog.Int("requested_analysis_steps", analysisSteps.Bits()),
 	)
 
-	dispatchAnalysisSteps(analysisSteps, pipeline)
+	collectedErrors := pipeline.dispatchAnalysisSteps(ctx, db, graphDB, analysisSteps)
+
+	slog.InfoContext(
+		ctx,
+		"Finished Running Analysis Operations",
+		slog.String("namespace", "analysis"),
+		slog.String("fn", "RunAnalysisOperations"),
+		slog.String("pipeline_status", pipeline.String()),
+	)
 
 	if len(collectedErrors) > 0 {
 		for _, err := range collectedErrors {
@@ -261,10 +358,8 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		}
 	}
 
-	if adFailed && azureFailed && agiFailed && dataQualityFailed {
-		return ErrAnalysisFailed
-	} else if adFailed || azureFailed || agiFailed || agtPartiallyFailed || dataQualityFailed {
-		return ErrAnalysisPartiallyCompleted
+	if err := pipeline.Err(); err != nil {
+		return err
 	}
 
 	return nil
