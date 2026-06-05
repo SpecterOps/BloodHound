@@ -18,7 +18,6 @@ package database
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -1350,40 +1349,28 @@ func (s *BloodhoundDB) GetPrimaryDisplayKinds(ctx context.Context) (graphschema.
 	} else if customNodeKinds, err := s.GetCustomNodeKinds(ctx); err != nil {
 		return nil, err
 	} else {
-		var customNames []string
-		var customKindsByName = make(map[string]model.CustomNodeKind)
-		for _, kind := range customNodeKinds {
-			customNames = append(customNames, kind.KindName)
-			customKindsByName[kind.KindName] = kind
-		}
-		// Until work is complete to ensure custom_node_kinds are properly kind backed, this will filter out invalid kinds
-		if kinds, err := s.GetKindsByNames(ctx, customNames...); err != nil && !errors.Is(err, ErrNotFound) {
-			return nil, err
-		} else {
-			var primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
-			for _, kind := range kinds {
-				customKind := customKindsByName[kind.Name]
-				primaryDisplayKinds[kind.ToKind()] = graphschema.DisplayKind{
-					Name: kind.Name,
-					Icon: graphschema.DisplayNodeIcon{
-						Name:  customKind.Config.Icon.Name,
-						Type:  customKind.Config.Icon.Type,
-						Color: customKind.Config.Icon.Color,
-					},
-				}
+		var primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
+		for _, customNodeKind := range customNodeKinds {
+			primaryDisplayKinds[graph.StringKind(customNodeKind.KindName)] = graphschema.DisplayKind{
+				Name: customNodeKind.KindName,
+				Icon: graphschema.DisplayNodeIcon{
+					Name:  customNodeKind.Config.Icon.Name,
+					Type:  customNodeKind.Config.Icon.Type,
+					Color: customNodeKind.Config.Icon.Color,
+				},
 			}
-			for _, kind := range displaySchemaNodeKinds {
-				primaryDisplayKinds[kind.ToKind()] = graphschema.DisplayKind{
-					Name: kind.Name,
-					Icon: graphschema.DisplayNodeIcon{
-						Name:  kind.Icon,
-						Color: kind.IconColor,
-						Type:  graphschema.DisplayNodeTypeFontAwesome,
-					},
-				}
-			}
-			return primaryDisplayKinds, nil
 		}
+		for _, kind := range displaySchemaNodeKinds {
+			primaryDisplayKinds[kind.ToKind()] = graphschema.DisplayKind{
+				Name: kind.Name,
+				Icon: graphschema.DisplayNodeIcon{
+					Name:  kind.Icon,
+					Color: kind.IconColor,
+					Type:  graphschema.DisplayNodeTypeFontAwesome,
+				},
+			}
+		}
+		return primaryDisplayKinds, nil
 	}
 }
 
