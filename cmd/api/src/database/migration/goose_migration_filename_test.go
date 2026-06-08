@@ -45,10 +45,7 @@ func isValidateGooseTimeStamp(s string) bool {
 	}
 
 	_, err := time.Parse(sampleGooseTimeStampLayout, timestampPrefix)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func invalidGooseMigrationFilenames(t *testing.T, migrationFileSystem fs.FS, allowedInitMigrationFilename string) []string {
