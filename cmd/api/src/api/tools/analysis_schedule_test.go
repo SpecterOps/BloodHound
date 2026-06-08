@@ -24,13 +24,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api/tools"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
@@ -179,7 +179,7 @@ func TestToolContainer_SetScheduledAnalysisConfiguration(t *testing.T) {
 		reqBody, _ := json.Marshal(scheduledAnalysisRequest)
 
 		mockDB.EXPECT().SetConfigurationParameter(gomock.Any(), parameterConfig).Return(nil)
-		mockDB.EXPECT().SetNextScheduledAnalysisStartTime(gomock.Any(), time.Time{}).Return(nil)
+		mockDB.EXPECT().SetNextScheduledAnalysisStartTime(gomock.Any(), null.Time{}).Return(nil)
 
 		if req, err := http.NewRequestWithContext(requestCtx, http.MethodPut, endpoint, bytes.NewBuffer(reqBody)); err != nil {
 			t.Fatal(err)
