@@ -42,13 +42,18 @@ const DropdownSelector: FC<{
 
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>
-            <div className='flex-col'>
-                {caption && <Typography variant='caption'>{caption}</Typography>}
+            <div className='flex flex-col'>
+                {caption && (
+                    <Typography variant='caption' id='dropdown-caption'>
+                        {caption}
+                    </Typography>
+                )}
                 <DropdownTrigger
                     open={open}
                     selectedText={selectedText}
                     variant={variant}
                     StartAdornment={StartAdornment}
+                    aria-describedby={caption ? 'dropdown-caption' : undefined}
                 />
             </div>
             <PopoverContent align={align} className={cn(popoverContentStyles, 'w-48', { 'w-64': buttonPrimary })}>
