@@ -24,9 +24,9 @@ import (
 	"os"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bomenc"
+	"github.com/specterops/bloodhound/packages/go/storage"
 	"github.com/specterops/dawgs/util"
 )
 

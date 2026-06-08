@@ -29,8 +29,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/storage"
 )
 
 const (

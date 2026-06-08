@@ -27,12 +27,12 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
-	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/specterops/bloodhound/packages/go/metrics"
+	"github.com/specterops/bloodhound/packages/go/storage"
 )
 
 var ErrInvalidJSON = errors.New("file is not valid json")
@@ -82,6 +82,10 @@ func cleanupTempFile(ctx context.Context, fileService storage.FileService, tempF
 }
 
 func WriteAndValidateFile(ctx context.Context, fileService storage.FileService, fileData io.Reader, prefix string, validationFunc FileValidator) (string, error) {
+	if validationFunc == nil {
+		return "", fmt.Errorf("validation function is required")
+	}
+
 	// Create a pipe: pr (read end) and pw (write end).
 	// Data written to pw can be read from pr.
 	pr, pw := io.Pipe()
@@ -91,17 +95,6 @@ func WriteAndValidateFile(ctx context.Context, fileService storage.FileService, 
 	// and gives the main goroutine a synchronization point to wait for the result.
 	validationErrCh := make(chan error, 1)
 
-func WriteAndValidateFileWithPrefix(fileData io.Reader, location string, tempFilePrefix string, validationFunc FileValidator) (string, error) {
-	if validationFunc == nil {
-		return "", fmt.Errorf("validation function is required")
-	}
-
-	var (
-		tempFile      *os.File
-		tempFileName  string
-		err           error
-		validationErr error
-	)
 	// Start validation in a separate goroutine.
 	// validationFunc reads from pr, writes to io.Discard.
 	// This validates the stream without storing the data twice.

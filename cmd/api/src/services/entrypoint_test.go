@@ -25,7 +25,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/services"
+	storageService "github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/packages/go/storage"
+	storagemocks "github.com/specterops/bloodhound/packages/go/storage/mocks"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -81,7 +83,7 @@ func TestPreMigrationDaemonsResolvesRetainedFileService(t *testing.T) {
 			connections     = bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]{}
 		)
 
-		fileServiceResolver, err := storage.NewFileServiceResolver(map[storage.FileServiceName]storage.FileService{
+		fileServiceResolver, err := storageService.NewFileServiceResolver(map[storage.FileServiceName]storage.FileService{
 			storage.FileServiceIngest: mockFileService,
 		})
 		require.NoError(t, err)
@@ -102,7 +104,7 @@ func TestPreMigrationDaemonsResolvesRetainedFileService(t *testing.T) {
 			connections         = bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]{}
 		)
 
-		fileServiceResolver, err := storage.NewFileServiceResolver(map[storage.FileServiceName]storage.FileService{
+		fileServiceResolver, err := storageService.NewFileServiceResolver(map[storage.FileServiceName]storage.FileService{
 			storage.FileServiceRetained: mockRetainedService,
 		})
 		require.NoError(t, err)
