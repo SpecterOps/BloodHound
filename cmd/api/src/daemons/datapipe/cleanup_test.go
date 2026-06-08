@@ -27,8 +27,8 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
-	storagemocks "github.com/specterops/bloodhound/cmd/api/src/services/storage/mocks"
+	"github.com/specterops/bloodhound/packages/go/storage"
+	storagemocks "github.com/specterops/bloodhound/packages/go/storage/mocks"
 	"go.uber.org/mock/gomock"
 )
 

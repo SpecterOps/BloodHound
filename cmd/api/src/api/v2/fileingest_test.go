@@ -43,9 +43,10 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
-	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
-	storagemocks "github.com/specterops/bloodhound/cmd/api/src/services/storage/mocks"
+	storageServiceMocks "github.com/specterops/bloodhound/cmd/api/src/services/storage/mocks"
 	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/specterops/bloodhound/packages/go/storage"
+	storagemocks "github.com/specterops/bloodhound/packages/go/storage/mocks"
 
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/stretchr/testify/assert"
@@ -493,7 +494,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 		mockDatabase            *dbmocks.MockDatabase
 		mockFileService         *storagemocks.MockFileService
 		trueFileService         storage.FileService
-		mockFileServiceResolver *storagemocks.MockFileServiceResolver
+		mockFileServiceResolver *storageServiceMocks.MockFileServiceResolver
 	}
 	type expected struct {
 		responseBody   string
@@ -840,7 +841,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			mocks := &mock{
 				mockDatabase:            dbmocks.NewMockDatabase(ctrl),
 				mockFileService:         storagemocks.NewMockFileService(ctrl),
-				mockFileServiceResolver: storagemocks.NewMockFileServiceResolver(ctrl),
+				mockFileServiceResolver: storageServiceMocks.NewMockFileServiceResolver(ctrl),
 			}
 
 			if testCase.fileServiceOvrd != nil {

@@ -25,8 +25,8 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
-	storagemocks "github.com/specterops/bloodhound/cmd/api/src/services/storage/mocks"
+	"github.com/specterops/bloodhound/packages/go/storage"
+	storagemocks "github.com/specterops/bloodhound/packages/go/storage/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
