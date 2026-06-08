@@ -28,11 +28,12 @@ import (
 	"github.com/gorilla/mux"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
-	storagemocks "github.com/specterops/bloodhound/cmd/api/src/services/storage/mocks"
+	storageServiceMocks "github.com/specterops/bloodhound/cmd/api/src/services/storage/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	"github.com/specterops/bloodhound/packages/go/storage"
+	storagemocks "github.com/specterops/bloodhound/packages/go/storage/mocks"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -42,7 +43,7 @@ import (
 func TestResources_DownloadCollectorByVersion(t *testing.T) {
 	type mock struct {
 		mockFS                  *storagemocks.MockFileService
-		mockFileServiceResolver *storagemocks.MockFileServiceResolver
+		mockFileServiceResolver *storageServiceMocks.MockFileServiceResolver
 	}
 	type expected struct {
 		responseBody   string
@@ -175,7 +176,7 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			mock := &mock{
 				mockFS:                  storagemocks.NewMockFileService(ctrl),
-				mockFileServiceResolver: storagemocks.NewMockFileServiceResolver(ctrl),
+				mockFileServiceResolver: storageServiceMocks.NewMockFileServiceResolver(ctrl),
 			}
 			testCase.setupMocks(t, mock)
 
@@ -213,7 +214,7 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 	type mock struct {
 		mockFS                  *storagemocks.MockFileService
-		mockFileServiceResolver *storagemocks.MockFileServiceResolver
+		mockFileServiceResolver *storageServiceMocks.MockFileServiceResolver
 	}
 	type expected struct {
 		responseBody   string
@@ -353,7 +354,7 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			mock := &mock{
 				mockFS:                  storagemocks.NewMockFileService(ctrl),
-				mockFileServiceResolver: storagemocks.NewMockFileServiceResolver(ctrl),
+				mockFileServiceResolver: storageServiceMocks.NewMockFileServiceResolver(ctrl),
 			}
 			testCase.setupMocks(t, mock)
 
