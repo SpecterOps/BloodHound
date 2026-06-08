@@ -25,7 +25,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/services"
-	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
+	"github.com/specterops/bloodhound/packages/go/storage"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
