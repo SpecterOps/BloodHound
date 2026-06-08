@@ -14,7 +14,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-FROM docker.io/library/neo4j:4.4.42 as base
+FROM docker.io/library/neo4j:4.4.42 AS base
 
 ARG memconfig
 
