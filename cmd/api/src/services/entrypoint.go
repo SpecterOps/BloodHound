@@ -41,12 +41,13 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
-	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
+	storageService "github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/metricsregistration"
+	"github.com/specterops/bloodhound/packages/go/storage"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -80,9 +81,9 @@ func ConnectDatabases(ctx context.Context, cfg config.Configuration) (bootstrap.
 // are necessary for the application.
 func CreateRuntimeDependencies(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) (bootstrap.RuntimeDependencies, error) {
 	var dependencies = bootstrap.RuntimeDependencies{}
-	if fileServices, err := storage.NewDefaultFileServices(cfg); err != nil {
+	if fileServices, err := storageService.NewDefaultFileServices(cfg); err != nil {
 		return dependencies, fmt.Errorf("failed to initialize file services: %w", err)
-	} else if fileServiceResolver, err := storage.NewFileServiceResolver(fileServices); err != nil {
+	} else if fileServiceResolver, err := storageService.NewFileServiceResolver(fileServices); err != nil {
 		return dependencies, fmt.Errorf("failed to initialize file service resolver: %w", err)
 		// The FileServiceRetained is necessary for the PreMigrationDaemons where it is used in IngestControl for Cleanup.
 		// Checking it here ensures we have the service prior to running the application.
