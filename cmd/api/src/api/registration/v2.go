@@ -354,7 +354,6 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 
 		// Datapipe API
 		routerInst.GET("/api/v2/datapipe/status", resources.GetDatapipeStatus).RequireAuth(),
-		routerInst.DELETE("/api/v2/analysis", resources.CancelAnalysisRequest).RequirePermissions(permissions.AppWriteApplicationConfiguration),
 
 		// Custom Node Management
 		routerInst.GET("/api/v2/custom-nodes", resources.GetCustomNodeKinds).RequireAuth(),
