@@ -28,6 +28,7 @@ import (
 
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/test/must"
@@ -252,7 +253,7 @@ func Test_SetApplicationConfiguration(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to parse rrule: %v", err)
 		}
-		expectedNextAnalysis := rule.After(time.Now(), true)
+		expectedNextAnalysis := null.TimeFrom(rule.After(time.Now(), true))
 
 		mockDB.EXPECT().
 			SetConfigurationParameter(gomock.Any(), expectedParameter).
@@ -296,7 +297,7 @@ func Test_SetApplicationConfiguration(t *testing.T) {
 			Return(nil)
 
 		mockDB.EXPECT().
-			SetNextScheduledAnalysisStartTime(gomock.Any(), time.Time{}).
+			SetNextScheduledAnalysisStartTime(gomock.Any(), null.Time{}).
 			Return(nil)
 
 		reqBody, _ := json.Marshal(scheduledAnalysisRequest)
