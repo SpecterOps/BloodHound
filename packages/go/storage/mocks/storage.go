@@ -229,6 +229,21 @@ func (mr *MockFileServiceMockRecorder) GetFile(ctx, name any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFile", reflect.TypeOf((*MockFileService)(nil).GetFile), ctx, name)
 }
 
+// GetFileInfo mocks base method.
+func (m *MockFileService) GetFileInfo(ctx context.Context, name string) (storage.FileInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFileInfo", ctx, name)
+	ret0, _ := ret[0].(storage.FileInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFileInfo indicates an expected call of GetFileInfo.
+func (mr *MockFileServiceMockRecorder) GetFileInfo(ctx, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileInfo", reflect.TypeOf((*MockFileService)(nil).GetFileInfo), ctx, name)
+}
+
 // ListFiles mocks base method.
 func (m *MockFileService) ListFiles(ctx context.Context, name string, opts storage.ListOptions) ([]storage.FileInfo, error) {
 	m.ctrl.T.Helper()
