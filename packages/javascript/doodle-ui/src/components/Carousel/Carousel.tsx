@@ -228,16 +228,24 @@ const CarouselDots = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
 
     return (
         <div className='flex flex-row'>
-            {scrollSnaps.map((_, index) => (
-                <button
-                    name={`dot-${index}`}
-                    key={index}
-                    aria-label='Select item in carousel'
-                    className={'h-2.5 w-2.5 mx-1.5 border-x border-y rounded-3xl border-black dark:border-white '.concat(
-                        index === selectedIndex ? 'active bg-black dark:bg-white rounded-3xl' : ''
-                    )}
-                    onClick={() => onDotButtonClick(index)}></button>
-            ))}
+            {scrollSnaps.map((_, index) => {
+                const isCurrent = selectedIndex === index;
+
+                return (
+                    <button
+                        key={index}
+                        aria-label={
+                            isCurrent
+                                ? `Current item, ${index + 1} of ${scrollSnaps.length}`
+                                : `Go to item ${index + 1} of ${scrollSnaps.length}`
+                        }
+                        aria-current={isCurrent ? 'true' : undefined}
+                        className={'h-2.5 w-2.5 mx-1.5 border-x border-y rounded-3xl border-black dark:border-white '.concat(
+                            index === selectedIndex ? 'active bg-black dark:bg-white rounded-3xl' : ''
+                        )}
+                        onClick={() => onDotButtonClick(index)}></button>
+                );
+            })}
         </div>
     );
 });

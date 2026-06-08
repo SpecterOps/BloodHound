@@ -94,7 +94,7 @@ const FilterDialog: FC<{
 
             <DialogContent>
                 <Form {...form}>
-                    <form className='flex flex-col gap-4'>
+                    <form className='flex flex-col gap-4 m-1'>
                         <DialogTitle className='flex justify-between items-center'>
                             <span className='text-xl'>Filter</span>
                             <Button
