@@ -35,6 +35,7 @@ interface RuleFormContext {
     ruleQuery: UseQueryResult<AssetGroupTagSelector>;
     autoCertify: AssetGroupTagSelectorAutoCertifyType;
     cypherQueryYieldsNoResults: boolean;
+    staleCypherPreview: boolean;
 }
 
 export const initialValue: RuleFormContext = {
@@ -50,6 +51,7 @@ export const initialValue: RuleFormContext = {
         isSuccess: false,
     } as UseQueryResult<AssetGroupTagSelector>,
     cypherQueryYieldsNoResults: false,
+    staleCypherPreview: false,
 };
 
 const RuleFormContext = createContext<RuleFormContext>(initialValue);
