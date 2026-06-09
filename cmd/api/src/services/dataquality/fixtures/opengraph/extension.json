@@ -1,0 +1,66 @@
+{
+  "schema": {
+    "name": "Data_Quality_Test",
+    "display_name": "Data Quality Test",
+    "version": "v1.0.0",
+    "namespace": "DQT"
+  },
+  "node_kinds": [
+    {
+      "name": "DQT_Environment",
+      "display_name": "DQT Environment",
+      "description": "A synthetic OpenGraph environment for data-quality object count testing.",
+      "is_display_kind": true,
+      "icon": "sitemap",
+      "color": "#1F7A8C"
+    },
+    {
+      "name": "DQT_User",
+      "display_name": "DQT User",
+      "description": "A synthetic OpenGraph user for data-quality object count testing.",
+      "is_display_kind": true,
+      "icon": "user",
+      "color": "#7A3E9D"
+    },
+    {
+      "name": "DQT_Group",
+      "display_name": "DQT Group",
+      "description": "A synthetic OpenGraph group for data-quality object count testing.",
+      "is_display_kind": true,
+      "icon": "users",
+      "color": "#2F855A"
+    },
+    {
+      "name": "DQT_Application",
+      "display_name": "DQT Application",
+      "description": "A synthetic OpenGraph application for data-quality object count testing.",
+      "is_display_kind": true,
+      "icon": "window-maximize",
+      "color": "#B7791F"
+    }
+  ],
+  "relationship_kinds": [
+    {
+      "name": "DQT_MemberOf",
+      "description": "A synthetic membership relationship.",
+      "is_traversable": true
+    },
+    {
+      "name": "DQT_Owns",
+      "description": "A synthetic ownership relationship.",
+      "is_traversable": true
+    }
+  ],
+  "environments": [
+    {
+      "environment_kind": "DQT_Environment",
+      "source_kind": "DQTBase",
+      "principal_kinds": [
+        "DQT_User",
+        "DQT_Group",
+        "DQT_Application"
+      ]
+    }
+  ],
+  "relationship_findings": []
+}

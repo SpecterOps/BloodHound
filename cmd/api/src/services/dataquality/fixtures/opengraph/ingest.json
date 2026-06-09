@@ -1,0 +1,138 @@
+{
+  "metadata": {
+    "source_kind": "DQTBase"
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "dqt-env-engineering",
+        "kinds": [
+          "DQT_Environment"
+        ],
+        "properties": {
+          "name": "DQT Engineering",
+          "environmentid": "dqt-env-engineering",
+          "collected": true
+        }
+      },
+      {
+        "id": "dqt-env-security",
+        "kinds": [
+          "DQT_Environment"
+        ],
+        "properties": {
+          "name": "DQT Security",
+          "environmentid": "dqt-env-security",
+          "collected": true
+        }
+      },
+      {
+        "id": "dqt-user-alice",
+        "kinds": [
+          "DQT_User"
+        ],
+        "properties": {
+          "name": "Alice Analyst",
+          "environmentid": "dqt-env-engineering",
+          "email": "alice@example.test"
+        }
+      },
+      {
+        "id": "dqt-user-bob",
+        "kinds": [
+          "DQT_User"
+        ],
+        "properties": {
+          "name": "Bob Builder",
+          "environmentid": "dqt-env-engineering",
+          "email": "bob@example.test"
+        }
+      },
+      {
+        "id": "dqt-user-cora",
+        "kinds": [
+          "DQT_User"
+        ],
+        "properties": {
+          "name": "Cora Defender",
+          "environmentid": "dqt-env-security",
+          "email": "cora@example.test"
+        }
+      },
+      {
+        "id": "dqt-group-engineering-admins",
+        "kinds": [
+          "DQT_Group"
+        ],
+        "properties": {
+          "name": "Engineering Admins",
+          "environmentid": "dqt-env-engineering"
+        }
+      },
+      {
+        "id": "dqt-group-security-admins",
+        "kinds": [
+          "DQT_Group"
+        ],
+        "properties": {
+          "name": "Security Admins",
+          "environmentid": "dqt-env-security"
+        }
+      },
+      {
+        "id": "dqt-app-build-system",
+        "kinds": [
+          "DQT_Application"
+        ],
+        "properties": {
+          "name": "Build System",
+          "environmentid": "dqt-env-engineering"
+        }
+      },
+      {
+        "id": "dqt-app-global-portal",
+        "kinds": [
+          "DQT_Application"
+        ],
+        "properties": {
+          "name": "Global Portal"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "start": {
+          "match_by": "id",
+          "value": "dqt-user-alice"
+        },
+        "end": {
+          "match_by": "id",
+          "value": "dqt-group-engineering-admins"
+        },
+        "kind": "DQT_MemberOf"
+      },
+      {
+        "start": {
+          "match_by": "id",
+          "value": "dqt-user-cora"
+        },
+        "end": {
+          "match_by": "id",
+          "value": "dqt-group-security-admins"
+        },
+        "kind": "DQT_MemberOf"
+      },
+      {
+        "start": {
+          "match_by": "id",
+          "value": "dqt-group-engineering-admins"
+        },
+        "end": {
+          "match_by": "id",
+          "value": "dqt-app-build-system"
+        },
+        "kind": "DQT_Owns"
+      }
+    ]
+  }
+}
