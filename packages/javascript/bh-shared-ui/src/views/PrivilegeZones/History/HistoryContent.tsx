@@ -15,8 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Card, CardHeader, CardTitle, DataTable } from 'doodle-ui';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { SearchInput } from '../../../components/SearchInput';
+import { useInfiniteScroll } from '../../../hooks';
 import { measureElement } from '../utils';
 import { FilterDialog } from './FilterDialog';
 import HistoryNote from './HistoryNote';
@@ -48,34 +49,20 @@ const HistoryContent = () => {
     const [search, setSearch] = useState('');
     const [filters, setFilters] = useState<AssetGroupTagHistoryFilters>(DEFAULT_FILTER_VALUE);
 
-    const { data, isFetching: isHistoryFetching, fetchNextPage } = useAssetGroupTagHistoryQuery(filters, search);
+    const query = useAssetGroupTagHistoryQuery(filters, search);
 
-    const historyData = data ?? emptyHistoryData;
+    const historyData = query.data ?? emptyHistoryData;
     const records = historyData.pages.flatMap((item) => item.data.records);
-    const totalDBRowCount = historyData.pages[0].count;
-    const totalFetched = records.length;
 
-    const scrollRef = useRef<HTMLDivElement>(null);
-
-    const fetchMoreOnBottomReached = useCallback(
-        (containerRefElement?: HTMLDivElement | null) => {
-            if (!containerRefElement) return;
-
-            const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
-            // once the user has scrolled near the bottom of the table, fetch more data if we can
-            if (scrollHeight - scrollTop - clientHeight < 20 && !isHistoryFetching && totalFetched < totalDBRowCount) {
-                fetchNextPage();
-            }
-        },
-        [fetchNextPage, isHistoryFetching, totalFetched, totalDBRowCount]
-    );
-
-    useEffect(() => {
-        fetchMoreOnBottomReached(scrollRef.current);
-    }, [fetchMoreOnBottomReached]);
+    const { scrollRef, onScroll } = useInfiniteScroll({
+        canFetchMore: !!query.hasNextPage,
+        isFetching: query.isFetchingNextPage,
+        fetchMore: query.fetchNextPage,
+        loadedCount: records.length,
+    });
 
     const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
-        count: totalFetched ?? 0,
+        count: records.length ?? 0,
         getScrollElement: () => scrollRef.current,
         measureElement,
         overscan: 2,
@@ -102,12 +89,13 @@ const HistoryContent = () => {
                     </CardHeader>
 
                     <div
-                        onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
+                        onScroll={onScroll}
                         ref={scrollRef}
                         // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
                         tabIndex={0}
                         className='overflow-y-auto mb-1 min-h-32'>
                         <DataTable
+                            aria-label='History Log Table'
                             data={records}
                             TableHeaderProps={tableHeaderProps}
                             TableHeadProps={tableHeadProps}

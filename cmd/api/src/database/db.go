@@ -29,6 +29,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database/migration"
@@ -36,8 +37,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
-	"github.com/specterops/dawgs/drivers"
-	"github.com/specterops/dawgs/drivers/pg"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -248,23 +247,28 @@ func (s *BloodhoundDB) Transaction(ctx context.Context, fn func(tx *BloodhoundDB
 	}, opts...)
 }
 
-func OpenDatabase(cfg drivers.DatabaseConfiguration) (*gorm.DB, *pgxpool.Pool, error) {
-	gormConfig := &gorm.Config{
-		Logger: &GormLogAdapter{
-			SlowQueryErrorThreshold: time.Second * 30,
-			SlowQueryWarnThreshold:  time.Second * 10,
-		},
-	}
-	pool, err := pg.NewPool(cfg)
+func OpenDatabase(cfg config.DatabaseConfiguration) (*gorm.DB, *pgxpool.Pool, error) {
+	var (
+		gormConfig = &gorm.Config{
+			Logger: &GormLogAdapter{
+				SlowQueryErrorThreshold: time.Second * 30,
+				SlowQueryWarnThreshold:  time.Second * 10,
+			},
+		}
+	)
+
+	// NewAppPool creates a relational database pool without graph composite type hooks,
+	// keeping the relational and graph connection concerns separate.
+	pool, err := dbpool.NewAppPool(cfg)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	dbPool := stdlib.OpenDBFromPool(pool)
+	dbConn := stdlib.OpenDBFromPool(pool)
 
-	db, err := gorm.Open(postgres.New(postgres.Config{Conn: dbPool}), gormConfig)
+	db, err := gorm.Open(postgres.New(postgres.Config{Conn: dbConn}), gormConfig)
 	if err != nil {
-		_ = dbPool.Close()
+		_ = dbConn.Close()
 		pool.Close()
 		return nil, nil, err
 	}

@@ -69,7 +69,7 @@ type OpenGraphSchema interface {
 	GetEnvironmentsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaEnvironment, error)
 	DeleteEnvironment(ctx context.Context, environmentId int32) error
 
-	CreateSchemaFinding(ctx context.Context, findingType model.SchemaFindingType, extensionId, kindId, environmentId int32, name, displayName string) (model.SchemaFinding, error)
+	CreateSchemaFinding(ctx context.Context, findingType model.SchemaFindingType, extensionId, kindId, environmentId int32, name, displayName, pzDisplayName string) (model.SchemaFinding, error)
 	GetSchemaFindings(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) ([]model.SchemaFinding, int, error)
 	GetSchemaFindingsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaFinding, error)
 	GetSchemaFindingById(ctx context.Context, findingId int32) (model.SchemaFinding, error)
@@ -949,15 +949,15 @@ func (s *BloodhoundDB) DeleteEnvironment(ctx context.Context, environmentId int3
 }
 
 // CreateSchemaFinding - creates a new schema finding.
-func (s *BloodhoundDB) CreateSchemaFinding(ctx context.Context, findingType model.SchemaFindingType, extensionId int32, kindId int32, environmentId int32, name string, displayName string) (model.SchemaFinding, error) {
+func (s *BloodhoundDB) CreateSchemaFinding(ctx context.Context, findingType model.SchemaFindingType, extensionId int32, kindId int32, environmentId int32, name string, displayName string, pzDisplayName string) (model.SchemaFinding, error) {
 	var finding model.SchemaFinding
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		INSERT INTO %s (type, schema_extension_id, kind_id, environment_id, name, display_name, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, NOW())
-		RETURNING id, type, schema_extension_id, kind_id, environment_id, name, display_name, created_at`,
+		INSERT INTO %s (type, schema_extension_id, kind_id, environment_id, name, display_name, pz_display_name, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, NULLIF(?, ''), NOW())
+		RETURNING id, type, schema_extension_id, kind_id, environment_id, name, display_name, pz_display_name, created_at`,
 		finding.TableName()),
-		findingType, extensionId, kindId, environmentId, name, displayName).Scan(&finding); result.Error != nil {
+		findingType, extensionId, kindId, environmentId, name, displayName, pzDisplayName).Scan(&finding); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return model.SchemaFinding{}, fmt.Errorf("%w: %s", model.ErrDuplicateSchemaFindingName, name)
 		}
@@ -975,15 +975,16 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 		aliasedSorts   = make(model.Sort, 0, len(sort))
 
 		schemaFindingsColumnAliases = map[string]string{
-			"extension_id":   "sf.schema_extension_id",
-			"extension_name": "se.name",
-			"id":             "sf.id",
-			"name":           "sf.name",
-			"type":           "sf.type",
-			"is_builtin":     "se.is_builtin",
-			"kind":           "k.name",
-			"display_name":   "sf.display_name",
-			"created_at":     "sf.created_at",
+			"extension_id":    "sf.schema_extension_id",
+			"extension_name":  "se.name",
+			"id":              "sf.id",
+			"name":            "sf.name",
+			"type":            "sf.type",
+			"is_builtin":      "se.is_builtin",
+			"kind":            "k.name",
+			"display_name":    "sf.display_name",
+			"pz_display_name": "sf.pz_display_name",
+			"created_at":      "sf.created_at",
 		}
 	)
 
@@ -1012,7 +1013,7 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 		return nil, 0, err
 	} else {
 		sqlStr := fmt.Sprintf(`
-		SELECT sf.id, sf.type, sf.schema_extension_id, sf.kind_id, environment_id, sf.name, sf.display_name, sf.created_at,
+		SELECT sf.id, sf.type, sf.schema_extension_id, sf.kind_id, environment_id, sf.name, sf.display_name, sf.pz_display_name, sf.created_at,
 		       se.id, se.name, se.display_name, se.version, se.is_builtin, se.namespace, se.created_at,
 		       k.name,
 		       ARRAY_REMOVE(ARRAY_AGG(sfs.subtype), NULL)
@@ -1037,7 +1038,7 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 					subtypes pq.StringArray
 				)
 				if err := rows.Scan(
-					&finding.ID, &finding.Type, &finding.SchemaExtensionId, &finding.KindId, &finding.EnvironmentId, &finding.Name, &finding.DisplayName, &finding.CreatedAt,
+					&finding.ID, &finding.Type, &finding.SchemaExtensionId, &finding.KindId, &finding.EnvironmentId, &finding.Name, &finding.DisplayName, &finding.PZDisplayName, &finding.CreatedAt,
 					&finding.Extension.ID, &finding.Extension.Name, &finding.Extension.DisplayName, &finding.Extension.Version, &finding.Extension.IsBuiltin, &finding.Extension.Namespace, &finding.Extension.CreatedAt,
 					&kindName,
 					&subtypes,
@@ -1114,16 +1115,16 @@ func (s *BloodhoundDB) DeleteSchemaFinding(ctx context.Context, findingId int32)
 	return nil
 }
 
-// UpdateSchemaFinding - updates the type, display_name, kind_id, and environment_id of an existing
-// schema finding by id. Type is included because findings may transition between SchemaFindingTypeRelationship
-// and SchemaFindingTypeList as extension definitions evolve.
+// UpdateSchemaFinding - updates the type, display_name, pz_display_name, kind_id, and environment_id
+// of an existing schema finding by id. Type is included because findings may transition between
+// SchemaFindingTypeRelationship and SchemaFindingTypeList as extension definitions evolve.
 func (s *BloodhoundDB) UpdateSchemaFinding(ctx context.Context, finding model.SchemaFinding) (model.SchemaFinding, error) {
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		UPDATE %s SET type = ?, display_name = ?, kind_id = ?, environment_id = ?
+		UPDATE %s SET type = ?, display_name = ?, pz_display_name = ?, kind_id = ?, environment_id = ?
 		WHERE id = ?
-		RETURNING id, type, schema_extension_id, kind_id, environment_id, name, display_name, created_at`,
+		RETURNING id, type, schema_extension_id, kind_id, environment_id, name, display_name, pz_display_name, created_at`,
 		finding.TableName()),
-		finding.Type, finding.DisplayName, finding.KindId, finding.EnvironmentId, finding.ID).Scan(&finding); result.Error != nil {
+		finding.Type, finding.DisplayName, finding.PZDisplayName, finding.KindId, finding.EnvironmentId, finding.ID).Scan(&finding); result.Error != nil {
 		return model.SchemaFinding{}, CheckError(result)
 	} else if result.RowsAffected == 0 {
 		return model.SchemaFinding{}, ErrNotFound

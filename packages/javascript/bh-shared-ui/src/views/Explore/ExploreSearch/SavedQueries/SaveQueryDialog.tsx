@@ -77,7 +77,7 @@ const SaveQueryDialog: React.FC<{
     const [localCypherQuery, setLocalCypherQuery] = useState('');
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
-    const { selectedQuery } = useSavedQueriesContext();
+    const { selected, selectedQuery, setSelected } = useSavedQueriesContext();
 
     const { cypherQuery } = cypherSearchState;
 
@@ -94,8 +94,12 @@ const SaveQueryDialog: React.FC<{
     }, [selectedQuery]);
 
     useEffect(() => {
-        setLocalCypherQuery(cypherQuery);
-    }, [cypherQuery]);
+        if (saveAction === 'edit' && selected.query) {
+            setLocalCypherQuery(selected.query);
+        } else {
+            setLocalCypherQuery(cypherQuery);
+        }
+    }, [cypherQuery, selected.query, saveAction]);
 
     const saveDisabled = name?.trim() === '' || saveUpdatePending;
 
@@ -106,6 +110,11 @@ const SaveQueryDialog: React.FC<{
             setIsConfirmOpen(true);
         }
     };
+    const onCancel = () => {
+        setSelected({ query: cypherQuery, id: undefined });
+        onClose();
+    };
+
     const cypherEditorRef = useRef<CypherEditor | null>(null);
     const cypherSchema = useCypherSchema();
 
@@ -194,7 +203,7 @@ const SaveQueryDialog: React.FC<{
                                     ) : null}
 
                                     <DialogActions className='flex justify-end gap-4'>
-                                        <Button variant='text' onClick={onClose}>
+                                        <Button variant='text' onClick={onCancel}>
                                             Cancel
                                         </Button>
                                         <Button variant='text' disabled={saveDisabled} onClick={handleSave}>

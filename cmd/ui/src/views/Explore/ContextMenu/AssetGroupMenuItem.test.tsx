@@ -164,9 +164,9 @@ describe('AssetGroupMenuItem', async () => {
         });
 
         it('renders null if network fails to return valid asset group membership list', async () => {
-            render(<AssetGroupMenuItem assetGroupId={3} assetGroupName={'blah'} />, {});
+            const { container } = render(<AssetGroupMenuItem assetGroupId={3} assetGroupName={'blah'} />, {});
 
-            expect(document.body.firstChild).toBeEmptyDOMElement();
+            expect(container.textContent).toBe('');
         });
     });
 

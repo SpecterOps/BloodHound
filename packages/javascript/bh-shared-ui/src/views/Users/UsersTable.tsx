@@ -69,14 +69,14 @@ const UsersTable: FC<UsersTableProps> = ({
         { label: 'Role' },
         { label: 'Status' },
         { label: 'Auth Method' },
-        { label: '', alignment: 'right' as const },
+        { label: 'Action Menu', alignment: 'right' as const, srOnly: true },
     ];
 
     const getSelfQuery = useSelf();
     const listUsersQuery = useBloodHoundUsers();
 
     const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS);
+    const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS) || checkPermission(Permission.AUTH_READ_USERS);
 
     const listSSOProvidersQuery = useQuery(
         ['listSSOProviders'],
