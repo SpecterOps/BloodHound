@@ -15,9 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, AlertTitle } from '@mui/material';
-import { useAppNavigate } from 'bh-shared-ui';
+import { useAppName, useAppNavigate } from 'bh-shared-ui';
 import { Button } from 'doodle-ui';
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import LoginPage from 'src/components/LoginPage';
 import { logout } from 'src/ducks/auth/authSlice';
 import { ROUTE_LOGIN } from 'src/routes/constants';
@@ -26,8 +27,13 @@ import { useAppDispatch } from 'src/store';
 const DisabledUser: React.FC = () => {
     const dispatch = useAppDispatch();
     const navigate = useAppNavigate();
+    const appName = useAppName();
+
     return (
         <LoginPage>
+            <Helmet>
+                <title>Account Disabled | {appName}</title>
+            </Helmet>
             <div className='flex flex-col gap-8'>
                 <Alert severity='warning'>
                     <AlertTitle>Your Account Has Been Disabled</AlertTitle>
