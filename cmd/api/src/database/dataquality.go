@@ -18,9 +18,11 @@ package database
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"gorm.io/gorm"
 )
 
@@ -29,6 +31,16 @@ type DataQualityData interface {
 	CreateADDataQualityAggregation(ctx context.Context, aggregation model.ADDataQualityAggregation) (model.ADDataQualityAggregation, error)
 	CreateAzureDataQualityStats(ctx context.Context, stats model.AzureDataQualityStats) (model.AzureDataQualityStats, error)
 	CreateAzureDataQualityAggregation(ctx context.Context, aggregation model.AzureDataQualityAggregation) (model.AzureDataQualityAggregation, error)
+	CreateDataQualityObjectCountRun(ctx context.Context, run model.DataQualityObjectCountRun) (model.DataQualityObjectCountRun, error)
+	CreateDataQualitySourceObjectCounts(ctx context.Context, counts model.DataQualitySourceObjectCounts) (model.DataQualitySourceObjectCounts, error)
+	CreateDataQualityEnvironmentObjectCounts(ctx context.Context, counts model.DataQualityEnvironmentObjectCounts) (model.DataQualityEnvironmentObjectCounts, error)
+	GetDataQualitySourceObjectCounts(ctx context.Context, start time.Time, end time.Time, filters model.DataQualitySourceObjectCountFilters, order string, limit int, skip int) (model.DataQualitySourceObjectCounts, int, error)
+	GetDataQualitySourceObjectCountSummaries(ctx context.Context, start time.Time, end time.Time, filters model.DataQualitySourceObjectCountFilters, order string, limit int, skip int) (model.DataQualitySourceObjectCountSummaries, int, error)
+	GetDataQualityEnvironmentObjectCounts(ctx context.Context, start time.Time, end time.Time, filters model.DataQualityEnvironmentObjectCountFilters, order string, limit int, skip int) (model.DataQualityEnvironmentObjectCounts, int, error)
+	GetEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error)
+	GetKindsByIDs(ctx context.Context, ids ...int32) ([]model.Kind, error)
+	GetPrimaryDisplayKinds(ctx context.Context) (graphschema.PrimaryDisplayKinds, error)
+	GetSourceKinds(ctx context.Context) ([]model.SourceKind, error)
 }
 
 func (s *BloodhoundDB) CreateADDataQualityStats(ctx context.Context, stats model.ADDataQualityStats) (model.ADDataQualityStats, error) {
@@ -203,6 +215,226 @@ func (s *BloodhoundDB) CreateAzureDataQualityAggregation(ctx context.Context, ag
 	return aggregation, CheckError(result)
 }
 
+func (s *BloodhoundDB) CreateDataQualityObjectCountRun(ctx context.Context, run model.DataQualityObjectCountRun) (model.DataQualityObjectCountRun, error) {
+	result := s.db.WithContext(ctx).Create(&run)
+	return run, CheckError(result)
+}
+
+func (s *BloodhoundDB) CreateDataQualitySourceObjectCounts(ctx context.Context, counts model.DataQualitySourceObjectCounts) (model.DataQualitySourceObjectCounts, error) {
+	result := s.db.WithContext(ctx).Create(&counts)
+	return counts, CheckError(result)
+}
+
+func (s *BloodhoundDB) CreateDataQualityEnvironmentObjectCounts(ctx context.Context, counts model.DataQualityEnvironmentObjectCounts) (model.DataQualityEnvironmentObjectCounts, error) {
+	result := s.db.WithContext(ctx).Create(&counts)
+	return counts, CheckError(result)
+}
+
+func (s *BloodhoundDB) GetDataQualitySourceObjectCounts(ctx context.Context, start time.Time, end time.Time, filters model.DataQualitySourceObjectCountFilters, order string, limit int, skip int) (model.DataQualitySourceObjectCounts, int, error) {
+	var (
+		count                   int64
+		objectCounts            model.DataQualitySourceObjectCounts
+		sourceObjectCountsQuery = func() *gorm.DB {
+			return applyDataQualitySourceObjectCountFilters(
+				s.db.Model(model.DataQualitySourceObjectCount{}).WithContext(ctx).Where("created_at between ? and ?", start, end),
+				filters,
+			)
+		}
+		result *gorm.DB
+	)
+
+	if filters.Latest {
+		if runID, err := s.getLatestDataQualityObjectCountRunID(ctx, start, end); errors.Is(err, ErrNotFound) {
+			return objectCounts, 0, nil
+		} else if err != nil {
+			return objectCounts, 0, err
+		} else {
+			filters.RunID = runID
+		}
+	}
+
+	result = sourceObjectCountsQuery().Count(&count)
+	if CheckError(result) != nil {
+		return objectCounts, 0, result.Error
+	}
+
+	if order == "" {
+		order = "created_at desc"
+	}
+
+	result = sourceObjectCountsQuery().Scopes(Paginate(skip, limit)).Order(order).Find(&objectCounts)
+	if CheckError(result) != nil {
+		return objectCounts, 0, result.Error
+	}
+
+	return objectCounts, int(count), nil
+}
+
+func (s *BloodhoundDB) GetDataQualitySourceObjectCountSummaries(ctx context.Context, start time.Time, end time.Time, filters model.DataQualitySourceObjectCountFilters, order string, limit int, skip int) (model.DataQualitySourceObjectCountSummaries, int, error) {
+	var (
+		count     int64
+		params    = dataQualitySourceObjectCountQueryParams(start, end, filters, limit, skip)
+		result    *gorm.DB
+		summaries model.DataQualitySourceObjectCountSummaries
+	)
+
+	if filters.Latest {
+		if runID, err := s.getLatestDataQualityObjectCountRunID(ctx, start, end); errors.Is(err, ErrNotFound) {
+			return summaries, 0, nil
+		} else if err != nil {
+			return summaries, 0, err
+		} else {
+			filters.RunID = runID
+			params = dataQualitySourceObjectCountQueryParams(start, end, filters, limit, skip)
+		}
+	}
+
+	result = s.db.WithContext(ctx).Raw(`
+		SELECT COUNT(*)
+		FROM data_quality_object_count_runs AS runs
+		WHERE runs.created_at BETWEEN @start AND @end
+		  AND (@run_id = '' OR runs.run_id = @run_id);
+	`, params).Scan(&count)
+	if CheckError(result) != nil {
+		return summaries, 0, result.Error
+	}
+
+	if order == "" {
+		order = "created_at desc"
+	}
+
+	result = s.db.WithContext(ctx).Raw(`
+		SELECT
+			runs.run_id,
+			COALESCE(SUM(object_counts.count), 0)::bigint AS count,
+			runs.created_at
+		FROM data_quality_object_count_runs AS runs
+		LEFT JOIN data_quality_source_object_counts AS object_counts
+		  ON object_counts.run_id = runs.run_id
+		 AND (@source_kind = '' OR object_counts.source_kind = @source_kind)
+		 AND (@node_kind = '' OR object_counts.node_kind = @node_kind)
+		WHERE runs.created_at BETWEEN @start AND @end
+		  AND (@run_id = '' OR runs.run_id = @run_id)
+		GROUP BY runs.run_id, runs.created_at
+		ORDER BY `+order+`
+		LIMIT @limit OFFSET @skip;
+	`, params).Scan(&summaries)
+	if CheckError(result) != nil {
+		return summaries, 0, result.Error
+	}
+
+	return summaries, int(count), nil
+}
+
+func (s *BloodhoundDB) GetDataQualityEnvironmentObjectCounts(ctx context.Context, start time.Time, end time.Time, filters model.DataQualityEnvironmentObjectCountFilters, order string, limit int, skip int) (model.DataQualityEnvironmentObjectCounts, int, error) {
+	var (
+		count                        int64
+		environmentObjectCountsQuery = func() *gorm.DB {
+			return applyDataQualityEnvironmentObjectCountFilters(
+				s.db.Model(model.DataQualityEnvironmentObjectCount{}).WithContext(ctx).Where("created_at between ? and ?", start, end),
+				filters,
+			)
+		}
+		objectCounts model.DataQualityEnvironmentObjectCounts
+		result       *gorm.DB
+	)
+
+	if filters.Latest {
+		if runID, err := s.getLatestDataQualityObjectCountRunID(ctx, start, end); errors.Is(err, ErrNotFound) {
+			return objectCounts, 0, nil
+		} else if err != nil {
+			return objectCounts, 0, err
+		} else {
+			filters.RunID = runID
+		}
+	}
+
+	result = environmentObjectCountsQuery().Count(&count)
+	if CheckError(result) != nil {
+		return objectCounts, 0, result.Error
+	}
+
+	if order == "" {
+		order = "created_at desc"
+	}
+
+	result = environmentObjectCountsQuery().Scopes(Paginate(skip, limit)).Order(order).Find(&objectCounts)
+	if CheckError(result) != nil {
+		return objectCounts, 0, result.Error
+	}
+
+	return objectCounts, int(count), nil
+}
+
+func (s *BloodhoundDB) getLatestDataQualityObjectCountRunID(ctx context.Context, start time.Time, end time.Time) (string, error) {
+	var (
+		run    model.DataQualityObjectCountRun
+		result = s.db.WithContext(ctx).Where("created_at between ? and ?", start, end).Order("created_at desc").First(&run)
+	)
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return "", ErrNotFound
+	}
+
+	if CheckError(result) != nil {
+		return "", result.Error
+	}
+
+	return run.RunID, nil
+}
+
+func dataQualitySourceObjectCountQueryParams(start time.Time, end time.Time, filters model.DataQualitySourceObjectCountFilters, limit int, skip int) map[string]any {
+	return map[string]any{
+		"start":       start,
+		"end":         end,
+		"source_kind": filters.SourceKind,
+		"node_kind":   filters.NodeKind,
+		"run_id":      filters.RunID,
+		"limit":       limit,
+		"skip":        skip,
+	}
+}
+
+func applyDataQualitySourceObjectCountFilters(query *gorm.DB, filters model.DataQualitySourceObjectCountFilters) *gorm.DB {
+	if filters.SourceKind != "" {
+		query = query.Where("source_kind = ?", filters.SourceKind)
+	}
+
+	if filters.NodeKind != "" {
+		query = query.Where("node_kind = ?", filters.NodeKind)
+	}
+
+	if filters.RunID != "" {
+		query = query.Where("run_id = ?", filters.RunID)
+	}
+
+	return query
+}
+
+func applyDataQualityEnvironmentObjectCountFilters(query *gorm.DB, filters model.DataQualityEnvironmentObjectCountFilters) *gorm.DB {
+	if filters.SourceKind != "" {
+		query = query.Where("source_kind = ?", filters.SourceKind)
+	}
+
+	if filters.EnvironmentKind != "" {
+		query = query.Where("environment_kind = ?", filters.EnvironmentKind)
+	}
+
+	if filters.EnvironmentID != "" {
+		query = query.Where("environment_id = ?", filters.EnvironmentID)
+	}
+
+	if filters.NodeKind != "" {
+		query = query.Where("node_kind = ?", filters.NodeKind)
+	}
+
+	if filters.RunID != "" {
+		query = query.Where("run_id = ?", filters.RunID)
+	}
+
+	return query
+}
+
 func (s *BloodhoundDB) GetAzureDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, order string, limit int, skip int) (model.AzureDataQualityAggregations, int, error) {
 	const (
 		defaultWhere = "created_at between ? and ?"
@@ -232,7 +464,13 @@ func (s *BloodhoundDB) GetAzureDataQualityAggregations(ctx context.Context, star
 }
 
 func (s *BloodhoundDB) DeleteAllDataQuality(ctx context.Context) error {
+	if err := CheckError(
+		s.db.WithContext(ctx).Exec("DELETE FROM data_quality_environment_object_counts; DELETE FROM data_quality_source_object_counts; DELETE FROM data_quality_object_count_runs;"),
+	); err != nil {
+		return err
+	}
+
 	return CheckError(
-		s.db.WithContext(ctx).Exec("DELETE FROM ad_data_quality_aggregations; DELETE FROM ad_data_quality_stats; DELETE FROM azure_data_quality_aggregations; DELETE FROM azure_data_quality_stats;"),
+		s.db.WithContext(ctx).Exec("DELETE FROM ad_data_quality_aggregations; DELETE FROM ad_data_quality_stats; DELETE FROM azure_data_quality_aggregations; DELETE FROM azure_data_quality_stats; DELETE FROM data_quality_object_counts;"),
 	)
 }

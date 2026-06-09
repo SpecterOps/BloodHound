@@ -342,6 +342,51 @@ func (mr *MockDatabaseMockRecorder) CreateCustomNodeKinds(ctx, customNodeKind an
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCustomNodeKinds", reflect.TypeOf((*MockDatabase)(nil).CreateCustomNodeKinds), ctx, customNodeKind)
 }
 
+// CreateDataQualityEnvironmentObjectCounts mocks base method.
+func (m *MockDatabase) CreateDataQualityEnvironmentObjectCounts(ctx context.Context, counts model.DataQualityEnvironmentObjectCounts) (model.DataQualityEnvironmentObjectCounts, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateDataQualityEnvironmentObjectCounts", ctx, counts)
+	ret0, _ := ret[0].(model.DataQualityEnvironmentObjectCounts)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateDataQualityEnvironmentObjectCounts indicates an expected call of CreateDataQualityEnvironmentObjectCounts.
+func (mr *MockDatabaseMockRecorder) CreateDataQualityEnvironmentObjectCounts(ctx, counts any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDataQualityEnvironmentObjectCounts", reflect.TypeOf((*MockDatabase)(nil).CreateDataQualityEnvironmentObjectCounts), ctx, counts)
+}
+
+// CreateDataQualityObjectCountRun mocks base method.
+func (m *MockDatabase) CreateDataQualityObjectCountRun(ctx context.Context, run model.DataQualityObjectCountRun) (model.DataQualityObjectCountRun, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateDataQualityObjectCountRun", ctx, run)
+	ret0, _ := ret[0].(model.DataQualityObjectCountRun)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateDataQualityObjectCountRun indicates an expected call of CreateDataQualityObjectCountRun.
+func (mr *MockDatabaseMockRecorder) CreateDataQualityObjectCountRun(ctx, run any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDataQualityObjectCountRun", reflect.TypeOf((*MockDatabase)(nil).CreateDataQualityObjectCountRun), ctx, run)
+}
+
+// CreateDataQualitySourceObjectCounts mocks base method.
+func (m *MockDatabase) CreateDataQualitySourceObjectCounts(ctx context.Context, counts model.DataQualitySourceObjectCounts) (model.DataQualitySourceObjectCounts, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateDataQualitySourceObjectCounts", ctx, counts)
+	ret0, _ := ret[0].(model.DataQualitySourceObjectCounts)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateDataQualitySourceObjectCounts indicates an expected call of CreateDataQualitySourceObjectCounts.
+func (mr *MockDatabaseMockRecorder) CreateDataQualitySourceObjectCounts(ctx, counts any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDataQualitySourceObjectCounts", reflect.TypeOf((*MockDatabase)(nil).CreateDataQualitySourceObjectCounts), ctx, counts)
+}
+
 // CreateEnvironment mocks base method.
 func (m *MockDatabase) CreateEnvironment(ctx context.Context, extensionId, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error) {
 	m.ctrl.T.Helper()
@@ -1747,6 +1792,54 @@ func (m *MockDatabase) GetCustomNodeKinds(ctx context.Context, filters model.Fil
 func (mr *MockDatabaseMockRecorder) GetCustomNodeKinds(ctx, filters any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomNodeKinds", reflect.TypeOf((*MockDatabase)(nil).GetCustomNodeKinds), ctx, filters)
+}
+
+// GetDataQualityEnvironmentObjectCounts mocks base method.
+func (m *MockDatabase) GetDataQualityEnvironmentObjectCounts(ctx context.Context, start, end time.Time, filters model.DataQualityEnvironmentObjectCountFilters, order string, limit, skip int) (model.DataQualityEnvironmentObjectCounts, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDataQualityEnvironmentObjectCounts", ctx, start, end, filters, order, limit, skip)
+	ret0, _ := ret[0].(model.DataQualityEnvironmentObjectCounts)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetDataQualityEnvironmentObjectCounts indicates an expected call of GetDataQualityEnvironmentObjectCounts.
+func (mr *MockDatabaseMockRecorder) GetDataQualityEnvironmentObjectCounts(ctx, start, end, filters, order, limit, skip any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataQualityEnvironmentObjectCounts", reflect.TypeOf((*MockDatabase)(nil).GetDataQualityEnvironmentObjectCounts), ctx, start, end, filters, order, limit, skip)
+}
+
+// GetDataQualitySourceObjectCountSummaries mocks base method.
+func (m *MockDatabase) GetDataQualitySourceObjectCountSummaries(ctx context.Context, start, end time.Time, filters model.DataQualitySourceObjectCountFilters, order string, limit, skip int) (model.DataQualitySourceObjectCountSummaries, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDataQualitySourceObjectCountSummaries", ctx, start, end, filters, order, limit, skip)
+	ret0, _ := ret[0].(model.DataQualitySourceObjectCountSummaries)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetDataQualitySourceObjectCountSummaries indicates an expected call of GetDataQualitySourceObjectCountSummaries.
+func (mr *MockDatabaseMockRecorder) GetDataQualitySourceObjectCountSummaries(ctx, start, end, filters, order, limit, skip any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataQualitySourceObjectCountSummaries", reflect.TypeOf((*MockDatabase)(nil).GetDataQualitySourceObjectCountSummaries), ctx, start, end, filters, order, limit, skip)
+}
+
+// GetDataQualitySourceObjectCounts mocks base method.
+func (m *MockDatabase) GetDataQualitySourceObjectCounts(ctx context.Context, start, end time.Time, filters model.DataQualitySourceObjectCountFilters, order string, limit, skip int) (model.DataQualitySourceObjectCounts, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDataQualitySourceObjectCounts", ctx, start, end, filters, order, limit, skip)
+	ret0, _ := ret[0].(model.DataQualitySourceObjectCounts)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetDataQualitySourceObjectCounts indicates an expected call of GetDataQualitySourceObjectCounts.
+func (mr *MockDatabaseMockRecorder) GetDataQualitySourceObjectCounts(ctx, start, end, filters, order, limit, skip any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataQualitySourceObjectCounts", reflect.TypeOf((*MockDatabase)(nil).GetDataQualitySourceObjectCounts), ctx, start, end, filters, order, limit, skip)
 }
 
 // GetDatapipeStatus mocks base method.
