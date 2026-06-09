@@ -49,6 +49,19 @@ const (
 	ClientTypeOpenHound  ClientType = 3
 )
 
+func (c ClientType) String() string {
+	switch c {
+	case ClientTypeSharpHound:
+		return "SharpHound"
+	case ClientTypeAzureHound:
+		return "AzureHound"
+	case ClientTypeOpenHound:
+		return "OpenHound"
+	default:
+		return fmt.Sprintf("UnknownClientType(%d)", int(c))
+	}
+}
+
 type ClientVersion struct {
 	ClientType    ClientType
 	Major         int
@@ -57,6 +70,7 @@ type ClientVersion struct {
 	Extra         int
 	Prerelease    string
 	BuildMetadata string
+	Original      string
 }
 
 // IsValidClientVersion checks the version from a user agent to ensure it's a valid UserAgent and that
@@ -104,7 +118,7 @@ func ParseClientVersion(userAgent string) (ClientVersion, error) {
 }
 
 // clientVersionFromSemver maps a parsed semver.Version into a ClientVersion struct.
-func clientVersionFromSemver(clientType ClientType, parsedVersion *semver.Version, extra int) ClientVersion {
+func clientVersionFromSemver(clientType ClientType, parsedVersion *semver.Version, extra int, original string) ClientVersion {
 	return ClientVersion{
 		ClientType:    clientType,
 		Major:         int(parsedVersion.Major()),
@@ -113,6 +127,7 @@ func clientVersionFromSemver(clientType ClientType, parsedVersion *semver.Versio
 		Extra:         extra,
 		Prerelease:    parsedVersion.Prerelease(),
 		BuildMetadata: parsedVersion.Metadata(),
+		Original:      original,
 	}
 }
 
@@ -152,7 +167,7 @@ func parseCollectorVersion(clientType ClientType, rawVersion string) (ClientVers
 		return version, ErrInvalidCollectorVersion
 	}
 
-	return clientVersionFromSemver(clientType, parsedVersion, 0), nil
+	return clientVersionFromSemver(clientType, parsedVersion, 0, rawVersion), nil
 }
 
 // parseSharpHoundVersion parses a raw version string in SharpHound's X.Y.Z.W[-rcN] format.
@@ -178,7 +193,7 @@ func parseSharpHoundVersion(rawVersion string) (ClientVersion, error) {
 		return version, ErrInvalidSharpHoundVersion
 	}
 
-	return clientVersionFromSemver(ClientTypeSharpHound, parsedVersion, extra), nil
+	return clientVersionFromSemver(ClientTypeSharpHound, parsedVersion, extra, rawVersion), nil
 }
 
 // splitSharpHoundVersion splits a SharpHound version string into a semver-compatible version

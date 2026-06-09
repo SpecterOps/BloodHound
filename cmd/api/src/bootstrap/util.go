@@ -83,6 +83,10 @@ func EnsureServerDirectories(cfg config.Configuration) error {
 		return err
 	}
 
+	if err := ensureDirectory(cfg.CollectorArtifactDirectory()); err != nil {
+		return err
+	}
+
 	return nil
 }
 
