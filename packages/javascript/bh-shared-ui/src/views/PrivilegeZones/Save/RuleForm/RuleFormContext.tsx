@@ -22,7 +22,7 @@ import {
     SeedTypes,
     SelectorSeedRequest,
 } from 'js-client-library';
-import { createContext } from 'react';
+import { createContext, useContext } from 'react';
 import { UseQueryResult } from 'react-query';
 import { Action } from './RuleForm';
 import { AssetGroupSelectedNodes } from './types';
@@ -37,6 +37,8 @@ interface RuleFormContext {
     cypherQueryYieldsNoResults: boolean;
     staleCypherPreview: boolean;
 }
+
+export const emptyFunction = () => {};
 
 export const initialValue: RuleFormContext = {
     dispatch: () => {},
@@ -55,5 +57,7 @@ export const initialValue: RuleFormContext = {
 };
 
 const RuleFormContext = createContext<RuleFormContext>(initialValue);
+
+export const useRuleFormContext = () => useContext(RuleFormContext);
 
 export default RuleFormContext;

@@ -42,13 +42,13 @@ import { useLocation } from 'react-router-dom';
 import { useAssetGroupTagInfo, usePZPathParams } from '../../../../hooks';
 import { queriesAreLoadingOrErrored } from '../../../../utils';
 import { PrivilegeZonesContext } from '../../PrivilegeZonesContext';
-import RuleFormContext from './RuleFormContext';
+import { useRuleFormContext } from './RuleFormContext';
 import { RuleFormInputs } from './types';
 
 const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> = ({ control }) => {
     const location = useLocation();
     const { ruleId = '', tagId, tagType, tagTypeDisplay } = usePZPathParams();
-    const { dispatch, ruleQuery } = useContext(RuleFormContext);
+    const { dispatch, ruleQuery } = useRuleFormContext();
     const { Certification } = useContext(PrivilegeZonesContext);
     const receivedData = location.state;
 

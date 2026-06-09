@@ -17,15 +17,14 @@ import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { Button, Card, CardContent, CardHeader, CardTitle } from 'doodle-ui';
 import { SeedTypeCypher } from 'js-client-library';
-import { FC, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { TagLabelPrefix } from '../../../hooks/useAssetGroupTags';
 import { useCypherSchema } from '../../../hooks/useGraphKinds';
 import { usePZPathParams } from '../../../hooks/usePZParams';
 import { cn } from '../../../utils';
 import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
-import RuleFormContext from '../Save/RuleForm/RuleFormContext';
-import { emptyFunction } from '../Save/RuleForm/rule-form-utils';
+import { useRuleFormContext } from '../Save/RuleForm/RuleFormContext';
 
 const hasTagLabel = (value: string) => {
     const tagLabel = `:${TagLabelPrefix}`;
@@ -42,11 +41,7 @@ export const PrivilegeZonesCypherEditor: FC<{
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
-    const {
-        dispatch = emptyFunction,
-        cypherQueryYieldsNoResults,
-        staleCypherPreview,
-    } = useContext(RuleFormContext) || emptyFunction;
+    const { dispatch, cypherQueryYieldsNoResults, staleCypherPreview } = useRuleFormContext();
 
     const setStalePreview = useCallback(
         (isStale: boolean) => dispatch({ type: 'set-stale-cypher-preview', staleCypherPreview: isStale }),
@@ -77,10 +72,10 @@ export const PrivilegeZonesCypherEditor: FC<{
 
     const onValueChanged = useCallback(
         (value: string) => {
-            if (preview) return;
             setCypherQuery(value);
             setStalePreview(true);
 
+            if (preview) return;
             if (hasZoneId && hasTagLabel(value)) setShowLabelWarning(true);
             else setShowLabelWarning(false);
         },
@@ -94,6 +89,8 @@ export const PrivilegeZonesCypherEditor: FC<{
             onChange(cypherQuery);
         }
     }, [cypherQuery, onChange]);
+
+    console.log({ staleCypherPreview });
 
     return (
         <Card className='mb-8'>

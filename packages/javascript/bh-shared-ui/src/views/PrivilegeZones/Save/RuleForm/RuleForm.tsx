@@ -159,6 +159,8 @@ const RuleForm: FC = () => {
     const patchRuleMutation = usePatchRule(tagId);
     const createRuleMutation = useCreateRule(tagId);
 
+    console.log({ staleCypherPreview });
+
     const handlePatchRule = useCallback(async () => {
         try {
             if (!tagId || !ruleId) throw new Error(`Missing required entity IDs; tagId: ${tagId}, ruleId: ${ruleId}`);
@@ -205,7 +207,18 @@ const RuleForm: FC = () => {
         } catch (error) {
             handleError(error, 'updating', 'rule', addNotification, { ruleType });
         }
-    }, [tagId, ruleId, ruleType, patchRuleMutation, addNotification, navigate, ruleQuery.data, form, seeds]);
+    }, [
+        tagId,
+        ruleId,
+        ruleType,
+        patchRuleMutation,
+        addNotification,
+        navigate,
+        ruleQuery.data,
+        form,
+        seeds,
+        staleCypherPreview,
+    ]);
 
     const handleCreateRule = useCallback(async () => {
         try {
@@ -323,7 +336,16 @@ const RuleForm: FC = () => {
 
     return (
         <RuleFormContext.Provider
-            value={{ dispatch, seeds, ruleType, selectedObjects, ruleQuery, autoCertify, cypherQueryYieldsNoResults }}>
+            value={{
+                dispatch,
+                seeds,
+                ruleType,
+                selectedObjects,
+                ruleQuery,
+                autoCertify,
+                cypherQueryYieldsNoResults,
+                staleCypherPreview,
+            }}>
             {isUpdate ? (
                 <p className='mt-6'>
                     {`Update this Rule's details. ${!isLabelPage ? 'Adjust criteria, analysis, or certification settings.' : ''} Changes apply to

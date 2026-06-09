@@ -26,13 +26,12 @@ import {
     SeedTypesMap,
     SelectorSeedRequest,
 } from 'js-client-library';
-import { FC, useContext, useEffect } from 'react';
+import { FC, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
 import { useOwnedTagId, usePZPathParams } from '../../../../hooks';
 import { apiClient, cn } from '../../../../utils';
-import RuleFormContext from './RuleFormContext';
-import { emptyFunction } from './rule-form-utils';
+import { useRuleFormContext } from './RuleFormContext';
 
 const getRuleExpansionMethod = (
     tagId: string,
@@ -58,7 +57,7 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
 
     const ownedId = useOwnedTagId();
 
-    const { dispatch = emptyFunction, cypherQueryYieldsNoResults } = useContext(RuleFormContext);
+    const { dispatch, cypherQueryYieldsNoResults } = useRuleFormContext();
 
     const expansion = getRuleExpansionMethod(tagId, tagType, ownedId?.toString());
 
