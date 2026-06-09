@@ -17,7 +17,7 @@
 services:
   testdb:
     restart: unless-stopped
-    image: docker.io/library/postgres:16
+    image: docker.io/library/postgres:18
     command: -c config_file=/etc/postgresql.conf
     shm_size: 1gb
     environment:
@@ -27,7 +27,7 @@ services:
     ports:
       - 127.0.0.1:65432:5432
     volumes:
-      - test-postgres-data:/var/lib/postgresql/data
+      - test-postgres-data:/var/lib/postgresql
       - ${BH_POSTGRES_CONFIG:-./local-harnesses/postgresql.conf}:/etc/postgresql.conf
 
   testgraph:
