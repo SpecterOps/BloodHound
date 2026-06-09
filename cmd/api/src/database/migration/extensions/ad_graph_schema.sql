@@ -63,6 +63,26 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION genscript_upsert_custom_node_kind(v_kind_name VARCHAR(256), v_config JSONB) RETURNS void AS $$
+DECLARE
+	retrieved_kind_id SMALLINT;
+	retrieved_schema_node_kind_id INTEGER;
+BEGIN
+	SELECT id INTO retrieved_kind_id FROM kind WHERE name = v_kind_name;
+	IF retrieved_kind_id IS NULL THEN
+		SELECT genscript_upsert_kind(v_kind_name) INTO retrieved_kind_id;
+	END IF;
+
+	SELECT id INTO retrieved_schema_node_kind_id FROM schema_node_kinds WHERE kind_id = retrieved_kind_id;
+
+	IF NOT EXISTS (SELECT id FROM custom_node_kinds cnk WHERE cnk.kind_id = retrieved_kind_id) THEN
+		INSERT INTO custom_node_kinds (kind_id, config, schema_node_kind_id, created_at, updated_at) VALUES (retrieved_kind_id, v_config, retrieved_schema_node_kind_id, NOW(), NOW());
+	ELSE
+		UPDATE custom_node_kinds SET config = v_config, schema_node_kind_id = retrieved_schema_node_kind_id, updated_at = NOW() WHERE kind_id = retrieved_kind_id;
+	END IF;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION genscript_upsert_schema_relationship_kind(v_extension_id INT, v_kind_name VARCHAR(256), v_description TEXT, v_is_traversable BOOLEAN) RETURNS void AS $$
 DECLARE
 	retrieved_kind_id SMALLINT;
@@ -257,6 +277,21 @@ BEGIN
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'CertTemplate', 'CertTemplate', '', true, 'id-card', '#B153F3');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'IssuancePolicy', 'IssuancePolicy', '', true, 'clipboard-check', '#99B2DD');
 
+	-- Keep custom_node_kinds in sync with node kinds
+	PERFORM genscript_upsert_custom_node_kind('User', '{"icon": {"name": "user", "type": "font-awesome", "color": "#17E625"}}');
+	PERFORM genscript_upsert_custom_node_kind('Computer', '{"icon": {"name": "desktop", "type": "font-awesome", "color": "#E67873"}}');
+	PERFORM genscript_upsert_custom_node_kind('Group', '{"icon": {"name": "users", "type": "font-awesome", "color": "#DBE617"}}');
+	PERFORM genscript_upsert_custom_node_kind('GPO', '{"icon": {"name": "list", "type": "font-awesome", "color": "#998EFD"}}');
+	PERFORM genscript_upsert_custom_node_kind('OU', '{"icon": {"name": "sitemap", "type": "font-awesome", "color": "#FFAA00"}}');
+	PERFORM genscript_upsert_custom_node_kind('Container', '{"icon": {"name": "box", "type": "font-awesome", "color": "#F79A78"}}');
+	PERFORM genscript_upsert_custom_node_kind('Domain', '{"icon": {"name": "globe", "type": "font-awesome", "color": "#17E6B9"}}');
+	PERFORM genscript_upsert_custom_node_kind('AIACA', '{"icon": {"name": "arrows-left-right-to-line", "type": "font-awesome", "color": "#9769F0"}}');
+	PERFORM genscript_upsert_custom_node_kind('RootCA', '{"icon": {"name": "landmark", "type": "font-awesome", "color": "#6968E8"}}');
+	PERFORM genscript_upsert_custom_node_kind('EnterpriseCA', '{"icon": {"name": "building", "type": "font-awesome", "color": "#4696E9"}}');
+	PERFORM genscript_upsert_custom_node_kind('NTAuthStore', '{"icon": {"name": "store", "type": "font-awesome", "color": "#D575F5"}}');
+	PERFORM genscript_upsert_custom_node_kind('CertTemplate', '{"icon": {"name": "id-card", "type": "font-awesome", "color": "#B153F3"}}');
+	PERFORM genscript_upsert_custom_node_kind('IssuancePolicy', '{"icon": {"name": "clipboard-check", "type": "font-awesome", "color": "#99B2DD"}}');
+
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'Owns', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'GenericAll', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'GenericWrite', '', true);
@@ -354,6 +389,7 @@ END $$;
 DROP FUNCTION IF EXISTS genscript_upsert_kind;
 DROP FUNCTION IF EXISTS genscript_upsert_source_kind;
 DROP FUNCTION IF EXISTS genscript_upsert_schema_node_kind;
+DROP FUNCTION IF EXISTS genscript_upsert_custom_node_kind;
 DROP FUNCTION IF EXISTS genscript_upsert_schema_relationship_kind;
 DROP FUNCTION IF EXISTS genscript_upsert_schema_environments;
 DROP FUNCTION IF EXISTS genscript_upsert_schema_environments_principal_kinds;
