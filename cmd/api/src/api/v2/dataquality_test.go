@@ -162,6 +162,232 @@ func TestGetADDataQualityStats_Failure(t *testing.T) {
 	}
 }
 
+func TestGetDataQualitySourceObjectCounts_Failure(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	resources := v2.Resources{DB: mocks.NewMockDatabase(mockCtrl)}
+
+	if req, err := http.NewRequest("GET", "/api/v2/data-quality/source-object-counts?sort_by=invalidColumn", nil); err != nil {
+		t.Fatal(err)
+	} else {
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/data-quality/source-object-counts", resources.GetDataQualitySourceObjectCounts).Methods("GET")
+
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
+
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+
+		var body any
+		require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &body))
+		assert.Equal(t, api.ErrorResponseDetailsNotSortable, body.(map[string]any)["errors"].([]any)[0].(map[string]any)["message"])
+	}
+}
+
+func TestGetDataQualitySourceObjectCounts_Success(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	mockDB := mocks.NewMockDatabase(mockCtrl)
+	mockDB.EXPECT().GetDataQualitySourceObjectCounts(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+		model.DataQualitySourceObjectCountFilters{
+			SourceKind: "Base",
+			NodeKind:   "User",
+			RunID:      "run-1",
+		},
+		"count desc",
+		1,
+		2,
+	).Return(model.DataQualitySourceObjectCounts{
+		{
+			SourceKind: "Base",
+			NodeKind:   "User",
+			Count:      10,
+			RunID:      "run-1",
+		},
+	}, 1, nil)
+
+	resources := v2.Resources{DB: mockDB}
+
+	endpoint := "/api/v2/data-quality/source-object-counts?source_kind=Base&node_kind=User&run_id=run-1&sort_by=-count&limit=1&skip=2&start=2022-03-23T07:20:50.52Z&end=2022-04-23T07:20:50.52Z"
+	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
+		t.Fatal(err)
+	} else {
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/data-quality/source-object-counts", resources.GetDataQualitySourceObjectCounts).Methods("GET")
+
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
+
+		require.Equal(t, http.StatusOK, rr.Code)
+	}
+}
+
+func TestGetDataQualitySourceObjectCounts_Latest(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	mockDB := mocks.NewMockDatabase(mockCtrl)
+	mockDB.EXPECT().GetDataQualitySourceObjectCounts(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+		model.DataQualitySourceObjectCountFilters{
+			SourceKind: "Base",
+			Latest:     true,
+		},
+		"",
+		1000,
+		0,
+	).Return(model.DataQualitySourceObjectCounts{}, 0, nil)
+
+	resources := v2.Resources{DB: mockDB}
+
+	if req, err := http.NewRequest("GET", "/api/v2/data-quality/source-object-counts?source_kind=Base&latest", nil); err != nil {
+		t.Fatal(err)
+	} else {
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/data-quality/source-object-counts", resources.GetDataQualitySourceObjectCounts).Methods("GET")
+
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
+
+		require.Equal(t, http.StatusOK, rr.Code)
+	}
+}
+
+func TestGetDataQualitySourceObjectCounts_LatestWithRunIDFailure(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	resources := v2.Resources{DB: mocks.NewMockDatabase(mockCtrl)}
+
+	if req, err := http.NewRequest("GET", "/api/v2/data-quality/source-object-counts?latest&run_id=run-1", nil); err != nil {
+		t.Fatal(err)
+	} else {
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/data-quality/source-object-counts", resources.GetDataQualitySourceObjectCounts).Methods("GET")
+
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
+
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+	}
+}
+
+func TestGetDataQualitySourceObjectCountSummaries_Success(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	mockDB := mocks.NewMockDatabase(mockCtrl)
+	mockDB.EXPECT().GetDataQualitySourceObjectCountSummaries(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+		model.DataQualitySourceObjectCountFilters{
+			SourceKind: "Base",
+			NodeKind:   "User",
+			Latest:     true,
+		},
+		"created_at desc",
+		1,
+		2,
+	).Return(model.DataQualitySourceObjectCountSummaries{
+		{
+			RunID: "run-1",
+			Count: 10,
+		},
+	}, 1, nil)
+
+	resources := v2.Resources{DB: mockDB}
+
+	endpoint := "/api/v2/data-quality/source-object-counts/summary?source_kind=Base&node_kind=User&latest&sort_by=-created_at&limit=1&skip=2&start=2022-03-23T07:20:50.52Z&end=2022-04-23T07:20:50.52Z"
+	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
+		t.Fatal(err)
+	} else {
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/data-quality/source-object-counts/summary", resources.GetDataQualitySourceObjectCountSummaries).Methods("GET")
+
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
+
+		require.Equal(t, http.StatusOK, rr.Code)
+	}
+}
+
+func TestGetDataQualityEnvironmentObjectCounts_Failure(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	resources := v2.Resources{DB: mocks.NewMockDatabase(mockCtrl)}
+
+	if req, err := http.NewRequest("GET", "/api/v2/data-quality/environment-object-counts?sort_by=invalidColumn", nil); err != nil {
+		t.Fatal(err)
+	} else {
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/data-quality/environment-object-counts", resources.GetDataQualityEnvironmentObjectCounts).Methods("GET")
+
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
+
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+
+		var body any
+		require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &body))
+		assert.Equal(t, api.ErrorResponseDetailsNotSortable, body.(map[string]any)["errors"].([]any)[0].(map[string]any)["message"])
+	}
+}
+
+func TestGetDataQualityEnvironmentObjectCounts_Success(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	mockDB := mocks.NewMockDatabase(mockCtrl)
+	mockDB.EXPECT().GetDataQualityEnvironmentObjectCounts(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+		model.DataQualityEnvironmentObjectCountFilters{
+			SourceKind:      "Base",
+			EnvironmentKind: "Domain",
+			EnvironmentID:   "S-1-5-21-1",
+			NodeKind:        "User",
+			RunID:           "run-1",
+		},
+		"count desc",
+		1,
+		2,
+	).Return(model.DataQualityEnvironmentObjectCounts{
+		{
+			SourceKind:      "Base",
+			EnvironmentKind: "Domain",
+			EnvironmentID:   "S-1-5-21-1",
+			NodeKind:        "User",
+			Count:           10,
+			RunID:           "run-1",
+		},
+	}, 1, nil)
+
+	resources := v2.Resources{DB: mockDB}
+
+	endpoint := "/api/v2/data-quality/environment-object-counts?source_kind=Base&environment_kind=Domain&environment_id=S-1-5-21-1&node_kind=User&run_id=run-1&sort_by=-count&limit=1&skip=2&start=2022-03-23T07:20:50.52Z&end=2022-04-23T07:20:50.52Z"
+	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
+		t.Fatal(err)
+	} else {
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/data-quality/environment-object-counts", resources.GetDataQualityEnvironmentObjectCounts).Methods("GET")
+
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
+
+		require.Equal(t, http.StatusOK, rr.Code)
+	}
+}
+
 func TestGetADDataQualityStats_Success(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)

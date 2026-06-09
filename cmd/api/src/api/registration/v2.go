@@ -351,6 +351,9 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET(fmt.Sprintf("/api/v2/ad-domains/{%s}/data-quality-stats", api.URIPathVariableDomainID), resources.GetADDataQualityStats).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB, resources.DogTags),
 		routerInst.GET(fmt.Sprintf("/api/v2/azure-tenants/{%s}/data-quality-stats", api.URIPathVariableTenantID), resources.GetAzureDataQualityStats).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB, resources.DogTags),
 		routerInst.GET(fmt.Sprintf("/api/v2/platform/{%s}/data-quality-stats", api.URIPathVariablePlatformID), resources.GetPlatformAggregateStats).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET("/api/v2/data-quality/source-object-counts", resources.GetDataQualitySourceObjectCounts).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET("/api/v2/data-quality/source-object-counts/summary", resources.GetDataQualitySourceObjectCountSummaries).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET("/api/v2/data-quality/environment-object-counts", resources.GetDataQualityEnvironmentObjectCounts).RequirePermissions(permissions.GraphDBRead).RequireAllEnvironmentAccess(resources.DogTags),
 
 		// Datapipe API
 		routerInst.GET("/api/v2/datapipe/status", resources.GetDatapipeStatus).RequireAuth(),

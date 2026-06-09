@@ -13859,6 +13859,412 @@
         }
       }
     },
+    "/api/v2/data-quality/source-object-counts": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetDataQualitySourceObjectCounts",
+        "summary": "Get data quality source object counts",
+        "description": "Time series list of object counts grouped by source kind and node kind.",
+        "tags": [
+          "Data Quality",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "source_kind",
+            "description": "Filter by source kind.",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node_kind",
+            "description": "Filter by node kind.",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "run_id",
+            "description": "Filter by collection run ID.",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "latest",
+            "description": "Return rows for the latest object count run in the selected time range. Cannot be combined with run_id.",
+            "in": "query",
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are source_kind, node_kind, count, run_id, created_at, updated_at.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "start",
+            "description": "Beginning datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime minus 30 days",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "end",
+            "description": "Ending datetime of range (exclusive) in RFC-3339 format; Defaults to current datetime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "$ref": "#/components/schemas/api.response.time-window"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.data-quality-source-object-count"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/data-quality/source-object-counts/summary": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetDataQualitySourceObjectCountSummaries",
+        "summary": "Get data quality source object count summaries",
+        "description": "Time series list of total object counts grouped by object count run. Use source_kind to scope totals to a source, or omit it for all objects.",
+        "tags": [
+          "Data Quality",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "source_kind",
+            "description": "Filter by source kind.",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node_kind",
+            "description": "Filter by node kind.",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "run_id",
+            "description": "Filter by collection run ID.",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "latest",
+            "description": "Return the latest object count run in the selected time range. Cannot be combined with run_id.",
+            "in": "query",
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are count, run_id, created_at.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "start",
+            "description": "Beginning datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime minus 30 days",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "end",
+            "description": "Ending datetime of range (exclusive) in RFC-3339 format; Defaults to current datetime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "$ref": "#/components/schemas/api.response.time-window"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.data-quality-source-object-count-summary"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/data-quality/environment-object-counts": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetDataQualityEnvironmentObjectCounts",
+        "summary": "Get data quality environment object counts",
+        "description": "Time series list of object counts grouped by source kind, environment kind, environment ID, and node kind.",
+        "tags": [
+          "Data Quality",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "source_kind",
+            "description": "Filter by source kind.",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "environment_kind",
+            "description": "Filter by environment kind.",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "environment_id",
+            "description": "Filter by environment ID.",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node_kind",
+            "description": "Filter by node kind.",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "run_id",
+            "description": "Filter by collection run ID.",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "latest",
+            "description": "Return rows for the latest object count run in the selected time range. Cannot be combined with run_id.",
+            "in": "query",
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are source_kind, environment_kind, environment_id, node_kind, count, run_id, created_at, updated_at.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "start",
+            "description": "Beginning datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime minus 30 days",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "end",
+            "description": "Ending datetime of range (exclusive) in RFC-3339 format; Defaults to current datetime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "$ref": "#/components/schemas/api.response.time-window"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.data-quality-environment-object-count"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/clear-database": {
       "parameters": [
         {
@@ -21978,6 +22384,87 @@
                     }
                   ]
                 }
+              }
+            }
+          }
+        ]
+      },
+      "model.data-quality-source-object-count": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int32.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "source_kind": {
+                "type": "string"
+              },
+              "node_kind": {
+                "type": "string"
+              },
+              "count": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "run_id": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          }
+        ]
+      },
+      "model.data-quality-source-object-count-summary": {
+        "type": "object",
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "model.data-quality-environment-object-count": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int32.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "source_kind": {
+                "type": "string"
+              },
+              "environment_kind": {
+                "type": "string"
+              },
+              "environment_id": {
+                "type": "string"
+              },
+              "node_kind": {
+                "type": "string"
+              },
+              "count": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "run_id": {
+                "type": "string",
+                "format": "uuid"
               }
             }
           }

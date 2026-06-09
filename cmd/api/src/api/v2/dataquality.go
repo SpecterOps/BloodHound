@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -35,7 +37,55 @@ const (
 	ErrNoTenantId        string = "no tenant id specified in url"
 	ErrNoPlatformId      string = "no platform id specified in url"
 	ErrInvalidPlatformId string = "invalid platform id specified in url: %v"
+
+	dataQualityQueryParameterEnvironmentKind string = "environment_kind"
+	dataQualityQueryParameterNodeKind        string = "node_kind"
+	dataQualityQueryParameterRunID           string = "run_id"
+	dataQualityQueryParameterSourceKind      string = "source_kind"
+
+	dataQualityErrorLatestWithRunID string = "latest cannot be combined with run_id"
 )
+
+type dataQualitySortable interface {
+	IsSortable(column string) bool
+}
+
+func buildDataQualityOrder(sortByValues []string, sortable dataQualitySortable) ([]string, bool) {
+	var order []string
+
+	for _, column := range sortByValues {
+		var descending bool
+
+		if strings.HasPrefix(column, "-") {
+			descending = true
+			column = strings.TrimPrefix(column, "-")
+		}
+
+		if column == "" || !sortable.IsSortable(column) {
+			return order, false
+		}
+
+		if descending {
+			order = append(order, column+" desc")
+		} else {
+			order = append(order, column)
+		}
+	}
+
+	return order, true
+}
+
+func getDataQualityLatestQueryParameter(queryParams url.Values) (bool, error) {
+	if values, wantsLatest := queryParams["latest"]; !wantsLatest {
+		return false, nil
+	} else if len(values) == 0 || values[0] == "" {
+		return true, nil
+	} else if latest, err := strconv.ParseBool(values[0]); err != nil {
+		return false, fmt.Errorf(api.ErrorResponseDetailsLatestMalformed)
+	} else {
+		return latest, nil
+	}
+}
 
 func (s Resources) GetDatabaseCompleteness(response http.ResponseWriter, request *http.Request) {
 	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Get Current Database Completeness")()
@@ -60,6 +110,119 @@ func (s Resources) GetDatabaseCompleteness(response http.ResponseWriter, request
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting quality stat: %v", err), request), response)
 	} else {
 		api.WriteBasicResponse(request.Context(), result, http.StatusOK, response)
+	}
+}
+
+func (s *Resources) GetDataQualitySourceObjectCounts(response http.ResponseWriter, request *http.Request) {
+	var (
+		objectCounts             model.DataQualitySourceObjectCounts
+		queryParams              = request.URL.Query()
+		defaultEnd, defaultStart = DefaultTimeRange()
+		filters                  = model.DataQualitySourceObjectCountFilters{
+			SourceKind: queryParams.Get(dataQualityQueryParameterSourceKind),
+			NodeKind:   queryParams.Get(dataQualityQueryParameterNodeKind),
+			RunID:      queryParams.Get(dataQualityQueryParameterRunID),
+		}
+	)
+
+	if order, validOrder := buildDataQualityOrder(queryParams[api.QueryParameterSortBy], objectCounts); !validOrder {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
+	} else if latest, err := getDataQualityLatestQueryParameter(queryParams); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if latest && filters.RunID != "" {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, dataQualityErrorLatestWithRunID, request), response)
+	} else if start, err := ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["start"]), request), response)
+	} else if end, err := ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["end"]), request), response)
+	} else if limit, err := ParseLimitQueryParameter(queryParams, 1000); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidLimit, queryParams["limit"]), request), response)
+	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, queryParams["skip"]), request), response)
+	} else {
+		filters.Latest = latest
+
+		if counts, count, err := s.DB.GetDataQualitySourceObjectCounts(request.Context(), start, end, filters, strings.Join(order, ", "), limit, skip); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			api.WriteResponseWrapperWithTimeWindowAndPagination(request.Context(), counts, start, end, limit, skip, count, http.StatusOK, response)
+		}
+	}
+}
+
+func (s *Resources) GetDataQualitySourceObjectCountSummaries(response http.ResponseWriter, request *http.Request) {
+	var (
+		objectCountSummaries     model.DataQualitySourceObjectCountSummaries
+		queryParams              = request.URL.Query()
+		defaultEnd, defaultStart = DefaultTimeRange()
+		filters                  = model.DataQualitySourceObjectCountFilters{
+			SourceKind: queryParams.Get(dataQualityQueryParameterSourceKind),
+			NodeKind:   queryParams.Get(dataQualityQueryParameterNodeKind),
+			RunID:      queryParams.Get(dataQualityQueryParameterRunID),
+		}
+	)
+
+	if order, validOrder := buildDataQualityOrder(queryParams[api.QueryParameterSortBy], objectCountSummaries); !validOrder {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
+	} else if latest, err := getDataQualityLatestQueryParameter(queryParams); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if latest && filters.RunID != "" {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, dataQualityErrorLatestWithRunID, request), response)
+	} else if start, err := ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["start"]), request), response)
+	} else if end, err := ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["end"]), request), response)
+	} else if limit, err := ParseLimitQueryParameter(queryParams, 1000); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidLimit, queryParams["limit"]), request), response)
+	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, queryParams["skip"]), request), response)
+	} else {
+		filters.Latest = latest
+
+		if summaries, count, err := s.DB.GetDataQualitySourceObjectCountSummaries(request.Context(), start, end, filters, strings.Join(order, ", "), limit, skip); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			api.WriteResponseWrapperWithTimeWindowAndPagination(request.Context(), summaries, start, end, limit, skip, count, http.StatusOK, response)
+		}
+	}
+}
+
+func (s *Resources) GetDataQualityEnvironmentObjectCounts(response http.ResponseWriter, request *http.Request) {
+	var (
+		objectCounts             model.DataQualityEnvironmentObjectCounts
+		queryParams              = request.URL.Query()
+		defaultEnd, defaultStart = DefaultTimeRange()
+		filters                  = model.DataQualityEnvironmentObjectCountFilters{
+			SourceKind:      queryParams.Get(dataQualityQueryParameterSourceKind),
+			EnvironmentKind: queryParams.Get(dataQualityQueryParameterEnvironmentKind),
+			EnvironmentID:   queryParams.Get(api.QueryParameterEnvironmentId),
+			NodeKind:        queryParams.Get(dataQualityQueryParameterNodeKind),
+			RunID:           queryParams.Get(dataQualityQueryParameterRunID),
+		}
+	)
+
+	if order, validOrder := buildDataQualityOrder(queryParams[api.QueryParameterSortBy], objectCounts); !validOrder {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
+	} else if latest, err := getDataQualityLatestQueryParameter(queryParams); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if latest && filters.RunID != "" {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, dataQualityErrorLatestWithRunID, request), response)
+	} else if start, err := ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["start"]), request), response)
+	} else if end, err := ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["end"]), request), response)
+	} else if limit, err := ParseLimitQueryParameter(queryParams, 1000); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidLimit, queryParams["limit"]), request), response)
+	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, queryParams["skip"]), request), response)
+	} else {
+		filters.Latest = latest
+
+		if counts, count, err := s.DB.GetDataQualityEnvironmentObjectCounts(request.Context(), start, end, filters, strings.Join(order, ", "), limit, skip); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			api.WriteResponseWrapperWithTimeWindowAndPagination(request.Context(), counts, start, end, limit, skip, count, http.StatusOK, response)
+		}
 	}
 }
 
