@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, FormControl, FormControlLabel, Grid, InputLabel, MenuItem, Select } from '@mui/material';
+import { Alert, FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material';
 import clsx from 'clsx';
 import { Switch, Typography } from 'doodle-ui';
 import {
@@ -50,29 +50,32 @@ const SSOProviderConfigForm: FC<{
                 control={control}
                 defaultValue={false}
                 render={({ field }) => (
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={field.value}
-                                onCheckedChange={(checked) => {
-                                    field.onChange(checked);
-                                    if (!checked) {
-                                        resetField('config.auto_provision.role_provision');
-                                        resetField('config.auto_provision.default_role_id');
-                                    }
-                                }}
-                                data-testid='sso-provider-config-form_toggle-auto-provision'
-                            />
-                        }
-                        label={
+                    <div className='flex items-center'>
+                        <Switch
+                            aria-describedby='auto-provision'
+                            checked={field.value}
+                            onCheckedChange={(checked) => {
+                                field.onChange(checked);
+
+                                if (!checked) {
+                                    resetField('config.auto_provision.role_provision');
+                                    resetField('config.auto_provision.default_role_id');
+                                }
+                            }}
+                            data-testid='sso-provider-config-form_toggle-auto-provision'
+                        />
+
+                        <label id='auto-provision'>
                             <Typography
                                 className={clsx(
-                                    `ml-4 ${!watch('config.auto_provision.enabled') && 'dark:text-white dark:text-opacity-75 text-black text-opacity-75'}`
+                                    'ml-4',
+                                    !watch('config.auto_provision.enabled') &&
+                                        'dark:text-white dark:text-opacity-75 text-black text-opacity-75'
                                 )}>
                                 Automatically create new users on login
                             </Typography>
-                        }
-                    />
+                        </label>
+                    </div>
                 )}
             />
         </Grid>
@@ -81,26 +84,31 @@ const SSOProviderConfigForm: FC<{
                 name='config.auto_provision.role_provision'
                 control={control}
                 defaultValue={false}
-                render={({ field }) => (
-                    <FormControlLabel
-                        disabled={!watch('config.auto_provision.enabled')}
-                        control={
+                render={({ field }) => {
+                    const roleProvisionEnabled = watch('config.auto_provision.enabled');
+                    return (
+                        <div className='flex items-center'>
                             <Switch
                                 checked={field.value}
+                                disabled={!roleProvisionEnabled}
                                 onCheckedChange={(checked) => field.onChange(checked)}
                                 data-testid='sso-provider-config-form_toggle-role-provision'
+                                aria-describedby='role-provision'
                             />
-                        }
-                        label={
-                            <Typography
-                                className={clsx(
-                                    `ml-4 ${!watch('config.auto_provision.role_provision') && 'dark:text-white dark:text-opacity-75 text-black text-opacity-75'}`
-                                )}>
-                                Allow SSO Provider to modify roles
-                            </Typography>
-                        }
-                    />
-                )}
+
+                            <label id='role-provision'>
+                                <Typography
+                                    className={clsx(
+                                        'ml-4',
+                                        !watch('config.auto_provision.role_provision') &&
+                                            'dark:text-white dark:text-opacity-75 text-black text-opacity-75'
+                                    )}>
+                                    Allow SSO Provider to modify roles
+                                </Typography>
+                            </label>
+                        </div>
+                    );
+                }}
             />
         </Grid>
         <Grid item xs={3}>
