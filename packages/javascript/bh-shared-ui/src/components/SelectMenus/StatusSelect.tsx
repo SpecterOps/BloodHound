@@ -39,7 +39,7 @@ export const StatusSelect: FC<Props> = ({ status = '', statusOptions, onSelect }
             <Label>Status</Label>
 
             <Select onValueChange={onSelect} value={status.toString()}>
-                <SelectTrigger className='w-32' aria-label='Status Select'>
+                <SelectTrigger className='w-32 m-1' aria-label='Status Select'>
                     <SelectValue placeholder='Select' />
                 </SelectTrigger>
                 <SelectPortal>

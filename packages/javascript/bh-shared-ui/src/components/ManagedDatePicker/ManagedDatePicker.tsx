@@ -138,11 +138,15 @@ export const ManagedDatePicker: FC<Props> = ({
         setValidationError(validationErrorProp);
     }, [validationErrorProp]);
 
+    const formatId = useId();
     const errorId = useId();
     return (
         <>
             <DatePicker
                 className='bg-transparent dark:bg-transparent pl-2'
+                aria-label={hint} // "Start date" or "End date"
+                aria-invalid={Boolean(validationError)}
+                aria-describedby={validationError ? `${formatId} ${errorId}` : formatId}
                 onBlur={() => {
                     setPlaceholder(hint);
                     validateInput(inputDateString);
@@ -152,9 +156,9 @@ export const ManagedDatePicker: FC<Props> = ({
                 placeholder={placeholder}
                 // `value` only represents input buffer
                 value={inputDateString}
-                variant={'underlined'}
-                aria-invalid={Boolean(validationError)}
-                aria-describedby={validationError ? errorId : undefined}
+                variant='underlined'
+                // aria-invalid={Boolean(validationError)}
+                // aria-describedby={validationError ? errorId : undefined}
                 calendarProps={{
                     fromDate: fromDate,
                     mode: 'single',
@@ -164,6 +168,10 @@ export const ManagedDatePicker: FC<Props> = ({
                     toDate: toDate,
                 }}
             />
+            <span id={formatId} className='sr-only'>
+                Format: four digit year, two digit month, two digit day. Example: 2026 dash 06 dash 08.
+            </span>
+
             {validationError && (
                 <span className='text-error text-sm' id={errorId}>
                     {validationError}
