@@ -25,7 +25,7 @@ const FALLBACK_STRING = '--';
 const ExploreTableDataCell = ({ value, columnKey }: { value: EntityField['value']; columnKey: string }) => {
     if (columnKey === 'kind') {
         return (
-            <div className='flex pl-8'>
+            <div className='flex pl-8 -outline-offset-4'>
                 <NodeIcon nodeType={value?.toString() || ''} />
             </div>
         );

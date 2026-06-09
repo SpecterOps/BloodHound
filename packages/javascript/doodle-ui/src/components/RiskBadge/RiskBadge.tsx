@@ -61,10 +61,19 @@ export interface RiskBadgeProps
     color?: ColorOptions;
     outlined: boolean;
     label?: string;
+    labelClassName?: string;
 }
 
 function RiskBadge(props: RiskBadgeProps) {
-    const { className, color: _color = 'secondary', outlined = false, type, label = 'md-circle', ...rest } = props;
+    const {
+        className,
+        labelClassName,
+        color: _color = 'secondary',
+        outlined = false,
+        type,
+        label = 'md-circle',
+        ...rest
+    } = props;
 
     const cssColor = getCssColor(_color);
     const labeled = type === 'labeled' || type === 'sm-labeled';
@@ -82,7 +91,7 @@ function RiskBadge(props: RiskBadgeProps) {
         <div role='status' className={cn(RiskBadgePropVariants({ type }), className)} {...rest}>
             <div
                 style={riskBadgeStyle}
-                className={cn(RiskBadgeContentVariants({ outlined, type }), 'risk-badge-label')}>
+                className={cn(RiskBadgeContentVariants({ outlined, type }), 'risk-badge-label', labelClassName)}>
                 <span>{labeled ? label : null}</span>
             </div>
         </div>

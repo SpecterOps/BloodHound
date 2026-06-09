@@ -148,3 +148,17 @@ export const setAssetGroupEdit = (assetGroupId: number | null): types.GlobalOpti
         assetGroupId,
     };
 };
+
+export const setIsExploreGraphHighlight = (isExploreGraphHighlight: boolean): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_IS_EXPLORE_GRAPH_HIGHLIGHT,
+        isExploreGraphHighlight,
+    };
+};
+
+export const setIsExploreGraphLabelClip = (isExploreGraphLabelClip: boolean): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_IS_EXPLORE_GRAPH_LABEL_CLIP,
+        isExploreGraphLabelClip,
+    };
+};

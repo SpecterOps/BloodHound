@@ -16,6 +16,7 @@
 import { CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import {
+    AnnouncementProvider,
     AppNotifications,
     GenericErrorBoundaryFallback,
     MainNav,
@@ -133,11 +134,13 @@ const App: React.FC = () => {
             <CssBaseline />
             <BrowserRouter future={reactRouterFutureFlags} basename='/ui' history={history}>
                 <NotificationsProvider>
-                    <DialogProviders>
-                        <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
-                            <Inner />
-                        </ErrorBoundary>
-                    </DialogProviders>
+                    <AnnouncementProvider>
+                        <DialogProviders>
+                            <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
+                                <Inner />
+                            </ErrorBoundary>
+                        </DialogProviders>
+                    </AnnouncementProvider>
                 </NotificationsProvider>
             </BrowserRouter>
         </ThemeProvider>

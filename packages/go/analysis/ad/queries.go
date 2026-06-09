@@ -1828,34 +1828,6 @@ func FetchEnterpriseCAsRootCAForPathToDomainFull(tx graph.Transaction, domain *g
 	})
 }
 
-func DoesCertTemplateLinkToDomain(tx graph.Transaction, certTemplate, domainNode graph.ID) (bool, error) {
-	if pathSet, err := FetchCertTemplatePathToDomain(tx, certTemplate, domainNode); err != nil {
-		return false, err
-	} else {
-		return pathSet.Len() > 0, nil
-	}
-}
-
-func FetchCertTemplatePathToDomain(tx graph.Transaction, certTemplate, domain graph.ID) (graph.PathSet, error) {
-	var (
-		paths = graph.NewPathSet()
-	)
-
-	return paths, tx.Relationships().Filter(
-		query.And(
-			query.Equals(query.StartID(), certTemplate),
-			query.KindIn(query.Relationship(), ad.PublishedTo, ad.IssuedSignedBy, ad.EnterpriseCAFor, ad.RootCAFor),
-			query.Equals(query.EndID(), domain),
-		),
-	).FetchAllShortestPaths(func(cursor graph.Cursor[graph.Path]) error {
-		for path := range cursor.Chan() {
-			paths.AddPath(path)
-		}
-
-		return cursor.Error()
-	})
-}
-
 // fetchFirstDegreeNodes fetches all entities that are connected to the provided targetNode with a relationship kind that matches any of the provided relKinds
 func fetchFirstDegreeNodes(tx graph.Transaction, targetNode *graph.Node, relKinds ...graph.Kind) (graph.NodeSet, error) {
 	return ops.FetchStartNodes(tx.Relationships().Filter(
@@ -1865,6 +1837,30 @@ func fetchFirstDegreeNodes(tx graph.Transaction, targetNode *graph.Node, relKind
 			query.Equals(query.EndID(), targetNode.ID),
 		),
 	))
+}
+
+// fetchFirstDegreeNodesByRelKind fetches all entities connected to targetNode in a single database query,
+// then partitions the results by relationship kind. This avoids issuing separate queries per edge kind.
+func fetchFirstDegreeNodesByRelKind(tx graph.Transaction, targetNode *graph.Node, relKinds ...graph.Kind) (map[graph.Kind]graph.NodeSet, error) {
+	nodesByKind := make(map[graph.Kind]graph.NodeSet, len(relKinds))
+	for _, kind := range relKinds {
+		nodesByKind[kind] = graph.NewNodeSet()
+	}
+
+	err := ops.ForEachStartNode(tx.Relationships().Filter(
+		query.And(
+			query.Kind(query.Start(), ad.Entity),
+			query.KindIn(query.Relationship(), relKinds...),
+			query.Equals(query.EndID(), targetNode.ID),
+		),
+	), func(relationship *graph.Relationship, node *graph.Node) error {
+		if nodeSet, ok := nodesByKind[relationship.Kind]; ok {
+			nodeSet.Add(node)
+		}
+		return nil
+	})
+
+	return nodesByKind, err
 }
 
 func FetchAttackersForEscalations9and10(tx graph.Transaction, victimBitmap cardinality.Duplex[uint64], scenarioB bool) ([]graph.ID, error) {

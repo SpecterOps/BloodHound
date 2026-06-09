@@ -52,6 +52,7 @@ const ActionField: FC<{
                             </FormControl>
                             <Button
                                 variant={'text'}
+                                aria-label='clear action'
                                 disabled={!field.value}
                                 className={cn('w-1/12 p-0', { invisible: !field.value })}
                                 onClick={() => {

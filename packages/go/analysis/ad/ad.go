@@ -512,8 +512,8 @@ func createOrUpdateWellKnownLink(
 
 // CalculateCrossProductNodeSets finds the intersection of the given sets of nodes.
 // See CalculateCrossProductNodeSetsDoc.md for explaination of the specialGroups (Authenticated Users and Everyone) and why we treat them the way we do
-func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ...[]*graph.Node) cardinality.Duplex[uint64] {
-	if len(nodeSlices) < 2 {
+func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, principalSets ...CachedPrincipalSet) cardinality.Duplex[uint64] {
+	if len(principalSets) < 2 {
 		slog.Error("Cross products require at least 2 nodesets")
 		return cardinality.NewBitmap64()
 	}
@@ -524,18 +524,15 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 		firstDegreeSets []cardinality.Duplex[uint64]
 		unrolledSets    [][]cardinality.Duplex[uint64]
 
-		// This is the set we use as a reference set to check against checkset
+		// This is the set we use as a reference set to check against the materialized check set
 		unrolledRefSet = cardinality.NewBitmap64()
-
-		// This is the set we use to aggregate multiple sets together it should have all the valid principals from all other sets at this point
-		checkSet = cardinality.CommutativeDuplexes[uint64]{}
 
 		// This is our set of entities that have the complete cross product of permissions
 		resultEntities = cardinality.NewBitmap64()
 	)
 
 	// Unroll all nodesets
-	for _, nodeSlice := range nodeSlices {
+	for _, principalSet := range principalSets {
 		var (
 			// Skip sets containing Auth. Users or Everyone
 			nodeExcluded = false
@@ -545,15 +542,13 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 			entityReachBitmaps = []cardinality.Duplex[uint64]{entityReachBitmap}
 		)
 
-		for _, entity := range nodeSlice {
-			entityID := entity.ID.Uint64()
-
+		principalSet.AllIDs.Each(func(entityID uint64) bool {
 			firstDegreeSet.Add(entityID)
 			entityReachBitmap.Add(entityID)
 
 			// When encountering a node that is a group or a local group, the algorithm here must expand all of the members
 			// of the group or local group
-			if entity.Kinds.ContainsOneOf(ad.Group, ad.LocalGroup) {
+			if principalSet.GroupOrLocalGroupIDs.Contains(entityID) {
 				// If this group is one of the excluded groups
 				if localGroupData.ExcludedShortcutGroups.Contains(entityID) {
 					// If this group is excluded, do not continue expanding the rest of the nodes in the set
@@ -577,16 +572,14 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 						}
 
 						if nodeExcluded {
-							break
+							return false
 						}
 					}
 				}
 			}
 
-			if nodeExcluded {
-				break
-			}
-		}
+			return !nodeExcluded
+		})
 
 		// If the node is not excluded, include all group members
 		if !nodeExcluded {
@@ -597,10 +590,8 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 
 	// If every nodeset (unrolled) includes Auth. Users/Everyone then return all nodesets (first degree)
 	if len(firstDegreeSets) == 0 {
-		for _, nodeSet := range nodeSlices {
-			for _, entity := range nodeSet {
-				resultEntities.Add(entity.ID.Uint64())
-			}
+		for _, principalSet := range principalSets {
+			resultEntities.Or(principalSet.AllIDs)
 		}
 
 		return resultEntities
@@ -610,15 +601,24 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 	}
 
 	// This means that len(firstDegreeSets) must be greater than or equal to 2 i.e. we have at least two nodesets (unrolled) without Auth. Users/Everyone
-	checkSet.Or(cardinality.CommutativeOr(unrolledSets[1]...))
+	// Materialize the check set as a single bitmap from the union of all component bitmaps (`Or`) within each set, then intersecting (`And`) across sets.
+	materializedCheckSet := cardinality.NewBitmap64()
+	for _, set := range unrolledSets[1] {
+		materializedCheckSet.Or(set)
+	}
 
+	setUnion := cardinality.NewBitmap64()
 	for _, unrolledSet := range unrolledSets[2:] {
-		checkSet.And(cardinality.CommutativeOr(unrolledSet...))
+		setUnion.Clear()
+		for _, bm := range unrolledSet {
+			setUnion.Or(bm)
+		}
+		materializedCheckSet.And(setUnion)
 	}
 
 	// Check first degree principals in our reference set (firstDegreeSets[0]) first
 	firstDegreeSets[0].Each(func(id uint64) bool {
-		if checkSet.Contains(id) {
+		if materializedCheckSet.Contains(id) {
 			resultEntities.Add(id)
 		} else {
 			localGroupData.GroupMembershipCache.OrReach(id, graph.DirectionInbound, unrolledRefSet)
@@ -667,7 +667,7 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 			continue
 		}
 
-		if checkSet.Contains(groupId) {
+		if materializedCheckSet.Contains(groupId) {
 			// If this entity is a cross product, add it to result entities, remove the group id from the second set and remove the group's membership from the result set
 			resultEntities.Add(groupId)
 
@@ -687,13 +687,9 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 		}
 	}
 
-	unrolledRefSet.Each(func(remainder uint64) bool {
-		if checkSet.Contains(remainder) {
-			resultEntities.Add(remainder)
-		}
-
-		return true
-	})
+	// Use bitmap-level intersection to confirm membership in check set.
+	unrolledRefSet.And(materializedCheckSet)
+	resultEntities.Or(unrolledRefSet)
 
 	return resultEntities
 }

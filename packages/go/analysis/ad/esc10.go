@@ -36,7 +36,7 @@ import (
 func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, certChains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
 	if publishedCertTemplates := cache.GetPublishedTemplateCache(certChains.EnterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
-	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(certChains.EnterpriseCA.ID); len(ecaEnrollers) == 0 {
+	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(certChains.EnterpriseCA.ID); ecaEnrollers.IsEmpty() {
 		return nil
 	} else {
 		results := cardinality.NewBitmap64()
@@ -44,7 +44,7 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- post.
 		for _, template := range publishedCertTemplates {
 			if !isCertTemplateValidForESC10(ctx, template, false) {
 				continue
-			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
+			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); certTemplateEnrollers.IsEmpty() {
 				slog.DebugContext(
 					ctx,
 					"Failed to retrieve enrollers for cert template from cache",
@@ -93,7 +93,7 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- post.
 func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, chains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
 	if publishedCertTemplates := cache.GetPublishedTemplateCache(chains.EnterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
-	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(chains.EnterpriseCA.ID); len(ecaEnrollers) == 0 {
+	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(chains.EnterpriseCA.ID); ecaEnrollers.IsEmpty() {
 		return nil
 	} else {
 		results := cardinality.NewBitmap64()
@@ -101,7 +101,7 @@ func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- post.
 		for _, template := range publishedCertTemplates {
 			if !isCertTemplateValidForESC10(ctx, template, true) {
 				continue
-			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
+			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); certTemplateEnrollers.IsEmpty() {
 				slog.DebugContext(
 					ctx,
 					"Failed to retrieve enrollers for cert template from cache",

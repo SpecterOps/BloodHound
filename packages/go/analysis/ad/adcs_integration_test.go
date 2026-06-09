@@ -315,6 +315,14 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
 			certTemplates, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
+			require.Nil(t, err)
+
+			enterpriseCAs, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA)
+			require.Nil(t, err)
+
+			cache := adAnalysis.NewADCSCache()
+			require.Nil(t, cache.BuildCache(context.Background(), db, enterpriseCAs, certTemplates))
+
 			v1Templates := make([]*graph.Node, 0)
 			v2Templates := make([]*graph.Node, 0)
 
@@ -328,43 +336,31 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 				}
 			}
 
-			require.Nil(t, err)
+			results := adAnalysis.EnrollOnBehalfOfVersionOne(cache, v1Templates, certTemplates, harness.EnrollOnBehalfOfHarness1.Domain1.ID)
 
-			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-				results, err := adAnalysis.EnrollOnBehalfOfVersionOne(tx, v1Templates, certTemplates, harness.EnrollOnBehalfOfHarness1.Domain1.ID)
-				require.Nil(t, err)
+			require.Len(t, results, 3)
 
-				require.Len(t, results, 3)
-
-				require.Contains(t, results, post.EnsureRelationshipJob{
-					FromID: harness.EnrollOnBehalfOfHarness1.CertTemplate11.ID,
-					ToID:   harness.EnrollOnBehalfOfHarness1.CertTemplate12.ID,
-					Kind:   ad.EnrollOnBehalfOf,
-				})
-
-				require.Contains(t, results, post.EnsureRelationshipJob{
-					FromID: harness.EnrollOnBehalfOfHarness1.CertTemplate13.ID,
-					ToID:   harness.EnrollOnBehalfOfHarness1.CertTemplate12.ID,
-					Kind:   ad.EnrollOnBehalfOf,
-				})
-
-				require.Contains(t, results, post.EnsureRelationshipJob{
-					FromID: harness.EnrollOnBehalfOfHarness1.CertTemplate12.ID,
-					ToID:   harness.EnrollOnBehalfOfHarness1.CertTemplate12.ID,
-					Kind:   ad.EnrollOnBehalfOf,
-				})
-
-				return nil
+			require.Contains(t, results, post.EnsureRelationshipJob{
+				FromID: harness.EnrollOnBehalfOfHarness1.CertTemplate11.ID,
+				ToID:   harness.EnrollOnBehalfOfHarness1.CertTemplate12.ID,
+				Kind:   ad.EnrollOnBehalfOf,
 			})
 
-			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-				results, err := adAnalysis.EnrollOnBehalfOfVersionTwo(tx, v2Templates, certTemplates, harness.EnrollOnBehalfOfHarness1.Domain1.ID)
-				require.Nil(t, err)
-
-				require.Len(t, results, 0)
-
-				return nil
+			require.Contains(t, results, post.EnsureRelationshipJob{
+				FromID: harness.EnrollOnBehalfOfHarness1.CertTemplate13.ID,
+				ToID:   harness.EnrollOnBehalfOfHarness1.CertTemplate12.ID,
+				Kind:   ad.EnrollOnBehalfOf,
 			})
+
+			require.Contains(t, results, post.EnsureRelationshipJob{
+				FromID: harness.EnrollOnBehalfOfHarness1.CertTemplate12.ID,
+				ToID:   harness.EnrollOnBehalfOfHarness1.CertTemplate12.ID,
+				Kind:   ad.EnrollOnBehalfOf,
+			})
+
+			resultsV2 := adAnalysis.EnrollOnBehalfOfVersionTwo(cache, v2Templates, certTemplates, harness.EnrollOnBehalfOfHarness1.Domain1.ID)
+
+			require.Len(t, resultsV2, 0)
 		})
 	})
 
@@ -375,6 +371,14 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
 			certTemplates, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
+			require.Nil(t, err)
+
+			enterpriseCAs, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA)
+			require.Nil(t, err)
+
+			cache := adAnalysis.NewADCSCache()
+			require.Nil(t, cache.BuildCache(context.Background(), db, enterpriseCAs, certTemplates))
+
 			v1Templates := make([]*graph.Node, 0)
 			v2Templates := make([]*graph.Node, 0)
 
@@ -388,27 +392,17 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 				}
 			}
 
-			require.Nil(t, err)
+			results := adAnalysis.EnrollOnBehalfOfVersionOne(cache, v1Templates, certTemplates, harness.EnrollOnBehalfOfHarness2.Domain2.ID)
 
-			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-				results, err := adAnalysis.EnrollOnBehalfOfVersionOne(tx, v1Templates, certTemplates, harness.EnrollOnBehalfOfHarness2.Domain2.ID)
-				require.Nil(t, err)
+			require.Len(t, results, 0)
 
-				require.Len(t, results, 0)
-				return nil
-			})
+			resultsV2 := adAnalysis.EnrollOnBehalfOfVersionTwo(cache, v2Templates, certTemplates, harness.EnrollOnBehalfOfHarness2.Domain2.ID)
 
-			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-				results, err := adAnalysis.EnrollOnBehalfOfVersionTwo(tx, v2Templates, certTemplates, harness.EnrollOnBehalfOfHarness2.Domain2.ID)
-				require.Nil(t, err)
-
-				require.Len(t, results, 1)
-				require.Contains(t, results, post.EnsureRelationshipJob{
-					FromID: harness.EnrollOnBehalfOfHarness2.CertTemplate21.ID,
-					ToID:   harness.EnrollOnBehalfOfHarness2.CertTemplate23.ID,
-					Kind:   ad.EnrollOnBehalfOf,
-				})
-				return nil
+			require.Len(t, resultsV2, 1)
+			require.Contains(t, resultsV2, post.EnsureRelationshipJob{
+				FromID: harness.EnrollOnBehalfOfHarness2.CertTemplate21.ID,
+				ToID:   harness.EnrollOnBehalfOfHarness2.CertTemplate23.ID,
+				Kind:   ad.EnrollOnBehalfOf,
 			})
 		})
 	})

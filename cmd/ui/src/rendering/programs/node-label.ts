@@ -41,7 +41,8 @@ export default function drawLabel(context: CanvasRenderingContext2D, data: Graph
     const fillBackground = data.highlighted ? data.highlightedBackground : data.backgroundColor;
     const fillText = data.highlighted ? data.highlightedText : settings.labelColor.color;
 
-    context.globalAlpha = calculateLabelOpacity(inverseSqrtZoomRatio);
+    const dimFactor = data.isDimmed ? data.labelDimFactor ?? 0.1 : 1;
+    context.globalAlpha = calculateLabelOpacity(inverseSqrtZoomRatio) * dimFactor;
 
     // Edge labels: use original right-of-node positioning with center-alignment offset
     if (EDGE_TYPES.includes(data.type ?? '')) {
@@ -57,9 +58,13 @@ export default function drawLabel(context: CanvasRenderingContext2D, data: Graph
         const labelbounds = getLabelBoundsFromContext(context, labelParams);
         labelbounds[0] = labelbounds[0] - labelbounds[2] / 2 - EDGE_MIDDLE_ALIGN_OFFSET;
 
+        // Draw background at full opacity so it always masks the edge line behind it
+        context.globalAlpha = 1;
         context.fillStyle = fillBackground;
         context.fillRect(...labelbounds);
 
+        // Draw text with zoom/dim factor applied
+        context.globalAlpha = calculateLabelOpacity(inverseSqrtZoomRatio) * dimFactor;
         context.fillStyle = fillText;
         context.fillText(data.label, labelbounds[0] + LABEL_PADDING, labelbounds[1] + labelbounds[3] - LABEL_PADDING);
 
@@ -71,6 +76,7 @@ export default function drawLabel(context: CanvasRenderingContext2D, data: Graph
     // When the node is highlighted (selected), show the full label instead of truncating
 
     const labelTextRendered = (labelText: string) => {
+        if (data.isExploreGraphLabelClip === false) return labelText;
         return data.highlighted ? labelText : truncateText(labelText) ?? labelText;
     };
 
@@ -88,9 +94,12 @@ export default function drawLabel(context: CanvasRenderingContext2D, data: Graph
 
     const primaryBounds = getNodeLabelBoundsBelowFromContext(context, primaryParams);
 
+    // Draw background at full opacity to mask any edge lines passing through the label area
+    context.globalAlpha = 1;
     context.fillStyle = fillBackground;
     context.fillRect(...primaryBounds);
 
+    context.globalAlpha = calculateLabelOpacity(inverseSqrtZoomRatio) * dimFactor;
     context.fillStyle = fillText;
     context.fillText(
         primaryLabel,
@@ -114,9 +123,11 @@ export default function drawLabel(context: CanvasRenderingContext2D, data: Graph
 
         const sublabelBounds = getNodeLabelBoundsBelowFromContext(context, sublabelParams, primaryBounds[3]);
 
+        context.globalAlpha = 1;
         context.fillStyle = fillBackground;
         context.fillRect(...sublabelBounds);
 
+        context.globalAlpha = calculateLabelOpacity(inverseSqrtZoomRatio) * dimFactor;
         context.fillStyle = fillText;
         context.fillText(
             sublabelText,
