@@ -254,10 +254,10 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 
 func TestStore_DeleteAnalysisRequest(t *testing.T) {
 	var (
-		ctx        = context.Background()
-		beginTxErr = errors.New("begin tx failed")
-		selectErr  = errors.New("select failed")
-		deleteErr  = errors.New("delete failed")
+		ctx         = context.Background()
+		beginTxErr  = errors.New("begin tx failed")
+		selectErr   = errors.New("select failed")
+		deleteErr   = errors.New("delete failed")
 		analysisRow = func(pool pgxmock.PgxPoolIface) *pgxmock.Rows {
 			return pool.NewRows(analysisRequestRowColumns()).AddRow(
 				"test-user", string(services.RequestedAnalysisTypeAnalysis), time.Now().UTC(),

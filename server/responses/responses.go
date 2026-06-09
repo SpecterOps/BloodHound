@@ -176,4 +176,3 @@ func writeJSON[T BasicResponse | ErrorWrapper | PaginatedResponse](requestCtx co
 		slog.ErrorContext(requestCtx, "Failed to write JSON response body", attr.Error(writeErr))
 	}
 }
-

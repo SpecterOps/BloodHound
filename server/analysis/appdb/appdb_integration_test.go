@@ -238,7 +238,7 @@ func TestStore_DeleteAnalysisRequest_Integration(t *testing.T) {
 
 	t.Run("returns ErrDeletionRequestPending and leaves the row intact", func(t *testing.T) {
 		var (
-			ctx   = context.Background()
+			ctx         = context.Background()
 			store, pool = setupStoreAndPool(t)
 		)
 
