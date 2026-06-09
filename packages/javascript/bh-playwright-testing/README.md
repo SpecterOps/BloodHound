@@ -1,10 +1,16 @@
 # BloodHound Playwright Testing Utils
 
-Shared Playwright testing utilities for BloodHound UI workspaces — axe-core fixture and reporting, auth bootstrap, route stubs, and theme matrix helpers.
+Shared Playwright testing utilities for BloodHound UI workspaces.
 
 ## Purpose
 
-`bh-playwright-testing` centralizes the Playwright building blocks that are common across BloodHound UI suites and consumers (e.g. CE's `cmd/ui` and BHE's `cmd/ui`). It exists so each consumer can compose suites — accessibility today, end-to-end and visual regression later — out of the same fixtures, snapshot helpers, and route stubs without reimplementing them.
+`bh-playwright-testing` centralizes the Playwright building blocks that are common across BloodHound UI suites and consumers (e.g. both BHE and BHCE's `cmd/ui`). It exists so each consumer can consistently compose test suites without reimplementing common features. This includes:
+
+-   axe-core fixture
+-   reporting
+-   auth bootstrap
+-   route stubs
+-   theme matrix helpers
 
 The package intentionally does **not** own:
 
@@ -19,13 +25,13 @@ Consumers compose those concerns on top of the modules below.
 
 The package is consumed via subpath imports so each consumer pulls only what it uses. Each subpath is a thin, focused module — no cross-module coupling beyond shared `Theme` types.
 
-| Subpath                                      | Exports                                                                                                       | Purpose                                                                                                                                      |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Subpath                                      | Exports                                                                                                       | Purpose                                                                                                                                          |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `bh-playwright-testing`                      | `test`, `expect`, `WCAG_TAGS`, `attachAxeReport`, `expectNoAccessibilityViolations`, `AttachAxeReportOptions` | Package root entry — the axe-core fixture and reporting helpers, exposed as named exports (no default export). Convenience re-export of `./axe`. |
-| `bh-playwright-testing/axe`                  | same as above                                                                                                 | Same named exports as the package root entry. Use this path when you want to be explicit.                                                    |
-| `bh-playwright-testing/themes`               | `Theme`, `THEMES`, `TestOptions`, `authStorageStateFor`                                                       | Type-only and constant helpers for the per-theme storage-state convention used by `loginAndSnapshotThemes` and Playwright configs.           |
-| `bh-playwright-testing/auth`                 | `loginAndSnapshotThemes`, `LoginAndSnapshotThemesOptions`                                                     | One-time login helper that snapshots `storageState` for both light and dark themes from a single session.                                    |
-| `bh-playwright-testing/stubs/graph-has-data` | `installGraphHasDataStub`                                                                                     | Stubs `POST /api/v2/graphs/cypher` so the `useGraphHasData` probe resolves to "true" and the "No Data Available" upload dialog stays closed. |
+| `bh-playwright-testing/axe`                  | same as above                                                                                                 | Same named exports as the package root entry. Use this path when you want to be explicit.                                                        |
+| `bh-playwright-testing/themes`               | `Theme`, `THEMES`, `TestOptions`, `authStorageStateFor`                                                       | Type-only and constant helpers for the per-theme storage-state convention used by `loginAndSnapshotThemes` and Playwright configs.               |
+| `bh-playwright-testing/auth`                 | `loginAndSnapshotThemes`, `LoginAndSnapshotThemesOptions`                                                     | One-time login helper that snapshots `storageState` for both light and dark themes from a single session.                                        |
+| `bh-playwright-testing/stubs/graph-has-data` | `installGraphHasDataStub`                                                                                     | Stubs `POST /api/v2/graphs/cypher` so the `useGraphHasData` probe resolves to "true" and the "No Data Available" upload dialog stays closed.     |
 
 ### `axe`
 
@@ -49,27 +55,23 @@ type AttachAxeReportOptions = {
 };
 ```
 
-When `page` is provided and there are violations, the helper screenshots each affected element via `page.locator(node.target).first().screenshot()` and attaches it as `a11y-<violation.id>-<n>.png` so the Playwright HTML and Allure reports show a visual indicator for each violation right next to the textual one. `maxNodesPerViolation` caps how many element screenshots are taken per rule (e.g. a `color-contrast` violation spanning 30 elements only attaches the first 5 PNGs).
+When `page` is provided and there are violations, the helper screenshots each affected element and attaches it as `a11y-<violation.id>-<n>.png` so that reports can show a visual indicator for each violation next to the textual one. `maxNodesPerViolation` caps how many element screenshots are taken per rule (e.g. a `color-contrast` violation spanning 30 elements only attaches the first 5 PNGs).
 
-Targets that cross iframe or shadow-DOM boundaries (where axe returns a nested-array target) are skipped — Playwright requires a different API for those, and the textual report still describes the violation. Per-element screenshot failures (detached/animated-off elements) are swallowed so a missing screenshot never blocks the assertion.
+Targets that cross iframe or shadow-DOM boundaries are skipped — Playwright requires a different API for those, though the textual report still describes the violation. Per-element screenshot failures (detached/animated-off elements) are swallowed so a missing screenshot never blocks the assertion.
 
 Without `page`, behavior is unchanged (textual attachments only).
 
 ### `themes`
 
-Type-only and constant helpers. `Theme = 'light' | 'dark'`, `THEMES: readonly Theme[]` is `['light', 'dark']`, and `TestOptions` is the worker-scoped option shape consumed at `defineConfig<TestOptions>` time.
-
-`authStorageStateFor(theme)` returns the canonical path Playwright projects should pass to `use.storageState` — `./playwright/.auth/user-<theme>.json` relative to the consumer's Playwright project root. The `auth` module writes to the same paths via the caller-supplied `storageStatePathFor` callback, so the two modules agree on the layout without one depending on the other.
+Theme TypeScript types and constants.
 
 ### `auth`
 
-`loginAndSnapshotThemes` logs in once and snapshots `storageState` for both themes from the same session. Capturing both snapshots from one session avoids the parallel-login race where two setups as the same user would invalidate each other's session. The helper assumes the BloodHound shared UI shell (login form labels `Email Address` / `Password`, the `LOGIN` submit button, the `global_nav-dark-mode` toggle, and the `persistedState` localStorage key written by the global store), which is shared across CE and BHE.
-
-An optional `dismissPostLogin(page)` hook lets the caller dismiss a post-login overlay (e.g. the "No Data Available" dialog) that could intercept the dark-mode toggle click.
+Auth storageState session snapshop helpers.
 
 ### `stubs/graph-has-data`
 
-`installGraphHasDataStub(page)` registers a `page.route` for `POST **/api/v2/graphs/cypher` that returns a populated payload. Install it before navigation. Tests that need a different cypher response can register a higher-priority handler for the same URL — Playwright runs `page.route` handlers in LIFO order, so a test-local handler wins for the cases it cares about. Non-`POST` traffic falls through.
+Stubs for tests that need controlled cypher response states.
 
 ## Usage
 
@@ -155,4 +157,4 @@ export { expect, expectNoAccessibilityViolations } from 'bh-playwright-testing';
 
 ## Source-Only Distribution
 
-The package ships TypeScript source via the `exports` map — there is no compiled `dist`. Consumers run it directly through their own Vite/Playwright TS pipelines. This avoids a build step that would only ever be consumed inside the monorepo and keeps the modules editable in place. `tsc --noEmit` (`yarn check-types`, also wired to `yarn lint`) is the only type-check.
+The package ships TypeScript source via the `exports` map — there is no compiled `dist`. Consumers run it directly through their own Vite/Playwright TS pipelines. This avoids a build step that would only ever be consumed inside the monorepo and keeps the modules editable in place. `tsc --noEmit` (`yarn check-types`) is the only type-check.
