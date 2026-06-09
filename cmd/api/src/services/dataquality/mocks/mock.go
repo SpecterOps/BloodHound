@@ -28,8 +28,10 @@ package mocks
 import (
 	context "context"
 	reflect "reflect"
+	time "time"
 
 	model "github.com/specterops/bloodhound/cmd/api/src/model"
+	graphschema "github.com/specterops/bloodhound/packages/go/graphschema"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -115,4 +117,162 @@ func (m *MockDataQualityData) CreateAzureDataQualityStats(ctx context.Context, s
 func (mr *MockDataQualityDataMockRecorder) CreateAzureDataQualityStats(ctx, stats any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityStats", reflect.TypeOf((*MockDataQualityData)(nil).CreateAzureDataQualityStats), ctx, stats)
+}
+
+// CreateDataQualityEnvironmentObjectCounts mocks base method.
+func (m *MockDataQualityData) CreateDataQualityEnvironmentObjectCounts(ctx context.Context, counts model.DataQualityEnvironmentObjectCounts) (model.DataQualityEnvironmentObjectCounts, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateDataQualityEnvironmentObjectCounts", ctx, counts)
+	ret0, _ := ret[0].(model.DataQualityEnvironmentObjectCounts)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateDataQualityEnvironmentObjectCounts indicates an expected call of CreateDataQualityEnvironmentObjectCounts.
+func (mr *MockDataQualityDataMockRecorder) CreateDataQualityEnvironmentObjectCounts(ctx, counts any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDataQualityEnvironmentObjectCounts", reflect.TypeOf((*MockDataQualityData)(nil).CreateDataQualityEnvironmentObjectCounts), ctx, counts)
+}
+
+// CreateDataQualityObjectCountRun mocks base method.
+func (m *MockDataQualityData) CreateDataQualityObjectCountRun(ctx context.Context, run model.DataQualityObjectCountRun) (model.DataQualityObjectCountRun, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateDataQualityObjectCountRun", ctx, run)
+	ret0, _ := ret[0].(model.DataQualityObjectCountRun)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateDataQualityObjectCountRun indicates an expected call of CreateDataQualityObjectCountRun.
+func (mr *MockDataQualityDataMockRecorder) CreateDataQualityObjectCountRun(ctx, run any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDataQualityObjectCountRun", reflect.TypeOf((*MockDataQualityData)(nil).CreateDataQualityObjectCountRun), ctx, run)
+}
+
+// CreateDataQualitySourceObjectCounts mocks base method.
+func (m *MockDataQualityData) CreateDataQualitySourceObjectCounts(ctx context.Context, counts model.DataQualitySourceObjectCounts) (model.DataQualitySourceObjectCounts, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateDataQualitySourceObjectCounts", ctx, counts)
+	ret0, _ := ret[0].(model.DataQualitySourceObjectCounts)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateDataQualitySourceObjectCounts indicates an expected call of CreateDataQualitySourceObjectCounts.
+func (mr *MockDataQualityDataMockRecorder) CreateDataQualitySourceObjectCounts(ctx, counts any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDataQualitySourceObjectCounts", reflect.TypeOf((*MockDataQualityData)(nil).CreateDataQualitySourceObjectCounts), ctx, counts)
+}
+
+// GetDataQualityEnvironmentObjectCounts mocks base method.
+func (m *MockDataQualityData) GetDataQualityEnvironmentObjectCounts(ctx context.Context, start, end time.Time, filters model.DataQualityEnvironmentObjectCountFilters, order string, limit, skip int) (model.DataQualityEnvironmentObjectCounts, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDataQualityEnvironmentObjectCounts", ctx, start, end, filters, order, limit, skip)
+	ret0, _ := ret[0].(model.DataQualityEnvironmentObjectCounts)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetDataQualityEnvironmentObjectCounts indicates an expected call of GetDataQualityEnvironmentObjectCounts.
+func (mr *MockDataQualityDataMockRecorder) GetDataQualityEnvironmentObjectCounts(ctx, start, end, filters, order, limit, skip any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataQualityEnvironmentObjectCounts", reflect.TypeOf((*MockDataQualityData)(nil).GetDataQualityEnvironmentObjectCounts), ctx, start, end, filters, order, limit, skip)
+}
+
+// GetDataQualitySourceObjectCounts mocks base method.
+func (m *MockDataQualityData) GetDataQualitySourceObjectCounts(ctx context.Context, start, end time.Time, filters model.DataQualitySourceObjectCountFilters, order string, limit, skip int) (model.DataQualitySourceObjectCounts, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDataQualitySourceObjectCounts", ctx, start, end, filters, order, limit, skip)
+	ret0, _ := ret[0].(model.DataQualitySourceObjectCounts)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetDataQualitySourceObjectCounts indicates an expected call of GetDataQualitySourceObjectCounts.
+func (mr *MockDataQualityDataMockRecorder) GetDataQualitySourceObjectCounts(ctx, start, end, filters, order, limit, skip any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataQualitySourceObjectCounts", reflect.TypeOf((*MockDataQualityData)(nil).GetDataQualitySourceObjectCounts), ctx, start, end, filters, order, limit, skip)
+}
+
+// GetDataQualitySourceObjectCountSummaries mocks base method.
+func (m *MockDataQualityData) GetDataQualitySourceObjectCountSummaries(ctx context.Context, start, end time.Time, filters model.DataQualitySourceObjectCountFilters, order string, limit, skip int) (model.DataQualitySourceObjectCountSummaries, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDataQualitySourceObjectCountSummaries", ctx, start, end, filters, order, limit, skip)
+	ret0, _ := ret[0].(model.DataQualitySourceObjectCountSummaries)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetDataQualitySourceObjectCountSummaries indicates an expected call of GetDataQualitySourceObjectCountSummaries.
+func (mr *MockDataQualityDataMockRecorder) GetDataQualitySourceObjectCountSummaries(ctx, start, end, filters, order, limit, skip any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataQualitySourceObjectCountSummaries", reflect.TypeOf((*MockDataQualityData)(nil).GetDataQualitySourceObjectCountSummaries), ctx, start, end, filters, order, limit, skip)
+}
+
+// GetEnvironments mocks base method.
+func (m *MockDataQualityData) GetEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEnvironments", ctx)
+	ret0, _ := ret[0].([]model.SchemaEnvironment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEnvironments indicates an expected call of GetEnvironments.
+func (mr *MockDataQualityDataMockRecorder) GetEnvironments(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironments", reflect.TypeOf((*MockDataQualityData)(nil).GetEnvironments), ctx)
+}
+
+// GetKindsByIDs mocks base method.
+func (m *MockDataQualityData) GetKindsByIDs(ctx context.Context, ids ...int32) ([]model.Kind, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx}
+	for _, a := range ids {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetKindsByIDs", varargs...)
+	ret0, _ := ret[0].([]model.Kind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetKindsByIDs indicates an expected call of GetKindsByIDs.
+func (mr *MockDataQualityDataMockRecorder) GetKindsByIDs(ctx any, ids ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx}, ids...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetKindsByIDs", reflect.TypeOf((*MockDataQualityData)(nil).GetKindsByIDs), varargs...)
+}
+
+// GetPrimaryDisplayKinds mocks base method.
+func (m *MockDataQualityData) GetPrimaryDisplayKinds(ctx context.Context) (graphschema.PrimaryDisplayKinds, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPrimaryDisplayKinds", ctx)
+	ret0, _ := ret[0].(graphschema.PrimaryDisplayKinds)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPrimaryDisplayKinds indicates an expected call of GetPrimaryDisplayKinds.
+func (mr *MockDataQualityDataMockRecorder) GetPrimaryDisplayKinds(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrimaryDisplayKinds", reflect.TypeOf((*MockDataQualityData)(nil).GetPrimaryDisplayKinds), ctx)
+}
+
+// GetSourceKinds mocks base method.
+func (m *MockDataQualityData) GetSourceKinds(ctx context.Context) ([]model.SourceKind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSourceKinds", ctx)
+	ret0, _ := ret[0].([]model.SourceKind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSourceKinds indicates an expected call of GetSourceKinds.
+func (mr *MockDataQualityDataMockRecorder) GetSourceKinds(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSourceKinds", reflect.TypeOf((*MockDataQualityData)(nil).GetSourceKinds), ctx)
 }
