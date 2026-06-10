@@ -34,6 +34,7 @@ type PermissionSet struct {
 
 	AuthAcceptEULA       model.Permission
 	AuthCreateToken      model.Permission
+	AuthReadProviders    model.Permission
 	AuthManageProviders  model.Permission
 	AuthManageSelf       model.Permission
 	AuthManageUsers      model.Permission
@@ -71,6 +72,7 @@ func (s PermissionSet) All() model.Permissions {
 		s.APsManageAPs,
 		s.AuditLogRead,
 		s.AuthCreateToken,
+		s.AuthReadProviders,
 		s.AuthManageProviders,
 		s.AuthManageSelf,
 		s.AuthManageUsers,
@@ -99,6 +101,7 @@ func (s PermissionSet) ReadAll() model.Permissions {
 		s.AppReadApplicationConfiguration,
 		s.APsGenerateReport,
 		s.AuditLogRead,
+		s.AuthReadProviders,
 		s.AuthReadUsers,
 		s.AuthReadUsersMinimal,
 		s.ClientsRead,
@@ -125,6 +128,7 @@ func Permissions() PermissionSet {
 
 		AuthAcceptEULA:       model.NewPermission("auth", "AcceptEULA"),
 		AuthCreateToken:      model.NewPermission("auth", "CreateToken"),
+		AuthReadProviders:    model.NewPermission("auth", "ReadProviders"),
 		AuthManageProviders:  model.NewPermission("auth", "ManageProviders"),
 		AuthManageSelf:       model.NewPermission("auth", "ManageSelf"),
 		AuthManageUsers:      model.NewPermission("auth", "ManageUsers"),
