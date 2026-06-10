@@ -114,7 +114,7 @@ const DownloadCollectors = () => {
                     {sharpHoundCollectorsQuery.isLoading ? (
                         <Paper>
                             <Box p={2}>
-                                <Typography variant='h6'>
+                                <Typography variant='h6' component='div'>
                                     <Skeleton variant='text' />
                                 </Typography>
                                 <Typography variant='body1'>
@@ -148,7 +148,7 @@ const DownloadCollectors = () => {
                     {azureHoundCollectorsQuery.isLoading ? (
                         <Paper>
                             <Box p={2}>
-                                <Typography variant='h6'>
+                                <Typography variant='h6' component='div'>
                                     <Skeleton variant='text' />
                                 </Typography>
                                 <Typography variant='body1'>

@@ -121,7 +121,7 @@ const SSOProviderTable: FC<{
             <Table stickyHeader aria-label='sso provider table'>
                 <TableHead>
                     <TableRow className='font-bold *:bg-neutral-2'>
-                        <TableCell />
+                        <TableCell aria-label='Actions' />
                         <TableCell className='align-bottom'>Provider Name</TableCell>
                         <TableCell>
                             {ssoProviders.length > 1 && !loading ? (
