@@ -91,8 +91,6 @@ export const PrivilegeZonesCypherEditor: FC<{
         }
     }, [cypherQuery, onChange]);
 
-    console.log({ staleCypherPreview });
-
     return (
         <Card className='mb-8'>
             <CardHeader>
