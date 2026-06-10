@@ -11,7 +11,7 @@ SELECT r.id, p.id
 FROM roles r
 JOIN permissions p
     ON (
-      (r.name IN ('Administrator', 'Auditor') AND (p.authority, p.name) IN (
+      (r.name IN ('Auditor') AND (p.authority, p.name) IN (
             ('auth', 'ReadProviders')
       ))
 )
