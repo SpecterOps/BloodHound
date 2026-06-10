@@ -92,6 +92,7 @@ const initialState: RuleFormState = {
     selectedObjects: [],
     autoCertify: AssetGroupTagSelectorAutoCertifyDisabled,
     cypherQueryYieldsNoResults: false,
+    staleCypherPreview: false,
 };
 
 export type Action =
@@ -100,6 +101,7 @@ export type Action =
     | { type: 'set-selected-objects'; nodes: AssetGroupSelectedNodes }
     | { type: 'set-rule-type'; ruleType: SeedTypes }
     | { type: 'set-cypher-no-results-validation-state'; cypherQueryYieldsNoResults: boolean }
+    | { type: 'set-stale-cypher-preview'; staleCypherPreview: boolean }
     | { type: 'set-seeds'; seeds: SelectorSeedRequest[] };
 
 const reducer = (state: RuleFormState, action: Action): RuleFormState => {
@@ -108,6 +110,7 @@ const reducer = (state: RuleFormState, action: Action): RuleFormState => {
             return {
                 ...state,
                 seeds: [...state.seeds, { type: SeedTypeObjectId, value: action.node.objectid }],
+                staleCypherPreview: false,
                 selectedObjects: [
                     ...state.selectedObjects,
                     {
@@ -131,6 +134,9 @@ const reducer = (state: RuleFormState, action: Action): RuleFormState => {
             return { ...state, seeds: action.seeds };
         case 'set-cypher-no-results-validation-state':
             return { ...state, cypherQueryYieldsNoResults: action.cypherQueryYieldsNoResults };
+        case 'set-stale-cypher-preview':
+            return { ...state, staleCypherPreview: action.staleCypherPreview };
+
         default:
             return state;
     }
@@ -142,10 +148,10 @@ const RuleForm: FC = () => {
     const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
     const { addNotification } = useNotifications();
 
-    const [{ ruleType, seeds, selectedObjects, autoCertify, cypherQueryYieldsNoResults }, dispatch] = useReducer(
-        reducer,
-        initialState
-    );
+    const [
+        { ruleType, seeds, selectedObjects, autoCertify, staleCypherPreview, cypherQueryYieldsNoResults },
+        dispatch,
+    ] = useReducer(reducer, initialState);
 
     const isUpdate = ruleId !== '';
     const ruleQuery = useRuleInfo(tagId, ruleId);
@@ -153,32 +159,31 @@ const RuleForm: FC = () => {
     const patchRuleMutation = usePatchRule(tagId);
     const createRuleMutation = useCreateRule(tagId);
 
+    console.log({ staleCypherPreview });
+
     const handlePatchRule = useCallback(async () => {
         try {
             if (!tagId || !ruleId) throw new Error(`Missing required entity IDs; tagId: ${tagId}, ruleId: ${ruleId}`);
 
             const diffedValues = diffValues(ruleQuery.data, { ...form.getValues(), seeds });
 
+            const stalePreviewErrorMessage = getErrorMessage('seeds are required', 'updating', 'rule', ruleType);
+
             if (isEmpty(diffedValues)) {
-                addNotification(
-                    'No changes to rule detected',
-                    `privilege-zones_update-rule_no-changes-warn_${ruleId}`,
-                    {
-                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                    }
-                );
+                const errorMessage = staleCypherPreview ? stalePreviewErrorMessage : 'No changes to rule detected';
+
+                addNotification(errorMessage, `privilege-zones_update-rule_no-changes-warn_${ruleId}`, {
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                });
+
                 return;
             }
 
             // In the API, PATCHing with an empty seeds array ignore the array.
             if (Array.isArray(diffedValues.seeds) && diffedValues.seeds.length === 0) {
-                return addNotification(
-                    getErrorMessage('seeds are required', 'updating', 'rule', ruleType),
-                    'privilege-zones_updating-rule',
-                    {
-                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                    }
-                );
+                return addNotification(stalePreviewErrorMessage, 'privilege-zones_updating-rule', {
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                });
             }
 
             await patchRuleMutation.mutateAsync({
@@ -202,7 +207,18 @@ const RuleForm: FC = () => {
         } catch (error) {
             handleError(error, 'updating', 'rule', addNotification, { ruleType });
         }
-    }, [tagId, ruleId, ruleType, patchRuleMutation, addNotification, navigate, ruleQuery.data, form, seeds]);
+    }, [
+        tagId,
+        ruleId,
+        ruleType,
+        patchRuleMutation,
+        addNotification,
+        navigate,
+        ruleQuery.data,
+        form,
+        seeds,
+        staleCypherPreview,
+    ]);
 
     const handleCreateRule = useCallback(async () => {
         try {
@@ -320,7 +336,16 @@ const RuleForm: FC = () => {
 
     return (
         <RuleFormContext.Provider
-            value={{ dispatch, seeds, ruleType, selectedObjects, ruleQuery, autoCertify, cypherQueryYieldsNoResults }}>
+            value={{
+                dispatch,
+                seeds,
+                ruleType,
+                selectedObjects,
+                ruleQuery,
+                autoCertify,
+                cypherQueryYieldsNoResults,
+                staleCypherPreview,
+            }}>
             {isUpdate ? (
                 <p className='mt-6'>
                     {`Update this Rule's details. ${!isLabelPage ? 'Adjust criteria, analysis, or certification settings.' : ''} Changes apply to
