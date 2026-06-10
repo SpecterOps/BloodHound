@@ -72,10 +72,11 @@ export const PrivilegeZonesCypherEditor: FC<{
 
     const onValueChanged = useCallback(
         (value: string) => {
+            if (preview) return;
+
             setCypherQuery(value);
             setStalePreview(true);
 
-            if (preview) return;
             if (hasZoneId && hasTagLabel(value)) setShowLabelWarning(true);
             else setShowLabelWarning(false);
         },
