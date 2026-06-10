@@ -98,21 +98,6 @@ func syncDir(root *os.Root, dir string) error {
 	return dirFile.Sync()
 }
 
-// syncDir is used to ensure that once the entry in a directory
-// is changed, to sync the change with the parent directory. While
-// this error does not mean the bytes of the file were not saved,
-// it may be helpful for troubleshooting if the otherwise successfully
-// saved file does not appear.
-func syncDir(root *os.Root, dir string) error {
-	dirFile, err := root.Open(dir)
-	if err != nil {
-		return err
-	}
-	defer dirFile.Close()
-
-	return dirFile.Sync()
-}
-
 // writeAtomic streams src into a temp file under dir(name), then publishes it at name.
 // If failIfExists is true, publish uses link+unlink and returns an error satisfying
 // errors.Is(err, fs.ErrExist) on collision. Otherwise, publish uses rename and silently
