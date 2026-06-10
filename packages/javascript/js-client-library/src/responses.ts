@@ -381,3 +381,26 @@ export type FindingSchema = {
 export type FindingSchemaResponse = PaginatedResponse<{ findings: FindingSchema[] }>;
 
 export type GraphKindsResponse = BasicResponse<{ kinds: string[] }>;
+
+export type UnifiedFinding = {
+    severity: string;
+    finding: string;
+    title: string;
+    finding_type: string;
+    platform: string;
+    environment_id: string;
+    environment_name: string;
+    zone_id: number;
+    zone_name: string;
+    source_principal_id: string;
+    source_principal_name: string;
+    source_principal_kind: string;
+    target_principal_id: string;
+    target_principal_name: string;
+    target_principal_kind: string;
+    status: string;
+    first_seen: string;
+    last_seen: string;
+};
+
+export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;

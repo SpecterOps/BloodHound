@@ -56,7 +56,7 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
         <Paper>
             <Box p={2} display='flex' justifyContent='space-between' flexWrap='wrap' style={{ rowGap: '1rem' }}>
                 <Box overflow='hidden'>
-                    <Typography variant='h6'>
+                    <Typography variant='h3'>
                         {`${COLLECTOR_TYPE[collectorType]} ${version} ${getLabel(isLatest, isDeprecated)}`.trim()}
                     </Typography>
                     <Typography variant='body1'>

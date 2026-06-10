@@ -37,13 +37,13 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- post.E
 
 	if publishedCertTemplates := cache.GetPublishedTemplateCache(chains.EnterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
-	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(chains.EnterpriseCA.ID); len(ecaEnrollers) == 0 {
+	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(chains.EnterpriseCA.ID); ecaEnrollers.IsEmpty() {
 		return nil
 	} else {
 		for _, template := range publishedCertTemplates {
 			if !isCertTemplateValidForESC9(ctx, template, false) {
 				continue
-			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
+			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); certTemplateEnrollers.IsEmpty() {
 				continue
 			} else {
 				victimBitmap := getVictimBitmap(localGroupData, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecialEnrollers(template.ID), cache.GetEnterpriseCAHasSpecialEnrollers(chains.EnterpriseCA.ID))
@@ -90,13 +90,13 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- post.E
 
 	if publishedCertTemplates := cache.GetPublishedTemplateCache(chains.EnterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
-	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(chains.EnterpriseCA.ID); len(ecaEnrollers) == 0 {
+	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(chains.EnterpriseCA.ID); ecaEnrollers.IsEmpty() {
 		return nil
 	} else {
 		for _, template := range publishedCertTemplates {
 			if !isCertTemplateValidForESC9(ctx, template, true) {
 				continue
-			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
+			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); certTemplateEnrollers.IsEmpty() {
 				slog.DebugContext(
 					ctx,
 					"Failed to retrieve enrollers for cert template from cache",

@@ -43,6 +43,7 @@
         "notistack": "^2.0.5",
         "prop-types": "^15.8.1",
         "react-error-boundary": "^3.1.4",
+        "react-helmet-async": "^3.0.0",
         "react-hook-form": "^7.61.1",
         "react-immutable-proptypes": "^2.2.0",
         "react-query": "^3.39.3",
@@ -78,7 +79,7 @@
         "@typescript-eslint/eslint-plugin": "^7.3.0",
         "@typescript-eslint/parser": "^7.3.0",
         "@vitejs/plugin-react": "^4.2.1",
-        "@vitest/coverage-v8": "^3.2.4",
+        "@vitest/coverage-v8": "^4.1.0",
         "allure-vitest": "^3.4.3",
         "eslint": "^9.26.0",
         "eslint-config-prettier": "^9.1.0",
@@ -96,7 +97,7 @@
         "tailwindcss": "^3.4.17",
         "typescript": "^5.9.3",
         "vite": "^6.4.2",
-        "vitest": "^3.0.0",
+        "vitest": "npm:^4.1.0",
         "whatwg-fetch": "^3.6.2"
     },
     "peerDependencies": {

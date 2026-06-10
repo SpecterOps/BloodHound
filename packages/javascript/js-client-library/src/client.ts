@@ -98,6 +98,7 @@ import {
     SavedQuery,
     SavedQueryPermissionsResponse,
     StartFileIngestResponse,
+    UnifiedFindingResponse,
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
 } from './responses';
@@ -494,6 +495,9 @@ class BHEAPIClient {
 
     getFindings = (key: string, options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<FindingAssetsResponse>>(`/api/v2/findings/${key}`, options);
+
+    getUnifiedFindings = (options?: RequestOptions) =>
+        this.baseClient.get<UnifiedFindingResponse>('/api/v2/attack-paths/findings', options);
 
     /**
      * getFindingDetails returns data associated with a finding for a given environment

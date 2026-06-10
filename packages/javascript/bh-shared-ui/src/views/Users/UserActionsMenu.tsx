@@ -29,7 +29,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem, MenuProps } from '@mui/material';
 import withStyles from '@mui/styles/withStyles';
 import React from 'react';
-import { useAPITokensConfiguration } from '../../hooks';
+import { useAPITokensConfiguration, usePermissions } from '../../hooks';
+import { Permission } from '../../utils';
 
 const StyledMenu = withStyles({
     paper: {
@@ -130,11 +131,15 @@ const UserActionsMenu: React.FC<UserActionsMenuProps> = ({
         }
     };
 
+    const { checkPermission } = usePermissions();
+    const hasManagePermission = checkPermission(Permission.AUTH_MANAGE_USERS);
+
     /* Implementation */
 
     return (
         <div>
             <IconButton
+                disabled={!hasManagePermission}
                 data-testid='manage-users_user-row-action-menu-button'
                 aria-label='Show user actions'
                 onClick={handleOnOpen}

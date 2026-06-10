@@ -16,6 +16,8 @@
 import { CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import {
+    AnnouncementProvider,
+    AppNameProvider,
     AppNotifications,
     GenericErrorBoundaryFallback,
     MainNav,
@@ -34,7 +36,7 @@ import {
 import { createBrowserHistory } from 'history';
 import React, { useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { Helmet } from 'react-helmet';
+import { Helmet, HelmetProvider } from 'react-helmet-async';
 import { unstable_HistoryRouter as BrowserRouter } from 'react-router-dom';
 import { initialize } from 'src/ducks/auth/authSlice';
 import { PRIVILEGE_ZONES_ROUTE, ROUTES } from 'src/routes';
@@ -129,18 +131,24 @@ const App: React.FC = () => {
     });
 
     return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <BrowserRouter future={reactRouterFutureFlags} basename='/ui' history={history}>
-                <NotificationsProvider>
-                    <DialogProviders>
-                        <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
-                            <Inner />
-                        </ErrorBoundary>
-                    </DialogProviders>
-                </NotificationsProvider>
-            </BrowserRouter>
-        </ThemeProvider>
+        <HelmetProvider>
+            <ThemeProvider theme={theme}>
+                <CssBaseline />
+                <BrowserRouter future={reactRouterFutureFlags} basename='/ui' history={history}>
+                    <AppNameProvider name='BloodHound Community Edition'>
+                        <NotificationsProvider>
+                            <AnnouncementProvider>
+                                <DialogProviders>
+                                    <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
+                                        <Inner />
+                                    </ErrorBoundary>
+                                </DialogProviders>
+                            </AnnouncementProvider>
+                        </NotificationsProvider>
+                    </AppNameProvider>
+                </BrowserRouter>
+            </ThemeProvider>
+        </HelmetProvider>
     );
 };
 

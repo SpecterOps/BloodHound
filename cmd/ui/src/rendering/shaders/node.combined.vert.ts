@@ -21,6 +21,8 @@ attribute vec4 a_color;
 attribute vec4 a_texture;
 attribute float a_angle;
 attribute vec4 a_borderColor;
+attribute float a_dim;
+attribute vec4 a_bgColor;
 
 uniform float u_ratio;
 uniform float u_scale;
@@ -35,6 +37,8 @@ varying float v_border;
 varying vec4 v_texture;
 varying vec2 v_diffVector;
 varying float v_radius;
+varying float v_dim;
+varying vec4 v_bgColor;
 
 const float bias = 255.0 / 254.0;
 const float marginRatio = 1.05;
@@ -64,4 +68,6 @@ void main() {
   v_texture = a_texture;
   v_borderColor = a_borderColor;
   v_borderColor.a *= bias;
+  v_dim = a_dim;
+  v_bgColor = a_bgColor;
 }`;
