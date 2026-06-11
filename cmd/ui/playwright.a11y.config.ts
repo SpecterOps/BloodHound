@@ -116,5 +116,5 @@ export default defineConfig<TestOptions>({
             }))
         ),
     ],
-    ...(shouldRunWebServer ? { webServer } : {}),
+    webServer: shouldRunWebServer ? webServer : undefined,
 });
