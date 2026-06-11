@@ -18,9 +18,16 @@ import { CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material'
 import { Theme, createTheme } from '@mui/material/styles';
 import { configureStore } from '@reduxjs/toolkit';
 import { RenderHookOptions, RenderHookResult, RenderResult, render, renderHook } from '@testing-library/react';
-import { AnnouncementProvider, NotificationsProvider, darkPalette, reactRouterFutureFlags } from 'bh-shared-ui';
+import {
+    AnnouncementProvider,
+    AppNameProvider,
+    NotificationsProvider,
+    darkPalette,
+    reactRouterFutureFlags,
+} from 'bh-shared-ui';
 import { MemoryHistory } from 'history';
 import { SnackbarProvider } from 'notistack';
+import { HelmetProvider } from 'react-helmet-async';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
@@ -66,22 +73,26 @@ const createProviders: (options: React.PropsWithChildren<CreateProvidersOptions>
     window.history.pushState({}, 'Test page', route);
 
     return (
-        <Provider store={store}>
-            <QueryClientProvider client={queryClient}>
-                <StyledEngineProvider injectFirst>
-                    <ThemeProvider theme={theme}>
-                        <CssBaseline />
-                        <NotificationsProvider>
-                            <AnnouncementProvider>
-                                <BrowserRouter future={reactRouterFutureFlags}>
-                                    <SnackbarProvider>{children}</SnackbarProvider>
-                                </BrowserRouter>
-                            </AnnouncementProvider>
-                        </NotificationsProvider>
-                    </ThemeProvider>
-                </StyledEngineProvider>
-            </QueryClientProvider>
-        </Provider>
+        <HelmetProvider>
+            <Provider store={store}>
+                <QueryClientProvider client={queryClient}>
+                    <StyledEngineProvider injectFirst>
+                        <ThemeProvider theme={theme}>
+                            <CssBaseline />
+                            <NotificationsProvider>
+                                <AnnouncementProvider>
+                                    <BrowserRouter future={reactRouterFutureFlags}>
+                                        <AppNameProvider name='BloodHound Community Edition'>
+                                            <SnackbarProvider>{children}</SnackbarProvider>
+                                        </AppNameProvider>
+                                    </BrowserRouter>
+                                </AnnouncementProvider>
+                            </NotificationsProvider>
+                        </ThemeProvider>
+                    </StyledEngineProvider>
+                </QueryClientProvider>
+            </Provider>
+        </HelmetProvider>
     );
 };
 

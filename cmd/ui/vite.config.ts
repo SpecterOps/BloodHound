@@ -41,6 +41,7 @@ export default defineConfig(({ mode }) => {
                     'src'
                 ),
                 'doodle-ui': path.resolve(__dirname, '..', '..', 'packages', 'javascript', 'doodle-ui', 'src'),
+                'react-helmet-async': path.resolve(__dirname, '..', '..', 'node_modules', 'react-helmet-async'),
             },
             dedupe: [
                 'doodle-ui',
@@ -63,6 +64,7 @@ export default defineConfig(({ mode }) => {
                 'react-error-boundary',
                 'react-hook-form',
                 'react-query',
+                'react-helmet-async',
                 'react-router-dom',
                 'tailwindcss',
             ],

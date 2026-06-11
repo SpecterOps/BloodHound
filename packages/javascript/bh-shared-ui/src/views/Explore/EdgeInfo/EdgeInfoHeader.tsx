@@ -51,9 +51,9 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
 
             {hiddenEdge && <HiddenEntityIcon />}
 
-            <h6 data-testid='explore_edge-information-pane_header-text' className='text-nowrap leading-10 grow'>
+            <h2 data-testid='explore_edge-information-pane_header-text' className='text-nowrap leading-10 grow'>
                 {name}
-            </h6>
+            </h2>
 
             <Icon className='h-10 box-border p-4 text-contrast' onClick={clearSelectedItem} tip='Clear selected item'>
                 <FontAwesomeIcon icon={faRemove} />
