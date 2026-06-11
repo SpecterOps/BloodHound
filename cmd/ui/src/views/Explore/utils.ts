@@ -172,9 +172,9 @@ const initGraphNodes = (
         // Set default node parameters
         const nodeParams: Partial<NodeParams> = {
             type: 'combined',
-            label: node.label,
-            source: getNodeSource(node.kinds),
-            kind: node.kind,
+            label: node.label?.trim(),
+            source: getNodeSource(node.kinds)?.trim(),
+            kind: node.kind?.trim(),
             forceLabel: true,
             hidden: hideNodes,
             ...themedOptions.labels,
