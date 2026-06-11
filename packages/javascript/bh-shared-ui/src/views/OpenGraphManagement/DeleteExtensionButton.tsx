@@ -25,10 +25,8 @@ import {
     Input,
 } from 'doodle-ui';
 import { type Extension } from 'js-client-library';
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import { AppIcon, ConditionalTooltip } from '../../components';
-import { usePermissions } from '../../hooks';
-import { Permission } from '../../utils';
 import { cn } from '../../utils/theme';
 
 export const ConfirmDeleteExtensionDialog: FC<{
@@ -40,18 +38,19 @@ export const ConfirmDeleteExtensionDialog: FC<{
 }> = ({ open, extensionName, onAccept, onCancel, isDeleting }) => {
     const [inputValue, setInputValue] = useState('');
 
+    // Clear input when dialog closes to ensure clean state for next open
+    useEffect(() => {
+        if (!open) {
+            setInputValue('');
+        }
+    }, [open]);
+
     const handleCancel = useCallback(() => {
         onCancel();
-        setTimeout(() => {
-            setInputValue('');
-        }, 1000);
     }, [onCancel]);
 
     const handleAccept = useCallback(() => {
         onAccept();
-        setTimeout(() => {
-            setInputValue('');
-        }, 1000);
     }, [onAccept]);
 
     const isConfirmDisabled = isDeleting || inputValue !== extensionName;
@@ -89,13 +88,11 @@ export const ConfirmDeleteExtensionDialog: FC<{
     );
 };
 
-export const DeleteExtensionButton: FC<{ extension: Extension; onDeleteClick: (extension: Extension) => void }> = ({
-    extension,
-    onDeleteClick,
-}) => {
-    const { checkPermission } = usePermissions();
-    const hasDeletePermission = checkPermission(Permission.OPENGRAPH_WRITE);
-
+export const DeleteExtensionButton: FC<{
+    extension: Extension;
+    onDeleteClick: (extension: Extension) => void;
+    hasDeletePermission: boolean;
+}> = ({ extension, onDeleteClick, hasDeletePermission }) => {
     const { name: extensionName, is_builtin: isUndeletable } = extension;
 
     return (

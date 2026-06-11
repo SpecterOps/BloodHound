@@ -34,8 +34,9 @@ import {
 import { type Extension } from 'js-client-library';
 import { useState } from 'react';
 import { SearchInput } from '../../components';
-import { useDeleteExtension, useExtensionsQuery } from '../../hooks';
+import { useDeleteExtension, useExtensionsQuery, usePermissions } from '../../hooks';
 import { DEFAULT_NOTIFICATION, ERROR_NOTIFICATION, useNotifications } from '../../providers';
+import { Permission } from '../../utils';
 import { ConfirmDeleteExtensionDialog, DeleteExtensionButton } from './DeleteExtensionButton';
 
 const columnHelper = createColumnHelper<Extension>();
@@ -55,6 +56,8 @@ export const ActiveExtensionsCard = () => {
     const { data = [], isError, isLoading, isSuccess } = useExtensionsQuery();
     const deleteExtensionMutation = useDeleteExtension();
     const { addNotification } = useNotifications();
+    const { checkPermission } = usePermissions();
+    const hasDeletePermission = checkPermission(Permission.OPENGRAPH_WRITE);
 
     const handleDeleteClick = (extension: Extension) => {
         setExtensionToDelete(extension);
@@ -95,29 +98,28 @@ export const ActiveExtensionsCard = () => {
         columnHelper.accessor('namespace', {
             id: 'namespace',
             header: () => (
-                <TooltipProvider>
+                <div className='flex items-center gap-1'>
+                    <span>Namespace</span>
                     <TooltipRoot>
-                        <TooltipTrigger asChild>
-                            <div className='flex items-center gap-1'>
-                                Namespace
+                        <TooltipTrigger>
+                            <div>
                                 <FontAwesomeIcon icon={faInfoCircle} size='sm' />
                             </div>
                         </TooltipTrigger>
                         <TooltipPortal>
-                            <TooltipContent>
-                                <div className='flex flex-col gap-2 p-2'>
-                                    <Typography variant='body1' className='font-bold'>
-                                        Namespace
-                                    </Typography>
-                                    <Typography variant='body1'>
-                                        The collection of data types from different extensions installed, organized
-                                        around a common purpose or related theme
-                                    </Typography>
-                                </div>
+                            <TooltipContent className='max-w-96 dark:bg-neutral-5 border-0'>
+                                <Typography variant='caption' component='p'>
+                                    Namespace Key is a set prefix for all node and edge kinds defined by an OpenGraph
+                                    extension (e.g. GH_User, AWS_User).
+                                </Typography>
+                                <Typography variant='caption' component='p' className='mt-2'>
+                                    This helps quickly inform which extension defines a node or edge kind and
+                                    differentiate common types across platforms.
+                                </Typography>
                             </TooltipContent>
                         </TooltipPortal>
                     </TooltipRoot>
-                </TooltipProvider>
+                </div>
             ),
             cell: ({ row }) => <span>{row.original.namespace}</span>,
         }),
@@ -129,7 +131,13 @@ export const ActiveExtensionsCard = () => {
         columnHelper.display({
             id: 'delete-item',
             header: () => <span className='opacity-0'>Delete</span>,
-            cell: ({ row }) => <DeleteExtensionButton extension={row.original} onDeleteClick={handleDeleteClick} />,
+            cell: ({ row }) => (
+                <DeleteExtensionButton
+                    extension={row.original}
+                    onDeleteClick={handleDeleteClick}
+                    hasDeletePermission={hasDeletePermission}
+                />
+            ),
             size: 0,
         }),
     ];
@@ -169,17 +177,19 @@ export const ActiveExtensionsCard = () => {
                             ? EMPTY_STATE_HEIGHT
                             : `${TABLE_HEADER_HEIGHT + TABLE_CELL_HEIGHT * filteredData.length}px`,
                 }}>
-                <DataTable
-                    data={filteredData}
-                    noResultsFallback={
-                        <TableRow>
-                            <TableCell colSpan={3} className='h-28 text-center'>
-                                {fallbackMessage}
-                            </TableCell>
-                        </TableRow>
-                    }
-                    columns={columns}
-                />
+                <TooltipProvider>
+                    <DataTable
+                        data={filteredData}
+                        noResultsFallback={
+                            <TableRow>
+                                <TableCell colSpan={4} className='h-28 text-center'>
+                                    {fallbackMessage}
+                                </TableCell>
+                            </TableRow>
+                        }
+                        columns={columns}
+                    />
+                </TooltipProvider>
             </div>
 
             <ConfirmDeleteExtensionDialog
