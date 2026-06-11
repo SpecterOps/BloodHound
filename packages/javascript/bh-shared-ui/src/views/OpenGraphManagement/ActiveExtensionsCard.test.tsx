@@ -19,6 +19,7 @@ import { AxiosResponse } from 'axios';
 import { Extension } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { withoutErrorLogging } from '../../mocks';
 import { fireEvent, render, screen, waitFor } from '../../test-utils';
 import { apiClient } from '../../utils';
 import {
@@ -112,10 +113,10 @@ describe('ActiveExtensionsCard', () => {
                 return res(ctx.status(500));
             })
         );
-
-        render(<ActiveExtensionsCard />);
-
-        expect(await screen.findByText(ERROR_MESSAGE)).toBeInTheDocument();
+        await withoutErrorLogging(async () => {
+            render(<ActiveExtensionsCard />);
+            expect(await screen.findByText(ERROR_MESSAGE)).toBeInTheDocument();
+        });
     });
 
     it('displays no data message when there are no extensions', async () => {
@@ -392,17 +393,20 @@ describe('ActiveExtensionsCard', () => {
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
         await waitFor(() => expect(confirmButton).not.toBeDisabled());
-        await user.click(confirmButton);
 
-        await waitFor(() => {
-            expect(addNotificationSpy).toHaveBeenCalledWith(
-                'Failed to delete extension "Custom Extension". Please try again.',
-                'deleteExtensionError',
-                expect.objectContaining({
-                    variant: 'error',
-                    anchorOrigin: { horizontal: 'right', vertical: 'top' },
-                })
-            );
+        await withoutErrorLogging(async () => {
+            await user.click(confirmButton);
+
+            await waitFor(() => {
+                expect(addNotificationSpy).toHaveBeenCalledWith(
+                    'Failed to delete extension "Custom Extension". Please try again.',
+                    'deleteExtensionError',
+                    expect.objectContaining({
+                        variant: 'error',
+                        anchorOrigin: { horizontal: 'right', vertical: 'top' },
+                    })
+                );
+            });
         });
     });
 });
