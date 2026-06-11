@@ -36,7 +36,7 @@ import { useState } from 'react';
 import { SearchInput } from '../../components';
 import { useDeleteExtension, useExtensionsQuery } from '../../hooks';
 import { DEFAULT_NOTIFICATION, ERROR_NOTIFICATION, useNotifications } from '../../providers';
-import { DeleteExtensionButton, ConfirmDeleteExtensionDialog } from './DeleteExtensionButton';
+import { ConfirmDeleteExtensionDialog, DeleteExtensionButton } from './DeleteExtensionButton';
 
 const columnHelper = createColumnHelper<Extension>();
 
