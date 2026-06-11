@@ -101,10 +101,13 @@ export const ActiveExtensionsCard = () => {
                 <div className='flex items-center gap-1'>
                     <span>Namespace</span>
                     <TooltipRoot>
-                        <TooltipTrigger>
-                            <div>
+                        <TooltipTrigger asChild>
+                            <button
+                                type='button'
+                                className='bg-transparent border-none p-0 cursor-default'
+                                aria-label='Namespace information'>
                                 <FontAwesomeIcon icon={faInfoCircle} size='sm' />
-                            </div>
+                            </button>
                         </TooltipTrigger>
                         <TooltipPortal>
                             <TooltipContent className='max-w-96 dark:bg-neutral-5 border-0'>
