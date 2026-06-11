@@ -25,5 +25,5 @@ export const truncateText = (
 ): string | undefined => {
     if (!text) return;
     if (text.length <= maxChars) return text;
-    return text.slice(0, maxChars) + trailingChars;
+    return text.slice(0, maxChars).trimEnd() + trailingChars;
 };

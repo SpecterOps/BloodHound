@@ -76,8 +76,9 @@ export default function drawLabel(context: CanvasRenderingContext2D, data: Graph
     // When the node is highlighted (selected), show the full label instead of truncating
 
     const labelTextRendered = (labelText: string) => {
-        if (data.isExploreGraphLabelClip === false) return labelText;
-        return data.highlighted ? labelText : truncateText(labelText) ?? labelText;
+        const trimmed = labelText.trim();
+        if (data.isExploreGraphLabelClip === false) return trimmed;
+        return data.highlighted ? trimmed : truncateText(trimmed) ?? trimmed;
     };
 
     const primaryLabel = labelTextRendered(data.label);
