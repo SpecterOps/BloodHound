@@ -13768,6 +13768,215 @@
         }
       }
     },
+    "/api/v2/data-quality-stats": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetDataQualityStats",
+        "summary": "Get OpenGraph data quality stats",
+        "description": "Time series list of OpenGraph extension data quality stats by environment",
+        "tags": [
+          "Data Quality",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are id, run_id, schema_extension_id, schema_environment_id, environment_id, metric_type, metric_name, metric_value, schema_node_kind_id, schema_relationship_kind_id, created_at, updated_at.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "start_date",
+            "description": "Beginning datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime minus 30 days",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "end_date",
+            "description": "Ending datetime of range (exclusive) in RFC-3339 format; Defaults to current datetime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "environment_id",
+            "description": "Filter stats by OpenGraph environment ID",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "$ref": "#/components/schemas/api.response.time-window"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.opengraph-data-quality-stat"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/data-quality-stats-aggregations": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetDataQualityStatsAggregations",
+        "summary": "Get OpenGraph data quality stat aggregations",
+        "description": "Time series list of OpenGraph extension data quality stat aggregations",
+        "tags": [
+          "Data Quality",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are id, run_id, schema_extension_id, metric_type, metric_name, metric_value, schema_node_kind_id, schema_relationship_kind_id, created_at, updated_at.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "start_date",
+            "description": "Beginning datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime minus 30 days",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "end_date",
+            "description": "Ending datetime of range (exclusive) in RFC-3339 format; Defaults to current datetime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "extension_id",
+            "description": "Filter aggregations by OpenGraph schema extension ID",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "$ref": "#/components/schemas/api.response.time-window"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.opengraph-data-quality-aggregation"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/platform/{platform_id}/data-quality-stats": {
       "parameters": [
         {
@@ -21832,6 +22041,107 @@
               "run_id": {
                 "type": "string",
                 "format": "uuid"
+              }
+            }
+          }
+        ]
+      },
+      "model.opengraph-data-quality-stat": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int32.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "run_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "schema_extension_id": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "schema_environment_id": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "environment_id": {
+                "type": "string"
+              },
+              "metric_type": {
+                "type": "string",
+                "enum": [
+                  "node",
+                  "relationship"
+                ]
+              },
+              "metric_name": {
+                "type": "string"
+              },
+              "metric_value": {
+                "type": "number",
+                "format": "double"
+              },
+              "schema_node_kind_id": {
+                "type": "integer",
+                "format": "int32",
+                "nullable": true
+              },
+              "schema_relationship_kind_id": {
+                "type": "integer",
+                "format": "int32",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "model.opengraph-data-quality-aggregation": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int32.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "run_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "schema_extension_id": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "metric_type": {
+                "type": "string",
+                "enum": [
+                  "node",
+                  "relationship"
+                ]
+              },
+              "metric_name": {
+                "type": "string"
+              },
+              "metric_value": {
+                "type": "number",
+                "format": "double"
+              },
+              "schema_node_kind_id": {
+                "type": "integer",
+                "format": "int32",
+                "nullable": true
+              },
+              "schema_relationship_kind_id": {
+                "type": "integer",
+                "format": "int32",
+                "nullable": true
               }
             }
           }

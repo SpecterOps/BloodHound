@@ -613,6 +613,10 @@ paths:
     $ref: './paths/data-quality.ad-domains.id.data-quality-stats.yaml'
   /api/v2/azure-tenants/{tenant_id}/data-quality-stats:
     $ref: './paths/data-quality.azure-tenants.id.data-quality-stats.yaml'
+  /api/v2/data-quality-stats:
+    $ref: './paths/data-quality.data-quality-stats.yaml'
+  /api/v2/data-quality-stats-aggregations:
+    $ref: './paths/data-quality.data-quality-stats-aggregations.yaml'
   /api/v2/platform/{platform_id}/data-quality-stats:
     $ref: './paths/data-quality.platform.id.data-quality-stats.yaml'
   /api/v2/clear-database:
