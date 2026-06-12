@@ -21,6 +21,7 @@ import (
 	"log/slog"
 	"net/http"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -119,7 +120,7 @@ func setSignedRequestFields(request *http.Request, logAttrs *[]slog.Attr) {
 
 // LoggingMiddleware is a middleware func that outputs a log for each request-response lifecycle. It includes timestamped
 // information organized into fields suitable for searching or parsing.
-func LoggingMiddleware(idResolver auth.IdentityResolver, bypassLimitsParam bool) func(http.Handler) http.Handler {
+func LoggingMiddleware(_ auth.IdentityResolver, bypassLimitsParam bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			var (
@@ -190,6 +191,18 @@ func LoggingMiddleware(idResolver auth.IdentityResolver, bypassLimitsParam bool)
 				slog.Int("status", loggedResponse.statusCode),
 				slog.Duration("elapsed", time.Since(requestContext.StartTime.UTC())),
 			)
+
+			// Add structured logging of query parameters for /api/v2 endpoints
+			if strings.HasPrefix(request.URL.Path, "/api/v2") {
+				var params []any
+				for k, v := range request.URL.Query() {
+					params = append(params, slog.String(k, strings.Join(v, ",")))
+				}
+
+				if len(params) > 0 {
+					logAttrs = append(logAttrs, slog.Group("query_parameters", params...))
+				}
+			}
 		})
 	}
 }
