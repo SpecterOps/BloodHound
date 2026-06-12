@@ -111,10 +111,25 @@ export const useAzurePlatformsDataQualityStatsQuery = () => {
     );
 };
 
-export const useOpenGraphDataQualityStatsQuery = (environmentId: string) => {
-    return useQuery(['opengraph-data-quality-stats', environmentId], ({ signal }) =>
+export const useOpenGraphDataQualityStatsQuery = (
+    environmentId: string,
+    extensionId?: number | null,
+    schemaEnvironmentId?: number | null
+) => {
+    return useQuery(['opengraph-data-quality-stats', environmentId, extensionId, schemaEnvironmentId], ({ signal }) =>
         apiClient
-            .getOpenGraphQualityStats(environmentId, undefined, undefined, 1000, '-created_at', { signal })
+            .getOpenGraphQualityStats(
+                environmentId,
+                extensionId ?? undefined,
+                schemaEnvironmentId ?? undefined,
+                undefined,
+                undefined,
+                1000,
+                '-created_at',
+                {
+                    signal,
+                }
+            )
             .then((response) => {
                 if (!response.data) throw new Error('Unable to retrieve OpenGraph quality stats');
                 return response.data;
@@ -122,11 +137,17 @@ export const useOpenGraphDataQualityStatsQuery = (environmentId: string) => {
     );
 };
 
-export const useOpenGraphDataQualityHistoryQuery = (environmentId: string) => {
-    return useQuery(['opengraph-data-quality-history', environmentId], ({ signal }) =>
+export const useOpenGraphDataQualityHistoryQuery = (
+    environmentId: string,
+    extensionId?: number | null,
+    schemaEnvironmentId?: number | null
+) => {
+    return useQuery(['opengraph-data-quality-history', environmentId, extensionId, schemaEnvironmentId], ({ signal }) =>
         apiClient
             .getOpenGraphQualityStats(
                 environmentId,
+                extensionId ?? undefined,
+                schemaEnvironmentId ?? undefined,
                 now.minus({ days: 30 }).toJSDate(),
                 now.toJSDate(),
                 undefined,
@@ -140,14 +161,25 @@ export const useOpenGraphDataQualityHistoryQuery = (environmentId: string) => {
     );
 };
 
-export const useOpenGraphDataQualityAggregationsQuery = (extensionId?: number | null) => {
+export const useOpenGraphDataQualityAggregationsQuery = (
+    extensionId?: number | null,
+    schemaEnvironmentId?: number | null
+) => {
     return useQuery(
-        ['opengraph-data-quality-aggregations', extensionId],
+        ['opengraph-data-quality-aggregations', extensionId, schemaEnvironmentId],
         ({ signal }) =>
             apiClient
-                .getOpenGraphQualityAggregations(extensionId ?? undefined, undefined, undefined, 1000, '-created_at', {
-                    signal,
-                })
+                .getOpenGraphQualityAggregations(
+                    extensionId ?? undefined,
+                    schemaEnvironmentId ?? undefined,
+                    undefined,
+                    undefined,
+                    1000,
+                    '-created_at',
+                    {
+                        signal,
+                    }
+                )
                 .then((response) => {
                     if (!response.data) throw new Error('Unable to retrieve OpenGraph quality aggregations');
                     return response.data;
@@ -156,13 +188,17 @@ export const useOpenGraphDataQualityAggregationsQuery = (extensionId?: number | 
     );
 };
 
-export const useOpenGraphDataQualityAggregationsHistoryQuery = (extensionId?: number | null) => {
+export const useOpenGraphDataQualityAggregationsHistoryQuery = (
+    extensionId?: number | null,
+    schemaEnvironmentId?: number | null
+) => {
     return useQuery(
-        ['opengraph-data-quality-aggregations-history', extensionId],
+        ['opengraph-data-quality-aggregations-history', extensionId, schemaEnvironmentId],
         ({ signal }) =>
             apiClient
                 .getOpenGraphQualityAggregations(
                     extensionId ?? undefined,
+                    schemaEnvironmentId ?? undefined,
                     now.minus({ days: 30 }).toJSDate(),
                     now.toJSDate(),
                     undefined,

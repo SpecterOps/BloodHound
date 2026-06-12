@@ -49,6 +49,18 @@ get:
       in: query
       schema:
         type: string
+    - name: extension_id
+      description: Filter stats by OpenGraph extension ID
+      in: query
+      schema:
+        type: integer
+        format: int32
+    - name: schema_environment_id
+      description: Filter stats by OpenGraph schema environment ID
+      in: query
+      schema:
+        type: integer
+        format: int32
     - $ref: './../parameters/query.skip.yaml'
     - $ref: './../parameters/query.limit.yaml'
   responses:

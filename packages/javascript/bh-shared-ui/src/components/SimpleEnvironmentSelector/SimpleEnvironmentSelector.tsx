@@ -55,8 +55,8 @@ const selectedText = (
         // Return the aggregation display name from the environment info map
         return environmentInfo[baseType]?.aggregationDisplayName || `All ${baseType} Environments`;
     } else {
-        const selectedDomain: Environment | undefined = environments?.find(
-            (domain: Environment) => domain.id === selected.id
+        const selectedDomain: Environment | undefined = environments?.find((domain: Environment) =>
+            environmentMatchesSelection(domain, selected)
         );
         if (selectedDomain) {
             return selectedDomain.name;
@@ -66,6 +66,26 @@ const selectedText = (
             return 'Select Environment';
         }
     }
+};
+
+const environmentMatchesSelection = (environment: Environment, selected: SelectedEnvironment): boolean => {
+    if (environment.id !== selected.id) return false;
+
+    if (selected.type && environment.type !== selected.type) return false;
+
+    if (selected.schema_extension_id !== undefined && selected.schema_extension_id !== null) {
+        if (environment.schema_extension_id !== selected.schema_extension_id) return false;
+    }
+
+    if (selected.schema_environment_id !== undefined && selected.schema_environment_id !== null) {
+        return environment.schema_environment_id === selected.schema_environment_id;
+    }
+
+    return true;
+};
+
+const environmentSelectionKey = (environment: Environment): string => {
+    return `${environment.type}:${environment.schema_extension_id ?? ''}:${environment.schema_environment_id ?? ''}:${environment.id}`;
 };
 
 const SimpleEnvironmentSelector: React.FC<{
@@ -109,12 +129,17 @@ const SimpleEnvironmentSelector: React.FC<{
         setSearchInput(e.target.value);
 
     const handlePlatformClick = (type?: Environment['type']) => {
-        const schemaExtensionID =
-            type !== undefined
-                ? availableEnvironments?.find((environment) => environment.type === type)?.schema_extension_id ?? null
-                : null;
+        const platformEnvironment =
+            type !== undefined ? availableEnvironments?.find((environment) => environment.type === type) : undefined;
+        const schemaExtensionID = platformEnvironment?.schema_extension_id ?? null;
+        const schemaEnvironmentID = platformEnvironment?.schema_environment_id ?? null;
 
-        onSelect({ type: type ? `${type}-platform` : null, id: null, schema_extension_id: schemaExtensionID });
+        onSelect({
+            type: type ? `${type}-platform` : null,
+            id: null,
+            schema_extension_id: schemaExtensionID,
+            schema_environment_id: schemaEnvironmentID,
+        });
         handleClose();
     };
 
@@ -123,6 +148,7 @@ const SimpleEnvironmentSelector: React.FC<{
             type: environment.type,
             id: environment.id,
             schema_extension_id: environment.schema_extension_id ?? null,
+            schema_environment_id: environment.schema_environment_id ?? null,
         });
         handleClose();
     };
@@ -187,7 +213,7 @@ const SimpleEnvironmentSelector: React.FC<{
                 <ul className='max-h-80 overflow-y-auto'>
                     {filteredEnvironments?.map((environment: Environment) => {
                         return (
-                            <li key={environment.id}>
+                            <li key={environmentSelectionKey(environment)}>
                                 <Button
                                     className='flex justify-between items-center gap-2 w-full'
                                     onClick={() => handleEnvironmentClick(environment)}

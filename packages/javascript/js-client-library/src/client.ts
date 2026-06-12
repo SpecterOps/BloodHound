@@ -685,6 +685,8 @@ class BHEAPIClient {
 
     getOpenGraphQualityStats = (
         environmentId?: string,
+        extensionId?: number,
+        schemaEnvironmentId?: number,
         startDate?: Date,
         endDate?: Date,
         limit?: number,
@@ -697,6 +699,8 @@ class BHEAPIClient {
                 {
                     params: {
                         environment_id: environmentId,
+                        extension_id: extensionId,
+                        schema_environment_id: schemaEnvironmentId,
                         start_date: startDate?.toISOString(),
                         end_date: endDate?.toISOString(),
                         limit: limit,
@@ -710,6 +714,7 @@ class BHEAPIClient {
 
     getOpenGraphQualityAggregations = (
         extensionId?: number,
+        schemaEnvironmentId?: number,
         startDate?: Date,
         endDate?: Date,
         limit?: number,
@@ -722,6 +727,7 @@ class BHEAPIClient {
                 {
                     params: {
                         extension_id: extensionId,
+                        schema_environment_id: schemaEnvironmentId,
                         start_date: startDate?.toISOString(),
                         end_date: endDate?.toISOString(),
                         limit: limit,

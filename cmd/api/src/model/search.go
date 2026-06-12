@@ -21,6 +21,9 @@ import (
 	"net/http"
 	"slices"
 
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 )
@@ -33,14 +36,15 @@ const (
 )
 
 type EnvironmentSelector struct {
-	Type               string    `json:"type"`
-	Name               string    `json:"name"`
-	ObjectID           string    `json:"id"`
-	Collected          bool      `json:"collected"`
-	SchemaExtensionID  *int32    `json:"schema_extension_id,omitempty"`
-	ImpactValue        *int      `json:"impactValue,omitempty"`
-	HygieneAttackPaths *int64    `json:"hygiene_attack_paths,omitempty"` // caution: if value is bigger than maxsafeint, the UI will truncate the value
-	Exposures          Exposures `json:"exposures,omitempty"`
+	Type                string    `json:"type"`
+	Name                string    `json:"name"`
+	ObjectID            string    `json:"id"`
+	Collected           bool      `json:"collected"`
+	SchemaExtensionID   *int32    `json:"schema_extension_id,omitempty"`
+	SchemaEnvironmentID *int32    `json:"schema_environment_id,omitempty"`
+	ImpactValue         *int      `json:"impactValue,omitempty"`
+	HygieneAttackPaths  *int64    `json:"hygiene_attack_paths,omitempty"` // caution: if value is bigger than maxsafeint, the UI will truncate the value
+	Exposures           Exposures `json:"exposures,omitempty"`
 }
 
 type EnvironmentSelectors []EnvironmentSelector
@@ -128,7 +132,45 @@ func (s EnvironmentSelectors) GetFilterCriteria(request *http.Request, environme
 		}
 		// ignoring the error here as this would've failed at ParseQueryParameterFilters before getting here
 
-		criteria = query.And(queryFilters.BuildGDBNodeFilter(), query.KindIn(query.Node(), environmentKinds...))
+		criteria = query.And(queryFilters.BuildGDBNodeFilter(), environmentKindFilter(environmentKinds))
 		return criteria, nil
 	}
+}
+
+func environmentKindFilter(environmentKinds []graph.Kind) graph.Criteria {
+	var (
+		builtInEnvironmentKinds []graph.Kind
+		criteria                []graph.Criteria
+		openGraphKindNames      []string
+		primaryKindProperty     = query.NodeProperty(common.PrimaryKind.String())
+	)
+
+	for _, environmentKind := range environmentKinds {
+		if environmentKind.Is(ad.Domain, azure.Tenant) {
+			builtInEnvironmentKinds = append(builtInEnvironmentKinds, environmentKind)
+		} else {
+			openGraphKindNames = append(openGraphKindNames, environmentKind.String())
+		}
+	}
+
+	if len(builtInEnvironmentKinds) > 0 {
+		criteria = append(criteria, query.And(
+			query.Not(query.Exists(primaryKindProperty)),
+			query.KindIn(query.Node(), builtInEnvironmentKinds...),
+		))
+	}
+
+	if len(openGraphKindNames) > 0 {
+		criteria = append(criteria, query.In(primaryKindProperty, openGraphKindNames))
+	}
+
+	if len(criteria) == 0 {
+		return query.KindIn(query.Node(), environmentKinds...)
+	}
+
+	if len(criteria) == 1 {
+		return criteria[0]
+	}
+
+	return query.Or(criteria...)
 }

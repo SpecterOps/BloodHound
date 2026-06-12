@@ -508,6 +508,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(gomock.Any(), false).Return(graph.Kinds{graph.StringKind("HeeHaw Kind")}, map[string]string{graph.StringKind("HeeHaw Kind").String(): "HeeHaw"}, nil)
 				mock.mockDatabase.EXPECT().GetEnvironmentsFiltered(gomock.Any(), gomock.Any()).Return([]model.SchemaEnvironment{
 					{
+						Serial:              model.Serial{ID: 11},
 						SchemaExtensionId:   7,
 						EnvironmentKindName: "HeeHaw Kind",
 					},
@@ -520,6 +521,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 								common.Name.String():         "HeeHaw Name",
 								common.ObjectID.String():     "1",
 								common.Collected.String():    true,
+								common.PrimaryKind.String():  "HeeHaw Kind",
 								graphschema.EnvironmentIDKey: "hee-haw-environment",
 							}),
 							Kinds: graph.Kinds{graph.StringKind("HeeHaw Kind")},
@@ -529,7 +531,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":[{"type":"HeeHaw","name":"HeeHaw Name","id":"hee-haw-environment","collected":true,"schema_extension_id":7}]}`,
+				responseBody:   `{"data":[{"type":"HeeHaw","name":"HeeHaw Name","id":"hee-haw-environment","collected":true,"schema_extension_id":7,"schema_environment_id":11}]}`,
 			},
 		},
 		{

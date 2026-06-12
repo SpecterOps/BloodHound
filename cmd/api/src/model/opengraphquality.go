@@ -46,6 +46,7 @@ type OpenGraphDataQualityAggregation struct {
 	Serial
 	RunID                    string                         `json:"run_id" gorm:"index"`
 	SchemaExtensionID        int32                          `json:"schema_extension_id" gorm:"index"`
+	SchemaEnvironmentID      int32                          `json:"schema_environment_id" gorm:"index"`
 	MetricType               OpenGraphDataQualityMetricType `json:"metric_type" gorm:"index"`
 	MetricName               string                         `json:"metric_name" gorm:"index"`
 	MetricValue              float64                        `json:"metric_value"`
@@ -86,6 +87,7 @@ func (s OpenGraphDataQualityAggregations) IsSortable(column string) bool {
 	case "id",
 		"run_id",
 		"schema_extension_id",
+		"schema_environment_id",
 		"metric_type",
 		"metric_name",
 		"metric_value",

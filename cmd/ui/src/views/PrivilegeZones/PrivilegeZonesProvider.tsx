@@ -61,6 +61,8 @@ const EnvironmentSelector = () => {
             selected={{
                 type: selectedEnvironment?.type ?? null,
                 id: selectedEnvironment?.id ?? null,
+                schema_extension_id: selectedEnvironment?.schema_extension_id ?? null,
+                schema_environment_id: selectedEnvironment?.schema_environment_id ?? null,
             }}
             onSelect={handleSelect}
         />

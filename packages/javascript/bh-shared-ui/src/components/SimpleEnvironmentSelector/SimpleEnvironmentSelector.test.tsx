@@ -94,6 +94,7 @@ describe('Simple Environment Selector', () => {
             type: testEnvironments[5].type,
             id: testEnvironments[5].id,
             schema_extension_id: null,
+            schema_environment_id: null,
         });
 
         await user.click(contextSelector);
@@ -103,7 +104,60 @@ describe('Simple Environment Selector', () => {
             type: 'active-directory-platform',
             id: null,
             schema_extension_id: null,
+            schema_environment_id: null,
         });
+    });
+
+    it('should match selected OpenGraph environments by type and schema extension id when ids collide', async () => {
+        const testOnChange = vi.fn();
+        const environmentId = 'S-1-5-21-1111111111-2222222222-3333333333';
+
+        server.use(
+            rest.get(`/api/v2/available-domains`, (req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: [
+                            {
+                                type: 'active-directory',
+                                impactValue: 54,
+                                name: 'TESTLAB.LOCAL',
+                                id: environmentId,
+                                collected: true,
+                                hygiene_attack_paths: 0,
+                                exposures: [],
+                            },
+                            {
+                                type: 'AD Domain Source Example',
+                                impactValue: 54,
+                                name: 'External Exposure - TESTLAB.LOCAL',
+                                id: environmentId,
+                                collected: true,
+                                schema_extension_id: 7,
+                                schema_environment_id: 11,
+                                hygiene_attack_paths: 0,
+                                exposures: [],
+                            },
+                        ],
+                    })
+                );
+            })
+        );
+
+        render(
+            <SimpleEnvironmentSelector
+                includeOpenGraph
+                selected={{
+                    type: 'AD Domain Source Example',
+                    id: environmentId,
+                    schema_extension_id: 7,
+                    schema_environment_id: 11,
+                }}
+                onSelect={testOnChange}
+                errorMessage={errorMessage}
+            />
+        );
+
+        expect(await screen.findByText('External Exposure - TESTLAB.LOCAL')).toBeInTheDocument();
     });
 });
 

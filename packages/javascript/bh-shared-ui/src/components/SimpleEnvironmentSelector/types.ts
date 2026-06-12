@@ -26,4 +26,5 @@ export type SelectedEnvironment = {
     type: SelectorValueTypes | null;
     id: string | null;
     schema_extension_id?: number | null;
+    schema_environment_id?: number | null;
 };

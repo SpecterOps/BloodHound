@@ -72,6 +72,7 @@ export type Environment = {
     id: string;
     collected: boolean;
     schema_extension_id?: number;
+    schema_environment_id?: number;
     hygiene_attack_paths: number; // While improbable this number could possibly be higher than the JavaScript max safe integer in the response
     exposures: EnvironmentExposure[];
 };
@@ -146,6 +147,7 @@ export type OpenGraphDataQualityAggregation = TimestampFields & {
     id: number;
     run_id: string;
     schema_extension_id: number;
+    schema_environment_id: number;
     metric_type: OpenGraphDataQualityMetricType;
     metric_name: string;
     metric_value: number;

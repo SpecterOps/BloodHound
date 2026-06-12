@@ -26,7 +26,7 @@ get:
     - Enterprise
   parameters:
     - name: sort_by
-      description: Sortable columns are id, run_id, schema_extension_id, metric_type, metric_name, metric_value, schema_node_kind_id, schema_relationship_kind_id, created_at, updated_at.
+      description: Sortable columns are id, run_id, schema_extension_id, schema_environment_id, metric_type, metric_name, metric_value, schema_node_kind_id, schema_relationship_kind_id, created_at, updated_at.
       in: query
       schema:
         $ref: './../schemas/api.params.query.sort-by.yaml'
@@ -46,6 +46,12 @@ get:
         format: date-time
     - name: extension_id
       description: Filter aggregations by OpenGraph schema extension ID
+      in: query
+      schema:
+        type: integer
+        format: int32
+    - name: schema_environment_id
+      description: Filter aggregations by OpenGraph schema environment ID
       in: query
       schema:
         type: integer

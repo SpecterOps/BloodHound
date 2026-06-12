@@ -49,10 +49,16 @@ const loadingRows: OpenGraphMetricRow[] = [
 
 export const OpenGraphEnvironmentInfo: React.FC<{
     contextId: string;
+    extensionId?: number | null;
+    schemaEnvironmentId?: number | null;
     headers?: boolean;
     onDataError?: () => void;
-}> = ({ contextId, headers = false, onDataError = () => {} }) => {
-    const { data: environmentData, isLoading, isError } = useOpenGraphDataQualityStatsQuery(contextId);
+}> = ({ contextId, extensionId, schemaEnvironmentId, headers = false, onDataError = () => {} }) => {
+    const { data: environmentData, isLoading, isError } = useOpenGraphDataQualityStatsQuery(
+        contextId,
+        extensionId,
+        schemaEnvironmentId
+    );
 
     useEffect(() => {
         if (isError) onDataError();
@@ -71,10 +77,14 @@ export const OpenGraphEnvironmentInfo: React.FC<{
 
 export const OpenGraphExtensionInfo: React.FC<{
     extensionId?: number | null;
+    schemaEnvironmentId?: number | null;
     headers?: boolean;
     onDataError?: () => void;
-}> = ({ extensionId, headers = false, onDataError = () => {} }) => {
-    const { data: extensionData, isLoading, isError } = useOpenGraphDataQualityAggregationsQuery(extensionId);
+}> = ({ extensionId, schemaEnvironmentId, headers = false, onDataError = () => {} }) => {
+    const { data: extensionData, isLoading, isError } = useOpenGraphDataQualityAggregationsQuery(
+        extensionId,
+        schemaEnvironmentId
+    );
 
     useEffect(() => {
         if (isError) onDataError();

@@ -526,7 +526,7 @@ func TestGetOpenGraphDataQualityStats_Failure(t *testing.T) {
 	endpoint := "/api/v2/data-quality-stats%s"
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
-	mockDB.EXPECT().GetOpenGraphDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error")).AnyTimes()
+	mockDB.EXPECT().GetOpenGraphDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error")).AnyTimes()
 
 	resources := v2.Resources{DB: mockDB}
 
@@ -595,6 +595,28 @@ func TestGetOpenGraphDataQualityStats_Failure(t *testing.T) {
 		},
 		{
 			Input{
+				url.Values{
+					"extension_id": []string{"invalidExtensionID"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: "query parameter \"extension_id\" is malformed"}},
+			},
+		},
+		{
+			Input{
+				url.Values{
+					"schema_environment_id": []string{"invalidSchemaEnvironmentID"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: "query parameter \"schema_environment_id\" is malformed"}},
+			},
+		},
+		{
+			Input{
 				url.Values{},
 			},
 			api.ErrorWrapper{
@@ -623,7 +645,7 @@ func TestGetOpenGraphDataQualityStats_Failure(t *testing.T) {
 			}
 
 			require.Equal(t, len(tc.Expected.Errors), 1)
-			require.Equal(t, tc.Expected.Errors[0].Message, body.(map[string]any)["errors"].([]any)[0].(map[string]any)["message"])
+			require.Contains(t, body.(map[string]any)["errors"].([]any)[0].(map[string]any)["message"], tc.Expected.Errors[0].Message)
 		}
 	}
 }
@@ -633,16 +655,18 @@ func TestGetOpenGraphDataQualityStats_Success(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
-	mockDB.EXPECT().GetOpenGraphDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), "updated_at desc", 1, 0).DoAndReturn(
-		func(ctx context.Context, environmentID null.String, start time.Time, end time.Time, order string, limit int, skip int) (model.OpenGraphDataQualityStats, int, error) {
+	mockDB.EXPECT().GetOpenGraphDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), "updated_at desc", 1, 0).DoAndReturn(
+		func(ctx context.Context, environmentID null.String, extensionID null.Int32, schemaEnvironmentID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.OpenGraphDataQualityStats, int, error) {
 			require.True(t, environmentID.Equal(null.StringFrom("env-1")))
+			require.True(t, extensionID.Equal(null.Int32From(7)))
+			require.True(t, schemaEnvironmentID.Equal(null.Int32From(11)))
 			return model.OpenGraphDataQualityStats{}, 0, nil
 		},
 	)
 
 	resources := v2.Resources{DB: mockDB}
 
-	req, err := http.NewRequest("GET", "/api/v2/data-quality-stats?sort_by=-updated_at&limit=1&start_date=2022-03-23T07:20:50.52Z&end_date=2022-04-23T07:20:50.52Z&skip=0&environment_id=env-1", nil)
+	req, err := http.NewRequest("GET", "/api/v2/data-quality-stats?sort_by=-updated_at&limit=1&start_date=2022-03-23T07:20:50.52Z&end_date=2022-04-23T07:20:50.52Z&skip=0&environment_id=env-1&extension_id=7&schema_environment_id=11", nil)
 	require.NoError(t, err)
 
 	router := mux.NewRouter()
@@ -661,7 +685,7 @@ func TestGetOpenGraphDataQualityAggregations_Failure(t *testing.T) {
 	endpoint := "/api/v2/data-quality-stats-aggregations%s"
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
-	mockDB.EXPECT().GetOpenGraphDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error")).AnyTimes()
+	mockDB.EXPECT().GetOpenGraphDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error")).AnyTimes()
 
 	resources := v2.Resources{DB: mockDB}
 
@@ -729,6 +753,15 @@ func TestGetOpenGraphDataQualityAggregations_Failure(t *testing.T) {
 			ExpectedErrorDetail: "query parameter \"extension_id\" is malformed",
 		},
 		{
+			Input: Input{
+				Params: url.Values{
+					"schema_environment_id": []string{"invalidSchemaEnvironmentID"},
+				},
+			},
+			ExpectedStatus:      http.StatusBadRequest,
+			ExpectedErrorDetail: "query parameter \"schema_environment_id\" is malformed",
+		},
+		{
 			Input:               Input{Params: url.Values{}},
 			ExpectedStatus:      http.StatusInternalServerError,
 			ExpectedErrorDetail: api.ErrorResponseDetailsInternalServerError,
@@ -763,16 +796,17 @@ func TestGetOpenGraphDataQualityAggregations_Success(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
-	mockDB.EXPECT().GetOpenGraphDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), "schema_extension_id", 1, 0).DoAndReturn(
-		func(ctx context.Context, extensionID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.OpenGraphDataQualityAggregations, int, error) {
+	mockDB.EXPECT().GetOpenGraphDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), "schema_extension_id", 1, 0).DoAndReturn(
+		func(ctx context.Context, extensionID null.Int32, schemaEnvironmentID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.OpenGraphDataQualityAggregations, int, error) {
 			require.True(t, extensionID.Equal(null.Int32From(7)))
+			require.True(t, schemaEnvironmentID.Equal(null.Int32From(11)))
 			return model.OpenGraphDataQualityAggregations{}, 0, nil
 		},
 	)
 
 	resources := v2.Resources{DB: mockDB}
 
-	req, err := http.NewRequest("GET", "/api/v2/data-quality-stats-aggregations?sort_by=schema_extension_id&limit=1&start_date=2022-03-23T07:20:50.52Z&end_date=2022-04-23T07:20:50.52Z&skip=0&extension_id=7", nil)
+	req, err := http.NewRequest("GET", "/api/v2/data-quality-stats-aggregations?sort_by=schema_extension_id&limit=1&start_date=2022-03-23T07:20:50.52Z&end_date=2022-04-23T07:20:50.52Z&skip=0&extension_id=7&schema_environment_id=11", nil)
 	require.NoError(t, err)
 
 	router := mux.NewRouter()

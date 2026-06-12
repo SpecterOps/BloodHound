@@ -25,6 +25,9 @@ allOf:
       schema_extension_id:
         type: integer
         format: int32
+      schema_environment_id:
+        type: integer
+        format: int32
       metric_type:
         type: string
         enum:

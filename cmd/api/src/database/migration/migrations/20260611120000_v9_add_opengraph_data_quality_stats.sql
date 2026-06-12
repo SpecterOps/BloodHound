@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS data_quality_stats_aggregation (
     id SERIAL PRIMARY KEY,
     run_id TEXT NOT NULL,
     schema_extension_id INTEGER NOT NULL,
+    schema_environment_id INTEGER NOT NULL,
     metric_type TEXT NOT NULL,
     metric_name TEXT NOT NULL,
     metric_value NUMERIC NOT NULL DEFAULT 0,
@@ -57,6 +58,7 @@ CREATE TABLE IF NOT EXISTS data_quality_stats_aggregation (
 
 CREATE INDEX IF NOT EXISTS idx_data_quality_stats_aggregation_run_id ON data_quality_stats_aggregation (run_id);
 CREATE INDEX IF NOT EXISTS idx_data_quality_stats_aggregation_schema_extension_id ON data_quality_stats_aggregation (schema_extension_id);
+CREATE INDEX IF NOT EXISTS idx_data_quality_stats_aggregation_schema_environment_id ON data_quality_stats_aggregation (schema_environment_id);
 CREATE INDEX IF NOT EXISTS idx_data_quality_stats_aggregation_metric_type ON data_quality_stats_aggregation (metric_type);
 CREATE INDEX IF NOT EXISTS idx_data_quality_stats_aggregation_metric_name ON data_quality_stats_aggregation (metric_name);
 CREATE INDEX IF NOT EXISTS idx_data_quality_stats_aggregation_schema_node_kind_id ON data_quality_stats_aggregation (schema_node_kind_id);
