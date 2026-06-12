@@ -37,6 +37,7 @@ type EnvironmentSelector struct {
 	Name               string    `json:"name"`
 	ObjectID           string    `json:"id"`
 	Collected          bool      `json:"collected"`
+	SchemaExtensionID  *int32    `json:"schema_extension_id,omitempty"`
 	ImpactValue        *int      `json:"impactValue,omitempty"`
 	HygieneAttackPaths *int64    `json:"hygiene_attack_paths,omitempty"` // caution: if value is bigger than maxsafeint, the UI will truncate the value
 	Exposures          Exposures `json:"exposures,omitempty"`

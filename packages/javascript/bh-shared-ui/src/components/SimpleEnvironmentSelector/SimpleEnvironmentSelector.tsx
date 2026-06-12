@@ -40,7 +40,7 @@ import {
 } from '../../utils/environments';
 import { cn } from '../../utils/theme';
 import { DropdownTrigger, popoverContentStyles } from '../DropdownSelector';
-import { SelectedEnvironment, SelectorValueTypes } from './types';
+import { SelectedEnvironment } from './types';
 
 const selectedText = (
     selected: SelectedEnvironment,
@@ -72,7 +72,7 @@ const SimpleEnvironmentSelector: React.FC<{
     align?: 'center' | 'start' | 'end';
     errorMessage?: ReactNode;
     includeOpenGraph?: boolean;
-    onSelect?: (newValue: { type: SelectorValueTypes | null; id: string | null }) => void;
+    onSelect?: (newValue: SelectedEnvironment) => void;
     selected: SelectedEnvironment;
     variant?: ButtonProps['variant'];
 }> = ({ align = 'start', errorMessage = '', includeOpenGraph = false, onSelect = () => {}, selected, variant }) => {
@@ -109,12 +109,21 @@ const SimpleEnvironmentSelector: React.FC<{
         setSearchInput(e.target.value);
 
     const handlePlatformClick = (type?: Environment['type']) => {
-        onSelect({ type: type ? `${type}-platform` : null, id: null });
+        const schemaExtensionID =
+            type !== undefined
+                ? availableEnvironments?.find((environment) => environment.type === type)?.schema_extension_id ?? null
+                : null;
+
+        onSelect({ type: type ? `${type}-platform` : null, id: null, schema_extension_id: schemaExtensionID });
         handleClose();
     };
 
     const handleEnvironmentClick = (environment: Environment) => {
-        onSelect({ type: environment.type, id: environment.id });
+        onSelect({
+            type: environment.type,
+            id: environment.id,
+            schema_extension_id: environment.schema_extension_id ?? null,
+        });
         handleClose();
     };
 

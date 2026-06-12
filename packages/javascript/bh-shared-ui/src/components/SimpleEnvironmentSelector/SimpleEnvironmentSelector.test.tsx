@@ -90,12 +90,20 @@ describe('Simple Environment Selector', () => {
         expect(await screen.findByText(testEnvironments[5].name)).toBeInTheDocument();
         await user.click(screen.getByText(testEnvironments[5].name));
 
-        expect(testOnChange).toHaveBeenLastCalledWith({ type: testEnvironments[5].type, id: testEnvironments[5].id });
+        expect(testOnChange).toHaveBeenLastCalledWith({
+            type: testEnvironments[5].type,
+            id: testEnvironments[5].id,
+            schema_extension_id: null,
+        });
 
         await user.click(contextSelector);
         await user.click(screen.getByText('All Active Directory Domains'));
 
-        expect(testOnChange).toHaveBeenLastCalledWith({ type: 'active-directory-platform', id: null });
+        expect(testOnChange).toHaveBeenLastCalledWith({
+            type: 'active-directory-platform',
+            id: null,
+            schema_extension_id: null,
+        });
     });
 });
 

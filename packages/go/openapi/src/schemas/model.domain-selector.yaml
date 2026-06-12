@@ -28,6 +28,11 @@ properties:
   collected:
     type: boolean
     readOnly: true
+  schema_extension_id:
+    type: integer
+    format: int32
+    readOnly: true
+    description: OpenGraph schema extension ID for custom environments
   impactValue:
     type: integer
     readOnly: true

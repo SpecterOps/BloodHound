@@ -169,12 +169,12 @@ func (s *Resources) ListAvailableEnvironments(response http.ResponseWriter, requ
 	}
 
 	// Build response with domain type display names
-	responseData := BuildEnvironmentSelectors(nodes, filterResult.KindToDisplayName)
+	responseData := BuildEnvironmentSelectors(nodes, filterResult.KindToDisplayName, filterResult.KindToSchemaExtensionID)
 
 	api.WriteBasicResponse(ctx, responseData, http.StatusOK, response)
 }
 
-func BuildEnvironmentSelectors(nodes []*graph.Node, kindToDisplayName map[string]string) model.EnvironmentSelectors {
+func BuildEnvironmentSelectors(nodes []*graph.Node, kindToDisplayName map[string]string, kindToSchemaExtensionID map[string]int32) model.EnvironmentSelectors {
 	envs := make(model.EnvironmentSelectors, 0, len(nodes))
 
 	for _, node := range nodes {
@@ -185,10 +185,11 @@ func BuildEnvironmentSelectors(nodes []*graph.Node, kindToDisplayName map[string
 		collected := resolveCollected(node)
 
 		envs = append(envs, model.EnvironmentSelector{
-			Type:      envType,
-			Name:      name,
-			ObjectID:  objectID,
-			Collected: collected,
+			Type:              envType,
+			Name:              name,
+			ObjectID:          objectID,
+			Collected:         collected,
+			SchemaExtensionID: resolveSchemaExtensionID(node, kindToDisplayName, kindToSchemaExtensionID),
 		})
 	}
 
@@ -224,19 +225,42 @@ func resolveEnvType(node *graph.Node, kindToDisplayName map[string]string) strin
 
 	// For custom extensions, use the display name from the schema extension
 	// Note: Nodes should only have one environment kind. In the edge case where there are multiple, we take the first.
-	for _, kind := range node.Kinds {
-		if displayName, ok := kindToDisplayName[kind.String()]; ok {
-			return displayName
-		}
+	if environmentKind, ok := resolveOpenGraphEnvironmentKind(node, kindToDisplayName); ok {
+		return kindToDisplayName[environmentKind]
 	}
 
 	return ""
 }
 
-// EnvironmentFilterResult contains the filter criteria and display name mapping for environments
+func resolveOpenGraphEnvironmentKind(node *graph.Node, kindToDisplayName map[string]string) (string, bool) {
+	for _, kind := range node.Kinds {
+		if _, ok := kindToDisplayName[kind.String()]; ok {
+			return kind.String(), true
+		}
+	}
+
+	return "", false
+}
+
+func resolveSchemaExtensionID(node *graph.Node, kindToDisplayName map[string]string, kindToSchemaExtensionID map[string]int32) *int32 {
+	if node.Kinds.ContainsOneOf(azure.Tenant, ad.Domain) {
+		return nil
+	}
+
+	if environmentKind, ok := resolveOpenGraphEnvironmentKind(node, kindToDisplayName); ok {
+		if schemaExtensionID, ok := kindToSchemaExtensionID[environmentKind]; ok {
+			return &schemaExtensionID
+		}
+	}
+
+	return nil
+}
+
+// EnvironmentFilterResult contains the filter criteria and environment kind mappings for environments
 type EnvironmentFilterResult struct {
-	FilterCriteria    graph.Criteria
-	KindToDisplayName map[string]string
+	FilterCriteria          graph.Criteria
+	KindToDisplayName       map[string]string
+	KindToSchemaExtensionID map[string]int32
 }
 
 // ErrInvalidQueryParameters is an error that is used to wrap other errors when the query parameters are invalid
@@ -250,7 +274,6 @@ func BuildEnvironmentFilter(ctx context.Context, db database.Database, openGraph
 	openGraphFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureOpenGraphFindings)
 	if err != nil {
 		return result, err
-		// Fetch schema environments and extension display names
 	} else if environmentKinds, envKindToExtensionDisplayName, err := openGraphSchemaService.GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx, !openGraphFlag.Enabled); err != nil {
 		return result, err
 	} else {
@@ -262,6 +285,34 @@ func BuildEnvironmentFilter(ctx context.Context, db database.Database, openGraph
 
 		result.FilterCriteria = filterCriteria
 		result.KindToDisplayName = envKindToExtensionDisplayName
+		result.KindToSchemaExtensionID, err = buildEnvironmentKindToSchemaExtensionIDMap(ctx, db, openGraphFlag.Enabled)
+		if err != nil {
+			return result, err
+		}
+
 		return result, nil
 	}
+}
+
+func buildEnvironmentKindToSchemaExtensionIDMap(ctx context.Context, db database.Database, includeOpenGraph bool) (map[string]int32, error) {
+	var (
+		environments            []model.SchemaEnvironment
+		err                     error
+		filters                 = model.Filters{"is_builtin": []model.Filter{{Operator: model.Equals, Value: "false", SetOperator: model.FilterAnd}}}
+		kindToSchemaExtensionID = make(map[string]int32)
+	)
+
+	if !includeOpenGraph {
+		return kindToSchemaExtensionID, nil
+	}
+
+	if environments, err = db.GetEnvironmentsFiltered(ctx, filters); err != nil {
+		return nil, err
+	}
+
+	for _, environment := range environments {
+		kindToSchemaExtensionID[environment.EnvironmentKindName] = environment.SchemaExtensionId
+	}
+
+	return kindToSchemaExtensionID, nil
 }

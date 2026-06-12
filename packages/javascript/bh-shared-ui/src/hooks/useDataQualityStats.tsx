@@ -110,3 +110,30 @@ export const useAzurePlatformsDataQualityStatsQuery = () => {
         })
     );
 };
+
+export const useOpenGraphDataQualityStatsQuery = (environmentId: string) => {
+    return useQuery(['opengraph-data-quality-stats', environmentId], ({ signal }) =>
+        apiClient
+            .getOpenGraphQualityStats(environmentId, undefined, undefined, 1000, '-created_at', { signal })
+            .then((response) => {
+                if (!response.data) throw new Error('Unable to retrieve OpenGraph quality stats');
+                return response.data;
+            })
+    );
+};
+
+export const useOpenGraphDataQualityAggregationsQuery = (extensionId?: number | null) => {
+    return useQuery(
+        ['opengraph-data-quality-aggregations', extensionId],
+        ({ signal }) =>
+            apiClient
+                .getOpenGraphQualityAggregations(extensionId ?? undefined, undefined, undefined, 1000, '-created_at', {
+                    signal,
+                })
+                .then((response) => {
+                    if (!response.data) throw new Error('Unable to retrieve OpenGraph quality aggregations');
+                    return response.data;
+                }),
+        { enabled: extensionId !== undefined && extensionId !== null }
+    );
+};

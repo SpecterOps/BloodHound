@@ -90,6 +90,8 @@ import {
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
     ListFileTypesForIngestResponse,
+    OpenGraphDataQualityAggregationsResponse,
+    OpenGraphDataQualityStatsResponse,
     PaginatedResponse,
     PostureFindingTrendsResponse,
     PostureHistoryResponse,
@@ -672,6 +674,56 @@ class BHEAPIClient {
                     params: {
                         start: start?.toISOString(),
                         end: end?.toISOString(),
+                        limit: limit,
+                        sort_by: sort_by,
+                    },
+                },
+                options
+            )
+        );
+    };
+
+    getOpenGraphQualityStats = (
+        environmentId?: string,
+        startDate?: Date,
+        endDate?: Date,
+        limit?: number,
+        sort_by?: string,
+        options?: RequestOptions
+    ) => {
+        return this.baseClient.get<OpenGraphDataQualityStatsResponse>(
+            '/api/v2/data-quality-stats',
+            Object.assign(
+                {
+                    params: {
+                        environment_id: environmentId,
+                        start_date: startDate?.toISOString(),
+                        end_date: endDate?.toISOString(),
+                        limit: limit,
+                        sort_by: sort_by,
+                    },
+                },
+                options
+            )
+        );
+    };
+
+    getOpenGraphQualityAggregations = (
+        extensionId?: number,
+        startDate?: Date,
+        endDate?: Date,
+        limit?: number,
+        sort_by?: string,
+        options?: RequestOptions
+    ) => {
+        return this.baseClient.get<OpenGraphDataQualityAggregationsResponse>(
+            '/api/v2/data-quality-stats-aggregations',
+            Object.assign(
+                {
+                    params: {
+                        extension_id: extensionId,
+                        start_date: startDate?.toISOString(),
+                        end_date: endDate?.toISOString(),
                         limit: limit,
                         sort_by: sort_by,
                     },

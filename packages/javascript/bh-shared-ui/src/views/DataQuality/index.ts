@@ -18,4 +18,6 @@ export * from './DomainInfo';
 
 export { default as LoadContainer } from './LoadContainer';
 
+export * from './OpenGraphInfo';
+
 export * from './TenantInfo';

@@ -20,6 +20,8 @@ import {
     AzurePlatformInfo,
     DomainInfo,
     LoadingOverlay,
+    OpenGraphEnvironmentInfo,
+    OpenGraphExtensionInfo,
     PageWithTitle,
     SelectedEnvironment,
     SimpleEnvironmentSelector,
@@ -45,8 +47,26 @@ const getStatsComponent = (selectedEnvironment: SelectedEnvironment | null, data
         case 'azure-platform':
             return <AzurePlatformInfo onDataError={dataErrorHandler} />;
         default:
-            return null;
+            if (!contextType) return null;
+            if (contextType.endsWith('-platform')) {
+                return (
+                    <OpenGraphExtensionInfo
+                        extensionId={selectedEnvironment?.schema_extension_id}
+                        onDataError={dataErrorHandler}
+                    />
+                );
+            }
+            if (!contextId) return null;
+            return <OpenGraphEnvironmentInfo contextId={contextId} onDataError={dataErrorHandler} />;
     }
+};
+
+const getSelectedEnvironment = (environment: SelectedEnvironment | null | undefined): SelectedEnvironment => {
+    return {
+        type: environment?.type ?? null,
+        id: environment?.id ?? null,
+        schema_extension_id: environment?.schema_extension_id ?? null,
+    };
 };
 
 const DataQuality: React.FC = () => {
@@ -102,12 +122,10 @@ const DataQuality: React.FC = () => {
                 <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
                     <SimpleEnvironmentSelector
                         align='end'
-                        selected={{
-                            type: environment?.type ?? null,
-                            id: environment?.id ?? null,
-                        }}
+                        selected={getSelectedEnvironment(environment)}
                         errorMessage={environmentErrorMessage}
                         onSelect={handleSelect}
+                        includeOpenGraph
                     />
                 </Box>
                 <Alert severity='info'>
@@ -127,12 +145,10 @@ const DataQuality: React.FC = () => {
             <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
                 <SimpleEnvironmentSelector
                     align='end'
-                    selected={{
-                        type: selectedEnvironment?.type ?? null,
-                        id: selectedEnvironment?.id ?? null,
-                    }}
+                    selected={getSelectedEnvironment(environment)}
                     errorMessage={environmentErrorMessage}
                     onSelect={handleSelect}
+                    includeOpenGraph
                 />
             </Box>
             {dataError && (

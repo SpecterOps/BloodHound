@@ -71,6 +71,7 @@ export type Environment = {
     name: string;
     id: string;
     collected: boolean;
+    schema_extension_id?: number;
     hygiene_attack_paths: number; // While improbable this number could possibly be higher than the JavaScript max safe integer in the response
     exposures: EnvironmentExposure[];
 };
@@ -125,6 +126,36 @@ export type AzureDataQualityStat = TimestampFields & {
 };
 
 export type AzureDataQualityResponse = PaginatedResponse<AzureDataQualityStat[]>;
+
+export type OpenGraphDataQualityMetricType = 'node' | 'relationship';
+
+export type OpenGraphDataQualityStat = TimestampFields & {
+    id: number;
+    run_id: string;
+    schema_extension_id: number;
+    schema_environment_id: number;
+    environment_id: string;
+    metric_type: OpenGraphDataQualityMetricType;
+    metric_name: string;
+    metric_value: number;
+    schema_node_kind_id: number | null;
+    schema_relationship_kind_id: number | null;
+};
+
+export type OpenGraphDataQualityAggregation = TimestampFields & {
+    id: number;
+    run_id: string;
+    schema_extension_id: number;
+    metric_type: OpenGraphDataQualityMetricType;
+    metric_name: string;
+    metric_value: number;
+    schema_node_kind_id: number | null;
+    schema_relationship_kind_id: number | null;
+};
+
+export type OpenGraphDataQualityStatsResponse = PaginatedResponse<OpenGraphDataQualityStat[]>;
+
+export type OpenGraphDataQualityAggregationsResponse = PaginatedResponse<OpenGraphDataQualityAggregation[]>;
 
 type PostureStat = TimestampFields & {
     domain_sid: string;
