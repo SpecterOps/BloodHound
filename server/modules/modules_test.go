@@ -17,8 +17,11 @@
 package modules_test
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -49,4 +52,30 @@ func TestRegister_PanicsOnNilPool(t *testing.T) {
 			Pool:   nil,
 		})
 	})
+}
+
+// TestRegister_WiresAnalysisRoutes verifies that the composition root correctly
+// attaches the analysis module routes to the shared router. Matching a
+// representative route proves that Register successfully delegated to the
+// feature module.
+func TestRegister_WiresAnalysisRoutes(t *testing.T) {
+	var (
+		cfg        = config.Configuration{}
+		authorizer = auth.NewAuthorizer(nil)
+		routerInst = router.NewRouter(cfg, authorizer, "")
+		deps       = modules.Deps{
+			Router: &routerInst,
+			Pool:   new(pgxpool.Pool),
+		}
+	)
+
+	modules.Register(deps)
+
+	var (
+		muxRouter = routerInst.MuxRouter()
+		request   = httptest.NewRequest(http.MethodGet, "/api/v2/analysis", nil)
+		match     mux.RouteMatch
+	)
+
+	assert.True(t, muxRouter.Match(request, &match), "analysis route should be registered by Register")
 }
