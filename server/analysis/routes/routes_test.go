@@ -48,7 +48,7 @@ func TestRegister(t *testing.T) {
 		method string
 		path   string
 	}{
-		{http.MethodGet, "/api/v2/analysis"},
+		{http.MethodGet, "/api/v2/analysis/status"},
 		{http.MethodPut, "/api/v2/analysis"},
 		{http.MethodDelete, "/api/v2/analysis"},
 	} {
@@ -78,7 +78,7 @@ func TestRegister_RoutesRequireAuthentication(t *testing.T) {
 		method string
 		path   string
 	}{
-		{http.MethodGet, "/api/v2/analysis"},
+		{http.MethodGet, "/api/v2/analysis/status"},
 		{http.MethodPut, "/api/v2/analysis"},
 		{http.MethodDelete, "/api/v2/analysis"},
 	} {

@@ -73,7 +73,7 @@ func TestRegister_WiresAnalysisRoutes(t *testing.T) {
 
 	var (
 		muxRouter = routerInst.MuxRouter()
-		request   = httptest.NewRequest(http.MethodGet, "/api/v2/analysis", nil)
+		request   = httptest.NewRequest(http.MethodGet, "/api/v2/analysis/status", nil)
 		match     mux.RouteMatch
 	)
 

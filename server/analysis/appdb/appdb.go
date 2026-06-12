@@ -128,15 +128,14 @@ func (s *Store) GetAnalysisRequest(ctx context.Context) (services.RequestedAnaly
 	return selectAnalysisRequest(ctx, s.db)
 }
 
-// CreateAnalysisRequest atomically inserts a new analysis request for the given user when none
-// is currently pending. The analysis_request_switch table is a DB-level singleton (PRIMARY KEY
-// (singleton) with CHECK (singleton)), so INSERT ... ON CONFLICT (singleton) DO NOTHING is
-// race-free and idempotent. The currently-pending request is returned alongside a boolean
-// indicating whether this call created it (true) or a request was already pending (false).
+// CreateAnalysisRequest inserts a new analysis request when none is pending, using a transaction
+// to keep the insert and read-back atomic. Returns the current request and whether this call
+// created it.
 func (s *Store) CreateAnalysisRequest(ctx context.Context, requestedBy string) (services.RequestedAnalysis, bool, error) {
 	var (
 		now            = time.Now().UTC()
 		err            error
+		tx             pgx.Tx
 		commandTag     pgconn.CommandTag
 		currentRequest services.RequestedAnalysis
 	)
@@ -165,14 +164,27 @@ func (s *Store) CreateAnalysisRequest(ctx context.Context, requestedBy string) (
 
 	sqlQuery, args := insertBuilder.Build()
 
-	commandTag, err = s.db.Exec(ctx, sqlQuery, args...)
+	tx, err = s.db.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return services.RequestedAnalysis{}, false, fmt.Errorf("beginning transaction: %s", err)
+	}
+	defer func() {
+		// Rollback is a no-op when the transaction has already been committed.
+		_ = tx.Rollback(ctx)
+	}()
+
+	commandTag, err = tx.Exec(ctx, sqlQuery, args...)
 	if err != nil {
 		return services.RequestedAnalysis{}, false, err
 	}
 
-	currentRequest, err = s.GetAnalysisRequest(ctx)
+	currentRequest, err = selectAnalysisRequest(ctx, tx)
 	if err != nil {
 		return services.RequestedAnalysis{}, false, err
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		return services.RequestedAnalysis{}, false, fmt.Errorf("committing transaction: %s", err)
 	}
 
 	return currentRequest, commandTag.RowsAffected() == 1, nil

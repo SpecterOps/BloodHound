@@ -159,6 +159,7 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 		ctx           = context.Background()
 		requester     = "test-user"
 		otherUser     = "other-user"
+		beginTxErr    = errors.New("begin tx failed")
 		insertErr     = errors.New("insert failed")
 		postInsertErr = errors.New("connection lost")
 		// time.Now().UTC() is called inside CreateAnalysisRequest so we can't
@@ -187,18 +188,21 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 	)
 
 	tests := []struct {
-		name          string
-		expectations  func(pool pgxmock.PgxPoolIface)
-		wantCreated   bool
-		wantRequester string
-		wantErr       error
+		name            string
+		expectations    func(pool pgxmock.PgxPoolIface)
+		wantCreated     bool
+		wantRequester   string
+		wantErr         error
+		wantErrContains string
 	}{
 		{
 			name: "returns created=true and the new request when no row exists",
 			expectations: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectBeginTx(pgx.TxOptions{})
 				pool.ExpectExec(expectedInsertSQL).WithArgs(insertArgs...).
 					WillReturnResult(pgxmock.NewResult("INSERT", 1))
 				pool.ExpectQuery(expectedSelectSQL).WithArgs(1).WillReturnRows(createdRow(pool))
+				pool.ExpectCommit()
 			},
 			wantCreated:   true,
 			wantRequester: requester,
@@ -209,26 +213,39 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 			// row already exists — the INSERT is still issued, the conflict is
 			// silently resolved at the DB level.
 			expectations: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectBeginTx(pgx.TxOptions{})
 				pool.ExpectExec(expectedInsertSQL).WithArgs(insertArgs...).
 					WillReturnResult(pgxmock.NewResult("INSERT", 0))
 				pool.ExpectQuery(expectedSelectSQL).WithArgs(1).WillReturnRows(existingRow(pool))
+				pool.ExpectCommit()
 			},
 			wantCreated:   false,
 			wantRequester: otherUser,
 		},
 		{
+			name: "wraps BeginTx errors",
+			expectations: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectBeginTx(pgx.TxOptions{}).WillReturnError(beginTxErr)
+			},
+			wantErrContains: "beginning transaction:",
+		},
+		{
 			name: "propagates insert errors",
 			expectations: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectBeginTx(pgx.TxOptions{})
 				pool.ExpectExec(expectedInsertSQL).WithArgs(insertArgs...).WillReturnError(insertErr)
+				pool.ExpectRollback()
 			},
 			wantErr: insertErr,
 		},
 		{
 			name: "propagates select errors after a successful insert",
 			expectations: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectBeginTx(pgx.TxOptions{})
 				pool.ExpectExec(expectedInsertSQL).WithArgs(insertArgs...).
 					WillReturnResult(pgxmock.NewResult("INSERT", 1))
 				pool.ExpectQuery(expectedSelectSQL).WithArgs(1).WillReturnError(postInsertErr)
+				pool.ExpectRollback()
 			},
 			wantErr: postInsertErr,
 		},
@@ -240,9 +257,12 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 			tt.expectations(pool)
 
 			current, created, err := store.CreateAnalysisRequest(ctx, requester)
-			if tt.wantErr != nil {
+			switch {
+			case tt.wantErr != nil:
 				assert.ErrorIs(t, err, tt.wantErr)
-			} else {
+			case tt.wantErrContains != "":
+				assert.ErrorContains(t, err, tt.wantErrContains)
+			default:
 				require.NoError(t, err)
 				assert.Equal(t, tt.wantCreated, created)
 				assert.Equal(t, tt.wantRequester, current.RequestedBy)
