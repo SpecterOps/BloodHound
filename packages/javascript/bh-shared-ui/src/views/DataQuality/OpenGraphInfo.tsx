@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faCircleNodes, faStream } from '@fortawesome/free-solid-svg-icons';
+import { faStream } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
@@ -24,6 +24,7 @@ import {
     OpenGraphDataQualityStat,
 } from 'js-client-library';
 import React, { useEffect } from 'react';
+import { NodeIcon } from '../../components';
 import { useOpenGraphDataQualityAggregationsQuery, useOpenGraphDataQualityStatsQuery } from '../../hooks';
 import LoadContainer from './LoadContainer';
 
@@ -155,7 +156,7 @@ const MetricTable: React.FC<{
                     {rows.map((row) => (
                         <LoadContainer
                             key={`${row.metric_type}-${row.metric_name}`}
-                            icon={<MetricIcon metricType={row.metric_type} />}
+                            icon={<MetricIcon metricName={row.metric_name} metricType={row.metric_type} />}
                             display={row.metric_name}
                             value={row.metric_value}
                             loading={loading}
@@ -167,9 +168,12 @@ const MetricTable: React.FC<{
     );
 };
 
-const MetricIcon: React.FC<{ metricType: OpenGraphDataQualityMetricType }> = ({ metricType }) => {
+const MetricIcon: React.FC<{ metricName: string; metricType: OpenGraphDataQualityMetricType }> = ({
+    metricName,
+    metricType,
+}) => {
     if (metricType === 'node') {
-        return <FontAwesomeIcon icon={faCircleNodes} />;
+        return <NodeIcon nodeType={metricName} />;
     }
 
     return <FontAwesomeIcon icon={faStream} />;

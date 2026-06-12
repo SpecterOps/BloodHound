@@ -108,9 +108,10 @@ func Test_SetNodeProperties(t *testing.T) {
 				{
 					Properties: &graph.Properties{
 						Map: map[string]any{
-							common.ObjectID.String():  "3",
-							common.Name.String():      "Node3",
-							common.Collected.String(): true,
+							common.ObjectID.String():     "3",
+							common.Name.String():         "Node3",
+							common.Collected.String():    true,
+							graphschema.EnvironmentIDKey: "environment-3",
 						},
 					},
 					Kinds: graph.Kinds{graph.StringKind("OpenGraphEnvironment")},
@@ -120,7 +121,7 @@ func Test_SetNodeProperties(t *testing.T) {
 				{
 					Type:              "OpenGraph Extension",
 					Name:              "Node3",
-					ObjectID:          "3",
+					ObjectID:          "environment-3",
 					Collected:         true,
 					SchemaExtensionID: &schemaExtensionID,
 				},

@@ -179,21 +179,36 @@ func BuildEnvironmentSelectors(nodes []*graph.Node, kindToDisplayName map[string
 
 	for _, node := range nodes {
 		name, _ := node.Properties.GetOrDefault(common.Name.String(), graphschema.DefaultMissingName).String()
-		objectID, _ := node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 
 		envType := resolveEnvType(node, kindToDisplayName)
+		environmentID := resolveEnvironmentID(node, kindToDisplayName)
 		collected := resolveCollected(node)
 
 		envs = append(envs, model.EnvironmentSelector{
 			Type:              envType,
 			Name:              name,
-			ObjectID:          objectID,
+			ObjectID:          environmentID,
 			Collected:         collected,
 			SchemaExtensionID: resolveSchemaExtensionID(node, kindToDisplayName, kindToSchemaExtensionID),
 		})
 	}
 
 	return envs
+}
+
+func resolveEnvironmentID(node *graph.Node, kindToDisplayName map[string]string) string {
+	if node.Kinds.ContainsOneOf(azure.Tenant, ad.Domain) {
+		objectID, _ := node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
+		return objectID
+	}
+
+	if _, ok := resolveOpenGraphEnvironmentKind(node, kindToDisplayName); ok {
+		environmentID, _ := node.Properties.GetWithFallback(graphschema.EnvironmentIDKey, graphschema.DefaultMissingObjectId, common.ObjectID.String()).String()
+		return environmentID
+	}
+
+	objectID, _ := node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
+	return objectID
 }
 
 func resolveCollected(node *graph.Node) bool {

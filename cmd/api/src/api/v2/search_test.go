@@ -517,9 +517,10 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 					Return([]*graph.Node{
 						{
 							Properties: graph.AsProperties(map[string]any{
-								common.Name.String():      "HeeHaw Name",
-								common.ObjectID.String():  "1",
-								common.Collected.String(): true,
+								common.Name.String():         "HeeHaw Name",
+								common.ObjectID.String():     "1",
+								common.Collected.String():    true,
+								graphschema.EnvironmentIDKey: "hee-haw-environment",
 							}),
 							Kinds: graph.Kinds{graph.StringKind("HeeHaw Kind")},
 						},
@@ -528,7 +529,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":[{"type":"HeeHaw","name":"HeeHaw Name","id":"1","collected":true,"schema_extension_id":7}]}`,
+				responseBody:   `{"data":[{"type":"HeeHaw","name":"HeeHaw Name","id":"hee-haw-environment","collected":true,"schema_extension_id":7}]}`,
 			},
 		},
 		{

@@ -122,6 +122,24 @@ export const useOpenGraphDataQualityStatsQuery = (environmentId: string) => {
     );
 };
 
+export const useOpenGraphDataQualityHistoryQuery = (environmentId: string) => {
+    return useQuery(['opengraph-data-quality-history', environmentId], ({ signal }) =>
+        apiClient
+            .getOpenGraphQualityStats(
+                environmentId,
+                now.minus({ days: 30 }).toJSDate(),
+                now.toJSDate(),
+                undefined,
+                'created_at',
+                { signal }
+            )
+            .then((response) => {
+                if (!response.data) throw new Error('Unable to retrieve OpenGraph quality history');
+                return response.data;
+            })
+    );
+};
+
 export const useOpenGraphDataQualityAggregationsQuery = (extensionId?: number | null) => {
     return useQuery(
         ['opengraph-data-quality-aggregations', extensionId],
@@ -132,6 +150,27 @@ export const useOpenGraphDataQualityAggregationsQuery = (extensionId?: number | 
                 })
                 .then((response) => {
                     if (!response.data) throw new Error('Unable to retrieve OpenGraph quality aggregations');
+                    return response.data;
+                }),
+        { enabled: extensionId !== undefined && extensionId !== null }
+    );
+};
+
+export const useOpenGraphDataQualityAggregationsHistoryQuery = (extensionId?: number | null) => {
+    return useQuery(
+        ['opengraph-data-quality-aggregations-history', extensionId],
+        ({ signal }) =>
+            apiClient
+                .getOpenGraphQualityAggregations(
+                    extensionId ?? undefined,
+                    now.minus({ days: 30 }).toJSDate(),
+                    now.toJSDate(),
+                    undefined,
+                    'created_at',
+                    { signal }
+                )
+                .then((response) => {
+                    if (!response.data) throw new Error('Unable to retrieve OpenGraph quality aggregations history');
                     return response.data;
                 }),
         { enabled: extensionId !== undefined && extensionId !== null }
