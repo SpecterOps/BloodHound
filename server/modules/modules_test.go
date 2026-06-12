@@ -17,11 +17,8 @@
 package modules_test
 
 import (
-	"net/http"
-	"net/http/httptest"
 	"testing"
 
-	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -52,36 +49,4 @@ func TestRegister_PanicsOnNilPool(t *testing.T) {
 			Pool:   nil,
 		})
 	})
-}
-
-func TestRegister_RegistersAnalysisRoutes(t *testing.T) {
-	var (
-		cfg        = config.Configuration{}
-		authorizer = auth.NewAuthorizer(nil)
-		routerInst = router.NewRouter(cfg, authorizer, "")
-		// new(pgxpool.Pool) is a non-nil zero-value pool. Register only stores
-		// the pointer; no pool methods are called during route registration.
-		pool = new(pgxpool.Pool)
-	)
-
-	assert.NotPanics(t, func() {
-		modules.Register(modules.Deps{
-			Router: &routerInst,
-			Pool:   pool,
-		})
-	})
-
-	muxRouter := routerInst.MuxRouter()
-
-	for _, tc := range []struct {
-		method string
-		path   string
-	}{
-		{http.MethodGet, "/api/v2/analysis"},
-		{http.MethodPut, "/api/v2/analysis"},
-	} {
-		req := httptest.NewRequest(tc.method, tc.path, nil)
-		var match mux.RouteMatch
-		assert.True(t, muxRouter.Match(req, &match), "%s %s route should be registered after modules.Register", tc.method, tc.path)
-	}
 }

@@ -30,4 +30,4 @@ packages:
   github.com/specterops/bloodhound/server:
     config:
       recursive: true
-      all: true
+      include-interface-regex: "^[A-Z]"
