@@ -20,6 +20,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"gorm.io/gorm"
 )
@@ -213,6 +214,84 @@ func (s *BloodhoundDB) CreateOpenGraphDataQualityStats(ctx context.Context, stat
 func (s *BloodhoundDB) CreateOpenGraphDataQualityAggregations(ctx context.Context, aggregations model.OpenGraphDataQualityAggregations) (model.OpenGraphDataQualityAggregations, error) {
 	result := s.db.WithContext(ctx).Create(&aggregations)
 	return aggregations, CheckError(result)
+}
+
+func (s *BloodhoundDB) GetOpenGraphDataQualityStats(ctx context.Context, environmentID null.String, start time.Time, end time.Time, order string, limit int, skip int) (model.OpenGraphDataQualityStats, int, error) {
+	const (
+		defaultWhere = "created_at between ? and ?"
+	)
+
+	var (
+		count                     int64
+		openGraphDataQualityStats model.OpenGraphDataQualityStats
+		query                     *gorm.DB
+		result                    *gorm.DB
+	)
+
+	query = s.db.Model(model.OpenGraphDataQualityStat{}).WithContext(ctx).Where(defaultWhere, start, end)
+	if environmentID.Valid {
+		query = query.Where("environment_id = ?", environmentID.String)
+	}
+
+	result = query.Count(&count)
+	if CheckError(result) != nil {
+		return openGraphDataQualityStats, 0, result.Error
+	}
+
+	if order == "" {
+		order = "created_at desc"
+	}
+
+	query = s.Scope(Paginate(skip, limit)).WithContext(ctx).Where(defaultWhere, start, end)
+	if environmentID.Valid {
+		query = query.Where("environment_id = ?", environmentID.String)
+	}
+
+	result = query.Order(order).Find(&openGraphDataQualityStats)
+	if CheckError(result) != nil {
+		return openGraphDataQualityStats, 0, result.Error
+	}
+
+	return openGraphDataQualityStats, int(count), nil
+}
+
+func (s *BloodhoundDB) GetOpenGraphDataQualityAggregations(ctx context.Context, extensionID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.OpenGraphDataQualityAggregations, int, error) {
+	const (
+		defaultWhere = "created_at between ? and ?"
+	)
+
+	var (
+		count                            int64
+		openGraphDataQualityAggregations model.OpenGraphDataQualityAggregations
+		query                            *gorm.DB
+		result                           *gorm.DB
+	)
+
+	query = s.db.Model(model.OpenGraphDataQualityAggregation{}).WithContext(ctx).Where(defaultWhere, start, end)
+	if extensionID.Valid {
+		query = query.Where("schema_extension_id = ?", extensionID.Int32)
+	}
+
+	result = query.Count(&count)
+	if CheckError(result) != nil {
+		return openGraphDataQualityAggregations, 0, result.Error
+	}
+
+	if order == "" {
+		order = "created_at desc"
+	}
+
+	query = s.Scope(Paginate(skip, limit)).WithContext(ctx).Where(defaultWhere, start, end)
+	if extensionID.Valid {
+		query = query.Where("schema_extension_id = ?", extensionID.Int32)
+	}
+
+	result = query.Order(order).Find(&openGraphDataQualityAggregations)
+	if CheckError(result) != nil {
+		return openGraphDataQualityAggregations, 0, result.Error
+	}
+
+	return openGraphDataQualityAggregations, int(count), nil
 }
 
 func (s *BloodhoundDB) GetAzureDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, order string, limit int, skip int) (model.AzureDataQualityAggregations, int, error) {

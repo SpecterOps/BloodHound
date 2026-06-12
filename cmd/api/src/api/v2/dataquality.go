@@ -20,10 +20,13 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad"
@@ -32,10 +35,59 @@ import (
 )
 
 const (
-	ErrNoTenantId        string = "no tenant id specified in url"
-	ErrNoPlatformId      string = "no platform id specified in url"
-	ErrInvalidPlatformId string = "invalid platform id specified in url: %v"
+	ErrNoTenantId                            string = "no tenant id specified in url"
+	ErrNoPlatformId                          string = "no platform id specified in url"
+	ErrInvalidPlatformId                     string = "invalid platform id specified in url: %v"
+	dataQualityQueryParameterEndDate         string = "end_date"
+	dataQualityQueryParameterExtensionID     string = "extension_id"
+	dataQualityQueryParameterStartDate       string = "start_date"
+	dataQualityStatsDefaultPaginationLimit   int    = 1000
+	dataQualityStatsDefaultPaginationOffset  int    = 0
+	dataQualityStatsDefaultSortableErrorText string = api.ErrorResponseDetailsNotSortable
 )
+
+func parseDataQualityOrder(sortable api.Sortable, queryParams url.Values) (string, error) {
+	var (
+		err     error
+		sort    model.Sort
+		sqlSort []string
+	)
+
+	if sort, err = api.ParseSortParameters(sortable, queryParams); err != nil {
+		return "", err
+	}
+
+	if sqlSort, err = api.BuildSQLSort(sort, model.SortItem{}); err != nil {
+		return "", err
+	}
+
+	return strings.Join(sqlSort, ", "), nil
+}
+
+func parseOptionalStringQueryParameter(queryParams url.Values, key string) null.String {
+	if value := queryParams.Get(key); value != "" {
+		return null.StringFrom(value)
+	}
+
+	return null.String{}
+}
+
+func parseOpenGraphExtensionIDQueryParameter(queryParams url.Values) (null.Int32, error) {
+	var (
+		err         error
+		extensionID int64
+	)
+
+	if value := queryParams.Get(dataQualityQueryParameterExtensionID); value != "" {
+		if extensionID, err = strconv.ParseInt(value, 10, 32); err != nil {
+			return null.Int32{}, err
+		}
+
+		return null.Int32From(int32(extensionID)), nil
+	}
+
+	return null.Int32{}, nil
+}
 
 func (s Resources) GetDatabaseCompleteness(response http.ResponseWriter, request *http.Request) {
 	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Get Current Database Completeness")()
@@ -148,6 +200,56 @@ func (s *Resources) GetAzureDataQualityStats(response http.ResponseWriter, reque
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteResponseWrapperWithTimeWindowAndPagination(request.Context(), stats, start, end, limit, skip, count, http.StatusOK, response)
+	}
+}
+
+func (s *Resources) GetOpenGraphDataQualityStats(response http.ResponseWriter, request *http.Request) {
+	var (
+		defaultEnd, defaultStart  = DefaultTimeRange()
+		openGraphDataQualityStats model.OpenGraphDataQualityStats
+		queryParams               = request.URL.Query()
+	)
+
+	if order, err := parseDataQualityOrder(openGraphDataQualityStats, queryParams); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, dataQualityStatsDefaultSortableErrorText, request), response)
+	} else if start, err := ParseTimeQueryParameter(queryParams, dataQualityQueryParameterStartDate, defaultStart); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams[dataQualityQueryParameterStartDate]), request), response)
+	} else if end, err := ParseTimeQueryParameter(queryParams, dataQualityQueryParameterEndDate, defaultEnd); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams[dataQualityQueryParameterEndDate]), request), response)
+	} else if limit, err := ParseLimitQueryParameter(queryParams, dataQualityStatsDefaultPaginationLimit); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidLimit, queryParams["limit"]), request), response)
+	} else if skip, err := ParseSkipQueryParameter(queryParams, dataQualityStatsDefaultPaginationOffset); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, queryParams["skip"]), request), response)
+	} else if stats, count, err := s.DB.GetOpenGraphDataQualityStats(request.Context(), parseOptionalStringQueryParameter(queryParams, api.QueryParameterEnvironmentId), start, end, order, limit, skip); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		api.WriteResponseWrapperWithTimeWindowAndPagination(request.Context(), stats, start, end, limit, skip, count, http.StatusOK, response)
+	}
+}
+
+func (s *Resources) GetOpenGraphDataQualityAggregations(response http.ResponseWriter, request *http.Request) {
+	var (
+		defaultEnd, defaultStart         = DefaultTimeRange()
+		openGraphDataQualityAggregations model.OpenGraphDataQualityAggregations
+		queryParams                      = request.URL.Query()
+	)
+
+	if order, err := parseDataQualityOrder(openGraphDataQualityAggregations, queryParams); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, dataQualityStatsDefaultSortableErrorText, request), response)
+	} else if start, err := ParseTimeQueryParameter(queryParams, dataQualityQueryParameterStartDate, defaultStart); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams[dataQualityQueryParameterStartDate]), request), response)
+	} else if end, err := ParseTimeQueryParameter(queryParams, dataQualityQueryParameterEndDate, defaultEnd); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams[dataQualityQueryParameterEndDate]), request), response)
+	} else if limit, err := ParseLimitQueryParameter(queryParams, dataQualityStatsDefaultPaginationLimit); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidLimit, queryParams["limit"]), request), response)
+	} else if skip, err := ParseSkipQueryParameter(queryParams, dataQualityStatsDefaultPaginationOffset); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, queryParams["skip"]), request), response)
+	} else if extensionID, err := parseOpenGraphExtensionIDQueryParameter(queryParams); err != nil {
+		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, dataQualityQueryParameterExtensionID, err), response)
+	} else if aggregations, count, err := s.DB.GetOpenGraphDataQualityAggregations(request.Context(), extensionID, start, end, order, limit, skip); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		api.WriteResponseWrapperWithTimeWindowAndPagination(request.Context(), aggregations, start, end, limit, skip, count, http.StatusOK, response)
 	}
 }
 

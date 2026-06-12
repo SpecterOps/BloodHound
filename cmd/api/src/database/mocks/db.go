@@ -296,36 +296,6 @@ func (mr *MockDatabaseMockRecorder) CreateAzureDataQualityStats(ctx, stats any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).CreateAzureDataQualityStats), ctx, stats)
 }
 
-// CreateOpenGraphDataQualityAggregations mocks base method.
-func (m *MockDatabase) CreateOpenGraphDataQualityAggregations(ctx context.Context, aggregations model.OpenGraphDataQualityAggregations) (model.OpenGraphDataQualityAggregations, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOpenGraphDataQualityAggregations", ctx, aggregations)
-	ret0, _ := ret[0].(model.OpenGraphDataQualityAggregations)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateOpenGraphDataQualityAggregations indicates an expected call of CreateOpenGraphDataQualityAggregations.
-func (mr *MockDatabaseMockRecorder) CreateOpenGraphDataQualityAggregations(ctx, aggregations any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOpenGraphDataQualityAggregations", reflect.TypeOf((*MockDatabase)(nil).CreateOpenGraphDataQualityAggregations), ctx, aggregations)
-}
-
-// CreateOpenGraphDataQualityStats mocks base method.
-func (m *MockDatabase) CreateOpenGraphDataQualityStats(ctx context.Context, stats model.OpenGraphDataQualityStats) (model.OpenGraphDataQualityStats, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOpenGraphDataQualityStats", ctx, stats)
-	ret0, _ := ret[0].(model.OpenGraphDataQualityStats)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateOpenGraphDataQualityStats indicates an expected call of CreateOpenGraphDataQualityStats.
-func (mr *MockDatabaseMockRecorder) CreateOpenGraphDataQualityStats(ctx, stats any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOpenGraphDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).CreateOpenGraphDataQualityStats), ctx, stats)
-}
-
 // CreateCompletedTask mocks base method.
 func (m *MockDatabase) CreateCompletedTask(ctx context.Context, task model.CompletedTask) (model.CompletedTask, error) {
 	m.ctrl.T.Helper()
@@ -505,6 +475,36 @@ func (m *MockDatabase) CreateOIDCProvider(ctx context.Context, name, issuer, cli
 func (mr *MockDatabaseMockRecorder) CreateOIDCProvider(ctx, name, issuer, clientID, config any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOIDCProvider", reflect.TypeOf((*MockDatabase)(nil).CreateOIDCProvider), ctx, name, issuer, clientID, config)
+}
+
+// CreateOpenGraphDataQualityAggregations mocks base method.
+func (m *MockDatabase) CreateOpenGraphDataQualityAggregations(ctx context.Context, aggregations model.OpenGraphDataQualityAggregations) (model.OpenGraphDataQualityAggregations, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateOpenGraphDataQualityAggregations", ctx, aggregations)
+	ret0, _ := ret[0].(model.OpenGraphDataQualityAggregations)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateOpenGraphDataQualityAggregations indicates an expected call of CreateOpenGraphDataQualityAggregations.
+func (mr *MockDatabaseMockRecorder) CreateOpenGraphDataQualityAggregations(ctx, aggregations any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOpenGraphDataQualityAggregations", reflect.TypeOf((*MockDatabase)(nil).CreateOpenGraphDataQualityAggregations), ctx, aggregations)
+}
+
+// CreateOpenGraphDataQualityStats mocks base method.
+func (m *MockDatabase) CreateOpenGraphDataQualityStats(ctx context.Context, stats model.OpenGraphDataQualityStats) (model.OpenGraphDataQualityStats, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateOpenGraphDataQualityStats", ctx, stats)
+	ret0, _ := ret[0].(model.OpenGraphDataQualityStats)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateOpenGraphDataQualityStats indicates an expected call of CreateOpenGraphDataQualityStats.
+func (mr *MockDatabaseMockRecorder) CreateOpenGraphDataQualityStats(ctx, stats any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOpenGraphDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).CreateOpenGraphDataQualityStats), ctx, stats)
 }
 
 // CreatePrincipalKind mocks base method.
@@ -2182,6 +2182,38 @@ func (m *MockDatabase) GetLatestAssetGroupCollection(ctx context.Context, assetG
 func (mr *MockDatabaseMockRecorder) GetLatestAssetGroupCollection(ctx, assetGroupID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestAssetGroupCollection", reflect.TypeOf((*MockDatabase)(nil).GetLatestAssetGroupCollection), ctx, assetGroupID)
+}
+
+// GetOpenGraphDataQualityAggregations mocks base method.
+func (m *MockDatabase) GetOpenGraphDataQualityAggregations(ctx context.Context, extensionID null.Int32, start, end time.Time, sort_by string, limit, skip int) (model.OpenGraphDataQualityAggregations, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOpenGraphDataQualityAggregations", ctx, extensionID, start, end, sort_by, limit, skip)
+	ret0, _ := ret[0].(model.OpenGraphDataQualityAggregations)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetOpenGraphDataQualityAggregations indicates an expected call of GetOpenGraphDataQualityAggregations.
+func (mr *MockDatabaseMockRecorder) GetOpenGraphDataQualityAggregations(ctx, extensionID, start, end, sort_by, limit, skip any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOpenGraphDataQualityAggregations", reflect.TypeOf((*MockDatabase)(nil).GetOpenGraphDataQualityAggregations), ctx, extensionID, start, end, sort_by, limit, skip)
+}
+
+// GetOpenGraphDataQualityStats mocks base method.
+func (m *MockDatabase) GetOpenGraphDataQualityStats(ctx context.Context, environmentID null.String, start, end time.Time, sort_by string, limit, skip int) (model.OpenGraphDataQualityStats, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOpenGraphDataQualityStats", ctx, environmentID, start, end, sort_by, limit, skip)
+	ret0, _ := ret[0].(model.OpenGraphDataQualityStats)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetOpenGraphDataQualityStats indicates an expected call of GetOpenGraphDataQualityStats.
+func (mr *MockDatabaseMockRecorder) GetOpenGraphDataQualityStats(ctx, environmentID, start, end, sort_by, limit, skip any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOpenGraphDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetOpenGraphDataQualityStats), ctx, environmentID, start, end, sort_by, limit, skip)
 }
 
 // GetOrderedAssetGroupTagTiers mocks base method.

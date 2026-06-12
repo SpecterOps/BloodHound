@@ -60,3 +60,41 @@ func (OpenGraphDataQualityAggregation) TableName() string {
 type OpenGraphDataQualityStats []OpenGraphDataQualityStat
 
 type OpenGraphDataQualityAggregations []OpenGraphDataQualityAggregation
+
+func (s OpenGraphDataQualityStats) IsSortable(column string) bool {
+	switch column {
+	case "id",
+		"run_id",
+		"schema_extension_id",
+		"schema_environment_id",
+		"environment_id",
+		"metric_type",
+		"metric_name",
+		"metric_value",
+		"schema_node_kind_id",
+		"schema_relationship_kind_id",
+		"updated_at",
+		"created_at":
+		return true
+	default:
+		return false
+	}
+}
+
+func (s OpenGraphDataQualityAggregations) IsSortable(column string) bool {
+	switch column {
+	case "id",
+		"run_id",
+		"schema_extension_id",
+		"metric_type",
+		"metric_name",
+		"metric_value",
+		"schema_node_kind_id",
+		"schema_relationship_kind_id",
+		"updated_at",
+		"created_at":
+		return true
+	default:
+		return false
+	}
+}
