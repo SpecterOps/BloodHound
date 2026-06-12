@@ -193,6 +193,22 @@ func (mr *MockDataQualityDataMockRecorder) GetGraphSchemaNodeKindsByExtensionId(
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaNodeKindsByExtensionId", reflect.TypeOf((*MockDataQualityData)(nil).GetGraphSchemaNodeKindsByExtensionId), ctx, extensionId)
 }
 
+// GetGraphSchemaRelationshipKinds mocks base method.
+func (m *MockDataQualityData) GetGraphSchemaRelationshipKinds(ctx context.Context, filters model.Filters, sortOrder model.Sort, skip, limit int) (model.GraphSchemaRelationshipKinds, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGraphSchemaRelationshipKinds", ctx, filters, sortOrder, skip, limit)
+	ret0, _ := ret[0].(model.GraphSchemaRelationshipKinds)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetGraphSchemaRelationshipKinds indicates an expected call of GetGraphSchemaRelationshipKinds.
+func (mr *MockDataQualityDataMockRecorder) GetGraphSchemaRelationshipKinds(ctx, filters, sortOrder, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaRelationshipKinds", reflect.TypeOf((*MockDataQualityData)(nil).GetGraphSchemaRelationshipKinds), ctx, filters, sortOrder, skip, limit)
+}
+
 // GetKindsByIDs mocks base method.
 func (m *MockDataQualityData) GetKindsByIDs(ctx context.Context, ids ...int32) ([]model.Kind, error) {
 	m.ctrl.T.Helper()

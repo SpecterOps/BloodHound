@@ -20,12 +20,12 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"sort"
 	"sync"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/nan"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
@@ -44,14 +44,17 @@ type DataQualityData interface {
 	database.DataQualityData
 	GetGraphSchemaExtensions(ctx context.Context, extensionFilters model.Filters, sortOrder model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error)
 	GetGraphSchemaNodeKindsByExtensionId(ctx context.Context, extensionId int32) (model.GraphSchemaNodeKinds, error)
+	GetGraphSchemaRelationshipKinds(ctx context.Context, filters model.Filters, sortOrder model.Sort, skip, limit int) (model.GraphSchemaRelationshipKinds, int, error)
 	GetEnvironmentsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaEnvironment, error)
 	GetKindsByIDs(ctx context.Context, ids ...int32) ([]model.Kind, error)
 }
 
 type openGraphDataQualityAggregationKey struct {
-	schemaExtensionID int32
-	schemaNodeKindID  int32
-	nodeKind          string
+	schemaExtensionID        int32
+	metricType               model.OpenGraphDataQualityMetricType
+	metricName               string
+	schemaNodeKindID         null.Int32
+	schemaRelationshipKindID null.Int32
 }
 
 func excludeSourceKindsFromOpenGraphNodeKinds(nodeKinds model.GraphSchemaNodeKinds, sourceKinds []model.Kind) model.GraphSchemaNodeKinds {
@@ -551,10 +554,11 @@ func openGraphExtensionGraphStats(
 	extension model.GraphSchemaExtension,
 	environments []model.SchemaEnvironment,
 	nodeKinds model.GraphSchemaNodeKinds,
+	relationshipKinds model.GraphSchemaRelationshipKinds,
 ) (model.OpenGraphDataQualityStats, model.OpenGraphDataQualityAggregations, error) {
 	var (
 		stats             = model.OpenGraphDataQualityStats{}
-		aggregationCounts = map[openGraphDataQualityAggregationKey]int{}
+		aggregationCounts = map[openGraphDataQualityAggregationKey]float64{}
 	)
 
 	if err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -582,18 +586,50 @@ func openGraphExtensionGraphStats(
 						SchemaExtensionID:   extension.ID,
 						SchemaEnvironmentID: environment.ID,
 						EnvironmentID:       environmentID,
-						SchemaNodeKindID:    nodeKind.ID,
-						NodeKind:            nodeKind.Name,
-						NodeCount:           int(count),
+						MetricType:          model.OpenGraphDataQualityMetricTypeNode,
+						MetricName:          nodeKind.Name,
+						MetricValue:         float64(count),
+						SchemaNodeKindID:    null.Int32From(nodeKind.ID),
 					}
 					aggregationKey := openGraphDataQualityAggregationKey{
 						schemaExtensionID: extension.ID,
-						schemaNodeKindID:  nodeKind.ID,
-						nodeKind:          nodeKind.Name,
+						metricType:        model.OpenGraphDataQualityMetricTypeNode,
+						metricName:        nodeKind.Name,
+						schemaNodeKindID:  null.Int32From(nodeKind.ID),
 					}
 
 					stats = append(stats, stat)
-					aggregationCounts[aggregationKey] += int(count)
+					aggregationCounts[aggregationKey] += float64(count)
+				}
+
+				for _, relationshipKind := range relationshipKinds {
+					count, err := tx.Relationships().Filter(query.And(
+						query.Kind(query.Relationship(), relationshipKind.ToKind()),
+						query.Equals(query.StartProperty(graphschema.EnvironmentIDKey), environmentID),
+					)).Count()
+					if err != nil {
+						return fmt.Errorf("failed to count OpenGraph relationships of type %s in environment %s: %w", relationshipKind.Name, environmentID, err)
+					}
+
+					stat := model.OpenGraphDataQualityStat{
+						RunID:                    runID,
+						SchemaExtensionID:        extension.ID,
+						SchemaEnvironmentID:      environment.ID,
+						EnvironmentID:            environmentID,
+						MetricType:               model.OpenGraphDataQualityMetricTypeRelationship,
+						MetricName:               relationshipKind.Name,
+						MetricValue:              float64(count),
+						SchemaRelationshipKindID: null.Int32From(relationshipKind.ID),
+					}
+					aggregationKey := openGraphDataQualityAggregationKey{
+						schemaExtensionID:        extension.ID,
+						metricType:               model.OpenGraphDataQualityMetricTypeRelationship,
+						metricName:               relationshipKind.Name,
+						schemaRelationshipKindID: null.Int32From(relationshipKind.ID),
+					}
+
+					stats = append(stats, stat)
+					aggregationCounts[aggregationKey] += float64(count)
 				}
 			}
 		}
@@ -604,33 +640,17 @@ func openGraphExtensionGraphStats(
 	}
 
 	aggregations := make(model.OpenGraphDataQualityAggregations, 0, len(aggregationCounts))
-	for aggregationKey, nodeCount := range aggregationCounts {
+	for aggregationKey, metricValue := range aggregationCounts {
 		aggregations = append(aggregations, model.OpenGraphDataQualityAggregation{
-			RunID:             runID,
-			SchemaExtensionID: aggregationKey.schemaExtensionID,
-			SchemaNodeKindID:  aggregationKey.schemaNodeKindID,
-			NodeKind:          aggregationKey.nodeKind,
-			NodeCount:         nodeCount,
+			RunID:                    runID,
+			SchemaExtensionID:        aggregationKey.schemaExtensionID,
+			MetricType:               aggregationKey.metricType,
+			MetricName:               aggregationKey.metricName,
+			MetricValue:              metricValue,
+			SchemaNodeKindID:         aggregationKey.schemaNodeKindID,
+			SchemaRelationshipKindID: aggregationKey.schemaRelationshipKindID,
 		})
 	}
-
-	sort.Slice(stats, func(i, j int) bool {
-		if stats[i].SchemaExtensionID != stats[j].SchemaExtensionID {
-			return stats[i].SchemaExtensionID < stats[j].SchemaExtensionID
-		} else if stats[i].SchemaEnvironmentID != stats[j].SchemaEnvironmentID {
-			return stats[i].SchemaEnvironmentID < stats[j].SchemaEnvironmentID
-		} else if stats[i].EnvironmentID != stats[j].EnvironmentID {
-			return stats[i].EnvironmentID < stats[j].EnvironmentID
-		}
-		return stats[i].NodeKind < stats[j].NodeKind
-	})
-
-	sort.Slice(aggregations, func(i, j int) bool {
-		if aggregations[i].SchemaExtensionID != aggregations[j].SchemaExtensionID {
-			return aggregations[i].SchemaExtensionID < aggregations[j].SchemaExtensionID
-		}
-		return aggregations[i].NodeKind < aggregations[j].NodeKind
-	})
 
 	return stats, aggregations, nil
 }
@@ -664,11 +684,22 @@ func openGraphGraphStats(ctx context.Context, db DataQualityData, graphDB graph.
 		nodeKinds, err := openGraphDataQualityNodeKinds(ctx, db, extension.ID, environments)
 		if err != nil {
 			return stats, aggregations, fmt.Errorf("failed to get node kinds for OpenGraph extension %d: %w", extension.ID, err)
-		} else if len(nodeKinds) == 0 {
+		}
+
+		relationshipKinds, _, err := db.GetGraphSchemaRelationshipKinds(ctx, model.Filters{"schema_extension_id": []model.Filter{{
+			Operator:    model.Equals,
+			Value:       fmt.Sprintf("%d", extension.ID),
+			SetOperator: model.FilterAnd,
+		}}}, model.Sort{}, 0, 0)
+		if err != nil {
+			return stats, aggregations, fmt.Errorf("failed to get relationship kinds for OpenGraph extension %d: %w", extension.ID, err)
+		}
+
+		if len(nodeKinds) == 0 && len(relationshipKinds) == 0 {
 			continue
 		}
 
-		extensionStats, extensionAggregations, err := openGraphExtensionGraphStats(ctx, graphDB, runID, extension, environments, nodeKinds)
+		extensionStats, extensionAggregations, err := openGraphExtensionGraphStats(ctx, graphDB, runID, extension, environments, nodeKinds, relationshipKinds)
 		if err != nil {
 			return stats, aggregations, fmt.Errorf("failed to get OpenGraph data quality stats for extension %d: %w", extension.ID, err)
 		}

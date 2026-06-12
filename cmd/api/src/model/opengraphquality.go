@@ -16,15 +16,26 @@
 
 package model
 
+import "github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+
+type OpenGraphDataQualityMetricType string
+
+const (
+	OpenGraphDataQualityMetricTypeNode         OpenGraphDataQualityMetricType = "node"
+	OpenGraphDataQualityMetricTypeRelationship OpenGraphDataQualityMetricType = "relationship"
+)
+
 type OpenGraphDataQualityStat struct {
 	Serial
-	RunID               string `json:"run_id" gorm:"index"`
-	SchemaExtensionID   int32  `json:"schema_extension_id" gorm:"index"`
-	SchemaEnvironmentID int32  `json:"schema_environment_id" gorm:"index"`
-	EnvironmentID       string `json:"environment_id" gorm:"index"`
-	SchemaNodeKindID    int32  `json:"schema_node_kind_id" gorm:"index"`
-	NodeKind            string `json:"node_kind"`
-	NodeCount           int    `json:"node_count"`
+	RunID                    string                         `json:"run_id" gorm:"index"`
+	SchemaExtensionID        int32                          `json:"schema_extension_id" gorm:"index"`
+	SchemaEnvironmentID      int32                          `json:"schema_environment_id" gorm:"index"`
+	EnvironmentID            string                         `json:"environment_id" gorm:"index"`
+	MetricType               OpenGraphDataQualityMetricType `json:"metric_type" gorm:"index"`
+	MetricName               string                         `json:"metric_name" gorm:"index"`
+	MetricValue              float64                        `json:"metric_value"`
+	SchemaNodeKindID         null.Int32                     `json:"schema_node_kind_id" gorm:"index"`
+	SchemaRelationshipKindID null.Int32                     `json:"schema_relationship_kind_id" gorm:"index"`
 }
 
 func (OpenGraphDataQualityStat) TableName() string {
@@ -33,11 +44,13 @@ func (OpenGraphDataQualityStat) TableName() string {
 
 type OpenGraphDataQualityAggregation struct {
 	Serial
-	RunID             string `json:"run_id" gorm:"index"`
-	SchemaExtensionID int32  `json:"schema_extension_id" gorm:"index"`
-	SchemaNodeKindID  int32  `json:"schema_node_kind_id" gorm:"index"`
-	NodeKind          string `json:"node_kind"`
-	NodeCount         int    `json:"node_count"`
+	RunID                    string                         `json:"run_id" gorm:"index"`
+	SchemaExtensionID        int32                          `json:"schema_extension_id" gorm:"index"`
+	MetricType               OpenGraphDataQualityMetricType `json:"metric_type" gorm:"index"`
+	MetricName               string                         `json:"metric_name" gorm:"index"`
+	MetricValue              float64                        `json:"metric_value"`
+	SchemaNodeKindID         null.Int32                     `json:"schema_node_kind_id" gorm:"index"`
+	SchemaRelationshipKindID null.Int32                     `json:"schema_relationship_kind_id" gorm:"index"`
 }
 
 func (OpenGraphDataQualityAggregation) TableName() string {
