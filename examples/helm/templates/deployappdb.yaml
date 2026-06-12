@@ -60,7 +60,7 @@ spec:
         {{- if .Values.appdb.volumes.pvcEnabled }}
         volumeMounts:
         - name: postgres-data
-          mountPath: /var/lib/postgresql/data
+          mountPath: /var/lib/postgresql
         {{- end }}
       {{- if .Values.appdb.volumes.pvcEnabled }}
       volumes:
