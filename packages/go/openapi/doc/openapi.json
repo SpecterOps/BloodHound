@@ -14019,38 +14019,52 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "OK. An analysis request is currently pending; its details are returned in the response body.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "requested_by": {
-                      "type": "string"
-                    },
-                    "request_type": {
-                      "type": "string"
-                    },
-                    "requested_at": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "delete_all_graph": {
-                      "type": "boolean"
-                    },
-                    "delete_sourceless_graph": {
-                      "type": "boolean"
-                    },
-                    "delete_source_kinds": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "requested_by": {
+                          "type": "string"
+                        },
+                        "request_type": {
+                          "type": "string"
+                        },
+                        "requested_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "delete_all_graph": {
+                          "type": "boolean"
+                        },
+                        "delete_sourceless_graph": {
+                          "type": "boolean"
+                        },
+                        "delete_source_kinds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "delete_relationships": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
                       }
                     }
                   }
                 }
               }
             }
+          },
+          "204": {
+            "description": "No Content. The request was successful but no analysis is currently pending."
           },
           "401": {
             "$ref": "#/components/responses/unauthorized"
@@ -14069,15 +14083,102 @@
       "put": {
         "operationId": "StartAnalysis",
         "summary": "Start analysis",
-        "description": "Flags the API to begin analyzing ingest data.",
+        "description": "Submits an analysis request attributed to the authenticated user. The\nendpoint is idempotent — at most one analysis request can be pending at a\ntime. Returns 202 Accepted when this call accepted the new request, or 200\nOK when a request was already pending. The currently pending request is\nreturned in the response body in both cases.\n",
         "tags": [
           "Datapipe",
           "Community",
           "Enterprise"
         ],
         "responses": {
+          "200": {
+            "description": "OK. A request was already pending; its details are returned in the response body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "requested_by": {
+                          "type": "string"
+                        },
+                        "request_type": {
+                          "type": "string"
+                        },
+                        "requested_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "delete_all_graph": {
+                          "type": "boolean"
+                        },
+                        "delete_sourceless_graph": {
+                          "type": "boolean"
+                        },
+                        "delete_source_kinds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "delete_relationships": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "202": {
-            "$ref": "#/components/responses/no-content"
+            "description": "Accepted. The analysis request was created; its details are returned in the response body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "requested_by": {
+                          "type": "string"
+                        },
+                        "request_type": {
+                          "type": "string"
+                        },
+                        "requested_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "delete_all_graph": {
+                          "type": "boolean"
+                        },
+                        "delete_sourceless_graph": {
+                          "type": "boolean"
+                        },
+                        "delete_source_kinds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "delete_relationships": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
             "$ref": "#/components/responses/unauthorized"

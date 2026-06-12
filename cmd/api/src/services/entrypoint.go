@@ -46,6 +46,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/cache"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/metricsregistration"
+	"github.com/specterops/bloodhound/server/modules"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -148,6 +149,11 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator, connections.RDMS)
 		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dogtagsService, openGraphSchemaService)
+
+		modules.Register(modules.Deps{
+			Router: &routerInst,
+			Pool:   connections.RDMS.Pool(),
+		})
 
 		// Set neo4j batch and flush sizes
 		neo4jParameters := appcfg.GetNeo4jParameters(ctx, connections.RDMS)

@@ -29,7 +29,7 @@ import (
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	mocks_db "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
@@ -49,7 +49,7 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 		mockGraph = mocks.NewMockGraph(mockCtrl)
 		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
 
-		bheCtx = ctx.Context{
+		bheCtx = bhctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
 				Owner:               model.User{},
@@ -157,7 +157,7 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
 		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
-		bheCtx    = ctx.Context{
+		bheCtx    = bhctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
 				Owner:               model.User{},
@@ -371,7 +371,7 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
 		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
-		bheCtx    = ctx.Context{
+		bheCtx    = bhctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
 				Owner:               model.User{},
@@ -479,7 +479,7 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
 		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
-		bheCtx    = ctx.Context{
+		bheCtx    = bhctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
 				Owner:               model.User{},
@@ -587,7 +587,7 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
 		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
-		bheCtx    = ctx.Context{
+		bheCtx    = bhctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
 				Owner:               model.User{},
@@ -695,7 +695,7 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
 		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
-		bheCtx    = ctx.Context{
+		bheCtx    = bhctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
 				Owner:               model.User{},
@@ -1065,7 +1065,7 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 
 			response := httptest.NewRecorder()
 
-			bheCtx := ctx.Context{
+			bheCtx := bhctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner:               testCase.user,
@@ -1345,7 +1345,7 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			bheCtx := ctx.Context{
+			bheCtx := bhctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner:               testCase.user,
@@ -1631,7 +1631,7 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 			}
 			request := testCase.buildRequest()
 
-			bheCtx := ctx.Context{
+			bheCtx := bhctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner:               testCase.user,
@@ -1912,7 +1912,7 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 
 			request := testCase.buildRequest()
 
-			bheCtx := ctx.Context{
+			bheCtx := bhctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner:               testCase.user,
@@ -2200,7 +2200,7 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			bheCtx := ctx.Context{
+			bheCtx := bhctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner:               testCase.user,
@@ -2488,7 +2488,7 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			bheCtx := ctx.Context{
+			bheCtx := bhctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner:               testCase.user,
@@ -2776,7 +2776,7 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			bheCtx := ctx.Context{
+			bheCtx := bhctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner:               testCase.user,
@@ -3064,7 +3064,7 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			bheCtx := ctx.Context{
+			bheCtx := bhctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner:               testCase.user,
