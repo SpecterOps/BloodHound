@@ -31,3 +31,5 @@ packages:
     config:
       recursive: true
       include-interface-regex: "^[A-Z]"
+      exclude-subpkg-regex:
+        - mocks
