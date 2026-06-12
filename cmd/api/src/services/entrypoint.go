@@ -48,6 +48,7 @@ import (
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/metricsregistration"
 	"github.com/specterops/bloodhound/packages/go/storage"
+	"github.com/specterops/bloodhound/server/modules"
 	"github.com/specterops/dawgs/graph"
 )
 
