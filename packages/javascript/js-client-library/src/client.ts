@@ -776,6 +776,20 @@ class BHEAPIClient {
     requestSupportBundle = (clientId: string, type: string, options?: RequestOptions) =>
         this.baseClient.post(`/api/v2/clients/${clientId}/management`, { type }, options);
 
+    getSupportBundleArtifact = (clientId: string, artifactId: string, options?: RequestOptions) =>
+        this.baseClient.get(`/api/v2/clients/${clientId}/management/artifacts/${artifactId}`, options);
+
+    downloadSupportBundleArtifact = (clientId: string, artifactId: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/clients/${clientId}/management/artifacts/${artifactId}`,
+            Object.assign(
+                {
+                    responseType: 'blob',
+                },
+                options
+            )
+        );
+
     createClient = (
         client: CreateSharpHoundClientRequest | CreateAzureHoundClientRequest | CreateOpenHoundClientRequest,
         options?: RequestOptions
