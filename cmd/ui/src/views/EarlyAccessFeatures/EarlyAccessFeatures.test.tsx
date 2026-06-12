@@ -50,7 +50,11 @@ const testFeatureFlags: Flag[] = [
 
 const server = setupServer(
     rest.get('/api/v2/self', (req, res, ctx) => {
-        return res(ctx.json(createAuthStateWithPermissions([Permission.APP_WRITE_APPLICATION_CONFIGURATION])));
+        return res(
+            ctx.json({
+                data: createAuthStateWithPermissions([Permission.APP_WRITE_APPLICATION_CONFIGURATION]).user,
+            })
+        );
     }),
     rest.get(`/api/v2/features`, (req, res, ctx) => {
         return res(
@@ -165,7 +169,7 @@ describe('EarlyAccessFeatures', () => {
     it('disables any available button toggles if the user lacks the permission', async () => {
         server.use(
             rest.get('/api/v2/self', (req, res, ctx) => {
-                return res(ctx.json(createAuthStateWithPermissions([])));
+                return res(ctx.json({ data: createAuthStateWithPermissions([]).user }));
             })
         );
         render(<EarlyAccessFeatures />);
