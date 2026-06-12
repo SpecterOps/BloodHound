@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"sort"
 	"sync"
 
 	"github.com/gofrs/uuid"
@@ -30,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -37,6 +39,61 @@ import (
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 )
+
+type DataQualityData interface {
+	database.DataQualityData
+	GetGraphSchemaExtensions(ctx context.Context, extensionFilters model.Filters, sortOrder model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error)
+	GetGraphSchemaNodeKindsByExtensionId(ctx context.Context, extensionId int32) (model.GraphSchemaNodeKinds, error)
+	GetEnvironmentsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaEnvironment, error)
+	GetKindsByIDs(ctx context.Context, ids ...int32) ([]model.Kind, error)
+}
+
+type openGraphDataQualityAggregationKey struct {
+	schemaExtensionID int32
+	schemaNodeKindID  int32
+	nodeKind          string
+}
+
+func excludeSourceKindsFromOpenGraphNodeKinds(nodeKinds model.GraphSchemaNodeKinds, sourceKinds []model.Kind) model.GraphSchemaNodeKinds {
+	var (
+		result          = make(model.GraphSchemaNodeKinds, 0, len(nodeKinds))
+		sourceKindNames = map[string]struct{}{}
+	)
+
+	for _, sourceKind := range sourceKinds {
+		sourceKindNames[sourceKind.Name] = struct{}{}
+	}
+
+	for _, nodeKind := range nodeKinds {
+		if _, isSourceKind := sourceKindNames[nodeKind.Name]; !isSourceKind {
+			result = append(result, nodeKind)
+		}
+	}
+
+	return result
+}
+
+func openGraphDataQualityNodeKinds(ctx context.Context, db DataQualityData, extensionID int32, environments []model.SchemaEnvironment) (model.GraphSchemaNodeKinds, error) {
+	var (
+		sourceKindIDs = make([]int32, 0, len(environments))
+	)
+
+	nodeKinds, err := db.GetGraphSchemaNodeKindsByExtensionId(ctx, extensionID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, environment := range environments {
+		sourceKindIDs = append(sourceKindIDs, environment.SourceKindId)
+	}
+
+	sourceKinds, err := db.GetKindsByIDs(ctx, sourceKindIDs...)
+	if err != nil {
+		return nil, err
+	}
+
+	return excludeSourceKindsFromOpenGraphNodeKinds(nodeKinds, sourceKinds), nil
+}
 
 func adGraphStats(ctx context.Context, db graph.Database) (model.ADDataQualityStats, model.ADDataQualityAggregation, error) {
 	var (
@@ -454,7 +511,176 @@ func azureGraphStats(ctx context.Context, db graph.Database) (model.AzureDataQua
 	return stats, aggregation, err
 }
 
-func SaveDataQuality(ctx context.Context, db database.DataQualityData, graphDB graph.Database) error {
+func fetchOpenGraphEnvironmentIDs(ctx context.Context, tx graph.Transaction, environmentKind graph.Kind) ([]string, error) {
+	var environmentIDs []string
+
+	if err := tx.Nodes().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Kind(query.Node(), environmentKind),
+			query.Equals(query.NodeProperty(common.Collected.String()), true),
+		)
+	}).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+		for node := range cursor.Chan() {
+			if environmentID, err := node.Properties.Get(graphschema.EnvironmentIDKey).String(); err != nil {
+				if graph.IsErrPropertyNotFound(err) {
+					slog.WarnContext(ctx, "Skipping OpenGraph environment node missing environment id property",
+						slog.Uint64("node_id", node.ID.Uint64()),
+						slog.String("environment_kind", environmentKind.String()),
+						slog.String("property", graphschema.EnvironmentIDKey),
+					)
+					continue
+				}
+				return fmt.Errorf("failed to get %s from node %d: %w", graphschema.EnvironmentIDKey, node.ID, err)
+			} else {
+				environmentIDs = append(environmentIDs, environmentID)
+			}
+		}
+
+		return cursor.Error()
+	}); err != nil {
+		return nil, err
+	}
+
+	return environmentIDs, nil
+}
+
+func openGraphExtensionGraphStats(
+	ctx context.Context,
+	graphDB graph.Database,
+	runID string,
+	extension model.GraphSchemaExtension,
+	environments []model.SchemaEnvironment,
+	nodeKinds model.GraphSchemaNodeKinds,
+) (model.OpenGraphDataQualityStats, model.OpenGraphDataQualityAggregations, error) {
+	var (
+		stats             = model.OpenGraphDataQualityStats{}
+		aggregationCounts = map[openGraphDataQualityAggregationKey]int{}
+	)
+
+	if err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		for _, environment := range environments {
+			environmentKind := graph.StringKind(environment.EnvironmentKindName)
+
+			environmentIDs, err := fetchOpenGraphEnvironmentIDs(ctx, tx, environmentKind)
+			if err != nil {
+				return fmt.Errorf("failed to fetch OpenGraph environment IDs for environment kind %s: %w", environmentKind.String(), err)
+			}
+
+			for _, environmentID := range environmentIDs {
+				for _, nodeKind := range nodeKinds {
+					count, err := tx.Nodes().Filter(query.And(
+						graphschema.IgnoreMetaFilter,
+						query.Kind(query.Node(), nodeKind.ToKind()),
+						query.Equals(query.NodeProperty(graphschema.EnvironmentIDKey), environmentID),
+					)).Count()
+					if err != nil {
+						return fmt.Errorf("failed to count OpenGraph nodes of type %s in environment %s: %w", nodeKind.Name, environmentID, err)
+					}
+
+					stat := model.OpenGraphDataQualityStat{
+						RunID:               runID,
+						SchemaExtensionID:   extension.ID,
+						SchemaEnvironmentID: environment.ID,
+						EnvironmentID:       environmentID,
+						SchemaNodeKindID:    nodeKind.ID,
+						NodeKind:            nodeKind.Name,
+						NodeCount:           int(count),
+					}
+					aggregationKey := openGraphDataQualityAggregationKey{
+						schemaExtensionID: extension.ID,
+						schemaNodeKindID:  nodeKind.ID,
+						nodeKind:          nodeKind.Name,
+					}
+
+					stats = append(stats, stat)
+					aggregationCounts[aggregationKey] += int(count)
+				}
+			}
+		}
+
+		return nil
+	}); err != nil {
+		return stats, nil, err
+	}
+
+	aggregations := make(model.OpenGraphDataQualityAggregations, 0, len(aggregationCounts))
+	for aggregationKey, nodeCount := range aggregationCounts {
+		aggregations = append(aggregations, model.OpenGraphDataQualityAggregation{
+			RunID:             runID,
+			SchemaExtensionID: aggregationKey.schemaExtensionID,
+			SchemaNodeKindID:  aggregationKey.schemaNodeKindID,
+			NodeKind:          aggregationKey.nodeKind,
+			NodeCount:         nodeCount,
+		})
+	}
+
+	sort.Slice(stats, func(i, j int) bool {
+		if stats[i].SchemaExtensionID != stats[j].SchemaExtensionID {
+			return stats[i].SchemaExtensionID < stats[j].SchemaExtensionID
+		} else if stats[i].SchemaEnvironmentID != stats[j].SchemaEnvironmentID {
+			return stats[i].SchemaEnvironmentID < stats[j].SchemaEnvironmentID
+		} else if stats[i].EnvironmentID != stats[j].EnvironmentID {
+			return stats[i].EnvironmentID < stats[j].EnvironmentID
+		}
+		return stats[i].NodeKind < stats[j].NodeKind
+	})
+
+	sort.Slice(aggregations, func(i, j int) bool {
+		if aggregations[i].SchemaExtensionID != aggregations[j].SchemaExtensionID {
+			return aggregations[i].SchemaExtensionID < aggregations[j].SchemaExtensionID
+		}
+		return aggregations[i].NodeKind < aggregations[j].NodeKind
+	})
+
+	return stats, aggregations, nil
+}
+
+func openGraphGraphStats(ctx context.Context, db DataQualityData, graphDB graph.Database) (model.OpenGraphDataQualityStats, model.OpenGraphDataQualityAggregations, error) {
+	var (
+		aggregations = model.OpenGraphDataQualityAggregations{}
+		stats        = model.OpenGraphDataQualityStats{}
+		runID        string
+	)
+
+	if newUUID, err := uuid.NewV4(); err != nil {
+		return stats, aggregations, fmt.Errorf("could not generate new UUID: %w", err)
+	} else {
+		runID = newUUID.String()
+	}
+
+	extensions, _, err := db.GetGraphSchemaExtensions(ctx, model.Filters{"is_builtin": []model.Filter{{Operator: model.Equals, Value: "false"}}}, model.Sort{}, 0, 0)
+	if err != nil {
+		return stats, aggregations, fmt.Errorf("failed to get OpenGraph extensions: %w", err)
+	}
+
+	for _, extension := range extensions {
+		environments, err := db.GetEnvironmentsByExtensionId(ctx, extension.ID)
+		if err != nil {
+			return stats, aggregations, fmt.Errorf("failed to get environments for OpenGraph extension %d: %w", extension.ID, err)
+		} else if len(environments) == 0 {
+			continue
+		}
+
+		nodeKinds, err := openGraphDataQualityNodeKinds(ctx, db, extension.ID, environments)
+		if err != nil {
+			return stats, aggregations, fmt.Errorf("failed to get node kinds for OpenGraph extension %d: %w", extension.ID, err)
+		} else if len(nodeKinds) == 0 {
+			continue
+		}
+
+		extensionStats, extensionAggregations, err := openGraphExtensionGraphStats(ctx, graphDB, runID, extension, environments, nodeKinds)
+		if err != nil {
+			return stats, aggregations, fmt.Errorf("failed to get OpenGraph data quality stats for extension %d: %w", extension.ID, err)
+		}
+
+		stats = append(stats, extensionStats...)
+		aggregations = append(aggregations, extensionAggregations...)
+	}
+
+	return stats, aggregations, nil
+}
+
+func SaveDataQuality(ctx context.Context, db DataQualityData, graphDB graph.Database) error {
 	slog.InfoContext(
 		ctx,
 		"Started Data Quality Stats Collection",
@@ -490,6 +716,17 @@ func SaveDataQuality(ctx context.Context, db database.DataQualityData, graphDB g
 			return fmt.Errorf("could not save azure data quality stats: %w", err)
 		} else if _, err := db.CreateAzureDataQualityAggregation(ctx, aggregation); err != nil {
 			return fmt.Errorf("could not save azure data quality stats: %w", err)
+		}
+	}
+
+	if stats, aggregations, err := openGraphGraphStats(ctx, db, graphDB); err != nil {
+		return fmt.Errorf("could not get OpenGraph data quality stats: %w", err)
+	} else if len(stats) > 0 {
+		// We only want to save stats if there are stats to save
+		if _, err := db.CreateOpenGraphDataQualityStats(ctx, stats); err != nil {
+			return fmt.Errorf("could not save OpenGraph data quality stats: %w", err)
+		} else if _, err := db.CreateOpenGraphDataQualityAggregations(ctx, aggregations); err != nil {
+			return fmt.Errorf("could not save OpenGraph data quality aggregations: %w", err)
 		}
 	}
 

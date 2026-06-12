@@ -116,3 +116,99 @@ func (mr *MockDataQualityDataMockRecorder) CreateAzureDataQualityStats(ctx, stat
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityStats", reflect.TypeOf((*MockDataQualityData)(nil).CreateAzureDataQualityStats), ctx, stats)
 }
+
+// CreateOpenGraphDataQualityAggregations mocks base method.
+func (m *MockDataQualityData) CreateOpenGraphDataQualityAggregations(ctx context.Context, aggregations model.OpenGraphDataQualityAggregations) (model.OpenGraphDataQualityAggregations, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateOpenGraphDataQualityAggregations", ctx, aggregations)
+	ret0, _ := ret[0].(model.OpenGraphDataQualityAggregations)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateOpenGraphDataQualityAggregations indicates an expected call of CreateOpenGraphDataQualityAggregations.
+func (mr *MockDataQualityDataMockRecorder) CreateOpenGraphDataQualityAggregations(ctx, aggregations any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOpenGraphDataQualityAggregations", reflect.TypeOf((*MockDataQualityData)(nil).CreateOpenGraphDataQualityAggregations), ctx, aggregations)
+}
+
+// CreateOpenGraphDataQualityStats mocks base method.
+func (m *MockDataQualityData) CreateOpenGraphDataQualityStats(ctx context.Context, stats model.OpenGraphDataQualityStats) (model.OpenGraphDataQualityStats, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateOpenGraphDataQualityStats", ctx, stats)
+	ret0, _ := ret[0].(model.OpenGraphDataQualityStats)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateOpenGraphDataQualityStats indicates an expected call of CreateOpenGraphDataQualityStats.
+func (mr *MockDataQualityDataMockRecorder) CreateOpenGraphDataQualityStats(ctx, stats any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOpenGraphDataQualityStats", reflect.TypeOf((*MockDataQualityData)(nil).CreateOpenGraphDataQualityStats), ctx, stats)
+}
+
+// GetEnvironmentsByExtensionId mocks base method.
+func (m *MockDataQualityData) GetEnvironmentsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaEnvironment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEnvironmentsByExtensionId", ctx, extensionId)
+	ret0, _ := ret[0].([]model.SchemaEnvironment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEnvironmentsByExtensionId indicates an expected call of GetEnvironmentsByExtensionId.
+func (mr *MockDataQualityDataMockRecorder) GetEnvironmentsByExtensionId(ctx, extensionId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironmentsByExtensionId", reflect.TypeOf((*MockDataQualityData)(nil).GetEnvironmentsByExtensionId), ctx, extensionId)
+}
+
+// GetGraphSchemaExtensions mocks base method.
+func (m *MockDataQualityData) GetGraphSchemaExtensions(ctx context.Context, extensionFilters model.Filters, sortOrder model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGraphSchemaExtensions", ctx, extensionFilters, sortOrder, skip, limit)
+	ret0, _ := ret[0].(model.GraphSchemaExtensions)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetGraphSchemaExtensions indicates an expected call of GetGraphSchemaExtensions.
+func (mr *MockDataQualityDataMockRecorder) GetGraphSchemaExtensions(ctx, extensionFilters, sortOrder, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaExtensions", reflect.TypeOf((*MockDataQualityData)(nil).GetGraphSchemaExtensions), ctx, extensionFilters, sortOrder, skip, limit)
+}
+
+// GetGraphSchemaNodeKindsByExtensionId mocks base method.
+func (m *MockDataQualityData) GetGraphSchemaNodeKindsByExtensionId(ctx context.Context, extensionId int32) (model.GraphSchemaNodeKinds, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGraphSchemaNodeKindsByExtensionId", ctx, extensionId)
+	ret0, _ := ret[0].(model.GraphSchemaNodeKinds)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetGraphSchemaNodeKindsByExtensionId indicates an expected call of GetGraphSchemaNodeKindsByExtensionId.
+func (mr *MockDataQualityDataMockRecorder) GetGraphSchemaNodeKindsByExtensionId(ctx, extensionId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaNodeKindsByExtensionId", reflect.TypeOf((*MockDataQualityData)(nil).GetGraphSchemaNodeKindsByExtensionId), ctx, extensionId)
+}
+
+// GetKindsByIDs mocks base method.
+func (m *MockDataQualityData) GetKindsByIDs(ctx context.Context, ids ...int32) ([]model.Kind, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx}
+	for _, a := range ids {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetKindsByIDs", varargs...)
+	ret0, _ := ret[0].([]model.Kind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetKindsByIDs indicates an expected call of GetKindsByIDs.
+func (mr *MockDataQualityDataMockRecorder) GetKindsByIDs(ctx any, ids ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx}, ids...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetKindsByIDs", reflect.TypeOf((*MockDataQualityData)(nil).GetKindsByIDs), varargs...)
+}

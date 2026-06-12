@@ -296,6 +296,36 @@ func (mr *MockDatabaseMockRecorder) CreateAzureDataQualityStats(ctx, stats any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).CreateAzureDataQualityStats), ctx, stats)
 }
 
+// CreateOpenGraphDataQualityAggregations mocks base method.
+func (m *MockDatabase) CreateOpenGraphDataQualityAggregations(ctx context.Context, aggregations model.OpenGraphDataQualityAggregations) (model.OpenGraphDataQualityAggregations, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateOpenGraphDataQualityAggregations", ctx, aggregations)
+	ret0, _ := ret[0].(model.OpenGraphDataQualityAggregations)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateOpenGraphDataQualityAggregations indicates an expected call of CreateOpenGraphDataQualityAggregations.
+func (mr *MockDatabaseMockRecorder) CreateOpenGraphDataQualityAggregations(ctx, aggregations any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOpenGraphDataQualityAggregations", reflect.TypeOf((*MockDatabase)(nil).CreateOpenGraphDataQualityAggregations), ctx, aggregations)
+}
+
+// CreateOpenGraphDataQualityStats mocks base method.
+func (m *MockDatabase) CreateOpenGraphDataQualityStats(ctx context.Context, stats model.OpenGraphDataQualityStats) (model.OpenGraphDataQualityStats, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateOpenGraphDataQualityStats", ctx, stats)
+	ret0, _ := ret[0].(model.OpenGraphDataQualityStats)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateOpenGraphDataQualityStats indicates an expected call of CreateOpenGraphDataQualityStats.
+func (mr *MockDatabaseMockRecorder) CreateOpenGraphDataQualityStats(ctx, stats any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOpenGraphDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).CreateOpenGraphDataQualityStats), ctx, stats)
+}
+
 // CreateCompletedTask mocks base method.
 func (m *MockDatabase) CreateCompletedTask(ctx context.Context, task model.CompletedTask) (model.CompletedTask, error) {
 	m.ctrl.T.Helper()

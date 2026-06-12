@@ -29,6 +29,8 @@ type DataQualityData interface {
 	CreateADDataQualityAggregation(ctx context.Context, aggregation model.ADDataQualityAggregation) (model.ADDataQualityAggregation, error)
 	CreateAzureDataQualityStats(ctx context.Context, stats model.AzureDataQualityStats) (model.AzureDataQualityStats, error)
 	CreateAzureDataQualityAggregation(ctx context.Context, aggregation model.AzureDataQualityAggregation) (model.AzureDataQualityAggregation, error)
+	CreateOpenGraphDataQualityStats(ctx context.Context, stats model.OpenGraphDataQualityStats) (model.OpenGraphDataQualityStats, error)
+	CreateOpenGraphDataQualityAggregations(ctx context.Context, aggregations model.OpenGraphDataQualityAggregations) (model.OpenGraphDataQualityAggregations, error)
 }
 
 func (s *BloodhoundDB) CreateADDataQualityStats(ctx context.Context, stats model.ADDataQualityStats) (model.ADDataQualityStats, error) {
@@ -203,6 +205,16 @@ func (s *BloodhoundDB) CreateAzureDataQualityAggregation(ctx context.Context, ag
 	return aggregation, CheckError(result)
 }
 
+func (s *BloodhoundDB) CreateOpenGraphDataQualityStats(ctx context.Context, stats model.OpenGraphDataQualityStats) (model.OpenGraphDataQualityStats, error) {
+	result := s.db.WithContext(ctx).Create(&stats)
+	return stats, CheckError(result)
+}
+
+func (s *BloodhoundDB) CreateOpenGraphDataQualityAggregations(ctx context.Context, aggregations model.OpenGraphDataQualityAggregations) (model.OpenGraphDataQualityAggregations, error) {
+	result := s.db.WithContext(ctx).Create(&aggregations)
+	return aggregations, CheckError(result)
+}
+
 func (s *BloodhoundDB) GetAzureDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, order string, limit int, skip int) (model.AzureDataQualityAggregations, int, error) {
 	const (
 		defaultWhere = "created_at between ? and ?"
@@ -233,6 +245,6 @@ func (s *BloodhoundDB) GetAzureDataQualityAggregations(ctx context.Context, star
 
 func (s *BloodhoundDB) DeleteAllDataQuality(ctx context.Context) error {
 	return CheckError(
-		s.db.WithContext(ctx).Exec("DELETE FROM ad_data_quality_aggregations; DELETE FROM ad_data_quality_stats; DELETE FROM azure_data_quality_aggregations; DELETE FROM azure_data_quality_stats;"),
+		s.db.WithContext(ctx).Exec("DELETE FROM ad_data_quality_aggregations; DELETE FROM ad_data_quality_stats; DELETE FROM azure_data_quality_aggregations; DELETE FROM azure_data_quality_stats; DELETE FROM data_quality_stats_aggregation; DELETE FROM data_quality_stats;"),
 	)
 }
