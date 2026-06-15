@@ -25,7 +25,7 @@ import (
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/specterops/bloodhound/server/analysis/services"
+	"github.com/specterops/bloodhound/server/analysis/internal/services"
 )
 
 // queryExecer is the minimal surface satisfied by both *pgxpool.Pool and pgx.Tx.

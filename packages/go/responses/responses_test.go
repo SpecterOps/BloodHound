@@ -26,8 +26,8 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
-	"github.com/specterops/bloodhound/server/responses"
-	"github.com/specterops/bloodhound/server/responses/mocks"
+	"github.com/specterops/bloodhound/packages/go/responses"
+	"github.com/specterops/bloodhound/packages/go/responses/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -22,7 +22,7 @@ package mocks
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/server/analysis/services"
+	"github.com/specterops/bloodhound/server/analysis/internal/services"
 	mock "github.com/stretchr/testify/mock"
 )
 

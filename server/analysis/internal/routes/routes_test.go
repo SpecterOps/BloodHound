@@ -25,9 +25,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/server/analysis/handlers"
-	"github.com/specterops/bloodhound/server/analysis/handlers/mocks"
-	"github.com/specterops/bloodhound/server/analysis/routes"
+	"github.com/specterops/bloodhound/server/analysis/internal/handlers"
+	"github.com/specterops/bloodhound/server/analysis/internal/handlers/mocks"
+	"github.com/specterops/bloodhound/server/analysis/internal/routes"
 	"github.com/stretchr/testify/assert"
 )
 

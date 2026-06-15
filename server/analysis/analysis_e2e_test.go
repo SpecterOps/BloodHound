@@ -37,9 +37,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
-	"github.com/specterops/bloodhound/server/analysis/appdb"
-	"github.com/specterops/bloodhound/server/analysis/handlers"
-	"github.com/specterops/bloodhound/server/analysis/services"
+	"github.com/specterops/bloodhound/server/analysis/internal/appdb"
+	"github.com/specterops/bloodhound/server/analysis/internal/handlers"
+	"github.com/specterops/bloodhound/server/analysis/internal/services"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

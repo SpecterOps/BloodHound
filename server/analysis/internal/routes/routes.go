@@ -19,7 +19,7 @@ package routes
 import (
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/server/analysis/handlers"
+	"github.com/specterops/bloodhound/server/analysis/internal/handlers"
 )
 
 // Register attaches the analysis request endpoints to the given router instance.

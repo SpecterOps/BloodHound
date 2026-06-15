@@ -29,9 +29,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/server/analysis/handlers"
-	"github.com/specterops/bloodhound/server/analysis/handlers/mocks"
-	"github.com/specterops/bloodhound/server/analysis/services"
+	"github.com/specterops/bloodhound/server/analysis/internal/handlers"
+	"github.com/specterops/bloodhound/server/analysis/internal/handlers/mocks"
+	"github.com/specterops/bloodhound/server/analysis/internal/services"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

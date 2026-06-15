@@ -28,8 +28,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
-	"github.com/specterops/bloodhound/server/analysis/services"
-	"github.com/specterops/bloodhound/server/responses"
+	"github.com/specterops/bloodhound/packages/go/responses"
+	"github.com/specterops/bloodhound/server/analysis/internal/services"
 )
 
 // Analysis defines the analysis service boundary for the analysis handlers package.

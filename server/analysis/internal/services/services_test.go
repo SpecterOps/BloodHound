@@ -22,8 +22,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/server/analysis/services"
-	"github.com/specterops/bloodhound/server/analysis/services/mocks"
+	"github.com/specterops/bloodhound/server/analysis/internal/services"
+	"github.com/specterops/bloodhound/server/analysis/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

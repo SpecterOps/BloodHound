@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/specterops/bloodhound/server/analysis/services"
+	"github.com/specterops/bloodhound/server/analysis/internal/services"
 )
 
 // RequestedAnalysisView is the JSON shape returned by the analysis handlers for

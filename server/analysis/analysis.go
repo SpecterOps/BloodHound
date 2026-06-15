@@ -22,10 +22,10 @@ package analysis
 import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
-	"github.com/specterops/bloodhound/server/analysis/appdb"
-	"github.com/specterops/bloodhound/server/analysis/handlers"
-	"github.com/specterops/bloodhound/server/analysis/routes"
-	"github.com/specterops/bloodhound/server/analysis/services"
+	"github.com/specterops/bloodhound/server/analysis/internal/appdb"
+	"github.com/specterops/bloodhound/server/analysis/internal/handlers"
+	"github.com/specterops/bloodhound/server/analysis/internal/routes"
+	"github.com/specterops/bloodhound/server/analysis/internal/services"
 )
 
 // Register builds the analysis store -> service -> handler chain and attaches
