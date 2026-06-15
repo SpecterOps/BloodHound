@@ -22,7 +22,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	dbMocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
@@ -43,12 +43,12 @@ var (
 )
 
 func setupRequest(user model.User) (context.Context, LoginRequest) {
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		RequestID: "12345",
 		RequestIP: "1.2.3.4",
 	}
 	testCtx := context.Background()
-	testCtx = ctx.Set(testCtx, &bhCtx)
+	testCtx = bhctx.Set(testCtx, &bhCtx)
 
 	var loginRequest LoginRequest
 	if user.PrincipalName == "" {
@@ -61,7 +61,7 @@ func setupRequest(user model.User) (context.Context, LoginRequest) {
 }
 
 func buildAuditLog(testCtx context.Context, status model.AuditLogEntryStatus, user model.User, fields types.JSONUntypedObject) model.AuditLog {
-	bhCtx := ctx.Get(testCtx)
+	bhCtx := bhctx.Get(testCtx)
 
 	auditLog := model.AuditLog{
 		Action:          model.AuditLogActionLoginAttempt,

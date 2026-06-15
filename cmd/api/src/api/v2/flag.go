@@ -25,7 +25,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 )
 
@@ -63,7 +63,7 @@ func (s Resources) ToggleFlag(response http.ResponseWriter, request *http.Reques
 			// TODO: Cleanup #ADCSFeatureFlag after full launch.
 			if featureFlag.Key == appcfg.FeatureAdcs && !featureFlag.Enabled {
 				var userId string
-				if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+				if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 					slog.WarnContext(request.Context(), "Encountered request analysis for unknown user, this shouldn't happen")
 					userId = "unknown-user-toggle-flag"
 				} else {
