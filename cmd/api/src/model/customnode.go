@@ -42,7 +42,7 @@ func (s CustomNodeKinds) AuditData() AuditData {
 
 type CustomNodeKind struct {
 	ID               int32                `json:"id"`
-	KindId           int16                `json:"-"`        // FK to kind.id; stored column
+	KindId           int16                `json:"kindId"`   // FK to kind.id; stored column
 	KindName         string               `json:"kindName"` // joined from kind.name; not a stored column
 	SchemaNodeKindId *int32               `json:"-"`        // SchemaNodeKindId is nullable
 	Config           CustomNodeKindConfig `json:"config"`

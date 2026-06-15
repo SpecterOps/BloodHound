@@ -28,8 +28,8 @@ WHERE NOT EXISTS (
     SELECT 1 FROM kind WHERE kind.name = cnk.kind_name
 );
 
--- Add the new kind_id FK column (SMALLINT matches kind.id SMALLSERIAL).
-ALTER TABLE custom_node_kinds ADD COLUMN IF NOT EXISTS kind_id SMALLINT;
+-- Add the new kind_id FK column
+ALTER TABLE custom_node_kinds ADD COLUMN IF NOT EXISTS kind_id INTEGER;
 
 -- Back-fill the new kind_id column
 UPDATE custom_node_kinds
