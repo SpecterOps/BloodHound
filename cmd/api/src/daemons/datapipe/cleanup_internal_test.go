@@ -248,6 +248,10 @@ func TestOrphanFileSweeper_ClearLegacyLocalIngestFiles(t *testing.T) {
 		cleanupInternalDirEntry{
 			name:  "nested",
 			isDir: true,
+			info: cleanupInternalFileInfo{
+				name:    "nested",
+				modTime: oldTime,
+			},
 		},
 		cleanupInternalDirEntry{
 			name: "old.json",
@@ -263,7 +267,7 @@ func TestOrphanFileSweeper_ClearLegacyLocalIngestFiles(t *testing.T) {
 	sweeper.clearLegacyLocalIngestFiles(context.Background(), []string{"expected.json", "../old.json"})
 }
 
-func TestOrphanFileSweeper_ClearLegacyLocalIngestFilesRemovesOrphanDirectories(t *testing.T) {
+func TestOrphanFileSweeper_ClearLegacyLocalIngestFilesRemovesOrphanDirectoriesIfOld(t *testing.T) {
 	t.Parallel()
 
 	var (
@@ -271,16 +275,34 @@ func TestOrphanFileSweeper_ClearLegacyLocalIngestFilesRemovesOrphanDirectories(t
 		mockFileOps   = mocks.NewMockFileOperations(mockCtrl)
 		tempDirectory = t.TempDir()
 		sweeper       = NewOrphanFileSweeper(mockFileOps, tempDirectory, t.TempDir())
+		oldTime       = time.Now().Add(-25 * time.Hour)
+		youngTime     = time.Now()
 	)
 
 	mockFileOps.EXPECT().ReadDir(tempDirectory).Return([]os.DirEntry{
 		cleanupInternalDirEntry{
 			name:  "orphan",
 			isDir: true,
+			info: cleanupInternalFileInfo{
+				name:    "orphan",
+				modTime: oldTime,
+			},
+		},
+		cleanupInternalDirEntry{
+			name:  "unexpected-orphan",
+			isDir: true,
+			info: cleanupInternalFileInfo{
+				name:    "unexpected-orphan",
+				modTime: youngTime,
+			},
 		},
 		cleanupInternalDirEntry{
 			name:  "expected-parent",
 			isDir: true,
+			info: cleanupInternalFileInfo{
+				name:    "expected-parent",
+				modTime: oldTime,
+			},
 		},
 	}, nil)
 	mockFileOps.EXPECT().RemoveAll(filepath.Join(tempDirectory, "orphan")).Return(nil)

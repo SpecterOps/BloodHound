@@ -305,13 +305,13 @@ func (s *OrphanFileSweeper) clearLegacyLocalIngestFiles(ctx context.Context, exp
 			continue
 		}
 
-		if entry.IsDir() {
-			_ = s.fileOps.RemoveAll(fullPath)
+		info, err := entry.Info()
+		if err != nil || info.ModTime().After(cutoff) {
 			continue
 		}
 
-		info, err := entry.Info()
-		if err != nil || info.ModTime().After(cutoff) {
+		if entry.IsDir() {
+			_ = s.fileOps.RemoveAll(fullPath)
 			continue
 		}
 
