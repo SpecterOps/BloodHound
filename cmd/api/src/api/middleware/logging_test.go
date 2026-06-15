@@ -1,0 +1,86 @@
+package middleware_test
+
+import (
+	"bytes"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
+	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestLoggingMiddleware_QueryParameters(t *testing.T) {
+	var (
+		testURL1  = "/api/v2/bloodhound-users"
+		testURL2  = "/api/v2/search"
+		healthURL = "/health"
+	)
+	testCases := []struct {
+		name              string
+		url               string
+		logContains       []string
+		logDoesNotContain []string
+	}{
+		{
+			name:              "non /api/v2 path does not log query parameters",
+			url:               healthURL + "?randomparam=123",
+			logContains:       []string{"HTTP request"},
+			logDoesNotContain: []string{"query_parameters"},
+		},
+		{
+			name:              "/api/v2 path with no query params does not log query parameters",
+			url:               testURL1,
+			logContains:       []string{"HTTP request"},
+			logDoesNotContain: []string{"query_parameters"},
+		},
+		{
+			name:        "single query parameter is logged as structured field",
+			url:         testURL1 + "?first_name=eq:Hubert",
+			logContains: []string{"HTTP request", "query_parameters", "first_name", "eq:Hubert"},
+		},
+		{
+			name:        "multiple query parameters are logged as structured fields",
+			url:         testURL1 + "?first_name=eq:Hubert&limit=10",
+			logContains: []string{"HTTP request", "query_parameters", "first_name", "eq:Hubert", "limit", "10"},
+		},
+		{
+			name:        "multi-value query parameter values are comma-joined",
+			url:         testURL2 + "?type=Computer&type=User&type=Group",
+			logContains: []string{"HTTP request", "query_parameters", "type", "Computer", "User", "Group"},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			var logBuffer bytes.Buffer
+			slog.SetDefault(slog.New(slog.NewJSONHandler(&logBuffer, &slog.HandlerOptions{})))
+
+			nextHandler := http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
+				responseWriter.WriteHeader(http.StatusOK)
+			})
+			handler := middleware.LoggingMiddleware(auth.NewIdentityResolver(), false)(nextHandler)
+
+			request := httptest.NewRequest(http.MethodGet, testCase.url, nil)
+			bhCtx := &ctx.Context{
+				StartTime: time.Now(),
+				RequestID: "123456",
+			}
+			request = ctx.SetRequestContext(request, bhCtx)
+			response := httptest.NewRecorder()
+			handler.ServeHTTP(response, request)
+
+			logOutput := logBuffer.String()
+			for _, expected := range testCase.logContains {
+				assert.Contains(t, logOutput, expected)
+			}
+			for _, unexpected := range testCase.logDoesNotContain {
+				assert.NotContains(t, logOutput, unexpected)
+			}
+		})
+	}
+}
