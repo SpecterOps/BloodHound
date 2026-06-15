@@ -478,10 +478,10 @@ func (mr *MockDatabaseMockRecorder) CreateOIDCProvider(ctx, name, issuer, client
 }
 
 // CreateOpenGraphDataQualityAggregations mocks base method.
-func (m *MockDatabase) CreateOpenGraphDataQualityAggregations(ctx context.Context, aggregations model.OpenGraphDataQualityAggregations) (model.OpenGraphDataQualityAggregations, error) {
+func (m *MockDatabase) CreateOpenGraphDataQualityAggregations(ctx context.Context, aggregations model.DataQualityAggregations) (model.DataQualityAggregations, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateOpenGraphDataQualityAggregations", ctx, aggregations)
-	ret0, _ := ret[0].(model.OpenGraphDataQualityAggregations)
+	ret0, _ := ret[0].(model.DataQualityAggregations)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -493,10 +493,10 @@ func (mr *MockDatabaseMockRecorder) CreateOpenGraphDataQualityAggregations(ctx, 
 }
 
 // CreateOpenGraphDataQualityStats mocks base method.
-func (m *MockDatabase) CreateOpenGraphDataQualityStats(ctx context.Context, stats model.OpenGraphDataQualityStats) (model.OpenGraphDataQualityStats, error) {
+func (m *MockDatabase) CreateOpenGraphDataQualityStats(ctx context.Context, stats model.DataQualityStats) (model.DataQualityStats, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateOpenGraphDataQualityStats", ctx, stats)
-	ret0, _ := ret[0].(model.OpenGraphDataQualityStats)
+	ret0, _ := ret[0].(model.DataQualityStats)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2185,10 +2185,10 @@ func (mr *MockDatabaseMockRecorder) GetLatestAssetGroupCollection(ctx, assetGrou
 }
 
 // GetOpenGraphDataQualityAggregations mocks base method.
-func (m *MockDatabase) GetOpenGraphDataQualityAggregations(ctx context.Context, extensionID, schemaEnvironmentID null.Int32, start, end time.Time, sort_by string, limit, skip int) (model.OpenGraphDataQualityAggregations, int, error) {
+func (m *MockDatabase) GetOpenGraphDataQualityAggregations(ctx context.Context, extensionID, schemaEnvironmentID null.Int32, start, end time.Time, sort_by string, limit, skip int) (model.DataQualityAggregations, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOpenGraphDataQualityAggregations", ctx, extensionID, schemaEnvironmentID, start, end, sort_by, limit, skip)
-	ret0, _ := ret[0].(model.OpenGraphDataQualityAggregations)
+	ret0, _ := ret[0].(model.DataQualityAggregations)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -2201,10 +2201,10 @@ func (mr *MockDatabaseMockRecorder) GetOpenGraphDataQualityAggregations(ctx, ext
 }
 
 // GetOpenGraphDataQualityStats mocks base method.
-func (m *MockDatabase) GetOpenGraphDataQualityStats(ctx context.Context, environmentID null.String, extensionID, schemaEnvironmentID null.Int32, start, end time.Time, sort_by string, limit, skip int) (model.OpenGraphDataQualityStats, int, error) {
+func (m *MockDatabase) GetOpenGraphDataQualityStats(ctx context.Context, environmentID null.String, extensionID, schemaEnvironmentID null.Int32, start, end time.Time, sort_by string, limit, skip int) (model.DataQualityStats, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOpenGraphDataQualityStats", ctx, environmentID, extensionID, schemaEnvironmentID, start, end, sort_by, limit, skip)
-	ret0, _ := ret[0].(model.OpenGraphDataQualityStats)
+	ret0, _ := ret[0].(model.DataQualityStats)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2

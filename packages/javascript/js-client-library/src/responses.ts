@@ -130,36 +130,36 @@ export type AzureDataQualityStat = TimestampFields & {
 export type AzureDataQualityResponse = PaginatedResponse<AzureDataQualityStat[]>;
 
 // Metric rows keep OpenGraph DQ extensible beyond node counts while sharing one response shape.
-export type OpenGraphDataQualityMetricType = 'node' | 'relationship';
+export type DataQualityMetricType = 'node' | 'relationship';
 
-export type OpenGraphDataQualityStat = TimestampFields & {
+export type DataQualityStat = TimestampFields & {
     id: number;
     run_id: string;
     schema_extension_id: number;
     schema_environment_id: number;
     environment_id: string;
-    metric_type: OpenGraphDataQualityMetricType;
+    metric_type: DataQualityMetricType;
     metric_name: string;
     metric_value: number;
     schema_node_kind_id: number | null;
     schema_relationship_kind_id: number | null;
 };
 
-export type OpenGraphDataQualityAggregation = TimestampFields & {
+export type DataQualityAggregation = TimestampFields & {
     id: number;
     run_id: string;
     schema_extension_id: number;
     schema_environment_id: number;
-    metric_type: OpenGraphDataQualityMetricType;
+    metric_type: DataQualityMetricType;
     metric_name: string;
     metric_value: number;
     schema_node_kind_id: number | null;
     schema_relationship_kind_id: number | null;
 };
 
-export type OpenGraphDataQualityStatsResponse = PaginatedResponse<OpenGraphDataQualityStat[]>;
+export type DataQualityStatsResponse = PaginatedResponse<DataQualityStat[]>;
 
-export type OpenGraphDataQualityAggregationsResponse = PaginatedResponse<OpenGraphDataQualityAggregation[]>;
+export type DataQualityAggregationsResponse = PaginatedResponse<DataQualityAggregation[]>;
 
 type PostureStat = TimestampFields & {
     domain_sid: string;

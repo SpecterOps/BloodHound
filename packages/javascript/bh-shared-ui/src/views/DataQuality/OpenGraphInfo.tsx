@@ -19,9 +19,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import {
-    OpenGraphDataQualityAggregation,
-    OpenGraphDataQualityMetricType,
-    OpenGraphDataQualityStat,
+    DataQualityAggregation,
+    DataQualityMetricType,
+    DataQualityStat,
 } from 'js-client-library';
 import React, { useEffect } from 'react';
 import { NodeIcon } from '../../components';
@@ -39,12 +39,14 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-type OpenGraphMetric = OpenGraphDataQualityStat | OpenGraphDataQualityAggregation;
+type OpenGraphMetric = DataQualityStat | DataQualityAggregation;
 type OpenGraphMetricRow = Pick<OpenGraphMetric, 'metric_type' | 'metric_name' | 'metric_value'>;
+
+const relationshipMetricName = 'relationships';
 
 const loadingRows: OpenGraphMetricRow[] = [
     { metric_type: 'node', metric_name: 'Nodes', metric_value: 0 },
-    { metric_type: 'relationship', metric_name: 'Relationships', metric_value: 0 },
+    { metric_type: 'relationship', metric_name: relationshipMetricName, metric_value: 0 },
 ];
 
 export const OpenGraphEnvironmentInfo: React.FC<{
@@ -115,6 +117,14 @@ function getLatestRunMetrics(stats: OpenGraphMetric[]): OpenGraphMetricRow[] {
     return stats.filter((stat) => stat.run_id === latestRunID);
 }
 
+function getMetricDisplayName(row: OpenGraphMetricRow): string {
+    if (row.metric_type === 'relationship' && row.metric_name === relationshipMetricName) {
+        return 'Relationships';
+    }
+
+    return row.metric_name;
+}
+
 const Layout: React.FC<{
     stats: OpenGraphMetricRow[];
     loading: boolean;
@@ -168,7 +178,7 @@ const MetricTable: React.FC<{
                         <LoadContainer
                             key={`${row.metric_type}-${row.metric_name}`}
                             icon={<MetricIcon metricName={row.metric_name} metricType={row.metric_type} />}
-                            display={row.metric_name}
+                            display={getMetricDisplayName(row)}
                             value={row.metric_value}
                             loading={loading}
                         />
@@ -179,7 +189,7 @@ const MetricTable: React.FC<{
     );
 };
 
-const MetricIcon: React.FC<{ metricName: string; metricType: OpenGraphDataQualityMetricType }> = ({
+const MetricIcon: React.FC<{ metricName: string; metricType: DataQualityMetricType }> = ({
     metricName,
     metricType,
 }) => {

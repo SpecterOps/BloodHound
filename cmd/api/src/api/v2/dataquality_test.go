@@ -656,11 +656,11 @@ func TestGetOpenGraphDataQualityStats_Success(t *testing.T) {
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
 	mockDB.EXPECT().GetOpenGraphDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), "updated_at desc", 1, 0).DoAndReturn(
-		func(ctx context.Context, environmentID null.String, extensionID null.Int32, schemaEnvironmentID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.OpenGraphDataQualityStats, int, error) {
+		func(ctx context.Context, environmentID null.String, extensionID null.Int32, schemaEnvironmentID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.DataQualityStats, int, error) {
 			require.True(t, environmentID.Equal(null.StringFrom("env-1")))
 			require.True(t, extensionID.Equal(null.Int32From(7)))
 			require.True(t, schemaEnvironmentID.Equal(null.Int32From(11)))
-			return model.OpenGraphDataQualityStats{}, 0, nil
+			return model.DataQualityStats{}, 0, nil
 		},
 	)
 
@@ -797,10 +797,10 @@ func TestGetOpenGraphDataQualityAggregations_Success(t *testing.T) {
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
 	mockDB.EXPECT().GetOpenGraphDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), "schema_extension_id", 1, 0).DoAndReturn(
-		func(ctx context.Context, extensionID null.Int32, schemaEnvironmentID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.OpenGraphDataQualityAggregations, int, error) {
+		func(ctx context.Context, extensionID null.Int32, schemaEnvironmentID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.DataQualityAggregations, int, error) {
 			require.True(t, extensionID.Equal(null.Int32From(7)))
 			require.True(t, schemaEnvironmentID.Equal(null.Int32From(11)))
-			return model.OpenGraphDataQualityAggregations{}, 0, nil
+			return model.DataQualityAggregations{}, 0, nil
 		},
 	)
 

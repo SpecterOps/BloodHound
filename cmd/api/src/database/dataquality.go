@@ -30,8 +30,8 @@ type DataQualityData interface {
 	CreateADDataQualityAggregation(ctx context.Context, aggregation model.ADDataQualityAggregation) (model.ADDataQualityAggregation, error)
 	CreateAzureDataQualityStats(ctx context.Context, stats model.AzureDataQualityStats) (model.AzureDataQualityStats, error)
 	CreateAzureDataQualityAggregation(ctx context.Context, aggregation model.AzureDataQualityAggregation) (model.AzureDataQualityAggregation, error)
-	CreateOpenGraphDataQualityStats(ctx context.Context, stats model.OpenGraphDataQualityStats) (model.OpenGraphDataQualityStats, error)
-	CreateOpenGraphDataQualityAggregations(ctx context.Context, aggregations model.OpenGraphDataQualityAggregations) (model.OpenGraphDataQualityAggregations, error)
+	CreateOpenGraphDataQualityStats(ctx context.Context, stats model.DataQualityStats) (model.DataQualityStats, error)
+	CreateOpenGraphDataQualityAggregations(ctx context.Context, aggregations model.DataQualityAggregations) (model.DataQualityAggregations, error)
 }
 
 func (s *BloodhoundDB) CreateADDataQualityStats(ctx context.Context, stats model.ADDataQualityStats) (model.ADDataQualityStats, error) {
@@ -206,30 +206,30 @@ func (s *BloodhoundDB) CreateAzureDataQualityAggregation(ctx context.Context, ag
 	return aggregation, CheckError(result)
 }
 
-func (s *BloodhoundDB) CreateOpenGraphDataQualityStats(ctx context.Context, stats model.OpenGraphDataQualityStats) (model.OpenGraphDataQualityStats, error) {
+func (s *BloodhoundDB) CreateOpenGraphDataQualityStats(ctx context.Context, stats model.DataQualityStats) (model.DataQualityStats, error) {
 	result := s.db.WithContext(ctx).Create(&stats)
 	return stats, CheckError(result)
 }
 
-func (s *BloodhoundDB) CreateOpenGraphDataQualityAggregations(ctx context.Context, aggregations model.OpenGraphDataQualityAggregations) (model.OpenGraphDataQualityAggregations, error) {
+func (s *BloodhoundDB) CreateOpenGraphDataQualityAggregations(ctx context.Context, aggregations model.DataQualityAggregations) (model.DataQualityAggregations, error) {
 	result := s.db.WithContext(ctx).Create(&aggregations)
 	return aggregations, CheckError(result)
 }
 
-func (s *BloodhoundDB) GetOpenGraphDataQualityStats(ctx context.Context, environmentID null.String, extensionID null.Int32, schemaEnvironmentID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.OpenGraphDataQualityStats, int, error) {
+func (s *BloodhoundDB) GetOpenGraphDataQualityStats(ctx context.Context, environmentID null.String, extensionID null.Int32, schemaEnvironmentID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.DataQualityStats, int, error) {
 	const (
 		defaultWhere = "created_at between ? and ?"
 	)
 
 	var (
 		count                     int64
-		openGraphDataQualityStats model.OpenGraphDataQualityStats
+		openGraphDataQualityStats model.DataQualityStats
 		query                     *gorm.DB
 		result                    *gorm.DB
 	)
 
 	// Filters are optional so the same endpoint can serve a specific environment or a narrowed extension/kind view.
-	query = s.db.Model(model.OpenGraphDataQualityStat{}).WithContext(ctx).Where(defaultWhere, start, end)
+	query = s.db.Model(model.DataQualityStat{}).WithContext(ctx).Where(defaultWhere, start, end)
 	if environmentID.Valid {
 		query = query.Where("environment_id = ?", environmentID.String)
 	}
@@ -268,20 +268,20 @@ func (s *BloodhoundDB) GetOpenGraphDataQualityStats(ctx context.Context, environ
 	return openGraphDataQualityStats, int(count), nil
 }
 
-func (s *BloodhoundDB) GetOpenGraphDataQualityAggregations(ctx context.Context, extensionID null.Int32, schemaEnvironmentID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.OpenGraphDataQualityAggregations, int, error) {
+func (s *BloodhoundDB) GetOpenGraphDataQualityAggregations(ctx context.Context, extensionID null.Int32, schemaEnvironmentID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.DataQualityAggregations, int, error) {
 	const (
 		defaultWhere = "created_at between ? and ?"
 	)
 
 	var (
 		count                            int64
-		openGraphDataQualityAggregations model.OpenGraphDataQualityAggregations
+		openGraphDataQualityAggregations model.DataQualityAggregations
 		query                            *gorm.DB
 		result                           *gorm.DB
 	)
 
 	// Aggregations intentionally filter by schema metadata instead of an environment_id.
-	query = s.db.Model(model.OpenGraphDataQualityAggregation{}).WithContext(ctx).Where(defaultWhere, start, end)
+	query = s.db.Model(model.DataQualityAggregation{}).WithContext(ctx).Where(defaultWhere, start, end)
 	if extensionID.Valid {
 		query = query.Where("schema_extension_id = ?", extensionID.Int32)
 	}

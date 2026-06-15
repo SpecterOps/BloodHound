@@ -72,7 +72,7 @@ get:
                   data:
                     type: array
                     items:
-                      $ref: './../schemas/model.opengraph-data-quality-aggregation.yaml'
+                      $ref: './../schemas/model.data-quality-aggregation.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:

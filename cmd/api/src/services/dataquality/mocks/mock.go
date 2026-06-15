@@ -118,10 +118,10 @@ func (mr *MockDataQualityDataMockRecorder) CreateAzureDataQualityStats(ctx, stat
 }
 
 // CreateOpenGraphDataQualityAggregations mocks base method.
-func (m *MockDataQualityData) CreateOpenGraphDataQualityAggregations(ctx context.Context, aggregations model.OpenGraphDataQualityAggregations) (model.OpenGraphDataQualityAggregations, error) {
+func (m *MockDataQualityData) CreateOpenGraphDataQualityAggregations(ctx context.Context, aggregations model.DataQualityAggregations) (model.DataQualityAggregations, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateOpenGraphDataQualityAggregations", ctx, aggregations)
-	ret0, _ := ret[0].(model.OpenGraphDataQualityAggregations)
+	ret0, _ := ret[0].(model.DataQualityAggregations)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -133,10 +133,10 @@ func (mr *MockDataQualityDataMockRecorder) CreateOpenGraphDataQualityAggregation
 }
 
 // CreateOpenGraphDataQualityStats mocks base method.
-func (m *MockDataQualityData) CreateOpenGraphDataQualityStats(ctx context.Context, stats model.OpenGraphDataQualityStats) (model.OpenGraphDataQualityStats, error) {
+func (m *MockDataQualityData) CreateOpenGraphDataQualityStats(ctx context.Context, stats model.DataQualityStats) (model.DataQualityStats, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateOpenGraphDataQualityStats", ctx, stats)
-	ret0, _ := ret[0].(model.OpenGraphDataQualityStats)
+	ret0, _ := ret[0].(model.DataQualityStats)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

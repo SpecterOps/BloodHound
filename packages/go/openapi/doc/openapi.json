@@ -13862,7 +13862,7 @@
                         "data": {
                           "type": "array",
                           "items": {
-                            "$ref": "#/components/schemas/model.opengraph-data-quality-stat"
+                            "$ref": "#/components/schemas/model.data-quality-stat"
                           }
                         }
                       }
@@ -13976,7 +13976,7 @@
                         "data": {
                           "type": "array",
                           "items": {
-                            "$ref": "#/components/schemas/model.opengraph-data-quality-aggregation"
+                            "$ref": "#/components/schemas/model.data-quality-aggregation"
                           }
                         }
                       }
@@ -22085,7 +22085,7 @@
           }
         ]
       },
-      "model.opengraph-data-quality-stat": {
+      "model.data-quality-stat": {
         "allOf": [
           {
             "$ref": "#/components/schemas/model.components.int32.id"
@@ -22139,7 +22139,7 @@
           }
         ]
       },
-      "model.opengraph-data-quality-aggregation": {
+      "model.data-quality-aggregation": {
         "allOf": [
           {
             "$ref": "#/components/schemas/model.components.int32.id"

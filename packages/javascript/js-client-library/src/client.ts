@@ -90,8 +90,8 @@ import {
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
     ListFileTypesForIngestResponse,
-    OpenGraphDataQualityAggregationsResponse,
-    OpenGraphDataQualityStatsResponse,
+    DataQualityAggregationsResponse,
+    DataQualityStatsResponse,
     PaginatedResponse,
     PostureFindingTrendsResponse,
     PostureHistoryResponse,
@@ -694,7 +694,7 @@ class BHEAPIClient {
         sort_by?: string,
         options?: RequestOptions
     ) => {
-        return this.baseClient.get<OpenGraphDataQualityStatsResponse>(
+        return this.baseClient.get<DataQualityStatsResponse>(
             '/api/v2/data-quality-stats',
             Object.assign(
                 {
@@ -723,7 +723,7 @@ class BHEAPIClient {
         sort_by?: string,
         options?: RequestOptions
     ) => {
-        return this.baseClient.get<OpenGraphDataQualityAggregationsResponse>(
+        return this.baseClient.get<DataQualityAggregationsResponse>(
             '/api/v2/data-quality-stats-aggregations',
             Object.assign(
                 {
