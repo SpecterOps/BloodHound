@@ -949,3 +949,131 @@ func TestEntityDetails(t *testing.T) {
 		})
 	})
 }
+
+// TestFetchEntityDescendentPaths_DirectPathsToRoot verifies that each terminal node with a direct
+// azure.Contains edge to the root tenant is included in the returned path set.
+func TestFetchEntityDescendentPaths_DirectPathsToRoot(t *testing.T) {
+	t.Parallel()
+
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		tenantID   = integration.RandomObjectID(t)
+		tenantNode = NewAzureTenant(t, &suite, tenantID)
+		app1       = NewAzureApplication(t, &suite, "App1", integration.RandomObjectID(t), tenantID)
+		app2       = NewAzureApplication(t, &suite, "App2", integration.RandomObjectID(t), tenantID)
+	)
+
+	NewRelationship(t, &suite, tenantNode, app1, graphAzure.Contains)
+	NewRelationship(t, &suite, tenantNode, app2, graphAzure.Contains)
+
+	err := suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
+		paths, err := azure.FetchEntityDescendentPaths(tx, tenantNode, graphAzure.App)
+		require.NoError(t, err)
+
+		nodeIDs := paths.AllNodes().IDs()
+		require.Len(t, nodeIDs, 3)
+		require.Contains(t, nodeIDs, tenantNode.ID)
+		require.Contains(t, nodeIDs, app1.ID)
+		require.Contains(t, nodeIDs, app2.ID)
+
+		return nil
+	})
+	require.NoError(t, err)
+}
+
+// TestFetchEntityDescendentPaths_MultiHopPathToRoot verifies that a terminal node connected to the
+// root through one or more intermediate azure.Contains hops is fully represented in the path set,
+// with every intermediary node included.
+func TestFetchEntityDescendentPaths_MultiHopPathToRoot(t *testing.T) {
+	t.Parallel()
+
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		tenantID         = integration.RandomObjectID(t)
+		tenantNode       = NewAzureTenant(t, &suite, tenantID)
+		subscriptionNode = NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
+			common.Name:         "TestSubscription",
+			common.ObjectID:     integration.RandomObjectID(t),
+			graphAzure.TenantID: tenantID,
+		}), graphAzure.Entity, graphAzure.Subscription)
+		appNode = NewAzureApplication(t, &suite, "App", integration.RandomObjectID(t), tenantID)
+	)
+
+	// tenant --Contains--> subscription --Contains--> app
+	NewRelationship(t, &suite, tenantNode, subscriptionNode, graphAzure.Contains)
+	NewRelationship(t, &suite, subscriptionNode, appNode, graphAzure.Contains)
+
+	err := suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
+		paths, err := azure.FetchEntityDescendentPaths(tx, tenantNode, graphAzure.App)
+		require.NoError(t, err)
+
+		nodeIDs := paths.AllNodes().IDs()
+		require.Len(t, nodeIDs, 3)
+		require.Contains(t, nodeIDs, tenantNode.ID)
+		require.Contains(t, nodeIDs, subscriptionNode.ID)
+		require.Contains(t, nodeIDs, appNode.ID)
+
+		return nil
+	})
+	require.NoError(t, err)
+}
+
+// TestFetchEntityDescendentPaths_DifferentTenantExcluded verifies that nodes sharing the same kind
+// but belonging to a different Azure tenant are not included in the path set.
+func TestFetchEntityDescendentPaths_DifferentTenantExcluded(t *testing.T) {
+	t.Parallel()
+
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		tenantID      = integration.RandomObjectID(t)
+		otherTenantID = integration.RandomObjectID(t)
+		tenantNode    = NewAzureTenant(t, &suite, tenantID)
+		ownApp        = NewAzureApplication(t, &suite, "OwnApp", integration.RandomObjectID(t), tenantID)
+		foreignApp    = NewAzureApplication(t, &suite, "ForeignApp", integration.RandomObjectID(t), otherTenantID)
+	)
+
+	NewRelationship(t, &suite, tenantNode, ownApp, graphAzure.Contains)
+	// foreignApp is deliberately not connected; it belongs to a different tenant.
+
+	err := suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
+		paths, err := azure.FetchEntityDescendentPaths(tx, tenantNode, graphAzure.App)
+		require.NoError(t, err)
+
+		nodeIDs := paths.AllNodes().IDs()
+		require.Contains(t, nodeIDs, tenantNode.ID)
+		require.Contains(t, nodeIDs, ownApp.ID)
+		require.NotContains(t, nodeIDs, foreignApp.ID)
+
+		return nil
+	})
+	require.NoError(t, err)
+}
+
+// TestFetchEntityDescendentPaths_NoTerminalsReturnsEmpty verifies that an empty path set is
+// returned when no nodes of the requested kind exist within the tenant.
+func TestFetchEntityDescendentPaths_NoTerminalsReturnsEmpty(t *testing.T) {
+	t.Parallel()
+
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		tenantID   = integration.RandomObjectID(t)
+		tenantNode = NewAzureTenant(t, &suite, tenantID)
+	)
+
+	err := suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
+		paths, err := azure.FetchEntityDescendentPaths(tx, tenantNode, graphAzure.App)
+		require.NoError(t, err)
+		require.Equal(t, 0, paths.Len())
+
+		return nil
+	})
+	require.NoError(t, err)
+}
