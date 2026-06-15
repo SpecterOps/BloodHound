@@ -518,8 +518,12 @@ func getCanReanimateTombstone(tx graph.Transaction, domain *graph.Node, localGro
 	}
 	results := make(map[graph.ID]cardinality.Duplex[uint64])
 	for targetID, writePrincipals := range writeNameNodes {
-		eligible := CalculateCrossProductNodeSets(localGroupData, writePrincipals,
-			reanimateNodes.Slice(), createChildNodes.Slice())
+		eligible := CalculateCrossProductNodeSets(
+			localGroupData,
+			NewCachedPrincipalSet(writePrincipals),
+			NewCachedPrincipalSet(reanimateNodes.Slice()),
+			NewCachedPrincipalSet(createChildNodes.Slice()),
+		)
 		if eligible.Cardinality() > 0 {
 			results[targetID] = eligible
 		}
