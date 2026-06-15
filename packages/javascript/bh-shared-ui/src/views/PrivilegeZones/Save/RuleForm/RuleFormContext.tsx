@@ -38,8 +38,6 @@ interface RuleFormContext {
     staleCypherPreview: boolean;
 }
 
-export const emptyFunction = () => {};
-
 export const initialValue: RuleFormContext = {
     dispatch: () => {},
     seeds: [],
