@@ -277,7 +277,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AddMember', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'HasSession', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'Contains', '', true);
-	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ServerIs', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ServerIs', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'GPLink', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AllowedToDelegate', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CoerceToTGT', '', true);
