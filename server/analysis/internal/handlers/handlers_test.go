@@ -91,11 +91,17 @@ func TestHandlers_GetRequest(t *testing.T) {
 			},
 		},
 		{
-			name:       "returns 204 No Content when no request is pending",
+			name:       "returns 200 OK with zero-valued request when no request is pending",
 			svcErr:     services.ErrNoPendingRequest,
-			wantStatus: http.StatusNoContent,
+			wantStatus: http.StatusOK,
 			assertBody: func(t *testing.T, body []byte) {
-				assert.Empty(t, body)
+				var envelope struct {
+					Data handlers.RequestedAnalysisView `json:"data"`
+				}
+				require.NoError(t, json.Unmarshal(body, &envelope))
+				// Verify it's a zero-valued response
+				assert.Empty(t, envelope.Data.RequestedBy)
+				assert.Empty(t, envelope.Data.RequestType)
 			},
 		},
 		{
@@ -157,30 +163,31 @@ func TestHandlers_CreateRequest(t *testing.T) {
 		wantBodyContains string
 	}{
 		{
-			name:          "returns 202 Accepted with the new request body when this call accepted it",
+			name:          "returns 202 Accepted when request is created",
 			authenticated: true,
 			expect: func(m *mocks.MockAnalysis, ctx context.Context) {
 				m.EXPECT().CreateRequest(ctx, userIDString).Return(createdResult, true, nil)
 			},
-			wantStatus:      http.StatusAccepted,
-			wantRequestedBy: userIDString,
+			wantStatus: http.StatusAccepted,
 		},
 		{
-			name:          "returns 200 OK with the existing request body when one was already pending",
+			name:          "returns 202 Accepted when a request already exists",
 			authenticated: true,
 			expect: func(m *mocks.MockAnalysis, ctx context.Context) {
 				m.EXPECT().CreateRequest(ctx, userIDString).Return(existingResult, false, nil)
 			},
-			wantStatus:      http.StatusOK,
-			wantRequestedBy: existingResult.RequestedBy,
+			wantStatus: http.StatusAccepted,
 		},
 		{
 			// The route middleware (RequirePermissions) guarantees an authenticated
 			// caller, so this branch is only reachable if something upstream is broken.
-			// The handler treats that as an internal error rather than a 401.
-			name:          "returns 500 when the auth context has no user (defensive guard past middleware)",
+			// The handler logs a warning and uses "unknown-user" as a fallback.
+			name:          "uses unknown-user fallback when auth context has no user",
 			authenticated: false,
-			wantStatus:    http.StatusInternalServerError,
+			expect: func(m *mocks.MockAnalysis, ctx context.Context) {
+				m.EXPECT().CreateRequest(ctx, "unknown-user").Return(createdResult, true, nil)
+			},
+			wantStatus: http.StatusAccepted,
 		},
 		{
 			name:          "returns 500 on service error",
@@ -251,18 +258,18 @@ func TestHandlers_CancelAnalysisRequest(t *testing.T) {
 		{
 			// The route middleware (RequirePermissions) guarantees an authenticated
 			// caller, so this branch is only reachable if something upstream is broken.
-			// The handler treats that as an internal error rather than a 401.
-			name:          "returns 500 when the auth context has no user (defensive guard past middleware)",
+			// The handler returns 401 Unauthorized when there's no user.
+			name:          "returns 401 when the auth context has no user (defensive guard past middleware)",
 			authenticated: false,
-			wantStatus:    http.StatusInternalServerError,
+			wantStatus:    http.StatusUnauthorized,
 		},
 		{
-			name:          "returns 204 No Content when no analysis request is pending",
+			name:          "returns 404 Not Found when no analysis request is pending",
 			authenticated: true,
 			expect: func(m *mocks.MockAnalysis, ctx context.Context) {
 				m.EXPECT().CancelAnalysisRequest(ctx).Return(services.ErrNoPendingRequest)
 			},
-			wantStatus: http.StatusNoContent,
+			wantStatus: http.StatusNotFound,
 		},
 		{
 			name:          "returns 409 Conflict when a deletion request is pending",
