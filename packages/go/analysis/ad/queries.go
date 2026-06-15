@@ -454,7 +454,7 @@ func FetchEnforcedGPOs(tx graph.Transaction, target *graph.Node, skip, limit int
 		Direction: graph.DirectionInbound,
 		BranchQuery: func() graph.Criteria {
 			return query.And(
-				query.KindIn(query.Start(), ad.Domain, ad.OU, ad.GPO),
+				query.KindIn(query.Start(), ad.Domain, ad.OU, ad.Site, ad.GPO),
 				query.KindIn(query.Relationship(), ad.Contains, ad.GPLink),
 			)
 		},
@@ -479,8 +479,8 @@ func FetchEnforcedGPOs(tx graph.Transaction, target *graph.Node, skip, limit int
 				// Walk the GPO path to see if any of the nodes between the GPO and the enforcement target block GPO
 				// inheritance. This walk starts at the GPO and moves down, with end being the GPO to start
 				segment.Path().WalkReverse(func(start, end *graph.Node, relationship *graph.Relationship) bool {
-					if !start.Kinds.ContainsOneOf(ad.OU, ad.Domain) {
-						// If we run into anything that isn't an OU or a Domain node then we're done checking for
+					if !start.Kinds.ContainsOneOf(ad.OU, ad.Domain, ad.Site) {
+						// If we run into anything that isn't an OU, Domain, or Site node then we're done checking for
 						// inheritance blocking
 						return false
 					} else if lastNodeBlocks && start.Kinds.ContainsOneOf(ad.OU) {
@@ -531,7 +531,7 @@ func FetchEnforcedGPOsPaths(ctx context.Context, db graph.Database, target *grap
 			Direction: graph.DirectionInbound,
 			BranchQuery: func() graph.Criteria {
 				return query.And(
-					query.KindIn(query.Start(), ad.Domain, ad.OU, ad.GPO),
+					query.KindIn(query.Start(), ad.Domain, ad.OU, ad.Site, ad.GPO),
 					query.KindIn(query.Relationship(), ad.Contains, ad.GPLink),
 				)
 			},
@@ -556,7 +556,7 @@ func FetchEnforcedGPOsPaths(ctx context.Context, db graph.Database, target *grap
 					// inheritance. This walk starts at the GPO and moves down, with end being the GPO to start
 					segment.Path().WalkReverse(func(start, end *graph.Node, relationship *graph.Relationship) bool {
 						if !start.Kinds.ContainsOneOf(ad.OU, ad.Domain, ad.Site) {
-							// If we run into anything that isn't an OU or a Domain node then we're done checking for
+							// If we run into anything that isn't an OU, Domain, or Site node then we're done checking for
 							// inheritance blocking
 							return false
 						} else if lastNodeBlocks && start.Kinds.ContainsOneOf(ad.OU) {

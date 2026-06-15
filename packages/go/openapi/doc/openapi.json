@@ -11171,6 +11171,60 @@
         }
       }
     },
+    "/api/v2/gpos/{object_id}/sites": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetGpoEntitySites",
+        "summary": "Get GPO entity sites",
+        "description": "Get a list, graph, or count of the sites affected by this GPO.",
+        "tags": [
+          "GPOs",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/gpos/{object_id}/tier-zero": {
       "parameters": [
         {
@@ -12077,6 +12131,420 @@
         "description": "Get a list, graph, or count of the Enterprise CAs having this Cert Template published.",
         "tags": [
           "Cert Templates",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sites/{object_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteEntity",
+        "summary": "Get Site entity info",
+        "description": "Get info and counts for this Site node.",
+        "tags": [
+          "Sites",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.hydrate-counts"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/entity-info-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sites/{object_id}/controllers": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteEntityControllers",
+        "summary": "Get Site entity controllers",
+        "description": "Get a list, graph, or count of the principals that can control this Site.",
+        "tags": [
+          "Sites",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sites/{object_id}/siteservers": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteEntitySiteServers",
+        "summary": "Get Site entity site servers",
+        "description": "Get a list, graph, or count of the site servers linked to this Site.",
+        "tags": [
+          "Sites",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sites/{object_id}/sitesubnets": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteEntitySiteSubnets",
+        "summary": "Get Site entity site subnets",
+        "description": "Get a list, graph, or count of the site subnets linked to this Site.",
+        "tags": [
+          "Sites",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/siteservers/{object_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteServerEntity",
+        "summary": "Get Site Server entity info",
+        "description": "Get info and counts for this Site Server node.",
+        "tags": [
+          "Site Servers",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.hydrate-counts"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/entity-info-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/siteservers/{object_id}/controllers": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteServerEntityControllers",
+        "summary": "Get Site Server entity controllers",
+        "description": "Get a list, graph, or count of the principals that can control this Site Server.",
+        "tags": [
+          "Site Servers",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sitesubnets/{object_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteSubnetEntity",
+        "summary": "Get Site Subnet entity info",
+        "description": "Get info and counts for this Site Subnet node.",
+        "tags": [
+          "Site Subnets",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.hydrate-counts"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/entity-info-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sitesubnets/{object_id}/controllers": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteSubnetEntityControllers",
+        "summary": "Get Site Subnet entity controllers",
+        "description": "Get a list, graph, or count of the principals that can control this Site Subnet.",
+        "tags": [
+          "Site Subnets",
           "Community",
           "Enterprise"
         ],
@@ -21756,6 +22224,18 @@
               "certtemplates": {
                 "type": "integer"
               },
+              "issuancepolicies": {
+                "type": "integer"
+              },
+              "sites": {
+                "type": "integer"
+              },
+              "siteservers": {
+                "type": "integer"
+              },
+              "sitesubnets": {
+                "type": "integer"
+              },
               "acls": {
                 "type": "integer"
               },
@@ -21882,6 +22362,18 @@
                 "type": "integer"
               },
               "certtemplates": {
+                "type": "integer"
+              },
+              "issuancepolicies": {
+                "type": "integer"
+              },
+              "sites": {
+                "type": "integer"
+              },
+              "siteservers": {
+                "type": "integer"
+              },
+              "sitesubnets": {
                 "type": "integer"
               },
               "acls": {
@@ -22959,6 +23451,9 @@
         "Enterprise CAs",
         "NT Auth Stores",
         "Cert Templates",
+        "Sites",
+        "Site Servers",
+        "Site Subnets",
         "OUs",
         "AD Users",
         "Groups",

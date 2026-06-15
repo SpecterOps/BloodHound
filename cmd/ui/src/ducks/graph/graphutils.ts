@@ -236,9 +236,9 @@ const ICONS: { [id in GraphNodeTypes]: string } = {
     [GraphNodeTypes.NTAuthStore]: 'fa-store',
     [GraphNodeTypes.CertTemplate]: 'fa-id-card',
     [GraphNodeTypes.IssuancePolicy]: 'fa-clipboard-check',
-    [GraphNodeTypes.Site]: 'fa-clipboard-check',
-    [GraphNodeTypes.SiteServer]: 'fa-clipboard-check',
-    [GraphNodeTypes.SiteSubnet]: 'fa-clipboard-check',
+    [GraphNodeTypes.Site]: 'fa-map-signs',
+    [GraphNodeTypes.SiteServer]: 'fa-map-marker',
+    [GraphNodeTypes.SiteSubnet]: 'fa-map',
 };
 
 const setFontIcons = (data: Items): void => {

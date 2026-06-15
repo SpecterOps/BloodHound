@@ -97,6 +97,9 @@ WITH aggregated_quality_stats AS (
         MAX(ntauthstores) AS max_ntauthstores,
         MAX(certtemplates) AS max_certtemplates,
         MAX(issuancepolicies) AS max_issuancepolicies,
+        MAX(sites) AS max_sites,
+        MAX(siteservers) AS max_siteservers,
+        MAX(sitesubnets) AS max_sitesubnets,
         MAX(session_completeness) AS max_session_completeness,
         MAX(local_group_completeness) AS max_local_group_completeness
     FROM ad_data_quality_stats
@@ -121,6 +124,9 @@ SELECT
     SUM(max_ntauthstores) AS ntauthstores,
     SUM(max_certtemplates) AS certtemplates,
     SUM(max_issuancepolicies) AS issuancepolicies,
+    SUM(max_sites) AS sites,
+    SUM(max_siteservers) AS siteservers,
+    SUM(max_sitesubnets) AS sitesubnets,
     MAX(max_session_completeness) AS session_completeness,
     MAX(max_local_group_completeness) AS local_group_completeness
 FROM aggregated_quality_stats
