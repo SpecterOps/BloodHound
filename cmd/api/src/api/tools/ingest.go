@@ -128,7 +128,6 @@ func (s *IngestControl) FetchRetainedIngestFiles(response http.ResponseWriter, r
 	response.Header().Set(headers.ContentType.String(), "application/gzip")
 	response.Header().Set(headers.ContentEncoding.String(), "gzip")
 	response.Header().Set(headers.ContentDisposition.String(), fmt.Sprintf(`attachment; filename="retained-ingest-%s.tar.gz"`, time.Now().UTC().Format("20060102T150405Z")))
-	response.WriteHeader(http.StatusOK)
 
 	gzipWriter := gzip.NewWriter(response)
 	defer gzipWriter.Close()
@@ -136,6 +135,8 @@ func (s *IngestControl) FetchRetainedIngestFiles(response http.ResponseWriter, r
 	tarWriter := tar.NewWriter(gzipWriter)
 	defer tarWriter.Close()
 
+	fileWritten := false
+	fileFailed := false
 	for _, file := range files {
 		if file.IsDir {
 			continue
@@ -148,8 +149,17 @@ func (s *IngestControl) FetchRetainedIngestFiles(response http.ResponseWriter, r
 				slog.String("path", file.Path),
 				attr.Error(err),
 			)
+			fileFailed = true
 			break
 		}
+
+		fileWritten = true
+	}
+
+	if fileFailed && !fileWritten {
+		response.WriteHeader(http.StatusInternalServerError)
+	} else {
+		response.WriteHeader(http.StatusOK)
 	}
 }
 
