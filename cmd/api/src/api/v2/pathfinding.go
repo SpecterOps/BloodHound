@@ -28,7 +28,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
@@ -164,7 +164,7 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 				return
 			}
 		}
-		user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx)
+		user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx)
 		if !isUser {
 			slog.Error("Unable to get user from auth context")
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
@@ -255,7 +255,7 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 		params        = request.URL.Query()
 		filteredGraph map[string]bloodhoundgraph.BloodHoundGraphNode
 	)
-	user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx)
+	user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx)
 	if !isUser {
 		slog.Error("Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)

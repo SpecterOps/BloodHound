@@ -29,7 +29,7 @@ import (
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	dbMocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
@@ -55,7 +55,7 @@ func setup(t *testing.T) (*gomock.Controller, *mocks.MockGraph, *dbMocks.MockDat
 }
 
 func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apitest.Case {
-	bheCtx := ctx.Context{
+	bheCtx := bhctx.Context{
 		AuthCtx: auth.Context{
 			PermissionOverrides: auth.PermissionOverrides{},
 			Owner:               model.User{},
@@ -850,7 +850,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			bheCtx := ctx.Context{
+			bheCtx := bhctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner:               testCase.user,

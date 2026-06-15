@@ -37,8 +37,8 @@ import (
 	"github.com/unrolled/secure"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
@@ -157,7 +157,7 @@ func ContextMiddleware(bypassLimitsParam bool) mux.MiddlewareFunc {
 				}
 
 				// Insert the bh context
-				requestCtx = ctx.Set(requestCtx, &ctx.Context{
+				requestCtx = bhctx.Set(requestCtx, &bhctx.Context{
 					StartTime: startTime,
 					RequestID: requestID,
 					Timeout:   max(requestedWaitDuration, 0),

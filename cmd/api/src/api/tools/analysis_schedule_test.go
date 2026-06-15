@@ -27,7 +27,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api/tools"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
@@ -50,7 +50,7 @@ func TestToolContainer_GetScheduledAnalysisConfiguration(t *testing.T) {
 
 		defer ctrl.Finish()
 
-		requestCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		requestCtx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 
 		scheduledAnalysisValue, _ := types.NewJSONBObject(map[string]any{
 			"enabled": true,
@@ -86,7 +86,7 @@ func TestToolContainer_GetScheduledAnalysisConfiguration(t *testing.T) {
 
 		defer ctrl.Finish()
 
-		requestCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		requestCtx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 
 		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{}, fmt.Errorf("database connection lost"))
 
@@ -118,7 +118,7 @@ func TestToolContainer_SetScheduledAnalysisConfiguration(t *testing.T) {
 
 		defer ctrl.Finish()
 
-		requestCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		requestCtx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		scheduledAnalysisRequest := tools.ScheduledAnalysisConfiguration{
 			Enabled: true,
 			RRule:   validRRule,
@@ -163,7 +163,7 @@ func TestToolContainer_SetScheduledAnalysisConfiguration(t *testing.T) {
 
 		defer ctrl.Finish()
 
-		requestCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		requestCtx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		scheduledAnalysisRequest := tools.ScheduledAnalysisConfiguration{
 			Enabled: false,
 		}
@@ -204,7 +204,8 @@ func TestToolContainer_SetScheduledAnalysisConfiguration(t *testing.T) {
 
 		defer ctrl.Finish()
 
-		requestCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		endpoint := "/analysis/schedule"
+		requestCtx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		scheduledAnalysisRequest := tools.ScheduledAnalysisConfiguration{
 			Enabled: true,
 			RRule:   "abc123",
@@ -236,7 +237,8 @@ func TestToolContainer_SetScheduledAnalysisConfiguration(t *testing.T) {
 
 		defer ctrl.Finish()
 
-		requestCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		endpoint := "/analysis/schedule"
+		requestCtx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		scheduledAnalysisRequest := tools.ScheduledAnalysisConfiguration{
 			Enabled: true,
 			RRule:   "FREQ=DAILY;INTERVAL=1;COUNT=3",
@@ -268,7 +270,8 @@ func TestToolContainer_SetScheduledAnalysisConfiguration(t *testing.T) {
 
 		defer ctrl.Finish()
 
-		requestCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		endpoint := "/analysis/schedule"
+		requestCtx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		scheduledAnalysisRequest := tools.ScheduledAnalysisConfiguration{
 			Enabled: true,
 			RRule:   "FREQ=DAILY;INTERVAL=1;UNTIL=20240930T000000Z",
@@ -301,7 +304,7 @@ func TestToolContainer_SetScheduledAnalysisConfiguration(t *testing.T) {
 
 		defer ctrl.Finish()
 
-		requestCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		requestCtx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		scheduledAnalysisRequest := tools.ScheduledAnalysisConfiguration{
 			Enabled: true,
 			RRule:   "FREQ=DAILY;INTERVAL=1;DTSTART=20230101T100000Z",
@@ -336,7 +339,7 @@ func TestToolContainer_SetScheduledAnalysisConfiguration(t *testing.T) {
 
 		defer ctrl.Finish()
 
-		requestCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		requestCtx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		scheduledAnalysisRequest := tools.ScheduledAnalysisConfiguration{
 			Enabled: true,
 			RRule:   "FREQ=DAILY;INTERVAL=1;DTSTART=20230101T100000Z",
@@ -371,7 +374,8 @@ func TestToolContainer_SetScheduledAnalysisConfiguration(t *testing.T) {
 
 		defer ctrl.Finish()
 
-		requestCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		endpoint := "/analysis/schedule"
+		requestCtx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		scheduledAnalysisRequest := tools.ScheduledAnalysisConfiguration{
 			Enabled: true,
 			RRule:   "RRULE:FREQ=DAILY;INTERVAL=1",
