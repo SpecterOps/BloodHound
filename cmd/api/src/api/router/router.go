@@ -17,6 +17,7 @@
 package router
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -102,8 +103,13 @@ func (s *Route) RequireAllEnvironmentAccess(dogTagsService dogtags.Service) *Rou
 	return s
 }
 
-func (s *Route) CheckFeatureFlag(db database.Database, flagKey string) *Route {
-	s.handler.Use(middleware.FeatureFlagMiddleware(db, flagKey))
+// featureFlag is the minimal interface for a feature flag, it is not to be exported from this pkg
+type featureFlag interface {
+	IsEnabled(ctx context.Context, key string) (bool, error)
+}
+
+func (s *Route) CheckFeatureFlag(ff featureFlag, flagKey string) *Route {
+	s.handler.Use(middleware.FeatureFlagMiddleware(ff, flagKey))
 	return s
 }
 
