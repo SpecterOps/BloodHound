@@ -346,7 +346,39 @@ func TestIngestControl_FetchRetainedIngestFiles(t *testing.T) {
 			},
 		},
 		{
-			name:   "get error ends archive without failing response",
+			name:   "get error with one file success ends archive without failing response",
+			retain: true,
+			setupMock: func(t *testing.T, ctx context.Context, mockFileService *storagemocks.MockFileService) {
+				mockFileService.EXPECT().
+					ListFiles(ctx, "", storage.ListOptions{Recursive: true}).
+					Return([]storage.FileInfo{
+						{Path: "1success.json"},
+						{Path: "2missing.json"},
+					}, nil)
+				mockFileService.EXPECT().
+					GetFile(ctx, "1success.json").
+					Return(
+						io.NopCloser(bytes.NewReader([]byte("one"))),
+						storage.FileInfo{
+							Path:         "1success.json",
+							Size:         int64(len("one")),
+							LastModified: time.Now().UTC(),
+						},
+						nil,
+					)
+				mockFileService.EXPECT().
+					GetFile(ctx, "2missing.json").
+					Return(nil, storage.FileInfo{}, errGet)
+			},
+			expected: expected{
+				statusCode: http.StatusOK,
+				files: map[string]string{
+					"1success.json": "one",
+				},
+			},
+		},
+		{
+			name:   "get error with no file success ends archive with failing response",
 			retain: true,
 			setupMock: func(t *testing.T, ctx context.Context, mockFileService *storagemocks.MockFileService) {
 				mockFileService.EXPECT().
@@ -357,7 +389,7 @@ func TestIngestControl_FetchRetainedIngestFiles(t *testing.T) {
 					Return(nil, storage.FileInfo{}, errGet)
 			},
 			expected: expected{
-				statusCode: http.StatusOK,
+				statusCode: http.StatusInternalServerError,
 				files:      map[string]string{},
 			},
 		},
@@ -560,5 +592,7 @@ func TestIngestControl_LockConflict(t *testing.T) {
 	})
 }
 
-var _ appcfg.ParameterService = retainedIngestParameterService{}
-var _ io.ReadCloser = retainedIngestErrorReadCloser{}
+var (
+	_ appcfg.ParameterService = retainedIngestParameterService{}
+	_ io.ReadCloser           = retainedIngestErrorReadCloser{}
+)
