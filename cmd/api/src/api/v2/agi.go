@@ -30,7 +30,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
@@ -220,7 +220,7 @@ func (s Resources) CreateAssetGroup(response http.ResponseWriter, request *http.
 			api.HandleDatabaseError(request, response, err)
 		}
 	} else {
-		assetGroupURL := *ctx.Get(request.Context()).Host
+		assetGroupURL := *bhctx.Get(request.Context()).Host
 		assetGroupURL.Path = fmt.Sprintf("/api/v2/asset-groups/%d", newAssetGroup.ID)
 		response.Header().Set(headers.Location.String(), assetGroupURL.String())
 
@@ -282,7 +282,7 @@ func (s Resources) UpdateAssetGroupSelectors(response http.ResponseWriter, reque
 			if assetGroup.Tag == model.TierZeroAssetGroupTag {
 				// When T0 asset group selectors are modified, entire analysis must be re-run
 				var userId string
-				if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+				if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 					slog.WarnContext(
 						request.Context(),
 						"Encountered request analysis for unknown user, this shouldn't happen",
