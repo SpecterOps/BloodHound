@@ -20,14 +20,13 @@ package datapipe
 
 import (
 	"context"
-	"path"
-	"time"
-
 	"log/slog"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/storage"
@@ -91,6 +90,10 @@ func normalizeStoragePrefixes(prefixes []string) []string {
 	return normalizedPrefixes
 }
 
+func normalizeStoragePath(logicalPath string) string {
+	return path.Clean(strings.TrimLeft(filepath.ToSlash(logicalPath), "/"))
+}
+
 func NewOrphanFileSweeper(fileOps FileOperations, tempDirectoryRootPath string, scratchDirectoryRootPath string, excludedStoragePrefixes ...string) *OrphanFileSweeper {
 	return &OrphanFileSweeper{
 		lock:                     &sync.Mutex{},
@@ -138,7 +141,7 @@ func ClearLocalIngestScratch(ctx context.Context, scratchDirectory string, minim
 }
 
 func (s *OrphanFileSweeper) isExcludedStoragePath(logicalPath string) bool {
-	logicalPath = path.Clean(strings.TrimPrefix(filepath.ToSlash(logicalPath), "/"))
+	logicalPath = normalizeStoragePath(logicalPath)
 
 	for _, excludedPrefix := range s.excludedStoragePrefixes {
 		if logicalPath == excludedPrefix || strings.HasPrefix(logicalPath, excludedPrefix+"/") {
@@ -200,7 +203,7 @@ func (s *OrphanFileSweeper) addExpectedStoragePath(expectedFiles map[string]stru
 		return
 	}
 
-	logicalPath := path.Clean(filepath.ToSlash(expectedFileName))
+	logicalPath := normalizeStoragePath(expectedFileName)
 	if logicalPath == "." || logicalPath == ".." || strings.HasPrefix(logicalPath, "../") {
 		return
 	}
@@ -229,7 +232,7 @@ func (s *OrphanFileSweeper) clearStoredIngestFiles(ctx context.Context, ingestFi
 			continue
 		}
 
-		logicalPath := path.Clean(file.Path)
+		logicalPath := normalizeStoragePath(file.Path)
 		if s.isExcludedStoragePath(logicalPath) {
 			continue
 		}

@@ -200,6 +200,28 @@ func TestOrphanFileSweeper_ClearStoredIngestFiles(t *testing.T) {
 	sweeper.clearStoredIngestFiles(context.Background(), mockFileService, []string{"expected.json", absoluteExpectedPath})
 }
 
+func TestOrphanFileSweeper_ClearStoredIngestFilesNormalizesListedPaths(t *testing.T) {
+	t.Parallel()
+
+	var (
+		mockCtrl        = gomock.NewController(t)
+		mockFileService = storagemocks.NewMockFileService(mockCtrl)
+		tempDirectory   = t.TempDir()
+		sweeper         = NewOrphanFileSweeper(nil, tempDirectory, t.TempDir(), "/excluded/")
+		oldTime         = time.Now().Add(-25 * time.Hour)
+	)
+
+	mockFileService.EXPECT().
+		ListFiles(gomock.Any(), "", storage.ListOptions{Recursive: true}).
+		Return([]storage.FileInfo{
+			{Path: "/expected.json", LastModified: oldTime},
+			{Path: "/old.json", LastModified: oldTime},
+		}, nil)
+	mockFileService.EXPECT().DeleteFile(gomock.Any(), "old.json").Return(nil)
+
+	sweeper.clearStoredIngestFiles(context.Background(), mockFileService, []string{"expected.json"})
+}
+
 func TestOrphanFileSweeper_ClearLegacyLocalIngestFiles(t *testing.T) {
 	t.Parallel()
 
@@ -280,10 +302,10 @@ func TestClearLocalIngestScratch(t *testing.T) {
 			oldTime          = time.Now().Add(-2 * time.Hour)
 		)
 
-		require.NoError(t, os.WriteFile(oldFilePath, []byte("old"), 0600))
+		require.NoError(t, os.WriteFile(oldFilePath, []byte("old"), 0o600))
 		require.NoError(t, os.Chtimes(oldFilePath, oldTime, oldTime))
-		require.NoError(t, os.WriteFile(youngFilePath, []byte("young"), 0600))
-		require.NoError(t, os.Mkdir(nestedDirectory, 0700))
+		require.NoError(t, os.WriteFile(youngFilePath, []byte("young"), 0o600))
+		require.NoError(t, os.Mkdir(nestedDirectory, 0o700))
 
 		ClearLocalIngestScratch(context.Background(), scratchDirectory, time.Hour)
 
@@ -301,7 +323,7 @@ func TestClearLocalIngestScratch(t *testing.T) {
 			oldTime          = time.Now().Add(-2 * time.Hour)
 		)
 
-		require.NoError(t, os.WriteFile(oldFilePath, []byte("old"), 0600))
+		require.NoError(t, os.WriteFile(oldFilePath, []byte("old"), 0o600))
 		require.NoError(t, os.Chtimes(oldFilePath, oldTime, oldTime))
 
 		ctx, done := context.WithCancel(context.Background())
