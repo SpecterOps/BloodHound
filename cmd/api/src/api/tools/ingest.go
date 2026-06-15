@@ -204,9 +204,13 @@ func (s *IngestControl) DisableIngestFileRetention(response http.ResponseWriter,
 
 	// Clear all retained files in a goroutine that releases the lock once finished. This is best effort as
 	// it is still possible for a file to make it into the retained directory even after the parameter is set.
-	cleanupCtx := context.WithoutCancel(request.Context())
+	// A timeout of five minutes is given since this is a best effort cleanup. In the event the cleanup locks
+	// up, the context should be canceled in five minutes to cancel storage calls and allow the
+	// goroutine to finish, and free the lock.
+	cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(request.Context()), 5*time.Minute)
 
 	go func(ctx context.Context) {
+		defer cancel()
 		defer s.retainedFileLock.Unlock()
 
 		files, err := s.retainedFileService.ListFiles(ctx, "", storage.ListOptions{Recursive: true})
