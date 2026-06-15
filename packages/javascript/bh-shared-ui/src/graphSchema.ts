@@ -155,6 +155,8 @@ export enum ActiveDirectoryRelationshipKind {
     GPOAppliesTo = 'GPOAppliesTo',
     CanApplyGPO = 'CanApplyGPO',
     HasTrustKeys = 'HasTrustKeys',
+    WriteAltSecurityIdentities = 'WriteAltSecurityIdentities',
+    WritePublicInformation = 'WritePublicInformation',
     ProtectAdminGroups = 'ProtectAdminGroups',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
@@ -329,6 +331,10 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'CanApplyGPO';
         case ActiveDirectoryRelationshipKind.HasTrustKeys:
             return 'HasTrustKeys';
+        case ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities:
+            return 'WriteAltSecurityIdentities';
+        case ActiveDirectoryRelationshipKind.WritePublicInformation:
+            return 'WritePublicInformation';
         case ActiveDirectoryRelationshipKind.ProtectAdminGroups:
             return 'ProtectAdminGroups';
         default:
@@ -840,6 +846,8 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.GPOAppliesTo,
         ActiveDirectoryRelationshipKind.CanApplyGPO,
         ActiveDirectoryRelationshipKind.HasTrustKeys,
+        ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities,
+        ActiveDirectoryRelationshipKind.WritePublicInformation,
         ActiveDirectoryRelationshipKind.ManageCA,
         ActiveDirectoryRelationshipKind.ManageCertificates,
         ActiveDirectoryRelationshipKind.Contains,
@@ -902,6 +910,8 @@ export function ActiveDirectoryPathfindingEdgesMatchFrontend(): ActiveDirectoryR
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
         ActiveDirectoryRelationshipKind.HasTrustKeys,
+        ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities,
+        ActiveDirectoryRelationshipKind.WritePublicInformation,
         ActiveDirectoryRelationshipKind.ManageCA,
         ActiveDirectoryRelationshipKind.ManageCertificates,
         ActiveDirectoryRelationshipKind.Contains,

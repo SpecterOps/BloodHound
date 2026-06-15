@@ -1,0 +1,297 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+//go:build integration
+
+package appdb_test
+
+import (
+	"context"
+	"fmt"
+	"net/url"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/peterldowns/pgtestdb"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/specterops/bloodhound/server/analysis/internal/appdb"
+	"github.com/specterops/bloodhound/server/analysis/internal/services"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+// setupStore spins up an isolated postgres database via pgtestdb, applies all
+// migrations, and returns an analysis Store backed by the resulting pgx pool.
+func setupStore(t *testing.T) *appdb.Store {
+	t.Helper()
+
+	var (
+		ctx      = context.Background()
+		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
+	)
+
+	cfg, err := config.NewDefaultConnectionConfiguration(connConf.URL())
+	require.NoError(t, err)
+
+	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
+	require.NoError(t, err)
+
+	bhDB := database.NewBloodhoundDB(gormDB, dbPool, auth.NewIdentityResolver(), cfg)
+	require.NoError(t, bhDB.Migrate(ctx))
+
+	t.Cleanup(func() { bhDB.Close(ctx) })
+
+	return appdb.NewStore(bhDB.Pool())
+}
+
+// getPostgresConfig reads the integration test connection details from the
+// configured environment and returns a pgtestdb.Config suitable for spinning
+// up isolated databases. Supports both TCP and unix-socket host values.
+func getPostgresConfig(t *testing.T) pgtestdb.Config {
+	t.Helper()
+
+	cfg, err := utils.LoadIntegrationTestConfig()
+	require.NoError(t, err)
+
+	environmentMap := make(map[string]string)
+	for entry := range strings.FieldsSeq(cfg.Database.Connection) {
+		if parts := strings.SplitN(entry, "=", 2); len(parts) == 2 {
+			environmentMap[parts[0]] = parts[1]
+		}
+	}
+
+	if strings.HasPrefix(environmentMap["host"], "/") {
+		return pgtestdb.Config{
+			DriverName: "pgx",
+			User:       environmentMap["user"],
+			Password:   environmentMap["password"],
+			Database:   environmentMap["dbname"],
+			Options:    fmt.Sprintf("host=%s", url.PathEscape(environmentMap["host"])),
+			TestRole: &pgtestdb.Role{
+				Username:     environmentMap["user"],
+				Password:     environmentMap["password"],
+				Capabilities: "NOSUPERUSER NOCREATEROLE",
+			},
+		}
+	}
+
+	return pgtestdb.Config{
+		DriverName:                "pgx",
+		Host:                      environmentMap["host"],
+		Port:                      environmentMap["port"],
+		User:                      environmentMap["user"],
+		Password:                  environmentMap["password"],
+		Database:                  environmentMap["dbname"],
+		Options:                   "sslmode=disable",
+		ForceTerminateConnections: true,
+	}
+}
+
+func TestStore_GetAnalysisRequest_Integration(t *testing.T) {
+	t.Run("returns ErrNotFound when no request exists", func(t *testing.T) {
+		var (
+			ctx   = context.Background()
+			store = setupStore(t)
+		)
+
+		_, err := store.GetAnalysisRequest(ctx)
+		assert.ErrorIs(t, err, services.ErrNoPendingRequest)
+	})
+
+	t.Run("returns the request after one is created", func(t *testing.T) {
+		var (
+			ctx   = context.Background()
+			store = setupStore(t)
+		)
+
+		created, wasCreated, err := store.CreateAnalysisRequest(ctx, "test-user")
+		require.NoError(t, err)
+		require.True(t, wasCreated)
+
+		retrieved, err := store.GetAnalysisRequest(ctx)
+		require.NoError(t, err)
+		assert.Equal(t, created.RequestedBy, retrieved.RequestedBy)
+		assert.Equal(t, created.RequestType, retrieved.RequestType)
+		assert.Equal(t, created.DeleteAllGraph, retrieved.DeleteAllGraph)
+		assert.Equal(t, created.DeleteSourcelessGraph, retrieved.DeleteSourcelessGraph)
+		assert.Equal(t, created.DeleteSourceKinds, retrieved.DeleteSourceKinds)
+		assert.Equal(t, created.DeleteRelationships, retrieved.DeleteRelationships)
+		assert.WithinDuration(t, created.RequestedAt, retrieved.RequestedAt, 1*time.Second)
+	})
+}
+
+func TestStore_CreateAnalysisRequest_Integration(t *testing.T) {
+	t.Run("first call creates the request and reports created=true", func(t *testing.T) {
+		var (
+			ctx   = context.Background()
+			store = setupStore(t)
+		)
+
+		current, created, err := store.CreateAnalysisRequest(ctx, "first-user")
+		require.NoError(t, err)
+		assert.True(t, created)
+		assert.Equal(t, "first-user", current.RequestedBy)
+		assert.Equal(t, services.RequestedAnalysisTypeAnalysis, current.RequestType)
+	})
+
+	t.Run("second call is a no-op and reports created=false with the original requester", func(t *testing.T) {
+		var (
+			ctx   = context.Background()
+			store = setupStore(t)
+		)
+
+		// Create the first request
+		_, created, err := store.CreateAnalysisRequest(ctx, "first-user")
+		require.NoError(t, err)
+		require.True(t, created)
+
+		// Second call should be a no-op
+		current, created, err := store.CreateAnalysisRequest(ctx, "second-user")
+		require.NoError(t, err)
+		assert.False(t, created)
+		assert.Equal(t, "first-user", current.RequestedBy)
+	})
+}
+
+// setupStoreAndPool is like setupStore but also returns the underlying pgxpool.Pool so
+// callers that need to seed rows not exposed by the Store API can do so directly.
+func setupStoreAndPool(t *testing.T) (*appdb.Store, *pgxpool.Pool) {
+	t.Helper()
+
+	var (
+		ctx      = context.Background()
+		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
+	)
+
+	cfg, err := config.NewDefaultConnectionConfiguration(connConf.URL())
+	require.NoError(t, err)
+
+	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
+	require.NoError(t, err)
+
+	bhDB := database.NewBloodhoundDB(gormDB, dbPool, auth.NewIdentityResolver(), cfg)
+	require.NoError(t, bhDB.Migrate(ctx))
+
+	t.Cleanup(func() { bhDB.Close(ctx) })
+
+	return appdb.NewStore(bhDB.Pool()), bhDB.Pool()
+}
+
+// seedDeletionRequest inserts a deletion-type row directly into analysis_request_switch,
+// bypassing the Store API which only exposes analysis-type creation.
+func seedDeletionRequest(t *testing.T, ctx context.Context, pool *pgxpool.Pool, requestedBy string) {
+	t.Helper()
+
+	_, err := pool.Exec(ctx,
+		`INSERT INTO analysis_request_switch
+		   (requested_by, request_type, requested_at, delete_all_graph, delete_sourceless_graph, delete_source_kinds, delete_relationships)
+		   VALUES ($1, 'deletion', NOW(), false, false, '{}', '{}')`,
+		requestedBy,
+	)
+	require.NoError(t, err)
+}
+
+func TestStore_DeleteAnalysisRequest_Integration(t *testing.T) {
+	t.Run("removes the pending analysis request", func(t *testing.T) {
+		var (
+			ctx   = context.Background()
+			store = setupStore(t)
+		)
+
+		_, _, err := store.CreateAnalysisRequest(ctx, "test-user")
+		require.NoError(t, err)
+
+		require.NoError(t, store.DeleteAnalysisRequest(ctx))
+
+		_, err = store.GetAnalysisRequest(ctx)
+		assert.ErrorIs(t, err, services.ErrNoPendingRequest)
+	})
+
+	t.Run("returns ErrNoPendingRequest when no request is pending", func(t *testing.T) {
+		var (
+			ctx   = context.Background()
+			store = setupStore(t)
+		)
+
+		err := store.DeleteAnalysisRequest(ctx)
+		assert.ErrorIs(t, err, services.ErrNoPendingRequest)
+	})
+
+	t.Run("returns ErrDeletionRequestPending and leaves the row intact", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+		)
+
+		seedDeletionRequest(t, ctx, pool, "test-user")
+
+		err := store.DeleteAnalysisRequest(ctx)
+		assert.ErrorIs(t, err, services.ErrDeletionRequestPending)
+
+		// The deletion request must remain — DeleteAnalysisRequest must not remove it.
+		retrieved, getErr := store.GetAnalysisRequest(ctx)
+		require.NoError(t, getErr)
+		assert.Equal(t, services.RequestedAnalysisTypeDeletion, retrieved.RequestType)
+	})
+}
+
+func TestStore_CreateAnalysisRequest_ConcurrentCallsDoNotDuplicate(t *testing.T) {
+	const concurrentCallers = 16
+
+	var (
+		ctx      = context.Background()
+		store    = setupStore(t)
+		results  = make(chan bool, concurrentCallers)
+		errs     = make(chan error, concurrentCallers)
+		startGun sync.WaitGroup
+		done     sync.WaitGroup
+	)
+
+	startGun.Add(1)
+	for callerIndex := 0; callerIndex < concurrentCallers; callerIndex++ {
+		done.Add(1)
+		go func(index int) {
+			defer done.Done()
+			startGun.Wait()
+			_, created, err := store.CreateAnalysisRequest(ctx, fmt.Sprintf("user-%d", index))
+			results <- created
+			errs <- err
+		}(callerIndex)
+	}
+
+	startGun.Done()
+	done.Wait()
+	close(results)
+	close(errs)
+
+	for err := range errs {
+		require.NoError(t, err)
+	}
+
+	createdCount := 0
+	for created := range results {
+		if created {
+			createdCount++
+		}
+	}
+	assert.Equal(t, 1, createdCount, "exactly one concurrent caller should report created=true")
+}

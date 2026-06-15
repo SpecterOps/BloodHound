@@ -24,7 +24,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 )
@@ -36,7 +36,7 @@ func SupportsETACMiddleware(db database.Database, dogTagsService dogtags.Service
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			if etacEnabled := dogTagsService.GetFlagAsBool(dogtags.ETAC_ENABLED); !etacEnabled {
 				next.ServeHTTP(response, request)
-			} else if bhCtx := ctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
+			} else if bhCtx := bhctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "not authenticated", request), response)
 			} else if currentUser, found := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !found {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no associated user found with request", request), response)
@@ -61,7 +61,7 @@ func RequireAllEnvironmentAccessMiddleware(dogTagsService dogtags.Service) mux.M
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			if etacEnabled := dogTagsService.GetFlagAsBool(dogtags.ETAC_ENABLED); !etacEnabled {
 				next.ServeHTTP(response, request)
-			} else if bhCtx := ctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
+			} else if bhCtx := bhctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "not authenticated", request), response)
 			} else if currentUser, found := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !found {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no associated user found with request", request), response)

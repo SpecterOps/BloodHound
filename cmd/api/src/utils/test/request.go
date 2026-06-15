@@ -28,7 +28,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/stretchr/testify/require"
@@ -45,8 +45,8 @@ func (s *RequestExecutor) Request() *http.Request {
 	return s.request
 }
 
-func (s *RequestExecutor) WithContext(bhCtx *ctx.Context) *RequestExecutor {
-	s.request = ctx.SetRequestContext(s.request, bhCtx)
+func (s *RequestExecutor) WithContext(bhCtx *bhctx.Context) *RequestExecutor {
+	s.request = bhctx.SetRequestContext(s.request, bhCtx)
 	return s
 }
 
