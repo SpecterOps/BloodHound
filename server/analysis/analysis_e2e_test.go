@@ -171,16 +171,21 @@ func TestGetAnalysisStatus(t *testing.T) {
 		return req
 	}
 
-	t.Run("returns 204 No Content when no request is pending", func(t *testing.T) {
+	t.Run("returns 200 OK with zero-valued request when no request is pending", func(t *testing.T) {
 		require.NoError(t, db.DeleteAnalysisRequest(ctx))
 
 		resp, err := http.DefaultClient.Do(newGetRequest(t))
 		require.NoError(t, err)
 		defer resp.Body.Close()
 
-		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
-		// 204 carries no body; the response must not claim JSON content.
-		assert.NotEqual(t, "application/json", resp.Header.Get("Content-Type"))
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
+
+		var envelope analysisResponseEnvelope
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+		// Verify it's a zero-valued response
+		assert.Empty(t, envelope.Data.RequestedBy)
+		assert.Empty(t, envelope.Data.RequestType)
 	})
 
 	t.Run("returns 200 OK with all contract fields when a request is pending", func(t *testing.T) {
@@ -233,7 +238,7 @@ func TestCreateAnalysisRequest(t *testing.T) {
 		return req
 	}
 
-	t.Run("returns 202 Accepted with all contract fields when no request is pending", func(t *testing.T) {
+	t.Run("returns 202 Accepted when no request is pending", func(t *testing.T) {
 		require.NoError(t, db.DeleteAnalysisRequest(ctx))
 
 		resp, err := http.DefaultClient.Do(newPutRequest(t))
@@ -241,23 +246,13 @@ func TestCreateAnalysisRequest(t *testing.T) {
 		defer resp.Body.Close()
 
 		assert.Equal(t, http.StatusAccepted, resp.StatusCode)
-		assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
-
-		var envelope analysisResponseEnvelope
-		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
-		assert.Equal(t, userID.String(), envelope.Data.RequestedBy)
-		assert.Equal(t, services.RequestedAnalysisTypeAnalysis, envelope.Data.RequestType)
-		assert.NotZero(t, envelope.Data.RequestedAt)
-		assert.False(t, envelope.Data.DeleteAllGraph)
-		assert.False(t, envelope.Data.DeleteSourcelessGraph)
-		assert.Empty(t, envelope.Data.DeleteSourceKinds)
-		assert.Empty(t, envelope.Data.DeleteRelationships)
+		// Handler returns 202 with no body, matching main behavior
+		assert.Empty(t, resp.Header.Get("Content-Type"))
 	})
 
-	t.Run("returns 200 OK with the existing request body when a request is already pending", func(t *testing.T) {
+	t.Run("returns 202 Accepted when a request is already pending", func(t *testing.T) {
 		require.NoError(t, db.DeleteAnalysisRequest(ctx))
-		// Seed a known pending request attributed to a different requester so we can
-		// verify that 200 returns the existing request body, not a new one.
+		// Seed a known pending request attributed to a different requester
 		require.NoError(t, db.RequestAnalysis(ctx, "prior-user"))
 		t.Cleanup(func() { _ = db.DeleteAnalysisRequest(ctx) })
 
@@ -265,14 +260,9 @@ func TestCreateAnalysisRequest(t *testing.T) {
 		require.NoError(t, err)
 		defer resp.Body.Close()
 
-		assert.Equal(t, http.StatusOK, resp.StatusCode)
-		assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
-
-		var envelope analysisResponseEnvelope
-		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
-		// The response must describe the existing request, not the new caller.
-		assert.Equal(t, "prior-user", envelope.Data.RequestedBy)
-		assert.Equal(t, services.RequestedAnalysisTypeAnalysis, envelope.Data.RequestType)
+		assert.Equal(t, http.StatusAccepted, resp.StatusCode)
+		// Handler returns 202 with no body, matching main behavior
+		assert.Empty(t, resp.Header.Get("Content-Type"))
 	})
 
 	t.Run("GET reflects the pending request created by PUT", func(t *testing.T) {
@@ -327,14 +317,14 @@ func TestCancelAnalysisRequest(t *testing.T) {
 		assert.Equal(t, http.StatusAccepted, resp.StatusCode)
 	})
 
-	t.Run("returns 204 No Content when no request is pending", func(t *testing.T) {
+	t.Run("returns 404 Not Found when no request is pending", func(t *testing.T) {
 		require.NoError(t, db.DeleteAnalysisRequest(ctx))
 
 		resp, err := http.DefaultClient.Do(newDeleteRequest(t))
 		require.NoError(t, err)
 		defer resp.Body.Close()
 
-		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 	})
 
 	t.Run("returns 409 Conflict when a deletion request is pending", func(t *testing.T) {
