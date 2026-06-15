@@ -2665,6 +2665,20 @@ class BHEAPIClient {
                 options
             )
         );
+    getSiteLinkedGPOsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/sites/${id}/linked-gpos`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
     getSiteLinkedServersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/sites/${id}/siteservers`,
@@ -2707,21 +2721,6 @@ class BHEAPIClient {
             )
         );
 
-    getSiteServerControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
-        this.baseClient.get(
-            `/api/v2/siteservers/${id}/controllers`,
-            Object.assign(
-                {
-                    params: {
-                        skip,
-                        limit,
-                        type,
-                    },
-                },
-                options
-            )
-        );
-
     getSiteSubnetV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/sitesubnets/${id}`,
@@ -2729,21 +2728,6 @@ class BHEAPIClient {
                 {
                     params: {
                         counts,
-                    },
-                },
-                options
-            )
-        );
-
-    getSiteSubnetControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
-        this.baseClient.get(
-            `/api/v2/sitesubnets/${id}/controllers`,
-            Object.assign(
-                {
-                    params: {
-                        skip,
-                        limit,
-                        type,
                     },
                 },
                 options

@@ -403,6 +403,33 @@ func FetchGPOAffectedSitePaths(tx graph.Transaction, node *graph.Node) (graph.Pa
 	}
 }
 
+func FetchGPOAffectedSites(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	var (
+		nodeSet          = graph.NewNodeSet()
+		seenSites        = graph.NewNodeSet()
+		limitSkipTracker = ops.LimitSkipTracker{
+			Limit: limit,
+			Skip:  skip,
+		}
+	)
+
+	if gpLinks, err := getGPOLinks(tx, node); err != nil {
+		return nil, err
+	} else {
+		for _, rel := range gpLinks {
+			if limitSkipTracker.AtLimit() {
+				break
+			} else if _, end, err := ops.FetchRelationshipNodes(tx, rel); err != nil {
+				return nil, err
+			} else if end.Kinds.ContainsOneOf(ad.Site) && seenSites.AddIfNotExists(end) && limitSkipTracker.ShouldCollect() {
+				nodeSet.Add(end)
+			}
+		}
+
+		return nodeSet, nil
+	}
+}
+
 func CreateGPOAffectedIntermediariesPathDelegate(targetKinds ...graph.Kind) PathDelegate {
 	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 		pathSet := graph.NewPathSet()

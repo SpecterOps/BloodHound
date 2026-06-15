@@ -12272,6 +12272,60 @@
         }
       }
     },
+    "/api/v2/sites/{object_id}/linked-gpos": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteEntityLinkedGpos",
+        "summary": "Get Site entity linked GPOs",
+        "description": "Get a list, graph, or count of the GPOs linked to this Site.",
+        "tags": [
+          "Sites",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/sites/{object_id}/siteservers": {
       "parameters": [
         {
@@ -12428,60 +12482,6 @@
         }
       }
     },
-    "/api/v2/siteservers/{object_id}/controllers": {
-      "parameters": [
-        {
-          "$ref": "#/components/parameters/header.prefer"
-        },
-        {
-          "$ref": "#/components/parameters/path.object-id"
-        }
-      ],
-      "get": {
-        "operationId": "GetSiteServerEntityControllers",
-        "summary": "Get Site Server entity controllers",
-        "description": "Get a list, graph, or count of the principals that can control this Site Server.",
-        "tags": [
-          "Site Servers",
-          "Community",
-          "Enterprise"
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/query.entity.skip"
-          },
-          {
-            "$ref": "#/components/parameters/query.entity.limit"
-          },
-          {
-            "$ref": "#/components/parameters/query.entity.type"
-          },
-          {
-            "$ref": "#/components/parameters/query.entity.sort-by"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/related-entity-query-results"
-          },
-          "400": {
-            "$ref": "#/components/responses/bad-request"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "429": {
-            "$ref": "#/components/responses/too-many-requests"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      }
-    },
     "/api/v2/sitesubnets/{object_id}": {
       "parameters": [
         {
@@ -12520,60 +12520,6 @@
           },
           "404": {
             "$ref": "#/components/responses/not-found"
-          },
-          "429": {
-            "$ref": "#/components/responses/too-many-requests"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      }
-    },
-    "/api/v2/sitesubnets/{object_id}/controllers": {
-      "parameters": [
-        {
-          "$ref": "#/components/parameters/header.prefer"
-        },
-        {
-          "$ref": "#/components/parameters/path.object-id"
-        }
-      ],
-      "get": {
-        "operationId": "GetSiteSubnetEntityControllers",
-        "summary": "Get Site Subnet entity controllers",
-        "description": "Get a list, graph, or count of the principals that can control this Site Subnet.",
-        "tags": [
-          "Site Subnets",
-          "Community",
-          "Enterprise"
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/query.entity.skip"
-          },
-          {
-            "$ref": "#/components/parameters/query.entity.limit"
-          },
-          {
-            "$ref": "#/components/parameters/query.entity.type"
-          },
-          {
-            "$ref": "#/components/parameters/query.entity.sort-by"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/related-entity-query-results"
-          },
-          "400": {
-            "$ref": "#/components/responses/bad-request"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"

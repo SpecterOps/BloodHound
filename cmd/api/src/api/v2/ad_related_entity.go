@@ -226,7 +226,7 @@ func (s *Resources) ListADGPOAffectedUsers(response http.ResponseWriter, request
 }
 
 func (s *Resources) ListADGPOAffectedSites(response http.ResponseWriter, request *http.Request) {
-	s.handleAdRelatedEntityQuery(response, request, "ListADGPOAffectedSites", adAnalysis.FetchGPOAffectedSitePaths, adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectSitesCandidateFilter))
+	s.handleAdRelatedEntityQuery(response, request, "ListADGPOAffectedSites", adAnalysis.FetchGPOAffectedSitePaths, adAnalysis.FetchGPOAffectedSites)
 }
 
 func (s *Resources) ListADGPOAffectedComputers(response http.ResponseWriter, request *http.Request) {
@@ -267,6 +267,10 @@ func (s *Resources) ListADCSEscalations(response http.ResponseWriter, request *h
 
 func (s *Resources) ListADSiteLinkedServers(response http.ResponseWriter, request *http.Request) {
 	s.handleAdRelatedEntityQuery(response, request, "ListADSiteLinkedServers", adAnalysis.CreateSiteContainedPathDelegate(ad.SiteServer), adAnalysis.CreateSiteContainedListDelegate(ad.SiteServer))
+}
+
+func (s *Resources) ListADSiteLinkedGPOs(response http.ResponseWriter, request *http.Request) {
+	s.handleAdRelatedEntityQuery(response, request, "ListADSiteLinkedGPOs", adAnalysis.FetchEntityLinkedGPOPaths, adAnalysis.FetchEntityLinkedGPOList)
 }
 
 func (s *Resources) ListADSiteLinkedSubnets(response http.ResponseWriter, request *http.Request) {

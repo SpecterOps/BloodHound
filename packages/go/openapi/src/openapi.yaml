@@ -558,6 +558,8 @@ paths:
     $ref: './paths/sites.sites.id.yaml'
   /api/v2/sites/{object_id}/controllers:
     $ref: './paths/sites.sites.id.controllers.yaml'
+  /api/v2/sites/{object_id}/linked-gpos:
+    $ref: './paths/sites.sites.id.linked-gpos.yaml'
   /api/v2/sites/{object_id}/siteservers:
     $ref: './paths/sites.sites.id.siteservers.yaml'
   /api/v2/sites/{object_id}/sitesubnets:
@@ -566,14 +568,10 @@ paths:
   # site servers
   /api/v2/siteservers/{object_id}:
     $ref: './paths/siteservers.siteservers.id.yaml'
-  /api/v2/siteservers/{object_id}/controllers:
-    $ref: './paths/siteservers.siteservers.id.controllers.yaml'
 
   # site subnets
   /api/v2/sitesubnets/{object_id}:
     $ref: './paths/sitesubnets.sitesubnets.id.yaml'
-  /api/v2/sitesubnets/{object_id}/controllers:
-    $ref: './paths/sitesubnets.sitesubnets.id.controllers.yaml'
 
   # ous
   /api/v2/ous/{object_id}:

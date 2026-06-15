@@ -351,6 +351,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		// Site Entity API
 		routerInst.GET(fmt.Sprintf("/api/v2/sites/{%s}", api.URIPathVariableObjectID), resources.GetSiteEntityInfo).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/sites/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/sites/{%s}/linked-gpos", api.URIPathVariableObjectID), resources.ListADSiteLinkedGPOs).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/sites/{%s}/siteservers", api.URIPathVariableObjectID), resources.ListADSiteLinkedServers).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/sites/{%s}/sitesubnets", api.URIPathVariableObjectID), resources.ListADSiteLinkedSubnets).RequirePermissions(permissions.GraphDBRead),
 

@@ -1064,6 +1064,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
         },
         {
             id,
+            label: 'Linked GPOs',
+            queryType: 'site-linked_gpos',
+        },
+        {
+            id,
             label: 'Linked Site Servers',
             queryType: 'site-linked_siteservers',
         },
@@ -1073,20 +1078,8 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             queryType: 'site-linked_sitesubnets',
         },
     ],
-    [ActiveDirectoryNodeKind.SiteServer]: (id: string) => [
-        {
-            id,
-            label: 'Inbound Object Control',
-            queryType: 'siteserver-inbound_object_control',
-        },
-    ],
-    [ActiveDirectoryNodeKind.SiteSubnet]: (id: string) => [
-        {
-            id,
-            label: 'Inbound Object Control',
-            queryType: 'sitesubnet-inbound_object_control',
-        },
-    ],
+    [ActiveDirectoryNodeKind.SiteServer]: (id: string) => [],
+    [ActiveDirectoryNodeKind.SiteSubnet]: (id: string) => [],
     [ActiveDirectoryNodeKind.User]: (id: string) => [
         {
             id,
@@ -1880,18 +1873,12 @@ export const entityRelationshipEndpoints = {
             .then((res) => res.data),
     'site-inbound_object_control': ({ id, skip, limit, type }) =>
         apiClient.getSiteControllersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
+    'site-linked_gpos': ({ id, skip, limit, type }) =>
+        apiClient.getSiteLinkedGPOsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'site-linked_siteservers': ({ id, skip, limit, type }) =>
         apiClient.getSiteLinkedServersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'site-linked_sitesubnets': ({ id, skip, limit, type }) =>
         apiClient.getSiteLinkedSubnetsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'siteserver-inbound_object_control': ({ id, skip, limit, type }) =>
-        apiClient
-            .getSiteServerControllersV2(id, skip, limit, type, { signal: controller.signal })
-            .then((res) => res.data),
-    'sitesubnet-inbound_object_control': ({ id, skip, limit, type }) =>
-        apiClient
-            .getSiteSubnetControllersV2(id, skip, limit, type, { signal: controller.signal })
-            .then((res) => res.data),
     'user-sessions': ({ id, skip, limit, type }) =>
         apiClient.getUserSessionsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'user-member_of': ({ id, skip, limit, type }) =>

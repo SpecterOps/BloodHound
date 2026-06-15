@@ -7,7 +7,7 @@
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an 'AS IS' BASIS,
+# distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
@@ -18,11 +18,11 @@ parameters:
   - $ref: './../parameters/header.prefer.yaml'
   - $ref: './../parameters/path.object-id.yaml'
 get:
-  operationId: GetSiteServerEntityControllers
-  summary: Get Site Server entity controllers
-  description: Get a list, graph, or count of the principals that can control this Site Server.
+  operationId: GetSiteEntityLinkedGpos
+  summary: Get Site entity linked GPOs
+  description: Get a list, graph, or count of the GPOs linked to this Site.
   tags:
-    - Site Servers
+    - Sites
     - Community
     - Enterprise
   parameters:

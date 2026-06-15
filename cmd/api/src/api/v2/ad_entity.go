@@ -304,6 +304,7 @@ func (s *Resources) GetSiteEntityInfo(response http.ResponseWriter, request *htt
 	var (
 		countQueries = map[string]any{
 			"controllers": adAnalysis.FetchInboundADEntityControllers,
+			"linkedgpos":  adAnalysis.FetchEntityLinkedGPOList,
 			"siteServers": adAnalysis.CreateSiteContainedListDelegate(ad.SiteServer),
 			"siteSubnets": adAnalysis.CreateSiteContainedListDelegate(ad.SiteSubnet),
 		}
