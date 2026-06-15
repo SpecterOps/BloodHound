@@ -72,10 +72,11 @@ export const PrivilegeZonesCypherEditor: FC<{
 
     const onValueChanged = useCallback(
         (value: string) => {
+            if (preview) return;
+
             setCypherQuery(value);
             setStalePreview(true);
 
-            if (preview) return;
             if (hasZoneId && hasTagLabel(value)) setShowLabelWarning(true);
             else setShowLabelWarning(false);
         },
@@ -89,8 +90,6 @@ export const PrivilegeZonesCypherEditor: FC<{
             onChange(cypherQuery);
         }
     }, [cypherQuery, onChange]);
-
-    console.log({ staleCypherPreview });
 
     return (
         <Card className='mb-8'>
