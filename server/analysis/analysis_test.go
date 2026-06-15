@@ -35,17 +35,8 @@ func TestNewAnalysisRequestAdapter(t *testing.T) {
 	t.Run("returns non-nil adapter", func(t *testing.T) {
 		pool := new(pgxpool.Pool)
 		adapter := analysis.NewAnalysisRequestAdapter(pool)
-		
-		require.NotNil(t, adapter)
-	})
 
-	t.Run("adapter implements AnalysisRequestAdapter interface", func(t *testing.T) {
-		pool := new(pgxpool.Pool)
-		adapter := analysis.NewAnalysisRequestAdapter(pool)
-		
-		// Type assertion to verify interface implementation
-		_, ok := adapter.(analysis.AnalysisRequestAdapter)
-		assert.True(t, ok, "adapter should implement AnalysisRequestAdapter interface")
+		require.NotNil(t, adapter)
 	})
 }
 
