@@ -27,7 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -46,9 +46,9 @@ func permissionsCheckAtLeastOneHandler(db *dbmocks.MockDatabase, internalHandler
 	return PermissionsCheckAtLeastOne(auth.NewAuthorizer(db), permissions...)(internalHandler)
 }
 
-func auditEntryAndContext(bhCtx ctx.Context, action model.AuditLogAction, fields model.AuditData, status model.AuditLogEntryStatus) (context.Context, model.AuditEntry) {
+func auditEntryAndContext(bhCtx bhctx.Context, action model.AuditLogAction, fields model.AuditData, status model.AuditLogEntryStatus) (context.Context, model.AuditEntry) {
 	testCtx := context.Background()
-	testCtx = ctx.Set(testCtx, &bhCtx)
+	testCtx = bhctx.Set(testCtx, &bhCtx)
 
 	auditEntry := model.AuditEntry{
 		CommitID: uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111"),
@@ -84,7 +84,7 @@ func TestPermissionsCheckAll(t *testing.T) {
 		}
 		mockCtrl   = gomock.NewController(t)
 		mockDB     = dbmocks.NewMockDatabase(mockCtrl)
-		noPermsCtx = ctx.Context{
+		noPermsCtx = bhctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
 				Owner: model.User{
@@ -103,7 +103,7 @@ func TestPermissionsCheckAll(t *testing.T) {
 				Session: model.UserSession{},
 			},
 		}
-		allPermsCtx = ctx.Context{
+		allPermsCtx = bhctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
 				Owner: model.User{
@@ -130,7 +130,7 @@ func TestPermissionsCheckAll(t *testing.T) {
 	test.Request(t).
 		WithURL("http://example.com/test").
 		WithHeader(headers.RequestID.String(), "requestID").
-		WithContext(&ctx.Context{}).
+		WithContext(&bhctx.Context{}).
 		OnHandler(permissionsCheckAllHandler(mockDB, handlerReturn200, auth.Permissions().AuthManageSelf)).
 		Require().
 		ResponseStatusCode(http.StatusUnauthorized)
@@ -165,7 +165,7 @@ func TestPermissionsCheckAtLeastOne(t *testing.T) {
 		}
 		mockCtrl        = gomock.NewController(t)
 		mockDB          = dbmocks.NewMockDatabase(mockCtrl)
-		missingPermsCtx = ctx.Context{
+		missingPermsCtx = bhctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
 				Owner: model.User{
@@ -186,7 +186,7 @@ func TestPermissionsCheckAtLeastOne(t *testing.T) {
 	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(0)
 	test.Request(t).
 		WithURL("http://example.com/test").
-		WithContext(&ctx.Context{
+		WithContext(&bhctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
 				Owner: model.User{
@@ -207,7 +207,7 @@ func TestPermissionsCheckAtLeastOne(t *testing.T) {
 
 	test.Request(t).
 		WithURL("http://example.com/test").
-		WithContext(&ctx.Context{
+		WithContext(&bhctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
 				Owner: model.User{
@@ -228,7 +228,7 @@ func TestPermissionsCheckAtLeastOne(t *testing.T) {
 
 	test.Request(t).
 		WithURL("http://example.com/test").
-		WithContext(&ctx.Context{
+		WithContext(&bhctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
 				Owner: model.User{
@@ -250,7 +250,7 @@ func TestPermissionsCheckAtLeastOne(t *testing.T) {
 	test.Request(t).
 		WithURL("http://example.com/test").
 		WithHeader(headers.RequestID.String(), "requestID").
-		WithContext(&ctx.Context{
+		WithContext(&bhctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
 				Owner: model.User{

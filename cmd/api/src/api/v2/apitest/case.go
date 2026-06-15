@@ -21,7 +21,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	bhectx "github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
@@ -38,12 +38,12 @@ func NewSortingErrorCase() Case {
 		Name: "SortingError",
 		Input: func(input *Input) {
 			AddQueryParam(input, "sort_by", "definitelyInvalidColumn")
-			bhctx := bhectx.Context{
+			bhCtxVal := bhctx.Context{
 				AuthCtx: auth.Context{
 					Owner: model.User{},
 				},
 			}
-			SetContext(input, bhctx.ConstructGoContext())
+			SetContext(input, bhCtxVal.ConstructGoContext())
 		},
 		Test: func(output Output) {
 			StatusCode(output, http.StatusBadRequest)
@@ -59,12 +59,12 @@ func NewColumnNotFilterableCase() Case {
 		Input: func(input *Input) {
 			AddQueryParam(input, "definitelyInvalidColumn", "gt:0")
 
-			bhctx := bhectx.Context{
+			bhCtxVal := bhctx.Context{
 				AuthCtx: auth.Context{
 					Owner: model.User{},
 				},
 			}
-			SetContext(input, bhctx.ConstructGoContext())
+			SetContext(input, bhCtxVal.ConstructGoContext())
 		},
 		Test: func(output Output) {
 			StatusCode(output, http.StatusBadRequest)
@@ -79,13 +79,13 @@ func NewInvalidFilterPredicateCase(validColumn string) Case {
 		Name: "InvalidFilterPredicate",
 		Input: func(input *Input) {
 			AddQueryParam(input, validColumn, "definitelyInvalidPredicate:0")
-			bhctx := bhectx.Context{
+			bhCtxVal := bhctx.Context{
 				AuthCtx: auth.Context{
 					Owner: model.User{},
 				},
 			}
 
-			SetContext(input, bhctx.ConstructGoContext())
+			SetContext(input, bhCtxVal.ConstructGoContext())
 		},
 		Test: func(output Output) {
 			StatusCode(output, http.StatusBadRequest)
