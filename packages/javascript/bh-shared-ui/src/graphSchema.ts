@@ -150,7 +150,7 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC10a = 'ADCSESC10a',
     ADCSESC10b = 'ADCSESC10b',
     ADCSESC13 = 'ADCSESC13',
-    SyncedToEntraUser = 'SyncedToEntraUser',
+    SyncedToADUser = 'SyncedToADUser',
     CoerceAndRelayNTLMToSMB = 'CoerceAndRelayNTLMToSMB',
     CoerceAndRelayNTLMToADCS = 'CoerceAndRelayNTLMToADCS',
     WriteOwnerLimitedRights = 'WriteOwnerLimitedRights',
@@ -165,6 +165,8 @@ export enum ActiveDirectoryRelationshipKind {
     GPOAppliesTo = 'GPOAppliesTo',
     CanApplyGPO = 'CanApplyGPO',
     HasTrustKeys = 'HasTrustKeys',
+    WriteAltSecurityIdentities = 'WriteAltSecurityIdentities',
+    WritePublicInformation = 'WritePublicInformation',
     ProtectAdminGroups = 'ProtectAdminGroups',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
@@ -311,8 +313,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ADCSESC10b';
         case ActiveDirectoryRelationshipKind.ADCSESC13:
             return 'ADCSESC13';
-        case ActiveDirectoryRelationshipKind.SyncedToEntraUser:
-            return 'SyncedToEntraUser';
+        case ActiveDirectoryRelationshipKind.SyncedToADUser:
+            return 'SyncedToADUser';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB:
             return 'CoerceAndRelayNTLMToSMB';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS:
@@ -341,6 +343,10 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'CanApplyGPO';
         case ActiveDirectoryRelationshipKind.HasTrustKeys:
             return 'HasTrustKeys';
+        case ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities:
+            return 'WriteAltSecurityIdentities';
+        case ActiveDirectoryRelationshipKind.WritePublicInformation:
+            return 'WritePublicInformation';
         case ActiveDirectoryRelationshipKind.ProtectAdminGroups:
             return 'ProtectAdminGroups';
         default:
@@ -839,7 +845,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC10a,
         ActiveDirectoryRelationshipKind.ADCSESC10b,
         ActiveDirectoryRelationshipKind.ADCSESC13,
-        ActiveDirectoryRelationshipKind.SyncedToEntraUser,
+        ActiveDirectoryRelationshipKind.SyncedToADUser,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
         ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
@@ -852,6 +858,8 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.GPOAppliesTo,
         ActiveDirectoryRelationshipKind.CanApplyGPO,
         ActiveDirectoryRelationshipKind.HasTrustKeys,
+        ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities,
+        ActiveDirectoryRelationshipKind.WritePublicInformation,
         ActiveDirectoryRelationshipKind.ManageCA,
         ActiveDirectoryRelationshipKind.ManageCertificates,
         ActiveDirectoryRelationshipKind.Contains,
@@ -859,6 +867,71 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.SameForestTrust,
         ActiveDirectoryRelationshipKind.SpoofSIDHistory,
         ActiveDirectoryRelationshipKind.AbuseTGTDelegation,
+    ];
+}
+export function ActiveDirectoryPathfindingEdgesMatchFrontend(): ActiveDirectoryRelationshipKind[] {
+    return [
+        ActiveDirectoryRelationshipKind.Owns,
+        ActiveDirectoryRelationshipKind.GenericAll,
+        ActiveDirectoryRelationshipKind.GenericWrite,
+        ActiveDirectoryRelationshipKind.WriteOwner,
+        ActiveDirectoryRelationshipKind.WriteDACL,
+        ActiveDirectoryRelationshipKind.MemberOf,
+        ActiveDirectoryRelationshipKind.ForceChangePassword,
+        ActiveDirectoryRelationshipKind.AllExtendedRights,
+        ActiveDirectoryRelationshipKind.AddMember,
+        ActiveDirectoryRelationshipKind.HasSession,
+        ActiveDirectoryRelationshipKind.GPLink,
+        ActiveDirectoryRelationshipKind.AllowedToDelegate,
+        ActiveDirectoryRelationshipKind.CoerceToTGT,
+        ActiveDirectoryRelationshipKind.AllowedToAct,
+        ActiveDirectoryRelationshipKind.AdminTo,
+        ActiveDirectoryRelationshipKind.CanPSRemote,
+        ActiveDirectoryRelationshipKind.CanRDP,
+        ActiveDirectoryRelationshipKind.ExecuteDCOM,
+        ActiveDirectoryRelationshipKind.HasSIDHistory,
+        ActiveDirectoryRelationshipKind.AddSelf,
+        ActiveDirectoryRelationshipKind.DCSync,
+        ActiveDirectoryRelationshipKind.ReadLAPSPassword,
+        ActiveDirectoryRelationshipKind.ReadGMSAPassword,
+        ActiveDirectoryRelationshipKind.DumpSMSAPassword,
+        ActiveDirectoryRelationshipKind.SQLAdmin,
+        ActiveDirectoryRelationshipKind.AddAllowedToAct,
+        ActiveDirectoryRelationshipKind.WriteSPN,
+        ActiveDirectoryRelationshipKind.AddKeyCredentialLink,
+        ActiveDirectoryRelationshipKind.SyncLAPSPassword,
+        ActiveDirectoryRelationshipKind.WriteAccountRestrictions,
+        ActiveDirectoryRelationshipKind.WriteGPLink,
+        ActiveDirectoryRelationshipKind.GoldenCert,
+        ActiveDirectoryRelationshipKind.ADCSESC1,
+        ActiveDirectoryRelationshipKind.ADCSESC3,
+        ActiveDirectoryRelationshipKind.ADCSESC4,
+        ActiveDirectoryRelationshipKind.ADCSESC6a,
+        ActiveDirectoryRelationshipKind.ADCSESC6b,
+        ActiveDirectoryRelationshipKind.ADCSESC9a,
+        ActiveDirectoryRelationshipKind.ADCSESC9b,
+        ActiveDirectoryRelationshipKind.ADCSESC10a,
+        ActiveDirectoryRelationshipKind.ADCSESC10b,
+        ActiveDirectoryRelationshipKind.ADCSESC13,
+        ActiveDirectoryRelationshipKind.SyncedToADUser,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
+        ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
+        ActiveDirectoryRelationshipKind.OwnsLimitedRights,
+        ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
+        ActiveDirectoryRelationshipKind.HasTrustKeys,
+        ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities,
+        ActiveDirectoryRelationshipKind.WritePublicInformation,
+        ActiveDirectoryRelationshipKind.ManageCA,
+        ActiveDirectoryRelationshipKind.ManageCertificates,
+        ActiveDirectoryRelationshipKind.Contains,
+        ActiveDirectoryRelationshipKind.DCFor,
+        ActiveDirectoryRelationshipKind.SameForestTrust,
+        ActiveDirectoryRelationshipKind.SpoofSIDHistory,
+        ActiveDirectoryRelationshipKind.AbuseTGTDelegation,
+        ActiveDirectoryRelationshipKind.ProtectAdminGroups,
     ];
 }
 export enum AzureNodeKind {
@@ -882,6 +955,7 @@ export enum AzureNodeKind {
     WebApp = 'AZWebApp',
     LogicApp = 'AZLogicApp',
     AutomationAccount = 'AZAutomationAccount',
+    FederatedIdentityCredential = 'AZFederatedIdentityCredential',
 }
 export function AzureNodeKindToDisplay(value: AzureNodeKind): string | undefined {
     switch (value) {
@@ -925,6 +999,8 @@ export function AzureNodeKindToDisplay(value: AzureNodeKind): string | undefined
             return 'LogicApp';
         case AzureNodeKind.AutomationAccount:
             return 'AutomationAccount';
+        case AzureNodeKind.FederatedIdentityCredential:
+            return 'FederatedIdentityCredential';
         default:
             return undefined;
     }
@@ -976,9 +1052,10 @@ export enum AzureRelationshipKind {
     AZMGAddSecret = 'AZMGAddSecret',
     AZMGGrantAppRoles = 'AZMGGrantAppRoles',
     AZMGGrantRole = 'AZMGGrantRole',
-    SyncedToADUser = 'SyncedToADUser',
+    SyncedToEntraUser = 'SyncedToEntraUser',
     AZRoleEligible = 'AZRoleEligible',
     AZRoleApprover = 'AZRoleApprover',
+    AZAuthenticatesTo = 'AZAuthenticatesTo',
 }
 export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): string | undefined {
     switch (value) {
@@ -1074,12 +1151,14 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'AZMGGrantAppRoles';
         case AzureRelationshipKind.AZMGGrantRole:
             return 'AZMGGrantRole';
-        case AzureRelationshipKind.SyncedToADUser:
-            return 'SyncedToADUser';
+        case AzureRelationshipKind.SyncedToEntraUser:
+            return 'SyncedToEntraUser';
         case AzureRelationshipKind.AZRoleEligible:
             return 'AZRoleEligible';
         case AzureRelationshipKind.AZRoleApprover:
             return 'AZRoleApprover';
+        case AzureRelationshipKind.AZAuthenticatesTo:
+            return 'AZAuthenticatesTo';
         default:
             return undefined;
     }
@@ -1125,6 +1204,11 @@ export enum AzureKindProperties {
     EndUserAssignmentRequiresMFA = 'enduserassignmentrequiresmfa',
     EndUserAssignmentRequiresJustification = 'enduserassignmentrequiresjustification',
     EndUserAssignmentRequiresTicketInformation = 'enduserassignmentrequiresticketinformation',
+    LastSuccessfulSignInDateTime = 'lastsuccessfulsignindatetime',
+    Issuer = 'issuer',
+    Subject = 'subject',
+    Audiences = 'audiences',
+    FederatedIdentityCredentialAppID = 'federatedidentitycredentialappid',
 }
 export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string | undefined {
     switch (value) {
@@ -1206,6 +1290,16 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'End User Assignment Requires Justification';
         case AzureKindProperties.EndUserAssignmentRequiresTicketInformation:
             return 'End User Assignment Requires Ticket Information';
+        case AzureKindProperties.LastSuccessfulSignInDateTime:
+            return 'Last Successful Sign In Date Time';
+        case AzureKindProperties.Issuer:
+            return 'Issuer';
+        case AzureKindProperties.Subject:
+            return 'Subject';
+        case AzureKindProperties.Audiences:
+            return 'Audiences';
+        case AzureKindProperties.FederatedIdentityCredentialAppID:
+            return 'Federated Identity Credential Application ID';
         default:
             return undefined;
     }
@@ -1249,10 +1343,11 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZMGAddSecret,
         AzureRelationshipKind.AZMGGrantAppRoles,
         AzureRelationshipKind.AZMGGrantRole,
-        AzureRelationshipKind.SyncedToADUser,
+        AzureRelationshipKind.SyncedToEntraUser,
         AzureRelationshipKind.AZRoleEligible,
         AzureRelationshipKind.AZRoleApprover,
         AzureRelationshipKind.Contains,
+        AzureRelationshipKind.AZAuthenticatesTo,
     ];
 }
 export enum CommonNodeKind {
@@ -1277,6 +1372,7 @@ export enum CommonKindProperties {
     SystemTags = 'system_tags',
     UserTags = 'user_tags',
     LastSeen = 'lastseen',
+    FirstSeen = 'firstseen',
     LastCollected = 'lastcollected',
     WhenCreated = 'whencreated',
     Enabled = 'enabled',
@@ -1309,6 +1405,8 @@ export function CommonKindPropertiesToDisplay(value: CommonKindProperties): stri
             return 'Node User Tags';
         case CommonKindProperties.LastSeen:
             return 'Last Seen by BloodHound';
+        case CommonKindProperties.FirstSeen:
+            return 'First Seen by BloodHound';
         case CommonKindProperties.LastCollected:
             return 'Last Collected by BloodHound';
         case CommonKindProperties.WhenCreated:

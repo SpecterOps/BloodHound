@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { AxiosResponse } from 'axios';
+import { EnvironmentRequest } from './requests';
 import {
     AssetGroupTag,
     AssetGroupTagCertificationRecord,
@@ -30,6 +31,7 @@ import {
     FileIngestJob,
     GraphData,
     NodeSourceTypes,
+    Role,
     ScheduledJobDisplay,
     TimestampFields,
 } from './types';
@@ -51,12 +53,26 @@ export type PaginatedResponse<T> = Partial<TimeWindowedResponse<T>> &
         skip: number;
     };
 
+export type EnvironmentExposure = {
+    exposure_percent: number;
+    asset_group_tag: AssetGroupTag;
+};
+
+export const knownEnvironmentTypes = ['active-directory', 'azure'] as const;
+
+export type KnownEnvironmentType = (typeof knownEnvironmentTypes)[number];
+
 export type Environment = {
-    type: 'active-directory' | 'azure';
+    // `string & {}` is a hack to make this a string literal type that can be widened to string if needed
+    // Needed because environment types can be provided by the user
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    type: KnownEnvironmentType | (string & {});
     impactValue: number;
     name: string;
     id: string;
     collected: boolean;
+    hygiene_attack_paths: number; // While improbable this number could possibly be higher than the JavaScript max safe integer in the response
+    exposures: EnvironmentExposure[];
 };
 
 export type GraphResponse = BasicResponse<GraphData>;
@@ -155,12 +171,18 @@ type DatapipeStatus = {
 
 export type DatapipeStatusResponse = BasicResponse<DatapipeStatus>;
 
+export type NullTime = {
+    Time: string;
+    Valid: boolean;
+};
+
 export type AuthToken = TimestampFields & {
     hmac_method: string;
     id: string;
     last_access: string;
     name: string;
     user_id: string;
+    expires_at: NullTime | null;
 };
 
 export type ListAuthTokensResponse = BasicResponse<{ tokens: AuthToken[] }>;
@@ -296,3 +318,89 @@ export type GetScheduledJobDisplayResponse = PaginatedResponse<ScheduledJobDispl
 export type GetExportQueryResponse = AxiosResponse<Blob>;
 
 export type GetClientResponse = PaginatedResponse<Client[]>;
+
+export type EdgeType = {
+    id: number;
+    name: string;
+    description: string;
+    is_traversable: boolean;
+    schema_name: string;
+    is_builtin: boolean;
+};
+
+export type GetEdgeTypesResponse = BasicResponse<EdgeType[]>;
+export type GetSelfResponse = BasicResponse<Self>;
+
+export type Self = {
+    AuthSecret: {
+        id: number;
+        digest_method: string;
+        expires_at: string;
+        totp_activated: boolean;
+    };
+    email_address: string;
+    eula_accepted: boolean;
+    first_name: string;
+    id: string;
+    last_login: string;
+    last_name: string;
+    principal_name: string;
+    saml_provider_id: number | null;
+    roles: Role[];
+    all_environments?: boolean;
+    created_at: string;
+    environment_targeted_access_control?: EnvironmentRequest[] | null;
+    is_disabled: boolean;
+    sso_provider_id: number | null;
+    updated_at: string;
+};
+
+export type Extension = {
+    id: string;
+    is_builtin: boolean;
+    name: string;
+    namespace: string;
+    version: string;
+};
+
+export type GetExtensionsResponse = BasicResponse<{ extensions: Extension[] }>;
+
+export type FindingSchema = {
+    id: number;
+    name: string;
+    display_name: string;
+    type: string;
+    environment_id: number;
+    extension_id: number;
+    kind: string;
+    subtypes: string[];
+    is_builtin: boolean;
+    created_at: string;
+};
+
+export type FindingSchemaResponse = PaginatedResponse<{ findings: FindingSchema[] }>;
+
+export type GraphKindsResponse = BasicResponse<{ kinds: string[] }>;
+
+export type UnifiedFinding = {
+    severity: string;
+    finding: string;
+    title: string;
+    finding_type: string;
+    platform: string;
+    environment_id: string;
+    environment_name: string;
+    zone_id: number;
+    zone_name: string;
+    source_principal_id: string;
+    source_principal_name: string;
+    source_principal_kind: string;
+    target_principal_id: string;
+    target_principal_name: string;
+    target_principal_kind: string;
+    status: string;
+    first_seen: string;
+    last_seen: string;
+};
+
+export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;

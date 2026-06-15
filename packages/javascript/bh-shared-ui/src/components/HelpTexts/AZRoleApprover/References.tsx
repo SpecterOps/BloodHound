@@ -19,7 +19,14 @@ import { FC } from 'react';
 
 const References: FC = () => {
     return (
-        <Box sx={{ overflowX: 'auto' }}>
+        <Box className='overflow-x-auto'>
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-configure'>
+                What is Microsoft Entra Privileged Identity Management?
+            </Link>
+            <br />
             <Link
                 target='_blank'
                 rel='noopener noreferrer'

@@ -1,5 +1,5 @@
 /*
-    Copyright 2025 Specter Ops, Inc.
+    Copyright 2026 Specter Ops, Inc.
     
     Licensed under the Apache License, Version 2.0
     you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ public static readonly string OperatingSystem = "operatingsystem";
 public static readonly string SystemTags = "system_tags";
 public static readonly string UserTags = "user_tags";
 public static readonly string LastSeen = "lastseen";
+public static readonly string FirstSeen = "firstseen";
 public static readonly string LastCollected = "lastcollected";
 public static readonly string WhenCreated = "whencreated";
 public static readonly string Enabled = "enabled";

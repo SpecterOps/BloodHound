@@ -21,6 +21,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/dawgs/graph"
 )
@@ -35,25 +36,27 @@ type GraphifyData interface {
 	GetFlagByKey(context.Context, string) (appcfg.FeatureFlag, error)
 
 	RegisterSourceKind(context.Context) func(sourceKind graph.Kind) error
+	EnsureStubbedCustomNodeKindForIngest(context.Context, string) error
 }
 
 type GraphifyService struct {
-	ctx     context.Context
-	db      GraphifyData
-	graphdb graph.Database
-	cfg     config.Configuration
-	schema  upload.IngestSchema
-
-	changeManager ChangeManager
+	ctx              context.Context
+	db               GraphifyData
+	graphdb          graph.Database
+	endpointResolver *endpoint.Resolver
+	cfg              config.Configuration
+	schema           upload.IngestSchema
+	changeManager    ChangeManager
 }
 
 func NewGraphifyService(ctx context.Context, db GraphifyData, graphDb graph.Database, cfg config.Configuration, schema upload.IngestSchema, changeManager ChangeManager) GraphifyService {
 	return GraphifyService{
-		ctx:           ctx,
-		db:            db,
-		graphdb:       graphDb,
-		cfg:           cfg,
-		schema:        schema,
-		changeManager: changeManager,
+		ctx:              ctx,
+		db:               db,
+		graphdb:          graphDb,
+		endpointResolver: endpoint.NewResolver(graphDb),
+		cfg:              cfg,
+		schema:           schema,
+		changeManager:    changeManager,
 	}
 }

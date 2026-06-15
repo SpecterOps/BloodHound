@@ -14,21 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DataTable } from '@bloodhoundenterprise/doodleui';
+import { DataTable, ScrollArea } from 'doodle-ui';
 import fileDownload from 'js-file-download';
 import { json2csv } from 'json-2-csv';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
-import { useExploreGraph, useExploreSelectedItem, useToggle } from '../../hooks';
+import { useAddKeyBinding, useExploreGraph, useExploreSelectedItem, useToggle } from '../../hooks';
 import { cn } from '../../utils';
 import TableControls from './TableControls';
 import {
-    DEFAULT_PINNED_COLUMN_KEYS,
+    DEFAULT_EXPLORE_TABLE_COLUMN_KEYS,
     ExploreTableProps,
     MungedTableRowWithId,
     createColumnStateFromKeys,
     defaultColumns,
     getExploreTableData,
-    shimGraphSpecificKeys,
 } from './explore-table-utils';
 import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
 
@@ -46,11 +45,11 @@ const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
 };
 
 const tableHeadProps: DataTableProps['TableHeadProps'] = {
-    className: 'pr-2 text-center',
+    className: 'px-2 text-center',
 };
 
 const tableCellProps: DataTableProps['TableCellProps'] = {
-    className: 'truncate group relative p-0',
+    className: 'truncate group relative p-0 pl-2',
 };
 
 const tableOptions: DataTableProps['tableOptions'] = {
@@ -65,13 +64,21 @@ const ExploreTable = ({
     onClose,
     onKebabMenuClick,
     onManageColumnsChange,
+    onChangePinnedColumns,
     selectedColumns = defaultColumns,
+    pinnedColumns,
 }: ExploreTableProps) => {
     const { data: graphData } = useExploreGraph();
     const { selectedItem, setSelectedItem, clearSelectedItem } = useExploreSelectedItem();
 
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
+
+    //controlled state for reset size button
+    const [columnSizing, setColumnSizing] = useState({});
+    const handleResetColumnSize = () => {
+        setColumnSizing({});
+    };
 
     const handleSearchInputChange = useCallback(
         (e: ChangeEvent<HTMLInputElement>) => {
@@ -81,21 +88,24 @@ const ExploreTable = ({
     );
 
     const exploreTableData = useMemo(() => getExploreTableData(graphData), [graphData]);
-    const shimmedColumns = useMemo(() => shimGraphSpecificKeys(selectedColumns), [selectedColumns]);
 
-    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount } = useExploreTableRowsAndColumns({
-        onKebabMenuClick,
-        searchInput,
-        selectedColumns: shimmedColumns,
-        exploreTableData,
-    });
+    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount, columnOrder, setColumnOrder } =
+        useExploreTableRowsAndColumns({
+            onKebabMenuClick,
+            searchInput,
+            selectedColumns,
+            exploreTableData,
+        });
 
-    // Just a hardcoded list of pinned columns for now
-    const [columnPinning, setColumnPinning] = useState<NonNullable<DataTableProps['columnPinning']>>({
-        left: DEFAULT_PINNED_COLUMN_KEYS,
-    });
+    const effectivePinnedColumns = pinnedColumns ?? DEFAULT_EXPLORE_TABLE_COLUMN_KEYS;
 
-    const leftPinnedColumns = columnPinning.left && createColumnStateFromKeys(columnPinning.left);
+    const columnPinning = useMemo(() => {
+        return {
+            left: effectivePinnedColumns,
+        };
+    }, [effectivePinnedColumns]);
+
+    const leftPinnedColumns = createColumnStateFromKeys(effectivePinnedColumns);
 
     const searchInputProps = useMemo(
         () => ({
@@ -117,37 +127,61 @@ const ExploreTable = ({
         [setSelectedItem, selectedItem, clearSelectedItem]
     );
 
-    const handleDownloadClick = useCallback(() => {
-        try {
-            const nodes = exploreTableData?.nodes;
-            if (nodes) {
-                const nodeValues = Object.values(nodes)?.map((node) => {
-                    const nodeClone = Object.assign({}, node);
-                    const flattenedNodeClone = Object.assign(nodeClone, node.properties);
-
-                    delete flattenedNodeClone.properties;
-
-                    return flattenedNodeClone;
-                });
-
-                const csv = json2csv(nodeValues, {
-                    keys: exploreTableData.node_keys,
-                    emptyFieldValue: '',
-                    preventCsvInjection: true,
-                });
-
-                fileDownload(csv, 'nodes.csv');
+    const handleKeydown = useCallback(
+        (event: KeyboardEvent) => {
+            if (event.code === 'Escape') {
+                if (typeof onClose === 'function') {
+                    onClose();
+                }
             }
-        } catch (err) {
-            console.error('Failed to export CSV:', err);
-        }
-    }, [exploreTableData]);
+        },
+        [onClose]
+    );
+
+    useAddKeyBinding(handleKeydown);
+
+    const handleDownloadClick = useCallback(
+        (columns: 'all' | 'selected') => {
+            try {
+                const nodes = exploreTableData?.nodes;
+                if (nodes) {
+                    const nodeValues = Object.values(nodes)?.map((node) => {
+                        const nodeClone = Object.assign({}, node);
+                        const flattenedNodeClone = Object.assign(nodeClone, node.properties);
+
+                        delete flattenedNodeClone.properties;
+                        return flattenedNodeClone;
+                    });
+                    const csv = json2csv(nodeValues, {
+                        keys:
+                            columns === 'all'
+                                ? exploreTableData.node_keys
+                                : exploreTableData.node_keys.filter((key) => selectedColumns[key]),
+                        emptyFieldValue: '',
+                        preventCsvInjection: true,
+                    });
+
+                    fileDownload(csv, 'nodes.csv');
+                }
+            } catch (err) {
+                console.error('Failed to export CSV:', err);
+            }
+        },
+        [exploreTableData, selectedColumns]
+    );
+
+    const handleSetColumnPinning = useCallback(
+        (pinnedCols: NonNullable<DataTableProps['columnPinning']>) => {
+            onChangePinnedColumns?.(pinnedCols.left ?? []);
+        },
+        [onChangePinnedColumns]
+    );
 
     return (
         <div
             data-testid='explore-table-container-wrapper'
             className={cn(
-                'dark:bg-neutral-dark-5 absolute z-10 bottom-4 left-4 right-4 bg-neutral-light-2 rounded-lg',
+                'dark:bg-neutral-dark-5 absolute z-10 bottom-4 left-4 right-4 bg-neutral-light-2 rounded-lg shadow-outer-1 border',
                 {
                     'h-1/2': !isExpanded,
                     'h-[calc(100%-72px)]': isExpanded,
@@ -157,32 +191,43 @@ const ExploreTable = ({
             <div className='explore-table-container w-full h-full overflow-hidden grid grid-rows-[72px,1fr]'>
                 <TableControls
                     columns={columnOptionsForDropdown}
-                    selectedColumns={shimmedColumns}
+                    selectedColumns={selectedColumns}
                     pinnedColumns={leftPinnedColumns}
                     onDownloadClick={handleDownloadClick}
                     onExpandClick={toggleIsExpanded}
                     onManageColumnsChange={onManageColumnsChange}
+                    onChangePinnedColumns={onChangePinnedColumns}
                     onCloseClick={onClose}
+                    onResetColumnSize={handleResetColumnSize}
                     tableName='Results'
                     resultsCount={resultsCount}
                     SearchInputProps={searchInputProps}
                 />
-                <MemoDataTable
-                    className='overflow-auto'
-                    TableHeaderProps={tableHeaderProps}
-                    TableHeadProps={tableHeadProps}
-                    TableProps={tableProps}
-                    TableCellProps={tableCellProps}
-                    columnPinning={columnPinning}
-                    onColumnPinningChange={setColumnPinning}
-                    onRowClick={handleRowClick}
-                    selectedRow={selectedItem || undefined}
-                    data={sortedFilteredRows}
-                    columns={tableColumns as DataTableProps['columns']}
-                    tableOptions={tableOptions}
-                    virtualizationOptions={virtualizationOptions}
-                    growLastColumn
-                />
+                <ScrollArea>
+                    <MemoDataTable
+                        TableHeaderProps={tableHeaderProps}
+                        TableHeadProps={tableHeadProps}
+                        TableProps={tableProps}
+                        TableCellProps={tableCellProps}
+                        columnPinning={columnPinning}
+                        setColumnPinning={handleSetColumnPinning}
+                        onRowClick={handleRowClick}
+                        selectedRow={selectedItem || undefined}
+                        data={sortedFilteredRows}
+                        columns={tableColumns as DataTableProps['columns']}
+                        tableOptions={tableOptions}
+                        virtualizationOptions={virtualizationOptions}
+                        columnSizing={columnSizing}
+                        onColumnSizingChange={setColumnSizing}
+                        columnOrder={columnOrder}
+                        onColumnOrderChange={(newOrder) => {
+                            setColumnOrder(newOrder);
+                        }}
+                        growLastColumn
+                        enableResizing
+                        enableDragAndDrop
+                    />
+                </ScrollArea>
             </div>
         </div>
     );

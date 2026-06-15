@@ -18,14 +18,13 @@ package ad
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"slices"
 	"time"
 
 	"github.com/RoaringBitmap/roaring/v2/roaring64"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/analysis/tiering"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -38,8 +37,11 @@ import (
 	"github.com/specterops/dawgs/traversal"
 )
 
+type PathDelegate = func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error)
+type ListDelegate = func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error)
+
 func FetchGraphDBTierZeroTaggedAssets(ctx context.Context, db graph.Database, domainSID string) (graph.NodeSet, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchGraphDBTierZeroTaggedAssets")()
+	defer measure.ContextMeasureWithThreshold(ctx, slog.LevelInfo, "FetchGraphDBTierZeroTaggedAssets")()
 
 	var (
 		nodes graph.NodeSet
@@ -61,7 +63,7 @@ func FetchGraphDBTierZeroTaggedAssets(ctx context.Context, db graph.Database, do
 }
 
 func FetchAllEnforcedGPOs(ctx context.Context, db graph.Database, targets graph.NodeSet) (graph.NodeSet, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchAllEnforcedGPOs")()
+	defer measure.ContextMeasureWithThreshold(ctx, slog.LevelInfo, "FetchAllEnforcedGPOs")()
 
 	enforcedGPOs := graph.NewNodeSet()
 
@@ -79,7 +81,7 @@ func FetchAllEnforcedGPOs(ctx context.Context, db graph.Database, targets graph.
 }
 
 func FetchOUContainers(ctx context.Context, db graph.Database, targets graph.NodeSet) (graph.NodeSet, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchOUContainers")()
+	defer measure.ContextMeasureWithThreshold(ctx, slog.LevelInfo, "FetchOUContainers")()
 
 	oUs := graph.NewNodeSet()
 
@@ -114,7 +116,7 @@ func FetchAllDomains(ctx context.Context, db graph.Database) ([]*graph.Node, err
 }
 
 func FetchActiveDirectoryTierZeroRoots(ctx context.Context, db graph.Database, domain *graph.Node, autoTagT0ParentObjectsFlag bool) (graph.NodeSet, error) {
-	defer measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "FetchActiveDirectoryTierZeroRoots")()
+	defer measure.ContextLogAndMeasureWithThreshold(ctx, slog.LevelInfo, "FetchActiveDirectoryTierZeroRoots")()
 
 	if domainSID, err := domain.Properties.Get(common.ObjectID.String()).String(); err != nil {
 		return nil, err
@@ -219,7 +221,7 @@ func getGPOLinks(tx graph.Transaction, node *graph.Node) ([]*graph.Relationship,
 	}
 }
 
-func CreateGPOAffectedIntermediariesListDelegate(candidateFilter ops.NodeFilter) analysis.ListDelegate {
+func CreateGPOAffectedIntermediariesListDelegate(candidateFilter ops.NodeFilter) ListDelegate {
 	return func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 		nodeSet := graph.NewNodeSet()
 
@@ -401,7 +403,7 @@ func FetchGPOAffectedSitePaths(tx graph.Transaction, node *graph.Node) (graph.Pa
 	}
 }
 
-func CreateGPOAffectedIntermediariesPathDelegate(targetKinds ...graph.Kind) analysis.PathDelegate {
+func CreateGPOAffectedIntermediariesPathDelegate(targetKinds ...graph.Kind) PathDelegate {
 	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 		pathSet := graph.NewPathSet()
 
@@ -691,7 +693,7 @@ func FetchContainersOfNode(tx graph.Transaction, target *graph.Node) (graph.Node
 	return containers, nil
 }
 
-func CreateOUContainedListDelegate(kind graph.Kind) analysis.ListDelegate {
+func CreateOUContainedListDelegate(kind graph.Kind) ListDelegate {
 	return func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 		return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
 			Root:      node,
@@ -710,7 +712,7 @@ func CreateOUContainedListDelegate(kind graph.Kind) analysis.ListDelegate {
 	}
 }
 
-func CreateOUContainedPathDelegate(kind graph.Kind) analysis.PathDelegate {
+func CreateOUContainedPathDelegate(kind graph.Kind) PathDelegate {
 	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 		return ops.TraversePaths(tx, ops.TraversalPlan{
 			Root:      node,
@@ -727,7 +729,7 @@ func CreateOUContainedPathDelegate(kind graph.Kind) analysis.PathDelegate {
 	}
 }
 
-func CreateSiteContainedListDelegate(kind graph.Kind) analysis.ListDelegate {
+func CreateSiteContainedListDelegate(kind graph.Kind) ListDelegate {
 	return func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 		return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
 			Root:      node,
@@ -746,7 +748,7 @@ func CreateSiteContainedListDelegate(kind graph.Kind) analysis.ListDelegate {
 	}
 }
 
-func CreateSiteContainedPathDelegate(kind graph.Kind) analysis.PathDelegate {
+func CreateSiteContainedPathDelegate(kind graph.Kind) PathDelegate {
 	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 		return ops.TraversePaths(tx, ops.TraversalPlan{
 			Root:      node,
@@ -763,7 +765,7 @@ func CreateSiteContainedPathDelegate(kind graph.Kind) analysis.PathDelegate {
 	}
 }
 
-func CreateDomainTrustListDelegate(direction graph.Direction) analysis.ListDelegate {
+func CreateDomainTrustListDelegate(direction graph.Direction) ListDelegate {
 	return func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 		return ops.AcyclicTraverseNodes(tx, ops.TraversalPlan{
 			Root:      node,
@@ -779,7 +781,7 @@ func CreateDomainTrustListDelegate(direction graph.Direction) analysis.ListDeleg
 	}
 }
 
-func CreateDomainTrustPathDelegate(direction graph.Direction) analysis.PathDelegate {
+func CreateDomainTrustPathDelegate(direction graph.Direction) PathDelegate {
 	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 		return ops.TraversePaths(tx, ops.TraversalPlan{
 			Root:      node,
@@ -791,7 +793,7 @@ func CreateDomainTrustPathDelegate(direction graph.Direction) analysis.PathDeleg
 	}
 }
 
-func CreateDomainContainedEntityListDelegate(kind graph.Kind) analysis.ListDelegate {
+func CreateDomainContainedEntityListDelegate(kind graph.Kind) ListDelegate {
 	return func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 		if domainSid, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 			return nil, err
@@ -1056,7 +1058,7 @@ func FetchForeignAdminPaths(tx graph.Transaction, node *graph.Node) (graph.PathS
 }
 
 // TODO: This query appears to be slow
-func CreateForeignEntityMembershipListDelegate(kind graph.Kind) analysis.ListDelegate {
+func CreateForeignEntityMembershipListDelegate(kind graph.Kind) ListDelegate {
 	return func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 		foreignNodes := graph.NewNodeSet()
 		if domainSID, err := getNodeDomainSIDOrObjectID(node); err != nil {
@@ -1098,7 +1100,7 @@ func CreateForeignEntityMembershipListDelegate(kind graph.Kind) analysis.ListDel
 	}
 }
 
-func CreateForeignEntityMembershipPathDelegate(kind graph.Kind) analysis.PathDelegate {
+func CreateForeignEntityMembershipPathDelegate(kind graph.Kind) PathDelegate {
 	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 		foreignPaths := graph.NewPathSet()
 
@@ -1169,7 +1171,7 @@ func FetchEntityLinkedGPOPaths(tx graph.Transaction, node *graph.Node) (graph.Pa
 	})
 }
 
-func CreateInboundLocalGroupListDelegate(edge graph.Kind) analysis.ListDelegate {
+func CreateInboundLocalGroupListDelegate(edge graph.Kind) ListDelegate {
 	return func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 		return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
 			Root:      node,
@@ -1190,7 +1192,7 @@ func CreateInboundLocalGroupListDelegate(edge graph.Kind) analysis.ListDelegate 
 	}
 }
 
-func CreateInboundLocalGroupPathDelegate(edge graph.Kind) analysis.PathDelegate {
+func CreateInboundLocalGroupPathDelegate(edge graph.Kind) PathDelegate {
 	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 		return ops.TraversePaths(tx, ops.TraversalPlan{
 			Root:      node,
@@ -1209,7 +1211,7 @@ func CreateInboundLocalGroupPathDelegate(edge graph.Kind) analysis.PathDelegate 
 	}
 }
 
-func CreateOutboundLocalGroupListDelegate(edge graph.Kind) analysis.ListDelegate {
+func CreateOutboundLocalGroupListDelegate(edge graph.Kind) ListDelegate {
 	return func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 		return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
 			Root:      node,
@@ -1231,7 +1233,7 @@ func CreateOutboundLocalGroupListDelegate(edge graph.Kind) analysis.ListDelegate
 	}
 }
 
-func CreateOutboundLocalGroupPathDelegate(edge graph.Kind) analysis.PathDelegate {
+func CreateOutboundLocalGroupPathDelegate(edge graph.Kind) PathDelegate {
 	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 		return ops.TraversePaths(tx, ops.TraversalPlan{
 			Root:      node,
@@ -1253,7 +1255,7 @@ func CreateOutboundLocalGroupPathDelegate(edge graph.Kind) analysis.PathDelegate
 	}
 }
 
-func CreateSQLAdminPathDelegate(direction graph.Direction) analysis.PathDelegate {
+func CreateSQLAdminPathDelegate(direction graph.Direction) PathDelegate {
 	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 		return ops.TraversePaths(tx, ops.TraversalPlan{
 			Root:      node,
@@ -1265,7 +1267,7 @@ func CreateSQLAdminPathDelegate(direction graph.Direction) analysis.PathDelegate
 	}
 }
 
-func CreateSQLAdminListDelegate(direction graph.Direction) analysis.ListDelegate {
+func CreateSQLAdminListDelegate(direction graph.Direction) ListDelegate {
 	return func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 		return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
 			Root:      node,
@@ -1279,7 +1281,7 @@ func CreateSQLAdminListDelegate(direction graph.Direction) analysis.ListDelegate
 	}
 }
 
-func CreateConstrainedDelegationPathDelegate(direction graph.Direction) analysis.PathDelegate {
+func CreateConstrainedDelegationPathDelegate(direction graph.Direction) PathDelegate {
 	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 		return ops.TraversePaths(tx, ops.TraversalPlan{
 			Root:      node,
@@ -1291,7 +1293,7 @@ func CreateConstrainedDelegationPathDelegate(direction graph.Direction) analysis
 	}
 }
 
-func CreateConstrainedDelegationListDelegate(direction graph.Direction) analysis.ListDelegate {
+func CreateConstrainedDelegationListDelegate(direction graph.Direction) ListDelegate {
 	return func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 		return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
 			Root:      node,
@@ -1391,7 +1393,7 @@ func FetchEntityGroupMembership(tx graph.Transaction, root *graph.Node, skip, li
 
 func FetchInboundADEntityControllerPaths(ctx context.Context, db graph.Database, node *graph.Node) (graph.PathSet, error) {
 	var (
-		traversalInstance = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInstance = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		collector         = traversal.NewPathCollector()
 	)
 
@@ -1417,7 +1419,7 @@ func FetchInboundADEntityControllerPaths(ctx context.Context, db graph.Database,
 
 func FetchInboundADEntityControllers(ctx context.Context, db graph.Database, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 	var (
-		traversalInstance = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInstance = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		collector         = traversal.NewNodeCollector()
 	)
 
@@ -1438,7 +1440,7 @@ func FetchInboundADEntityControllers(ctx context.Context, db graph.Database, nod
 
 func FetchOutboundADEntityControlPaths(ctx context.Context, db graph.Database, node *graph.Node) (graph.PathSet, error) {
 	var (
-		traversalInstance = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInstance = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		collector         = traversal.NewPathCollector()
 	)
 
@@ -1459,7 +1461,7 @@ func FetchOutboundADEntityControlPaths(ctx context.Context, db graph.Database, n
 
 func FetchOutboundADEntityControl(ctx context.Context, db graph.Database, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 	var (
-		traversalInstance = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInstance = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		collector         = traversal.NewNodeCollector()
 	)
 
@@ -1541,7 +1543,7 @@ func FetchGroupMemberPaths(tx graph.Transaction, node *graph.Node) (graph.PathSe
 func FetchGroupMembers(ctx context.Context, db graph.Database, root *graph.Node, skip, limit int) (graph.NodeSet, error) {
 	collector := traversal.NewNodeCollector()
 
-	if err := traversal.New(db, analysis.MaximumDatabaseParallelWorkers).BreadthFirst(ctx, traversal.Plan{
+	if err := traversal.New(db, post.MaximumDatabaseParallelWorkers).BreadthFirst(ctx, traversal.Plan{
 		Root: root,
 		Driver: traversal.LightweightDriver(
 			graph.DirectionInbound,
@@ -1713,9 +1715,9 @@ func FetchUserSessionCompleteness(tx graph.Transaction, domainSIDs ...string) (f
 }
 
 func FetchAllGroupMembers(ctx context.Context, db graph.Database, targets graph.NodeSet) (graph.NodeSet, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchAllGroupMembers")()
+	defer measure.ContextMeasureWithThreshold(ctx, slog.LevelInfo, "FetchAllGroupMembers")()
 
-	slog.InfoContext(ctx, fmt.Sprintf("Fetching group members for %d AD nodes", len(targets)))
+	slog.InfoContext(ctx, "Fetching group members for AD nodes", slog.Int("num_nodes", len(targets)))
 
 	allGroupMembers := graph.NewNodeSet()
 
@@ -1729,7 +1731,7 @@ func FetchAllGroupMembers(ctx context.Context, db graph.Database, targets graph.
 		}
 	}
 
-	slog.InfoContext(ctx, fmt.Sprintf("Collected %d group members", len(allGroupMembers)))
+	slog.InfoContext(ctx, "Collected group members", slog.Int("num_group_members", len(allGroupMembers)))
 	return allGroupMembers, nil
 }
 
@@ -1890,34 +1892,6 @@ func FetchEnterpriseCAsRootCAForPathToDomainFull(tx graph.Transaction, domain *g
 	})
 }
 
-func DoesCertTemplateLinkToDomain(tx graph.Transaction, certTemplate, domainNode *graph.Node) (bool, error) {
-	if pathSet, err := FetchCertTemplatePathToDomain(tx, certTemplate, domainNode); err != nil {
-		return false, err
-	} else {
-		return pathSet.Len() > 0, nil
-	}
-}
-
-func FetchCertTemplatePathToDomain(tx graph.Transaction, certTemplate, domain *graph.Node) (graph.PathSet, error) {
-	var (
-		paths = graph.NewPathSet()
-	)
-
-	return paths, tx.Relationships().Filter(
-		query.And(
-			query.Equals(query.StartID(), certTemplate.ID),
-			query.KindIn(query.Relationship(), ad.PublishedTo, ad.IssuedSignedBy, ad.EnterpriseCAFor, ad.RootCAFor),
-			query.Equals(query.EndID(), domain.ID),
-		),
-	).FetchAllShortestPaths(func(cursor graph.Cursor[graph.Path]) error {
-		for path := range cursor.Chan() {
-			paths.AddPath(path)
-		}
-
-		return cursor.Error()
-	})
-}
-
 // fetchFirstDegreeNodes fetches all entities that are connected to the provided targetNode with a relationship kind that matches any of the provided relKinds
 func fetchFirstDegreeNodes(tx graph.Transaction, targetNode *graph.Node, relKinds ...graph.Kind) (graph.NodeSet, error) {
 	return ops.FetchStartNodes(tx.Relationships().Filter(
@@ -1929,17 +1903,45 @@ func fetchFirstDegreeNodes(tx graph.Transaction, targetNode *graph.Node, relKind
 	))
 }
 
+// fetchFirstDegreeNodesByRelKind fetches all entities connected to targetNode in a single database query,
+// then partitions the results by relationship kind. This avoids issuing separate queries per edge kind.
+func fetchFirstDegreeNodesByRelKind(tx graph.Transaction, targetNode *graph.Node, relKinds ...graph.Kind) (map[graph.Kind]graph.NodeSet, error) {
+	nodesByKind := make(map[graph.Kind]graph.NodeSet, len(relKinds))
+	for _, kind := range relKinds {
+		nodesByKind[kind] = graph.NewNodeSet()
+	}
+
+	err := ops.ForEachStartNode(tx.Relationships().Filter(
+		query.And(
+			query.Kind(query.Start(), ad.Entity),
+			query.KindIn(query.Relationship(), relKinds...),
+			query.Equals(query.EndID(), targetNode.ID),
+		),
+	), func(relationship *graph.Relationship, node *graph.Node) error {
+		if nodeSet, ok := nodesByKind[relationship.Kind]; ok {
+			nodeSet.Add(node)
+		}
+		return nil
+	})
+
+	return nodesByKind, err
+}
+
 func FetchAttackersForEscalations9and10(tx graph.Transaction, victimBitmap cardinality.Duplex[uint64], scenarioB bool) ([]graph.ID, error) {
 	if attackers, err := ops.FetchStartNodeIDs(tx.Relationships().Filterf(func() graph.Criteria {
 		criteria := query.And(
 			query.KindIn(query.Start(), ad.Group, ad.User, ad.Computer),
-			query.KindIn(query.Relationship(), ad.GenericAll, ad.GenericWrite, ad.Owns, ad.WriteOwner, ad.WriteDACL),
 			query.InIDs(query.EndID(), graph.DuplexToGraphIDs(victimBitmap)...),
 		)
 		if scenarioB {
-			return query.And(criteria, query.KindIn(query.End(), ad.Computer))
+			return query.And(criteria,
+				query.KindIn(query.End(), ad.Computer),
+				query.KindIn(query.Relationship(), ad.GenericAll, ad.GenericWrite, ad.Owns, ad.WriteOwner, ad.WriteDACL),
+			)
+		} else {
+			return query.And(criteria,
+				query.KindIn(query.Relationship(), ad.GenericAll, ad.GenericWrite, ad.Owns, ad.WriteOwner, ad.WriteDACL, ad.WritePublicInformation))
 		}
-		return criteria
 	})); err != nil {
 		return nil, err
 	} else {

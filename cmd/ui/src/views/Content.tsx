@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -19,18 +19,19 @@ import makeStyles from '@mui/styles/makeStyles';
 import {
     FileUploadDialog,
     GenericErrorBoundaryFallback,
-    Permission,
-    getExcludedIds,
     useExecuteOnFileDrag,
     useFileUploadDialogContext,
-    usePermissions,
+    useKeybindings,
+    useKeyboardShortcutsDialogContext,
+    useQuickUploadEnabled,
 } from 'bh-shared-ui';
 import React, { Suspense, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
+import KeyboardShortcutsDialog from 'src/components/KeyboardShortcutsDialog';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
-import { authExpiredSelector, fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
+import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { fetchAssetGroups } from 'src/ducks/global/actions';
 import { ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
@@ -47,11 +48,9 @@ const Content: React.FC = () => {
     const classes = useStyles();
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
-    const isAuthExpired = useAppSelector(authExpiredSelector);
     const { showFileIngestDialog, setShowFileIngestDialog } = useFileUploadDialogContext();
+    const { showKeyboardShortcutsDialog, setShowKeyboardShortcutsDialog } = useKeyboardShortcutsDialogContext();
     const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
-    const { checkPermission } = usePermissions();
-    const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST);
 
     useEffect(() => {
         if (isFullyAuthenticated) {
@@ -60,16 +59,26 @@ const Content: React.FC = () => {
         }
     }, [authState, isFullyAuthenticated, dispatch]);
 
-    const permitFileUploadModalLaunch =
-        !!authState.sessionToken && !!authState.user && !isAuthExpired && !getExcludedIds() && !!hasPermissionToUpload;
+    const isQuickUploadEnabled = useQuickUploadEnabled();
+    const permitFileUploadModalLaunch = isFullyAuthenticated && isQuickUploadEnabled;
+
     // Display ingest dialog when a processable file is dragged into the browser client
     useExecuteOnFileDrag(() => setShowFileIngestDialog(true), {
         condition: () => permitFileUploadModalLaunch,
         acceptedTypes: ['application/json', 'application/zip'],
     });
 
+    useKeybindings({
+        KeyH: () => {
+            if (isFullyAuthenticated) setShowKeyboardShortcutsDialog(!showKeyboardShortcutsDialog);
+        },
+        KeyU: () => {
+            if (isFullyAuthenticated) setShowFileIngestDialog(!showFileIngestDialog);
+        },
+    });
+
     return (
-        <Box className={classes.content}>
+        <Box component='main' className={classes.content}>
             <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
                 <Suspense
                     fallback={
@@ -92,11 +101,8 @@ const Content: React.FC = () => {
                                 <Route
                                     path={route.path}
                                     element={
-                                        // Note: We add a left padding value to account for pages that have nav bar, h-full is because when adding the div it collapsed the views
                                         <AuthenticatedRoute>
-                                            <div className={`h-full ${route.navigation && 'pl-nav-width'} `}>
-                                                <route.component />
-                                            </div>
+                                            <route.component />
                                         </AuthenticatedRoute>
                                     }
                                     key={route.path}
@@ -107,7 +113,16 @@ const Content: React.FC = () => {
                         })}
                     </Routes>
                     {isFullyAuthenticated && (
-                        <FileUploadDialog open={showFileIngestDialog} onClose={() => setShowFileIngestDialog(false)} />
+                        <>
+                            <KeyboardShortcutsDialog
+                                open={showKeyboardShortcutsDialog}
+                                onClose={() => setShowKeyboardShortcutsDialog(false)}
+                            />
+                            <FileUploadDialog
+                                open={showFileIngestDialog}
+                                onClose={() => setShowFileIngestDialog(false)}
+                            />
+                        </>
                     )}
                 </Suspense>
             </ErrorBoundary>

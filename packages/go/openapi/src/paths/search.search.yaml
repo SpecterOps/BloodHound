@@ -33,7 +33,7 @@ get:
         type: string
     - name: type
       description: |
-        Node type.
+        Node type. Currently only supports built-in types.
         Some AD examples: `Base`, `User`, `Computer`, `Group`, `Container`.
         Some Azure examples: `AZBase`, `AZApp`, `AZDevice`.
       in: query

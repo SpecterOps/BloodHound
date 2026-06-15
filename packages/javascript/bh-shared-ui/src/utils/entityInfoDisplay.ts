@@ -23,12 +23,14 @@ import { ZERO_VALUE_API_DATE } from '../constants';
 import {
     ActiveDirectoryKindProperties,
     ActiveDirectoryKindPropertiesToDisplay,
+    ActiveDirectoryNodeKind,
     AzureKindProperties,
     AzureKindPropertiesToDisplay,
+    AzureNodeKind,
     CommonKindProperties,
     CommonKindPropertiesToDisplay,
 } from '../graphSchema';
-import { MappedStringLiteral } from '../types';
+import { MappedStringLiteral, SelectedNode } from '../types';
 import { LuxonFormat } from './datetime';
 
 export const formatPotentiallyUnknownLabel = (propKey: string) => {
@@ -42,7 +44,8 @@ export const formatObjectInfoFields = (props: any): EntityField[] => {
     const propKeys = Object.keys(props || {});
 
     for (let i = 0; i < propKeys.length; i++) {
-        const value = props[propKeys[i]];
+        const key = propKeys[i];
+        const value = props[key];
         // Don't display empty fields or fields with zero date values
         if (
             value === undefined ||
@@ -52,13 +55,16 @@ export const formatObjectInfoFields = (props: any): EntityField[] => {
         )
             continue;
 
-        const { kind } = validateProperty(propKeys[i]);
+        // prevent rendering the zone property twice if it exists since there is explicit handling for it in EntityObjectInformation
+        if (key === 'zone') continue;
+
+        const { kind } = validateProperty(key);
 
         mappedFields.push({
             kind: kind,
-            label: `${formatPotentiallyUnknownLabel(propKeys[i])}:`,
+            label: `${formatPotentiallyUnknownLabel(key)}:`,
             value: value,
-            keyprop: propKeys[i],
+            keyprop: key,
         });
     }
 
@@ -184,6 +190,16 @@ export enum ADSpecificTimeProperties {
 export const NoEntitySelectedMessage = 'Select a node to view the associated information';
 export const NoEntitySelectedHeader = 'None Selected';
 
+export const getEntityName = (selectedEntity: SelectedNode | null | undefined) => {
+    if (!selectedEntity) return NoEntitySelectedHeader;
+
+    const { name } = selectedEntity;
+
+    if (!name) return 'Name not found';
+
+    return name;
+};
+
 export const getNodeByDatabaseIdCypher = (id: string): string => `MATCH (n) WHERE ID(n) = ${id} RETURN n LIMIT 1`;
 
 // Map containing all properties that should display as bitwise integers in the entity panel.
@@ -259,7 +275,16 @@ export const formatDateString = (value: string) => {
     return value;
 };
 
-export const DATE_FIELDS = ['lastseen', 'whencreated', 'lastlogontimestamp', 'lastlogon', 'pwdlastset'];
+export const DATE_FIELDS = [
+    'lastseen',
+    'whencreated',
+    'lastlogontimestamp',
+    'lastlogon',
+    'pwdlastset',
+    'lastsuccessfulsignindatetime',
+    'lastcollected',
+    'firstseen',
+];
 
 export const formatPrimitive = (
     value: string | number | boolean,
@@ -274,7 +299,7 @@ export const formatPrimitive = (
             return formatBoolean(value);
         }
         case 'string':
-            if (!keyprop || DATE_FIELDS.includes(keyprop)) {
+            if (keyprop && DATE_FIELDS.includes(keyprop)) {
                 return formatDateString(value);
             }
 
@@ -301,4 +326,11 @@ export const format = (field: EntityField): string | string[] => {
     } else {
         return formatPrimitive(value, kind, keyprop);
     }
+};
+
+// To do: Better way to do this ?
+export const getNodeSource = (kinds: string[]): string | undefined => {
+    if (kinds.includes(AzureNodeKind.Entity)) return 'Azure';
+    if (kinds.includes(ActiveDirectoryNodeKind.Entity)) return 'Active Directory';
+    return 'OpenGraph';
 };

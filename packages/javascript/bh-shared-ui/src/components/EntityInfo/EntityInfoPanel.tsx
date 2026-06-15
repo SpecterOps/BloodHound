@@ -13,11 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Box, Paper, SxProps, Typography } from '@mui/material';
-import React from 'react';
+import { faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Badge } from 'doodle-ui';
+import React, { HTMLProps } from 'react';
+import useRoleBasedFiltering from '../../hooks/useRoleBasedFiltering';
 import { SelectedNode } from '../../types';
-import { EntityInfoDataTableProps, NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../utils';
-import usePaneStyles from '../../views/Explore/InfoStyles/Pane';
+import { EntityInfoDataTableProps, NoEntitySelectedMessage, cn, getEntityName } from '../../utils';
 import { ObjectInfoPanelContextProvider } from '../../views/Explore/providers/ObjectInfoPanelProvider';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
@@ -27,29 +29,48 @@ export type EntityTables = {
     TableComponent: React.FC<EntityInfoDataTableProps>;
 }[];
 
-interface EntityInfoPanelProps {
+export interface EntityInfoPanelProps {
     DataTable: React.FC<EntityInfoDataTableProps>;
     selectedNode?: SelectedNode | null;
-    sx?: SxProps;
+    className?: HTMLProps<HTMLDivElement>['className'];
     additionalTables?: EntityTables;
     priorityTables?: EntityTables;
+    showPlaceholderMessage?: boolean;
+    showFilteringBanner?: boolean;
 }
 
 const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
     selectedNode,
-    sx,
+    className,
     additionalTables,
     priorityTables,
     DataTable,
+    showPlaceholderMessage = false,
+    showFilteringBanner = false,
 }) => {
-    const styles = usePaneStyles();
+    const isRoleBasedFiltering = useRoleBasedFiltering();
 
     return (
-        <Box sx={sx} className={styles.container} data-testid='explore_entity-information-panel'>
-            <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
-                <Header name={selectedNode?.name || NoEntitySelectedHeader} nodeType={selectedNode?.type} />
-            </Paper>
-            <Paper elevation={0} classes={{ root: styles.contentPaperRoot }}>
+        <div
+            className={cn(
+                'flex flex-col rounded-lg pointer-events-none overflow-y-hidden h-full min-w-[400px] w-[400px] max-w-[400px] gap-2',
+                className
+            )}
+            data-testid='explore_entity-information-panel'>
+            {showFilteringBanner && isRoleBasedFiltering && (
+                <Badge
+                    data-testid='explore_entity-information-panel-role-based-filtering-badge'
+                    variant='fill'
+                    className='px-2 py-1'
+                    color='primary'
+                    icon={<FontAwesomeIcon icon={faEyeSlash} className='ml-1 mr-3' />}
+                    label='Role-based access filtering applied'
+                />
+            )}
+            <div className='bg-neutral-2 pointer-events-auto rounded-lg shadow-outer-1'>
+                <Header name={getEntityName(selectedNode)} nodeType={selectedNode?.type} />
+            </div>
+            <div className='bg-neutral-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded-lg shadow-outer-1'>
                 {selectedNode ? (
                     <EntityInfoContent
                         DataTable={DataTable}
@@ -60,10 +81,14 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
                         additionalTables={additionalTables}
                     />
                 ) : (
-                    <Typography variant='body2'>{NoEntitySelectedMessage}</Typography>
+                    <p className='text-sm'>
+                        {showPlaceholderMessage
+                            ? 'Select an object to view the associated information'
+                            : NoEntitySelectedMessage}
+                    </p>
                 )}
-            </Paper>
-        </Box>
+            </div>
+        </div>
     );
 };
 

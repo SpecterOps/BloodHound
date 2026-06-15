@@ -48,8 +48,10 @@ func Roles() map[string]RoleTemplate {
 				permissions.APsGenerateReport,
 				permissions.AuthCreateToken,
 				permissions.AuthManageSelf,
+				permissions.AuthReadUsersMinimal,
 				permissions.GraphDBRead,
 				permissions.SavedQueriesRead,
+				permissions.OpenGraphRead,
 			},
 		},
 		RoleUploadOnly: {
@@ -63,17 +65,7 @@ func Roles() map[string]RoleTemplate {
 		RoleAuditor: {
 			Name:        RoleAuditor,
 			Description: "Can read data and audit logs",
-			Permissions: model.Permissions{
-				permissions.AppReadApplicationConfiguration,
-				permissions.APsGenerateReport,
-				permissions.AuthCreateToken,
-				permissions.AuditLogRead,
-				permissions.AuthManageSelf,
-				permissions.AuthReadUsers,
-				permissions.ClientsRead,
-				permissions.GraphDBRead,
-				permissions.SavedQueriesRead,
-			},
+			Permissions: append(permissions.ReadAll(), permissions.AuthCreateToken, permissions.AuthManageSelf),
 		},
 		RoleUser: {
 			Name:        RoleUser,
@@ -83,10 +75,12 @@ func Roles() map[string]RoleTemplate {
 				permissions.APsGenerateReport,
 				permissions.AuthCreateToken,
 				permissions.AuthManageSelf,
+				permissions.AuthReadUsersMinimal,
 				permissions.ClientsRead,
 				permissions.GraphDBRead,
 				permissions.SavedQueriesRead,
 				permissions.SavedQueriesWrite,
+				permissions.OpenGraphRead,
 			},
 		},
 		RolePowerUser: {
@@ -98,6 +92,7 @@ func Roles() map[string]RoleTemplate {
 				permissions.APsManageAPs,
 				permissions.AuthCreateToken,
 				permissions.AuthManageSelf,
+				permissions.AuthReadUsersMinimal,
 				permissions.ClientsManage,
 				permissions.ClientsRead,
 				permissions.ClientsTasking,
@@ -108,6 +103,7 @@ func Roles() map[string]RoleTemplate {
 				permissions.SavedQueriesRead,
 				permissions.SavedQueriesWrite,
 				permissions.GraphDBMutate,
+				permissions.OpenGraphRead,
 			},
 		},
 		RoleAdministrator: {

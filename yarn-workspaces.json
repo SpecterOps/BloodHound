@@ -3,6 +3,8 @@
   "workspaces": [
     "cmd/ui",
     "packages/javascript/bh-shared-ui",
-    "packages/javascript/js-client-library"
+    "packages/javascript/eslint-plugin-sx-props",
+    "packages/javascript/js-client-library",
+    "packages/javascript/doodle-ui"
   ]
 }

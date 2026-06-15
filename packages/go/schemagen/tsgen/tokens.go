@@ -119,7 +119,7 @@ func UnionGroupTokens() GroupTokens {
 func FunctionParameterGroupTokens() GroupTokens {
 	return GroupTokens{
 		Open:      literalOpenParentheses,
-		Close:     literalClosedParentheses,
+		Close:     literalClosedParentheses + literalColon,
 		Separator: literalComma,
 	}
 }

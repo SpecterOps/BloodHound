@@ -15,9 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faCheck, faCopy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { AnimationEvent, useState } from 'react';
+import { AnimationEvent, KeyboardEvent, MouseEvent, useState } from 'react';
+import { useAnnounce } from '../../providers';
 import { cn, copyToClipboard } from '../../utils';
-
+import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 type CopyToClipboardButtonProps = {
     onAnimationStart?: (e: AnimationEvent<HTMLDivElement>) => void;
     onAnimationEnd?: (e: AnimationEvent<HTMLDivElement>) => void;
@@ -26,7 +27,6 @@ type CopyToClipboardButtonProps = {
 };
 
 const DEFAULT_TRANSITION_DELAY = 'delay-300';
-
 export const CopyToClipboardButton = ({
     onAnimationEnd = () => {},
     onAnimationStart = () => {},
@@ -34,7 +34,9 @@ export const CopyToClipboardButton = ({
     value,
 }: CopyToClipboardButtonProps) => {
     const [displayCopyCheckmark, setDisplayCopyCheckmark] = useState(false);
-    const handleCopyToClipBoard: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    const announce = useAnnounce();
+
+    const handleCopyToClipBoard = <T extends KeyboardEvent<HTMLElement> | MouseEvent<HTMLElement>>(e: T) => {
         e.stopPropagation(); // prevents the click event bubbling up the DOM and triggering the row click handler
         if (typeof value === 'string') {
             copyToClipboard(value);
@@ -42,13 +44,16 @@ export const CopyToClipboardButton = ({
             copyToClipboard(value.join(', '));
         }
         setDisplayCopyCheckmark(true);
+        announce('Value copied to clipboard');
     };
 
     return (
         <>
             <div
                 role='button'
+                tabIndex={0}
                 onClick={handleCopyToClipBoard}
+                onKeyDown={adaptClickHandlerToKeyDown(handleCopyToClipBoard)}
                 onAnimationStart={(animationEvent) => {
                     const element = animationEvent.target as HTMLElement;
 
@@ -66,7 +71,7 @@ export const CopyToClipboardButton = ({
                     }
                 }}
                 className={cn(
-                    'cursor-pointer absolute top-1/2 left-2 -translate-x-1/2 -translate-y-1/2 opacity-0 pr-1 group-hover:opacity-100 transition-opacity ease-in',
+                    'cursor-pointer absolute top-1/2 left-2 -translate-x-1/2 -translate-y-1/2 opacity-0 pr-1 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity ease-in',
                     transitionDelay,
                     {
                         'animate-[null-animation_1s]': displayCopyCheckmark,
@@ -89,7 +94,13 @@ export const CopyToClipboardButton = ({
                     />
                 )}
             </div>
-            <span className={cn('group-hover:pl-5 transition-[padding-left] ease-in', transitionDelay)}>{value}</span>
+            <span
+                className={cn(
+                    'group-hover:pl-5 group-focus-within:pl-5 transition-[padding-left] ease-in',
+                    transitionDelay
+                )}>
+                {value}
+            </span>
         </>
     );
 };

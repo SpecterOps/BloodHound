@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -16,3 +16,5 @@
 
 /** Returns Object.entries with results retaining their types */
 export const typedEntries = <T extends object>(obj: T): [keyof T, T[keyof T]][] => Object.entries(obj) as any;
+
+export const noop = () => undefined;

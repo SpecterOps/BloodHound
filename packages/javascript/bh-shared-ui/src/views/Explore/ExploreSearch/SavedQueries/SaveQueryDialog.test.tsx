@@ -17,10 +17,23 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { mockKindsHandler } from '../../../../mocks/handlers/graphKinds';
 import { act, render, screen, waitFor } from '../../../../test-utils';
 import { mockCodemirrorLayoutMethods } from '../../../../utils/testHelpers';
-import { SavedQueriesProvider } from '../../providers';
+import { SavedQueriesContext, SavedQueriesProvider } from '../../providers';
 import SaveQueryDialog from './SaveQueryDialog';
+
+vi.mock('@neo4j-cypher/react-codemirror', async () => {
+    const { forwardRef } = await import('react');
+    return {
+        CypherEditor: forwardRef<HTMLDivElement, { value: string }>(({ value }, ref) => (
+            <div ref={ref} data-testid='cypher-editor'>
+                {value}
+            </div>
+        )),
+    };
+});
+
 const testUsers = [
     {
         principal_name: 'Ted Theodore Logan - user',
@@ -86,13 +99,7 @@ const handlers = [
             })
         );
     }),
-    rest.get('/api/v2/graphs/kinds', async (_req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {},
-            })
-        );
-    }),
+    mockKindsHandler(),
     rest.get('/api/v2/features', async (_, res, ctx) => {
         return res(
             ctx.json({
@@ -482,7 +489,7 @@ describe('SaveQueryDialog', () => {
     it('should render a SaveQueryDialog', () => {
         render(<SaveQueryDialogWithProvider />);
 
-        expect(screen.getByText(/save query/i)).toBeInTheDocument();
+        expect(screen.getAllByText(/save query/i)).toHaveLength(2); // card and dialog titles
         expect(screen.getByLabelText(/query name/i)).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
@@ -557,5 +564,48 @@ describe('SaveQueryDialog', () => {
         expect(nestedElement).toBeInTheDocument();
         const testTable = screen.getByRole('table');
         expect(testTable).toBeInTheDocument();
+    });
+
+    it('renders the selected query in the cypher editor when editing a query that differs from the active cypher search', () => {
+        const queryA = 'MATCH (a:User) RETURN a';
+        const queryB = 'MATCH (b:Group) RETURN b';
+
+        render(
+            <SavedQueriesContext.Provider
+                value={{
+                    selected: { query: queryB, id: 2 },
+                    selectedQuery: { id: 2, name: 'Query B', description: 'desc B', query: queryB },
+                    showSaveQueryDialog: true,
+                    saveAction: 'edit',
+                    setSelected: vi.fn(),
+                    setShowSaveQueryDialog: vi.fn(),
+                    setSaveAction: vi.fn(),
+                    runQuery: vi.fn(),
+                    editQuery: vi.fn(),
+                }}>
+                <SaveQueryDialog
+                    open
+                    onSave={testOnSave}
+                    onClose={testOnClose}
+                    error={testError}
+                    cypherSearchState={{
+                        cypherQuery: queryA,
+                        performSearch: vi.fn(),
+                        setCypherQuery: vi.fn(),
+                    }}
+                    sharedIds={[]}
+                    isPublic={false}
+                    saveAction='edit'
+                    saveUpdatePending={false}
+                    onUpdate={testOnUpdate}
+                    setSharedIds={testSetSharedIds}
+                    setIsPublic={testSetIsPublic}
+                />
+            </SavedQueriesContext.Provider>
+        );
+
+        const editor = screen.getByTestId('cypher-editor');
+        expect(editor).toHaveTextContent(queryB);
+        expect(editor).not.toHaveTextContent(queryA);
     });
 });

@@ -22,26 +22,21 @@ import (
 	"log/slog"
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 )
 
-func NewTenantEntityDetails(node *graph.Node) TenantDetails {
-	return TenantDetails{
-		Node: FromGraphNode(node),
-	}
-}
-
-func TenantEntityDetails(db graph.Database, objectID string, hydrateCounts bool) (TenantDetails, error) {
+func TenantEntityDetails(ctx context.Context, db graph.Database, primaryDisplayKinds graphschema.PrimaryDisplayKinds, objectID string, hydrateCounts bool) (TenantDetails, error) {
 	var details TenantDetails
 
-	return details, db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+	return details, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
 			return err
 		} else {
-			details = NewTenantEntityDetails(node)
+			details.Node = FromGraphNode(primaryDisplayKinds, node)
 			if hydrateCounts {
 				details, err = PopulateTenantEntityDetailsCounts(tx, node, details)
 			}
@@ -103,7 +98,7 @@ func FetchTenants(ctx context.Context, db graph.Database) (graph.NodeSet, error)
 
 // TenantRoles returns the NodeSet of roles for a given tenant that match one of the given role template IDs. If no role template ID is provided, then all of the tenant role nodes are returned in the NodeSet.
 func TenantRoles(tx graph.Transaction, tenant *graph.Node, roleTemplateIDs ...string) (graph.NodeSet, error) {
-	defer measure.Measure(slog.LevelInfo, "TenantRoles completed", slog.Int64("tenant_id", tenant.ID.Int64()))()
+	defer measure.MeasureWithThreshold(slog.LevelInfo, "TenantRoles completed", slog.Int64("tenant_id", tenant.ID.Int64()))()
 
 	if !IsTenantNode(tenant) {
 		return nil, fmt.Errorf("cannot fetch tenant roles - node %d must be of kind %s", tenant.ID, azure.Tenant)

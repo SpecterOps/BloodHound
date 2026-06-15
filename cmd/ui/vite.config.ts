@@ -16,8 +16,9 @@
 
 /// <reference types="vitest" />
 import react from '@vitejs/plugin-react';
+import fs from 'fs';
 import path from 'path';
-import { defineConfig, loadEnv, searchForWorkspaceRoot } from 'vite';
+import { defineConfig, loadEnv, Plugin, searchForWorkspaceRoot } from 'vite';
 import glsl from 'vite-plugin-glsl';
 
 // https://vitejs.dev/config/
@@ -25,7 +26,7 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
 
     return {
-        plugins: [react(), glsl()],
+        plugins: [react(), glsl(), excludeMockServiceWorker(env)],
         resolve: {
             alias: {
                 src: path.resolve(__dirname, './src'),
@@ -39,9 +40,11 @@ export default defineConfig(({ mode }) => {
                     'js-client-library',
                     'src'
                 ),
+                'doodle-ui': path.resolve(__dirname, '..', '..', 'packages', 'javascript', 'doodle-ui', 'src'),
+                'react-helmet-async': path.resolve(__dirname, '..', '..', 'node_modules', 'react-helmet-async'),
             },
             dedupe: [
-                '@bloodhoundenterprise/doodleui',
+                'doodle-ui',
                 '@emotion/react',
                 '@emotion/styled',
                 '@faker-js/faker',
@@ -61,6 +64,7 @@ export default defineConfig(({ mode }) => {
                 'react-error-boundary',
                 'react-hook-form',
                 'react-query',
+                'react-helmet-async',
                 'react-router-dom',
                 'tailwindcss',
             ],
@@ -94,9 +98,39 @@ export default defineConfig(({ mode }) => {
                 reportsDirectory: './coverage',
                 reporter: ['text-summary', 'json-summary'],
             },
+            reporters: [
+                'default',
+                [
+                    'allure-vitest/reporter',
+                    {
+                        resultsDir: '../../allure-results',
+                    },
+                ],
+            ],
         },
         build: {
             outDir: env.BUILD_PATH || './dist',
         },
     };
 });
+
+/**
+ * Exclude mockServiceWorker.js from production builds
+ * MSW service worker should only be available in development mode
+ */
+function excludeMockServiceWorker(env: ReturnType<typeof loadEnv>): Plugin {
+    return {
+        name: 'exclude-mock-service-worker',
+        apply: 'build', // Only apply during build (production)
+        closeBundle() {
+            // Remove mockServiceWorker.js from the output directory after build
+            const mockServiceWorkerPath = env.BUILD_PATH
+                ? path.resolve(env.BUILD_PATH, 'mockServiceWorker.js')
+                : path.resolve(__dirname, 'dist', 'mockServiceWorker.js');
+
+            if (fs.existsSync(mockServiceWorkerPath)) {
+                fs.unlinkSync(mockServiceWorkerPath);
+            }
+        },
+    };
+}

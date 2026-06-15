@@ -16,6 +16,47 @@
 
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
+
+get:
+  operationId: GetAnalysisRequest
+  summary: Gets analysis request information
+  description: Flags the API to request the information of an analysis request.
+  tags:
+    - Datapipe
+    - Community
+    - Enterprise
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              requested_by:
+                type: string 
+              request_type:
+                type: string
+              requested_at:
+                type: string
+                format: date-time
+              delete_all_graph:
+                type: boolean
+              delete_sourceless_graph:
+                type: boolean
+              delete_source_kinds:
+                type: array
+                items:
+                  type: string
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
+
 put:
   operationId: StartAnalysis
   summary: Start analysis
@@ -33,3 +74,33 @@ put:
       $ref: './../responses/forbidden.yaml'
     429:
       $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
+
+delete:
+  operationId: CancelAnalysisRequest
+  summary: Cancels an analysis request
+  description: Flags the API to request the cancellation of analyzing ingest data.
+  tags:
+    - Datapipe
+    - Community
+    - Enterprise
+  responses:
+    202:
+      $ref: './../responses/no-content.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    409:
+      description: Conflict. You cannot cancel an analysis request because a deletion request is pending
+      content:
+        application/json:
+          schema:
+            $ref: './../schemas/api.error-wrapper.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'

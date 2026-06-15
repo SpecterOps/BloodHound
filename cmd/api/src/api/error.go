@@ -27,6 +27,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 const (
@@ -45,7 +46,7 @@ const (
 	ErrorResponseDetailsFilterPredicateNotSupported                  = "the specified filter predicate is not supported for this column"
 	ErrorResponseDetailsForbidden                                    = "Forbidden"
 	ErrorResponseDetailsFromMalformed                                = "from parameter should be formatted as RFC3339 i.e 2021-04-21T07:20:50.52Z"
-	ErrorResponseDetailsIDMalformed                                  = "id is malformed."
+	ErrorResponseDetailsIDMalformed                                  = "id is malformed"
 	ErrorResponseDetailsInternalServerError                          = "an internal error has occurred that is preventing the service from servicing this request"
 	ErrorResponseDetailsInvalidCombination                           = "the combination of inputs is not allowed"
 	ErrorResponseDetailsLatestMalformed                              = "latest parameter has unexpected value"
@@ -72,9 +73,9 @@ const (
 	ErrorResponseUserDuplicateEmail                                  = "email must be unique"
 	ErrorResponseDetailsUniqueViolation                              = "unique constraint was violated"
 	ErrorResponseDetailsNotImplemented                               = "All good things to those who wait. Not implemented."
-	ErrorResponseUnknownUser                                         = "unknown user"
 	ErrorResponseAssetGroupTagExceededNameLimit                      = "asset group tag name is limited to 250 characters"
 	ErrorResponseAssetGroupTagDuplicateKindName                      = "asset group tag name must be unique"
+	ErrorResponseAssetGroupTagSelectorDuplicateName                  = "asset group tag selector name must be unique"
 	ErrorResponseAssetGroupTagInvalid                                = "valid tag_type is required"
 	ErrorResponseAssetGroupTagExceededTagLimit                       = "tag limit has been exceeded"
 	ErrorResponseAssetGroupTagInvalidFields                          = "position and require_certify are only allowed for tiers"
@@ -90,9 +91,14 @@ const (
 	ErrorResponseETACBadRequest                                      = "cannot specify environments when all_environments is true"
 	ErrorResponseETACInvalidRoles                                    = "administrators and power users may not have an ETAC list applied to them"
 	ErrorResponseAssetGroupTagInvalidTagName                         = "asset group tag name must contain only alphanumeric characters, spaces, and underscores"
+	ErrorResponseAnalysisRequestTypeDeletionPending                  = "cannot cancel an analysis request because a deletion request is pending"
 
 	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"
 	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"
+)
+
+var (
+	ErrorResponseUnknownUser = errors.New("unknown user")
 )
 
 const (
@@ -151,7 +157,7 @@ func HandleDatabaseError(request *http.Request, response http.ResponseWriter, er
 	} else if errors.Is(err, context.DeadlineExceeded) {
 		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusInternalServerError, ErrorResponseRequestTimeout, request), response)
 	} else {
-		slog.Error(fmt.Sprintf("Unexpected database error: %v", err))
+		slog.Error("Unexpected database error", attr.Error(err))
 		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusInternalServerError, ErrorResponseDetailsInternalServerError, request), response)
 	}
 }
@@ -162,7 +168,7 @@ func FormatDatabaseError(err error) error {
 	if errors.Is(err, database.ErrNotFound) {
 		return errors.New(ErrorResponseDetailsResourceNotFound)
 	} else {
-		slog.Error(fmt.Sprintf("Unexpected database error: %v", err))
+		slog.Error("Unexpected database error", attr.Error(err))
 		return errors.New(ErrorResponseDetailsInternalServerError)
 	}
 }

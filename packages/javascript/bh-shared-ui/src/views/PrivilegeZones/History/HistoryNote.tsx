@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Card, CardContent, CardFooter, CardTitle } from '@bloodhoundenterprise/doodleui';
+import { Card, CardContent, CardFooter, CardTitle } from 'doodle-ui';
 import { DateTime } from 'luxon';
 import { LuxonFormat } from '../../..';
 import { AppIcon } from '../../../components';
@@ -24,7 +24,7 @@ const HistoryNote = () => {
 
     return (
         <div>
-            <Card className='flex justify-center mb-4 p-4 h-14 w-96 min-w-80 max-w-[32rem]'>
+            <Card className='flex justify-center mb-4 p-4 h-14'>
                 <CardTitle className='flex items-center gap-2'>
                     <AppIcon.LinedPaper size={24} className='-mb-[3px]' />
                     Note
@@ -32,7 +32,7 @@ const HistoryNote = () => {
             </Card>
 
             {selected && (
-                <Card className='p-4 '>
+                <Card className='p-4'>
                     <CardContent>
                         <p className='text-xl'>{selected.note}</p>
                     </CardContent>

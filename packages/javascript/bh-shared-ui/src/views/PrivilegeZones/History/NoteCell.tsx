@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Tooltip } from '@bloodhoundenterprise/doodleui';
-import { SystemString } from 'js-client-library';
+import { Button, Tooltip } from 'doodle-ui';
+import { BloodHoundString } from 'js-client-library';
 import { AppIcon } from '../../../components/AppIcon';
 import { useHistoryTableContext } from './HistoryTableContext';
 import { HistoryItem } from './types';
@@ -25,19 +25,25 @@ export const NoteCell = ({ row }: { row: { original: HistoryItem } }) => {
     const { note, id, actor } = row.original;
 
     const noteIsActive = selected?.id === id;
+    const tip = !note ? 'No notes' : noteIsActive ? 'Hide note' : 'Show note';
 
     const handleClick = () => (noteIsActive ? clearSelected() : setSelected(row.original));
 
     return (
         <div className='w-full flex justify-center'>
-            {actor === SystemString ? (
-                <Tooltip tooltip={`No notes for ${SystemString} history`}>
+            {actor === BloodHoundString ? (
+                <Tooltip tooltip={`No notes for ${BloodHoundString} history`}>
                     <p>-</p>
                 </Tooltip>
             ) : (
-                <Tooltip tooltip={!note ? 'No notes' : noteIsActive ? 'Hide note' : 'Show note'}>
+                <Tooltip tooltip={tip}>
                     <span>
-                        <Button variant={'text'} className='disabled:opacity-25' onClick={handleClick} disabled={!note}>
+                        <Button
+                            aria-label={tip}
+                            variant='text'
+                            className='disabled:opacity-25'
+                            onClick={handleClick}
+                            disabled={!note}>
                             <AppIcon.LinedPaper size={24} className='-mb-[3px]' />
                         </Button>
                     </span>

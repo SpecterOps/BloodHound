@@ -21,8 +21,12 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"sort"
 
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
@@ -32,6 +36,8 @@ type Migration struct {
 	Version version.Version
 	Execute func(ctx context.Context, db graph.Database) error
 }
+
+type MigrationsByVersion = map[version.Version][]Migration
 
 func UpdateMigrationData(ctx context.Context, db graph.Database, target version.Version) error {
 	var node *graph.Node
@@ -84,16 +90,32 @@ func GetMigrationData(ctx context.Context, db graph.Database) (version.Version, 
 
 		return err
 	}); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Unable to fetch migration data from graph: %v", err))
+		slog.WarnContext(
+			ctx,
+			"Unable to fetch migration data from graph",
+			attr.Error(err),
+		)
 		return currentMigration, ErrNoMigrationData
 	} else if major, err := node.Properties.Get("Major").Int(); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Unable to get Major property from migration data node: %v", err))
+		slog.WarnContext(
+			ctx,
+			"Unable to get Major property from migration data node",
+			attr.Error(err),
+		)
 		return currentMigration, ErrNoMigrationData
 	} else if minor, err := node.Properties.Get("Minor").Int(); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("unable to get Minor property from migration data node: %v", err))
+		slog.WarnContext(
+			ctx,
+			"Unable to get Minor property from migration data node",
+			attr.Error(err),
+		)
 		return currentMigration, ErrNoMigrationData
 	} else if patch, err := node.Properties.Get("Patch").Int(); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("unable to get Patch property from migration data node: %v", err))
+		slog.WarnContext(
+			ctx,
+			"Unable to get Patch property from migration data node",
+			attr.Error(err),
+		)
 		return currentMigration, ErrNoMigrationData
 	} else {
 		currentMigration.Major = major
@@ -104,22 +126,57 @@ func GetMigrationData(ctx context.Context, db graph.Database) (version.Version, 
 	return currentMigration, nil
 }
 
+type GraphMigration interface {
+	Migrate(ctx context.Context) error
+	GetMigrationsByVersion() MigrationsByVersion
+	ExecuteStepwiseMigrations(ctx context.Context, migrationsByVersion MigrationsByVersion) error
+
+	executeMigrations(ctx context.Context, originalVersion version.Version, migrationsByVersion MigrationsByVersion) error
+}
+
+// schemalessNodeKindBackfillData is the narrow interface consumed by Version_930_Migration to read
+// display metadata from Postgres and write backfilled custom_node_kinds entries. It is intended to
+// be satisfied by database.Database
+type schemalessNodeKindBackfillData interface {
+	GetCustomNodeKinds(ctx context.Context, filters model.Filters) ([]model.CustomNodeKind, error)
+	GetGraphSchemaNodeKinds(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error)
+	CreateCustomNodeKinds(ctx context.Context, customNodeKinds model.CustomNodeKinds) (model.CustomNodeKinds, error)
+}
+
 type GraphMigrator struct {
-	db graph.Database
+	db                             graph.Database
+	schemalessNodeKindBackfillData schemalessNodeKindBackfillData
 }
 
-func NewGraphMigrator(db graph.Database) *GraphMigrator {
-	return &GraphMigrator{db: db}
+// Option configures optional dependencies on a GraphMigrator. Most migrations
+// only need a graph.Database; a small number need access to the relational
+// database (e.g. to read source_kinds). Use functional options to inject those
+// dependencies without forcing every caller to acknowledge them.
+type Option func(*GraphMigrator)
+
+// WithSchemalessKindBackfill wires a SchemalessNodeKindBackfillData provider into the migrator.
+// Migrations that backfill custom_node_kinds for orphaned schemaless ingest kinds will
+// short-circuit when this option is not supplied.
+func WithSchemalessKindBackfill(nodeKindData schemalessNodeKindBackfillData) Option {
+	return func(m *GraphMigrator) { m.schemalessNodeKindBackfillData = nodeKindData }
 }
 
-func (s *GraphMigrator) Migrate(ctx context.Context, schema graph.Schema) error {
+func NewGraphMigrator(db graph.Database, opts ...Option) *GraphMigrator {
+	migrator := &GraphMigrator{db: db}
+	for _, opt := range opts {
+		opt(migrator)
+	}
+	return migrator
+}
+
+func (s *GraphMigrator) Migrate(ctx context.Context) error {
 	// Assert the schema first
-	if err := s.db.AssertSchema(ctx, schema); err != nil {
+	if err := s.db.AssertSchema(ctx, graphschema.DefaultGraphSchema()); err != nil {
 		return err
 	}
 
 	// Perform stepwise migrations
-	if err := s.executeStepwiseMigrations(ctx); err != nil {
+	if err := s.ExecuteStepwiseMigrations(ctx, s.GetMigrationsByVersion()); err != nil {
 		return err
 	}
 
@@ -139,19 +196,42 @@ func CreateMigrationData(ctx context.Context, db graph.Database, currentVersion 
 	})
 }
 
-func (s *GraphMigrator) executeMigrations(ctx context.Context, originalVersion version.Version) error {
-	mostRecentVersion := originalVersion
+func (s *GraphMigrator) executeMigrations(ctx context.Context, originalVersion version.Version, migrationsByVersion MigrationsByVersion) error {
+	var (
+		mostRecentVersion = originalVersion
+		orderedVersions   []version.Version
+	)
 
-	for _, nextMigration := range Manifest {
-		if nextMigration.Version.GreaterThan(mostRecentVersion) {
-			slog.InfoContext(ctx, fmt.Sprintf("Graph migration version %s is greater than current version %s", nextMigration.Version, mostRecentVersion))
+	// Order the manifest versions to ensure ascending stepwise migrations
+	for v := range migrationsByVersion {
+		orderedVersions = append(orderedVersions, v)
+	}
+	sort.Slice(orderedVersions, func(i, j int) bool {
+		return orderedVersions[i].LessThan(orderedVersions[j])
+	})
 
-			if err := nextMigration.Execute(ctx, s.db); err != nil {
-				return fmt.Errorf("migration version %s failed: %w", nextMigration.Version.String(), err)
+	for _, nextVersion := range orderedVersions {
+		if nextVersion.GreaterThan(mostRecentVersion) {
+			versionMigrations := migrationsByVersion[nextVersion]
+			for _, nextMigration := range versionMigrations {
+				slog.InfoContext(
+					ctx,
+					"Graph migration version is greater than current version",
+					slog.String("migration_version", nextMigration.Version.String()),
+					slog.String("most_recent_version", mostRecentVersion.String()),
+				)
+
+				if err := nextMigration.Execute(ctx, s.db); err != nil {
+					return fmt.Errorf("migration version %s failed: %w", nextMigration.Version.String(), err)
+				}
 			}
 
-			slog.InfoContext(ctx, fmt.Sprintf("Graph migration version %s executed successfully", nextMigration.Version))
-			mostRecentVersion = nextMigration.Version
+			slog.InfoContext(
+				ctx,
+				"Graph migration executed successfully",
+				slog.String("next_version", nextVersion.String()),
+			)
+			mostRecentVersion = nextVersion
 		}
 	}
 
@@ -166,17 +246,29 @@ func (s *GraphMigrator) executeMigrations(ctx context.Context, originalVersion v
 	return nil
 }
 
-func (s *GraphMigrator) executeStepwiseMigrations(ctx context.Context) error {
+func (s *GraphMigrator) GetMigrationsByVersion() MigrationsByVersion {
+	migrationsByVersion := make(MigrationsByVersion)
+	for _, migration := range GetManifest(s.schemalessNodeKindBackfillData) {
+		migrationsByVersion[migration.Version] = append(migrationsByVersion[migration.Version], migration)
+	}
+	return migrationsByVersion
+}
+
+func (s *GraphMigrator) ExecuteStepwiseMigrations(ctx context.Context, migrationsByVersion MigrationsByVersion) error {
 	if currentMigration, err := GetMigrationData(ctx, s.db); err != nil {
 		if errors.Is(err, ErrNoMigrationData) {
 			currentVersion := version.GetVersion()
 
-			slog.InfoContext(ctx, fmt.Sprintf("This is a new graph database. Creating a migration entry for GraphDB version %s", currentVersion))
+			slog.InfoContext(
+				ctx,
+				"This is a new graph database. Creating a migration entry for GraphDB version",
+				slog.String("current_version", currentVersion.String()),
+			)
 			return CreateMigrationData(ctx, s.db, currentMigration)
 		} else {
 			return fmt.Errorf("unable to get graph db migration data: %w", err)
 		}
 	} else {
-		return s.executeMigrations(ctx, currentMigration)
+		return s.executeMigrations(ctx, currentMigration, migrationsByVersion)
 	}
 }

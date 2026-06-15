@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useTheme } from '@mui/material';
 import { SigmaContainer } from '@react-sigma/core';
 import '@react-sigma/core/lib/react-sigma.min.css';
+import { useTheme } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { forwardRef, RefAttributes } from 'react';
@@ -72,7 +72,7 @@ const SigmaChart = forwardRef<RefAttributes<HTMLDivElement>, SigmaChartProps>(fu
                     left: 0,
                     height: '100%',
                     width: '100%',
-                    background: theme.palette.neutral.primary,
+                    background: theme.neutral.primary,
                 }}
                 graph={graph}
                 settings={{
@@ -92,7 +92,7 @@ const SigmaChart = forwardRef<RefAttributes<HTMLDivElement>, SigmaChartProps>(fu
                     edgeLabelSize: 12,
                     labelSize: 12,
                     labelFont: 'Roboto',
-                    labelColor: { color: theme.palette.color.primary },
+                    labelColor: { color: theme.contrast },
                     labelRenderer: drawLabel,
                     maxCameraRatio: MAX_CAMERA_RATIO,
                     minCameraRatio: MIN_CAMERA_RATIO,

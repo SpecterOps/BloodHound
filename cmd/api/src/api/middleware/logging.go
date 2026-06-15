@@ -17,7 +17,6 @@
 package middleware
 
 import (
-	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -28,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/headers"
 )
 
@@ -37,7 +37,12 @@ func PanicHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		defer func() {
 			if recovery := recover(); recovery != nil {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("[panic recovery] %s - [stack trace] %s", recovery, debug.Stack()))
+				slog.ErrorContext(
+					request.Context(),
+					"Panic recovery",
+					slog.Any("recovery", recovery),
+					slog.String("stack_trace", string(debug.Stack())),
+				)
 			}
 		}()
 
@@ -114,7 +119,7 @@ func setSignedRequestFields(request *http.Request, logAttrs *[]slog.Attr) {
 
 // LoggingMiddleware is a middleware func that outputs a log for each request-response lifecycle. It includes timestamped
 // information organized into fields suitable for searching or parsing.
-func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http.Handler {
+func LoggingMiddleware(idResolver auth.IdentityResolver, bypassLimitsParam bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			var (
@@ -133,24 +138,39 @@ func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http
 			)
 
 			// assign a deadline, but only if a valid timeout has been supplied via the prefer header
-			timeout, err := RequestWaitDuration(request)
+			timeout, err := RequestWaitDuration(request, bypassLimitsParam)
 			if err != nil {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("Error parsing prefer header for timeout: %v", err))
+				slog.ErrorContext(
+					request.Context(),
+					"Error parsing prefer header for timeout",
+					attr.Error(err),
+				)
 			} else if timeout > 0 {
 				deadline = time.Now().Add(timeout * time.Second)
 			}
-
 			// Wrap the request body so that we can tell how much was read
 			request.Body = loggedRequestBody
 
 			// Defer the log statement and then serve the request
 			defer func() {
-				slog.LogAttrs(request.Context(), slog.LevelInfo, fmt.Sprintf("%s %s", request.Method, request.URL.RequestURI()), logAttrs...)
+				logAttrs = append(logAttrs,
+					slog.String("method", request.Method),
+					slog.String("request_uri", request.URL.RequestURI()),
+				)
+				slog.LogAttrs(
+					request.Context(),
+					slog.LevelInfo,
+					"HTTP request",
+					logAttrs...,
+				)
 
 				if !deadline.IsZero() && time.Now().After(deadline) {
 					slog.WarnContext(
 						request.Context(),
-						fmt.Sprintf("%s %s took longer than the configured timeout of %0.f seconds", request.Method, request.URL.RequestURI(), timeout.Seconds()),
+						"Took longer than the configured timeout",
+						slog.String("method", request.Method),
+						slog.String("request_uri", request.URL.RequestURI()),
+						slog.Float64("configured_timeout_seconds", timeout.Seconds()),
 					)
 				}
 			}()

@@ -14,26 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Badge, Card, Skeleton } from '@bloodhoundenterprise/doodleui';
+import { Badge, Card, Skeleton } from 'doodle-ui';
 import { FC } from 'react';
-import { useQuery } from 'react-query';
 import { NodeIcon } from '../../../components';
-import { useEnvironmentIdList } from '../../../hooks';
-import { apiClient } from '../../../utils';
+import { useObjectCounts } from '../../../hooks/useAssetGroupTags/useObjectCounts';
 
-const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
-    const environments = useEnvironmentIdList(['privilege-zones']);
-    const objectsCountQuery = useQuery({
-        queryKey: ['asset-group-tags-count', tagId, ...environments],
-        queryFn: ({ signal }) =>
-            apiClient.getAssetGroupTagMembersCount(tagId, environments, { signal }).then((res) => res.data.data),
-    });
+const ObjectCountPanel: FC = () => {
+    const objectsCountQuery = useObjectCounts();
 
     if (objectsCountQuery.isLoading) {
         return (
-            <Card
-                className='flex flex-col px-6 py-6 select-none max-w-[32rem]'
-                data-testid='privilege-zones_object-counts'>
+            <Card tabIndex={0} className='flex flex-col p-6 select-none' data-testid='privilege-zones_object-counts'>
                 <div className='flex justify-between items-center'>
                     <p>Total Count</p>
                     <Skeleton className='h-8 w-16' />
@@ -48,9 +39,7 @@ const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
         );
     } else if (objectsCountQuery.isError) {
         return (
-            <Card
-                className='flex flex-col px-6 py-6 select-none max-w-[32rem]'
-                data-testid='privilege-zones_object-counts'>
+            <Card tabIndex={0} className='flex flex-col p-6 select-none' data-testid='privilege-zones_object-counts'>
                 <div className='flex justify-between items-center'>
                     <p>Total Count</p>
                     <Badge label={'0'} />
@@ -64,7 +53,8 @@ const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
     } else if (objectsCountQuery.isSuccess && objectsCountQuery.data) {
         return (
             <Card
-                className='flex flex-col px-6 py-6 select-none overflow-y-auto max-w-[32rem]'
+                tabIndex={0}
+                className='flex flex-col p-6 select-none overflow-y-auto'
                 data-testid='privilege-zones_object-counts'>
                 <div className='flex justify-between items-center'>
                     <p>Total Count</p>

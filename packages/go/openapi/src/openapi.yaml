@@ -180,6 +180,7 @@ x-tagGroups:
       - Data Quality
       - Datapipe
       - Cypher
+      - OpenGraph (Experimental)
   - name: Enterprise Only
     tags:
       - EULA
@@ -193,7 +194,7 @@ x-tagGroups:
       - Attack Paths
       - Risk Posture
       - Meta Entities
-
+      - Alerts
 paths:
   ##
   # Community + Enterprise Endpoints
@@ -300,7 +301,7 @@ paths:
   # api info
   /api/version:
     $ref: './paths/api-info.version.yaml'
-  /api/v2/spec/openapi.yaml:
+  /api/v2/spec:
     $ref: './paths/api-info.spec.yaml'
 
   # search
@@ -350,6 +351,8 @@ paths:
     $ref: './paths/asset-isolation.asset-group-tags.id.members.counts.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members:
     $ref: './paths/asset-isolation.asset-group-tags.id.selectors.id.members.yaml'
+  /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members/counts:
+    $ref: './paths/asset-isolation.asset-group-tags.id.selectors.id.members.counts.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}/selectors:
     $ref: './paths/asset-isolation.asset-group-tags.id.selectors.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}:
@@ -378,6 +381,14 @@ paths:
     $ref: './paths/graph.graphs.relay-targets.yaml'
   /api/v2/graphs/acl-inheritance:
     $ref: './paths/graph.graphs.acl-inheritance.yaml'
+
+  # opengraph extensions
+  /api/v2/extensions:
+    $ref: './paths/opengraph.extensions.yaml'
+  /api/v2/extensions/{extension_id}:
+    $ref: './paths/opengraph.extension-delete.yaml'
+  /api/v2/extensions-edges:
+    $ref: './paths/graph-schema.edge-kinds.yaml'
 
   # cypher
   /api/v2/saved-queries:
@@ -685,25 +696,25 @@ paths:
   /api/v2/jobs/{job_id}/log:
     $ref: './paths/jobs.jobs.id.log.yaml'
 
-  #  # tasks (deprecated)
-  #  /api/v2/tasks/available:
-  #    $ref: './paths/tasks/tasks.available.yaml'
-  #  /api/v2/tasks/finished:
-  #    $ref: './paths/tasks/tasks.finished.yaml'
-  #  /api/v2/tasks/end:
-  #    $ref: './paths/tasks/tasks.end.yaml'
-  #  /api/v2/tasks/start:
-  #    $ref: './paths/tasks/tasks.start.yaml'
-  #  /api/v2/tasks:
-  #    $ref: './paths/tasks/tasks.yaml'
-  #  /api/v2/tasks/{task_id}:
-  #    $ref: './paths/tasks/tasks.id.yaml'
-  #  /api/v2/tasks/{task_id}/cancel:
-  #    $ref: './paths/tasks/tasks.id.cancel.yaml'
-  #  /api/v2/tasks/{task_id}/log:
-  #    $ref: './paths/tasks/tasks.id.log.yaml'
-  #  /api/v2/tasks/current:
-  #    $ref: './paths/tasks/tasks.current.yaml'
+#  tasks (deprecated)
+  /api/v2/tasks/available:
+    $ref: './paths/tasks.tasks.available.yaml'
+  /api/v2/tasks/finished:
+    $ref: './paths/tasks.tasks.finished.yaml'
+  /api/v2/tasks:
+    $ref: './paths/tasks.tasks.yaml'
+  /api/v2/tasks/current:
+    $ref: './paths/tasks.tasks.current.yaml'
+  /api/v2/tasks/start:
+    $ref: './paths/tasks.tasks.start.yaml'
+  /api/v2/tasks/end:
+    $ref: './paths/tasks.tasks.end.yaml'
+  /api/v2/tasks/{task_id}:
+    $ref: './paths/tasks.tasks.id.yaml'
+  /api/v2/tasks/{task_id}/cancel:
+    $ref: './paths/tasks.tasks.id.cancel.yaml'
+  /api/v2/tasks/{task_id}/log:
+    $ref: './paths/tasks.tasks.id.log.yaml'
 
   # events
   /api/v2/events:
@@ -722,6 +733,8 @@ paths:
     $ref: './paths/attack-paths.attack-paths.yaml'
   /api/v2/attack-paths/details:
     $ref: './paths/attack-paths.attack-paths-details.yaml'
+  # /api/v2/attack-paths/findings:
+  #   $ref: './paths/attack-paths.attack-paths-findings.yaml'
   /api/v2/domains/{domain_id}/available-types:
     $ref: './paths/attack-paths.domains.id.available-types.yaml'
   /api/v2/domains/{domain_id}/details:
@@ -740,6 +753,34 @@ paths:
   # meta entity
   /api/v2/meta/{object_id}:
     $ref: './paths/meta-entity.meta.id.yaml'
+
+  # alerts - WIP and subject to change as development proceeds
+#  /api/v2/alert-webhooks:
+#    $ref: './paths/alerts.alert-webhooks.yaml'
+#  /api/v2/alert-webhooks/{alert_webhook_id}:
+#    $ref: './paths/alerts.alert-webhooks.id.yaml'
+#  /api/v2/alert-webhooks/{alert_webhook_id}/rotate-secret:
+#    $ref: './paths/alerts.alert-webhooks.id.rotate-secret.yaml'
+#  /api/v2/alert-webhooks/{alert_webhook_id}/test:
+#    $ref: './paths/alerts.alert-webhooks.id.test.yaml'
+#  /api/v2/alert-events:
+#    $ref: './paths/alerts.alert-events.yaml'
+#  /api/v2/alert-events/{alert_event_id}:
+#    $ref: './paths/alerts.alert-events.id.yaml'
+#  /api/v2/alert-event-types:
+#    $ref: './paths/alerts.alert-event-types.yaml'
+#  /api/v2/alerts:
+#    $ref: './paths/alerts.alerts.yaml'
+#  /api/v2/alerts/{alert_id}:
+#    $ref: './paths/alerts.alerts.id.yaml'
+#  /api/v2/alert-attempts:
+#    $ref: './paths/alerts.alert-attempts.yaml'
+#  /api/v2/alert-attempts/retry:
+#    $ref: './paths/alerts.alert-attempts.retry.yaml'
+
+  # graph schema findings
+  #/api/v2/extensions-findings:
+  #  $ref: './paths/opengraph.extensions.findings.yaml'
 
 components:
   ##

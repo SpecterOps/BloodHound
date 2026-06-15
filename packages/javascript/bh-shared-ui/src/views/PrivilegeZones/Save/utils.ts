@@ -14,14 +14,37 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { isAxiosError } from 'js-client-library';
+import { isAxiosError, SeedTypeObjectId, SeedTypes, SeedTypesMap } from 'js-client-library';
 import { OptionsObject } from 'notistack';
+
+export const getErrorMessage = (apiMessage: string, action: string, entity: string, ruleType?: SeedTypes) => {
+    // RULE_TYPE_LABEL - "Object ID" or "Cypher"
+    const RULE_TYPE_LABEL = ruleType ? SeedTypesMap[ruleType] : 'Cypher';
+    const UPDATE_OR_CREATE_ACTION = action === 'creating' || action === 'updating';
+
+    switch (apiMessage) {
+        case 'name must be unique':
+            return `Error ${action} ${entity}: ${entity} names must be unique. Please provide a unique name for your new ${entity} and try again.`;
+
+        case 'seeds are required': {
+            if (ruleType === SeedTypeObjectId && UPDATE_OR_CREATE_ACTION) {
+                return `To save a ${entity} using ${RULE_TYPE_LABEL}, add at least one object using the field below.`;
+            }
+
+            return `To save a ${entity} created using ${RULE_TYPE_LABEL}, the ${RULE_TYPE_LABEL} must be run first. Click "Run" to continue`;
+        }
+
+        default:
+            return `An unexpected error occurred while ${action} the ${entity}. Message: ${apiMessage}. Please try again.`;
+    }
+};
 
 export const handleError = (
     error: unknown,
     action: 'creating' | 'updating' | 'deleting',
-    entity: 'selector' | 'zone' | 'label',
-    addNotification: (notification: string, key?: string, options?: OptionsObject) => void
+    entity: 'rule' | 'zone' | 'label',
+    addNotification: (notification: string, key?: string, options?: OptionsObject) => void,
+    optionalParams?: { ruleType?: SeedTypes }
 ) => {
     console.error(error);
 
@@ -34,8 +57,10 @@ export const handleError = (
     if (isAxiosError(error)) {
         const errorsList = error.response?.data?.errors ?? [];
         const apiMessage = errorsList.length ? errorsList[0].message : error.response?.statusText || undefined;
-        if (apiMessage)
-            message = `An unexpected error occurred while ${action} the ${entity}. Message: ${apiMessage}. Please try again.`;
+
+        if (apiMessage) {
+            message = getErrorMessage(apiMessage, action, entity, optionalParams?.ruleType);
+        }
     }
 
     addNotification(message, key, options);

@@ -17,17 +17,18 @@ package graphify
 
 import (
 	"fmt"
+	"iter"
 	"log/slog"
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/errorlist"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/dawgs/query"
 	"github.com/specterops/dawgs/util"
 )
 
@@ -39,26 +40,29 @@ import (
 // Errors encountered during resolution or update are collected and returned as a single combined error.
 func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relationships []ein.IngestibleRelationship) error {
 	var (
-		errs = util.NewErrorCollector()
+		errs                                 = errorlist.NewBuilder()
+		resolvedRelationships, resolveErrors = endpoint.ResolveAll(ingestCtx.Ctx, ingestCtx.EndpointResolver, relationships)
 	)
 
-	updates, err := resolveRelationships(ingestCtx, relationships, sourceKind)
-	if err != nil {
-		errs.Add(err)
+	if resolveErrors != nil {
+		errs.Add(resolveErrors)
 	}
 
-	for _, update := range updates {
+	for update := range ingestibleRelationshipsToUpdates(ingestCtx, resolvedRelationships, sourceKind) {
 		if err := maybeSubmitRelationshipUpdate(ingestCtx, update); err != nil {
 			errs.Add(err)
 		}
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
 
 // maybeSubmitRelationshipUpdate decides whether to upsert a node directly, or route it
 // through the changelog for deduplication and caching.
 func maybeSubmitRelationshipUpdate(ingestCtx *IngestContext, update graph.RelationshipUpdate) error {
+	// Track that we processed this relationship (regardless of whether it's written)
+	ingestCtx.Stats.RelationshipsProcessed.Add(1)
+
 	if !ingestCtx.HasChangelog() {
 		// No changelog: always update via dawgs batch
 		return ingestCtx.Batch.UpdateRelationshipBy(update)
@@ -189,199 +193,42 @@ func IngestSessions(batch *IngestContext, sessions []ein.IngestibleSession) erro
 	return errs.Combined()
 }
 
-type endpointKey struct {
-	Name string
-	Kind string
-}
-
-func addKey(endpoint ein.IngestibleEndpoint, cache map[endpointKey]struct{}) {
-	if endpoint.MatchBy != ein.MatchByName {
-		return
-	}
-	key := endpointKey{
-		Name: strings.ToUpper(endpoint.Value),
-	}
-	if endpoint.Kind != nil {
-		key.Kind = endpoint.Kind.String()
-	}
-	cache[key] = struct{}{}
-}
-
-// resolveAllEndpointsByName attempts to resolve all unique source and target
-// endpoints from a list of ingestible relationships into their corresponding object IDs.
-//
-// Each endpoint is identified by a Name, (optional) Kind pair. A single batch query is
-// used to resolve all endpoints in one round trip.
-//
-// If multiple nodes match a given Name, Kind pair with conflicting object IDs,
-// the match is considered ambiguous and excluded from the result. This can happen because there are no
-// uniqueness guarantees on a node's `Name` property.
-//
-// Returns a map of resolved object IDs. If no matches are found or the input is empty, an empty map is returned.
-func resolveAllEndpointsByName(batch BatchUpdater, rels []ein.IngestibleRelationship) (map[endpointKey]string, error) {
-	// seen deduplicates Name:Kind pairs from the input batch to ensure that each Name:Kind pairs is resolved once.
-	seen := map[endpointKey]struct{}{}
-
-	if len(rels) == 0 {
-		return map[endpointKey]string{}, nil
-	}
-
-	for _, rel := range rels {
-		addKey(rel.Source, seen)
-		addKey(rel.Target, seen)
-	}
-	// if nothing to filter, return early
-	if len(seen) == 0 {
-		return map[endpointKey]string{}, nil
-	}
-
-	var (
-		filters     = make([]graph.Criteria, 0, len(seen))
-		buildFilter = func(key endpointKey) graph.Criteria {
-			var criteria []graph.Criteria
-
-			criteria = append(criteria, query.Equals(query.NodeProperty(common.Name.String()), key.Name))
-			if key.Kind != "" {
-				criteria = append(criteria, query.Kind(query.Node(), graph.StringKind(key.Kind)))
-			}
-			return query.And(criteria...)
-		}
-	)
-
-	// aggregate all Name:Kind pairs in 1 DAWGs query for 1 round trip
-	for key := range seen {
-		filters = append(filters, buildFilter(key))
-	}
-
-	var (
-		resolved  = map[endpointKey]string{}
-		ambiguous = map[endpointKey]bool{}
-	)
-
-	if err := batch.Nodes().Filter(query.Or(filters...)).Fetch(
-		func(cursor graph.Cursor[*graph.Node]) error {
-
-			for node := range cursor.Chan() {
-				nameVal, _ := node.Properties.Get(common.Name.String()).String()
-				objectID, err := node.Properties.Get(string(common.ObjectID)).String()
-				if err != nil || objectID == "" {
-					slog.Warn("Matched node missing objectid",
-						slog.String("name", nameVal),
-						slog.Any("kinds", node.Kinds))
-					continue
-				}
-
-				// edge case: resolve an empty key to match endpoints that provide no Kind filter
-				node.Kinds = append(node.Kinds, graph.EmptyKind)
-
-				// resolve all names found to objectids,
-				// record ambiguous matches (when more than one match is found, we cannot disambiguate the requested node and must skip the update)
-				for _, kind := range node.Kinds {
-					key := endpointKey{Name: strings.ToUpper(nameVal), Kind: kind.String()}
-					if existingID, exists := resolved[key]; exists && existingID != objectID {
-						ambiguous[key] = true
-					} else {
-						resolved[key] = objectID
-					}
-				}
-			}
-
-			return nil
-		},
-	); err != nil {
-		return nil, err
-	}
-
-	// remove ambiguous matches
-	for key := range ambiguous {
-		delete(resolved, key)
-	}
-
-	return resolved, nil
-}
-
-// resolveRelationships transforms a list of ingestible relationships into a
-// slice of graph.RelationshipUpdate objects, suitable for ingestion into the
-// graph database.
-//
-// The function resolves all source and target endpoints to their corresponding
-// object IDs if MatchByName is set on an endpoint. Relationships with unresolved
-// or ambiguous endpoints are skipped and logged with a warning.
-//
-// The identityKind parameter determines the identity kind used for both start
-// and end nodes if provided. eg. ad.Base and az.Base are used for *hound collections, and generic ingest has no base kind.
-//
-// Each resolved relationship is stamped with the current UTC timestamp as the "last seen" property.
-//
-// Returns a slice of valid relationship updates or an error if resolution fails.
-func resolveRelationships(batch *IngestContext, rels []ein.IngestibleRelationship, sourceKind graph.Kind) ([]graph.RelationshipUpdate, error) {
-	if cache, err := resolveAllEndpointsByName(batch.Batch, rels); err != nil {
-		return nil, err
-	} else {
-		var (
-			updates []graph.RelationshipUpdate
-			errs    = errorlist.NewBuilder()
-		)
-
+// ingestibleRelationshipsToUpdates transforms a list of ingestible relationships into
+// graph.RelationshipUpdate objects as an iterator.
+func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.IngestibleRelationship, sourceKind graph.Kind) iter.Seq[graph.RelationshipUpdate] {
+	return func(yield func(graph.RelationshipUpdate) bool) {
 		for _, rel := range rels {
-			srcID, srcOK := resolveEndpointID(rel.Source, cache)
-			targetID, targetOK := resolveEndpointID(rel.Target, cache)
-
-			if !srcOK || !targetOK {
-				slog.Warn("Skipping unresolved relationship",
-					slog.String("source", rel.Source.Value),
-					slog.String("target", rel.Target.Value),
-					slog.Bool("resolved_source", srcOK),
-					slog.Bool("resolved_target", targetOK))
-				errs.Add(
-					fmt.Errorf("skipping invalid relationship. unable to resolve endpoints. source: %s, target: %s", rel.Source.Value, rel.Target.Value),
-				)
-				continue
-			}
-
 			rel.RelProps[common.LastSeen.String()] = batch.IngestTime
 
-			startKinds := MergeNodeKinds(sourceKind, rel.Source.Kind)
-			endKinds := MergeNodeKinds(sourceKind, rel.Target.Kind)
+			var (
+				startKinds = MergeNodeKinds(sourceKind, rel.Source.Kind)
+				endKinds   = MergeNodeKinds(sourceKind, rel.Target.Kind)
 
-			update := graph.RelationshipUpdate{
-				Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-					common.ObjectID: srcID,
-					common.LastSeen: batch.IngestTime,
-				}), startKinds...),
-				StartIdentityProperties: []string{common.ObjectID.String()},
-				StartIdentityKind:       sourceKind,
-				End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-					common.ObjectID: targetID,
-					common.LastSeen: batch.IngestTime,
-				}), endKinds...),
-				EndIdentityKind:       sourceKind,
-				EndIdentityProperties: []string{common.ObjectID.String()},
-				Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
+				startObjID = strings.ToUpper(rel.Source.Value)
+				endObjID   = strings.ToUpper(rel.Target.Value)
+
+				update = graph.RelationshipUpdate{
+					Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+						common.ObjectID: startObjID,
+						common.LastSeen: batch.IngestTime,
+					}), startKinds...),
+					StartIdentityProperties: []string{common.ObjectID.String()},
+					StartIdentityKind:       sourceKind,
+					End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+						common.ObjectID: endObjID,
+						common.LastSeen: batch.IngestTime,
+					}), endKinds...),
+					EndIdentityKind:       sourceKind,
+					EndIdentityProperties: []string{common.ObjectID.String()},
+					Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
+				}
+			)
+
+			if !yield(update) {
+				break
 			}
-
-			updates = append(updates, update)
 		}
-
-		return updates, errs.Build()
 	}
-}
-
-func resolveEndpointID(endpoint ein.IngestibleEndpoint, cache map[endpointKey]string) (string, bool) {
-	if endpoint.MatchBy == ein.MatchByName {
-		key := endpointKey{
-			Name: strings.ToUpper(endpoint.Value),
-			Kind: "",
-		}
-		if endpoint.Kind != nil {
-			key.Kind = endpoint.Kind.String()
-		}
-		id, ok := cache[key]
-		return id, ok
-	}
-
-	// Fallback to raw value if matching by ID
-	return endpoint.Value, endpoint.Value != ""
 }
 
 // MergeNodeKinds combines a source kind with any additional kinds,

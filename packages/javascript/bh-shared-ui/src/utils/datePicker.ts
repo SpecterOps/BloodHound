@@ -17,7 +17,10 @@ export enum CustomRangeError {
     INVALID_DATE = 'Must be a valid date in yyyy-mm-dd format.',
     INVALID_RANGE_START = 'Start date must be before end date.',
     INVALID_RANGE_END = 'End date must be after start date.',
+    FUTURE_END_TIME = 'End time must be before current time.',
 }
 
+export const START_TIME = 'start-time' as const;
+export const END_TIME = 'end-time' as const;
 export const START_DATE = 'start-date' as const;
 export const END_DATE = 'end-date' as const;

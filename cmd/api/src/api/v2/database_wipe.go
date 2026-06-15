@@ -29,12 +29,14 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/dawgs/graph"
 )
 
 type DatabaseWipe struct {
-	DeleteCollectedGraphData bool  `json:"deleteCollectedGraphData"`
-	DeleteSourceKinds        []int `json:"deleteSourceKinds"` // an id of 0 represents "sourceless" data
+	DeleteCollectedGraphData bool     `json:"deleteCollectedGraphData"`
+	DeleteSourceKinds        []int    `json:"deleteSourceKinds"` // an id of 0 represents "sourceless" data
+	DeleteRelationships      []string `json:"deleteRelationships"`
 
 	DeleteFileIngestHistory   bool  `json:"deleteFileIngestHistory"`
 	DeleteDataQualityHistory  bool  `json:"deleteDataQualityHistory"`
@@ -63,7 +65,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	}
 
 	// return `BadRequest` if request is empty
-	isEmptyRequest := !payload.DeleteCollectedGraphData && !payload.DeleteDataQualityHistory && !payload.DeleteFileIngestHistory && len(payload.DeleteAssetGroupSelectors) == 0 && len(payload.DeleteSourceKinds) == 0
+	isEmptyRequest := !payload.DeleteCollectedGraphData && !payload.DeleteDataQualityHistory && !payload.DeleteFileIngestHistory && len(payload.DeleteRelationships) == 0 && len(payload.DeleteAssetGroupSelectors) == 0 && len(payload.DeleteSourceKinds) == 0
 	if isEmptyRequest {
 		api.WriteErrorResponse(
 			request.Context(),
@@ -73,11 +75,11 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		return
 	}
 
-	isMixedDeleteRequest := payload.DeleteCollectedGraphData && len(payload.DeleteSourceKinds) > 0
+	isMixedDeleteRequest := payload.DeleteCollectedGraphData && (len(payload.DeleteSourceKinds) > 0 || len(payload.DeleteRelationships) > 0)
 	if isMixedDeleteRequest {
 		api.WriteErrorResponse(
 			request.Context(),
-			api.BuildErrorResponse(http.StatusBadRequest, "request may only specify either deleteCollectedGraphData or deleteSourceKinds, not both", request),
+			api.BuildErrorResponse(http.StatusBadRequest, "request may not specify deleteCollectedGraphData with deleteSourceKinds or deleteRelationships", request),
 			response,
 		)
 		return
@@ -108,7 +110,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		return
 	}
 
-	deleteGraph := payload.DeleteCollectedGraphData || len(payload.DeleteSourceKinds) > 0
+	deleteGraph := payload.DeleteCollectedGraphData || len(payload.DeleteSourceKinds) > 0 || len(payload.DeleteRelationships) > 0
 	if deleteGraph {
 		if clearGraphDataFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureClearGraphData); err != nil {
 			api.WriteErrorResponse(
@@ -127,7 +129,10 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		} else {
 			var userId string
 			if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-				slog.WarnContext(request.Context(), "Encountered request analysis for unknown user, this shouldn't happen")
+				slog.WarnContext(
+					request.Context(),
+					"Encountered request analysis for unknown user, this shouldn't happen",
+				)
 				userId = "unknown-user-database-wipe"
 			} else {
 				userId = user.ID.String()
@@ -162,7 +167,10 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	if kickoffAnalysis {
 		var userId string
 		if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-			slog.WarnContext(request.Context(), "Encountered request analysis for unknown user, this shouldn't happen")
+			slog.WarnContext(
+				request.Context(),
+				"Encountered request analysis for unknown user, this shouldn't happen",
+			)
 			userId = "unknown-user-database-wipe"
 		} else {
 			userId = user.ID.String()
@@ -205,7 +213,11 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 func (s Resources) deleteHighValueSelectors(ctx context.Context, auditEntry *model.AuditEntry, assetGroupIDs []int) (failure bool) {
 
 	if err := s.DB.DeleteAssetGroupSelectorsForAssetGroups(ctx, assetGroupIDs); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", "there was an error deleting asset group selectors ", err.Error()))
+		slog.ErrorContext(
+			ctx,
+			"Error deleting asset group selectors",
+			attr.Error(err),
+		)
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "high value selectors")
 		return true
 	} else {
@@ -217,7 +229,11 @@ func (s Resources) deleteHighValueSelectors(ctx context.Context, auditEntry *mod
 
 func (s Resources) deleteFileIngestHistory(ctx context.Context, auditEntry *model.AuditEntry) (failure bool) {
 	if err := s.DB.DeleteAllIngestJobs(ctx); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", "there was an error deleting file ingest history", err.Error()))
+		slog.ErrorContext(
+			ctx,
+			"Error deleting file ingest history",
+			attr.Error(err),
+		)
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "file ingest history")
 		return true
 	} else {
@@ -228,7 +244,11 @@ func (s Resources) deleteFileIngestHistory(ctx context.Context, auditEntry *mode
 
 func (s Resources) deleteDataQualityHistory(ctx context.Context, auditEntry *model.AuditEntry) (failure bool) {
 	if err := s.DB.DeleteAllDataQuality(ctx); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", "there was an error deleting data quality history", err.Error()))
+		slog.ErrorContext(
+			ctx,
+			"Error deleting data quality history",
+			attr.Error(err),
+		)
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "data quality history")
 		return true
 	} else {
@@ -251,7 +271,11 @@ func (s Resources) handleAuditLogForDatabaseWipe(ctx context.Context, auditEntry
 	}
 
 	if err := s.DB.AppendAuditLog(ctx, *auditEntry); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", "error writing to audit log", err.Error()))
+		slog.ErrorContext(
+			ctx,
+			"Error writing to audit log",
+			attr.Error(err),
+		)
 	}
 }
 
@@ -279,7 +303,7 @@ func (s Resources) BuildDeleteRequest(ctx context.Context, userID string, payloa
 			found := false
 			for _, sk := range sourceKinds {
 				if sk.ID == id {
-					requestedKinds = append(requestedKinds, sk.Name)
+					requestedKinds = append(requestedKinds, sk.ToKind())
 					found = true
 					break
 				}
@@ -309,6 +333,10 @@ func (s Resources) BuildDeleteRequest(ctx context.Context, userID string, payloa
 
 		// All kinds are valid
 		deleteRequest.DeleteSourceKinds = requestedKinds.Strings()
+	}
+
+	if len(payload.DeleteRelationships) > 0 {
+		deleteRequest.DeleteRelationships = payload.DeleteRelationships
 	}
 
 	return deleteRequest, nil

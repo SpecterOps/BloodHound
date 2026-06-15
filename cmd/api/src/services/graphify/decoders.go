@@ -20,10 +20,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"io"
 	"log/slog"
 	"time"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/errorlist"
 	"github.com/specterops/dawgs/graph"
@@ -48,7 +50,11 @@ func decodeBasicData[T any](batch *IngestContext, decoder *json.Decoder, convers
 		// This variable needs to be initialized here, otherwise the marshaller will cache the map in the struct
 		var decodeTarget T
 		if err := decoder.Decode(&decodeTarget); err != nil {
-			slog.Error(fmt.Sprintf("Error decoding %T object: %v", decodeTarget, err))
+			slog.Error(
+				"Error decoding object",
+				slog.String("decode_target", fmt.Sprintf("%T", decodeTarget)),
+				attr.Error(err),
+			)
 			if errors.Is(err, io.EOF) {
 				break
 			}
@@ -88,7 +94,11 @@ func DecodeGenericData[T any](batch *IngestContext, decoder *json.Decoder, sourc
 		// This variable needs to be initialized here, otherwise the marshaller will cache the map in the struct
 		var decodeTarget T
 		if err := decoder.Decode(&decodeTarget); err != nil {
-			slog.Error(fmt.Sprintf("Error decoding %T object: %v", decodeTarget, err))
+			slog.Error(
+				"Error decoding object",
+				slog.String("decode_target", fmt.Sprintf("%T", decodeTarget)),
+				attr.Error(err),
+			)
 			if errors.Is(err, io.EOF) {
 				break
 			}
@@ -130,7 +140,10 @@ func decodeGroupData(batch *IngestContext, decoder *json.Decoder) error {
 	for decoder.More() {
 		var group ein.Group
 		if err := decoder.Decode(&group); err != nil {
-			slog.Error(fmt.Sprintf("Error decoding group object: %v", err))
+			slog.Error(
+				"Error decoding group object",
+				attr.Error(err),
+			)
 			if errors.Is(err, io.EOF) {
 				break
 			}
@@ -168,7 +181,10 @@ func decodeSessionData(batch *IngestContext, decoder *json.Decoder) error {
 	for decoder.More() {
 		var session ein.Session
 		if err := decoder.Decode(&session); err != nil {
-			slog.Error(fmt.Sprintf("Error decoding session object: %v", err))
+			slog.Error(
+				"Error decoding session object",
+				attr.Error(err),
+			)
 			if errors.Is(err, io.EOF) {
 				break
 			}
@@ -205,7 +221,10 @@ func decodeAzureData(batch *IngestContext, decoder *json.Decoder) error {
 	for decoder.More() {
 		var data AzureBase
 		if err := decoder.Decode(&data); err != nil {
-			slog.Error(fmt.Sprintf("Error decoding azure object: %v", err))
+			slog.Error(
+				"Error decoding azure object",
+				attr.Error(err),
+			)
 			if errors.Is(err, io.EOF) {
 				break
 			}

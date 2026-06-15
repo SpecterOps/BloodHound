@@ -54,7 +54,12 @@ jobs:
     env:
       DOCKER_CONTENT_TRUST_SERVER: ${{ inputs.docker_content_trust_server }}
     steps:
-      - uses: docker/login-action@v3
+      - name: Set up Docker 27.3.1 (has docker trust)
+        uses: docker/setup-docker-action@e43656e248c0bd0647d3f5c195d116aacf6fcaf4 # ratchet:docker/setup-docker-action@v4
+        with:
+          version: 27.3.1
+
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # ratchet:docker/login-action@v3
         name: Authenticate with DockerHub Registry
         with:
           registry: docker.io
@@ -106,7 +111,12 @@ jobs:
       DOCKER_CONTENT_TRUST: 1
       DOCKER_CONTENT_TRUST_SERVER: ${{ inputs.docker_content_trust_server }}
     steps:
-      - uses: docker/login-action@v3
+      - name: Set up Docker 27.3.1 (has docker trust)
+        uses: docker/setup-docker-action@e43656e248c0bd0647d3f5c195d116aacf6fcaf4 # ratchet:docker/setup-docker-action@v4
+        with:
+          version: 27.3.1
+
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # ratchet:docker/login-action@v3
         name: Authenticate with DockerHub Registry
         with:
           registry: docker.io

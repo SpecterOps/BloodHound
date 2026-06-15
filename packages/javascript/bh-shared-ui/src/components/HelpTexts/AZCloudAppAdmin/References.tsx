@@ -14,12 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link, Typography } from '@mui/material';
+import { Link } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 
 const References: FC = () => {
     return (
         <Typography variant='body2'>
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/permissions-reference#cloud-application-administrator'>
+                Microsoft Entra built-in roles: Cloud Application Administrator
+            </Link>
+            <br />
             <Link
                 target='_blank'
                 rel='noopener noreferrer'

@@ -399,7 +399,7 @@ func TestResources_UpdateSavedQuery_InvalidID(t *testing.T) {
 	responseBodyWithDefaultTimestamp, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, response.Code)
-	assert.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`, responseBodyWithDefaultTimestamp)
+	assert.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_UpdateSavedQuery_GetSavedQueryError(t *testing.T) {
@@ -950,7 +950,7 @@ func TestResources_DeleteSavedQuery_IDMalformed(t *testing.T) {
 	responseBodyWithDefaultTimestamp, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, response.Code)
-	assert.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`, responseBodyWithDefaultTimestamp)
+	assert.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_DeleteSavedQuery_DBError(t *testing.T) {
@@ -1401,7 +1401,7 @@ func TestResources_ExportSavedQuery(t *testing.T) {
 			},
 			expect: expected{
 				responseCode:  http.StatusBadRequest,
-				responseError: "Code: 400 - errors: id is malformed.",
+				responseError: "Code: 400 - errors: id is malformed",
 			},
 		},
 		{
@@ -2431,7 +2431,7 @@ func TestResources_GetSavedQuery(t *testing.T) {
 			},
 			expect: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   `{"errors":[{"context":"","message":"id is malformed."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"id is malformed"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},

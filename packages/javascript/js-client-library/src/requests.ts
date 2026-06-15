@@ -20,6 +20,7 @@ import {
     AssetGroupTagSelectorAutoCertifyType,
     AssetGroupTagSelectorSeed,
     AssetGroupTagType,
+    AuthenticationMethod,
     CertificationManual,
     CertificationRevoked,
     SeedExpansionMethod,
@@ -94,6 +95,9 @@ export interface CreateSharpHoundClientRequest {
     name: string;
     events?: any[];
     type: 'sharphound';
+    auth_type?: AuthenticationMethod;
+    issuer_address?: string;
+    issuer_address_override?: string;
 }
 
 export interface CreateAzureHoundClientRequest {
@@ -102,12 +106,25 @@ export interface CreateAzureHoundClientRequest {
     type: 'azurehound';
 }
 
+export interface CreateOpenHoundClientRequest {
+    name: string;
+    events?: any[];
+    type: 'openhound';
+}
+
 export interface UpdateSharpHoundClientRequest {
     domain_controller: string;
     name: string;
+    auth_type?: AuthenticationMethod;
+    issuer_address?: string;
+    issuer_address_override?: string;
 }
 
 export interface UpdateAzureHoundClientRequest {
+    name: string;
+}
+
+export interface UpdateOpenHoundClientRequest {
     name: string;
 }
 
@@ -158,6 +175,11 @@ export interface CreateAzureHoundEventRequest {
     rrule: string;
 }
 
+export interface CreateOpenHoundEventRequest {
+    client_id: string;
+    rrule: string;
+}
+
 export interface UpdateSharpHoundEventRequest {
     client_id: string;
     rrule: string;
@@ -173,6 +195,11 @@ export interface UpdateSharpHoundEventRequest {
 }
 
 export interface UpdateAzureHoundEventRequest {
+    client_id: string;
+    rrule: string;
+}
+
+export interface UpdateOpenHoundEventRequest {
     client_id: string;
     rrule: string;
 }
@@ -240,23 +267,31 @@ export interface ClearDatabaseRequest {
     deleteDataQualityHistory: boolean;
     deleteFileIngestHistory: boolean;
     deleteSourceKinds: number[];
+    deleteRelationships: string[];
+}
+
+export interface EnvironmentRequest {
+    environment_id?: string;
 }
 
 export interface UpdateUserRequest {
-    firstName: string;
-    lastName: string;
-    emailAddress: string;
+    first_name: string;
+    last_name: string;
+    email_address: string;
     principal: string;
     roles: number[];
-    SSOProviderId?: number;
+    sso_provider_id?: number;
     is_disabled?: boolean;
+    all_environments?: boolean;
+    environment_targeted_access_control?: {
+        environments?: EnvironmentRequest[] | null;
+    };
     /** @deprecated: this is left to maintain backwards compatability, please use SSOProviderId instead */
     SAMLProviderId?: string;
 }
-
 export interface CreateUserRequest extends Omit<UpdateUserRequest, 'is_disabled'> {
-    password?: string;
-    needsPasswordReset?: boolean;
+    secret?: string;
+    needs_password_reset?: boolean;
 }
 
 export type UpdateConfigurationRequest = ConfigurationPayload;

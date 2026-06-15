@@ -182,7 +182,7 @@ describe('Tag Form', () => {
 
         expect(await screen.findByText('Create new Zone')).toBeInTheDocument();
 
-        const nameInput = screen.getByLabelText('Name');
+        const nameInput = screen.getByLabelText('Zone Information');
         expect(nameInput).toBeInTheDocument();
         expect(nameInput).toHaveValue('');
 
@@ -200,7 +200,7 @@ describe('Tag Form', () => {
         // The delete button should not render when creating a new selector because it doesn't exist yet
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Define Selector/ })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Define Rule/ })).toBeInTheDocument();
         expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
     });
 
@@ -220,7 +220,7 @@ describe('Tag Form', () => {
 
         expect(await screen.findByText('Create new Label')).toBeInTheDocument();
 
-        const nameInput = screen.getByLabelText('Name');
+        const nameInput = screen.getByLabelText('Label Information');
         expect(nameInput).toBeInTheDocument();
         expect(nameInput).toHaveValue('');
 
@@ -237,7 +237,7 @@ describe('Tag Form', () => {
         // The delete button should not render when creating a new selector because it doesn't exist yet
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Define Selector/ })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Define Rule/ })).toBeInTheDocument();
         expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
     });
 
@@ -255,9 +255,11 @@ describe('Tag Form', () => {
             { route: editHighestPrivilegeZonePath }
         );
 
-        expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText('Edit Zone Details')).toBeInTheDocument();
+        });
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Zone Information');
         expect(nameInput).toBeInTheDocument();
         await waitFor(() => {
             expect(nameInput).toHaveValue('Tier Zero');
@@ -299,7 +301,7 @@ describe('Tag Form', () => {
             expect(screen.getByText('Edit Label Details')).toBeInTheDocument();
         });
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Label Information');
         expect(nameInput).toBeInTheDocument();
         await waitFor(() => {
             expect(nameInput).toHaveValue('Owned');
@@ -337,7 +339,9 @@ describe('Tag Form', () => {
             { route: editOtherZonePath }
         );
 
-        expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText('Edit Zone Details')).toBeInTheDocument();
+        });
 
         expect(await screen.findByLabelText(/Apply Custom Glyph/)).toBeInTheDocument();
         expect(await screen.findAllByText('lightbulb')).toHaveLength(2);
@@ -369,7 +373,9 @@ describe('Tag Form', () => {
             { route: editHighestPrivilegeZonePath }
         );
 
-        expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText('Edit Zone Details')).toBeInTheDocument();
+        });
         expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
     });
 
@@ -384,7 +390,9 @@ describe('Tag Form', () => {
             { route: editHighestPrivilegeZonePath }
         );
 
-        expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText('Edit Zone Details')).toBeInTheDocument();
+        });
         expect(await screen.findByText(/Enable Analysis/i)).toBeInTheDocument();
     });
 
@@ -407,7 +415,7 @@ describe('Tag Form', () => {
         vi.mocked(useLocation).mockReturnValue({ pathname: createNewLabelPath } as Location);
         render(<TagForm />, { route: createNewLabelPath });
 
-        await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
+        await user.click(await screen.findByRole('button', { name: /Define Rule/ }));
 
         await waitFor(() => {
             expect(screen.getByText('Please provide a name for the Label')).toBeInTheDocument();
@@ -419,12 +427,12 @@ describe('Tag Form', () => {
         vi.mocked(useLocation).mockReturnValue({ pathname: createNewLabelPath } as Location);
         render(<TagForm />, { route: createNewLabelPath });
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Label Information');
 
         await user.click(nameInput);
         await user.paste('f'.repeat(251));
 
-        await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
+        await user.click(await screen.findByRole('button', { name: /Define Rule/ }));
 
         await waitFor(() => {
             expect(
@@ -444,12 +452,12 @@ describe('Tag Form', () => {
             { route: createNewZonePath }
         );
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Zone Information');
 
         await user.click(nameInput);
         await user.paste('foo');
 
-        await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
+        await user.click(await screen.findByRole('button', { name: /Define Rule/ }));
 
         expect(screen.queryByText('Please provide a name for the zone')).not.toBeInTheDocument();
     });
@@ -465,12 +473,12 @@ describe('Tag Form', () => {
             { route: createNewZonePath }
         );
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Zone Information');
 
         await user.click(nameInput);
         await user.paste('foo');
 
-        await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
+        await user.click(await screen.findByRole('button', { name: /Define Rule/ }));
 
         expect(screen.queryByText('Please provide a name for the zone')).not.toBeInTheDocument();
 
@@ -491,12 +499,12 @@ describe('Tag Form', () => {
             { route: createNewZonePath }
         );
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Zone Information');
 
         await user.click(nameInput);
         await user.paste('foo');
 
-        await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
+        await user.click(await screen.findByRole('button', { name: /Define Rule/ }));
 
         await waitFor(() => {
             expect(mockNavigate).toBeCalled();
@@ -505,6 +513,7 @@ describe('Tag Form', () => {
 
     it('handles creating a new label', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: undefined });
+        vi.mocked(useLocation).mockReturnValue({ pathname: createNewLabelPath } as Location);
 
         render(
             <Routes>
@@ -514,12 +523,12 @@ describe('Tag Form', () => {
             { route: createNewLabelPath }
         );
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Label Information');
 
         await user.click(nameInput);
         await user.paste('foo');
 
-        await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
+        await user.click(await screen.findByRole('button', { name: /Define Rule/ }));
 
         await waitFor(() => {
             expect(mockNavigate).toBeCalled();
@@ -528,6 +537,7 @@ describe('Tag Form', () => {
 
     it('only sends dirty fields in the request when updating', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
+        vi.mocked(useLocation).mockReturnValue({ pathname: editHighestPrivilegeZonePath } as Location);
         const updateAGTSpy = vi.spyOn(apiClient, 'updateAssetGroupTag');
 
         const queryClient = setUpQueryClient([{ key: privilegeZonesKeys.tagDetail('1'), data: testTierZero }]);
@@ -540,7 +550,7 @@ describe('Tag Form', () => {
             { route: editHighestPrivilegeZonePath, queryClient }
         );
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Zone Information');
         expect(nameInput).toBeInTheDocument();
         expect(nameInput).toHaveValue('Tier Zero');
 
@@ -559,10 +569,13 @@ describe('Tag Form', () => {
 
     it('disables the confirm button until user types required text', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '3' });
+        vi.mocked(useLocation).mockReturnValue({ pathname: deletionTestsPath } as Location);
 
         render(<TagForm />);
 
-        const deleteButton = await screen.findByTestId('privilege-zones_save_tag-form_delete-button');
+        await screen.findByLabelText('Label Information');
+
+        const deleteButton = screen.getByTestId('privilege-zones_save_tag-form_delete-button');
 
         await act(async () => {
             fireEvent.click(deleteButton);
@@ -588,10 +601,13 @@ describe('Tag Form', () => {
 
     it('opens and closes the dialog with the cancel button', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '3' });
+        vi.mocked(useLocation).mockReturnValue({ pathname: deletionTestsPath } as Location);
 
         render(<TagForm />);
 
-        const deleteButton = await screen.findByTestId('privilege-zones_save_tag-form_delete-button');
+        await screen.findByLabelText('Label Information');
+
+        const deleteButton = screen.getByTestId('privilege-zones_save_tag-form_delete-button');
 
         await act(async () => {
             fireEvent.click(deleteButton);
@@ -614,7 +630,7 @@ describe('Tag Form', () => {
 
     it('open and closes dialog with confirm button after user inputs required text', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '3' });
-        vi.mocked(useLocation).mockReturnValue({ pathname: editExistingLabelPath } as Location);
+        vi.mocked(useLocation).mockReturnValue({ pathname: deletionTestsPath } as Location);
         server.use(
             rest.delete('/api/v2/asset-group-tags/:tagId', async (_, res, ctx) => {
                 return res(ctx.status(200));
@@ -628,7 +644,9 @@ describe('Tag Form', () => {
             { route: deletionTestsPath }
         );
 
-        const deleteButton = await screen.findByRole('button', { name: /Delete Label/i });
+        await screen.findByLabelText('Label Information');
+
+        const deleteButton = screen.getByRole('button', { name: /Delete Label/i });
         await act(async () => {
             fireEvent.click(deleteButton);
         });

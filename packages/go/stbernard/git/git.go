@@ -80,7 +80,7 @@ func ListSubmodulePaths(cwd string, env environment.Environment) ([]string, erro
 
 // CheckClean checks if the git repository is clean and returns status as a bool. Codes other than exit 1 are returned as an error
 func CheckClean(cwd string, env environment.Environment) (bool, error) {
-	slog.Info(fmt.Sprintf("Checking repository clean for %s", cwd))
+	slog.Info("Checking repository clean", slog.String("cwd", cwd))
 
 	// We need to run git status first to ensure we don't hit a cache issue
 	gitStatusPlan := cmdrunner.ExecutionPlan{
@@ -93,24 +93,40 @@ func CheckClean(cwd string, env environment.Environment) (bool, error) {
 		return false, fmt.Errorf("git status: %w", err)
 	}
 
+	statusPorcelainPlan := cmdrunner.ExecutionPlan{
+		Command: "git",
+		Args:    []string{"status", "--porcelain=v1", "--untracked-files=all"},
+		Path:    cwd,
+		Env:     env.Slice(),
+	}
+	statusResult, err := cmdrunner.Run(context.TODO(), statusPorcelainPlan)
+	if err != nil {
+		return false, fmt.Errorf("git status --porcelain=v1 --untracked-files=all: %w", err)
+	}
+
 	diffIndexPlan := cmdrunner.ExecutionPlan{
 		Command:        "git",
-		Args:           []string{"diff-index", "--quiet", "HEAD", "--"},
+		Args:           []string{"--no-pager", "diff"},
 		Path:           cwd,
 		Env:            env.Slice(),
 		SuppressErrors: true,
 	}
-	result, err := cmdrunner.Run(context.TODO(), diffIndexPlan)
+	diffResult, err := cmdrunner.Run(context.TODO(), diffIndexPlan)
 	if err != nil {
-		// Failure was due to dirty workspace
-		if errors.Is(err, cmdrunner.ErrCmdExecutionFailed) && result.ReturnCode == 1 {
-			return false, nil
-		} else {
-			return false, fmt.Errorf("git diff-index: %w", err)
-		}
+		return false, fmt.Errorf("git diff: %w", err)
 	}
 
-	slog.Info(fmt.Sprintf("Finished checking repository clean for %s", cwd))
+	if len(statusResult.StandardOutput.Bytes()) > 0 {
+		slog.Info("Repository is dirty")
+		if len(diffResult.StandardOutput.Bytes()) > 0 {
+			fmt.Fprint(os.Stdout, diffResult.StandardOutput.String())
+		} else {
+			fmt.Fprint(os.Stdout, statusResult.StandardOutput.String())
+		}
+		return false, nil
+	}
+
+	slog.Info("Finished checking repository clean", slog.String("cwd", cwd))
 
 	return true, nil
 }
@@ -205,13 +221,13 @@ func getAllVersionTags(cwd string, env environment.Environment) ([]string, error
 		cmd.Stderr = os.Stderr
 	}
 
-	slog.Info(fmt.Sprintf("Listing tags for %v", cwd))
+	slog.Info("Listing tags", slog.String("cwd", cwd))
 
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("git tag --list v*: %w", err)
 	}
 
-	slog.Info(fmt.Sprintf("Finished listing tags for %v", cwd))
+	slog.Info("Finished listing tags", slog.String("cwd", cwd))
 
 	return strings.Split(output.String(), "\n"), nil
 }

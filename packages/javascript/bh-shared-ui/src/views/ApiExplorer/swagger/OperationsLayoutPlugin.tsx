@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Skeleton, Typography, useTheme } from '@mui/material';
+import { Box, Skeleton } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { PageWithTitle } from '../../../components';
 import DocumentationLinks from '../../../components/DocumentationLinks';
 
@@ -33,7 +34,6 @@ type Props = {
 };
 
 function CustomLayout(props: Props) {
-    const theme = useTheme();
     const { getComponent, specSelectors } = props;
     const VersionPragmaFilter = getComponent('VersionPragmaFilter', true);
     const FilterContainer = getComponent('FilterContainer', true);
@@ -52,13 +52,15 @@ function CustomLayout(props: Props) {
             data-testid='api-explorer'
             className='api-explorer'
             pageDescription={
-                <Typography variant='body2' paragraph>
+                <Typography variant='body2'>
                     Review and understand the API endpoints available that power BloodHound. To learn how to use the
-                    API, see {DocumentationLinks.apiUsageLink}.
+                    API, see {DocumentationLinks.apiUsageLink}. <br /> <br /> <b>*[EXPERIMENTAL]</b> – Endpoints labeled
+                    as "Experimental" are under active development, such as for Early Access functionality. Breaking
+                    changes may occur until the experimental flag is removed.
                 </Typography>
             }>
             {!isReady() ? (
-                <Box display='grid' gap={theme.spacing(4)}>
+                <Box display='grid' gap={'2rem'}>
                     <Box>
                         <Typography variant='h1'>
                             <Skeleton />
@@ -72,7 +74,7 @@ function CustomLayout(props: Props) {
                     </Box>
                 </Box>
             ) : (
-                <Box className='swagger-ui' display='grid' gap={theme.spacing(4)}>
+                <Box className='swagger-ui' display='grid' gap={'0rem'}>
                     <SvgAssets />
                     <VersionPragmaFilter isSwagger2={isSwagger2} isOAS3={isOAS3} alsoShow={<Errors />}>
                         <Box>

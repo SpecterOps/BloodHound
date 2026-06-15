@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from '@bloodhoundenterprise/doodleui';
 import { faAngleDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import clsx from 'clsx';
+import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from 'doodle-ui';
 
 import React, { ComponentType } from 'react';
 
@@ -106,7 +106,8 @@ export const DetailsAccordion = <T extends Record<string, unknown>>({
                         className='bg-neutral-light-2 dark:bg-neutral-dark-2 border-t dark:border-neutral-dark-4 first:border-none'
                         disabled={isDisabled}
                         key={key}
-                        value={String(idx)}>
+                        value={String(idx)}
+                        data-testid={key}>
                         <AccordionHeader
                             className={clsx(
                                 'h-16',

@@ -1,0 +1,38 @@
+// BloodHound Community Edition - Web UI Component View
+// Shows the internal components of the Web UI container.
+
+views {
+
+  view uiComponents of bloodhound.ui {
+    title "Web UI Components"
+    description "Internal structure of the React SPA: shell, state management, graph visualization, views, and API client."
+
+    include *
+
+    style bloodhound.ui.appShell {
+      notation "Application shell"
+      color primary
+    }
+
+    style bloodhound.ui.reduxStore {
+      notation "State management"
+      color indigo
+    }
+
+    style bloodhound.ui.sigmaGraph {
+      notation "Graph visualization"
+      color green
+    }
+
+    style bloodhound.ui.apiClientLib {
+      notation "API client library"
+      color muted
+    }
+
+    style bloodhound.ui.exploreView, bloodhound.ui.administrationView, bloodhound.ui.groupManagementView, bloodhound.ui.downloadCollectorsView, bloodhound.ui.privilegeZonesView, bloodhound.ui.apiExplorerView, bloodhound.ui.userProfileView {
+      notation "Feature view"
+      color sky
+    }
+  }
+}
+

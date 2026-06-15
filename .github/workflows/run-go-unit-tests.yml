@@ -17,9 +17,11 @@
 name: Run Go Unit Tests
 
 on:
-  push:
-    branches:
-      - main
+  workflow_call:
+    outputs:
+      run_id:
+        description: "workflow run_id"
+        value: ${{ jobs.provide.outputs.run_id }}
   pull_request:
     branches:
       - main
@@ -29,15 +31,23 @@ on:
       - synchronize
 
 jobs:
+  provide:
+    runs-on: ubuntu-latest
+    outputs:
+      run_id: ${{ steps.set_run_id.outputs.run_id }}
+    steps:
+      - id: set_run_id
+        run: echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
+
   run-go-unit-tests:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source code for this repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # ratchet:actions/checkout@v5
 
       - name: Install Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # ratchet:actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache: true
@@ -47,12 +57,12 @@ jobs:
         run: |
           go tool stbernard test -g -r
 
-      - name: Install AllureCtl 
+      - name: Install AllureCtl
         # v0.14.3
-        run: | 
+        run: |
           go install github.com/robotomize/go-allure/cmd/golurectl@8ef44907de4280d459f93ce6660b28e263b1d6bc
-      
-      - name: Building Allure JSON 
+
+      - name: Building Allure JSON
         run: |
           mkdir allure-results
           cat go-test-results.json | golurectl -l -e --allure-suite "Go Test" --allure-tags "Unit" -o ./allure-results
@@ -70,10 +80,9 @@ jobs:
         if: ${{ ! cancelled() }}
         run: |
           docker compose -f docker-compose.testing.yml down
-      
+
       - name: Upload Allure Results
-        uses: actions/upload-artifact@v4
-        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # ratchet:actions/upload-artifact@v4
         with:
-          name: allure-results
+          name: allure-results-go
           path: allure-results

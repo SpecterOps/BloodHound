@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 
 const WindowsAbuse: FC = () => {
@@ -22,7 +23,7 @@ const WindowsAbuse: FC = () => {
         <>
             <Typography variant='body2'>The ESC3 attack can be carried out in the following manner.</Typography>
             <Typography variant='body2'>
-                <Box component='span' sx={{ fontWeight: 'bold' }}>
+                <Box component='span' className='font-bold'>
                     Step 1:
                 </Box>{' '}
                 Use Certify (2.0) to request an enrollment agent certificate.
@@ -43,7 +44,7 @@ const WindowsAbuse: FC = () => {
                 The certificate PFX is printed to the console in a base64-encoded format.
             </Typography>
             <Typography variant='body2'>
-                <Box component='span' sx={{ fontWeight: 'bold' }}>
+                <Box component='span' className='font-bold'>
                     Step 2:
                 </Box>{' '}
                 Use the enrollment agent certificate to issue a certificate request on behalf of another user to a
@@ -64,7 +65,7 @@ const WindowsAbuse: FC = () => {
                 Choose another target with the given attribute set.
             </Typography>
             <Typography variant='body2'>
-                <Box component='span' sx={{ fontWeight: 'bold' }}>
+                <Box component='span' className='font-bold'>
                     Step 3:
                 </Box>{' '}
                 With Rubeus, use the certificate to authenticate to the domain and request a TGT, specifying the

@@ -45,21 +45,15 @@ const server = setupServer(
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(ctx.status(200));
     }),
+    rest.get('/api/v2/config', (_req, res, ctx) => {
+        return res(ctx.status(200), ctx.json({ data: [] }));
+    }),
     rest.get('/api/v2/custom-nodes', (req, res, ctx) => {
         return res(ctx.status(200));
     })
 );
 
-beforeAll(() => {
-    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
-        value: 800,
-    });
-    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
-        value: 800,
-    });
-
-    server.listen();
-});
+beforeAll(() => server.listen());
 
 const jsonToCsvArgs = [
     [
@@ -443,6 +437,15 @@ const jsonToCsvArgs = [
     },
 ];
 
+const jsonToCsvSelectedColumnsArgs = [
+    jsonToCsvArgs[0],
+    {
+        emptyFieldValue: '',
+        preventCsvInjection: true,
+        keys: ['kind', 'label', 'objectId', 'isTierZero'],
+    },
+];
+
 const WrappedExploreTable = () => {
     const [selectedColumns, setSelectedColumns] = useState<Record<string, boolean>>({
         kind: true,
@@ -450,6 +453,7 @@ const WrappedExploreTable = () => {
         label: true,
         objectId: true,
     });
+    const handleChangedPinnedColumns = () => {};
 
     return (
         <ExploreTable
@@ -463,6 +467,7 @@ const WrappedExploreTable = () => {
             onKebabMenuClick={(row) => {
                 kebabCallbackSpy(row);
             }}
+            onChangePinnedColumns={handleChangedPinnedColumns}
         />
     );
 };
@@ -564,15 +569,41 @@ describe('ExploreTable', async () => {
         expect(container.className).toContain('h-[calc(100%');
     });
 
-    it('Download button causes the json2csv function to be called', async () => {
+    it('Download button opens a menu and selecting "All Columns" calls json2csv with all columns', async () => {
         const { user } = await setup();
+
+        await screen.findByText('10 results');
 
         expect(json2csv).not.toBeCalled();
         const downloadButton = screen.getByTestId('download-button');
 
         await user.click(downloadButton);
 
+        const allButton = screen.getByRole('menuitem', { name: 'All Columns' });
+        const selectedButton = screen.getByRole('menuitem', { name: 'Selected Columns' });
+
+        expect(allButton).toBeInTheDocument();
+        expect(selectedButton).toBeInTheDocument();
+
+        await user.click(allButton);
+
         expect(json2csv).toBeCalledWith(...jsonToCsvArgs);
+    });
+
+    it('Download button opens a menu and selecting "Selected Columns" calls json2csv with selected columns only', async () => {
+        const { user } = await setup();
+
+        await screen.findByText('10 results');
+
+        expect(json2csv).not.toBeCalled();
+
+        const downloadButton = screen.getByTestId('download-button');
+        await user.click(downloadButton);
+
+        const selectedButton = screen.getByRole('menuitem', { name: 'Selected Columns' });
+        await user.click(selectedButton);
+
+        expect(json2csv).toBeCalledWith(...jsonToCsvSelectedColumnsArgs);
     });
 
     it('Close button click causes the callback function to be called', async () => {
@@ -640,6 +671,17 @@ describe('ExploreTable', async () => {
     });
 
     it('Kebab menu click causes the callback function to be called with the correct parameters', async () => {
+        Object.defineProperty(window, 'innerHeight', {
+            configurable: true,
+            writable: true,
+            value: 100, // Set your desired mock height
+        });
+        Object.defineProperty(window, 'innerWidth', {
+            configurable: true,
+            writable: true,
+            value: 100, // Set your desired mock height
+        });
+
         const { user } = await setup();
 
         expect(kebabCallbackSpy).not.toBeCalled();
@@ -655,5 +697,33 @@ describe('ExploreTable', async () => {
             x: 0,
             y: 0,
         });
+    });
+
+    it('Sort arrow is visible and direction is correct', async () => {
+        const { user } = await setup();
+
+        //ensures table is loaded
+        await screen.findByText('10 results');
+
+        // sort empty visible
+        expect(within(screen.getByRole('button', { name: /name/i })).getByText('app-icon-sort-empty')).toBeVisible();
+
+        //fire sort
+        await user.click(screen.getByText('Name'));
+
+        //up arrow visible, down arrow removed
+        expect(within(screen.getByRole('button', { name: /name/i })).getByText('app-icon-sort-asc')).toBeVisible();
+        expect(
+            within(screen.getByRole('button', { name: /name/i })).queryByText('app-icon-sort-empty')
+        ).not.toBeInTheDocument();
+
+        // //fire sort again
+        await user.click(screen.getByText('Name'));
+
+        //down arrow visible, up arrow removed
+        expect(within(screen.getByRole('button', { name: /name/i })).getByText('app-icon-sort-desc')).toBeVisible();
+        expect(
+            within(screen.getByRole('button', { name: /name/i })).queryByText('app-icon-sort-asc')
+        ).not.toBeInTheDocument();
     });
 });

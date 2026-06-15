@@ -40,10 +40,10 @@ func NodeKinds() []graph.Kind {
 	return []graph.Kind{MigrationData}
 }
 func InboundRelationshipKinds() []graph.Kind {
-	return []graph.Kind{ad.Owns, ad.GenericAll, ad.GenericWrite, ad.WriteOwner, ad.WriteDACL, ad.MemberOf, ad.ForceChangePassword, ad.AllExtendedRights, ad.AddMember, ad.HasSession, ad.GPLink, ad.AllowedToDelegate, ad.CoerceToTGT, ad.AllowedToAct, ad.AdminTo, ad.CanPSRemote, ad.CanRDP, ad.ExecuteDCOM, ad.HasSIDHistory, ad.AddSelf, ad.DCSync, ad.ReadLAPSPassword, ad.ReadGMSAPassword, ad.DumpSMSAPassword, ad.SQLAdmin, ad.AddAllowedToAct, ad.WriteSPN, ad.AddKeyCredentialLink, ad.SyncLAPSPassword, ad.WriteAccountRestrictions, ad.WriteGPLink, ad.GoldenCert, ad.ADCSESC1, ad.ADCSESC3, ad.ADCSESC4, ad.ADCSESC6a, ad.ADCSESC6b, ad.ADCSESC9a, ad.ADCSESC9b, ad.ADCSESC10a, ad.ADCSESC10b, ad.ADCSESC13, ad.SyncedToEntraUser, ad.CoerceAndRelayNTLMToSMB, ad.CoerceAndRelayNTLMToADCS, ad.WriteOwnerLimitedRights, ad.OwnsLimitedRights, ad.ClaimSpecialIdentity, ad.CoerceAndRelayNTLMToLDAP, ad.CoerceAndRelayNTLMToLDAPS, ad.ContainsIdentity, ad.PropagatesACEsTo, ad.GPOAppliesTo, ad.CanApplyGPO, ad.HasTrustKeys, ad.ManageCA, ad.ManageCertificates, ad.Contains, ad.ServerIs, azure.AvereContributor, azure.Contributor, azure.GetCertificates, azure.GetKeys, azure.GetSecrets, azure.HasRole, azure.MemberOf, azure.Owner, azure.RunsAs, azure.VMContributor, azure.AutomationContributor, azure.KeyVaultContributor, azure.VMAdminLogin, azure.AddMembers, azure.AddSecret, azure.ExecuteCommand, azure.GlobalAdmin, azure.PrivilegedAuthAdmin, azure.Grant, azure.GrantSelf, azure.PrivilegedRoleAdmin, azure.ResetPassword, azure.UserAccessAdministrator, azure.Owns, azure.CloudAppAdmin, azure.AppAdmin, azure.AddOwner, azure.ManagedIdentity, azure.AKSContributor, azure.NodeResourceGroup, azure.WebsiteContributor, azure.LogicAppContributor, azure.AZMGAddMember, azure.AZMGAddOwner, azure.AZMGAddSecret, azure.AZMGGrantAppRoles, azure.AZMGGrantRole, azure.SyncedToADUser, azure.AZRoleEligible, azure.AZRoleApprover, azure.Contains}
+	return []graph.Kind{ad.Owns, ad.GenericAll, ad.GenericWrite, ad.WriteOwner, ad.WriteDACL, ad.MemberOf, ad.ForceChangePassword, ad.AllExtendedRights, ad.AddMember, ad.HasSession, ad.GPLink, ad.AllowedToDelegate, ad.CoerceToTGT, ad.AllowedToAct, ad.AdminTo, ad.CanPSRemote, ad.CanRDP, ad.ExecuteDCOM, ad.HasSIDHistory, ad.AddSelf, ad.DCSync, ad.ReadLAPSPassword, ad.ReadGMSAPassword, ad.DumpSMSAPassword, ad.SQLAdmin, ad.AddAllowedToAct, ad.WriteSPN, ad.AddKeyCredentialLink, ad.SyncLAPSPassword, ad.WriteAccountRestrictions, ad.WriteGPLink, ad.GoldenCert, ad.ADCSESC1, ad.ADCSESC3, ad.ADCSESC4, ad.ADCSESC6a, ad.ADCSESC6b, ad.ADCSESC9a, ad.ADCSESC9b, ad.ADCSESC10a, ad.ADCSESC10b, ad.ADCSESC13, ad.SyncedToADUser, ad.CoerceAndRelayNTLMToSMB, ad.CoerceAndRelayNTLMToADCS, ad.WriteOwnerLimitedRights, ad.OwnsLimitedRights, ad.ClaimSpecialIdentity, ad.CoerceAndRelayNTLMToLDAP, ad.CoerceAndRelayNTLMToLDAPS, ad.ContainsIdentity, ad.PropagatesACEsTo, ad.GPOAppliesTo, ad.CanApplyGPO, ad.HasTrustKeys, ad.WriteAltSecurityIdentities, ad.WritePublicInformation, ad.ManageCA, ad.ManageCertificates, ad.Contains, ad.ServerIs, azure.AvereContributor, azure.Contributor, azure.GetCertificates, azure.GetKeys, azure.GetSecrets, azure.HasRole, azure.MemberOf, azure.Owner, azure.RunsAs, azure.VMContributor, azure.AutomationContributor, azure.KeyVaultContributor, azure.VMAdminLogin, azure.AddMembers, azure.AddSecret, azure.ExecuteCommand, azure.GlobalAdmin, azure.PrivilegedAuthAdmin, azure.Grant, azure.GrantSelf, azure.PrivilegedRoleAdmin, azure.ResetPassword, azure.UserAccessAdministrator, azure.Owns, azure.CloudAppAdmin, azure.AppAdmin, azure.AddOwner, azure.ManagedIdentity, azure.AKSContributor, azure.NodeResourceGroup, azure.WebsiteContributor, azure.LogicAppContributor, azure.AZMGAddMember, azure.AZMGAddOwner, azure.AZMGAddSecret, azure.AZMGGrantAppRoles, azure.AZMGGrantRole, azure.SyncedToEntraUser, azure.AZRoleEligible, azure.AZRoleApprover, azure.Contains, azure.AZAuthenticatesTo}
 }
 func OutboundRelationshipKinds() []graph.Kind {
-	return []graph.Kind{ad.Owns, ad.GenericAll, ad.GenericWrite, ad.WriteOwner, ad.WriteDACL, ad.MemberOf, ad.ForceChangePassword, ad.AllExtendedRights, ad.AddMember, ad.HasSession, ad.GPLink, ad.AllowedToDelegate, ad.CoerceToTGT, ad.AllowedToAct, ad.AdminTo, ad.CanPSRemote, ad.CanRDP, ad.ExecuteDCOM, ad.HasSIDHistory, ad.AddSelf, ad.DCSync, ad.ReadLAPSPassword, ad.ReadGMSAPassword, ad.DumpSMSAPassword, ad.SQLAdmin, ad.AddAllowedToAct, ad.WriteSPN, ad.AddKeyCredentialLink, ad.SyncLAPSPassword, ad.WriteAccountRestrictions, ad.WriteGPLink, ad.GoldenCert, ad.ADCSESC1, ad.ADCSESC3, ad.ADCSESC4, ad.ADCSESC6a, ad.ADCSESC6b, ad.ADCSESC9a, ad.ADCSESC9b, ad.ADCSESC10a, ad.ADCSESC10b, ad.ADCSESC13, ad.SyncedToEntraUser, ad.CoerceAndRelayNTLMToSMB, ad.CoerceAndRelayNTLMToADCS, ad.WriteOwnerLimitedRights, ad.OwnsLimitedRights, ad.ClaimSpecialIdentity, ad.CoerceAndRelayNTLMToLDAP, ad.CoerceAndRelayNTLMToLDAPS, ad.ContainsIdentity, ad.PropagatesACEsTo, ad.GPOAppliesTo, ad.CanApplyGPO, ad.HasTrustKeys, ad.ManageCA, ad.ManageCertificates, ad.Contains, ad.DCFor, ad.ServerIs, azure.AvereContributor, azure.Contributor, azure.GetCertificates, azure.GetKeys, azure.GetSecrets, azure.HasRole, azure.MemberOf, azure.Owner, azure.RunsAs, azure.VMContributor, azure.AutomationContributor, azure.KeyVaultContributor, azure.VMAdminLogin, azure.AddMembers, azure.AddSecret, azure.ExecuteCommand, azure.GlobalAdmin, azure.PrivilegedAuthAdmin, azure.Grant, azure.GrantSelf, azure.PrivilegedRoleAdmin, azure.ResetPassword, azure.UserAccessAdministrator, azure.Owns, azure.CloudAppAdmin, azure.AppAdmin, azure.AddOwner, azure.ManagedIdentity, azure.AKSContributor, azure.NodeResourceGroup, azure.WebsiteContributor, azure.LogicAppContributor, azure.AZMGAddMember, azure.AZMGAddOwner, azure.AZMGAddSecret, azure.AZMGGrantAppRoles, azure.AZMGGrantRole, azure.SyncedToADUser, azure.AZRoleEligible, azure.AZRoleApprover, azure.Contains}
+	return []graph.Kind{ad.Owns, ad.GenericAll, ad.GenericWrite, ad.WriteOwner, ad.WriteDACL, ad.MemberOf, ad.ForceChangePassword, ad.AllExtendedRights, ad.AddMember, ad.HasSession, ad.GPLink, ad.AllowedToDelegate, ad.CoerceToTGT, ad.AllowedToAct, ad.AdminTo, ad.CanPSRemote, ad.CanRDP, ad.ExecuteDCOM, ad.HasSIDHistory, ad.AddSelf, ad.DCSync, ad.ReadLAPSPassword, ad.ReadGMSAPassword, ad.DumpSMSAPassword, ad.SQLAdmin, ad.AddAllowedToAct, ad.WriteSPN, ad.AddKeyCredentialLink, ad.SyncLAPSPassword, ad.WriteAccountRestrictions, ad.WriteGPLink, ad.GoldenCert, ad.ADCSESC1, ad.ADCSESC3, ad.ADCSESC4, ad.ADCSESC6a, ad.ADCSESC6b, ad.ADCSESC9a, ad.ADCSESC9b, ad.ADCSESC10a, ad.ADCSESC10b, ad.ADCSESC13, ad.SyncedToADUser, ad.CoerceAndRelayNTLMToSMB, ad.CoerceAndRelayNTLMToADCS, ad.WriteOwnerLimitedRights, ad.OwnsLimitedRights, ad.ClaimSpecialIdentity, ad.CoerceAndRelayNTLMToLDAP, ad.CoerceAndRelayNTLMToLDAPS, ad.ContainsIdentity, ad.PropagatesACEsTo, ad.GPOAppliesTo, ad.CanApplyGPO, ad.HasTrustKeys, ad.WriteAltSecurityIdentities, ad.WritePublicInformation, ad.ManageCA, ad.ManageCertificates, ad.Contains, ad.DCFor, ad.ServerIs, azure.AvereContributor, azure.Contributor, azure.GetCertificates, azure.GetKeys, azure.GetSecrets, azure.HasRole, azure.MemberOf, azure.Owner, azure.RunsAs, azure.VMContributor, azure.AutomationContributor, azure.KeyVaultContributor, azure.VMAdminLogin, azure.AddMembers, azure.AddSecret, azure.ExecuteCommand, azure.GlobalAdmin, azure.PrivilegedAuthAdmin, azure.Grant, azure.GrantSelf, azure.PrivilegedRoleAdmin, azure.ResetPassword, azure.UserAccessAdministrator, azure.Owns, azure.CloudAppAdmin, azure.AppAdmin, azure.AddOwner, azure.ManagedIdentity, azure.AKSContributor, azure.NodeResourceGroup, azure.WebsiteContributor, azure.LogicAppContributor, azure.AZMGAddMember, azure.AZMGAddOwner, azure.AZMGAddSecret, azure.AZMGGrantAppRoles, azure.AZMGGrantRole, azure.SyncedToEntraUser, azure.AZRoleEligible, azure.AZRoleApprover, azure.Contains, azure.AZAuthenticatesTo}
 }
 
 type Property string
@@ -59,6 +59,7 @@ const (
 	SystemTags      Property = "system_tags"
 	UserTags        Property = "user_tags"
 	LastSeen        Property = "lastseen"
+	FirstSeen       Property = "firstseen"
 	LastCollected   Property = "lastcollected"
 	WhenCreated     Property = "whencreated"
 	Enabled         Property = "enabled"
@@ -71,7 +72,7 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{ObjectID, Name, DisplayName, Description, OwnerObjectID, Collected, OperatingSystem, SystemTags, UserTags, LastSeen, LastCollected, WhenCreated, Enabled, PasswordLastSet, Title, Email, IsInherited, CompositionID, PrimaryKind}
+	return []Property{ObjectID, Name, DisplayName, Description, OwnerObjectID, Collected, OperatingSystem, SystemTags, UserTags, LastSeen, FirstSeen, LastCollected, WhenCreated, Enabled, PasswordLastSet, Title, Email, IsInherited, CompositionID, PrimaryKind}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -95,6 +96,8 @@ func ParseProperty(source string) (Property, error) {
 		return UserTags, nil
 	case "lastseen":
 		return LastSeen, nil
+	case "firstseen":
+		return FirstSeen, nil
 	case "lastcollected":
 		return LastCollected, nil
 	case "whencreated":
@@ -139,6 +142,8 @@ func (s Property) String() string {
 		return string(UserTags)
 	case LastSeen:
 		return string(LastSeen)
+	case FirstSeen:
+		return string(FirstSeen)
 	case LastCollected:
 		return string(LastCollected)
 	case WhenCreated:
@@ -183,6 +188,8 @@ func (s Property) Name() string {
 		return "Node User Tags"
 	case LastSeen:
 		return "Last Seen by BloodHound"
+	case FirstSeen:
+		return "First Seen by BloodHound"
 	case LastCollected:
 		return "Last Collected by BloodHound"
 	case WhenCreated:

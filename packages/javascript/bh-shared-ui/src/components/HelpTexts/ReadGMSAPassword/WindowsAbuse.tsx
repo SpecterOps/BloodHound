@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { List, ListItem, ListItemText, Typography } from '@mui/material';
+import { List, ListItem, ListItemText } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 
 const WindowsAbuse: FC = () => {

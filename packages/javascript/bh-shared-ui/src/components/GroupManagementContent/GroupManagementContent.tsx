@@ -14,19 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
-import { faExternalLink } from '@fortawesome/free-solid-svg-icons';
+import { faExternalLink, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Grid, Paper, Typography, useTheme } from '@mui/material';
+import { Grid } from '@mui/material';
+import { Badge, Button, Typography } from 'doodle-ui';
 import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
-import { FC, ReactNode, useEffect, useState } from 'react';
+import { FC, HTMLProps, ReactNode, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
+import useRoleBasedFiltering from '../../hooks/useRoleBasedFiltering';
 import { apiClient } from '../../utils/api';
 import AssetGroupEdit from '../AssetGroupEdit/AssetGroupEdit';
 import AssetGroupFilters from '../AssetGroupFilters';
 import { FILTERABLE_PARAMS } from '../AssetGroupFilters/AssetGroupFilters';
 import AssetGroupMemberList from '../AssetGroupMemberList';
-import DropdownSelector, { DropdownOption } from '../DropdownSelector';
+import { DropdownOption, DropdownSelector } from '../DropdownSelector';
 import { SelectedEnvironment, SimpleEnvironmentSelector } from '../SimpleEnvironmentSelector';
 
 interface GroupManagementContentProps {
@@ -55,8 +56,6 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
     mapAssetGroups,
     userHasEditPermissions,
 }) => {
-    const theme = useTheme();
-
     const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedEnvironment | null>(null);
     const [selectedAssetGroupId, setSelectedAssetGroupId] = useState<number | null>(null);
     const [filterParams, setFilterParams] = useState<AssetGroupMemberParams>({});
@@ -134,39 +133,52 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
         setFilterParams(filter);
     }, [selectedEnvironment, globalEnvironment, selectedAssetGroupId]);
 
-    const selectorLabelStyles = { display: { xs: 'none', xl: 'flex' } };
+    const selectorLabelStyles: HTMLProps<HTMLElement>['className'] = 'flex max-sm:hidden';
+
+    const isRoleBasedFiltering = useRoleBasedFiltering();
 
     return (
-        <Box height={'100%'} padding={theme.spacing(2, 4)}>
+        <div className='h-full py-4 px-8'>
+            {isRoleBasedFiltering && (
+                <Badge
+                    data-testid='explore_entity-information-panel-badge-etac-filtering'
+                    variant='fill'
+                    color='primary'
+                    className='px-2 py-1'
+                    icon={<FontAwesomeIcon icon={faEyeSlash} className='mr-2' />}
+                    label='This account does not have access to this page. Please contact an administrator if this message is in error.'
+                />
+            )}
             <Grid container height={'100%'} spacing={2}>
                 <Grid item xs={3} md={3}>
-                    <Box component={Paper} elevation={0} marginBottom={1}>
-                        <Grid container sx={{ bgcolor: theme.palette.neutral.secondary }}>
-                            <Grid item sm={4} sx={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
-                                <Typography variant='button'>Group:</Typography>
+                    <div className='mb-2'>
+                        <Grid container className='bg-neutral-2'>
+                            <Grid item sm={4} className={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
+                                <Typography className='font-medium text-sm uppercase'>Group:</Typography>
                             </Grid>
                             <Grid item xs={12} xl={8}>
-                                <Box p={1}>
+                                <div className='p-2'>
                                     <DropdownSelector
+                                        variant='primary'
                                         options={listAssetGroups.data ? mapAssetGroups(listAssetGroups.data) : []}
                                         selectedText={getAssetGroupSelectorLabel()}
                                         onChange={handleAssetGroupSelectorChange}
                                     />
-                                </Box>
+                                </div>
                             </Grid>
-                            <Grid item xs={4} sx={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
-                                <Typography variant='button'>Environment:</Typography>
+                            <Grid item xs={4} className={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
+                                <Typography className='font-medium text-sm uppercase'>Environment:</Typography>
                             </Grid>
-                            <Grid item xs={12} xl={8} padding={theme.spacing()}>
+                            <Grid item xs={12} xl={8} className='p-2'>
                                 <SimpleEnvironmentSelector
                                     selected={selectedEnvironment || globalEnvironment || { type: null, id: null }}
                                     errorMessage={domainSelectorErrorMessage}
-                                    buttonPrimary
+                                    variant={'primary'}
                                     onSelect={handleSelect}
                                 />
                             </Grid>
                         </Grid>
-                    </Box>
+                    </div>
                     <AssetGroupFilters
                         filterParams={filterParams}
                         handleFilterChange={handleFilterChange}
@@ -191,19 +203,19 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                 </Grid>
                 <Grid item xs={4} md={3} height={'100%'}>
                     {/* CSS calc accounts for the height of the link button */}
-                    <Box sx={{ maxHeight: 'calc(100% - 45px)', overflow: 'auto' }}>{entityPanelComponent}</Box>
+                    <div className='max-h-[calc(100%-45px)] overflow-auto'>{entityPanelComponent}</div>
                     {showExplorePageLink && (
                         <Button
                             data-testid='group-management_explore-link'
                             style={{ borderRadius: '4px', marginTop: '8px', width: '100%' }}
                             onClick={onShowNodeInExplore}>
                             <FontAwesomeIcon icon={faExternalLink} />
-                            <Typography ml='8px'>Open in Explore</Typography>
+                            <Typography className='ml-2'>Open in Explore</Typography>
                         </Button>
                     )}
                 </Grid>
             </Grid>
-        </Box>
+        </div>
     );
 };
 

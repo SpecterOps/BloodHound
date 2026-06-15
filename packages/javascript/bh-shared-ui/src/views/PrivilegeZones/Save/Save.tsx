@@ -21,17 +21,20 @@ import {
     BreadcrumbList,
     BreadcrumbPage,
     BreadcrumbSeparator,
-} from '@bloodhoundenterprise/doodleui';
+} from 'doodle-ui';
 import { FC } from 'react';
+import { useLocation } from 'react-router-dom';
 import { AppLink } from '../../../components/Navigation';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../../hooks';
-import { detailsPath, privilegeZonesPath, savePath, selectorsPath, zonesPath } from '../../../routes';
-import SelectorForm from './SelectorForm';
+import { rulesPath } from '../../../routes';
+import RuleForm from './RuleForm';
 import TagForm from './TagForm';
 
 const Save: FC = () => {
-    const showSelectorForm = location.pathname.includes(selectorsPath);
-    const { tagType, tagTypeDisplay, tagTypeDisplayPlural, tagId } = usePZPathParams();
+    const location = useLocation();
+    const showRuleForm = location.pathname.includes(rulesPath);
+
+    const { tagTypeDisplay, tagTypeDisplayPlural, tagId, tagDetailsLink, tagEditLink, isZonePage } = usePZPathParams();
 
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const ownedId = useOwnedTagId();
@@ -42,28 +45,36 @@ const Save: FC = () => {
                 <BreadcrumbList>
                     <BreadcrumbItem>
                         <BreadcrumbLink asChild>
-                            <AppLink
-                                data-testid='privilege-zones_save_details-breadcrumb'
-                                to={`/${privilegeZonesPath}/${tagType}/${tagType === zonesPath ? topTagId : ownedId}/${detailsPath}`}>
-                                {tagTypeDisplayPlural}
-                            </AppLink>
+                            {!topTagId || !ownedId ? (
+                                <span data-testid='privilege-zones_save_details-breadcrumb'>
+                                    {tagTypeDisplayPlural}
+                                </span>
+                            ) : (
+                                <AppLink
+                                    discardQueryParams
+                                    data-testid='privilege-zones_save_details-breadcrumb'
+                                    to={tagDetailsLink(isZonePage ? topTagId : ownedId)}>
+                                    {tagTypeDisplayPlural}
+                                </AppLink>
+                            )}
                         </BreadcrumbLink>
                     </BreadcrumbItem>
                     <BreadcrumbSeparator />
-                    {showSelectorForm ? (
+                    {showRuleForm ? (
                         <>
                             <BreadcrumbItem>
                                 <BreadcrumbLink asChild>
                                     <AppLink
+                                        discardQueryParams
                                         data-testid='privilege-zones_save_tag-breadcrumb'
-                                        to={`/${privilegeZonesPath}/${tagType}/${tagId}/${savePath}`}>
+                                        to={tagEditLink(tagId)}>
                                         {`${tagTypeDisplay} Details`}
                                     </AppLink>
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator />
                             <BreadcrumbItem>
-                                <BreadcrumbPage>Selector</BreadcrumbPage>
+                                <BreadcrumbPage>Rule</BreadcrumbPage>
                             </BreadcrumbItem>
                         </>
                     ) : (
@@ -75,7 +86,7 @@ const Save: FC = () => {
                     )}
                 </BreadcrumbList>
             </Breadcrumb>
-            {showSelectorForm ? <SelectorForm /> : <TagForm />}
+            {showRuleForm ? <RuleForm /> : <TagForm />}
         </div>
     );
 };

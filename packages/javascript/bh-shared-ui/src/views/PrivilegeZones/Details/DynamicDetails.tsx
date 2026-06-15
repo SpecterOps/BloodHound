@@ -14,9 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card, Skeleton } from '@bloodhoundenterprise/doodleui';
-import { IconName } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Card, Skeleton } from 'doodle-ui';
 import {
     AssetGroupTag,
     AssetGroupTagSelector,
@@ -28,12 +26,13 @@ import {
 import { DateTime } from 'luxon';
 import { FC, useContext } from 'react';
 import { UseQueryResult } from 'react-query';
-import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../../hooks';
+import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams, usePrivilegeZoneAnalysis } from '../../../hooks';
 import { LuxonFormat } from '../../../utils';
-import { Cypher } from '../Cypher/Cypher';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
+import PrivilegeZonesCypherEditor from '../PrivilegeZonesCypherEditor';
+import { ZoneIcon } from '../ZoneIcon';
+import { getRuleSeedType, isRule, isTag } from '../utils';
 import ObjectCountPanel from './ObjectCountPanel';
-import { getSelectorSeedType, isSelector, isTag } from './utils';
 
 const DetailField: FC<{ label: string; value: string }> = ({ label, value }) => {
     return (
@@ -57,43 +56,43 @@ const DescriptionField: FC<{ description: string }> = ({ description }) => {
     );
 };
 
-const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
+const TagDetails: FC<{ tagData: AssetGroupTag; hasObjectCountPanel: boolean }> = ({ tagData, hasObjectCountPanel }) => {
     const {
         glyph,
         name,
         description,
-        position,
         created_by,
         updated_by,
         updated_at,
         id: tagId,
         type,
         require_certify,
+        analysis_enabled,
     } = tagData;
 
     const lastUpdated = DateTime.fromISO(updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
-
     const { SalesMessage, Certification } = useContext(PrivilegeZonesContext);
-
+    const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const ownedId = useOwnedTagId();
 
     return (
-        <div
-            className='max-h-full flex flex-col gap-8 max-w-[32rem] w-full'
-            data-testid='privilege-zones_tag-details-card'>
-            <Card className='px-6 py-6'>
-                <div className='text-xl font-bold truncate' title={name}>
-                    {glyph && (
-                        <span>
-                            <FontAwesomeIcon icon={glyph as IconName} size='sm' /> <span> </span>
-                        </span>
-                    )}
-                    {name}
+        <div className='max-h-full flex flex-col gap-6 mb-8' data-testid='privilege-zones_tag-details-card'>
+            <Card className='p-6'>
+                <div className='flex items-center' title={name}>
+                    {glyph && <ZoneIcon zone={tagData} persistGlyph size={20} />}
+                    <span className='text-xl font-bold text-wrap'>{name}</span>
                 </div>
-                {position !== null && (
+                {Certification && (
                     <div className='mt-4'>
-                        <DetailField label='Position' value={position.toString()} />
+                        <DetailField
+                            label='Analysis'
+                            value={
+                                (privilegeZoneAnalysisEnabled && analysis_enabled) || tagId === topTagId
+                                    ? 'Enabled'
+                                    : 'Disabled'
+                            }
+                        />
                     </div>
                 )}
                 <div className='mt-4'>
@@ -113,27 +112,25 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
                 )}
             </Card>
             {tagId !== topTagId && tagId !== ownedId && SalesMessage && <SalesMessage />}
-            <ObjectCountPanel tagId={tagId.toString()} />
+            {hasObjectCountPanel && <ObjectCountPanel />}
         </div>
     );
 };
 
-const SelectorDetails: FC<{ selectorData: AssetGroupTagSelector }> = ({ selectorData }) => {
-    const { name, description, created_by, updated_by, updated_at, auto_certify, disabled_at, seeds } = selectorData;
+const RuleDetails: FC<{ ruleData: AssetGroupTagSelector }> = ({ ruleData }) => {
+    const { name, description, created_by, updated_by, updated_at, auto_certify, disabled_at, seeds } = ruleData;
 
     const lastUpdated = DateTime.fromISO(updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
 
-    const seedType = getSelectorSeedType(selectorData);
+    const seedType = getRuleSeedType(ruleData);
 
     const { isZonePage } = usePZPathParams();
     const { Certification } = useContext(PrivilegeZonesContext);
 
     return (
-        <div
-            className='max-h-full flex flex-col gap-8 max-w-[32rem]'
-            data-testid='privilege-zones_selector-details-card'>
-            <Card className='px-6 py-6'>
-                <div className='text-xl font-bold truncate' title={name}>
+        <div className='flex flex-col gap-6' data-testid='privilege-zones_selector-details-card'>
+            <Card className='p-6'>
+                <div className='text-xl font-bold break-all line-clamp-2' title={name}>
                     {name}
                 </div>
                 <div className='mt-4'>
@@ -157,31 +154,35 @@ const SelectorDetails: FC<{ selectorData: AssetGroupTagSelector }> = ({ selector
 
                 <div className='mt-4'>
                     <DetailField label='Type' value={SeedTypesMap[seedType]} />
-                    <DetailField label='Selector Status' value={disabled_at ? 'Disabled' : 'Enabled'} />
+                    <DetailField label='Rule Status' value={disabled_at ? 'Disabled' : 'Enabled'} />
                 </div>
             </Card>
-            {seedType === SeedTypeCypher && <Cypher preview initialInput={seeds[0].value} />}
+            {seedType === SeedTypeCypher && <PrivilegeZonesCypherEditor preview initialInput={seeds[0].value} />}
         </div>
     );
 };
 
 type DynamicDetailsProps = {
     queryResult: UseQueryResult<AssetGroupTag | undefined> | UseQueryResult<AssetGroupTagSelector | undefined>;
+    hasObjectCountPanel?: boolean;
 };
 
-const DynamicDetails: FC<DynamicDetailsProps> = ({ queryResult: { isError, isLoading, data } }) => {
+const DynamicDetails: FC<DynamicDetailsProps> = ({
+    queryResult: { isError, isLoading, data },
+    hasObjectCountPanel = false,
+}) => {
     if (isLoading) {
-        return <Skeleton className='px-6 py-6 max-w-[32rem] h-52' />;
+        return <Skeleton className='p-6 h-52' />;
     } else if (isError) {
         return (
-            <Card className='px-6 py-6 max-w-[32rem]'>
+            <Card className='p-6'>
                 <span className='text-base'>There was an error fetching this data</span>
             </Card>
         );
     } else if (isTag(data)) {
-        return <TagDetails tagData={data} />;
-    } else if (isSelector(data)) {
-        return <SelectorDetails selectorData={data} />;
+        return <TagDetails tagData={data} hasObjectCountPanel={hasObjectCountPanel} />;
+    } else if (isRule(data)) {
+        return <RuleDetails ruleData={data} />;
     }
     return null;
 };

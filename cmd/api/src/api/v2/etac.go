@@ -18,9 +18,18 @@ package v2
 
 import (
 	"context"
+	"fmt"
+	"slices"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/dawgs/graph"
 )
 
 type UpdateEnvironmentRequest struct {
@@ -58,6 +67,48 @@ func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentT
 	return true, nil
 }
 
+// nodeGatedByETAC checks if a node should be filtered out by ETAC based on the environment ID of the node and the allowed list.
+// When environmentsFilter is non-nil, only nodes whose tenant ID (Azure) or domain SID (AD) or environment ID (OG)
+// appears in environmentsFilter are allowed.
+// When environmentsFilter is nil, all nodes are allowed without filtering.
+// Defaults to gating the node when the environment ID cannot be determined and the environmentsFilter is non-nil.
+func nodeGatedByETAC(environmentsFilter []string, node *graph.Node) bool {
+	if environmentsFilter == nil {
+		return false
+	} else if len(environmentsFilter) == 0 {
+		return true
+	} else if environmentId, err := getEnvironmentIdFromNode(node); err != nil {
+		return true
+	} else {
+		return !slices.Contains(environmentsFilter, environmentId)
+	}
+}
+
+func getEnvironmentIdFromNode(node *graph.Node) (string, error) {
+	if node.Kinds.ContainsOneOf(azure.Entity) {
+		return node.Properties.Get(azure.TenantID.String()).String()
+	} else if node.Kinds.ContainsOneOf(ad.Entity) {
+		return node.Properties.Get(ad.DomainSID.String()).String()
+	} else {
+		return node.Properties.Get(graphschema.EnvironmentIDKey).String()
+	}
+}
+
+// CheckUserHasAccessToNodeById returns whether a user has access to view this node based on their ETAC list
+func CheckUserHasAccessToNodeById(ctx context.Context, graphQuery queries.Graph, dogTagsService dogtags.Service, user model.User, objectId string, kind graph.Kind) (bool, error) {
+	if ShouldFilterForETAC(dogTagsService, user) {
+		if node, err := graphQuery.GetEntityByObjectId(ctx, objectId, kind); err != nil {
+			return false, err
+		} else if node == nil {
+			return false, fmt.Errorf("node not found for %s", objectId)
+		} else if allowList := ExtractEnvironmentIDsFromUser(&user); nodeGatedByETAC(allowList, node) {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+
 // ExtractEnvironmentIDsFromUser is a helper function
 // to extract a user's environments from their model as a list of strings
 func ExtractEnvironmentIDsFromUser(user *model.User) []string {
@@ -68,4 +119,94 @@ func ExtractEnvironmentIDsFromUser(user *model.User) []string {
 	}
 
 	return list
+}
+
+// ShouldFilterForETAC determines whether ETAC filtering should be applied
+// based on the feature flag and user's environment access.
+func ShouldFilterForETAC(dogTagsService dogtags.Service, user model.User) bool {
+	if etacEnabled := dogTagsService.GetFlagAsBool(dogtags.ETAC_ENABLED); !etacEnabled {
+		return false
+	} else if user.AllEnvironments {
+		// no filtering required if user has all environments
+		return false
+	}
+
+	return true
+}
+
+// filterETACGraph applies ETAC(Environment-based Access Control) filtering for the CypherQuery endpoint.
+// Nodes that the user does not have access to are replaced with hidden placeholder nodes,
+// and edges connected to hidden nodes are marked as hidden.
+func filterETACGraph(graphResponse model.UnifiedGraph, user model.User) (model.UnifiedGraph, error) {
+	accessList := ExtractEnvironmentIDsFromUser(&user)
+
+	filteredResponse := model.UnifiedGraph{}
+	filteredNodes := make(map[string]model.UnifiedNode)
+
+	environmentKeys := []string{ad.DomainSID.String(), azure.TenantID.String(), graphschema.EnvironmentIDKey}
+
+	// filter nodes based on environment access
+	for id, node := range graphResponse.Nodes {
+		include := false
+		for _, key := range environmentKeys {
+			if val, ok := node.Properties[key]; ok {
+				if envStr, ok := val.(string); ok && slices.Contains(accessList, envStr) {
+					include = true
+					break
+				}
+			}
+		}
+
+		if include {
+			// user has access, we keep original node
+			filteredNodes[id] = node
+		} else {
+			// extract node source kind for display in hidden label
+			var kind string
+			if len(node.Kinds) > 0 && node.Kinds[0] != "" {
+				kind = node.Kinds[0]
+			} else {
+				kind = "Unknown"
+			}
+
+			label := fmt.Sprintf("** Hidden %s Object **", kind)
+			filteredNodes[id] = model.UnifiedNode{
+				Label:         label,
+				Kind:          "HIDDEN",
+				Kinds:         []string{},
+				ObjectId:      "HIDDEN",
+				IsTierZero:    false,
+				IsOwnedObject: false,
+				LastSeen:      time.Time{},
+				Properties:    nil,
+				Hidden:        true,
+			}
+		}
+	}
+
+	filteredResponse.Nodes = filteredNodes
+	filteredEdges := make([]model.UnifiedEdge, 0, len(graphResponse.Edges))
+
+	// mark edges as hidden if attached to a hidden node
+	for _, edge := range graphResponse.Edges {
+		if filteredNodes[edge.Target].Hidden || filteredNodes[edge.Source].Hidden {
+			filteredEdges = append(filteredEdges, model.UnifiedEdge{
+				Source:     edge.Source,
+				Target:     edge.Target,
+				Label:      "** Hidden Edge **",
+				Kind:       "HIDDEN",
+				LastSeen:   time.Time{},
+				Properties: nil,
+			})
+		} else {
+			// nodes on both ends of edge are accessible, we keep original edge
+			filteredEdges = append(filteredEdges, edge)
+		}
+	}
+	filteredResponse.Edges = filteredEdges
+
+	// ensure literals are filtered out of etac filtered responses
+	filteredResponse.Literals = graph.Literals{}
+
+	return filteredResponse, nil
 }

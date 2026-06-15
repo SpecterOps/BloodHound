@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 import { EdgeInfoProps } from '../index';
 import { groupSpecialFormat } from '../utils';
@@ -28,16 +28,16 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetType, target
             </Typography>
 
             <Typography variant='body2'>
-                The ability to alter the gPLink attribute of an object may allow an attacker to apply a malicious Group Policy Object
-                (GPO) to all child user and computer objects. This can be
-                exploited to make said child objects execute arbitrary commands through e.g. an immediate scheduled task,
-                thus compromising them.
+                The ability to alter the gPLink attribute of an object may allow an attacker to apply a malicious Group
+                Policy Object (GPO) to all child user and computer objects. This can be exploited to make said child
+                objects execute arbitrary commands through e.g. an immediate scheduled task, thus compromising them.
             </Typography>
             <Typography variant='body2'>
-                For domain and OU objects, child user/computer objects are the ones belonging to the domain/OU (including the ones located in nested OUs). 
-                In the case of a site, the affected objects are the computers that have an IP address included in one of the site's subnets  
-                (or computers that do not belong to any site if this is the default site), as well as users connecting to these computers.
-                Note that Server objects associated with the Site should be located in the Site.
+                For domain and OU objects, child user/computer objects are the ones belonging to the domain/OU
+                (including the ones located in nested OUs). In the case of a site, the affected objects are the
+                computers that have an IP address included in one of the site's subnets (or computers that do not belong
+                to any site if this is the default site), as well as users connecting to these computers. Note that
+                Server objects associated with the Site should be located in the Site.
             </Typography>
         </>
     );

@@ -14,15 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Link, Typography } from '@mui/material';
+import { Box, Link } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
-import { useHelpTextStyles } from '../utils';
+import { cn } from '../../../utils';
+import { hasChildCodeElementsClasses } from '../utils';
 
 const WindowsAbuse: FC = () => {
-    const classes = useHelpTextStyles();
     const step1 = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 1: </b>Remove SPNs including <code>dNSHostName</code> on victim.
                 <br />
                 <br />
@@ -39,7 +40,7 @@ const WindowsAbuse: FC = () => {
 
     const step2 = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2'>
                 <b>Step 2: </b>Create .exe version of Certipy.
                 <br />
                 <br />
@@ -48,7 +49,7 @@ const WindowsAbuse: FC = () => {
                 Windows computer where Python is not installed:
             </Typography>
             <Typography component={'pre'}>{'pyinstaller ./Certipy.spec'}</Typography>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 The Certipy.exe will be in the <code>dist</code> folder.
             </Typography>
         </>
@@ -56,7 +57,7 @@ const WindowsAbuse: FC = () => {
 
     const step3 = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 3: </b> Set <code>dNSHostName</code> of victim computer to targeted computer's{' '}
                 <code>dNSHostName</code>.
                 <br />
@@ -71,7 +72,7 @@ const WindowsAbuse: FC = () => {
 
     const step4 = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl} sx={{ marginBottom: '-8px' }}>
+            <Typography variant='body2' className={cn(hasChildCodeElementsClasses, '-mb-2')}>
                 <b>Step 4: </b>Check if <code>mail</code> attribute of victim must be set and set it if required.
                 <br />
                 <br />

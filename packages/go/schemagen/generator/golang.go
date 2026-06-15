@@ -394,10 +394,30 @@ func GenerateGolangActiveDirectory(pkgName, dir string, adSchema model.ActiveDir
 		),
 	)
 
+	root.Func().Id("IngestACLRelationships").Params().Index().Qual(GraphPackageName, "Kind").Block(
+		jen.Return(
+			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
+				for _, ingestAclRelationship := range adSchema.IngestACLRelationships {
+					group.Id(ingestAclRelationship.Symbol)
+				}
+			}),
+		),
+	)
+
 	root.Func().Id("PathfindingRelationships").Params().Index().Qual(GraphPackageName, "Kind").Block(
 		jen.Return(
 			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
 				for _, pathRelationship := range adSchema.PathfindingRelationships {
+					group.Id(pathRelationship.Symbol)
+				}
+			}),
+		),
+	)
+
+	root.Func().Id("PathfindingRelationshipsMatchFrontend").Params().Index().Qual(GraphPackageName, "Kind").Block(
+		jen.Return(
+			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
+				for _, pathRelationship := range adSchema.PathfindingRelationshipsMatchFrontend {
 					group.Id(pathRelationship.Symbol)
 				}
 			}),

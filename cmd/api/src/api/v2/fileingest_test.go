@@ -103,7 +103,7 @@ func TestResources_ListFileUploadJobs(t *testing.T) {
 					apitest.AddQueryParam(input, "user_id", "eq:123")
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetAllIngestJobs(gomock.Any(), 1, 2, "start_time", model.SQLFilter{SQLString: "user_id = 123"}).Return([]model.IngestJob{}, 0, nil)
+					mockDB.EXPECT().GetAllIngestJobs(gomock.Any(), 1, 2, "start_time", model.SQLFilter{SQLString: "user_id = '123'"}).Return([]model.IngestJob{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -215,7 +215,7 @@ func TestResources_StartIngestJob(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusCreated,
-				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "end_time":"0001-01-01T00:00:00Z", "failed_files":0, "id":0, "last_ingest":"0001-01-01T00:00:00Z", "start_time":"0001-01-01T00:00:00Z", "status":1, "status_message":"", "total_files":0, "updated_at":"0001-01-01T00:00:00Z", "user_email_address": "email@notreal.com", "user_id":"00000000-0000-0000-0000-000000000000"}}`,
+				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "end_time":"0001-01-01T00:00:00Z", "failed_files":0, "id":0, "last_ingest":"0001-01-01T00:00:00Z", "partial_failed_files":0, "start_time":"0001-01-01T00:00:00Z", "status":1, "status_message":"", "total_files":0, "updated_at":"0001-01-01T00:00:00Z", "user_email_address": "email@notreal.com", "user_id":"00000000-0000-0000-0000-000000000000"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -294,7 +294,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   `{"errors":[{"context":"", "message":"id is malformed."}], "http_status":400, "request_id":"id", "timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"", "message":"id is malformed"}], "http_status":400, "request_id":"id", "timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -529,7 +529,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   `{"errors":[{"context":"","message":"id is malformed."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"id is malformed"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},

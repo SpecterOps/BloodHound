@@ -14,11 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../graphSchema';
 import {
-    ADSpecificTimeProperties,
+    ActiveDirectoryKindProperties,
+    ActiveDirectoryNodeKind,
+    AzureKindProperties,
+    CommonKindProperties,
+} from '../graphSchema';
+import { SelectedNode } from '../types';
+import {
     AD_NEVER_VALUE,
     AD_UNKNOWN_VALUE,
+    ADSpecificTimeProperties,
     DATE_FIELDS,
     EntityField,
     formatADSpecificTime,
@@ -27,6 +33,8 @@ import {
     formatList,
     formatNumber,
     formatPrimitive,
+    getEntityName,
+    NoEntitySelectedHeader,
     validateProperty,
 } from './entityInfoDisplay';
 
@@ -111,9 +119,9 @@ describe('Formatting strings via formatPrimive', () => {
         expect(formatPrimitive('2016', null, 'any_other_field')).toEqual('2016');
         expect(formatPrimitive('2016', null, 'any_other_field')).not.toEqual('2016-01-01 00:00 PST (GMT-0800)');
 
-        // With no field supplied, parse as a date
-        expect(formatPrimitive('2016')).toEqual('2016-01-01 00:00 PST (GMT-0800)');
-        expect(formatPrimitive('2016')).not.toEqual('2016');
+        // With no field supplied, do not parse as a date
+        expect(formatPrimitive('2016')).toEqual('2016');
+        expect(formatPrimitive('2016')).not.toEqual('2016-01-01 00:00 PST (GMT-0800)');
     });
 });
 
@@ -145,5 +153,21 @@ describe('validating a node property against the shared generated schema', () =>
     });
     it('should return an object denoting that the property is not in the schema when it is unrecognized', () => {
         expect(validateProperty('notInSchema')).toEqual({ isKnownProperty: false, kind: null });
+    });
+});
+
+describe('Evaluating the entity display name from a given entity', () => {
+    it('should handle an undefined or null entity', () => {
+        expect(getEntityName(null)).toBe(NoEntitySelectedHeader);
+        expect(getEntityName(undefined)).toBe(NoEntitySelectedHeader);
+    });
+    it('should handle an entity that has an empty name property', () => {
+        expect(getEntityName({ id: '1', type: ActiveDirectoryNodeKind.User, name: '' })).toBe('Name not found');
+    });
+    it('should handle an entity that has no name property', () => {
+        expect(getEntityName({ id: '1', type: ActiveDirectoryNodeKind.User } as SelectedNode)).toBe('Name not found');
+    });
+    it('should handle the well formed entities', () => {
+        expect(getEntityName({ id: '1', type: ActiveDirectoryNodeKind.User, name: 'foo' })).toBe('foo');
     });
 });

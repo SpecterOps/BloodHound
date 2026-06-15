@@ -14,25 +14,37 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Skeleton } from '@bloodhoundenterprise/doodleui';
+import { AssetGroupTag, AssetGroupTagSelector, SeedTypes } from 'js-client-library';
 import { DateTime } from 'luxon';
-import { CSSProperties } from 'react';
 import { ErrorOption, FieldValues, UseFormReturn } from 'react-hook-form';
 import { CustomRangeError, END_DATE, LuxonFormat, START_DATE } from '../../utils';
 
-export const ItemSkeleton = (title: string, key: number, height?: string, style?: CSSProperties) => {
-    return (
-        <li
-            key={key}
-            data-testid={`privilege-zones_${title.toLowerCase()}-list_loading-skeleton`}
-            style={style}
-            className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative w-full'>
-            <Skeleton className={`${height ?? 'min-h-10'} rounded-none`} />
-        </li>
-    );
+export const isTag = (data: any): data is AssetGroupTag => {
+    return 'kind_id' in data;
 };
 
-export const itemSkeletons = [ItemSkeleton, ItemSkeleton, ItemSkeleton];
+export const isRule = (data: any): data is AssetGroupTagSelector => {
+    return 'is_default' in data;
+};
+
+export const getRuleSeedType = (rule: AssetGroupTagSelector): SeedTypes => {
+    const firstSeed = rule.seeds[0];
+
+    return firstSeed.type;
+};
+
+export const TagTabValue = 'tag' as const;
+export const RuleTabValue = 'rule' as const;
+export const ObjectTabValue = 'object' as const;
+
+export type DetailsTabOption = typeof TagTabValue | typeof RuleTabValue | typeof ObjectTabValue;
+
+export const getListHeight = (windoHeight: number) => {
+    if (windoHeight > 1080) return 760;
+    if (1080 >= windoHeight && windoHeight > 900) return 640;
+    if (900 >= windoHeight) return 436;
+    return 436;
+};
 
 export function validateFormDates<T extends FieldValues>(
     form: UseFormReturn<T>,

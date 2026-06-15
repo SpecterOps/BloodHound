@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Menu, MenuItem, Typography } from '@mui/material';
+import { Box, Menu, MenuItem } from '@mui/material';
+import { Button, Typography } from 'doodle-ui';
 import React, { ComponentPropsWithoutRef, FC } from 'react';
 import FeatureFlag from '../FeatureFlag';
 
@@ -48,7 +48,7 @@ const MenuWithDropdown: React.FC<{
                 onClick={openMenu}
                 disabled={disabled}>
                 <Box display='flex' alignItems={'center'}>
-                    <Typography mr='8px'>{menuTitle}</Typography>
+                    <Typography className='mr-2'>{menuTitle}</Typography>
                     <FontAwesomeIcon icon={faCaretDown} />
                 </Box>
             </Button>

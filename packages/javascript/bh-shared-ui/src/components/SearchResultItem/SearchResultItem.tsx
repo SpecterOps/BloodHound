@@ -37,7 +37,6 @@ const SearchResultItem: FC<{
 }> = ({ style, item, index, highlightedIndex, keyword, getItemProps }) => {
     return (
         <ListItem
-            button
             dense
             style={style}
             className={cn(
@@ -49,6 +48,7 @@ const SearchResultItem: FC<{
             )}
             key={item.objectId}
             data-testid='explore_search_result-list-item'
+            tabIndex={0}
             {...getItemProps({ item, index })}>
             <ListItemText
                 primary={

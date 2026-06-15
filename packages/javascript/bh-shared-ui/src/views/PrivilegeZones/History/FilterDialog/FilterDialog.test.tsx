@@ -25,6 +25,18 @@ const server = setupServer(
     ...bloodHoundUsersHandlers,
     rest.get('/api/v2/asset-group-tags', async (_, res, ctx) => {
         return res(ctx.json({ data: { tags: [{ name: 'foo', id: 77 }] } }));
+    }),
+    rest.get('/api/v2/features', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        key: 'tier_management_engine',
+                        enabled: true,
+                    },
+                ],
+            })
+        );
     })
 );
 

@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -34,10 +34,11 @@ export const environmentAggregationMap = {
 } as const satisfies MappedStringLiteral<EnvironmentAggregation, EnvironmentAggregation>;
 
 export const parseEnvironmentAggregation = (paramValue: string | null): EnvironmentAggregation | null => {
-    if (paramValue && paramValue in environmentAggregationMap) {
-        return paramValue as EnvironmentAggregation;
+    if (!paramValue) {
+        return null;
     }
-    return null;
+    // Allow custom environment types to pass through
+    return paramValue as EnvironmentAggregation;
 };
 
 interface UseEnvironmentParamsReturn extends EnvironmentQueryParams {

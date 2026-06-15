@@ -15,39 +15,83 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { GraphData } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render } from '../../../test-utils';
+import { cypherTestResponse } from '../../../mocks/factories/explore';
+import { createGraphKinds } from '../../../mocks/factories/graphKinds';
+import { render, waitFor } from '../../../test-utils';
 import { mockCodemirrorLayoutMethods } from '../../../utils';
 import CypherSearch from './CypherSearch';
 
+const mockClearSelectedItem = vi.fn();
+const mockSetSelectedItem = vi.fn();
+
+vi.mock('../../../hooks', async () => {
+    const actual = await vi.importActual('../../../hooks');
+
+    return {
+        ...actual,
+        useExploreSelectedItem: () => ({
+            clearSelectedItem: mockClearSelectedItem,
+            setSelectedItem: mockSetSelectedItem,
+            selectedItem: '123',
+        }),
+    };
+});
+
+const CYPHER_SEARCH_ROUTE = '?searchType=cypher&cypherSearch=bWF0Y2ggKG4pIHJldHVybiBuIGxpbWl0IDEw';
+
+const multiNodeGraphResponse = cypherTestResponse;
+
+const singleNodeGraphResponse = {
+    data: {
+        nodes: { '108': cypherTestResponse.data.nodes['108'] },
+        edges: [],
+    },
+};
+
+const zeroNodeGraphResponse = {
+    data: {
+        nodes: {},
+        edges: [{ source: '1', target: '2', label: 'HasSession', kind: 'HasSession', lastSeen: '2023-01-01' }],
+    },
+};
+
 const CYPHER = 'match (n) return n limit 5';
+const INCOMPLETE_CYPHER = 'match (n:';
 
 describe('CypherSearch', () => {
-    const setup = async () => {
-        const testPerformSearch = vi.fn();
-        const state = {
-            cypherQuery: '',
-            setCypherQuery: vi.fn(),
-            performSearch: testPerformSearch,
-        };
-        const autoRun = true;
-        const handleAutoRun = () => {};
-        const testOnRunSearchClick = vi.fn();
+    const testPerformSearch = vi.fn();
+    const mockOnExploreMenuCollapse = vi.fn();
 
-        const screen = await render(
-            <CypherSearch cypherSearchState={state} autoRun={autoRun} setAutoRun={handleAutoRun} />
+    const testState = {
+        cypherQuery: '',
+        setCypherQuery: vi.fn(),
+        performSearch: testPerformSearch,
+    };
+    const setup = async (state = testState, route = '/', disableQueryLimit = true) => {
+        const screen = render(
+            <CypherSearch
+                cypherSearchState={state}
+                autoRun={true}
+                setAutoRun={() => {}}
+                disableQueryLimit={disableQueryLimit}
+                setDisableQueryLimit={() => {}}
+                onExploreMenuCollapse={mockOnExploreMenuCollapse}
+            />,
+            { route }
         );
-        const user = await userEvent.setup();
+        const user = userEvent.setup();
 
-        return { state, screen, user, testOnRunSearchClick };
+        return { state, screen, user };
     };
 
     const server = setupServer(
         rest.get('/api/v2/graphs/kinds', async (_req, res, ctx) => {
             return res(
                 ctx.json({
-                    data: { kinds: ['Tier Zero', 'Tier One', 'Tier Two'] },
+                    data: createGraphKinds(['Tier Zero', 'Tier One', 'Tier Two'], []),
                 })
             );
         }),
@@ -96,6 +140,15 @@ describe('CypherSearch', () => {
                     data: [],
                 })
             );
+        }),
+        rest.get('/api/v2/bloodhound-users-minimal', (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: {
+                        users: [],
+                    },
+                })
+            );
         })
     );
 
@@ -103,7 +156,13 @@ describe('CypherSearch', () => {
         server.listen();
     });
     beforeEach(mockCodemirrorLayoutMethods);
-    afterEach(vi.restoreAllMocks);
+    afterEach(() => {
+        vi.restoreAllMocks();
+        server.resetHandlers();
+        mockClearSelectedItem.mockClear();
+        mockSetSelectedItem.mockClear();
+        mockOnExploreMenuCollapse.mockClear();
+    });
     afterAll(() => {
         server.close();
     });
@@ -111,14 +170,126 @@ describe('CypherSearch', () => {
     it('should render', async () => {
         const { screen } = await setup();
         expect(screen.getByText(/cypher query/i)).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: /app-icon-info/i })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /Learn more about cypher/i })).toBeInTheDocument();
     });
 
     it('should call the setCypherQuery handler when the value in the editor changes', async () => {
         const { screen, user, state } = await setup();
         const searchbox = screen.getAllByRole('textbox');
+
         await user.type(searchbox[1], CYPHER);
-        expect(state.setCypherQuery).toBeCalled();
-        expect(state.setCypherQuery).toHaveBeenCalledTimes(CYPHER.length);
+
+        expect(state.setCypherQuery).toHaveBeenCalled();
+    });
+
+    it('should display a dropdown when a user types a partial query that can be autocompleted', async () => {
+        const { screen, user } = await setup();
+        const searchbox = screen.getAllByRole('textbox');
+
+        await user.type(searchbox[1], INCOMPLETE_CYPHER);
+
+        const autocomplete = await screen.findByRole('listbox');
+
+        expect(autocomplete).toBeVisible();
+    });
+
+    it('should call performSearch on keyboard press alt+R', async () => {
+        const { user } = await setup({ ...testState, cypherQuery: 'Anything' });
+
+        expect(testPerformSearch).not.toHaveBeenCalled();
+
+        await user.keyboard('{Alt>}r{/Alt}');
+
+        expect(testPerformSearch).toHaveBeenCalled();
+    });
+
+    it('should open save dialog on keyboard press alt+S', async () => {
+        const { user, screen } = await setup({ ...testState, cypherQuery: 'Anything' });
+
+        expect(screen.queryByTestId('save-query-dialog')).not.toBeInTheDocument();
+
+        await user.keyboard('{Alt>}s{/Alt}');
+
+        expect(screen.queryByTestId('save-query-dialog')).toBeInTheDocument();
+    });
+
+    describe('Minimize explorer page elements when multiple nodes are returned', () => {
+        const cypherSearchState = { ...testState, cypherQuery: CYPHER };
+        const cypherSearchRoute = `${CYPHER_SEARCH_ROUTE}&selectedItem=108`;
+
+        const mockCypherEndpoint = (response: { data: GraphData }) => {
+            server.use(rest.post('/api/v2/graphs/cypher', (_req, res, ctx) => res(ctx.json(response))));
+        };
+
+        it('closes explore search tab menu and clears selected item when a cypher query returns multiple nodes', async () => {
+            mockCypherEndpoint(singleNodeGraphResponse);
+            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute);
+
+            await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
+
+            expect(mockClearSelectedItem).not.toHaveBeenCalled();
+
+            mockCypherEndpoint(multiNodeGraphResponse);
+            await user.click(screen.getByRole('button', { name: /run cypher query/i }));
+
+            await waitFor(() => expect(mockClearSelectedItem).toHaveBeenCalled());
+            expect(mockOnExploreMenuCollapse).toHaveBeenCalled();
+        });
+
+        it('does not close explore search tab menu or entity info panel when search returns zero nodes', async () => {
+            mockCypherEndpoint(singleNodeGraphResponse);
+            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute);
+
+            await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
+
+            expect(mockClearSelectedItem).not.toHaveBeenCalled();
+            expect(mockOnExploreMenuCollapse).toHaveBeenCalled();
+            mockOnExploreMenuCollapse.mockClear();
+
+            mockCypherEndpoint(zeroNodeGraphResponse);
+            await user.click(screen.getByRole('button', { name: /run cypher query/i }));
+
+            await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
+
+            expect(mockClearSelectedItem).not.toHaveBeenCalled();
+            expect(mockOnExploreMenuCollapse).not.toHaveBeenCalled();
+        });
+
+        it('closes explore search tab menu when search returns one node, entity info panel remains open', async () => {
+            mockCypherEndpoint(singleNodeGraphResponse);
+            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute);
+
+            await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
+
+            mockClearSelectedItem.mockClear();
+            mockSetSelectedItem.mockClear();
+
+            mockCypherEndpoint(singleNodeGraphResponse);
+            await user.click(screen.getByRole('button', { name: /run cypher query/i }));
+
+            await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
+
+            expect(mockClearSelectedItem).not.toHaveBeenCalled();
+            expect(mockOnExploreMenuCollapse).toHaveBeenCalled();
+            expect(mockSetSelectedItem).toHaveBeenCalledWith('108');
+        });
+
+        it('calls onExploreMenuCollapse again when user reopens widget and runs another multi-node query', async () => {
+            mockCypherEndpoint(singleNodeGraphResponse);
+            const { screen, user } = await setup(cypherSearchState, cypherSearchRoute);
+            await waitFor(() => expect(mockOnExploreMenuCollapse).toHaveBeenCalledTimes(1));
+            await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
+            mockOnExploreMenuCollapse.mockClear();
+
+            mockCypherEndpoint(multiNodeGraphResponse);
+            await user.click(screen.getByRole('button', { name: /run cypher query/i }));
+            await waitFor(() => expect(mockOnExploreMenuCollapse).toHaveBeenCalledTimes(1));
+
+            mockOnExploreMenuCollapse.mockClear();
+
+            mockCypherEndpoint(multiNodeGraphResponse);
+            await user.click(screen.getByRole('button', { name: /run cypher query/i }));
+            await waitFor(() => expect(mockOnExploreMenuCollapse).toHaveBeenCalledTimes(1));
+        });
     });
 });

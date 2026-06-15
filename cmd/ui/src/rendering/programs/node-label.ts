@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { truncateText } from 'bh-shared-ui';
 import { Settings } from 'sigma/settings';
 import {
     EDGE_MIDDLE_ALIGN_OFFSET,
@@ -23,7 +24,10 @@ import {
     LabelBoundsParams,
     calculateLabelOpacity,
     getLabelBoundsFromContext,
+    getNodeLabelBoundsBelowFromContext,
 } from '../utils/utils';
+
+const SUBLABEL_FONT_RATIO = 0.85;
 
 export default function drawLabel(context: CanvasRenderingContext2D, data: GraphItemData, settings: Settings): void {
     if (!data.label || !settings.labelColor.color) return;
@@ -34,29 +38,103 @@ export default function drawLabel(context: CanvasRenderingContext2D, data: Graph
         font = settings.labelFont,
         weight = settings.labelWeight;
 
-    context.globalAlpha = calculateLabelOpacity(inverseSqrtZoomRatio);
-    context.font = `${weight} ${size}px ${font}`;
+    const fillBackground = data.highlighted ? data.highlightedBackground : data.backgroundColor;
+    const fillText = data.highlighted ? data.highlightedText : settings.labelColor.color;
 
-    const labelParams: LabelBoundsParams = {
-        inverseSqrtZoomRatio,
-        label: data.label,
-        position: data,
-        size: data.size ?? 0, // fallback prevents NaN
-    };
+    const dimFactor = data.isDimmed ? data.labelDimFactor ?? 0.1 : 1;
+    context.globalAlpha = calculateLabelOpacity(inverseSqrtZoomRatio) * dimFactor;
 
-    const labelbounds = getLabelBoundsFromContext(context, labelParams);
-
-    // This method is reused to draw edge labels as well, however, edge labels
-    // must be offset to middle to align with unrendered edge label mouse target
+    // Edge labels: use original right-of-node positioning with center-alignment offset
     if (EDGE_TYPES.includes(data.type ?? '')) {
+        context.font = `${weight} ${size}px ${font}`;
+
+        const labelParams: LabelBoundsParams = {
+            inverseSqrtZoomRatio,
+            label: data.label,
+            position: data,
+            size: data.size ?? 0,
+        };
+
+        const labelbounds = getLabelBoundsFromContext(context, labelParams);
         labelbounds[0] = labelbounds[0] - labelbounds[2] / 2 - EDGE_MIDDLE_ALIGN_OFFSET;
+
+        // Draw background at full opacity so it always masks the edge line behind it
+        context.globalAlpha = 1;
+        context.fillStyle = fillBackground;
+        context.fillRect(...labelbounds);
+
+        // Draw text with zoom/dim factor applied
+        context.globalAlpha = calculateLabelOpacity(inverseSqrtZoomRatio) * dimFactor;
+        context.fillStyle = fillText;
+        context.fillText(data.label, labelbounds[0] + LABEL_PADDING, labelbounds[1] + labelbounds[3] - LABEL_PADDING);
+
+        context.globalAlpha = 1;
+        return;
     }
 
-    context.fillStyle = data.highlighted ? data.highlightedBackground : data.backgroundColor;
-    context.fillRect(...labelbounds);
+    // Node labels: truncated primary label + truncated sublabel, centered below the node
+    // When the node is highlighted (selected), show the full label instead of truncating
 
-    context.fillStyle = data.highlighted ? data.highlightedText : settings.labelColor.color;
-    context.fillText(data.label, labelbounds[0] + LABEL_PADDING, labelbounds[1] + labelbounds[3] - LABEL_PADDING);
+    const labelTextRendered = (labelText: string) => {
+        if (data.isExploreGraphLabelClip === false) return labelText;
+        return data.highlighted ? labelText : truncateText(labelText) ?? labelText;
+    };
+
+    const primaryLabel = labelTextRendered(data.label);
+    const nodeSize = data.size ?? 0;
+
+    context.font = `bold ${size}px ${font}`;
+
+    const primaryParams: LabelBoundsParams = {
+        inverseSqrtZoomRatio,
+        label: primaryLabel,
+        position: data,
+        size: nodeSize,
+    };
+
+    const primaryBounds = getNodeLabelBoundsBelowFromContext(context, primaryParams);
+
+    // Draw background at full opacity to mask any edge lines passing through the label area
+    context.globalAlpha = 1;
+    context.fillStyle = fillBackground;
+    context.fillRect(...primaryBounds);
+
+    context.globalAlpha = calculateLabelOpacity(inverseSqrtZoomRatio) * dimFactor;
+    context.fillStyle = fillText;
+    context.fillText(
+        primaryLabel,
+        primaryBounds[0] + LABEL_PADDING,
+        primaryBounds[1] + primaryBounds[3] - LABEL_PADDING
+    );
+
+    if (data.source && data.kind) {
+        const nodeSource = labelTextRendered(data.source);
+        const nodeKind = labelTextRendered(data.kind);
+        const sublabelText = `${nodeSource} | ${nodeKind}`;
+        const sublabelSize = size * SUBLABEL_FONT_RATIO;
+        context.font = `${weight} ${sublabelSize}px ${font}`;
+
+        const sublabelParams: LabelBoundsParams = {
+            inverseSqrtZoomRatio,
+            label: sublabelText,
+            position: data,
+            size: nodeSize,
+        };
+
+        const sublabelBounds = getNodeLabelBoundsBelowFromContext(context, sublabelParams, primaryBounds[3]);
+
+        context.globalAlpha = 1;
+        context.fillStyle = fillBackground;
+        context.fillRect(...sublabelBounds);
+
+        context.globalAlpha = calculateLabelOpacity(inverseSqrtZoomRatio) * dimFactor;
+        context.fillStyle = fillText;
+        context.fillText(
+            sublabelText,
+            sublabelBounds[0] + LABEL_PADDING,
+            sublabelBounds[1] + sublabelBounds[3] - LABEL_PADDING
+        );
+    }
 
     context.globalAlpha = 1;
 }

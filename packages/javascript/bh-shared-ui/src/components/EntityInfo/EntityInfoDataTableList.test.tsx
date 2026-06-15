@@ -23,7 +23,7 @@ import { zonesPath } from '../../routes';
 import { render, screen, waitForElementToBeRemoved } from '../../test-utils';
 import { EntityKinds } from '../../utils';
 import { ObjectInfoPanelContextProvider } from '../../views';
-import EntitySelectorsInformation from '../../views/PrivilegeZones/Details/EntitySelectorsInformation';
+import EntitysRulesInformation from '../../views/PrivilegeZones/Details/EntityRulesInformation';
 import { EntityInfoDataTable } from '../EntityInfoDataTable';
 import EntityInfoContent from './EntityInfoContent';
 
@@ -113,7 +113,7 @@ describe('EntityInfoDataTableList', () => {
                 additionalTables={[
                     {
                         sectionProps: { tagType: zonesPath },
-                        TableComponent: EntitySelectorsInformation,
+                        TableComponent: EntitysRulesInformation,
                     },
                 ]}
             />
@@ -125,7 +125,7 @@ describe('EntityInfoDataTableList', () => {
         let listContainsSelectorsSection = false;
 
         list.childNodes.forEach((child) => {
-            if (child.textContent?.includes('Selectors')) listContainsSelectorsSection = true;
+            if (child.textContent?.includes('Rules')) listContainsSelectorsSection = true;
         });
 
         expect(listContainsSelectorsSection).toBeTruthy();
@@ -139,7 +139,7 @@ describe('EntityInfoDataTableList', () => {
 
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
 
-        const selectorsInfoSectionTitle = await screen.queryByText(/selectors/i);
+        const selectorsInfoSectionTitle = await screen.queryByText(/rules/i);
         expect(selectorsInfoSectionTitle).not.toBeInTheDocument();
     });
 });

@@ -15,25 +15,24 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faAngleDoubleUp, faRemove } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Typography } from '@mui/material';
+import { Tooltip } from 'doodle-ui';
 import React from 'react';
 import Icon from '../../components/Icon';
 import NodeIcon from '../../components/NodeIcon/NodeIcon';
 import { useExploreParams, useExploreSelectedItem } from '../../hooks';
 import { EntityKinds } from '../../utils/content';
-import { useHeaderStyles } from '../../views/Explore/InfoStyles';
 import { useObjectInfoPanelContext } from '../../views/Explore/providers';
+import HiddenEntityIcon from '../HiddenEntityIcon';
 
 export interface HeaderProps {
     name: string;
-    nodeType?: EntityKinds;
+    nodeType?: EntityKinds | string;
 }
 
 const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
-    const styles = useHeaderStyles();
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams, expandedPanelSections } = useExploreParams();
-    const { clearSelectedItem, selectedItem } = useExploreSelectedItem();
+    const { clearSelectedItem, selectedItem, selectedItemType } = useExploreSelectedItem();
 
     const handleCollapseAll = () => {
         setIsObjectInfoPanelOpen(false);
@@ -45,34 +44,35 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
         }
     };
 
+    const hiddenNode = nodeType === 'HIDDEN' && selectedItemType === 'node';
+
     return (
-        <Box className={styles.header}>
-            {selectedItem ? (
-                <Icon className={styles.icon} click={clearSelectedItem} tip='Clear selected item'>
-                    <FontAwesomeIcon icon={faRemove} />
-                </Icon>
-            ) : (
-                <div className='w-3' />
-            )}
-
-            {nodeType && <NodeIcon nodeType={nodeType} />}
-
-            <Typography
-                data-testid='explore_entity-information-panel_header-text'
-                variant='h6'
-                noWrap
-                className={styles.headerText}>
-                {name}
-            </Typography>
-
+        <div className='flex justify-between items-center text-sm font-bold'>
             <Icon
                 tip='Collapse All'
-                click={handleCollapseAll}
-                className={styles.icon}
+                onClick={handleCollapseAll}
+                className='box-border text-contrast px-4'
                 data-testid='explore_entity-information-panel_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />
             </Icon>
-        </Box>
+            {hiddenNode ? <HiddenEntityIcon /> : <NodeIcon nodeType={nodeType} />}
+            <Tooltip tooltip={name} contentProps={{ side: 'bottom' }}>
+                <h6
+                    data-testid='explore_entity-information-panel_header-text'
+                    className='truncate pl-2 pr-4 leading-10 grow'>
+                    {name}
+                </h6>
+            </Tooltip>
+            {/* selectedItem only gets set from param so we only offer the clear icon if its from param, hence nothing in PZ entity  panel */}
+            {selectedItem && (
+                <Icon
+                    className='h-10 box-border p-4 text-contrast'
+                    onClick={clearSelectedItem}
+                    tip='Clear selected item'>
+                    <FontAwesomeIcon icon={faRemove} />
+                </Icon>
+            )}
+        </div>
     );
 };
 

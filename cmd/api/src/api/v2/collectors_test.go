@@ -28,10 +28,12 @@ import (
 	"github.com/gorilla/mux"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	fsmocks "github.com/specterops/bloodhound/cmd/api/src/services/fs/mocks"
+	storageServiceMocks "github.com/specterops/bloodhound/cmd/api/src/services/storage/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	"github.com/specterops/bloodhound/packages/go/storage"
+	storagemocks "github.com/specterops/bloodhound/packages/go/storage/mocks"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -40,7 +42,8 @@ import (
 
 func TestResources_DownloadCollectorByVersion(t *testing.T) {
 	type mock struct {
-		mockFS *fsmocks.MockService
+		mockFS                  *storagemocks.MockFileService
+		mockFileServiceResolver *storageServiceMocks.MockFileServiceResolver
 	}
 	type expected struct {
 		responseBody   string
@@ -89,7 +92,7 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: os.ReadFile error when retrieving collector file - Internal Server Error",
+			name: "Error: file service read error when retrieving collector file - Internal Server Error",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
@@ -99,7 +102,27 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockFS.EXPECT().ReadFile("azurehound/azurehound-latest.zip").Return([]byte{}, errors.New("error"))
+				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceCollectors).Return(mock.mockFS, nil)
+				mock.mockFS.EXPECT().ReadFile(gomock.Any(), "azurehound/azurehound-latest.zip").Return([]byte{}, errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: file service resolver error - Internal Server Error",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/collectors/azurehound/latest",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceCollectors).Return(nil, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -118,7 +141,8 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockFS.EXPECT().ReadFile("azurehound/azurehound-v1.0.0.zip").Return([]byte{}, nil)
+				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceCollectors).Return(mock.mockFS, nil)
+				mock.mockFS.EXPECT().ReadFile(gomock.Any(), "azurehound/azurehound-v1.0.0.zip").Return([]byte{}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -136,7 +160,8 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockFS.EXPECT().ReadFile("azurehound/azurehound-latest.zip").Return([]byte{}, nil)
+				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceCollectors).Return(mock.mockFS, nil)
+				mock.mockFS.EXPECT().ReadFile(gomock.Any(), "azurehound/azurehound-latest.zip").Return([]byte{}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -150,7 +175,8 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 
 			ctrl := gomock.NewController(t)
 			mock := &mock{
-				mockFS: fsmocks.NewMockService(ctrl),
+				mockFS:                  storagemocks.NewMockFileService(ctrl),
+				mockFileServiceResolver: storageServiceMocks.NewMockFileServiceResolver(ctrl),
 			}
 			testCase.setupMocks(t, mock)
 
@@ -162,8 +188,8 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 			}
 
 			resources := v2.Resources{
-				CollectorManifests: collectorManifests,
-				FileService:        mock.mockFS,
+				CollectorManifests:  collectorManifests,
+				FileServiceResolver: mock.mockFileServiceResolver,
 			}
 
 			response := httptest.NewRecorder()
@@ -187,7 +213,8 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 
 func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 	type mock struct {
-		mockFS *fsmocks.MockService
+		mockFS                  *storagemocks.MockFileService
+		mockFileServiceResolver *storageServiceMocks.MockFileServiceResolver
 	}
 	type expected struct {
 		responseBody   string
@@ -236,7 +263,7 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: os.ReadFile error when retrieving collector file - Internal Server Error",
+			name: "Error: file service read error when retrieving collector file - Internal Server Error",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
@@ -246,7 +273,27 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockFS.EXPECT().ReadFile("azurehound/azurehound-latest.zip.sha256").Return([]byte{}, errors.New("error"))
+				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceCollectors).Return(mock.mockFS, nil)
+				mock.mockFS.EXPECT().ReadFile(gomock.Any(), "azurehound/azurehound-latest.zip.sha256").Return([]byte{}, errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: file service resolver error - Internal Server Error",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/collectors/azurehound/latest/checksum",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceCollectors).Return(nil, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -265,7 +312,8 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockFS.EXPECT().ReadFile("azurehound/azurehound-v1.0.0.zip.sha256").Return([]byte{}, nil)
+				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceCollectors).Return(mock.mockFS, nil)
+				mock.mockFS.EXPECT().ReadFile(gomock.Any(), "azurehound/azurehound-v1.0.0.zip.sha256").Return([]byte{}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -283,7 +331,8 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockFS.EXPECT().ReadFile("azurehound/azurehound-latest.zip.sha256").Return([]byte{}, nil)
+				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceCollectors).Return(mock.mockFS, nil)
+				mock.mockFS.EXPECT().ReadFile(gomock.Any(), "azurehound/azurehound-latest.zip.sha256").Return([]byte{}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -304,13 +353,14 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 
 			ctrl := gomock.NewController(t)
 			mock := &mock{
-				mockFS: fsmocks.NewMockService(ctrl),
+				mockFS:                  storagemocks.NewMockFileService(ctrl),
+				mockFileServiceResolver: storageServiceMocks.NewMockFileServiceResolver(ctrl),
 			}
 			testCase.setupMocks(t, mock)
 
 			resources := v2.Resources{
-				CollectorManifests: collectorManifests,
-				FileService:        mock.mockFS,
+				CollectorManifests:  collectorManifests,
+				FileServiceResolver: mock.mockFileServiceResolver,
 			}
 
 			response := httptest.NewRecorder()

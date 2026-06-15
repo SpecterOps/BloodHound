@@ -13,6 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { faClose } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     Button,
     FormControl,
@@ -25,10 +27,8 @@ import {
     SelectTrigger,
     SelectValue,
     Skeleton,
-} from '@bloodhoundenterprise/doodleui';
-import { faClose } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { SystemString, User } from 'js-client-library';
+} from 'doodle-ui';
+import { BloodHoundString, User } from 'js-client-library';
 import { FC, useMemo } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { useBloodHoundUsers } from '../../../../hooks/useBloodHoundUsers';
@@ -78,6 +78,7 @@ const MadeByField: FC<{
                             </FormControl>
                             <Button
                                 variant={'text'}
+                                aria-label='clear MadeBy'
                                 disabled={!field.value}
                                 className={cn('w-1/12 p-0', { invisible: !field.value })}
                                 onClick={() => {
@@ -90,7 +91,7 @@ const MadeByField: FC<{
                             <Skeleton className='h-10 w-24' />
                         ) : (
                             <SelectContent>
-                                <SelectItem value={SystemString}>{SystemString}</SelectItem>
+                                <SelectItem value={BloodHoundString}>{BloodHoundString}</SelectItem>
                                 {users.map((user) => (
                                     <SelectItem key={user.id} value={user.email_address || user.id}>
                                         {user.email_address || user.principal_name}

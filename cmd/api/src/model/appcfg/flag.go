@@ -25,22 +25,31 @@ import (
 
 // AvailableFlags has been removed and the db feature_flags table is the source of truth. Feature flag defaults should be added via migration *.sql files.
 const (
-	FeatureButterflyAnalysis          = "butterfly_analysis"
-	FeatureEnableSAMLSSO              = "enable_saml_sso"
-	FeatureScopeCollectionByOU        = "scope_collection_by_ou"
-	FeatureAzureSupport               = "azure_support"
-	FeatureEntityPanelCaching         = "entity_panel_cache"
-	FeatureAdcs                       = "adcs"
-	FeatureClearGraphData             = "clear_graph_data"
-	FeatureRiskExposureNewCalculation = "risk_exposure_new_calculation"
-	FeatureFedRAMPEULA                = "fedramp_eula"
-	FeatureDarkMode                   = "dark_mode"
-	FeatureAutoTagT0ParentObjects     = "auto_tag_t0_parent_objects"
-	FeatureOIDCSupport                = "oidc_support"
-	FeatureNTLMPostProcessing         = "ntlm_post_processing"
-	FeatureTierManagement             = "tier_management_engine"
-	FeatureChangelog                  = "changelog"
-	FeatureETAC                       = "environment_targeted_access_control"
+	FeatureButterflyAnalysis            = "butterfly_analysis"
+	FeatureEnableSAMLSSO                = "enable_saml_sso"
+	FeatureScopeCollectionByOU          = "scope_collection_by_ou"
+	FeatureAzureSupport                 = "azure_support"
+	FeatureEntityPanelCaching           = "entity_panel_cache"
+	FeatureAdcs                         = "adcs"
+	FeatureClearGraphData               = "clear_graph_data"
+	FeatureRiskExposureNewCalculation   = "risk_exposure_new_calculation"
+	FeatureFedRAMPEULA                  = "fedramp_eula"
+	FeatureDarkMode                     = "dark_mode"
+	FeatureAutoTagT0ParentObjects       = "auto_tag_t0_parent_objects"
+	FeatureOIDCSupport                  = "oidc_support"
+	FeatureNTLMPostProcessing           = "ntlm_post_processing"
+	FeatureTierManagement               = "tier_management_engine"
+	FeatureChangelog                    = "changelog"
+	FeatureETAC                         = "environment_targeted_access_control"
+	FeatureOpenGraphSearch              = "opengraph_search"
+	FeatureOpenGraphFindings            = "opengraph_findings"
+	FeatureClientBearerAuth             = "client_bearer_auth"
+	FeatureOpenGraphExtensionManagement = "opengraph_extension_management"
+	FeatureOpenHoundSupport             = "openhound_support"
+	FeatureAPIKeyExpirationSupport      = "api_key_expiration_support"
+	FeatureFindingsTable                = "findings_table"
+	FeatureCollectorSupportBundle       = "collector_support_bundle"
+	FeatureAlerts                       = "alerts"
 )
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be
@@ -68,6 +77,14 @@ type FeatureFlag struct {
 	UserUpdatable bool `json:"user_updatable"`
 }
 
+func (s FeatureFlag) AuditData() model.AuditData {
+	return model.AuditData{
+		"name":    s.Name,
+		"key":     s.Key,
+		"enabled": s.Enabled,
+	}
+}
+
 // FeatureFlagSet is a collection of flags indexed by their flag Key.
 type FeatureFlagSet map[string]FeatureFlag
 
@@ -90,20 +107,26 @@ type GetFlagByKeyer interface {
 	GetFlagByKey(context.Context, string) (FeatureFlag, error)
 }
 
-// TODO Cleanup after Tiering GA
-func GetTieringEnabled(ctx context.Context, service GetFlagByKeyer) bool {
-	if tierFlag, err := service.GetFlagByKey(ctx, FeatureTierManagement); err != nil {
-		slog.WarnContext(ctx, "Failed to fetch tiering management flag; returning false")
+func GetFlagEnabled(ctx context.Context, service GetFlagByKeyer, key string) bool {
+	if flag, err := service.GetFlagByKey(ctx, key); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch feature flag; returning false", slog.String("key", key))
 		return false
 	} else {
-		return tierFlag.Enabled
+		return flag.Enabled
 	}
 }
 
-func (s FeatureFlag) AuditData() model.AuditData {
-	return model.AuditData{
-		"name":    s.Name,
-		"key":     s.Key,
-		"enabled": s.Enabled,
-	}
+// TODO Cleanup after Tiering GA
+func GetTieringEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+	return GetFlagEnabled(ctx, service, FeatureTierManagement)
+}
+
+// GetOpenHoundEnabled returns true if the OpenHound Support feature flag is enabled.
+func GetOpenHoundEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+	return GetFlagEnabled(ctx, service, FeatureOpenHoundSupport)
+}
+
+// GetAlertsEnabled returns true if the Alerts feature flag is enabled.
+func GetAlertsEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+	return GetFlagEnabled(ctx, service, FeatureAlerts)
 }

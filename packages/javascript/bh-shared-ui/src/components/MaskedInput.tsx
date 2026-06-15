@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Input, InputProps } from '@bloodhoundenterprise/doodleui';
 import InputMask from '@mona-health/react-input-mask';
+import { Input, InputProps } from 'doodle-ui';
 import { forwardRef } from 'react';
 
 export const MaskedInput = forwardRef<HTMLInputElement, InputProps>((props, ref) => {

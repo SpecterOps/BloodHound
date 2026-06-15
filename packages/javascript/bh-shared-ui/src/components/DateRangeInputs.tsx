@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Label } from '@bloodhoundenterprise/doodleui';
+import { Label } from 'doodle-ui';
 import { DateTime } from 'luxon';
 import { useCallback, useEffect, useState, type FC } from 'react';
 import { FinishedJobsFilter, LuxonFormat } from '../utils';
@@ -85,7 +85,6 @@ export const DateRangeInputs: FC<DateRangeInputsProps> = ({ end, onChange, onVal
             <Label>Date Range</Label>
 
             <ManagedDatePicker hint='Start Date' onDateChange={onStartChange} value={start} />
-
             <ManagedDatePicker
                 hint='End Date'
                 onDateChange={onEndChange}

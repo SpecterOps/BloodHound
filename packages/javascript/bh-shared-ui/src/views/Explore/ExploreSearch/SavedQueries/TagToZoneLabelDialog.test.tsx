@@ -80,6 +80,18 @@ const handlers = [
             })
         );
     }),
+    rest.get('/api/v2/features', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        key: 'tier_management_engine',
+                        enabled: true,
+                    },
+                ],
+            })
+        );
+    }),
 ];
 
 const server = setupServer(...handlers);

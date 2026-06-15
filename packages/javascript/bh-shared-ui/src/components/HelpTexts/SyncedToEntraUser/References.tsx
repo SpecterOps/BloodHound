@@ -33,7 +33,7 @@ const References: FC = () => {
         },
     ];
     return (
-        <Box sx={{ overflowX: 'auto' }}>
+        <Box className='overflow-x-auto'>
             {references.map((reference) => {
                 return (
                     <React.Fragment key={reference.link}>

@@ -27,6 +27,7 @@ import (
 	"testing"
 
 	"github.com/peterldowns/pgtestdb"
+	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
@@ -63,29 +64,35 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 		workDir  = t.TempDir()
 	)
 
+	cfg, err := config.NewDefaultConnectionConfiguration(connConf.URL())
+	require.NoError(t, err)
+
 	//#region Setup for dbs
-	pool, err := pg.NewPool(connConf.URL())
+	graphPool, err := dbpool.NewDawgsPool(cfg.Database)
 	require.NoError(t, err)
 
-	gormDB, err := database.OpenDatabase(connConf.URL())
+	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
 	require.NoError(t, err)
 
-	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
+	db := database.NewBloodhoundDB(gormDB, dbPool, auth.NewIdentityResolver(), config.Configuration{})
 
 	graphDB, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
 		GraphQueryMemoryLimit: 1024 * 1024 * 1024 * 2,
 		ConnectionString:      connConf.URL(),
-		Pool:                  pool,
+		Pool:                  graphPool,
 	})
 	require.NoError(t, err)
 
-	err = migrations.NewGraphMigrator(graphDB).Migrate(ctx, graphschema.DefaultGraphSchema())
+	err = migrations.NewGraphMigrator(graphDB).Migrate(ctx)
 	require.NoError(t, err)
 
 	err = db.Migrate(ctx)
 	require.NoError(t, err)
 
 	err = graphDB.AssertSchema(ctx, graphschema.DefaultGraphSchema())
+	require.NoError(t, err)
+
+	err = db.PopulateExtensionData(ctx)
 	require.NoError(t, err)
 
 	ingestSchema, err := upload.LoadIngestSchema()
@@ -99,9 +106,7 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 	err = os.Mkdir(path.Join(workDir, "tmp"), 0755)
 	require.NoError(t, err)
 
-	cfg := config.Configuration{
-		WorkDir: workDir,
-	}
+	cfg.WorkDir = workDir
 
 	return IntegrationTestSuite{
 		Context:         ctx,

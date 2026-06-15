@@ -22,6 +22,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 )
 
 const (
@@ -29,6 +30,14 @@ const (
 	AzureGraphPrefix           = "az"
 	DefaultMissingName         = "NO NAME"
 	DefaultMissingObjectId     = "NO OBJECT ID"
+	EnvironmentIDKey           = "environmentid"
+)
+
+var (
+	Meta             = graph.StringKind("Meta")
+	MetaDetail       = graph.StringKind("MetaDetail")
+	MetaIncludes     = graph.StringKind("MetaIncludes")
+	IgnoreMetaFilter = query.Not(query.KindIn(query.Node(), Meta, MetaDetail))
 )
 
 func ActiveDirectoryGraphName(suffix string) string {
@@ -67,6 +76,10 @@ func CombinedGraphSchema(name string) graph.Graph {
 			},
 			{
 				Field: azure.TenantID.String(),
+				Type:  graph.BTreeIndex,
+			},
+			{
+				Field: EnvironmentIDKey,
 				Type:  graph.BTreeIndex,
 			},
 		},
@@ -145,6 +158,28 @@ func ActiveDirectoryGraphSchema(name string) graph.Graph {
 	}
 }
 
+func MetaGraphDefinition() graph.Graph {
+	return graph.Graph{
+		Name:  "meta",
+		Nodes: []graph.Kind{Meta, MetaDetail},
+		Edges: []graph.Kind{MetaIncludes},
+		NodeIndexes: []graph.Index{
+			{
+				Field: common.SystemTags.String(),
+				Type:  graph.TextSearchIndex,
+			},
+			{
+				Field: common.UserTags.String(),
+				Type:  graph.TextSearchIndex,
+			},
+			{
+				Field: common.OwnerObjectID.String(),
+				Type:  graph.TextSearchIndex,
+			},
+		},
+	}
+}
+
 func DefaultGraph() graph.Graph {
 	return CombinedGraphSchema("default")
 }
@@ -155,6 +190,7 @@ func DefaultGraphSchema() graph.Schema {
 	return graph.Schema{
 		Graphs: []graph.Graph{
 			defaultGraph,
+			MetaGraphDefinition(),
 		},
 
 		DefaultGraph: defaultGraph,

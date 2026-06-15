@@ -24,7 +24,7 @@ import {
     Form,
     Tooltip,
     VisuallyHidden,
-} from '@bloodhoundenterprise/doodleui';
+} from 'doodle-ui';
 import { DateTime } from 'luxon';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { UseFormReturn, useForm } from 'react-hook-form';
@@ -80,6 +80,7 @@ const FilterDialog: FC<{
                 <Button
                     data-testid='privilege-zones_history_filter-button'
                     variant='text'
+                    aria-label='Filter'
                     onClick={() => {
                         setOpen((prev) => !prev);
                     }}>
@@ -93,7 +94,7 @@ const FilterDialog: FC<{
 
             <DialogContent>
                 <Form {...form}>
-                    <form className='flex flex-col gap-4'>
+                    <form className='flex flex-col gap-4 m-1'>
                         <DialogTitle className='flex justify-between items-center'>
                             <span className='text-xl'>Filter</span>
                             <Button

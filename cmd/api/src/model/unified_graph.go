@@ -19,8 +19,8 @@ package model
 import (
 	"time"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/tiering"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
@@ -31,19 +31,22 @@ type UnifiedGraphWPropertyKeys struct {
 	EdgeKeys []string               `json:"edge_keys,omitempty"`
 	Edges    []UnifiedEdge          `json:"edges"`
 	Nodes    map[string]UnifiedNode `json:"nodes"`
+	Literals graph.Literals         `json:"literals"`
 }
 
 // UnifiedGraph represents a single, generic and minimalistic graph
 type UnifiedGraph struct {
-	Nodes map[string]UnifiedNode `json:"nodes"`
-	Edges []UnifiedEdge          `json:"edges"`
+	Nodes    map[string]UnifiedNode `json:"nodes"`
+	Edges    []UnifiedEdge          `json:"edges"`
+	Literals graph.Literals         `json:"literals"`
 }
 
 // NewUnifiedGraph returns a new UnifiedGraph struct with the Nodes field initialized to an empty map
 func NewUnifiedGraph() UnifiedGraph {
 	return UnifiedGraph{
-		Nodes: map[string]UnifiedNode{},
-		Edges: []UnifiedEdge{},
+		Nodes:    map[string]UnifiedNode{},
+		Edges:    []UnifiedEdge{},
+		Literals: graph.Literals{},
 	}
 }
 
@@ -57,6 +60,7 @@ type UnifiedNode struct {
 	IsOwnedObject bool           `json:"isOwnedObject"`
 	LastSeen      time.Time      `json:"lastSeen"`
 	Properties    map[string]any `json:"properties,omitempty"`
+	Hidden        bool           `json:"hidden,omitempty"`
 }
 
 // UnifiedEdge represents a single path segment in a graph containing a minimal set of attributes for graph rendering
@@ -69,7 +73,7 @@ type UnifiedEdge struct {
 	Properties map[string]any `json:"properties,omitempty"`
 }
 
-func FromDAWGSNode(node *graph.Node, includeProperties bool) UnifiedNode {
+func FromDAWGSNode(primaryDisplayKinds graphschema.PrimaryDisplayKinds, node *graph.Node, includeProperties bool) UnifiedNode {
 	var (
 		props       = node.Properties
 		objectId    = getTypedPropertyOrDefault(props, common.ObjectID.String(), "")
@@ -81,7 +85,7 @@ func FromDAWGSNode(node *graph.Node, includeProperties bool) UnifiedNode {
 	// only generic-ingested nodes have the PrimaryKind property set to control what icon the UI displays.
 	kind := primaryKind
 	if kind == "" {
-		kind = analysis.GetNodeKind(node).String()
+		kind = graphschema.GetNodeKind(primaryDisplayKinds, node).String()
 	}
 
 	var properties map[string]any
@@ -126,19 +130,24 @@ func (s *UnifiedGraph) AddRelationship(rel *graph.Relationship, includePropertie
 	s.Edges = append(s.Edges, formattedRelationship)
 }
 
-func (s *UnifiedGraph) AddNode(node *graph.Node, includeProperties bool) {
-	formattedNode := FromDAWGSNode(node, includeProperties)
+func (s *UnifiedGraph) AddNode(primaryDisplayKinds graphschema.PrimaryDisplayKinds, node *graph.Node, includeProperties bool) {
+	formattedNode := FromDAWGSNode(primaryDisplayKinds, node, includeProperties)
 	s.Nodes[node.ID.String()] = formattedNode
 }
 
-func (s *UnifiedGraph) AddPathSet(paths graph.PathSet, includeProperties bool) {
+func (s *UnifiedGraph) AddPathSet(primaryDisplayKinds graphschema.PrimaryDisplayKinds, paths graph.PathSet, includeProperties bool) {
+	nonDuplicateEdges := make(map[graph.ID]bool)
 	for _, path := range paths.Paths() {
 		for _, node := range path.Nodes {
-			s.AddNode(node, includeProperties)
+			s.AddNode(primaryDisplayKinds, node, includeProperties)
 		}
 
 		for _, edge := range path.Edges {
-			s.AddRelationship(edge, includeProperties)
+			// Skip adding duplicate edges before adding edge relationship
+			if !nonDuplicateEdges[edge.ID] {
+				s.AddRelationship(edge, includeProperties)
+				nonDuplicateEdges[edge.ID] = true
+			}
 		}
 	}
 }

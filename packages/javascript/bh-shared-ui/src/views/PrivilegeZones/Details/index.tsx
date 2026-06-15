@@ -13,10 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import Details from './Details';
-import EntitySelectorsInformation from './EntitySelectorsInformation';
-import { SelectedDetails } from './SelectedDetails';
 
-export { EntitySelectorsInformation, SelectedDetails };
+export { default as EntityRulesInformation } from './EntityRulesInformation';
+export { ObjectsAccordion } from './ObjectsAccordion';
+export { SelectedDetails } from './SelectedDetails';
+
 export default Details;

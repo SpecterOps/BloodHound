@@ -19,7 +19,7 @@ import { FC } from 'react';
 
 const References: FC = () => {
     return (
-        <Box sx={{ overflowX: 'auto' }}>
+        <Box className='overflow-x-auto'>
             <Link target='_blank' rel='noopener noreferrer' href='https://attack.mitre.org/techniques/T1098/'>
                 ATT&amp;CK T1098: Account Manipulation
             </Link>
@@ -42,14 +42,14 @@ const References: FC = () => {
                 target='_blank'
                 rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/azure/active-directory/roles/permissions-reference#privileged-authentication-administrator'>
-                Microsoft Azure AD roles
+                Microsoft Entra built-in roles: Privileged Authentication Administrator
             </Link>
             <br />
             <Link
                 target='_blank'
                 rel='noopener noreferrer'
-                href='https://docs.microsoft.com/en-us/azure/active-directory/roles/assign-roles-different-scopes'>
-                Assign Azure AD roles at different scopes
+                href='https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/manage-roles-portal'>
+                Assign Microsoft Entra roles
             </Link>
         </Box>
     );

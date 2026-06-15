@@ -103,9 +103,10 @@ describe('useFinishedJobs', () => {
     it('requests finished jobs', async () => {
         checkPermissionMock.mockImplementation(() => true);
         const { result } = renderHook(() => useFinishedJobs({ page: 0, rowsPerPage: 10 }));
+
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-        expect(result.current.data.data.length).toBe(10);
+        expect(result.current.data?.data.length).toBe(10);
     });
 
     it('applies the given filters', async () => {

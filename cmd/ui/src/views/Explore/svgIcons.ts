@@ -15,12 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-    DEFAULT_GLYPH_COLOR,
     DEFAULT_ICON_COLOR,
-    GLYPHS,
-    GLYPH_SCALE,
     GetIconInfo,
-    GlyphDictionary,
     IconDictionary,
     NODE_ICONS,
     NODE_SCALE,
@@ -39,29 +35,14 @@ const appendIconSvgUrls = (icons: IconDictionary): void => {
     });
 };
 
-// Adds object URLs to all glyph definitions so that our fontawesome icons can be used by sigmajs node programs
-const appendGlyphSvgUrls = (icons: GlyphDictionary): void => {
-    Object.entries(icons).forEach(([type, value]) => {
-        if (value.url) return;
-
-        icons[type].url = getModifiedSvgUrlFromIcon(value.icon, {
-            styles: {
-                color: value.iconColor ?? DEFAULT_GLYPH_COLOR,
-                scale: GLYPH_SCALE,
-            },
-        });
-    });
-};
-
 function transformIconDictionary(icons: IconDictionary): IconDictionary {
     appendIconSvgUrls(icons);
 
     return icons;
 }
 
-// Append URLs for nodes, glyphs, and any additional utility icons
+// Append URLs for nodes and any additional utility icons
 appendIconSvgUrls(NODE_ICONS);
-appendGlyphSvgUrls(GLYPHS);
 UNKNOWN_ICON.url = getModifiedSvgUrlFromIcon(UNKNOWN_ICON.icon, { styles: { scale: NODE_SCALE } });
 
-export { GLYPHS, GetIconInfo, NODE_ICONS, UNKNOWN_ICON, transformIconDictionary };
+export { GetIconInfo, NODE_ICONS, UNKNOWN_ICON, transformIconDictionary };

@@ -23,7 +23,9 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
@@ -58,6 +60,29 @@ func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error 
 		node.PropertyMap[common.PrimaryKind.String()] = node.Labels[0]
 	}
 
+	// BloodHound convention: environment IDs are uppercased
+	if envID, ok := node.PropertyMap[graphschema.EnvironmentIDKey]; ok {
+		if envIDStr, ok := envID.(string); ok {
+			node.PropertyMap[graphschema.EnvironmentIDKey] = strings.ToUpper(envIDStr)
+		}
+	}
+
+	// if a domain is generically-ingested; it needs this property uppercased to
+	// be consistent with the traditional sharphound ingestion code path
+	if domainSID, ok := node.PropertyMap[ad.DomainSID.String()]; ok {
+		if domainSIDStr, ok := domainSID.(string); ok {
+			node.PropertyMap[ad.DomainSID.String()] = strings.ToUpper(domainSIDStr)
+		}
+	}
+
+	// if a tenant is generically-ingested; it needs this property uppercased to
+	// be consistent with the traditional azurehound ingestion code path
+	if tenantID, ok := node.PropertyMap[azure.TenantID.String()]; ok {
+		if tenantIDStr, ok := tenantID.(string); ok {
+			node.PropertyMap[azure.TenantID.String()] = strings.ToUpper(tenantIDStr)
+		}
+	}
+
 	converted.NodeProps = append(converted.NodeProps, node)
 	return nil
 }
@@ -65,14 +90,16 @@ func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error 
 func ConvertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) error {
 	ingestibleRel := ein.NewIngestibleRelationship(
 		ein.IngestibleEndpoint{
-			Value:   strings.ToUpper(entity.Start.Value),
-			MatchBy: ein.IngestMatchStrategy(entity.Start.MatchBy),
-			Kind:    graph.StringKind(entity.Start.Kind),
+			Value:    entity.Start.Value,
+			MatchBy:  ein.IngestMatchStrategy(entity.Start.MatchBy),
+			Kind:     graph.StringKind(entity.Start.Kind),
+			Matchers: ein.PropertyMatchersToMatchExpressions(entity.Start.PropertyMatchers),
 		},
 		ein.IngestibleEndpoint{
-			Value:   strings.ToUpper(entity.End.Value),
-			MatchBy: ein.IngestMatchStrategy(entity.End.MatchBy),
-			Kind:    graph.StringKind(entity.End.Kind),
+			Value:    entity.End.Value,
+			MatchBy:  ein.IngestMatchStrategy(entity.End.MatchBy),
+			Kind:     graph.StringKind(entity.End.Kind),
+			Matchers: ein.PropertyMatchersToMatchExpressions(entity.End.PropertyMatchers),
 		},
 		ein.IngestibleRel{
 			RelProps: entity.Properties,

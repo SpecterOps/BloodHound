@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -28,23 +28,21 @@ import {
     faCube,
     faCubes,
     faDesktop,
-    faGem,
     faGlobe,
     faIdCard,
     faKey,
     faLandmark,
     faList,
     faLock,
-    faMapSigns,
     faMap,
     faMapMarker,
+    faMapSigns,
     faObjectGroup,
     faQuestion,
     faRobot,
     fas,
     faServer,
     faSitemap,
-    faSkull,
     faStore,
     faUser,
     faUsers,
@@ -64,19 +62,6 @@ export type IconInfo = {
 export type IconDictionary = {
     [index: string]: IconInfo;
 };
-
-export type GlyphIconInfo = IconInfo & { iconColor: string };
-
-export type GlyphDictionary = {
-    [index: string]: GlyphIconInfo;
-};
-
-export enum GlyphKind {
-    TIER_ZERO,
-    TIER_ZERO_DARK,
-    OWNED_OBJECT,
-    OWNED_OBJECT_DARK,
-}
 
 export const NODE_SCALE = '0.6';
 export const GLYPH_SCALE = '0.5';
@@ -260,28 +245,10 @@ export const NODE_ICONS: IconDictionary = {
         icon: faSitemap,
         color: '#BD93D8',
     },
-};
 
-export const GLYPHS: GlyphDictionary = {
-    [GlyphKind.TIER_ZERO]: {
-        icon: faGem,
-        color: '#000000',
-        iconColor: '#FFFFFF',
-    },
-    [GlyphKind.TIER_ZERO_DARK]: {
-        icon: faGem,
-        color: '#FFFFFF',
-        iconColor: '#000000',
-    },
-    [GlyphKind.OWNED_OBJECT]: {
-        icon: faSkull,
-        color: '#000000',
-        iconColor: '#FFFFFF',
-    },
-    [GlyphKind.OWNED_OBJECT_DARK]: {
-        icon: faSkull,
-        color: '#FFFFFF',
-        iconColor: '#000000',
+    [AzureNodeKind.FederatedIdentityCredential]: {
+        icon: faKey,
+        color: '#FFEE8C',
     },
 };
 

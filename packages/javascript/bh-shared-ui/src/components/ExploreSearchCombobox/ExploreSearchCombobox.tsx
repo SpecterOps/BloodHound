@@ -14,9 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants, useTheme } from '@mui/material';
+import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants } from '@mui/material';
 import { useCombobox } from 'downshift';
-import { SearchResult, getEmptyResultsText, getKeywordAndTypeValues, useSearch } from '../../hooks';
+import { useRef } from 'react';
+import { SearchResult, getEmptyResultsText, getKeywordAndTypeValues, useSearch, useTheme } from '../../hooks';
 import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import NodeIcon from '../NodeIcon';
 import SearchResultItem from '../SearchResultItem';
@@ -24,6 +25,7 @@ import SearchResultItem from '../SearchResultItem';
 const ExploreSearchCombobox: React.FC<{
     labelText: string;
     inputValue: string;
+    autoFocus?: boolean;
     selectedItem: SearchValue | null;
     handleNodeEdited: (edit: string) => any;
     handleNodeSelected: (selection: SearchValue) => any;
@@ -35,26 +37,27 @@ const ExploreSearchCombobox: React.FC<{
     selectedItem,
     handleNodeEdited,
     handleNodeSelected,
+    autoFocus,
     disabled = false,
     variant = 'outlined',
 }) => {
     const theme = useTheme();
+    const searchNodesRef = useRef<HTMLInputElement>();
 
     const { keyword, type } = getKeywordAndTypeValues(inputValue);
     const { data, error, isError, isLoading, isFetching } = useSearch(keyword, type);
 
-    const { isOpen, getMenuProps, getInputProps, getComboboxProps, highlightedIndex, getItemProps, openMenu } =
-        useCombobox({
-            items: data || [],
-            inputValue,
-            selectedItem,
-            onSelectedItemChange: ({ selectedItem }) => {
-                if (selectedItem) {
-                    handleNodeSelected(selectedItem);
-                }
-            },
-            itemToString: (item) => item?.name || item?.objectid || '',
-        });
+    const { isOpen, getMenuProps, getInputProps, highlightedIndex, getItemProps, openMenu } = useCombobox({
+        items: data || [],
+        inputValue,
+        selectedItem,
+        onSelectedItemChange: ({ selectedItem }) => {
+            if (selectedItem) {
+                handleNodeSelected(selectedItem);
+            }
+        },
+        itemToString: (item) => item?.name || item?.objectid || '',
+    });
 
     const disabledText: string = getEmptyResultsText(
         isLoading,
@@ -67,8 +70,18 @@ const ExploreSearchCombobox: React.FC<{
         data
     );
 
+    const downshiftInputProps = {
+        ...getInputProps({
+            onFocus: openMenu,
+            refKey: 'inputRef',
+            onChange: (e) => {
+                handleNodeEdited(e.currentTarget.value);
+            },
+        }),
+    };
+
     return (
-        <div {...getComboboxProps()} style={{ position: 'relative' }}>
+        <div style={{ position: 'relative' }}>
             <TextField
                 placeholder={labelText}
                 variant={variant}
@@ -80,18 +93,17 @@ const ExploreSearchCombobox: React.FC<{
                 }}
                 InputProps={{
                     style: {
-                        backgroundColor: disabled ? theme.palette.action.disabled : 'inherit',
-                        fontSize: theme.typography.pxToRem(14),
+                        backgroundColor: disabled ? theme.neutral.tertiary : 'inherit',
+                        fontSize: '0.875rem',
                     },
+                    autoFocus,
                     startAdornment: selectedItem?.type && <NodeIcon nodeType={selectedItem?.type} />,
                 }}
-                {...getInputProps({
-                    onFocus: openMenu,
-                    refKey: 'inputRef',
-                    onChange: (e) => {
-                        handleNodeEdited(e.currentTarget.value);
-                    },
-                })}
+                {...downshiftInputProps}
+                inputRef={(node) => {
+                    downshiftInputProps.inputRef(node);
+                    searchNodesRef.current = node;
+                }}
                 data-testid='explore_search_input-search'
             />
             <div
@@ -100,20 +112,32 @@ const ExploreSearchCombobox: React.FC<{
                     marginTop: '1rem',
                     zIndex: 1300,
                 }}>
-                <Paper style={{ display: isOpen ? 'inherit' : 'none' }}>
+                <Paper style={{ display: isOpen ? 'inherit' : 'none' }} className='rounded-lg'>
                     <List
                         {...getMenuProps()}
                         dense
                         style={{
                             width: '100%',
                         }}
+                        role='listbox'
                         data-testid='explore_search_result-list'>
                         {disabledText ? (
-                            <ListItem disabled dense>
+                            <ListItem
+                                dense
+                                className='text-[#616161] dark:text-[#868686]' // To do: Tokenize when available
+                                {...getItemProps({
+                                    disabled: true,
+                                    'aria-disabled': true,
+                                    label: disabledText,
+                                    item: {
+                                        objectid: '',
+                                    },
+                                    style: { opacity: 0.6 },
+                                })}>
                                 <ListItemText primary={disabledText} />
                             </ListItem>
                         ) : (
-                            data!.map((item: SearchResult, index: any) => {
+                            data?.map((item: SearchResult, index: any) => {
                                 return (
                                     <SearchResultItem
                                         item={{

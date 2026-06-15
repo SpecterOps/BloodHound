@@ -14,23 +14,27 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
+import { faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { CircularProgress } from '@mui/material';
-import React, { FC, Suspense, useContext } from 'react';
+import { Badge, Tabs, TabsList, TabsTrigger } from 'doodle-ui';
+import React, { FC, Suspense } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Route, Routes, useLocation } from 'react-router-dom';
-import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../hooks';
+import { useAppName } from '../../components/PageWithTitle';
+import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams, useRoleBasedFiltering } from '../../hooks';
 import {
     ROUTE_PZ_CERTIFICATIONS,
     ROUTE_PZ_HISTORY,
     ROUTE_PZ_LABEL_DETAILS,
-    ROUTE_PZ_LABEL_MEMBER_DETAILS,
-    ROUTE_PZ_LABEL_SELECTOR_DETAILS,
-    ROUTE_PZ_LABEL_SELECTOR_MEMBER_DETAILS,
+    ROUTE_PZ_LABEL_OBJECT_DETAILS,
+    ROUTE_PZ_LABEL_RULE_DETAILS,
+    ROUTE_PZ_LABEL_RULE_OBJECT_DETAILS,
     ROUTE_PZ_LABEL_SUMMARY,
     ROUTE_PZ_ZONE_DETAILS,
-    ROUTE_PZ_ZONE_MEMBER_DETAILS,
-    ROUTE_PZ_ZONE_SELECTOR_DETAILS,
-    ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS,
+    ROUTE_PZ_ZONE_OBJECT_DETAILS,
+    ROUTE_PZ_ZONE_RULE_DETAILS,
+    ROUTE_PZ_ZONE_RULE_OBJECT_DETAILS,
     ROUTE_PZ_ZONE_SUMMARY,
     Routable,
     certificationsPath,
@@ -44,7 +48,10 @@ import {
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
 import DefaultRoot from './DefaultRoot';
-import { PrivilegeZonesContext } from './PrivilegeZonesContext';
+import { useSelectedDetailsTabsContext } from './Details/SelectedDetailsTabs/SelectedDetailsTabsContext';
+import PZDetailsTabsProvider from './Details/SelectedDetailsTabs/SelectedDetailsTabsProvider';
+import { usePZContext } from './PrivilegeZonesContext';
+import { TagTabValue } from './utils';
 
 const Details = React.lazy(() => import('./Details'));
 const Save = React.lazy(() => import('./Save'));
@@ -53,12 +60,12 @@ const History = React.lazy(() => import('./History'));
 const detailsPaths = [
     ROUTE_PZ_ZONE_DETAILS,
     ROUTE_PZ_LABEL_DETAILS,
-    ROUTE_PZ_ZONE_SELECTOR_DETAILS,
-    ROUTE_PZ_LABEL_SELECTOR_DETAILS,
-    ROUTE_PZ_ZONE_MEMBER_DETAILS,
-    ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS,
-    ROUTE_PZ_LABEL_MEMBER_DETAILS,
-    ROUTE_PZ_LABEL_SELECTOR_MEMBER_DETAILS,
+    ROUTE_PZ_ZONE_RULE_DETAILS,
+    ROUTE_PZ_LABEL_RULE_DETAILS,
+    ROUTE_PZ_ZONE_OBJECT_DETAILS,
+    ROUTE_PZ_ZONE_RULE_OBJECT_DETAILS,
+    ROUTE_PZ_LABEL_OBJECT_DETAILS,
+    ROUTE_PZ_LABEL_RULE_OBJECT_DETAILS,
 ];
 
 const summaryPaths = [ROUTE_PZ_ZONE_SUMMARY, ROUTE_PZ_LABEL_SUMMARY];
@@ -72,11 +79,11 @@ const PrivilegeZones: FC = () => {
     const { tagId } = useHighestPrivilegeTagId();
     const { isCertificationsPage, isHistoryPage, tagType, isSummaryPage } = usePZPathParams();
 
-    const context = useContext(PrivilegeZonesContext);
-    if (!context) {
-        throw new Error('PrivilegeZones must be used within a PrivilegeZonesContext.Provider');
-    }
-    const { savePaths, SupportLink, Summary, Certification } = context;
+    const { savePaths, Summary, Certification, defaultPath } = usePZContext();
+    const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
+    const appName = useAppName();
+
+    const isRoleBasedFiltering = useRoleBasedFiltering();
 
     const childRoutes: Routable[] = [
         ...detailsPaths.map((path) => {
@@ -109,42 +116,65 @@ const PrivilegeZones: FC = () => {
     const tabValue = isCertificationsPage ? certificationsPath : isHistoryPage ? historyPath : tagType;
 
     return (
-        <main>
+        <>
+            <Helmet>
+                <title>Privilege Zones | {appName}</title>
+            </Helmet>
             <div className='h-dvh min-w-full px-8'>
-                <h1 className='text-4xl font-bold pt-8'>Privilege Zone Management</h1>
-                <p className='mt-6'>
-                    Use Privilege Zones to segment and organize assets based on sensitivity and access level.
-                    <br />
-                    {SupportLink && <SupportLink />}
-                </p>
-                <div className='flex flex-col h-[75vh]'>
+                <div className='flex items-center justify-between pt-8'>
+                    <h1 className='text-4xl font-bold'>Zone Builder</h1>
+                    {isRoleBasedFiltering && (
+                        <Badge
+                            data-testid='privilege-zones_etac-filtering-badge'
+                            variant='fill'
+                            className='px-2 py-1'
+                            color='primary'
+                            icon={<FontAwesomeIcon icon={faEyeSlash} />}
+                            label='Role-based access filtering applied'
+                        />
+                    )}
+                </div>
+                <div className='flex flex-col h-[calc(100%-10rem)]'>
                     <Tabs
                         defaultValue={zonesPath}
                         value={tabValue}
                         className={cn('w-full mt-4', { hidden: location.pathname.includes(savePath) })}
                         onValueChange={(value) => {
-                            if (value === certificationsPath) {
-                                return navigate(`/${privilegeZonesPath}/${certificationsPath}`, {
-                                    discardQueryParams: true,
-                                });
-                            }
-                            if (value === historyPath) {
-                                return navigate(`/${privilegeZonesPath}/${historyPath}`, { discardQueryParams: true });
-                            } else {
-                                const path = isSummaryPage ? summaryPath : detailsPath;
-                                const id = value === zonesPath ? tagId : ownedId;
-                                navigate(`/${privilegeZonesPath}/${value}/${id}/${path}?environmentAggregation=all`);
+                            setSelectedDetailsTab(TagTabValue);
+                            const path = isSummaryPage ? summaryPath : detailsPath;
+                            const id = value === zonesPath ? tagId : ownedId;
+                            switch (value) {
+                                case certificationsPath:
+                                    return navigate(`/${privilegeZonesPath}/${certificationsPath}`, {
+                                        discardQueryParams: true,
+                                    });
+                                case historyPath:
+                                    return navigate(`/${privilegeZonesPath}/${historyPath}`, {
+                                        discardQueryParams: true,
+                                    });
+                                case zonesPath:
+                                case labelsPath:
+                                    return navigate(`/${privilegeZonesPath}/${value}/${id}/${path}`);
                             }
                         }}>
                         <TabsList className='w-full flex justify-start'>
-                            <TabsTrigger value={zonesPath} data-testid='privilege-zones_tab-list_zones-tab'>
+                            <TabsTrigger
+                                // per https://github.com/radix-ui/primitives/issues/3013#issuecomment-2453054222
+                                // aria-controls is optional, and default radix prop breaks accessibility
+                                aria-controls={undefined}
+                                value={zonesPath}
+                                data-testid='privilege-zones_tab-list_zones-tab'>
                                 Zones
                             </TabsTrigger>
-                            <TabsTrigger value={labelsPath} data-testid='privilege-zones_tab-list_labels-tab'>
+                            <TabsTrigger
+                                aria-controls={undefined}
+                                value={labelsPath}
+                                data-testid='privilege-zones_tab-list_labels-tab'>
                                 Labels
                             </TabsTrigger>
                             {Certification && (
                                 <TabsTrigger
+                                    aria-controls={undefined}
                                     value={certificationsPath}
                                     data-testid='privilege-zones_tab-list_certifications-tab'>
                                     Certifications
@@ -165,13 +195,21 @@ const PrivilegeZones: FC = () => {
                             {childRoutes.map((route) => {
                                 return <Route path={route.path} element={<route.component />} key={route.path} />;
                             })}
-                            <Route path='*' element={<DefaultRoot defaultPath={context.defaultPath} />} />
+                            <Route path='*' element={<DefaultRoot defaultPath={defaultPath} />} />
                         </Routes>
                     </Suspense>
                 </div>
             </div>
-        </main>
+        </>
     );
 };
 
-export default PrivilegeZones;
+const WrappedPrivilegeZones = () => {
+    return (
+        <PZDetailsTabsProvider>
+            <PrivilegeZones />
+        </PZDetailsTabsProvider>
+    );
+};
+
+export default WrappedPrivilegeZones;

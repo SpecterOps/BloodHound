@@ -25,6 +25,7 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 type AuditLogEntryStatus string
@@ -54,8 +55,11 @@ const (
 
 	AuditLogActionDeleteAssetGroupSelector AuditLogAction = "DeleteAssetGroupSelector"
 
-	AuditLogActionCreateAuthToken AuditLogAction = "CreateAuthToken"
-	AuditLogActionDeleteAuthToken AuditLogAction = "DeleteAuthToken"
+	AuditLogActionCreateAuthToken           AuditLogAction = "CreateAuthToken"
+	AuditLogActionUpdateAuthTokenExpiration AuditLogAction = "UpdateAuthTokenExpiration"
+	AuditLogActionDeleteExpiredAuthTokens   AuditLogAction = "DeleteExpiredAuthTokens"
+	AuditLogActionDeleteAuthToken           AuditLogAction = "DeleteAuthToken"
+	AuditLogActionDeleteAllAuthTokens       AuditLogAction = "DeleteAllAuthTokens"
 
 	AuditLogActionCreateAuthSecret AuditLogAction = "CreateAuthSecret"
 	AuditLogActionUpdateAuthSecret AuditLogAction = "UpdateAuthSecret"
@@ -98,7 +102,10 @@ const (
 	AuditLogActionToggleEarlyAccessFeatureFlag AuditLogAction = "ToggleEarlyAccessFeatureFlag"
 
 	AuditLogActionCreateClient       AuditLogAction = "CreateClient"
+	AuditLogActionDeleteClient       AuditLogAction = "DeleteClient"
 	AuditLogActionReplaceClientToken AuditLogAction = "ReplaceClientToken"
+	AuditLogActionUpdateClient       AuditLogAction = "UpdateClient"
+	AuditLogActionStartClientJob     AuditLogAction = "StartClientJob"
 
 	AuditLogActionImportSavedQuery   AuditLogAction = "ImportSavedQueries"
 	AuditLogActionExportSavedQuery   AuditLogAction = "ExportSavedQuery"
@@ -106,6 +113,21 @@ const (
 
 	AuditLogActionUpdateETACList AuditLogAction = "UpdateETACList"
 	AuditLogActionDeleteETACList AuditLogAction = "DeleteETACList"
+
+	AuditLogActionCreateGraphSchemaExtension AuditLogAction = "CreateGraphSchemaExtension"
+	AuditLogActionDeleteGraphSchemaExtension AuditLogAction = "DeleteGraphSchemaExtension"
+
+	AuditLogActionCreateSupportUserSessionAttempt  AuditLogAction = "CreateSupportUserSessionAttempt"
+	AuditLogActionInvalidateSupportUserSession     AuditLogAction = "InvalidateSupportUserSession"
+	AuditLogActionInvalidateAllSupportUserSessions AuditLogAction = "InvalidateAllSupportUserSessions"
+
+	AuditLogActionRunCypherQuery AuditLogAction = "RunCypherQuery"
+
+	AuditLogActionCreateAlertWebhook AuditLogAction = "CreateAlertWebhook"
+	AuditLogActionUpdateAlertWebhook AuditLogAction = "UpdateAlertWebhook"
+	AuditLogActionDeleteAlertWebhook AuditLogAction = "DeleteAlertWebhook"
+
+	AuditLogActionRotateAlertWebhookSecret AuditLogAction = "RotateAlertWebhookSecret"
 )
 
 // TODO embed Basic into this struct instead of declaring the ID and CreatedAt fields. This will require a migration
@@ -253,7 +275,7 @@ func (s AuditEntry) String() string {
 
 func NewAuditEntry(action AuditLogAction, status AuditLogEntryStatus, data AuditData) (AuditEntry, error) {
 	if commitId, err := uuid.NewV4(); err != nil {
-		slog.Error(fmt.Sprintf("Error generating commit ID for audit entry: %s", err.Error()))
+		slog.Error("Error generating commit ID for audit entry", attr.Error(err))
 		return AuditEntry{}, err
 	} else {
 		return AuditEntry{Action: action, Model: data, Status: status, CommitID: commitId}, nil

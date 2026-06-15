@@ -27,6 +27,8 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/headers"
 
 	"github.com/gorilla/mux"
@@ -34,6 +36,7 @@ import (
 	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
+	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -44,6 +47,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 
 	type mock struct {
 		mockDatabase *dbmocks.MockDatabase
+		mockGraph    *graphmocks.MockDatabase
 	}
 	type expected struct {
 		responseBody   string
@@ -72,7 +76,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 				payload := &v2.CreateCustomNodeRequest{
 					CustomTypes: map[string]model.CustomNodeKindConfig{
 						"KindA": {
-							Icon: model.CustomNodeIcon{
+							Icon: graphschema.DisplayNodeIcon{
 								Type:  "font-stupid",
 								Name:  "coffee",
 								Color: "#FFFFFF",
@@ -111,8 +115,8 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 				payload := &v2.CreateCustomNodeRequest{
 					CustomTypes: map[string]model.CustomNodeKindConfig{
 						"KindA": {
-							Icon: model.CustomNodeIcon{
-								Type:  "font-awesome",
+							Icon: graphschema.DisplayNodeIcon{
+								Type:  graphschema.DisplayNodeTypeFontAwesome,
 								Name:  "coffee",
 								Color: "FFFFFF",
 							},
@@ -150,15 +154,15 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 				payload := &v2.CreateCustomNodeRequest{
 					CustomTypes: map[string]model.CustomNodeKindConfig{
 						"KindA": {
-							Icon: model.CustomNodeIcon{
-								Type:  "font-awesome",
+							Icon: graphschema.DisplayNodeIcon{
+								Type:  graphschema.DisplayNodeTypeFontAwesome,
 								Name:  "coffee",
 								Color: "#FFFFFF",
 							},
 						},
 						"KindB": {
-							Icon: model.CustomNodeIcon{
-								Type:  "font-awesome",
+							Icon: graphschema.DisplayNodeIcon{
+								Type:  graphschema.DisplayNodeTypeFontAwesome,
 								Name:  "house",
 								Color: "#000",
 							},
@@ -182,8 +186,8 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 						ID:       1,
 						KindName: "KindA",
 						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{
-								Type:  "font-awesome",
+							Icon: graphschema.DisplayNodeIcon{
+								Type:  graphschema.DisplayNodeTypeFontAwesome,
 								Name:  "coffee",
 								Color: "#FFFFFF",
 							},
@@ -193,19 +197,64 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 						ID:       2,
 						KindName: "KindB",
 						Config: model.CustomNodeKindConfig{
-							Icon: model.CustomNodeIcon{
-								Type:  "font-awesome",
+							Icon: graphschema.DisplayNodeIcon{
+								Type:  graphschema.DisplayNodeTypeFontAwesome,
 								Name:  "house",
 								Color: "#000",
 							},
 						},
 					},
 				}, nil)
+				mocks.mockGraph.EXPECT().RefreshKinds(gomock.Any()).Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusCreated,
 				responseBody:   `{"data":[{"id":1,"kindName":"KindA","config":{"icon":{"type":"font-awesome","name":"coffee","color":"#FFFFFF"}}},{"id":2,"kindName":"KindB","config":{"icon":{"type":"font-awesome","name":"house","color":"#000"}}}]}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: duplicate kind name",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/custom-nodes",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{},
+				}
+
+				payload := &v2.CreateCustomNodeRequest{
+					CustomTypes: map[string]model.CustomNodeKindConfig{
+						"DuplicateKind": {
+							Icon: graphschema.DisplayNodeIcon{
+								Type:  graphschema.DisplayNodeTypeFontAwesome,
+								Name:  "coffee",
+								Color: "#FFFFFF",
+							},
+						},
+					},
+				}
+				jsonPayload, err := json.Marshal(payload)
+				if err != nil {
+					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
+				}
+
+				request.Header.Add(headers.ContentType.String(), "application/json")
+				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
+
+				return request
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockDatabase.EXPECT().
+					CreateCustomNodeKinds(gomock.Any(), gomock.Any()).
+					Return(model.CustomNodeKinds{}, database.ErrDuplicateCustomNodeKindName)
+			},
+			expected: expected{
+				responseCode:   http.StatusConflict,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				// responseBody intentionally omitted — status code is the contract under test
 			},
 		},
 		{
@@ -222,8 +271,8 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 				payload := &v2.CreateCustomNodeRequest{
 					CustomTypes: map[string]model.CustomNodeKindConfig{
 						"": {
-							Icon: model.CustomNodeIcon{
-								Type:  "font-awesome",
+							Icon: graphschema.DisplayNodeIcon{
+								Type:  graphschema.DisplayNodeTypeFontAwesome,
 								Name:  "coffee",
 								Color: "#FFFFFF",
 							},
@@ -255,6 +304,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 
 			mocks := &mock{
 				mockDatabase: dbmocks.NewMockDatabase(ctrl),
+				mockGraph:    graphmocks.NewMockDatabase(ctrl),
 			}
 
 			request := testCase.buildRequest()
@@ -262,6 +312,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 
 			resources := v2.Resources{
 				DB:         mocks.mockDatabase,
+				Graph:      mocks.mockGraph,
 				Authorizer: auth.NewAuthorizer(mocks.mockDatabase),
 			}
 
@@ -275,7 +326,9 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
-			assert.JSONEq(t, testCase.expected.responseBody, body)
+			if testCase.expected.responseBody != "" {
+				assert.JSONEq(t, testCase.expected.responseBody, body)
+			}
 		})
 	}
 }
@@ -316,7 +369,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 
 				payload := &v2.UpdateCustomNodeKindRequest{
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{
+						Icon: graphschema.DisplayNodeIcon{
 							Type:  "font-stupid",
 							Name:  "coffee",
 							Color: "#FFFFFF",
@@ -357,8 +410,8 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 
 				payload := &v2.UpdateCustomNodeKindRequest{
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{
-							Type:  "font-awesome",
+						Icon: graphschema.DisplayNodeIcon{
+							Type:  graphschema.DisplayNodeTypeFontAwesome,
 							Name:  "coffee",
 							Color: "FFFFFF",
 						},
@@ -398,8 +451,8 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 
 				payload := &v2.UpdateCustomNodeKindRequest{
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{
-							Type:  "font-awesome",
+						Icon: graphschema.DisplayNodeIcon{
+							Type:  graphschema.DisplayNodeTypeFontAwesome,
 							Name:  "coffee",
 							Color: "#FFFFFF",
 						},
@@ -421,8 +474,8 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 					ID:       1,
 					KindName: "KindA",
 					Config: model.CustomNodeKindConfig{
-						Icon: model.CustomNodeIcon{
-							Type:  "font-awesome",
+						Icon: graphschema.DisplayNodeIcon{
+							Type:  graphschema.DisplayNodeTypeFontAwesome,
 							Name:  "coffee",
 							Color: "#FFFFFF",
 						},

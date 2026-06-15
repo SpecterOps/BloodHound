@@ -25,8 +25,10 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
 	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"
 )
 
@@ -34,8 +36,6 @@ import (
 // step 2. delete sourceless
 // step 3. assert graph
 func TestDeleteData_Sourceless(t *testing.T) {
-
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -49,8 +49,10 @@ func TestDeleteData_Sourceless(t *testing.T) {
 	)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
+	ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
+
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(graphify.NewIngestContext(ctx), model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
 		failed := 0
@@ -83,7 +85,6 @@ func TestDeleteData_Sourceless(t *testing.T) {
 }
 
 func TestDeleteData_SourceKinds(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -97,9 +98,10 @@ func TestDeleteData_SourceKinds(t *testing.T) {
 	)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
+	ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(graphify.NewIngestContext(ctx), model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
 		failed := 0
@@ -132,7 +134,6 @@ func TestDeleteData_SourceKinds(t *testing.T) {
 }
 
 func TestDeleteData_All(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -146,9 +147,10 @@ func TestDeleteData_All(t *testing.T) {
 	)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
+	ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(graphify.NewIngestContext(ctx), model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
 		failed := 0
@@ -178,4 +180,84 @@ func TestDeleteData_All(t *testing.T) {
 	sourceKinds, err := testSuite.BHDatabase.GetSourceKinds(ctx)
 	require.NoError(t, err)
 	require.Len(t, sourceKinds, 2)
+}
+
+// TestPartialIngest verifies that when a batch contains one resolvable edge and one unresolvable
+// edge, the resolvable edge is still committed and the resolution failure is surfaced as a
+// UserDataErr rather than a fatal error that rolls back the batch.
+func TestPartialIngest(t *testing.T) {
+	var (
+		ctx = context.Background()
+
+		fixturesPath = path.Join("fixtures", "OpenGraphJSON", "raw")
+
+		testSuite = setupIntegrationTestSuite(t, fixturesPath)
+	)
+
+	defer teardownIntegrationTestSuite(t, &testSuite)
+	ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
+
+	fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{
+		StoredFileName: path.Join(testSuite.WorkDir, "oneGoodOneInvalidRel.json"),
+		FileType:       model.FileTypeJson,
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, len(fileData))
+
+	require.Empty(t, fileData[0].Errors, "no fatal errors expected; resolution failures must not abort the batch")
+	require.Len(t, fileData[0].UserDataErrs, 1, "expected one resolution error for the unresolvable property_match")
+
+	// Verify that the edge for the existing endpoints was created despite the failing edge existing in the same batch.
+	var edgeCount int
+	err = testSuite.GraphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		return tx.Relationships().Filterf(func() graph.Criteria {
+			return query.Kind(query.Relationship(), graph.StringKind("THIS_EDGE_GETS_CREATED"))
+		}).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
+			for range cursor.Chan() {
+				edgeCount++
+			}
+			return cursor.Error()
+		})
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, edgeCount, "THIS_EDGE_GETS_CREATED was not created")
+}
+
+func TestAnalyze_LastAnalysisTimestampUpdated(t *testing.T) {
+	var (
+		ctx              = context.Background()
+		ingestedFilePath = path.Join("fixtures", "OpenGraphJSON", "raw")
+		testSuite        = setupIntegrationTestSuite(t, ingestedFilePath)
+	)
+
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	datapipeStatus, err := testSuite.BHDatabase.GetDatapipeStatus(ctx)
+	require.NoError(t, err)
+	require.True(t, datapipeStatus.LastAnalysisRunAt.IsZero())
+
+	// request analysis so that Analyze will run
+	err = testSuite.BHDatabase.RequestAnalysis(ctx, "test")
+	require.NoError(t, err)
+
+	err = testSuite.Daemon.Analyze(ctx)
+	require.NoError(t, err)
+
+	// confirm that the last analysis run timestamp is updated
+	updatedDatapipeStatus, err := testSuite.BHDatabase.GetDatapipeStatus(ctx)
+	require.NoError(t, err)
+	require.False(t, updatedDatapipeStatus.LastAnalysisRunAt.IsZero())
+	require.Greater(t, updatedDatapipeStatus.LastAnalysisRunAt, datapipeStatus.LastAnalysisRunAt)
+
+	// request analysis again
+	err = testSuite.BHDatabase.RequestAnalysis(ctx, "test")
+	require.NoError(t, err)
+
+	err = testSuite.Daemon.Analyze(ctx)
+	require.NoError(t, err)
+
+	// confirm that the last analysis run timestamp is updated again
+	finalDataPipeStatus, err := testSuite.BHDatabase.GetDatapipeStatus(ctx)
+	require.NoError(t, err)
+	require.Greater(t, finalDataPipeStatus.LastAnalysisRunAt, updatedDatapipeStatus.LastAnalysisRunAt)
 }

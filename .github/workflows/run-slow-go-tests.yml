@@ -16,33 +16,24 @@
 
 name: Run Slow Go Tests
 
+# On workflow call ensures that it runs before CD without duplication. This will likely be better fixed when we move to the newer pipeline layout of workflows in the near future
 on:
-  workflow_run:
-    workflows: 
-      - "Run Go Unit Tests"
-      - "Run UI Tests"
-    types:
-      - completed
-    branches:
-      - main
-      - "stage/**"
+  workflow_call:
 
 jobs:
   run-tests:
-    # On Sucesss execute Go integration tests
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source code for this repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # ratchet:actions/checkout@v5
 
       - name: Start PostgreSQL and Neo4j Containers
         run: |
           BH_POSTGRES_CONFIG=$(pwd)/.github/config/postgresql.conf docker compose -f docker-compose.testing.yml up -d
 
       - name: Install Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # ratchet:actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache: true

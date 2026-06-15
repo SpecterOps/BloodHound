@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Tooltip, createColumnHelper } from '@bloodhoundenterprise/doodleui';
+import { Tooltip, createColumnHelper } from 'doodle-ui';
 import { DateTime } from 'luxon';
 import { LuxonFormat } from '../../..';
 import { NoteCell } from './NoteCell';
@@ -28,9 +28,9 @@ const actionTranslate: Record<string, string> = {
     DeleteTag: 'Delete Tag',
     AnalysisEnabledTag: 'Analysis Enabled Tag',
     AnalysisDisabledTag: 'Analysis Disabled Tag',
-    CreateSelector: 'Create Selector',
-    UpdateSelector: 'Update Selector',
-    DeleteSelector: 'Delete Selector',
+    CreateSelector: 'Create Rule',
+    UpdateSelector: 'Update Rule',
+    DeleteSelector: 'Delete Rule',
     CertifyNodeAuto: 'Automatic Certification',
     CertifyNodeManual: 'User Certification',
     CertifyNodeRevoked: 'Certify Revoked',
@@ -101,7 +101,7 @@ export const columns = [
     columnHelper.accessor('note', {
         id: 'note',
         header: () => {
-            return <div className='pr-1'>Note</div>;
+            return <div className='pr-1 text-center w-full'>Note</div>;
         },
         size: 96,
         cell: ({ row }) => <NoteCell row={row} />,

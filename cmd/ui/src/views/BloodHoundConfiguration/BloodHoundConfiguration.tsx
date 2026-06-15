@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Link, Typography } from '@mui/material';
 import { AnalyzeNowConfiguration, CitrixRDPConfiguration, PageWithTitle } from 'bh-shared-ui';
 
 const BloodHoundConfiguration = () => {
@@ -22,18 +21,20 @@ const BloodHoundConfiguration = () => {
         <PageWithTitle
             title='BloodHound Configuration'
             pageDescription={
-                <Typography variant='body2' paragraph>
+                <p className='text-sm'>
                     Modify the configuration of your BloodHound tenant. See our{' '}
-                    <Link href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/configuration'>
+                    <a
+                        className='text-link underline'
+                        href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/configuration'>
                         documentation
-                    </Link>{' '}
+                    </a>{' '}
                     for more details on each option.
-                </Typography>
+                </p>
             }>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className='flex flex-col gap-6 mt-4'>
                 <AnalyzeNowConfiguration description='This will re-run analysis in the BloodHound environment, recreating all Attack Paths that exist as a result of complex configurations.' />
                 <CitrixRDPConfiguration />
-            </Box>
+            </div>
         </PageWithTitle>
     );
 };

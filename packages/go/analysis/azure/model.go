@@ -17,8 +17,8 @@
 package azure
 
 import (
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/tiering"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -37,6 +37,7 @@ const (
 	RelatedEntityTypeVaultKeyReaders                    RelatedEntityType = "key-readers"
 	RelatedEntityTypeGroupMembers                       RelatedEntityType = "group-members"
 	RelatedEntityTypeRoles                              RelatedEntityType = "roles"
+	RelatedEntityTypeEligibleAndApproverRoles           RelatedEntityType = "eligible-approver-roles"
 	RelatedEntityTypeFunctionApps                       RelatedEntityType = "function-apps"
 	RelatedEntityTypeInboundExecutionPrivileges         RelatedEntityType = "inbound-execution-privileges"
 	RelatedEntityTypeOutboundExecutionPrivileges        RelatedEntityType = "outbound-execution-privileges"
@@ -62,26 +63,24 @@ const (
 	RelatedEntityTypeDescendentContainerRegistries      RelatedEntityType = "descendent-container-registries"
 	RelatedEntityTypeDescendentFunctionApps             RelatedEntityType = "descendent-function-apps"
 	RelatedEntityTypeRoleApprovers                      RelatedEntityType = "role-approvers"
+	RelatedEntityTypeFederatedIdentityCredentials       RelatedEntityType = "federated-identity-credentials"
 )
 
 // FromGraphNodes takes a slice of *graph.Node and converts them to serializable node structs.
-func FromGraphNodes(nodes []*graph.Node) []Node {
+func FromGraphNodes(primaryNodeKinds graphschema.PrimaryDisplayKinds, nodes []*graph.Node) []Node {
 	renderedNodes := make([]Node, len(nodes))
 
 	for idx, node := range nodes {
-		renderedNodes[idx] = Node{
-			Kind:       analysis.GetNodeKindDisplayLabel(node),
-			Properties: node.Properties.Map,
-		}
+		renderedNodes[idx] = FromGraphNode(primaryNodeKinds, node)
 	}
 
 	return renderedNodes
 }
 
 // FromGraphNode takes a *graph.Node and converts it to serializable node struct.
-func FromGraphNode(node *graph.Node) Node {
+func FromGraphNode(primaryNodeKinds graphschema.PrimaryDisplayKinds, node *graph.Node) Node {
 	return Node{
-		Kind:          analysis.GetNodeKindDisplayLabel(node),
+		Kind:          graphschema.GetNodeKindDisplayLabel(primaryNodeKinds, node),
 		Kinds:         node.Kinds.Strings(),
 		IsTierZero:    tiering.IsTierZero(node),
 		IsOwnedObject: tiering.IsOwned(node),
@@ -217,7 +216,8 @@ type DeviceDetails struct {
 type ApplicationDetails struct {
 	Node
 
-	InboundObjectControl int `json:"inbound_object_control"`
+	InboundObjectControl         int `json:"inbound_object_control"`
+	FederatedIdentityCredentials int `json:"federated_identity_credentials"`
 }
 
 type VMScaleSetDetails struct {
@@ -234,6 +234,12 @@ type ServicePrincipalDetails struct {
 	OutboundObjectControl              int `json:"outbound_object_control"`
 	InboundAbusableAppRoleAssignments  int `json:"inbound-abusable-app-role-assignments"`
 	OutboundAbusableAppRoleAssignments int `json:"outbound-abusable-app-role-assignments"`
+}
+
+type FederatedIdentityCredentialDetails struct {
+	Node
+
+	Apps int `json:"apps"`
 }
 
 type RoleDetails struct {

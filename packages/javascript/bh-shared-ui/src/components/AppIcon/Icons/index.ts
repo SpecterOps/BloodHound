@@ -15,11 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export * from './AttackPaths';
+export * from './BarChart';
 export * from './BHCELogo';
 export * from './BHCELogoFull';
 export * from './BHELogo';
 export * from './BHELogoFull';
-export * from './BarChart';
+export * from './BHLogo';
 export * from './CalendarDay';
 export * from './CaretDown';
 export * from './CaretUp';
@@ -39,6 +40,7 @@ export * from './Info';
 export * from './LargeRightArrow';
 export * from './LineChart';
 export * from './LinedPaper';
+export * from './Lock';
 export * from './Logout';
 export * from './MagnifyingGlass';
 export * from './Shield';
@@ -46,6 +48,7 @@ export * from './SortAsc';
 export * from './SortDesc';
 export * from './SortEmpty';
 export * from './TierZero';
+export * from './Trash';
 export * from './Upload';
 export * from './User';
 export * from './UserCog';

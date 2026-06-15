@@ -16,14 +16,14 @@
 
 package database
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../LICENSE.header -destination=./mocks/auth.go -package=mocks . AuthContextInitializer
-
 import (
 	"context"
 	"crypto/rand"
+	"database/sql"
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -34,6 +34,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 )
 
 // NewClientAuthToken creates a new Client AuthToken row using the details provided
@@ -65,32 +66,6 @@ func NewClientAuthToken(ownerID uuid.UUID, hmacMethod string) (model.AuthToken, 
 
 	authToken.Key = base64.StdEncoding.EncodeToString(tokenBytes)
 	return authToken, nil
-}
-
-type AuthContextInitializer interface {
-	InitContextFromToken(ctx context.Context, authToken model.AuthToken) (auth.Context, error)
-}
-
-type contextInitializer struct {
-	db Database
-}
-
-func NewContextInitializer(db Database) AuthContextInitializer {
-	return contextInitializer{db: db}
-}
-
-func (s contextInitializer) InitContextFromToken(ctx context.Context, authToken model.AuthToken) (auth.Context, error) {
-	if authToken.UserID.Valid {
-		if user, err := s.db.GetUser(ctx, authToken.UserID.UUID); err != nil {
-			return auth.Context{}, err
-		} else {
-			return auth.Context{
-				Owner: user,
-			}, nil
-		}
-	}
-
-	return auth.Context{}, ErrNotFound
 }
 
 // GetAllRoles retrieves all available roles in the db
@@ -300,7 +275,7 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 
 		// Clear a user's etac list before applying their new one when saving the user model
 		if user.AllEnvironments || user.EnvironmentTargetedAccessControl != nil {
-			bhdb := NewBloodhoundDB(tx, s.idResolver)
+			bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
 			if err := bhdb.DeleteEnvironmentTargetedAccessControlForUser(ctx, user); err != nil {
 				return fmt.Errorf("error deleting user's environment list: %w", err)
 			}
@@ -312,7 +287,7 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 			if err := tx.Raw("SELECT * FROM auth_secrets WHERE user_id = ?", user.ID).First(&authSecret).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 				return err
 			} else if authSecret.ID > 0 {
-				bhdb := NewBloodhoundDB(tx, s.idResolver)
+				bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
 				if err := bhdb.DeleteAuthSecret(ctx, authSecret); err != nil {
 					return err
 				}
@@ -344,11 +319,7 @@ func (s *BloodhoundDB) GetAllUsers(ctx context.Context, order string, filter mod
 		cursor = cursor.Order(order)
 	}
 
-	if filter.SQLString != "" {
-		result = cursor.Where(filter.SQLString, filter.Params...).Find(&users)
-	} else {
-		result = cursor.Find(&users)
-	}
+	result = cursor.Where(filter.SQLString, filter.Params...).Find(&users)
 
 	return users, CheckError(result)
 }
@@ -410,6 +381,21 @@ func (s *BloodhoundDB) CreateAuthToken(ctx context.Context, authToken model.Auth
 		Action: model.AuditLogActionCreateAuthToken,
 		Model:  &authToken,
 	}
+	// check for whether API keys are enabled
+	apiKeysEnabled := appcfg.GetAPITokensParameter(ctx, s)
+	if !apiKeysEnabled {
+		return model.AuthToken{}, errors.New("API Keys are disabled")
+	}
+
+	// Check if API key expiration is enabled; if it is set the mandatory expiration period for the auth token
+	apiKeyExpiration := appcfg.GetAPITokenExpirationParameter(ctx, s)
+	if apiKeyExpiration.Enabled {
+		expirationDate := time.Now().AddDate(0, 0, apiKeyExpiration.ExpirationPeriod)
+
+		if authToken.ExpiresAt.Time.Before(time.Now()) || authToken.ExpiresAt.Time.After(expirationDate) {
+			authToken.ExpiresAt = sql.NullTime{Time: expirationDate, Valid: true}
+		}
+	}
 
 	return authToken, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		return CheckError(tx.WithContext(ctx).Create(&authToken))
@@ -422,6 +408,47 @@ func (s *BloodhoundDB) CreateAuthToken(ctx context.Context, authToken model.Auth
 func (s *BloodhoundDB) UpdateAuthToken(ctx context.Context, authToken model.AuthToken) error {
 	result := s.db.WithContext(ctx).Save(&authToken)
 	return CheckError(result)
+}
+
+// Updates all auth tokens expiration field when API key expiration is enabled or disabled
+func (s *BloodhoundDB) UpdateAuthTokenExpiration(ctx context.Context) error {
+
+	// Attempt to Delete the Expired Tokens
+	if deletionErr := s.DeleteExpiredAuthTokens(ctx); deletionErr != nil {
+		return fmt.Errorf("error deleting expired auth tokens: %w", deletionErr)
+	}
+
+	// Create the Audit Details
+	auditDetails := model.AuditData{
+		"table":  "auth_tokens",
+		"column": "expires_at",
+	}
+
+	// Create the Audit Entry
+	auditEntry, err := model.NewAuditEntry(model.AuditLogActionUpdateAuthTokenExpiration, model.AuditLogStatusIntent, auditDetails)
+	if err != nil {
+		return fmt.Errorf("error creating update auth token expiration audit entry: %w", err)
+	}
+
+	// Obtain the API Key Expiration Parameter
+	apiExpParam := appcfg.GetAPITokenExpirationParameter(ctx, s)
+
+	// If Enabled Set Expiration Date for Auth Tokens; Unless the Token Expires before the New Expiration
+	// If Disabled Set Expiration Date for Auth Tokens to NULL
+	if apiExpParam.Enabled {
+		expirationDate := sql.NullTime{Time: time.Now().AddDate(0, 0, apiExpParam.ExpirationPeriod), Valid: true}
+
+		return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+			result := tx.WithContext(ctx).Exec("UPDATE auth_tokens SET expires_at = ? WHERE expires_at IS NULL OR expires_at > ?", expirationDate, expirationDate)
+			return CheckError(result)
+		})
+	} else {
+		return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+			result := tx.WithContext(ctx).Exec("UPDATE auth_tokens SET expires_at = NULL")
+			return CheckError(result)
+		})
+	}
+
 }
 
 // GetAuthToken retrieves the AuthToken row associated with the provided ID
@@ -458,6 +485,51 @@ func (s *BloodhoundDB) GetUserToken(ctx context.Context, userId, tokenId uuid.UU
 		result    = s.db.WithContext(ctx).First(&authToken, "id = ? AND user_id = ?", tokenId, userId)
 	)
 	return authToken, CheckError(result)
+}
+
+func (s *BloodhoundDB) DeleteExpiredAuthTokens(ctx context.Context) error {
+
+	// Create the Audit Details
+	auditDetails := model.AuditData{
+		"table":   "auth_tokens",
+		"trigger": "API expiration configuration change",
+	}
+
+	// Create the Audit Entry
+	auditEntry, err := model.NewAuditEntry(model.AuditLogActionDeleteExpiredAuthTokens, model.AuditLogStatusIntent, auditDetails)
+	if err != nil {
+		return fmt.Errorf("error creating delete expired auth tokens audit entry: %w", err)
+	}
+
+	// Delete All Expired Auth Tokens
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		result := tx.WithContext(ctx).Exec("DELETE FROM auth_tokens WHERE expires_at IS NOT NULL AND expires_at < NOW()")
+		return CheckError(result)
+	})
+
+}
+
+// DeleteAllAuthTokens deletes all tokens at startup if the APITokens parameter is disabled (enabled=false).
+// An audit log is created for this action.
+func (s *BloodhoundDB) DeleteAllAuthTokens(ctx context.Context) error {
+	auditDetails := model.AuditData{
+		"table":   "auth_tokens",
+		"trigger": "startup",
+	}
+	auditEntry, aErr := model.NewAuditEntry(model.AuditLogActionDeleteAllAuthTokens, model.AuditLogStatusIntent, auditDetails)
+	if aErr != nil {
+		return fmt.Errorf("error creating %v audit entry: %w", model.AuditLogActionDeleteAllAuthTokens, aErr)
+	}
+
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		result := tx.WithContext(ctx).Exec("TRUNCATE TABLE auth_tokens")
+		return CheckError(result)
+	})
+	if err == nil {
+		slog.InfoContext(ctx, "DeleteAllAuthTokens: all tokens deleted")
+	}
+
+	return err
 }
 
 // DeleteAuthToken deletes the provided AuthToken row
@@ -536,7 +608,7 @@ func (s *BloodhoundDB) CreateUserSession(ctx context.Context, userSession model.
 // EndUserSession terminates the provided session
 // UPDATE user_sessions SET expires_at = <now> WHERE user_id = ...
 func (s *BloodhoundDB) EndUserSession(ctx context.Context, userSession model.UserSession) {
-	s.db.WithContext(ctx).Exec(`UPDATE user_sessions SET expires_at = NOW(), updated_at = NOW() WHERE user_id = ?`, userSession.UserID)
+	s.db.WithContext(ctx).Exec(`UPDATE user_sessions SET expires_at = NOW(), updated_at = NOW() WHERE id = ?`, userSession.ID)
 }
 
 // corresponding retrival function is model.UserSession.GetFlag()

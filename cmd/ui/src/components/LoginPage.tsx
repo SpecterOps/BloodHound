@@ -14,19 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Container, Paper } from '@mui/material';
+import { Container } from '@mui/material';
 import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 import { addSnackbar } from 'src/ducks/global/actions';
-import { useAppSelector } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 interface LoginPageProps {
     children: React.ReactNode;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ children }) => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const [searchParams] = useSearchParams();
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
@@ -40,24 +39,22 @@ const LoginPage: React.FC<LoginPageProps> = ({ children }) => {
     }, [dispatch, errorMessage]);
 
     return (
-        <>
-            <Box className='flex justify-center items-center h-full'>
-                <Container maxWidth='sm'>
-                    <Paper sx={{ px: 8, pb: 8, pt: 4 }}>
-                        <Box height='100%' width='auto' textAlign='center' boxSizing='content-box' padding='64px'>
-                            <img
-                                src={`${import.meta.env.BASE_URL}${imageUrl}`}
-                                alt='BloodHound'
-                                style={{
-                                    width: '100%',
-                                }}
-                            />
-                        </Box>
-                        {children}
-                    </Paper>
-                </Container>
-            </Box>
-        </>
+        <div className='flex justify-center items-center h-full'>
+            <Container maxWidth='sm'>
+                <div className='bg-neutral-2 shadow-outer-1 px-16 pb-16 pt-8'>
+                    <div className='h-full w-auto text-center box-border p-16'>
+                        <img
+                            src={`${import.meta.env.BASE_URL}${imageUrl}`}
+                            alt='BloodHound'
+                            style={{
+                                width: '100%',
+                            }}
+                        />
+                    </div>
+                    {children}
+                </div>
+            </Container>
+        </div>
     );
 };
 

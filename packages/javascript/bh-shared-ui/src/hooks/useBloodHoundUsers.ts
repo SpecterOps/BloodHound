@@ -25,11 +25,19 @@ export const useSelf = () =>
 
 export const useBloodHoundUsers = () => {
     const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS);
+    const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS) || checkPermission(Permission.AUTH_READ_USERS);
 
     return useQuery({
         queryKey: ['listUsers'],
         queryFn: ({ signal }) => apiClient.listUsers({ signal }).then((res) => res.data?.data?.users),
         enabled: hasPermission,
     });
+};
+
+export const useGetUser = (userId: string) => {
+    return useQuery(
+        ['getUser', userId],
+        ({ signal }) => apiClient.getUser(userId, { signal }).then((res) => res.data.data),
+        { cacheTime: 0 }
+    );
 };

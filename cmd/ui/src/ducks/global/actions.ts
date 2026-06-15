@@ -64,6 +64,13 @@ export const setAutoRunQueries = (autoRunQueries: boolean): types.GlobalViewActi
     };
 };
 
+export const setTimeoutSetting = (timeoutSetting: boolean): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_TIMEOUT_SETTING,
+        timeoutSetting,
+    };
+};
+
 export const setExploreLayout = (exploreLayout: BaseGraphLayoutOptions): types.GlobalViewActionTypes => {
     return {
         type: types.GLOBAL_SET_EXPLORE_LAYOUT,
@@ -78,6 +85,13 @@ export const setIsExploreTableSelected = (isExploreTableSelected: boolean): type
     };
 };
 
+export const setIsExploreLayoutSelected = (isExploreLayoutSelected: boolean): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_IS_EXPLORE_LAYOUT_SELECTED,
+        isExploreLayoutSelected,
+    };
+};
+
 export const setSelectedExploreTableColumns = (
     selectedExploreTableColumns: Record<string, boolean>
 ): types.GlobalViewActionTypes => {
@@ -86,6 +100,14 @@ export const setSelectedExploreTableColumns = (
         selectedExploreTableColumns,
     };
 };
+
+export const setPinnedExploreTableColumns = (pinnedExploreTableColumns: string[]): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_PINNED_EXPLORE_TABLE_COLUMNS,
+        pinnedExploreTableColumns,
+    };
+};
+
 export const setExpanded = (expanded: { [key: string]: symbol[] }): types.GlobalAccordionsActionTypes => {
     return {
         type: types.GLOBAL_SET_EXPANDED,
@@ -124,5 +146,19 @@ export const setAssetGroupEdit = (assetGroupId: number | null): types.GlobalOpti
     return {
         type: types.GLOBAL_SET_ASSET_GROUP_EDIT,
         assetGroupId,
+    };
+};
+
+export const setIsExploreGraphHighlight = (isExploreGraphHighlight: boolean): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_IS_EXPLORE_GRAPH_HIGHLIGHT,
+        isExploreGraphHighlight,
+    };
+};
+
+export const setIsExploreGraphLabelClip = (isExploreGraphLabelClip: boolean): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_IS_EXPLORE_GRAPH_LABEL_CLIP,
+        isExploreGraphLabelClip,
     };
 };

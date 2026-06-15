@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card } from '@bloodhoundenterprise/doodleui';
+import { Card } from 'doodle-ui';
 import type { FileIngestJob } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useGetFileUploadsQuery } from '../../hooks';
@@ -27,7 +27,7 @@ import { FileIngestFilterDialog } from './FileIngestFilterDialog';
 
 const HEADERS = ['ID / User / Status', 'Message', 'Start Time', 'Duration', 'File Information'];
 
-const getHeaders = (headers: string[]) => headers.map((label) => ({ label, verticalAlign: 'baseline' }));
+const getHeaders = (headers: string[]) => headers.map((label) => ({ label, className: 'align-baseline' }));
 
 const getRow =
     (onSelectJob: React.Dispatch<React.SetStateAction<FileIngestJob | undefined>>) => (job: FileIngestJob) => {
@@ -84,7 +84,7 @@ export const FileIngestTable: FC = () => {
     };
 
     return (
-        <div className='grid h-full grid-cols-[1fr_27rem] grid-rows-[auto_minmax(0,1fr)] pt-4 gap-4'>
+        <div className='grid h-full grid-cols-[1fr_27rem] grid-rows-[auto_minmax(0,1fr)] gap-4'>
             <div className='col-[1] row-[1] flex items-center justify-end gap-2'>
                 <FileIngestFilterDialog onConfirm={handleOnConfirm} />
                 <FileIngestUploadButton />
@@ -101,7 +101,10 @@ export const FileIngestTable: FC = () => {
                             rowsPerPage,
                             count,
                             onPageChange: (_event, page) => setPage(page),
-                            onRowsPerPageChange: (event) => setRowsPerPage(parseInt(event.target.value)),
+                            onRowsPerPageChange: (event) => {
+                                setRowsPerPage(parseInt(event.target.value));
+                                setPage(0);
+                            },
                         }}
                         showPaginationControls
                     />

@@ -16,32 +16,20 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import * as usePZParams from '../../../hooks/usePZParams/usePZPathParams';
+import { mockPZPathParams } from '../../../mocks/factories/privilegeZones';
+import zoneHandlers from '../../../mocks/handlers/zoneHandlers';
 import { render, screen } from '../../../test-utils';
 import ObjectCountPanel from './ObjectCountPanel';
 
-const server = setupServer(
-    rest.get(`/api/v2/asset-group-tags/*`, async (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {
-                    total_count: 0,
-                    counts: [],
-                },
-            })
-        );
-    }),
-    rest.get('/api/v2/available-domains', async (_req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: [],
-            })
-        );
-    })
-);
+const server = setupServer(...zoneHandlers);
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
+
+const usePZPathParamsSpy = vi.spyOn(usePZParams, 'usePZPathParams');
+usePZPathParamsSpy.mockReturnValue({ ...mockPZPathParams, tagId: '1', ruleId: undefined });
 
 describe('ObjectCountPanel', () => {
     it('renders error message on error', async () => {
@@ -52,7 +40,7 @@ describe('ObjectCountPanel', () => {
             })
         );
 
-        render(<ObjectCountPanel tagId='1' />);
+        render(<ObjectCountPanel />);
 
         expect(await screen.findByText('There was an error fetching this data')).toBeInTheDocument();
     });
@@ -71,7 +59,7 @@ describe('ObjectCountPanel', () => {
             })
         );
 
-        render(<ObjectCountPanel tagId='1' />);
+        render(<ObjectCountPanel />);
 
         expect(screen.getByText('Total Count')).toBeInTheDocument();
         expect(await screen.findByText('100')).toBeInTheDocument();

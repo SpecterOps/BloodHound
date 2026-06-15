@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+export * from './adaptClickHandlerToKeyDown';
 export * from './api';
 export * from './array';
 export * from './colors';
@@ -23,11 +24,13 @@ export * from './copyToClipboard';
 export * from './datePicker';
 export * from './datetime';
 export * from './entityInfoDisplay';
+export * from './environments';
 export * from './exportGraphData';
 export * from './freeIconsList';
 export * from './icons';
 export * from './jobs';
 export * from './luxon';
+export * from './number';
 export * from './numberFormatting';
 export * from './object';
 export * from './parseItemId';
@@ -36,6 +39,8 @@ export * from './permissions';
 export * from './queries';
 export * from './quickUpload';
 export * from './searchParams';
+export * from './strings';
 export * from './testHelpers';
 export * from './theme';
+export * from './type';
 export * from './user';

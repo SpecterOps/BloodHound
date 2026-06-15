@@ -24,8 +24,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
-	"github.com/specterops/bloodhound/packages/go/analysis/impact"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/specterops/dawgs/cardinality"
@@ -35,17 +35,22 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) error {
+func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation post.StatTrackedOperation[post.EnsureRelationshipJob]) error {
 	if ntAuthStoreNodes, err := FetchNodesByKind(ctx, db, ad.NTAuthStore); err != nil {
 		return err
 	} else {
 		for _, node := range ntAuthStoreNodes {
 			innerNode := node
 
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 				if thumbprints, err := innerNode.Properties.Get(ad.CertThumbprints.String()).StringSlice(); err != nil {
 					if strings.Contains(err.Error(), graph.ErrPropertyNotFound.Error()) {
-						slog.WarnContext(ctx, fmt.Sprintf("Unable to post-process TrustedForNTAuth edge for NTAuthStore node %d due to missing adcs data: %v", innerNode.ID, err))
+						slog.WarnContext(
+							ctx,
+							"Unable to post-process TrustedForNTAuth edge for NTAuthStore due to missing adcs data",
+							slog.Uint64("nt_auth_store_id", uint64(innerNode.ID)),
+							attr.Error(err),
+						)
 						return nil
 					}
 					return err
@@ -56,7 +61,7 @@ func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation anal
 								return err
 							} else {
 								for _, sourceNodeID := range sourceNodeIDs {
-									if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+									if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 										FromID: sourceNodeID,
 										ToID:   innerNode.ID,
 										Kind:   ad.TrustedForNTAuth,
@@ -76,8 +81,8 @@ func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation anal
 	return nil
 }
 
-func PostIssuedSignedBy(operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node, rootCertAuthorities []*graph.Node, aiaCertAuthorities []*graph.Node) error {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+func PostIssuedSignedBy(operation post.StatTrackedOperation[post.EnsureRelationshipJob], enterpriseCertAuthorities []*graph.Node, rootCertAuthorities []*graph.Node, aiaCertAuthorities []*graph.Node) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		for _, node := range enterpriseCertAuthorities {
 			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
 				return err
@@ -95,7 +100,7 @@ func PostIssuedSignedBy(operation analysis.StatTrackedOperation[analysis.CreateP
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		for _, node := range rootCertAuthorities {
 			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
 				return err
@@ -113,7 +118,7 @@ func PostIssuedSignedBy(operation analysis.StatTrackedOperation[analysis.CreateP
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		for _, node := range aiaCertAuthorities {
 			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
 				return err
@@ -134,8 +139,8 @@ func PostIssuedSignedBy(operation analysis.StatTrackedOperation[analysis.CreateP
 	return nil
 }
 
-func PostEnterpriseCAFor(operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+func PostEnterpriseCAFor(operation post.StatTrackedOperation[post.EnsureRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		for _, ecaNode := range enterpriseCertAuthorities {
 			if thumbprint, err := ecaNode.Properties.Get(ad.CertThumbprint.String()).String(); err != nil {
 				if graph.IsErrPropertyNotFound(err) {
@@ -147,7 +152,7 @@ func PostEnterpriseCAFor(operation analysis.StatTrackedOperation[analysis.Create
 					return err
 				} else {
 					for _, rootCANodeID := range rootCAIDs {
-						if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+						if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 							FromID: ecaNode.ID,
 							ToID:   rootCANodeID,
 							Kind:   ad.EnterpriseCAFor,
@@ -160,7 +165,7 @@ func PostEnterpriseCAFor(operation analysis.StatTrackedOperation[analysis.Create
 					return err
 				} else {
 					for _, aiaCANodeID := range aiaCAIDs {
-						if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+						if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 							FromID: ecaNode.ID,
 							ToID:   aiaCANodeID,
 							Kind:   ad.EnterpriseCAFor,
@@ -176,15 +181,20 @@ func PostEnterpriseCAFor(operation analysis.StatTrackedOperation[analysis.Create
 	return nil
 }
 
-func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, enterpriseCA *graph.Node, targetDomains *graph.NodeSet) error {
-	if hostCAServiceComputers, err := FetchHostsCAServiceComputers(tx, enterpriseCA); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error fetching host ca computer for enterprise ca %d: %v", enterpriseCA.ID, err))
+func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, certChains *EnterpriseCAChainedDomains) error {
+	if hostCAServiceComputers, err := FetchHostsCAServiceComputers(tx, certChains.EnterpriseCA); err != nil {
+		slog.ErrorContext(
+			ctx,
+			"Error fetching host ca computer for enterprise ca",
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
+			attr.Error(err),
+		)
 	} else {
 		for _, computer := range hostCAServiceComputers {
-			for _, domain := range targetDomains.Slice() {
-				channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+			for _, domain := range certChains.Domains.Slice() {
+				channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 					FromID: computer.ID,
-					ToID:   domain.ID,
+					ToID:   graph.ID(domain),
 					Kind:   ad.GoldenCert,
 				})
 			}
@@ -193,8 +203,8 @@ func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- analy
 	return nil
 }
 
-func PostExtendedByPolicyBinding(operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], certTemplates []*graph.Node) error {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+func PostExtendedByPolicyBinding(operation post.StatTrackedOperation[post.EnsureRelationshipJob], certTemplates []*graph.Node) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		if allIssuancePolicies, err := fetchAllIssuancePolicies(tx); err != nil {
 			return err
 		} else {
@@ -216,7 +226,7 @@ func PostExtendedByPolicyBinding(operation analysis.StatTrackedOperation[analysi
 								continue
 							} else if certTemplateDomain != "" && certTemplateDomain == issuancePolicyDomain {
 								// Create ExtendedByPolicy edge
-								if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+								if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 									FromID: certTemplate.ID,
 									ToID:   issuancePolicy.ID,
 									Kind:   ad.ExtendedByPolicy,
@@ -264,19 +274,19 @@ func getIssuancePolicyCertOIDMap(issuancePolicies graph.NodeSet) map[string][]gr
 	return oidMap
 }
 
-func processCertChainParent(node *graph.Node, tx graph.Transaction) ([]analysis.CreatePostRelationshipJob, error) {
+func processCertChainParent(node *graph.Node, tx graph.Transaction) ([]post.EnsureRelationshipJob, error) {
 	if certChain, err := node.Properties.Get(ad.CertChain.String()).StringSlice(); err != nil {
 		if errors.Is(err, graph.ErrPropertyNotFound) {
-			return []analysis.CreatePostRelationshipJob{}, nil
+			return []post.EnsureRelationshipJob{}, nil
 		}
-		return []analysis.CreatePostRelationshipJob{}, err
+		return []post.EnsureRelationshipJob{}, err
 	} else if len(certChain) > 1 {
 		parentCert := certChain[1]
 		if targetNodes, err := findNodesByCertThumbprint(parentCert, tx, ad.EnterpriseCA, ad.RootCA, ad.AIACA); err != nil {
-			return []analysis.CreatePostRelationshipJob{}, err
+			return []post.EnsureRelationshipJob{}, err
 		} else {
-			return slicesext.Map(targetNodes, func(nodeId graph.ID) analysis.CreatePostRelationshipJob {
-				return analysis.CreatePostRelationshipJob{
+			return slicesext.Map(targetNodes, func(nodeId graph.ID) post.EnsureRelationshipJob {
+				return post.EnsureRelationshipJob{
 					FromID: node.ID,
 					ToID:   nodeId,
 					Kind:   ad.IssuedSignedBy,
@@ -284,7 +294,7 @@ func processCertChainParent(node *graph.Node, tx graph.Transaction) ([]analysis.
 			}), nil
 		}
 	} else {
-		return []analysis.CreatePostRelationshipJob{}, ErrNoCertParent
+		return []post.EnsureRelationshipJob{}, ErrNoCertParent
 	}
 }
 
@@ -300,51 +310,65 @@ func findNodesByCertThumbprint(certThumbprint string, tx graph.Transaction, kind
 	}))
 }
 
-func expandNodeSliceToBitmapWithoutGroups(nodes []*graph.Node, groupExpansions impact.PathAggregator) cardinality.Duplex[uint64] {
-	var bitmap = cardinality.NewBitmap64()
+func expandCachedPrincipalsToBitmapWithoutGroups(principals CachedPrincipalSet, localGroupData *LocalGroupData) cardinality.Duplex[uint64] {
+	var (
+		nonGroupNodes = cardinality.NewBitmap64()
+	)
 
-	for _, controller := range nodes {
-		if controller.Kinds.ContainsOneOf(ad.Group) {
-			groupExpansions.Cardinality(controller.ID.Uint64()).(cardinality.Duplex[uint64]).Each(func(id uint64) bool {
-				//Check group expansions against each id, if cardinality is 0 than its not a group
-				if groupExpansions.Cardinality(id).Cardinality() == 0 {
-					bitmap.Add(id)
+	principals.AllIDs.Each(func(entityID uint64) bool {
+		if principals.GroupOrLocalGroupIDs.Contains(entityID) {
+			localGroupData.GroupMembershipCache.ReachOfComponentContainingMember(entityID, graph.DirectionInbound).Each(func(memberID uint64) bool {
+				if !localGroupData.Groups.Contains(memberID) {
+					nonGroupNodes.Add(memberID)
 				}
+
 				return true
 			})
 		} else {
-			bitmap.Add(controller.ID.Uint64())
+			nonGroupNodes.Add(entityID)
 		}
-	}
 
-	return bitmap
+		return true
+	})
+
+	return nonGroupNodes
 }
 
-func containsAuthUsersOrEveryone(tx graph.Transaction, nodes []*graph.Node) (bool, error) {
-	if specialGroups, err := FetchAuthUsersAndEveryoneGroups(tx); err != nil {
-		return false, err
-	} else {
-		for _, node := range nodes {
-			if specialGroups.Contains(node) {
-				return true, nil
-			} else if node.Kinds.ContainsOneOf(ad.Group) {
-				for _, group := range specialGroups {
-					if path, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-						return query.And(
-							query.Equals(query.StartID(), group.ID),
-							query.KindIn(query.Relationship(), ad.MemberOf),
-							query.Equals(query.EndID(), node.ID),
-						)
-					})); err != nil {
-						return false, err
-					} else if len(path) > 0 {
-						return true, nil
-					}
-				}
-			}
+func containsAuthUsersOrEveryone(tx graph.Transaction, specialGroups graph.NodeSet, nodes []*graph.Node) (bool, error) {
+	// Collect IDs of special groups and group nodes for a single bulk query
+	var groupNodeIDs []graph.ID
+
+	for _, node := range nodes {
+		// Direct membership check — is this node itself a special group?
+		if specialGroups.Contains(node) {
+			return true, nil
+		}
+
+		if node.Kinds.ContainsOneOf(ad.Group) {
+			groupNodeIDs = append(groupNodeIDs, node.ID)
 		}
 	}
-	return false, nil
+
+	// No group nodes to check transitive membership for
+	if len(groupNodeIDs) == 0 {
+		return false, nil
+	}
+
+	// Build the list of special group IDs
+	specialGroupIDs := specialGroups.IDs()
+
+	// Single bulk query: check if any special group is a MemberOf any of the group nodes
+	if rels, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.InIDs(query.StartID(), specialGroupIDs...),
+			query.KindIn(query.Relationship(), ad.MemberOf),
+			query.InIDs(query.EndID(), groupNodeIDs...),
+		)
+	})); err != nil {
+		return false, err
+	} else {
+		return len(rels) > 0, nil
+	}
 }
 
 func certTemplateValidForUserVictim(certTemplate *graph.Node) bool {
@@ -362,9 +386,20 @@ func certTemplateValidForUserVictim(certTemplate *graph.Node) bool {
 }
 
 func filterUserDNSResults(tx graph.Transaction, bitmap cardinality.Duplex[uint64], certTemplate *graph.Node) (cardinality.Duplex[uint64], error) {
+	// gMSAs and sMSAs are ingested as User nodes but behave like Computer objects in AD
+	// and possess DNS names, so they should not be filtered out of attack paths that
+	// require DNS in the SubjectAltName
 	if userNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
 			query.KindIn(query.Node(), ad.User),
+			query.Not(query.And(
+				query.Exists(query.NodeProperty(ad.GMSA.String())),
+				query.Equals(query.NodeProperty(ad.GMSA.String()), true),
+			)),
+			query.Not(query.And(
+				query.Exists(query.NodeProperty(ad.MSA.String())),
+				query.Equals(query.NodeProperty(ad.MSA.String()), true),
+			)),
 			query.InIDs(query.NodeID(), graph.DuplexToGraphIDs(bitmap)...),
 		)
 	})); err != nil {
@@ -378,11 +413,11 @@ func filterUserDNSResults(tx graph.Transaction, bitmap cardinality.Duplex[uint64
 	return bitmap, nil
 }
 
-func getVictimBitmap(groupExpansions impact.PathAggregator, certTemplateControllers, ecaControllers []*graph.Node, specialGroupHasTemplateEnroll, specialGroupHasECAEnroll bool) cardinality.Duplex[uint64] {
+func getVictimBitmap(localGroupData *LocalGroupData, certTemplateControllers, ecaControllers CachedPrincipalSet, specialGroupHasTemplateEnroll, specialGroupHasECAEnroll bool) cardinality.Duplex[uint64] {
 	// Expand controllers for the eca + template completely because we don't do group shortcutting here
 	var (
-		templateBitmap = expandNodeSliceToBitmapWithoutGroups(certTemplateControllers, groupExpansions)
-		ecaBitmap      = expandNodeSliceToBitmapWithoutGroups(ecaControllers, groupExpansions)
+		templateBitmap = expandCachedPrincipalsToBitmapWithoutGroups(certTemplateControllers, localGroupData)
+		ecaBitmap      = expandCachedPrincipalsToBitmapWithoutGroups(ecaControllers, localGroupData)
 		victimBitmap   = cardinality.NewBitmap64()
 	)
 
@@ -417,5 +452,23 @@ func schannelAuthenticationEnabled(certTemplate *graph.Node) (bool, error) {
 		} else {
 			return slices.Contains(effectiveekus, "1.3.6.1.5.5.7.3.2") || slices.Contains(effectiveekus, "2.5.29.37.0") || len(effectiveekus) == 0, nil
 		}
+	}
+}
+
+func logPropertyLookupFailure(ctx context.Context, node *graph.Node, err error) {
+	if errors.Is(err, graph.ErrPropertyNotFound) {
+		slog.WarnContext(
+			ctx,
+			"Property not found for node",
+			slog.Uint64("node_id", uint64(node.ID)),
+			attr.Error(err),
+		)
+	} else {
+		slog.ErrorContext(
+			ctx,
+			"Property error",
+			slog.Uint64("node_id", uint64(node.ID)),
+			attr.Error(err),
+		)
 	}
 }

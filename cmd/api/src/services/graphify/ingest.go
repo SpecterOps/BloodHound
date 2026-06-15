@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/ein"
@@ -43,8 +44,7 @@ const (
 	ReconcileProperty    = "reconcile"
 )
 
-// registrationFn persists a kind encountered in the ingest payload, if it hasn't already been registered in the source_kinds table.
-// (e.g., "Base", "AZBase", "GithubBase")
+// registrationFn persists a kind encountered in the ingest payload.
 type registrationFn func(kind graph.Kind) error
 
 type ReadOptions struct {
@@ -64,15 +64,23 @@ type IngestContext struct {
 	Manager ChangeManager
 	// Stats tracks the number of nodes and relationships processed during ingestion
 	Stats *IngestStats
-
+	// ID of the Job that is being ingested
+	JobId int64
+	// EndpointResolver is the endpoint matching strategy to be used when looking up
+	// entities for relationship creation
+	EndpointResolver *endpoint.Resolver
+	// RegisterNodeKind persists custom node kind stubs for newly encountered ingest kinds
+	RegisterNodeKind registrationFn
+	seenKinds        map[string]struct{}
 	// RetainIngestedFiles determines if the service should clean up working files after ingest
 	RetainIngestedFiles bool
 }
 
 func NewIngestContext(ctx context.Context, opts ...IngestOption) *IngestContext {
 	ic := &IngestContext{
-		Ctx:   ctx,
-		Stats: &IngestStats{}, // Always initialize stats
+		Ctx:       ctx,
+		Stats:     &IngestStats{}, // Always initialize stats
+		seenKinds: map[string]struct{}{},
 	}
 
 	for _, opt := range opts {
@@ -108,9 +116,27 @@ func WithChangeManager(manager ChangeManager) IngestOption {
 	}
 }
 
+func WithEndpointResolver(resolver *endpoint.Resolver) IngestOption {
+	return func(s *IngestContext) {
+		s.EndpointResolver = resolver
+	}
+}
+
+func WithNodeKindRegistrar(registerNodeKind registrationFn) IngestOption {
+	return func(s *IngestContext) {
+		s.RegisterNodeKind = registerNodeKind
+	}
+}
+
 func WithBatchUpdater(batchUpdater BatchUpdater) IngestOption {
 	return func(s *IngestContext) {
 		s.Batch = batchUpdater
+	}
+}
+
+func WithJobId(jobId int64) IngestOption {
+	return func(s *IngestContext) {
+		s.JobId = jobId
 	}
 }
 
@@ -190,7 +216,7 @@ func ReadFileForIngest(batch *IngestContext, reader io.ReadSeeker, options ReadO
 }
 
 // IngestWrapper dispatches the ingest process based on the metadata's type.
-func IngestWrapper(batch *IngestContext, reader io.ReadSeeker, meta ingest.Metadata, readOpts ReadOptions) error {
+func IngestWrapper(batch *IngestContext, reader io.ReadSeeker, meta ingest.OriginalMetadata, readOpts ReadOptions) error {
 	// Source-kind-aware handler
 	if handler, ok := sourceKindHandlers[meta.Type]; ok {
 		if readOpts.RegisterSourceKind == nil {
@@ -231,15 +257,53 @@ func IngestBasicData(batch *IngestContext, converted ConvertedData) error {
 func IngestGenericData(batch *IngestContext, sourceKind graph.Kind, converted ConvertedData) error {
 	errs := errorlist.NewBuilder()
 
+	if err := registerGenericNodeKinds(batch, sourceKind, converted.NodeProps); err != nil {
+		errs.Add(err)
+		return errs.Build()
+	}
+
 	if err := IngestNodes(batch, sourceKind, converted.NodeProps); err != nil {
 		errs.Add(err)
 	}
 
-	if err := IngestRelationships(batch, sourceKind, converted.RelProps); err != nil {
-		errs.Add(err)
+	if len(converted.RelProps) > 0 {
+		if err := IngestRelationships(batch, sourceKind, converted.RelProps); err != nil {
+			errs.Add(err)
+		}
 	}
 
 	return errs.Build()
+}
+
+func registerGenericNodeKinds(batch *IngestContext, sourceKind graph.Kind, nodes []ein.IngestibleNode) error {
+	if batch.RegisterNodeKind == nil {
+		return nil
+	}
+
+	if batch.seenKinds == nil {
+		batch.seenKinds = map[string]struct{}{}
+	}
+
+	for _, node := range nodes {
+		for _, kind := range MergeNodeKinds(sourceKind, node.Labels...) {
+			if model.IsExtendedNodeKind(kind) {
+				continue
+			}
+
+			kindName := kind.String()
+			if _, seen := batch.seenKinds[kindName]; seen {
+				continue
+			}
+
+			if err := batch.RegisterNodeKind(kind); err != nil {
+				return err
+			}
+
+			batch.seenKinds[kindName] = struct{}{}
+		}
+	}
+
+	return nil
 }
 
 func IngestGroupData(batch *IngestContext, converted ConvertedGroupData) error {
@@ -261,14 +325,10 @@ func IngestGroupData(batch *IngestContext, converted ConvertedGroupData) error {
 }
 
 func IngestAzureData(batch *IngestContext, converted ConvertedAzureData) error {
-	defer measure.ContextLogAndMeasure(context.TODO(), slog.LevelDebug, "ingest azure data")()
+	defer measure.ContextLogAndMeasureWithThreshold(context.TODO(), slog.LevelDebug, "ingest azure data")()
 	errs := errorlist.NewBuilder()
 
 	if err := IngestNodes(batch, azure.Entity, converted.NodeProps); err != nil {
-		errs.Add(err)
-	}
-
-	if err := IngestNodes(batch, ad.Entity, converted.OnPremNodes); err != nil {
 		errs.Add(err)
 	}
 
@@ -280,15 +340,15 @@ func IngestAzureData(batch *IngestContext, converted ConvertedAzureData) error {
 }
 
 // basicIngestHandler defines the function signature for all ingest paths except for the OpenGraph
-type basicIngestHandler func(batch *IngestContext, reader io.ReadSeeker, meta ingest.Metadata) error
+type basicIngestHandler func(batch *IngestContext, reader io.ReadSeeker, meta ingest.OriginalMetadata) error
 
 // sourceKindIngestHandler defines the function signature for ingest handlers that require
 // additional logic — specifically, registration of a sourceKind before decoding data.
 // This is only used for ingest payloads within OpenGraph, which may specify new source kinds that we want to track (e.g. Base, AZBase, GithubBase).
-type sourceKindIngestHandler func(batch *IngestContext, reader io.ReadSeeker, meta ingest.Metadata, register registrationFn) error
+type sourceKindIngestHandler func(batch *IngestContext, reader io.ReadSeeker, meta ingest.OriginalMetadata, register registrationFn) error
 
 func defaultBasicHandler[T any](conversionFunc ConversionFuncWithTime[T]) basicIngestHandler {
-	return func(batch *IngestContext, reader io.ReadSeeker, meta ingest.Metadata) error {
+	return func(batch *IngestContext, reader io.ReadSeeker, meta ingest.OriginalMetadata) error {
 		decoder, err := getDefaultDecoder(reader)
 		if err != nil {
 			return err
@@ -298,7 +358,7 @@ func defaultBasicHandler[T any](conversionFunc ConversionFuncWithTime[T]) basicI
 }
 
 var basicHandlers = map[ingest.DataType]basicIngestHandler{
-	ingest.DataTypeComputer: func(batch *IngestContext, reader io.ReadSeeker, meta ingest.Metadata) error {
+	ingest.DataTypeComputer: func(batch *IngestContext, reader io.ReadSeeker, meta ingest.OriginalMetadata) error {
 		if decoder, err := getDefaultDecoder(reader); err != nil {
 			return err
 		} else if meta.Version >= 5 {
@@ -307,21 +367,21 @@ var basicHandlers = map[ingest.DataType]basicIngestHandler{
 			return nil
 		}
 	},
-	ingest.DataTypeGroup: func(batch *IngestContext, reader io.ReadSeeker, meta ingest.Metadata) error {
+	ingest.DataTypeGroup: func(batch *IngestContext, reader io.ReadSeeker, meta ingest.OriginalMetadata) error {
 		if decoder, err := getDefaultDecoder(reader); err != nil {
 			return err
 		} else {
 			return decodeGroupData(batch, decoder)
 		}
 	},
-	ingest.DataTypeSession: func(batch *IngestContext, reader io.ReadSeeker, meta ingest.Metadata) error {
+	ingest.DataTypeSession: func(batch *IngestContext, reader io.ReadSeeker, meta ingest.OriginalMetadata) error {
 		if decoder, err := getDefaultDecoder(reader); err != nil {
 			return err
 		} else {
 			return decodeSessionData(batch, decoder)
 		}
 	},
-	ingest.DataTypeAzure: func(batch *IngestContext, reader io.ReadSeeker, meta ingest.Metadata) error {
+	ingest.DataTypeAzure: func(batch *IngestContext, reader io.ReadSeeker, meta ingest.OriginalMetadata) error {
 		if decoder, err := getDefaultDecoder(reader); err != nil {
 			return err
 		} else {
@@ -345,7 +405,7 @@ var basicHandlers = map[ingest.DataType]basicIngestHandler{
 }
 
 var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
-	ingest.DataTypeOpenGraph: func(batch *IngestContext, reader io.ReadSeeker, meta ingest.Metadata, registerSourceKind registrationFn) error {
+	ingest.DataTypeOpenGraph: func(batch *IngestContext, reader io.ReadSeeker, meta ingest.OriginalMetadata, registerSourceKind registrationFn) error {
 		sourceKind := graph.EmptyKind
 
 		// decode metadata, if present

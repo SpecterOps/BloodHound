@@ -19,12 +19,40 @@ import { render, screen, waitFor, within } from '../../test-utils';
 
 import UserProfile from './UserProfile';
 
+import { ConfigurationKey } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { QueryClient } from 'react-query';
+import { configurationKeys } from '../../hooks';
+
+const CONFIG_ENABLED_RESPONSE = {
+    data: [
+        {
+            key: ConfigurationKey.APITokens,
+            value: {
+                enabled: true,
+            },
+        },
+    ],
+};
+
+const CONFIG_DISABLED_RESPONSE = {
+    data: [
+        {
+            key: ConfigurationKey.APITokens,
+            value: {
+                enabled: false,
+            },
+        },
+    ],
+};
 
 const server = setupServer(
     rest.get(`/api/v2/self`, (req, res) => {
         return res();
+    }),
+    rest.get(`/api/v2/config`, async (_req, res, ctx) => {
+        return res(ctx.json(CONFIG_ENABLED_RESPONSE));
     })
 );
 
@@ -61,7 +89,7 @@ describe('UserProfile with SSO User', () => {
 
     test('The reset password and two-factor authentication options should not appear in profile page if the user is configured for SAML login', () => {
         const resetPasswordButton = screen.queryByText('Reset Password');
-        const twoFactorAuthToggle = screen.queryByRole('checkbox', {
+        const twoFactorAuthToggle = screen.queryByRole('switch', {
             name: 'Multi-Factor Authentication Enabled',
         });
 
@@ -146,17 +174,13 @@ describe('UserProfile', () => {
     });
 
     it('should display a toggle switch to enable multi-factor authentication', () => {
-        expect(
-            screen.getByRole('checkbox', {
-                name: 'Multi-Factor Authentication Enabled',
-            })
-        ).toBeInTheDocument();
+        expect(screen.getByRole('switch')).toBeInTheDocument();
     });
 
-    describe('"Multi-Factor Authentication Enabled" switch is enabled', () => {
+    describe('"Multi-Factor Authentication" switch', () => {
         const user = userEvent.setup();
         beforeEach(async () => {
-            await user.click(screen.getByLabelText('Multi-Factor Authentication Enabled'));
+            await user.click(screen.getByTestId('my-profile_switch-multi-factor-authentication'));
         });
 
         it('should display a "Configure Multi-Factor Authentication" modal', () => {
@@ -164,5 +188,28 @@ describe('UserProfile', () => {
             expect(modal).toBeInTheDocument();
             expect(within(modal).getByText('Configure Multi-Factor Authentication')).toBeInTheDocument();
         });
+    });
+});
+
+describe('Api Keys', () => {
+    it('should display api key management button', async () => {
+        render(<UserProfile />);
+        const apiKeyManagementButton = await screen.findByRole('button', { name: 'API Key Management' });
+        expect(apiKeyManagementButton).toBeInTheDocument();
+    });
+
+    it('should not display api key management button', async () => {
+        server.use(
+            rest.get(`/api/v2/config`, async (_req, res, ctx) => {
+                return res(ctx.json(CONFIG_DISABLED_RESPONSE));
+            })
+        );
+        const queryClient = new QueryClient();
+        render(<UserProfile />, { queryClient });
+
+        await waitFor(() => expect(queryClient.getQueryState(configurationKeys.all)?.status).toBe('success'));
+        await waitFor(() =>
+            expect(screen.queryByRole('button', { name: 'API Key Management' })).not.toBeInTheDocument()
+        );
     });
 });

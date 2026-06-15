@@ -14,6 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+/* eslint-disable no-useless-assignment */
+/* stop strict complaints about `i` from eslint */
+
 /**
  * Sigma.js WebGL Renderer Node Program
  * =====================================
@@ -35,6 +38,7 @@ import { Coordinates, Dimensions, NodeDisplayData } from 'sigma/types';
 import { floatColor } from 'sigma/utils';
 import { fragmentShaderSource } from 'src/rendering/shaders/node.glyphs.frag';
 import { vertexShaderSource } from 'src/rendering/shaders/node.glyphs.vert';
+import { DEFAULT_BG_COLOR, DIM_FACTOR, NO_DIM_FACTOR } from '../utils/utils';
 
 const POINTS = 3,
     /*
@@ -46,7 +50,7 @@ const POINTS = 3,
       - angle (1xfloat)
       - borderColor (4xbyte = 1xfloat)
    */
-    ATTRIBUTES = 11,
+    ATTRIBUTES = 13,
     // Number of possible circles to be drawn -- 1 node + 4 glyphs
     CIRCLES = 5,
     // maximum size of single texture in atlas
@@ -268,6 +272,8 @@ export default function getNodeGlyphsProgram(): typeof AbstractNodeGlyphsProgram
         angleLocation: GLint;
         translationLocation: GLint;
         borderColorLocation: GLint;
+        dimLocation: GLint;
+        bgColorLocation: GLint;
         latestRenderParams?: RenderParams;
 
         constructor(gl: WebGLRenderingContext, renderer: Sigma) {
@@ -285,6 +291,8 @@ export default function getNodeGlyphsProgram(): typeof AbstractNodeGlyphsProgram
             this.angleLocation = gl.getAttribLocation(this.program, 'a_angle');
             this.borderColorLocation = gl.getAttribLocation(this.program, 'a_borderColor');
             this.translationLocation = gl.getAttribLocation(this.program, 'a_translation');
+            this.dimLocation = gl.getAttribLocation(this.program, 'a_dim');
+            this.bgColorLocation = gl.getAttribLocation(this.program, 'a_bgColor');
 
             // Uniform Location
             const atlasLocation = gl.getUniformLocation(this.program, 'u_atlas');
@@ -322,6 +330,8 @@ export default function getNodeGlyphsProgram(): typeof AbstractNodeGlyphsProgram
             gl.enableVertexAttribArray(this.angleLocation);
             gl.enableVertexAttribArray(this.translationLocation);
             gl.enableVertexAttribArray(this.borderColorLocation);
+            gl.enableVertexAttribArray(this.dimLocation);
+            gl.enableVertexAttribArray(this.bgColorLocation);
 
             gl.vertexAttribPointer(
                 this.textureLocation,
@@ -355,6 +365,22 @@ export default function getNodeGlyphsProgram(): typeof AbstractNodeGlyphsProgram
                 this.attributes * Float32Array.BYTES_PER_ELEMENT,
                 40
             );
+            gl.vertexAttribPointer(
+                this.dimLocation,
+                1,
+                gl.FLOAT,
+                false,
+                this.attributes * Float32Array.BYTES_PER_ELEMENT,
+                44
+            );
+            gl.vertexAttribPointer(
+                this.bgColorLocation,
+                4,
+                gl.UNSIGNED_BYTE,
+                true,
+                this.attributes * Float32Array.BYTES_PER_ELEMENT,
+                48
+            );
         }
 
         // We need to override this method to multiply the default array size by number of glyphs + 1 node
@@ -363,11 +389,20 @@ export default function getNodeGlyphsProgram(): typeof AbstractNodeGlyphsProgram
         }
 
         process(
-            data: NodeDisplayData & { image?: string; borderColor?: string; glyphs?: Glyph[] },
+            data: NodeDisplayData & {
+                image?: string;
+                borderColor?: string;
+                glyphs?: Glyph[];
+                isDimmed?: boolean;
+                dimFactor?: number;
+                graphBgColor?: string;
+            },
             hidden: boolean,
             offset: number
         ): void {
             let i = offset * POINTS * ATTRIBUTES * CIRCLES;
+            const dim = data.dimFactor ?? (data.isDimmed ? DIM_FACTOR : NO_DIM_FACTOR);
+            const bgColor = data.graphBgColor ?? DEFAULT_BG_COLOR;
 
             this.fillCircleAttributeBuffer(
                 this.array,
@@ -378,7 +413,10 @@ export default function getNodeGlyphsProgram(): typeof AbstractNodeGlyphsProgram
                 data.size,
                 data.color,
                 data.borderColor ?? data.color,
-                data.image
+                data.image,
+                undefined,
+                dim,
+                bgColor
             );
 
             i += POINTS * ATTRIBUTES;
@@ -405,7 +443,9 @@ export default function getNodeGlyphsProgram(): typeof AbstractNodeGlyphsProgram
                         glyph.backgroundColor, //fill
                         glyph.color, //border
                         glyph.image,
-                        { x, y }
+                        { x, y },
+                        dim,
+                        bgColor
                     );
                 }
                 i += POINTS * ATTRIBUTES;
@@ -422,7 +462,9 @@ export default function getNodeGlyphsProgram(): typeof AbstractNodeGlyphsProgram
             color: string,
             borderColor: string,
             image?: string,
-            translation?: Coordinates
+            translation?: Coordinates,
+            dim: number = 1.0,
+            bgColor: string = DEFAULT_BG_COLOR
         ): void {
             let i = currentIndex;
             const imageSource = image;
@@ -450,10 +492,15 @@ export default function getNodeGlyphsProgram(): typeof AbstractNodeGlyphsProgram
                 array[i++] = 0;
                 // Border Color:
                 array[i++] = 0;
+                // Dim:
+                array[i++] = 0;
+                // BgColor:
+                array[i++] = 0;
             }
 
             const fcolor = floatColor(color);
             const fborderColor = floatColor(borderColor ?? color);
+            const fbgColor = floatColor(bgColor);
 
             array[i++] = x;
             array[i++] = y;
@@ -477,6 +524,8 @@ export default function getNodeGlyphsProgram(): typeof AbstractNodeGlyphsProgram
             array[i++] = translateX;
             array[i++] = translateY;
             array[i++] = fborderColor;
+            array[i++] = dim;
+            array[i++] = fbgColor;
 
             array[i++] = x;
             array[i++] = y;
@@ -501,6 +550,8 @@ export default function getNodeGlyphsProgram(): typeof AbstractNodeGlyphsProgram
             array[i++] = translateX;
             array[i++] = translateY;
             array[i++] = fborderColor;
+            array[i++] = dim;
+            array[i++] = fbgColor;
 
             array[i++] = x;
             array[i++] = y;
@@ -521,6 +572,8 @@ export default function getNodeGlyphsProgram(): typeof AbstractNodeGlyphsProgram
             array[i++] = translateX;
             array[i++] = translateY;
             array[i++] = fborderColor;
+            array[i++] = dim;
+            array[i++] = fbgColor;
         }
 
         render(params: RenderParams): void {

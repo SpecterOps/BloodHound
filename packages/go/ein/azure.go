@@ -30,7 +30,7 @@ import (
 	"github.com/bloodhoundad/azurehound/v2/enums"
 	"github.com/bloodhoundad/azurehound/v2/models"
 	azure2 "github.com/bloodhoundad/azurehound/v2/models/azure"
-	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -39,6 +39,8 @@ import (
 const (
 	ISO8601               string = "2006-01-02T15:04:05Z"
 	KeyVaultPermissionGet string = "Get"
+	AzureSerialError      string = "Error deserializing Azure data"
+	AzureExtractError     string = "Failed to extract id/type from Azure directory object"
 )
 
 var (
@@ -238,6 +240,38 @@ func ConvertAzureOwnerToRel(directoryObject azure2.DirectoryObject, ownerType gr
 	)
 }
 
+func ConvertAppFederatedIdentityCredential(federatedIdentityCredential models.FICData, appID, tenantName, tenantId string) (IngestibleNode, IngestibleRelationship) {
+	node := IngestibleNode{
+		ObjectID: strings.ToUpper(federatedIdentityCredential.ID),
+		PropertyMap: map[string]any{
+			common.Description.String(): federatedIdentityCredential.Description,
+			common.Name.String():        strings.ToUpper(fmt.Sprintf("%s@%s", federatedIdentityCredential.Name, tenantName)),
+			azure.Issuer.String():       federatedIdentityCredential.Issuer,
+			azure.Audiences.String():    federatedIdentityCredential.Audiences,
+			azure.Subject.String():      federatedIdentityCredential.Subject,
+			azure.TenantID.String():     strings.ToUpper(tenantId),
+		},
+		Labels: []graph.Kind{azure.FederatedIdentityCredential, azure.Entity},
+	}
+
+	rel := NewIngestibleRelationship(
+		IngestibleEndpoint{
+			Value: strings.ToUpper(federatedIdentityCredential.ID),
+			Kind:  azure.FederatedIdentityCredential,
+		},
+		IngestibleEndpoint{
+			Kind:  azure.App,
+			Value: strings.ToUpper(appID),
+		},
+		IngestibleRel{
+			RelProps: map[string]any{},
+			RelType:  azure.AZAuthenticatesTo,
+		},
+	)
+
+	return node, rel
+}
+
 func ConvertAzureAppRoleAssignmentToNodes(data models.AppRoleAssignment) []IngestibleNode {
 	nodes := make([]IngestibleNode, 0)
 
@@ -417,22 +451,6 @@ func ConvertAzureGroupToNode(data models.Group, ingestTime time.Time) Ingestible
 	}
 }
 
-func ConvertAzureGroupToOnPremisesNode(data models.Group) IngestibleNode {
-	if data.OnPremisesSecurityIdentifier != "" {
-		return IngestibleNode{
-			ObjectID:    strings.ToUpper(data.OnPremisesSecurityIdentifier),
-			PropertyMap: map[string]any{},
-			Labels:      []graph.Kind{ad.Group},
-		}
-	}
-
-	return IngestibleNode{
-		ObjectID:    "",
-		PropertyMap: nil,
-		Labels:      nil,
-	}
-}
-
 func ConvertAzureGroupToRel(data models.Group) IngestibleRelationship {
 	return NewIngestibleRelationship(
 		IngestibleEndpoint{
@@ -458,11 +476,21 @@ func ConvertAzureGroupMembersToRels(data models.GroupMembers) []IngestibleRelati
 			member azure2.DirectoryObject
 		)
 		if err := json.Unmarshal(raw.Member, &member); err != nil {
-			slog.Error(fmt.Sprintf(SerialError, "azure group member", err))
+			slog.Error(
+				AzureSerialError,
+				slog.String("type", "group member"),
+				attr.Error(err),
+			)
 		} else if memberType, err := ExtractTypeFromDirectoryObject(member); errors.Is(err, ErrInvalidType) {
-			slog.Warn(fmt.Sprintf(ExtractError, err))
+			slog.Warn(
+				AzureExtractError,
+				attr.Error(err),
+			)
 		} else if err != nil {
-			slog.Error(fmt.Sprintf(ExtractError, err))
+			slog.Error(
+				AzureExtractError,
+				attr.Error(err),
+			)
 		} else {
 			relationships = append(relationships, NewIngestibleRelationship(
 				IngestibleEndpoint{
@@ -492,11 +520,21 @@ func ConvertAzureGroupOwnerToRels(data models.GroupOwners) []IngestibleRelations
 			owner azure2.DirectoryObject
 		)
 		if err := json.Unmarshal(raw.Owner, &owner); err != nil {
-			slog.Error(fmt.Sprintf(SerialError, "azure group owner", err))
+			slog.Error(
+				AzureSerialError,
+				slog.String("type", "group owner"),
+				attr.Error(err),
+			)
 		} else if ownerType, err := ExtractTypeFromDirectoryObject(owner); errors.Is(err, ErrInvalidType) {
-			slog.Warn(fmt.Sprintf(ExtractError, err))
+			slog.Warn(
+				AzureExtractError,
+				attr.Error(err),
+			)
 		} else if err != nil {
-			slog.Error(fmt.Sprintf(ExtractError, err))
+			slog.Error(
+				AzureExtractError,
+				attr.Error(err),
+			)
 		} else {
 			relationships = append(relationships, NewIngestibleRelationship(
 				IngestibleEndpoint{
@@ -708,6 +746,30 @@ func ConvertAzureManagementGroupOwnerToRels(data models.ManagementGroupOwners) [
 	return relationships
 }
 
+func ConvertAzureManagementGroupContributorToRels(data models.ManagementGroupContributors) []IngestibleRelationship {
+	relationships := make([]IngestibleRelationship, 0)
+	for _, raw := range data.Contributors {
+		if data.ManagementGroupId == raw.Contributor.Properties.Scope {
+			relationships = append(relationships, NewIngestibleRelationship(
+				IngestibleEndpoint{
+					Value: strings.ToUpper(raw.Contributor.GetPrincipalId()),
+					Kind:  azure.Entity,
+				},
+				IngestibleEndpoint{
+					Kind:  azure.ManagementGroup,
+					Value: strings.ToUpper(data.ManagementGroupId),
+				},
+				IngestibleRel{
+					RelProps: map[string]any{},
+					RelType:  azure.Contributor,
+				},
+			))
+		}
+	}
+
+	return relationships
+}
+
 func ConvertAzureManagementGroupUserAccessAdminToRels(data models.ManagementGroupUserAccessAdmins) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, 0)
 	for _, raw := range data.UserAccessAdmins {
@@ -779,6 +841,30 @@ func ConvertAzureResourceGroup(data models.ResourceGroup, ingestTime time.Time) 
 				RelType:  azure.Contains,
 			},
 		)
+}
+
+func ConvertAzureResourceGroupContributorToRels(data models.ResourceGroupContributors) []IngestibleRelationship {
+	relationships := make([]IngestibleRelationship, 0)
+	for _, raw := range data.Contributors {
+		if data.ResourceGroupId == raw.Contributor.Properties.Scope {
+			relationships = append(relationships, NewIngestibleRelationship(
+				IngestibleEndpoint{
+					Value: strings.ToUpper(raw.Contributor.Properties.PrincipalId),
+					Kind:  azure.Entity,
+				},
+				IngestibleEndpoint{
+					Kind:  azure.ResourceGroup,
+					Value: strings.ToUpper(data.ResourceGroupId),
+				},
+				IngestibleRel{
+					RelProps: map[string]any{},
+					RelType:  azure.Contributor,
+				},
+			))
+		}
+	}
+
+	return relationships
 }
 
 func ConvertAzureResourceGroupOwnerToRels(data models.ResourceGroupOwners) []IngestibleRelationship {
@@ -874,7 +960,11 @@ func ConvertAzureRoleAssignmentToRels(roleAssignment azure2.UnifiedRoleAssignmen
 
 	if CanAddSecret(roleAssignment.RoleDefinitionId) && roleAssignment.DirectoryScopeId != "/" {
 		if relType, err := GetAddSecretRoleKind(roleAssignment.RoleDefinitionId); err != nil {
-			slog.Error(fmt.Sprintf("Error processing role assignment for role %s: %v", roleObjectId, err))
+			slog.Error(
+				"Error processing role assignment for role",
+				slog.String("role_object_id", roleObjectId),
+				attr.Error(err),
+			)
 		} else {
 			relationships = append(relationships, NewIngestibleRelationship(
 				IngestibleEndpoint{
@@ -1084,11 +1174,21 @@ func ConvertAzureServicePrincipalOwnerToRels(data models.ServicePrincipalOwners)
 		)
 
 		if err := json.Unmarshal(raw.Owner, &owner); err != nil {
-			slog.Error(fmt.Sprintf(SerialError, "azure service principal owner", err))
+			slog.Error(
+				AzureSerialError,
+				slog.String("type", "service principal owner"),
+				attr.Error(err),
+			)
 		} else if ownerType, err := ExtractTypeFromDirectoryObject(owner); errors.Is(err, ErrInvalidType) {
-			slog.Warn(fmt.Sprintf(ExtractError, err))
+			slog.Warn(
+				AzureExtractError,
+				attr.Error(err),
+			)
 		} else if err != nil {
-			slog.Error(fmt.Sprintf(ExtractError, err))
+			slog.Error(
+				AzureExtractError,
+				attr.Error(err),
+			)
 		} else {
 			relationships = append(relationships, NewIngestibleRelationship(
 				IngestibleEndpoint{
@@ -1162,6 +1262,30 @@ func ConvertAzureSubscriptionOwnerToRels(data models.SubscriptionOwners) []Inges
 	return relationships
 }
 
+func ConvertAzureSubscriptionContributorToRels(data models.SubscriptionContributors) []IngestibleRelationship {
+	relationships := make([]IngestibleRelationship, 0)
+	for _, raw := range data.Contributors {
+		if data.SubscriptionId == raw.Contributor.Properties.Scope {
+			relationships = append(relationships, NewIngestibleRelationship(
+				IngestibleEndpoint{
+					Value: strings.ToUpper(raw.Contributor.Properties.PrincipalId),
+					Kind:  azure.Entity,
+				},
+				IngestibleEndpoint{
+					Kind:  azure.Subscription,
+					Value: strings.ToUpper(data.SubscriptionId),
+				},
+				IngestibleRel{
+					RelProps: map[string]any{},
+					RelType:  azure.Contributor,
+				},
+			))
+		}
+	}
+
+	return relationships
+}
+
 func ConvertAzureSubscriptionUserAccessAdminToRels(data models.SubscriptionUserAccessAdmins) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, 0)
 
@@ -1207,36 +1331,33 @@ func ConvertAzureTenantToNode(data models.Tenant, ingestTime time.Time) Ingestib
 	return node
 }
 
-// ConvertAzureUser returns the basic node, the on prem node and then the ingestible contains relationship
-func ConvertAzureUser(data models.User, ingestTime time.Time) (IngestibleNode, IngestibleNode, IngestibleRelationship) {
-	onPremNode := IngestibleNode{}
-	if data.OnPremisesSecurityIdentifier != "" {
-		onPremNode = IngestibleNode{
-			ObjectID:    strings.ToUpper(data.OnPremisesSecurityIdentifier),
-			PropertyMap: map[string]any{},
-			Labels:      []graph.Kind{ad.User},
-		}
+// ConvertAzureUser returns the basic node and the ingestible contains relationship.
+func ConvertAzureUser(data models.User, ingestTime time.Time) (IngestibleNode, IngestibleRelationship) {
+	properties := map[string]any{
+		common.Name.String():             strings.ToUpper(data.UserPrincipalName),
+		common.Enabled.String():          data.AccountEnabled,
+		common.WhenCreated.String():      ParseISO8601(data.CreatedDateTime),
+		common.DisplayName.String():      data.DisplayName,
+		common.Title.String():            data.JobTitle,
+		common.PasswordLastSet.String():  ParseISO8601(data.LastPasswordChangeDateTime),
+		common.Email.String():            data.Mail,
+		azure.OnPremID.String():          data.OnPremisesSecurityIdentifier,
+		azure.OnPremSyncEnabled.String(): data.OnPremisesSyncEnabled,
+		azure.UserPrincipalName.String(): data.UserPrincipalName,
+		azure.UserType.String():          data.UserType,
+		azure.TenantID.String():          strings.ToUpper(data.TenantId),
+		common.LastCollected.String():    ingestTime,
+	}
+
+	if data.SignInActivity.LastSuccessfulSignInDateTime != "" {
+		properties[azure.LastSuccessfulSignInDateTime.String()] = data.SignInActivity.LastSuccessfulSignInDateTime
 	}
 
 	return IngestibleNode{
-			ObjectID: strings.ToUpper(data.Id),
-			PropertyMap: map[string]any{
-				common.Name.String():             strings.ToUpper(data.UserPrincipalName),
-				common.Enabled.String():          data.AccountEnabled,
-				common.WhenCreated.String():      ParseISO8601(data.CreatedDateTime),
-				common.DisplayName.String():      data.DisplayName,
-				common.Title.String():            data.JobTitle,
-				common.PasswordLastSet.String():  ParseISO8601(data.LastPasswordChangeDateTime),
-				common.Email.String():            data.Mail,
-				azure.OnPremID.String():          data.OnPremisesSecurityIdentifier,
-				azure.OnPremSyncEnabled.String(): data.OnPremisesSyncEnabled,
-				azure.UserPrincipalName.String(): data.UserPrincipalName,
-				azure.UserType.String():          data.UserType,
-				azure.TenantID.String():          strings.ToUpper(data.TenantId),
-				common.LastCollected.String():    ingestTime,
-			},
-			Labels: []graph.Kind{azure.User},
-		}, onPremNode, NewIngestibleRelationship(
+			ObjectID:    strings.ToUpper(data.Id),
+			PropertyMap: properties,
+			Labels:      []graph.Kind{azure.User},
+		}, NewIngestibleRelationship(
 			IngestibleEndpoint{
 				Value: strings.ToUpper(data.TenantId),
 				Kind:  azure.Tenant,

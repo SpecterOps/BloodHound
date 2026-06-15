@@ -22,6 +22,7 @@ import { SearchValue } from './ExploreSearch/types';
 import { Field } from './fragments';
 
 interface BasicObjectInfoFieldsProps {
+    zone?: string;
     displayname?: string;
     grouplinkid?: string;
     handleSourceNodeSelected?: (sourceNode: SearchValue) => void;
@@ -30,8 +31,9 @@ interface BasicObjectInfoFieldsProps {
     name?: string;
     noderesourcegroupid?: string;
     nodeType?: string;
-    objectid: string;
+    objectid?: string;
     service_principal_id?: string;
+    federatedidentitycredentialappid?: string;
 }
 
 const RelatedKindField = (
@@ -63,19 +65,20 @@ const RelatedKindField = (
 };
 
 const basicObjectFields = [
+    'zone',
     'nodeType',
     'isTierZero',
     'isOwnedObject',
     CommonKindProperties.DisplayName,
     CommonKindProperties.ObjectID,
-] satisfies (KnownNodeProperties | CommonKindProperties)[];
+] satisfies (KnownNodeProperties | CommonKindProperties | 'zone')[];
 
 export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (props): JSX.Element => {
     return (
         <>
             {basicObjectFields.map((field) => {
                 const value = props[field];
-                if (value === undefined) return null; // <Field /> doesnt support undefined values
+                if (value === undefined) return null; // <Field /> doesn't support undefined values
 
                 return <Field key={field} label={`${formatPotentiallyUnknownLabel(field) ?? field}:`} value={value} />;
             })}
@@ -87,6 +90,14 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (prop
                             'Service Principal ID:',
                             AzureNodeKind.ServicePrincipal,
                             props.service_principal_id,
+                            props.name
+                        )}
+                    {props.federatedidentitycredentialappid &&
+                        RelatedKindField(
+                            props.handleSourceNodeSelected,
+                            'Federated Identity Credential Application ID:',
+                            AzureNodeKind.App,
+                            props.federatedidentitycredentialappid,
                             props.name
                         )}
                     {props.noderesourcegroupid &&

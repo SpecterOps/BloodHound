@@ -38,6 +38,7 @@ None: #Direction & {
 }
 
 #KindDescriptor: {
+	prefix?: string
 	kind:  #Kind
 	name?: string
 }

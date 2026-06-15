@@ -13,6 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { faClose } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     Button,
     FormControl,
@@ -24,9 +26,7 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@bloodhoundenterprise/doodleui';
-import { faClose } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+} from 'doodle-ui';
 import { FC } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { cn } from '../../../../utils';
@@ -52,6 +52,7 @@ const ActionField: FC<{
                             </FormControl>
                             <Button
                                 variant={'text'}
+                                aria-label='clear action'
                                 disabled={!field.value}
                                 className={cn('w-1/12 p-0', { invisible: !field.value })}
                                 onClick={() => {

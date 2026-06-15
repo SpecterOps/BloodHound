@@ -22,16 +22,15 @@ import (
 	"os"
 	"path"
 	"testing"
-	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
 	"github.com/stretchr/testify/require"
 )
 
 func TestVersion5IngestJSON(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -54,7 +53,7 @@ func TestVersion5IngestJSON(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		ingestCtx := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()))
+		ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
@@ -75,7 +74,6 @@ func TestVersion5IngestJSON(t *testing.T) {
 }
 
 func TestVersion5IngestZIP(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -91,7 +89,7 @@ func TestVersion5IngestZIP(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		ingestCtx := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()))
+		ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip})
 		require.NoError(t, err)
 
@@ -112,7 +110,6 @@ func TestVersion5IngestZIP(t *testing.T) {
 }
 
 func TestVersion6ADCSJSON(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -140,7 +137,7 @@ func TestVersion6ADCSJSON(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		ingestCtx := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()))
+		ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
@@ -161,7 +158,6 @@ func TestVersion6ADCSJSON(t *testing.T) {
 }
 
 func TestVersion6ADCSZIP(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -177,7 +173,7 @@ func TestVersion6ADCSZIP(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		ingestCtx := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()))
+		ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip})
 		require.NoError(t, err)
 
@@ -198,7 +194,6 @@ func TestVersion6ADCSZIP(t *testing.T) {
 }
 
 func TestVersion6AllJSON(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -226,7 +221,7 @@ func TestVersion6AllJSON(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()))
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
@@ -247,7 +242,6 @@ func TestVersion6AllJSON(t *testing.T) {
 }
 
 func TestVersion6AllZIP(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -263,7 +257,7 @@ func TestVersion6AllZIP(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()))
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip})
 		require.NoError(t, err)
 
@@ -284,7 +278,6 @@ func TestVersion6AllZIP(t *testing.T) {
 }
 
 func TestVersion6IngestJSON(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -307,7 +300,7 @@ func TestVersion6IngestJSON(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()))
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
@@ -328,7 +321,6 @@ func TestVersion6IngestJSON(t *testing.T) {
 }
 
 func TestVersion6IngestZIP(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -344,7 +336,7 @@ func TestVersion6IngestZIP(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()))
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip})
 		require.NoError(t, err)
 

@@ -543,7 +543,7 @@ RETURN p\nLIMIT 1000`,
                 query: `MATCH (c:Computer)\nWHERE c.restrictoutboundntlm = True\nRETURN c LIMIT 1000`,
             },
             {
-                name: 'Computers with membership in Protected Users',
+                name: 'All members of Protected Users',
                 description: '',
                 query: `MATCH p = (:Base)-[:MemberOf*1..]->(g:Group)\nWHERE g.objectid ENDS WITH '-525'\nRETURN p LIMIT 1000`,
             },
@@ -561,6 +561,20 @@ RETURN p\nLIMIT 1000`,
                 name: 'Computers not requiring inbound SMB signing',
                 description: '',
                 query: `MATCH (n:Computer)\nWHERE n.smbsigning = False\nRETURN n`,
+            },
+        ],
+    },
+];
+
+export const UncommonSearches: CommonSearchType[] = [
+    {
+        subheader: 'Browser Limit Test',
+        category: categoryAD,
+        queries: [
+            {
+                name: 'Query Parse Error',
+                description: '',
+                query: `match (n) return n limit 8316`,
             },
         ],
     },

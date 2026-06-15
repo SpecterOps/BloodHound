@@ -14,12 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Link, Typography } from '@mui/material';
+import { Box, Link } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 
 const References: FC = () => {
     return (
-        <Box sx={{ overflowX: 'auto' }}>
+        <Box className='overflow-x-auto'>
             <Typography variant='body1'>Lateral movement</Typography>
             <Link target='_blank' rel='noopener noreferrer' href='https://attack.mitre.org/wiki/Lateral_Movement'>
                 https://attack.mitre.org/wiki/Lateral_Movement

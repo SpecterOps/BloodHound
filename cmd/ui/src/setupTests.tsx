@@ -19,8 +19,6 @@
 import matchers from '@testing-library/jest-dom/matchers';
 import { expect } from 'vitest';
 //@ts-ignore
-import React, { lazy } from 'react';
-//@ts-ignore
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import 'whatwg-fetch';
 
@@ -33,8 +31,15 @@ global.jest = vi;
 expect.extend(matchers);
 
 // mocks
-
 beforeAll(() => {
+    // DoodleUI Table uses virtualization which requires these properties to be defined or rows do not render
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+        value: 800,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
+        value: 800,
+    });
+
     // Radix Select relies on pointer events + scroll positioning under the hood
     // (Popper + focus management). In JSDOM, those methods (scrollIntoView,
     // hasPointerCapture, releasePointerCapture) don’t exist by default, so Radix
@@ -68,7 +73,7 @@ vi.mock('react', async () => {
     const react = await vi.importActual<typeof import('react')>('react');
     return {
         ...react,
-        lazy: vi.fn(() => React.createElement('div', null, 'empty component')),
+        lazy: vi.fn(() => () => react.createElement('div', null, 'empty component')),
     };
 });
 
@@ -80,3 +85,10 @@ vi.mock('@fortawesome/react-fontawesome', () => ({
         return <span>{props.icon.iconName}</span>;
     }),
 }));
+
+class ResizeObserverMock {
+    observe = vi.fn();
+    unobserve = vi.fn();
+    disconnect = vi.fn();
+}
+vi.stubGlobal('ResizeObserver', ResizeObserverMock);

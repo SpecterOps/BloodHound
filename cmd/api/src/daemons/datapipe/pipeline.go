@@ -30,6 +30,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/job"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -81,7 +83,10 @@ func (s *BHCEPipeline) DeleteData(ctx context.Context) error {
 	}()
 	defer measure.LogAndMeasure(slog.LevelInfo, "Purge Graph Data")()
 
-	slog.InfoContext(ctx, "Begin Purge Graph Data")
+	slog.InfoContext(
+		ctx,
+		"Begin Purge Graph Data",
+	)
 
 	if err := s.db.CancelAllIngestJobs(ctx); err != nil {
 		return fmt.Errorf("cancelling jobs during data deletion: %v", err)
@@ -117,29 +122,29 @@ func PurgeGraphData(
 		return fmt.Errorf("deleting graph data: %w", err)
 	}
 
-	if err := db.DeleteSourceKindsByName(ctx, filteredKinds); err != nil {
+	if err := db.DeleteSourceKindsByName(ctx, filteredKinds...); err != nil {
 		return fmt.Errorf("deleting source kinds: %w", err)
 	}
 
 	return nil
 }
 
-func extractKindNames(sourceKinds []database.SourceKind) graph.Kinds {
+func extractKindNames(sourceKinds []model.SourceKind) graph.Kinds {
 	var kinds graph.Kinds
 	for _, k := range sourceKinds {
-		kinds = append(kinds, k.Name)
+		kinds = append(kinds, k.ToKind())
 	}
 	return kinds
 }
 
 // if the delete request specifies any source_kinds for deletion we want to remove them from the source_kinds table.
 // we want to remove 3rd party source_kinds when requested(e.g. GithubBase, HelloBase), but this ensures that we never remove Base and AZBase.
-func filterDeletableKinds(kindsToDelete []string) graph.Kinds {
-	var filtered graph.Kinds
+func filterDeletableKinds(kindsToDelete []string) []string {
+	var filtered []string
 	for _, kind := range kindsToDelete {
 		k := graph.StringKind(kind)
 		if !k.Is(ad.Entity) && !k.Is(azure.Entity) {
-			filtered = append(filtered, k)
+			filtered = append(filtered, kind)
 		}
 	}
 	return filtered
@@ -181,7 +186,12 @@ func (s *BHCEPipeline) IngestTasks(ctx context.Context) error {
 func updateJobFunc(ctx context.Context, db database.Database) graphify.UpdateJobFunc {
 	return func(jobID int64, fileData []graphify.IngestFileData) {
 		if job, err := db.GetIngestJob(ctx, jobID); err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed to fetch job for ingest task %d: %v", jobID, err))
+			slog.ErrorContext(
+				ctx,
+				"Failed to fetch job for ingest task",
+				slog.Int64("job_id", jobID),
+				attr.Error(err),
+			)
 		} else {
 			for _, file := range fileData {
 				job.TotalFiles += 1
@@ -190,20 +200,35 @@ func updateJobFunc(ctx context.Context, db database.Database) graphify.UpdateJob
 					FileName:       file.Name,
 					ParentFileName: file.ParentFile,
 					Errors:         []string{},
+					Warnings:       []string{},
 				}
 
 				if len(file.Errors) > 0 {
 					job.FailedFiles += 1
 					completedTask.Errors = file.Errors
 				}
+				if len(file.UserDataErrs) > 0 {
+					job.PartialFailedFiles += 1
+					completedTask.Warnings = file.UserDataErrs
+				}
 
 				if _, err = db.CreateCompletedTask(ctx, completedTask); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Failed to create completed task for ingest task %d: %v", job.ID, err))
+					slog.ErrorContext(
+						ctx,
+						"Failed to create completed task for ingest task",
+						slog.Int64("job_id", job.ID),
+						attr.Error(err),
+					)
 				}
 			}
 
 			if err = db.UpdateIngestJob(ctx, job); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed to update number of failed files for ingest job ID %d: %v", job.ID, err))
+				slog.ErrorContext(
+					ctx,
+					"Failed to update number of failed files for ingest job ID",
+					slog.Int64("job_id", job.ID),
+					attr.Error(err),
+				)
 			}
 		}
 	}
@@ -229,17 +254,22 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 			return ErrAnalysisDisabled
 		}
 
-		defer measure.LogAndMeasure(slog.LevelInfo, "Graph Analysis")()
+		defer measure.LogAndMeasure(
+			slog.LevelInfo,
+			"Graph Analysis",
+			attr.Namespace("analysis"),
+			attr.Function("Analyze"),
+			attr.Scope("summary"),
+		)()
 
-		// Record the last time we started an analysis run
 		if err := s.db.SetLastAnalysisStartTime(ctx); err != nil {
-			return fmt.Errorf("update last analysis start time: %v", err)
+			slog.ErrorContext(ctx, "Error setting last analysis start time", attr.Error(err))
 		}
 
-		if err := RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg); err != nil {
-			if errors.Is(err, ErrAnalysisFailed) {
+		if err := analysis.RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg); err != nil {
+			if errors.Is(err, analysis.ErrAnalysisFailed) {
 				s.jobService.FailAnalyzedIngestJobs()
-			} else if errors.Is(err, ErrAnalysisPartiallyCompleted) {
+			} else if errors.Is(err, analysis.ErrAnalysisPartiallyCompleted) {
 				s.jobService.PartialCompleteIngestJobs()
 			}
 			return fmt.Errorf("analysis failure: %v", err)
@@ -250,11 +280,24 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 
 			// This is cacheclearing. The analysis is still successful here
 			if _, err := s.db.GetFlagByKey(ctx, appcfg.FeatureEntityPanelCaching); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error retrieving entity panel caching flag: %v", err))
+				slog.ErrorContext(
+					ctx,
+					"Error retrieving entity panel caching flag",
+					attr.Error(err),
+				)
 			} else if err := s.cache.Reset(); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error while resetting the cache: %v", err))
+				slog.ErrorContext(
+					ctx,
+					"Error while resetting the cache",
+					attr.Error(err),
+				)
 			} else {
-				slog.InfoContext(ctx, "Cache successfully reset by datapipe daemon")
+				slog.InfoContext(
+					ctx,
+					"Cache successfully reset by datapipe daemon",
+					attr.Namespace("analysis"),
+					attr.Function("Analyze"),
+				)
 			}
 
 			return nil

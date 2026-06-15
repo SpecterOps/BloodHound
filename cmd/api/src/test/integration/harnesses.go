@@ -26,9 +26,9 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/test"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/harnesses"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
+	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -56,6 +56,13 @@ func RandomDomainSID() string {
 	)
 
 	return fmt.Sprintf("S-1-5-21-%d-%d-%d", authority, subAuthority1, subAuthority2)
+}
+
+func addHostingComputer(graphTestContext *GraphTestContext, name, domainSID string, enterpriseCA *graph.Node) {
+	computer := graphTestContext.NewActiveDirectoryComputer(name, domainSID)
+	computer.Properties.Set(common.Enabled.String(), true)
+	graphTestContext.UpdateNode(computer)
+	graphTestContext.NewRelationship(computer, enterpriseCA, ad.HostsCAService)
 }
 
 const (
@@ -1313,6 +1320,8 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.User12, s.Group13, ad.MemberOf)
 	graphTestContext.NewRelationship(s.User11, s.Group13, ad.MemberOf)
 
+	addHostingComputer(graphTestContext, "eca 1 host", sid, s.EnterpriseCA1)
+
 	sid = RandomDomainSID()
 	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("domain 2", sid, false, true)
 	s.RootCA2 = graphTestContext.NewActiveDirectoryRootCA("rca2", sid)
@@ -1348,6 +1357,10 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group22, s.CertTemplate2, ad.Enroll)
 	graphTestContext.NewRelationship(s.Group22, s.EnterpriseCA21, ad.Enroll)
 
+	addHostingComputer(graphTestContext, "eca 2-1 host", sid, s.EnterpriseCA21)
+	addHostingComputer(graphTestContext, "eca 2-2 host", sid, s.EnterpriseCA22)
+	addHostingComputer(graphTestContext, "eca 2-3 host", sid, s.EnterpriseCA23)
+
 	sid = RandomDomainSID()
 	s.Domain3 = graphTestContext.NewActiveDirectoryDomain("domain 3", sid, false, true)
 	s.RootCA3 = graphTestContext.NewActiveDirectoryRootCA("rca3", sid)
@@ -1380,6 +1393,9 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group31, s.CertTemplate3, ad.Enroll)
 	graphTestContext.NewRelationship(s.Group32, s.CertTemplate3, ad.Enroll)
 	graphTestContext.NewRelationship(s.Group32, s.EnterpriseCA31, ad.Enroll)
+
+	addHostingComputer(graphTestContext, "eca 3-1 host", sid, s.EnterpriseCA31)
+	addHostingComputer(graphTestContext, "eca 3-2 host", sid, s.EnterpriseCA32)
 
 	sid = RandomDomainSID()
 	s.Domain4 = graphTestContext.NewActiveDirectoryDomain("domain 4", sid, false, true)
@@ -1492,6 +1508,8 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.CertTemplate44, s.EnterpriseCA4, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.CertTemplate45, s.EnterpriseCA4, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.CertTemplate46, s.EnterpriseCA4, ad.PublishedTo)
+
+	addHostingComputer(graphTestContext, "eca 4 host", sid, s.EnterpriseCA4)
 }
 
 type ADCSESC1HarnessAuthUsers struct {
@@ -1543,6 +1561,8 @@ func (s *ADCSESC1HarnessAuthUsers) Setup(graphTestContext *GraphTestContext) {
 
 	s.AuthUsers.Properties.Set(common.ObjectID.String(), "TEST.LOCAL-S-1-5-11")
 	graphTestContext.UpdateNode(s.AuthUsers)
+
+	addHostingComputer(graphTestContext, "eca host", sid, s.EnterpriseCA)
 }
 
 type EnrollOnBehalfOfHarness2 struct {
@@ -1789,6 +1809,8 @@ func (s *ADCSGoldenCertHarness) Setup(graphTestContext *GraphTestContext) {
 	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("ntauthstore 1", sid)
 	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca 1", sid)
 	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("computer 1", sid)
+	s.Computer1.Properties.Set(common.Enabled.String(), true)
+	graphTestContext.UpdateNode(s.Computer1)
 
 	graphTestContext.NewRelationship(s.NTAuthStore1, s.Domain1, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.RootCA1, s.Domain1, ad.RootCAFor)
@@ -1802,6 +1824,8 @@ func (s *ADCSGoldenCertHarness) Setup(graphTestContext *GraphTestContext) {
 	s.NTAuthStore3 = graphTestContext.NewActiveDirectoryNTAuthStore("ntauthstore 3", sid)
 	s.EnterpriseCA3 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca 3", sid)
 	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("computer 3", sid)
+	s.Computer3.Properties.Set(common.Enabled.String(), true)
+	graphTestContext.UpdateNode(s.Computer3)
 
 	graphTestContext.NewRelationship(s.NTAuthStore3, s.Domain3, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.RootCA3, s.Domain3, ad.RootCAFor)
@@ -1818,8 +1842,14 @@ func (s *ADCSGoldenCertHarness) Setup(graphTestContext *GraphTestContext) {
 	s.EnterpriseCA22 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca 4", sid)
 	s.EnterpriseCA23 = graphTestContext.NewActiveDirectoryEnterpriseCA("eca 5", sid)
 	s.Computer21 = graphTestContext.NewActiveDirectoryComputer("computer 3", sid)
+	s.Computer21.Properties.Set(common.Enabled.String(), true)
+	graphTestContext.UpdateNode(s.Computer21)
 	s.Computer22 = graphTestContext.NewActiveDirectoryComputer("computer 4", sid)
+	s.Computer22.Properties.Set(common.Enabled.String(), true)
+	graphTestContext.UpdateNode(s.Computer22)
 	s.Computer23 = graphTestContext.NewActiveDirectoryComputer("computer 5", sid)
+	s.Computer23.Properties.Set(common.Enabled.String(), true)
+	graphTestContext.UpdateNode(s.Computer23)
 
 	graphTestContext.NewRelationship(s.RootCA2, s.Domain2, ad.RootCAFor)
 	graphTestContext.NewRelationship(s.NTAuthStore2, s.Domain2, ad.NTAuthStoreFor)
@@ -2035,6 +2065,9 @@ func (s *ESC3Harness1) Setup(graphTestContext *GraphTestContext) {
 	s.EnterpriseCA1.Properties.Set(ad.EnrollmentAgentRestrictionsCollected.String(), true)
 	s.EnterpriseCA1.Properties.Set(ad.HasEnrollmentAgentRestrictions.String(), false)
 	graphTestContext.UpdateNode(s.EnterpriseCA1)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA1 host", sid, s.EnterpriseCA1)
+	addHostingComputer(graphTestContext, "EnterpriseCA2 host", sid, s.EnterpriseCA2)
 }
 
 type ESC3Harness2 struct {
@@ -2140,6 +2173,8 @@ func (s *ESC3Harness2) Setup(c *GraphTestContext) {
 	s.EnterpriseCA1.Properties.Set(ad.EnrollmentAgentRestrictionsCollected.String(), true)
 	s.EnterpriseCA1.Properties.Set(ad.HasEnrollmentAgentRestrictions.String(), true)
 	c.UpdateNode(s.EnterpriseCA1)
+
+	addHostingComputer(c, "EnterpriseCA1 host", sid, s.EnterpriseCA1)
 }
 
 type ESC3Harness3 struct {
@@ -2201,6 +2236,8 @@ func (s *ESC3Harness3) Setup(c *GraphTestContext) {
 
 	s.EnterpriseCA1.Properties.Set(ad.EnrollmentAgentRestrictionsCollected.String(), false)
 	c.UpdateNode(s.EnterpriseCA1)
+
+	addHostingComputer(c, "EnterpriseCA1 host", sid, s.EnterpriseCA1)
 }
 
 type ESC9aPrincipalHarness struct {
@@ -2215,6 +2252,7 @@ type ESC9aPrincipalHarness struct {
 	Group4       *graph.Node
 	Group5       *graph.Node
 	Group6       *graph.Node
+	Group7       *graph.Node
 	NTAuthStore  *graph.Node
 	RootCA       *graph.Node
 	User1        *graph.Node
@@ -2246,6 +2284,7 @@ func (s *ESC9aPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domainSid)
 	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domainSid)
 	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domainSid)
+	s.Group7 = graphTestContext.NewActiveDirectoryGroup("Group7", domainSid)
 	s.NTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore", domainSid)
 	s.RootCA = graphTestContext.NewActiveDirectoryRootCA("RootCA", domainSid)
 	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", domainSid)
@@ -2261,7 +2300,8 @@ func (s *ESC9aPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group6, s.User1, ad.AllExtendedRights)
 	graphTestContext.NewRelationship(s.Group3, s.User1, ad.WriteDACL)
 	graphTestContext.NewRelationship(s.Group4, s.User1, ad.WriteOwner)
-	graphTestContext.NewRelationship(s.Group5, s.User1, ad.WriteOwner)
+	graphTestContext.NewRelationship(s.Group5, s.User1, ad.Owns)
+	graphTestContext.NewRelationship(s.Group6, s.User1, ad.WritePublicInformation)
 	graphTestContext.NewRelationship(s.User2, s.User2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.User1, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.User2, s.Group0, ad.MemberOf)
@@ -3621,6 +3661,8 @@ func (s *ESC6aHarnessPrincipalEdges) Setup(c *GraphTestContext) {
 	s.EnterpriseCA1.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
 	s.EnterpriseCA1.Properties.Set(ad.IsUserSpecifiesSanEnabledCollected.String(), true)
 	c.UpdateNode(s.EnterpriseCA1)
+
+	addHostingComputer(c, "EnterpriseCA1 host", sid, s.EnterpriseCA1)
 }
 
 // This function relies on having the "kind" property set for nodes in the json from arrows.app
@@ -3710,7 +3752,7 @@ func initHarnessNodeProperties(c *GraphTestContext, nodeMap map[string]*graph.No
 
 func initHarnessRelationships(c *GraphTestContext, nodeMap map[string]*graph.Node, relationships []harnesses.Relationship) {
 	for _, relationship := range relationships {
-		if kind, err := analysis.ParseKind(relationship.Kind); err != nil {
+		if kind, err := ein.ParseKind(relationship.Kind); err != nil {
 			c.testCtx.Errorf("invalid relationship kind: %s", kind)
 			continue
 		} else if asserting, ok := relationship.Properties["asserted"]; !ok {
@@ -3753,10 +3795,11 @@ type ESC10aPrincipalHarness struct {
 	User1        *graph.Node
 	Group1       *graph.Node
 	Group2       *graph.Node
-	Group6       *graph.Node
 	Group3       *graph.Node
 	Group4       *graph.Node
 	Group5       *graph.Node
+	Group6       *graph.Node
+	Group7       *graph.Node
 	User2        *graph.Node
 	Group0       *graph.Node
 }
@@ -3783,10 +3826,11 @@ func (s *ESC10aPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", domainSid)
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid)
 	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSid)
-	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domainSid)
 	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domainSid)
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domainSid)
 	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domainSid)
+	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domainSid)
+	s.Group7 = graphTestContext.NewActiveDirectoryGroup("Group7", domainSid)
 	s.User2 = graphTestContext.NewActiveDirectoryUser("User2", domainSid)
 	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid)
 	graphTestContext.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
@@ -3800,7 +3844,8 @@ func (s *ESC10aPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group6, s.User1, ad.AllExtendedRights)
 	graphTestContext.NewRelationship(s.Group3, s.User1, ad.WriteDACL)
 	graphTestContext.NewRelationship(s.Group4, s.User1, ad.WriteOwner)
-	graphTestContext.NewRelationship(s.Group5, s.User1, ad.WriteOwner)
+	graphTestContext.NewRelationship(s.Group5, s.User1, ad.Owns)
+	graphTestContext.NewRelationship(s.Group6, s.User1, ad.WritePublicInformation)
 	graphTestContext.NewRelationship(s.User2, s.User2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.User1, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.User2, s.Group0, ad.MemberOf)
@@ -3809,6 +3854,8 @@ func (s *ESC10aPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 
 	s.DC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
 	graphTestContext.UpdateNode(s.DC)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA host", domainSid, s.EnterpriseCA)
 }
 
 type ESC10aHarness1 struct {
@@ -3984,6 +4031,8 @@ func (s *ESC10aHarness1) Setup(graphTestContext *GraphTestContext) {
 
 	s.DC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
 	graphTestContext.UpdateNode(s.DC)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA host", domainSid, s.EnterpriseCA)
 }
 
 type ESC10aHarness2 struct {
@@ -4126,6 +4175,8 @@ func (s *ESC10aHarness2) Setup(graphTestContext *GraphTestContext) {
 
 	s.DC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
 	graphTestContext.UpdateNode(s.DC)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA host", domainSid, s.EnterpriseCA)
 }
 
 type ESC10aHarnessECA struct {
@@ -4290,6 +4341,11 @@ func (s *ESC10aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.DC4)
 	s.DC5.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
 	graphTestContext.UpdateNode(s.DC5)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA1 host", domainSid1, s.EnterpriseCA1)
+	addHostingComputer(graphTestContext, "EnterpriseCA3 host", domainSid3, s.EnterpriseCA3)
+	addHostingComputer(graphTestContext, "EnterpriseCA4 host", domainSid4, s.EnterpriseCA4)
+	addHostingComputer(graphTestContext, "EnterpriseCA5 host", domainSid5, s.EnterpriseCA5)
 }
 
 type ESC10aHarnessVictim struct {
@@ -4360,6 +4416,8 @@ func (s *ESC10aHarnessVictim) Setup(graphTestContext *GraphTestContext) {
 
 	s.DC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
 	graphTestContext.UpdateNode(s.DC)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA host", domainSid, s.EnterpriseCA)
 }
 
 type ESC10bHarness1 struct {
@@ -4526,6 +4584,8 @@ func (s *ESC10bHarness1) Setup(graphTestContext *GraphTestContext) {
 
 	s.ComputerDC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
 	graphTestContext.UpdateNode(s.ComputerDC)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA host", domainSid, s.EnterpriseCA)
 }
 
 type ESC10bHarness2 struct {
@@ -4668,6 +4728,8 @@ func (s *ESC10bHarness2) Setup(graphTestContext *GraphTestContext) {
 
 	s.ComputerDC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
 	graphTestContext.UpdateNode(s.ComputerDC)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA host", domainSid, s.EnterpriseCA)
 }
 
 type ESC10bHarnessECA struct {
@@ -4836,6 +4898,11 @@ func (s *ESC10bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.ComputerDC4)
 	s.ComputerDC5.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
 	graphTestContext.UpdateNode(s.ComputerDC5)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA1 host", domainSid1, s.EnterpriseCA1)
+	addHostingComputer(graphTestContext, "EnterpriseCA3 host", domainSid3, s.EnterpriseCA3)
+	addHostingComputer(graphTestContext, "EnterpriseCA4 host", domainSid4, s.EnterpriseCA4)
+	addHostingComputer(graphTestContext, "EnterpriseCA5 host", domainSid5, s.EnterpriseCA5)
 }
 
 type ESC10bHarnessVictim struct {
@@ -4907,6 +4974,8 @@ func (s *ESC10bHarnessVictim) Setup(graphTestContext *GraphTestContext) {
 
 	s.ComputerDC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
 	graphTestContext.UpdateNode(s.ComputerDC)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA host", domainSid, s.EnterpriseCA)
 }
 
 type ESC10bPrincipalHarness struct {
@@ -4977,6 +5046,8 @@ func (s *ESC10bPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 
 	s.ComputerDC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
 	graphTestContext.UpdateNode(s.ComputerDC)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA host", domainSid, s.EnterpriseCA)
 }
 
 type ESC6bHarnessTemplate1 struct{}
@@ -5110,6 +5181,8 @@ func (s *ESC6bTemplate1Harness) Setup(graphTestContext *GraphTestContext) {
 
 	s.DC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
 	graphTestContext.UpdateNode(s.DC)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA host", domainSid, s.EnterpriseCA)
 }
 
 type ESC6bTemplate2Harness struct {
@@ -5239,6 +5312,8 @@ func (s *ESC6bTemplate2Harness) Setup(graphTestContext *GraphTestContext) {
 
 	s.DC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
 	graphTestContext.UpdateNode(s.DC)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA host", domainSid, s.EnterpriseCA)
 }
 
 type ESC6bECAHarness struct {
@@ -5451,6 +5526,12 @@ func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.DC4)
 	s.DC5.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
 	graphTestContext.UpdateNode(s.DC5)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA0 host", domainSid0, s.EnterpriseCA0)
+	addHostingComputer(graphTestContext, "EnterpriseCA1 host", domainSid1, s.EnterpriseCA1)
+	addHostingComputer(graphTestContext, "EnterpriseCA3 host", domainSid3, s.EnterpriseCA3)
+	addHostingComputer(graphTestContext, "EnterpriseCA4 host", domainSid4, s.EnterpriseCA4)
+	addHostingComputer(graphTestContext, "EnterpriseCA5 host", domainSid5, s.EnterpriseCA5)
 }
 
 type ESC6bPrincipalEdgesHarness struct {
@@ -5513,6 +5594,8 @@ func (s *ESC6bPrincipalEdgesHarness) Setup(graphTestContext *GraphTestContext) {
 
 	s.DC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
 	graphTestContext.UpdateNode(s.DC)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA host", domainSid, s.EnterpriseCA)
 }
 
 type ShortcutHarness struct {
@@ -5611,6 +5694,48 @@ func (s *ShortcutHarnessEveryone2) Setup(graphTestContext *GraphTestContext) {
 
 	s.Everyone.Properties.Set(common.ObjectID.String(), "TEST.LOCAL-S-1-1-0")
 	graphTestContext.UpdateNode(s.Everyone)
+}
+
+// ShortcutHarnessSharedMember models the scenario where a user is a member of two sub-groups that both
+// appear in the second node set, and both sub-groups are reachable through a common parent group in the
+// first node set. The shared user must not appear as an individual cross-product result because it is
+// already covered by both sub-groups.
+//
+// Graph shape:
+//
+//	SharedUser  -[MemberOf]-> SubGroup1 -[MemberOf]-> ParentGroup  (firstSet)
+//	SharedUser  -[MemberOf]-> SubGroup2 -[MemberOf]-> ParentGroup
+//	UniqueUser1 -[MemberOf]-> SubGroup1                             (secondSet contains SubGroup1, SubGroup2)
+//	UniqueUser2 -[MemberOf]-> SubGroup2
+type ShortcutHarnessSharedMember struct {
+	ParentGroup *graph.Node
+	SubGroup1   *graph.Node
+	SubGroup2   *graph.Node
+	SharedUser  *graph.Node
+	UniqueUser1 *graph.Node
+	UniqueUser2 *graph.Node
+}
+
+func (s *ShortcutHarnessSharedMember) Setup(graphTestContext *GraphTestContext) {
+	sid := RandomDomainSID()
+	s.ParentGroup = graphTestContext.NewActiveDirectoryGroup("PARENT GROUP", sid)
+	s.SubGroup1 = graphTestContext.NewActiveDirectoryGroup("SUB GROUP ONE", sid)
+	s.SubGroup2 = graphTestContext.NewActiveDirectoryGroup("SUB GROUP TWO", sid)
+	s.SharedUser = graphTestContext.NewActiveDirectoryUser("SHARED USER", sid)
+	s.UniqueUser1 = graphTestContext.NewActiveDirectoryUser("UNIQUE USER ONE", sid)
+	s.UniqueUser2 = graphTestContext.NewActiveDirectoryUser("UNIQUE USER TWO", sid)
+
+	// Both sub-groups are members of the parent group
+	graphTestContext.NewRelationship(s.SubGroup1, s.ParentGroup, ad.MemberOf)
+	graphTestContext.NewRelationship(s.SubGroup2, s.ParentGroup, ad.MemberOf)
+
+	// SharedUser is a member of both sub-groups
+	graphTestContext.NewRelationship(s.SharedUser, s.SubGroup1, ad.MemberOf)
+	graphTestContext.NewRelationship(s.SharedUser, s.SubGroup2, ad.MemberOf)
+
+	// Each unique user belongs to exactly one sub-group
+	graphTestContext.NewRelationship(s.UniqueUser1, s.SubGroup1, ad.MemberOf)
+	graphTestContext.NewRelationship(s.UniqueUser2, s.SubGroup2, ad.MemberOf)
 }
 
 type RootADHarness struct {
@@ -5831,6 +5956,8 @@ func (s *ESC4Template1) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group45, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Group45, s.CertTemplate4, ad.WritePKIEnrollmentFlag)
 	graphTestContext.NewRelationship(s.Group45, s.CertTemplate4, ad.WritePKINameFlag)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA host", domainSid, s.EnterpriseCA)
 }
 
 type ESC4Template2 struct {
@@ -6048,6 +6175,8 @@ func (s *ESC4Template2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group55, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Group55, s.CertTemplate5, ad.WritePKIEnrollmentFlag)
 	graphTestContext.NewRelationship(s.Group55, s.CertTemplate5, ad.WritePKINameFlag)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA host", domainSid, s.EnterpriseCA)
 }
 
 type ESC4Template3 struct {
@@ -6120,6 +6249,8 @@ func (s *ESC4Template3) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group17, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Group19, s.CertTemplate1, ad.WriteDACL)
 	graphTestContext.NewRelationship(s.Group19, s.Group0, ad.MemberOf)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA host", domainSid, s.EnterpriseCA)
 }
 
 type ESC4Template4 struct {
@@ -6183,6 +6314,8 @@ func (s *ESC4Template4) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group13, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Group13, s.CertTemplate1, ad.WritePKIEnrollmentFlag)
 	graphTestContext.NewRelationship(s.Group13, s.CertTemplate1, ad.WritePKINameFlag)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA host", domainSid, s.EnterpriseCA)
 }
 
 type ESC4ECA struct {
@@ -6552,6 +6685,8 @@ func (s *ESC13Harness1) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.CertTemplate4, s.IssuancePolicy, ad.ExtendedByPolicy)
 	graphTestContext.NewRelationship(s.CertTemplate5, s.IssuancePolicy, ad.ExtendedByPolicy)
 	graphTestContext.NewRelationship(s.Domain, s.Group6, ad.Contains)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA host", domainSid, s.EnterpriseCA)
 }
 
 type ESC13Harness2 struct {
@@ -6673,6 +6808,8 @@ func (s *ESC13Harness2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.IssuancePolicy, s.Group4, ad.OIDGroupLink)
 	graphTestContext.NewRelationship(s.Domain, s.OU, ad.Contains)
 	graphTestContext.NewRelationship(s.OU, s.Group4, ad.Contains)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA host", domainSid, s.EnterpriseCA)
 }
 
 type ESC13HarnessECA struct {
@@ -6850,6 +6987,12 @@ func (s *ESC13HarnessECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Domain3, s.Group11, ad.Contains)
 	graphTestContext.NewRelationship(s.Domain4, s.Group11, ad.Contains)
 	graphTestContext.NewRelationship(s.Domain5, s.Group11, ad.Contains)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA1 host", domainSid, s.EnterpriseCA1)
+	addHostingComputer(graphTestContext, "EnterpriseCA2 host", domainSid2, s.EnterpriseCA2)
+	addHostingComputer(graphTestContext, "EnterpriseCA3 host", domainSid3, s.EnterpriseCA3)
+	addHostingComputer(graphTestContext, "EnterpriseCA4 host", domainSid4, s.EnterpriseCA4)
+	addHostingComputer(graphTestContext, "EnterpriseCA5 host", domainSid5, s.EnterpriseCA5)
 }
 
 type AZAddSecretHarness struct {
@@ -7256,6 +7399,10 @@ func (s *ESC6bHarnessDC1) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.DC4)
 	graphTestContext.UpdateNode(s.DC5)
 	graphTestContext.UpdateNode(s.DC6)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA0 host", domainSid0, s.EnterpriseCA0)
+	addHostingComputer(graphTestContext, "EnterpriseCA1 host", domainSid1, s.EnterpriseCA1)
+	addHostingComputer(graphTestContext, "EnterpriseCA2 host", domainSid2, s.EnterpriseCA2)
 }
 
 type ESC6bHarnessDC2 struct {
@@ -7365,6 +7512,9 @@ func (s *ESC6bHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	s.DC1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
 	graphTestContext.UpdateNode(s.DC0)
 	graphTestContext.UpdateNode(s.DC1)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA0 host", domainSid0, s.EnterpriseCA0)
+	addHostingComputer(graphTestContext, "EnterpriseCA1 host", domainSid1, s.EnterpriseCA1)
 }
 
 type ESC9aHarnessDC1 struct {
@@ -8091,6 +8241,10 @@ func (s *ESC10aHarnessDC1) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.DC4)
 	graphTestContext.UpdateNode(s.DC5)
 	graphTestContext.UpdateNode(s.DC6)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA0 host", domainSid0, s.EnterpriseCA0)
+	addHostingComputer(graphTestContext, "EnterpriseCA1 host", domainSid1, s.EnterpriseCA1)
+	addHostingComputer(graphTestContext, "EnterpriseCA2 host", domainSid2, s.EnterpriseCA2)
 }
 
 type ESC10aHarnessDC2 struct {
@@ -8199,6 +8353,9 @@ func (s *ESC10aHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	s.DC1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
 	graphTestContext.UpdateNode(s.DC0)
 	graphTestContext.UpdateNode(s.DC1)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA0 host", domainSid0, s.EnterpriseCA0)
+	addHostingComputer(graphTestContext, "EnterpriseCA1 host", domainSid1, s.EnterpriseCA1)
 }
 
 type ESC10bHarnessDC1 struct {
@@ -8350,6 +8507,10 @@ func (s *ESC10bHarnessDC1) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.DC4)
 	graphTestContext.UpdateNode(s.DC5)
 	graphTestContext.UpdateNode(s.DC6)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA0 host", domainSid0, s.EnterpriseCA0)
+	addHostingComputer(graphTestContext, "EnterpriseCA1 host", domainSid1, s.EnterpriseCA1)
+	addHostingComputer(graphTestContext, "EnterpriseCA2 host", domainSid2, s.EnterpriseCA2)
 }
 
 type ESC10bHarnessDC2 struct {
@@ -8460,6 +8621,9 @@ func (s *ESC10bHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	s.DC1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
 	graphTestContext.UpdateNode(s.DC0)
 	graphTestContext.UpdateNode(s.DC1)
+
+	addHostingComputer(graphTestContext, "EnterpriseCA0 host", domainSid0, s.EnterpriseCA0)
+	addHostingComputer(graphTestContext, "EnterpriseCA1 host", domainSid1, s.EnterpriseCA1)
 }
 
 type OwnsWriteOwnerPriorCollectorVersions struct {
@@ -9793,6 +9957,23 @@ func (s *IngestRelationships) Setup(graphTestContext *GraphTestContext) {
 	s.ExistingRel = graphTestContext.NewRelationship(s.Node1, s.Node2, graph.StringKind("existing_edge_kind"))
 }
 
+type IngestRelationshipsUppercaseInvariant struct {
+	Node1 *graph.Node
+	Node2 *graph.Node
+}
+
+func (s *IngestRelationshipsUppercaseInvariant) Setup(graphTestContext *GraphTestContext) {
+	s.Node1 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "ABC",
+		common.Name:     "computer a",
+	}), graph.StringKind("Computer"))
+
+	s.Node2 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "DEF",
+		common.Name:     "computer b",
+	}), graph.StringKind("Computer"))
+}
+
 type GenericIngest struct {
 	Node1 *graph.Node
 	Node2 *graph.Node
@@ -9881,6 +10062,35 @@ func (s *Version730_Migration_Harness) Setup(graphTestContext *GraphTestContext)
 	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domain1Sid)
 	s.Computer2.Properties.Set(ad.SMBSigning.String(), false)
 	graphTestContext.UpdateNode(s.Computer1)
+}
+
+type Version900_Migration_Harness struct {
+	Computer1 *graph.Node
+	Computer2 *graph.Node
+}
+
+func (s *Version900_Migration_Harness) Setup(graphTestContext *GraphTestContext) {
+	domain1Sid := RandomDomainSID()
+
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
+	s.Computer1.Properties.Set("environment_id", "ENV-001")
+	graphTestContext.UpdateNode(s.Computer1)
+
+	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domain1Sid)
+	s.Computer2.Properties.Set("environment_id", "ENV-001")
+	graphTestContext.UpdateNode(s.Computer2)
+}
+
+type Version910_Migration_Harness struct {
+	ADNode *graph.Node
+	AZNode *graph.Node
+	OGNode *graph.Node
+}
+
+func (s *Version910_Migration_Harness) Setup(graphTestContext *GraphTestContext) {
+	s.ADNode = graphTestContext.NewActiveDirectoryGroup("ADNode", RandomDomainSID())
+	s.AZNode = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{}), azure.Entity, ad.Group)
+	s.OGNode = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{}), graph.StringKind("OGBaseKind"), ad.Group)
 }
 
 type ACLInheritanceHarness struct {
@@ -9999,6 +10209,50 @@ func (s *ACLInheritanceHarness) Setup(graphTestContext *GraphTestContext) {
 		common.IsInherited: true,
 		ad.InheritanceHash: "my_hash_3",
 	}))
+}
+
+type AZEligibleAndApproverRoleHarness struct {
+	UserDirectEligible *graph.Node
+	UserGroupEligible  *graph.Node
+	UserNoEligibility  *graph.Node
+	UserDirectApprover *graph.Node
+	UserGroupApprover  *graph.Node
+	Group              *graph.Node
+	ApproverGroup      *graph.Node
+	RoleDirect         *graph.Node
+	RoleViaGroup       *graph.Node
+	RoleDirectApprover *graph.Node
+	RoleGroupApprover  *graph.Node
+}
+
+func (s *AZEligibleAndApproverRoleHarness) Setup(graphTestContext *GraphTestContext) {
+	var (
+		tenantID = RandomDomainSID()
+	)
+
+	s.RoleDirect = graphTestContext.NewAzureRole("DirectRole", RandomObjectID(graphTestContext.testCtx), azure.ContributorRole, tenantID)
+	s.RoleViaGroup = graphTestContext.NewAzureRole("GroupRole", RandomObjectID(graphTestContext.testCtx), azure.ContributorRole, tenantID)
+	s.RoleDirectApprover = graphTestContext.NewAzureRole("DirectApproverRole", RandomObjectID(graphTestContext.testCtx), azure.ContributorRole, tenantID)
+	s.RoleGroupApprover = graphTestContext.NewAzureRole("GroupApproverRole", RandomObjectID(graphTestContext.testCtx), azure.ContributorRole, tenantID)
+	s.UserDirectEligible = graphTestContext.NewAzureUser("UserDirect", "UserDirect", "", RandomObjectID(graphTestContext.testCtx), "", tenantID, false)
+	s.UserGroupEligible = graphTestContext.NewAzureUser("UserGroup", "UserGroup", "", RandomObjectID(graphTestContext.testCtx), "", tenantID, false)
+	s.UserNoEligibility = graphTestContext.NewAzureUser("UserNone", "UserNone", "", RandomObjectID(graphTestContext.testCtx), "", tenantID, false)
+	s.UserDirectApprover = graphTestContext.NewAzureUser("UserDirectApprover", "UserDirectApprover", "", RandomObjectID(graphTestContext.testCtx), "", tenantID, false)
+	s.UserGroupApprover = graphTestContext.NewAzureUser("UserGroupApprover", "UserGroupApprover", "", RandomObjectID(graphTestContext.testCtx), "", tenantID, false)
+	s.Group = graphTestContext.NewAzureGroup("EligibleGroup", RandomObjectID(graphTestContext.testCtx), tenantID)
+	s.ApproverGroup = graphTestContext.NewAzureGroup("ApproverGroup", RandomObjectID(graphTestContext.testCtx), tenantID)
+
+	// Eligible role edges
+	graphTestContext.NewRelationship(s.UserDirectEligible, s.RoleDirect, azure.AZRoleEligible)
+
+	graphTestContext.NewRelationship(s.UserGroupEligible, s.Group, azure.MemberOf)
+	graphTestContext.NewRelationship(s.Group, s.RoleViaGroup, azure.AZRoleEligible)
+
+	// Approver role edges
+	graphTestContext.NewRelationship(s.UserDirectApprover, s.RoleDirectApprover, azure.AZRoleApprover)
+
+	graphTestContext.NewRelationship(s.UserGroupApprover, s.ApproverGroup, azure.MemberOf)
+	graphTestContext.NewRelationship(s.ApproverGroup, s.RoleGroupApprover, azure.AZRoleApprover)
 }
 
 type AZPIMRolesHarness struct {
@@ -10130,12 +10384,15 @@ type HarnessDetails struct {
 	AZMGGroupMemberReadWriteAllHarness              AZMGGroupMemberReadWriteAllHarness
 	AZMGRoleManagementReadWriteDirectoryHarness     AZMGRoleManagementReadWriteDirectoryHarness
 	AZMGServicePrincipalEndpointReadWriteAllHarness AZMGServicePrincipalEndpointReadWriteAllHarness
+	AZPIMRolesHarness                               AZPIMRolesHarness
+	AZEligibleAndApproverRoleHarness                AZEligibleAndApproverRoleHarness
 	RootADHarness                                   RootADHarness
 	SearchHarness                                   SearchHarness
 	ShortcutHarness                                 ShortcutHarness
 	ShortcutHarnessAuthUsers                        ShortcutHarnessAuthUsers
 	ShortcutHarnessEveryone                         ShortcutHarnessEveryone
 	ShortcutHarnessEveryone2                        ShortcutHarnessEveryone2
+	ShortcutHarnessSharedMember                     ShortcutHarnessSharedMember
 	ADCSESC1Harness                                 ADCSESC1Harness
 	ADCSESC1HarnessAuthUsers                        ADCSESC1HarnessAuthUsers
 	EnrollOnBehalfOfHarness1                        EnrollOnBehalfOfHarness1
@@ -10215,7 +10472,9 @@ type HarnessDetails struct {
 	GenericIngest                                   GenericIngest
 	ResolveEndpointsByName                          ResolveEndpointsByName
 	IngestRelationships                             IngestRelationships
-	AZPIMRolesHarness                               AZPIMRolesHarness
+	IngestRelationshipsUppercaseInvariant           IngestRelationshipsUppercaseInvariant
 	Version730_Migration                            Version730_Migration_Harness
+	Version900_Migration_Harness                    Version900_Migration_Harness
+	Version910_Migration_Harness                    Version910_Migration_Harness
 	ACLInheritanceHarness                           ACLInheritanceHarness
 }

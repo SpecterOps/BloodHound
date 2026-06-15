@@ -1345,7 +1345,7 @@
         "parameters": [
           {
             "name": "user_id",
-            "description": "Provide a user id to filter tokens by. This filter is only honored for Admin users.",
+            "description": "Provide a `user_id` to filter tokens by. Admin users may filter by any `user_id`. Non-admin users may only filter by their own `user_id` using `eq`.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.uuid"
@@ -3387,7 +3387,7 @@
         }
       }
     },
-    "/api/v2/spec/openapi.yaml": {
+    "/api/v2/spec": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
@@ -3452,7 +3452,7 @@
           },
           {
             "name": "type",
-            "description": "Node type.\nSome AD examples: `Base`, `User`, `Computer`, `Group`, `Container`.\nSome Azure examples: `AZBase`, `AZApp`, `AZDevice`.\n",
+            "description": "Node type. Currently only supports built-in types.\nSome AD examples: `Base`, `User`, `Computer`, `Group`, `Container`.\nSome Azure examples: `AZBase`, `AZApp`, `AZDevice`.\n",
             "in": "query",
             "schema": {
               "type": "string"
@@ -5193,10 +5193,20 @@
                                       "counts": {
                                         "type": "object",
                                         "properties": {
+                                          "members": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                          },
                                           "selectors": {
                                             "type": "integer"
                                           },
-                                          "members": {
+                                          "custom_selectors": {
+                                            "type": "integer"
+                                          },
+                                          "default_selectors": {
+                                            "type": "integer"
+                                          },
+                                          "disabled_selectors": {
                                             "type": "integer"
                                           }
                                         }
@@ -5507,6 +5517,33 @@
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
             }
+          },
+          {
+            "name": "primary_kind",
+            "in": "query",
+            "description": "Filter by primary_kind",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Filter by name",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "object_id",
+            "in": "query",
+            "description": "Filter by object_id",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
           }
         ],
         "responses": {
@@ -5686,7 +5723,45 @@
             "in": "query",
             "description": "Sortable columns are `id`, `objectid`, and `name`.\n",
             "schema": {
-              "$ref": "#/components/schemas/api.params.query.sort-by"
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/api.params.query.sort-by"
+                },
+                {
+                  "enum": [
+                    "id",
+                    "objectid",
+                    "name"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name": "primary_kind",
+            "in": "query",
+            "description": "Filter by primary_kind",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Filter by name",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "object_id",
+            "in": "query",
+            "description": "Filter by object_id",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
             }
           }
         ],
@@ -5732,6 +5807,111 @@
           },
           "404": {
             "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict. Selector is disabled.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members/counts": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of an asset group tag",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        {
+          "name": "asset_group_tag_selector_id",
+          "description": "ID of an asset group tag selector",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetAssetGroupSelectorMemberCountsByKind",
+        "summary": "List asset group tag selector member count by kind",
+        "description": "List counts of members of an asset group tag selector by primary kind.",
+        "tags": [
+          "Asset Isolation",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.environments"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "total_count": {
+                          "type": "integer"
+                        },
+                        "counts": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict. Selector is disabled.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -6262,7 +6442,13 @@
                               "additionalProperties": true
                             },
                             "source": {
-                              "type": "integer"
+                              "description": "Describes which phase of tagging resulted in this member being tagged, 1 - direct object, 2 - expanded downward, 3 - expanded upward",
+                              "type": "integer",
+                              "enum": [
+                                1,
+                                2,
+                                3
+                              ]
                             }
                           }
                         }
@@ -6305,7 +6491,7 @@
           "Community"
         ],
         "requestBody": {
-          "description": "The request body for searching asset group tags.",
+          "description": "The request body for searching asset group tags. `query` represents being able to query by either name or object id. `tag_type` can be either 1(zone), 2(label), or 3(owned). And `asset_group_tag_id` is the ID of a tag (zone or label).",
           "required": true,
           "content": {
             "application/json": {
@@ -6316,6 +6502,9 @@
                     "type": "string"
                   },
                   "tag_type": {
+                    "type": "integer"
+                  },
+                  "asset_group_tag_id": {
                     "type": "integer"
                   }
                 },
@@ -6834,6 +7023,17 @@
           "Community",
           "Enterprise"
         ],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter by type, valid types are node or edge, e.g. \"eq:node\"",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string-strict"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -6857,6 +7057,9 @@
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
           },
           "401": {
             "$ref": "#/components/responses/unauthorized"
@@ -7054,9 +7257,19 @@
           },
           {
             "name": "relationship_kinds",
+            "description": "Specific relationship kinds to include in the pathfinding search. If the kinds are not valid kinds, the query will error.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.contains"
+            }
+          },
+          {
+            "name": "only_traversable",
+            "description": "Whether or not to only include traversable kinds. If true and no `relationship_kinds` are specified, all traversable kinds will be searched. If true, and `relationship_kinds` param includes non-traversable kinds, the non-traversable kinds will be excluded from the path search. If false or omitted, all kinds will be searched.",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -7324,6 +7537,345 @@
           },
           "403": {
             "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/extensions": {
+      "put": {
+        "description": "**Experimental** - Upserts the OpenGraph extension",
+        "tags": [
+          "OpenGraph (Experimental)",
+          "Community",
+          "Enterprise"
+        ],
+        "operationId": "UpsertOpenGraphExtension",
+        "summary": "Upserts the OpenGraph Extension",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/model.graph-extension.payload"
+              },
+              "examples": {
+                "Generic": {
+                  "summary": "Generic OpenGraph Extension Example",
+                  "description": "An example generic OpenGraph Extension payload.",
+                  "value": {
+                    "schema": {
+                      "name": "OpenGraph_Extension",
+                      "display_name": "OpenGraph Extension",
+                      "version": "v1.0.0",
+                      "namespace": "OGE"
+                    },
+                    "node_kinds": [
+                      {
+                        "name": "OGE_Node_Kind_1",
+                        "display_name": "Node Kind 1",
+                        "description": "A generic node kind",
+                        "is_display_kind": true,
+                        "icon": "computer",
+                        "color": "#FF0000"
+                      },
+                      {
+                        "name": "OGE_Node_Kind_2",
+                        "display_name": "Node Kind 2",
+                        "description": "A secondary generic node kind",
+                        "is_display_kind": false
+                      },
+                      {
+                        "name": "OGE_Environment_Kind",
+                        "display_name": "Environment",
+                        "description": "A generic environment kind",
+                        "icon": "sitemap",
+                        "color": "#00FF00",
+                        "is_display_kind": true
+                      }
+                    ],
+                    "relationship_kinds": [
+                      {
+                        "name": "OGE_ConnectedTo",
+                        "description": "A generic relationship kind",
+                        "is_traversable": true
+                      }
+                    ],
+                    "environments": [
+                      {
+                        "environment_kind": "OGE_Environment_Kind",
+                        "source_kind": "OGExtension",
+                        "principal_kinds": [
+                          "OGE_Node_Kind_1",
+                          "OGE_Node_Kind_2"
+                        ]
+                      }
+                    ],
+                    "relationship_findings": [
+                      {
+                        "name": "OGE_Finding_1",
+                        "display_name": "Finding 1",
+                        "relationship_kind": "OGE_ConnectedTo",
+                        "environment_kind": "OGE_Environment_Kind",
+                        "remediation": {
+                          "short_description": "a remediation",
+                          "long_description": "a remediation to fix Finding 1",
+                          "short_remediation": "Do X",
+                          "long_remediation": "Do X to fix Finding 1"
+                        }
+                      }
+                    ]
+                  }
+                },
+                "Active Directory": {
+                  "summary": "Active Directory Example",
+                  "description": "An example Active Directory OpenGraph Extension. As a note, the Active Directory objects in the DB do not currently conform to the expected validation rules. This will change in the future. The example provided is how an Active Directory extension would look in the OpenGraph framework.",
+                  "value": {
+                    "schema": {
+                      "name": "Active_Directory",
+                      "display_name": "Active Directory",
+                      "version": "v1.0.0",
+                      "namespace": "AD"
+                    },
+                    "node_kinds": [
+                      {
+                        "name": "AD_Computer",
+                        "display_name": "Computer",
+                        "description": "An Active Directory Computer object",
+                        "is_display_kind": true,
+                        "icon": "computer",
+                        "color": "#FF0000"
+                      },
+                      {
+                        "name": "AD_User",
+                        "display_name": "User",
+                        "description": "An Active Directory User object",
+                        "is_display_kind": true,
+                        "icon": "user",
+                        "color": "#0000FF"
+                      },
+                      {
+                        "name": "AD_LocalGroup",
+                        "display_name": "Local Group",
+                        "description": "An Active Directory Local Group object",
+                        "is_display_kind": false
+                      },
+                      {
+                        "name": "AD_Domain",
+                        "display_name": "Domain",
+                        "description": "An Active Directory Domain environment object",
+                        "icon": "sitemap",
+                        "color": "#00FF00",
+                        "is_display_kind": true
+                      }
+                    ],
+                    "relationship_kinds": [
+                      {
+                        "name": "AD_MemberOf",
+                        "description": "An Active Directory relationship kind",
+                        "is_traversable": true
+                      }
+                    ],
+                    "environments": [
+                      {
+                        "environment_kind": "AD_Domain",
+                        "source_kind": "ActiveDirectory",
+                        "principal_kinds": [
+                          "AD_User",
+                          "AD_Computer"
+                        ]
+                      }
+                    ],
+                    "relationship_findings": [
+                      {
+                        "name": "AD_Finding_1",
+                        "display_name": "Finding 1 (Active Directory)",
+                        "relationship_kind": "AD_MemberOf",
+                        "environment_kind": "AD_Domain",
+                        "remediation": {
+                          "short_description": "a remediation",
+                          "long_description": "a remediation to fix Finding 1",
+                          "short_remediation": "Do X",
+                          "long_remediation": "Do X to fix Finding 1"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "CREATED"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "get": {
+        "description": "**Experimental** - Lists pertinent OpenGraph extension information such as id, name, version, and if it is a built-in extension",
+        "tags": [
+          "OpenGraph (Experimental)",
+          "Community",
+          "Enterprise"
+        ],
+        "operationId": "ListExtensions",
+        "summary": "List OpenGraph Extensions Information",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.response.graph-extensions-info"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/extensions/{extension_id}": {
+      "delete": {
+        "description": "**Experimental** - Deletes an OpenGraph Extension by Extension ID",
+        "tags": [
+          "OpenGraph (Experimental)",
+          "Community",
+          "Enterprise"
+        ],
+        "operationId": "DeleteExtension",
+        "summary": "Delete OpenGraph Extension",
+        "parameters": [
+          {
+            "name": "extension_id",
+            "in": "path",
+            "required": true,
+            "description": "Extension ID for deletion",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/extensions-edges": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListEdgeKinds",
+        "summary": "List Edge Kinds",
+        "description": "**Experimental** - List all Edge Kinds across OpenGraph Schemas",
+        "tags": [
+          "OpenGraph (Experimental)",
+          "Enterprise",
+          "Community"
+        ],
+        "parameters": [
+          {
+            "name": "schemas",
+            "description": "Schema names to filter response by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "is_traversable",
+            "description": "Filter response by whether or not an edge is traversable",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.graph-schema-edge-kinds"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -8118,7 +8670,7 @@
       "post": {
         "operationId": "RunCypherQuery",
         "summary": "Run a cypher query",
-        "description": "Runs a manual cypher query directly against the database",
+        "description": "Runs a manual cypher query directly against the database.",
         "tags": [
           "Cypher",
           "Community",
@@ -13316,7 +13868,7 @@
       "post": {
         "operationId": "DeleteBloodHoundDatabase",
         "summary": "Delete your BloodHound data",
-        "description": "Wipes your BloodHound data permanently. Specify the data to delete in the request body. Possible data includes collected graph data, custom high value selectors, file ingest history, and data quality history.",
+        "description": "Wipes your BloodHound data permanently. Specify the data to delete in the request body. Possible data includes collected graph data, relationships of specific types, custom high value selectors, file ingest history, and data quality history.",
         "tags": [
           "Database",
           "Community",
@@ -13329,16 +13881,34 @@
                 "type": "object",
                 "properties": {
                   "deleteCollectedGraphData": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "When true, deletes all collected graph nodes and edges. Cannot be combined with deleteSourceKinds or deleteRelationships.\n"
+                  },
+                  "deleteSourceKinds": {
+                    "type": "array",
+                    "description": "A list of source kind IDs (from the source_kinds table) whose associated graph nodes and source kind records will be deleted. Use 0 as a special value to delete all \"sourceless\" nodes - nodes that exist in the graph but are not attributed to any source kind. Non-existent IDs will result in a 400 error.\n",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "deleteRelationships": {
+                    "type": "array",
+                    "description": "A list of relationship kind names (e.g. \"HasSession\") whose edges will be deleted from the graph. Each value must be a valid, known relationship kind. Cannot be combined with deleteCollectedGraphData.\n",
+                    "items": {
+                      "type": "string"
+                    }
                   },
                   "deleteFileIngestHistory": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "When true, deletes all file ingest job history records."
                   },
                   "deleteDataQualityHistory": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "When true, deletes all data quality history records."
                   },
                   "deleteAssetGroupSelectors": {
                     "type": "array",
+                    "description": "A list of asset group IDs whose custom selectors will be deleted. Triggers a re-analysis after deletion.\n",
                     "items": {
                       "type": "integer"
                     }
@@ -13406,6 +13976,15 @@
                         "last_complete_analysis_at": {
                           "type": "string",
                           "format": "date-time"
+                        },
+                        "last_analysis_run_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "next_scheduled_analysis_at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "The next time a scheduled analysis will run. Note this field is Enterprise-Only."
                         }
                       }
                     }
@@ -13429,6 +14008,64 @@
           "$ref": "#/components/parameters/header.prefer"
         }
       ],
+      "get": {
+        "operationId": "GetAnalysisRequest",
+        "summary": "Gets analysis request information",
+        "description": "Flags the API to request the information of an analysis request.",
+        "tags": [
+          "Datapipe",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "requested_by": {
+                      "type": "string"
+                    },
+                    "request_type": {
+                      "type": "string"
+                    },
+                    "requested_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "delete_all_graph": {
+                      "type": "boolean"
+                    },
+                    "delete_sourceless_graph": {
+                      "type": "boolean"
+                    },
+                    "delete_source_kinds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
       "put": {
         "operationId": "StartAnalysis",
         "summary": "Start analysis",
@@ -13450,6 +14087,49 @@
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "CancelAnalysisRequest",
+        "summary": "Cancels an analysis request",
+        "description": "Flags the API to request the cancellation of analyzing ingest data.",
+        "tags": [
+          "Datapipe",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "202": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict. You cannot cancel an analysis request because a deletion request is pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
           }
         }
       }
@@ -13644,7 +14324,7 @@
         "operationId": "GetAssetGroupComboNode",
         "deprecated": true,
         "summary": "Get the combo tree for an asset group",
-        "description": "Gets the combo tree for an asset group",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases.\n",
         "tags": [
           "Analysis",
           "Enterprise"
@@ -14329,7 +15009,7 @@
         "operationId": "ListClientCompletedTasks",
         "deprecated": true,
         "summary": "List all completed tasks for a client",
-        "description": "List all completed tasks for a client",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/clients/{client_id}/completed_jobs` instead.\n",
         "tags": [
           "Clients",
           "Enterprise"
@@ -14644,7 +15324,7 @@
         "operationId": "CreateClientScheduledTask",
         "deprecated": true,
         "summary": "Creates a scheduled task",
-        "description": "Creates a new scheduled task",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `POST /api/v2/clients/{client_id}/jobs` instead.\n",
         "tags": [
           "Clients",
           "Enterprise"
@@ -15505,6 +16185,741 @@
         }
       }
     },
+    "/api/v2/tasks/available": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListAvailableClientTasks",
+        "deprecated": true,
+        "summary": "List available client tasks",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/jobs/available` instead.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are `event_id`, `execution_time`, `status`, `start_time`, `end_time`, `log_path`, `domain_controller`, `event_title`, `last_ingest`, `id`, `created_at`, `updated_at`, and `deleted_at`.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.log-path"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.session-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.local-group-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.cert-services-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.ca-registry-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.dc-registry-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.ad-structure-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.domain-controller"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.status"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.event-title"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.client-id"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.event-id"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.execution-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.start-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.end-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.last-ingest"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.hydrate-ous"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.hydrate-domains"
+          },
+          {
+            "$ref": "#/components/parameters/query.created-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.updated-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.deleted-at"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/finished": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListClientFinishedTasks",
+        "deprecated": true,
+        "summary": "List finished tasks",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/jobs/finished` instead.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are `client_name`, `event_id`, `execution_time`, `status`, `start_time`, `end_time`, `log_path`, `domain_controller`, `event_title`, `last_ingest`, `id`, `created_at`, `updated_at`, `deleted_at`.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.log-path"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.session-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.local-group-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.cert-services-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.ca-registry-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.dc-registry-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.ad-structure-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.domain-controller"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.status"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.event-title"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.client-id"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.event-id"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.execution-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.start-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.end-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.last-ingest"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.hydrate-domains"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.hydrate-ous"
+          },
+          {
+            "$ref": "#/components/parameters/query.created-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.updated-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.deleted-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetClientTasks",
+        "deprecated": true,
+        "summary": "Get tasks",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/jobs` instead.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are `client_name`, `event_id`, `execution_time`, `status`, `start_time`, `end_time`, `log_path`, `domain_controller`, `event_title`, `last_ingest`, `id`, `created_at`, `updated_at`, `deleted_at`.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.log-path"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.session-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.local-group-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.cert-services-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.ca-registry-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.dc-registry-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.ad-structure-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.domain-controller"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.status"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.event-title"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.client-id"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.event-id"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.execution-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.start-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.end-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.last-ingest"
+          },
+          {
+            "$ref": "#/components/parameters/query.created-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.updated-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.deleted-at"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/current": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetClientCurrentTask",
+        "deprecated": true,
+        "summary": "Get client current task",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/jobs/current` instead.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/start": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "StartClientTask",
+        "deprecated": true,
+        "summary": "Notifies the API of a task start",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `POST /api/v2/jobs/start` instead.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "format": "int64"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-scheduled-job"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/end": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "EndClientTask",
+        "deprecated": true,
+        "summary": "Notifies the API of a task ending",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `POST /api/v2/jobs/end` instead.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-scheduled-job"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/{task_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "task_id",
+          "description": "Task ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetClientTask",
+        "deprecated": true,
+        "summary": "Get client task",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/jobs/{job_id}` instead.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/{task_id}/cancel": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "task_id",
+          "description": "Task ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "put": {
+        "operationId": "CancelClientTask",
+        "deprecated": true,
+        "summary": "Cancels a scheduled task",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `PUT /api/v2/jobs/{job_id}/cancel` instead.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/{task_id}/log": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "task_id",
+          "description": "Task ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetClientTaskLog",
+        "deprecated": true,
+        "summary": "Get Task Log File",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/jobs/{job_id}/log` instead.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "log": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/events": {
       "parameters": [
         {
@@ -16004,13 +17419,17 @@
                                   "finding_count_decrease": {
                                     "type": "integer"
                                   },
-                                  "finding_impact_count": {
+                                  "impact_count": {
                                     "type": "integer",
                                     "nullable": true
                                   },
-                                  "finding_exposure_count": {
+                                  "exposure_count": {
                                     "type": "integer",
                                     "nullable": true
+                                  },
+                                  "archived_count": {
+                                    "type": "integer",
+                                    "description": "Total number of findings of this type that were\narchived (deleted during analysis reconciliation)\nwithin the requested time window. Summed across\nall snapshots in the window.\n"
                                   }
                                 }
                               }
@@ -16285,7 +17704,7 @@
         },
         {
           "name": "domain_id",
-          "description": "Domain ID",
+          "description": "Domain, Tenant, or Environment ID",
           "in": "path",
           "required": true,
           "schema": {
@@ -17276,13 +18695,13 @@
     "parameters": {
       "header.prefer": {
         "name": "Prefer",
-        "description": "Prefer header, used to specify a custom timeout in seconds using the wait parameter as per RFC7240.",
+        "description": "Prefer header, used to specify a custom timeout in seconds using the wait parameter as per RFC7240. Passing in wait=-1 bypasses all timeout limits when the feature is enabled.",
         "in": "header",
         "required": false,
         "schema": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 0
+          "type": "string",
+          "default": "wait=30",
+          "pattern": "^wait=(-1|[0-9]+)$"
         }
       },
       "query.created-at": {
@@ -17737,21 +19156,6 @@
           }
         }
       },
-      "model.environment-targeted-access-control": {
-        "type": "object",
-        "properties": {
-          "user_id": {
-            "type": "string",
-            "format": "uuid",
-            "description": "The user UUID that associates the access control to a specific user",
-            "readOnly": true
-          },
-          "environment_id": {
-            "type": "string",
-            "description": "The environment id which a user has been granted access to"
-          }
-        }
-      },
       "model.user": {
         "allOf": [
           {
@@ -17832,18 +19236,6 @@
               "eula_accepted": {
                 "type": "boolean",
                 "readOnly": true
-              },
-              "all_environments": {
-                "type": "boolean",
-                "readOnly": true
-              },
-              "environment_targeted_access_control": {
-                "description": "A collection of environment targeted access controls that a user has been granted access to.",
-                "type": "array",
-                "readOnly": true,
-                "items": {
-                  "$ref": "#/components/schemas/model.environment-targeted-access-control"
-                }
               }
             }
           }
@@ -17962,6 +19354,15 @@
                 "type": "string",
                 "format": "date-time",
                 "readOnly": true
+              },
+              "created_by": {
+                "description": "The ID of the user who created the token",
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.uuid"
+                  }
+                ]
               }
             }
           }
@@ -18207,7 +19608,8 @@
         "description": "This enum describes the collector client type.",
         "enum": [
           "sharphound",
-          "azurehound"
+          "azurehound",
+          "openhound"
         ]
       },
       "model.client": {
@@ -18465,20 +19867,22 @@
       },
       "api.params.predicate.filter.string": {
         "type": "string",
+        "pattern": "^((eq|~eq|neq):)?[^:]+$",
         "description": "Filter results by column string value. Valid filter predicates are `eq`, `~eq`, `neq`.\n"
       },
       "api.params.predicate.filter.integer": {
-        "type": "integer",
+        "type": "string",
+        "pattern": "^((eq|neq|gt|gte|lt|lte):)?-?[0-9]+$",
         "description": "Filter results by column integer value. Valid filter predicates are `eq`, `neq`, `gt`, `gte`, `lt`, `lte`.\n"
       },
       "api.params.predicate.filter.time": {
         "type": "string",
-        "format": "date-time",
+        "pattern": "^((eq|neq|gt|gte|lt|lte):)?[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt][0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?([Zz]|-[0-9]{2}:[0-9]{2})$",
         "description": "Filter results by column timestamp value formatted as an RFC-3339 string.\nValid filter predicates are `eq`, `neq`, `gt`, `gte`, `lt`, `lte`.\n"
       },
       "api.params.predicate.filter.uuid": {
         "type": "string",
-        "format": "uuid",
+        "pattern": "^((eq|neq):)?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
         "description": "Filter results by column string-formatted uuid value. Valid filter predicates are `eq`, `neq`.\n"
       },
       "api.requests.user.update": {
@@ -18519,54 +19923,8 @@
           },
           "is_disabled": {
             "type": "boolean"
-          },
-          "all_environments": {
-            "description": "Grants access to all environments for the user. This will clear a user's environment access control list, if it exists",
-            "type": "boolean"
-          },
-          "environment_targeted_access_control": {
-            "type": "object",
-            "additionalProperties": false,
-            "description": "Sets an environment targeted access control on the user. When all_environments is set to true, a user's existing environment control is cleared and they are granted access to all environments. Administrators and Power Users may not have an ETAC list applied to them.",
-            "properties": {
-              "environments": {
-                "type": "array",
-                "uniqueItems": true,
-                "items": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "properties": {
-                    "environment_id": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
           }
-        },
-        "oneOf": [
-          {
-            "required": [
-              "all_environments"
-            ],
-            "not": {
-              "required": [
-                "environment_targeted_access_control"
-              ]
-            }
-          },
-          {
-            "required": [
-              "environment_targeted_access_control"
-            ],
-            "not": {
-              "required": [
-                "all_environments"
-              ]
-            }
-          }
-        ]
+        }
       },
       "api.requests.user.set-secret": {
         "type": "object",
@@ -18975,6 +20333,11 @@
             "readOnly": true,
             "description": "Enterprise Only"
           },
+          "hygiene_attack_paths": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Enterprise Only"
+          },
           "exposures": {
             "type": "array",
             "readOnly": true,
@@ -19337,9 +20700,15 @@
         "type": "object",
         "properties": {
           "type": {
-            "type": "integer"
+            "type": "integer",
+            "description": "The type of selector, valid types are 1 - object id or 2 - cypher.",
+            "enum": [
+              1,
+              2
+            ]
           },
           "value": {
+            "description": "The string value representing either an objectid or cypher query depending on the selector type.",
             "type": "string"
           }
         }
@@ -19403,15 +20772,18 @@
         }
       },
       "api.params.predicate.filter.integer-strict": {
-        "type": "integer",
+        "type": "string",
+        "pattern": "^((eq|neq):)?-?[0-9]+$",
         "description": "Filter results by column integer value. Valid filter predicates are `eq`, `neq`.\n"
       },
       "api.params.predicate.filter.string-strict": {
         "type": "string",
+        "pattern": "^((eq|neq):)?[^:]+$",
         "description": "Filter results by column string value. Valid filter predicates are `eq`, `neq`.\n"
       },
       "api.params.predicate.filter.boolean": {
-        "type": "boolean",
+        "type": "string",
+        "pattern": "^((eq|neq):)?(t|T|TRUE|true|True|f|F|FALSE|false|False)$",
         "description": "Filter results by column boolean value. Valid filter predicates are `eq`, `neq`.\n"
       },
       "model.asset-group-tag-request": {
@@ -19957,6 +21329,233 @@
           }
         }
       },
+      "api.response.graph-extensions-info": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": [
+              "extensions"
+            ],
+            "properties": {
+              "extensions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "version",
+                    "is_builtin",
+                    "namespace"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "format": "int32"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "string"
+                    },
+                    "is_builtin": {
+                      "type": "boolean"
+                    },
+                    "namespace": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "example": {
+          "data": {
+            "extensions": [
+              {
+                "id": 1,
+                "name": "Active Directory",
+                "version": "v1.0.0",
+                "is_builtin": true,
+                "namespace": "AD"
+              }
+            ]
+          }
+        }
+      },
+      "model.graph-extension.payload": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "OpenGraph_Extension"
+              },
+              "display_name": {
+                "type": "string",
+                "example": "OpenGraph Extension"
+              },
+              "version": {
+                "type": "string",
+                "example": "v1.0.0"
+              },
+              "namespace": {
+                "type": "string",
+                "example": "OGE"
+              }
+            }
+          },
+          "node_kinds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "OGE_Computer"
+                },
+                "display_name": {
+                  "type": "string",
+                  "example": "OGE Computer"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "An OpenGraph Extension Computer object"
+                },
+                "is_display_kind": {
+                  "type": "boolean"
+                },
+                "icon": {
+                  "type": "string",
+                  "example": "Desktop"
+                },
+                "color": {
+                  "type": "string",
+                  "example": "#FF0000"
+                }
+              }
+            }
+          },
+          "relationship_kinds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "OGE_ConnectedTo"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "An OpenGraph Extension ConnectedTo edge"
+                },
+                "is_traversable": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "environments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "environment_kind": {
+                  "type": "string",
+                  "example": "OGE_Environment"
+                },
+                "source_kind": {
+                  "type": "string",
+                  "example": "OGExtension"
+                },
+                "principal_kinds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "OGE_User",
+                    "OGE_Computer"
+                  ]
+                }
+              }
+            }
+          },
+          "relationship_findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "OGE_Malicious_Finding_1"
+                },
+                "display_name": {
+                  "type": "string",
+                  "example": "Malicious Finding 1 (OG Extension)"
+                },
+                "relationship_kind": {
+                  "type": "string",
+                  "example": "OGE_ConnectedTo"
+                },
+                "environment_kind": {
+                  "type": "string",
+                  "example": "OGE_Environment"
+                },
+                "remediation": {
+                  "type": "object",
+                  "properties": {
+                    "short_description": {
+                      "type": "string"
+                    },
+                    "long_description": {
+                      "type": "string"
+                    },
+                    "short_remediation": {
+                      "type": "string"
+                    },
+                    "long_remediation": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "model.graph-schema-edge-kinds": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "is_traversable": {
+            "type": "boolean"
+          },
+          "schema_name": {
+            "type": "string"
+          },
+          "is_builtin": {
+            "type": "boolean"
+          }
+        }
+      },
       "model.saved-query": {
         "allOf": [
           {
@@ -20059,6 +21658,38 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/model.unified-graph.edge"
+            }
+          },
+          "literals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "object",
+                  "nullable": true,
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "array"
+                    },
+                    {
+                      "type": "object"
+                    }
+                  ]
+                }
+              }
             }
           }
         }
@@ -20376,10 +22007,12 @@
             "type": "string"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "exists": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           }
         }
       },
@@ -20392,10 +22025,12 @@
             "type": "object",
             "properties": {
               "distinguishedname": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "type": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               }
             }
           }
@@ -21016,7 +22651,8 @@
           "assets",
           "session-completeness",
           "group-completeness",
-          "attack-paths"
+          "attack-paths",
+          "archived-findings"
         ]
       }
     },
@@ -21209,7 +22845,7 @@
         }
       },
       "entity-info-query-results": {
-        "description": "**OK**\n\nThis response is polymorphic and depends on the type of entity being queried and whether\nthe `count` param is true or not. All node types will return a `props` field with the graph node\nproperties. If `count=true` the response will also include additional fields with integer counts.\n",
+        "description": "**OK**\n\nThis response is polymorphic and depends on the type of entity being queried and whether\nthe `count` param is true or not. All node types will return a `props` field with the graph node\nproperties and a `kinds` field with the graph node kinds. If `count=true` the response will also include additional fields with integer counts.\n",
         "content": {
           "application/json": {
             "schema": {
@@ -21218,6 +22854,12 @@
                 "data": {
                   "type": "object",
                   "properties": {
+                    "kinds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
                     "props": {
                       "type": "object",
                       "additionalProperties": {
@@ -21322,7 +22964,8 @@
         "Groups",
         "Data Quality",
         "Datapipe",
-        "Cypher"
+        "Cypher",
+        "OpenGraph (Experimental)"
       ]
     },
     {
@@ -21338,7 +22981,8 @@
         "Events (Schedules)",
         "Attack Paths",
         "Risk Posture",
-        "Meta Entities"
+        "Meta Entities",
+        "Alerts"
       ]
     }
   ]

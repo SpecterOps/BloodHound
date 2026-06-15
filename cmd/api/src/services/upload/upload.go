@@ -27,13 +27,14 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
 
 var ErrInvalidJSON = errors.New("file is not valid json")
 
-func SaveIngestFile(location string, request *http.Request, validator IngestValidator) (IngestTaskParams, error) {
+func SaveIngestFile(location string, request *http.Request, validator IngestValidator, jobID int64) (IngestTaskParams, error) {
 	fileData := request.Body
 
 	var (
@@ -52,7 +53,7 @@ func SaveIngestFile(location string, request *http.Request, validator IngestVali
 		return IngestTaskParams{}, fmt.Errorf("invalid content type for ingest file")
 	}
 
-	if tempFileName, err := WriteAndValidateFile(fileData, location, validationFn); err != nil {
+	if tempFileName, err := WriteAndValidateFileWithPrefix(fileData, location, ingestFileTempPrefix(jobID), validationFn); err != nil {
 		return IngestTaskParams{}, err
 	} else {
 		return IngestTaskParams{
@@ -63,29 +64,55 @@ func SaveIngestFile(location string, request *http.Request, validator IngestVali
 
 }
 
-func WriteAndValidateFile(fileData io.Reader, location string, validationFunc FileValidator) (string, error) {
+func ingestFileTempPrefix(jobID int64) string {
+	return fmt.Sprintf("file_upload_job%d_", jobID)
+}
+
+func WriteAndValidateFile(fileData io.Reader, location string, jobID int64, validationFunc FileValidator) (string, error) {
+	return WriteAndValidateFileWithPrefix(fileData, location, ingestFileTempPrefix(jobID), validationFunc)
+}
+
+func WriteAndValidateFileWithPrefix(fileData io.Reader, location string, tempFilePrefix string, validationFunc FileValidator) (string, error) {
+	if validationFunc == nil {
+		return "", fmt.Errorf("validation function is required")
+	}
+
+	var (
+		tempFile      *os.File
+		tempFileName  string
+		err           error
+		validationErr error
+	)
+
 	// Write a temp file. If it passes validation, keep it around and return the filename. Otherwise destroy it.
-	tempFile, err := os.CreateTemp(location, "bh")
-	if err != nil {
+	if tempFile, err = os.CreateTemp(location, tempFilePrefix); err != nil {
 		return "", fmt.Errorf("error creating ingest file: %w", err)
 	}
 
 	// Save this for later
-	tempFileName := tempFile.Name()
+	tempFileName = tempFile.Name()
 
 	// Run validation on the file to see if we even want to keep it
-	_, validationErr := validationFunc(fileData, tempFile)
+	_, validationErr = validationFunc(fileData, tempFile)
 
 	// We close the file next, not last. We can't defer this if we might want to delete it.
 	// Note: fileData does not need to be closed because the HTTP server manages it's lifecyle
 	if closeErr := tempFile.Close(); closeErr != nil {
-		slog.Error(fmt.Sprintf("Error closing temp file %s: %v", tempFileName, closeErr))
+		slog.Error(
+			"Error closing temp file",
+			slog.String("file", tempFileName),
+			attr.Error(closeErr),
+		)
 	}
 
 	// If the validation was not successful, after we close the file, we remove it and return the error
 	if validationErr != nil {
 		if removeErr := os.Remove(tempFileName); removeErr != nil {
-			slog.Error(fmt.Sprintf("Error deleting temp file %s: %v", tempFileName, removeErr))
+			slog.Error(
+				"Error deleting temp file",
+				slog.String("file", tempFileName),
+				attr.Error(removeErr),
+			)
 		}
 		return "", validationErr
 	}

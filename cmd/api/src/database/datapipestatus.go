@@ -18,39 +18,49 @@ package database
 
 import (
 	"context"
-	"time"
+	"fmt"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 type DatapipeStatusData interface {
-	UpdateLastAnalysisCompleteTime(ctx context.Context) error
 	SetLastAnalysisStartTime(ctx context.Context) error
+	UpdateLastAnalysisCompleteTime(ctx context.Context) error
 	SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus) error
 	GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error)
-}
-
-// This should be called at the end of a successful analysis run (not always every analysis)
-func (s *BloodhoundDB) UpdateLastAnalysisCompleteTime(ctx context.Context) error {
-	now := time.Now().UTC()
-	return s.db.WithContext(ctx).Exec("UPDATE datapipe_status SET updated_at = ?, last_complete_analysis_at = ?", now, now).Error
+	SetNextScheduledAnalysisStartTime(ctx context.Context, time null.Time) error
 }
 
 // This should be called at the start of analysis processing (not every datapipe tick, but start of real work)
 func (s *BloodhoundDB) SetLastAnalysisStartTime(ctx context.Context) error {
-	now := time.Now().UTC()
-	return s.db.WithContext(ctx).Exec("UPDATE datapipe_status SET updated_at = ?, last_analysis_run_at = ?", now, now).Error
+	var datapipeStatus model.DatapipeStatus
+	return s.db.WithContext(ctx).Exec(fmt.Sprintf(`UPDATE %s SET updated_at = current_timestamp, last_analysis_run_at = current_timestamp`, datapipeStatus.TableName())).Error
+}
+
+// This should be called at the end of a successful analysis run (not always every analysis)
+func (s *BloodhoundDB) UpdateLastAnalysisCompleteTime(ctx context.Context) error {
+	var datapipeStatus model.DatapipeStatus
+	return s.db.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET updated_at = current_timestamp, last_complete_analysis_at = current_timestamp", datapipeStatus.TableName())).Error
 }
 
 func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus) error {
-	now := time.Now().UTC()
-	return s.db.WithContext(ctx).Exec("UPDATE datapipe_status SET status = ?, updated_at = ?;", status, now).Error
+	var datapipeStatus model.DatapipeStatus
+	return s.db.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET status = ?, updated_at = current_timestamp", datapipeStatus.TableName()), status).Error
 }
 
 func (s *BloodhoundDB) GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error) {
-	var datapipeStatus model.DatapipeStatusWrapper
+	var (
+		datapipeStatusWrapper model.DatapipeStatusWrapper
+		datapipeStatus        model.DatapipeStatus
+	)
 
-	tx := s.db.WithContext(ctx).Select("status, updated_at, last_complete_analysis_at, last_analysis_run_at").Table("datapipe_status").First(&datapipeStatus)
+	tx := s.db.WithContext(ctx).Select("status, updated_at, last_complete_analysis_at, last_analysis_run_at, next_scheduled_analysis_at").Table(datapipeStatus.TableName()).First(&datapipeStatusWrapper)
 
-	return datapipeStatus, CheckError(tx)
+	return datapipeStatusWrapper, CheckError(tx)
+}
+
+// No-op in BHCE
+func (s *BloodhoundDB) SetNextScheduledAnalysisStartTime(ctx context.Context, time null.Time) error {
+	return nil
 }

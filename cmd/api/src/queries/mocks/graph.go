@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -29,9 +29,10 @@ import (
 	context "context"
 	reflect "reflect"
 
+	database "github.com/specterops/bloodhound/cmd/api/src/database"
 	model "github.com/specterops/bloodhound/cmd/api/src/model"
 	queries "github.com/specterops/bloodhound/cmd/api/src/queries"
-	agi "github.com/specterops/bloodhound/cmd/api/src/services/agi"
+	graphschema "github.com/specterops/bloodhound/packages/go/graphschema"
 	graph "github.com/specterops/dawgs/graph"
 	query "github.com/specterops/dawgs/query"
 	gomock "go.uber.org/mock/gomock"
@@ -166,9 +167,9 @@ func (mr *MockGraphMockRecorder) FetchNodesByObjectIDsAndKinds(ctx, kinds any, o
 }
 
 // GetADEntityQueryResult mocks base method.
-func (m *MockGraph) GetADEntityQueryResult(ctx context.Context, params queries.EntityQueryParameters, cacheEnabled bool) (any, int, error) {
+func (m *MockGraph) GetADEntityQueryResult(ctx context.Context, primaryNodeKinds graphschema.PrimaryDisplayKinds, params queries.EntityQueryParameters, cacheEnabled bool) (any, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetADEntityQueryResult", ctx, params, cacheEnabled)
+	ret := m.ctrl.Call(m, "GetADEntityQueryResult", ctx, primaryNodeKinds, params, cacheEnabled)
 	ret0, _ := ret[0].(any)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -176,9 +177,9 @@ func (m *MockGraph) GetADEntityQueryResult(ctx context.Context, params queries.E
 }
 
 // GetADEntityQueryResult indicates an expected call of GetADEntityQueryResult.
-func (mr *MockGraphMockRecorder) GetADEntityQueryResult(ctx, params, cacheEnabled any) *gomock.Call {
+func (mr *MockGraphMockRecorder) GetADEntityQueryResult(ctx, primaryNodeKinds, params, cacheEnabled any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetADEntityQueryResult", reflect.TypeOf((*MockGraph)(nil).GetADEntityQueryResult), ctx, params, cacheEnabled)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetADEntityQueryResult", reflect.TypeOf((*MockGraph)(nil).GetADEntityQueryResult), ctx, primaryNodeKinds, params, cacheEnabled)
 }
 
 // GetAllShortestPaths mocks base method.
@@ -196,19 +197,34 @@ func (mr *MockGraphMockRecorder) GetAllShortestPaths(ctx, startNodeID, endNodeID
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllShortestPaths", reflect.TypeOf((*MockGraph)(nil).GetAllShortestPaths), ctx, startNodeID, endNodeID, filter)
 }
 
-// GetAssetGroupComboNode mocks base method.
-func (m *MockGraph) GetAssetGroupComboNode(ctx context.Context, owningObjectID, assetGroupTag string) (map[string]any, error) {
+// GetAllShortestPathsWithOpenGraph mocks base method.
+func (m *MockGraph) GetAllShortestPathsWithOpenGraph(ctx context.Context, startNodeID, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAssetGroupComboNode", ctx, owningObjectID, assetGroupTag)
+	ret := m.ctrl.Call(m, "GetAllShortestPathsWithOpenGraph", ctx, startNodeID, endNodeID, filter)
+	ret0, _ := ret[0].(graph.PathSet)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllShortestPathsWithOpenGraph indicates an expected call of GetAllShortestPathsWithOpenGraph.
+func (mr *MockGraphMockRecorder) GetAllShortestPathsWithOpenGraph(ctx, startNodeID, endNodeID, filter any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllShortestPathsWithOpenGraph", reflect.TypeOf((*MockGraph)(nil).GetAllShortestPathsWithOpenGraph), ctx, startNodeID, endNodeID, filter)
+}
+
+// GetAssetGroupComboNode mocks base method.
+func (m *MockGraph) GetAssetGroupComboNode(ctx context.Context, primaryNodeKinds graphschema.PrimaryDisplayKinds, owningObjectID, assetGroupTag string) (map[string]any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAssetGroupComboNode", ctx, primaryNodeKinds, owningObjectID, assetGroupTag)
 	ret0, _ := ret[0].(map[string]any)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAssetGroupComboNode indicates an expected call of GetAssetGroupComboNode.
-func (mr *MockGraphMockRecorder) GetAssetGroupComboNode(ctx, owningObjectID, assetGroupTag any) *gomock.Call {
+func (mr *MockGraphMockRecorder) GetAssetGroupComboNode(ctx, primaryNodeKinds, owningObjectID, assetGroupTag any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupComboNode", reflect.TypeOf((*MockGraph)(nil).GetAssetGroupComboNode), ctx, owningObjectID, assetGroupTag)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupComboNode", reflect.TypeOf((*MockGraph)(nil).GetAssetGroupComboNode), ctx, primaryNodeKinds, owningObjectID, assetGroupTag)
 }
 
 // GetAssetGroupNodes mocks base method.
@@ -311,9 +327,9 @@ func (mr *MockGraphMockRecorder) GetNodesByKind(ctx any, kinds ...any) *gomock.C
 }
 
 // GetPrimaryNodeKindCounts mocks base method.
-func (m *MockGraph) GetPrimaryNodeKindCounts(ctx context.Context, kind graph.Kind, additionalFilters ...graph.Criteria) (map[string]int, error) {
+func (m *MockGraph) GetPrimaryNodeKindCounts(ctx context.Context, primaryDisplayKinds graphschema.PrimaryDisplayKinds, kind graph.Kind, additionalFilters ...graph.Criteria) (map[string]int, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, kind}
+	varargs := []any{ctx, primaryDisplayKinds, kind}
 	for _, a := range additionalFilters {
 		varargs = append(varargs, a)
 	}
@@ -324,9 +340,9 @@ func (m *MockGraph) GetPrimaryNodeKindCounts(ctx context.Context, kind graph.Kin
 }
 
 // GetPrimaryNodeKindCounts indicates an expected call of GetPrimaryNodeKindCounts.
-func (mr *MockGraphMockRecorder) GetPrimaryNodeKindCounts(ctx, kind any, additionalFilters ...any) *gomock.Call {
+func (mr *MockGraphMockRecorder) GetPrimaryNodeKindCounts(ctx, primaryDisplayKinds, kind any, additionalFilters ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, kind}, additionalFilters...)
+	varargs := append([]any{ctx, primaryDisplayKinds, kind}, additionalFilters...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrimaryNodeKindCounts", reflect.TypeOf((*MockGraph)(nil).GetPrimaryNodeKindCounts), varargs...)
 }
 
@@ -346,52 +362,52 @@ func (mr *MockGraphMockRecorder) PrepareCypherQuery(rawCypher, queryComplexityLi
 }
 
 // RawCypherQuery mocks base method.
-func (m *MockGraph) RawCypherQuery(ctx context.Context, pQuery queries.PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
+func (m *MockGraph) RawCypherQuery(ctx context.Context, primaryDisplayKinds graphschema.PrimaryDisplayKinds, pQuery queries.PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RawCypherQuery", ctx, pQuery, includeProperties)
+	ret := m.ctrl.Call(m, "RawCypherQuery", ctx, primaryDisplayKinds, pQuery, includeProperties)
 	ret0, _ := ret[0].(model.UnifiedGraph)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RawCypherQuery indicates an expected call of RawCypherQuery.
-func (mr *MockGraphMockRecorder) RawCypherQuery(ctx, pQuery, includeProperties any) *gomock.Call {
+func (mr *MockGraphMockRecorder) RawCypherQuery(ctx, primaryDisplayKinds, pQuery, includeProperties any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RawCypherQuery", reflect.TypeOf((*MockGraph)(nil).RawCypherQuery), ctx, pQuery, includeProperties)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RawCypherQuery", reflect.TypeOf((*MockGraph)(nil).RawCypherQuery), ctx, primaryDisplayKinds, pQuery, includeProperties)
 }
 
 // SearchByNameOrObjectID mocks base method.
-func (m *MockGraph) SearchByNameOrObjectID(ctx context.Context, searchValue, searchType string) (graph.NodeSet, error) {
+func (m *MockGraph) SearchByNameOrObjectID(ctx context.Context, includeOpenGraphNodes bool, searchValue, searchType string) (graph.NodeSet, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SearchByNameOrObjectID", ctx, searchValue, searchType)
+	ret := m.ctrl.Call(m, "SearchByNameOrObjectID", ctx, includeOpenGraphNodes, searchValue, searchType)
 	ret0, _ := ret[0].(graph.NodeSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SearchByNameOrObjectID indicates an expected call of SearchByNameOrObjectID.
-func (mr *MockGraphMockRecorder) SearchByNameOrObjectID(ctx, searchValue, searchType any) *gomock.Call {
+func (mr *MockGraphMockRecorder) SearchByNameOrObjectID(ctx, includeOpenGraphNodes, searchValue, searchType any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchByNameOrObjectID", reflect.TypeOf((*MockGraph)(nil).SearchByNameOrObjectID), ctx, searchValue, searchType)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchByNameOrObjectID", reflect.TypeOf((*MockGraph)(nil).SearchByNameOrObjectID), ctx, includeOpenGraphNodes, searchValue, searchType)
 }
 
-// SearchNodesByName mocks base method.
-func (m *MockGraph) SearchNodesByName(ctx context.Context, nodeKinds graph.Kinds, nameQuery string, skip, limit int) ([]model.SearchResult, error) {
+// SearchNodesByNameOrObjectId mocks base method.
+func (m *MockGraph) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip, limit int) ([]*graph.Node, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SearchNodesByName", ctx, nodeKinds, nameQuery, skip, limit)
-	ret0, _ := ret[0].([]model.SearchResult)
+	ret := m.ctrl.Call(m, "SearchNodesByNameOrObjectId", ctx, nodeKinds, nameOrObjectIdQuery, skip, limit)
+	ret0, _ := ret[0].([]*graph.Node)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// SearchNodesByName indicates an expected call of SearchNodesByName.
-func (mr *MockGraphMockRecorder) SearchNodesByName(ctx, nodeKinds, nameQuery, skip, limit any) *gomock.Call {
+// SearchNodesByNameOrObjectId indicates an expected call of SearchNodesByNameOrObjectId.
+func (mr *MockGraphMockRecorder) SearchNodesByNameOrObjectId(ctx, nodeKinds, nameOrObjectIdQuery, skip, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchNodesByName", reflect.TypeOf((*MockGraph)(nil).SearchNodesByName), ctx, nodeKinds, nameQuery, skip, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchNodesByNameOrObjectId", reflect.TypeOf((*MockGraph)(nil).SearchNodesByNameOrObjectId), ctx, nodeKinds, nameOrObjectIdQuery, skip, limit)
 }
 
 // UpdateSelectorTags mocks base method.
-func (m *MockGraph) UpdateSelectorTags(ctx context.Context, db agi.AgiData, selectors model.UpdatedAssetGroupSelectors) error {
+func (m *MockGraph) UpdateSelectorTags(ctx context.Context, db database.AgiData, selectors model.UpdatedAssetGroupSelectors) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateSelectorTags", ctx, db, selectors)
 	ret0, _ := ret[0].(error)

@@ -16,7 +16,24 @@
 
 package bloodhoundgraph
 
-//TODO: Move styling responsibilites to the UI or move shared styling definitions to a cue file to generate from one source of truth
+import (
+	"fmt"
+
+	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/dawgs/graph"
+)
+
+//TODO: Move styling responsibilities to the UI or move shared styling definitions to a cue file to generate from one source of truth
+
+var (
+	fontAwesomePrefix  = "fas fa-"
+	defaultUnknownIcon = "fas fa-question"
+	defaultIconColor   = "#EEE"
+	metaNodeKindLabel  = "Meta"
+	metaNodeColor      = "#000"
+	metaImageDefault   = "/ui/meta.png"
+	metaImageTierZero  = "/ui/metat0.png"
+)
 
 type BloodHoundGraphGlyph struct {
 	Angle    int                        `json:"angle,omitempty"`
@@ -128,232 +145,29 @@ type BloodHoundGraphLink struct {
 	Width     int                       `json:"width,omitempty"`
 }
 
-func (s *BloodHoundGraphNode) SetIcon(nType string) {
-	switch nType {
-	case "AZApp":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-window-restore",
-		}
-	case "AZVMScaleSet":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-server",
-		}
-	case "AZDevice":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-desktop",
-		}
-	case "AZFunctionApp":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-bolt",
-		}
-	case "AZGroup":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-users",
-		}
-	case "AZKeyVault":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-lock",
-		}
-	case "AZManagementGroup":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-sitemap",
-		}
-	case "AZResourceGroup":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-cube",
-		}
-	case "AZRole":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-clipboard-list",
-		}
-	case "AZServicePrincipal":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-robot",
-		}
-	case "AZSubscription":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-key",
-		}
-	case "AZTenant":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-cloud",
-		}
-	case "AZUser":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-user",
-		}
-	case "AZVM":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-desktop",
-		}
-	case "AZManagedCluster":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-cubes",
-		}
-	case "AZContainerRegistry":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-box-open",
-		}
-	case "AZWebApp":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-object-group",
-		}
-	case "AZLogicApp":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-sitemap",
-		}
-	case "AZAutomationAccount":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-cog",
-		}
-	case "User":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-user",
-		}
-	case "Group":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-users",
-		}
-	case "Computer":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-desktop",
-		}
-	case "Container":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-box",
-		}
-	case "Domain":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-globe",
-		}
-	case "OU":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-sitemap",
-		}
-	case "GPO":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-list",
-		}
-	case "AIACA":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-arrows-left-right-to-line",
-		}
-	case "RootCA":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-landmark",
-		}
-	case "EnterpriseCA":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-building",
-		}
-	case "NTAuthStore":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-store",
-		}
-	case "CertTemplate":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-id-card",
-		}
-	case "IssuancePolicy":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-clipboard-check",
-		}
-	case "Site":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-map-signs",
-		}
-	case "SiteServer":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-map-marker",
-		}
-	case "SiteSubnet":
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-map",
-		}
-	case "Meta":
-		if tier, ok := s.Data["admintier"]; ok {
-			if tier.(int64) == 0 {
-				s.Image = "/ui/metat0.png"
-			} else {
-				s.Image = "/ui/meta.png"
-			}
-		} else {
-			s.Image = "/ui/meta.png"
-		}
-	default:
-		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fas fa-question",
-		}
-	}
-}
+func (s *BloodHoundGraphNode) SetFontIcon(nodeKind string, primaryDisplayKinds graphschema.PrimaryDisplayKinds) {
+	if nodeKind == metaNodeKindLabel {
+		s.Color = metaNodeColor
+		s.Image = metaImageDefault
 
-func (s *BloodHoundGraphNode) SetBackground(nType string) {
-	switch nType {
-	case "AZApp":
-		s.Color = "#03FC84"
-	case "AZVMScaleSet":
-		s.Color = "#007CD0"
-	case "AZDevice":
-		s.Color = "#B18FCF"
-	case "AZFunctionApp":
-		s.Color = "#F4BA44"
-	case "AZGroup":
-		s.Color = "#F57C9B"
-	case "AZKeyVault":
-		s.Color = "#ED658C"
-	case "AZManagementGroup":
-		s.Color = "#BD93D8"
-	case "AZResourceGroup":
-		s.Color = "#89BD9E"
-	case "AZRole":
-		s.Color = "#ED8537"
-	case "AZServicePrincipal":
-		s.Color = "#C1D6D6"
-	case "AZSubscription":
-		s.Color = "#D2CCA1"
-	case "AZTenant":
-		s.Color = "#54F2F2"
-	case "AZUser":
-		s.Color = "#34D2EB"
-	case "AZVM":
-		s.Color = "#F9ADA0"
-	case "AZManagedCluster":
-		s.Color = "#326CE5"
-	case "AZContainerRegistry":
-		s.Color = "#0885D7"
-	case "AZWebApp":
-		s.Color = "#4696E9"
-	case "AZLogicApp":
-		s.Color = "#9EE047"
-	case "AZAutomationAccount":
-		s.Color = "#F4BA44"
-	case "User":
-		s.Color = "#17E625"
-	case "Group":
-		s.Color = "#DBE617"
-	case "Computer":
-		s.Color = "#E67873"
-	case "Container":
-		s.Color = "#F79A78"
-	case "Domain":
-		s.Color = "#17E6B9"
-	case "OU":
-		s.Color = "#FFAA00"
-	case "GPO":
-		s.Color = "#998EFD"
-	case "AIACA":
-		s.Color = "#9769F0"
-	case "RootCA":
-		s.Color = "#6968E8"
-	case "EnterpriseCA":
-		s.Color = "#4696E9"
-	case "NTAuthStore":
-		s.Color = "#D575F5"
-	case "CertTemplate":
-		s.Color = "#B153F3"
-	case "Meta":
-		s.Color = "#000"
-	default:
-		s.Color = "#EEE"
+		if tier, ok := s.Data["admintier"]; ok && tier.(int64) == 0 {
+			s.Image = metaImageTierZero
+		}
+	} else if primaryKind, ok := primaryDisplayKinds[graph.StringKind(nodeKind)]; ok {
+		switch primaryKind.Icon.Type {
+		case graphschema.DisplayNodeTypeFontAwesome:
+			s.FontIcon = &BloodHoundGraphFontIcon{
+				Text: fmt.Sprintf("%s%s", fontAwesomePrefix, primaryKind.Icon.Name),
+			}
+		default:
+			s.FontIcon = &BloodHoundGraphFontIcon{Text: primaryKind.Icon.Name}
+		}
+
+		s.Color = primaryKind.Icon.Color
+	} else {
+		s.FontIcon = &BloodHoundGraphFontIcon{
+			Text: defaultUnknownIcon,
+		}
+		s.Color = defaultIconColor
 	}
 }

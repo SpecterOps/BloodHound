@@ -53,8 +53,10 @@ export const abortEntitySectionRequest = () => {
     controller.abort();
     controller = new AbortController();
 };
+
 export const MetaNodeKind = 'Meta' as const;
-export type EntityKinds = ActiveDirectoryNodeKind | AzureNodeKind | typeof MetaNodeKind;
+export const MetaDetailNodeKind = 'MetaDetail' as const;
+export type EntityKinds = ActiveDirectoryNodeKind | AzureNodeKind;
 
 export const entityInformationEndpoints: Record<EntityKinds, (id: string, options?: RequestOptions) => Promise<any>> = {
     [AzureNodeKind.Entity]: (id: string, options?: RequestOptions) =>
@@ -133,13 +135,23 @@ export const entityInformationEndpoints: Record<EntityKinds, (id: string, option
             undefined,
             options
         ),
+    [AzureNodeKind.FederatedIdentityCredential]: (id: string, options?: RequestOptions) =>
+        apiClient.getAZEntityInfoV2(
+            'federated-identity-credentials',
+            id,
+            undefined,
+            false,
+            undefined,
+            undefined,
+            undefined,
+            options
+        ),
     [ActiveDirectoryNodeKind.Entity]: (id: string, options?: RequestOptions) => apiClient.getBaseV2(id, false, options),
     // LocalGroups and LocalUsers are entities that we handle directly and add the `Base` kind to so using getBaseV2 is an assumption but should work
     [ActiveDirectoryNodeKind.LocalGroup]: (id: string, options?: RequestOptions) =>
         apiClient.getBaseV2(id, false, options),
     [ActiveDirectoryNodeKind.LocalUser]: (id: string, options?: RequestOptions) =>
         apiClient.getBaseV2(id, false, options),
-
     [ActiveDirectoryNodeKind.AIACA]: (id: string, options?: RequestOptions) => apiClient.getAIACAV2(id, false, options),
     [ActiveDirectoryNodeKind.CertTemplate]: (id: string, options?: RequestOptions) =>
         apiClient.getCertTemplateV2(id, false, options),
@@ -166,7 +178,6 @@ export const entityInformationEndpoints: Record<EntityKinds, (id: string, option
         apiClient.getSiteServerV2(id, false, options),
     [ActiveDirectoryNodeKind.SiteSubnet]: (id: string, options?: RequestOptions) =>
         apiClient.getSiteSubnetV2(id, false, options),
-    Meta: apiClient.getMetaV2,
 };
 
 export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfoDataTableProps[]>> = {
@@ -187,6 +198,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             id,
             label: 'Inbound Object Control',
             queryType: 'azapp-inbound_object_control',
+        },
+        {
+            id,
+            label: 'Federated Identity Credentials',
+            queryType: 'azapp-federated_identity_credentials',
         },
     ],
     [AzureNodeKind.VMScaleSet]: (id: string) => [
@@ -230,6 +246,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             id,
             label: 'Roles',
             queryType: 'azgroup-roles',
+        },
+        {
+            id,
+            label: 'Eligible Roles',
+            queryType: 'azgroup-eligible-approver-roles',
         },
         {
             id,
@@ -625,6 +646,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             id,
             label: 'Roles',
             queryType: 'azuser-roles',
+        },
+        {
+            id,
+            label: 'Eligible Roles',
+            queryType: 'azuser-eligible-approver-roles',
         },
         {
             id,
@@ -1119,7 +1145,6 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             queryType: 'user-inbound_object_control',
         },
     ],
-    Meta: () => [],
 };
 
 export type EntityRelationshipEndpoint = Record<string, (params: EntitySectionEndpointParams) => Promise<any>>;
@@ -1140,6 +1165,12 @@ export const entityRelationshipEndpoints = {
     'azapp-inbound_object_control': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('applications', id, 'inbound-control', counts, skip, limit, type, {
+                signal: controller.signal,
+            })
+            .then((res) => res.data),
+    'azapp-federated_identity_credentials': ({ id, counts, skip, limit, type }) =>
+        apiClient
+            .getAZEntityInfoV2('applications', id, 'federated-identity-credentials', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
@@ -1180,6 +1211,12 @@ export const entityRelationshipEndpoints = {
     'azgroup-roles': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('groups', id, 'roles', counts, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
+    'azgroup-eligible-approver-roles': ({ id, counts, skip, limit, type }) =>
+        apiClient
+            .getAZEntityInfoV2('groups', id, 'eligible-approver-roles', counts, skip, limit, type, {
+                signal: controller.signal,
+            })
             .then((res) => res.data),
     'azgroup-inbound_object_control': ({ id, counts, skip, limit, type }) =>
         apiClient
@@ -1616,6 +1653,12 @@ export const entityRelationshipEndpoints = {
     'azuser-roles': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('users', id, 'roles', counts, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
+    'azuser-eligible-approver-roles': ({ id, counts, skip, limit, type }) =>
+        apiClient
+            .getAZEntityInfoV2('users', id, 'eligible-approver-roles', counts, skip, limit, type, {
+                signal: controller.signal,
+            })
             .then((res) => res.data),
     'azuser-execution_privileges': ({ id, counts, skip, limit, type }) =>
         apiClient

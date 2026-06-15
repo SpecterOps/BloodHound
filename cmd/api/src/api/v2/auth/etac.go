@@ -17,7 +17,6 @@
 package auth
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
@@ -26,24 +25,32 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
-	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 )
 
 // handleETACRequest will modify the user passed in to assign an etac list or grant all environment access
 // and will return an error on bad requests
 // Administrators and Power Users may not have an ETAC list applied to them
 // The user may not request all environments and have an ETAC list applied to them
-func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserRequest, roles model.Roles, user *model.User, graphDB queries.Graph) error {
+func handleETACRequest(updateUserRequest v2.UpdateUserRequest, roles model.Roles, user *model.User, graphDB queries.Graph) error {
 	if updateUserRequest.AllEnvironments.Valid || updateUserRequest.EnvironmentTargetedAccessControl != nil {
 		// Admin / Power Users can only have all_environments set to true
-		if (roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser})) &&
+		if (!hasValidRolesForETAC(roles)) &&
 			(!updateUserRequest.AllEnvironments.Bool || (updateUserRequest.EnvironmentTargetedAccessControl != nil && len(updateUserRequest.EnvironmentTargetedAccessControl.Environments) > 0)) {
 			return errors.New(api.ErrorResponseETACInvalidRoles)
 		}
 		user.AllEnvironments = updateUserRequest.AllEnvironments.Bool
+	}
+
+	// This will force admins to have valid defaults in the event that a user does not send all_environments or explore_enabled
+	if !updateUserRequest.AllEnvironments.Valid {
+		if !hasValidRolesForETAC(roles) {
+			user.AllEnvironments = true
+		}
 	}
 
 	if updateUserRequest.EnvironmentTargetedAccessControl == nil || len(updateUserRequest.EnvironmentTargetedAccessControl.Environments) == 0 {
@@ -51,7 +58,7 @@ func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserReque
 		return nil
 	}
 
-	// Both all_environments and environment_access_control was set on the request
+	// Both all_environments and environment_targeted_access_control was set on the request
 	// A user may only have all_environments true or an environment access control list
 	if updateUserRequest.AllEnvironments.Bool {
 		return errors.New(api.ErrorResponseETACBadRequest)
@@ -63,17 +70,27 @@ func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserReque
 		envIds = append(envIds, environment.EnvironmentID)
 	}
 
-	if nodes, err := graphDB.FetchNodesByObjectIDsAndKinds(ctx, graph.Kinds{
-		ad.Domain, azure.Tenant,
-	}, envIds...); err != nil {
+	if nodes, err := graphDB.GetFilteredAndSortedNodes(query.SortItems{},
+		query.And(
+			query.In(query.NodeProperty(common.ObjectID.String()), envIds),
+			query.Or(
+				query.In(query.NodeProperty(ad.DomainSID.String()), envIds),
+				query.In(query.NodeProperty(azure.TenantID.String()), envIds),
+				query.In(query.NodeProperty(graphschema.EnvironmentIDKey), envIds),
+			),
+		)); err != nil {
 		return fmt.Errorf("error fetching environments: %w", err)
-	} else if nodesByObject, err := nodeSetToObjectIDMap(nodes); err != nil {
-		return err
 	} else {
+		var validNodes = make(map[string]bool)
+		for _, node := range nodes {
+			if objectID, err := node.Properties.Get(common.ObjectID.String()).String(); err == nil {
+				validNodes[objectID] = true
+			}
+		}
 		user.EnvironmentTargetedAccessControl = make([]model.EnvironmentTargetedAccessControl, 0, len(envIds))
 		for _, envId := range envIds {
-			if _, ok := nodesByObject[envId]; !ok {
-				return fmt.Errorf("domain or tenant not found: %s", envId)
+			if !validNodes[envId] {
+				return fmt.Errorf("environment not found: %s", envId)
 			} else {
 				user.EnvironmentTargetedAccessControl = append(user.EnvironmentTargetedAccessControl, model.EnvironmentTargetedAccessControl{
 					UserID:        user.ID.String(),
@@ -86,18 +103,8 @@ func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserReque
 	return nil
 }
 
-func nodeSetToObjectIDMap(set graph.NodeSet) (map[string]bool, error) {
-	var (
-		objectIDs = make(map[string]bool)
-	)
-
-	for _, node := range set {
-		if objectID, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-			return objectIDs, err
-		} else {
-			objectIDs[objectID] = true
-		}
-	}
-
-	return objectIDs, nil
+// hasValidRolesForETAC will check the passed in roles to determine if a user can have ETAC controls applied to theem
+// returning true if they may be ETAC controlled and false if they may not
+func hasValidRolesForETAC(roles model.Roles) bool {
+	return !roles.Has(model.Role{Name: auth.RoleAdministrator}) && !roles.Has(model.Role{Name: auth.RolePowerUser}) && !roles.Has(model.Role{Name: auth.RoleAuditor})
 }

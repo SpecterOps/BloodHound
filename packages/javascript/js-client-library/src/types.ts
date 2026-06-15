@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { EnvironmentRequest } from './requests';
+
 export interface Serial {
     id: number;
     created_at: string;
@@ -29,9 +31,9 @@ export interface AssetGroupMemberParams {
     limit?: number;
 }
 
-export const SystemString = 'SYSTEM' as const;
+export const BloodHoundString = 'BloodHound' as const;
 
-type System = typeof SystemString;
+type BloodHound = typeof BloodHoundString;
 
 type ISO_DATE_STRING = string;
 
@@ -46,12 +48,12 @@ export type TimestampFields = {
 
 interface Created {
     created_at: ISO_DATE_STRING;
-    created_by: string | System;
+    created_by: string | BloodHound;
 }
 
 interface Updated {
     updated_at: ISO_DATE_STRING;
-    updated_by: string | System;
+    updated_by: string | BloodHound;
 }
 
 interface Deleted {
@@ -85,25 +87,28 @@ export interface AssetGroupTagCertificationRecord {
     created_at: string;
     asset_group_tag_id: number;
     certified_by: string;
-    certified: number;
+    certified: CertificationType;
 }
 
 export const CertificationPending = 0 as const;
 export const CertificationRevoked = 1 as const;
 export const CertificationManual = 2 as const;
 export const CertificationAuto = 3 as const;
+export const AllStatuses = 4 as const;
 
 export type CertificationType =
     | typeof CertificationPending
     | typeof CertificationRevoked
     | typeof CertificationManual
-    | typeof CertificationAuto;
+    | typeof CertificationAuto
+    | typeof AllStatuses;
 
 export const CertificationTypeMap: Record<CertificationType, string> = {
     [CertificationPending]: 'Pending',
     [CertificationRevoked]: 'Rejected',
     [CertificationManual]: 'User Certified',
-    [CertificationAuto]: 'Automatic Certification',
+    [CertificationAuto]: 'Automatic',
+    [AllStatuses]: 'All Statuses',
 };
 
 export type AssetGroupTagCertificationParams = {
@@ -112,6 +117,8 @@ export type AssetGroupTagCertificationParams = {
     primary_kind?: string;
     created_at?: string;
 };
+
+export const HighestPrivilegePosition = 1 as const;
 
 export const AssetGroupTagTypeZone = 1 as const;
 export const AssetGroupTagTypeLabel = 2 as const;
@@ -123,14 +130,26 @@ export type AssetGroupTagType =
     | typeof AssetGroupTagTypeOwned;
 
 export const AssetGroupTagTypeMap = {
-    1: 'zone',
-    2: 'label',
-    3: 'owned',
+    [AssetGroupTagTypeZone]: 'zone',
+    [AssetGroupTagTypeLabel]: 'label',
+    [AssetGroupTagTypeOwned]: 'owned',
 } as const;
 
+export const RuleKey = 'selector' as const;
+export const RulesKey = 'selectors' as const;
+export const CustomRulesKey = 'custom_selectors' as const;
+export const DefaultRulesKey = 'default_selectors' as const;
+export const DisabledRulesKey = 'disabled_selectors' as const;
+
+export const ObjectKey = 'member' as const;
+export const ObjectsKey = 'members' as const;
+
 export interface AssetGroupTagCounts {
-    selectors: number;
-    members: number;
+    [RulesKey]: number;
+    [CustomRulesKey]: number;
+    [DefaultRulesKey]: number;
+    [DisabledRulesKey]: number;
+    [ObjectsKey]: number;
 }
 
 export interface AssetGroupTag extends Created, Updated, Deleted {
@@ -177,8 +196,8 @@ export type AssetGroupTagSelectorAutoCertifyType =
 
 export const AssetGroupTagSelectorAutoCertifyMap = {
     [AssetGroupTagSelectorAutoCertifyDisabled]: 'Off',
-    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Initial members',
-    [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All members',
+    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Direct Objects',
+    [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All Objects',
 } as const;
 
 export interface AssetGroupTagSelectorCounts {
@@ -222,6 +241,7 @@ export interface AssetGroupTagMember {
     primary_kind: string;
     object_id: string;
     name: string;
+    source: number;
 }
 
 export interface CreateSAMLProviderFormInputs extends SSOProviderConfiguration {
@@ -272,7 +292,6 @@ export interface SSOProvider extends Serial, SSOProviderConfiguration {
 export interface ListSSOProvidersResponse {
     data: SSOProvider[];
 }
-
 export interface User {
     id: string;
     sso_provider_id: number | null;
@@ -287,6 +306,8 @@ export interface User {
     updated_at: string;
     is_disabled: boolean;
     eula_accepted: boolean;
+    all_environments?: boolean;
+    environment_targeted_access_control?: EnvironmentRequest[] | null;
 }
 
 export interface UserMinimal {
@@ -338,7 +359,7 @@ export interface LoginResponse {
 }
 
 export type CommunityCollectorType = 'sharphound' | 'azurehound';
-export type EnterpriseCollectorType = 'sharphound_enterprise' | 'azurehound_enterprise';
+export type EnterpriseCollectorType = 'sharphound_enterprise' | 'azurehound_enterprise' | 'openhound';
 export type CollectorType = CommunityCollectorType | EnterpriseCollectorType;
 
 export interface CollectorManifest {
@@ -453,10 +474,10 @@ export type CustomNodeKindType = {
 
 export type OuDetails = {
     objectid: string;
-    name: string;
-    exists: boolean;
-    distinguishedname: string;
-    type: string;
+    name?: string;
+    exists?: boolean;
+    distinguishedname?: string;
+    type?: string;
 };
 
 export type DomainDetails = {
@@ -547,6 +568,8 @@ export type Client = {
     version: string;
     user_sid: string;
     type: string;
+    issuer_address: string;
+    issuer_address_override: string;
 };
 
 export type FileIngestJob = TimestampFields & {
@@ -564,7 +587,23 @@ export type FileIngestJob = TimestampFields & {
 
 export type FileIngestCompletedTask = TimestampFields & {
     errors: string[];
+    warnings: string[];
     file_name: string;
     id: number;
     parent_file_name: string;
+};
+
+export const WindowsAuth = 'windows' as const;
+export const BloodHoundAuth = 'bloodhound' as const;
+
+export type AuthenticationMethod = typeof BloodHoundAuth | typeof WindowsAuth;
+
+export type FindingAssetsResponse = {
+    long_description: string;
+    long_remediation: string;
+    references: string;
+    short_description: string;
+    short_remediation: string;
+    title: string;
+    type: string;
 };

@@ -247,6 +247,48 @@ func ListEntityRoles(ctx context.Context, db graph.Database, objectID string, sk
 	})
 }
 
+func ListEntityEligibleAndApproverRoles(ctx context.Context, db graph.Database, objectID string) (graph.NodeSet, error) {
+	var combinedNodeSet graph.NodeSet
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
+			return err
+		} else if eligibleRoles, err := FetchEntityEligibleRoles(tx, node, 0, 0); err != nil {
+			return err
+		} else if approverRoles, err := FetchEntityApproverRoles(tx, node, 0, 0); err != nil {
+			return err
+		} else {
+			combinedNodeSet = eligibleRoles
+			combinedNodeSet.AddSet(approverRoles)
+			return nil
+		}
+	}); err != nil {
+		return nil, err
+	}
+	return combinedNodeSet, nil
+
+}
+
+func ListEntityEligibleAndApproverRolePaths(ctx context.Context, db graph.Database, objectID string) (graph.PathSet, error) {
+	combinedPaths := graph.NewPathSet()
+
+	return combinedPaths, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
+			return err
+		} else {
+			if eligibleRolePaths, err := FetchEntityEligibleRolePaths(tx, node); err != nil {
+				return err
+			} else if approverRolePaths, err := FetchEntityApproverRolePaths(tx, node); err != nil {
+				return err
+			} else {
+				combinedPaths.AddPathSet(eligibleRolePaths)
+				combinedPaths.AddPathSet(approverRolePaths)
+				return nil
+			}
+		}
+	})
+}
+
 func ListEntityExecutionPrivilegePaths(ctx context.Context, db graph.Database, objectID string, direction graph.Direction) (graph.PathSet, error) {
 	var paths graph.PathSet
 
@@ -470,6 +512,32 @@ func ListRoleApproverPaths(ctx context.Context, db graph.Database, objectID stri
 			return err
 		} else {
 			paths, err = FetchRoleApproverPaths(tx, node)
+			return err
+		}
+	})
+}
+
+func ListAppFederatedIdentityCredentialPaths(ctx context.Context, db graph.Database, objectID string) (graph.PathSet, error) {
+	var paths graph.PathSet
+
+	return paths, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
+			return err
+		} else {
+			paths, err = FetchApplicationFederatedIdentityCredentialPaths(tx, node, 0, 0)
+			return err
+		}
+	})
+}
+
+func ListAppFederatedIdentityCredentials(ctx context.Context, db graph.Database, objectID string, skip, limit int) (graph.NodeSet, error) {
+	var nodes graph.NodeSet
+
+	return nodes, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
+			return err
+		} else {
+			nodes, err = FetchApplicationFederatedIdentityCredentialList(tx, node, skip, limit)
 			return err
 		}
 	})

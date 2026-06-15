@@ -19,9 +19,21 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import Users from '.';
 import { bloodHoundUsersHandlers, testAuthenticatedUser, testBloodHoundUsers, testSSOProviders } from '../../mocks';
-import { render, screen, within } from '../../test-utils';
+import { render, screen, waitFor, within } from '../../test-utils';
 
 const server = setupServer(...bloodHoundUsersHandlers);
+
+const selfHandler = (roles: { name: string; permissions: { authority: string; name: string }[] }[]) =>
+    rest.get('/api/v2/self', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    id: '1',
+                    roles,
+                },
+            })
+        );
+    });
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
@@ -51,7 +63,7 @@ describe('Users', () => {
         expect(within(testUserRow).getByRole('button')).toBeInTheDocument();
 
         // open the update user dialog for Marshall
-        await userEvent.click(within(testUserRow).getByRole('button', { name: 'bars' }));
+        await userEvent.click(within(testUserRow).getByRole('button', { name: 'Show user actions' }));
         await screen.findByRole('menuitem', { name: /update user/i, hidden: false });
         await userEvent.click(screen.getByRole('menuitem', { name: /update user/i, hidden: false }));
         expect(await screen.findByTestId('update-user-dialog')).toBeVisible();
@@ -62,7 +74,7 @@ describe('Users', () => {
         await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
         // the update user dialog should close and the password reset dialog should open
-        expect(await screen.findByTestId('update-user-dialog')).not.toBeVisible();
+        expect(screen.queryByTestId('update-user-dialog')).toBeNull();
         expect(await screen.findByTestId('password-dialog')).toBeVisible();
 
         // the force password reset option should be checked
@@ -82,12 +94,80 @@ describe('Users', () => {
         expect(rows).toHaveLength(1);
     });
 
+    it('enables the create user button when the user is admin role', async () => {
+        server.use(
+            selfHandler([
+                {
+                    name: 'Administrator',
+                    permissions: [{ authority: 'auth', name: 'ManageUsers' }],
+                },
+            ])
+        );
+
+        render(<Users />);
+
+        await waitFor(() => expect(screen.getByTestId('manage-users_button-create-user')).not.toBeDisabled());
+    });
+
+    it('disables the create user button when the user is auditor role', async () => {
+        server.use(
+            selfHandler([
+                {
+                    name: 'Auditor',
+                    permissions: [{ authority: 'auth', name: 'ReadUsers' }],
+                },
+            ])
+        );
+
+        render(<Users />);
+
+        await waitFor(() => expect(screen.getByTestId('manage-users_button-create-user')).toBeDisabled());
+    });
+
+    it('enables the user actions menu when the user is admin role', async () => {
+        server.use(
+            selfHandler([
+                {
+                    name: 'Administrator',
+                    permissions: [{ authority: 'auth', name: 'ManageUsers' }],
+                },
+            ])
+        );
+
+        render(<Users />);
+
+        const testAdminRow = await screen.findByRole('row', { name: /test_admin/i });
+
+        await waitFor(() =>
+            expect(within(testAdminRow).getByRole('button', { name: 'Show user actions' })).not.toBeDisabled()
+        );
+    });
+
+    it('disables the user actions menu when the user is auditor role', async () => {
+        server.use(
+            selfHandler([
+                {
+                    name: 'Auditor',
+                    permissions: [{ authority: 'auth', name: 'ReadUsers' }],
+                },
+            ])
+        );
+
+        render(<Users />);
+
+        const testAdminRow = await screen.findByRole('row', { name: /test_admin/i });
+
+        await waitFor(() =>
+            expect(within(testAdminRow).getByRole('button', { name: 'Show user actions' })).toBeDisabled()
+        );
+    });
+
     it('does not show the "Disable MFA" context menu option for users without MFA enabled', async () => {
         render(<Users />);
 
         const noMFARow = await screen.findByRole('row', { name: /test_admin/i });
 
-        await userEvent.click(within(noMFARow).getByRole('button', { name: 'bars' }));
+        await userEvent.click(within(noMFARow).getByRole('button', { name: 'Show user actions' }));
         await screen.findByRole('menuitem', { name: /update user/i, hidden: false });
         expect(screen.queryByRole('menuitem', { name: /disable mfa/i, hidden: false })).not.toBeInTheDocument();
     });
@@ -97,7 +177,7 @@ describe('Users', () => {
 
         const withMFARow = await screen.findByRole('row', { name: /mfa_user/i });
 
-        await userEvent.click(within(withMFARow).getByRole('button', { name: 'bars' }));
+        await userEvent.click(within(withMFARow).getByRole('button', { name: 'Show user actions' }));
         expect(screen.queryByRole('menuitem', { name: /disable mfa/i, hidden: false })).toBeInTheDocument();
     });
 
@@ -106,7 +186,7 @@ describe('Users', () => {
 
         const withMFARow = await screen.findByRole('row', { name: /mfa_user/i });
 
-        await userEvent.click(within(withMFARow).getByRole('button', { name: 'bars' }));
+        await userEvent.click(within(withMFARow).getByRole('button', { name: 'Show user actions' }));
         await userEvent.click(screen.getByRole('menuitem', { name: /disable mfa/i }));
 
         const dialog = screen.queryByRole('dialog', { name: /disable multi-factor authentication/i });
@@ -131,7 +211,7 @@ describe('Users', () => {
 
         const withMFARow = await screen.findByRole('row', { name: /mfa_user/i });
 
-        await userEvent.click(within(withMFARow).getByRole('button', { name: 'bars' }));
+        await userEvent.click(within(withMFARow).getByRole('button', { name: 'Show user actions' }));
         await userEvent.click(screen.getByRole('menuitem', { name: /disable mfa/i }));
 
         const dialog = screen.queryByRole('dialog', { name: /disable multi-factor authentication/i });

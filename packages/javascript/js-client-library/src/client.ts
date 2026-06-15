@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import {
     CreateAzureHoundClientRequest,
     CreateAzureHoundEventRequest,
     CreateOIDCProviderRequest,
+    CreateOpenHoundClientRequest,
     CreateScheduledJobRequest,
     CreateSelectorRequest,
     CreateSharpHoundClientRequest,
@@ -43,6 +44,7 @@ import {
     UpdateCertificationRequest,
     UpdateConfigurationRequest,
     UpdateOIDCProviderRequest,
+    UpdateOpenHoundClientRequest,
     UpdateSelectorRequest,
     UpdateSharpHoundClientRequest,
     UpdateSharpHoundEventRequest,
@@ -58,10 +60,10 @@ import {
     AssetGroupTagMemberInfoResponse,
     AssetGroupTagMembersResponse,
     AssetGroupTagResponse,
+    AssetGroupTagsCertification,
     AssetGroupTagSearchResponse,
     AssetGroupTagSelectorResponse,
     AssetGroupTagSelectorsResponse,
-    AssetGroupTagsCertification,
     AssetGroupTagsHistory,
     AssetGroupTagsResponse,
     AzureDataQualityResponse,
@@ -71,14 +73,19 @@ import {
     EndFileIngestResponse,
     Environment,
     FileIngestCompletedTasksResponse,
+    FindingSchemaResponse,
     GetClientResponse,
     GetCollectorsResponse,
     GetCommunityCollectorsResponse,
     GetConfigurationResponse,
     GetCustomNodeKindsResponse,
+    GetEdgeTypesResponse,
     GetEnterpriseCollectorsResponse,
     GetExportQueryResponse,
+    GetExtensionsResponse,
     GetScheduledJobDisplayResponse,
+    GetSelfResponse,
+    GraphKindsResponse,
     GraphResponse,
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
@@ -91,10 +98,12 @@ import {
     SavedQuery,
     SavedQueryPermissionsResponse,
     StartFileIngestResponse,
+    UnifiedFindingResponse,
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
 } from './responses';
 import * as types from './types';
+import { FindingAssetsResponse } from './types';
 
 /** Return the value as a string with the given prefix */
 const prefixValue = (prefix: string, value: any) => (value ? `${prefix}:${value.toString()}` : undefined);
@@ -130,9 +139,6 @@ class BHEAPIClient {
                         q: keyword,
                         type: type,
                     },
-                    headers: {
-                        Prefer: 'wait=60',
-                    },
                 },
                 options
             )
@@ -142,7 +148,7 @@ class BHEAPIClient {
     cypherSearch = (query: string, options?: RequestOptions, includeProperties?: boolean) => {
         return this.baseClient.post<GraphResponse>(
             '/api/v2/graphs/cypher',
-            { query, include_properties: includeProperties || false },
+            { query, include_properties: includeProperties || false, headers: options?.headers },
             options
         );
     };
@@ -237,8 +243,7 @@ class BHEAPIClient {
             )
         );
 
-    getKinds = (options?: RequestOptions) =>
-        this.baseClient.get<BasicResponse<{ kinds: string[] }>>('/api/v2/graphs/kinds', options);
+    getKinds = (options?: RequestOptions) => this.baseClient.get<GraphKindsResponse>('/api/v2/graphs/kinds', options);
 
     getSourceKinds = (options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<{ kinds: { id: number; name: string }[] }>>(
@@ -279,7 +284,12 @@ class BHEAPIClient {
         );
 
     getAssetGroupTagsCertifications = (options?: RequestOptions) => {
-        return this.baseClient.get<AssetGroupTagsCertification>(`/api/v2/asset-group-tags/certifications`, options);
+        return this.baseClient.get<AssetGroupTagsCertification>(`/api/v2/asset-group-tags/certifications`, {
+            paramsSerializer: {
+                indexes: null,
+            },
+            ...options,
+        });
     };
 
     getAssetGroupTags = (options?: RequestOptions) =>
@@ -314,29 +324,15 @@ class BHEAPIClient {
             options
         );
 
-    getAssetGroupTagSelectors = (
-        tagId: number | string,
-        skip: number | string,
-        limit: number,
-        sort_by: string,
-        environments?: string[],
-        options?: RequestOptions
-    ) =>
+    getAssetGroupTagSelectors = (tagId: number | string, options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagSelectorsResponse>(`/api/v2/asset-group-tags/${tagId}/selectors`, {
             ...options,
-            params: {
-                ...options?.params,
-                skip,
-                limit,
-                environments,
-                sort_by,
-            },
             paramsSerializer: { indexes: null },
         });
 
-    getAssetGroupTagSelector = (tagId: number | string, selectorId: number | string, options?: RequestOptions) =>
+    getAssetGroupTagSelector = (tagId: number | string, ruleId: number | string, options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagSelectorResponse>(
-            `/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`,
+            `/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}`,
             options
         );
 
@@ -345,13 +341,13 @@ class BHEAPIClient {
 
     updateAssetGroupTagSelector = (
         tagId: number | string,
-        selectorId: number | string,
+        ruleId: number | string,
         updatedValues: UpdateSelectorRequest,
         options?: RequestOptions
-    ) => this.baseClient.patch(`/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`, updatedValues, options);
+    ) => this.baseClient.patch(`/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}`, updatedValues, options);
 
-    deleteAssetGroupTagSelector = (tagId: string | number, selectorId: string | number, options?: RequestOptions) =>
-        this.baseClient.delete(`/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`, options);
+    deleteAssetGroupTagSelector = (tagId: string | number, ruleId: string | number, options?: RequestOptions) =>
+        this.baseClient.delete(`/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}`, options);
 
     getAssetGroupTagMembers = (
         assetGroupTagId: number | string,
@@ -359,6 +355,7 @@ class BHEAPIClient {
         limit: number,
         sort_by: string,
         environments?: string[],
+        primary_kind?: string,
         options?: RequestOptions
     ) =>
         this.baseClient.get<AssetGroupTagMembersResponse>(`/api/v2/asset-group-tags/${assetGroupTagId}/members`, {
@@ -366,6 +363,7 @@ class BHEAPIClient {
             params: {
                 ...options?.params,
                 environments,
+                primary_kind: primary_kind ? `eq:${primary_kind}` : undefined,
                 skip,
                 limit,
                 sort_by,
@@ -375,20 +373,22 @@ class BHEAPIClient {
 
     getAssetGroupTagSelectorMembers = (
         tagId: number | string,
-        selectorId: number | string,
+        ruleId: number | string,
         skip: number,
         limit: number,
         sort_by: string,
         environments?: string[],
+        primary_kind?: string,
         options?: RequestOptions
     ) =>
         this.baseClient.get<AssetGroupTagMembersResponse>(
-            `/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}/members`,
+            `/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}/members`,
             {
                 ...options,
                 params: {
                     ...options?.params,
                     environments,
+                    primary_kind: primary_kind ? `eq:${primary_kind}` : undefined,
                     skip,
                     limit,
                     sort_by,
@@ -403,6 +403,21 @@ class BHEAPIClient {
             params: { ...options?.params, environments },
             paramsSerializer: { indexes: null },
         });
+
+    getAssetGroupTagRuleMembersCount = (
+        tagId: string,
+        ruleId: string,
+        environments?: string[],
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get<AssetGroupMemberCountsResponse>(
+            `/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}/members/counts`,
+            {
+                ...options,
+                params: { ...options?.params, environments },
+                paramsSerializer: { indexes: null },
+            }
+        );
 
     assetGroupTagsPreviewSelectors = (payload: PreviewSelectorsRequest, options: RequestOptions) => {
         return this.baseClient.post<PreviewSelectorsResponse>(
@@ -478,6 +493,12 @@ class BHEAPIClient {
     getLatestMetaNode = (environmentId: string, options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<types.FlatGraphResponse>>(`/api/v2/meta-nodes/${environmentId}`, options);
 
+    getFindings = (key: string, options?: RequestOptions) =>
+        this.baseClient.get<BasicResponse<FindingAssetsResponse>>(`/api/v2/findings/${key}`, options);
+
+    getUnifiedFindings = (options?: RequestOptions) =>
+        this.baseClient.get<UnifiedFindingResponse>('/api/v2/attack-paths/findings', options);
+
     /**
      * getFindingDetails returns data associated with a finding for a given environment
      */
@@ -528,7 +549,7 @@ class BHEAPIClient {
 
     changeFindingAcceptance = (
         attackPathId: string,
-        findingType: string,
+        findingName: string,
         accepted: boolean,
         acceptUntil?: Date,
         options?: RequestOptions
@@ -536,7 +557,7 @@ class BHEAPIClient {
         this.baseClient.put(
             `/api/v2/attack-paths/${attackPathId}/acceptance`,
             {
-                risk_type: findingType,
+                risk_type: findingName,
                 accepted: accepted,
                 accept_until: acceptUntil && acceptUntil.toISOString(),
             },
@@ -553,13 +574,19 @@ class BHEAPIClient {
     getAvailableFindingTypes = (environmentId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/domains/${environmentId}/available-types`, options);
 
-    exportRiskFindings = (environmentId: string, findingType: string, accepted?: boolean, options?: RequestOptions) =>
+    getFindingSchemas = (skip: number = 0, options?: RequestOptions) =>
+        this.baseClient.get<FindingSchemaResponse>(
+            '/api/v2/extensions-findings',
+            Object.assign({ params: { skip } }, options)
+        );
+
+    exportRiskFindings = (environmentId: string, findingName: string, accepted?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/domains/${environmentId}/attack-path-findings`,
             Object.assign(
                 {
                     params: {
-                        finding: findingType,
+                        finding: findingName,
                         accepted: accepted,
                     },
                     responseType: 'blob',
@@ -746,15 +773,17 @@ class BHEAPIClient {
             )
         );
 
-    createClient = (client: CreateSharpHoundClientRequest | CreateAzureHoundClientRequest, options?: RequestOptions) =>
-        this.baseClient.post('/api/v2/clients', client, options);
+    createClient = (
+        client: CreateSharpHoundClientRequest | CreateAzureHoundClientRequest | CreateOpenHoundClientRequest,
+        options?: RequestOptions
+    ) => this.baseClient.post('/api/v2/clients', client, options);
 
     getClient = (clientId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/clients/${clientId}`, options);
 
     updateClient = (
         clientId: string,
-        client: UpdateSharpHoundClientRequest | UpdateAzureHoundClientRequest,
+        client: UpdateSharpHoundClientRequest | UpdateAzureHoundClientRequest | UpdateOpenHoundClientRequest,
         options?: RequestOptions
     ) => this.baseClient.put(`/api/v2/clients/${clientId}`, client, options);
 
@@ -948,6 +977,9 @@ class BHEAPIClient {
     endFileIngest = (ingestId: string) =>
         this.baseClient.post<EndFileIngestResponse>(`/api/v2/file-upload/${ingestId}/end`);
 
+    uploadSchemaFile = (json: any, options?: RequestOptions) =>
+        this.baseClient.put('/api/v2/extensions', json, options);
+
     /* custom node kinds */
     getCustomNodeKinds = (options?: RequestOptions) =>
         this.baseClient.get<GetCustomNodeKindsResponse>('/api/v2/custom-nodes', options);
@@ -979,7 +1011,7 @@ class BHEAPIClient {
     login = (credentials: LoginRequest, options?: RequestOptions) =>
         this.baseClient.post<types.LoginResponse>('/api/v2/login', credentials, options);
 
-    getSelf = (options?: RequestOptions) => this.baseClient.get('/api/v2/self', options);
+    getSelf = (options?: RequestOptions) => this.baseClient.get<GetSelfResponse>('/api/v2/self', options);
 
     logout = (options?: RequestOptions) => this.baseClient.post('/api/v2/logout', options);
 
@@ -1083,35 +1115,10 @@ class BHEAPIClient {
         this.baseClient.get(`/api/v2/bloodhound-users/${userId}`, options);
 
     createUser = (user: CreateUserRequest, options?: RequestOptions) =>
-        this.baseClient.post(
-            '/api/v2/bloodhound-users',
-            {
-                first_name: user.firstName,
-                last_name: user.lastName,
-                email_address: user.emailAddress,
-                principal: user.principal,
-                roles: user.roles,
-                sso_provider_id: user.SSOProviderId,
-                secret: user.password,
-                needs_password_reset: user.needsPasswordReset,
-            },
-            options
-        );
+        this.baseClient.post('/api/v2/bloodhound-users', user, options);
 
     updateUser = (userId: string, user: UpdateUserRequest, options?: RequestOptions) =>
-        this.baseClient.patch(
-            `/api/v2/bloodhound-users/${userId}`,
-            {
-                first_name: user.firstName,
-                last_name: user.lastName,
-                email_address: user.emailAddress,
-                principal: user.principal,
-                roles: user.roles,
-                sso_provider_id: user.SSOProviderId,
-                is_disabled: user.is_disabled,
-            },
-            options
-        );
+        this.baseClient.patch(`/api/v2/bloodhound-users/${userId}`, user, options);
 
     deleteUser = (userId: string, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/bloodhound-users/${userId}`, options);
@@ -2754,6 +2761,7 @@ class BHEAPIClient {
                         start_node: startNode,
                         end_node: endNode,
                         relationship_kinds: relationshipKinds,
+                        only_traversable: true,
                     },
                 },
                 options
@@ -2815,6 +2823,17 @@ class BHEAPIClient {
 
     updateConfiguration = (payload: UpdateConfigurationRequest, options?: RequestOptions) =>
         this.baseClient.put<UpdateConfigurationResponse>('/api/v2/config', payload, options);
+
+    getEdgeTypes = (options?: RequestOptions) =>
+        this.baseClient.get<GetEdgeTypesResponse>('/api/v2/extensions-edges', options);
+
+    getDogTags = (options?: RequestOptions) => this.baseClient.get('/api/v2/dog-tags', options);
+
+    getExtensions = (options?: RequestOptions) =>
+        this.baseClient.get<GetExtensionsResponse>('/api/v2/extensions', options);
+
+    deleteExtension = (extensionId: string, options?: RequestOptions): Promise<AxiosResponse<void>> =>
+        this.baseClient.delete(`/api/v2/extensions/${extensionId}`, options);
 }
 
 export default BHEAPIClient;

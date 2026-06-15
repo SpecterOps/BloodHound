@@ -22,6 +22,7 @@ type CompletedTask struct {
 	FileName       string         `json:"file_name"`
 	ParentFileName string         `json:"parent_file_name"`
 	Errors         pq.StringArray `json:"errors" gorm:"type:text[]"`
+	Warnings       pq.StringArray `json:"warnings" gorm:"type:text[]"`
 
 	BigSerial
 }

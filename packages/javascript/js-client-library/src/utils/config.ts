@@ -16,7 +16,7 @@
 
 import { ConfigurationWithMetadata, GetConfigurationResponse } from '../responses';
 
-/* 
+/*
 A collection of types and helper functions for working with values from the config endpoint.
 
 Intended Usage:
@@ -37,6 +37,11 @@ export enum ConfigurationKey {
     Reconciliation = 'analysis.reconciliation',
     PruneTTL = 'prune.ttl',
     Tiering = 'analysis.tiering',
+    TimeoutLimit = 'api.timeout_limit',
+    APITokens = 'auth.api_tokens',
+    APITokenExpiration = 'auth.api_token_expiration',
+    ScheduledAnalysis = 'analysis.scheduled',
+    SupportAccountProvisioning = 'auth.support_account_provisioning',
 }
 
 export type PasswordExpirationConfiguration = {
@@ -77,11 +82,48 @@ export type TieringConfiguration = {
     };
 };
 
+export type ScheduledAnalysisConfiguration = {
+    key: ConfigurationKey.ScheduledAnalysis;
+    value: {
+        rrule: string;
+        enabled: boolean;
+    };
+};
+
 export type PruneTTLConfiguration = {
     key: ConfigurationKey.PruneTTL;
     value: {
         has_session_edge_ttl: string;
         base_ttl: string;
+    };
+};
+
+export type TimeoutLimitConfiguration = {
+    key: ConfigurationKey.TimeoutLimit;
+    value: {
+        enabled: boolean;
+    };
+};
+
+export type APITokensConfiguration = {
+    key: ConfigurationKey.APITokens;
+    value: {
+        enabled: boolean;
+    };
+};
+
+export type APITokenExpirationConfiguration = {
+    key: ConfigurationKey.APITokenExpiration;
+    value: {
+        enabled: boolean;
+        expiration_period: number;
+    };
+};
+
+export type SupportAccountConfiguration = {
+    key: ConfigurationKey.SupportAccountProvisioning;
+    value: {
+        enabled: boolean;
     };
 };
 
@@ -91,7 +133,12 @@ export type ConfigurationPayload =
     | CitrixConfiguration
     | ReconciliationConfiguration
     | PruneTTLConfiguration
-    | TieringConfiguration;
+    | TieringConfiguration
+    | APITokensConfiguration
+    | APITokenExpirationConfiguration
+    | ScheduledAnalysisConfiguration
+    | TimeoutLimitConfiguration
+    | SupportAccountConfiguration;
 
 export const getConfigurationFromKey = (config: GetConfigurationResponse | undefined, key: ConfigurationKey) => {
     return config?.data.find((c) => c.key === key);
@@ -149,4 +196,49 @@ export const parseTieringConfiguration = (
     const config = getConfigurationFromKey(response, key);
 
     return config?.key === key ? config : undefined;
+};
+
+export const parseTimeoutLimitConfiguration = (
+    response: GetConfigurationResponse | undefined
+): ConfigurationWithMetadata<TimeoutLimitConfiguration> | undefined => {
+    const key = ConfigurationKey.TimeoutLimit;
+    const config = getConfigurationFromKey(response, key);
+
+    return config?.key === key ? config : undefined;
+};
+
+export const parseAPITokensConfiguration = (
+    response: GetConfigurationResponse | undefined
+): ConfigurationWithMetadata<APITokensConfiguration> | undefined => {
+    const key = ConfigurationKey.APITokens;
+    const config = getConfigurationFromKey(response, key);
+
+    return config?.key === key ? config : undefined;
+};
+
+export const parseAPITokenExpirationConfiguration = (
+    response: GetConfigurationResponse | undefined
+): ConfigurationWithMetadata<APITokenExpirationConfiguration> | undefined => {
+    const key = ConfigurationKey.APITokenExpiration;
+    const config = getConfigurationFromKey(response, key);
+
+    return config?.key === key ? config : undefined;
+};
+
+export const parseScheduledAnalysisConfiguration = (
+    response: GetConfigurationResponse | undefined
+): ConfigurationWithMetadata<ScheduledAnalysisConfiguration> | undefined => {
+    const key = ConfigurationKey.ScheduledAnalysis;
+    const config = getConfigurationFromKey(response, key);
+
+    return config?.key === key ? config : undefined;
+};
+
+export const parseSupportAccountConfiguration = (
+    response: GetConfigurationResponse | undefined
+): ConfigurationWithMetadata<SupportAccountConfiguration> | undefined => {
+    const key = ConfigurationKey.SupportAccountProvisioning;
+    const config = getConfigurationFromKey(response, key);
+
+    return config?.key == key ? config : undefined;
 };
