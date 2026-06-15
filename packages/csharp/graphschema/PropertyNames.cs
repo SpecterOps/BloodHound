@@ -181,6 +181,10 @@ public static readonly string AdminSDHolderProtected = "adminsdholderprotected";
 public static readonly string ServicePrincipalNames = "serviceprincipalnames";
 public static readonly string GPOStatusRaw = "gpostatusraw";
 public static readonly string GPOStatus = "gpostatus";
+public static readonly string ManagedAccountPrecededByLink = "managedaccountprecededbylink";
+public static readonly string SupersededManagedAccountLink = "supersededmanagedaccountlink";
+public static readonly string SupersededManagedAccountState = "supersededmanagedaccountstate";
+public static readonly string DelegatedMSAState = "delegatedmsastate";
 
 }
 }

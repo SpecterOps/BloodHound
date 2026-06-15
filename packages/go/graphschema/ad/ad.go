@@ -28,6 +28,7 @@ var (
 	Entity                      = graph.StringKind("Base")
 	User                        = graph.StringKind("User")
 	Computer                    = graph.StringKind("Computer")
+	DelegatedMSA                           = graph.StringKind("DelegatedMSA")
 	Group                       = graph.StringKind("Group")
 	GPO                         = graph.StringKind("GPO")
 	OU                          = graph.StringKind("OU")
@@ -129,6 +130,19 @@ var (
 	WriteAltSecurityIdentities  = graph.StringKind("WriteAltSecurityIdentities")
 	WritePublicInformation      = graph.StringKind("WritePublicInformation")
 	ProtectAdminGroups          = graph.StringKind("ProtectAdminGroups")
+	ReanimateTombstones                    = graph.StringKind("ReanimateTombstones")
+	CreateChild                            = graph.StringKind("CreateChild")
+	CreateChildAll                         = graph.StringKind("CreateChildAll")
+	CreateChildDMSA                        = graph.StringKind("CreateChildDMSA")
+	WriteCommonName                        = graph.StringKind("WriteCommonName")
+	WriteRDN                               = graph.StringKind("WriteRDN")
+	WriteMsDSManagedAccountPrecededByLink  = graph.StringKind("WriteMsDSManagedAccountPrecededByLink")
+	WriteMsDSSupersededManagedAccountLink  = graph.StringKind("WriteMsDSSupersededManagedAccountLink")
+	WriteMsDSDelegatedMSAState             = graph.StringKind("WriteMsDSDelegatedMSAState")
+	WriteMsDSGroupMSAMembership            = graph.StringKind("WriteMsDSGroupMSAMembership")
+	WriteMsDSSupersededServiceAccountState = graph.StringKind("WriteMsDSSupersededServiceAccountState")
+	CanUseBadSuccessor                     = graph.StringKind("CanUseBadSuccessor")
+	CanReanimateTombstone                  = graph.StringKind("CanReanimateTombstone")
 )
 
 type Property string
@@ -274,6 +288,10 @@ const (
 	ServicePrincipalNames                         Property = "serviceprincipalnames"
 	GPOStatusRaw                                  Property = "gpostatusraw"
 	GPOStatus                                     Property = "gpostatus"
+	ManagedAccountPrecededByLink                  Property = "managedaccountprecededbylink"
+	SupersededManagedAccountLink                  Property = "supersededmanagedaccountlink"
+	SupersededManagedAccountState                 Property = "supersededmanagedaccountstate"
+	DelegatedMSAState                             Property = "delegatedmsastate"
 )
 
 func AllProperties() []Property {
@@ -561,6 +579,14 @@ func ParseProperty(source string) (Property, error) {
 		return GPOStatusRaw, nil
 	case "gpostatus":
 		return GPOStatus, nil
+	case "managedaccountprecededbylink":
+		return ManagedAccountPrecededByLink, nil
+	case "supersededmanagedaccountlink":
+		return SupersededManagedAccountLink, nil
+	case "supersededmanagedaccountstate":
+		return SupersededManagedAccountState, nil
+	case "delegatedmsastate":
+		return DelegatedMSAState, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -847,6 +873,14 @@ func (s Property) String() string {
 		return string(GPOStatusRaw)
 	case GPOStatus:
 		return string(GPOStatus)
+	case ManagedAccountPrecededByLink:
+		return string(ManagedAccountPrecededByLink)
+	case SupersededManagedAccountLink:
+		return string(SupersededManagedAccountLink)
+	case SupersededManagedAccountState:
+		return string(SupersededManagedAccountState)
+	case DelegatedMSAState:
+		return string(DelegatedMSAState)
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -1133,6 +1167,14 @@ func (s Property) Name() string {
 		return "GPO Status (Raw)"
 	case GPOStatus:
 		return "GPO Status"
+	case ManagedAccountPrecededByLink:
+		return "Managed Account Preceded By Link"
+	case SupersededManagedAccountLink:
+		return "Superseded Managed Account Link"
+	case SupersededManagedAccountState:
+		return "Superseded Managed Account State"
+	case DelegatedMSAState:
+		return "Delegated MSA State"
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}

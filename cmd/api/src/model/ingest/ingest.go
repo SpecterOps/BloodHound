@@ -46,6 +46,7 @@ type DataType string
 const (
 	DataTypeSession        DataType = "sessions"
 	DataTypeUser           DataType = "users"
+	DataTypeDelegatedMSA   DataType = "dmsas"
 	DataTypeGroup          DataType = "groups"
 	DataTypeComputer       DataType = "computers"
 	DataTypeGPO            DataType = "gpos"
@@ -68,6 +69,7 @@ func AllOriginalIngestDataTypes() []DataType {
 	return []DataType{
 		DataTypeSession,
 		DataTypeUser,
+		DataTypeDelegatedMSA,
 		DataTypeGroup,
 		DataTypeComputer,
 		DataTypeGPO,

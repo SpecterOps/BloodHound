@@ -342,6 +342,19 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET(fmt.Sprintf("/api/v2/groups/{%s}/controllables", api.URIPathVariableObjectID), resources.ListADEntityControllables).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/groups/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
 
+		// DelegatedMSA Entity API
+		routerInst.GET(fmt.Sprintf("/api/v2/delegatedmsas/{%s}", api.URIPathVariableObjectID), resources.GetDelegatedMSAEntityInfo).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/delegatedmsas/{%s}/sessions", api.URIPathVariableObjectID), resources.ListADUserSessions).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/delegatedmsas/{%s}/memberships", api.URIPathVariableObjectID), resources.ListADGroupMembership).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/delegatedmsas/{%s}/admin-rights", api.URIPathVariableObjectID), resources.ListADEntityAdminRights).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/delegatedmsas/{%s}/rdp-rights", api.URIPathVariableObjectID), resources.ListADEntityRDPRights).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/delegatedmsas/{%s}/dcom-rights", api.URIPathVariableObjectID), resources.ListADEntityDCOMRights).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/delegatedmsas/{%s}/ps-remote-rights", api.URIPathVariableObjectID), resources.ListADEntityPSRemoteRights).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/delegatedmsas/{%s}/sql-admin-rights", api.URIPathVariableObjectID), resources.ListADUserSQLAdminRights).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/delegatedmsas/{%s}/constrained-delegation-rights", api.URIPathVariableObjectID), resources.ListADEntityConstrainedDelegationRights).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/delegatedmsas/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/delegatedmsas/{%s}/controllables", api.URIPathVariableObjectID), resources.ListADEntityControllables).RequirePermissions(permissions.GraphDBRead),
+
 		// IssuancePolicy Entity API
 		routerInst.GET(fmt.Sprintf("/api/v2/issuancepolicies/{%s}", api.URIPathVariableObjectID), resources.GetIssuancePolicyEntityInfo).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/issuancepolicies/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),

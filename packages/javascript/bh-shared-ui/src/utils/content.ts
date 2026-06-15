@@ -171,6 +171,8 @@ export const entityInformationEndpoints: Record<EntityKinds, (id: string, option
     [ActiveDirectoryNodeKind.RootCA]: (id: string, options?: RequestOptions) =>
         apiClient.getRootCAV2(id, false, options),
     [ActiveDirectoryNodeKind.User]: (id: string, options?: RequestOptions) => apiClient.getUserV2(id, false, options),
+    [ActiveDirectoryNodeKind.DelegatedMSA]: (id: string, options?: RequestOptions) =>
+        apiClient.getDelegatedMSAV2(id, false, options),
     [ActiveDirectoryNodeKind.IssuancePolicy]: (id: string, options?: RequestOptions) =>
         apiClient.getIssuancePolicyV2(id, false, options),
 };
@@ -1047,6 +1049,64 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
         },
     ],
     [ActiveDirectoryNodeKind.User]: (id: string) => [
+        {
+            id,
+            label: 'Sessions',
+            queryType: 'user-sessions',
+        },
+        {
+            id,
+            label: 'Member Of',
+            queryType: 'user-member_of',
+        },
+        {
+            id,
+            label: 'Local Admin Privileges',
+            queryType: 'user-local_admin_privileges',
+        },
+        {
+            id,
+            label: 'Execution Privileges',
+            sections: [
+                {
+                    id,
+                    label: 'RDP Privileges',
+                    queryType: 'user-rdp_privileges',
+                },
+                {
+                    id,
+                    label: 'PSRemote Privileges',
+                    queryType: 'user-psremote_privileges',
+                },
+                {
+                    id,
+                    label: 'DCOM Privileges',
+                    queryType: 'user-dcom_privileges',
+                },
+                {
+                    id,
+                    label: 'SQL Admin Rights',
+                    queryType: 'user-sql_admin_rights',
+                },
+                {
+                    id,
+                    label: 'Constrained Delegation Privileges',
+                    queryType: 'user-constrained_delegation_privileges',
+                },
+            ],
+        },
+        {
+            id,
+            label: 'Outbound Object Control',
+            queryType: 'user-outbound_object_control',
+        },
+        {
+            id,
+            label: 'Inbound Object Control',
+            queryType: 'user-inbound_object_control',
+        },
+    ],
+    [ActiveDirectoryNodeKind.DelegatedMSA]: (id: string) => [
         {
             id,
             label: 'Sessions',

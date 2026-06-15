@@ -79,7 +79,10 @@ export const NODE_ICONS: IconDictionary = {
         icon: faUsers,
         color: '#DBE617',
     },
-
+    [ActiveDirectoryNodeKind.DelegatedMSA]: {
+        icon: faUser,
+        color: '#cccccc',
+    },
     [ActiveDirectoryNodeKind.Computer]: {
         icon: faDesktop,
         color: '#E67873',

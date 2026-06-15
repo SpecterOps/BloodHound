@@ -17,6 +17,7 @@ export enum ActiveDirectoryNodeKind {
     Entity = 'Base',
     User = 'User',
     Computer = 'Computer',
+    DelegatedMSA = 'DelegatedMSA',
     Group = 'Group',
     GPO = 'GPO',
     OU = 'OU',
@@ -39,6 +40,8 @@ export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind)
             return 'User';
         case ActiveDirectoryNodeKind.Computer:
             return 'Computer';
+        case ActiveDirectoryNodeKind.DelegatedMSA:
+            return 'DelegatedMSA';
         case ActiveDirectoryNodeKind.Group:
             return 'Group';
         case ActiveDirectoryNodeKind.GPO:
@@ -78,7 +81,7 @@ export enum ActiveDirectoryRelationshipKind {
     MemberOf = 'MemberOf',
     ForceChangePassword = 'ForceChangePassword',
     AllExtendedRights = 'AllExtendedRights',
-    AddMember = 'AddMember',
+    AddOrRemoveMember = 'AddOrRemoveMember',
     HasSession = 'HasSession',
     Contains = 'Contains',
     GPLink = 'GPLink',
@@ -158,6 +161,19 @@ export enum ActiveDirectoryRelationshipKind {
     WriteAltSecurityIdentities = 'WriteAltSecurityIdentities',
     WritePublicInformation = 'WritePublicInformation',
     ProtectAdminGroups = 'ProtectAdminGroups',
+    ReanimateTombstones = 'ReanimateTombstones',
+    CreateChild = 'CreateChild',
+    CreateChildAll = 'CreateChildAll',
+    CreateChildDMSA = 'CreateChildDMSA',
+    WriteCommonName = 'WriteCommonName',
+    WriteRDN = 'WriteRDN',
+    WriteMsDSManagedAccountPrecededByLink = 'WriteMsDSManagedAccountPrecededByLink',
+    WriteMsDSSupersededManagedAccountLink = 'WriteMsDSSupersededManagedAccountLink',
+    WriteMsDSDelegatedMSAState = 'WriteMsDSDelegatedMSAState',
+    WriteMsDSGroupMSAMembership = 'WriteMsDSGroupMSAMembership',
+    WriteMsDSSupersededServiceAccountState = 'WriteMsDSSupersededServiceAccountState',
+    CanUseBadSuccessor = 'CanUseBadSuccessor',
+    CanReanimateTombstone = 'CanReanimateTombstone',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -177,8 +193,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ForceChangePassword';
         case ActiveDirectoryRelationshipKind.AllExtendedRights:
             return 'AllExtendedRights';
-        case ActiveDirectoryRelationshipKind.AddMember:
-            return 'AddMember';
+        case ActiveDirectoryRelationshipKind.AddOrRemoveMember:
+            return 'AddOrRemoveMember';
         case ActiveDirectoryRelationshipKind.HasSession:
             return 'HasSession';
         case ActiveDirectoryRelationshipKind.Contains:
@@ -337,6 +353,32 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'WritePublicInformation';
         case ActiveDirectoryRelationshipKind.ProtectAdminGroups:
             return 'ProtectAdminGroups';
+        case ActiveDirectoryRelationshipKind.ReanimateTombstones:
+            return 'ReanimateTombstones';
+        case ActiveDirectoryRelationshipKind.CreateChild:
+            return 'CreateChild';
+        case ActiveDirectoryRelationshipKind.CreateChildAll:
+            return 'CreateChildAll';
+        case ActiveDirectoryRelationshipKind.CreateChildDMSA:
+            return 'CreateChildDMSA';
+        case ActiveDirectoryRelationshipKind.WriteCommonName:
+            return 'WriteCommonName';
+        case ActiveDirectoryRelationshipKind.WriteRDN:
+            return 'WriteRDN';
+        case ActiveDirectoryRelationshipKind.WriteMsDSManagedAccountPrecededByLink:
+            return 'WriteMsDSManagedAccountPrecededByLink';
+        case ActiveDirectoryRelationshipKind.WriteMsDSSupersededManagedAccountLink:
+            return 'WriteMsDSSupersededManagedAccountLink';
+        case ActiveDirectoryRelationshipKind.WriteMsDSDelegatedMSAState:
+            return 'WriteMsDSDelegatedMSAState';
+        case ActiveDirectoryRelationshipKind.WriteMsDSGroupMSAMembership:
+            return 'WriteMsDSGroupMSAMembership';
+        case ActiveDirectoryRelationshipKind.WriteMsDSSupersededServiceAccountState:
+            return 'WriteMsDSSupersededServiceAccountState';
+        case ActiveDirectoryRelationshipKind.CanUseBadSuccessor:
+            return 'CanUseBadSuccessor';
+        case ActiveDirectoryRelationshipKind.CanReanimateTombstone:
+            return 'CanReanimateTombstone';
         default:
             return undefined;
     }
@@ -360,6 +402,7 @@ export const EdgeCompositionRelationships = [
     'CoerceAndRelayNTLMToLDAPS',
     'GPOAppliesTo',
     'CanApplyGPO',
+    'CanUseBadSuccessor',
 ];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
@@ -502,6 +545,10 @@ export enum ActiveDirectoryKindProperties {
     ServicePrincipalNames = 'serviceprincipalnames',
     GPOStatusRaw = 'gpostatusraw',
     GPOStatus = 'gpostatus',
+    ManagedAccountPrecededByLink = 'managedaccountprecededbylink',
+    SupersededManagedAccountLink = 'supersededmanagedaccountlink',
+    SupersededManagedAccountState = 'supersededmanagedaccountstate',
+    DelegatedMSAState = 'delegatedmsastate',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -785,6 +832,14 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'GPO Status (Raw)';
         case ActiveDirectoryKindProperties.GPOStatus:
             return 'GPO Status';
+        case ActiveDirectoryKindProperties.ManagedAccountPrecededByLink:
+            return 'Managed Account Preceded By Link';
+        case ActiveDirectoryKindProperties.SupersededManagedAccountLink:
+            return 'Superseded Managed Account Link';
+        case ActiveDirectoryKindProperties.SupersededManagedAccountState:
+            return 'Superseded Managed Account State';
+        case ActiveDirectoryKindProperties.DelegatedMSAState:
+            return 'Delegated MSA State';
         default:
             return undefined;
     }
@@ -799,7 +854,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.MemberOf,
         ActiveDirectoryRelationshipKind.ForceChangePassword,
         ActiveDirectoryRelationshipKind.AllExtendedRights,
-        ActiveDirectoryRelationshipKind.AddMember,
+        ActiveDirectoryRelationshipKind.AddOrRemoveMember,
         ActiveDirectoryRelationshipKind.HasSession,
         ActiveDirectoryRelationshipKind.GPLink,
         ActiveDirectoryRelationshipKind.AllowedToDelegate,
@@ -850,6 +905,14 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.WritePublicInformation,
         ActiveDirectoryRelationshipKind.ManageCA,
         ActiveDirectoryRelationshipKind.ManageCertificates,
+        ActiveDirectoryRelationshipKind.ReanimateTombstones,
+        ActiveDirectoryRelationshipKind.CreateChild,
+        ActiveDirectoryRelationshipKind.CreateChildAll,
+        ActiveDirectoryRelationshipKind.CreateChildDMSA,
+        ActiveDirectoryRelationshipKind.WriteCommonName,
+        ActiveDirectoryRelationshipKind.WriteRDN,
+        ActiveDirectoryRelationshipKind.CanUseBadSuccessor,
+        ActiveDirectoryRelationshipKind.CanReanimateTombstone,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,
@@ -867,7 +930,7 @@ export function ActiveDirectoryPathfindingEdgesMatchFrontend(): ActiveDirectoryR
         ActiveDirectoryRelationshipKind.MemberOf,
         ActiveDirectoryRelationshipKind.ForceChangePassword,
         ActiveDirectoryRelationshipKind.AllExtendedRights,
-        ActiveDirectoryRelationshipKind.AddMember,
+        ActiveDirectoryRelationshipKind.AddOrRemoveMember,
         ActiveDirectoryRelationshipKind.HasSession,
         ActiveDirectoryRelationshipKind.GPLink,
         ActiveDirectoryRelationshipKind.AllowedToDelegate,
@@ -914,6 +977,14 @@ export function ActiveDirectoryPathfindingEdgesMatchFrontend(): ActiveDirectoryR
         ActiveDirectoryRelationshipKind.WritePublicInformation,
         ActiveDirectoryRelationshipKind.ManageCA,
         ActiveDirectoryRelationshipKind.ManageCertificates,
+        ActiveDirectoryRelationshipKind.ReanimateTombstones,
+        ActiveDirectoryRelationshipKind.CreateChild,
+        ActiveDirectoryRelationshipKind.CreateChildAll,
+        ActiveDirectoryRelationshipKind.CreateChildDMSA,
+        ActiveDirectoryRelationshipKind.WriteCommonName,
+        ActiveDirectoryRelationshipKind.WriteRDN,
+        ActiveDirectoryRelationshipKind.CanUseBadSuccessor,
+        ActiveDirectoryRelationshipKind.CanReanimateTombstone,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,

@@ -38,6 +38,7 @@ export enum GraphNodeTypes {
     Base = 'Base',
     User = 'User',
     Group = 'Group',
+    DelegatedMSA = 'DelegatedMSA',
     Computer = 'Computer',
     GPO = 'GPO',
     OU = 'OU',

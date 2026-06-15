@@ -114,26 +114,50 @@ func (s *Resources) GetBaseEntityInfo(response http.ResponseWriter, request *htt
 func (s *Resources) GetComputerEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
 		countQueries = map[string]any{
-			"sessions":         adAnalysis.FetchComputerSessions,
-			"adminUsers":       adAnalysis.CreateInboundLocalGroupListDelegate(ad.AdminTo),
-			"rdpUsers":         adAnalysis.CreateInboundLocalGroupListDelegate(ad.CanRDP),
-			"dcomUsers":        adAnalysis.CreateInboundLocalGroupListDelegate(ad.ExecuteDCOM),
-			"psRemoteUsers":    adAnalysis.CreateInboundLocalGroupListDelegate(ad.CanPSRemote),
-			"sqlAdminUsers":    adAnalysis.CreateSQLAdminListDelegate(graph.DirectionInbound),
-			"constrainedUsers": adAnalysis.CreateConstrainedDelegationListDelegate(graph.DirectionInbound),
-			"groupMembership":  adAnalysis.FetchEntityGroupMembership,
-			"adminRights":      adAnalysis.CreateOutboundLocalGroupListDelegate(ad.AdminTo),
-			"rdpRights":        adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanRDP),
-			"dcomRights":       adAnalysis.CreateOutboundLocalGroupListDelegate(ad.ExecuteDCOM),
-			"psRemoteRights":   adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanPSRemote),
-			"constrainedPrivs": adAnalysis.CreateConstrainedDelegationListDelegate(graph.DirectionOutbound),
-			"controllables":    adAnalysis.FetchOutboundADEntityControl,
-			"controllers":      adAnalysis.FetchInboundADEntityControllers,
-			"gpos":             adAnalysis.FetchEnforcedGPOs,
+			"sessions":               adAnalysis.FetchComputerSessions,
+			"adminUsers":             adAnalysis.CreateInboundLocalGroupListDelegate(ad.AdminTo),
+			"rdpUsers":               adAnalysis.CreateInboundLocalGroupListDelegate(ad.CanRDP),
+			"dcomUsers":              adAnalysis.CreateInboundLocalGroupListDelegate(ad.ExecuteDCOM),
+			"psRemoteUsers":          adAnalysis.CreateInboundLocalGroupListDelegate(ad.CanPSRemote),
+			"sqlAdminUsers":          adAnalysis.CreateSQLAdminListDelegate(graph.DirectionInbound),
+			"constrainedUsers":       adAnalysis.CreateConstrainedDelegationListDelegate(graph.DirectionInbound),
+			"groupMembership":        adAnalysis.FetchEntityGroupMembership,
+			"adminRights":            adAnalysis.CreateOutboundLocalGroupListDelegate(ad.AdminTo),
+			"rdpRights":              adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanRDP),
+			"dcomRights":             adAnalysis.CreateOutboundLocalGroupListDelegate(ad.ExecuteDCOM),
+			"psRemoteRights":         adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanPSRemote),
+			"constrainedPrivs":       adAnalysis.CreateConstrainedDelegationListDelegate(graph.DirectionOutbound),
+			"controllables":          adAnalysis.FetchOutboundADEntityControl,
+			"controllers":            adAnalysis.FetchInboundADEntityControllers,
+			"gpos":                   adAnalysis.FetchEnforcedGPOs,
+			"canReanimateTombstones": adAnalysis.FetchCanReanimateTombstoneObjects,
+			"canUseBadSuccessor":     adAnalysis.FetchCanUseBadSuccessor,
 		}
 	)
 
 	s.handleAdEntityInfoQuery(response, request, ad.Computer, countQueries)
+}
+
+func (s *Resources) GetDelegatedMSAEntityInfo(response http.ResponseWriter, request *http.Request) {
+	var (
+		countQueries = map[string]any{
+			"sessions":               adAnalysis.FetchUserSessions,
+			"groupMembership":        adAnalysis.FetchEntityGroupMembership,
+			"adminRights":            adAnalysis.CreateOutboundLocalGroupListDelegate(ad.AdminTo),
+			"rdpRights":              adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanRDP),
+			"dcomRights":             adAnalysis.CreateOutboundLocalGroupListDelegate(ad.ExecuteDCOM),
+			"psRemoteRights":         adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanPSRemote),
+			"sqlAdmin":               adAnalysis.CreateSQLAdminListDelegate(graph.DirectionOutbound),
+			"constrainedDelegation":  adAnalysis.CreateConstrainedDelegationListDelegate(graph.DirectionOutbound),
+			"controllables":          adAnalysis.FetchOutboundADEntityControl,
+			"controllers":            adAnalysis.FetchInboundADEntityControllers,
+			"gpos":                   adAnalysis.FetchEnforcedGPOs,
+			"canReanimateTombstones": adAnalysis.FetchCanReanimateTombstoneObjects,
+			"canUseBadSuccessor":     adAnalysis.FetchCanUseBadSuccessor,
+		}
+	)
+
+	s.handleAdEntityInfoQuery(response, request, ad.DelegatedMSA, countQueries)
 }
 
 func (s *Resources) GetContainerEntityInfo(response http.ResponseWriter, request *http.Request) {
@@ -150,6 +174,7 @@ func (s *Resources) GetDomainEntityInfo(response http.ResponseWriter, request *h
 	var (
 		countQueries = map[string]any{
 			"users":                 adAnalysis.CreateDomainContainedEntityListDelegate(ad.User),
+			"dmsas":                 adAnalysis.CreateDomainContainedEntityListDelegate(ad.DelegatedMSA),
 			"groups":                adAnalysis.CreateDomainContainedEntityListDelegate(ad.Group),
 			"computers":             adAnalysis.CreateDomainContainedEntityListDelegate(ad.Computer),
 			"ous":                   adAnalysis.CreateDomainContainedEntityListDelegate(ad.OU),
@@ -164,6 +189,8 @@ func (s *Resources) GetDomainEntityInfo(response http.ResponseWriter, request *h
 			"linkedgpos":            adAnalysis.FetchEnforcedGPOs,
 			"dcsyncers":             adAnalysis.FetchDCSyncers,
 			"adcs-escalations":      adAnalysis.CreateADCSEscalationsListDelegate,
+			"canreanimatombstones":  adAnalysis.FetchCanReanimateTombstoneObjects,
+			"canusebadsuccessor":    adAnalysis.FetchCanUseBadSuccessor,
 		}
 	)
 
@@ -176,6 +203,7 @@ func (s *Resources) GetGPOEntityInfo(response http.ResponseWriter, request *http
 			"ous":         adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOContainerCandidateFilter),
 			"computers":   adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectComputersCandidateFilter),
 			"users":       adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectUsersCandidateFilter),
+			"dmsas":       adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectDMSACandidateFilter),
 			"controllers": adAnalysis.FetchInboundADEntityControllers,
 			"tierzero":    adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOTierZeroCandidateFilter),
 		}
@@ -242,6 +270,7 @@ func (s *Resources) GetOUEntityInfo(response http.ResponseWriter, request *http.
 		countQueries = map[string]any{
 			"gpos":      adAnalysis.FetchEnforcedGPOs,
 			"users":     adAnalysis.CreateOUContainedListDelegate(ad.User),
+			"dmsas":     adAnalysis.CreateOUContainedListDelegate(ad.DelegatedMSA),
 			"groups":    adAnalysis.CreateOUContainedListDelegate(ad.Group),
 			"computers": adAnalysis.CreateOUContainedListDelegate(ad.Computer),
 		}
@@ -253,17 +282,19 @@ func (s *Resources) GetOUEntityInfo(response http.ResponseWriter, request *http.
 func (s *Resources) GetUserEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
 		countQueries = map[string]any{
-			"sessions":              adAnalysis.FetchUserSessions,
-			"groupMembership":       adAnalysis.FetchEntityGroupMembership,
-			"adminRights":           adAnalysis.CreateOutboundLocalGroupListDelegate(ad.AdminTo),
-			"rdpRights":             adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanRDP),
-			"dcomRights":            adAnalysis.CreateOutboundLocalGroupListDelegate(ad.ExecuteDCOM),
-			"psRemoteRights":        adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanPSRemote),
-			"sqlAdmin":              adAnalysis.CreateSQLAdminListDelegate(graph.DirectionOutbound),
-			"constrainedDelegation": adAnalysis.CreateConstrainedDelegationListDelegate(graph.DirectionOutbound),
-			"controllables":         adAnalysis.FetchOutboundADEntityControl,
-			"controllers":           adAnalysis.FetchInboundADEntityControllers,
-			"gpos":                  adAnalysis.FetchEnforcedGPOs,
+			"sessions":               adAnalysis.FetchUserSessions,
+			"groupMembership":        adAnalysis.FetchEntityGroupMembership,
+			"adminRights":            adAnalysis.CreateOutboundLocalGroupListDelegate(ad.AdminTo),
+			"rdpRights":              adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanRDP),
+			"dcomRights":             adAnalysis.CreateOutboundLocalGroupListDelegate(ad.ExecuteDCOM),
+			"psRemoteRights":         adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanPSRemote),
+			"sqlAdmin":               adAnalysis.CreateSQLAdminListDelegate(graph.DirectionOutbound),
+			"constrainedDelegation":  adAnalysis.CreateConstrainedDelegationListDelegate(graph.DirectionOutbound),
+			"controllables":          adAnalysis.FetchOutboundADEntityControl,
+			"controllers":            adAnalysis.FetchInboundADEntityControllers,
+			"gpos":                   adAnalysis.FetchEnforcedGPOs,
+			"canReanimateTombstones": adAnalysis.FetchCanReanimateTombstoneObjects,
+			"canUseBadSuccessor":     adAnalysis.FetchCanUseBadSuccessor,
 		}
 	)
 
@@ -273,15 +304,17 @@ func (s *Resources) GetUserEntityInfo(response http.ResponseWriter, request *htt
 func (s *Resources) GetGroupEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
 		countQueries = map[string]any{
-			"sessions":       adAnalysis.FetchGroupSessions,
-			"members":        adAnalysis.FetchGroupMembers,
-			"membership":     adAnalysis.FetchEntityGroupMembership,
-			"adminRights":    adAnalysis.CreateOutboundLocalGroupListDelegate(ad.AdminTo),
-			"rdpRights":      adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanRDP),
-			"dcomRights":     adAnalysis.CreateOutboundLocalGroupListDelegate(ad.ExecuteDCOM),
-			"psRemoteRights": adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanPSRemote),
-			"controllables":  adAnalysis.FetchOutboundADEntityControl,
-			"controllers":    adAnalysis.FetchInboundADEntityControllers,
+			"sessions":               adAnalysis.FetchGroupSessions,
+			"members":                adAnalysis.FetchGroupMembers,
+			"membership":             adAnalysis.FetchEntityGroupMembership,
+			"adminRights":            adAnalysis.CreateOutboundLocalGroupListDelegate(ad.AdminTo),
+			"rdpRights":              adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanRDP),
+			"dcomRights":             adAnalysis.CreateOutboundLocalGroupListDelegate(ad.ExecuteDCOM),
+			"psRemoteRights":         adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanPSRemote),
+			"controllables":          adAnalysis.FetchOutboundADEntityControl,
+			"controllers":            adAnalysis.FetchInboundADEntityControllers,
+			"canReanimateTombstones": adAnalysis.FetchCanReanimateTombstoneObjects,
+			"canUseBadSuccessor":     adAnalysis.FetchCanUseBadSuccessor,
 		}
 	)
 

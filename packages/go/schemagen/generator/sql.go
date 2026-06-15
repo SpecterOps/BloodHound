@@ -40,6 +40,10 @@ var nodeIcons = map[string]nodeIcon{
 		Icon:  "users",
 		Color: "#DBE617",
 	},
+	"DelegatedMSA": {
+		Icon:  "user",
+		Color: "#17E625",
+	},
 	"Computer": {
 		Icon:  "desktop",
 		Color: "#E67873",
@@ -382,6 +386,7 @@ func GenerateADSpecifics(sb io.StringWriter) {
 	sb.WriteString("\tSELECT genscript_upsert_schema_environments(extension_id, 'Domain', 'Base') INTO environment_id;\n")
 	sb.WriteString("\tPERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'User');\n")
 	sb.WriteString("\tPERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'Computer');\n")
+	sb.WriteString("\tPERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'DelegatedMSA');\n")
 }
 
 func GenerateAZSpecifics(sb io.StringWriter) {

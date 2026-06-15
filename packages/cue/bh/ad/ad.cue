@@ -1037,6 +1037,30 @@ GPOStatus: types.#StringEnum & {
 	representation: "gpostatus"
 }
 
+ManagedAccountPrecededByLink: types.#StringEnum & {
+	symbol:         "ManagedAccountPrecededByLink"
+	schema:         "ad"
+	name:           "Managed Account Preceded By Link"
+	representation: "managedaccountprecededbylink"
+}
+SupersededManagedAccountLink: types.#StringEnum & {
+	symbol:         "SupersededManagedAccountLink"
+	schema:         "ad"
+	name:           "Superseded Managed Account Link"
+	representation: "supersededmanagedaccountlink"
+}
+SupersededManagedAccountState: types.#StringEnum & {
+	symbol:         "SupersededManagedAccountState"
+	schema:         "ad"
+	name:           "Superseded Managed Account State"
+	representation: "supersededmanagedaccountstate"
+}
+DelegatedMSAState: types.#StringEnum & {
+	symbol:         "DelegatedMSAState"
+	schema:         "ad"
+	name:           "Delegated MSA State"
+	representation: "delegatedmsastate"
+}
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -1178,6 +1202,10 @@ Properties: [
 	ServicePrincipalNames,
 	GPOStatusRaw,
 	GPOStatus,
+	ManagedAccountPrecededByLink,
+	SupersededManagedAccountLink,
+	SupersededManagedAccountState,
+	DelegatedMSAState,
 ]
 
 // Kinds
@@ -1194,6 +1222,11 @@ User: types.#Kind & {
 
 Computer: types.#Kind & {
 	symbol: "Computer"
+	schema: "active_directory"
+}
+
+DelegatedMSA: types.#Kind & {
+	symbol: "DelegatedMSA"
 	schema: "active_directory"
 }
 
@@ -1268,6 +1301,7 @@ NodeKinds: [
 	Entity,
 	User,
 	Computer,
+	DelegatedMSA,
 	Group,
 	GPO,
 	OU,
@@ -1334,8 +1368,8 @@ AllExtendedRights: types.#Kind & {
 	schema: "active_directory"
 }
 
-AddMember: types.#Kind & {
-	symbol: "AddMember"
+AddOrRemoveMember: types.#Kind & {
+	symbol: "AddOrRemoveMember"
 	schema: "active_directory"
 }
 
@@ -1729,6 +1763,61 @@ WritePublicInformation: types.#Kind & {
 	symbol: "WritePublicInformation"
 	schema: "active_directory"
 }
+ReanimateTombstones: types.#Kind & {
+	symbol: "ReanimateTombstones"
+	schema: "active_directory"
+}
+
+CanReanimateTombstone: types.#Kind & {
+	symbol: "CanReanimateTombstone"
+	schema: "active_directory"
+}
+
+CreateChild: types.#Kind & {
+	symbol: "CreateChild"
+	schema: "active_directory"
+}
+CreateChildAll: types.#Kind & {
+	symbol: "CreateChildAll"
+	schema: "active_directory"
+}
+CreateChildDMSA: types.#Kind & {
+	symbol: "CreateChildDMSA"
+	schema: "active_directory"
+}
+WriteCommonName: types.#Kind & {
+	symbol: "WriteCommonName"
+	schema: "active_directory"
+}
+
+WriteRDN: types.#Kind & {
+	symbol: "WriteRDN"
+	schema: "active_directory"
+}
+WriteMsDSManagedAccountPrecededByLink: types.#Kind & {
+	symbol: "WriteMsDSManagedAccountPrecededByLink"
+	schema: "active_directory"
+}
+WriteMsDSSupersededManagedAccountLink: types.#Kind & {
+	symbol: "WriteMsDSSupersededManagedAccountLink"
+	schema: "active_directory"
+}
+WriteMsDSDelegatedMSAState: types.#Kind & {
+	symbol: "WriteMsDSDelegatedMSAState"
+	schema: "active_directory"
+}
+WriteMsDSGroupMSAMembership: types.#Kind & {
+	symbol: "WriteMsDSGroupMSAMembership"
+	schema: "active_directory"
+}
+WriteMsDSSupersededServiceAccountState: types.#Kind & {
+	symbol: "WriteMsDSSupersededServiceAccountState"
+	schema: "active_directory"
+}
+CanUseBadSuccessor: types.#Kind & {
+	symbol: "CanUseBadSuccessor"
+	schema: "active_directory"
+}
 
 // Relationship Kinds
 RelationshipKinds: [
@@ -1740,7 +1829,7 @@ RelationshipKinds: [
 	MemberOf,
 	ForceChangePassword,
 	AllExtendedRights,
-	AddMember,
+	AddOrRemoveMember,
 	HasSession,
 	Contains,
 	GPLink,
@@ -1820,13 +1909,26 @@ RelationshipKinds: [
 	WriteAltSecurityIdentities,
 	WritePublicInformation,
 	ProtectAdminGroups,
+	ReanimateTombstones,
+	CreateChild,
+	CreateChildAll,
+	CreateChildDMSA,
+	WriteCommonName,
+	WriteRDN,
+	WriteMsDSManagedAccountPrecededByLink,
+	WriteMsDSSupersededManagedAccountLink,
+	WriteMsDSDelegatedMSAState,
+	WriteMsDSGroupMSAMembership,
+	WriteMsDSSupersededServiceAccountState,
+	CanUseBadSuccessor,
+	CanReanimateTombstone,
 ]
 
 // ACL Relationships
 ACLRelationships: [
 	AllExtendedRights,
 	ForceChangePassword,
-	AddMember,
+	AddOrRemoveMember,
 	AddAllowedToAct,
 	GenericAll,
 	WriteDACL,
@@ -1854,6 +1956,19 @@ ACLRelationships: [
 	OwnsLimitedRights,
 	WriteAltSecurityIdentities,
 	WritePublicInformation,
+	ReanimateTombstones,
+	CreateChild,
+	CreateChildAll,
+	CreateChildDMSA,
+	WriteCommonName,
+	WriteRDN,
+	WriteMsDSManagedAccountPrecededByLink,
+	WriteMsDSSupersededManagedAccountLink,
+	WriteMsDSDelegatedMSAState,
+	WriteMsDSGroupMSAMembership,
+	WriteMsDSSupersededServiceAccountState,
+	CanReanimateTombstone,
+	CanUseBadSuccessor
 ]
 
 IngestACLRelationships: [for r in ACLRelationships if !list.Contains(AllPostProcessedRelationships, r) {r}],
@@ -1868,7 +1983,7 @@ SharedRelationshipKinds: [
 	MemberOf,
 	ForceChangePassword,
 	AllExtendedRights,
-	AddMember,
+	AddOrRemoveMember,
 	HasSession,
 	GPLink,
 	AllowedToDelegate,
@@ -1919,6 +2034,14 @@ SharedRelationshipKinds: [
 	WritePublicInformation,
 	ManageCA,
 	ManageCertificates,
+	ReanimateTombstones,
+	CreateChild,
+	CreateChildAll,
+	CreateChildDMSA,
+	WriteCommonName,
+	WriteRDN,
+	CanUseBadSuccessor,
+	CanReanimateTombstone,
 ]
 
 // Edges that are used during inbound traversal
@@ -1952,6 +2075,7 @@ EdgeCompositionRelationships: [
 	CoerceAndRelayNTLMToLDAPS,
 	GPOAppliesTo,
 	CanApplyGPO,
+	CanUseBadSuccessor,
 ]
 
 PostProcessedRelationships: [
@@ -1986,6 +2110,8 @@ PostProcessedRelationships: [
 	GPOAppliesTo,
 	CanApplyGPO,
 	HasTrustKeys,
+	CanReanimateTombstone,
+	CanUseBadSuccessor,
 ]
 
 DCAPostProcessedRelationships: [

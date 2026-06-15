@@ -39,6 +39,7 @@ const useStyles = makeStyles((theme) => ({
 export const DomainMap = {
     users: { displayText: 'Users', kind: ActiveDirectoryNodeKind.User },
     groups: { displayText: 'Groups', kind: ActiveDirectoryNodeKind.Group },
+    dmsas: { displayText: 'DMSAs', kind: ActiveDirectoryNodeKind.DelegatedMSA },
     computers: { displayText: 'Computers', kind: ActiveDirectoryNodeKind.Computer },
     ous: {
         displayText: 'OUs',

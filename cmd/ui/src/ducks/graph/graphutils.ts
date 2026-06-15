@@ -229,6 +229,7 @@ const ICONS: { [id in GraphNodeTypes]: string } = {
     [GraphNodeTypes.Group]: 'fa-users',
     [GraphNodeTypes.OU]: 'fa-sitemap',
     [GraphNodeTypes.User]: 'fa-user',
+    [GraphNodeTypes.DelegatedMSA]: 'fa-user',
     [GraphNodeTypes.Container]: 'fa-box',
     [GraphNodeTypes.AIACA]: 'fa-box',
     [GraphNodeTypes.RootCA]: 'fa-landmark',

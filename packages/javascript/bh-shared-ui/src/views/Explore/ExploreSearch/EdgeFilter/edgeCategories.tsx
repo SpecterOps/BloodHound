@@ -93,6 +93,8 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
                     ActiveDirectoryRelationshipKind.WriteDACL,
                     ActiveDirectoryRelationshipKind.WriteOwner,
                     ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
+                    ActiveDirectoryRelationshipKind.WriteCommonName,
+                    ActiveDirectoryRelationshipKind.WriteRDN,
                 ],
             },
             {
@@ -105,6 +107,12 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
                     ActiveDirectoryRelationshipKind.WriteGPLink,
                     ActiveDirectoryRelationshipKind.WritePublicInformation,
                     ActiveDirectoryRelationshipKind.WriteSPN,
+                    ActiveDirectoryRelationshipKind.CreateChild,
+                    ActiveDirectoryRelationshipKind.CreateChildAll,
+                    ActiveDirectoryRelationshipKind.CreateChildDMSA,
+                    ActiveDirectoryRelationshipKind.ReanimateTombstones,
+                    ActiveDirectoryRelationshipKind.CanReanimateTombstone,
+                    ActiveDirectoryRelationshipKind.CanUseBadSuccessor,
                 ],
             },
             {

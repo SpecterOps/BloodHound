@@ -110,6 +110,10 @@ func adGraphStats(ctx context.Context, db graph.Database) (model.ADDataQualitySt
 									stat.Groups = int(count)
 									aggregation.Groups += int(count)
 
+								case ad.DelegatedMSA:
+									stat.DelegatedMSAs = int(count)
+									aggregation.DelegatedMSAs += int(count)
+
 								case ad.Computer:
 									stat.Computers = int(count)
 									aggregation.Computers += int(count)

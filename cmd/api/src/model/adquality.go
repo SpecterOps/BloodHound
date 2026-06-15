@@ -24,6 +24,7 @@ type ADDataQualityStat struct {
 	DomainSID              string      `json:"domain_sid" gorm:"column:domain_sid"`
 	Users                  int         `json:"users"`
 	Groups                 int         `json:"groups"`
+	DelegatedMSAs          int         `json:"dmsas" gorm:"column:dmsas"`
 	Computers              int         `json:"computers"`
 	OUs                    int         `json:"ous" gorm:"column:ous"`
 	Containers             int         `json:"containers"`
@@ -48,6 +49,7 @@ type ADDataQualityAggregation struct {
 	Domains                int     `json:"domains"`
 	Users                  int     `json:"users"`
 	Groups                 int     `json:"groups"`
+	DelegatedMSAs          int     `json:"dmsas" gorm:"column:dmsas"`
 	Computers              int     `json:"computers"`
 	OUs                    int     `json:"ous" gorm:"column:ous"`
 	Containers             int     `json:"containers"`

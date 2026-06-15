@@ -82,6 +82,7 @@ import AllowedToAct from './AllowedToAct/AllowedToAct';
 import AllowedToDelegate from './AllowedToDelegate/AllowedToDelegate';
 import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
+import CanReanimateTombstone from './CanReanimateTombstone/CanReanimateTombstone';
 import ClaimSpecialIdentity from './ClaimSpecialIdentity/ClaimSpecialIdentity';
 import CoerceAndRelayNTLMToADCS from './CoerceAndRelayNTLMToADCS/CoerceAndRelayNTLMToADCS';
 import CoerceAndRelayNTLMToLDAP from './CoerceAndRelayNTLMToLDAP/CoerceAndRelayNTLMToLDAP';
@@ -123,6 +124,7 @@ import ProtectAdminGroups from './ProtectAdminGroups/ProtectAdminGroups';
 import PublishedTo from './PublishedTo/PublishedTo';
 import ReadGMSAPassword from './ReadGMSAPassword/ReadGMSAPassword';
 import ReadLAPSPassword from './ReadLAPSPassword/ReadLAPSPassword';
+import ReanimateTombstones from './ReanimateTombstones/ReanimateTombstones';
 import RootCAFor from './RootCAFor/RootCAFor';
 import SQLAdmin from './SQLAdmin/SQLAdmin';
 import SameForestTrust from './SameForestTrust/SameForestTrust';
@@ -132,6 +134,7 @@ import SyncedToADUser from './SyncedToADUser/SyncedToADUser';
 import SyncedToEntraUser from './SyncedToEntraUser/SyncedToEntraUser';
 import TrustedForNTAuth from './TrustedForNTAuth/TrustedForNTAuth';
 import WriteAccountRestrictions from './WriteAccountRestrictions/WriteAccountRestrictions';
+import WriteCommonName from './WriteCommonName/WriteCommonName';
 import WriteAltSecurityIdentities from './WriteAltSecurityIdentities/WriteAltSecurityIdentities';
 import WriteDacl from './WriteDacl/WriteDacl';
 import WriteGPLink from './WriteGPLink/WriteGPLink';
@@ -141,6 +144,7 @@ import WriteOwnerRaw from './WriteOwnerRaw/WriteOwnerRaw';
 import WritePKIEnrollmentFlag from './WritePKIEnrollmentFlag/WritePKIEnrollmentFlag';
 import WritePKINameFlag from './WritePKINameFlag/WritePKINameFlag';
 import WritePublicInformation from './WritePublicInformation/WritePublicInformation';
+import WriteRDN from './WriteRDN/WriteRDN';
 import WriteSPN from './WriteSPN/WriteSPN';
 
 export type EdgeInfoProps = {
@@ -282,6 +286,10 @@ const EdgeInfoComponents = {
     WriteAltSecurityIdentities: WriteAltSecurityIdentities,
     WritePublicInformation: WritePublicInformation,
     AZAuthenticatesTo: AZAuthenticatesTo,
+    CanReanimateTombstone: CanReanimateTombstone,
+    WriteCommonName: WriteCommonName,
+    WriteRDN: WriteRDN,
+    ReanimateTombstones: ReanimateTombstones,
 };
 
 export default EdgeInfoComponents;

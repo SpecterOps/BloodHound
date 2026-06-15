@@ -158,6 +158,10 @@ func SelectComputersCandidateFilter(node *graph.Node) bool {
 	return node.Kinds.ContainsOneOf(ad.Computer)
 }
 
+func SelectDMSACandidateFilter(node *graph.Node) bool {
+	return node.Kinds.ContainsOneOf(ad.DelegatedMSA)
+}
+
 func SelectGPOTierZeroCandidateFilter(node *graph.Node) bool {
 	if node.Kinds.ContainsOneOf(ad.Group) {
 		// GPOs don’t apply to groups.

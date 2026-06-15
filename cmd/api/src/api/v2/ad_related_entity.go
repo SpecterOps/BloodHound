@@ -205,6 +205,14 @@ func (s *Resources) ListADDomainDCSyncers(response http.ResponseWriter, request 
 	s.handleAdRelatedEntityQuery(response, request, "ListADDomainDCSyncers", adAnalysis.FetchDCSyncerPaths, adAnalysis.FetchDCSyncers)
 }
 
+func (s *Resources) ListADCanReanimateTombstones(response http.ResponseWriter, request *http.Request) {
+	s.handleAdRelatedEntityQuery(response, request, "ListADCanReanimateTombstones", adAnalysis.FetchCanReanimateTombstoneObjectsPaths, adAnalysis.FetchCanReanimateTombstoneObjects)
+}
+
+func (s *Resources) ListADCanUseBadSuccessor(response http.ResponseWriter, request *http.Request) {
+	s.handleAdRelatedEntityQuery(response, request, "ListADCanUseBadSuccessor", adAnalysis.FetchCanUseBadSuccessorPaths, adAnalysis.FetchCanUseBadSuccessor)
+}
+
 func (s *Resources) ListADOUContainedUsers(response http.ResponseWriter, request *http.Request) {
 	s.handleAdRelatedEntityQuery(response, request, "ListADOUContainedUsers", adAnalysis.CreateOUContainedPathDelegate(ad.User), adAnalysis.CreateOUContainedListDelegate(ad.User))
 }

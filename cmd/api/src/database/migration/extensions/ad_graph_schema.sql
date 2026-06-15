@@ -138,6 +138,7 @@ BEGIN
 	PERFORM genscript_upsert_kind('Base');
 	PERFORM genscript_upsert_kind('User');
 	PERFORM genscript_upsert_kind('Computer');
+	PERFORM genscript_upsert_kind('DelegatedMSA');
 	PERFORM genscript_upsert_kind('Group');
 	PERFORM genscript_upsert_kind('GPO');
 	PERFORM genscript_upsert_kind('OU');
@@ -161,7 +162,7 @@ BEGIN
 	PERFORM genscript_upsert_kind('MemberOf');
 	PERFORM genscript_upsert_kind('ForceChangePassword');
 	PERFORM genscript_upsert_kind('AllExtendedRights');
-	PERFORM genscript_upsert_kind('AddMember');
+	PERFORM genscript_upsert_kind('AddOrRemoveMember');
 	PERFORM genscript_upsert_kind('HasSession');
 	PERFORM genscript_upsert_kind('Contains');
 	PERFORM genscript_upsert_kind('GPLink');
@@ -241,10 +242,24 @@ BEGIN
 	PERFORM genscript_upsert_kind('WriteAltSecurityIdentities');
 	PERFORM genscript_upsert_kind('WritePublicInformation');
 	PERFORM genscript_upsert_kind('ProtectAdminGroups');
+	PERFORM genscript_upsert_kind('ReanimateTombstones');
+	PERFORM genscript_upsert_kind('CreateChild');
+	PERFORM genscript_upsert_kind('CreateChildAll');
+	PERFORM genscript_upsert_kind('CreateChildDMSA');
+	PERFORM genscript_upsert_kind('WriteCommonName');
+	PERFORM genscript_upsert_kind('WriteRDN');
+	PERFORM genscript_upsert_kind('WriteMsDSManagedAccountPrecededByLink');
+	PERFORM genscript_upsert_kind('WriteMsDSSupersededManagedAccountLink');
+	PERFORM genscript_upsert_kind('WriteMsDSDelegatedMSAState');
+	PERFORM genscript_upsert_kind('WriteMsDSGroupMSAMembership');
+	PERFORM genscript_upsert_kind('WriteMsDSSupersededServiceAccountState');
+	PERFORM genscript_upsert_kind('CanUseBadSuccessor');
+	PERFORM genscript_upsert_kind('CanReanimateTombstone');
 
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Base', 'Base', '', false, '', '');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'User', 'User', '', true, 'user', '#17E625');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Computer', 'Computer', '', true, 'desktop', '#E67873');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'DelegatedMSA', 'DelegatedMSA', '', true, 'user', '#17E625');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Group', 'Group', '', true, 'users', '#DBE617');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'GPO', 'GPO', '', true, 'list', '#998EFD');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'OU', 'OU', '', true, 'sitemap', '#FFAA00');
@@ -267,7 +282,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'MemberOf', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ForceChangePassword', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AllExtendedRights', '', true);
-	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AddMember', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AddOrRemoveMember', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'HasSession', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'Contains', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'GPLink', '', true);
@@ -347,12 +362,26 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteAltSecurityIdentities', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WritePublicInformation', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ProtectAdminGroups', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ReanimateTombstones', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CreateChild', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CreateChildAll', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CreateChildDMSA', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteCommonName', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteRDN', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteMsDSManagedAccountPrecededByLink', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteMsDSSupersededManagedAccountLink', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteMsDSDelegatedMSAState', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteMsDSGroupMSAMembership', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteMsDSSupersededServiceAccountState', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CanUseBadSuccessor', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CanReanimateTombstone', '', true);
 
 	PERFORM genscript_upsert_source_kind('Base');
 	PERFORM genscript_upsert_kind('Domain');
 	SELECT genscript_upsert_schema_environments(extension_id, 'Domain', 'Base') INTO environment_id;
 	PERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'User');
 	PERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'Computer');
+	PERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'DelegatedMSA');
 END $$;
 
 DROP FUNCTION IF EXISTS genscript_upsert_kind;

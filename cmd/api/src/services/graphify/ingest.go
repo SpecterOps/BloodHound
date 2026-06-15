@@ -389,6 +389,7 @@ var basicHandlers = map[ingest.DataType]basicIngestHandler{
 		}
 	},
 	ingest.DataTypeUser:           defaultBasicHandler(convertUserData),
+	ingest.DataTypeDelegatedMSA:   defaultBasicHandler(convertDelegatedMSAData),
 	ingest.DataTypeDomain:         defaultBasicHandler(convertDomainData),
 	ingest.DataTypeGPO:            defaultBasicHandler(convertGPOData),
 	ingest.DataTypeOU:             defaultBasicHandler(convertOUData),
