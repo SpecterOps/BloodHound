@@ -228,6 +228,7 @@ func (s *BloodhoundDB) GetOpenGraphDataQualityStats(ctx context.Context, environ
 		result                    *gorm.DB
 	)
 
+	// Filters are optional so the same endpoint can serve a specific environment or a narrowed extension/kind view.
 	query = s.db.Model(model.OpenGraphDataQualityStat{}).WithContext(ctx).Where(defaultWhere, start, end)
 	if environmentID.Valid {
 		query = query.Where("environment_id = ?", environmentID.String)
@@ -279,6 +280,7 @@ func (s *BloodhoundDB) GetOpenGraphDataQualityAggregations(ctx context.Context, 
 		result                           *gorm.DB
 	)
 
+	// Aggregations intentionally filter by schema metadata instead of an environment_id.
 	query = s.db.Model(model.OpenGraphDataQualityAggregation{}).WithContext(ctx).Where(defaultWhere, start, end)
 	if extensionID.Valid {
 		query = query.Where("schema_extension_id = ?", extensionID.Int32)

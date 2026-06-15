@@ -111,6 +111,7 @@ export const useAzurePlatformsDataQualityStatsQuery = () => {
     );
 };
 
+// OpenGraph DQ queries pass schemaEnvironmentId so extension-level views stay scoped to one environment kind.
 export const useOpenGraphDataQualityStatsQuery = (
     environmentId: string,
     extensionId?: number | null,

@@ -73,6 +73,7 @@ const environmentMatchesSelection = (environment: Environment, selected: Selecte
 
     if (selected.type && environment.type !== selected.type) return false;
 
+    // OG selectors can share an environment id across schema environment kinds, so compare schema IDs when present.
     if (selected.schema_extension_id !== undefined && selected.schema_extension_id !== null) {
         if (environment.schema_extension_id !== selected.schema_extension_id) return false;
     }
@@ -85,6 +86,7 @@ const environmentMatchesSelection = (environment: Environment, selected: Selecte
 };
 
 const environmentSelectionKey = (environment: Environment): string => {
+    // Include schema IDs so React keys stay stable when multiple OG selectors point at the same environment id.
     return `${environment.type}:${environment.schema_extension_id ?? ''}:${environment.schema_environment_id ?? ''}:${environment.id}`;
 };
 
@@ -131,6 +133,7 @@ const SimpleEnvironmentSelector: React.FC<{
     const handlePlatformClick = (type?: Environment['type']) => {
         const platformEnvironment =
             type !== undefined ? availableEnvironments?.find((environment) => environment.type === type) : undefined;
+        // Aggregate OG selections keep the schema IDs from a representative environment of that kind.
         const schemaExtensionID = platformEnvironment?.schema_extension_id ?? null;
         const schemaEnvironmentID = platformEnvironment?.schema_environment_id ?? null;
 

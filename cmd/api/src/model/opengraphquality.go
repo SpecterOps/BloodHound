@@ -25,6 +25,7 @@ const (
 	OpenGraphDataQualityMetricTypeRelationship OpenGraphDataQualityMetricType = "relationship"
 )
 
+// OpenGraphDataQualityStat stores one metric for one graph environment ID.
 type OpenGraphDataQualityStat struct {
 	Serial
 	RunID                    string                         `json:"run_id" gorm:"index"`
@@ -42,6 +43,7 @@ func (OpenGraphDataQualityStat) TableName() string {
 	return "data_quality_stats"
 }
 
+// OpenGraphDataQualityAggregation stores the same metrics rolled up by schema environment kind.
 type OpenGraphDataQualityAggregation struct {
 	Serial
 	RunID                    string                         `json:"run_id" gorm:"index"`

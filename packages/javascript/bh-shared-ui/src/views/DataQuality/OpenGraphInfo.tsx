@@ -111,6 +111,7 @@ function getLatestRunMetrics(stats: OpenGraphMetric[]): OpenGraphMetricRow[] {
         return [];
     }
 
+    // The summary tables show the newest collection run; history stays in the charts.
     return stats.filter((stat) => stat.run_id === latestRunID);
 }
 

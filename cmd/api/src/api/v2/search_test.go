@@ -521,7 +521,6 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 								common.Name.String():         "HeeHaw Name",
 								common.ObjectID.String():     "1",
 								common.Collected.String():    true,
-								common.PrimaryKind.String():  "HeeHaw Kind",
 								graphschema.EnvironmentIDKey: "hee-haw-environment",
 							}),
 							Kinds: graph.Kinds{graph.StringKind("HeeHaw Kind")},

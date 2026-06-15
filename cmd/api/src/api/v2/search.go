@@ -175,77 +175,33 @@ func (s *Resources) ListAvailableEnvironments(response http.ResponseWriter, requ
 }
 
 func BuildEnvironmentSelectors(nodes []*graph.Node, kindToDisplayName map[string]string, kindToSchemaExtensionID map[string]int32, kindToSchemaEnvironmentID map[string]int32) model.EnvironmentSelectors {
-	var (
-		envs                        = make(model.EnvironmentSelectors, 0, len(nodes))
-		builtInEnvironmentNamesByID = buildBuiltInEnvironmentNamesByID(nodes)
-	)
+	envs := make(model.EnvironmentSelectors, 0, len(nodes))
 
 	for _, node := range nodes {
 		name, _ := node.Properties.GetOrDefault(common.Name.String(), graphschema.DefaultMissingName).String()
+		objectID, _ := node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 
 		envType := resolveEnvType(node, kindToDisplayName)
-		environmentID := resolveEnvironmentID(node, kindToDisplayName)
 		collected := resolveCollected(node)
+		// Only OpenGraph schema environments get these metadata IDs; built-in environments leave them nil.
+		schemaExtensionID, schemaEnvironmentID := resolveSchemaEnvironmentIDs(node, kindToSchemaExtensionID, kindToSchemaEnvironmentID)
 
-		if isOpenGraphEnvironment(node, kindToDisplayName) {
-			if builtInEnvironmentName, ok := builtInEnvironmentNamesByID[environmentID]; ok {
-				name = builtInEnvironmentName
-			}
+		if schemaExtensionID != nil {
+			// Stats queries are environment-ID scoped, so OG selectors expose the graph environmentid as their id.
+			objectID, _ = node.Properties.GetWithFallback(graphschema.EnvironmentIDKey, graphschema.DefaultMissingObjectId, common.ObjectID.String()).String()
 		}
 
 		envs = append(envs, model.EnvironmentSelector{
 			Type:                envType,
 			Name:                name,
-			ObjectID:            environmentID,
+			ObjectID:            objectID,
 			Collected:           collected,
-			SchemaExtensionID:   resolveSchemaExtensionID(node, kindToDisplayName, kindToSchemaExtensionID),
-			SchemaEnvironmentID: resolveSchemaEnvironmentID(node, kindToDisplayName, kindToSchemaEnvironmentID),
+			SchemaExtensionID:   schemaExtensionID,
+			SchemaEnvironmentID: schemaEnvironmentID,
 		})
 	}
 
 	return envs
-}
-
-func buildBuiltInEnvironmentNamesByID(nodes []*graph.Node) map[string]string {
-	var namesByID = map[string]string{}
-
-	for _, node := range nodes {
-		if isBuiltInEnvironment(node) {
-			objectID, _ := node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
-			name, _ := node.Properties.GetOrDefault(common.Name.String(), graphschema.DefaultMissingName).String()
-			namesByID[objectID] = name
-		}
-	}
-
-	return namesByID
-}
-
-func isOpenGraphEnvironment(node *graph.Node, kindToDisplayName map[string]string) bool {
-	_, ok := resolveOpenGraphEnvironmentKind(node, kindToDisplayName)
-	return ok
-}
-
-func isBuiltInEnvironment(node *graph.Node) bool {
-	if _, hasPrimaryKind := getPrimaryKind(node); hasPrimaryKind {
-		return false
-	}
-
-	return node.Kinds.ContainsOneOf(azure.Tenant, ad.Domain)
-}
-
-func resolveEnvironmentID(node *graph.Node, kindToDisplayName map[string]string) string {
-	if isBuiltInEnvironment(node) {
-		objectID, _ := node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
-		return objectID
-	}
-
-	if _, ok := resolveOpenGraphEnvironmentKind(node, kindToDisplayName); ok {
-		environmentID, _ := node.Properties.GetWithFallback(graphschema.EnvironmentIDKey, graphschema.DefaultMissingObjectId, common.ObjectID.String()).String()
-		return environmentID
-	}
-
-	objectID, _ := node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
-	return objectID
 }
 
 func resolveCollected(node *graph.Node) bool {
@@ -257,7 +213,8 @@ func resolveCollected(node *graph.Node) bool {
 	collected, _ := node.Properties.Get(common.Collected.String()).Bool()
 
 	// Built-in environments (AD/Azure) respect the collected property
-	if isBuiltInEnvironment(node) {
+	isBuiltinEnvironment := node.Kinds.ContainsOneOf(azure.Tenant, ad.Domain)
+	if isBuiltinEnvironment {
 		return collected
 	}
 
@@ -267,63 +224,35 @@ func resolveCollected(node *graph.Node) bool {
 
 func resolveEnvType(node *graph.Node, kindToDisplayName map[string]string) string {
 	// TODO: Remove hardcoded built-in types once they are saved in DB and not CUE
-	if isBuiltInEnvironment(node) && node.Kinds.ContainsOneOf(azure.Tenant) {
+	if node.Kinds.ContainsOneOf(azure.Tenant) {
 		return "azure"
 	}
-	if isBuiltInEnvironment(node) && node.Kinds.ContainsOneOf(ad.Domain) {
+	if node.Kinds.ContainsOneOf(ad.Domain) {
 		return "active-directory"
 	}
 
 	// For custom extensions, use the display name from the schema extension
 	// Note: Nodes should only have one environment kind. In the edge case where there are multiple, we take the first.
-	if environmentKind, ok := resolveOpenGraphEnvironmentKind(node, kindToDisplayName); ok {
-		return kindToDisplayName[environmentKind]
+	for _, kind := range node.Kinds {
+		if displayName, ok := kindToDisplayName[kind.String()]; ok {
+			return displayName
+		}
 	}
 
 	return ""
 }
 
-func resolveOpenGraphEnvironmentKind(node *graph.Node, kindToDisplayName map[string]string) (string, bool) {
-	if primaryKind, hasPrimaryKind := getPrimaryKind(node); hasPrimaryKind {
-		if _, ok := kindToDisplayName[primaryKind.String()]; ok {
-			return primaryKind.String(), true
+func resolveSchemaEnvironmentIDs(node *graph.Node, kindToSchemaExtensionID map[string]int32, kindToSchemaEnvironmentID map[string]int32) (*int32, *int32) {
+	for _, kind := range node.Kinds {
+		kindName := kind.String()
+
+		if schemaExtensionID, ok := kindToSchemaExtensionID[kindName]; ok {
+			schemaEnvironmentID, _ := kindToSchemaEnvironmentID[kindName]
+			return &schemaExtensionID, &schemaEnvironmentID
 		}
 	}
 
-	return "", false
-}
-
-func resolveSchemaExtensionID(node *graph.Node, kindToDisplayName map[string]string, kindToSchemaExtensionID map[string]int32) *int32 {
-	if environmentKind, ok := resolveOpenGraphEnvironmentKind(node, kindToDisplayName); ok {
-		if schemaExtensionID, ok := kindToSchemaExtensionID[environmentKind]; ok {
-			return &schemaExtensionID
-		}
-	}
-
-	return nil
-}
-
-func resolveSchemaEnvironmentID(node *graph.Node, kindToDisplayName map[string]string, kindToSchemaEnvironmentID map[string]int32) *int32 {
-	if environmentKind, ok := resolveOpenGraphEnvironmentKind(node, kindToDisplayName); ok {
-		if schemaEnvironmentID, ok := kindToSchemaEnvironmentID[environmentKind]; ok {
-			return &schemaEnvironmentID
-		}
-	}
-
-	return nil
-}
-
-func getPrimaryKind(node *graph.Node) (graph.Kind, bool) {
-	if node.Properties == nil {
-		return nil, false
-	}
-
-	primaryKind, err := node.Properties.Get(common.PrimaryKind.String()).String()
-	if err != nil || primaryKind == "" {
-		return nil, false
-	}
-
-	return graph.StringKind(primaryKind), true
+	return nil, nil
 }
 
 // EnvironmentFilterResult contains the filter criteria and environment kind mappings for environments
@@ -356,6 +285,7 @@ func BuildEnvironmentFilter(ctx context.Context, db database.Database, openGraph
 
 		result.FilterCriteria = filterCriteria
 		result.KindToDisplayName = envKindToExtensionDisplayName
+		// These maps let the selector response carry the minimal routing metadata needed by OG data quality.
 		result.KindToSchemaExtensionID, result.KindToSchemaEnvironmentID, err = buildOpenGraphEnvironmentKindIDMaps(ctx, db, openGraphFlag.Enabled)
 		if err != nil {
 			return result, err

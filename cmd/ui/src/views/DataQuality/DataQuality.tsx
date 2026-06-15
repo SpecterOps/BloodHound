@@ -48,6 +48,7 @@ const getStatsComponent = (selectedEnvironment: SelectedEnvironment | null, data
             return <AzurePlatformInfo onDataError={dataErrorHandler} />;
         default:
             if (!contextType) return null;
+            // OpenGraph aggregate selections are represented as "<environment-kind>-platform".
             if (contextType.endsWith('-platform')) {
                 return (
                     <OpenGraphExtensionInfo

@@ -58,6 +58,7 @@ type openGraphDataQualityAggregationKey struct {
 	schemaRelationshipKindID null.Int32
 }
 
+// Source kinds are counted by their owning built-in extension, so OG stats skip them here.
 func excludeSourceKindsFromOpenGraphNodeKinds(nodeKinds model.GraphSchemaNodeKinds, sourceKinds []model.Kind) model.GraphSchemaNodeKinds {
 	var (
 		result          = make(model.GraphSchemaNodeKinds, 0, len(nodeKinds))
@@ -77,6 +78,7 @@ func excludeSourceKindsFromOpenGraphNodeKinds(nodeKinds model.GraphSchemaNodeKin
 	return result
 }
 
+// Schema environments define the source kind used to scope each OpenGraph environment kind.
 func openGraphDataQualitySourceKinds(ctx context.Context, db DataQualityData, environments []model.SchemaEnvironment) (map[int32]model.Kind, []model.Kind, error) {
 	var (
 		sourceKindIDs              = make([]int32, 0, len(environments))
@@ -109,6 +111,7 @@ func openGraphDataQualitySourceKinds(ctx context.Context, db DataQualityData, en
 	return sourceKindsByEnvironmentID, sourceKinds, nil
 }
 
+// Node kind counts exclude source kinds so shared AD/Azure kinds are not double-counted for OG.
 func openGraphDataQualityNodeKinds(ctx context.Context, db DataQualityData, extensionID int32, sourceKinds []model.Kind) (model.GraphSchemaNodeKinds, error) {
 	nodeKinds, err := db.GetGraphSchemaNodeKindsByExtensionId(ctx, extensionID)
 	if err != nil {
@@ -534,6 +537,7 @@ func azureGraphStats(ctx context.Context, db graph.Database) (model.AzureDataQua
 	return stats, aggregation, err
 }
 
+// OG environment nodes identify the environment IDs to count; stats remain scoped to those IDs.
 func fetchOpenGraphEnvironmentIDs(ctx context.Context, tx graph.Transaction, environmentKind graph.Kind) ([]string, error) {
 	var environmentIDs []string
 
@@ -578,7 +582,8 @@ func openGraphExtensionGraphStats(
 	relationshipKinds model.GraphSchemaRelationshipKinds,
 ) (model.OpenGraphDataQualityStats, model.OpenGraphDataQualityAggregations, error) {
 	var (
-		stats             = model.OpenGraphDataQualityStats{}
+		stats = model.OpenGraphDataQualityStats{}
+		// Aggregations roll up all environment IDs for the same schema environment kind and metric.
 		aggregationCounts = map[openGraphDataQualityAggregationKey]float64{}
 	)
 
@@ -597,6 +602,7 @@ func openGraphExtensionGraphStats(
 
 			for _, environmentID := range environmentIDs {
 				for _, nodeKind := range nodeKinds {
+					// MVP counts require both the expected source kind and the selected environment ID.
 					count, err := tx.Nodes().Filter(query.And(
 						graphschema.IgnoreMetaFilter,
 						query.Kind(query.Node(), sourceKind.ToKind()),
@@ -630,6 +636,7 @@ func openGraphExtensionGraphStats(
 				}
 
 				for _, relationshipKind := range relationshipKinds {
+					// Relationship counts use the same environment-ID and source-kind scope as node counts.
 					count, err := tx.Relationships().Filter(query.And(
 						query.Kind(query.Relationship(), relationshipKind.ToKind()),
 						query.Kind(query.Start(), sourceKind.ToKind()),
@@ -686,6 +693,7 @@ func openGraphExtensionGraphStats(
 	return stats, aggregations, nil
 }
 
+// Collect OpenGraph stats using schema environments to scope source kinds and environment IDs.
 func openGraphGraphStats(ctx context.Context, db DataQualityData, graphDB graph.Database) (model.OpenGraphDataQualityStats, model.OpenGraphDataQualityAggregations, error) {
 	var (
 		aggregations = model.OpenGraphDataQualityAggregations{}
@@ -786,6 +794,7 @@ func SaveDataQuality(ctx context.Context, db DataQualityData, graphDB graph.Data
 		}
 	}
 
+	// OpenGraph runs after built-in DQ collection so shared source-kind nodes are already attributed.
 	if stats, aggregations, err := openGraphGraphStats(ctx, db, graphDB); err != nil {
 		return fmt.Errorf("could not get OpenGraph data quality stats: %w", err)
 	} else if len(stats) > 0 {

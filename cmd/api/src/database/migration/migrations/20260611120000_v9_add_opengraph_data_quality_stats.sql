@@ -15,6 +15,7 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 -- +goose Up
+-- Generic metric tables support node and relationship counts today and other OG DQ metrics later.
 CREATE TABLE IF NOT EXISTS data_quality_stats (
     id SERIAL PRIMARY KEY,
     run_id TEXT NOT NULL,

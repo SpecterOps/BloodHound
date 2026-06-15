@@ -215,6 +215,7 @@ func (s *Resources) GetOpenGraphDataQualityStats(response http.ResponseWriter, r
 		queryParams               = request.URL.Query()
 	)
 
+	// schema_environment_id scopes OpenGraph stats to the selected schema environment kind.
 	if order, err := parseDataQualityOrder(openGraphDataQualityStats, queryParams); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, dataQualityStatsDefaultSortableErrorText, request), response)
 	} else if start, err := ParseTimeQueryParameter(queryParams, dataQualityQueryParameterStartDate, defaultStart); err != nil {
@@ -243,6 +244,7 @@ func (s *Resources) GetOpenGraphDataQualityAggregations(response http.ResponseWr
 		queryParams                      = request.URL.Query()
 	)
 
+	// Aggregations are per schema environment kind, not just per extension.
 	if order, err := parseDataQualityOrder(openGraphDataQualityAggregations, queryParams); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, dataQualityStatsDefaultSortableErrorText, request), response)
 	} else if start, err := ParseTimeQueryParameter(queryParams, dataQualityQueryParameterStartDate, defaultStart); err != nil {

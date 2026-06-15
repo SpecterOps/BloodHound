@@ -71,6 +71,7 @@ export type Environment = {
     name: string;
     id: string;
     collected: boolean;
+    // OG selectors carry schema IDs so DQ can route aggregate and environment views to the right metric query.
     schema_extension_id?: number;
     schema_environment_id?: number;
     hygiene_attack_paths: number; // While improbable this number could possibly be higher than the JavaScript max safe integer in the response
@@ -128,6 +129,7 @@ export type AzureDataQualityStat = TimestampFields & {
 
 export type AzureDataQualityResponse = PaginatedResponse<AzureDataQualityStat[]>;
 
+// Metric rows keep OpenGraph DQ extensible beyond node counts while sharing one response shape.
 export type OpenGraphDataQualityMetricType = 'node' | 'relationship';
 
 export type OpenGraphDataQualityStat = TimestampFields & {
