@@ -69,8 +69,10 @@ func (s dirEntry) Info() (fs.FileInfo, error) {
 }
 
 func TestOrphanFileSweeper_Clear(t *testing.T) {
-	const workDir = "/fake/work/dir"
-	const scratchDir = "/fake/work/dir/scratch"
+	var (
+		workDir    = t.TempDir()
+		scratchDir = t.TempDir()
+	)
 
 	t.Run("Allow Only One Goroutine", func(t *testing.T) {
 		var (

@@ -23,12 +23,14 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bootstrap"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
@@ -113,6 +115,9 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 	require.NoError(t, err)
 
 	cfg.WorkDir = workDir
+	cfg.CollectorsBasePath = filepath.Join(workDir, "collectors")
+	err = bootstrap.EnsureServerDirectories(cfg)
+	require.NoError(t, err)
 
 	fileServices, err := storage.NewDefaultFileServices(cfg)
 	require.NoError(t, err, "error creating the default file services")
