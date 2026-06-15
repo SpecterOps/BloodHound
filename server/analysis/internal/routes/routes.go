@@ -26,7 +26,7 @@ import (
 func Register(routerInst *router.Router, handlers *handlers.Handlers) {
 	var permissions = auth.Permissions()
 
-	routerInst.GET("/api/v2/analysis/status", handlers.GetRequest).RequirePermissions(permissions.GraphDBRead)
-	routerInst.PUT("/api/v2/analysis", handlers.CreateRequest).RequirePermissions(permissions.AppWriteApplicationConfiguration)
+	routerInst.GET("/api/v2/analysis/status", handlers.GetAnalysisRequest).RequirePermissions(permissions.GraphDBRead)
+	routerInst.PUT("/api/v2/analysis", handlers.CreateAnalysisRequest).RequirePermissions(permissions.AppWriteApplicationConfiguration)
 	routerInst.DELETE("/api/v2/analysis", handlers.CancelAnalysisRequest).RequirePermissions(permissions.AppWriteApplicationConfiguration)
 }

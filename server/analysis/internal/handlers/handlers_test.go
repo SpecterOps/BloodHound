@@ -116,7 +116,7 @@ func TestHandlers_GetRequest(t *testing.T) {
 
 			analysisMock.EXPECT().GetRequest(request.Context()).Return(tt.svcResult, tt.svcErr)
 
-			handlerSet.GetRequest(recorder, request)
+			handlerSet.GetAnalysisRequest(recorder, request)
 
 			assert.Equal(t, tt.wantStatus, recorder.Code)
 			if tt.assertBody != nil {
@@ -212,7 +212,7 @@ func TestHandlers_CreateRequest(t *testing.T) {
 				tt.expect(analysisMock, request.Context())
 			}
 
-			handlerSet.CreateRequest(recorder, request)
+			handlerSet.CreateAnalysisRequest(recorder, request)
 
 			assert.Equal(t, tt.wantStatus, recorder.Code)
 			if tt.wantRequestedBy != "" {

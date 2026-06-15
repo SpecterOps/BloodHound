@@ -51,10 +51,10 @@ func NewHandlersContainer(analysis Analysis) *Handlers {
 	}
 }
 
-// GetRequest returns the currently pending analysis request. Returns 200 with the
+// GetAnalysisRequest returns the currently pending analysis request. Returns 200 with the
 // request details when one is pending, or 204 No Content when no request is
 // currently pending.
-func (s Handlers) GetRequest(response http.ResponseWriter, request *http.Request) {
+func (s Handlers) GetAnalysisRequest(response http.ResponseWriter, request *http.Request) {
 	var ctx = request.Context()
 
 	ra, err := s.analysis.GetRequest(ctx)
@@ -66,14 +66,14 @@ func (s Handlers) GetRequest(response http.ResponseWriter, request *http.Request
 	responses.WriteBasic(ctx, BuildRequestedAnalysisView(ra), http.StatusOK, response)
 }
 
-// CreateRequest submits a new analysis request attributed to the authenticated user.
+// CreateAnalysisRequest submits a new analysis request attributed to the authenticated user.
 // Returns 202 Accepted when this call accepted the request, or 200 OK when a request
 // was already pending (the body in both cases describes the currently pending request).
 //
 // Authentication is enforced by the route middleware (RequirePermissions); if no user
 // is present on the auth context here it indicates an unexpected internal state and a
 // 500 is returned.
-func (s Handlers) CreateRequest(response http.ResponseWriter, request *http.Request) {
+func (s Handlers) CreateAnalysisRequest(response http.ResponseWriter, request *http.Request) {
 	var ctx = request.Context()
 
 	user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx)

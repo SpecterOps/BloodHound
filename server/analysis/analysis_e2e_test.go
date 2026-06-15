@@ -135,7 +135,7 @@ func getAnalysisPostgresConfig(t *testing.T) pgtestdb.Config {
 func newAnalysisGetHandler(db *database.BloodhoundDB) http.HandlerFunc {
 	store := appdb.NewStore(db.Pool())
 	svc := services.NewService(store)
-	return handlers.NewHandlersContainer(svc).GetRequest
+	return handlers.NewHandlersContainer(svc).GetAnalysisRequest
 }
 
 // newCreateAnalysisHandler wires the pgx-backed analysis stack from a BloodhoundDB
@@ -143,7 +143,7 @@ func newAnalysisGetHandler(db *database.BloodhoundDB) http.HandlerFunc {
 func newCreateAnalysisHandler(db *database.BloodhoundDB, userID uuid.UUID) http.HandlerFunc {
 	store := appdb.NewStore(db.Pool())
 	svc := services.NewService(store)
-	return injectAuthMiddleware(handlers.NewHandlersContainer(svc).CreateRequest, userID)
+	return injectAuthMiddleware(handlers.NewHandlersContainer(svc).CreateAnalysisRequest, userID)
 }
 
 // newCancelAnalysisHandler wires the DELETE /api/v2/analysis handler backed by
