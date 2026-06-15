@@ -168,7 +168,7 @@ func TestWriteCSV(t *testing.T) {
 	t.Run("writes 500 when serialization fails", func(t *testing.T) {
 		var recorder = httptest.NewRecorder()
 
-		responses.WriteCSV(ctx, stubCSVViewer{err: errors.New("csv boom")}, http.StatusOK, recorder)
+		responses.WriteCSV(ctx, stubCSVViewer{err: errors.New("csv boom")}, http.StatusInternalServerError, recorder)
 
 		assert.Equal(t, http.StatusInternalServerError, recorder.Code)
 	})

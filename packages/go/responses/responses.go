@@ -118,14 +118,12 @@ func WritePaginated(ctx context.Context, data JSONViewer, limit, skip, count, st
 // responsible for setting any Content-Disposition header before invoking this helper.
 func WriteCSV(ctx context.Context, data CSVViewer, statusCode int, response http.ResponseWriter) {
 	response.Header().Set(headers.ContentType.String(), mediatypes.TextCsv.String())
+	response.WriteHeader(statusCode)
 
 	if err := data.WriteCSV(response); err != nil {
 		slog.ErrorContext(ctx, "Failed to write CSV response body", attr.Error(err))
-		response.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	response.WriteHeader(statusCode)
 }
 
 // WriteError writes a structured ErrorWrapper to the response with the supplied status code

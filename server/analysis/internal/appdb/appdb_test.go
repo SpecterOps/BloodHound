@@ -98,13 +98,6 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 			wantResult: expected,
 		},
 		{
-			name: "maps pgx.ErrNoRows to services.ErrNoPendingRequest",
-			expectations: func(pool pgxmock.PgxPoolIface) {
-				pool.ExpectQuery(expectedSelectSQL).WithArgs(1).WillReturnError(pgx.ErrNoRows)
-			},
-			wantErr: services.ErrNoPendingRequest,
-		},
-		{
 			name: "maps CollectOneRow pgx.ErrNoRows to services.ErrNoPendingRequest",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				// Query succeeds but returns zero rows; CollectOneRow sees no data and returns pgx.ErrNoRows

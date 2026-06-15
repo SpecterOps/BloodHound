@@ -28,6 +28,10 @@ import (
 	"github.com/specterops/bloodhound/server/analysis/internal/services"
 )
 
+const (
+	tableAnalysisRequestSwitch = "analysis_request_switch"
+)
+
 // queryExecer is the minimal surface satisfied by both *pgxpool.Pool and pgx.Tx.
 // Helpers that must run inside a transaction accept this narrower interface.
 type queryExecer interface {
@@ -99,15 +103,12 @@ func selectAnalysisRequest(ctx context.Context, querier queryExecer) (services.R
 		"delete_source_kinds",
 		"delete_relationships",
 	)
-	selectBuilder.From("analysis_request_switch")
+	selectBuilder.From(tableAnalysisRequestSwitch)
 	selectBuilder.Limit(1)
 
 	sqlQuery, args := selectBuilder.Build()
 
 	rows, err = querier.Query(ctx, sqlQuery, args...)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return services.RequestedAnalysis{}, services.ErrNoPendingRequest
-	}
 	if err != nil {
 		return services.RequestedAnalysis{}, err
 	}
@@ -141,7 +142,7 @@ func (s *Store) CreateAnalysisRequest(ctx context.Context, requestedBy string) (
 	)
 
 	insertBuilder := sqlbuilder.PostgreSQL.NewInsertBuilder()
-	insertBuilder.InsertInto("analysis_request_switch")
+	insertBuilder.InsertInto(tableAnalysisRequestSwitch)
 	insertBuilder.Cols(
 		"requested_by",
 		"request_type",
@@ -220,7 +221,7 @@ func (s *Store) DeleteAnalysisRequest(ctx context.Context) error {
 	}
 
 	deleteBuilder := sqlbuilder.PostgreSQL.NewDeleteBuilder()
-	deleteBuilder.DeleteFrom("analysis_request_switch")
+	deleteBuilder.DeleteFrom(tableAnalysisRequestSwitch)
 
 	sqlQuery, args := deleteBuilder.Build()
 
