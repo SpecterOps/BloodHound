@@ -1013,6 +1013,7 @@ func (s *GraphQuery) runListQuery(ctx context.Context, primaryDisplayKinds graph
 }
 
 func (s *GraphQuery) runCountQuery(ctx context.Context, node *graph.Node, params EntityQueryParameters, cacheEnabled bool) (any, int, error) {
+	params.RequestedType = model.DataTypeList 
 	result, err := s.runMaybeCachedEntityQuery(ctx, node, params, cacheEnabled)
 	return nil, result.Len(), err
 }

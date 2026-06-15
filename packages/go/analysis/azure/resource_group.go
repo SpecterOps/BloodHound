@@ -43,7 +43,7 @@ func ResourceGroupEntityDetails(ctx context.Context, db graph.Database, primaryD
 func PopulateResourceGroupEntityDetailsCounts(tx graph.Transaction, node *graph.Node, details ResourceGroupDetails) (ResourceGroupDetails, error) {
 	var descendentKinds = GetDescendentKinds(azure.ResourceGroup)
 
-	if descendents, err := FetchEntityDescendentCounts(tx, node, 0, 0, descendentKinds...); err != nil {
+	if descendents, err := FetchDirectDescendentCounts(tx, node, 0, 0, descendentKinds...); err != nil {
 		return details, err
 	} else {
 		details.Descendents = descendents

@@ -18,6 +18,7 @@ package azure
 
 import (
 	"context"
+	"net/url"
 
 	"log/slog"
 	"strings"
@@ -28,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -788,27 +790,159 @@ func FetchKeyVaultReaderCounts(tx graph.Transaction, keyVault *graph.Node) (KeyV
 	return keyVaultReaders, nil
 }
 
-func EntityDescendentsTraversal(root *graph.Node, _ ...graph.Kind) ops.TraversalPlan {
-	return ops.TraversalPlan{
-		Root:        root,
-		Direction:   graph.DirectionOutbound,
-		BranchQuery: FilterContains,
+// containsValidEndKinds maps each valid AZContains start node kind to the set of valid end node kinds.
+// This is derived directly from the ingestion logic in bhce/packages/go/ein/azure.go.
+var containsValidEndKinds = map[graph.Kind]graph.Kinds{
+	azure.Tenant: {
+		azure.App,
+		azure.Device,
+		azure.Group,
+		azure.Role,
+		azure.ServicePrincipal,
+		azure.Subscription,
+		azure.User,
+	},
+	azure.ManagementGroup: {
+		azure.ManagementGroup,
+		azure.Subscription,
+	},
+	azure.Subscription: {
+		azure.ResourceGroup,
+	},
+	azure.ResourceGroup: {
+		azure.VMScaleSet,
+		azure.FunctionApp,
+		azure.KeyVault,
+		azure.LogicApp,
+		azure.VM,
+		azure.ManagedCluster,
+		azure.ContainerRegistry,
+		azure.WebApp,
+		azure.AutomationAccount,
+	},
+}
+
+// nodeAzureTenantID returns the Azure tenant ID for a node. For Tenant nodes the tenant ID is
+// stored in the common.ObjectID property; for all other Azure nodes it is stored in azure.TenantID.
+func nodeAzureTenantID(node *graph.Node) (string, error) {
+	if node.Kinds.ContainsOneOf(azure.Tenant) {
+		return node.Properties.Get(common.ObjectID.String()).String()
+	}
+
+	return node.Properties.Get(azure.TenantID.String()).String()
+}
+
+// FetchDirectDescendentPaths fetches the direct AZContains relationships from the root node. Both
+// the valid start/end node kind pairing and the tenant-id match are enforced
+func FetchDirectDescendentPaths(tx graph.Transaction, root *graph.Node, descendentKind ...graph.Kind) (graph.PathSet, error) {
+	if tenantID, err := nodeAzureTenantID(root); err != nil {
+		return nil, err
+	} else {
+		return ops.FetchPathSet(tx.Relationships().Filter(query.And(
+			query.Equals(query.StartID(), root.ID),
+			query.Kind(query.Relationship(), azure.Contains),
+			query.KindIn(query.End(), descendentKind...),
+			query.Equals(query.EndProperty(azure.TenantID.String()), tenantID),
+		)))
 	}
 }
 
-func FetchEntityDescendentPaths(tx graph.Transaction, root *graph.Node, descendentKinds ...graph.Kind) (graph.PathSet, error) {
-	return ops.TraverseIntermediaryPaths(tx, EntityDescendentsTraversal(root, descendentKinds...), func(node *graph.Node) bool {
-		return node.Kinds.ContainsOneOf(descendentKinds...)
-	})
-}
-
-func FetchEntityDescendents(tx graph.Transaction, root *graph.Node, skip, limit int, descendentKinds ...graph.Kind) (graph.NodeSet, error) {
-	if paths, err := FetchEntityDescendentPaths(tx, root, descendentKinds...); err != nil {
+func FetchDirectEntityDescendents(tx graph.Transaction, root *graph.Node, skip, limit int, descendentKind graph.Kind) (graph.NodeSet, error) {
+	if paths, err := FetchDirectDescendentPaths(tx, root, descendentKind); err != nil {
 		return nil, err
 	} else {
 		nodes := paths.AllNodes()
 		nodes.Remove(root.ID)
-		return nodes.ContainingNodeKinds(descendentKinds...), nil
+		return nodes, nil
+	}
+}
+
+func FetchDescendentKindByTenantID(tx graph.Transaction, root *graph.Node, skip, limit int, descendentKind ...graph.Kind) (graph.NodeSet, error) {
+	if tenantID, err := nodeAzureTenantID(root); err != nil {
+		return nil, err
+	} else if nodes, err := ops.FetchNodeSet(tx.Nodes().Filter(query.And(
+		query.KindIn(query.Node(), descendentKind...),
+		query.Equals(query.NodeProperty(azure.TenantID.String()), tenantID),
+	))); err != nil {
+		return nil, err
+	} else {
+		return nodes, nil
+	}
+}
+
+// FetchEntityDescendentPaths fetches paths from each terminal node of descendentKind (within the
+// same Azure tenant as root) back up to root via azure.Contains relationships. Each traversal
+// halts upon reaching root or encountering a node already claimed by a prior traversal, preventing
+// duplicate path segments across traversals.
+func FetchEntityDescendentPaths(tx graph.Transaction, root *graph.Node, descendentKind ...graph.Kind) (graph.PathSet, error) {
+	var (
+		visitedBitmap = cardinality.NewBitmap64()
+		pathSet       = graph.NewPathSet()
+	)
+
+	// Pre-populate the visited bitmap with root so that any traversal halts when it reaches it
+	visitedBitmap.Add(root.ID.Uint64())
+
+	terminalNodes, err := FetchDescendentKindByTenantID(tx, root, 0, 0, descendentKind...)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, terminalNode := range terminalNodes {
+		// Skip this terminal if it was already reached and claimed by a prior traversal
+		if visitedBitmap.Contains(terminalNode.ID.Uint64()) {
+			continue
+		}
+
+		if paths, err := ops.TraversePaths(tx, ops.TraversalPlan{
+			Root:      terminalNode,
+			Direction: graph.DirectionInbound,
+			BranchQuery: func() graph.Criteria {
+				return query.Kind(query.Relationship(), azure.Contains)
+			},
+			ExpansionFilter: func(segment *graph.PathSegment) bool {
+				nodeID := segment.Node.ID.Uint64()
+				if visitedBitmap.Contains(nodeID) {
+					return false
+				}
+				visitedBitmap.Add(nodeID)
+				return true
+			},
+		}); err != nil {
+			return nil, err
+		} else {
+			pathSet.AddPathSet(paths)
+		}
+	}
+
+	return pathSet, nil
+}
+
+func FetchEntityDescendents(tx graph.Transaction, root *graph.Node, skip, limit int, descendentKind graph.Kind) (graph.NodeSet, error) {
+	if paths, err := FetchEntityDescendentPaths(tx, root, descendentKind); err != nil {
+		return nil, err
+	} else {
+		nodes := paths.AllNodes()
+		nodes.Remove(root.ID)
+		return nodes.ContainingNodeKinds(descendentKind), nil
+	}
+}
+
+func FetchDirectDescendentCounts(tx graph.Transaction, root *graph.Node, skip, limit int, descendentKinds ...graph.Kind) (Descendents, error) {
+	if paths, err := FetchDirectDescendentPaths(tx, root, descendentKinds...); err != nil {
+		return Descendents{}, err
+	} else {
+		details := Descendents{
+			DescendentCounts: map[string]int{},
+		}
+		kindSet := paths.AllNodes().KindSet()
+		kindSet.RemoveNode(root.ID)
+
+		for _, kind := range descendentKinds {
+			details.DescendentCounts[kind.String()] = int(kindSet.Count(kind))
+		}
+
+		return details, nil
 	}
 }
 
@@ -846,10 +980,14 @@ func fetchRolesTraversalPlan(root *graph.Node) ops.TraversalPlan {
 
 // FetchEntityByObjectID pulls a node by its ObjectID. It requires a kind to perform index lookups against.
 func FetchEntityByObjectID(tx graph.Transaction, objectID string) (*graph.Node, error) {
-	return tx.Nodes().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Kind(query.Node(), azure.Entity),
-			query.Equals(query.NodeProperty(common.ObjectID.String()), objectID),
-		)
-	}).First()
+	if decodedObjectID, err := url.QueryUnescape(objectID); err != nil {
+		return nil, err
+	} else {
+		return tx.Nodes().Filterf(func() graph.Criteria {
+			return query.And(
+				query.Kind(query.Node(), azure.Entity),
+				query.Equals(query.NodeProperty(common.ObjectID.String()), decodedObjectID),
+			)
+		}).First()
+	}
 }
