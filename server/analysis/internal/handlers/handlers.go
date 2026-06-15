@@ -51,56 +51,61 @@ func NewHandlersContainer(analysis Analysis) *Handlers {
 	}
 }
 
-// GetAnalysisRequest returns the currently pending analysis request. Returns 200 with the
-// request details when one is pending, or 204 No Content when no request is
-// currently pending.
+// GetAnalysisRequest returns the currently pending analysis request. Always returns 200 OK
+// with the request details. If no request exists, returns a zero-valued struct.
 func (s Handlers) GetAnalysisRequest(response http.ResponseWriter, request *http.Request) {
 	var ctx = request.Context()
 
 	ra, err := s.analysis.GetRequest(ctx)
-	if err != nil {
+	if err != nil && !errors.Is(err, services.ErrNoPendingRequest) {
 		handleAnalysisError(request, response, err)
 		return
 	}
 
+	// Always return 200 OK with the request (even if zero-valued when no request exists)
+	// This matches the behavior in main where sql.ErrNoRows is ignored and zero-valued struct is returned
 	responses.WriteBasic(ctx, BuildRequestedAnalysisView(ra), http.StatusOK, response)
 }
 
 // CreateAnalysisRequest submits a new analysis request attributed to the authenticated user.
-// Returns 202 Accepted when this call accepted the request, or 200 OK when a request
-// was already pending (the body in both cases describes the currently pending request).
+// Always returns 202 Accepted with no response body.
 //
 // Authentication is enforced by the route middleware (RequirePermissions); if no user
-// is present on the auth context here it indicates an unexpected internal state and a
-// 500 is returned.
+// is present on the auth context, logs a warning and uses "unknown-user" as a fallback.
 func (s Handlers) CreateAnalysisRequest(response http.ResponseWriter, request *http.Request) {
-	var ctx = request.Context()
+	var (
+		ctx    = request.Context()
+		userId string
+	)
 
 	user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx)
 	if !isUser {
-		responses.WriteInternalServerError(ctx, errors.New("no user on auth context after authentication middleware"), response)
-		return
+		slog.WarnContext(ctx, "Encountered request analysis for unknown user, this shouldn't happen")
+		userId = "unknown-user"
+	} else {
+		userId = user.ID.String()
 	}
 
-	current, created, err := s.analysis.CreateRequest(ctx, user.ID.String())
+	_, _, err := s.analysis.CreateRequest(ctx, userId)
 	if err != nil {
 		handleAnalysisError(request, response, err)
 		return
 	}
 
-	statusCode := http.StatusOK
-	if created {
-		statusCode = http.StatusAccepted
-	}
-	responses.WriteBasic(ctx, BuildRequestedAnalysisView(current), statusCode, response)
+	// Always return 202 Accepted with no response body, matching main behavior
+	response.WriteHeader(http.StatusAccepted)
 }
 
+// CancelAnalysisRequest cancels a pending analysis request.
+// Returns 401 if user is missing, 404 if no request exists, 409 if deletion request is pending,
+// or 202 on success.
 func (s Handlers) CancelAnalysisRequest(response http.ResponseWriter, request *http.Request) {
 	var ctx = request.Context()
 
 	_, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx)
 	if !isUser {
-		responses.WriteInternalServerError(ctx, errors.New("no user on auth context after authentication middleware"), response)
+		slog.ErrorContext(ctx, "Unable to get user from auth context")
+		responses.WriteError(ctx, http.StatusUnauthorized, api.ErrorResponseUnknownUser.Error(), response)
 		return
 	}
 
@@ -114,14 +119,22 @@ func (s Handlers) CancelAnalysisRequest(response http.ResponseWriter, request *h
 }
 
 func handleAnalysisError(request *http.Request, response http.ResponseWriter, err error) {
+	var ctx = request.Context()
+
 	if errors.Is(err, services.ErrNoPendingRequest) {
-		response.WriteHeader(http.StatusNoContent)
+		// For DELETE requests, return 404 Not Found (request doesn't exist to cancel)
+		// For other requests, this is handled in the caller
+		if request.Method == http.MethodDelete {
+			responses.WriteError(ctx, http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, response)
+		} else {
+			response.WriteHeader(http.StatusNoContent)
+		}
 	} else if errors.Is(err, services.ErrDeletionRequestPending) {
-		response.WriteHeader(http.StatusConflict)
+		responses.WriteError(ctx, http.StatusConflict, api.ErrorResponseAnalysisRequestTypeDeletionPending, response)
 	} else if errors.Is(err, context.DeadlineExceeded) {
-		responses.WriteError(request.Context(), http.StatusInternalServerError, api.ErrorResponseRequestTimeout, response)
+		responses.WriteError(ctx, http.StatusInternalServerError, api.ErrorResponseRequestTimeout, response)
 	} else {
 		slog.Error("Unexpected database error", attr.Error(err))
-		responses.WriteError(request.Context(), http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, response)
+		responses.WriteError(ctx, http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, response)
 	}
 }
