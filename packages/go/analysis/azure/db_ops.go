@@ -73,14 +73,12 @@ func ListEntityDescendentPaths(ctx context.Context, db graph.Database, relatedEn
 				return ErrInvalidRelatedEntityType
 			}
 
-			if validEndKinds, ok := containsValidEndKinds[sourceKind]; ok && validEndKinds.ContainsOneOf(targetKind) {
+			if isDirectDescendent(sourceKind, targetKind) {
 				paths, err = FetchDirectDescendentPaths(tx, node, targetKind)
-				return err
 			} else {
 				paths, err = FetchEntityDescendentPaths(tx, node, targetKind)
-				return err
 			}
-
+			return err
 		}
 	})
 }
@@ -133,14 +131,12 @@ func ListEntityDescendents(ctx context.Context, db graph.Database, relatedEntity
 				return ErrInvalidRelatedEntityType
 			}
 
-			if validEndKinds, ok := containsValidEndKinds[sourceKind]; ok && validEndKinds.ContainsOneOf(targetKind) {
-				nodes, err = FetchDirectEntityDescendents(tx, node, skip, limit, targetKind)
-				return err
+			if isDirectDescendent(sourceKind, targetKind) {
+				nodes, err = FetchDirectEntityDescendents(tx, node, targetKind)
 			} else {
-				nodes, err = FetchEntityDescendents(tx, node, skip, limit, targetKind)
-				return err
+				nodes, err = FetchEntityDescendents(tx, node, targetKind)
 			}
-
+			return err
 		}
 	})
 }

@@ -18,7 +18,6 @@ package azure
 
 import (
 	"context"
-	"net/url"
 
 	"log/slog"
 	"strings"
@@ -822,6 +821,13 @@ var containsValidEndKinds = map[graph.Kind]graph.Kinds{
 	},
 }
 
+func isDirectDescendent(sourceKind, targetKind graph.Kind) bool {
+	if validEndKinds, ok := containsValidEndKinds[sourceKind]; ok && validEndKinds.ContainsOneOf(targetKind) {
+		return true
+	}
+	return false
+}
+
 // nodeAzureTenantID returns the Azure tenant ID for a node. For Tenant nodes the tenant ID is
 // stored in the common.ObjectID property; for all other Azure nodes it is stored in azure.TenantID.
 func nodeAzureTenantID(node *graph.Node) (string, error) {
@@ -832,22 +838,16 @@ func nodeAzureTenantID(node *graph.Node) (string, error) {
 	return node.Properties.Get(azure.TenantID.String()).String()
 }
 
-// FetchDirectDescendentPaths fetches the direct AZContains relationships from the root node. Both
-// the valid start/end node kind pairing and the tenant-id match are enforced
+// FetchDirectDescendentPaths fetches the direct AZContains relationships from the root node
 func FetchDirectDescendentPaths(tx graph.Transaction, root *graph.Node, descendentKind ...graph.Kind) (graph.PathSet, error) {
-	if tenantID, err := nodeAzureTenantID(root); err != nil {
-		return nil, err
-	} else {
-		return ops.FetchPathSet(tx.Relationships().Filter(query.And(
-			query.Equals(query.StartID(), root.ID),
-			query.Kind(query.Relationship(), azure.Contains),
-			query.KindIn(query.End(), descendentKind...),
-			query.Equals(query.EndProperty(azure.TenantID.String()), tenantID),
-		)))
-	}
+	return ops.FetchPathSet(tx.Relationships().Filter(query.And(
+		query.Equals(query.StartID(), root.ID),
+		query.Kind(query.Relationship(), azure.Contains),
+		query.KindIn(query.End(), descendentKind...),
+	)))
 }
 
-func FetchDirectEntityDescendents(tx graph.Transaction, root *graph.Node, skip, limit int, descendentKind graph.Kind) (graph.NodeSet, error) {
+func FetchDirectEntityDescendents(tx graph.Transaction, root *graph.Node, descendentKind graph.Kind) (graph.NodeSet, error) {
 	if paths, err := FetchDirectDescendentPaths(tx, root, descendentKind); err != nil {
 		return nil, err
 	} else {
@@ -857,7 +857,7 @@ func FetchDirectEntityDescendents(tx graph.Transaction, root *graph.Node, skip, 
 	}
 }
 
-func FetchDescendentKindByTenantID(tx graph.Transaction, root *graph.Node, skip, limit int, descendentKind ...graph.Kind) (graph.NodeSet, error) {
+func FetchDescendentKindByTenantID(tx graph.Transaction, root *graph.Node, descendentKind ...graph.Kind) (graph.NodeSet, error) {
 	if tenantID, err := nodeAzureTenantID(root); err != nil {
 		return nil, err
 	} else if nodes, err := ops.FetchNodeSet(tx.Nodes().Filter(query.And(
@@ -883,7 +883,7 @@ func FetchEntityDescendentPaths(tx graph.Transaction, root *graph.Node, descende
 	// Pre-populate the visited bitmap with root so that any traversal halts when it reaches it
 	visitedBitmap.Add(root.ID.Uint64())
 
-	terminalNodes, err := FetchDescendentKindByTenantID(tx, root, 0, 0, descendentKind...)
+	terminalNodes, err := FetchDescendentKindByTenantID(tx, root, descendentKind...)
 	if err != nil {
 		return nil, err
 	}
@@ -918,7 +918,7 @@ func FetchEntityDescendentPaths(tx graph.Transaction, root *graph.Node, descende
 	return pathSet, nil
 }
 
-func FetchEntityDescendents(tx graph.Transaction, root *graph.Node, skip, limit int, descendentKind graph.Kind) (graph.NodeSet, error) {
+func FetchEntityDescendents(tx graph.Transaction, root *graph.Node, descendentKind graph.Kind) (graph.NodeSet, error) {
 	if paths, err := FetchEntityDescendentPaths(tx, root, descendentKind); err != nil {
 		return nil, err
 	} else {
@@ -928,7 +928,7 @@ func FetchEntityDescendents(tx graph.Transaction, root *graph.Node, skip, limit 
 	}
 }
 
-func FetchDirectDescendentCounts(tx graph.Transaction, root *graph.Node, skip, limit int, descendentKinds ...graph.Kind) (Descendents, error) {
+func FetchDirectDescendentCounts(tx graph.Transaction, root *graph.Node, descendentKinds ...graph.Kind) (Descendents, error) {
 	if paths, err := FetchDirectDescendentPaths(tx, root, descendentKinds...); err != nil {
 		return Descendents{}, err
 	} else {
@@ -946,7 +946,7 @@ func FetchDirectDescendentCounts(tx graph.Transaction, root *graph.Node, skip, l
 	}
 }
 
-func FetchEntityDescendentCounts(tx graph.Transaction, root *graph.Node, skip, limit int, descendentKinds ...graph.Kind) (Descendents, error) {
+func FetchEntityDescendentCounts(tx graph.Transaction, root *graph.Node, descendentKinds ...graph.Kind) (Descendents, error) {
 	if paths, err := FetchEntityDescendentPaths(tx, root, descendentKinds...); err != nil {
 		return Descendents{}, err
 	} else {
@@ -980,14 +980,10 @@ func fetchRolesTraversalPlan(root *graph.Node) ops.TraversalPlan {
 
 // FetchEntityByObjectID pulls a node by its ObjectID. It requires a kind to perform index lookups against.
 func FetchEntityByObjectID(tx graph.Transaction, objectID string) (*graph.Node, error) {
-	if decodedObjectID, err := url.QueryUnescape(objectID); err != nil {
-		return nil, err
-	} else {
-		return tx.Nodes().Filterf(func() graph.Criteria {
-			return query.And(
-				query.Kind(query.Node(), azure.Entity),
-				query.Equals(query.NodeProperty(common.ObjectID.String()), decodedObjectID),
-			)
-		}).First()
-	}
+	return tx.Nodes().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Kind(query.Node(), azure.Entity),
+			query.Equals(query.NodeProperty(common.ObjectID.String()), objectID),
+		)
+	}).First()
 }

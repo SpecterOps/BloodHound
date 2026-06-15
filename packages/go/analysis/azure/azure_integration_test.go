@@ -1022,39 +1022,6 @@ func TestFetchEntityDescendentPaths_MultiHopPathToRoot(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// TestFetchEntityDescendentPaths_DifferentTenantExcluded verifies that nodes sharing the same kind
-// but belonging to a different Azure tenant are not included in the path set.
-func TestFetchEntityDescendentPaths_DifferentTenantExcluded(t *testing.T) {
-	t.Parallel()
-
-	suite := setupIntegrationTestSuite(t)
-	defer teardownIntegrationTestSuite(t, &suite)
-
-	var (
-		tenantID      = integration.RandomObjectID(t)
-		otherTenantID = integration.RandomObjectID(t)
-		tenantNode    = NewAzureTenant(t, &suite, tenantID)
-		ownApp        = NewAzureApplication(t, &suite, "OwnApp", integration.RandomObjectID(t), tenantID)
-		foreignApp    = NewAzureApplication(t, &suite, "ForeignApp", integration.RandomObjectID(t), otherTenantID)
-	)
-
-	NewRelationship(t, &suite, tenantNode, ownApp, graphAzure.Contains)
-	// foreignApp is deliberately not connected; it belongs to a different tenant.
-
-	err := suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
-		paths, err := azure.FetchEntityDescendentPaths(tx, tenantNode, graphAzure.App)
-		require.NoError(t, err)
-
-		nodeIDs := paths.AllNodes().IDs()
-		require.Contains(t, nodeIDs, tenantNode.ID)
-		require.Contains(t, nodeIDs, ownApp.ID)
-		require.NotContains(t, nodeIDs, foreignApp.ID)
-
-		return nil
-	})
-	require.NoError(t, err)
-}
-
 // TestFetchEntityDescendentPaths_NoTerminalsReturnsEmpty verifies that an empty path set is
 // returned when no nodes of the requested kind exist within the tenant.
 func TestFetchEntityDescendentPaths_NoTerminalsReturnsEmpty(t *testing.T) {

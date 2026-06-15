@@ -48,7 +48,7 @@ func TenantEntityDetails(ctx context.Context, db graph.Database, primaryDisplayK
 func PopulateTenantEntityDetailsCounts(tx graph.Transaction, node *graph.Node, details TenantDetails) (TenantDetails, error) {
 	descendentKinds := GetDescendentKinds(azure.Tenant)
 
-	if descendents, err := FetchEntityDescendentCounts(tx, node, 0, 0, descendentKinds...); err != nil {
+	if descendents, err := FetchEntityDescendentCounts(tx, node, descendentKinds...); err != nil {
 		return details, err
 	} else {
 		details.Descendents = descendents

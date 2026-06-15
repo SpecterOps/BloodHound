@@ -1235,7 +1235,7 @@ class BHEAPIClient {
             Object.assign(
                 {
                     params: {
-                        object_id: encodeURIComponent(id),
+                        object_id: id,
                         related_entity_type: relatedEntityType,
                         counts,
                         skip,
