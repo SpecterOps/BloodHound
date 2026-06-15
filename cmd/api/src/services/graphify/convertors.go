@@ -301,12 +301,16 @@ func convertIssuancePolicy(issuancePolicy ein.IssuancePolicy, converted *Convert
 }
 
 func convertSiteData(site ein.Site, converted *ConvertedData, ingestTime time.Time) {
-	baseNodeProp := ein.ConvertObjectToNode(site.IngestBase, ad.Site, ingestTime)
+	baseNodeProp := ein.ConvertSiteToNode(site, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, site.Aces, site.ObjectIdentifier, ad.Site)...)
 
 	if rel := ein.ParseObjectContainer(site.IngestBase, ad.Site); rel.IsValid() {
 		converted.RelProps = append(converted.RelProps, rel)
+	}
+
+	if len(site.ChildObjects) > 0 {
+		converted.RelProps = append(converted.RelProps, ein.ParseChildObjects(site.ChildObjects, site.ObjectIdentifier, ad.Site)...)
 	}
 
 	if len(site.Links) > 0 {
@@ -315,11 +319,11 @@ func convertSiteData(site ein.Site, converted *ConvertedData, ingestTime time.Ti
 }
 
 func convertSiteServerData(siteServer ein.SiteServer, converted *ConvertedData, ingestTime time.Time) {
-	baseNodeProp := ein.ConvertObjectToNode(ein.IngestBase(siteServer), ad.SiteServer, ingestTime)
+	baseNodeProp := ein.ConvertObjectToNode(siteServer.IngestBase, ad.SiteServer, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
-	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, siteServer.Aces, siteServer.ObjectIdentifier, ad.SiteServer)...)
+	converted.RelProps = append(converted.RelProps, ein.ParseSiteServerData(siteServer)...)
 
-	if rel := ein.ParseObjectContainer(ein.IngestBase(siteServer), ad.SiteServer); rel.IsValid() {
+	if rel := ein.ParseObjectContainer(siteServer.IngestBase, ad.SiteServer); rel.IsValid() {
 		converted.RelProps = append(converted.RelProps, rel)
 	}
 }
@@ -327,7 +331,6 @@ func convertSiteServerData(siteServer ein.SiteServer, converted *ConvertedData, 
 func convertSiteSubnetData(siteSubnet ein.SiteSubnet, converted *ConvertedData, ingestTime time.Time) {
 	baseNodeProp := ein.ConvertObjectToNode(ein.IngestBase(siteSubnet), ad.SiteSubnet, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
-	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, siteSubnet.Aces, siteSubnet.ObjectIdentifier, ad.SiteSubnet)...)
 
 	if rel := ein.ParseObjectContainer(ein.IngestBase(siteSubnet), ad.SiteSubnet); rel.IsValid() {
 		converted.RelProps = append(converted.RelProps, rel)

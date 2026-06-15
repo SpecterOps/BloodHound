@@ -1364,6 +1364,11 @@ Contains: types.#Kind & {
 	schema: "active_directory"
 }
 
+ServerIs: types.#Kind & {
+	symbol: "ServerIs"
+	schema: "active_directory"
+}
+
 GPLink: types.#Kind & {
 	symbol: "GPLink"
 	schema: "active_directory"
@@ -1747,6 +1752,7 @@ RelationshipKinds: [
 	AddMember,
 	HasSession,
 	Contains,
+	ServerIs,
 	GPLink,
 	AllowedToDelegate,
 	CoerceToTGT,
@@ -1918,10 +1924,10 @@ SharedRelationshipKinds: [
 ]
 
 // Edges that are used during inbound traversal
-InboundRelationshipKinds: list.Concat([SharedRelationshipKinds, [Contains]])
+InboundRelationshipKinds: list.Concat([SharedRelationshipKinds, [Contains, ServerIs]])
 
 // Edges that are used during outbound traversal
-OutboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[Contains, DCFor]])
+OutboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[Contains, DCFor, ServerIs]])
 
 // Edges that are used in pathfinding
 PathfindingRelationships: list.Concat([SharedRelationshipKinds,[Contains, DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation]])

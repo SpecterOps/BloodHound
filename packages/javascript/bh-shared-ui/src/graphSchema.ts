@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -90,6 +90,7 @@ export enum ActiveDirectoryRelationshipKind {
     AddMember = 'AddMember',
     HasSession = 'HasSession',
     Contains = 'Contains',
+    ServerIs = 'ServerIs',
     GPLink = 'GPLink',
     AllowedToDelegate = 'AllowedToDelegate',
     CoerceToTGT = 'CoerceToTGT',
@@ -190,6 +191,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'HasSession';
         case ActiveDirectoryRelationshipKind.Contains:
             return 'Contains';
+        case ActiveDirectoryRelationshipKind.ServerIs:
+            return 'ServerIs';
         case ActiveDirectoryRelationshipKind.GPLink:
             return 'GPLink';
         case ActiveDirectoryRelationshipKind.AllowedToDelegate:

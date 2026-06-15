@@ -176,10 +176,15 @@ type IssuancePolicy struct {
 
 type Site struct {
 	IngestBase
-	Links []GPLink
+	ChildObjects      []TypedPrincipal
+	Links             []GPLink
+	InheritanceHashes []string
 }
 
-type SiteServer IngestBase
+type SiteServer struct {
+	IngestBase
+	ServerIs TypedPrincipal
+}
 
 type SiteSubnet IngestBase
 

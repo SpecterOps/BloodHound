@@ -129,6 +129,36 @@ func TestConvertContainerToNode_InheritanceHashes(t *testing.T) {
 	assert.Contains(t, result.PropertyMap[ad.InheritanceHashes.String()], testHash)
 }
 
+func TestConvertSiteToNode_InheritanceHashes(t *testing.T) {
+	testHash := "abc123"
+	siteObject := ein.Site{
+		IngestBase:        ein.IngestBase{},
+		InheritanceHashes: []string{testHash},
+	}
+
+	result := ein.ConvertSiteToNode(siteObject, time.Now().UTC())
+	assert.Contains(t, result.PropertyMap[ad.InheritanceHashes.String()], testHash)
+}
+
+func TestParseSiteServerData_ServerIs(t *testing.T) {
+	siteServer := ein.SiteServer{
+		IngestBase: ein.IngestBase{
+			ObjectIdentifier: "S-1-5-21-123-456-789-1001",
+		},
+		ServerIs: ein.TypedPrincipal{
+			ObjectIdentifier: "S-1-5-21-123-456-789-1002",
+			ObjectType:       "Computer",
+		},
+	}
+
+	result := ein.ParseSiteServerData(siteServer)
+	require.Len(t, result, 1)
+	assert.Equal(t, ad.ServerIs, result[0].RelType)
+	assert.Equal(t, siteServer.ObjectIdentifier, result[0].Source.Value)
+	assert.Equal(t, siteServer.ServerIs.ObjectIdentifier, result[0].Target.Value)
+	assert.Equal(t, ad.Computer, result[0].Target.Kind)
+}
+
 func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
 	domainObject := ein.Domain{
 		IngestBase:   ein.IngestBase{},

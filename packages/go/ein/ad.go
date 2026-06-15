@@ -94,6 +94,20 @@ func ConvertContainerToNode(item Container, ingestTime time.Time) IngestibleNode
 	}
 }
 
+func ConvertSiteToNode(item Site, ingestTime time.Time) IngestibleNode {
+	itemProps := getBaseProperties(item.IngestBase, ingestTime)
+
+	if len(item.InheritanceHashes) > 0 {
+		itemProps[ad.InheritanceHashes.String()] = item.InheritanceHashes
+	}
+
+	return IngestibleNode{
+		ObjectID:    item.ObjectIdentifier,
+		PropertyMap: itemProps,
+		Labels:      []graph.Kind{ad.Site},
+	}
+}
+
 func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
 	itemProps := getBaseProperties(item.IngestBase, ingestTime)
 
@@ -763,6 +777,29 @@ func ParseChildObjects(data []TypedPrincipal, containerId string, containerType 
 	}
 
 	return relationships
+}
+
+func ParseSiteServerData(siteServer SiteServer) []IngestibleRelationship {
+	if siteServer.ServerIs.ObjectIdentifier == "" {
+		return nil
+	}
+
+	return []IngestibleRelationship{
+		NewIngestibleRelationship(
+			IngestibleEndpoint{
+				Value: siteServer.ObjectIdentifier,
+				Kind:  ad.SiteServer,
+			},
+			IngestibleEndpoint{
+				Value: siteServer.ServerIs.ObjectIdentifier,
+				Kind:  siteServer.ServerIs.Kind(),
+			},
+			IngestibleRel{
+				RelProps: map[string]any{ad.IsACL.String(): false},
+				RelType:  ad.ServerIs,
+			},
+		),
+	}
 }
 
 func ParseGPOChanges(changes GPOChanges) ParsedLocalGroupData {
