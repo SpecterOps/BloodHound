@@ -184,6 +184,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 				mocks.mockDatabase.EXPECT().CreateCustomNodeKinds(gomock.Any(), gomock.Any()).Return(model.CustomNodeKinds{
 					{
 						ID:       1,
+						KindId:   1,
 						KindName: "KindA",
 						Config: model.CustomNodeKindConfig{
 							Icon: graphschema.DisplayNodeIcon{
@@ -195,6 +196,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 					},
 					{
 						ID:       2,
+						KindId:   2,
 						KindName: "KindB",
 						Config: model.CustomNodeKindConfig{
 							Icon: graphschema.DisplayNodeIcon{
@@ -209,7 +211,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusCreated,
-				responseBody:   `{"data":[{"id":1,"kindName":"KindA","config":{"icon":{"type":"font-awesome","name":"coffee","color":"#FFFFFF"}}},{"id":2,"kindName":"KindB","config":{"icon":{"type":"font-awesome","name":"house","color":"#000"}}}]}`,
+				responseBody:   `{"data":[{"id":1,"kindId":1,"kindName":"KindA","config":{"icon":{"type":"font-awesome","name":"coffee","color":"#FFFFFF"}}},{"id":2,"kindId":2,"kindName":"KindB","config":{"icon":{"type":"font-awesome","name":"house","color":"#000"}}}]}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -472,6 +474,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 				t.Helper()
 				mocks.mockDatabase.EXPECT().UpdateCustomNodeKind(gomock.Any(), gomock.Any()).Return(model.CustomNodeKind{
 					ID:       1,
+					KindId:   1,
 					KindName: "KindA",
 					Config: model.CustomNodeKindConfig{
 						Icon: graphschema.DisplayNodeIcon{
@@ -484,7 +487,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"id":1,"kindName":"KindA","config":{"icon":{"type":"font-awesome","name":"coffee","color":"#FFFFFF"}}}}`,
+				responseBody:   `{"data":{"id":1,"kindId":1,"kindName":"KindA","config":{"icon":{"type":"font-awesome","name":"coffee","color":"#FFFFFF"}}}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
