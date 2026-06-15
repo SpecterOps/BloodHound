@@ -356,11 +356,9 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 
 		// SiteServer Entity API
 		routerInst.GET(fmt.Sprintf("/api/v2/siteservers/{%s}", api.URIPathVariableObjectID), resources.GetSiteServerEntityInfo).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET(fmt.Sprintf("/api/v2/siteservers/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
 
 		// SiteSubnet Entity API
 		routerInst.GET(fmt.Sprintf("/api/v2/sitesubnets/{%s}", api.URIPathVariableObjectID), resources.GetSiteSubnetEntityInfo).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET(fmt.Sprintf("/api/v2/sitesubnets/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
 
 		// Data Quality Stats API
 		routerInst.GET(fmt.Sprintf("/api/v2/ad-domains/{%s}/data-quality-stats", api.URIPathVariableDomainID), resources.GetADDataQualityStats).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB, resources.DogTags),

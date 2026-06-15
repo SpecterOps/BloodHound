@@ -304,6 +304,8 @@ func (s *Resources) GetSiteEntityInfo(response http.ResponseWriter, request *htt
 	var (
 		countQueries = map[string]any{
 			"controllers": adAnalysis.FetchInboundADEntityControllers,
+			"siteServers": adAnalysis.CreateSiteContainedListDelegate(ad.SiteServer),
+			"siteSubnets": adAnalysis.CreateSiteContainedListDelegate(ad.SiteSubnet),
 		}
 	)
 
@@ -312,9 +314,7 @@ func (s *Resources) GetSiteEntityInfo(response http.ResponseWriter, request *htt
 
 func (s *Resources) GetSiteServerEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
-		countQueries = map[string]any{
-			"controllers": adAnalysis.FetchInboundADEntityControllers,
-		}
+		countQueries = map[string]any{}
 	)
 
 	s.handleAdEntityInfoQuery(response, request, ad.SiteServer, countQueries)
@@ -322,9 +322,7 @@ func (s *Resources) GetSiteServerEntityInfo(response http.ResponseWriter, reques
 
 func (s *Resources) GetSiteSubnetEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
-		countQueries = map[string]any{
-			"controllers": adAnalysis.FetchInboundADEntityControllers,
-		}
+		countQueries = map[string]any{}
 	)
 
 	s.handleAdEntityInfoQuery(response, request, ad.SiteSubnet, countQueries)
