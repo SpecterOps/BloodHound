@@ -61,7 +61,7 @@ func TestLoggingMiddleware_QueryParameters(t *testing.T) {
 			logDoesNotContain: []string{"query_parameters"},
 		},
 		{
-			name:              "SSO callback path with query params does not log query parameters",
+			name:              "SSO callback path with query params does not add query_parameters field and logs",
 			url:               ssoCallbackURL + "?code=abc123&state=xyz789",
 			logContains:       []string{"HTTP request"},
 			logDoesNotContain: []string{`"query_parameters":"`, `"code":`, `"state":`},
