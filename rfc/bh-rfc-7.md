@@ -44,7 +44,9 @@ The middleware is registered globally from day one and begins emitting the new r
 
 -   Endpoints that already emit a typed `AuditLogAction` continue to do so through their existing path, so their database value is unchanged.
 -   The middleware additionally records the generic route-template row for those same endpoints. This temporary overlap is the deliberate cost of turning coverage on everywhere immediately.
--   When an endpoint is refactored into the new `server/` slice architecture, its semantic action (e.g. `"CreateUser"`) is **re-homed into the handler layer** and emitted through the injected audit slice (see [Section 6](#6-audit-log-slice)), and the old `AuditableTransaction` call is removed in the same change.
+-   When an endpoint is refactored into the new `server/` module architecture, its semantic action (e.g. `"CreateUser"`) is **re-homed into the handler layer** and emitted through the injected audit service (see [Section 6](#6-audit-module)), and the old `AuditableTransaction` call is removed in the same change.
+
+**Dual-write tagging:** To distinguish between duplicate rows written during the migration window, the `audit_logs` table includes a `source` column (`VARCHAR(20)`, default `'middleware'`). Legacy writes are tagged with `'legacy'`, middleware writes with `'middleware'`. Consumers should prefer the semantic action over the route-template when both exist for the same `commit_id`. The migration backfills existing rows with `source = 'legacy'`.
 
 The legacy audit-logging code is removed wholesale only at the end of the transition (see [Section 3.5](#35-implementation-plan)).
 
@@ -61,9 +63,9 @@ Several audit writes today occur outside the normal HTTP handler path and are **
 The transition from legacy audit logging to the middleware-based approach follows a **3-month deprecation window** aligned with the default retention period:
 
 -   **Month 0 (middleware deployment):** The middleware is registered globally and begins emitting the new route-template format for all endpoints. Legacy audit logging (`AuditableTransaction` and direct `AppendAuditLog` calls in handlers) continues to operate in parallel, so endpoints emit both formats during the transition.
--   **Months 0–3 (migration window):** Endpoints are incrementally refactored into the `server/` slice architecture. Each refactor re-homes its semantic action into the handler layer (via the audit slice) and removes the corresponding `AuditableTransaction` call. Both old and new audit formats coexist in the database during this period.
+-   **Months 0–3 (migration window):** Endpoints are incrementally refactored into the `server/` module architecture. Each refactor re-homes its semantic action into the handler layer (via the audit service or context helpers) and removes the corresponding `AuditableTransaction` call. Both old and new audit formats coexist in the database during this period.
 -   **Month 3 (deprecation):** Legacy audit-logging code (`AuditableTransaction`, handler-layer `AppendAuditLog` calls, and the typed `AuditLogAction` constants not re-homed into handlers) is marked deprecated. The audit log UI and any customer integrations must migrate to consume the new route-template format or the re-homed semantic actions.
--   **Month 3+ (removal):** After the 3-month window, the legacy audit-logging infrastructure is removed wholesale. Only out-of-band writes (login events, support account operations, daemon-triggered actions per [Section 3.1.3](#313-out-of-band-audit-writes)) continue using the audit slice's direct write path.
+-   **Month 3+ (removal):** After the 3-month window, the legacy audit-logging infrastructure is removed wholesale. Only out-of-band writes (login events, support account operations, daemon-triggered actions per [Section 3.1.3](#313-out-of-band-audit-writes)) continue using the audit service's direct write path.
 
 **Non-API endpoint audit writes** — specifically, any audit writes that occur outside the standard HTTP request/response cycle and do not correspond to a registered API route — are subject to the same 3-month support window. After month 3, only the explicitly scoped out-of-band writes listed in Section 3.1.3 are preserved; all other non-API audit paths are removed.
 
@@ -111,11 +113,12 @@ Auditing every endpoint with a full intent+result pair significantly increases r
 ### 3.5 Implementation Plan
 
 1. Add a `created_at`-partitioned migration for `audit_logs` (monthly range partitions, PK becomes `(id, created_at)`) and a partition-lifecycle worker hooked into the existing GC daemon (mechanics in [Section 7.2](#72-migration-mechanics) and [Section 7.3](#73-partition-lifecycle)). Configure retention bounds at 1–12 months with a 3-month default.
-2. Build the **audit log slice** (`server/audit/`) and publish its `Recorder` on `modules.Deps` so it can be injected into the middleware and into other feature slices (scaffolding guidance in [Section 6.4](#64-scaffolding-guidance)).
-3. Register `AuditMiddleware` globally so every endpoint is audited in the route-template format from day one. Add exclusion-list support for health, liveness, and metrics routes. Existing audit logging is left in place and runs alongside it.
-4. As endpoints are refactored into the `server/` slice architecture, re-home their semantic action into the handler layer via the injected audit slice and remove the corresponding `AuditableTransaction` call in the same change.
-5. After the 3-month migration window (see [Section 3.1.4](#314-deprecation-timeline-for-legacy-audit-formats)), mark legacy audit-logging infrastructure as deprecated and notify consumers to migrate to the new format.
-6. Remove the legacy audit-logging code (`AuditableTransaction` and handler-layer `AppendAuditLog` call sites) wholesale after the deprecation period, preserving only the out-of-band writes documented in [Section 3.1.3](#313-out-of-band-audit-writes).
+2. Build the **audit module** (`bhce/server/audit/`) following the module isolation pattern (see [Section 6.4](#64-module-structure)). The module exports `audit.Service`, `audit.Entry`, and context helpers from its public API; all implementation details live in `internal/` packages.
+3. Create the **BHCE module registry** (`bhce/server/modules/modules.go`) that calls `audit.Register(pool)` and returns `modules.Services{Audit: auditService}` for injection into middleware and other consumers (see [Section 6.3](#63-module-registry-and-injection)).
+4. Register `AuditMiddleware` globally by calling `modules.Register(deps)` in the entrypoint to obtain the audit service, then constructing the middleware with `services.Audit`. Configure the middleware to audit every endpoint in the route-template format from day one. Add exclusion-list support for the health check route (`/health`). Existing audit logging is left in place and runs alongside it.
+5. As endpoints are refactored into feature modules, re-home their semantic action into the handler layer via `audit.Contribute()` or by accepting `audit.Service` as a parameter to the module's `Register()` function. Remove the corresponding `AuditableTransaction` call in the same change.
+6. After the 3-month migration window (see [Section 3.1.4](#314-deprecation-timeline-for-legacy-audit-formats)), mark legacy audit-logging infrastructure as deprecated and notify consumers to migrate to the new format.
+7. Remove the legacy audit-logging code (`AuditableTransaction` and handler-layer `AppendAuditLog` call sites) wholesale after the deprecation period, preserving only the out-of-band writes documented in [Section 3.1.3](#313-out-of-band-audit-writes).
 
 ## 4. Middleware Behavior
 
@@ -123,7 +126,34 @@ Auditing every endpoint with a full intent+result pair significantly increases r
 
 The middleware registers in the **post-routing** stack (`registration.RegisterFossGlobalMiddleware`), after `ContextMiddleware` (so `bhctx` is available) and positioned to observe the result of `AuthMiddleware`.
 
-A small, explicit **exclusion list** covers routes with no audit value (health checks, liveness probes, metrics scrape endpoints). Excluded routes emit no rows.
+**Concrete wiring** in the startup entrypoint (`lib/go/services/entrypoint.go` or registration package):
+
+```go
+// Register BHCE modules and obtain cross-cutting services
+bhceDeps := modules.Deps{
+	Router: &routerInst,
+	Pool:   connections.RDMS.Pool(),
+}
+bhceServices, err := modules.Register(bhceDeps)
+if err != nil {
+	return fmt.Errorf("failed to register BHCE modules: %w", err)
+}
+
+// Construct and register audit middleware with the service
+auditMiddleware := middleware.NewAuditMiddleware(
+	bhceServices.Audit,
+	identityResolver,
+	[]string{"/health"}, // exclusion list
+)
+routerInst.UsePostrouting(auditMiddleware)
+```
+
+A small, explicit **exclusion list** covers routes with no audit value:
+- `/health` - Health check endpoint (returns 200 OK, no auth required)
+
+Excluded routes emit no rows. Future additions to the exclusion list follow the criteria: (1) no auth context required, (2) high request volume (>10 req/sec), (3) no security value.
+
+**Note:** The `/metrics` endpoint and other pprof/debug endpoints are served on a separate Tools API daemon (different port configured by `MetricsPort`) and are not part of the main API router, so they are not audited by this middleware.
 
 ### 4.2 Per-Request Behavior
 
@@ -143,9 +173,9 @@ The API version prefix (e.g., `/api/v2/`) is **preserved** so audit consumers ca
 
 ### 5.2 Optional Semantic Overlay
 
-Handlers that need a human-readable, refactor-stable name for a security-significant operation may **optionally** record one through the injected audit slice (see [Section 6](#6-audit-log-slice)), which attaches it to the request context. The middleware records the handler-supplied name when present, falling back to the derived form otherwise.
+Handlers that need a human-readable, refactor-stable name for a security-significant operation may **optionally** record one through the injected audit service (see [Section 6](#6-audit-module)), which attaches it to the request context via `audit.Contribute()`. The middleware records the handler-supplied name when present, falling back to the derived form otherwise.
 
-This is the mechanism for **preserving an existing action string across a refactor**: when an endpoint that previously emitted a typed `AuditLogAction` (e.g. `"CreateUser"`) is moved into the `server/` slice architecture, its handler records that same action through the audit slice, so the database value does not change. The existing `AuditLogAction` constants are not removed or deprecated by this RFC; they remain available for handlers that choose to keep using them.
+This is the mechanism for **preserving an existing action string across a refactor**: when an endpoint that previously emitted a typed `AuditLogAction` (e.g. `"CreateUser"`) is moved into the `server/` module architecture, its handler records that same action through `audit.Contribute()`, so the database value does not change. The existing `AuditLogAction` constants are not removed or deprecated by this RFC; they remain available for handlers that choose to keep using them.
 
 ### 5.3 Model-Level Fields
 
@@ -401,8 +431,8 @@ The non-obvious constraint an implementer must design around: **PostgreSQL canno
 2.  Create the new parent: `CREATE TABLE audit_logs (... , PRIMARY KEY (id, created_at)) PARTITION BY RANGE (created_at)`, carrying the same columns, the `status_check` constraint, and column defaults. `created_at` must be **`NOT NULL`** (the partition key cannot be null) with a default of `now()`.
 3.  Re-point the sequence so inserts keep auto-assigning `id`: keep `audit_logs_id_seq` and set it as the `id` default / owned column on the new table.
 4.  Declare the indexes (`created_at`, `actor_id`, `action`) on the **parent**; on PostgreSQL 11+ these propagate to every partition automatically.
-5.  Pre-create partitions covering the legacy data's `created_at` range plus the current and next month. Decide explicitly between a **`DEFAULT` partition** (prevents inserts from ever failing on a missing range, but complicates attaching new bounded partitions later) and **strict pre-creation** (no default, lifecycle worker guarantees the next partition exists). This RFC recommends strict pre-creation backed by the worker in [Section 7.3](#73-partition-lifecycle).
-6.  Backfill: `INSERT INTO audit_logs SELECT ... FROM audit_logs_legacy`, substituting a non-null `created_at` for any legacy null rows. For large tables, batch the copy.
+5.  Pre-create partitions covering the legacy data's `created_at` range plus the current and next month. Create a **`DEFAULT` partition** to prevent inserts from ever failing on a missing range. The maintenance worker (see [Section 7.3](#73-partition-lifecycle)) will pre-create bounded partitions ahead of time, but the DEFAULT partition provides operational safety during initial deployment and worker failures.
+6.  Backfill: `INSERT INTO audit_logs SELECT ... FROM audit_logs_legacy`, substituting a non-null `created_at` for any legacy null rows using `COALESCE(created_at, '2020-01-01'::timestamptz)`. This places all null-timestamp rows in a single legacy partition. For large tables, batch the copy.
 7.  Drop `audit_logs_legacy` once the backfill is verified (may be deferred to a follow-up migration if a verification window is desired).
 
 The `Down` section must reverse the swap (recreate the flat table, copy rows back, drop the partitioned table and its partitions). Note in the migration that `Down` is best-effort and that any rows written after `Up` into months beyond the original data are still preserved by the copy-back.
@@ -423,12 +453,20 @@ The retention period must be **configurable** within a **bounded range of 1 to 1
 
 The configuration value is validated at daemon startup to ensure it falls within `[1, 12]` months. Out-of-range values cause the daemon to fail-fast with a clear error message rather than silently clamping or defaulting.
 
-Two wiring options for the maintenance call, with the trade-off stated so reviewers can choose:
+The audit module exposes a **maintenance interface** that the GC daemon calls to manage partition lifecycle:
 
--   **Add a method to `database.Database`** (e.g. `SweepAuditLogPartitions(ctx)`) for parity with the existing sweeps. Lowest-friction, but keeps partition DDL in the legacy `BloodhoundDB`.
--   **Expose a maintenance interface from the audit slice** and give the daemon that dependency. Keeps all `audit_logs` DDL inside the slice (consistent with [Section 6.1](#61-responsibilities)) at the cost of threading a new dependency into the daemon's constructor.
+```go
+// bhce/server/audit/audit.go
+type Maintainer interface {
+	PreCreateNextPartition(ctx context.Context) error
+	DropExpiredPartitions(ctx context.Context, retentionMonths int) error
+}
 
-This RFC recommends the slice-owned maintenance interface so the partitioned table has a single owner, but either satisfies the requirement.
+// Register returns both Service and Maintainer
+func Register(pool *pgxpool.Pool) (Service, Maintainer, error)
+```
+
+The GC daemon receives `audit.Maintainer` (not a `database.Database` method) so the audit module fully owns its storage lifecycle (consistent with [Section 6.1](#61-responsibilities)). This requires threading a new dependency into the daemon's constructor, but keeps all `audit_logs` DDL encapsulated within the module.
 
 ## 8. Reference Implementation
 
