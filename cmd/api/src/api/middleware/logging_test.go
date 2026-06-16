@@ -31,9 +31,10 @@ import (
 
 func TestLoggingMiddleware_QueryParameters(t *testing.T) {
 	var (
-		testURL1  = "/api/v2/bloodhound-users"
-		testURL2  = "/api/v2/search"
-		healthURL = "/health"
+		testURL1       = "/api/v2/bloodhound-users"
+		testURL2       = "/api/v2/search"
+		healthURL      = "/health"
+		ssoCallbackURL = "/api/v2/sso/73d94be8-a18c-4de2-b63c-75c28d3d4bff/callback"
 	)
 	testCases := []struct {
 		name              string
@@ -48,10 +49,22 @@ func TestLoggingMiddleware_QueryParameters(t *testing.T) {
 			logDoesNotContain: []string{"query_parameters"},
 		},
 		{
+			name:              "similar /api/v20 does not log query parameters",
+			url:               "/api/v20/search?foo=bar",
+			logContains:       []string{"HTTP request"},
+			logDoesNotContain: []string{"query_parameters"},
+		},
+		{
 			name:              "/api/v2 path with no query params does not log query parameters",
 			url:               testURL1,
 			logContains:       []string{"HTTP request"},
 			logDoesNotContain: []string{"query_parameters"},
+		},
+		{
+			name:              "SSO callback path with query params does not log query parameters",
+			url:               ssoCallbackURL + "?code=abc123&state=xyz789",
+			logContains:       []string{"HTTP request"},
+			logDoesNotContain: []string{`"query_parameters":"`, `"code":`, `"state":`},
 		},
 		{
 			name:        "/api/v2 path with query params adds a query_parameters field",
@@ -66,7 +79,7 @@ func TestLoggingMiddleware_QueryParameters(t *testing.T) {
 		{
 			name:        "multiple query parameters are logged",
 			url:         testURL2 + "?q=abcd&limit=1000&type=Computer&type=User&type=Group",
-			logContains: []string{"HTTP request", "query_parameters", "q", "abcd", "limit", "1000", "type", "Computer", "User", "Group"},
+			logContains: []string{"HTTP request", "query_parameters", "abcd", "limit", "1000", "type", "Computer", "User", "Group"},
 		},
 		{
 			name:        "query_parameters field contains the full raw query string",
@@ -77,6 +90,9 @@ func TestLoggingMiddleware_QueryParameters(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			previousLogger := slog.Default()
+			t.Cleanup(func() { slog.SetDefault(previousLogger) })
+
 			var logBuffer bytes.Buffer
 			slog.SetDefault(slog.New(slog.NewJSONHandler(&logBuffer, &slog.HandlerOptions{})))
 
