@@ -36,6 +36,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/specterops/dawgs/graph"
@@ -144,9 +145,104 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 					mockGraph.EXPECT().
 						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+					mockGraph.EXPECT().
+						GetEntityByRelationship(gomock.Any(), gomock.Any(), graph.DirectionInbound, ad.ServerIs, ad.SiteServer).
+						Return(nil, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyNotContains(output, "siteservernode")
+				},
+			},
+			{
+				Name: "SuccessWithoutCountsWithSiteServer",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, "object_id", "1")
+					apitest.AddQueryParam(input, "counts", "false")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
+				},
+				Setup: func() {
+					siteServerProperties := graph.NewProperties().
+						Set(common.ObjectID.String(), "SITE-SERVER-1").
+						Set(common.Name.String(), "SITE-SERVER-NAME")
+
+					mockGraph.EXPECT().
+						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(graph.NewNode(graph.ID(1), graph.NewProperties().Set(common.ObjectID.String(), "COMPUTER-1")), nil)
+					mockGraph.EXPECT().
+						GetEntityByRelationship(gomock.Any(), gomock.Any(), graph.DirectionInbound, ad.ServerIs, ad.SiteServer).
+						Return(graph.NewNode(graph.ID(2), siteServerProperties, ad.SiteServer), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyContains(output, `"siteservernode":"SITE-SERVER-1"`)
+					apitest.BodyContains(output, `"siteservernodename":"SITE-SERVER-NAME"`)
+				},
+			},
+		})
+}
+
+func TestResources_GetSiteServerEntityInfo(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockGraph = mocks.NewMockGraph(mockCtrl)
+		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+
+		bheCtx = bhctx.Context{
+			AuthCtx: auth.Context{
+				PermissionOverrides: auth.PermissionOverrides{},
+				Owner:               model.User{},
+				Session:             model.UserSession{},
+			},
+		}
+	)
+	defer mockCtrl.Finish()
+
+	apitest.NewHarness(t, resources.GetSiteServerEntityInfo).
+		Run([]apitest.Case{
+			{
+				Name: "SuccessWithoutCounts",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, "object_id", "1")
+					apitest.AddQueryParam(input, "counts", "false")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
+				},
+				Setup: func() {
+					mockGraph.EXPECT().
+						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+					mockGraph.EXPECT().
+						GetEntityByRelationship(gomock.Any(), gomock.Any(), graph.DirectionOutbound, ad.ServerIs, ad.Computer).
+						Return(nil, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyNotContains(output, "serverreferencecomputer")
+				},
+			},
+			{
+				Name: "SuccessWithoutCountsWithServerReference",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, "object_id", "1")
+					apitest.AddQueryParam(input, "counts", "false")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
+				},
+				Setup: func() {
+					computerProperties := graph.NewProperties().
+						Set(common.ObjectID.String(), "COMPUTER-1").
+						Set(common.Name.String(), "COMPUTER-NAME")
+
+					mockGraph.EXPECT().
+						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(graph.NewNode(graph.ID(1), graph.NewProperties().Set(common.ObjectID.String(), "SITE-SERVER-1")), nil)
+					mockGraph.EXPECT().
+						GetEntityByRelationship(gomock.Any(), gomock.Any(), graph.DirectionOutbound, ad.ServerIs, ad.Computer).
+						Return(graph.NewNode(graph.ID(2), computerProperties, ad.Computer), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyContains(output, `"serverreferencecomputer":"COMPUTER-1"`)
+					apitest.BodyContains(output, `"serverreferencecomputername":"COMPUTER-NAME"`)
 				},
 			},
 		})

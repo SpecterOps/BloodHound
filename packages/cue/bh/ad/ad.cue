@@ -1023,6 +1023,13 @@ ServicePrincipalNames: types.#StringEnum & {
 	representation: "serviceprincipalnames"
 }
 
+Serverreference: types.#StringEnum & {
+	symbol:         "Serverreference"
+	schema:         "ad"
+	name:           "Server Reference"
+	representation: "serverreference"
+}
+
 GPOStatusRaw: types.#StringEnum & {
 	symbol:         "GPOStatusRaw"
 	schema:         "ad"
@@ -1176,6 +1183,7 @@ Properties: [
 	NetBIOS,
 	AdminSDHolderProtected,
 	ServicePrincipalNames,
+	Serverreference,
 	GPOStatusRaw,
 	GPOStatus,
 ]
