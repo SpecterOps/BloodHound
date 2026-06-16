@@ -43,9 +43,30 @@ const (
 )
 
 var (
+	// ingestTasksCreated tracks the total number of ingest tasks created and
+	// persisted to the database. This counter is used for volume analytics and
+	// trend analysis (e.g., "How many tasks were created this week?", "Is usage growing?").
+	//
+	// For operational queue monitoring, use:
+	//   - bhe_ingest_tasks (gauge: current queue depth)
+	//   - bh_ingest_task_queue_latency_seconds_count (summary: tasks processed)
+	ingestTasksCreated = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: model.Namespace,
+			Subsystem: ingestSubsystem,
+			Name:      "tasks_created_total",
+			Help:      "Total number of ingest tasks created and saved to the database (for volume/trend analysis)",
+		},
+		[]string{"source"}, // "file" for manual file upload, "client" for client ingest
+	)
+
 	// ingestTaskQueueLatency tracks the time an ingest task spends waiting in the
 	// database queue from creation (DB write) until it is picked up for processing.
 	// This measures queue wait time, not processing time.
+	//
+	// The _count value represents tasks that have been PROCESSED (picked up from queue).
+	// Compare with ingestTasksCreated to detect stuck tasks:
+	//   stuck_tasks = ingestTasksCreated - ingestTaskQueueLatency_count
 	ingestTaskQueueLatency = prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
 			Namespace:  model.Namespace,
@@ -58,6 +79,13 @@ var (
 	)
 )
 
+// RecordIngestTaskCreated increments the counter for ingest tasks created and saved to disk.
+// This metric is used for volume tracking and trend analysis.
+// The source parameter indicates the ingest source type (file upload or client ingest).
+func RecordIngestTaskCreated(source IngestSource) {
+	ingestTasksCreated.WithLabelValues(string(source)).Inc()
+}
+
 // RecordIngestTaskQueueLatency records the queue wait time from when an ingest task was saved to disk
 // until it was picked up for processing. This measures time waiting in queue, not processing time.
 // The source parameter indicates the ingest source type (file upload or client ingest).
@@ -67,6 +95,10 @@ func RecordIngestTaskQueueLatency(taskCreatedAt time.Time, source IngestSource) 
 
 // RegisterIngestMetrics registers all ingest-subsystem Prometheus metrics with the provided registerer.
 func RegisterIngestMetrics(registerer prometheus.Registerer) error {
+	if err := registerer.Register(ingestTasksCreated); err != nil {
+		return fmt.Errorf("failed to register ingest tasks created counter: %w", err)
+	}
+
 	if err := registerer.Register(ingestTaskQueueLatency); err != nil {
 		return fmt.Errorf("failed to register ingest task queue latency summary: %w", err)
 	}

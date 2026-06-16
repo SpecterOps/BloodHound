@@ -21,6 +21,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/metrics"
 )
 
 type IngestTaskParams struct {
@@ -40,7 +41,13 @@ func CreateIngestTask(ctx context.Context, db UploadData, params IngestTaskParam
 		FileType:         params.FileType,
 	}
 
-	return db.CreateIngestTask(ctx, newIngestTask)
+	if task, err := db.CreateIngestTask(ctx, newIngestTask); err != nil {
+		return task, err
+	} else {
+		// Record metric: file ingest task created and saved to disk
+		metrics.RecordIngestTaskCreated(metrics.IngestSourceFile)
+		return task, nil
+	}
 }
 
 func CreateCompositionInfo(ctx context.Context, db UploadData, nodes model.EdgeCompositionNodes, edges model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error) {

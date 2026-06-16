@@ -42,8 +42,6 @@ func PublishIngestThroughput(nodesProcessed, relsProcessed, nodesWritten, relsWr
 	ingestThroughputGauge.WithLabelValues("relationships", "written").Set(relsWrittenPerSec)
 }
 
-
-
 // IngestStats tracks the number of nodes and relationships processed during ingestion
 type IngestStats struct {
 	// Total entities processed (including deduplicated ones).
