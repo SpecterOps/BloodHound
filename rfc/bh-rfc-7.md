@@ -151,29 +151,38 @@ This is the mechanism for **preserving an existing action string across a refact
 
 The enrichment hook also covers the model-level `Fields` that `AuditData()` provides today. Handlers may attach structured detail (affected entity IDs, before/after diffs) to `bhctx`; the middleware drains it into `Fields` on the result row. Generic coverage (actor, action, status, IP) is automatic everywhere; high-value endpoints keep the same rich detail they emit today.
 
-## 6. Audit Log Slice
+## 6. Audit Module
 
-Both the middleware and individual handlers need to write audit rows. Rather than have each re-implement actor resolution, intent/result pairing, and persistence, this RFC introduces an **audit log slice** in the new `server/` architecture (`server/audit/`). It follows the standard four-layer slice pattern (`appdb → services → handlers`) and exposes a small service that is injected wherever audit rows are written.
+Both the middleware and individual handlers need to write audit rows. Rather than have each re-implement actor resolution, intent/result pairing, and persistence, this RFC introduces an **audit module** in the BHCE server architecture (`bhce/server/audit/`). It follows the module isolation pattern established by `server/clients/` and `server/kennel/`, using `internal/` packages for encapsulation and exposing a small public API for audit recording.
 
 ### 6.1 Responsibilities
 
-The slice is the single chokepoint for writing to `audit_logs`:
+The audit module is the single chokepoint for writing to `audit_logs`:
 
--   Owns `audit_logs` persistence in its `appdb` layer, including the partitioned-table writes described in [Section 7](#7-retention-and-table-stability).
--   Owns the domain `Entry` type in its `services` layer. The three database status values (`intent`, `success`, `failure`) are internal to the appdb layer; callers express outcome through which `Recorder` method they call.
--   Exposes a `Recorder` interface that hides `commit_id` generation and intent/result bookkeeping behind a small surface, so the middleware and handlers never construct `model.AuditLog` rows by hand.
+-   Owns `audit_logs` persistence in its `internal/appdb` layer, including the partitioned-table writes described in [Section 7](#7-retention-and-table-stability).
+-   Owns the domain `Entry` type and exports it from the public API (`audit.go`). The three database status values (`intent`, `success`, `failure`) are internal to the appdb layer; callers express outcome through which `Service` method they call (`Intent`, `Success`, `Failure`).
+-   Exposes a `Service` interface that hides `commit_id` generation and intent/result bookkeeping behind a small surface, so the middleware and handlers never construct `model.AuditLog` rows by hand.
+-   Owns the buffered result-writer worker that offloads result writes from the request critical path.
 
-### 6.2 Service Surface
+### 6.2 Public API
 
-The `Recorder` interface keeps call sites trivial (its placement is explained in [Section 6.4.2](#642-interface-placement)):
+The audit module exports a minimal public API from `audit.go`. All implementation details live in `internal/` packages and are inaccessible to other modules.
+
+**Public types and interface:**
 
 ```go
-// server/audit/services/services.go
-package services
+// bhce/server/audit/audit.go
+package audit
 
-// Entry carries the descriptive fields of an audit record. The slice fills in
+import (
+	"context"
+	"github.com/gofrs/uuid"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+)
+
+// Entry carries the descriptive fields of an audit record. The service fills in
 // commit_id and timestamp; callers supply the rest. Outcome (success vs. failure)
-// is expressed by which Recorder method is called, not by a status field on Entry.
+// is expressed by which Service method is called, not by a status field on Entry.
 type Entry struct {
 	Action          model.AuditLogAction
 	ActorID         string
@@ -184,10 +193,12 @@ type Entry struct {
 	Fields          map[string]any
 }
 
-// Recorder is the consumer-facing surface for writing audit rows. The middleware
+type CommitID = uuid.UUID
+
+// Service is the public interface for writing audit rows. The middleware
 // calls Intent before the handler and Success or Failure after; handlers re-home
-// semantic actions through the same Recorder when an endpoint is migrated.
-type Recorder interface {
+// semantic actions through the same Service when an endpoint is migrated.
+type Service interface {
 	// Intent writes the pre-execution row and returns the commit ID that links
 	// it to its eventual result.
 	Intent(ctx context.Context, entry Entry) (CommitID, error)
@@ -200,79 +211,175 @@ type Recorder interface {
 }
 ```
 
-A pair of context helpers is exposed for handlers that prefer to contribute via the request context rather than holding a `Recorder` directly. The handler calls `Contribute`; the middleware drains it with `FromContext` on the way out (see the reference implementation in [Section 8](#8-reference-implementation)):
+**Register function:**
 
 ```go
-// Contribute records a semantic action and/or model-level Fields on the request
-// context. The audit middleware folds the contribution into the result row.
-func Contribute(ctx context.Context, action model.AuditLogAction, fields map[string]any)
+// Register wires the audit service to its PostgreSQL store, starts the
+// buffered result-writer worker, and returns the constructed service.
+// This is called by the BHCE module registry during startup.
+func Register(pool *pgxpool.Pool) (Service, error)
+```
 
-// FromContext returns the contribution a handler attached during the request, or
-// nil if the handler contributed nothing. The middleware calls this after the
+**Context helpers** for handlers that prefer to contribute via the request context rather than holding a `Service` directly:
+
+```go
+// Contribution holds the optional semantic action and model-level Fields a handler
+// attached during the request. The middleware folds the contribution into the result row.
+type Contribution struct {
+	Action model.AuditLogAction
+	Fields map[string]any
+}
+
+// Contribute attaches a semantic action and/or model-level Fields to the request
+// context. The audit middleware folds the contribution into the result row.
+func Contribute(ctx context.Context, action model.AuditLogAction, fields map[string]any) context.Context
+
+// FromContext extracts the contribution a handler attached during the request, or
+// returns nil if the handler contributed nothing. The middleware calls this after the
 // handler returns to overlay the semantic action and Fields onto the result row.
 func FromContext(ctx context.Context) *Contribution
 ```
 
-### 6.3 Injection
+### 6.3 Module Registry and Injection
 
-The slice's service is constructed once and published on `modules.Deps`, so other slices receive it the same way they receive the router and pool:
+The audit module is registered by the BHCE module registry, which calls `audit.Register()` and returns the service for injection into middleware and other consumers.
+
+**BHCE Module Registry** (`bhce/server/modules/modules.go`):
 
 ```go
-// server/modules/modules.go
+package modules
+
+import (
+	"fmt"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/server/audit"
+)
+
+// Deps carries the shared infrastructure that BHCE modules need.
+// BHE's modules.Deps embeds this struct to inherit Router and Pool.
 type Deps struct {
 	Router *router.Router
 	Pool   *pgxpool.Pool
-	Audit  services.Recorder // shared audit writer, injected into other slices
 }
 
-func Register(deps Deps) {
-	// ... nil checks for Router, Pool, Audit ...
-	analysis.Register(deps.Router, deps.Pool, deps.Audit)
+// Services holds the constructed BHCE cross-cutting services that need to be
+// injected into middleware or passed to other modules.
+type Services struct {
+	Audit audit.Service
+}
+
+// Register wires up BHCE modules and returns services that middleware and
+// other modules depend on.
+func Register(deps Deps) (*Services, error) {
+	if deps.Router == nil {
+		panic("modules: Register requires a non-nil Router")
+	}
+	if deps.Pool == nil {
+		panic("modules: Register requires a non-nil Pool")
+	}
+
+	// Build the audit service
+	auditService, err := audit.Register(deps.Pool)
+	if err != nil {
+		return nil, fmt.Errorf("failed to register audit module: %w", err)
+	}
+
+	// Future: Register other BHCE-specific feature modules here
+	// analysis.Register(deps.Router, deps.Pool, auditService)
+
+	return &Services{
+		Audit: auditService,
+	}, nil
 }
 ```
 
-The `AuditMiddleware` receives the same `Recorder` at construction time. Feature handlers receive it through their own `Register` and use it to emit a semantic action or attach model-level `Fields`, without importing the persistence layer. This is what makes preserving a legacy action across a refactor a one-line handler call (see [Section 5.2](#52-optional-semantic-overlay)).
+**Middleware injection** in the startup entrypoint:
 
-### 6.4 Scaffolding Guidance
+```go
+// In lib/go/services/entrypoint.go or equivalent registration code
+bhceDeps := modules.Deps{
+	Router: &routerInst,
+	Pool:   connections.RDMS.Pool(),
+}
 
-The slice is built with the standard four-layer pattern documented in [`bhce/server/README.md`](../server/README.md) ("Adding a new feature module") and the step order in [`bhce/server/implementation_checklist.md`](../server/implementation_checklist.md). It is an **infrastructure slice** rather than a typical read/return feature, so a few deliberate deviations from that pattern apply — they are called out below so an implementer reproduces them intentionally.
+// Register BHCE modules and obtain cross-cutting services
+bhceServices, err := modules.Register(bhceDeps)
+if err != nil {
+	return fmt.Errorf("failed to register BHCE modules: %w", err)
+}
 
-#### 6.4.1 Package Layout and Layer Ownership
+// Construct and register audit middleware with the service
+auditMiddleware := middleware.NewAuditMiddleware(
+	bhceServices.Audit,
+	identityResolver,
+	[]string{"/health", "/api/v2/liveness", "/metrics"}, // exclusions
+)
+routerInst.UsePostrouting(auditMiddleware)
+
+// BHE modules register separately, embedding the BHCE Deps
+bhemodules.Register(bhemodules.Deps{
+	Deps: bhceDeps, // Embeds Router and Pool
+	// ... BHE-specific dependencies ...
+})
+```
+
+Feature handlers that need to emit semantic actions or attach model-level `Fields` can receive `audit.Service` as a parameter to their module's `Register()` function, or use the context helpers (`audit.Contribute`, `audit.FromContext`). This is what makes preserving a legacy action across a refactor a one-line handler call (see [Section 5.2](#52-optional-semantic-overlay)).
+
+### 6.4 Module Structure
+
+The audit module follows the isolation pattern established by `server/clients/` and `server/kennel/`, with all implementation details encapsulated in `internal/` packages.
+
+#### 6.4.1 Package Layout
 
 ```
-server/audit/
-├── audit.go        # Register(): builds appdb → services, starts the worker, returns the Recorder
-├── appdb/          # audit_logs writes + partition DDL; defines its own pgxQuerier
-├── services/       # Entry, Status, CommitID, Contribution, Recorder, Database interface, the worker
-└── handlers/       # OPTIONAL — only if the read endpoint (Section 6.4.5) is migrated here
+bhce/server/audit/
+├── audit.go              # Public API: Service, Entry, CommitID, Contribution, Register(), context helpers
+├── audit_test.go
+└── internal/             # All implementation details - inaccessible to other modules
+    ├── appdb/
+    │   ├── store.go     # PostgreSQL adapter (pgx)
+    │   └── partition_ddl.go  # Partition lifecycle (pre-create, drop)
+    └── services/
+        ├── service.go   # Service implementation (Intent/Success/Failure)
+        ├── worker.go    # Buffered result-writer goroutine
+        └── types.go     # Internal types (Status constants, Database port)
 ```
 
--   **`services`** owns the domain types (`Entry`, `CommitID`, `Contribution`), the public `Recorder` surface, and the consumer-defined `Database` interface (the only methods the service calls). The buffered result-writer worker lives here. `Status` is an internal constant set used only by `appdb` to write the correct `status` column value; it is not part of the public interface.
--   **`appdb`** owns all SQL via `sqlbuilder.PostgreSQL` and `pgx`, defines its package-local `pgxQuerier` (only the pgx methods it uses), maps rows with `db:` tags, and returns `services`-layer sentinels. Because this layer does not use GORM, it must set `created_at` explicitly on every insert (GORM's `autoCreateTime` is not in play) and let the `audit_logs_id_seq` default populate `id`.
--   **`Status`** mirrors the existing `model.AuditLogEntryStatus` values (`intent`, `success`, `failure`) so the database contract is unchanged.
+-   **`audit.go`** (public API) exports only what external consumers need: `Service` interface, `Entry`, `CommitID`, `Contribution`, `Register()`, and context helpers. No internal types are exposed.
+-   **`internal/services`** owns the domain logic, the consumer-defined `Database` port interface, and the buffered result-writer worker. `Status` is an internal constant set (`intent`, `success`, `failure`) used only by `appdb` to write the correct `status` column value.
+-   **`internal/appdb`** owns all SQL via `pgx`, maps rows with `db:` tags, and returns `services`-layer types. Because this layer does not use GORM, it must set `created_at` explicitly on every insert (GORM's `autoCreateTime` is not in play) and let the `audit_logs_id_seq` default populate `id`.
 
 #### 6.4.2 Interface Placement
 
-Per the repo convention, interfaces are defined by the consumer. The wrinkle here is that `Recorder` has **multiple** consumers (the middleware and every feature slice), so it is published from `services` and carried on `modules.Deps` rather than redefined in each consumer. The persistence `Database` interface stays consumer-defined in `services` and is implemented by `appdb.Store`, exactly like other slices.
+Per the repo convention, interfaces are defined by the consumer. The `Service` interface is exported from the public `audit.go` because it has **multiple** consumers (the middleware, the module registry, and potentially other feature modules). The persistence `Database` interface stays consumer-defined in `internal/services` and is implemented by `internal/appdb.Store`, exactly like other modules (see `server/clients/internal/services` for the same pattern).
 
 #### 6.4.3 Construction and Registration Order
 
-Unlike a normal feature slice — whose `Register` only wires its chain and registers routes — the audit slice's `Register` must **return** the constructed `Recorder` (and start its worker) so it can be published on `Deps` *before* any consumer is wired. In `modules.Register` the order is therefore: construct the audit slice first, assign `deps.Audit`, construct `AuditMiddleware` with it, then register every other slice passing `deps.Audit` through. Document this ordering constraint in `audit.go`.
+Unlike a normal feature module whose `Register` only wires its internal chain and registers routes, the audit module's `Register` must **return** the constructed `Service` so it can be injected into middleware and other consumers. The BHCE module registry (`bhce/server/modules/modules.go`) calls `audit.Register(pool)` first, receives the service, then constructs the audit middleware with it. The ordering is:
+
+1. `modules.Register(deps)` calls `audit.Register(pool)` and receives `audit.Service`
+2. Registry returns `modules.Services{Audit: auditService}`
+3. Entrypoint constructs `AuditMiddleware` with `services.Audit`
+4. Entrypoint registers middleware on router
+5. BHE modules register separately, embedding the BHCE `Deps`
+
+This ordering ensures the audit service is available before any middleware or feature module that needs it is constructed. Document this in `audit.go` and `modules.go`.
 
 #### 6.4.4 Result Worker and Error Isolation
 
-The `Intent` write is synchronous (its purpose is pre-execution durability). `Result` hands off to a buffered worker owned by `services` (a bounded channel drained by a goroutine started in `Register`, flushed on shutdown). Two invariants the implementer must hold:
+The `Intent` write is synchronous (its purpose is pre-execution durability). `Success` and `Failure` hand off to a buffered worker owned by `internal/services` (a bounded channel drained by a goroutine started in `Register`, flushed on shutdown). Two invariants the implementer must hold:
 
--   A `Recorder` error — or a full/closed worker buffer — is **logged and swallowed**; it must never fail or delay the originating request. The middleware already treats both `Intent` and `Result` errors as non-fatal.
--   The buffer's overflow policy (block vs. drop-and-count) is an explicit decision; the recommended default is drop-with-metric so audit pressure cannot stall request handling.
+-   A `Service` error — or a full/closed worker buffer — is **logged and swallowed**; it must never fail or delay the originating request. The middleware already treats both `Intent` and result errors as non-fatal.
+-   The buffer's overflow policy is **drop-with-metric**: when the buffer is full, the result write is dropped and a Prometheus counter (`audit_result_drops_total`) is incremented. An alert fires when the drop rate exceeds 1% over a 5-minute window. This policy ensures audit pressure cannot stall request handling. (Alternative: block-with-timeout; document trade-off if chosen.)
 
 #### 6.4.5 Read Path
 
-The existing read endpoint (`GET /api/v2/audit` → `v2.Resources.ListAuditLogs` → `BloodhoundDB.ListAuditLogs`) keeps working unchanged because partitioning is transparent to `SELECT`, and its `created_at BETWEEN` predicate already enables partition pruning. Migrating that read endpoint into the slice's `handlers`/`appdb` layers is **optional and out of scope** for this RFC; if done, follow the standard slice steps for the read side.
+The existing read endpoint (`GET /api/v2/audit` → `v2.Resources.ListAuditLogs` → `BloodhoundDB.ListAuditLogs`) keeps working unchanged because partitioning is transparent to `SELECT`, and its `created_at BETWEEN` predicate already enables partition pruning. Migrating that read endpoint into the audit module is **optional and out of scope** for this RFC.
 
 #### 6.4.6 Mocks and Tests
 
-Follow the testing conventions established in the existing slices under `bhce/server/`. Mock generation and test structure for the audit slice should mirror those patterns.
+Follow the testing conventions established in `server/clients/` and `server/kennel/`. Mock generation (`go.uber.org/mock/mockgen`) and test structure for the audit module should mirror those patterns. Module-level tests go in `audit_test.go`; internal package tests stay in their respective `internal/` subdirectories.
 
 ## 7. Retention and Table Stability
 
@@ -325,12 +432,12 @@ This RFC recommends the slice-owned maintenance interface so the partitioned tab
 
 ## 8. Reference Implementation
 
-The sketch below is illustrative, not production-ready. It demonstrates how the middleware writes through the injected audit slice ([Section 6](#6-audit-log-slice)) using the existing `responseRecorder` pattern.
+The sketch below is illustrative, not production-ready. It demonstrates how the middleware writes through the injected audit service ([Section 6](#6-audit-module)) using the existing `responseRecorder` pattern.
 
 ```go
 // AuditMiddleware writes an intent row before the handler runs and a success/failure
-// row after it completes through the injected audit slice, which owns commit_id pairing.
-func AuditMiddleware(auditRecorder audit.Recorder, muxRouter *mux.Router, idResolver auth.IdentityResolver, exclusions ExclusionList) mux.MiddlewareFunc {
+// row after it completes through the injected audit service, which owns commit_id pairing.
+func AuditMiddleware(auditService audit.Service, muxRouter *mux.Router, idResolver auth.IdentityResolver, exclusions ExclusionList) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			var (
@@ -361,9 +468,9 @@ func AuditMiddleware(auditRecorder audit.Recorder, muxRouter *mux.Router, idReso
 			}
 
 			// Intent: synchronous, written for every audited endpoint (reads included)
-			// so a denied or failed attempt is always recorded. The slice returns the
+			// so a denied or failed attempt is always recorded. The service returns the
 			// commit_id that links this intent to its result.
-			commitID, err := auditRecorder.Intent(ctx, entry)
+			commitID, err := auditService.Intent(ctx, entry)
 			if err != nil {
 				slog.ErrorContext(ctx, "failed to write audit intent", slog.String("err", err.Error()))
 			}
@@ -371,7 +478,7 @@ func AuditMiddleware(auditRecorder audit.Recorder, muxRouter *mux.Router, idReso
 			next.ServeHTTP(recorder, request)
 
 			// A handler may have re-homed a semantic action (e.g. "CreateUser") and/or
-			// model-level Fields through the audit slice's context hook; fold them in.
+			// model-level Fields through the audit module's context hook; fold them in.
 			if contribution := audit.FromContext(ctx); contribution != nil {
 				if contribution.Action != "" {
 					entry.Action = contribution.Action
@@ -379,14 +486,14 @@ func AuditMiddleware(auditRecorder audit.Recorder, muxRouter *mux.Router, idReso
 				entry.Fields = contribution.Fields
 			}
 
-			// The slice offloads the result write to a buffered worker; see Section 3.4.1.
+			// The service offloads the result write to a buffered worker; see Section 6.4.4.
 			// HTTP status -> outcome: <400 success, >=400 failure.
 			if recorder.statusCode >= http.StatusBadRequest {
-				if err := auditRecorder.Failure(ctx, commitID, entry); err != nil {
+				if err := auditService.Failure(ctx, commitID, entry); err != nil {
 					slog.ErrorContext(ctx, "failed to write audit failure", slog.String("err", err.Error()))
 				}
 			} else {
-				if err := auditRecorder.Success(ctx, commitID, entry); err != nil {
+				if err := auditService.Success(ctx, commitID, entry); err != nil {
 					slog.ErrorContext(ctx, "failed to write audit success", slog.String("err", err.Error()))
 				}
 			}
