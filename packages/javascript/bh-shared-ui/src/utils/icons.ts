@@ -130,17 +130,17 @@ export const NODE_ICONS: IconDictionary = {
 
     [ActiveDirectoryNodeKind.Site]: {
         icon: faMapSigns,
-        color: '#bababdff',
+        color: '#2DD4BF',
     },
 
     [ActiveDirectoryNodeKind.SiteServer]: {
         icon: faMapMarker,
-        color: '#dcdce6ff',
+        color: '#60A5FA',
     },
 
     [ActiveDirectoryNodeKind.SiteSubnet]: {
         icon: faMap,
-        color: '#fdfdfdff',
+        color: '#F59E0B',
     },
 
     [ActiveDirectoryNodeKind.OU]: {
