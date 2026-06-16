@@ -157,8 +157,6 @@ export const ManagedDatePicker: FC<Props> = ({
                 // `value` only represents input buffer
                 value={inputDateString}
                 variant='underlined'
-                // aria-invalid={Boolean(validationError)}
-                // aria-describedby={validationError ? errorId : undefined}
                 calendarProps={{
                     fromDate: fromDate,
                     mode: 'single',

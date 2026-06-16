@@ -35,11 +35,11 @@ export const StatusSelect: FC<Props> = ({ status = '', statusOptions, onSelect }
     );
 
     return (
-        <div className='flex flex-col gap-2'>
+        <div className='flex flex-col gap-2 ml-1'>
             <Label>Status</Label>
 
             <Select onValueChange={onSelect} value={status.toString()}>
-                <SelectTrigger className='w-32 m-1' aria-label='Status Select'>
+                <SelectTrigger className='w-32' aria-label='Status Select'>
                     <SelectValue placeholder='Select' />
                 </SelectTrigger>
                 <SelectPortal>
