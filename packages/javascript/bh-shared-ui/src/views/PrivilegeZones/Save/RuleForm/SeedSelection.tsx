@@ -53,8 +53,6 @@ const SeedSelection: FC<{
     const [cypherQueryForExploreUrl, setCypherQueryForExploreUrl] = useState('');
     const { ruleId = '', tagId, tagDetailsLink } = usePZPathParams();
     const { seeds, ruleType, ruleQuery, dispatch } = useContext(RuleFormContext);
-    const [stalePreview, setStalePreview] = useState(false);
-
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const navigate = useAppNavigate();
     const deleteRuleMutation = useDeleteRule();
@@ -129,7 +127,7 @@ const SeedSelection: FC<{
                                     dispatch({ type: 'set-rule-type', ruleType: SeedTypeCypher });
                                     dispatch({ type: 'set-seeds', seeds: [] });
 
-                                    setStalePreview(true);
+                                    dispatch({ type: 'set-stale-cypher-preview', staleCypherPreview: true });
                                 }
                             }}>
                             <SelectTrigger aria-label='select rule seed type' id='rule-seed-type-select'>
@@ -154,8 +152,6 @@ const SeedSelection: FC<{
                         onChange={setCypherQueryForExploreUrl}
                         preview={false}
                         initialInput={firstSeed?.value}
-                        stalePreview={stalePreview}
-                        setStalePreview={setStalePreview}
                     />
                 )}
             </div>
