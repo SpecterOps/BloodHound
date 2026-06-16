@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -54,19 +54,24 @@ func TestLoggingMiddleware_QueryParameters(t *testing.T) {
 			logDoesNotContain: []string{"query_parameters"},
 		},
 		{
-			name:        "single query parameter is logged as structured field",
+			name:        "/api/v2 path with query params adds a query_parameters field",
+			url:         testURL1 + "?first_name=eq:Hubert",
+			logContains: []string{`"query_parameters":"`},
+		},
+		{
+			name:        "single query parameter is logged",
 			url:         testURL1 + "?first_name=eq:Hubert",
 			logContains: []string{"HTTP request", "query_parameters", "first_name", "eq:Hubert"},
 		},
 		{
-			name:        "multiple query parameters are logged as structured fields",
-			url:         testURL1 + "?first_name=eq:Hubert&limit=10",
-			logContains: []string{"HTTP request", "query_parameters", "first_name", "eq:Hubert", "limit", "10"},
+			name:        "multiple query parameters are logged",
+			url:         testURL2 + "?q=abcd&limit=1000&type=Computer&type=User&type=Group",
+			logContains: []string{"HTTP request", "query_parameters", "q", "abcd", "limit", "1000", "type", "Computer", "User", "Group"},
 		},
 		{
-			name:        "multi-value query parameter values are comma-joined",
-			url:         testURL2 + "?type=Computer&type=User&type=Group",
-			logContains: []string{"HTTP request", "query_parameters", "type", "Computer", "User", "Group"},
+			name:        "query_parameters field contains the full raw query string",
+			url:         testURL2 + "?q=abcd&limit=1000&type=Computer&type=User&type=Group",
+			logContains: []string{"HTTP request", `"query_parameters":"q=abcd&limit=1000&type=Computer&type=User&type=Group"`},
 		},
 	}
 
