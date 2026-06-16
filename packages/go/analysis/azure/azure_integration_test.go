@@ -1044,3 +1044,79 @@ func TestFetchEntityDescendentPaths_NoTerminalsReturnsEmpty(t *testing.T) {
 	})
 	require.NoError(t, err)
 }
+
+// TestFetchEntityDescendentPaths_SharedIntermediateNode verifies that two terminal nodes sharing
+// an intermediate container node both produce complete paths reaching root. Each traversal
+// independently reaches root through the shared intermediate without being truncated.
+func TestFetchEntityDescendentPaths_SharedIntermediateNode(t *testing.T) {
+	t.Parallel()
+
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		tenantID         = integration.RandomObjectID(t)
+		tenantNode       = NewAzureTenant(t, &suite, tenantID)
+		subscriptionNode = NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
+			common.Name:         "SharedSubscription",
+			common.ObjectID:     integration.RandomObjectID(t),
+			graphAzure.TenantID: tenantID,
+		}), graphAzure.Entity, graphAzure.Subscription)
+		app1 = NewAzureApplication(t, &suite, "App1", integration.RandomObjectID(t), tenantID)
+		app2 = NewAzureApplication(t, &suite, "App2", integration.RandomObjectID(t), tenantID)
+	)
+
+	// tenant --Contains--> subscription --Contains--> app1
+	//                                   --Contains--> app2
+	NewRelationship(t, &suite, tenantNode, subscriptionNode, graphAzure.Contains)
+	NewRelationship(t, &suite, subscriptionNode, app1, graphAzure.Contains)
+	NewRelationship(t, &suite, subscriptionNode, app2, graphAzure.Contains)
+
+	err := suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
+		paths, err := azure.FetchEntityDescendentPaths(tx, tenantNode, graphAzure.App)
+		require.NoError(t, err)
+
+		nodeIDs := paths.AllNodes().IDs()
+		require.Contains(t, nodeIDs, tenantNode.ID)
+		require.Contains(t, nodeIDs, subscriptionNode.ID)
+		require.Contains(t, nodeIDs, app1.ID)
+		require.Contains(t, nodeIDs, app2.ID)
+
+		return nil
+	})
+	require.NoError(t, err)
+}
+
+// TestFetchEntityDescendentPaths_TerminalNotConnectedToRoot verifies that a terminal node
+// which exists in the same tenant but has no azure.Contains path leading back to root
+// is excluded from the returned path set.
+func TestFetchEntityDescendentPaths_TerminalNotConnectedToRoot(t *testing.T) {
+	t.Parallel()
+
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		tenantID        = integration.RandomObjectID(t)
+		tenantNode      = NewAzureTenant(t, &suite, tenantID)
+		connectedApp    = NewAzureApplication(t, &suite, "ConnectedApp", integration.RandomObjectID(t), tenantID)
+		disconnectedApp = NewAzureApplication(t, &suite, "DisconnectedApp", integration.RandomObjectID(t), tenantID)
+	)
+
+	// Only connectedApp has a Contains edge to root; disconnectedApp shares the tenantID
+	// but has no path leading back to tenantNode.
+	NewRelationship(t, &suite, tenantNode, connectedApp, graphAzure.Contains)
+
+	err := suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
+		paths, err := azure.FetchEntityDescendentPaths(tx, tenantNode, graphAzure.App)
+		require.NoError(t, err)
+
+		nodeIDs := paths.AllNodes().IDs()
+		require.Contains(t, nodeIDs, tenantNode.ID)
+		require.Contains(t, nodeIDs, connectedApp.ID)
+		require.NotContains(t, nodeIDs, disconnectedApp.ID)
+
+		return nil
+	})
+	require.NoError(t, err)
+}

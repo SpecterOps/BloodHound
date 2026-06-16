@@ -28,7 +28,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
-	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -821,6 +820,8 @@ var containsValidEndKinds = map[graph.Kind]graph.Kinds{
 	},
 }
 
+// isDirectDescendent reports whether targetKind is a valid direct AZContains child of sourceKind,
+// according to the containsValidEndKinds mapping derived from the Azure ingestion logic.
 func isDirectDescendent(sourceKind, targetKind graph.Kind) bool {
 	if validEndKinds, ok := containsValidEndKinds[sourceKind]; ok && validEndKinds.ContainsOneOf(targetKind) {
 		return true
@@ -847,6 +848,8 @@ func FetchDirectDescendentPaths(tx graph.Transaction, root *graph.Node, descende
 	)))
 }
 
+// FetchDirectEntityDescendents fetches the set of nodes of descendentKind that are direct AZContains
+// children of root, excluding root itself.
 func FetchDirectEntityDescendents(tx graph.Transaction, root *graph.Node, descendentKind graph.Kind) (graph.NodeSet, error) {
 	if paths, err := FetchDirectDescendentPaths(tx, root, descendentKind); err != nil {
 		return nil, err
@@ -857,6 +860,9 @@ func FetchDirectEntityDescendents(tx graph.Transaction, root *graph.Node, descen
 	}
 }
 
+// FetchDescendentKindByTenantID fetches the set of nodes matching descendentKind that reside within
+// the same Azure tenant as root, determined by comparing the azure.TenantID property against root's
+// tenant ID.
 func FetchDescendentKindByTenantID(tx graph.Transaction, root *graph.Node, descendentKind ...graph.Kind) (graph.NodeSet, error) {
 	if tenantID, err := nodeAzureTenantID(root); err != nil {
 		return nil, err
@@ -872,16 +878,9 @@ func FetchDescendentKindByTenantID(tx graph.Transaction, root *graph.Node, desce
 
 // FetchEntityDescendentPaths fetches paths from each terminal node of descendentKind (within the
 // same Azure tenant as root) back up to root via azure.Contains relationships. Each traversal
-// halts upon reaching root or encountering a node already claimed by a prior traversal, preventing
-// duplicate path segments across traversals.
+// halts upon reaching root, and only paths that successfully reach root are included in the result.
 func FetchEntityDescendentPaths(tx graph.Transaction, root *graph.Node, descendentKind ...graph.Kind) (graph.PathSet, error) {
-	var (
-		visitedBitmap = cardinality.NewBitmap64()
-		pathSet       = graph.NewPathSet()
-	)
-
-	// Pre-populate the visited bitmap with root so that any traversal halts when it reaches it
-	visitedBitmap.Add(root.ID.Uint64())
+	pathSet := graph.NewPathSet()
 
 	terminalNodes, err := FetchDescendentKindByTenantID(tx, root, descendentKind...)
 	if err != nil {
@@ -889,11 +888,7 @@ func FetchEntityDescendentPaths(tx graph.Transaction, root *graph.Node, descende
 	}
 
 	for _, terminalNode := range terminalNodes {
-		// Skip this terminal if it was already reached and claimed by a prior traversal
-		if visitedBitmap.Contains(terminalNode.ID.Uint64()) {
-			continue
-		}
-
+		reachedRoot := false
 		if paths, err := ops.TraversePaths(tx, ops.TraversalPlan{
 			Root:      terminalNode,
 			Direction: graph.DirectionInbound,
@@ -901,17 +896,18 @@ func FetchEntityDescendentPaths(tx graph.Transaction, root *graph.Node, descende
 				return query.Kind(query.Relationship(), azure.Contains)
 			},
 			ExpansionFilter: func(segment *graph.PathSegment) bool {
-				nodeID := segment.Node.ID.Uint64()
-				if visitedBitmap.Contains(nodeID) {
+				if segment.Node.ID == root.ID {
+					reachedRoot = true
 					return false
 				}
-				visitedBitmap.Add(nodeID)
 				return true
 			},
 		}); err != nil {
 			return nil, err
 		} else {
-			pathSet.AddPathSet(paths)
+			if reachedRoot {
+				pathSet.AddPathSet(paths)
+			}
 		}
 	}
 
@@ -928,6 +924,8 @@ func FetchEntityDescendents(tx graph.Transaction, root *graph.Node, descendentKi
 	}
 }
 
+// FetchDirectDescendentCounts returns the per-kind counts of nodes that are direct AZContains
+// children of root, keyed by kind string and excluding root itself.
 func FetchDirectDescendentCounts(tx graph.Transaction, root *graph.Node, descendentKinds ...graph.Kind) (Descendents, error) {
 	if paths, err := FetchDirectDescendentPaths(tx, root, descendentKinds...); err != nil {
 		return Descendents{}, err
