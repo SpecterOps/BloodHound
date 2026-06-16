@@ -192,16 +192,9 @@ func LoggingMiddleware(_ auth.IdentityResolver, bypassLimitsParam bool) func(htt
 				slog.Duration("elapsed", time.Since(requestContext.StartTime.UTC())),
 			)
 
-			// Add structured logging of query parameters for /api/v2 endpoints
-			if strings.HasPrefix(request.URL.Path, "/api/v2") {
-				var params []any
-				for k, v := range request.URL.Query() {
-					params = append(params, slog.String(k, strings.Join(v, ",")))
-				}
-
-				if len(params) > 0 {
-					logAttrs = append(logAttrs, slog.Group("query_parameters", params...))
-				}
+			// Add logging of query parameters for /api/v2 endpoints
+			if strings.HasPrefix(request.URL.Path, "/api/v2") && request.URL.RawQuery != "" {
+				logAttrs = append(logAttrs, slog.String("query_parameters", request.URL.RawQuery))
 			}
 		})
 	}
