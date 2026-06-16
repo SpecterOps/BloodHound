@@ -303,7 +303,9 @@ type Contribution struct {
 }
 
 // Contribute attaches a semantic action and/or model-level Fields to the request
-// context. The audit middleware folds the contribution into the result row.
+// context using context.WithValue and returns the updated context. Handlers must
+// propagate the returned context via request.WithContext() to make the contribution
+// visible to the middleware's post-handler FromContext call.
 func Contribute(ctx context.Context, action model.AuditLogAction, fields map[string]any) context.Context
 
 // FromContext extracts the contribution a handler attached during the request, or

@@ -22,7 +22,7 @@ import (
 
     "github.com/gorilla/mux"
     "github.com/specterops/bloodhound/cmd/api/src/auth"
-    "github.com/specterops/bloodhound/cmd/api/src/ctx"
+    "github.com/specterops/bloodhound/cmd/api/src/bhctx"
     "github.com/specterops/bloodhound/cmd/api/src/model"
     "github.com/specterops/bloodhound/server/audit"
 )
@@ -80,7 +80,7 @@ func auditMiddlewareHandler(
 ) {
     var (
         ctx            = request.Context()
-        requestContext = ctx.Get(ctx)  // bhctx.Context
+        requestContext = bhctx.Get(ctx)  // Extract BloodHound context
         routeTemplate  = routeTemplateFor(muxRouter, request)
         recorder       = &responseRecorder{delegate: response, statusCode: http.StatusOK}
     )
@@ -109,7 +109,7 @@ func auditMiddlewareHandler(
 
     // INTENT WRITE (synchronous): Pre-execution record
     // The audit service returns the commit_id that links this intent to its result
-    commitID, err := auditService.Intent(ctx, entry)
+    commitID, auditErr := auditService.Intent(ctx, entry)
     if err != nil {
         // Log but do not fail the request
         slog.ErrorContext(ctx, "failed to write audit intent", slog.String("err", err.Error()))
@@ -118,25 +118,29 @@ func auditMiddlewareHandler(
     // Execute the handler
     next.ServeHTTP(recorder, request)
 
-    // Check if handler contributed semantic action and/or fields via context
-    if contribution := audit.FromContext(ctx); contribution != nil {
-        if contribution.Action != "" {
-            entry.Action = contribution.Action  // Override route-template with semantic action
+    // Only write result if intent succeeded (to maintain intent/result correlation)
+    if auditErr == nil {
+        // Check if handler contributed semantic action and/or fields via context
+        // The handler must propagate the context via request.WithContext() for this to work
+        if contribution := audit.FromContext(request.Context()); contribution != nil {
+            if contribution.Action != "" {
+                entry.Action = contribution.Action  // Override route-template with semantic action
+            }
+            if contribution.Fields != nil {
+                entry.Fields = contribution.Fields  // Add handler-contributed fields
+            }
         }
-        if contribution.Fields != nil {
-            entry.Fields = contribution.Fields  // Add handler-contributed fields
-        }
-    }
 
-    // RESULT WRITE (async via worker): Post-execution record
-    // HTTP status -> outcome: <400 = success, >=400 = failure
-    if recorder.statusCode >= http.StatusBadRequest {
-        if err := auditService.Failure(ctx, commitID, entry); err != nil {
-            slog.ErrorContext(ctx, "failed to write audit failure", slog.String("err", err.Error()))
-        }
-    } else {
-        if err := auditService.Success(ctx, commitID, entry); err != nil {
-            slog.ErrorContext(ctx, "failed to write audit success", slog.String("err", err.Error()))
+        // RESULT WRITE (async via worker): Post-execution record
+        // HTTP status -> outcome: <400 = success, >=400 = failure
+        if recorder.statusCode >= http.StatusBadRequest {
+            if err := auditService.Failure(ctx, commitID, entry); err != nil {
+                slog.ErrorContext(ctx, "failed to write audit failure", slog.String("err", err.Error()))
+            }
+        } else {
+            if err := auditService.Success(ctx, commitID, entry); err != nil {
+                slog.ErrorContext(ctx, "failed to write audit success", slog.String("err", err.Error()))
+            }
         }
     }
 }
