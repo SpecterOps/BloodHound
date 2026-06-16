@@ -52,6 +52,26 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
+var requiredFileServices = []storage.FileServiceName{
+	storage.FileServiceIngest,
+	storage.FileServiceRetained,
+	storage.FileServiceCollectors,
+	storage.FileServiceWork,
+}
+
+func ensureFileServices(
+	fileServiceResolver storageService.FileServiceResolver,
+	requiredFileServices ...storage.FileServiceName,
+) error {
+	for _, serviceName := range requiredFileServices {
+		if _, err := fileServiceResolver.Resolve(serviceName); err != nil {
+			return fmt.Errorf("failed to resolve %s file service: %w", serviceName, err)
+		}
+	}
+
+	return nil
+}
+
 // ConnectPostgres initializes a connection to PG, and returns errors if any
 func ConnectPostgres(cfg config.Configuration) (*database.BloodhoundDB, error) {
 	if db, dbPool, err := database.OpenDatabase(cfg.Database); err != nil {
@@ -81,15 +101,15 @@ func ConnectDatabases(ctx context.Context, cfg config.Configuration) (bootstrap.
 // IngestControl which occurs prior to migration. This function can be used to make the struct to contain the services that
 // are necessary for the application.
 func CreateRuntimeDependencies(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) (bootstrap.RuntimeDependencies, error) {
-	var dependencies = bootstrap.RuntimeDependencies{}
+	dependencies := bootstrap.RuntimeDependencies{}
 	if fileServices, err := storageService.NewDefaultFileServices(cfg); err != nil {
 		return dependencies, fmt.Errorf("failed to initialize file services: %w", err)
 	} else if fileServiceResolver, err := storageService.NewFileServiceResolver(fileServices); err != nil {
 		return dependencies, fmt.Errorf("failed to initialize file service resolver: %w", err)
-		// The FileServiceRetained is necessary for the PreMigrationDaemons where it is used in IngestControl for Cleanup.
-		// Checking it here ensures we have the service prior to running the application.
-	} else if _, err := fileServiceResolver.Resolve(storage.FileServiceRetained); err != nil {
-		return dependencies, fmt.Errorf("failed to resolve retained file service: %w", err)
+		// Multiple file services are required at runtime. Checking it here to ensure that they were properly registered
+		// to fail fast if there were any required services that were not registered.
+	} else if err := ensureFileServices(fileServiceResolver, requiredFileServices...); err != nil {
+		return dependencies, fmt.Errorf("failed to resolve required file service: %w", err)
 	} else {
 		dependencies.FileServiceResolver = fileServiceResolver
 		return dependencies, nil
