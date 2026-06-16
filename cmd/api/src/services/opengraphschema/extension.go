@@ -73,25 +73,36 @@ func (s *OpenGraphSchemaService) DeleteExtension(ctx context.Context, extensionI
 	return nil
 }
 
-// GetEnvironmentKindsAndEnvironmentExtensionDisplayNames - returns all environment kinds as graph.Kinds and a map of
-// their extension display names. If the findings feature flag is not enabled, it will only return builtin environment kinds.
+// GetEnvironmentKindsAndEnvironmentExtensionDisplayNames - returns all environment kinds as graph.Kinds and maps of
+// their extension display names, extension IDs, and environment kind IDs. If the findings feature flag is not enabled, it will only return builtin environment kinds.
 // TODO: Remove the onlyBuiltin parameter once the appcfg.FeatureOpenGraphFindings feature flag is removed.
-func (s *OpenGraphSchemaService) GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx context.Context, onlyBuiltin bool) (graph.Kinds, map[string]string, error) {
-	var filters = make(model.Filters)
+func (s *OpenGraphSchemaService) GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx context.Context, onlyBuiltin bool) (graph.Kinds, map[string]string, map[string]int32, map[string]int32, error) {
+	var (
+		filters                       = make(model.Filters)
+		kindToDisplayName             = map[string]string{}
+		kindToSchemaExtensionID       = map[string]int32{}
+		kindToSchemaEnvironmentKindID = map[string]int32{}
+		environmentKinds              graph.Kinds
+	)
+
 	if onlyBuiltin {
 		filters = model.Filters{"is_builtin": []model.Filter{{Operator: model.Equals, Value: "true", SetOperator: model.FilterAnd}}}
 	}
 	if environments, err := s.openGraphSchemaRepository.GetEnvironmentsFiltered(ctx, filters); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, nil, err
 	} else {
-		// Build environment kind mappings
-		environmentKinds := make([]graph.Kind, 0)
-		envKindToExtensionDisplayName := make(map[string]string, len(environments))
+		environmentKinds = make(graph.Kinds, 0, len(environments))
+		kindToDisplayName = make(map[string]string, len(environments))
+		kindToSchemaExtensionID = make(map[string]int32, len(environments))
+		kindToSchemaEnvironmentKindID = make(map[string]int32, len(environments))
+
 		for _, env := range environments {
 			environmentKinds = append(environmentKinds, graph.StringKind(env.EnvironmentKindName))
-			envKindToExtensionDisplayName[env.EnvironmentKindName] = env.SchemaExtensionDisplayName
+			kindToDisplayName[env.EnvironmentKindName] = env.SchemaExtensionDisplayName
+			kindToSchemaExtensionID[env.EnvironmentKindName] = env.SchemaExtensionId
+			kindToSchemaEnvironmentKindID[env.EnvironmentKindName] = env.EnvironmentKindId
 		}
-		return environmentKinds, envKindToExtensionDisplayName, nil
+		return environmentKinds, kindToDisplayName, kindToSchemaExtensionID, kindToSchemaEnvironmentKindID, nil
 	}
 }
 

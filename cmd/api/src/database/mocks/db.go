@@ -2185,9 +2185,9 @@ func (mr *MockDatabaseMockRecorder) GetLatestAssetGroupCollection(ctx, assetGrou
 }
 
 // GetOpenGraphDataQualityAggregations mocks base method.
-func (m *MockDatabase) GetOpenGraphDataQualityAggregations(ctx context.Context, extensionID, schemaEnvironmentID null.Int32, start, end time.Time, sort_by string, limit, skip int) (model.DataQualityAggregations, int, error) {
+func (m *MockDatabase) GetOpenGraphDataQualityAggregations(ctx context.Context, extensionID, schemaEnvironmentKindID null.Int32, start, end time.Time, sort_by string, limit, skip int) (model.DataQualityAggregations, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOpenGraphDataQualityAggregations", ctx, extensionID, schemaEnvironmentID, start, end, sort_by, limit, skip)
+	ret := m.ctrl.Call(m, "GetOpenGraphDataQualityAggregations", ctx, extensionID, schemaEnvironmentKindID, start, end, sort_by, limit, skip)
 	ret0, _ := ret[0].(model.DataQualityAggregations)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -2195,15 +2195,15 @@ func (m *MockDatabase) GetOpenGraphDataQualityAggregations(ctx context.Context, 
 }
 
 // GetOpenGraphDataQualityAggregations indicates an expected call of GetOpenGraphDataQualityAggregations.
-func (mr *MockDatabaseMockRecorder) GetOpenGraphDataQualityAggregations(ctx, extensionID, schemaEnvironmentID, start, end, sort_by, limit, skip any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetOpenGraphDataQualityAggregations(ctx, extensionID, schemaEnvironmentKindID, start, end, sort_by, limit, skip any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOpenGraphDataQualityAggregations", reflect.TypeOf((*MockDatabase)(nil).GetOpenGraphDataQualityAggregations), ctx, extensionID, schemaEnvironmentID, start, end, sort_by, limit, skip)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOpenGraphDataQualityAggregations", reflect.TypeOf((*MockDatabase)(nil).GetOpenGraphDataQualityAggregations), ctx, extensionID, schemaEnvironmentKindID, start, end, sort_by, limit, skip)
 }
 
 // GetOpenGraphDataQualityStats mocks base method.
-func (m *MockDatabase) GetOpenGraphDataQualityStats(ctx context.Context, environmentID null.String, extensionID, schemaEnvironmentID null.Int32, start, end time.Time, sort_by string, limit, skip int) (model.DataQualityStats, int, error) {
+func (m *MockDatabase) GetOpenGraphDataQualityStats(ctx context.Context, environmentID null.String, extensionID, schemaEnvironmentKindID null.Int32, start, end time.Time, sort_by string, limit, skip int) (model.DataQualityStats, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOpenGraphDataQualityStats", ctx, environmentID, extensionID, schemaEnvironmentID, start, end, sort_by, limit, skip)
+	ret := m.ctrl.Call(m, "GetOpenGraphDataQualityStats", ctx, environmentID, extensionID, schemaEnvironmentKindID, start, end, sort_by, limit, skip)
 	ret0, _ := ret[0].(model.DataQualityStats)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -2211,9 +2211,9 @@ func (m *MockDatabase) GetOpenGraphDataQualityStats(ctx context.Context, environ
 }
 
 // GetOpenGraphDataQualityStats indicates an expected call of GetOpenGraphDataQualityStats.
-func (mr *MockDatabaseMockRecorder) GetOpenGraphDataQualityStats(ctx, environmentID, extensionID, schemaEnvironmentID, start, end, sort_by, limit, skip any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetOpenGraphDataQualityStats(ctx, environmentID, extensionID, schemaEnvironmentKindID, start, end, sort_by, limit, skip any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOpenGraphDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetOpenGraphDataQualityStats), ctx, environmentID, extensionID, schemaEnvironmentID, start, end, sort_by, limit, skip)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOpenGraphDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetOpenGraphDataQualityStats), ctx, environmentID, extensionID, schemaEnvironmentKindID, start, end, sort_by, limit, skip)
 }
 
 // GetOrderedAssetGroupTagTiers mocks base method.

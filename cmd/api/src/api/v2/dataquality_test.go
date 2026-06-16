@@ -607,12 +607,12 @@ func TestGetOpenGraphDataQualityStats_Failure(t *testing.T) {
 		{
 			Input{
 				url.Values{
-					"schema_environment_id": []string{"invalidSchemaEnvironmentID"},
+					"schema_environment_kind_id": []string{"invalidSchemaEnvironmentKindID"},
 				},
 			},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: "query parameter \"schema_environment_id\" is malformed"}},
+				Errors:     []api.ErrorDetails{{Message: "query parameter \"schema_environment_kind_id\" is malformed"}},
 			},
 		},
 		{
@@ -656,17 +656,17 @@ func TestGetOpenGraphDataQualityStats_Success(t *testing.T) {
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
 	mockDB.EXPECT().GetOpenGraphDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), "updated_at desc", 1, 0).DoAndReturn(
-		func(ctx context.Context, environmentID null.String, extensionID null.Int32, schemaEnvironmentID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.DataQualityStats, int, error) {
+		func(ctx context.Context, environmentID null.String, extensionID null.Int32, schemaEnvironmentKindID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.DataQualityStats, int, error) {
 			require.True(t, environmentID.Equal(null.StringFrom("env-1")))
 			require.True(t, extensionID.Equal(null.Int32From(7)))
-			require.True(t, schemaEnvironmentID.Equal(null.Int32From(11)))
+			require.True(t, schemaEnvironmentKindID.Equal(null.Int32From(11)))
 			return model.DataQualityStats{}, 0, nil
 		},
 	)
 
 	resources := v2.Resources{DB: mockDB}
 
-	req, err := http.NewRequest("GET", "/api/v2/data-quality-stats?sort_by=-updated_at&limit=1&start_date=2022-03-23T07:20:50.52Z&end_date=2022-04-23T07:20:50.52Z&skip=0&environment_id=env-1&extension_id=7&schema_environment_id=11", nil)
+	req, err := http.NewRequest("GET", "/api/v2/data-quality-stats?sort_by=-updated_at&limit=1&start_date=2022-03-23T07:20:50.52Z&end_date=2022-04-23T07:20:50.52Z&skip=0&environment_id=env-1&extension_id=7&schema_environment_kind_id=11", nil)
 	require.NoError(t, err)
 
 	router := mux.NewRouter()
@@ -755,11 +755,11 @@ func TestGetOpenGraphDataQualityAggregations_Failure(t *testing.T) {
 		{
 			Input: Input{
 				Params: url.Values{
-					"schema_environment_id": []string{"invalidSchemaEnvironmentID"},
+					"schema_environment_kind_id": []string{"invalidSchemaEnvironmentKindID"},
 				},
 			},
 			ExpectedStatus:      http.StatusBadRequest,
-			ExpectedErrorDetail: "query parameter \"schema_environment_id\" is malformed",
+			ExpectedErrorDetail: "query parameter \"schema_environment_kind_id\" is malformed",
 		},
 		{
 			Input:               Input{Params: url.Values{}},
@@ -797,16 +797,16 @@ func TestGetOpenGraphDataQualityAggregations_Success(t *testing.T) {
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
 	mockDB.EXPECT().GetOpenGraphDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), "schema_extension_id", 1, 0).DoAndReturn(
-		func(ctx context.Context, extensionID null.Int32, schemaEnvironmentID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.DataQualityAggregations, int, error) {
+		func(ctx context.Context, extensionID null.Int32, schemaEnvironmentKindID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.DataQualityAggregations, int, error) {
 			require.True(t, extensionID.Equal(null.Int32From(7)))
-			require.True(t, schemaEnvironmentID.Equal(null.Int32From(11)))
+			require.True(t, schemaEnvironmentKindID.Equal(null.Int32From(11)))
 			return model.DataQualityAggregations{}, 0, nil
 		},
 	)
 
 	resources := v2.Resources{DB: mockDB}
 
-	req, err := http.NewRequest("GET", "/api/v2/data-quality-stats-aggregations?sort_by=schema_extension_id&limit=1&start_date=2022-03-23T07:20:50.52Z&end_date=2022-04-23T07:20:50.52Z&skip=0&extension_id=7&schema_environment_id=11", nil)
+	req, err := http.NewRequest("GET", "/api/v2/data-quality-stats-aggregations?sort_by=schema_extension_id&limit=1&start_date=2022-03-23T07:20:50.52Z&end_date=2022-04-23T07:20:50.52Z&skip=0&extension_id=7&schema_environment_kind_id=11", nil)
 	require.NoError(t, err)
 
 	router := mux.NewRouter()

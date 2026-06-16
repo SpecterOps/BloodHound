@@ -25,7 +25,7 @@ allOf:
       schema_extension_id:
         type: integer
         format: int32
-      schema_environment_id:
+      schema_environment_kind_id:
         type: integer
         format: int32
       metric_type:
@@ -38,11 +38,7 @@ allOf:
       metric_value:
         type: number
         format: double
-      schema_node_kind_id:
-        type: integer
-        format: int32
-        nullable: true
-      schema_relationship_kind_id:
+      kind_id:
         type: integer
         format: int32
         nullable: true

@@ -139,6 +139,7 @@ type GraphSchemaNodeKinds []GraphSchemaNodeKind
 type GraphSchemaNodeKind struct {
 	Serial
 	Name              string
+	KindID            int32  `json:"-"`
 	SchemaExtensionId int32  // indicates which extension this node kind belongs to
 	DisplayName       string // can be different from name but usually isn't other than Base/Entity
 	Description       string // human-readable description of the node kind

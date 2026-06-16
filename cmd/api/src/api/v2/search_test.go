@@ -408,7 +408,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
-				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(gomock.Any(), true).Return(graph.Kinds{}, map[string]string{}, fmt.Errorf("Some error"))
+				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(gomock.Any(), true).Return(graph.Kinds{}, map[string]string{}, map[string]int32{}, map[string]int32{}, fmt.Errorf("Some error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -433,7 +433,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 				}, map[string]string{
 					ad.Domain.String():    "Active Directory",
 					azure.Tenant.String(): "Azure",
-				}, nil)
+				}, map[string]int32{}, map[string]int32{}, nil)
 				mock.mockGraphQuery.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{}, fmt.Errorf("Some error"))
 			},
 			expected: expected{
@@ -454,7 +454,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
-				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(gomock.Any(), true).Return(graph.Kinds{}, map[string]string{}, nil)
+				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(gomock.Any(), true).Return(graph.Kinds{}, map[string]string{}, map[string]int32{}, map[string]int32{}, nil)
 				mock.mockGraphQuery.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{}, nil)
 			},
 			expected: expected{
@@ -475,7 +475,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
-				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(gomock.Any(), true).Return(graph.Kinds{ad.Domain}, map[string]string{ad.Domain.String(): "Active Directory"}, nil)
+				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(gomock.Any(), true).Return(graph.Kinds{ad.Domain}, map[string]string{ad.Domain.String(): "Active Directory"}, map[string]int32{}, map[string]int32{}, nil)
 				mock.mockGraphQuery.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{
 					{
 						Properties: graph.AsProperties(map[string]any{
@@ -505,14 +505,13 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: true}, nil)
-				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(gomock.Any(), false).Return(graph.Kinds{graph.StringKind("HeeHaw Kind")}, map[string]string{graph.StringKind("HeeHaw Kind").String(): "HeeHaw"}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentsFiltered(gomock.Any(), gomock.Any()).Return([]model.SchemaEnvironment{
-					{
-						Serial:              model.Serial{ID: 11},
-						SchemaExtensionId:   7,
-						EnvironmentKindName: "HeeHaw Kind",
-					},
-				}, nil)
+				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(gomock.Any(), false).Return(
+					graph.Kinds{graph.StringKind("HeeHaw Kind")},
+					map[string]string{graph.StringKind("HeeHaw Kind").String(): "HeeHaw"},
+					map[string]int32{graph.StringKind("HeeHaw Kind").String(): 7},
+					map[string]int32{graph.StringKind("HeeHaw Kind").String(): 11},
+					nil,
+				)
 				mock.mockGraphQuery.EXPECT().
 					GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).
 					Return([]*graph.Node{
@@ -530,7 +529,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":[{"type":"HeeHaw","name":"HeeHaw Name","id":"hee-haw-environment","collected":true,"schema_extension_id":7,"schema_environment_id":11}]}`,
+				responseBody:   `{"data":[{"type":"HeeHaw","name":"HeeHaw Name","id":"hee-haw-environment","collected":true,"schema_extension_id":7,"schema_environment_kind_id":11}]}`,
 			},
 		},
 		{
@@ -547,7 +546,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(gomock.Any(), true).
-					Return(graph.Kinds{ad.Domain}, map[string]string{ad.Domain.String(): "Active Directory"}, nil)
+					Return(graph.Kinds{ad.Domain}, map[string]string{ad.Domain.String(): "Active Directory"}, map[string]int32{}, map[string]int32{}, nil)
 				mock.mockGraphQuery.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).
 					Return([]*graph.Node{{
 						Properties: graph.AsProperties(map[string]any{
@@ -578,7 +577,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(gomock.Any(), true).
-					Return(graph.Kinds{ad.Domain}, map[string]string{ad.Domain.String(): "Active Directory"}, nil)
+					Return(graph.Kinds{ad.Domain}, map[string]string{ad.Domain.String(): "Active Directory"}, map[string]int32{}, map[string]int32{}, nil)
 				mock.mockGraphQuery.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).
 					Return([]*graph.Node{{
 						Properties: graph.AsProperties(map[string]any{
@@ -609,7 +608,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(gomock.Any(), true).
-					Return(graph.Kinds{ad.Domain}, map[string]string{ad.Domain.String(): "Active Directory"}, nil)
+					Return(graph.Kinds{ad.Domain}, map[string]string{ad.Domain.String(): "Active Directory"}, map[string]int32{}, map[string]int32{}, nil)
 				mock.mockGraphQuery.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).
 					Return([]*graph.Node{{
 						Properties: graph.AsProperties(map[string]any{
@@ -640,7 +639,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(gomock.Any(), true).
-					Return(graph.Kinds{ad.Domain}, map[string]string{ad.Domain.String(): "Active Directory"}, nil)
+					Return(graph.Kinds{ad.Domain}, map[string]string{ad.Domain.String(): "Active Directory"}, map[string]int32{}, map[string]int32{}, nil)
 				mock.mockGraphQuery.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).
 					Return([]*graph.Node{{
 						Properties: graph.AsProperties(map[string]any{

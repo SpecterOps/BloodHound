@@ -73,13 +73,15 @@ func (mr *MockOpenGraphSchemaServiceMockRecorder) DeleteExtension(ctx, extension
 }
 
 // GetEnvironmentKindsAndEnvironmentExtensionDisplayNames mocks base method.
-func (m *MockOpenGraphSchemaService) GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx context.Context, onlyBuiltin bool) (graph.Kinds, map[string]string, error) {
+func (m *MockOpenGraphSchemaService) GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx context.Context, onlyBuiltin bool) (graph.Kinds, map[string]string, map[string]int32, map[string]int32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEnvironmentKindsAndEnvironmentExtensionDisplayNames", ctx, onlyBuiltin)
 	ret0, _ := ret[0].(graph.Kinds)
 	ret1, _ := ret[1].(map[string]string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret2, _ := ret[2].(map[string]int32)
+	ret3, _ := ret[3].(map[string]int32)
+	ret4, _ := ret[4].(error)
+	return ret0, ret1, ret2, ret3, ret4
 }
 
 // GetEnvironmentKindsAndEnvironmentExtensionDisplayNames indicates an expected call of GetEnvironmentKindsAndEnvironmentExtensionDisplayNames.

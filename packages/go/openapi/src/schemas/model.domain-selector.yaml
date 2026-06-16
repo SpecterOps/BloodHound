@@ -33,11 +33,11 @@ properties:
     format: int32
     readOnly: true
     description: OpenGraph schema extension ID for custom environments
-  schema_environment_id:
+  schema_environment_kind_id:
     type: integer
     format: int32
     readOnly: true
-    description: OpenGraph schema environment ID for custom environments
+    description: OpenGraph schema environment kind ID for custom environments
   impactValue:
     type: integer
     readOnly: true

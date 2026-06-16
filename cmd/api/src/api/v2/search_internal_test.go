@@ -32,8 +32,12 @@ import (
 
 func Test_SetNodeProperties(t *testing.T) {
 	var (
-		schemaExtensionID   int32 = 7
-		schemaEnvironmentID int32 = 11
+		schemaExtensionID            int32 = 7
+		schemaEnvironmentKindID      int32 = 11
+		adSchemaExtensionID          int32 = 21
+		adSchemaEnvironmentKindID    int32 = 31
+		azureSchemaExtensionID       int32 = 22
+		azureSchemaEnvironmentKindID int32 = 32
 	)
 
 	tests := []struct {
@@ -122,12 +126,12 @@ func Test_SetNodeProperties(t *testing.T) {
 			},
 			expected: model.EnvironmentSelectors{
 				{
-					Type:                "OpenGraph Extension",
-					Name:                "Node3",
-					ObjectID:            "environment-3",
-					Collected:           true,
-					SchemaExtensionID:   &schemaExtensionID,
-					SchemaEnvironmentID: &schemaEnvironmentID,
+					Type:                    "OpenGraph Extension",
+					Name:                    "Node3",
+					ObjectID:                "environment-3",
+					Collected:               true,
+					SchemaExtensionID:       &schemaExtensionID,
+					SchemaEnvironmentKindID: &schemaEnvironmentKindID,
 				},
 			},
 		},
@@ -137,10 +141,16 @@ func Test_SetNodeProperties(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := BuildEnvironmentSelectors(tt.nodes, map[string]string{
 				"OpenGraphEnvironment": "OpenGraph Extension",
+				ad.Domain.String():     "Active Directory",
+				azure.Tenant.String():  "Azure",
 			}, map[string]int32{
 				"OpenGraphEnvironment": schemaExtensionID,
+				ad.Domain.String():     adSchemaExtensionID,
+				azure.Tenant.String():  azureSchemaExtensionID,
 			}, map[string]int32{
-				"OpenGraphEnvironment": schemaEnvironmentID,
+				"OpenGraphEnvironment": schemaEnvironmentKindID,
+				ad.Domain.String():     adSchemaEnvironmentKindID,
+				azure.Tenant.String():  azureSchemaEnvironmentKindID,
 			})
 			assert.Equal(t, tt.expected, got, tt.name)
 		})

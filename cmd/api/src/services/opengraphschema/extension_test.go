@@ -797,9 +797,11 @@ func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDispla
 		onlyBuiltin bool
 	}
 	type expected struct {
-		graphKinds     graph.Kinds
-		displayNameMap map[string]string
-		err            error
+		graphKinds                    graph.Kinds
+		displayNameMap                map[string]string
+		kindToSchemaExtensionID       map[string]int32
+		kindToSchemaEnvironmentKindID map[string]int32
+		err                           error
 	}
 	tests := []struct {
 		name       string
@@ -824,10 +826,16 @@ func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDispla
 			setupMocks: func(t *testing.T, m *mocks) {
 				m.mockOpenGraphSchema.EXPECT().GetEnvironmentsFiltered(gomock.Any(), model.Filters{"is_builtin": []model.Filter{{Operator: model.Equals, Value: "true", SetOperator: model.FilterAnd}}}).Return([]model.SchemaEnvironment{
 					{
+						Serial:                     model.Serial{ID: 11},
+						SchemaExtensionId:          21,
+						EnvironmentKindId:          31,
 						EnvironmentKindName:        "Domain",
 						SchemaExtensionDisplayName: "AD",
 					},
 					{
+						Serial:                     model.Serial{ID: 12},
+						SchemaExtensionId:          22,
+						EnvironmentKindId:          32,
 						EnvironmentKindName:        "Tenant",
 						SchemaExtensionDisplayName: "Azure",
 					},
@@ -841,6 +849,14 @@ func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDispla
 				displayNameMap: map[string]string{
 					"Domain": "AD",
 					"Tenant": "Azure",
+				},
+				kindToSchemaExtensionID: map[string]int32{
+					"Domain": 21,
+					"Tenant": 22,
+				},
+				kindToSchemaEnvironmentKindID: map[string]int32{
+					"Domain": 31,
+					"Tenant": 32,
 				},
 			},
 			args: args{
@@ -853,12 +869,25 @@ func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDispla
 			setupMocks: func(t *testing.T, m *mocks) {
 				m.mockOpenGraphSchema.EXPECT().GetEnvironmentsFiltered(gomock.Any(), model.Filters{}).Return([]model.SchemaEnvironment{
 					{
+						Serial:                     model.Serial{ID: 11},
+						SchemaExtensionId:          21,
+						EnvironmentKindId:          31,
 						EnvironmentKindName:        "Domain",
 						SchemaExtensionDisplayName: "AD",
 					},
 					{
+						Serial:                     model.Serial{ID: 12},
+						SchemaExtensionId:          22,
+						EnvironmentKindId:          32,
 						EnvironmentKindName:        "Tenant",
 						SchemaExtensionDisplayName: "Azure",
+					},
+					{
+						Serial:                     model.Serial{ID: 13},
+						SchemaExtensionId:          23,
+						EnvironmentKindId:          33,
+						EnvironmentKindName:        "CustomEnvironment",
+						SchemaExtensionDisplayName: "Custom Extension",
 					},
 				}, nil)
 			},
@@ -866,10 +895,22 @@ func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDispla
 				graphKinds: graph.Kinds{
 					graph.StringKind("Domain"),
 					graph.StringKind("Tenant"),
+					graph.StringKind("CustomEnvironment"),
 				},
 				displayNameMap: map[string]string{
-					"Domain": "AD",
-					"Tenant": "Azure",
+					"Domain":            "AD",
+					"Tenant":            "Azure",
+					"CustomEnvironment": "Custom Extension",
+				},
+				kindToSchemaExtensionID: map[string]int32{
+					"Domain":            21,
+					"Tenant":            22,
+					"CustomEnvironment": 23,
+				},
+				kindToSchemaEnvironmentKindID: map[string]int32{
+					"Domain":            31,
+					"Tenant":            32,
+					"CustomEnvironment": 33,
 				},
 			},
 			args: args{
@@ -891,11 +932,13 @@ func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDispla
 
 			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, m.mockGraphDB)
 
-			if envKinds, envKindToExtensionDisplayName, err := service.GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(tt.args.ctx, tt.args.onlyBuiltin); tt.expected.err != nil {
+			if envKinds, envKindToExtensionDisplayName, kindToSchemaExtensionID, kindToSchemaEnvironmentKindID, err := service.GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(tt.args.ctx, tt.args.onlyBuiltin); tt.expected.err != nil {
 				assert.EqualError(t, err, tt.expected.err.Error())
 			} else {
 				assert.Equalf(t, tt.expected.graphKinds, envKinds, "GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(%v, %v)", tt.args.ctx, tt.args.onlyBuiltin)
 				assert.Equalf(t, tt.expected.displayNameMap, envKindToExtensionDisplayName, "GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(%v, %v)", tt.args.ctx, tt.args.onlyBuiltin)
+				assert.Equalf(t, tt.expected.kindToSchemaExtensionID, kindToSchemaExtensionID, "GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(%v, %v)", tt.args.ctx, tt.args.onlyBuiltin)
+				assert.Equalf(t, tt.expected.kindToSchemaEnvironmentKindID, kindToSchemaEnvironmentKindID, "GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(%v, %v)", tt.args.ctx, tt.args.onlyBuiltin)
 			}
 		})
 	}

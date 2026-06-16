@@ -111,18 +111,18 @@ export const useAzurePlatformsDataQualityStatsQuery = () => {
     );
 };
 
-// OpenGraph DQ queries pass schemaEnvironmentId so extension-level views stay scoped to one environment kind.
+// OpenGraph DQ queries pass schemaEnvironmentKindId so extension-level views stay scoped to one environment kind.
 export const useOpenGraphDataQualityStatsQuery = (
     environmentId: string,
     extensionId?: number | null,
-    schemaEnvironmentId?: number | null
+    schemaEnvironmentKindId?: number | null
 ) => {
-    return useQuery(['opengraph-data-quality-stats', environmentId, extensionId, schemaEnvironmentId], ({ signal }) =>
+    return useQuery(['opengraph-data-quality-stats', environmentId, extensionId, schemaEnvironmentKindId], ({ signal }) =>
         apiClient
             .getOpenGraphQualityStats(
                 environmentId,
                 extensionId ?? undefined,
-                schemaEnvironmentId ?? undefined,
+                schemaEnvironmentKindId ?? undefined,
                 undefined,
                 undefined,
                 1000,
@@ -141,14 +141,14 @@ export const useOpenGraphDataQualityStatsQuery = (
 export const useOpenGraphDataQualityHistoryQuery = (
     environmentId: string,
     extensionId?: number | null,
-    schemaEnvironmentId?: number | null
+    schemaEnvironmentKindId?: number | null
 ) => {
-    return useQuery(['opengraph-data-quality-history', environmentId, extensionId, schemaEnvironmentId], ({ signal }) =>
+    return useQuery(['opengraph-data-quality-history', environmentId, extensionId, schemaEnvironmentKindId], ({ signal }) =>
         apiClient
             .getOpenGraphQualityStats(
                 environmentId,
                 extensionId ?? undefined,
-                schemaEnvironmentId ?? undefined,
+                schemaEnvironmentKindId ?? undefined,
                 now.minus({ days: 30 }).toJSDate(),
                 now.toJSDate(),
                 undefined,
@@ -164,15 +164,15 @@ export const useOpenGraphDataQualityHistoryQuery = (
 
 export const useOpenGraphDataQualityAggregationsQuery = (
     extensionId?: number | null,
-    schemaEnvironmentId?: number | null
+    schemaEnvironmentKindId?: number | null
 ) => {
     return useQuery(
-        ['opengraph-data-quality-aggregations', extensionId, schemaEnvironmentId],
+        ['opengraph-data-quality-aggregations', extensionId, schemaEnvironmentKindId],
         ({ signal }) =>
             apiClient
                 .getOpenGraphQualityAggregations(
                     extensionId ?? undefined,
-                    schemaEnvironmentId ?? undefined,
+                    schemaEnvironmentKindId ?? undefined,
                     undefined,
                     undefined,
                     1000,
@@ -191,15 +191,15 @@ export const useOpenGraphDataQualityAggregationsQuery = (
 
 export const useOpenGraphDataQualityAggregationsHistoryQuery = (
     extensionId?: number | null,
-    schemaEnvironmentId?: number | null
+    schemaEnvironmentKindId?: number | null
 ) => {
     return useQuery(
-        ['opengraph-data-quality-aggregations-history', extensionId, schemaEnvironmentId],
+        ['opengraph-data-quality-aggregations-history', extensionId, schemaEnvironmentKindId],
         ({ signal }) =>
             apiClient
                 .getOpenGraphQualityAggregations(
                     extensionId ?? undefined,
-                    schemaEnvironmentId ?? undefined,
+                    schemaEnvironmentKindId ?? undefined,
                     now.minus({ days: 30 }).toJSDate(),
                     now.toJSDate(),
                     undefined,

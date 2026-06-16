@@ -13786,7 +13786,7 @@
         "parameters": [
           {
             "name": "sort_by",
-            "description": "Sortable columns are id, run_id, schema_extension_id, schema_environment_id, environment_id, metric_type, metric_name, metric_value, schema_node_kind_id, schema_relationship_kind_id, created_at, updated_at.",
+            "description": "Sortable columns are id, run_id, schema_extension_id, schema_environment_kind_id, environment_id, metric_type, metric_name, metric_value, kind_id, created_at, updated_at.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -13828,8 +13828,8 @@
             }
           },
           {
-            "name": "schema_environment_id",
-            "description": "Filter stats by OpenGraph schema environment ID",
+            "name": "schema_environment_kind_id",
+            "description": "Filter stats by OpenGraph schema environment kind ID",
             "in": "query",
             "schema": {
               "type": "integer",
@@ -13908,7 +13908,7 @@
         "parameters": [
           {
             "name": "sort_by",
-            "description": "Sortable columns are id, run_id, schema_extension_id, schema_environment_id, metric_type, metric_name, metric_value, schema_node_kind_id, schema_relationship_kind_id, created_at, updated_at.",
+            "description": "Sortable columns are id, run_id, schema_extension_id, schema_environment_kind_id, metric_type, metric_name, metric_value, kind_id, created_at, updated_at.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -13942,8 +13942,8 @@
             }
           },
           {
-            "name": "schema_environment_id",
-            "description": "Filter aggregations by OpenGraph schema environment ID",
+            "name": "schema_environment_kind_id",
+            "description": "Filter aggregations by OpenGraph schema environment kind ID",
             "in": "query",
             "schema": {
               "type": "integer",
@@ -20570,11 +20570,11 @@
             "readOnly": true,
             "description": "OpenGraph schema extension ID for custom environments"
           },
-          "schema_environment_id": {
+          "schema_environment_kind_id": {
             "type": "integer",
             "format": "int32",
             "readOnly": true,
-            "description": "OpenGraph schema environment ID for custom environments"
+            "description": "OpenGraph schema environment kind ID for custom environments"
           },
           "impactValue": {
             "type": "integer",
@@ -22104,7 +22104,7 @@
                 "type": "integer",
                 "format": "int32"
               },
-              "schema_environment_id": {
+              "schema_environment_kind_id": {
                 "type": "integer",
                 "format": "int32"
               },
@@ -22125,12 +22125,7 @@
                 "type": "number",
                 "format": "double"
               },
-              "schema_node_kind_id": {
-                "type": "integer",
-                "format": "int32",
-                "nullable": true
-              },
-              "schema_relationship_kind_id": {
+              "kind_id": {
                 "type": "integer",
                 "format": "int32",
                 "nullable": true
@@ -22158,7 +22153,7 @@
                 "type": "integer",
                 "format": "int32"
               },
-              "schema_environment_id": {
+              "schema_environment_kind_id": {
                 "type": "integer",
                 "format": "int32"
               },
@@ -22176,12 +22171,7 @@
                 "type": "number",
                 "format": "double"
               },
-              "schema_node_kind_id": {
-                "type": "integer",
-                "format": "int32",
-                "nullable": true
-              },
-              "schema_relationship_kind_id": {
+              "kind_id": {
                 "type": "integer",
                 "format": "int32",
                 "nullable": true

@@ -26,26 +26,6 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestExcludeSourceKindsFromOpenGraphNodeKinds(t *testing.T) {
-	nodeKinds := model.GraphSchemaNodeKinds{
-		{Serial: model.Serial{ID: 1}, Name: "Base"},
-		{Serial: model.Serial{ID: 2}, Name: "GitHubUser"},
-		{Serial: model.Serial{ID: 3}, Name: "AZBase"},
-		{Serial: model.Serial{ID: 4}, Name: "GitHubRepository"},
-	}
-	sourceKinds := []model.Kind{
-		{Name: "Base"},
-		{Name: "AZBase"},
-	}
-
-	result := excludeSourceKindsFromOpenGraphNodeKinds(nodeKinds, sourceKinds)
-
-	require.Equal(t, model.GraphSchemaNodeKinds{
-		{Serial: model.Serial{ID: 2}, Name: "GitHubUser"},
-		{Serial: model.Serial{ID: 4}, Name: "GitHubRepository"},
-	}, result)
-}
-
 func TestOpenGraphDataQualitySourceKinds(t *testing.T) {
 	var (
 		ctx                = context.Background()
@@ -69,10 +49,9 @@ func TestOpenGraphDataQualitySourceKinds(t *testing.T) {
 
 	mockDB.EXPECT().GetKindsByIDs(ctx, firstKindID, secondKindID).Return(sourceKinds, nil)
 
-	sourceKindsByEnvironmentID, result, err := openGraphDataQualitySourceKinds(ctx, mockDB, environments)
+	sourceKindsByEnvironmentID, err := openGraphDataQualitySourceKinds(ctx, mockDB, environments)
 
 	require.NoError(t, err)
-	require.Equal(t, sourceKinds, result)
 	require.Equal(t, model.Kind{ID: firstKindID, Name: "Domain"}, sourceKindsByEnvironmentID[firstEnvID])
 	require.Equal(t, model.Kind{ID: secondKindID, Name: "Tenant"}, sourceKindsByEnvironmentID[secondEnvID])
 }
@@ -93,7 +72,7 @@ func TestOpenGraphDataQualitySourceKinds_MissingKind(t *testing.T) {
 
 	mockDB.EXPECT().GetKindsByIDs(ctx, sourceKind).Return([]model.Kind{}, nil)
 
-	_, _, err := openGraphDataQualitySourceKinds(ctx, mockDB, environments)
+	_, err := openGraphDataQualitySourceKinds(ctx, mockDB, environments)
 
 	require.ErrorContains(t, err, "source kind 21 not found for schema environment 11")
 }

@@ -33,16 +33,16 @@ import (
 )
 
 const (
-	ErrNoTenantId                                string = "no tenant id specified in url"
-	ErrNoPlatformId                              string = "no platform id specified in url"
-	ErrInvalidPlatformId                         string = "invalid platform id specified in url: %v"
-	dataQualityQueryParameterEndDate             string = "end_date"
-	dataQualityQueryParameterExtensionID         string = "extension_id"
-	dataQualityQueryParameterSchemaEnvironmentID string = "schema_environment_id"
-	dataQualityQueryParameterStartDate           string = "start_date"
-	dataQualityStatsDefaultPaginationLimit       int    = 1000
-	dataQualityStatsDefaultPaginationOffset      int    = 0
-	dataQualityStatsDefaultSortableErrorText     string = api.ErrorResponseDetailsNotSortable
+	ErrNoTenantId                                    string = "no tenant id specified in url"
+	ErrNoPlatformId                                  string = "no platform id specified in url"
+	ErrInvalidPlatformId                             string = "invalid platform id specified in url: %v"
+	dataQualityQueryParameterEndDate                 string = "end_date"
+	dataQualityQueryParameterExtensionID             string = "extension_id"
+	dataQualityQueryParameterSchemaEnvironmentKindID string = "schema_environment_kind_id"
+	dataQualityQueryParameterStartDate               string = "start_date"
+	dataQualityStatsDefaultPaginationLimit           int    = 1000
+	dataQualityStatsDefaultPaginationOffset          int    = 0
+	dataQualityStatsDefaultSortableErrorText         string = api.ErrorResponseDetailsNotSortable
 )
 
 func (s Resources) GetDatabaseCompleteness(response http.ResponseWriter, request *http.Request) {
@@ -166,13 +166,13 @@ func (s *Resources) GetOpenGraphDataQualityStats(response http.ResponseWriter, r
 		environmentID            null.String
 		extensionID              null.Int32
 		queryParams              = request.URL.Query()
-		schemaEnvironmentID      null.Int32
+		schemaEnvironmentKindID  null.Int32
 		sqlSort                  []string
 	)
 
 	environmentID = null.NewString(queryParams.Get(api.QueryParameterEnvironmentId), queryParams.Get(api.QueryParameterEnvironmentId) != "")
 
-	// schema_environment_id scopes OpenGraph stats to the selected schema environment kind.
+	// schema_environment_kind_id scopes OpenGraph stats to the selected schema environment kind.
 	if sort, err := api.ParseSortParameters(dataQualityStats, queryParams); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, dataQualityStatsDefaultSortableErrorText, request), response)
 	} else if sqlSort, err = api.BuildSQLSort(sort, model.SortItem{}); err != nil {
@@ -187,9 +187,9 @@ func (s *Resources) GetOpenGraphDataQualityStats(response http.ResponseWriter, r
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, queryParams["skip"]), request), response)
 	} else if err := extensionID.UnmarshalText([]byte(queryParams.Get(dataQualityQueryParameterExtensionID))); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, dataQualityQueryParameterExtensionID, err), response)
-	} else if err := schemaEnvironmentID.UnmarshalText([]byte(queryParams.Get(dataQualityQueryParameterSchemaEnvironmentID))); err != nil {
-		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, dataQualityQueryParameterSchemaEnvironmentID, err), response)
-	} else if stats, count, err := s.DB.GetOpenGraphDataQualityStats(request.Context(), environmentID, extensionID, schemaEnvironmentID, start, end, strings.Join(sqlSort, ", "), limit, skip); err != nil {
+	} else if err := schemaEnvironmentKindID.UnmarshalText([]byte(queryParams.Get(dataQualityQueryParameterSchemaEnvironmentKindID))); err != nil {
+		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, dataQualityQueryParameterSchemaEnvironmentKindID, err), response)
+	} else if stats, count, err := s.DB.GetOpenGraphDataQualityStats(request.Context(), environmentID, extensionID, schemaEnvironmentKindID, start, end, strings.Join(sqlSort, ", "), limit, skip); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteResponseWrapperWithTimeWindowAndPagination(request.Context(), stats, start, end, limit, skip, count, http.StatusOK, response)
@@ -202,7 +202,7 @@ func (s *Resources) GetOpenGraphDataQualityAggregations(response http.ResponseWr
 		defaultEnd, defaultStart = DefaultTimeRange()
 		extensionID              null.Int32
 		queryParams              = request.URL.Query()
-		schemaEnvironmentID      null.Int32
+		schemaEnvironmentKindID  null.Int32
 		sqlSort                  []string
 	)
 
@@ -221,9 +221,9 @@ func (s *Resources) GetOpenGraphDataQualityAggregations(response http.ResponseWr
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, queryParams["skip"]), request), response)
 	} else if err := extensionID.UnmarshalText([]byte(queryParams.Get(dataQualityQueryParameterExtensionID))); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, dataQualityQueryParameterExtensionID, err), response)
-	} else if err := schemaEnvironmentID.UnmarshalText([]byte(queryParams.Get(dataQualityQueryParameterSchemaEnvironmentID))); err != nil {
-		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, dataQualityQueryParameterSchemaEnvironmentID, err), response)
-	} else if aggregations, count, err := s.DB.GetOpenGraphDataQualityAggregations(request.Context(), extensionID, schemaEnvironmentID, start, end, strings.Join(sqlSort, ", "), limit, skip); err != nil {
+	} else if err := schemaEnvironmentKindID.UnmarshalText([]byte(queryParams.Get(dataQualityQueryParameterSchemaEnvironmentKindID))); err != nil {
+		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, dataQualityQueryParameterSchemaEnvironmentKindID, err), response)
+	} else if aggregations, count, err := s.DB.GetOpenGraphDataQualityAggregations(request.Context(), extensionID, schemaEnvironmentKindID, start, end, strings.Join(sqlSort, ", "), limit, skip); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteResponseWrapperWithTimeWindowAndPagination(request.Context(), aggregations, start, end, limit, skip, count, http.StatusOK, response)

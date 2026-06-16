@@ -63,7 +63,7 @@ const EnvironmentSelector = () => {
                 id: selectedEnvironment?.id ?? null,
                 // Preserve selector metadata now that OG DQ distinguishes environments by schema kind as well as id.
                 schema_extension_id: selectedEnvironment?.schema_extension_id ?? null,
-                schema_environment_id: selectedEnvironment?.schema_environment_id ?? null,
+                schema_environment_kind_id: selectedEnvironment?.schema_environment_kind_id ?? null,
             }}
             onSelect={handleSelect}
         />

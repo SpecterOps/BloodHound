@@ -53,7 +53,7 @@ const getStatsComponent = (selectedEnvironment: SelectedEnvironment | null, data
                 return (
                     <OpenGraphExtensionInfo
                         extensionId={selectedEnvironment?.schema_extension_id}
-                        schemaEnvironmentId={selectedEnvironment?.schema_environment_id}
+                        schemaEnvironmentKindId={selectedEnvironment?.schema_environment_kind_id}
                         onDataError={dataErrorHandler}
                     />
                 );
@@ -63,7 +63,7 @@ const getStatsComponent = (selectedEnvironment: SelectedEnvironment | null, data
                 <OpenGraphEnvironmentInfo
                     contextId={contextId}
                     extensionId={selectedEnvironment?.schema_extension_id}
-                    schemaEnvironmentId={selectedEnvironment?.schema_environment_id}
+                    schemaEnvironmentKindId={selectedEnvironment?.schema_environment_kind_id}
                     onDataError={dataErrorHandler}
                 />
             );
@@ -75,7 +75,7 @@ const getSelectedEnvironment = (environment: SelectedEnvironment | null | undefi
         type: environment?.type ?? null,
         id: environment?.id ?? null,
         schema_extension_id: environment?.schema_extension_id ?? null,
-        schema_environment_id: environment?.schema_environment_id ?? null,
+        schema_environment_kind_id: environment?.schema_environment_kind_id ?? null,
     };
 };
 

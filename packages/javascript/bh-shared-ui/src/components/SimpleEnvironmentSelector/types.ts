@@ -27,5 +27,5 @@ export type SelectedEnvironment = {
     id: string | null;
     // OG data quality needs schema IDs to distinguish environment kinds within the same extension.
     schema_extension_id?: number | null;
-    schema_environment_id?: number | null;
+    schema_environment_kind_id?: number | null;
 };
