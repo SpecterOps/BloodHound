@@ -52,26 +52,6 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-var requiredFileServices = []storage.FileServiceName{
-	storage.FileServiceIngest,
-	storage.FileServiceRetained,
-	storage.FileServiceCollectors,
-	storage.FileServiceWork,
-}
-
-func ensureFileServices(
-	fileServiceResolver storageService.FileServiceResolver,
-	requiredFileServices ...storage.FileServiceName,
-) error {
-	for _, serviceName := range requiredFileServices {
-		if _, err := fileServiceResolver.Resolve(serviceName); err != nil {
-			return fmt.Errorf("failed to resolve %s file service: %w", serviceName, err)
-		}
-	}
-
-	return nil
-}
-
 // ConnectPostgres initializes a connection to PG, and returns errors if any
 func ConnectPostgres(cfg config.Configuration) (*database.BloodhoundDB, error) {
 	if db, dbPool, err := database.OpenDatabase(cfg.Database); err != nil {
@@ -108,7 +88,7 @@ func CreateRuntimeDependencies(ctx context.Context, cfg config.Configuration, co
 		return dependencies, fmt.Errorf("failed to initialize file service resolver: %w", err)
 		// Multiple file services are required at runtime. Checking it here to ensure that they were properly registered
 		// to fail fast if there were any required services that were not registered.
-	} else if err := ensureFileServices(fileServiceResolver, requiredFileServices...); err != nil {
+	} else if err := bootstrap.EnsureFileServices(fileServiceResolver); err != nil {
 		return dependencies, fmt.Errorf("failed to resolve required file service: %w", err)
 	} else {
 		dependencies.FileServiceResolver = fileServiceResolver
