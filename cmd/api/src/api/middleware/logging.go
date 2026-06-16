@@ -118,6 +118,19 @@ func setSignedRequestFields(request *http.Request, logAttrs *[]slog.Attr) {
 	}
 }
 
+func isSSOCallbackPath(requestPath string) bool {
+	pathSegments := strings.Split(strings.Trim(requestPath, "/"), "/")
+
+	if len(pathSegments) < 5 {
+		return false
+	}
+
+	return pathSegments[0] == "api" &&
+		pathSegments[1] == "v2" &&
+		pathSegments[2] == "sso" &&
+		pathSegments[4] == "callback"
+}
+
 // LoggingMiddleware is a middleware func that outputs a log for each request-response lifecycle. It includes timestamped
 // information organized into fields suitable for searching or parsing.
 func LoggingMiddleware(_ auth.IdentityResolver, bypassLimitsParam bool) func(http.Handler) http.Handler {
@@ -193,7 +206,8 @@ func LoggingMiddleware(_ auth.IdentityResolver, bypassLimitsParam bool) func(htt
 			)
 
 			// Add logging of query parameters for /api/v2 endpoints
-			if strings.HasPrefix(request.URL.Path, "/api/v2") && request.URL.RawQuery != "" {
+			// Ignore SSO callback path logging
+			if strings.HasPrefix(request.URL.Path, "/api/v2/") && request.URL.RawQuery != "" && !isSSOCallbackPath(request.URL.Path) {
 				logAttrs = append(logAttrs, slog.String("query_parameters", request.URL.RawQuery))
 			}
 		})
