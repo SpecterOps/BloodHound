@@ -26,7 +26,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	mocks_db "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
@@ -464,7 +464,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			bheCtx := ctx.Context{
+			bheCtx := bhctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner:               testCase.user,
@@ -1463,7 +1463,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			bheCtx := ctx.Context{
+			bheCtx := bhctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner:               testCase.user,

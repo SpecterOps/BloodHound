@@ -347,19 +347,6 @@ type Computer struct {
 	NTLMRegistryData        NTLMRegistryDataAPIResult
 }
 
-type DelegatedMSA struct {
-	IngestBase
-	AllowedToDelegate             []TypedPrincipal
-	SPNTargets                    []SPNTarget
-	PrimaryGroupSID               string
-	HasSIDHistory                 []TypedPrincipal
-	DomainSID                     string
-	UnconstrainedDelegation       bool
-	ManagedAccountPrecededByLink  string `json:"managedaccountprecededbylink"`
-	SupersededManagedAccountLink  string `json:"supersededmanagedaccountlink"`
-	SupersededManagedAccountState string `json:"supersededmanagedaccountstate"`
-	DelegatedMSAState             string `json:"delegatedmsastate"`
-}
 type GPOChanges struct {
 	LocalAdmins        []TypedPrincipal
 	RemoteDesktopUsers []TypedPrincipal
@@ -404,4 +391,19 @@ type EdgeEndpoint struct {
 	Kind             string            `json:"kind"`
 	MatchBy          string            `json:"match_by"`
 	PropertyMatchers []PropertyMatcher `json:"property_matchers"`
+}
+
+// DelegatedMSA
+type DelegatedMSA struct {
+	IngestBase
+	AllowedToDelegate             []TypedPrincipal
+	SPNTargets                    []SPNTarget
+	PrimaryGroupSID               string
+	HasSIDHistory                 []TypedPrincipal
+	DomainSID                     string
+	UnconstrainedDelegation       bool
+	ManagedAccountPrecededByLink  string `json:"managedaccountprecededbylink"`
+	SupersededManagedAccountLink  string `json:"supersededmanagedaccountlink"`
+	SupersededManagedAccountState string `json:"supersededmanagedaccountstate"`
+	DelegatedMSAState             string `json:"delegatedmsastate"`
 }

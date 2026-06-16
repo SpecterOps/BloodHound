@@ -76,12 +76,12 @@ model {
         }
 
         analysisRoutes = goPackage 'routes' {
-          description 'Binds GET/PUT /api/v2/analysis to handler methods with permission middleware.'
+          description 'Binds GET/PUT/DELETE /api/v2/analysis to handler methods with permission middleware.'
           technology 'bhce/server/analysis/routes'
         }
 
         analysisHandlers = goPackage 'handlers' {
-          description 'HTTP layer. Defines the Analysis interface, reads auth context, maps domain errors to status codes, writes JSON.'
+          description 'HTTP layer. Defines the Analysis interface (GetRequest/CreateRequest/CancelAnalysisRequest), reads auth context, maps domain errors to status codes, writes JSON.'
           technology 'bhce/server/analysis/handlers'
         }
 

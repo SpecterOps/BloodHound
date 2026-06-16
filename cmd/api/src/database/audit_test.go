@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 )
@@ -41,14 +41,14 @@ func TestDatabase_ListAuditLogs(t *testing.T) {
 		}
 		auditLogIdFilterMap = model.QueryParameterFilterMap{auditLogIdFilter.Name: model.QueryParameterFilters{auditLogIdFilter}}
 
-		mockCtx = ctx.Context{
+		mockCtx = bhctx.Context{
 			RequestID: "requestID",
 			AuthCtx: auth.Context{
 				Owner:   model.User{},
 				Session: model.UserSession{},
 			},
 		}
-		testCtx = ctx.Set(context.Background(), &mockCtx)
+		testCtx = bhctx.Set(context.Background(), &mockCtx)
 	)
 
 	for i := 0; i < 7; i++ {

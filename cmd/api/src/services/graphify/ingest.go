@@ -388,6 +388,7 @@ var basicHandlers = map[ingest.DataType]basicIngestHandler{
 			return decodeAzureData(batch, decoder)
 		}
 	},
+
 	ingest.DataTypeUser:           defaultBasicHandler(convertUserData),
 	ingest.DataTypeDelegatedMSA:   defaultBasicHandler(convertDelegatedMSAData),
 	ingest.DataTypeDomain:         defaultBasicHandler(convertDomainData),

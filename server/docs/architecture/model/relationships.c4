@@ -21,7 +21,7 @@ model {
   bhce.apiServer.analysisFeature.analysisWireup -[calls]-> bhce.apiServer.analysisFeature.analysisServices 'services.NewService(store)'
   bhce.apiServer.analysisFeature.analysisWireup -[calls]-> bhce.apiServer.analysisFeature.analysisHandlers 'handlers.NewHandlersContainer(svc)'
   bhce.apiServer.analysisFeature.analysisWireup -[calls]-> bhce.apiServer.analysisFeature.analysisRoutes   'routes.Register(router, handlers)'
-  bhce.apiServer.analysisFeature.analysisRoutes -[registers]-> bhce.apiServer.httpRouter 'GET/PUT /api/v2/analysis → handler methods'
+  bhce.apiServer.analysisFeature.analysisRoutes -[registers]-> bhce.apiServer.httpRouter 'GET/PUT/DELETE /api/v2/analysis → handler methods'
 
   // ─── Runtime request call flow ──────────────────────────────────
 

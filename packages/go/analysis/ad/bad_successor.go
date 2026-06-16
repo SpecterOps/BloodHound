@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
+	// "github.com/specterops/dawgs/util/channels"
 )
 
 // PostCanUseBadSuccessor
@@ -74,84 +75,86 @@ func PostCanUseBadSuccessor(ctx context.Context, db graph.Database, localGroupDa
 	}
 }
 
-// getCanUseBadSuccessorViaCreateChild(tx, domain)     → map[ouID]principals
-func getCanUseBadSuccessorViaCreateChild(tx graph.Transaction, domain *graph.Node, localGroupData *LocalGroupData) (map[graph.ID]cardinality.Duplex[uint64], error) {
-	createChildNodes, err := getCreateChildDMSAPrincipalsForDomain(tx, domain)
-	if err != nil {
-		return nil, err
-	}
-	return createChildNodes, nil
-}
+// // getCanUseBadSuccessorViaCreateChild(tx, domain)     → map[ouID]principals
+// func getCanUseBadSuccessorViaCreateChild(tx graph.Transaction, domain *graph.Node, localGroupData *LocalGroupData) (map[graph.ID]cardinality.Duplex[uint64], error) {
+// 	createChildNodes, err := getCreateChildDMSAPrincipalsForDomain(tx, domain)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return createChildNodes, nil
+// }
 
-// getCanUseBadSuccessorViaUnmigratedDMSA(tx, domain)  → map[dmsaID]principals
-func getCanUseBadSuccessorViaUnmigratedDMSA(tx graph.Transaction, domain *graph.Node) (map[graph.ID]cardinality.Duplex[uint64], error) {
-	// this is a separate function because it has a different set of criteria, and it may be worth including the results even if the CreateChildDMSA portion doesn't return any results. also, it was easier to write and test separately.
-	domainSid, err := domain.Properties.Get(ad.DomainSID.String()).String()
-	if err != nil {
-		return nil, err
-	}
+// // getCanUseBadSuccessorViaUnmigratedDMSA(tx, domain)  → map[dmsaID]principals
+// func getCanUseBadSuccessorViaUnmigratedDMSA(tx graph.Transaction, domain *graph.Node) (map[graph.ID]cardinality.Duplex[uint64], error) {
+// 	// this is a separate function because it has a different set of criteria, and it may be worth including the results even if the CreateChildDMSA portion doesn't return any results. also, it was easier to write and test separately.
+// 	domainSid, err := domain.Properties.Get(ad.DomainSID.String()).String()
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	nonMigratedDMSANodes, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Kind(query.Node(), ad.DelegatedMSA),
-			query.Not(query.Equals(query.NodeProperty(string(ad.DelegatedMSAState)), "2")),
-			query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSid),
-		)
-	}))
-	if err != nil {
-		return nil, err
-	}
+// 	nonMigratedDMSANodes, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+// 		return query.And(
+// 			query.Kind(query.Node(), ad.DelegatedMSA),
+// 			query.Not(query.Equals(query.NodeProperty(string(ad.DelegatedMSAState)), "2")),
+// 			query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSid),
+// 		)
+// 	}))
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	delegatedStateNodes, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Kind(query.Start(), ad.Entity),
-			query.Or(query.Kind(query.Relationship(), ad.WriteMsDSDelegatedMSAState), query.Kind(query.Relationship(), ad.GenericAll)),
-			query.InIDs(query.EndID(), nonMigratedDMSANodes...),
-		)
-	}))
-	if err != nil {
-		return nil, err
-	}
+// 	delegatedStateNodes, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+// 		return query.And(
+// 			query.Kind(query.Start(), ad.Entity),
+// 			query.Or(query.Kind(query.Relationship(), ad.WriteMsDSDelegatedMSAState), query.Kind(query.Relationship(), ad.GenericAll)),
+// 			query.InIDs(query.EndID(), nonMigratedDMSANodes...),
+// 		)
+// 	}))
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	precededByNodes, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Kind(query.Start(), ad.Entity),
-			query.Kind(query.Relationship(), ad.WriteMsDSManagedAccountPrecededByLink),
-			query.InIDs(query.EndID(), nonMigratedDMSANodes...),
-		)
-	}))
-	if err != nil {
-		return nil, err
-	}
+// 	precededByNodes, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+// 		return query.And(
+// 			query.Kind(query.Start(), ad.Entity),
+// 			query.Kind(query.Relationship(), ad.WriteMsDSManagedAccountPrecededByLink),
+// 			query.InIDs(query.EndID(), nonMigratedDMSANodes...),
+// 		)
+// 	}))
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	results := make(map[graph.ID]cardinality.Duplex[uint64])
-	for _, rel := range delegatedStateNodes {
-		duplex, ok := results[rel.EndID]
-		if !ok {
-			duplex = cardinality.NewBitmap64()
-		}
-		duplex.Add(rel.StartID.Uint64())
-		results[rel.EndID] = duplex
-	}
-	for _, rel := range precededByNodes {
-		duplex, ok := results[rel.EndID]
-		if !ok {
-			duplex = cardinality.NewBitmap64()
-		}
-		duplex.Add(rel.StartID.Uint64())
-		results[rel.EndID] = duplex
-	}
-	return results, nil
+// 	results := make(map[graph.ID]cardinality.Duplex[uint64])
+// 	for _, rel := range delegatedStateNodes {
+// 		duplex, ok := results[rel.EndID]
+// 		if !ok {
+// 			duplex = cardinality.NewBitmap64()
+// 		}
+// 		duplex.Add(rel.StartID.Uint64())
+// 		results[rel.EndID] = duplex
+// 	}
+// 	for _, rel := range precededByNodes {
+// 		duplex, ok := results[rel.EndID]
+// 		if !ok {
+// 			duplex = cardinality.NewBitmap64()
+// 		}
+// 		duplex.Add(rel.StartID.Uint64())
+// 		results[rel.EndID] = duplex
+// 	}
+// 	return results, nil
 
-}
+// }
 
 /*
-   **Two** dMSA accounts are required for this.
+   **Two** accounts are required for this.
    1. "attacker_dmsa" can be achieved with **EITHER:**
-     - CreateChild(all) or CreateChild (msDS-DelegatedManagedServiceAccount) on an OU
-     - Having Write on `msDS-GroupMSAMembership` and `msDS-ManagedAccountPrecededByLink`
+     - CreateChild(all) or CreateChild (msDS-DelegatedManagedServiceAccount) on an OU and maq != 0
+     - Having Write on `msDS-DelegatedMSAState` and `msDS-ManagedAccountPrecededByLink` or GenericWrite or GenericAll on an existing dMSA that is in a non-migrated state (msDS-DelegatedMSAState != 2)
 
-   2. Second -> must have Write on `msDS-SupersededManagedAccountLink` and `msDS-SupersededServiceAccountState` on _another_ dMSA.
+   2. Must have the ability to Write to/modify these attributes on ANOTHER account, doesn't have to be a dMSA though.
+	  - `msDS-SupersededManagedAccountLink`
+		- `msDS-SupersededServiceAccountState`
 */
 // getCanUseBadSuccessorPostPatch(tx, domain) → map[dmsaID]principals
 func getCanUseBadSuccessorPostPatch(tx graph.Transaction, domain *graph.Node, createChildNodes map[graph.ID]cardinality.Duplex[uint64]) (map[graph.ID]cardinality.Duplex[uint64], error) {
@@ -267,7 +270,7 @@ func getCanUseBadSuccessorPostPatch(tx graph.Transaction, domain *graph.Node, cr
 	return results, nil
 }
 
-func getCreateChildDMSAPrincipalsForDomain(tx graph.Transaction, domain *graph.Node) (map[graph.ID]cardinality.Duplex[uint64], error) {
+func getCreateChildForBadSuccessorPrincipalsForDomain(tx graph.Transaction, domain *graph.Node) (map[graph.ID]cardinality.Duplex[uint64], error) {
 	domainSid, err := domain.Properties.Get(ad.DomainSID.String()).String()
 	if err != nil {
 		return nil, err

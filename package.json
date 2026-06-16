@@ -20,7 +20,7 @@
     "format": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run format",
     "check-format": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run check-format"
   },
-  "packageManager": "yarn@4.13.0",
+  "packageManager": "yarn@3.6.0",
   "devDependencies": {
     "all-contributors-cli": "^6.26.1",
     "prettier": "^3.2.5",
@@ -33,7 +33,7 @@
     "braces": ">=3.0.3 <4.0.0",
     "cross-spawn": "^7.0.5",
     "dompurify": "3.2.4",
-    "form-data": "^4.0.4",
+    "form-data": "^4.0.6",
     "glob": "^11.1.0",
     "immutable": "4.3.8",
     "lodash": "4.18.1",
@@ -43,8 +43,9 @@
     "sha.js": "^2.4.12",
     "tar-fs": ">=2.1.3 < 3.0.0",
     "tar": "7.5.11",
-    "tmp": "0.2.6",
-    "vitest/vite": "7.3.2",
-    "vite-node/vite": "7.3.2"
+    "tmp": "0.2.7",
+    "vitest/vite": "7.3.5",
+    "vite-node/vite": "7.3.5",
+    "ws": "^8.21.0"
   }
 }

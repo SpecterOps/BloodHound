@@ -162,7 +162,7 @@ BEGIN
 	PERFORM genscript_upsert_kind('MemberOf');
 	PERFORM genscript_upsert_kind('ForceChangePassword');
 	PERFORM genscript_upsert_kind('AllExtendedRights');
-	PERFORM genscript_upsert_kind('AddOrRemoveMember');
+	PERFORM genscript_upsert_kind('AddMember');
 	PERFORM genscript_upsert_kind('HasSession');
 	PERFORM genscript_upsert_kind('Contains');
 	PERFORM genscript_upsert_kind('GPLink');
@@ -255,6 +255,7 @@ BEGIN
 	PERFORM genscript_upsert_kind('WriteMsDSSupersededServiceAccountState');
 	PERFORM genscript_upsert_kind('CanUseBadSuccessor');
 	PERFORM genscript_upsert_kind('CanReanimateTombstone');
+	PERFORM genscript_upsert_kind('WriteUserAccountControl');
 
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Base', 'Base', '', false, '', '');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'User', 'User', '', true, 'user', '#17E625');
@@ -282,7 +283,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'MemberOf', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ForceChangePassword', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AllExtendedRights', '', true);
-	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AddOrRemoveMember', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AddMember', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'HasSession', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'Contains', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'GPLink', '', true);
@@ -375,6 +376,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteMsDSSupersededServiceAccountState', '', false);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CanUseBadSuccessor', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CanReanimateTombstone', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteUserAccountControl', '', true);
 
 	PERFORM genscript_upsert_source_kind('Base');
 	PERFORM genscript_upsert_kind('Domain');

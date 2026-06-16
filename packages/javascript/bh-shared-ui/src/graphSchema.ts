@@ -81,7 +81,7 @@ export enum ActiveDirectoryRelationshipKind {
     MemberOf = 'MemberOf',
     ForceChangePassword = 'ForceChangePassword',
     AllExtendedRights = 'AllExtendedRights',
-    AddOrRemoveMember = 'AddOrRemoveMember',
+    AddMember = 'AddMember',
     HasSession = 'HasSession',
     Contains = 'Contains',
     GPLink = 'GPLink',
@@ -174,6 +174,7 @@ export enum ActiveDirectoryRelationshipKind {
     WriteMsDSSupersededServiceAccountState = 'WriteMsDSSupersededServiceAccountState',
     CanUseBadSuccessor = 'CanUseBadSuccessor',
     CanReanimateTombstone = 'CanReanimateTombstone',
+    WriteUserAccountControl = 'WriteUserAccountControl',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -193,8 +194,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ForceChangePassword';
         case ActiveDirectoryRelationshipKind.AllExtendedRights:
             return 'AllExtendedRights';
-        case ActiveDirectoryRelationshipKind.AddOrRemoveMember:
-            return 'AddOrRemoveMember';
+        case ActiveDirectoryRelationshipKind.AddMember:
+            return 'AddMember';
         case ActiveDirectoryRelationshipKind.HasSession:
             return 'HasSession';
         case ActiveDirectoryRelationshipKind.Contains:
@@ -379,6 +380,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'CanUseBadSuccessor';
         case ActiveDirectoryRelationshipKind.CanReanimateTombstone:
             return 'CanReanimateTombstone';
+        case ActiveDirectoryRelationshipKind.WriteUserAccountControl:
+            return 'WriteUserAccountControl';
         default:
             return undefined;
     }
@@ -532,7 +535,7 @@ export enum ActiveDirectoryKindProperties {
     HasVulnerableEndpoint = 'hasvulnerableendpoint',
     RequireSecuritySignature = 'requiresecuritysignature',
     EnableSecuritySignature = 'enablesecuritysignature',
-    RestrictReceivingNTLMTraffic = 'restrictreceivingntmltraffic',
+    RestrictReceivingNTLMTraffic = 'restrictreceivingntlmtraffic',
     NTLMMinServerSec = 'ntlmminserversec',
     NTLMMinClientSec = 'ntlmminclientsec',
     LMCompatibilityLevel = 'lmcompatibilitylevel',
@@ -854,7 +857,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.MemberOf,
         ActiveDirectoryRelationshipKind.ForceChangePassword,
         ActiveDirectoryRelationshipKind.AllExtendedRights,
-        ActiveDirectoryRelationshipKind.AddOrRemoveMember,
+        ActiveDirectoryRelationshipKind.AddMember,
         ActiveDirectoryRelationshipKind.HasSession,
         ActiveDirectoryRelationshipKind.GPLink,
         ActiveDirectoryRelationshipKind.AllowedToDelegate,
@@ -913,6 +916,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.WriteRDN,
         ActiveDirectoryRelationshipKind.CanUseBadSuccessor,
         ActiveDirectoryRelationshipKind.CanReanimateTombstone,
+        ActiveDirectoryRelationshipKind.WriteUserAccountControl,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,
@@ -930,7 +934,7 @@ export function ActiveDirectoryPathfindingEdgesMatchFrontend(): ActiveDirectoryR
         ActiveDirectoryRelationshipKind.MemberOf,
         ActiveDirectoryRelationshipKind.ForceChangePassword,
         ActiveDirectoryRelationshipKind.AllExtendedRights,
-        ActiveDirectoryRelationshipKind.AddOrRemoveMember,
+        ActiveDirectoryRelationshipKind.AddMember,
         ActiveDirectoryRelationshipKind.HasSession,
         ActiveDirectoryRelationshipKind.GPLink,
         ActiveDirectoryRelationshipKind.AllowedToDelegate,
@@ -985,6 +989,7 @@ export function ActiveDirectoryPathfindingEdgesMatchFrontend(): ActiveDirectoryR
         ActiveDirectoryRelationshipKind.WriteRDN,
         ActiveDirectoryRelationshipKind.CanUseBadSuccessor,
         ActiveDirectoryRelationshipKind.CanReanimateTombstone,
+        ActiveDirectoryRelationshipKind.WriteUserAccountControl,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,

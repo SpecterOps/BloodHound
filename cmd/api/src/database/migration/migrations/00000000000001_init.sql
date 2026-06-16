@@ -20,6 +20,7 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE TABLE IF NOT EXISTS ad_data_quality_aggregations (
     domains bigint,
     users bigint,
+    dmsas bigint, -- kind of important and this doesn't get added manually
     groups bigint,
     computers bigint,
     ous bigint,
@@ -53,6 +54,7 @@ ALTER SEQUENCE ad_data_quality_aggregations_id_seq OWNED BY ad_data_quality_aggr
 CREATE TABLE IF NOT EXISTS ad_data_quality_stats (
     domain_sid text,
     users bigint,
+    dmsas bigint, -- kind of important and this doesn't get added manually
     groups bigint,
     computers bigint,
     ous bigint,

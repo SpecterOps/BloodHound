@@ -32,8 +32,8 @@ import (
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -213,7 +213,7 @@ func getRedirectURL(hostUrl url.URL, provider model.SSOProvider) string {
 }
 
 func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
-	var hostURL = *ctx.Get(request.Context()).Host
+	var hostURL = *bhctx.Get(request.Context()).Host
 
 	if ssoProvider.OIDCProvider == nil {
 		// SSO misconfiguration scenario
@@ -310,7 +310,7 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 // OIDC Token exchange adapted from golang.org/x/oauth2
 func exchangeCodeForToken(reqCtx context.Context, ssoProvider model.SSOProvider, tokenUrl string, pkceVerifier *http.Cookie, code string) (*oauth2.Token, error) {
 	var (
-		hostUrl = *ctx.Get(reqCtx).Host
+		hostUrl = *bhctx.Get(reqCtx).Host
 		payload = url.Values{
 			"grant_type":    {"authorization_code"},
 			"client_id":     {ssoProvider.OIDCProvider.ClientID},

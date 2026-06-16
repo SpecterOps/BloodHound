@@ -26,7 +26,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
@@ -46,7 +46,7 @@ func TestSupportsETACMiddleware(t *testing.T) {
 	tests := []struct {
 		name             string
 		setupMocks       func()
-		bhCtx            ctx.Context
+		bhCtx            bhctx.Context
 		expectedCode     int
 		expectNextHit    bool
 		dogTagsOverrides dogtags.TestOverrides
@@ -67,7 +67,7 @@ func TestSupportsETACMiddleware(t *testing.T) {
 			name: "Success All Environments enabled",
 			setupMocks: func() {
 			},
-			bhCtx: ctx.Context{
+			bhCtx: bhctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner: model.User{
@@ -94,7 +94,7 @@ func TestSupportsETACMiddleware(t *testing.T) {
 					},
 				}, nil)
 			},
-			bhCtx: ctx.Context{
+			bhCtx: bhctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner: model.User{
@@ -117,7 +117,7 @@ func TestSupportsETACMiddleware(t *testing.T) {
 			setupMocks: func() {
 				mockDB.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{{}}, errors.New("an error"))
 			},
-			bhCtx: ctx.Context{
+			bhCtx: bhctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner: model.User{
@@ -140,7 +140,7 @@ func TestSupportsETACMiddleware(t *testing.T) {
 			setupMocks: func() {
 				mockDB.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{{}}, nil)
 			},
-			bhCtx: ctx.Context{
+			bhCtx: bhctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner: model.User{
@@ -173,7 +173,7 @@ func TestSupportsETACMiddleware(t *testing.T) {
 			handler := SupportsETACMiddleware(mockDB, dogtags.NewTestService(tt.dogTagsOverrides))(next)
 
 			req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/test/12345", nil)
-			req = ctx.SetRequestContext(req, &tt.bhCtx)
+			req = bhctx.SetRequestContext(req, &tt.bhCtx)
 			req = mux.SetURLVars(req, map[string]string{
 				api.URIPathVariableObjectID: "12345",
 			})
@@ -199,7 +199,7 @@ func TestRequireAllEnvironmentAccessMiddleware(t *testing.T) {
 	tests := []struct {
 		name             string
 		setupMocks       func()
-		bhCtx            ctx.Context
+		bhCtx            bhctx.Context
 		expectedCode     int
 		expectNextHit    bool
 		dogTagsOverrides dogtags.TestOverrides
@@ -220,7 +220,7 @@ func TestRequireAllEnvironmentAccessMiddleware(t *testing.T) {
 			name: "Success All Environments enabled",
 			setupMocks: func() {
 			},
-			bhCtx: ctx.Context{
+			bhCtx: bhctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner: model.User{
@@ -242,7 +242,7 @@ func TestRequireAllEnvironmentAccessMiddleware(t *testing.T) {
 			name: "Fail If All Environments is false",
 			setupMocks: func() {
 			},
-			bhCtx: ctx.Context{
+			bhCtx: bhctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner: model.User{
@@ -275,7 +275,7 @@ func TestRequireAllEnvironmentAccessMiddleware(t *testing.T) {
 			handler := RequireAllEnvironmentAccessMiddleware(dogtags.NewTestService(tt.dogTagsOverrides))(next)
 
 			req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/test/12345", nil)
-			req = ctx.SetRequestContext(req, &tt.bhCtx)
+			req = bhctx.SetRequestContext(req, &tt.bhCtx)
 			req = mux.SetURLVars(req, map[string]string{
 				api.URIPathVariableObjectID: "12345",
 			})

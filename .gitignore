@@ -3,7 +3,8 @@
 ################################
 # Codex
 .codex
-
+.yarn/*
+node_modules/*
 # Temporary backup files
 *.bak
 
@@ -425,12 +426,12 @@ dist
 
 # yarn (Zero-Installs)
 **/.yarn/*
-!**/.yarn/cache
-!**/.yarn/patches
-!**/.yarn/plugins
-!**/.yarn/releases
-!**/.yarn/sdks
-!**/.yarn/versions
+**/.yarn/cache
+**/.yarn/patches
+**/.yarn/plugins
+**/.yarn/releases
+**/.yarn/sdks
+**/.yarn/versions
 
 # Custom datasets
 /data/neo4j/*

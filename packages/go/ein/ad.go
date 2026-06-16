@@ -760,57 +760,6 @@ func ParseUserMiscData(user User) []IngestibleRelationship {
 	return data
 }
 
-func ParseDelegatedMSAMiscData(dmsa DelegatedMSA) []IngestibleRelationship {
-	data := make([]IngestibleRelationship, 0)
-	data = append(data, convertSPNData(dmsa.SPNTargets, dmsa.ObjectIdentifier)...)
-	if rel := ParsePrimaryGroup(dmsa.IngestBase, ad.DelegatedMSA, dmsa.PrimaryGroupSID); rel.IsValid() {
-		data = append(data, rel)
-	}
-	for _, target := range dmsa.AllowedToDelegate {
-		data = append(data, NewIngestibleRelationship(
-			IngestibleEndpoint{
-				Value: dmsa.ObjectIdentifier,
-				Kind:  ad.DelegatedMSA,
-			},
-			IngestibleEndpoint{
-				Value: target.ObjectIdentifier,
-				Kind:  target.Kind(),
-			},
-			IngestibleRel{
-				RelProps: map[string]any{ad.IsACL.String(): false},
-				RelType:  ad.AllowedToDelegate,
-			},
-		))
-	}
-
-	// CoerceToTGT / unconstrained delegation
-	var (
-		dmsaProps        = graph.AsProperties(dmsa.Properties)
-		uncondel, _      = dmsaProps.GetOrDefault(ad.UnconstrainedDelegation.String(), dmsa.UnconstrainedDelegation).Bool() // SH v2.5.7 and earlier have unconstraineddelegation under 'Properties' only
-		domainsid, _     = dmsaProps.GetOrDefault(ad.DomainSID.String(), dmsa.DomainSID).String()                           // SH v2.5.7 and earlier have domainsid under 'Properties' only
-		validCoerceToTGT = uncondel && domainsid != ""
-	)
-
-	if validCoerceToTGT {
-		data = append(data, NewIngestibleRelationship(
-			IngestibleEndpoint{
-				Value: dmsa.ObjectIdentifier,
-				Kind:  ad.DelegatedMSA,
-			},
-			IngestibleEndpoint{
-				Value: domainsid,
-				Kind:  ad.Domain,
-			},
-			IngestibleRel{
-				RelProps: map[string]any{ad.IsACL.String(): false},
-				RelType:  ad.CoerceToTGT,
-			},
-		))
-	}
-
-	return data
-}
-
 func ParseChildObjects(data []TypedPrincipal, containerId string, containerType graph.Kind) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, 0, len(data))
 	for _, childObject := range data {
@@ -1642,4 +1591,55 @@ func ParseGPOData(gpo GPO) IngestibleNode {
 		PropertyMap: propMap,
 		Labels:      []graph.Kind{ad.GPO},
 	}
+}
+
+func ParseDelegatedMSAMiscData(dmsa DelegatedMSA) []IngestibleRelationship {
+	data := make([]IngestibleRelationship, 0)
+	data = append(data, convertSPNData(dmsa.SPNTargets, dmsa.ObjectIdentifier)...)
+	if rel := ParsePrimaryGroup(dmsa.IngestBase, ad.DelegatedMSA, dmsa.PrimaryGroupSID); rel.IsValid() {
+		data = append(data, rel)
+	}
+	for _, target := range dmsa.AllowedToDelegate {
+		data = append(data, NewIngestibleRelationship(
+			IngestibleEndpoint{
+				Value: dmsa.ObjectIdentifier,
+				Kind:  ad.DelegatedMSA,
+			},
+			IngestibleEndpoint{
+				Value: target.ObjectIdentifier,
+				Kind:  target.Kind(),
+			},
+			IngestibleRel{
+				RelProps: map[string]any{ad.IsACL.String(): false},
+				RelType:  ad.AllowedToDelegate,
+			},
+		))
+	}
+
+	// CoerceToTGT / unconstrained delegation
+	var (
+		dmsaProps        = graph.AsProperties(dmsa.Properties)
+		uncondel, _      = dmsaProps.GetOrDefault(ad.UnconstrainedDelegation.String(), dmsa.UnconstrainedDelegation).Bool() // SH v2.5.7 and earlier have unconstraineddelegation under 'Properties' only
+		domainsid, _     = dmsaProps.GetOrDefault(ad.DomainSID.String(), dmsa.DomainSID).String()                           // SH v2.5.7 and earlier have domainsid under 'Properties' only
+		validCoerceToTGT = uncondel && domainsid != ""
+	)
+
+	if validCoerceToTGT {
+		data = append(data, NewIngestibleRelationship(
+			IngestibleEndpoint{
+				Value: dmsa.ObjectIdentifier,
+				Kind:  ad.DelegatedMSA,
+			},
+			IngestibleEndpoint{
+				Value: domainsid,
+				Kind:  ad.Domain,
+			},
+			IngestibleRel{
+				RelProps: map[string]any{ad.IsACL.String(): false},
+				RelType:  ad.CoerceToTGT,
+			},
+		))
+	}
+
+	return data
 }

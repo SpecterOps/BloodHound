@@ -789,95 +789,7 @@ func FetchDCSyncerPaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, 
 		return pathSet, nil
 	}
 }
-func FetchCanReanimateTombstoneObjects(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
-	if reanimators, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Equals(query.EndID(), node.ID),
-			query.Kind(query.Relationship(), ad.CanReanimateTombstone),
-		)
-	})); err != nil {
-		return nil, err
-	} else {
-		return graph.SortAndSliceNodeSet(reanimators, skip, limit), nil
-	}
-}
 
-func FetchCanReanimateTombstoneObjectsPaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
-	if reanimatorNodes, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Equals(query.EndID(), node.ID),
-			query.Kind(query.Relationship(), ad.CanReanimateTombstone),
-		)
-	})); err != nil {
-		return nil, err
-	} else {
-		pathSet := graph.NewPathSet()
-
-		for _, reanimator := range reanimatorNodes {
-			if paths, err := ops.TraversePaths(tx, ops.TraversalPlan{
-				Root:      reanimator,
-				Direction: graph.DirectionOutbound,
-				BranchQuery: func() graph.Criteria {
-					return query.KindIn(query.Relationship(), ad.MemberOf, ad.ReanimateTombstones, ad.CreateChild, ad.WriteCommonName, ad.WriteRDN)
-				},
-				PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-					return segment.Node.Kinds.ContainsOneOf(ad.User, ad.Group, ad.Computer)
-				},
-			}); err != nil {
-				return nil, err
-			} else {
-				pathSet.AddPathSet(paths)
-			}
-		}
-
-		return pathSet, nil
-	}
-}
-
-func FetchCanUseBadSuccessor(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
-	if badLineOfSuccession, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Equals(query.EndID(), node.ID),
-			query.Kind(query.Relationship(), ad.CanUseBadSuccessor),
-		)
-	})); err != nil {
-		return nil, err
-	} else {
-		return graph.SortAndSliceNodeSet(badLineOfSuccession, skip, limit), nil
-	}
-}
-
-func FetchCanUseBadSuccessorPaths(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.PathSet, error) {
-	if badSuccessorNodes, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Equals(query.EndID(), node.ID),
-			query.Kind(query.Relationship(), ad.CanUseBadSuccessor),
-		)
-	})); err != nil {
-		return nil, err
-	} else {
-		pathSet := graph.NewPathSet()
-
-		for _, badSuccessor := range badSuccessorNodes {
-			if paths, err := ops.TraversePaths(tx, ops.TraversalPlan{
-				Root:      badSuccessor,
-				Direction: graph.DirectionOutbound,
-				BranchQuery: func() graph.Criteria {
-					return query.KindIn(query.Relationship(), ad.MemberOf, ad.CanUseBadSuccessor, ad.CreateChildDMSA, ad.CreateChildAll, ad.WriteMsDSDelegatedMSAState, ad.WriteMsDSManagedAccountPrecededByLink)
-				},
-				PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-					return segment.Node.Kinds.ContainsOneOf(ad.User, ad.Group, ad.Computer)
-				},
-			}); err != nil {
-				return nil, err
-			} else {
-				pathSet.AddPathSet(paths)
-			}
-		}
-
-		return pathSet, nil
-	}
-}
 func FetchForeignGPOControllers(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 	if domainSID, err := getNodeDomainSIDOrObjectID(node); err != nil {
 		return nil, err
@@ -2178,4 +2090,95 @@ func CreateADCSEscalationsListDelegate(tx graph.Transaction, node *graph.Node, s
 	}, func(candidate *graph.Node) bool {
 		return candidate.ID != node.ID
 	})
+}
+
+// ReanimateTombstones and BadSuccessor queries
+func FetchCanReanimateTombstoneObjects(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	if reanimators, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Equals(query.EndID(), node.ID),
+			query.Kind(query.Relationship(), ad.CanReanimateTombstone),
+		)
+	})); err != nil {
+		return nil, err
+	} else {
+		return graph.SortAndSliceNodeSet(reanimators, skip, limit), nil
+	}
+}
+
+func FetchCanReanimateTombstoneObjectsPaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+	if reanimatorNodes, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Equals(query.EndID(), node.ID),
+			query.Kind(query.Relationship(), ad.CanReanimateTombstone),
+		)
+	})); err != nil {
+		return nil, err
+	} else {
+		pathSet := graph.NewPathSet()
+
+		for _, reanimator := range reanimatorNodes {
+			if paths, err := ops.TraversePaths(tx, ops.TraversalPlan{
+				Root:      reanimator,
+				Direction: graph.DirectionOutbound,
+				BranchQuery: func() graph.Criteria {
+					return query.KindIn(query.Relationship(), ad.MemberOf, ad.ReanimateTombstones, ad.CreateChild, ad.WriteCommonName, ad.WriteRDN)
+				},
+				PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+					return segment.Node.Kinds.ContainsOneOf(ad.User, ad.Group, ad.Computer)
+				},
+			}); err != nil {
+				return nil, err
+			} else {
+				pathSet.AddPathSet(paths)
+			}
+		}
+
+		return pathSet, nil
+	}
+}
+
+func FetchCanUseBadSuccessor(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	if badLineOfSuccession, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Equals(query.EndID(), node.ID),
+			query.Kind(query.Relationship(), ad.CanUseBadSuccessor),
+		)
+	})); err != nil {
+		return nil, err
+	} else {
+		return graph.SortAndSliceNodeSet(badLineOfSuccession, skip, limit), nil
+	}
+}
+
+func FetchCanUseBadSuccessorPaths(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.PathSet, error) {
+	if badSuccessorNodes, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Equals(query.EndID(), node.ID),
+			query.Kind(query.Relationship(), ad.CanUseBadSuccessor),
+		)
+	})); err != nil {
+		return nil, err
+	} else {
+		pathSet := graph.NewPathSet()
+
+		for _, badSuccessor := range badSuccessorNodes {
+			if paths, err := ops.TraversePaths(tx, ops.TraversalPlan{
+				Root:      badSuccessor,
+				Direction: graph.DirectionOutbound,
+				BranchQuery: func() graph.Criteria {
+					return query.KindIn(query.Relationship(), ad.MemberOf, ad.CanUseBadSuccessor, ad.CreateChildDMSA, ad.CreateChildAll, ad.WriteMsDSDelegatedMSAState, ad.WriteMsDSManagedAccountPrecededByLink)
+				},
+				PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+					return segment.Node.Kinds.ContainsOneOf(ad.User, ad.Group, ad.Computer)
+				},
+			}); err != nil {
+				return nil, err
+			} else {
+				pathSet.AddPathSet(paths)
+			}
+		}
+
+		return pathSet, nil
+	}
 }

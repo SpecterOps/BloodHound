@@ -780,17 +780,17 @@ MinPwdLength: types.#StringEnum & {
 }
 
 GMSA: types.#StringEnum & {
- 	symbol: "GMSA"
- 	schema: "ad"
- 	name: "GMSA"
- 	representation: "gmsa"
+	symbol:         "GMSA"
+	schema:         "ad"
+	name:           "GMSA"
+	representation: "gmsa"
 }
 
 MSA: types.#StringEnum & {
- 	symbol: "MSA"
- 	schema: "ad"
- 	name: "MSA"
- 	representation: "msa"
+	symbol:         "MSA"
+	schema:         "ad"
+	name:           "MSA"
+	representation: "msa"
 }
 
 SMBSigning: types.#StringEnum & {
@@ -801,9 +801,9 @@ SMBSigning: types.#StringEnum & {
 }
 
 WebClientRunning: types.#StringEnum & {
-	symbol: "WebClientRunning"
-	schema: "ad"
-	name: "WebClient Running"
+	symbol:         "WebClientRunning"
+	schema:         "ad"
+	name:           "WebClient Running"
 	representation: "webclientrunning"
 }
 
@@ -815,190 +815,190 @@ RestrictOutboundNTLM: types.#StringEnum & {
 }
 
 ADCSWebEnrollmentHTTP: types.#StringEnum & {
-	symbol: "ADCSWebEnrollmentHTTP"
-	schema: "ad"
-	name: "ADCS Web Enrollment HTTP"
+	symbol:         "ADCSWebEnrollmentHTTP"
+	schema:         "ad"
+	name:           "ADCS Web Enrollment HTTP"
 	representation: "adcswebenrollmenthttp"
 }
 
 ADCSWebEnrollmentHTTPS: types.#StringEnum & {
-	symbol: "ADCSWebEnrollmentHTTPS"
-	schema: "ad"
-	name: "ADCS Web Enrollment HTTPS"
+	symbol:         "ADCSWebEnrollmentHTTPS"
+	schema:         "ad"
+	name:           "ADCS Web Enrollment HTTPS"
 	representation: "adcswebenrollmenthttps"
 }
 
 ADCSWebEnrollmentHTTPSEPA: types.#StringEnum & {
-	symbol: "ADCSWebEnrollmentHTTPSEPA"
-	schema: "ad"
-	name: "ADCS Web Enrollment HTTPS EPA"
+	symbol:         "ADCSWebEnrollmentHTTPSEPA"
+	schema:         "ad"
+	name:           "ADCS Web Enrollment HTTPS EPA"
 	representation: "adcswebenrollmenthttpsepa"
 }
 
 DoesAnyAceGrantOwnerRights: types.#StringEnum & {
- 	symbol: "DoesAnyAceGrantOwnerRights"
- 	schema: "ad"
- 	name: "Does Any ACE Grant Owner Rights"
- 	representation: "doesanyacegrantownerrights"
+	symbol:         "DoesAnyAceGrantOwnerRights"
+	schema:         "ad"
+	name:           "Does Any ACE Grant Owner Rights"
+	representation: "doesanyacegrantownerrights"
 }
 
 DoesAnyInheritedAceGrantOwnerRights: types.#StringEnum & {
- 	symbol: "DoesAnyInheritedAceGrantOwnerRights"
- 	schema: "ad"
- 	name: "Does Any Inherited ACE Grant Owner Rights"
- 	representation: "doesanyinheritedacegrantownerrights"
+	symbol:         "DoesAnyInheritedAceGrantOwnerRights"
+	schema:         "ad"
+	name:           "Does Any Inherited ACE Grant Owner Rights"
+	representation: "doesanyinheritedacegrantownerrights"
 }
 
 OwnerSid: types.#StringEnum & {
-	symbol: "OwnerSid"
- 	schema: "ad"
- 	name: "Owner SID"
- 	representation: "ownersid"
+	symbol:         "OwnerSid"
+	schema:         "ad"
+	name:           "Owner SID"
+	representation: "ownersid"
 }
 
 LDAPSigning: types.#StringEnum & {
-	symbol: "LDAPSigning"
-	schema: "ad"
-	name: "LDAP Signing"
+	symbol:         "LDAPSigning"
+	schema:         "ad"
+	name:           "LDAP Signing"
 	representation: "ldapsigning"
 }
 
 LDAPAvailable: types.#StringEnum & {
-	symbol: "LDAPAvailable"
-	schema: "ad"
-	name: "LDAP Available"
+	symbol:         "LDAPAvailable"
+	schema:         "ad"
+	name:           "LDAP Available"
 	representation: "ldapavailable"
 }
 
 LDAPSAvailable: types.#StringEnum & {
-	symbol: "LDAPSAvailable"
-	schema: "ad"
-	name: "LDAPS Available"
+	symbol:         "LDAPSAvailable"
+	schema:         "ad"
+	name:           "LDAPS Available"
 	representation: "ldapsavailable"
 }
 
 LDAPSEPA: types.#StringEnum & {
-	symbol: "LDAPSEPA"
-	schema: "ad"
-	name: "LDAPS EPA"
+	symbol:         "LDAPSEPA"
+	schema:         "ad"
+	name:           "LDAPS EPA"
 	representation: "ldapsepa"
 }
 
 RelayableToDCLDAP: types.#StringEnum & {
-	symbol: "RelayableToDCLDAP"
-	schema: "ad"
-	name: "Relayable To DC LDAP"
+	symbol:         "RelayableToDCLDAP"
+	schema:         "ad"
+	name:           "Relayable To DC LDAP"
 	representation: "replayabletodcldap"
 }
 
 RelayableToDCLDAPS: types.#StringEnum & {
-	symbol: "RelayableToDCLDAPS"
-	schema: "ad"
-	name: "Relayable To DC LDAPS"
+	symbol:         "RelayableToDCLDAPS"
+	schema:         "ad"
+	name:           "Relayable To DC LDAPS"
 	representation: "replayabletodcldaps"
 }
 
 WebClientRunning: types.#StringEnum & {
-	symbol: "WebClientRunning"
-	schema: "ad"
-	name: "WebClient Running"
+	symbol:         "WebClientRunning"
+	schema:         "ad"
+	name:           "WebClient Running"
 	representation: "webclientrunning"
 }
 
 IsDC: types.#StringEnum & {
-	symbol: "IsDC"
-	schema: "ad"
-	name: "Is Domain Controller"
+	symbol:         "IsDC"
+	schema:         "ad"
+	name:           "Is Domain Controller"
 	representation: "isdc"
 }
 
 IsReadOnlyDC: types.#StringEnum & {
-	symbol: "IsReadOnlyDC"
-	schema: "ad"
-	name: "Read-Only DC"
+	symbol:         "IsReadOnlyDC"
+	schema:         "ad"
+	name:           "Read-Only DC"
 	representation: "isreadonlydc"
 }
 
 HTTPEnrollmentEndpoints: types.#StringEnum & {
-	symbol: "HTTPEnrollmentEndpoints"
-	schema: "ad"
-	name:"HTTP Enrollment Endpoints"
+	symbol:         "HTTPEnrollmentEndpoints"
+	schema:         "ad"
+	name:           "HTTP Enrollment Endpoints"
 	representation: "httpenrollmentendpoints"
 }
 
 HTTPSEnrollmentEndpoints: types.#StringEnum & {
-	symbol: "HTTPSEnrollmentEndpoints"
-	schema: "ad"
-	name:"HTTPS Enrollment Endpoints"
+	symbol:         "HTTPSEnrollmentEndpoints"
+	schema:         "ad"
+	name:           "HTTPS Enrollment Endpoints"
 	representation: "httpsenrollmentendpoints"
 }
 
 HasVulnerableEndpoint: types.#StringEnum & {
-	symbol: "HasVulnerableEndpoint"
-	schema: "ad"
-	name:"Has Vulnerable Endpoint"
+	symbol:         "HasVulnerableEndpoint"
+	schema:         "ad"
+	name:           "Has Vulnerable Endpoint"
 	representation: "hasvulnerableendpoint"
 }
 
 RequireSecuritySignature: types.#StringEnum & {
-	symbol: "RequireSecuritySignature"
-	schema: "ad"
-	name: "Require Security Signature"
+	symbol:         "RequireSecuritySignature"
+	schema:         "ad"
+	name:           "Require Security Signature"
 	representation: "requiresecuritysignature"
 }
 
 EnableSecuritySignature: types.#StringEnum & {
-	symbol: "EnableSecuritySignature"
-	schema: "ad"
-	name: "Enable Security Signature"
+	symbol:         "EnableSecuritySignature"
+	schema:         "ad"
+	name:           "Enable Security Signature"
 	representation: "enablesecuritysignature"
 }
 
 RestrictReceivingNTLMTraffic: types.#StringEnum & {
-	symbol: "RestrictReceivingNTLMTraffic"
-	schema: "ad"
-	name: "Restrict Receiving NTLM Traffic"
-	representation: "restrictreceivingntmltraffic"
+	symbol:         "RestrictReceivingNTLMTraffic"
+	schema:         "ad"
+	name:           "Restrict Receiving NTLM Traffic"
+	representation: "restrictreceivingntlmtraffic"
 }
 
 NTLMMinServerSec: types.#StringEnum & {
-	symbol: "NTLMMinServerSec"
-	schema: "ad"
-	name: "NTLM Min Server Sec"
+	symbol:         "NTLMMinServerSec"
+	schema:         "ad"
+	name:           "NTLM Min Server Sec"
 	representation: "ntlmminserversec"
 }
 
 NTLMMinClientSec: types.#StringEnum & {
-	symbol: "NTLMMinClientSec"
-	schema: "ad"
-	name: "NTLM Min Client Sec"
+	symbol:         "NTLMMinClientSec"
+	schema:         "ad"
+	name:           "NTLM Min Client Sec"
 	representation: "ntlmminclientsec"
 }
 LMCompatibilityLevel: types.#StringEnum & {
-	symbol: "LMCompatibilityLevel"
-	schema: "ad"
-	name: "LM Compatibility Level"
+	symbol:         "LMCompatibilityLevel"
+	schema:         "ad"
+	name:           "LM Compatibility Level"
 	representation: "lmcompatibilitylevel"
 }
 
 UseMachineID: types.#StringEnum & {
-	symbol: "UseMachineID"
-	schema: "ad"
-	name: "Use Machine ID"
+	symbol:         "UseMachineID"
+	schema:         "ad"
+	name:           "Use Machine ID"
 	representation: "usemachineid"
 }
 
 ClientAllowedNTLMServers: types.#StringEnum & {
-	symbol: "ClientAllowedNTLMServers"
-	schema: "ad"
-	name: "Client Allowed NTLM Servers"
+	symbol:         "ClientAllowedNTLMServers"
+	schema:         "ad"
+	name:           "Client Allowed NTLM Servers"
 	representation: "clientallowedntlmservers"
 }
 
 Transitive: types.#StringEnum & {
-	symbol: "Transitive"
-	schema: "ad"
-	name:"Transitive"
+	symbol:         "Transitive"
+	schema:         "ad"
+	name:           "Transitive"
 	representation: "transitive"
 }
 
@@ -1036,7 +1036,7 @@ GPOStatus: types.#StringEnum & {
 	name:           "GPO Status"
 	representation: "gpostatus"
 }
-
+// start BadSuccessor attributes
 ManagedAccountPrecededByLink: types.#StringEnum & {
 	symbol:         "ManagedAccountPrecededByLink"
 	schema:         "ad"
@@ -1061,6 +1061,7 @@ DelegatedMSAState: types.#StringEnum & {
 	name:           "Delegated MSA State"
 	representation: "delegatedmsastate"
 }
+// end BadSuccessor attributes
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -1368,8 +1369,8 @@ AllExtendedRights: types.#Kind & {
 	schema: "active_directory"
 }
 
-AddOrRemoveMember: types.#Kind & {
-	symbol: "AddOrRemoveMember"
+AddMember: types.#Kind & {
+	symbol: "AddMember"
 	schema: "active_directory"
 }
 
@@ -1674,9 +1675,9 @@ ADCSESC13: types.#Kind & {
 }
 
 SyncedToADUser: types.#Kind & {
-	symbol:			"SyncedToADUser"
-	schema:			"active_directory"
-	representation:	"SyncedToADUser"
+	symbol:         "SyncedToADUser"
+	schema:         "active_directory"
+	representation: "SyncedToADUser"
 }
 
 CoerceAndRelayNTLMToSMB: types.#Kind & {
@@ -1720,8 +1721,8 @@ CoerceAndRelayNTLMToLDAPS: types.#Kind & {
 }
 
 ProtectAdminGroups: types.#Kind & {
-	symbol:         "ProtectAdminGroups"
-	schema:         "active_directory"
+	symbol: "ProtectAdminGroups"
+	schema: "active_directory"
 }
 
 HasTrustKeys: types.#Kind & {
@@ -1763,6 +1764,8 @@ WritePublicInformation: types.#Kind & {
 	symbol: "WritePublicInformation"
 	schema: "active_directory"
 }
+
+// for ReanimateTombstones edge
 ReanimateTombstones: types.#Kind & {
 	symbol: "ReanimateTombstones"
 	schema: "active_directory"
@@ -1772,6 +1775,16 @@ CanReanimateTombstone: types.#Kind & {
 	symbol: "CanReanimateTombstone"
 	schema: "active_directory"
 }
+WriteCommonName: types.#Kind & {
+	symbol: "WriteCommonName"
+	schema: "active_directory"
+}
+
+WriteRDN: types.#Kind & {
+	symbol: "WriteRDN"
+	schema: "active_directory"
+}
+// end ReanimateTombstones edge
 
 CreateChild: types.#Kind & {
 	symbol: "CreateChild"
@@ -1785,15 +1798,8 @@ CreateChildDMSA: types.#Kind & {
 	symbol: "CreateChildDMSA"
 	schema: "active_directory"
 }
-WriteCommonName: types.#Kind & {
-	symbol: "WriteCommonName"
-	schema: "active_directory"
-}
 
-WriteRDN: types.#Kind & {
-	symbol: "WriteRDN"
-	schema: "active_directory"
-}
+// for BadSuccessor edges
 WriteMsDSManagedAccountPrecededByLink: types.#Kind & {
 	symbol: "WriteMsDSManagedAccountPrecededByLink"
 	schema: "active_directory"
@@ -1818,7 +1824,11 @@ CanUseBadSuccessor: types.#Kind & {
 	symbol: "CanUseBadSuccessor"
 	schema: "active_directory"
 }
-
+// end BadSuccessor edges
+WriteUserAccountControl: types.#Kind & {
+	symbol: "WriteUserAccountControl"
+	schema: "active_directory"
+}
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1829,7 +1839,7 @@ RelationshipKinds: [
 	MemberOf,
 	ForceChangePassword,
 	AllExtendedRights,
-	AddOrRemoveMember,
+	AddMember,
 	HasSession,
 	Contains,
 	GPLink,
@@ -1922,13 +1932,14 @@ RelationshipKinds: [
 	WriteMsDSSupersededServiceAccountState,
 	CanUseBadSuccessor,
 	CanReanimateTombstone,
+	WriteUserAccountControl,
 ]
 
 // ACL Relationships
 ACLRelationships: [
 	AllExtendedRights,
 	ForceChangePassword,
-	AddOrRemoveMember,
+	AddMember,
 	AddAllowedToAct,
 	GenericAll,
 	WriteDACL,
@@ -1968,10 +1979,11 @@ ACLRelationships: [
 	WriteMsDSGroupMSAMembership,
 	WriteMsDSSupersededServiceAccountState,
 	CanReanimateTombstone,
-	CanUseBadSuccessor
+	CanUseBadSuccessor,
+	WriteUserAccountControl,
 ]
 
-IngestACLRelationships: [for r in ACLRelationships if !list.Contains(AllPostProcessedRelationships, r) {r}],
+IngestACLRelationships: [for r in ACLRelationships if !list.Contains(AllPostProcessedRelationships, r) {r}]
 
 // these edges are common to inbound/outbound/pathfinding
 SharedRelationshipKinds: [
@@ -1983,7 +1995,7 @@ SharedRelationshipKinds: [
 	MemberOf,
 	ForceChangePassword,
 	AllExtendedRights,
-	AddOrRemoveMember,
+	AddMember,
 	HasSession,
 	GPLink,
 	AllowedToDelegate,
@@ -2042,20 +2054,20 @@ SharedRelationshipKinds: [
 	WriteRDN,
 	CanUseBadSuccessor,
 	CanReanimateTombstone,
+	WriteUserAccountControl,
 ]
 
 // Edges that are used during inbound traversal
 InboundRelationshipKinds: list.Concat([SharedRelationshipKinds, [Contains]])
 
 // Edges that are used during outbound traversal
-OutboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[Contains, DCFor]])
+OutboundRelationshipKinds: list.Concat([SharedRelationshipKinds, [Contains, DCFor]])
 
 // Edges that are used in pathfinding
-PathfindingRelationships: list.Concat([SharedRelationshipKinds,[Contains, DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation]])
+PathfindingRelationships: list.Concat([SharedRelationshipKinds, [Contains, DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation]])
 
 // Edges that are used in Shortest Path and match the frontend's list of traversable edges
-PathfindingRelationshipsMatchFrontend: list.Concat([[for r in PathfindingRelationships if !list.Contains([ContainsIdentity, PropagatesACEsTo, GPOAppliesTo, CanApplyGPO], r) {r}], [ProtectAdminGroups]]),
-
+PathfindingRelationshipsMatchFrontend: list.Concat([[for r in PathfindingRelationships if !list.Contains([ContainsIdentity, PropagatesACEsTo, GPOAppliesTo, CanApplyGPO], r) {r}], [ProtectAdminGroups]])
 
 EdgeCompositionRelationships: [
 	GoldenCert,
@@ -2116,8 +2128,8 @@ PostProcessedRelationships: [
 
 DCAPostProcessedRelationships: [
 	Owns,
-	WriteOwner
+	WriteOwner,
 ]
 
 // All post-processed edges
-AllPostProcessedRelationships: list.Concat([PostProcessedRelationships,DCAPostProcessedRelationships])
+AllPostProcessedRelationships: list.Concat([PostProcessedRelationships, DCAPostProcessedRelationships])

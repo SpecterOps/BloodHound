@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
@@ -140,7 +140,7 @@ func BuildErrorResponse(httpStatus int, message string, request *http.Request) *
 	return &ErrorWrapper{
 		HTTPStatus: httpStatus,
 		Timestamp:  time.Now(),
-		RequestID:  ctx.FromRequest(request).RequestID,
+		RequestID:  bhctx.FromRequest(request).RequestID,
 		Errors: []ErrorDetails{
 			{
 				Message: message,

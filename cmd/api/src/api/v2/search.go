@@ -24,7 +24,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	bhCtx "github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
@@ -45,7 +45,7 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		etacAllowedList []string
 	)
 
-	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx); !isUser {
+	if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no associated user found with request", request), response)
 		return
 	} else if ShouldFilterForETAC(s.DogTags, user) {

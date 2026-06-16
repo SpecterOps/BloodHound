@@ -36,7 +36,7 @@ export GOARCH := env_var_or_default("GOARCH", host_arch)
 export INTEGRATION_CONFIG_PATH := env_var_or_default("INTEGRATION_CONFIG_PATH", absolute_path("./local-harnesses/integration.config.json"))
 export SB_LOG_LEVEL := env_var_or_default("SB_LOG_LEVEL", "info")
 export SB_PG_CONNECTION := env_var_or_default("SB_PG_CONNECTION", "user=bloodhound password=bloodhoundcommunityedition dbname=bloodhound host=localhost port=65432")
-
+export PYTHON:= env_var_or_default("PYTHON", "/home/investigato/.local/share/uv/python/cpython-3.10-linux-x86_64-gnu/bin/python3.10")
 set positional-arguments
 
 # generate generic graph files
