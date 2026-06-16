@@ -211,7 +211,9 @@ auditMiddleware := middleware.NewAuditMiddleware(
     []string{"/health"}, // Exclusion list
 )
 
-// Register in post-routing stack (after ContextMiddleware, AuthMiddleware)
+// Register in post-routing stack
+// Must be called AFTER RegisterFossGlobalMiddleware so it wraps inside AuthMiddleware
+// Execution order: PanicHandler → AuthMiddleware → AuditMiddleware → Handler
 routerInst.UsePostrouting(auditMiddleware)
 ```
 

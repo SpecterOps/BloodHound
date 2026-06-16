@@ -14,7 +14,7 @@ This document provides detailed implementation guidance for the audit module str
 
 ```
 bhce/server/audit/
-├── audit.go              # Public API: Service, Entry, CommitID, Contribution, Maintainer, Register()
+├── audit.go              # Public API: Service, Entry, Contribution, Maintainer, Register()
 ├── audit_test.go         # Module-level tests
 └── internal/             # All implementation details - inaccessible to other modules
     ├── appdb/
@@ -41,9 +41,8 @@ bhce/server/audit/
 **Exports only what external consumers need:**
 
 - `Entry` struct - Audit record data
-- `CommitID` type alias (`uuid.UUID`)
 - `Contribution` struct - Handler-contributed enrichment
-- `Service` interface - Write operations (Intent/Success/Failure)
+- `Service` interface - Write operations (Intent/Success/Failure), uses `uuid.UUID` for commit IDs
 - `Maintainer` interface - Partition lifecycle operations
 - `Register(pool) (Service, Maintainer, error)` - Module construction
 - `Contribute(ctx, action, fields) context.Context` - Context helper

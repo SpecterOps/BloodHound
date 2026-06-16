@@ -123,15 +123,17 @@ The `intent` write is kept **synchronous** — its whole point is pre-execution 
 
 #### 3.4.2 Volume
 
-Auditing every endpoint with a full intent+result pair significantly increases row count compared to today's mutation-only coverage. **Expected impact:**
+Auditing every endpoint with a full intent+result pair increases row count compared to today's mutation-only coverage. The actual multiplier depends on current audit coverage (unknown) and the ratio of read vs. write operations in production traffic (unknown).
 
--   **Row increase:** 3-5x multiplier over current volume. Every endpoint now writes 2 rows (intent + result) instead of selective mutation-only auditing.
--   **Storage impact:** Exact storage requirements depend on deployment size and request volume. For reference, a typical enterprise deployment with ~1M API requests/day would generate ~2M audit rows/day, or ~60M rows/month. At ~500 bytes/row (accounting for JSONB `Fields`), this is ~30GB/month uncompressed. PostgreSQL TOAST compression typically reduces this by 40-60%.
--   **Retention impact:** With the default 3-month retention, expect ~90M rows and ~90GB storage (pre-compression) for the reference deployment.
+**Expected characteristics:**
+
+-   Every audited endpoint writes 2 rows (intent + result) instead of 1 row for mutations only
+-   Read-heavy workloads (e.g., UI polling, dashboard refreshes) will see higher row counts than write-heavy workloads
+-   Exact storage requirements depend on deployment size, request volume, and field usage patterns
 
 This is addressed through monthly partitioning with `DROP PARTITION` retention (see [Section 7](#7-retention-and-table-stability)) rather than by weakening the audit record. The partition-drop operation is near-instant (metadata-only), preventing table bloat.
 
-Reducing volume at the source — primarily UI polling behavior — is a recommended follow-up and out of scope for this proposal. **Monitoring:** Track partition sizes and drop operations via Prometheus metrics to validate storage estimates against actual usage.
+Reducing volume at the source — primarily UI polling behavior — is a recommended follow-up and out of scope for this proposal. **Monitoring:** Track partition sizes and row counts via Prometheus metrics to establish baselines and validate retention settings against actual usage.
 
 #### 3.4.3 HTTP Status as Outcome Signal
 
@@ -151,7 +153,14 @@ Reducing volume at the source — primarily UI polling behavior — is a recomme
 
 ### 4.1 Registration and Positioning
 
-The middleware registers in the **post-routing** stack (`registration.RegisterFossGlobalMiddleware`), after `ContextMiddleware` (so `bhctx` is available) and positioned to observe the result of `AuthMiddleware`.
+The middleware registers in the **post-routing** stack, positioned to wrap the handler and have access to both `ContextMiddleware` (for `bhctx`) and `AuthMiddleware` (for actor identity).
+
+**Execution order:**
+1. Pre-routing: `ContextMiddleware` → `MetricsMiddleware` → `LoggingMiddleware`
+2. Route matching
+3. Post-routing (wraps handler): `PanicHandler` → `AuthMiddleware` → `AuditMiddleware` → **Handler**
+
+The audit middleware must register AFTER the existing post-routing middleware so it runs inside the auth context but still wraps the handler.
 
 **Concrete wiring** in the startup entrypoint (`lib/go/services/entrypoint.go` or registration package):
 
@@ -169,6 +178,7 @@ if err != nil {
 // Construct and register audit middleware with the service
 auditMiddleware := middleware.NewAuditMiddleware(
 	bhceServices.Audit,
+	routerInst.MuxRouter(),
 	identityResolver,
 	[]string{"/health"}, // exclusion list
 )
@@ -250,21 +260,19 @@ type Entry struct {
 	Fields          map[string]any
 }
 
-type CommitID = uuid.UUID
-
 // Service is the public interface for writing audit rows. The middleware
 // calls Intent before the handler and Success or Failure after; handlers re-home
 // semantic actions through the same Service when an endpoint is migrated.
 type Service interface {
-	// Intent writes the pre-execution row and returns the commit ID that links
-	// it to its eventual result.
-	Intent(ctx context.Context, entry Entry) (CommitID, error)
+	// Intent writes the pre-execution row and returns the commit ID (uuid.UUID)
+	// that links it to its eventual result.
+	Intent(ctx context.Context, entry Entry) (uuid.UUID, error)
 	// Success writes the post-execution row with a successful outcome,
 	// reusing the commit ID returned by Intent.
-	Success(ctx context.Context, commitID CommitID, entry Entry) error
+	Success(ctx context.Context, commitID uuid.UUID, entry Entry) error
 	// Failure writes the post-execution row with a failed outcome,
 	// reusing the commit ID returned by Intent.
-	Failure(ctx context.Context, commitID CommitID, entry Entry) error
+	Failure(ctx context.Context, commitID uuid.UUID, entry Entry) error
 }
 ```
 
@@ -378,8 +386,9 @@ if err != nil {
 // Construct and register audit middleware with the service
 auditMiddleware := middleware.NewAuditMiddleware(
 	bhceServices.Audit,
+	routerInst.MuxRouter(),
 	identityResolver,
-	[]string{"/health", "/api/v2/liveness", "/metrics"}, // exclusions
+	[]string{"/health"}, // exclusions
 )
 routerInst.UsePostrouting(auditMiddleware)
 
@@ -402,7 +411,7 @@ The audit module follows the isolation pattern established by `server/clients/` 
 
 **Key points:**
 
--   **Public API** (`audit.go`): Exports `Service`, `Maintainer`, `Entry`, `CommitID`, `Contribution`, `Register()`, and context helpers
+-   **Public API** (`audit.go`): Exports `Service`, `Maintainer`, `Entry`, `Contribution`, `Register()`, and context helpers
 -   **Internal implementation**: `internal/appdb/` (PostgreSQL), `internal/services/` (domain logic, worker)
 -   **Result worker**: Buffered channel with drop-with-metric overflow policy
 -   **Sensitive data**: Redaction denylist applied to handler-contributed fields
@@ -499,5 +508,6 @@ The audit middleware demonstrates how HTTP-layer auditing works with the injecte
 -   **Context enrichment:** Handlers optionally contribute semantic actions/fields via `audit.Contribute()`
 -   **Anonymous actors:** Missing auth context leaves actor fields empty (source IP captured)
 -   **Route exclusions:** `/health` and other non-audit-worthy endpoints are excluded
+-   **Registration timing:** Must be registered AFTER existing post-routing middleware to wrap inside `AuthMiddleware`
 
-The middleware registers in the **post-routing** stack (after `ContextMiddleware` and `AuthMiddleware`) and uses the existing `responseRecorder` pattern to capture HTTP status codes.
+The middleware uses the existing `responseRecorder` pattern to capture HTTP status codes.
