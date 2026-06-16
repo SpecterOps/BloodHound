@@ -64,6 +64,37 @@ export const CommonSearches: CommonSearchType[] = [
         ],
     },
     {
+        subheader: 'AD Sites',
+        category: categoryAD,
+        queries: [
+            {
+                name: 'Map AD site topology',
+                description: 'Shows sites and the site-server or site-subnet objects they contain.',
+                query: `MATCH p = (:Site)-[:Contains]->(n:Base)\nWHERE n:SiteServer OR n:SiteSubnet\nRETURN p\nLIMIT 1000`,
+            },
+            {
+                name: 'Map site controllers',
+                description: 'Shows sites, their controllers, and the site-server or site-subnet objects they contain.',
+                query: `MATCH p = (:Base)-[:Owns|WriteOwner|WriteDacl|GenericAll|GenericWrite|WriteGPLink]->(:Site)-[:Contains]->(n:Base)\nWHERE n:SiteServer OR n:SiteSubnet\nRETURN p\nLIMIT 1000`,
+            },
+            {
+                name: 'Map site-linked GPOs',
+                description: 'Shows site-linked GPOs and affected site-servers and site-subnets',
+                query: `MATCH p = (:GPO)-[:GPLink]->(:Site)-[:Contains]->(n:Base)\nWHERE n:SiteServer OR n:SiteSubnet\nRETURN p\nLIMIT 1000`,
+            },
+            {
+                name: 'Map site-linked GPO controllers',
+                description: 'Shows site-linked GPO controllers and affected site-servers and site-subnets',
+                query: `MATCH p = (:Base)-[:Owns|WriteOwner|WriteDacl|GenericAll|GenericWrite]->(:GPO)-[:GPLink]->(:Site)-[:Contains]->(n:Base)\nWHERE n:SiteServer OR n:SiteSubnet\nRETURN p\nLIMIT 1000`,
+            },
+            {
+                name: 'Map site servers to computers',
+                description: 'Shows SiteServer nodes and the Computer objects they resolve to through ServerIs.',
+                query: `MATCH p = (:Site)-[:Contains]->(:SiteServer)-[:ServerIs]->(:Computer)\nRETURN p\nLIMIT 1000`,
+            }
+        ],
+    },
+    {
         subheader: 'Dangerous Privileges',
         category: categoryAD,
         queries: [
