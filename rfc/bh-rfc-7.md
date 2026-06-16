@@ -69,6 +69,14 @@ The transition from legacy audit logging to the middleware-based approach follow
 
 **Non-API endpoint audit writes** — specifically, any audit writes that occur outside the standard HTTP request/response cycle and do not correspond to a registered API route — are subject to the same 3-month support window. After month 3, only the explicitly scoped out-of-band writes listed in Section 3.1.3 are preserved; all other non-API audit paths are removed.
 
+**Consumer migration guidance:**
+
+Consumers of audit logs (UI, SIEM integrations, analytics) must adapt to the new action format during the 3-month window:
+
+-   **Audit Log UI:** Update filter/search logic to recognize both typed constants (e.g., `"CreateUser"`) and route-template format (e.g., `"POST /api/v2/users"`). During the migration window, prefer rows with `source = 'legacy'` for existing semantic actions. After month 3, rely on route-template format or handler-contributed semantic actions (distinguished by the absence of HTTP method prefix).
+-   **SIEM integrations:** Update alert rules and parsers to match the new format. Example: an alert that filtered on `Action = "CreateUser"` should be updated to match either `Action = "CreateUser"` OR `Action = "POST /api/v2/users"` during the transition, then switch to the route-template pattern after month 3 (or use the re-homed semantic action if the endpoint is refactored).
+-   **Analytics queries:** Add logic to handle both formats. The `source` column can be used to distinguish middleware writes from legacy writes when deduplication is needed.
+
 ### 3.2 Security & Compliance
 
 #### 3.2.1 Read Auditing
@@ -77,7 +85,18 @@ The middleware writes the full `intent` → `success`/`failure` pair for **all**
 
 #### 3.2.2 Sensitive Data Capture
 
-Request bodies must **not** be blanket-logged. The middleware records method, route template, route parameters, and handler-contributed fields only, with a redaction denylist for known secret fields. This matches the existing behavior where `AuditData()` deliberately omits credentials and tokens.
+Request bodies must **not** be blanket-logged. The middleware records method, route template, route parameters, and handler-contributed fields only, with a **redaction denylist** for known secret fields. This matches the existing behavior where `AuditData()` deliberately omits credentials and tokens.
+
+**Redaction denylist** (case-insensitive substring match in field names):
+- `password`
+- `secret`
+- `token`
+- `api_key`
+- `apikey`
+- `private_key`
+- `privatekey`
+
+Any handler-contributed field whose name contains one of these substrings has its value replaced with `"[REDACTED]"` before being written to `Fields`. The denylist is maintained in a centralized constant within the audit module (`internal/services/redaction.go`) and is updated by the security team as new sensitive field patterns are identified.
 
 #### 3.2.3 Anonymous Actor Path
 
@@ -104,7 +123,15 @@ The `intent` write is kept **synchronous** — its whole point is pre-execution 
 
 #### 3.4.2 Volume
 
-Auditing every endpoint with a full intent+result pair significantly increases row count compared to today's mutation-only coverage. This is addressed through monthly partitioning with `DROP PARTITION` retention (see [Section 7](#7-retention-and-table-stability)) rather than by weakening the audit record. Reducing volume at the source — primarily UI polling behavior — is a recommended follow-up and out of scope for this proposal.
+Auditing every endpoint with a full intent+result pair significantly increases row count compared to today's mutation-only coverage. **Expected impact:**
+
+-   **Row increase:** 3-5x multiplier over current volume. Every endpoint now writes 2 rows (intent + result) instead of selective mutation-only auditing.
+-   **Storage impact:** Exact storage requirements depend on deployment size and request volume. For reference, a typical enterprise deployment with ~1M API requests/day would generate ~2M audit rows/day, or ~60M rows/month. At ~500 bytes/row (accounting for JSONB `Fields`), this is ~30GB/month uncompressed. PostgreSQL TOAST compression typically reduces this by 40-60%.
+-   **Retention impact:** With the default 3-month retention, expect ~90M rows and ~90GB storage (pre-compression) for the reference deployment.
+
+This is addressed through monthly partitioning with `DROP PARTITION` retention (see [Section 7](#7-retention-and-table-stability)) rather than by weakening the audit record. The partition-drop operation is near-instant (metadata-only), preventing table bloat.
+
+Reducing volume at the source — primarily UI polling behavior — is a recommended follow-up and out of scope for this proposal. **Monitoring:** Track partition sizes and drop operations via Prometheus metrics to validate storage estimates against actual usage.
 
 #### 3.4.3 HTTP Status as Outcome Signal
 
@@ -244,10 +271,17 @@ type Service interface {
 **Register function:**
 
 ```go
+// Maintainer provides partition lifecycle operations for the GC daemon.
+type Maintainer interface {
+	PreCreateNextPartition(ctx context.Context) error
+	DropExpiredPartitions(ctx context.Context, retentionMonths int) error
+}
+
 // Register wires the audit service to its PostgreSQL store, starts the
-// buffered result-writer worker, and returns the constructed service.
+// buffered result-writer worker, and returns both the service (for middleware
+// and handlers) and the maintainer (for the GC daemon).
 // This is called by the BHCE module registry during startup.
-func Register(pool *pgxpool.Pool) (Service, error)
+func Register(pool *pgxpool.Pool) (Service, Maintainer, error)
 ```
 
 **Context helpers** for handlers that prefer to contribute via the request context rather than holding a `Service` directly:
@@ -296,7 +330,8 @@ type Deps struct {
 // Services holds the constructed BHCE cross-cutting services that need to be
 // injected into middleware or passed to other modules.
 type Services struct {
-	Audit audit.Service
+	Audit           audit.Service
+	AuditMaintainer audit.Maintainer
 }
 
 // Register wires up BHCE modules and returns services that middleware and
@@ -309,8 +344,8 @@ func Register(deps Deps) (*Services, error) {
 		panic("modules: Register requires a non-nil Pool")
 	}
 
-	// Build the audit service
-	auditService, err := audit.Register(deps.Pool)
+	// Build the audit service and maintainer
+	auditService, auditMaintainer, err := audit.Register(deps.Pool)
 	if err != nil {
 		return nil, fmt.Errorf("failed to register audit module: %w", err)
 	}
@@ -319,7 +354,8 @@ func Register(deps Deps) (*Services, error) {
 	// analysis.Register(deps.Router, deps.Pool, auditService)
 
 	return &Services{
-		Audit: auditService,
+		Audit:           auditService,
+		AuditMaintainer: auditMaintainer,
 	}, nil
 }
 ```
@@ -453,20 +489,35 @@ The retention period must be **configurable** within a **bounded range of 1 to 1
 
 The configuration value is validated at daemon startup to ensure it falls within `[1, 12]` months. Out-of-range values cause the daemon to fail-fast with a clear error message rather than silently clamping or defaulting.
 
-The audit module exposes a **maintenance interface** that the GC daemon calls to manage partition lifecycle:
+The audit module exposes a **maintenance interface** that the GC daemon calls to manage partition lifecycle. The BHCE module registry returns `modules.Services.AuditMaintainer`, which the entrypoint passes to the GC daemon:
+
+**Maintenance interface** (exported from `bhce/server/audit/audit.go`):
 
 ```go
-// bhce/server/audit/audit.go
 type Maintainer interface {
 	PreCreateNextPartition(ctx context.Context) error
 	DropExpiredPartitions(ctx context.Context, retentionMonths int) error
 }
-
-// Register returns both Service and Maintainer
-func Register(pool *pgxpool.Pool) (Service, Maintainer, error)
 ```
 
-The GC daemon receives `audit.Maintainer` (not a `database.Database` method) so the audit module fully owns its storage lifecycle (consistent with [Section 6.1](#61-responsibilities)). This requires threading a new dependency into the daemon's constructor, but keeps all `audit_logs` DDL encapsulated within the module.
+**GC daemon integration** (in startup entrypoint):
+
+```go
+// After modules.Register returns services
+bhceServices, err := modules.Register(bhceDeps)
+if err != nil {
+	return err
+}
+
+// Pass AuditMaintainer to GC daemon constructor
+gcDaemon := gc.NewDaemon(
+	connections.RDMS,
+	bhceServices.AuditMaintainer, // New dependency
+	retentionConfig,
+)
+```
+
+The GC daemon calls `PreCreateNextPartition()` and `DropExpiredPartitions(retentionMonths)` on its 24-hour ticker, alongside the existing `SweepSessions` and `SweepAssetGroupCollections` operations. This approach ensures the audit module fully owns its storage lifecycle (consistent with [Section 6.1](#61-responsibilities)) while keeping the partition DDL encapsulated within the module.
 
 ## 8. Reference Implementation
 
