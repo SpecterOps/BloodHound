@@ -69,7 +69,7 @@ const SSOProviderConfigForm: FC<{
                                 data-testid='sso-provider-config-form_toggle-auto-provision'
                             />
 
-                            <label id={autoProvisionLabelId}>
+                            <span id={autoProvisionLabelId}>
                                 <Typography
                                     className={clsx(
                                         'ml-4',
@@ -78,7 +78,7 @@ const SSOProviderConfigForm: FC<{
                                     )}>
                                     Automatically create new users on login
                                 </Typography>
-                            </label>
+                            </span>
                         </div>
                     )}
                 />
@@ -100,7 +100,7 @@ const SSOProviderConfigForm: FC<{
                                     aria-labelledby={roleProvisionLabelId}
                                 />
 
-                                <label id={roleProvisionLabelId}>
+                                <span id={roleProvisionLabelId}>
                                     <Typography
                                         className={clsx(
                                             'ml-4',
@@ -109,7 +109,7 @@ const SSOProviderConfigForm: FC<{
                                         )}>
                                         Allow SSO Provider to modify roles
                                     </Typography>
-                                </label>
+                                </span>
                             </div>
                         );
                     }}
