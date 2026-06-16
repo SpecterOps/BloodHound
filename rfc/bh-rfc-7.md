@@ -56,6 +56,17 @@ Several audit writes today occur outside the normal HTTP handler path and are **
 -   **Support account operations** (`CreateSupportUserSessionAttempt`, `InvalidateSupportUserSession`, `InvalidateAllSupportUserSessions`) — written from `lib/go/api/tools/support_account`, which bypasses the HTTP stack.
 -   **Daemon-triggered actions** (`CreateAuthTokens`, `UpdateAuthTokens`) — written by scheduled daemons, not request handlers.
 
+#### 3.1.4 Deprecation Timeline for Legacy Audit Formats
+
+The transition from legacy audit logging to the middleware-based approach follows a **3-month deprecation window** aligned with the default retention period:
+
+-   **Month 0 (middleware deployment):** The middleware is registered globally and begins emitting the new route-template format for all endpoints. Legacy audit logging (`AuditableTransaction` and direct `AppendAuditLog` calls in handlers) continues to operate in parallel, so endpoints emit both formats during the transition.
+-   **Months 0–3 (migration window):** Endpoints are incrementally refactored into the `server/` slice architecture. Each refactor re-homes its semantic action into the handler layer (via the audit slice) and removes the corresponding `AuditableTransaction` call. Both old and new audit formats coexist in the database during this period.
+-   **Month 3 (deprecation):** Legacy audit-logging code (`AuditableTransaction`, handler-layer `AppendAuditLog` calls, and the typed `AuditLogAction` constants not re-homed into handlers) is marked deprecated. The audit log UI and any customer integrations must migrate to consume the new route-template format or the re-homed semantic actions.
+-   **Month 3+ (removal):** After the 3-month window, the legacy audit-logging infrastructure is removed wholesale. Only out-of-band writes (login events, support account operations, daemon-triggered actions per [Section 3.1.3](#313-out-of-band-audit-writes)) continue using the audit slice's direct write path.
+
+**Non-API endpoint audit writes** — specifically, any audit writes that occur outside the standard HTTP request/response cycle and do not correspond to a registered API route — are subject to the same 3-month support window. After month 3, only the explicitly scoped out-of-band writes listed in Section 3.1.3 are preserved; all other non-API audit paths are removed.
+
 ### 3.2 Security & Compliance
 
 #### 3.2.1 Read Auditing
@@ -99,12 +110,12 @@ Auditing every endpoint with a full intent+result pair significantly increases r
 
 ### 3.5 Implementation Plan
 
-1. Add a `created_at`-partitioned migration for `audit_logs` (monthly range partitions, PK becomes `(id, created_at)`) and a partition-lifecycle worker hooked into the existing GC daemon (mechanics in [Section 7.2](#72-migration-mechanics) and [Section 7.3](#73-partition-lifecycle)).
+1. Add a `created_at`-partitioned migration for `audit_logs` (monthly range partitions, PK becomes `(id, created_at)`) and a partition-lifecycle worker hooked into the existing GC daemon (mechanics in [Section 7.2](#72-migration-mechanics) and [Section 7.3](#73-partition-lifecycle)). Configure retention bounds at 1–12 months with a 3-month default.
 2. Build the **audit log slice** (`server/audit/`) and publish its `Recorder` on `modules.Deps` so it can be injected into the middleware and into other feature slices (scaffolding guidance in [Section 6.4](#64-scaffolding-guidance)).
 3. Register `AuditMiddleware` globally so every endpoint is audited in the route-template format from day one. Add exclusion-list support for health, liveness, and metrics routes. Existing audit logging is left in place and runs alongside it.
 4. As endpoints are refactored into the `server/` slice architecture, re-home their semantic action into the handler layer via the injected audit slice and remove the corresponding `AuditableTransaction` call in the same change.
-5. Obtain Product sign-off on the `Action` contract change and agree the deprecation timeline for the legacy action strings.
-6. Remove the legacy audit-logging code (`AuditableTransaction` and the remaining direct `AppendAuditLog` call sites) wholesale after a cool-down period or as part of v3 preparation, once consumers have migrated.
+5. After the 3-month migration window (see [Section 3.1.4](#314-deprecation-timeline-for-legacy-audit-formats)), mark legacy audit-logging infrastructure as deprecated and notify consumers to migrate to the new format.
+6. Remove the legacy audit-logging code (`AuditableTransaction` and handler-layer `AppendAuditLog` call sites) wholesale after the deprecation period, preserving only the out-of-band writes documented in [Section 3.1.3](#313-out-of-band-audit-writes).
 
 ## 4. Middleware Behavior
 
@@ -269,7 +280,7 @@ Follow the testing conventions established in the existing slices under `bhce/se
 
 `audit_logs` is converted to a **range-partitioned table on `created_at`** as part of this change — not as a later increment. PostgreSQL requires the partition key to be part of the primary key, so the PK becomes `(id, created_at)`. Retention is enforced by **`DROP PARTITION`** — an instant metadata operation with no per-row deletes, no vacuum churn, and no index bloat — rather than a `DELETE` sweep.
 
-**Partition granularity must not exceed the minimum supported retention period.** Dropping a partition removes an entire range boundary-to-boundary; if a partition spans a longer period than the minimum retention window, it is impossible to honor that minimum without keeping data that should have been dropped, or dropping data that should still be retained. For example, if the minimum retention period is one month, monthly partitions are the largest permissible granularity — finer (weekly, daily) partitions are safe but coarser ones are not. The exact minimum retention period is a product decision (see [Section 7.3](#73-partition-lifecycle)); the initial implementation uses monthly partitions because it is the lowest-common-denominator granularity relative to the candidate lower bounds under discussion.
+**Partition granularity must not exceed the minimum supported retention period.** Dropping a partition removes an entire range boundary-to-boundary; if a partition spans a longer period than the minimum retention window, it is impossible to honor that minimum without keeping data that should have been dropped, or dropping data that should still be retained. With a minimum retention period of 1 month (see [Section 7.3](#73-partition-lifecycle)), monthly partitions are the largest permissible granularity — finer (weekly, daily) partitions are safe but coarser ones are not. Monthly partitions align exactly with the month-only retention granularity requirement.
 
 The current `audit_logs` shape the migration starts from (see baseline `00000000000001_init.sql`): `id bigint` backed by `audit_logs_id_seq`, `created_at timestamptz` (currently **nullable**), the actor/request/IP columns, `fields jsonb`, `status varchar(15)` defaulting to `'intent'` with the `status_check` constraint, and `commit_id text`. The GORM model also declares indexes on `created_at`, `actor_id`, and `action`.
 
@@ -296,13 +307,14 @@ Partition maintenance hooks into the existing GC daemon's 24-hour ticker (`daemo
 -   **Pre-creates** the next month's partition ahead of time so writes never hit a missing partition.
 -   **Drops** partitions whose entire range is older than the configured retention period.
 
-The retention period must be **configurable** within a bounded range. The exact lower and upper bounds are a **product decision that must be resolved before implementation** — they are not set by this RFC. A few constraints the product discussion should account for:
+The retention period must be **configurable** within a **bounded range of 1 to 12 months**, with a **default of 3 months**. This configuration enforces the following constraints:
 
--   The **lower bound** determines the minimum partition granularity (see [Section 7.1](#71-partitioning)). Lowering the bound may require switching to finer partitions (e.g., weekly instead of monthly) and a corresponding migration.
--   The **upper bound** prevents unbounded growth from misconfiguration and should reflect the maximum period the platform is willing to guarantee storage for (storage, regulatory, and operational considerations all apply).
--   The **default value** must sit within [lower bound, upper bound] and should reflect a reasonable operational baseline. A default of 12 months is used as a placeholder for the reference implementation; it is subject to change once Product signs off.
+-   The **lower bound of 1 month** establishes the minimum retention period and aligns with the monthly partition granularity (see [Section 7.1](#71-partitioning)). Retention periods shorter than one month are not supported.
+-   The **upper bound of 12 months** prevents unbounded growth from misconfiguration and sets the maximum period the platform guarantees storage for. Retention periods longer than 12 months (including unbounded retention) are explicitly not supported.
+-   The **default value of 3 months** provides a reasonable operational baseline that balances storage cost, audit coverage, and typical investigation windows. This default aligns with the deprecation timeline for legacy audit formats (see [Section 3.1.4](#314-deprecation-timeline-for-legacy-audit-formats)).
+-   The retention configuration must be **expressable only in whole months**. Finer granularity (weeks, days) and coarser granularity (years) are not supported.
 
-This open question is tracked in the implementation plan ([Section 3.5](#35-implementation-plan), step 5).
+The configuration value is validated at daemon startup to ensure it falls within `[1, 12]` months. Out-of-range values cause the daemon to fail-fast with a clear error message rather than silently clamping or defaulting.
 
 Two wiring options for the maintenance call, with the trade-off stated so reviewers can choose:
 
