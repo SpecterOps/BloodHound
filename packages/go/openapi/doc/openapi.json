@@ -3302,25 +3302,27 @@
       },
       "delete": {
         "operationId": "DeleteCustomNode",
-        "summary": "Delete custom node",
-        "description": "Delete the configuration for a specific custom node kind.",
+        "deprecated": true,
+        "summary": "Delete custom node (Deprecated)",
+        "description": "**Deprecated**: This endpoint is no longer supported and will return 410 Gone.\n",
         "tags": [
           "Custom Node Management",
           "Community",
           "Enterprise"
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
           "401": {
             "$ref": "#/components/responses/unauthorized"
           },
-          "404": {
-            "$ref": "#/components/responses/not-found"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
+          "410": {
+            "description": "Gone - This endpoint has been deprecated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
           }
         }
       }

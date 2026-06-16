@@ -95,18 +95,20 @@ put:
       $ref: './../responses/internal-server-error.yaml'
 delete:
   operationId: DeleteCustomNode
-  summary: Delete custom node
-  description: Delete the configuration for a specific custom node kind.
+  deprecated: true
+  summary: Delete custom node (Deprecated)
+  description: |
+    **Deprecated**: This endpoint is no longer supported and will return 410 Gone.
   tags:
     - Custom Node Management
     - Community
     - Enterprise
   responses:
-    200:
-      description: OK
     401:
       $ref: './../responses/unauthorized.yaml'
-    404:
-      $ref: './../responses/not-found.yaml'
-    500:
-      $ref: './../responses/internal-server-error.yaml'
+    410:
+      description: Gone - This endpoint has been deprecated
+      content:
+        application/json:
+          schema:
+            $ref: './../schemas/api.error-wrapper.yaml'
