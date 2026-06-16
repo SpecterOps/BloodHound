@@ -392,60 +392,23 @@ bhemodules.Register(bhemodules.Deps{
 
 Feature handlers that need to emit semantic actions or attach model-level `Fields` can receive `audit.Service` as a parameter to their module's `Register()` function, or use the context helpers (`audit.Contribute`, `audit.FromContext`). This is what makes preserving a legacy action across a refactor a one-line handler call (see [Section 5.2](#52-optional-semantic-overlay)).
 
-### 6.4 Module Structure
+### 6.4 Implementation Guidance
 
 The audit module follows the isolation pattern established by `server/clients/` and `server/kennel/`, with all implementation details encapsulated in `internal/` packages.
 
-#### 6.4.1 Package Layout
+**Detailed implementation guidance** including package layout, layer responsibilities, interface placement, registration order, worker implementation, error handling, redaction logic, and testing patterns is documented in:
 
-```
-bhce/server/audit/
-├── audit.go              # Public API: Service, Entry, CommitID, Contribution, Register(), context helpers
-├── audit_test.go
-└── internal/             # All implementation details - inaccessible to other modules
-    ├── appdb/
-    │   ├── store.go     # PostgreSQL adapter (pgx)
-    │   └── partition_ddl.go  # Partition lifecycle (pre-create, drop)
-    └── services/
-        ├── service.go   # Service implementation (Intent/Success/Failure)
-        ├── worker.go    # Buffered result-writer goroutine
-        └── types.go     # Internal types (Status constants, Database port)
-```
+📄 **[`bhce/server/docs/design/audit/module-structure.md`](../server/docs/design/audit/module-structure.md)**
 
--   **`audit.go`** (public API) exports only what external consumers need: `Service` interface, `Entry`, `CommitID`, `Contribution`, `Register()`, and context helpers. No internal types are exposed.
--   **`internal/services`** owns the domain logic, the consumer-defined `Database` port interface, and the buffered result-writer worker. `Status` is an internal constant set (`intent`, `success`, `failure`) used only by `appdb` to write the correct `status` column value.
--   **`internal/appdb`** owns all SQL via `pgx`, maps rows with `db:` tags, and returns `services`-layer types. Because this layer does not use GORM, it must set `created_at` explicitly on every insert (GORM's `autoCreateTime` is not in play) and let the `audit_logs_id_seq` default populate `id`.
+**Key points:**
 
-#### 6.4.2 Interface Placement
+-   **Public API** (`audit.go`): Exports `Service`, `Maintainer`, `Entry`, `CommitID`, `Contribution`, `Register()`, and context helpers
+-   **Internal implementation**: `internal/appdb/` (PostgreSQL), `internal/services/` (domain logic, worker)
+-   **Result worker**: Buffered channel with drop-with-metric overflow policy
+-   **Sensitive data**: Redaction denylist applied to handler-contributed fields
+-   **Testing**: Follow `server/clients/` and `server/kennel/` patterns
 
-Per the repo convention, interfaces are defined by the consumer. The `Service` interface is exported from the public `audit.go` because it has **multiple** consumers (the middleware, the module registry, and potentially other feature modules). The persistence `Database` interface stays consumer-defined in `internal/services` and is implemented by `internal/appdb.Store`, exactly like other modules (see `server/clients/internal/services` for the same pattern).
-
-#### 6.4.3 Construction and Registration Order
-
-Unlike a normal feature module whose `Register` only wires its internal chain and registers routes, the audit module's `Register` must **return** the constructed `Service` so it can be injected into middleware and other consumers. The BHCE module registry (`bhce/server/modules/modules.go`) calls `audit.Register(pool)` first, receives the service, then constructs the audit middleware with it. The ordering is:
-
-1. `modules.Register(deps)` calls `audit.Register(pool)` and receives `audit.Service`
-2. Registry returns `modules.Services{Audit: auditService}`
-3. Entrypoint constructs `AuditMiddleware` with `services.Audit`
-4. Entrypoint registers middleware on router
-5. BHE modules register separately, embedding the BHCE `Deps`
-
-This ordering ensures the audit service is available before any middleware or feature module that needs it is constructed. Document this in `audit.go` and `modules.go`.
-
-#### 6.4.4 Result Worker and Error Isolation
-
-The `Intent` write is synchronous (its purpose is pre-execution durability). `Success` and `Failure` hand off to a buffered worker owned by `internal/services` (a bounded channel drained by a goroutine started in `Register`, flushed on shutdown). Two invariants the implementer must hold:
-
--   A `Service` error — or a full/closed worker buffer — is **logged and swallowed**; it must never fail or delay the originating request. The middleware already treats both `Intent` and result errors as non-fatal.
--   The buffer's overflow policy is **drop-with-metric**: when the buffer is full, the result write is dropped and a Prometheus counter (`audit_result_drops_total`) is incremented. An alert fires when the drop rate exceeds 1% over a 5-minute window. This policy ensures audit pressure cannot stall request handling. (Alternative: block-with-timeout; document trade-off if chosen.)
-
-#### 6.4.5 Read Path
-
-The existing read endpoint (`GET /api/v2/audit` → `v2.Resources.ListAuditLogs` → `BloodhoundDB.ListAuditLogs`) keeps working unchanged because partitioning is transparent to `SELECT`, and its `created_at BETWEEN` predicate already enables partition pruning. Migrating that read endpoint into the audit module is **optional and out of scope** for this RFC.
-
-#### 6.4.6 Mocks and Tests
-
-Follow the testing conventions established in `server/clients/` and `server/kennel/`. Mock generation (`go.uber.org/mock/mockgen`) and test structure for the audit module should mirror those patterns. Module-level tests go in `audit_test.go`; internal package tests stay in their respective `internal/` subdirectories.
+The existing read endpoint (`GET /api/v2/audit`) keeps working unchanged because partitioning is transparent to `SELECT`. Migrating that endpoint into the audit module is **optional and out of scope**.
 
 ## 7. Retention and Table Stability
 
@@ -459,19 +422,21 @@ The current `audit_logs` shape the migration starts from (see baseline `00000000
 
 ### 7.2 Migration Mechanics
 
-This must be a **new** goose migration; the baseline `00000000000001_init.sql` is immutable (see [`bhce/AGENTS.md`](../AGENTS.md)). Place it at `cmd/api/src/database/migration/migrations/YYYYMMDDHHMMSS_audit_logs_partitioning.sql` with `-- +goose Up` / `-- +goose Down` sections; wrap any `DO $$ ... $$` / function blocks (which contain inner semicolons) in `-- +goose StatementBegin` / `-- +goose StatementEnd`.
+This must be a **new** goose migration; the baseline `00000000000001_init.sql` is immutable (see [`bhce/AGENTS.md`](../AGENTS.md)). The migration converts `audit_logs` from a regular table to a range-partitioned table.
 
-The non-obvious constraint an implementer must design around: **PostgreSQL cannot convert a populated regular table into a partitioned table in place.** The recommended approach in the `Up` migration is therefore a rename-and-swap:
+**Key constraint:** PostgreSQL cannot convert a populated regular table into a partitioned table in place. The migration uses a **rename-and-swap** strategy: rename the existing table aside, create a new partitioned table with the same name, backfill data, then drop the old table.
 
-1.  Rename the existing table aside: `ALTER TABLE audit_logs RENAME TO audit_logs_legacy`.
-2.  Create the new parent: `CREATE TABLE audit_logs (... , PRIMARY KEY (id, created_at)) PARTITION BY RANGE (created_at)`, carrying the same columns, the `status_check` constraint, and column defaults. `created_at` must be **`NOT NULL`** (the partition key cannot be null) with a default of `now()`.
-3.  Re-point the sequence so inserts keep auto-assigning `id`: keep `audit_logs_id_seq` and set it as the `id` default / owned column on the new table.
-4.  Declare the indexes (`created_at`, `actor_id`, `action`) on the **parent**; on PostgreSQL 11+ these propagate to every partition automatically.
-5.  Pre-create partitions covering the legacy data's `created_at` range plus the current and next month. Create a **`DEFAULT` partition** to prevent inserts from ever failing on a missing range. The maintenance worker (see [Section 7.3](#73-partition-lifecycle)) will pre-create bounded partitions ahead of time, but the DEFAULT partition provides operational safety during initial deployment and worker failures.
-6.  Backfill: `INSERT INTO audit_logs SELECT ... FROM audit_logs_legacy`, substituting a non-null `created_at` for any legacy null rows using `COALESCE(created_at, '2020-01-01'::timestamptz)`. This places all null-timestamp rows in a single legacy partition. For large tables, batch the copy.
-7.  Drop `audit_logs_legacy` once the backfill is verified (may be deferred to a follow-up migration if a verification window is desired).
+**Detailed step-by-step SQL procedure** including partition pre-creation, backfill logic, null handling, and rollback strategy is documented in:
 
-The `Down` section must reverse the swap (recreate the flat table, copy rows back, drop the partitioned table and its partitions). Note in the migration that `Down` is best-effort and that any rows written after `Up` into months beyond the original data are still preserved by the copy-back.
+📄 **[`bhce/server/docs/design/audit/migration-procedure.md`](../server/docs/design/audit/migration-procedure.md)**
+
+**Key decisions:**
+
+-   **NULL `created_at` handling:** `COALESCE(created_at, '2020-01-01'::timestamptz)` places null rows in a legacy partition
+-   **DEFAULT partition:** Created for operational safety (prevents insert failures on missing partitions)
+-   **Dual-write tagging:** Backfill sets `source = 'legacy'` for all existing rows
+-   **Primary key:** Changes to `(id, created_at)` (composite, partition key must be in PK)
+-   **Indexes:** Declared on parent table, propagate to partitions automatically (PostgreSQL 11+)
 
 ### 7.3 Partition Lifecycle
 
@@ -521,72 +486,18 @@ The GC daemon calls `PreCreateNextPartition()` and `DropExpiredPartitions(retent
 
 ## 8. Reference Implementation
 
-The sketch below is illustrative, not production-ready. It demonstrates how the middleware writes through the injected audit service ([Section 6](#6-audit-module)) using the existing `responseRecorder` pattern.
+The audit middleware demonstrates how HTTP-layer auditing works with the injected audit service. **A complete reference implementation** including constructor, handler logic, response recorder, route template helper, and handler contribution examples is documented in:
 
-```go
-// AuditMiddleware writes an intent row before the handler runs and a success/failure
-// row after it completes through the injected audit service, which owns commit_id pairing.
-func AuditMiddleware(auditService audit.Service, muxRouter *mux.Router, idResolver auth.IdentityResolver, exclusions ExclusionList) mux.MiddlewareFunc {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			var (
-				ctx            = request.Context()
-				requestContext = bhctx.FromRequest(request)
-				routeTemplate  = routeTemplateFor(muxRouter, request)
-				recorder       = &responseRecorder{delegate: response}
-			)
+📄 **[`bhce/server/docs/design/audit/middleware-reference.md`](../server/docs/design/audit/middleware-reference.md)**
 
-			if exclusions.Contains(routeTemplate) {
-				next.ServeHTTP(response, request)
-				return
-			}
+**Key patterns:**
 
-			// Default action: "METHOD /route/template" — zero maintenance, bounded
-			// cardinality. The version prefix is preserved (e.g. "/api/v2/") so
-			// consumers can distinguish calls across API versions.
-			entry := audit.Entry{
-				Action:          model.AuditLogAction(request.Method + " " + routeTemplate),
-				RequestID:       requestContext.RequestID,
-				SourceIpAddress: requestContext.RequestIP,
-			}
-			// Anonymous actors (e.g. failed login) are recorded by source IP rather than dropped.
-			if identity, err := idResolver.GetIdentity(requestContext.AuthCtx); err == nil {
-				entry.ActorID = identity.ID.String()
-				entry.ActorName = identity.Name
-				entry.ActorEmail = identity.Email
-			}
+-   **Intent before handler:** Synchronous write, records pre-execution state
+-   **Result after handler:** Asynchronous write via buffered worker, records post-execution state
+-   **Error handling:** Log and swallow - audit failures never fail the request
+-   **Status mapping:** `< 400` → success, `>= 400` → failure
+-   **Context enrichment:** Handlers optionally contribute semantic actions/fields via `audit.Contribute()`
+-   **Anonymous actors:** Missing auth context leaves actor fields empty (source IP captured)
+-   **Route exclusions:** `/health` and other non-audit-worthy endpoints are excluded
 
-			// Intent: synchronous, written for every audited endpoint (reads included)
-			// so a denied or failed attempt is always recorded. The service returns the
-			// commit_id that links this intent to its result.
-			commitID, err := auditService.Intent(ctx, entry)
-			if err != nil {
-				slog.ErrorContext(ctx, "failed to write audit intent", slog.String("err", err.Error()))
-			}
-
-			next.ServeHTTP(recorder, request)
-
-			// A handler may have re-homed a semantic action (e.g. "CreateUser") and/or
-			// model-level Fields through the audit module's context hook; fold them in.
-			if contribution := audit.FromContext(ctx); contribution != nil {
-				if contribution.Action != "" {
-					entry.Action = contribution.Action
-				}
-				entry.Fields = contribution.Fields
-			}
-
-			// The service offloads the result write to a buffered worker; see Section 6.4.4.
-			// HTTP status -> outcome: <400 success, >=400 failure.
-			if recorder.statusCode >= http.StatusBadRequest {
-				if err := auditService.Failure(ctx, commitID, entry); err != nil {
-					slog.ErrorContext(ctx, "failed to write audit failure", slog.String("err", err.Error()))
-				}
-			} else {
-				if err := auditService.Success(ctx, commitID, entry); err != nil {
-					slog.ErrorContext(ctx, "failed to write audit success", slog.String("err", err.Error()))
-				}
-			}
-		})
-	}
-}
-```
+The middleware registers in the **post-routing** stack (after `ContextMiddleware` and `AuthMiddleware`) and uses the existing `responseRecorder` pattern to capture HTTP status codes.
