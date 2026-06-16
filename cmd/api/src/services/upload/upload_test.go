@@ -38,9 +38,14 @@ func buildValidator(t *testing.T, expectedContent string, validationErr error) F
 	t.Helper()
 
 	return func(src io.Reader, dst io.Writer) (ingest.OriginalMetadata, error) {
-		content, err := io.ReadAll(src)
-		require.NoError(t, err)
-		require.Equal(t, expectedContent, string(content))
+		tr := io.TeeReader(src, dst)
+		content, err := io.ReadAll(tr)
+		if err != nil {
+			return ingest.OriginalMetadata{}, err
+		}
+		if string(content) != expectedContent {
+			return ingest.OriginalMetadata{}, fmt.Errorf("expected content %q, got %q", expectedContent, string(content))
+		}
 
 		return ingest.OriginalMetadata{}, validationErr
 	}
@@ -237,7 +242,11 @@ func TestUpload_WriteAndValidateFile(t *testing.T) {
 				WriteTempFile(ctx, "prefix", gomock.Any(), storage.WriteOptions{}).
 				DoAndReturn(func(_ context.Context, _ string, reader io.Reader, _ storage.WriteOptions) (string, error) {
 					content, err := io.ReadAll(reader)
-					require.NoError(t, err)
+					if testCase.validationErr != nil {
+						require.Error(t, err, testCase.validationErr)
+					} else {
+						require.NoError(t, err)
+					}
 					require.Equal(t, "content", string(content))
 
 					return testCase.tempFileName, testCase.writeErr

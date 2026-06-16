@@ -101,45 +101,45 @@ func WriteAndValidateFile(ctx context.Context, fileService storage.FileService, 
 	validationErrCh := make(chan error, 1)
 
 	// Start validation in a separate goroutine.
-	// validationFunc reads from pr, writes to io.Discard.
-	// This validates the stream without storing the data twice.
+	// validationFunc reads from the request body and writes the validated output to pw.
+	// WriteTempFile reads from pr and persists that validated output.
 	go func() {
-		_, err := validationFunc(pr, io.Discard)
-		pr.Close()
+		_, err := validationFunc(fileData, pw)
+		_ = pw.CloseWithError(err)
 		validationErrCh <- err
 	}()
 
-	// TeeReader: as we read fileData, a copy is written to pw and flows to the goroutine via pr.
-	teeReader := io.TeeReader(fileData, pw)
-
 	// Write to storage while validation happens concurrently.
-	tempFileName, writeErr := fileService.WriteTempFile(ctx, prefix, teeReader, storage.WriteOptions{})
+	tempFileName, writeErr := fileService.WriteTempFile(ctx, prefix, pr, storage.WriteOptions{})
+	if writeErr != nil {
+		_ = pr.CloseWithError(writeErr)
+	}
 
-	// Closing pw signals EOF to the validation goroutine so it can finish.
-	pw.Close()
-
+	var validationErr error
 	select {
-	case validationErr := <-validationErrCh:
+	case validationErr = <-validationErrCh:
 		// Context cancelation wins over validation errors when both are ready
 		if err := ctx.Err(); err != nil {
 			cleanupTempFile(ctx, fileService, tempFileName)
 			return "", err
 		}
-
-		if validationErr != nil {
-			slog.ErrorContext(
-				ctx,
-				"Validation failed",
-				slog.String("temp_file_name",
-					tempFileName),
-				attr.Error(validationErr),
-			)
-			cleanupTempFile(ctx, fileService, tempFileName)
-			return "", validationErr
-		}
 	case <-ctx.Done():
+		_ = pr.CloseWithError(ctx.Err())
 		cleanupTempFile(ctx, fileService, tempFileName)
 		return "", ctx.Err()
+	}
+
+	// Check if validation failed, which should win over write errors.
+	if validationErr != nil {
+		slog.ErrorContext(
+			ctx,
+			"Validation failed",
+			slog.String("temp_file_name",
+				tempFileName),
+			attr.Error(validationErr),
+		)
+		cleanupTempFile(ctx, fileService, tempFileName)
+		return "", validationErr
 	}
 
 	// Check if writing failed; the temp file should be cleaned up.
