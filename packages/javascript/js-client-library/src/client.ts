@@ -683,7 +683,7 @@ class BHEAPIClient {
         );
     };
 
-    // OpenGraph DQ routes use query filters because aggregate views are scoped by schema environment kind.
+    // OpenGraph DQ routes use query filters so callers can scope by extension or environment.
     getOpenGraphQualityStats = (
         environmentId?: string,
         extensionId?: number,
@@ -713,7 +713,7 @@ class BHEAPIClient {
         );
     };
 
-    // Aggregations are intentionally schema-scoped, not a single "all environments" OpenGraph rollup.
+    // Aggregations can be scoped by extension, and direct callers may further scope by schema environment kind.
     getOpenGraphQualityAggregations = (
         extensionId?: number,
         schemaEnvironmentKindId?: number,

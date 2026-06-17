@@ -37,12 +37,11 @@ type EnvironmentSelector struct {
 	Name      string `json:"name"`
 	ObjectID  string `json:"id"`
 	Collected bool   `json:"collected"`
-	// OpenGraph data quality uses these IDs to scope stats to a schema environment kind, not just an extension.
-	SchemaExtensionID       *int32    `json:"schema_extension_id,omitempty"`
-	SchemaEnvironmentKindID *int32    `json:"schema_environment_kind_id,omitempty"`
-	ImpactValue             *int      `json:"impactValue,omitempty"`
-	HygieneAttackPaths      *int64    `json:"hygiene_attack_paths,omitempty"` // caution: if value is bigger than maxsafeint, the UI will truncate the value
-	Exposures               Exposures `json:"exposures,omitempty"`
+	// OpenGraph data quality uses this ID to route extension-level stats.
+	SchemaExtensionID  *int32    `json:"schema_extension_id,omitempty"`
+	ImpactValue        *int      `json:"impactValue,omitempty"`
+	HygieneAttackPaths *int64    `json:"hygiene_attack_paths,omitempty"` // caution: if value is bigger than maxsafeint, the UI will truncate the value
+	Exposures          Exposures `json:"exposures,omitempty"`
 }
 
 type EnvironmentSelectors []EnvironmentSelector

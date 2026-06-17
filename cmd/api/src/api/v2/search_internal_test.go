@@ -32,8 +32,7 @@ import (
 
 func Test_SetNodeProperties(t *testing.T) {
 	var (
-		schemaExtensionID   int32 = 7
-		schemaEnvironmentID int32 = 11
+		schemaExtensionID int32 = 7
 	)
 
 	tests := []struct {
@@ -122,12 +121,11 @@ func Test_SetNodeProperties(t *testing.T) {
 			},
 			expected: model.EnvironmentSelectors{
 				{
-					Type:                    "OpenGraph Extension",
-					Name:                    "Node3",
-					ObjectID:                "environment-3",
-					Collected:               true,
-					SchemaExtensionID:       &schemaExtensionID,
-					SchemaEnvironmentKindID: &schemaEnvironmentID,
+					Type:              "OpenGraph Extension",
+					Name:              "Node3",
+					ObjectID:          "environment-3",
+					Collected:         true,
+					SchemaExtensionID: &schemaExtensionID,
 				},
 			},
 		},
@@ -139,8 +137,6 @@ func Test_SetNodeProperties(t *testing.T) {
 				"OpenGraphEnvironment": "OpenGraph Extension",
 			}, map[string]int32{
 				"OpenGraphEnvironment": schemaExtensionID,
-			}, map[string]int32{
-				"OpenGraphEnvironment": schemaEnvironmentID,
 			})
 			assert.Equal(t, tt.expected, got, tt.name)
 		})

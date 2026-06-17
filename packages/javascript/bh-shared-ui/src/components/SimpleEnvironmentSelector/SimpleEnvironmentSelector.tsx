@@ -73,21 +73,16 @@ const environmentMatchesSelection = (environment: Environment, selected: Selecte
 
     if (selected.type && environment.type !== selected.type) return false;
 
-    // OG selectors can share an environment id across schema environment kinds, so compare schema IDs when present.
+    // OG selectors use the schema extension ID plus the environment ID for DQ routing.
     if (selected.schema_extension_id !== undefined && selected.schema_extension_id !== null) {
         if (environment.schema_extension_id !== selected.schema_extension_id) return false;
-    }
-
-    if (selected.schema_environment_kind_id !== undefined && selected.schema_environment_kind_id !== null) {
-        return environment.schema_environment_kind_id === selected.schema_environment_kind_id;
     }
 
     return true;
 };
 
 const environmentSelectionKey = (environment: Environment): string => {
-    // Include schema IDs so React keys stay stable when multiple OG selectors point at the same environment id.
-    return `${environment.type}:${environment.schema_extension_id ?? ''}:${environment.schema_environment_kind_id ?? ''}:${environment.id}`;
+    return `${environment.type}:${environment.schema_extension_id ?? ''}:${environment.id}`;
 };
 
 const SimpleEnvironmentSelector: React.FC<{
@@ -133,15 +128,13 @@ const SimpleEnvironmentSelector: React.FC<{
     const handlePlatformClick = (type?: Environment['type']) => {
         const platformEnvironment =
             type !== undefined ? availableEnvironments?.find((environment) => environment.type === type) : undefined;
-        // Aggregate OG selections keep the schema IDs from a representative environment of that kind.
+        // Aggregate OG selections keep the schema extension ID from a representative environment of that kind.
         const schemaExtensionID = platformEnvironment?.schema_extension_id ?? null;
-        const schemaEnvironmentKindID = platformEnvironment?.schema_environment_kind_id ?? null;
 
         onSelect({
             type: type ? `${type}-platform` : null,
             id: null,
             schema_extension_id: schemaExtensionID,
-            schema_environment_kind_id: schemaEnvironmentKindID,
         });
         handleClose();
     };
@@ -151,7 +144,6 @@ const SimpleEnvironmentSelector: React.FC<{
             type: environment.type,
             id: environment.id,
             schema_extension_id: environment.schema_extension_id ?? null,
-            schema_environment_kind_id: environment.schema_environment_kind_id ?? null,
         });
         handleClose();
     };

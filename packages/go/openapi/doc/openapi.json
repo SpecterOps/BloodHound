@@ -20596,12 +20596,6 @@
                 }
               }
             }
-          },
-          "schema_environment_kind_id": {
-            "type": "integer",
-            "format": "int32",
-            "readOnly": true,
-            "description": "OpenGraph schema environment kind ID for custom environments"
           }
         }
       },

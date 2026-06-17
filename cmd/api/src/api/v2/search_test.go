@@ -531,7 +531,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":[{"type":"HeeHaw","name":"HeeHaw Name","id":"hee-haw-environment","collected":true,"schema_extension_id":7,"schema_environment_kind_id":11}]}`,
+				responseBody:   `{"data":[{"type":"HeeHaw","name":"HeeHaw Name","id":"hee-haw-environment","collected":true,"schema_extension_id":7}]}`,
 			},
 		},
 		{

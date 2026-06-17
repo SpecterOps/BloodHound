@@ -169,19 +169,19 @@ func (s *Resources) ListAvailableEnvironments(response http.ResponseWriter, requ
 	}
 
 	// Build response with domain type display names
-	responseData := BuildEnvironmentSelectors(nodes, filterResult.KindToDisplayName, filterResult.KindToSchemaExtensionID, filterResult.KindToSchemaEnvironmentKindID)
+	responseData := BuildEnvironmentSelectors(nodes, filterResult.KindToDisplayName, filterResult.KindToSchemaExtensionID)
 
 	api.WriteBasicResponse(ctx, responseData, http.StatusOK, response)
 }
 
-func BuildEnvironmentSelectors(nodes []*graph.Node, kindToDisplayName map[string]string, kindToSchemaExtensionID map[string]int32, kindToSchemaEnvironmentKindID map[string]int32) model.EnvironmentSelectors {
+func BuildEnvironmentSelectors(nodes []*graph.Node, kindToDisplayName map[string]string, kindToSchemaExtensionID map[string]int32) model.EnvironmentSelectors {
 	envs := make(model.EnvironmentSelectors, 0, len(nodes))
 
 	for _, node := range nodes {
 		name, _ := node.Properties.GetOrDefault(common.Name.String(), graphschema.DefaultMissingName).String()
 		objectID, _ := node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 
-		metadata := resolveEnvironmentSelectorMetadata(node, kindToDisplayName, kindToSchemaExtensionID, kindToSchemaEnvironmentKindID)
+		metadata := resolveEnvironmentSelectorMetadata(node, kindToDisplayName, kindToSchemaExtensionID)
 		collected := resolveCollected(node)
 
 		if metadata.schemaExtensionID != nil {
@@ -190,12 +190,11 @@ func BuildEnvironmentSelectors(nodes []*graph.Node, kindToDisplayName map[string
 		}
 
 		envs = append(envs, model.EnvironmentSelector{
-			Type:                    metadata.envType,
-			Name:                    name,
-			ObjectID:                objectID,
-			Collected:               collected,
-			SchemaExtensionID:       metadata.schemaExtensionID,
-			SchemaEnvironmentKindID: metadata.schemaEnvironmentKindID,
+			Type:              metadata.envType,
+			Name:              name,
+			ObjectID:          objectID,
+			Collected:         collected,
+			SchemaExtensionID: metadata.schemaExtensionID,
 		})
 	}
 
@@ -203,9 +202,8 @@ func BuildEnvironmentSelectors(nodes []*graph.Node, kindToDisplayName map[string
 }
 
 type environmentSelectorMetadata struct {
-	envType                 string
-	schemaExtensionID       *int32
-	schemaEnvironmentKindID *int32
+	envType           string
+	schemaExtensionID *int32
 }
 
 func resolveCollected(node *graph.Node) bool {
@@ -226,7 +224,7 @@ func resolveCollected(node *graph.Node) bool {
 	return true
 }
 
-func resolveEnvironmentSelectorMetadata(node *graph.Node, kindToDisplayName map[string]string, kindToSchemaExtensionID map[string]int32, kindToSchemaEnvironmentKindID map[string]int32) environmentSelectorMetadata {
+func resolveEnvironmentSelectorMetadata(node *graph.Node, kindToDisplayName map[string]string, kindToSchemaExtensionID map[string]int32) environmentSelectorMetadata {
 	var result environmentSelectorMetadata
 
 	for _, kind := range node.Kinds {
@@ -244,9 +242,7 @@ func resolveEnvironmentSelectorMetadata(node *graph.Node, kindToDisplayName map[
 		}
 
 		if schemaExtensionID, ok := kindToSchemaExtensionID[kindName]; ok {
-			schemaEnvironmentKindID, _ := kindToSchemaEnvironmentKindID[kindName]
 			result.schemaExtensionID = &schemaExtensionID
-			result.schemaEnvironmentKindID = &schemaEnvironmentKindID
 		}
 	}
 
@@ -255,10 +251,9 @@ func resolveEnvironmentSelectorMetadata(node *graph.Node, kindToDisplayName map[
 
 // EnvironmentFilterResult contains the filter criteria and environment kind mappings for environments
 type EnvironmentFilterResult struct {
-	FilterCriteria                graph.Criteria
-	KindToDisplayName             map[string]string
-	KindToSchemaExtensionID       map[string]int32
-	KindToSchemaEnvironmentKindID map[string]int32
+	FilterCriteria          graph.Criteria
+	KindToDisplayName       map[string]string
+	KindToSchemaExtensionID map[string]int32
 }
 
 // ErrInvalidQueryParameters is an error that is used to wrap other errors when the query parameters are invalid
@@ -283,8 +278,8 @@ func BuildEnvironmentFilter(ctx context.Context, db database.Database, openGraph
 
 		result.FilterCriteria = filterCriteria
 		result.KindToDisplayName = envKindToExtensionDisplayName
-		// These maps let the selector response carry the minimal routing metadata needed by OG data quality.
-		result.KindToSchemaExtensionID, result.KindToSchemaEnvironmentKindID, err = buildOpenGraphEnvironmentKindIDMaps(ctx, db, openGraphFlag.Enabled)
+		// This map lets the selector response carry the minimal routing metadata needed by OG data quality.
+		result.KindToSchemaExtensionID, err = buildOpenGraphEnvironmentExtensionIDMap(ctx, db, openGraphFlag.Enabled)
 		if err != nil {
 			return result, err
 		}
@@ -293,27 +288,25 @@ func BuildEnvironmentFilter(ctx context.Context, db database.Database, openGraph
 	}
 }
 
-func buildOpenGraphEnvironmentKindIDMaps(ctx context.Context, db database.Database, includeOpenGraph bool) (map[string]int32, map[string]int32, error) {
+func buildOpenGraphEnvironmentExtensionIDMap(ctx context.Context, db database.Database, includeOpenGraph bool) (map[string]int32, error) {
 	var (
-		environments                  []model.SchemaEnvironment
-		err                           error
-		filters                       = model.Filters{"is_builtin": []model.Filter{{Operator: model.Equals, Value: "false", SetOperator: model.FilterAnd}}}
-		kindToSchemaExtensionID       = make(map[string]int32)
-		kindToSchemaEnvironmentKindID = make(map[string]int32)
+		environments            []model.SchemaEnvironment
+		err                     error
+		filters                 = model.Filters{"is_builtin": []model.Filter{{Operator: model.Equals, Value: "false", SetOperator: model.FilterAnd}}}
+		kindToSchemaExtensionID = make(map[string]int32)
 	)
 
 	if !includeOpenGraph {
-		return kindToSchemaExtensionID, kindToSchemaEnvironmentKindID, nil
+		return kindToSchemaExtensionID, nil
 	}
 
 	if environments, err = db.GetEnvironmentsFiltered(ctx, filters); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	for _, environment := range environments {
 		kindToSchemaExtensionID[environment.EnvironmentKindName] = environment.SchemaExtensionId
-		kindToSchemaEnvironmentKindID[environment.EnvironmentKindName] = environment.EnvironmentKindId
 	}
 
-	return kindToSchemaExtensionID, kindToSchemaEnvironmentKindID, nil
+	return kindToSchemaExtensionID, nil
 }

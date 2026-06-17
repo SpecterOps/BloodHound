@@ -94,7 +94,6 @@ describe('Simple Environment Selector', () => {
             type: testEnvironments[5].type,
             id: testEnvironments[5].id,
             schema_extension_id: null,
-            schema_environment_kind_id: null,
         });
 
         await user.click(contextSelector);
@@ -104,7 +103,6 @@ describe('Simple Environment Selector', () => {
             type: 'active-directory-platform',
             id: null,
             schema_extension_id: null,
-            schema_environment_kind_id: null,
         });
     });
 
@@ -133,7 +131,6 @@ describe('Simple Environment Selector', () => {
                                 id: environmentId,
                                 collected: true,
                                 schema_extension_id: 7,
-                                schema_environment_kind_id: 11,
                                 hygiene_attack_paths: 0,
                                 exposures: [],
                             },
@@ -150,7 +147,6 @@ describe('Simple Environment Selector', () => {
                     type: 'AD Domain Source Example',
                     id: environmentId,
                     schema_extension_id: 7,
-                    schema_environment_kind_id: 11,
                 }}
                 onSelect={testOnChange}
                 errorMessage={errorMessage}

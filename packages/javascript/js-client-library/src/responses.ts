@@ -71,9 +71,8 @@ export type Environment = {
     name: string;
     id: string;
     collected: boolean;
-    // OG selectors carry schema IDs so DQ can route aggregate and environment views to the right metric query.
+    // OG selectors carry the schema extension ID so DQ can route aggregate and environment views.
     schema_extension_id?: number;
-    schema_environment_kind_id?: number;
     hygiene_attack_paths: number; // While improbable this number could possibly be higher than the JavaScript max safe integer in the response
     exposures: EnvironmentExposure[];
 };

@@ -25,7 +25,6 @@ export type SelectorValueTypes = Environment['type'] | EnvironmentPlatform;
 export type SelectedEnvironment = {
     type: SelectorValueTypes | null;
     id: string | null;
-    // OG data quality needs schema IDs to distinguish environment kinds within the same extension.
+    // OG data quality needs the extension ID for custom environment routes.
     schema_extension_id?: number | null;
-    schema_environment_kind_id?: number | null;
 };
