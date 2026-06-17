@@ -20,17 +20,19 @@ import (
 	"log/slog"
 
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
+	"github.com/specterops/bloodhound/packages/go/analysis/tiering"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
-	// "github.com/specterops/dawgs/util/channels"
+	"github.com/specterops/dawgs/util/channels"
 )
 
-// PostCanUseBadSuccessor
+// PostCanUseBadSuccessor just iterates the result and emits EnsureRelationshipJob{FromID: principal, ToID: target, Kind: ad.CanUseBadSuccessor}.
 func PostCanUseBadSuccessor(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
@@ -41,235 +43,186 @@ func PostCanUseBadSuccessor(ctx context.Context, db graph.Database, localGroupDa
 		attr.Scope("process"),
 	)()
 
-	if _, err := fetchCollectedDomainNodes(ctx, db); err != nil {
+	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &post.AtomicPostProcessingStats{}, err
 	} else {
 		operation := post.NewPostRelationshipOperation(ctx, db, "CanUseBadSuccessor Post Processing")
 
-		// for _, domain := range domainNodes {
-		// 	innerDomain := domain
-		// 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		// 		badLineOfSuccession, err := getCanUseBadSuccessorViaCreateChild(tx, innerDomain, localGroupData)
-		// 		if err != nil {
-		// 			return err
-		// 		} else if len(badLineOfSuccession) == 0 {
-		// 			return nil
-		// 		}
+		for _, domain := range domainNodes {
+			innerDomain := domain
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+				edgeMap, err := getCanUseBadSuccessorViaCreateChild(tx, innerDomain, localGroupData)
+				if err != nil {
+					return err
+				}
+				for targetID, duplex := range edgeMap {
+					duplex.Each(func(principal uint64) bool {
+						channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+							FromID: graph.ID(principal),
+							ToID:   targetID,
+							Kind:   ad.CanUseBadSuccessor,
+						})
+						return true
+					})
+				}
 
-		// 		for _, duplex := range badLineOfSuccession {
-		// 			duplex.Each(func(value uint64) bool {
-		// 				channels.Submit(ctx, outC, post.EnsureRelationshipJob{
-		// 					FromID: graph.ID(value),
-		// 					ToID:   graph.ID(),
-		// 					Kind:   ad.CanUseBadSuccessor,
-		// 				})
-		// 				return true
-		// 			})
-		// 		}
-		// 	})
+				return nil
 
-		// 	return nil
+			})
 
-		// }
+		}
 		return &operation.Stats, operation.Done()
 	}
 }
 
-// // getCanUseBadSuccessorViaCreateChild(tx, domain)     → map[ouID]principals
-// func getCanUseBadSuccessorViaCreateChild(tx graph.Transaction, domain *graph.Node, localGroupData *LocalGroupData) (map[graph.ID]cardinality.Duplex[uint64], error) {
-// 	createChildNodes, err := getCreateChildDMSAPrincipalsForDomain(tx, domain)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return createChildNodes, nil
-// }
+// getCanUseBadSuccessorPostPatch
+// calls both functions
+// ANDs P1 into each entry of P2
+// drops empty results
+// returns the final edge map keyed by targetID.
+func getCanUseBadSuccessorViaCreateChild(tx graph.Transaction, domain *graph.Node, localGroupData *LocalGroupData) (map[graph.ID]cardinality.Duplex[uint64], error) {
+	// get the principals that can create child objects in this domain, regardless of where they can create them
+	createChildPrincipals, err := getCreateChildPrincipalsFlat(tx, domain)
+	if err != nil {
+		return nil, err
+	}
+	if createChildPrincipals.Cardinality() == 0 {
+		return make(map[graph.ID]cardinality.Duplex[uint64]), nil
+	}
 
-// // getCanUseBadSuccessorViaUnmigratedDMSA(tx, domain)  → map[dmsaID]principals
-// func getCanUseBadSuccessorViaUnmigratedDMSA(tx graph.Transaction, domain *graph.Node) (map[graph.ID]cardinality.Duplex[uint64], error) {
-// 	// this is a separate function because it has a different set of criteria, and it may be worth including the results even if the CreateChildDMSA portion doesn't return any results. also, it was easier to write and test separately.
-// 	domainSid, err := domain.Properties.Get(ad.DomainSID.String()).String()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	nonMigratedDMSANodes, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-// 		return query.And(
-// 			query.Kind(query.Node(), ad.DelegatedMSA),
-// 			query.Not(query.Equals(query.NodeProperty(string(ad.DelegatedMSAState)), "2")),
-// 			query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSid),
-// 		)
-// 	}))
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	delegatedStateNodes, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-// 		return query.And(
-// 			query.Kind(query.Start(), ad.Entity),
-// 			query.Or(query.Kind(query.Relationship(), ad.WriteMsDSDelegatedMSAState), query.Kind(query.Relationship(), ad.GenericAll)),
-// 			query.InIDs(query.EndID(), nonMigratedDMSANodes...),
-// 		)
-// 	}))
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	precededByNodes, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-// 		return query.And(
-// 			query.Kind(query.Start(), ad.Entity),
-// 			query.Kind(query.Relationship(), ad.WriteMsDSManagedAccountPrecededByLink),
-// 			query.InIDs(query.EndID(), nonMigratedDMSANodes...),
-// 		)
-// 	}))
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	results := make(map[graph.ID]cardinality.Duplex[uint64])
-// 	for _, rel := range delegatedStateNodes {
-// 		duplex, ok := results[rel.EndID]
-// 		if !ok {
-// 			duplex = cardinality.NewBitmap64()
-// 		}
-// 		duplex.Add(rel.StartID.Uint64())
-// 		results[rel.EndID] = duplex
-// 	}
-// 	for _, rel := range precededByNodes {
-// 		duplex, ok := results[rel.EndID]
-// 		if !ok {
-// 			duplex = cardinality.NewBitmap64()
-// 		}
-// 		duplex.Add(rel.StartID.Uint64())
-// 		results[rel.EndID] = duplex
-// 	}
-// 	return results, nil
-
-// }
-
-/*
-   **Two** accounts are required for this.
-   1. "attacker_dmsa" can be achieved with **EITHER:**
-     - CreateChild(all) or CreateChild (msDS-DelegatedManagedServiceAccount) on an OU and maq != 0
-     - Having Write on `msDS-DelegatedMSAState` and `msDS-ManagedAccountPrecededByLink` or GenericWrite or GenericAll on an existing dMSA that is in a non-migrated state (msDS-DelegatedMSAState != 2)
-
-   2. Must have the ability to Write to/modify these attributes on ANOTHER account, doesn't have to be a dMSA though.
-	  - `msDS-SupersededManagedAccountLink`
-		- `msDS-SupersededServiceAccountState`
-*/
-// getCanUseBadSuccessorPostPatch(tx, domain) → map[dmsaID]principals
-func getCanUseBadSuccessorPostPatch(tx graph.Transaction, domain *graph.Node, createChildNodes map[graph.ID]cardinality.Duplex[uint64]) (map[graph.ID]cardinality.Duplex[uint64], error) {
-	var firstDMSACandidates []graph.ID
-	var secondDMSACandidates []graph.ID
-	results := make(map[graph.ID]cardinality.Duplex[uint64])
-
-	writeSupersededManagedAccountLinkNodes, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+	tierZeroPrincipals, err := getTierZeroPrincipals(tx, domain)
+	if err != nil {
+		return nil, err
+	}
+	createChildPrincipals.AndNot(tierZeroPrincipals)
+	if createChildPrincipals.Cardinality() == 0 {
+		return make(map[graph.ID]cardinality.Duplex[uint64]), nil
+	}
+	// get the principals that can write the attributes required to set up a bad successor attack, per target
+	domainSid, err := domain.Properties.Get(ad.DomainSID.String()).String()
+	if err != nil {
+		return nil, err
+	}
+	entityIDs, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
-			query.Kind(query.Start(), ad.DelegatedMSA),
-			query.Kind(query.Relationship(), ad.WriteMsDSSupersededManagedAccountLink),
+			query.KindIn(query.Node(), ad.Entity),
+			query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSid),
 		)
 	}))
 	if err != nil {
 		return nil, err
 	}
-
-	writeSupersededServiceAccountStateNodes, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Kind(query.Start(), ad.DelegatedMSA),
-			query.Kind(query.Relationship(), ad.WriteMsDSSupersededServiceAccountState),
-		)
-	}))
+	if len(entityIDs) == 0 {
+		return make(map[graph.ID]cardinality.Duplex[uint64]), nil
+	}
+	supersededWriteManagedAccountPrincipals, err := getSupersededWriteManagedAccountPrincipals(tx, entityIDs)
 	if err != nil {
 		return nil, err
 	}
-
-	for _, rel := range writeSupersededManagedAccountLinkNodes {
-		secondDMSACandidates = append(secondDMSACandidates, rel.EndID)
-	}
-	for _, rel := range writeSupersededServiceAccountStateNodes {
-		secondDMSACandidates = append(secondDMSACandidates, rel.EndID)
-	}
-	if len(secondDMSACandidates) == 0 {
-		return results, nil
-	}
-	if len(createChildNodes) > 0 {
-		for _, dmsaID := range secondDMSACandidates {
-			for _, duplex := range createChildNodes {
-				duplex.Each(func(value uint64) bool {
-					duplex2, ok := results[graph.ID(dmsaID)]
-					if !ok {
-						duplex2 = cardinality.NewBitmap64()
-					}
-					duplex2.Add(value)
-					results[graph.ID(dmsaID)] = duplex2
-					return true
-				})
-			}
-		}
-		return results, nil
-	}
-	precededByNodes, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Kind(query.Start(), ad.DelegatedMSA),
-			query.Kind(query.Relationship(), ad.WriteMsDSManagedAccountPrecededByLink),
-		)
-	}))
+	supersededWriteServiceAccountStatePrincipals, err := getSupersededWriteServiceAccountStatePrincipals(tx, entityIDs)
 	if err != nil {
 		return nil, err
 	}
-
-	writableGroupMembershipNodes, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Kind(query.Start(), ad.DelegatedMSA),
-			query.Kind(query.Relationship(), ad.WriteMsDSGroupMSAMembership),
-		)
-	}))
+	genericWritePrincipals, err := getGenericWritePrincipals(tx, entityIDs)
 	if err != nil {
 		return nil, err
 	}
-
-	for _, rel := range precededByNodes {
-		firstDMSACandidates = append(firstDMSACandidates, rel.EndID)
-	}
-	for _, rel := range writableGroupMembershipNodes {
-		firstDMSACandidates = append(firstDMSACandidates, rel.EndID)
-	}
-	// then we need to find the intersection of the first and second dmsa candidates, and then find the principals that have access to both, keyed by the secondDMSAId
-	for _, secondDMSAID := range secondDMSACandidates {
-		for _, firstDMSAID := range firstDMSACandidates {
-			if secondDMSAID == firstDMSAID {
-				// this means that the same dmsa has both sets of permissions, which is not valid for this attack path, so we skip it.
-				continue
-			}
-			var firstDMSAPrincipals []uint64
-			var secondDMSAPrincipals []uint64
-			for _, rel := range writeSupersededManagedAccountLinkNodes {
-				if rel.EndID == secondDMSAID {
-					secondDMSAPrincipals = append(secondDMSAPrincipals, rel.StartID.Uint64())
-				}
-			}
-			for _, rel := range writeSupersededServiceAccountStateNodes {
-				if rel.EndID == secondDMSAID {
-					secondDMSAPrincipals = append(secondDMSAPrincipals, rel.StartID.Uint64())
-				}
-			}
-			for _, rel := range precededByNodes {
-				if rel.EndID == firstDMSAID {
-					firstDMSAPrincipals = append(firstDMSAPrincipals, rel.StartID.Uint64())
-				}
-			}
-			for _, rel := range writableGroupMembershipNodes {
-				if rel.EndID == firstDMSAID {
-					firstDMSAPrincipals = append(firstDMSAPrincipals, rel.StartID.Uint64())
-				}
-			}
-			if len(firstDMSAPrincipals) == 0 || len(secondDMSAPrincipals) == 0 {
-				continue
+	// must be AND on the first two, OR with the third, then we can AND with the createChildPrincipals
+	principalsWithRequiredWritePermissions := make(map[graph.ID]cardinality.Duplex[uint64])
+	for targetID, managedAccountDuplex := range supersededWriteManagedAccountPrincipals {
+		serviceAccountStateDuplex, ok := supersededWriteServiceAccountStatePrincipals[targetID]
+		if ok {
+			managedAccountDuplex.And(serviceAccountStateDuplex)
+			if managedAccountDuplex.Cardinality() > 0 {
+				principalsWithRequiredWritePermissions[targetID] = managedAccountDuplex
 			}
 		}
 	}
-	return results, nil
+	for targetID, genericWriteDuplex := range genericWritePrincipals {
+		existing, ok := principalsWithRequiredWritePermissions[targetID]
+		if ok {
+			existing.Or(genericWriteDuplex)
+			principalsWithRequiredWritePermissions[targetID] = existing
+		} else {
+			principalsWithRequiredWritePermissions[targetID] = genericWriteDuplex
+		}
+	}
+	// AND the results of who can CreateChild into who can Write the correct attributes, drop empty results, return the final edge map keyed by targetID.
+	finalEdgeMap := make(map[graph.ID]cardinality.Duplex[uint64])
+	for targetID, duplex := range principalsWithRequiredWritePermissions {
+		duplex.And(createChildPrincipals)
+		if duplex.Cardinality() > 0 {
+			finalEdgeMap[targetID] = duplex
+		}
+	}
+	return finalEdgeMap, nil
 }
 
+func getTierZeroPrincipals(tx graph.Transaction, domain *graph.Node) (cardinality.Duplex[uint64], error) {
+	domainSid, err := domain.Properties.Get(ad.DomainSID.String()).String()
+	if err != nil {
+		return nil, err
+	}
+	// find TierZero principals (by tag or SystemTags)
+	// query.StringContains(query.NodeProperty(common.SystemTags.String()), ad.AdminTierZero)
+	// ORed with query.Kind(query.Node(), tiering.KindTagTierZero)
+	// this must be on the Start node
+
+	adminCountPrincipals, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+		return query.And(
+			query.KindIn(query.Node(), ad.User, ad.Group, ad.Computer, ad.DelegatedMSA),
+			query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSid),
+			query.Equals(query.NodeProperty(ad.AdminCount.String()), true),
+		)
+	}))
+	if err != nil {
+		return nil, err
+	}
+
+	tierZeroPrincipalIDs, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+		return query.And(
+			query.KindIn(query.Node(), ad.User, ad.Group, ad.Computer, ad.DelegatedMSA),
+			query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSid),
+			query.Or(
+				query.StringContains(query.NodeProperty(common.SystemTags.String()), ad.AdminTierZero),
+				query.Kind(query.Node(), tiering.KindTagTierZero),
+			),
+		)
+	}))
+	if err != nil {
+		return nil, err
+	}
+
+	result := cardinality.NewBitmap64()
+	for _, id := range adminCountPrincipals {
+		result.Add(id.Uint64())
+	}
+	for _, id := range tierZeroPrincipalIDs {
+		if !result.Contains(id.Uint64()) {
+			result.Add(id.Uint64())
+		}
+	}
+	return result, nil
+}
+
+// getCreateChildPrincipalsFlat(tx, domain) (Duplex[uint64], error) this gets the first part, who can create what and where
+func getCreateChildPrincipalsFlat(tx graph.Transaction, domain *graph.Node) (cardinality.Duplex[uint64], error) {
+	// calls the other fancy function
+	createChildNodes, err := getCreateChildForBadSuccessorPrincipalsForDomain(tx, domain)
+	if err != nil {
+		return nil, err
+	}
+	// squash it flat! we need a bitmap of all the principals that can create child objects in this domain, regardless of where they can create them
+	result := cardinality.NewBitmap64()
+	for _, duplex := range createChildNodes {
+		duplex.Each(func(value uint64) bool {
+			result.Add(value)
+			return true
+		})
+	}
+	return result, nil
+
+}
 func getCreateChildForBadSuccessorPrincipalsForDomain(tx graph.Transaction, domain *graph.Node) (map[graph.ID]cardinality.Duplex[uint64], error) {
 	domainSid, err := domain.Properties.Get(ad.DomainSID.String()).String()
 	if err != nil {
@@ -296,6 +249,86 @@ func getCreateChildForBadSuccessorPrincipalsForDomain(tx graph.Transaction, doma
 			query.Kind(query.Start(), ad.Entity),
 			query.Or(query.Kind(query.Relationship(), ad.CreateChildDMSA), query.Kind(query.Relationship(), ad.CreateChildAll), query.Kind(query.Relationship(), ad.GenericAll), query.Kind(query.Relationship(), ad.GenericWrite), query.Kind(query.Relationship(), ad.WriteOwner), query.Kind(query.Relationship(), ad.WriteDACL), query.Kind(query.Relationship(), ad.Owns)),
 			query.InIDs(query.EndID(), containerIDs...),
+		)
+	}))
+	if err != nil {
+		return nil, err
+	}
+	// then group by rel.EndID into a map[graph.ID]cardinality.Duplex[uint64]
+	relMapByEndID := make(map[graph.ID]cardinality.Duplex[uint64])
+	for _, rel := range relMap {
+		duplex, ok := relMapByEndID[rel.EndID]
+		if !ok {
+			duplex = cardinality.NewBitmap64()
+		}
+		duplex.Add(rel.StartID.Uint64())
+		relMapByEndID[rel.EndID] = duplex
+	}
+	return relMapByEndID, nil
+}
+
+// getSupersededWritePrincipals(tx, domain) (map[graph.ID]Duplex[uint64], error):
+// we finding a combination of either:
+// WriteMsDSSupersededManagedAccountLink and WriteMsDSSupersededServiceAccountState
+// GenericAll, GenericWrite, WriteOwner, WriteDACL, Owns
+// builds a map per relationship, then intersects them per targetID. Returns Part2.
+func getSupersededWriteManagedAccountPrincipals(tx graph.Transaction, entityIDs []graph.ID) (map[graph.ID]cardinality.Duplex[uint64], error) {
+
+	relMap, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Kind(query.Start(), ad.Entity),
+			query.Kind(query.Relationship(), ad.WriteMsDSSupersededManagedAccountLink),
+			query.InIDs(query.EndID(), entityIDs...),
+		)
+	}))
+	if err != nil {
+		return nil, err
+	}
+	// then group by rel.EndID into a map[graph.ID]cardinality.Duplex[uint64]
+	relMapByEndID := make(map[graph.ID]cardinality.Duplex[uint64])
+	for _, rel := range relMap {
+		duplex, ok := relMapByEndID[rel.EndID]
+		if !ok {
+			duplex = cardinality.NewBitmap64()
+		}
+		duplex.Add(rel.StartID.Uint64())
+		relMapByEndID[rel.EndID] = duplex
+	}
+	return relMapByEndID, nil
+}
+
+func getSupersededWriteServiceAccountStatePrincipals(tx graph.Transaction, entityIDs []graph.ID) (map[graph.ID]cardinality.Duplex[uint64], error) {
+
+	relMap, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Kind(query.Start(), ad.Entity),
+			query.Kind(query.Relationship(), ad.WriteMsDSSupersededServiceAccountState),
+			query.InIDs(query.EndID(), entityIDs...),
+		)
+	}))
+	if err != nil {
+		return nil, err
+	}
+	// then group by rel.EndID into a map[graph.ID]cardinality.Duplex[uint64]
+	relMapByEndID := make(map[graph.ID]cardinality.Duplex[uint64])
+	for _, rel := range relMap {
+		duplex, ok := relMapByEndID[rel.EndID]
+		if !ok {
+			duplex = cardinality.NewBitmap64()
+		}
+		duplex.Add(rel.StartID.Uint64())
+		relMapByEndID[rel.EndID] = duplex
+	}
+	return relMapByEndID, nil
+}
+
+func getGenericWritePrincipals(tx graph.Transaction, entityIDs []graph.ID) (map[graph.ID]cardinality.Duplex[uint64], error) {
+
+	relMap, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Kind(query.Start(), ad.Entity),
+			query.Or(query.Kind(query.Relationship(), ad.GenericAll), query.Kind(query.Relationship(), ad.GenericWrite), query.Kind(query.Relationship(), ad.WriteOwner), query.Kind(query.Relationship(), ad.WriteDACL), query.Kind(query.Relationship(), ad.Owns)),
+			query.InIDs(query.EndID(), entityIDs...),
 		)
 	}))
 	if err != nil {
