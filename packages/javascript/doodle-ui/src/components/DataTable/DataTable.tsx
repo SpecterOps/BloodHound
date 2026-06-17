@@ -601,7 +601,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                 event.stopPropagation();
                                                 handleRowClick(row);
                                             }}
-                                            role={tableBodyRowRole ?? (onRowClick ? 'button' : undefined)}
+                                            role={tableBodyRowRole}
                                             tabIndex={tableBodyRowTabIndex ?? (onRowClick ? 0 : undefined)}
                                             data-state={row.getIsSelected() && 'selected'}
                                             className={cn(
