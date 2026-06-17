@@ -46,6 +46,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // MAIN
             '--primary': light.primary.main,
             '--primary-variant': light.primary.variant,
+            '--secondary': light.secondary.main,
             '--secondary-main': light.secondary.main,
             '--secondary-variant': light.secondary.variant,
             // '--tertiary': light.tertiary.main,
@@ -75,6 +76,12 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // LINKS
             '--link-main': light.secondary.main,
             '--link-hover': light.secondary.variant,
+
+            // FOCUS
+            '--focus-ring': light.secondary.main,
+            '--focus-ring-offset': common.white,
+            '--focus-ring-width': '2px',
+            '--focus-ring-offset-width': '1px',
 
             // // ELEVATION
             // '--elevation-0': elevation.light[0],
@@ -232,6 +239,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--primary': dark.primary.main,
             '--primary-variant': dark.primary.variant,
             '--secondary': dark.secondary.main,
+            '--secondary-main': dark.secondary.main,
             '--secondary-variant': dark.secondary.variant,
             // '--tertiary': dark.tertiary.main,
             // '--tertiary-variant': dark.tertiary.variant,
@@ -260,6 +268,12 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // LINKS
             '--link-main': dark.secondary.main,
             '--link-hover': dark.secondary.variant,
+
+            // FOCUS
+            '--focus-ring': dark.secondary.main,
+            '--focus-ring-offset': palette.neutral.dark[50],
+            '--focus-ring-width': '2px',
+            '--focus-ring-offset-width': '1px',
 
             // // ELEVATION
             // '--elevation-0': elevation.dark[0],
@@ -385,11 +399,25 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--neutral-5': '#2e2e2e',
 
             '--link': '#99a3ff',
-
             '--error': '#e9827c',
         },
     }),
         addUtilities({
+            '.focus-ring': {
+                outline: 'var(--focus-ring-width) solid var(--focus-ring)',
+                'outline-offset': 'var(--focus-ring-offset-width)',
+                '--tw-ring-offset-width': 'var(--focus-ring-offset-width)',
+                '--tw-ring-offset-color': 'var(--focus-ring-offset)',
+                '--tw-ring-color': 'var(--focus-ring)',
+                '--tw-ring-offset-shadow': '0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color)',
+                '--tw-ring-shadow':
+                    '0 0 0 calc(var(--focus-ring-width) + var(--tw-ring-offset-width)) var(--tw-ring-color)',
+                'box-shadow': 'var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)',
+            },
+            '.focus-ring-inset': {
+                outline: 'none',
+                'box-shadow': 'inset 0 0 0 var(--focus-ring-width) var(--focus-ring), var(--tw-shadow, 0 0 #0000)',
+            },
             '.clip-right-rounded': {
                 'clip-path': 'inset(0 0.5px 0 -100vw round 0.25rem)',
             },

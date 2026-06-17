@@ -17,14 +17,16 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tooltip } from 'doodle-ui';
 import { useCustomNodeKinds } from '../../hooks/useCustomNodeKinds';
+import { cn } from '../../utils';
 import { EntityKinds, MetaDetailNodeKind, MetaNodeKind } from '../../utils/content';
 import { GetIconInfo } from '../../utils/icons';
 
 interface NodeIconProps {
     nodeType?: EntityKinds | string;
+    className?: string;
 }
 
-function NodeIcon({ nodeType = '' }: NodeIconProps) {
+function NodeIcon({ nodeType = '', className }: NodeIconProps) {
     const customIcons = useCustomNodeKinds().data ?? {};
     const iconInfo = GetIconInfo(nodeType, customIcons);
 
@@ -34,7 +36,10 @@ function NodeIcon({ nodeType = '' }: NodeIconProps) {
             contentProps={{ className: 'bg-neutral-5 border-none text-contrast dark:text-contrast' }}>
             <div className='inline-block relative mr-1'>
                 <div
-                    className='flex items-center justify-center border border-neutral-dark-1 rounded-full p-1 size-[22px] text-neutral-dark-1 bg-neutral-light-1 pointer-events-none'
+                    className={cn(
+                        'flex items-center justify-center border border-neutral-dark-1 rounded-full p-1 size-[22px] text-neutral-dark-1 bg-neutral-light-1 pointer-events-none',
+                        className
+                    )}
                     style={iconInfo ? { backgroundColor: iconInfo.color } : undefined}
                     title={nodeType}>
                     {nodeType === MetaNodeKind || nodeType === MetaDetailNodeKind ? (
