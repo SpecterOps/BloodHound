@@ -17,13 +17,11 @@
 package config
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"net"
 	"net/url"
@@ -38,7 +36,6 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
-	"github.com/specterops/bloodhound/packages/go/bomenc"
 	"github.com/specterops/bloodhound/packages/go/crypto"
 )
 
@@ -294,16 +291,11 @@ func WriteConfigurationFile(path string, config Configuration) error {
 	return nil
 }
 
-// check to see if BOM normalization is needed for config files generated for the user
 func ParseConfiguration(content []byte) (Configuration, error) {
 	if configuration, err := NewDefaultConfiguration(); err != nil {
 		return configuration, fmt.Errorf("failed to create default configuration: %w", err)
-	} else if normalizedContent, err := bomenc.NormalizeToUTF8(bytes.NewReader(content)); err != nil {
-		return configuration, fmt.Errorf("failed to normalize configuration: %w", err)
-	} else if normalizedBytes, err := io.ReadAll(normalizedContent); err != nil {
-		return configuration, fmt.Errorf("failed to read normalized configuration: %w", err)
 	} else {
-		return configuration, json.Unmarshal(normalizedBytes, &configuration)
+		return configuration, json.Unmarshal(content, &configuration)
 	}
 }
 
