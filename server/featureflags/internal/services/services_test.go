@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/server/featureflags/internal/services"
+	"github.com/specterops/bloodhound/server/featureflags/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -37,7 +38,8 @@ func (f fakeFlagDatabase) GetFlagByKey(_ context.Context, _ string) (services.Fe
 }
 
 func TestNewService(t *testing.T) {
-	assert.NotNil(t, services.NewService(nil))
+	mockDb := mocks.NewMockDatabase(t)
+	assert.NotNil(t, services.NewService(mockDb))
 }
 
 func TestService_GetFlagByKey(t *testing.T) {

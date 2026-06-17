@@ -63,6 +63,9 @@ type Service struct {
 // PostgreSQL implementation (Store) lives alongside in sql.go so callers obtain
 // a ready-to-use service without taking on a storage-layer dependency directly.
 func NewService(db Database) *Service {
+	if db == nil {
+		panic("feature-flag: service requires a non-nil Database")
+	}
 	return &Service{db: db}
 }
 
