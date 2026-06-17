@@ -96,11 +96,9 @@ func RecordIngestTaskQueueLatency(taskCreatedAt time.Time, source IngestSource) 
 func RegisterIngestMetrics(registerer prometheus.Registerer) error {
 	if err := registerer.Register(ingestTasksCreated); err != nil {
 		return fmt.Errorf("failed to register ingest tasks created counter: %w", err)
-	}
-
-	if err := registerer.Register(ingestTaskQueueLatency); err != nil {
+	} else if err := registerer.Register(ingestTaskQueueLatency); err != nil {
 		return fmt.Errorf("failed to register ingest task queue latency summary: %w", err)
+	} else {
+		return nil
 	}
-
-	return nil
 }
