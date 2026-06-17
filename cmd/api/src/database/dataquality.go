@@ -216,7 +216,7 @@ func (s *BloodhoundDB) CreateOpenGraphDataQualityAggregations(ctx context.Contex
 	return aggregations, CheckError(result)
 }
 
-func (s *BloodhoundDB) GetOpenGraphDataQualityStats(ctx context.Context, environmentID null.String, extensionID null.Int32, schemaEnvironmentID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.DataQualityStats, int, error) {
+func (s *BloodhoundDB) GetOpenGraphDataQualityStats(ctx context.Context, environmentID null.String, extensionID null.Int32, schemaEnvironmentKindID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.DataQualityStats, int, error) {
 	const (
 		defaultWhere = "created_at between ? and ?"
 	)
@@ -236,8 +236,8 @@ func (s *BloodhoundDB) GetOpenGraphDataQualityStats(ctx context.Context, environ
 	if extensionID.Valid {
 		query = query.Where("schema_extension_id = ?", extensionID.Int32)
 	}
-	if schemaEnvironmentID.Valid {
-		query = query.Where("schema_environment_id = ?", schemaEnvironmentID.Int32)
+	if schemaEnvironmentKindID.Valid {
+		query = query.Where("schema_environment_kind_id = ?", schemaEnvironmentKindID.Int32)
 	}
 
 	result = query.Count(&count)
@@ -256,8 +256,8 @@ func (s *BloodhoundDB) GetOpenGraphDataQualityStats(ctx context.Context, environ
 	if extensionID.Valid {
 		query = query.Where("schema_extension_id = ?", extensionID.Int32)
 	}
-	if schemaEnvironmentID.Valid {
-		query = query.Where("schema_environment_id = ?", schemaEnvironmentID.Int32)
+	if schemaEnvironmentKindID.Valid {
+		query = query.Where("schema_environment_kind_id = ?", schemaEnvironmentKindID.Int32)
 	}
 
 	result = query.Order(order).Find(&openGraphDataQualityStats)
@@ -268,7 +268,7 @@ func (s *BloodhoundDB) GetOpenGraphDataQualityStats(ctx context.Context, environ
 	return openGraphDataQualityStats, int(count), nil
 }
 
-func (s *BloodhoundDB) GetOpenGraphDataQualityAggregations(ctx context.Context, extensionID null.Int32, schemaEnvironmentID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.DataQualityAggregations, int, error) {
+func (s *BloodhoundDB) GetOpenGraphDataQualityAggregations(ctx context.Context, extensionID null.Int32, schemaEnvironmentKindID null.Int32, start time.Time, end time.Time, order string, limit int, skip int) (model.DataQualityAggregations, int, error) {
 	const (
 		defaultWhere = "created_at between ? and ?"
 	)
@@ -285,8 +285,8 @@ func (s *BloodhoundDB) GetOpenGraphDataQualityAggregations(ctx context.Context, 
 	if extensionID.Valid {
 		query = query.Where("schema_extension_id = ?", extensionID.Int32)
 	}
-	if schemaEnvironmentID.Valid {
-		query = query.Where("schema_environment_id = ?", schemaEnvironmentID.Int32)
+	if schemaEnvironmentKindID.Valid {
+		query = query.Where("schema_environment_kind_id = ?", schemaEnvironmentKindID.Int32)
 	}
 
 	result = query.Count(&count)
@@ -302,8 +302,8 @@ func (s *BloodhoundDB) GetOpenGraphDataQualityAggregations(ctx context.Context, 
 	if extensionID.Valid {
 		query = query.Where("schema_extension_id = ?", extensionID.Int32)
 	}
-	if schemaEnvironmentID.Valid {
-		query = query.Where("schema_environment_id = ?", schemaEnvironmentID.Int32)
+	if schemaEnvironmentKindID.Valid {
+		query = query.Where("schema_environment_kind_id = ?", schemaEnvironmentKindID.Int32)
 	}
 
 	result = query.Order(order).Find(&openGraphDataQualityAggregations)

@@ -122,12 +122,12 @@ func Test_SetNodeProperties(t *testing.T) {
 			},
 			expected: model.EnvironmentSelectors{
 				{
-					Type:                "OpenGraph Extension",
-					Name:                "Node3",
-					ObjectID:            "environment-3",
-					Collected:           true,
-					SchemaExtensionID:   &schemaExtensionID,
-					SchemaEnvironmentID: &schemaEnvironmentID,
+					Type:                    "OpenGraph Extension",
+					Name:                    "Node3",
+					ObjectID:                "environment-3",
+					Collected:               true,
+					SchemaExtensionID:       &schemaExtensionID,
+					SchemaEnvironmentKindID: &schemaEnvironmentID,
 				},
 			},
 		},

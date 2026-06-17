@@ -18,11 +18,7 @@ import { faStream } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import {
-    DataQualityAggregation,
-    DataQualityMetricType,
-    DataQualityStat,
-} from 'js-client-library';
+import { DataQualityAggregation, DataQualityMetricType, DataQualityStat } from 'js-client-library';
 import React, { useEffect } from 'react';
 import { NodeIcon } from '../../components';
 import { useOpenGraphDataQualityAggregationsQuery, useOpenGraphDataQualityStatsQuery } from '../../hooks';
@@ -52,15 +48,15 @@ const loadingRows: OpenGraphMetricRow[] = [
 export const OpenGraphEnvironmentInfo: React.FC<{
     contextId: string;
     extensionId?: number | null;
-    schemaEnvironmentId?: number | null;
+    schemaEnvironmentKindId?: number | null;
     headers?: boolean;
     onDataError?: () => void;
-}> = ({ contextId, extensionId, schemaEnvironmentId, headers = false, onDataError = () => {} }) => {
-    const { data: environmentData, isLoading, isError } = useOpenGraphDataQualityStatsQuery(
-        contextId,
-        extensionId,
-        schemaEnvironmentId
-    );
+}> = ({ contextId, extensionId, schemaEnvironmentKindId, headers = false, onDataError = () => {} }) => {
+    const {
+        data: environmentData,
+        isLoading,
+        isError,
+    } = useOpenGraphDataQualityStatsQuery(contextId, extensionId, schemaEnvironmentKindId);
 
     useEffect(() => {
         if (isError) onDataError();
@@ -79,14 +75,15 @@ export const OpenGraphEnvironmentInfo: React.FC<{
 
 export const OpenGraphExtensionInfo: React.FC<{
     extensionId?: number | null;
-    schemaEnvironmentId?: number | null;
+    schemaEnvironmentKindId?: number | null;
     headers?: boolean;
     onDataError?: () => void;
-}> = ({ extensionId, schemaEnvironmentId, headers = false, onDataError = () => {} }) => {
-    const { data: extensionData, isLoading, isError } = useOpenGraphDataQualityAggregationsQuery(
-        extensionId,
-        schemaEnvironmentId
-    );
+}> = ({ extensionId, schemaEnvironmentKindId, headers = false, onDataError = () => {} }) => {
+    const {
+        data: extensionData,
+        isLoading,
+        isError,
+    } = useOpenGraphDataQualityAggregationsQuery(extensionId, schemaEnvironmentKindId);
 
     useEffect(() => {
         if (isError) onDataError();

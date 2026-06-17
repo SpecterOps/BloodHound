@@ -14,16 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DateTime } from 'luxon';
 import { useQuery } from 'react-query';
 import { apiClient } from '../utils/api';
-
-const now = DateTime.now();
 
 export const useActiveDirectoryDataQualityHistoryQuery = (id: string) => {
     return useQuery(['active-directory-data-quality-history', id], ({ signal }) => {
         return apiClient
-            .getADQualityStats(id, now.minus({ days: 30 }).toJSDate(), now.toJSDate(), undefined, undefined, { signal })
+            .getADQualityStats(id, undefined, undefined, undefined, 'created_at', { signal })
             .then((response) => {
                 if (!response.data) throw new Error('Unable to retrieve AD quality history');
                 return response.data;
@@ -43,9 +40,7 @@ export const useActiveDirectoryDataQualityStatsQuery = (id: string) => {
 export const useAzureDataQualityHistoryQuery = (id: string) => {
     return useQuery(['azure-data-quality-history', id], ({ signal }) => {
         return apiClient
-            .getAzureQualityStats(id, now.minus({ days: 30 }).toJSDate(), now.toJSDate(), undefined, undefined, {
-                signal,
-            })
+            .getAzureQualityStats(id, undefined, undefined, undefined, 'created_at', { signal })
             .then((response) => {
                 if (!response.data) throw new Error('Unable to retrieve Azure quality history');
                 return response.data;
@@ -65,9 +60,7 @@ export const useAzureDataQualityStatsQuery = (id: string) => {
 export const useActiveDirectoryPlatformsDataQualityHistoryQuery = () => {
     return useQuery('active-directory-platform-data-quality-history', ({ signal }) =>
         apiClient
-            .getPlatformQualityStats('ad', now.minus({ days: 30 }).toJSDate(), now.toJSDate(), undefined, undefined, {
-                signal,
-            })
+            .getPlatformQualityStats('ad', undefined, undefined, undefined, 'created_at', { signal })
             .then((response) => {
                 if (!response.data) throw new Error('Unable to retrieve AD platform quality history');
                 return response.data;
@@ -87,14 +80,7 @@ export const useActiveDirectoryPlatformsDataQualityStatsQuery = () => {
 export const useAzurePlatformsDataQualityHistoryQuery = () => {
     return useQuery('azure-platform-data-quality-history', ({ signal }) =>
         apiClient
-            .getPlatformQualityStats(
-                'azure',
-                now.minus({ days: 30 }).toJSDate(),
-                now.toJSDate(),
-                undefined,
-                undefined,
-                { signal }
-            )
+            .getPlatformQualityStats('azure', undefined, undefined, undefined, 'created_at', { signal })
             .then((response) => {
                 if (!response.data) throw new Error('Unable to retrieve Azure platform quality history');
                 return response.data;
@@ -111,68 +97,72 @@ export const useAzurePlatformsDataQualityStatsQuery = () => {
     );
 };
 
-// OpenGraph DQ queries pass schemaEnvironmentId so extension-level views stay scoped to one environment kind.
+// OpenGraph DQ queries pass schemaEnvironmentKindId so extension-level views stay scoped to one environment kind.
 export const useOpenGraphDataQualityStatsQuery = (
     environmentId: string,
     extensionId?: number | null,
-    schemaEnvironmentId?: number | null
+    schemaEnvironmentKindId?: number | null
 ) => {
-    return useQuery(['opengraph-data-quality-stats', environmentId, extensionId, schemaEnvironmentId], ({ signal }) =>
-        apiClient
-            .getOpenGraphQualityStats(
-                environmentId,
-                extensionId ?? undefined,
-                schemaEnvironmentId ?? undefined,
-                undefined,
-                undefined,
-                1000,
-                '-created_at',
-                {
-                    signal,
-                }
-            )
-            .then((response) => {
-                if (!response.data) throw new Error('Unable to retrieve OpenGraph quality stats');
-                return response.data;
-            })
+    return useQuery(
+        ['opengraph-data-quality-stats', environmentId, extensionId, schemaEnvironmentKindId],
+        ({ signal }) =>
+            apiClient
+                .getOpenGraphQualityStats(
+                    environmentId,
+                    extensionId ?? undefined,
+                    schemaEnvironmentKindId ?? undefined,
+                    undefined,
+                    undefined,
+                    1000,
+                    '-created_at',
+                    {
+                        signal,
+                    }
+                )
+                .then((response) => {
+                    if (!response.data) throw new Error('Unable to retrieve OpenGraph quality stats');
+                    return response.data;
+                })
     );
 };
 
 export const useOpenGraphDataQualityHistoryQuery = (
     environmentId: string,
     extensionId?: number | null,
-    schemaEnvironmentId?: number | null
+    schemaEnvironmentKindId?: number | null
 ) => {
-    return useQuery(['opengraph-data-quality-history', environmentId, extensionId, schemaEnvironmentId], ({ signal }) =>
-        apiClient
-            .getOpenGraphQualityStats(
-                environmentId,
-                extensionId ?? undefined,
-                schemaEnvironmentId ?? undefined,
-                now.minus({ days: 30 }).toJSDate(),
-                now.toJSDate(),
-                undefined,
-                'created_at',
-                { signal }
-            )
-            .then((response) => {
-                if (!response.data) throw new Error('Unable to retrieve OpenGraph quality history');
-                return response.data;
-            })
+    return useQuery(
+        ['opengraph-data-quality-history', environmentId, extensionId, schemaEnvironmentKindId],
+        ({ signal }) =>
+            apiClient
+                .getOpenGraphQualityStats(
+                    environmentId,
+                    extensionId ?? undefined,
+                    schemaEnvironmentKindId ?? undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    'created_at',
+                    { signal }
+                )
+                .then((response) => {
+                    if (!response.data) throw new Error('Unable to retrieve OpenGraph quality history');
+                    return response.data;
+                })
     );
 };
 
 export const useOpenGraphDataQualityAggregationsQuery = (
     extensionId?: number | null,
-    schemaEnvironmentId?: number | null
+    schemaEnvironmentKindId?: number | null
 ) => {
     return useQuery(
-        ['opengraph-data-quality-aggregations', extensionId, schemaEnvironmentId],
+        ['opengraph-data-quality-aggregations', extensionId, schemaEnvironmentKindId],
         ({ signal }) =>
             apiClient
                 .getOpenGraphQualityAggregations(
                     extensionId ?? undefined,
-                    schemaEnvironmentId ?? undefined,
+                    schemaEnvironmentKindId ?? undefined,
                     undefined,
                     undefined,
                     1000,
@@ -191,17 +181,17 @@ export const useOpenGraphDataQualityAggregationsQuery = (
 
 export const useOpenGraphDataQualityAggregationsHistoryQuery = (
     extensionId?: number | null,
-    schemaEnvironmentId?: number | null
+    schemaEnvironmentKindId?: number | null
 ) => {
     return useQuery(
-        ['opengraph-data-quality-aggregations-history', extensionId, schemaEnvironmentId],
+        ['opengraph-data-quality-aggregations-history', extensionId, schemaEnvironmentKindId],
         ({ signal }) =>
             apiClient
                 .getOpenGraphQualityAggregations(
                     extensionId ?? undefined,
-                    schemaEnvironmentId ?? undefined,
-                    now.minus({ days: 30 }).toJSDate(),
-                    now.toJSDate(),
+                    schemaEnvironmentKindId ?? undefined,
+                    undefined,
+                    undefined,
                     undefined,
                     'created_at',
                     { signal }

@@ -150,8 +150,8 @@ type Database interface {
 	GetAzureDataQualityStats(ctx context.Context, tenantId string, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityStats, int, error)
 	GetAzureDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityAggregations, int, error)
 	// OpenGraph filters are nullable so one query path can serve both specific environments and schema environment aggregates.
-	GetOpenGraphDataQualityStats(ctx context.Context, environmentID null.String, extensionID null.Int32, schemaEnvironmentID null.Int32, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.DataQualityStats, int, error)
-	GetOpenGraphDataQualityAggregations(ctx context.Context, extensionID null.Int32, schemaEnvironmentID null.Int32, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.DataQualityAggregations, int, error)
+	GetOpenGraphDataQualityStats(ctx context.Context, environmentID null.String, extensionID null.Int32, schemaEnvironmentKindID null.Int32, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.DataQualityStats, int, error)
+	GetOpenGraphDataQualityAggregations(ctx context.Context, extensionID null.Int32, schemaEnvironmentKindID null.Int32, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.DataQualityAggregations, int, error)
 	DeleteAllDataQuality(ctx context.Context) error
 
 	// Saved Queries

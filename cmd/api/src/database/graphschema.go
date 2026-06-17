@@ -280,7 +280,7 @@ func (s *BloodhoundDB) CreateGraphSchemaNodeKind(ctx context.Context, name strin
 		FROM dawgs_kind dk
 		RETURNING id, kind_id, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
 	)
-	SELECT isn.id, isn.schema_extension_id, dk.name, isn.display_name, isn.description, isn.is_display_kind, isn.icon, isn.icon_color, isn.created_at, isn.updated_at, isn.deleted_at
+	SELECT isn.id, dk.id kind_id, isn.schema_extension_id, dk.name, isn.display_name, isn.description, isn.is_display_kind, isn.icon, isn.icon_color, isn.created_at, isn.updated_at, isn.deleted_at
 	FROM inserted_schema_node isn
 	JOIN dawgs_kind dk ON isn.kind_id = dk.id;`, name, extensionId, displayName, description,
 		isDisplayKind, icon, iconColor).Scan(&schemaNodeKind); result.Error != nil {
@@ -339,7 +339,7 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 	if filterAndPagination, err := parseFiltersAndPagination(aliasedFilters, aliasedSorts, skip, limit); err != nil {
 		return schemaNodeKinds, 0, err
 	} else {
-		sqlStr := fmt.Sprintf(`SELECT nk.id, k.name, nk.schema_extension_id, nk.display_name, nk.description,
+		sqlStr := fmt.Sprintf(`SELECT nk.id, nk.kind_id, k.name, nk.schema_extension_id, nk.display_name, nk.description,
 									nk.is_display_kind, nk.icon, nk.icon_color, nk.created_at, nk.updated_at, nk.deleted_at
 									FROM %s nk
 									JOIN %s k ON nk.kind_id = k.id
@@ -380,9 +380,9 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKindsByExtensionId(ctx context.Context,
 func (s *BloodhoundDB) GetGraphSchemaNodeKindById(ctx context.Context, schemaNodeKindId int32) (model.GraphSchemaNodeKind, error) {
 	var schemaNodeKind model.GraphSchemaNodeKind
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		SELECT %s.id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
-		FROM %s JOIN %s ON %s.kind_id = %s.id WHERE %s.id = ?`, schemaNodeKind.TableName(), schemaNodeKind.TableName(), model.Kind{}.TableName(),
-		schemaNodeKind.TableName(), model.Kind{}.TableName(), schemaNodeKind.TableName()), schemaNodeKindId).First(&schemaNodeKind); result.Error != nil {
+		SELECT %s.id, %s.kind_id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+		FROM %s JOIN %s ON %s.kind_id = %s.id WHERE %s.id = ?`, schemaNodeKind.TableName(), schemaNodeKind.TableName(), schemaNodeKind.TableName(),
+		model.Kind{}.TableName(), schemaNodeKind.TableName(), model.Kind{}.TableName(), schemaNodeKind.TableName()), schemaNodeKindId).First(&schemaNodeKind); result.Error != nil {
 		return model.GraphSchemaNodeKind{}, CheckError(result)
 	}
 	return schemaNodeKind, nil
@@ -401,7 +401,7 @@ func (s *BloodhoundDB) UpdateGraphSchemaNodeKind(ctx context.Context, schemaNode
 			WHERE id = ?
 			RETURNING id, kind_id, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
 		)
-		SELECT updated_row.id, k.name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+		SELECT updated_row.id, updated_row.kind_id, k.name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
 		FROM updated_row
 		JOIN %s k ON k.id = updated_row.kind_id`,
 		schemaNodeKind.TableName(), model.Kind{}.TableName()), schemaNodeKind.SchemaExtensionId,
@@ -428,7 +428,7 @@ func (s *BloodhoundDB) UpdateGraphSchemaNodeKindIconById(ctx context.Context, id
 			WHERE id = ?
 			RETURNING id, kind_id, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
 		)
-		SELECT updated_row.id, k.name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+		SELECT updated_row.id, updated_row.kind_id, k.name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
 		FROM updated_row
 		JOIN %s k ON k.id = updated_row.kind_id`,
 		model.GraphSchemaNodeKind{}.TableName(), model.Kind{}.TableName()), icon.Name, icon.Color, id).Scan(&schemaNodeKind); result.Error != nil {
@@ -607,7 +607,7 @@ func (s *BloodhoundDB) GetGraphSchemaRelationshipKinds(ctx context.Context, rela
 	if filterAndPagination, err := parseFiltersAndPagination(relationshipKindFilters, sort, skip, limit); err != nil {
 		return schemaRelationshipKinds, 0, err
 	} else {
-		sqlStr := fmt.Sprintf(`SELECT ek.id, k.name, ek.schema_extension_id, ek.description, ek.is_traversable,
+		sqlStr := fmt.Sprintf(`SELECT ek.id, ek.kind_id, k.name, ek.schema_extension_id, ek.description, ek.is_traversable,
 									ek.created_at, ek.updated_at, ek.deleted_at
 									FROM %s ek
 									JOIN %s k ON ek.kind_id = k.id
@@ -635,7 +635,7 @@ func (s *BloodhoundDB) GetGraphSchemaRelationshipKinds(ctx context.Context, rela
 // This is a purpose-built query for the analysis pipeline that needs traversable edges for graph traversal.
 func (s *BloodhoundDB) GetTraversableRelationshipKindsByExtensionID(ctx context.Context, extensionID int32) (model.GraphSchemaRelationshipKinds, error) {
 	var query = fmt.Sprintf(`
-		SELECT rk.id, k.name, rk.schema_extension_id, rk.description, rk.is_traversable,
+		SELECT rk.id, rk.kind_id, k.name, rk.schema_extension_id, rk.description, rk.is_traversable,
 		       rk.created_at, rk.updated_at, rk.deleted_at
 		FROM %s rk
 		JOIN %s k ON rk.kind_id = k.id
@@ -690,9 +690,9 @@ func (s *BloodhoundDB) GetGraphSchemaRelationshipKindsWithSchemaName(ctx context
 func (s *BloodhoundDB) GetGraphSchemaRelationshipKindById(ctx context.Context, schemaRelationshipKindId int32) (model.GraphSchemaRelationshipKind, error) {
 	var schemaRelationshipKind model.GraphSchemaRelationshipKind
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-	SELECT %s.id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
-	FROM %s JOIN %s ON %s.kind_id = %s.id WHERE %s.id = ?`, schemaRelationshipKind.TableName(), schemaRelationshipKind.TableName(), model.Kind{}.TableName(),
-		schemaRelationshipKind.TableName(), model.Kind{}.TableName(), schemaRelationshipKind.TableName()), schemaRelationshipKindId).First(&schemaRelationshipKind); result.Error != nil {
+	SELECT %s.id, %s.kind_id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
+	FROM %s JOIN %s ON %s.kind_id = %s.id WHERE %s.id = ?`, schemaRelationshipKind.TableName(), schemaRelationshipKind.TableName(), schemaRelationshipKind.TableName(),
+		model.Kind{}.TableName(), schemaRelationshipKind.TableName(), model.Kind{}.TableName(), schemaRelationshipKind.TableName()), schemaRelationshipKindId).First(&schemaRelationshipKind); result.Error != nil {
 		return schemaRelationshipKind, CheckError(result)
 	}
 	return schemaRelationshipKind, nil
@@ -711,7 +711,7 @@ func (s *BloodhoundDB) UpdateGraphSchemaRelationshipKind(ctx context.Context, sc
 			WHERE id = ?
 			RETURNING id, kind_id, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
 		)
-		SELECT updated_row.id, k.name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
+		SELECT updated_row.id, updated_row.kind_id, k.name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
 		FROM updated_row
 		JOIN %s k ON k.id = updated_row.kind_id`,
 		schemaRelationshipKind.TableName(), model.Kind{}.TableName()),

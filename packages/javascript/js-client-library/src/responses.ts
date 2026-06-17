@@ -73,7 +73,7 @@ export type Environment = {
     collected: boolean;
     // OG selectors carry schema IDs so DQ can route aggregate and environment views to the right metric query.
     schema_extension_id?: number;
-    schema_environment_id?: number;
+    schema_environment_kind_id?: number;
     hygiene_attack_paths: number; // While improbable this number could possibly be higher than the JavaScript max safe integer in the response
     exposures: EnvironmentExposure[];
 };
@@ -136,25 +136,23 @@ export type DataQualityStat = TimestampFields & {
     id: number;
     run_id: string;
     schema_extension_id: number;
-    schema_environment_id: number;
+    schema_environment_kind_id: number;
     environment_id: string;
     metric_type: DataQualityMetricType;
     metric_name: string;
     metric_value: number;
-    schema_node_kind_id: number | null;
-    schema_relationship_kind_id: number | null;
+    kind_id: number | null;
 };
 
 export type DataQualityAggregation = TimestampFields & {
     id: number;
     run_id: string;
     schema_extension_id: number;
-    schema_environment_id: number;
+    schema_environment_kind_id: number;
     metric_type: DataQualityMetricType;
     metric_name: string;
     metric_value: number;
-    schema_node_kind_id: number | null;
-    schema_relationship_kind_id: number | null;
+    kind_id: number | null;
 };
 
 export type DataQualityStatsResponse = PaginatedResponse<DataQualityStat[]>;

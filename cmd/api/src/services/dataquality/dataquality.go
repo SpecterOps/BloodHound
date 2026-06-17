@@ -50,11 +50,11 @@ type DataQualityData interface {
 }
 
 type openGraphDataQualityAggregationKey struct {
-	schemaExtensionID   int32
-	schemaEnvironmentID int32
-	metricType          model.DataQualityMetricType
-	metricName          string
-	schemaNodeKindID    null.Int32
+	schemaExtensionID       int32
+	schemaEnvironmentKindID int32
+	metricType              model.DataQualityMetricType
+	metricName              string
+	kindID                  null.Int32
 }
 
 const openGraphDataQualityRelationshipsMetricName = "relationships"
@@ -558,6 +558,7 @@ func fetchOpenGraphEnvironmentIDs(ctx context.Context, tx graph.Transaction, env
 					)
 					continue
 				}
+
 				return fmt.Errorf("failed to get %s from node %d: %w", graphschema.EnvironmentIDKey, node.ID, err)
 			} else {
 				environmentIDs = append(environmentIDs, environmentID)
@@ -572,13 +573,23 @@ func fetchOpenGraphEnvironmentIDs(ctx context.Context, tx graph.Transaction, env
 	return environmentIDs, nil
 }
 
+func openGraphNodeEnvironmentIDFilter(environmentID string) graph.Criteria {
+	return query.Equals(query.NodeProperty(graphschema.EnvironmentIDKey), environmentID)
+}
+
+func openGraphRelationshipEnvironmentIDFilter(environmentID string) graph.Criteria {
+	return query.Or(
+		query.Equals(query.StartProperty(graphschema.EnvironmentIDKey), environmentID),
+		query.Equals(query.EndProperty(graphschema.EnvironmentIDKey), environmentID),
+	)
+}
+
 func openGraphExtensionGraphStats(
 	ctx context.Context,
 	graphDB graph.Database,
 	runID string,
 	extension model.GraphSchemaExtension,
 	environments []model.SchemaEnvironment,
-	sourceKindsByEnvironmentID map[int32]model.Kind,
 	nodeKinds model.GraphSchemaNodeKinds,
 	relationshipKinds model.GraphSchemaRelationshipKinds,
 ) (model.DataQualityStats, model.DataQualityAggregations, error) {
@@ -596,11 +607,6 @@ func openGraphExtensionGraphStats(
 	if err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		for _, environment := range environments {
 			environmentKind := graph.StringKind(environment.EnvironmentKindName)
-			sourceKind, hasSourceKind := sourceKindsByEnvironmentID[environment.ID]
-			if !hasSourceKind {
-				return fmt.Errorf("source kind not found for schema environment %d", environment.ID)
-			}
-
 			environmentIDs, err := fetchOpenGraphEnvironmentIDs(ctx, tx, environmentKind)
 			if err != nil {
 				return fmt.Errorf("failed to fetch OpenGraph environment IDs for environment kind %s: %w", environmentKind.String(), err)
@@ -608,33 +614,31 @@ func openGraphExtensionGraphStats(
 
 			for _, environmentID := range environmentIDs {
 				for _, nodeKind := range nodeKinds {
-					// MVP counts require both the expected source kind and the selected environment ID.
 					count, err := tx.Nodes().Filter(query.And(
 						graphschema.IgnoreMetaFilter,
-						query.Kind(query.Node(), sourceKind.ToKind()),
 						query.Kind(query.Node(), nodeKind.ToKind()),
-						query.Equals(query.NodeProperty(graphschema.EnvironmentIDKey), environmentID),
+						openGraphNodeEnvironmentIDFilter(environmentID),
 					)).Count()
 					if err != nil {
 						return fmt.Errorf("failed to count OpenGraph nodes of type %s in environment %s: %w", nodeKind.Name, environmentID, err)
 					}
 
 					stat := model.DataQualityStat{
-						RunID:               runID,
-						SchemaExtensionID:   extension.ID,
-						SchemaEnvironmentID: environment.ID,
-						EnvironmentID:       environmentID,
-						MetricType:          model.DataQualityMetricTypeNode,
-						MetricName:          nodeKind.Name,
-						MetricValue:         float64(count),
-						SchemaNodeKindID:    null.Int32From(nodeKind.ID),
+						RunID:                   runID,
+						SchemaExtensionID:       extension.ID,
+						SchemaEnvironmentKindID: environment.EnvironmentKindId,
+						EnvironmentID:           environmentID,
+						MetricType:              model.DataQualityMetricTypeNode,
+						MetricName:              nodeKind.Name,
+						MetricValue:             float64(count),
+						KindID:                  null.Int32From(nodeKind.KindId),
 					}
 					aggregationKey := openGraphDataQualityAggregationKey{
-						schemaExtensionID:   extension.ID,
-						schemaEnvironmentID: environment.ID,
-						metricType:          model.DataQualityMetricTypeNode,
-						metricName:          nodeKind.Name,
-						schemaNodeKindID:    null.Int32From(nodeKind.ID),
+						schemaExtensionID:       extension.ID,
+						schemaEnvironmentKindID: environment.EnvironmentKindId,
+						metricType:              model.DataQualityMetricTypeNode,
+						metricName:              nodeKind.Name,
+						kindID:                  null.Int32From(nodeKind.KindId),
 					}
 
 					stats = append(stats, stat)
@@ -642,31 +646,28 @@ func openGraphExtensionGraphStats(
 				}
 
 				if len(relationshipGraphKinds) > 0 {
-					// Relationship totals use the same environment-ID and source-kind scope as node counts.
 					count, err := tx.Relationships().Filter(query.And(
 						query.KindIn(query.Relationship(), relationshipGraphKinds...),
-						query.Kind(query.Start(), sourceKind.ToKind()),
-						query.Kind(query.End(), sourceKind.ToKind()),
-						query.Equals(query.StartProperty(graphschema.EnvironmentIDKey), environmentID),
+						openGraphRelationshipEnvironmentIDFilter(environmentID),
 					)).Count()
 					if err != nil {
 						return fmt.Errorf("failed to count OpenGraph relationships in environment %s: %w", environmentID, err)
 					}
 
 					stat := model.DataQualityStat{
-						RunID:               runID,
-						SchemaExtensionID:   extension.ID,
-						SchemaEnvironmentID: environment.ID,
-						EnvironmentID:       environmentID,
-						MetricType:          model.DataQualityMetricTypeRelationship,
-						MetricName:          openGraphDataQualityRelationshipsMetricName,
-						MetricValue:         float64(count),
+						RunID:                   runID,
+						SchemaExtensionID:       extension.ID,
+						SchemaEnvironmentKindID: environment.EnvironmentKindId,
+						EnvironmentID:           environmentID,
+						MetricType:              model.DataQualityMetricTypeRelationship,
+						MetricName:              openGraphDataQualityRelationshipsMetricName,
+						MetricValue:             float64(count),
 					}
 					aggregationKey := openGraphDataQualityAggregationKey{
-						schemaExtensionID:   extension.ID,
-						schemaEnvironmentID: environment.ID,
-						metricType:          model.DataQualityMetricTypeRelationship,
-						metricName:          openGraphDataQualityRelationshipsMetricName,
+						schemaExtensionID:       extension.ID,
+						schemaEnvironmentKindID: environment.EnvironmentKindId,
+						metricType:              model.DataQualityMetricTypeRelationship,
+						metricName:              openGraphDataQualityRelationshipsMetricName,
 					}
 
 					stats = append(stats, stat)
@@ -683,20 +684,20 @@ func openGraphExtensionGraphStats(
 	aggregations := make(model.DataQualityAggregations, 0, len(aggregationCounts))
 	for aggregationKey, metricValue := range aggregationCounts {
 		aggregations = append(aggregations, model.DataQualityAggregation{
-			RunID:               runID,
-			SchemaExtensionID:   aggregationKey.schemaExtensionID,
-			SchemaEnvironmentID: aggregationKey.schemaEnvironmentID,
-			MetricType:          aggregationKey.metricType,
-			MetricName:          aggregationKey.metricName,
-			MetricValue:         metricValue,
-			SchemaNodeKindID:    aggregationKey.schemaNodeKindID,
+			RunID:                   runID,
+			SchemaExtensionID:       aggregationKey.schemaExtensionID,
+			SchemaEnvironmentKindID: aggregationKey.schemaEnvironmentKindID,
+			MetricType:              aggregationKey.metricType,
+			MetricName:              aggregationKey.metricName,
+			MetricValue:             metricValue,
+			KindID:                  aggregationKey.kindID,
 		})
 	}
 
 	return stats, aggregations, nil
 }
 
-// Collect OpenGraph stats using schema environments to scope source kinds and environment IDs.
+// Collect OpenGraph stats using schema environments to scope environment IDs.
 func openGraphGraphStats(ctx context.Context, db DataQualityData, graphDB graph.Database) (model.DataQualityStats, model.DataQualityAggregations, error) {
 	var (
 		aggregations = model.DataQualityAggregations{}
@@ -723,7 +724,7 @@ func openGraphGraphStats(ctx context.Context, db DataQualityData, graphDB graph.
 			continue
 		}
 
-		sourceKindsByEnvironmentID, sourceKinds, err := openGraphDataQualitySourceKinds(ctx, db, environments)
+		_, sourceKinds, err := openGraphDataQualitySourceKinds(ctx, db, environments)
 		if err != nil {
 			return stats, aggregations, fmt.Errorf("failed to get source kinds for OpenGraph extension %d: %w", extension.ID, err)
 		}
@@ -746,7 +747,7 @@ func openGraphGraphStats(ctx context.Context, db DataQualityData, graphDB graph.
 			continue
 		}
 
-		extensionStats, extensionAggregations, err := openGraphExtensionGraphStats(ctx, graphDB, runID, extension, environments, sourceKindsByEnvironmentID, nodeKinds, relationshipKinds)
+		extensionStats, extensionAggregations, err := openGraphExtensionGraphStats(ctx, graphDB, runID, extension, environments, nodeKinds, relationshipKinds)
 		if err != nil {
 			return stats, aggregations, fmt.Errorf("failed to get OpenGraph data quality stats for extension %d: %w", extension.ID, err)
 		}

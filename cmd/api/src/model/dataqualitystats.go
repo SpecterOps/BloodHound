@@ -28,15 +28,14 @@ const (
 // DataQualityStat stores one metric for one graph environment ID.
 type DataQualityStat struct {
 	Serial
-	RunID                    string                `json:"run_id"`
-	SchemaExtensionID        int32                 `json:"schema_extension_id"`
-	SchemaEnvironmentID      int32                 `json:"schema_environment_id"`
-	EnvironmentID            string                `json:"environment_id"`
-	MetricType               DataQualityMetricType `json:"metric_type"`
-	MetricName               string                `json:"metric_name"`
-	MetricValue              float64               `json:"metric_value"`
-	SchemaNodeKindID         null.Int32            `json:"schema_node_kind_id"`
-	SchemaRelationshipKindID null.Int32            `json:"schema_relationship_kind_id"`
+	RunID                   string                `json:"run_id"`
+	SchemaExtensionID       int32                 `json:"schema_extension_id"`
+	SchemaEnvironmentKindID int32                 `json:"schema_environment_kind_id"`
+	EnvironmentID           string                `json:"environment_id"`
+	MetricType              DataQualityMetricType `json:"metric_type"`
+	MetricName              string                `json:"metric_name"`
+	MetricValue             float64               `json:"metric_value"`
+	KindID                  null.Int32            `json:"kind_id"`
 }
 
 func (DataQualityStat) TableName() string {
@@ -46,14 +45,13 @@ func (DataQualityStat) TableName() string {
 // DataQualityAggregation stores the same metrics rolled up by schema environment kind.
 type DataQualityAggregation struct {
 	Serial
-	RunID                    string                `json:"run_id"`
-	SchemaExtensionID        int32                 `json:"schema_extension_id"`
-	SchemaEnvironmentID      int32                 `json:"schema_environment_id"`
-	MetricType               DataQualityMetricType `json:"metric_type"`
-	MetricName               string                `json:"metric_name"`
-	MetricValue              float64               `json:"metric_value"`
-	SchemaNodeKindID         null.Int32            `json:"schema_node_kind_id"`
-	SchemaRelationshipKindID null.Int32            `json:"schema_relationship_kind_id"`
+	RunID                   string                `json:"run_id"`
+	SchemaExtensionID       int32                 `json:"schema_extension_id"`
+	SchemaEnvironmentKindID int32                 `json:"schema_environment_kind_id"`
+	MetricType              DataQualityMetricType `json:"metric_type"`
+	MetricName              string                `json:"metric_name"`
+	MetricValue             float64               `json:"metric_value"`
+	KindID                  null.Int32            `json:"kind_id"`
 }
 
 func (DataQualityAggregation) TableName() string {
@@ -69,13 +67,12 @@ func (s DataQualityStats) IsSortable(column string) bool {
 	case "id",
 		"run_id",
 		"schema_extension_id",
-		"schema_environment_id",
+		"schema_environment_kind_id",
 		"environment_id",
 		"metric_type",
 		"metric_name",
 		"metric_value",
-		"schema_node_kind_id",
-		"schema_relationship_kind_id",
+		"kind_id",
 		"updated_at",
 		"created_at":
 		return true
@@ -89,12 +86,11 @@ func (s DataQualityAggregations) IsSortable(column string) bool {
 	case "id",
 		"run_id",
 		"schema_extension_id",
-		"schema_environment_id",
+		"schema_environment_kind_id",
 		"metric_type",
 		"metric_name",
 		"metric_value",
-		"schema_node_kind_id",
-		"schema_relationship_kind_id",
+		"kind_id",
 		"updated_at",
 		"created_at":
 		return true
