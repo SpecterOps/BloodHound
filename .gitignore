@@ -425,7 +425,7 @@ dist
 .vscode-test
 
 # yarn (Zero-Installs)
-**/.yarn/*
+.yarn/*
 **/.yarn/cache
 **/.yarn/patches
 **/.yarn/plugins
