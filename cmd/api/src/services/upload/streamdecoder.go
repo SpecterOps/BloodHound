@@ -31,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/bomenc"
 )
 
 var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}
@@ -375,8 +376,14 @@ func ReadZippedFile(zf *zip.File) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	defer f.Close()
-	return io.ReadAll(f)
+
+	if normFile, err := bomenc.NormalizeToUTF8(f); err != nil {
+		return nil, fmt.Errorf("failed to normalize json file: %w", err)
+	} else {
+		return io.ReadAll(normFile)
+	}
 }
 
 func ValidateZipFile(reader io.Reader) error {
