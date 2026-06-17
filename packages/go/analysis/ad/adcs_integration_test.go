@@ -1755,13 +1755,14 @@ func TestADCSESC10a(t *testing.T) {
 				})); err != nil {
 					t.Fatalf("error fetching esc10a edges in integration test; %v", err)
 				} else {
-					require.Equal(t, 6, len(results))
+					require.Equal(t, 7, len(results))
 
 					require.True(t, results.Contains(harness.ESC10aPrincipalHarness.Group1))
 					require.True(t, results.Contains(harness.ESC10aPrincipalHarness.Group2))
 					require.True(t, results.Contains(harness.ESC10aPrincipalHarness.Group3))
 					require.True(t, results.Contains(harness.ESC10aPrincipalHarness.Group4))
 					require.True(t, results.Contains(harness.ESC10aPrincipalHarness.Group5))
+					require.True(t, results.Contains(harness.ESC10aPrincipalHarness.Group6))
 					require.True(t, results.Contains(harness.ESC10aPrincipalHarness.User2))
 
 				}

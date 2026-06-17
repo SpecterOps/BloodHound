@@ -73,6 +73,10 @@ func WriteAndValidateFile(fileData io.Reader, location string, jobID int64, vali
 }
 
 func WriteAndValidateFileWithPrefix(fileData io.Reader, location string, tempFilePrefix string, validationFunc FileValidator) (string, error) {
+	if validationFunc == nil {
+		return "", fmt.Errorf("validation function is required")
+	}
+
 	var (
 		tempFile      *os.File
 		tempFileName  string

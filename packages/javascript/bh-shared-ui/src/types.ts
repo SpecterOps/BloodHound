@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { EntityKinds } from './utils/content';
+import { Permission } from './utils/permissions';
 
 // recursively applies Partial<T> to nested object types
 
@@ -41,6 +42,7 @@ export type SubNavItem = {
     component: React.LazyExoticComponent<React.FC>;
     adminOnly: boolean;
     featureFlag?: string;
+    permissions?: Permission[];
 };
 
 export type SubNavSection = {

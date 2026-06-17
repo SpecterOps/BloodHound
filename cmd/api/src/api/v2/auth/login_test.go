@@ -44,8 +44,8 @@ import (
 	v2auth "github.com/specterops/bloodhound/cmd/api/src/api/v2/auth"
 
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
@@ -56,7 +56,7 @@ func TestLoginExpiry(t *testing.T) {
 	mockDB := mocks.NewMockDatabase(mockCtrl)
 
 	endpoint := "/api/v2/auth/login"
-	goCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	goCtx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 
 	req1 := api.LoginRequest{
 		LoginMethod: auth.ProviderTypeSecret,
@@ -177,12 +177,12 @@ func TestLoginResource_Logout(t *testing.T) {
 					Session: userSession,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					AuthCtx: authContext,
 					Host:    request.URL,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockAuth.EXPECT().Logout(gomock.Any(), model.UserSession{

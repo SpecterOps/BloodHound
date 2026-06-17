@@ -29,8 +29,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	apimocks "github.com/specterops/bloodhound/cmd/api/src/api/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
@@ -75,7 +75,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	httpRequest, _ := http.NewRequestWithContext(
-		context.WithValue(context.TODO(), ctx.ValueKey, &ctx.Context{Host: &hostUrl.URL}),
+		context.WithValue(context.TODO(), bhctx.ValueKey, &bhctx.Context{Host: &hostUrl.URL}),
 		http.MethodPost,
 		"http://localhost",
 		nil,

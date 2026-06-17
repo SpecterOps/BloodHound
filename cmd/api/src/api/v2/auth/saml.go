@@ -34,7 +34,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -147,7 +147,7 @@ func (s ManagementResource) SAMLLoginRedirect(response http.ResponseWriter, requ
 	if ssoProvider, err := s.db.GetSSOProviderBySlug(request.Context(), ssoProviderSlug); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		bheCtx := ctx.FromRequest(request)
+		bheCtx := bhctx.FromRequest(request)
 		redirectURL := api.URLJoinPath(*bheCtx.Host, fmt.Sprintf("/api/v2/sso/%s/login", ssoProvider.Slug))
 		http.Redirect(response, request, redirectURL.String(), http.StatusFound)
 	}
@@ -160,7 +160,7 @@ func (s ManagementResource) SAMLCallbackRedirect(response http.ResponseWriter, r
 	if ssoProvider, err := s.db.GetSSOProviderBySlug(request.Context(), ssoProviderSlug); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		bheCtx := ctx.FromRequest(request)
+		bheCtx := bhctx.FromRequest(request)
 		redirectURL := api.URLJoinPath(*bheCtx.Host, fmt.Sprintf("/api/v2/sso/%s/callback", ssoProvider.Slug))
 		http.Redirect(response, request, redirectURL.String(), http.StatusTemporaryRedirect)
 	}
@@ -172,7 +172,7 @@ func (s ManagementResource) ListSAMLSignOnEndpoints(response http.ResponseWriter
 	} else {
 		var (
 			samlSignOnEndpoints = make([]v2.SAMLSignOnEndpoint, len(samlProviders))
-			requestContext      = ctx.Get(request.Context())
+			requestContext      = bhctx.Get(request.Context())
 		)
 
 		for idx, samlProvider := range samlProviders {
@@ -193,7 +193,7 @@ func (s ManagementResource) ListSAMLProviders(response http.ResponseWriter, requ
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		for _, samlProvider := range samlProviders {
-			samlProvider.FormatSAMLProviderURLs(*ctx.Get(request.Context()).Host)
+			samlProvider.FormatSAMLProviderURLs(*bhctx.Get(request.Context()).Host)
 		}
 		api.WriteBasicResponse(request.Context(), v2.ListSAMLProvidersResponse{SAMLProviders: samlProviders}, http.StatusOK, response)
 	}
@@ -243,7 +243,7 @@ func (s ManagementResource) DeleteSAMLProvider(response http.ResponseWriter, req
 	var (
 		identityProvider model.SAMLProvider
 		rawProviderID    = mux.Vars(request)[api.URIPathVariableSAMLProviderID]
-		requestContext   = ctx.FromRequest(request)
+		requestContext   = bhctx.FromRequest(request)
 	)
 
 	if providerID, err := strconv.ParseInt(rawProviderID, 10, 32); err != nil {
@@ -342,7 +342,7 @@ func (s ManagementResource) ServeMetadata(response http.ResponseWriter, request 
 		api.HandleDatabaseError(request, response, err)
 	} else if ssoProvider.SAMLProvider == nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
-	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
+	} else if serviceProvider, err := auth.NewServiceProvider(*bhctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
 		// Note: This is the samlsp metadata tied to authenticate flow and will not be the same as the XML metadata used to import the SAML provider initially
@@ -395,7 +395,7 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 	if ssoProvider.SAMLProvider == nil {
 		// SAML misconfiguration scenario
 		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
-	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
+	} else if serviceProvider, err := auth.NewServiceProvider(*bhctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
 		slog.WarnContext(
 			request.Context(),
 			"[SAML] Service provider creation failed",
@@ -473,7 +473,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 	if ssoProvider.SAMLProvider == nil {
 		// SAML misconfiguration
 		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
-	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
+	} else if serviceProvider, err := auth.NewServiceProvider(*bhctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
 		slog.WarnContext(
 			request.Context(),
 			"[SAML] Service provider creation failed",

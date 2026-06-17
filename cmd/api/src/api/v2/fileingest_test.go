@@ -37,8 +37,8 @@ import (
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -62,7 +62,7 @@ func setupUser() model.User {
 }
 
 func setupUserCtx(user model.User) context.Context {
-	return context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+	return context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 		AuthCtx: auth.Context{
 			PermissionOverrides: auth.PermissionOverrides{},
 			Owner:               user,
@@ -139,7 +139,7 @@ func TestResources_StartIngestJob(t *testing.T) {
 					URL: &url.URL{Path: "/api/v2/file-upload/start"}, Method: http.MethodPost,
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner:   model.User{},
@@ -147,7 +147,7 @@ func TestResources_StartIngestJob(t *testing.T) {
 					},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -165,11 +165,11 @@ func TestResources_StartIngestJob(t *testing.T) {
 					URL: &url.URL{Path: "/api/v2/file-upload/start"}, Method: http.MethodPost,
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -186,7 +186,7 @@ func TestResources_StartIngestJob(t *testing.T) {
 					URL: &url.URL{Path: "/api/v2/file-upload/start"}, Method: http.MethodPost,
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner:   model.User{},
@@ -194,7 +194,7 @@ func TestResources_StartIngestJob(t *testing.T) {
 					},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -279,7 +279,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 					URL: &url.URL{Path: "/api/v2/file-upload/invalid/end"}, Method: http.MethodPost,
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner:   model.User{},
@@ -287,7 +287,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 					},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -305,7 +305,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 					URL: &url.URL{Path: "/api/v2/file-upload/123/end"}, Method: http.MethodPost,
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner:   model.User{},
@@ -313,7 +313,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 					},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -337,7 +337,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 					URL: &url.URL{Path: "/api/v2/file-upload/123/end"}, Method: http.MethodPost,
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner:   model.User{},
@@ -345,7 +345,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 					},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -370,7 +370,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 					URL: &url.URL{Path: "/api/v2/file-upload/123/end"}, Method: http.MethodPost,
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner:   model.User{},
@@ -378,7 +378,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 					},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -397,7 +397,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 					URL: &url.URL{Path: "/api/v2/file-upload/123/end"}, Method: http.MethodPost,
 				}
 
-				requestCtx := ctx.Context{
+				requestCtx := bhctx.Context{
 					RequestID: "id",
 					AuthCtx: auth.Context{
 						Owner:   model.User{},
@@ -405,7 +405,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 					},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()

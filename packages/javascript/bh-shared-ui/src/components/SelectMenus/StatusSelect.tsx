@@ -35,7 +35,7 @@ export const StatusSelect: FC<Props> = ({ status = '', statusOptions, onSelect }
     );
 
     return (
-        <div className='flex flex-col gap-2'>
+        <div className='flex flex-col gap-2 ml-1'>
             <Label>Status</Label>
 
             <Select onValueChange={onSelect} value={status.toString()}>
