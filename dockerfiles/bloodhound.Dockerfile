@@ -106,7 +106,7 @@ RUN apk add --update --no-cache git
 RUN mkdir -p /opt/bloodhound /etc/bloodhound /var/log
 
 WORKDIR /build
-COPY --parents go* cmd/api packages/go ./
+COPY --parents go* cmd/api packages/go server ./
 COPY --from=ldflag-builder /build/LDFLAGS ./
 COPY --from=ui-builder /build/cmd/ui/dist ./cmd/api/src/api/static/assets
 RUN --mount=type=cache,target=/go/pkg/mod go build -C cmd/api/src -o /bloodhound -ldflags "$(cat LDFLAGS)" github.com/specterops/bloodhound/cmd/api/src/cmd/bhapi
