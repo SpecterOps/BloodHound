@@ -24,6 +24,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/metrics"
@@ -46,6 +47,10 @@ func RegisterBHCEMetrics(registerer prometheus.Registerer) error {
 
 	if err := metrics.RegisterIngestMetrics(registerer); err != nil {
 		return fmt.Errorf("failed to register ingest metrics: %w", err)
+	}
+
+	if err := graphify.RegisterIngestMetrics(registerer); err != nil {
+		return fmt.Errorf("failed to register graphify ingest metrics: %w", err)
 	}
 
 	return nil
