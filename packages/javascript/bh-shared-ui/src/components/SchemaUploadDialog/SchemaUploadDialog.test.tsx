@@ -132,12 +132,16 @@ describe('SchemaUploadDialog', () => {
         expect(screen.queryByRole('dialog', { name: 'Upload Schema Files' })).not.toBeInTheDocument();
     });
 
-    it('does not open the schema upload dialog via drag when the Quick Upload dialog is already open', async () => {
+    it('does not open the Schema Upload dialog via drag when the Quick Upload dialog is already open', async () => {
         showFileIngestDialogMock.value = true;
 
         const screen = render(<SchemaUploadDialog />);
 
-        const dragEvent = new Event('dragenter');
+        const dragEvent = new Event('dragenter', { bubbles: true }) as any;
+        dragEvent.dataTransfer = {
+            types: ['Files'],
+            items: [{ kind: 'file', type: 'application/json' }],
+        };
         document.dispatchEvent(dragEvent);
 
         expect(screen.queryByRole('dialog', { name: 'Upload Schema Files' })).not.toBeInTheDocument();
