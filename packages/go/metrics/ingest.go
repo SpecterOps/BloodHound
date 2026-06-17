@@ -64,9 +64,8 @@ var (
 	// database queue from creation (DB write) until it is picked up for processing.
 	// This measures queue wait time, not processing time.
 	//
-	// The _count value represents tasks that have been PROCESSED (picked up from queue).
-	// Compare with ingestTasksCreated to detect stuck tasks:
-	//   stuck_tasks = ingestTasksCreated - ingestTaskQueueLatency_count
+	// The _count value represents tasks that have been PROCESSED (picked up from queue) since last restart.
+	// For current queue depth, use the bhe_ingest_tasks gauge instead.
 	ingestTaskQueueLatency = prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
 			Namespace:  model.Namespace,
