@@ -32,6 +32,18 @@ type IngestTaskParams struct {
 	JobID            int64
 }
 
+// fileFormatFromFileType converts a model.FileType to metrics.IngestFileFormat.
+func fileFormatFromFileType(ft model.FileType) metrics.IngestFileFormat {
+	switch ft.String() {
+	case "json":
+		return metrics.IngestFileFormatJSON
+	case "zip":
+		return metrics.IngestFileFormatZip
+	default:
+		return metrics.IngestFileFormatJSON // default to JSON
+	}
+}
+
 func CreateIngestTask(ctx context.Context, db UploadData, params IngestTaskParams) (model.IngestTask, error) {
 	newIngestTask := model.IngestTask{
 		StoredFileName:   params.Filename,
@@ -42,10 +54,20 @@ func CreateIngestTask(ctx context.Context, db UploadData, params IngestTaskParam
 	}
 
 	if task, err := db.CreateIngestTask(ctx, newIngestTask); err != nil {
+		// Record metric: file ingest task creation failed
+		metrics.RecordIngestTask(
+			metrics.IngestCollectorManual,
+			fileFormatFromFileType(params.FileType),
+			metrics.IngestTaskStatusFailed,
+		)
 		return task, err
 	} else {
 		// Record metric: file ingest task created and saved to disk
-		metrics.RecordIngestTaskCreated(metrics.IngestSourceFile)
+		metrics.RecordIngestTask(
+			metrics.IngestCollectorManual,
+			fileFormatFromFileType(params.FileType),
+			metrics.IngestTaskStatusSuccess,
+		)
 		return task, nil
 	}
 }

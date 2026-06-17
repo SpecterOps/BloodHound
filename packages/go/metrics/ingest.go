@@ -29,35 +29,79 @@ import (
 
 const ingestSubsystem = "ingest"
 
-// IngestSource represents the origin of an ingest task in the pipeline.
+// IngestCollectorType represents the collector that generated the ingest data.
 // This typed enum is used for Prometheus label values to ensure compile-time
 // validation and prevent typos that would create stray time series.
+type IngestCollectorType string
+
+const (
+	// IngestCollectorManual indicates a manual file upload (not from an automated collector).
+	IngestCollectorManual IngestCollectorType = "manual"
+
+	// IngestCollectorAzureHound indicates data from the AzureHound collector.
+	IngestCollectorAzureHound IngestCollectorType = "azurehound"
+
+	// IngestCollectorSharpHound indicates data from the SharpHound collector.
+	IngestCollectorSharpHound IngestCollectorType = "sharphound"
+
+	// IngestCollectorOpenHound indicates data from the OpenHound collector.
+	IngestCollectorOpenHound IngestCollectorType = "openhound"
+)
+
+// IngestSource represents the high-level origin of an ingest task (file upload or client).
+// This is a simpler categorization used for operational metrics like queue latency.
 type IngestSource string
 
 const (
-	// IngestSourceFile represents tasks created from manual file uploads via the web UI or API.
+	// IngestSourceFile represents tasks from manual file uploads.
 	IngestSourceFile IngestSource = "file"
 
-	// IngestSourceClient represents tasks created from SharpHound, AzureHound, or OpenHound client ingests.
+	// IngestSourceClient represents tasks from automated collector clients.
 	IngestSourceClient IngestSource = "client"
 )
 
+// IngestFileFormat represents the format of the uploaded file.
+type IngestFileFormat string
+
+const (
+	// IngestFileFormatJSON indicates a JSON file.
+	IngestFileFormatJSON IngestFileFormat = "json"
+
+	// IngestFileFormatZip indicates a ZIP archive.
+	IngestFileFormatZip IngestFileFormat = "zip"
+)
+
+// IngestTaskStatus represents the outcome of an ingest task creation attempt.
+type IngestTaskStatus string
+
+const (
+	// IngestTaskStatusSuccess indicates the file was sucessfully uploaded and the task was successfully created in the database.
+	IngestTaskStatusSuccess IngestTaskStatus = "success"
+
+	// IngestTaskStatusFailed indicates the task creation failed (validation, storage, or database error).
+	IngestTaskStatusFailed IngestTaskStatus = "failed"
+)
+
 var (
-	// ingestTasksCreated tracks the total number of ingest tasks created and
-	// persisted to the database. This counter is used for volume analytics and
-	// trend analysis (e.g., "How many tasks were created this week?", "Is usage growing?").
+	// ingestTasks tracks ingest task creation attempts (both successful and failed).
+	// This counter is used for volume analytics, trend analysis, and failure rate tracking.
+	//
+	// Labels:
+	//   - collector_type: collector that generated the data ("manual", "azurehound", "sharphound", "openhound")
+	//   - file_format: format of the uploaded file ("json", "zip")
+	//   - status: "success" or "failed"
 	//
 	// For operational queue monitoring, use:
 	//   - bhe_ingest_tasks (gauge: current queue depth)
 	//   - bh_ingest_task_queue_latency_seconds_count (summary: tasks processed)
-	ingestTasksCreated = prometheus.NewCounterVec(
+	ingestTasks = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: model.Namespace,
 			Subsystem: ingestSubsystem,
-			Name:      "tasks_created_total",
-			Help:      "Total number of ingest tasks created and saved to the database (for volume/trend analysis)",
+			Name:      "task_total",
+			Help:      "Total number of ingest task creation attempts, including both successful and failed attempts",
 		},
-		[]string{"source"}, // "file" for manual file upload, "client" for client ingest
+		[]string{"collector_type", "file_format", "status"},
 	)
 
 	// ingestTaskQueueLatency tracks the time an ingest task spends waiting in the
@@ -78,11 +122,15 @@ var (
 	)
 )
 
-// RecordIngestTaskCreated increments the counter for ingest tasks created and saved to disk.
-// This metric is used for volume tracking and trend analysis.
-// The source parameter indicates the ingest source type (file upload or client ingest).
-func RecordIngestTaskCreated(source IngestSource) {
-	ingestTasksCreated.WithLabelValues(string(source)).Inc()
+// RecordIngestTask increments the counter for ingest task creation attempts.
+// This should be called for both successful and failed task creation attempts.
+//
+// Parameters:
+//   - collectorType: the collector that generated the data ("manual" for file uploads, or collector name for clients)
+//   - fileFormat: the format of the uploaded file (zip or json)
+//   - status: the outcome of the creation attempt (success or failed)
+func RecordIngestTask(collectorType IngestCollectorType, fileFormat IngestFileFormat, status IngestTaskStatus) {
+	ingestTasks.WithLabelValues(string(collectorType), string(fileFormat), string(status)).Inc()
 }
 
 // RecordIngestTaskQueueLatency records the queue wait time from when an ingest task was saved to disk
@@ -94,8 +142,8 @@ func RecordIngestTaskQueueLatency(taskCreatedAt time.Time, source IngestSource) 
 
 // RegisterIngestMetrics registers all ingest-subsystem Prometheus metrics with the provided registerer.
 func RegisterIngestMetrics(registerer prometheus.Registerer) error {
-	if err := registerer.Register(ingestTasksCreated); err != nil {
-		return fmt.Errorf("failed to register ingest tasks created counter: %w", err)
+	if err := registerer.Register(ingestTasks); err != nil {
+		return fmt.Errorf("failed to register ingest task counter: %w", err)
 	} else if err := registerer.Register(ingestTaskQueueLatency); err != nil {
 		return fmt.Errorf("failed to register ingest task queue latency summary: %w", err)
 	} else {
