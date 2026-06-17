@@ -69,6 +69,9 @@ const (
 
 	// IngestFileFormatZip indicates a ZIP archive.
 	IngestFileFormatZip IngestFileFormat = "zip"
+
+	// IngestFileFormatUnknown indicates an unknown or unsupported file format.
+	IngestFileFormatUnknown IngestFileFormat = "unknown"
 )
 
 // IngestTaskStatus represents the outcome of an ingest task creation attempt.

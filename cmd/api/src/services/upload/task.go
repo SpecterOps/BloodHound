@@ -40,7 +40,7 @@ func fileFormatFromFileType(ft model.FileType) metrics.IngestFileFormat {
 	case "zip":
 		return metrics.IngestFileFormatZip
 	default:
-		return metrics.IngestFileFormatJSON // default to JSON
+		return metrics.IngestFileFormatUnknown
 	}
 }
 
