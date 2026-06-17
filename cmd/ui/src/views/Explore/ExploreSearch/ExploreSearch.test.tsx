@@ -156,7 +156,7 @@ describe('ExploreSearch rendering per tab', async () => {
     it('should render the cypher search controls when user clicks on cypher tab ', async () => {
         await setup('cypher');
 
-        expect(screen.getByText(/cypher/i)).toBeInTheDocument();
+        expect(screen.getByTestId('cypher-search-section')).toBeInTheDocument();
 
         expect(screen.getByRole('link', { name: /Learn more about cypher/i })).toBeInTheDocument();
         expect(screen.getByLabelText('Run cypher query')).toBeInTheDocument();
