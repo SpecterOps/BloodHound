@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/errorlist"
+	"github.com/specterops/bloodhound/packages/go/metrics"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -149,6 +150,9 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 	}
 
 	for _, task := range tasks {
+		// Record task latency metric: time from when task was created until picked up for processing
+		metrics.RecordIngestTaskQueueLatency(task.CreatedAt, metrics.IngestSourceFile)
+
 		ingestCtx := s.NewIngestContext(s.ctx, time.Now().UTC(), flagChangeLogEnabled, task.JobId.ValueOrZero())
 		fileData, err := s.ProcessIngestFile(ingestCtx, task)
 

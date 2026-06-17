@@ -24,13 +24,16 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/test/must"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
+	"github.com/teambition/rrule-go"
 	"go.uber.org/mock/gomock"
 )
 
@@ -215,6 +218,89 @@ func Test_SetApplicationConfiguration(t *testing.T) {
 			Return(nil)
 
 		reqBody, _ := json.Marshal(appConfigRequest)
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/config", bytes.NewBuffer(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		resources.SetApplicationConfiguration(rec, req)
+
+		if status := rec.Code; status != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusOK)
+		}
+	})
+
+	t.Run("Scheduled Analysis updates next scheduled analysis start time", func(t *testing.T) {
+		var (
+			futureTime = time.Now().Add(48 * time.Hour).Format("20060102T150405Z")
+			validRRule = fmt.Sprintf("FREQ=DAILY;INTERVAL=1;DTSTART=%s", futureTime)
+
+			scheduledAnalysisRequest = appcfg.AppConfigUpdateRequest{
+				Key: string(appcfg.ScheduledAnalysis),
+				Value: map[string]any{
+					"enabled": true,
+					"rrule":   validRRule,
+				},
+			}
+
+			expectedParameter = appcfg.Parameter{
+				Key:   appcfg.ScheduledAnalysis,
+				Value: must.NewJSONBObject(map[string]any{"enabled": true, "rrule": validRRule}),
+			}
+		)
+
+		rule, err := rrule.StrToRRule(validRRule)
+		if err != nil {
+			t.Fatalf("failed to parse rrule: %v", err)
+		}
+		expectedNextAnalysis := null.TimeFrom(rule.After(time.Now(), true))
+
+		mockDB.EXPECT().
+			SetConfigurationParameter(gomock.Any(), expectedParameter).
+			Return(nil)
+
+		mockDB.EXPECT().
+			SetNextScheduledAnalysisStartTime(gomock.Any(), expectedNextAnalysis).
+			Return(nil)
+
+		reqBody, _ := json.Marshal(scheduledAnalysisRequest)
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/config", bytes.NewBuffer(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		resources.SetApplicationConfiguration(rec, req)
+
+		if status := rec.Code; status != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusOK)
+		}
+	})
+
+	t.Run("Disabling Scheduled Analysis removes the next scheduled analysis start time", func(t *testing.T) {
+		var (
+			scheduledAnalysisRequest = appcfg.AppConfigUpdateRequest{
+				Key: string(appcfg.ScheduledAnalysis),
+				Value: map[string]any{
+					"enabled": false,
+					"rrule":   "",
+				},
+			}
+
+			expectedParameter = appcfg.Parameter{
+				Key:   appcfg.ScheduledAnalysis,
+				Value: must.NewJSONBObject(map[string]any{"enabled": false, "rrule": ""}),
+			}
+		)
+
+		mockDB.EXPECT().
+			SetConfigurationParameter(gomock.Any(), expectedParameter).
+			Return(nil)
+
+		mockDB.EXPECT().
+			SetNextScheduledAnalysisStartTime(gomock.Any(), null.Time{}).
+			Return(nil)
+
+		reqBody, _ := json.Marshal(scheduledAnalysisRequest)
 		req := httptest.NewRequest(http.MethodPost, "/api/v2/config", bytes.NewBuffer(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()

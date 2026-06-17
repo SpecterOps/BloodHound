@@ -122,6 +122,13 @@ const References: FC = () => {
             <Link
                 target='_blank'
                 rel='noopener noreferrer'
+                href='https://posts.specterops.io/adcs-esc14-abuse-technique-333a004dc2b9'>
+                https://posts.specterops.io/adcs-esc14-abuse-technique-333a004dc2b9
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-adts/fb7c101d-ec8b-4fbf-bca8-7d7c2d747d0c'>
                 https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-adts/fb7c101d-ec8b-4fbf-bca8-7d7c2d747d0c
             </Link>

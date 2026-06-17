@@ -112,21 +112,21 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                     </TooltipRoot>
                 </TooltipProvider>
 
-                <GraphMenu label={'Hide Labels'}>
+                <GraphMenu label={`${!showNodeLabels || !showEdgeLabels ? 'Show' : 'Hide'} Labels`}>
                     <MenuItem
-                        aria-label='All Labels Toggle'
+                        aria-label={`${!showEdgeLabels ? 'Show' : 'Hide'} All Labels Toggle`}
                         data-testid='explore_graph-controls_all-labels-toggle'
                         onClick={handleToggleAllLabels}>
                         {!showNodeLabels || !showEdgeLabels ? 'Show' : 'Hide'} All Labels
                     </MenuItem>
                     <MenuItem
-                        aria-label='Node Labels Toggle'
+                        aria-label={`${showNodeLabels ? 'Hide' : 'Show'} Node Labels Toggle`}
                         data-testid='explore_graph-controls_node-labels-toggle'
                         onClick={onToggleNodeLabels}>
                         {showNodeLabels ? 'Hide' : 'Show'} Node Labels
                     </MenuItem>
                     <MenuItem
-                        aria-label='Edge Labels Toggle'
+                        aria-label={`${showEdgeLabels ? 'Hide' : 'Show'} Edge Labels Toggle`}
                         data-testid='explore_graph-controls_edge-labels-toggle'
                         onClick={onToggleEdgeLabels}>
                         {showEdgeLabels ? 'Hide' : 'Show'} Edge Labels

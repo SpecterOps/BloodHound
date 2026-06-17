@@ -23,7 +23,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -53,7 +53,7 @@ var (
 )
 
 func setupRequest(user model.User) context.Context {
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		AuthCtx: auth.Context{
 			Owner: user,
 		},
@@ -61,7 +61,7 @@ func setupRequest(user model.User) context.Context {
 		RequestIP: requestIP,
 	}
 	testCtx := context.Background()
-	testCtx = ctx.Set(testCtx, &bhCtx)
+	testCtx = bhctx.Set(testCtx, &bhCtx)
 
 	return testCtx
 }
@@ -101,12 +101,12 @@ func TestNewAuditLog_Error(t *testing.T) {
 }
 
 func TestNewAuditLog_BadAuthContext(t *testing.T) {
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		RequestID: requestID,
 		RequestIP: requestIP,
 	}
 	testCtx := context.Background()
-	testCtx = ctx.Set(testCtx, &bhCtx)
+	testCtx = bhctx.Set(testCtx, &bhCtx)
 
 	auditData := model.AuditData{"test": "message"}
 	entry := model.AuditEntry{

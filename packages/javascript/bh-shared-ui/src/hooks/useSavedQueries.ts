@@ -136,8 +136,12 @@ export const useSavedQueries = (
 export const useCreateSavedQuery = () => {
     const queryClient = useQueryClient();
     return useMutation(createSavedQuery, {
-        onSuccess: () => {
-            queryClient.invalidateQueries(savedQueryKeys.all);
+        onSuccess: async (createdQuery) => {
+            await queryClient.cancelQueries(savedQueryKeys.all);
+            queryClient.setQueryData<SavedQuery[] | undefined>(savedQueryKeys.all, (oldData) => {
+                if (!oldData) return oldData;
+                return [...oldData, createdQuery];
+            });
         },
     });
 };
@@ -145,8 +149,12 @@ export const useCreateSavedQuery = () => {
 export const useUpdateSavedQuery = () => {
     const queryClient = useQueryClient();
     return useMutation(updateSavedQuery, {
-        onSuccess: () => {
-            queryClient.invalidateQueries(savedQueryKeys.all);
+        onSuccess: async (updatedQuery) => {
+            await queryClient.cancelQueries(savedQueryKeys.all);
+            queryClient.setQueryData<SavedQuery[] | undefined>(savedQueryKeys.all, (oldData) => {
+                if (!oldData) return oldData;
+                return oldData.map((q) => (q.id === updatedQuery.id ? updatedQuery : q));
+            });
         },
     });
 };
@@ -154,8 +162,12 @@ export const useUpdateSavedQuery = () => {
 export const useDeleteSavedQuery = () => {
     const queryClient = useQueryClient();
     return useMutation(deleteSavedQuery, {
-        onSuccess: () => {
-            queryClient.invalidateQueries(savedQueryKeys.all);
+        onSuccess: async (_data, deletedId) => {
+            await queryClient.cancelQueries(savedQueryKeys.all);
+            queryClient.setQueryData<SavedQuery[] | undefined>(savedQueryKeys.all, (oldData) => {
+                if (!oldData) return oldData;
+                return oldData.filter((q) => q.id !== deletedId);
+            });
         },
     });
 };

@@ -37,7 +37,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -51,7 +51,7 @@ import (
 
 func TestResources_CreateSavedQuery_NotAUserAuth(t *testing.T) {
 	// Setup
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
 			Owner: model.Role{},
@@ -296,7 +296,7 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 
 func TestResources_UpdateSavedQuery_NotAUserAuth(t *testing.T) {
 	// Setup
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
 			Owner: model.Role{},
@@ -884,7 +884,7 @@ func TestResources_UpdateSavedQuery_AdminPublicQuery_Success(t *testing.T) {
 
 func TestResources_DeleteSavedQuery_NotAUserAuth(t *testing.T) {
 	// Setup
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
 			Owner: model.Role{},
@@ -1281,7 +1281,7 @@ func TestResources_DeleteSavedQuery(t *testing.T) {
 }
 
 func createContextWithOwnerId(id uuid2.UUID) context.Context {
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
 			Owner: model.User{
@@ -1296,7 +1296,7 @@ func createContextWithOwnerId(id uuid2.UUID) context.Context {
 }
 
 func createContextWithAdminOwnerId(id uuid2.UUID) context.Context {
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
 			Owner: model.User{

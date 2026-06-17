@@ -27,7 +27,6 @@ import {
     CardTitle,
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -443,7 +442,9 @@ export const TagForm: FC = () => {
                                         name='analysis_enabled'
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel className='flex gap-2 items-center'>
+                                                <FormLabel
+                                                    className='flex gap-2 items-center'
+                                                    htmlFor='analysis_enabled'>
                                                     Enable Analysis
                                                     <Tooltip
                                                         tooltip={
@@ -460,21 +461,20 @@ export const TagForm: FC = () => {
                                                         </span>
                                                     </Tooltip>
                                                 </FormLabel>
-                                                <div className='flex gap-2 mb-4'>
+                                                <div className='mb-4'>
                                                     <FormControl>
                                                         <Switch
+                                                            id='analysis_enabled'
                                                             {...field}
                                                             value={''}
+                                                            label={field.value ? 'Enabled' : 'Disabled'}
+                                                            labelClassName='text-sm'
                                                             data-testid='privilege-zones_save_tag-form_enable-analysis-toggle'
                                                             checked={field.value || false}
                                                             onCheckedChange={field.onChange}
                                                         />
                                                     </FormControl>
-                                                    <FormDescription>
-                                                        {field.value ? 'Enabled' : 'Disabled'}
-                                                    </FormDescription>
                                                 </div>
-                                                <FormMessage />
                                             </FormItem>
                                         )}
                                     />
@@ -530,8 +530,10 @@ export const TagForm: FC = () => {
                                             control={control}
                                             name='require_certify'
                                             render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel className='flex gap-2 items-center'>
+                                                <FormItem className='gap-2'>
+                                                    <FormLabel
+                                                        className='flex gap-2 items-center'
+                                                        htmlFor='enable-certification'>
                                                         Enable Certification
                                                         <Tooltip
                                                             tooltip={
@@ -548,20 +550,19 @@ export const TagForm: FC = () => {
                                                             </span>
                                                         </Tooltip>
                                                     </FormLabel>
-                                                    <div className='flex gap-2'>
+                                                    <div>
                                                         <FormControl>
                                                             <Switch
                                                                 {...field}
+                                                                id='enable-certification'
+                                                                label={field.value ? 'Enabled' : 'Disabled'}
+                                                                labelClassName='text-sm'
                                                                 value={field.value?.toString()}
                                                                 data-testid='privilege-zones_save_tag-form_require-certify-toggle'
                                                                 checked={field.value || false}
                                                                 onCheckedChange={field.onChange}></Switch>
                                                         </FormControl>
-                                                        <FormDescription>
-                                                            {field.value ? 'Enabled' : 'Disabled'}
-                                                        </FormDescription>
                                                     </div>
-                                                    <FormMessage />
                                                 </FormItem>
                                             )}
                                         />

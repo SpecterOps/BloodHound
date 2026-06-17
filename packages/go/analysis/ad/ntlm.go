@@ -390,7 +390,7 @@ func PostCoerceAndRelayNTLMToADCS(ctx context.Context, operation post.StatTracke
 				// Verify cert template enables authentication and get cert template enrollers
 				if valid := isCertTemplateValidForADCSRelay(ctx, certTemplate); !valid {
 					continue
-				} else if certTemplateEnrollers := adcsCache.GetCertTemplateEnrollers(certTemplate.ID); len(certTemplateEnrollers) == 0 {
+				} else if certTemplateEnrollers := adcsCache.GetCertTemplateEnrollers(certTemplate.ID); certTemplateEnrollers.IsEmpty() {
 					continue
 				} else {
 					victims := getVictimBitmap(

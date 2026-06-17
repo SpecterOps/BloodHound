@@ -48,8 +48,11 @@ export const getColumns = (sortOrder?: string | null, handleSort?: (sortBy: stri
             id: 'action-menu',
             size: 50,
             minSize: 50,
+            header: () => {
+                return <span className='sr-only'>Action Menu</span>;
+            },
             cell: () => (
-                <button className='pl-4'>
+                <button className='pl-4' tabIndex={0} aria-label='action-menu'>
                     <FontAwesomeIcon icon={faEllipsis} className='rotate-90 dark:text-neutral-light-1' />
                 </button>
             ),

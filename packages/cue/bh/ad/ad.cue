@@ -1720,6 +1720,16 @@ CanApplyGPO: types.#Kind & {
 	schema: "active_directory"
 }
 
+WriteAltSecurityIdentities: types.#Kind & {
+	symbol: "WriteAltSecurityIdentities"
+	schema: "active_directory"
+}
+
+WritePublicInformation: types.#Kind & {
+	symbol: "WritePublicInformation"
+	schema: "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1807,6 +1817,8 @@ RelationshipKinds: [
 	GPOAppliesTo,
 	CanApplyGPO,
 	HasTrustKeys,
+	WriteAltSecurityIdentities,
+	WritePublicInformation,
 	ProtectAdminGroups,
 ]
 
@@ -1840,6 +1852,8 @@ ACLRelationships: [
 	WritePKINameFlag,
 	WriteOwnerLimitedRights,
 	OwnsLimitedRights,
+	WriteAltSecurityIdentities,
+	WritePublicInformation,
 ]
 
 IngestACLRelationships: [for r in ACLRelationships if !list.Contains(AllPostProcessedRelationships, r) {r}],
@@ -1901,6 +1915,8 @@ SharedRelationshipKinds: [
 	GPOAppliesTo,
 	CanApplyGPO,
 	HasTrustKeys,
+	WriteAltSecurityIdentities,
+	WritePublicInformation,
 	ManageCA,
 	ManageCertificates,
 ]

@@ -69,6 +69,7 @@ func NewDefaultConfiguration() (Configuration, error) {
 			WorkDir:                         "/opt/bhe/work",
 			LogLevel:                        "INFO",
 			CollectorsBasePath:              "/etc/bloodhound/collectors",
+			EmbeddedExtensionsBasePath:      "/etc/bloodhound/extensions",
 			CollectorsBucketURL:             serde.MustParseURL("https://bhe-hound-artifacts.s3.amazonaws.com/"),
 			DatapipeInterval:                60,
 			EnableStartupWaitPeriod:         true,
@@ -103,6 +104,10 @@ func NewDefaultConfiguration() (Configuration, error) {
 			},
 			EnableUserAnalytics:  false,
 			EnableAuditLogStdout: false,
+			Teleport: TeleportConfiguration{
+				DialAddress: "teleport:3080",
+				WebAddress:  "localhost:3080",
+			},
 		}, nil
 	}
 }

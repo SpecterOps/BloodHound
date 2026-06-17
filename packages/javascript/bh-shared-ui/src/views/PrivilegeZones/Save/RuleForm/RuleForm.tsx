@@ -28,8 +28,9 @@ import {
 import { SelectorSeedRequest } from 'js-client-library/dist/requests';
 import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
-import { FC, useCallback, useEffect, useReducer } from 'react';
+import { FC, useCallback, useEffect, useReducer, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import { ConfirmationDialog } from '../../../../components';
 import { usePZPathParams } from '../../../../hooks';
 import { useCreateRule, usePatchRule, useRuleInfo } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
@@ -90,6 +91,8 @@ const initialState: RuleFormState = {
     seeds: [],
     selectedObjects: [],
     autoCertify: AssetGroupTagSelectorAutoCertifyDisabled,
+    cypherQueryYieldsNoResults: false,
+    staleCypherPreview: false,
 };
 
 export type Action =
@@ -97,6 +100,8 @@ export type Action =
     | { type: 'remove-selected-object'; node: SearchValue }
     | { type: 'set-selected-objects'; nodes: AssetGroupSelectedNodes }
     | { type: 'set-rule-type'; ruleType: SeedTypes }
+    | { type: 'set-cypher-no-results-validation-state'; cypherQueryYieldsNoResults: boolean }
+    | { type: 'set-stale-cypher-preview'; staleCypherPreview: boolean }
     | { type: 'set-seeds'; seeds: SelectorSeedRequest[] };
 
 const reducer = (state: RuleFormState, action: Action): RuleFormState => {
@@ -105,6 +110,7 @@ const reducer = (state: RuleFormState, action: Action): RuleFormState => {
             return {
                 ...state,
                 seeds: [...state.seeds, { type: SeedTypeObjectId, value: action.node.objectid }],
+                staleCypherPreview: false,
                 selectedObjects: [
                     ...state.selectedObjects,
                     {
@@ -126,6 +132,11 @@ const reducer = (state: RuleFormState, action: Action): RuleFormState => {
             return { ...state, ruleType: action.ruleType, seeds: [], selectedObjects: [] };
         case 'set-seeds':
             return { ...state, seeds: action.seeds };
+        case 'set-cypher-no-results-validation-state':
+            return { ...state, cypherQueryYieldsNoResults: action.cypherQueryYieldsNoResults };
+        case 'set-stale-cypher-preview':
+            return { ...state, staleCypherPreview: action.staleCypherPreview };
+
         default:
             return state;
     }
@@ -134,10 +145,15 @@ const reducer = (state: RuleFormState, action: Action): RuleFormState => {
 const RuleForm: FC = () => {
     const { tagId, ruleId = '', tagDetailsLink, isLabelPage, tagTypeDisplay } = usePZPathParams();
     const navigate = useAppNavigate();
+    const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
     const { addNotification } = useNotifications();
 
-    const [{ ruleType, seeds, selectedObjects, autoCertify }, dispatch] = useReducer(reducer, initialState);
+    const [
+        { ruleType, seeds, selectedObjects, autoCertify, staleCypherPreview, cypherQueryYieldsNoResults },
+        dispatch,
+    ] = useReducer(reducer, initialState);
 
+    const isUpdate = ruleId !== '';
     const ruleQuery = useRuleInfo(tagId, ruleId);
     const form = useForm<RuleFormInputs>();
     const patchRuleMutation = usePatchRule(tagId);
@@ -149,26 +165,23 @@ const RuleForm: FC = () => {
 
             const diffedValues = diffValues(ruleQuery.data, { ...form.getValues(), seeds });
 
+            const stalePreviewErrorMessage = getErrorMessage('seeds are required', 'updating', 'rule', ruleType);
+
             if (isEmpty(diffedValues)) {
-                addNotification(
-                    'No changes to rule detected',
-                    `privilege-zones_update-rule_no-changes-warn_${ruleId}`,
-                    {
-                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                    }
-                );
+                const errorMessage = staleCypherPreview ? stalePreviewErrorMessage : 'No changes to rule detected';
+
+                addNotification(errorMessage, `privilege-zones_update-rule_no-changes-warn_${ruleId}`, {
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                });
+
                 return;
             }
 
             // In the API, PATCHing with an empty seeds array ignore the array.
             if (Array.isArray(diffedValues.seeds) && diffedValues.seeds.length === 0) {
-                return addNotification(
-                    getErrorMessage('seeds are required', 'updating', 'rule', ruleType),
-                    'privilege-zones_updating-rule',
-                    {
-                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                    }
-                );
+                return addNotification(stalePreviewErrorMessage, 'privilege-zones_updating-rule', {
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                });
             }
 
             await patchRuleMutation.mutateAsync({
@@ -192,7 +205,18 @@ const RuleForm: FC = () => {
         } catch (error) {
             handleError(error, 'updating', 'rule', addNotification, { ruleType });
         }
-    }, [tagId, ruleId, ruleType, patchRuleMutation, addNotification, navigate, ruleQuery.data, form, seeds]);
+    }, [
+        tagId,
+        ruleId,
+        ruleType,
+        patchRuleMutation,
+        addNotification,
+        navigate,
+        ruleQuery.data,
+        form,
+        seeds,
+        staleCypherPreview,
+    ]);
 
     const handleCreateRule = useCallback(async () => {
         try {
@@ -216,13 +240,39 @@ const RuleForm: FC = () => {
         }
     }, [tagId, ruleType, form, seeds, createRuleMutation, addNotification, navigate, tagDetailsLink]);
 
-    const onSubmit: SubmitHandler<RuleFormInputs> = useCallback(() => {
-        if (ruleId !== '') {
+    const createOrUpdateRule = useCallback(() => {
+        if (isUpdate) {
             handlePatchRule();
         } else {
             handleCreateRule();
         }
-    }, [ruleId, handleCreateRule, handlePatchRule]);
+    }, [handleCreateRule, handlePatchRule, isUpdate]);
+
+    const onSubmit: SubmitHandler<RuleFormInputs> = useCallback(() => {
+        const diffedValues = diffValues(ruleQuery.data, { ...form.getValues(), seeds });
+        const noChanges = isEmpty(diffedValues);
+        const invalidPatch = isUpdate && noChanges;
+
+        if (cypherQueryYieldsNoResults && !invalidPatch) {
+            /**
+             * If cypher query seed contains no objects, force user to confirm
+             * semi-invalid rule creation in confirmation dialog. However, if
+             * this is an 'unchanged' patch operation, the user cannot choose to
+             * update and should therefore not see this dialog
+             */
+            return setShowConfirmationDialog(true);
+        }
+
+        createOrUpdateRule();
+    }, [
+        cypherQueryYieldsNoResults,
+        setShowConfirmationDialog,
+        createOrUpdateRule,
+        form,
+        isUpdate,
+        ruleQuery.data,
+        seeds,
+    ]);
 
     useEffect(() => {
         const abortController = new AbortController();
@@ -283,8 +333,18 @@ const RuleForm: FC = () => {
     if (ruleQuery.isError) return <div>There was an error fetching the rule information.</div>;
 
     return (
-        <RuleFormContext.Provider value={{ dispatch, seeds, ruleType, selectedObjects, ruleQuery, autoCertify }}>
-            {ruleId !== '' ? (
+        <RuleFormContext.Provider
+            value={{
+                dispatch,
+                seeds,
+                ruleType,
+                selectedObjects,
+                ruleQuery,
+                autoCertify,
+                cypherQueryYieldsNoResults,
+                staleCypherPreview,
+            }}>
+            {isUpdate ? (
                 <p className='mt-6'>
                     {`Update this Rule's details. ${!isLabelPage ? 'Adjust criteria, analysis, or certification settings.' : ''} Changes apply to
                     the ${tagTypeDisplay} after the next analysis completes.`}
@@ -307,6 +367,20 @@ const RuleForm: FC = () => {
                     data-testid='rule-form'>
                     <BasicInfo control={form.control} />
                     <SeedSelection control={form.control} />
+                    <ConfirmationDialog
+                        open={showConfirmationDialog}
+                        title='Cypher query has no results'
+                        text="This rule's Cypher query produces no results. Do you want to save it anyway?"
+                        onConfirm={() => {
+                            dispatch({
+                                type: 'set-cypher-no-results-validation-state',
+                                cypherQueryYieldsNoResults: false,
+                            });
+                            createOrUpdateRule();
+                            setShowConfirmationDialog(false);
+                        }}
+                        onCancel={() => setShowConfirmationDialog(false)}
+                    />
                 </form>
             </Form>
         </RuleFormContext.Provider>
