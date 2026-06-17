@@ -46,6 +46,8 @@ export const SchemaUploadDialog = () => {
         [hasUploadPermission, showFileIngestDialog]
     );
 
+    // Dragging a file into the window displays the dialog. The normal global file upload drag and drop behavior is
+    // disabled for the OpenGraph Management page, unless the user explicitly clicks on the Quick Upload button to open the Quick Upload Dialog
     useExecuteOnFileDrag(
         () => {
             if (hasUploadPermission) setDialogOpen(true);
