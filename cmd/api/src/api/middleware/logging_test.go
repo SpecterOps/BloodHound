@@ -25,7 +25,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -102,11 +102,11 @@ func TestLoggingMiddleware_QueryParameters(t *testing.T) {
 			handler := middleware.LoggingMiddleware(auth.NewIdentityResolver(), false)(nextHandler)
 
 			request := httptest.NewRequest(http.MethodGet, testCase.url, nil)
-			bhCtx := &ctx.Context{
+			bhCtx := &bhctx.Context{
 				StartTime: time.Now(),
 				RequestID: "123456",
 			}
-			request = ctx.SetRequestContext(request, bhCtx)
+			request = bhctx.SetRequestContext(request, bhCtx)
 			response := httptest.NewRecorder()
 			handler.ServeHTTP(response, request)
 
