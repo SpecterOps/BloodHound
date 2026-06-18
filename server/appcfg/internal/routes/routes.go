@@ -21,7 +21,7 @@ import (
 	"github.com/specterops/bloodhound/server/appcfg/internal/handlers"
 )
 
-// Register attaches the application configuration endpoints to the given router instance.
+// Register attaches the appcfg endpoints to the given router instance.
 func Register(routerInst *router.Router, handlers *handlers.Handlers) {
-	// Routes will be added as we implement handlers
+	routerInst.GET("/api/v2/datapipe/status", handlers.GetDatapipeStatus).RequireAuth()
 }
