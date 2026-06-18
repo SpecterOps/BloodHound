@@ -30,7 +30,6 @@ import (
 	"time"
 
 	"github.com/peterldowns/pgtestdb"
-	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/registration"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
@@ -39,9 +38,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
-	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/server/modules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -117,13 +114,6 @@ func getAppcfgPostgresConfig(t *testing.T) pgtestdb.Config {
 		Options:                   "sslmode=disable",
 		ForceTerminateConnections: true,
 	}
-}
-
-// newDatapipeStatusHandler wires the old v2.Resources.GetDatapipeStatus handler.
-// DEPRECATED: This handler is used for the baseline test. Use the new module-based
-// routing for the production test.
-func newDatapipeStatusHandler(db *database.BloodhoundDB) http.HandlerFunc {
-	return v2.Resources{DB: db}.GetDatapipeStatus
 }
 
 // mintJWT creates a signed JWT token for the given user using the authenticator.
@@ -279,99 +269,5 @@ func TestGetDatapipeStatus(t *testing.T) {
 		// Timestamps should be non-zero after setting them
 		assert.False(t, envelope.Data.LastAnalysisRunAt.IsZero(), "last_analysis_run_at should be set")
 		assert.False(t, envelope.Data.LastCompleteAnalysisAt.IsZero(), "last_complete_analysis_at should be set")
-	})
-}
-
-func TestGetDatapipeStatus_WithRouting(t *testing.T) {
-	var (
-		ctx        = context.Background()
-		db         = setupAppcfgDB(t)
-		cfg, _     = config.NewDefaultConfiguration()
-		resolver   = auth.NewIdentityResolver()
-		authExt    = api.NewAuthExtensions(cfg, db)
-		auther     = api.NewAuthenticator(cfg, db, authExt)
-		authorizer = auth.NewAuthorizer(db)
-		routerInst = router.NewRouter(cfg, authorizer, "")
-	)
-
-	// Set up JWT signing key
-	cfg.Crypto.JWT.SetSigningKeyBytes([]byte("test-secret-key-that-is-at-least-32-bytes-long"))
-
-	// Register global middleware (auth, rate limiting, etc)
-	registration.RegisterFossGlobalMiddleware(&routerInst, cfg, resolver, auther, db)
-
-	// Register the actual production routes using v2.Resources and NewV2API
-	// This ensures we're testing the real route wiring, not a test-specific mock.
-	// Most parameters can be nil since we're only testing the datapipe/status endpoint.
-	apiCache, err := cache.NewCache(cache.Config{MaxSize: 1000})
-	require.NoError(t, err)
-
-	resources := v2.NewResources(
-		db,                           // rdms database.Database
-		nil,                          // graphDB *graph.DatabaseSwitch (not needed for datapipe status)
-		cfg,                          // cfg config.Configuration
-		apiCache,                     // apiCache cache.Cache
-		nil,                          // graphQuery queries.Graph (not needed for datapipe status)
-		config.CollectorManifests{}, // collectorManifests
-		authorizer,                   // authorizer
-		auther,                       // authenticator
-		upload.IngestSchema{},        // ingestSchema (needs non-nil struct)
-		nil,                          // fileServiceResolver (not needed for datapipe status)
-		nil,                          // dogtagsService (not needed for datapipe status)
-		nil,                          // openGraphSchemaService (not needed for datapipe status)
-	)
-	registration.NewV2API(resources, &routerInst)
-
-	handler := routerInst.Handler()
-
-	t.Run("returns 401 Unauthorized when no auth token is provided", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/v2/datapipe/status", nil)
-		rr := httptest.NewRecorder()
-
-		handler.ServeHTTP(rr, req)
-
-		assert.Equal(t, http.StatusUnauthorized, rr.Code)
-
-		var envelope api.ErrorWrapper
-		require.NoError(t, json.NewDecoder(rr.Body).Decode(&envelope))
-		assert.Equal(t, http.StatusUnauthorized, envelope.HTTPStatus)
-		assert.NotEmpty(t, envelope.Errors)
-	})
-
-	t.Run("returns 401 Unauthorized with invalid auth token", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/v2/datapipe/status", nil)
-		req.Header.Set("Authorization", "Bearer invalid-token")
-		rr := httptest.NewRecorder()
-
-		handler.ServeHTTP(rr, req)
-
-		assert.Equal(t, http.StatusUnauthorized, rr.Code)
-	})
-
-	t.Run("returns 200 OK with valid auth token", func(t *testing.T) {
-		// Create a test user
-		user := model.User{
-			PrincipalName: "test-user",
-		}
-
-		// Mint a valid JWT (creates user and session in database)
-		token := mintJWT(t, ctx, db, auther, user)
-
-		// Set datapipe status
-		err := db.SetDatapipeStatus(ctx, model.DatapipeStatusIdle)
-		require.NoError(t, err)
-
-		req := httptest.NewRequest(http.MethodGet, "/api/v2/datapipe/status", nil)
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
-		rr := httptest.NewRecorder()
-
-		handler.ServeHTTP(rr, req)
-
-		assert.Equal(t, http.StatusOK, rr.Code)
-		assert.Equal(t, "application/json", rr.Header().Get("Content-Type"))
-
-		var envelope datapipeStatusResponseEnvelope
-		require.NoError(t, json.NewDecoder(rr.Body).Decode(&envelope))
-		assert.Equal(t, model.DatapipeStatusIdle, envelope.Data.Status)
 	})
 }
