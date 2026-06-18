@@ -125,14 +125,24 @@ func getAnalysisPostgresConfig(t *testing.T) pgtestdb.Config {
 func mintJWT(t *testing.T, ctx context.Context, db *database.BloodhoundDB, auther api.Authenticator, user model.User) string {
 	t.Helper()
 
+	var (
+		allRoles   model.Roles
+		adminRole  model.Role
+		found      bool
+		authSecret model.AuthSecret
+		dbUser     model.User
+		token      string
+		err        error
+	)
+
 	// Get the Administrator role which has all permissions
-	allRoles, err := db.GetAllRoles(ctx, "", model.SQLFilter{})
+	allRoles, err = db.GetAllRoles(ctx, "", model.SQLFilter{})
 	require.NoError(t, err)
 
-	adminRole, found := allRoles.FindByName(auth.RoleAdministrator)
+	adminRole, found = allRoles.FindByName(auth.RoleAdministrator)
 	require.True(t, found, "Administrator role should exist in database")
 
-	authSecret := model.AuthSecret{
+	authSecret = model.AuthSecret{
 		Digest:       "dummy-digest-for-e2e-test",
 		DigestMethod: "argon2",
 		ExpiresAt:    time.Now().Add(24 * time.Hour).UTC(),
@@ -140,7 +150,7 @@ func mintJWT(t *testing.T, ctx context.Context, db *database.BloodhoundDB, authe
 	user.AuthSecret = &authSecret
 	user.Roles = model.Roles{adminRole}
 
-	dbUser, err := db.CreateUser(ctx, user)
+	dbUser, err = db.CreateUser(ctx, user)
 	require.NoError(t, err)
 
 	// CRITICAL: Must reload user with full associations before creating session
@@ -152,7 +162,7 @@ func mintJWT(t *testing.T, ctx context.Context, db *database.BloodhoundDB, authe
 	require.NotEmpty(t, dbUser.Roles, "User should have roles assigned")
 	require.Greater(t, len(dbUser.Roles[0].Permissions), 0, "Administrator role should have permissions")
 
-	token, err := auther.CreateSession(ctx, dbUser, *dbUser.AuthSecret)
+	token, err = auther.CreateSession(ctx, dbUser, *dbUser.AuthSecret)
 	require.NoError(t, err)
 	return token
 }
