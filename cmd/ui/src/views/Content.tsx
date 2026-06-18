@@ -78,7 +78,7 @@ const Content: React.FC = () => {
     });
 
     return (
-        <Box className={classes.content}>
+        <Box component='main' className={classes.content}>
             <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
                 <Suspense
                     fallback={

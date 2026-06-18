@@ -49,7 +49,6 @@ const (
 	FeatureAPIKeyExpirationSupport      = "api_key_expiration_support"
 	FeatureFindingsTable                = "findings_table"
 	FeatureCollectorSupportBundle       = "collector_support_bundle"
-	FeatureAlerts                       = "alerts"
 )
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be
@@ -100,6 +99,9 @@ type FeatureFlagService interface {
 
 	// SetFlag attempts to store or update the given FeatureFlag by its feature Key.
 	SetFlag(ctx context.Context, value FeatureFlag) error
+
+	// Implements the new feature flag shared slice method
+	IsEnabled(ctx context.Context, key string) (bool, error)
 }
 
 type GetFlagByKeyer interface {
@@ -124,9 +126,4 @@ func GetTieringEnabled(ctx context.Context, service GetFlagByKeyer) bool {
 // GetOpenHoundEnabled returns true if the OpenHound Support feature flag is enabled.
 func GetOpenHoundEnabled(ctx context.Context, service GetFlagByKeyer) bool {
 	return GetFlagEnabled(ctx, service, FeatureOpenHoundSupport)
-}
-
-// GetAlertsEnabled returns true if the Alerts feature flag is enabled.
-func GetAlertsEnabled(ctx context.Context, service GetFlagByKeyer) bool {
-	return GetFlagEnabled(ctx, service, FeatureAlerts)
 }

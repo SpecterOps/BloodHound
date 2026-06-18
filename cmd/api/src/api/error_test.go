@@ -28,7 +28,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/stretchr/testify/require"
@@ -78,7 +78,7 @@ func TestError(t *testing.T) {
 func TestBuildErrorResponseInternalServerError(t *testing.T) {
 	details := "Test error"
 
-	response := api.BuildErrorResponse(http.StatusInternalServerError, details, test.Request(t).WithContext(&ctx.Context{
+	response := api.BuildErrorResponse(http.StatusInternalServerError, details, test.Request(t).WithContext(&bhctx.Context{
 		RequestID: "12345",
 	}).Request())
 	require.Equal(t, http.StatusInternalServerError, response.HTTPStatus)
@@ -96,7 +96,7 @@ func TestBuildErrorResponseInternalServerError(t *testing.T) {
 
 func TestBuildErrorResponseBadRequest(t *testing.T) {
 	details := "Test error"
-	response := api.BuildErrorResponse(http.StatusBadRequest, details, test.Request(t).WithContext(&ctx.Context{
+	response := api.BuildErrorResponse(http.StatusBadRequest, details, test.Request(t).WithContext(&bhctx.Context{
 		RequestID: "12345",
 	}).Request())
 	require.Equal(t, http.StatusBadRequest, response.HTTPStatus)
@@ -114,7 +114,7 @@ func TestBuildErrorResponseBadRequest(t *testing.T) {
 
 func TestBuildErrorResponseUnauthorized(t *testing.T) {
 	details := "Test error"
-	response := api.BuildErrorResponse(http.StatusUnauthorized, details, test.Request(t).WithContext(&ctx.Context{
+	response := api.BuildErrorResponse(http.StatusUnauthorized, details, test.Request(t).WithContext(&bhctx.Context{
 		RequestID: "12345",
 	}).Request())
 	require.Equal(t, http.StatusUnauthorized, response.HTTPStatus)
@@ -132,7 +132,7 @@ func TestBuildErrorResponseUnauthorized(t *testing.T) {
 
 func TestBuildErrorResponseConflict(t *testing.T) {
 	details := "Test error"
-	response := api.BuildErrorResponse(http.StatusConflict, details, test.Request(t).WithContext(&ctx.Context{
+	response := api.BuildErrorResponse(http.StatusConflict, details, test.Request(t).WithContext(&bhctx.Context{
 		RequestID: "12345",
 	}).Request())
 	require.Equal(t, http.StatusConflict, response.HTTPStatus)
@@ -150,7 +150,7 @@ func TestBuildErrorResponseConflict(t *testing.T) {
 
 func TestBuildErrorResponseDefault(t *testing.T) {
 	details := "Test error"
-	response := api.BuildErrorResponse(http.StatusTeapot, details, test.Request(t).WithContext(&ctx.Context{
+	response := api.BuildErrorResponse(http.StatusTeapot, details, test.Request(t).WithContext(&bhctx.Context{
 		RequestID: "12345",
 	}).Request())
 	require.Equal(t, http.StatusTeapot, response.HTTPStatus)
@@ -167,7 +167,7 @@ func TestBuildErrorResponseDefault(t *testing.T) {
 }
 
 func TestHandleDatabaseErrorNotFound(t *testing.T) {
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		RequestID: "requestID",
 		AuthCtx:   auth.Context{},
 	}
@@ -175,7 +175,7 @@ func TestHandleDatabaseErrorNotFound(t *testing.T) {
 	request, err := http.NewRequest("GET", "www.foo.bar", strings.NewReader("Hello world"))
 	require.Nil(t, err)
 
-	request = request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhCtx.WithRequestID("requestID")))
+	request = request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhCtx.WithRequestID("requestID")))
 
 	response := httptest.NewRecorder()
 	err = database.ErrNotFound
@@ -186,7 +186,7 @@ func TestHandleDatabaseErrorNotFound(t *testing.T) {
 }
 
 func TestHandleDatabaseError(t *testing.T) {
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		RequestID: "requestID",
 		AuthCtx:   auth.Context{},
 	}
@@ -194,7 +194,7 @@ func TestHandleDatabaseError(t *testing.T) {
 	request, err := http.NewRequest("GET", "www.foo.bar", strings.NewReader("Hello world"))
 	require.Nil(t, err)
 
-	request = request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhCtx.WithRequestID("requestID")))
+	request = request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhCtx.WithRequestID("requestID")))
 
 	response := httptest.NewRecorder()
 	err = errors.New("custom error")

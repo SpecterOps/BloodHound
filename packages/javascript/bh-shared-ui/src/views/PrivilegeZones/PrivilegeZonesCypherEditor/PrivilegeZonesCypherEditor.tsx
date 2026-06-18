@@ -17,16 +17,14 @@ import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { Button, Card, CardContent, CardHeader, CardTitle } from 'doodle-ui';
 import { SeedTypeCypher } from 'js-client-library';
-import { Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { TagLabelPrefix } from '../../../hooks/useAssetGroupTags';
 import { useCypherSchema } from '../../../hooks/useGraphKinds';
 import { usePZPathParams } from '../../../hooks/usePZParams';
 import { cn } from '../../../utils';
 import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
-import RuleFormContext from '../Save/RuleForm/RuleFormContext';
-
-const emptyFunction = () => {};
+import { useRuleFormContext } from '../Save/RuleForm/RuleFormContext';
 
 const hasTagLabel = (value: string) => {
     const tagLabel = `:${TagLabelPrefix}`;
@@ -37,15 +35,19 @@ export const PrivilegeZonesCypherEditor: FC<{
     preview?: boolean;
     initialInput?: string;
     onChange?: (content: string) => void;
-    stalePreview?: boolean;
-    setStalePreview?: Dispatch<SetStateAction<boolean>>;
-}> = ({ preview = true, initialInput = '', onChange, stalePreview = false, setStalePreview = () => {} }) => {
+}> = ({ preview = true, initialInput = '', onChange }) => {
     const [cypherQuery, setCypherQuery] = useState(initialInput);
     const [showLabelWarning, setShowLabelWarning] = useState(hasTagLabel(initialInput));
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
-    const dispatch = useContext(RuleFormContext).dispatch || emptyFunction;
+    const { dispatch, cypherQueryYieldsNoResults, staleCypherPreview } = useRuleFormContext();
+
+    const setStalePreview = useCallback(
+        (isStale: boolean) => dispatch({ type: 'set-stale-cypher-preview', staleCypherPreview: isStale }),
+        [dispatch]
+    );
+
     const { hasZoneId } = usePZPathParams();
 
     const location = useLocation();
@@ -71,6 +73,7 @@ export const PrivilegeZonesCypherEditor: FC<{
     const onValueChanged = useCallback(
         (value: string) => {
             if (preview) return;
+
             setCypherQuery(value);
             setStalePreview(true);
 
@@ -120,6 +123,7 @@ export const PrivilegeZonesCypherEditor: FC<{
                                 'bg-transparent [&_.cm-editor]:bg-transparent [&_.cm-editor_.cm-gutters]:bg-transparent [&_.cm-editor_.cm-gutters]:border-transparent dark:bg-transparent dark:[&_.cm-editor]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:border-transparent':
                                     preview,
                                 'md:min-h-[16rem] md:max-h-[16rem] h-[24rem] max-h-[24rem]': !preview,
+                                'border-error border-2': cypherQueryYieldsNoResults,
                             }
                         )}
                         ref={cypherEditorRef}
@@ -147,7 +151,7 @@ export const PrivilegeZonesCypherEditor: FC<{
                             disabled={!cypherQuery}
                             data-testid='privilege-zones_save_selector-form_update-results-button'
                             className={cn('mt-3', {
-                                'animate-pulse': stalePreview,
+                                'animate-pulse': staleCypherPreview,
                             })}
                             onClick={handleCypherSearch}>
                             Run

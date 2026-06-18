@@ -156,8 +156,9 @@ describe('GraphControls', () => {
             'Toggles node and edge labels on/off depending on their existing state',
             async ({ showEdgeLabels, showNodeLabels }) => {
                 const { user } = setup({ showEdgeLabels, showNodeLabels });
-                const labelMenu = screen.getByText('Hide Labels');
-                await user.click(labelMenu);
+
+                const menuLabel = !showNodeLabels || !showEdgeLabels ? 'Show Labels' : 'Hide Labels';
+                await user.click(screen.getByText(menuLabel));
 
                 const allLabelsController = await screen.findByRole('menuitem', { name: /All Labels/i });
                 await user.click(allLabelsController);

@@ -17,6 +17,8 @@
 package bootstrap_test
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/bootstrap"
@@ -70,4 +72,37 @@ func TestFillAndPopulateDefaultAdminInfo(t *testing.T) {
 		require.NotEqual(t, "", cfg.LastName)
 		require.NotEqual(t, "", cfg.PrincipalName)
 	}
+}
+
+func TestEnsureServerDirectoriesCreatesRequiredDirectories(t *testing.T) {
+	t.Parallel()
+
+	var (
+		rootDirectory = t.TempDir()
+		cfg           = config.Configuration{
+			WorkDir:            filepath.Join(rootDirectory, "work"),
+			CollectorsBasePath: filepath.Join(rootDirectory, "collectors"),
+		}
+	)
+
+	require.NoError(t, bootstrap.EnsureServerDirectories(cfg))
+
+	for _, directory := range []string{
+		cfg.WorkDir,
+		cfg.TempDirectory(),
+		cfg.ScratchDirectory(),
+		cfg.RetainedFilesDirectory(),
+		cfg.ClientLogDirectory(),
+		cfg.CollectorsDirectory(),
+	} {
+		requireDirectoryExists(t, directory)
+	}
+}
+
+func requireDirectoryExists(t *testing.T, path string) {
+	t.Helper()
+
+	info, err := os.Stat(path)
+	require.NoError(t, err)
+	require.True(t, info.IsDir())
 }

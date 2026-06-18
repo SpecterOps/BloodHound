@@ -26,12 +26,21 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/tools"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/neo4j"
 	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/util/size"
 )
+
+// RuntimeDependencies holds values that must be created before the entrypoint starts. For instance
+// IngestControl is reliant on the FileService. In order for the pre-migration toolapi to have
+// access to the FileServiceRetained, the FileServiceResolver is created prior to the
+// PreMigrationDaemons and the Entrypoint. This could then be passed in.
+type RuntimeDependencies struct {
+	FileServiceResolver storage.FileServiceResolver
+}
 
 func ensureDirectory(path string) error {
 	if _, err := os.Stat(path); err != nil {
@@ -55,6 +64,10 @@ func EnsureServerDirectories(cfg config.Configuration) error {
 	}
 
 	if err := ensureDirectory(cfg.TempDirectory()); err != nil {
+		return err
+	}
+
+	if err := ensureDirectory(cfg.ScratchDirectory()); err != nil {
 		return err
 	}
 
