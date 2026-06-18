@@ -17,7 +17,7 @@
 import { Autocomplete, AutocompleteRenderInputParams, TextField } from '@mui/material';
 import { AssetGroup } from 'js-client-library';
 import { FC, HTMLAttributes, ReactNode, SyntheticEvent, useState } from 'react';
-import { getEmptyResultsText, getKeywordAndTypeValues, useDebouncedValue, useSearch } from '../../hooks';
+import { getEmptyResultsText, useDebouncedValue, useKeywordAndTypeValues, useSearch } from '../../hooks';
 import AutocompleteOption from './AutocompleteOption';
 import { AssetGroupChangelog, AssetGroupChangelogEntry, ChangelogAction } from './types';
 
@@ -30,7 +30,7 @@ const AssetGroupAutocomplete: FC<{
 }> = ({ assetGroup, changelog, onChange }) => {
     const [searchInput, setSearchInput] = useState('');
     const debouncedInputValue = useDebouncedValue(searchInput, 250);
-    const { keyword, type } = getKeywordAndTypeValues(debouncedInputValue);
+    const { keyword, type } = useKeywordAndTypeValues(debouncedInputValue);
     const { data, isLoading, isFetching, isError, error } = useSearch(keyword, type);
 
     const noOptionsText = getEmptyResultsText(
