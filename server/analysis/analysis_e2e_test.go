@@ -29,38 +29,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/registration"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
-	"github.com/specterops/bloodhound/server/analysis/internal/appdb"
 	"github.com/specterops/bloodhound/server/analysis/internal/handlers"
 	"github.com/specterops/bloodhound/server/analysis/internal/services"
 	"github.com/specterops/bloodhound/server/modules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-// injectAuthMiddleware wraps the given handler, attaching a bhctx.Context that
-// identifies the supplied user as the request owner. This stands in for the
-// production auth middleware so the analysis handler can resolve a user without
-// requiring the full auth stack.
-func injectAuthMiddleware(handler http.HandlerFunc, userID uuid.UUID) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		bhCtx := &bhctx.Context{
-			AuthCtx: auth.Context{Owner: model.User{Unique: model.Unique{ID: userID}}},
-		}
-		handler(w, bhctx.SetRequestContext(r, bhCtx))
-	}
-}
 
 // analysisResponseEnvelope is the full JSON envelope shape returned by the GET
 // and PUT /api/v2/analysis handlers. All seven documented fields are included so
@@ -133,30 +117,6 @@ func getAnalysisPostgresConfig(t *testing.T) pgtestdb.Config {
 		Options:                   "sslmode=disable",
 		ForceTerminateConnections: true,
 	}
-}
-
-// newAnalysisGetHandler wires the pgx-backed analysis stack from a BloodhoundDB
-// and returns its GET handler.
-func newAnalysisGetHandler(db *database.BloodhoundDB) http.HandlerFunc {
-	store := appdb.NewStore(db.Pool())
-	svc := services.NewService(store)
-	return handlers.NewHandlersContainer(svc).GetAnalysisRequest
-}
-
-// newCreateAnalysisHandler wires the pgx-backed analysis stack from a BloodhoundDB
-// and returns its PUT handler wrapped with auth-injecting middleware.
-func newCreateAnalysisHandler(db *database.BloodhoundDB, userID uuid.UUID) http.HandlerFunc {
-	store := appdb.NewStore(db.Pool())
-	svc := services.NewService(store)
-	return injectAuthMiddleware(handlers.NewHandlersContainer(svc).CreateAnalysisRequest, userID)
-}
-
-// newCancelAnalysisHandler wires the DELETE /api/v2/analysis handler backed by
-// a pgx-backed analysis stack and wrapped with auth-injecting middleware.
-func newCancelAnalysisHandler(db *database.BloodhoundDB, userID uuid.UUID) http.HandlerFunc {
-	store := appdb.NewStore(db.Pool())
-	svc := services.NewService(store)
-	return injectAuthMiddleware(handlers.NewHandlersContainer(svc).CancelAnalysisRequest, userID)
 }
 
 // mintJWT creates a signed JWT token for the given user using the authenticator.
