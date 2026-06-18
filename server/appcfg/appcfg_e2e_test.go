@@ -29,7 +29,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/peterldowns/pgtestdb"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -38,10 +37,12 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/packages/go/cache"
+	"github.com/specterops/bloodhound/server/modules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -119,6 +120,8 @@ func getAppcfgPostgresConfig(t *testing.T) pgtestdb.Config {
 }
 
 // newDatapipeStatusHandler wires the old v2.Resources.GetDatapipeStatus handler.
+// DEPRECATED: This handler is used for the baseline test. Use the new module-based
+// routing for the production test.
 func newDatapipeStatusHandler(db *database.BloodhoundDB) http.HandlerFunc {
 	return v2.Resources{DB: db}.GetDatapipeStatus
 }
@@ -151,18 +154,49 @@ func mintJWT(t *testing.T, ctx context.Context, db *database.BloodhoundDB, authe
 
 func TestGetDatapipeStatus(t *testing.T) {
 	var (
-		db        = setupAppcfgDB(t)
-		ctx       = context.Background()
-		muxRouter = mux.NewRouter()
-		server    = httptest.NewServer(muxRouter)
+		db         = setupAppcfgDB(t)
+		ctx        = context.Background()
+		cfg, _     = config.NewDefaultConfiguration()
+		authExt    = api.NewAuthExtensions(cfg, db)
+		auther     = api.NewAuthenticator(cfg, db, authExt)
+		authorizer = auth.NewAuthorizer(db)
+		resolver   = auth.NewIdentityResolver()
+		routerInst = router.NewRouter(cfg, authorizer, "")
 	)
-	muxRouter.HandleFunc("/api/v2/datapipe/status", newDatapipeStatusHandler(db)).Methods(http.MethodGet)
+
+	// Set up JWT signing key
+	cfg.Crypto.JWT.SetSigningKeyBytes([]byte("test-secret-key-that-is-at-least-32-bytes-long"))
+
+	// Register global middleware (required for auth to work)
+	registration.RegisterFossGlobalMiddleware(&routerInst, cfg, resolver, auther, db)
+
+	// Register the appcfg module using the new architecture
+	modules.Register(modules.Deps{
+		Router: &routerInst,
+		Pool:   db.Pool(),
+	})
+
+	var (
+		handler = routerInst.Handler()
+		server  = httptest.NewServer(handler)
+	)
 	t.Cleanup(server.Close)
+
+	// Create a test user and get a valid JWT token for authentication
+	var (
+		user = model.User{
+			PrincipalName: "test-user@example.com",
+			EmailAddress:  null.StringFrom("test-user@example.com"),
+		}
+		token = mintJWT(t, ctx, db, auther, user)
+	)
 
 	newGetRequest := func(t *testing.T) *http.Request {
 		t.Helper()
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/datapipe/status", nil)
 		require.NoError(t, err)
+		// Add authentication header
+		req.Header.Set("Authorization", "Bearer "+token)
 		return req
 	}
 

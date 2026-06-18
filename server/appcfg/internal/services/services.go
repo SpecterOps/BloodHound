@@ -42,8 +42,8 @@ const (
 type DatapipeStatus struct {
 	Status                  DatapipeStatusType
 	UpdatedAt               time.Time
-	LastCompleteAnalysisAt  time.Time
-	LastAnalysisRunAt       time.Time
+	LastCompleteAnalysisAt  null.Time
+	LastAnalysisRunAt       null.Time
 	NextScheduledAnalysisAt null.Time
 }
 

@@ -62,8 +62,8 @@ func TestStore_GetDatapipeStatus(t *testing.T) {
 		expected    = services.DatapipeStatus{
 			Status:                  services.DatapipeStatusIdle,
 			UpdatedAt:               updatedAt,
-			LastCompleteAnalysisAt:  completedAt,
-			LastAnalysisRunAt:       startedAt,
+			LastCompleteAnalysisAt:  null.TimeFrom(completedAt),
+			LastAnalysisRunAt:       null.TimeFrom(startedAt),
 			NextScheduledAnalysisAt: nextRun,
 		}
 	)
