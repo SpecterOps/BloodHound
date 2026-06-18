@@ -33,7 +33,7 @@ export const UserMinimalSelect: FC<Props> = ({ user = '', onSelect }) => {
             <Label>Users</Label>
 
             <Select onValueChange={onSelect} value={user}>
-                <SelectTrigger className='w-32' aria-label='User Select'>
+                <SelectTrigger className='w-32 m-1' aria-label='User Select'>
                     <SelectValue placeholder='Select' />
                 </SelectTrigger>
                 <SelectPortal>

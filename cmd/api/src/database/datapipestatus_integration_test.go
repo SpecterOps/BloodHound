@@ -19,30 +19,61 @@
 package database_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestDatapipeStatus(t *testing.T) {
-	var (
-		testCtx = context.Background()
-		db      = integration.SetupDB(t)
-	)
+func TestDatabase_GetDatapipeStatus(t *testing.T) {
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
 
-	status, err := db.GetDatapipeStatus(testCtx)
-	require.Nil(t, err)
-	assert.Equal(t, model.DatapipeStatusIdle, status.Status)
+	status, err := testSuite.BHDatabase.GetDatapipeStatus(testSuite.Context)
+	require.NoError(t, err)
+	require.Equal(t, model.DatapipeStatusIdle, status.Status)
+}
 
-	err = db.SetDatapipeStatus(testCtx, model.DatapipeStatusIdle)
-	require.Nil(t, err)
-	err = db.UpdateLastAnalysisCompleteTime(testCtx)
-	require.Nil(t, err)
-	status, err = db.GetDatapipeStatus(testCtx)
-	require.Nil(t, err)
-	assert.True(t, !status.LastCompleteAnalysisAt.IsZero())
+func TestDatabase_SetDatapipeStatus(t *testing.T) {
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	err := testSuite.BHDatabase.SetDatapipeStatus(testSuite.Context, model.DatapipeStatusAnalyzing)
+	require.NoError(t, err)
+
+	status, err := testSuite.BHDatabase.GetDatapipeStatus(testSuite.Context)
+	require.NoError(t, err)
+	require.Equal(t, model.DatapipeStatusAnalyzing, status.Status)
+}
+
+func TestDatabase_SetLastAnalysisStartTime(t *testing.T) {
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	status, err := testSuite.BHDatabase.GetDatapipeStatus(testSuite.Context)
+	require.NoError(t, err)
+	require.True(t, status.LastAnalysisRunAt.IsZero())
+
+	err = testSuite.BHDatabase.SetLastAnalysisStartTime(testSuite.Context)
+	require.NoError(t, err)
+
+	status, err = testSuite.BHDatabase.GetDatapipeStatus(testSuite.Context)
+	require.NoError(t, err)
+	require.False(t, status.LastAnalysisRunAt.IsZero())
+}
+
+func TestDatabase_UpdateLastAnalysisCompleteTime(t *testing.T) {
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	status, err := testSuite.BHDatabase.GetDatapipeStatus(testSuite.Context)
+	require.NoError(t, err)
+	require.True(t, status.LastCompleteAnalysisAt.IsZero())
+
+	err = testSuite.BHDatabase.UpdateLastAnalysisCompleteTime(testSuite.Context)
+	require.NoError(t, err)
+
+	status, err = testSuite.BHDatabase.GetDatapipeStatus(testSuite.Context)
+	require.NoError(t, err)
+	require.False(t, status.LastCompleteAnalysisAt.IsZero())
 }

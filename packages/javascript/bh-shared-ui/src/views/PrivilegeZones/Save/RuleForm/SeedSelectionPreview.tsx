@@ -26,12 +26,12 @@ import {
     SeedTypesMap,
     SelectorSeedRequest,
 } from 'js-client-library';
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
-import { useOwnedTagId } from '../../../../hooks/useAssetGroupTags';
-import { usePZPathParams } from '../../../../hooks/usePZParams';
+import { useOwnedTagId, usePZPathParams } from '../../../../hooks';
 import { apiClient, cn } from '../../../../utils';
+import { useRuleFormContext } from './RuleFormContext';
 
 const getRuleExpansionMethod = (
     tagId: string,
@@ -57,6 +57,8 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
 
     const ownedId = useOwnedTagId();
 
+    const { dispatch, cypherQueryYieldsNoResults } = useRuleFormContext();
+
     const expansion = getRuleExpansionMethod(tagId, tagType, ownedId?.toString());
 
     const { data: sampleResults, isFetched: sampleResultsFetched } = useQuery({
@@ -73,6 +75,19 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
 
     const directObjects = sampleResults?.filter((objectItem) => objectItem.source === NodeSourceSeed);
     const expandedObjects = sampleResults?.filter((objectItem) => objectItem.source > NodeSourceSeed);
+
+    useEffect(() => {
+        const emptyResults = directObjects?.length === 0 && expandedObjects?.length === 0;
+        const undefinedResults = !directObjects && !expandedObjects;
+        const cypherQueryIsEmpty = sampleResultsFetched && (emptyResults || undefinedResults);
+
+        if (cypherQueryIsEmpty && !cypherQueryYieldsNoResults) {
+            dispatch({ type: 'set-cypher-no-results-validation-state', cypherQueryYieldsNoResults: true });
+        } else if (!cypherQueryIsEmpty && cypherQueryYieldsNoResults) {
+            dispatch({ type: 'set-cypher-no-results-validation-state', cypherQueryYieldsNoResults: false });
+        }
+    }, [directObjects, expandedObjects, cypherQueryYieldsNoResults, dispatch, sampleResultsFetched]);
+
     const showViewInExploreButton = exploreUrl && ruleType === SeedTypeCypher;
 
     return (

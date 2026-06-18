@@ -56,7 +56,9 @@ export const EarlyAccessFeatureToggle: React.FC<{
         <div className='bg-neutral-2 shadow-outer-1'>
             <div className='p-4 flex justify-between gap-4'>
                 <div className='overflow-hidden'>
-                    <Typography variant='h6'>{flag.name}</Typography>
+                    <Typography variant='h6' component='h2'>
+                        {flag.name}
+                    </Typography>
                     <Typography variant='body1'>{flag.description}</Typography>
                 </div>
                 <div className='flex items-center justify-center'>
@@ -156,7 +158,7 @@ const EarlyAccessFeatures: FC = () => {
                     (isLoading ? (
                         <div className='bg-neutral-2'>
                             <div className='p-4'>
-                                <Typography variant='h6'>
+                                <Typography variant='h6' component='div'>
                                     <Skeleton />
                                 </Typography>
                                 <Typography variant='body1'>
@@ -172,7 +174,7 @@ const EarlyAccessFeatures: FC = () => {
                     ) : data!.filter((flag) => flag.user_updatable).length === 0 ? (
                         <div className='bg-neutral-2'>
                             <div className='p-4'>
-                                <Typography variant='h6'>No Early Access Features Available</Typography>
+                                <Typography variant='h2'>No Early Access Features Available</Typography>
                                 <Typography variant='body1'>
                                     There are no early access features available at this time. Please check back later.
                                 </Typography>

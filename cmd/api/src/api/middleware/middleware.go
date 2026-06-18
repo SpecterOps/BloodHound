@@ -37,9 +37,8 @@ import (
 	"github.com/unrolled/secure"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -157,7 +156,7 @@ func ContextMiddleware(bypassLimitsParam bool) mux.MiddlewareFunc {
 				}
 
 				// Insert the bh context
-				requestCtx = ctx.Set(requestCtx, &ctx.Context{
+				requestCtx = bhctx.Set(requestCtx, &bhctx.Context{
 					StartTime: startTime,
 					RequestID: requestID,
 					Timeout:   max(requestedWaitDuration, 0),
@@ -298,12 +297,18 @@ func SecureHandlerMiddleware(cfg config.Configuration, contentSecurityPolicy str
 // endpoint's availability should be specified in flagKey.
 //
 // If the flag is enabled, the endpoint will work as intended. If the flag is disabled, a 404 will be returned to the user.
-func FeatureFlagMiddleware(db database.Database, flagKey string) mux.MiddlewareFunc {
+
+// featureFlag is the minimal interface for a feature flag, it is not to be exported from this pkg
+type featureFlag interface {
+	IsEnabled(ctx context.Context, key string) (bool, error)
+}
+
+func FeatureFlagMiddleware(featureFlags featureFlag, flagKey string) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			if flag, err := db.GetFlagByKey(request.Context(), flagKey); err != nil {
+			if flagEnabled, err := featureFlags.IsEnabled(request.Context(), flagKey); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error retrieving %s feature flag: %s", flagKey, err), request), response)
-			} else if flag.Enabled {
+			} else if flagEnabled {
 				next.ServeHTTP(response, request)
 			} else {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)

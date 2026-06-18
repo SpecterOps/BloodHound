@@ -16,8 +16,9 @@
 
 import React from 'react';
 
-import { PasswordResetForm } from 'bh-shared-ui';
+import { PasswordResetForm, useAppName } from 'bh-shared-ui';
 import { PutUserAuthSecretRequest } from 'js-client-library';
+import { Helmet } from 'react-helmet-async';
 import { Navigate } from 'react-router-dom';
 import LoginPage from 'src/components/LoginPage';
 import { authExpiredSelector, logout, updateExpiredPassword } from 'src/ducks/auth/authSlice';
@@ -29,6 +30,7 @@ const PasswordReset: React.FC = () => {
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
     const authExpired = useAppSelector(authExpiredSelector);
+    const appName = useAppName();
 
     /* Event Handlers */
     const handleSubmit = (payload: PutUserAuthSecretRequest) => {
@@ -44,6 +46,9 @@ const PasswordReset: React.FC = () => {
 
     return (
         <LoginPage>
+            <Helmet>
+                <title>Password Expired | {appName}</title>
+            </Helmet>
             <PasswordResetForm
                 onSubmit={handleSubmit}
                 onCancel={handleCancel}

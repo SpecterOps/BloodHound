@@ -36,7 +36,8 @@ var (
 // RegisterIngestMetrics registers the ingestion throughput gauge with the provided Prometheus registerer.
 func RegisterIngestMetrics(registerer prometheus.Registerer) error {
 	if err := registerer.Register(ingestThroughputGauge); err != nil {
-		return fmt.Errorf("failed to register ingest metrics: %w", err)
+		return fmt.Errorf("failed to register ingest throughput gauge: %w", err)
 	}
+
 	return nil
 }

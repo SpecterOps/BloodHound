@@ -26,7 +26,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -128,7 +128,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 			return
 		} else {
 			var userId string
-			if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+			if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 				slog.WarnContext(
 					request.Context(),
 					"Encountered request analysis for unknown user, this shouldn't happen",
@@ -166,7 +166,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	// if deleting `nodes` or deleting `asset group selectors` is successful, kickoff an analysis
 	if kickoffAnalysis {
 		var userId string
-		if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 			slog.WarnContext(
 				request.Context(),
 				"Encountered request analysis for unknown user, this shouldn't happen",

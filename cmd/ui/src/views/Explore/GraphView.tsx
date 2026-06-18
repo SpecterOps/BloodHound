@@ -32,6 +32,7 @@ import {
     isNode,
     isWebGLEnabled,
     makeStoreMapFromColumnOptions,
+    useAppName,
     useAutomaticGraphActions,
     useCustomNodeKinds,
     useExploreParams,
@@ -47,6 +48,7 @@ import {
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataFileUploadDialogWithLinks } from 'src/components/NoDataFileUploadDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
@@ -69,6 +71,12 @@ const GraphView: FC = () => {
     /* Hooks */
     const theme = useTheme();
     const dispatch = useAppDispatch();
+    const appName = useAppName();
+    const title = (
+        <Helmet>
+            <title>Explore | {appName}</title>
+        </Helmet>
+    );
 
     const { selectedItem, setSelectedItem, selectedItemQuery, previousSelectedItem, clearSelectedItem } =
         useExploreSelectedItem();
@@ -263,6 +271,7 @@ const GraphView: FC = () => {
             className='relative h-full w-full overflow-hidden'
             data-testid='explore'
             onContextMenu={(e) => e.preventDefault()}>
+            {title}
             <SigmaChart
                 graph={graphologyGraph}
                 highlightedItem={selectedItem}

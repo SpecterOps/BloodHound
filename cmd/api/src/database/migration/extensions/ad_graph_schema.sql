@@ -258,6 +258,8 @@ BEGIN
 	PERFORM genscript_upsert_kind('GPOAppliesTo');
 	PERFORM genscript_upsert_kind('CanApplyGPO');
 	PERFORM genscript_upsert_kind('HasTrustKeys');
+	PERFORM genscript_upsert_kind('WriteAltSecurityIdentities');
+	PERFORM genscript_upsert_kind('WritePublicInformation');
 	PERFORM genscript_upsert_kind('ProtectAdminGroups');
 
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Base', 'Base', '', false, '', '');
@@ -377,6 +379,8 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'GPOAppliesTo', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CanApplyGPO', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'HasTrustKeys', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteAltSecurityIdentities', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WritePublicInformation', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ProtectAdminGroups', '', false);
 
 	PERFORM genscript_upsert_source_kind('Base');
