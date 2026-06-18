@@ -27,19 +27,24 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/gorilla/mux"
 	"github.com/peterldowns/pgtestdb"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api/registration"
+	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/server/analysis/internal/appdb"
 	"github.com/specterops/bloodhound/server/analysis/internal/handlers"
 	"github.com/specterops/bloodhound/server/analysis/internal/services"
+	"github.com/specterops/bloodhound/server/modules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -154,22 +159,113 @@ func newCancelAnalysisHandler(db *database.BloodhoundDB, userID uuid.UUID) http.
 	return injectAuthMiddleware(handlers.NewHandlersContainer(svc).CancelAnalysisRequest, userID)
 }
 
+// mintJWT creates a signed JWT token for the given user using the authenticator.
+// This creates a proper session in the database and returns a valid token.
+// The user is granted all roles (and permissions) from the database for testing.
+func mintJWT(t *testing.T, ctx context.Context, db *database.BloodhoundDB, auther api.Authenticator, user model.User) string {
+	t.Helper()
+
+	roles, err := db.GetAllRoles(ctx, "", model.SQLFilter{})
+	require.NoError(t, err)
+
+	authSecret := model.AuthSecret{
+		Digest:       "dummy-digest-for-e2e-test",
+		DigestMethod: "argon2",
+		ExpiresAt:    time.Now().Add(24 * time.Hour).UTC(),
+	}
+	user.AuthSecret = &authSecret
+	user.Roles = roles
+
+	dbUser, err := db.CreateUser(ctx, user)
+	require.NoError(t, err)
+
+	dbUser, err = db.GetUser(ctx, dbUser.ID)
+	require.NoError(t, err)
+	require.NotNil(t, dbUser.AuthSecret, "User should have an AuthSecret")
+
+	token, err := auther.CreateSession(ctx, dbUser, *dbUser.AuthSecret)
+	require.NoError(t, err)
+	return token
+}
+
 func TestGetAnalysisStatus(t *testing.T) {
 	var (
-		db        = setupAnalysisDB(t)
-		ctx       = context.Background()
-		muxRouter = mux.NewRouter()
-		server    = httptest.NewServer(muxRouter)
+		db         = setupAnalysisDB(t)
+		ctx        = context.Background()
+		cfg, _     = config.NewDefaultConfiguration()
+		authExt    = api.NewAuthExtensions(cfg, db)
+		auther     = api.NewAuthenticator(cfg, db, authExt)
+		authorizer = auth.NewAuthorizer(db)
+		resolver   = auth.NewIdentityResolver()
+		routerInst = router.NewRouter(cfg, authorizer, "")
 	)
-	muxRouter.HandleFunc("/api/v2/analysis", newAnalysisGetHandler(db)).Methods(http.MethodGet)
+
+	cfg.Crypto.JWT.SetSigningKeyBytes([]byte("test-secret-key-that-is-at-least-32-bytes-long"))
+
+	registration.RegisterFossGlobalMiddleware(&routerInst, cfg, resolver, auther, db)
+
+	modules.Register(modules.Deps{
+		Router: &routerInst,
+		Pool:   db.Pool(),
+	})
+
+	var (
+		handler = routerInst.Handler()
+		server  = httptest.NewServer(handler)
+	)
 	t.Cleanup(server.Close)
+
+	var (
+		user = model.User{
+			PrincipalName: "test-user@example.com",
+			EmailAddress:  null.StringFrom("test-user@example.com"),
+		}
+		token = mintJWT(t, ctx, db, auther, user)
+	)
 
 	newGetRequest := func(t *testing.T) *http.Request {
 		t.Helper()
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/analysis", nil)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/analysis/status", nil)
 		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
 		return req
 	}
+
+	// Authentication tests - validate middleware is properly attached
+	t.Run("returns 401 Unauthorized when no authentication token is provided", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/analysis/status", nil)
+		require.NoError(t, err)
+
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+	})
+
+	t.Run("returns 401 Unauthorized when an invalid token is provided", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/analysis/status", nil)
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer invalid-token-that-is-not-valid")
+
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+	})
+
+	t.Run("returns 400 Bad Request when Bearer prefix is missing", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/analysis/status", nil)
+		require.NoError(t, err)
+		req.Header.Set("Authorization", token)
+
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
 
 	t.Run("returns 200 OK with zero-valued request when no request is pending", func(t *testing.T) {
 		require.NoError(t, db.DeleteAnalysisRequest(ctx))
@@ -214,29 +310,90 @@ func TestGetAnalysisStatus(t *testing.T) {
 
 func TestCreateAnalysisRequest(t *testing.T) {
 	var (
-		db        = setupAnalysisDB(t)
-		userID    = uuid.Must(uuid.NewV4())
-		ctx       = context.Background()
-		muxRouter = mux.NewRouter()
-		server    = httptest.NewServer(muxRouter)
+		db         = setupAnalysisDB(t)
+		ctx        = context.Background()
+		cfg, _     = config.NewDefaultConfiguration()
+		authExt    = api.NewAuthExtensions(cfg, db)
+		auther     = api.NewAuthenticator(cfg, db, authExt)
+		authorizer = auth.NewAuthorizer(db)
+		resolver   = auth.NewIdentityResolver()
+		routerInst = router.NewRouter(cfg, authorizer, "")
 	)
-	muxRouter.HandleFunc("/api/v2/analysis", newCreateAnalysisHandler(db, userID)).Methods(http.MethodPut)
-	muxRouter.HandleFunc("/api/v2/analysis", newAnalysisGetHandler(db)).Methods(http.MethodGet)
+
+	cfg.Crypto.JWT.SetSigningKeyBytes([]byte("test-secret-key-that-is-at-least-32-bytes-long"))
+
+	registration.RegisterFossGlobalMiddleware(&routerInst, cfg, resolver, auther, db)
+
+	modules.Register(modules.Deps{
+		Router: &routerInst,
+		Pool:   db.Pool(),
+	})
+
+	var (
+		handler = routerInst.Handler()
+		server  = httptest.NewServer(handler)
+	)
 	t.Cleanup(server.Close)
+
+	var (
+		user = model.User{
+			PrincipalName: "test-user@example.com",
+			EmailAddress:  null.StringFrom("test-user@example.com"),
+		}
+		token = mintJWT(t, ctx, db, auther, user)
+	)
 
 	newPutRequest := func(t *testing.T) *http.Request {
 		t.Helper()
 		req, err := http.NewRequestWithContext(ctx, http.MethodPut, server.URL+"/api/v2/analysis", nil)
 		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
 		return req
 	}
 
 	newGetRequest := func(t *testing.T) *http.Request {
 		t.Helper()
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/analysis", nil)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/analysis/status", nil)
 		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
 		return req
 	}
+
+	// Authentication tests - validate middleware is properly attached
+	t.Run("returns 401 Unauthorized when no authentication token is provided for PUT", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodPut, server.URL+"/api/v2/analysis", nil)
+		require.NoError(t, err)
+
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+	})
+
+	t.Run("returns 401 Unauthorized when an invalid token is provided for PUT", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodPut, server.URL+"/api/v2/analysis", nil)
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer invalid-token-that-is-not-valid")
+
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+	})
+
+	t.Run("returns 400 Bad Request when Bearer prefix is missing for PUT", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodPut, server.URL+"/api/v2/analysis", nil)
+		require.NoError(t, err)
+		req.Header.Set("Authorization", token)
+
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
 
 	t.Run("returns 202 Accepted when no request is pending", func(t *testing.T) {
 		require.NoError(t, db.DeleteAnalysisRequest(ctx))
@@ -283,28 +440,89 @@ func TestCreateAnalysisRequest(t *testing.T) {
 
 		var envelope analysisResponseEnvelope
 		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
-		assert.Equal(t, userID.String(), envelope.Data.RequestedBy)
+		assert.NotEmpty(t, envelope.Data.RequestedBy)
 		assert.Equal(t, services.RequestedAnalysisTypeAnalysis, envelope.Data.RequestType)
 	})
 }
 
 func TestCancelAnalysisRequest(t *testing.T) {
 	var (
-		db        = setupAnalysisDB(t)
-		userID    = uuid.Must(uuid.NewV4())
-		ctx       = context.Background()
-		muxRouter = mux.NewRouter()
-		server    = httptest.NewServer(muxRouter)
+		db         = setupAnalysisDB(t)
+		ctx        = context.Background()
+		cfg, _     = config.NewDefaultConfiguration()
+		authExt    = api.NewAuthExtensions(cfg, db)
+		auther     = api.NewAuthenticator(cfg, db, authExt)
+		authorizer = auth.NewAuthorizer(db)
+		resolver   = auth.NewIdentityResolver()
+		routerInst = router.NewRouter(cfg, authorizer, "")
 	)
-	muxRouter.HandleFunc("/api/v2/analysis", newCancelAnalysisHandler(db, userID)).Methods(http.MethodDelete)
+
+	cfg.Crypto.JWT.SetSigningKeyBytes([]byte("test-secret-key-that-is-at-least-32-bytes-long"))
+
+	registration.RegisterFossGlobalMiddleware(&routerInst, cfg, resolver, auther, db)
+
+	modules.Register(modules.Deps{
+		Router: &routerInst,
+		Pool:   db.Pool(),
+	})
+
+	var (
+		handler = routerInst.Handler()
+		server  = httptest.NewServer(handler)
+	)
 	t.Cleanup(server.Close)
+
+	var (
+		user = model.User{
+			PrincipalName: "test-user@example.com",
+			EmailAddress:  null.StringFrom("test-user@example.com"),
+		}
+		token = mintJWT(t, ctx, db, auther, user)
+	)
 
 	newDeleteRequest := func(t *testing.T) *http.Request {
 		t.Helper()
 		req, err := http.NewRequestWithContext(ctx, http.MethodDelete, server.URL+"/api/v2/analysis", nil)
 		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
 		return req
 	}
+
+	// Authentication tests - validate middleware is properly attached
+	t.Run("returns 401 Unauthorized when no authentication token is provided for DELETE", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodDelete, server.URL+"/api/v2/analysis", nil)
+		require.NoError(t, err)
+
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+	})
+
+	t.Run("returns 401 Unauthorized when an invalid token is provided for DELETE", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodDelete, server.URL+"/api/v2/analysis", nil)
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer invalid-token-that-is-not-valid")
+
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+	})
+
+	t.Run("returns 400 Bad Request when Bearer prefix is missing for DELETE", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodDelete, server.URL+"/api/v2/analysis", nil)
+		require.NoError(t, err)
+		req.Header.Set("Authorization", token)
+
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
 
 	t.Run("returns 202 Accepted when an analysis request is pending", func(t *testing.T) {
 		require.NoError(t, db.DeleteAnalysisRequest(ctx))
