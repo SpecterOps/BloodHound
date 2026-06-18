@@ -43,6 +43,7 @@
         "notistack": "^2.0.5",
         "prop-types": "^15.8.1",
         "react-error-boundary": "^3.1.4",
+        "react-helmet-async": "^3.0.0",
         "react-hook-form": "^7.61.1",
         "react-immutable-proptypes": "^2.2.0",
         "react-query": "^3.39.3",

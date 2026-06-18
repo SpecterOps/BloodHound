@@ -30,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	"github.com/specterops/bloodhound/packages/go/metrics"
 )
 
 var ErrInvalidJSON = errors.New("file is not valid json")
@@ -54,6 +55,8 @@ func SaveIngestFile(location string, request *http.Request, validator IngestVali
 	}
 
 	if tempFileName, err := WriteAndValidateFileWithPrefix(fileData, location, ingestFileTempPrefix(jobID), validationFn); err != nil {
+		// Record validation failure metric
+		metrics.RecordIngestTask(metrics.IngestCollectorManual, fileFormatFromFileType(fileType), metrics.IngestTaskStatusFailed)
 		return IngestTaskParams{}, err
 	} else {
 		return IngestTaskParams{
@@ -73,6 +76,10 @@ func WriteAndValidateFile(fileData io.Reader, location string, jobID int64, vali
 }
 
 func WriteAndValidateFileWithPrefix(fileData io.Reader, location string, tempFilePrefix string, validationFunc FileValidator) (string, error) {
+	if validationFunc == nil {
+		return "", fmt.Errorf("validation function is required")
+	}
+
 	var (
 		tempFile      *os.File
 		tempFileName  string

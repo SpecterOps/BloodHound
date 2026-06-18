@@ -20,34 +20,48 @@ parameters:
 get:
   operationId: GetAnalysisRequest
   summary: Gets analysis request information
-  description: Flags the API to request the information of an analysis request.
+  description: |
+    Returns the current analysis request information. Always returns 200 OK with
+    the request details. When no request is pending, returns a zero-valued response
+    with empty strings, false booleans, null arrays, and zero timestamp.
   tags:
     - Datapipe
     - Community
     - Enterprise
   responses:
     200:
-      description: OK
+      description: |
+        OK. Returns analysis request details if one exists, or a zero-valued
+        response if no request is pending (requested_by and request_type will be
+        empty strings, requested_at will be "0001-01-01T00:00:00Z", booleans will
+        be false, and arrays will be null).
       content:
         application/json:
           schema:
             type: object
             properties:
-              requested_by:
-                type: string 
-              request_type:
-                type: string
-              requested_at:
-                type: string
-                format: date-time
-              delete_all_graph:
-                type: boolean
-              delete_sourceless_graph:
-                type: boolean
-              delete_source_kinds:
-                type: array
-                items:
-                  type: string
+              data:
+                type: object
+                properties:
+                  requested_by:
+                    type: string
+                  request_type:
+                    type: string
+                  requested_at:
+                    type: string
+                    format: date-time
+                  delete_all_graph:
+                    type: boolean
+                  delete_sourceless_graph:
+                    type: boolean
+                  delete_source_kinds:
+                    type: array
+                    items:
+                      type: string
+                  delete_relationships:
+                    type: array
+                    items:
+                      type: string
     401:
       $ref: './../responses/unauthorized.yaml'
     403:
@@ -60,7 +74,10 @@ get:
 put:
   operationId: StartAnalysis
   summary: Start analysis
-  description: Flags the API to begin analyzing ingest data.
+  description: |
+    Submits an analysis request attributed to the authenticated user. The
+    endpoint is idempotent — at most one analysis request can be pending at a
+    time. Always returns 202 Accepted with no response body.
   tags:
     - Datapipe
     - Community

@@ -37,7 +37,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -51,7 +51,7 @@ import (
 
 func TestResources_CreateSavedQuery_NotAUserAuth(t *testing.T) {
 	// Setup
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
 			Owner: model.Role{},
@@ -296,7 +296,7 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 
 func TestResources_UpdateSavedQuery_NotAUserAuth(t *testing.T) {
 	// Setup
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
 			Owner: model.Role{},
@@ -884,7 +884,7 @@ func TestResources_UpdateSavedQuery_AdminPublicQuery_Success(t *testing.T) {
 
 func TestResources_DeleteSavedQuery_NotAUserAuth(t *testing.T) {
 	// Setup
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
 			Owner: model.Role{},
@@ -1281,7 +1281,7 @@ func TestResources_DeleteSavedQuery(t *testing.T) {
 }
 
 func createContextWithOwnerId(id uuid2.UUID) context.Context {
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
 			Owner: model.User{
@@ -1296,7 +1296,7 @@ func createContextWithOwnerId(id uuid2.UUID) context.Context {
 }
 
 func createContextWithAdminOwnerId(id uuid2.UUID) context.Context {
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
 			Owner: model.User{
@@ -1928,6 +1928,68 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 						jsonFile, err := json.Marshal(query)
 						require.NoError(t, err)
 						_, err = io.Copy(file, bytes.NewReader(jsonFile))
+						require.NoError(t, err)
+					}
+					err = zipWriter.Close()
+					require.NoError(t, err)
+					req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPost, "/api/v2/saved-queries/import", bytes.NewReader(zipBuffer.Bytes()))
+					req.Header.Set("Content-Type", mediatypes.ApplicationZip.String())
+					require.NoError(t, err)
+					return req, err
+				},
+			},
+			expect: expected{
+				responseCode: http.StatusCreated,
+				responseBody: "imported 3 queries",
+			},
+		},
+		{
+			name: "success - json with UTF-8 BOM",
+			fields: fields{
+				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
+					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
+					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(nil)
+					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
+				},
+			},
+			args: args{
+				buildRequest: func() (*http.Request, error) {
+					body, err := json.Marshal(testQuery)
+					require.NoError(t, err)
+					// Prepend UTF-8 BOM
+					bodyWithBOM := append([]byte{0xEF, 0xBB, 0xBF}, body...)
+					req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPost, "/api/v2/saved-queries/import", bytes.NewReader(bodyWithBOM))
+					req.Header.Set("Content-Type", mediatypes.ApplicationJson.String())
+					require.NoError(t, err)
+					return req, err
+				},
+			},
+			expect: expected{
+				responseCode: http.StatusCreated,
+				responseBody: "imported 1 queries",
+			},
+		},
+		{
+			name: "success - zip with UTF-8 BOM in JSON files",
+			fields: fields{
+				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
+					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
+					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(nil)
+					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
+				},
+			},
+			args: args{
+				buildRequest: func() (*http.Request, error) {
+					zipBuffer := new(bytes.Buffer)
+					zipWriter := zip.NewWriter(zipBuffer)
+					for _, query := range testQueries {
+						file, err := zipWriter.Create(query.Name)
+						require.NoError(t, err)
+						jsonFile, err := json.Marshal(query)
+						require.NoError(t, err)
+						// Prepend UTF-8 BOM to JSON content
+						jsonFileWithBOM := append([]byte{0xEF, 0xBB, 0xBF}, jsonFile...)
+						_, err = io.Copy(file, bytes.NewReader(jsonFileWithBOM))
 						require.NoError(t, err)
 					}
 					err = zipWriter.Close()
