@@ -136,6 +136,10 @@ func TestGetDatapipeStatus(t *testing.T) {
 	}
 
 	t.Run("returns 200 OK with datapipe status in idle state", func(t *testing.T) {
+		// Ensure datapipe is in idle state (default after migration)
+		err := db.SetDatapipeStatus(ctx, model.DatapipeStatusIdle)
+		require.NoError(t, err)
+
 		resp, err := http.DefaultClient.Do(newGetRequest(t))
 		require.NoError(t, err)
 		defer resp.Body.Close()
@@ -151,5 +155,64 @@ func TestGetDatapipeStatus(t *testing.T) {
 		assert.IsType(t, time.Time{}, envelope.Data.UpdatedAt)
 		assert.IsType(t, time.Time{}, envelope.Data.LastCompleteAnalysisAt)
 		assert.IsType(t, time.Time{}, envelope.Data.LastAnalysisRunAt)
+		// next_scheduled_analysis_at is nullable (Enterprise-only field)
+		assert.IsType(t, time.Time{}, envelope.Data.NextScheduledAnalysisAt.Time)
+	})
+
+	t.Run("returns 200 OK with datapipe status in ingesting state", func(t *testing.T) {
+		// Set datapipe to ingesting state
+		err := db.SetDatapipeStatus(ctx, model.DatapipeStatusIngesting)
+		require.NoError(t, err)
+
+		resp, err := http.DefaultClient.Do(newGetRequest(t))
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		var envelope datapipeStatusResponseEnvelope
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+
+		assert.Equal(t, model.DatapipeStatusIngesting, envelope.Data.Status)
+	})
+
+	t.Run("returns 200 OK with datapipe status in analyzing state", func(t *testing.T) {
+		// Set datapipe to analyzing state
+		err := db.SetDatapipeStatus(ctx, model.DatapipeStatusAnalyzing)
+		require.NoError(t, err)
+
+		resp, err := http.DefaultClient.Do(newGetRequest(t))
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		var envelope datapipeStatusResponseEnvelope
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+
+		assert.Equal(t, model.DatapipeStatusAnalyzing, envelope.Data.Status)
+	})
+
+	t.Run("returns 200 OK with updated timestamps after analysis", func(t *testing.T) {
+		// Set analysis start time
+		err := db.SetLastAnalysisStartTime(ctx)
+		require.NoError(t, err)
+
+		// Complete the analysis
+		err = db.UpdateLastAnalysisCompleteTime(ctx)
+		require.NoError(t, err)
+
+		resp, err := http.DefaultClient.Do(newGetRequest(t))
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		var envelope datapipeStatusResponseEnvelope
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+
+		// Timestamps should be non-zero after setting them
+		assert.False(t, envelope.Data.LastAnalysisRunAt.IsZero(), "last_analysis_run_at should be set")
+		assert.False(t, envelope.Data.LastCompleteAnalysisAt.IsZero(), "last_complete_analysis_at should be set")
 	})
 }
