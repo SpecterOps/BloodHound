@@ -35,7 +35,8 @@ export const searchKeys = {
     detail: (keyword: string, type: string | undefined) => [...searchKeys.all, keyword, type] as const,
 };
 
-export const useSearch = (keyword: string, type: string | undefined) => {
+export const useSearch = (keyword = '', type: string | undefined) => {
+    console.log('use search keyword', keyword);
     const timeoutLimitEnabled = useTimeoutLimitConfiguration();
     const timeout = timeoutLimitEnabled ? 60000 : 0;
 
@@ -59,6 +60,32 @@ export const useSearch = (keyword: string, type: string | undefined) => {
         keepPreviousData: true,
         retry: false,
     });
+};
+
+export const useKeywordAndTypeValues = (
+    inputValue: string | undefined
+): { keyword: string | undefined; type: string | undefined } => {
+    const { data } = useGraphNodeKinds();
+
+    let keyword: string | undefined = inputValue;
+    let type: string | undefined = undefined;
+
+    if (inputValue && inputValue.length > 1) {
+        // We use the : as q search/qualifier operator for searches so we need to perform the below to parse it if necessary
+        // Only do it if more than one char and that way if a user wants to use the : as a search string it works
+        const splitValue = inputValue.split(':');
+        if (splitValue.length > 1) {
+            const hasNodeKind = !!data?.kinds.find(
+                (kind) => kind.toLocaleLowerCase() === splitValue[0].toLocaleLowerCase() //abstract
+            );
+            if (hasNodeKind) {
+                type = splitValue[0];
+                keyword = splitValue.slice(1).join(':');
+            }
+        }
+    }
+
+    return { keyword, type };
 };
 
 export const getKeywordAndTypeValues = (inputValue = ''): { keyword: string; type: string | undefined } => {
@@ -90,7 +117,7 @@ const getErrorText = (error: any, type: string | undefined): string => {
     return errorMessage;
 };
 
-const getNoDataText = (debouncedInputValue: string, type: string | undefined, keyword: string): string => {
+const getNoDataText = (debouncedInputValue: string, type: string | undefined, keyword: string | undefined): string => {
     if (debouncedInputValue === '' && type === undefined)
         return 'Begin typing to search. Prepend a type followed by a colon to search by type, e.g., user:bob';
     else if (debouncedInputValue === '' && type !== undefined)
@@ -107,7 +134,7 @@ export const getEmptyResultsText = (
     error: any,
     debouncedInputValue: string,
     type: string | undefined,
-    keyword: string,
+    keyword: string | undefined,
     data: SearchResults | undefined
 ): string => {
     if (isLoading || isFetching) {
