@@ -39,7 +39,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -264,8 +266,27 @@ func TestGetDatapipeStatus_WithRouting(t *testing.T) {
 	// Register global middleware (auth, rate limiting, etc)
 	registration.RegisterFossGlobalMiddleware(&routerInst, cfg, resolver, auther, db)
 
-	// Register the old route with middleware
-	routerInst.GET("/api/v2/datapipe/status", newDatapipeStatusHandler(db)).RequireAuth()
+	// Register the actual production routes using v2.Resources and NewV2API
+	// This ensures we're testing the real route wiring, not a test-specific mock.
+	// Most parameters can be nil since we're only testing the datapipe/status endpoint.
+	apiCache, err := cache.NewCache(cache.Config{MaxSize: 1000})
+	require.NoError(t, err)
+
+	resources := v2.NewResources(
+		db,                           // rdms database.Database
+		nil,                          // graphDB *graph.DatabaseSwitch (not needed for datapipe status)
+		cfg,                          // cfg config.Configuration
+		apiCache,                     // apiCache cache.Cache
+		nil,                          // graphQuery queries.Graph (not needed for datapipe status)
+		config.CollectorManifests{}, // collectorManifests
+		authorizer,                   // authorizer
+		auther,                       // authenticator
+		upload.IngestSchema{},        // ingestSchema (needs non-nil struct)
+		nil,                          // fileServiceResolver (not needed for datapipe status)
+		nil,                          // dogtagsService (not needed for datapipe status)
+		nil,                          // openGraphSchemaService (not needed for datapipe status)
+	)
+	registration.NewV2API(resources, &routerInst)
 
 	handler := routerInst.Handler()
 
