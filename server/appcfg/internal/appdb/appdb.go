@@ -27,8 +27,8 @@ type pgxQuerier interface {
 type datapipeStatusRow struct {
 	Status                  string    `db:"status"`
 	UpdatedAt               time.Time `db:"updated_at"`
-	LastCompleteAnalysisAt  time.Time `db:"last_complete_analysis_at"`
-	LastAnalysisRunAt       time.Time `db:"last_analysis_run_at"`
+	LastCompleteAnalysisAt  null.Time `db:"last_complete_analysis_at"`
+	LastAnalysisRunAt       null.Time `db:"last_analysis_run_at"`
 	NextScheduledAnalysisAt null.Time `db:"next_scheduled_analysis_at"`
 }
 

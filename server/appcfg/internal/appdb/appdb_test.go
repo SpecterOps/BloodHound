@@ -56,8 +56,8 @@ func TestStore_GetDatapipeStatus(t *testing.T) {
 		ctx         = context.Background()
 		dbErr       = errors.New("connection refused")
 		updatedAt   = time.Date(2026, 6, 18, 12, 0, 0, 0, time.UTC)
-		completedAt = time.Date(2026, 6, 18, 11, 0, 0, 0, time.UTC)
-		startedAt   = time.Date(2026, 6, 18, 10, 0, 0, 0, time.UTC)
+		completedAt = null.TimeFrom(time.Date(2026, 6, 18, 11, 0, 0, 0, time.UTC))
+		startedAt   = null.TimeFrom(time.Date(2026, 6, 18, 10, 0, 0, 0, time.UTC))
 		nextRun     = null.TimeFrom(time.Date(2026, 6, 19, 10, 0, 0, 0, time.UTC))
 		expected    = services.DatapipeStatus{
 			Status:                  services.DatapipeStatusIdle,

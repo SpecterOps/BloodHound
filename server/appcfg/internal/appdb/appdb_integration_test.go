@@ -155,8 +155,8 @@ func TestStore_GetDatapipeStatus_Integration(t *testing.T) {
 		var (
 			expectedStatus                  = services.DatapipeStatusIdle
 			expectedUpdatedAt               = time.Now().UTC().Truncate(time.Microsecond)
-			expectedLastCompleteAnalysisAt  = time.Now().UTC().Add(-1 * time.Hour).Truncate(time.Microsecond)
-			expectedLastAnalysisRunAt       = time.Now().UTC().Add(-30 * time.Minute).Truncate(time.Microsecond)
+			expectedLastCompleteAnalysisAt  = null.TimeFrom(time.Now().UTC().Add(-1 * time.Hour).Truncate(time.Microsecond))
+			expectedLastAnalysisRunAt       = null.TimeFrom(time.Now().UTC().Add(-30 * time.Minute).Truncate(time.Microsecond))
 			expectedNextScheduledAnalysisAt = null.TimeFrom(time.Now().UTC().Add(2 * time.Hour).Truncate(time.Microsecond))
 		)
 
@@ -181,8 +181,10 @@ func TestStore_GetDatapipeStatus_Integration(t *testing.T) {
 
 		assert.Equal(t, expectedStatus, status.Status)
 		assert.WithinDuration(t, expectedUpdatedAt, status.UpdatedAt, 1*time.Second)
-		assert.WithinDuration(t, expectedLastCompleteAnalysisAt, status.LastCompleteAnalysisAt, 1*time.Second)
-		assert.WithinDuration(t, expectedLastAnalysisRunAt, status.LastAnalysisRunAt, 1*time.Second)
+		assert.True(t, status.LastCompleteAnalysisAt.Valid)
+		assert.WithinDuration(t, expectedLastCompleteAnalysisAt.Time, status.LastCompleteAnalysisAt.Time, 1*time.Second)
+		assert.True(t, status.LastAnalysisRunAt.Valid)
+		assert.WithinDuration(t, expectedLastAnalysisRunAt.Time, status.LastAnalysisRunAt.Time, 1*time.Second)
 		assert.True(t, status.NextScheduledAnalysisAt.Valid)
 		assert.WithinDuration(t, expectedNextScheduledAnalysisAt.Time, status.NextScheduledAnalysisAt.Time, 1*time.Second)
 	})

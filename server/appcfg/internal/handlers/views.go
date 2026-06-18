@@ -11,8 +11,8 @@ import (
 type DatapipeStatusView struct {
 	Status                  services.DatapipeStatusType `json:"status"`
 	UpdatedAt               time.Time                   `json:"updated_at"`
-	LastCompleteAnalysisAt  time.Time                   `json:"last_complete_analysis_at"`
-	LastAnalysisRunAt       time.Time                   `json:"last_analysis_run_at"`
+	LastCompleteAnalysisAt  null.Time                   `json:"last_complete_analysis_at"`
+	LastAnalysisRunAt       null.Time                   `json:"last_analysis_run_at"`
 	NextScheduledAnalysisAt null.Time                   `json:"next_scheduled_analysis_at"`
 }
 

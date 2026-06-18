@@ -47,8 +47,8 @@ func TestHandlers_GetDatapipeStatus(t *testing.T) {
 		expected          = services.DatapipeStatus{
 			Status:                  services.DatapipeStatusIdle,
 			UpdatedAt:               time.Date(2026, 6, 18, 10, 0, 0, 0, time.UTC),
-			LastCompleteAnalysisAt:  time.Date(2026, 6, 18, 9, 30, 0, 0, time.UTC),
-			LastAnalysisRunAt:       time.Date(2026, 6, 18, 9, 0, 0, 0, time.UTC),
+			LastCompleteAnalysisAt:  null.TimeFrom(time.Date(2026, 6, 18, 9, 30, 0, 0, time.UTC)),
+			LastAnalysisRunAt:       null.TimeFrom(time.Date(2026, 6, 18, 9, 0, 0, 0, time.UTC)),
 			NextScheduledAnalysisAt: null.TimeFrom(nextScheduledTime),
 		}
 	)
