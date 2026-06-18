@@ -91,6 +91,7 @@ const initialState: RuleFormState = {
     seeds: [],
     prevSeeds: [],
     selectedObjects: [],
+    prevSelectedObjects: [],
     autoCertify: AssetGroupTagSelectorAutoCertifyDisabled,
     cypherQueryYieldsNoResults: false,
     staleCypherPreview: false,
@@ -134,16 +135,17 @@ const reducer = (state: RuleFormState, action: Action): RuleFormState => {
                 ...state,
                 ruleType: action.ruleType,
                 /**
-                 * Writing a cypher query (or even finding the right object id) is work that a user doesn't want to lose
+                 * Writing a cypher query (or even finding the right object id) is work that a user doesn't want to lose.
                  * Therefore, as we toggle between ObjectId and Cypher rule type, we hold onto that work in prevSeeds
                  * (and always hydrate this work from prevSeeds if it exists).
-                 * This only meet expectations because we have exactly 2 rule types.
-                 * When we introduce a third rule type, simple toggling will be insufficient
-                 * And we will need to store all 3 seed types explicitly.
+                 * Tthis only meet expectations because we have exactly 2 rule types.
+                 * when we introduce a third rule type, simple toggling will be insufficient
+                 * and we will need to store all 3 seed types explicitly.
                  */
                 seeds: state.prevSeeds,
                 prevSeeds: state.seeds,
-                selectedObjects: [],
+                selectedObjects: state.prevSelectedObjects,
+                prevSelectedObjects: state.selectedObjects,
             };
         case 'set-seeds':
             return { ...state, seeds: action.seeds };
