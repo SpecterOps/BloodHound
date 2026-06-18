@@ -299,6 +299,22 @@ func TestGetMyEndpoint_WithRouting(t *testing.T) {
 **File:** `server/<feature>/internal/appdb/appdb.go`
 
 ```go
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package appdb
 
 import (
@@ -330,8 +346,13 @@ func toMyRecord(row myRecord) services.MyRecord {
     return services.MyRecord{ID: row.ID, Name: row.Name}
 }
 
-type Store struct{ db pgxQuerier }
+// Store performs <feature> persistence operations directly against a PostgreSQL
+// connection. Callers receive appdb-level sentinels rather than raw driver errors.
+type Store struct {
+    db pgxQuerier
+}
 
+// NewStore returns a Store backed by the provided pgx connection pool.
 func NewStore(db pgxQuerier) *Store {
     return &Store{db: db}
 }
@@ -406,14 +427,30 @@ func TestStore_GetMyRecord(t *testing.T) {
 **File:** `server/<feature>/internal/services/services.go`
 
 ```go
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package services
+
+//go:generate go tool mockery
 
 import (
     "context"
     "errors"
 )
-
-//go:generate go tool mockery
 
 type MyRecord struct {
     ID   string
@@ -427,16 +464,19 @@ var (
     ErrNotFound = errors.New("not found")
 )
 
-// Database defines the persistence operations required by this service.
-// Defined here (consumer side) to enable dependency inversion.
+// Database describes the persistence capabilities the <feature> Service requires.
+// Implementations are expected to translate driver-specific not-found errors into
+// appdb-level sentinels so that the Service can map them to its own failure-mode errors.
 type Database interface {
     GetMyRecord(ctx context.Context, id string) (MyRecord, error)
 }
 
+// Service implements the <feature> use cases on top of a Database implementation.
 type Service struct {
     db Database
 }
 
+// NewService constructs a Service backed by the supplied Database implementation.
 func NewService(databaseInterface Database) *Service {
     return &Service{db: databaseInterface}
 }
@@ -482,6 +522,22 @@ func TestService_GetMyRecord(t *testing.T) {
 **File:** `server/<feature>/internal/handlers/views.go`
 
 ```go
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package handlers
 
 import (
@@ -489,20 +545,22 @@ import (
     "github.com/specterops/bloodhound/server/<feature>/internal/services"
 )
 
-// MyRecordView is the JSON shape returned by the handler.
-// It is separate from services.MyRecord so the wire format can change
-// without touching the domain model.
+// MyRecordView is the JSON shape returned by the <feature> handlers.
+// It is decoupled from services.MyRecord so the wire format can evolve
+// independently of the domain model.
 type MyRecordView struct {
     ID   string `json:"id"`
     Name string `json:"name"`
 }
 
-// BuildMyRecordView projects a domain model into the view type.
+// BuildMyRecordView projects a services.MyRecord into the view type the
+// handlers return in their JSON envelope.
 func BuildMyRecordView(r services.MyRecord) MyRecordView {
     return MyRecordView{ID: r.ID, Name: r.Name}
 }
 
-// JSONView satisfies responses.JSONViewer.
+// JSONView marshals the view to the byte slice expected by responses.WriteBasic,
+// satisfying the responses.JSONViewer contract.
 func (s MyRecordView) JSONView() ([]byte, error) {
     return json.Marshal(s)
 }
@@ -513,6 +571,22 @@ func (s MyRecordView) JSONView() ([]byte, error) {
 **File:** `server/<feature>/internal/handlers/handlers.go`
 
 ```go
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package handlers
 
 //go:generate go tool mockery
@@ -522,22 +596,26 @@ import (
     "errors"
     "net/http"
 
+    "github.com/specterops/bloodhound/packages/go/responses"
     "github.com/specterops/bloodhound/server/<feature>/internal/services"
-    "github.com/specterops/bloodhound/server/responses"
 )
 
-// MyFeature is the service interface required by these handlers.
+// MyFeature defines the <feature> service boundary for the <feature> handlers package.
 // Defined here (consumer side) to allow tests to swap in MockMyFeature.
 type MyFeature interface {
     GetMyRecord(ctx context.Context, id string) (services.MyRecord, error)
 }
 
+// Handlers is a dependency injection container for <feature> handlers
 type Handlers struct {
     feature MyFeature
 }
 
+// NewHandlersContainer initializes the Handlers dependency injection container
 func NewHandlersContainer(feature MyFeature) *Handlers {
-    return &Handlers{feature: feature}
+    return &Handlers{
+        feature: feature,
+    }
 }
 
 func (s Handlers) GetMyRecord(response http.ResponseWriter, request *http.Request) {
@@ -625,6 +703,22 @@ func TestHandlers_GetMyRecord(t *testing.T) {
 **File:** `server/<feature>/internal/routes/routes.go`
 
 ```go
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package routes
 
 import (
@@ -697,6 +791,25 @@ func TestRegister(t *testing.T) {
 **File:** `server/<feature>/<feature>.go`
 
 ```go
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+// Package <feature> is the wireup module for the <feature> feature. It is the
+// single place where the <feature> store, service, handlers and routes are
+// composed; the layered subpackages themselves remain unaware of each other.
 package <feature>
 
 import (
@@ -708,7 +821,7 @@ import (
     "github.com/specterops/bloodhound/server/<feature>/internal/services"
 )
 
-// Register builds the <feature> store → service → handler chain and attaches
+// Register builds the <feature> store -> service -> handler chain and attaches
 // the <feature> routes to the provided router. It is called from the modules
 // registry and receives only the infrastructure it directly needs.
 func Register(routerInst *router.Router, pool *pgxpool.Pool) {
