@@ -16,15 +16,15 @@ See README ["Adding a new feature module"](README.md#adding-a-new-feature-module
     ```
     server/<feature>/
     ├── <feature>.go        # Register() entry point
-    ├── appdb/
-    │   └── appdb.go
-    ├── handlers/
-    │   ├── handlers.go
-    │   └── views.go
-    ├── routes/
-    │   └── routes.go
-    └── services/
-        └── services.go
+    └── internal/           # Internal package for implementation details
+        ├── appdb/
+        │   └── appdb.go
+        ├── handlers/
+        │   ├── handlers.go
+        │   ├── routes.go
+        │   └── views.go
+        └── services/
+            └── services.go
     ```
 -   [ ] Add the license header to every new file (run `just generate` or copy from an existing file)
 
@@ -46,7 +46,7 @@ Before touching any production code, write a test that covers the HTTP contract 
 
 ---
 
-## Step 3 – Implement persistence in `appdb/appdb.go`
+## Step 3 – Implement persistence in `internal/appdb/appdb.go`
 
 See README ["Step 3"](README.md#3-implement-persistence-in-appdbappdbgo).
 
@@ -54,12 +54,12 @@ See README ["Step 3"](README.md#3-implement-persistence-in-appdbappdbgo).
 -   [ ] Define a package-local row struct with `db:` tags for `pgx.RowToStructByName`
 -   [ ] Implement `Store` methods using `sqlbuilder.PostgreSQL` for all SQL construction
 -   [ ] Return services-layer sentinels (not driver errors) so callers can use `errors.Is` without importing `appdb`
--   [ ] Write unit tests in `appdb/appdb_test.go` using `pgxmock`
--   [ ] Write integration tests in `appdb/appdb_integration_test.go` using `pgtestdb` with `//go:build integration`
+-   [ ] Write unit tests in `internal/appdb/appdb_test.go` using `pgxmock`
+-   [ ] Write integration tests in `internal/appdb/appdb_integration_test.go` using `pgtestdb` with `//go:build integration`
 
 ---
 
-## Step 4 – Define domain types and interfaces in `services/services.go`
+## Step 4 – Define domain types and interfaces in `internal/services/services.go`
 
 See README ["Step 2"](README.md#2-define-domain-types-and-interfaces-in-servicesservicesgo).
 
@@ -69,11 +69,11 @@ See README ["Step 2"](README.md#2-define-domain-types-and-interfaces-in-services
 -   [ ] Implement the Service methods on the `Service` struct that coordinate domain logic and call the `Database` interface
 -   [ ] Implement a stub for the `Database` methods (no logic, no structs) to satisfy the interface in the service
 -   [ ] Add `//go:generate go tool mockery` at the top of the file
--   [ ] Write unit tests in `services/services_test.go` using `MockDatabase` (AI can be helpful here)
+-   [ ] Write unit tests in `internal/services/services_test.go` using `MockDatabase` (AI can be helpful here)
 
 ---
 
-## Step 5 – Define JSON views in `handlers/views.go`
+## Step 5 – Define JSON views in `internal/handlers/views.go`
 
 See README ["Step 4"](README.md#4-define-json-views-in-handlersviewsgo).
 
@@ -83,7 +83,7 @@ See README ["Step 4"](README.md#4-define-json-views-in-handlersviewsgo).
 
 ---
 
-## Step 6 – Define the handler interface and methods in `handlers/handlers.go`
+## Step 6 – Define the handler interface and methods in `internal/handlers/handlers.go`
 
 See README ["Step 5"](README.md#5-define-the-handler-interface-and-methods-in-handlershandlersgo).
 
@@ -94,16 +94,16 @@ See README ["Step 5"](README.md#5-define-the-handler-interface-and-methods-in-ha
     -   Call the service via the interface
     -   Write the response using the `responses` package
 -   [ ] Add a package-level `handleXxxError(request, response, err)` helper that maps sentinel errors to HTTP status codes using `errors.Is` — keeps every handler method DRY and makes the error contract visible in one place
--   [ ] Write unit tests in `handlers/handlers_test.go` using `MockMyFeature`
+-   [ ] Write unit tests in `internal/handlers/handlers_test.go` using `MockMyFeature`
 
 ---
 
-## Step 7 – Register routes in `routes/routes.go`
+## Step 7 – Register routes in `internal/routes/routes.go`
 
 See README ["Step 6"](README.md#6-register-routes-in-handlersroutesgo).
 
 -   [ ] Call `routerInst.GET/PUT/DELETE(...)` with the correct path and `.RequirePermissions(...)`
--   [ ] Write a routes test in `routes/routes_test.go` that asserts every method+path is registered
+-   [ ] Write a routes test in `internal/routes/routes_test.go` that asserts every method+path is registered
 
 ---
 
@@ -111,6 +111,7 @@ See README ["Step 6"](README.md#6-register-routes-in-handlersroutesgo).
 
 See README ["Step 7"](README.md#7-wire-all-layers-in-myfeaturemyfeaturego).
 
+-   [ ] Import the internal packages: `internal/appdb`, `internal/handlers`, `internal/routes`, `internal/services`
 -   [ ] Implement `Register(routerInst *router.Router, pool *pgxpool.Pool)` that chains `appdb → services → handlers → routes`
 
 ---
@@ -125,7 +126,7 @@ See README ["Step 8"](README.md#8-add-to-the-module-registry).
 
 ---
 
-## Step 11 – Swap the e2e test to use the new handler
+## Step 10 – Swap the e2e test to use the new handler
 
 -   [ ] Update the handler factory in the e2e test to wire the new stack instead of the old handler:
 
@@ -141,9 +142,10 @@ See README ["Step 8"](README.md#8-add-to-the-module-registry).
         svc   := services.NewService(store)
         return handlers.NewHandlersContainer(svc).MyMethod
     }
+    // Note: Import from "github.com/specterops/bloodhound/server/<feature>/internal/{appdb,handlers,services}"
     ```
 
--   [ ] Confirm the e2e test is still green (no assertion changes): `go test -tags integration ./cmd/api/src/services/...`
+-   [ ] Confirm the e2e test is still green (no assertion changes): `go test -tags integration ./server/<feature>/...`
 
 ---
 

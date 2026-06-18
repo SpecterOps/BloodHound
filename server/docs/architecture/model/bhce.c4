@@ -77,22 +77,22 @@ model {
 
         analysisRoutes = goPackage 'routes' {
           description 'Binds GET/PUT/DELETE /api/v2/analysis to handler methods with permission middleware.'
-          technology 'bhce/server/analysis/routes'
+          technology 'bhce/server/analysis/internal/routes'
         }
 
         analysisHandlers = goPackage 'handlers' {
           description 'HTTP layer. Defines the Analysis interface (GetRequest/CreateRequest/CancelAnalysisRequest), reads auth context, maps domain errors to status codes, writes JSON.'
-          technology 'bhce/server/analysis/handlers'
+          technology 'bhce/server/analysis/internal/handlers'
         }
 
         analysisServices = goPackage 'services' {
           description 'Business-logic layer. Owns domain types and sentinel errors; defines the Database interface implemented by appdb.'
-          technology 'bhce/server/analysis/services'
+          technology 'bhce/server/analysis/internal/services'
         }
 
         analysisAppdb = goPackage 'appdb' {
           description 'Persistence layer. Builds SQL with go-sqlbuilder, executes via pgx, maps driver errors to domain sentinels.'
-          technology 'bhce/server/analysis/appdb'
+          technology 'bhce/server/analysis/internal/appdb'
         }
       }
     }
