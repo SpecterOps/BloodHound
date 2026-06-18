@@ -18,7 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { createMockAssetGroup, createMockMemberCounts, createMockSearchResults } from '../../mocks/factories';
-import { mockKindsHandler } from '../../mocks/handlers/graphKinds';
+import { mockGetConfigurationHandler, mockKindsHandler } from '../../mocks/handlers';
 import { act, render, waitFor } from '../../test-utils';
 import { AUTOCOMPLETE_PLACEHOLDER } from './AssetGroupAutocomplete';
 import AssetGroupEdit from './AssetGroupEdit';
@@ -29,6 +29,7 @@ const memberCounts = createMockMemberCounts();
 
 const server = setupServer(
     mockKindsHandler(),
+    mockGetConfigurationHandler(),
     rest.get('/api/v2/search', (req, res, ctx) => {
         return res(
             ctx.json({

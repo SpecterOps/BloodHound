@@ -13,9 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { rest } from 'msw';
 
-export * from './bloodHoundUsers';
-export * from './configuration';
-export * from './environments';
-export * from './graphKinds';
-export { default as zoneHandlers } from './zoneHandlers';
+export const defaultConfigurationResponse = { data: [] };
+
+export const mockGetConfigurationHandler = (response = defaultConfigurationResponse) => {
+    return rest.get('/api/v2/config', (_req, res, ctx) => res(ctx.json(response)));
+};
