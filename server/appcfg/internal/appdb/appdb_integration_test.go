@@ -39,30 +39,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// setupStore spins up an isolated postgres database via pgtestdb, applies all
-// migrations, and returns an appcfg Store backed by the resulting pgx pool.
-func setupStore(t *testing.T) *appdb.Store {
-	t.Helper()
-
-	var (
-		ctx      = context.Background()
-		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
-	)
-
-	cfg, err := config.NewDefaultConnectionConfiguration(connConf.URL())
-	require.NoError(t, err)
-
-	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
-	require.NoError(t, err)
-
-	bhDB := database.NewBloodhoundDB(gormDB, dbPool, auth.NewIdentityResolver(), cfg)
-	require.NoError(t, bhDB.Migrate(ctx))
-
-	t.Cleanup(func() { bhDB.Close(ctx) })
-
-	return appdb.NewStore(bhDB.Pool())
-}
-
 // setupStoreAndPool is like setupStore but also returns the underlying pgxpool.Pool so
 // callers that need to seed rows not exposed by the Store API can do so directly.
 func setupStoreAndPool(t *testing.T) (*appdb.Store, *pgxpool.Pool) {
