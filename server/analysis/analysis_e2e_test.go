@@ -161,12 +161,16 @@ func newCancelAnalysisHandler(db *database.BloodhoundDB, userID uuid.UUID) http.
 
 // mintJWT creates a signed JWT token for the given user using the authenticator.
 // This creates a proper session in the database and returns a valid token.
-// The user is granted all roles (and permissions) from the database for testing.
+// The user is granted the Administrator role which has all permissions.
 func mintJWT(t *testing.T, ctx context.Context, db *database.BloodhoundDB, auther api.Authenticator, user model.User) string {
 	t.Helper()
 
-	roles, err := db.GetAllRoles(ctx, "", model.SQLFilter{})
+	// Get the Administrator role which has all permissions
+	allRoles, err := db.GetAllRoles(ctx, "", model.SQLFilter{})
 	require.NoError(t, err)
+
+	adminRole, found := allRoles.FindByName(auth.RoleAdministrator)
+	require.True(t, found, "Administrator role should exist in database")
 
 	authSecret := model.AuthSecret{
 		Digest:       "dummy-digest-for-e2e-test",
@@ -174,14 +178,24 @@ func mintJWT(t *testing.T, ctx context.Context, db *database.BloodhoundDB, authe
 		ExpiresAt:    time.Now().Add(24 * time.Hour).UTC(),
 	}
 	user.AuthSecret = &authSecret
-	user.Roles = roles
+	user.Roles = model.Roles{adminRole}
 
 	dbUser, err := db.CreateUser(ctx, user)
 	require.NoError(t, err)
 
+	// Reload user to ensure roles and permissions are properly loaded
 	dbUser, err = db.GetUser(ctx, dbUser.ID)
 	require.NoError(t, err)
 	require.NotNil(t, dbUser.AuthSecret, "User should have an AuthSecret")
+	require.NotEmpty(t, dbUser.Roles, "User should have roles assigned")
+
+	// Verify the user has the expected permissions
+	permissions := dbUser.Roles.Permissions()
+	t.Logf("User has %d permissions from %d roles", len(permissions), len(dbUser.Roles))
+	for _, role := range dbUser.Roles {
+		t.Logf("Role: %s has %d permissions", role.Name, len(role.Permissions))
+	}
+	require.NotEmpty(t, permissions, "User should have permissions from their roles")
 
 	token, err := auther.CreateSession(ctx, dbUser, *dbUser.AuthSecret)
 	require.NoError(t, err)
