@@ -183,19 +183,14 @@ func mintJWT(t *testing.T, ctx context.Context, db *database.BloodhoundDB, authe
 	dbUser, err := db.CreateUser(ctx, user)
 	require.NoError(t, err)
 
-	// Reload user to ensure roles and permissions are properly loaded
+	// CRITICAL: Must reload user with full associations before creating session
+	// The session stores UserID, and when middleware validates, it calls GetUserSession
+	// which preloads User.Roles.Permissions. We need to ensure the user_roles mapping exists.
 	dbUser, err = db.GetUser(ctx, dbUser.ID)
 	require.NoError(t, err)
 	require.NotNil(t, dbUser.AuthSecret, "User should have an AuthSecret")
 	require.NotEmpty(t, dbUser.Roles, "User should have roles assigned")
-
-	// Verify the user has the expected permissions
-	permissions := dbUser.Roles.Permissions()
-	t.Logf("User has %d permissions from %d roles", len(permissions), len(dbUser.Roles))
-	for _, role := range dbUser.Roles {
-		t.Logf("Role: %s has %d permissions", role.Name, len(role.Permissions))
-	}
-	require.NotEmpty(t, permissions, "User should have permissions from their roles")
+	require.Greater(t, len(dbUser.Roles[0].Permissions), 0, "Administrator role should have permissions")
 
 	token, err := auther.CreateSession(ctx, dbUser, *dbUser.AuthSecret)
 	require.NoError(t, err)
@@ -233,6 +228,7 @@ func TestGetAnalysisStatus(t *testing.T) {
 		user = model.User{
 			PrincipalName: "test-user@example.com",
 			EmailAddress:  null.StringFrom("test-user@example.com"),
+			EULAAccepted:  true, // Required for permission checks to work
 		}
 		token = mintJWT(t, ctx, db, auther, user)
 	)
@@ -353,6 +349,7 @@ func TestCreateAnalysisRequest(t *testing.T) {
 		user = model.User{
 			PrincipalName: "test-user@example.com",
 			EmailAddress:  null.StringFrom("test-user@example.com"),
+			EULAAccepted:  true, // Required for permission checks to work
 		}
 		token = mintJWT(t, ctx, db, auther, user)
 	)
@@ -490,6 +487,7 @@ func TestCancelAnalysisRequest(t *testing.T) {
 		user = model.User{
 			PrincipalName: "test-user@example.com",
 			EmailAddress:  null.StringFrom("test-user@example.com"),
+			EULAAccepted:  true, // Required for permission checks to work
 		}
 		token = mintJWT(t, ctx, db, auther, user)
 	)
