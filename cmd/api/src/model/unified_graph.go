@@ -58,6 +58,7 @@ type UnifiedNode struct {
 	ObjectId      string         `json:"objectId"`
 	IsTierZero    bool           `json:"isTierZero"`
 	IsOwnedObject bool           `json:"isOwnedObject"`
+	IsDecoyObject bool           `json:"isDecoyObject"`
 	LastSeen      time.Time      `json:"lastSeen"`
 	Properties    map[string]any `json:"properties,omitempty"`
 	Hidden        bool           `json:"hidden,omitempty"`
@@ -100,6 +101,7 @@ func FromDAWGSNode(primaryDisplayKinds graphschema.PrimaryDisplayKinds, node *gr
 		ObjectId:      objectId,
 		IsTierZero:    tiering.IsTierZero(node),
 		IsOwnedObject: tiering.IsOwned(node),
+		IsDecoyObject: tiering.IsDecoy(node),
 		LastSeen:      lastSeen,
 		Properties:    properties,
 	}

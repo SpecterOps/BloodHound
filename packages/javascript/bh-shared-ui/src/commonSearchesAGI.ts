@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { OWNED_OBJECT_TAG, TIER_ZERO_TAG } from './constants';
+import { DECOY_OBJECT_TAG, OWNED_OBJECT_TAG, TIER_ZERO_TAG } from './constants';
 import { ActiveDirectoryPathfindingEdges, AzurePathfindingEdges } from './graphSchema';
 import { CommonSearchType } from './types';
 
@@ -23,6 +23,7 @@ const categoryAzure = 'Azure';
 
 const azureTransitEdgeTypes = AzurePathfindingEdges().join('|');
 const adTransitEdgeTypes = ActiveDirectoryPathfindingEdges().join('|');
+const excludeDecoyNodesAGI = `none(n IN nodes(p) WHERE COALESCE(n.system_tags, '') CONTAINS '${DECOY_OBJECT_TAG}')`;
 
 const highPrivilegedRoleDisplayNameRegex =
     '^(Global Administrator|User Administrator|Cloud Application Administrator|Authentication Policy Administrator|Exchange Administrator|Helpdesk Administrator|Privileged Authentication Administrator|Privileged Role Administrator).*$';
@@ -70,47 +71,47 @@ export const CommonSearches: CommonSearchType[] = [
             {
                 name: 'Principals with DCSync privileges',
                 description: '',
-                query: `MATCH p=(:Base)-[:DCSync|AllExtendedRights|GenericAll]->(:Domain)\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=(:Base)-[:DCSync|AllExtendedRights|GenericAll]->(:Domain)\nWHERE ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Principals with foreign domain group membership',
                 description: '',
-                query: `MATCH p=(s:Base)-[:MemberOf]->(t:Group)\nWHERE s.domainsid<>t.domainsid\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=(s:Base)-[:MemberOf]->(t:Group)\nWHERE s.domainsid<>t.domainsid\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Computers where Domain Users are local administrators',
                 description: '',
-                query: `MATCH p=(s:Group)-[:AdminTo]->(:Computer)\nWHERE s.objectid ENDS WITH '-513'\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=(s:Group)-[:AdminTo]->(:Computer)\nWHERE s.objectid ENDS WITH '-513'\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Computers where Domain Users can read LAPS passwords',
                 description: '',
-                query: `MATCH p=(s:Group)-[:AllExtendedRights|ReadLAPSPassword]->(:Computer)\nWHERE s.objectid ENDS WITH '-513'\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=(s:Group)-[:AllExtendedRights|ReadLAPSPassword]->(:Computer)\nWHERE s.objectid ENDS WITH '-513'\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Paths from Domain Users to Tier Zero / High Value targets',
                 description: '',
-                query: `MATCH p=shortestPath((s:Group)-[:${adTransitEdgeTypes}*1..]->(t))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s.objectid ENDS WITH '-513' AND s<>t\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=shortestPath((s:Group)-[:${adTransitEdgeTypes}*1..]->(t))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s.objectid ENDS WITH '-513' AND s<>t\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Workstations where Domain Users can RDP',
                 description: '',
-                query: `MATCH p=(s:Group)-[:CanRDP]->(t:Computer)\nWHERE s.objectid ENDS WITH '-513' AND NOT toUpper(t.operatingsystem) CONTAINS 'SERVER'\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=(s:Group)-[:CanRDP]->(t:Computer)\nWHERE s.objectid ENDS WITH '-513' AND NOT toUpper(t.operatingsystem) CONTAINS 'SERVER'\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Servers where Domain Users can RDP',
                 description: '',
-                query: `MATCH p=(s:Group)-[:CanRDP]->(t:Computer)\nWHERE s.objectid ENDS WITH '-513' AND toUpper(t.operatingsystem) CONTAINS 'SERVER'\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=(s:Group)-[:CanRDP]->(t:Computer)\nWHERE s.objectid ENDS WITH '-513' AND toUpper(t.operatingsystem) CONTAINS 'SERVER'\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Dangerous privileges for Domain Users groups',
                 description: '',
-                query: `MATCH p=(s:Group)-[r:${adTransitEdgeTypes}]->(:Base)\nWHERE s.objectid ENDS WITH '-513'\nAND NOT r:MemberOf\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=(s:Group)-[r:${adTransitEdgeTypes}]->(:Base)\nWHERE s.objectid ENDS WITH '-513'\nAND NOT r:MemberOf\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Domain Admins logons to non-Domain Controllers',
                 description: '',
-                query: `MATCH (s)-[:MemberOf*0..]->(g:Group)\nWHERE g.objectid ENDS WITH '-516'\nWITH COLLECT(s) AS exclude\nMATCH p = (c:Computer)-[:HasSession]->(:User)-[:MemberOf*1..]->(g:Group)\nWHERE g.objectid ENDS WITH '-512' AND NOT c IN exclude\nRETURN p\nLIMIT 1000`,
+                query: `MATCH (s)-[:MemberOf*0..]->(g:Group)\nWHERE g.objectid ENDS WITH '-516'\nWITH COLLECT(s) AS exclude\nMATCH p = (c:Computer)-[:HasSession]->(:User)-[:MemberOf*1..]->(g:Group)\nWHERE g.objectid ENDS WITH '-512' AND NOT c IN exclude\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
         ],
     },
@@ -121,22 +122,22 @@ export const CommonSearches: CommonSearchType[] = [
             {
                 name: 'Kerberoastable members of Tier Zero / High Value groups',
                 description: '',
-                query: `MATCH (u:User)\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH '-502'\nAND NOT COALESCE(u.gmsa, false) = true\nAND NOT COALESCE(u.msa, false) = true\nAND COALESCE(u.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nRETURN u\nLIMIT 100`,
+                query: `MATCH (u:User)\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH '-502'\nAND NOT COALESCE(u.gmsa, false) = true\nAND NOT COALESCE(u.msa, false) = true\nAND COALESCE(u.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nAND NOT COALESCE(u.system_tags, '') CONTAINS '${DECOY_OBJECT_TAG}'\nRETURN u\nLIMIT 100`,
             },
             {
                 name: 'All Kerberoastable users',
                 description: '',
-                query: `MATCH (u:User)\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH '-502'\nAND NOT COALESCE(u.gmsa, false) = true\nAND NOT COALESCE(u.msa, false) = true\nRETURN u\nLIMIT 100`,
+                query: `MATCH (u:User)\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH '-502'\nAND NOT COALESCE(u.gmsa, false) = true\nAND NOT COALESCE(u.msa, false) = true\nAND NOT COALESCE(u.system_tags, '') CONTAINS '${DECOY_OBJECT_TAG}'\nRETURN u\nLIMIT 100`,
             },
             {
                 name: 'Kerberoastable users with most admin privileges',
                 description: '',
-                query: `MATCH (u:User)\nWHERE u.hasspn = true\n  AND u.enabled = true\n  AND NOT u.objectid ENDS WITH '-502'\n  AND NOT COALESCE(u.gmsa, false) = true\n  AND NOT COALESCE(u.msa, false) = true\nMATCH (u)-[:MemberOf|AdminTo*1..]->(c:Computer)\nWITH DISTINCT u, COUNT(c) AS adminCount\nRETURN u\nORDER BY adminCount DESC\nLIMIT 100`,
+                query: `MATCH (u:User)\nWHERE u.hasspn = true\n  AND u.enabled = true\n  AND NOT u.objectid ENDS WITH '-502'\n  AND NOT COALESCE(u.gmsa, false) = true\n  AND NOT COALESCE(u.msa, false) = true\n  AND NOT COALESCE(u.system_tags, '') CONTAINS '${DECOY_OBJECT_TAG}'\nMATCH p=(u)-[:MemberOf|AdminTo*1..]->(c:Computer)\nWHERE ${excludeDecoyNodesAGI}\nWITH u, COUNT(DISTINCT c) AS adminCount\nRETURN u\nORDER BY adminCount DESC\nLIMIT 100`,
             },
             {
                 name: 'AS-REP Roastable users (DontReqPreAuth)',
                 description: '',
-                query: `MATCH (u:User)\nWHERE u.dontreqpreauth = true\nAND u.enabled = true\nRETURN u\nLIMIT 100`,
+                query: `MATCH (u:User)\nWHERE u.dontreqpreauth = true\nAND u.enabled = true\nAND NOT COALESCE(u.system_tags, '') CONTAINS '${DECOY_OBJECT_TAG}'\nRETURN u\nLIMIT 100`,
             },
         ],
     },
@@ -147,37 +148,37 @@ export const CommonSearches: CommonSearchType[] = [
             {
                 name: 'Shortest paths to systems trusted for unconstrained delegation',
                 description: '',
-                query: `MATCH p=shortestPath((s)-[:${adTransitEdgeTypes}*1..]->(t:Computer))\nWHERE t.unconstraineddelegation = true AND s<>t\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=shortestPath((s)-[:${adTransitEdgeTypes}*1..]->(t:Computer))\nWHERE t.unconstraineddelegation = true AND s<>t\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Shortest paths to Domain Admins from Kerberoastable users',
                 description: '',
-                query: `MATCH p=shortestPath((s:User)-[:${adTransitEdgeTypes}*1..]->(t:Group))\nWHERE s.hasspn=true\nAND s.enabled = true\nAND NOT s.objectid ENDS WITH '-502'\nAND NOT COALESCE(s.gmsa, false) = true\nAND NOT COALESCE(s.msa, false) = true\nAND t.objectid ENDS WITH '-512'\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=shortestPath((s:User)-[:${adTransitEdgeTypes}*1..]->(t:Group))\nWHERE s.hasspn=true\nAND s.enabled = true\nAND NOT s.objectid ENDS WITH '-502'\nAND NOT COALESCE(s.gmsa, false) = true\nAND NOT COALESCE(s.msa, false) = true\nAND t.objectid ENDS WITH '-512'\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Shortest paths to Tier Zero / High Value targets',
                 description: '',
-                query: `MATCH p=shortestPath((s)-[:${adTransitEdgeTypes}*1..]->(t))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s<>t\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=shortestPath((s)-[:${adTransitEdgeTypes}*1..]->(t))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s<>t\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Shortest paths from Domain Users to Tier Zero / High Value targets',
                 description: '',
-                query: `MATCH p=shortestPath((s:Group)-[:${adTransitEdgeTypes}*1..]->(t))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s.objectid ENDS WITH '-513' AND s<>t\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=shortestPath((s:Group)-[:${adTransitEdgeTypes}*1..]->(t))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s.objectid ENDS WITH '-513' AND s<>t\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Shortest paths to Domain Admins',
                 description: '',
-                query: `MATCH p=shortestPath((t:Group)<-[:${adTransitEdgeTypes}*1..]-(s:Base))\nWHERE t.objectid ENDS WITH '-512' AND s<>t\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=shortestPath((t:Group)<-[:${adTransitEdgeTypes}*1..]-(s:Base))\nWHERE t.objectid ENDS WITH '-512' AND s<>t\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Shortest paths from Owned objects to Tier Zero',
                 description: '',
-                query: `// MANY TO MANY SHORTEST PATH QUERIES USE EXCESSIVE SYSTEM RESOURCES AND TYPICALLY WILL NOT COMPLETE\n// UNCOMMENT THE FOLLOWING LINES BY REMOVING THE DOUBLE FORWARD SLASHES AT YOUR OWN RISK\n// MATCH p=shortestPath((s)-[:${adTransitEdgeTypes}*1..]->(t))\n// WHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s<>t\n// AND COALESCE(s.system_tags, '') CONTAINS '${OWNED_OBJECT_TAG}'\n// RETURN p\n// LIMIT 1000`,
+                query: `// MANY TO MANY SHORTEST PATH QUERIES USE EXCESSIVE SYSTEM RESOURCES AND TYPICALLY WILL NOT COMPLETE\n// UNCOMMENT THE FOLLOWING LINES BY REMOVING THE DOUBLE FORWARD SLASHES AT YOUR OWN RISK\n// MATCH p=shortestPath((s)-[:${adTransitEdgeTypes}*1..]->(t))\n// WHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s<>t\n// AND COALESCE(s.system_tags, '') CONTAINS '${OWNED_OBJECT_TAG}'\n// AND ${excludeDecoyNodesAGI}\n// RETURN p\n// LIMIT 1000`,
             },
             {
                 name: 'Shortest paths from Owned objects',
                 description: '',
-                query: `MATCH p=shortestPath((s:Base)-[:${adTransitEdgeTypes}*1..]->(t:Base))\nWHERE COALESCE(s.system_tags, '') CONTAINS '${OWNED_OBJECT_TAG}' AND s<>t\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=shortestPath((s:Base)-[:${adTransitEdgeTypes}*1..]->(t:Base))\nWHERE COALESCE(s.system_tags, '') CONTAINS '${OWNED_OBJECT_TAG}' AND s<>t\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
         ],
     },
@@ -188,37 +189,37 @@ export const CommonSearches: CommonSearchType[] = [
             {
                 name: 'PKI hierarchy',
                 description: '',
-                query: `MATCH p=()-[:HostsCAService|IssuedSignedBy|EnterpriseCAFor|RootCAFor|TrustedForNTAuth|NTAuthStoreFor*..]->(:Domain)\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=()-[:HostsCAService|IssuedSignedBy|EnterpriseCAFor|RootCAFor|TrustedForNTAuth|NTAuthStoreFor*..]->(:Domain)\nWHERE ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Public Key Services container',
                 description: '',
-                query: `MATCH p = (c:Container)-[:Contains*..]->(:Base)\nWHERE c.distinguishedname starts with 'CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC='\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (c:Container)-[:Contains*..]->(:Base)\nWHERE c.distinguishedname starts with 'CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC='\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Enrollment rights on published certificate templates',
                 description: '',
-                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Enrollment rights on published ESC1 certificate templates',
                 description: '',
-                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.enrolleesuppliessubject = True\nAND ct.authenticationenabled = True\nAND ct.requiresmanagerapproval = False\nAND (ct.authorizedsignatures = 0 OR ct.schemaversion = 1)\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.enrolleesuppliessubject = True\nAND ct.authenticationenabled = True\nAND ct.requiresmanagerapproval = False\nAND (ct.authorizedsignatures = 0 OR ct.schemaversion = 1)\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Enrollment rights on published ESC2 certificate templates',
                 description: '',
-                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(c:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE c.requiresmanagerapproval = false\nAND (c.effectiveekus = [''] OR '2.5.29.37.0' IN c.effectiveekus OR c.effectiveekus IS NULL)\nAND (c.authorizedsignatures = 0 OR c.schemaversion = 1)\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(c:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE c.requiresmanagerapproval = false\nAND (c.effectiveekus = [''] OR '2.5.29.37.0' IN c.effectiveekus OR c.effectiveekus IS NULL)\nAND (c.authorizedsignatures = 0 OR c.schemaversion = 1)\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Enrollment rights on published enrollment agent certificate templates',
                 description: '',
-                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE '1.3.6.1.4.1.311.20.2.1' IN ct.effectiveekus\nOR '2.5.29.37.0' IN ct.effectiveekus\nOR SIZE(ct.effectiveekus) = 0\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ('1.3.6.1.4.1.311.20.2.1' IN ct.effectiveekus\nOR '2.5.29.37.0' IN ct.effectiveekus\nOR SIZE(ct.effectiveekus) = 0)\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Enrollment rights on published certificate templates with no security extension',
                 description: '',
-                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.nosecurityextension = true\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.nosecurityextension = true\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Compromising permissions on ADCS nodes (ESC5)',
@@ -228,42 +229,43 @@ WHERE m.distinguishedname CONTAINS "PUBLIC KEY SERVICES"
 AND NOT n.objectid ENDS WITH "-512" // Domain Admins
 AND NOT n.objectid ENDS WITH "-519" // Enterprise Admins
 AND NOT n.objectid ENDS WITH "-544" // Administrators
+AND ${excludeDecoyNodesAGI}
 RETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Enrollment rights on certificate templates published to Enterprise CA with User Specified SAN enabled (ESC6)',
                 description: '',
-                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.isuserspecifiessanenabled = True\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.isuserspecifiessanenabled = True\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'CA Administrators and CA Managers (ESC7)',
                 description: '',
-                query: `MATCH p = (:Base)-[:ManageCertificates|ManageCA]->(:EnterpriseCA)\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (:Base)-[:ManageCertificates|ManageCA]->(:EnterpriseCA)\nWHERE ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Enrollment rights on certificate templates published to Enterprise CA with vulnerable HTTP(S) endpoint (ESC8)',
                 description: '',
-                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.hasvulnerableendpoint = True\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.hasvulnerableendpoint = True\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Domain controllers with weak certificate binding enabled',
                 description: '',
-                query: `MATCH p = (s:Computer)-[:DCFor]->(:Domain)\nWHERE s.strongcertificatebindingenforcementraw = 0 OR s.strongcertificatebindingenforcementraw = 1\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (s:Computer)-[:DCFor]->(:Domain)\nWHERE (s.strongcertificatebindingenforcementraw = 0 OR s.strongcertificatebindingenforcementraw = 1)\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Domain controllers with UPN certificate mapping enabled',
                 description: '',
-                query: `MATCH p = (s:Computer)-[:DCFor]->(:Domain)\nWHERE s.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (s:Computer)-[:DCFor]->(:Domain)\nWHERE s.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Non-default permissions on IssuancePolicy nodes',
                 description: '',
-                query: `MATCH p = (s:Base)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(:IssuancePolicy)\nWHERE NOT s.objectid ENDS WITH '-512' AND NOT s.objectid ENDS WITH '-519'\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (s:Base)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(:IssuancePolicy)\nWHERE NOT s.objectid ENDS WITH '-512' AND NOT s.objectid ENDS WITH '-519'\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Enrollment rights on CertTemplates with OIDGroupLink',
                 description: '',
-                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(:CertTemplate)-[:ExtendedByPolicy]->(:IssuancePolicy)-[:OIDGroupLink]->(:Group)\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(:CertTemplate)-[:ExtendedByPolicy]->(:IssuancePolicy)-[:OIDGroupLink]->(:Group)\nWHERE ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
         ],
     },
@@ -294,7 +296,7 @@ RETURN p\nLIMIT 1000`,
             {
                 name: 'Cross-forest trusts with abusable configuration',
                 description: '',
-                query: `MATCH p=(n:Domain)-[:CrossForestTrust|SpoofSIDHistory|AbuseTGTDelegation]-(m:Domain)\nWHERE (n)-[:SpoofSIDHistory|AbuseTGTDelegation]-(m)\nRETURN p`,
+                query: `MATCH p=(n:Domain)-[:CrossForestTrust|SpoofSIDHistory|AbuseTGTDelegation]-(m:Domain)\nWHERE (n)-[:SpoofSIDHistory|AbuseTGTDelegation]-(m)\nAND ${excludeDecoyNodesAGI}\nRETURN p`,
             },
             {
                 name: 'Computers with unsupported operating systems',
@@ -314,7 +316,7 @@ RETURN p\nLIMIT 1000`,
             {
                 name: 'Nested groups within Tier Zero / High Value',
                 description: '',
-                query: `MATCH p=(t:Group)<-[:MemberOf*..]-(s:Group)\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nAND NOT s.objectid ENDS WITH '-512' // Domain Admins\nAND NOT s.objectid ENDS WITH '-519' // Enterprise Admins\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=(t:Group)<-[:MemberOf*..]-(s:Group)\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nAND NOT s.objectid ENDS WITH '-512' // Domain Admins\nAND NOT s.objectid ENDS WITH '-519' // Enterprise Admins\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Disabled Tier Zero / High Value principals',
@@ -349,7 +351,7 @@ RETURN p\nLIMIT 1000`,
             {
                 name: 'AdminSDHolder to protected objects relationship',
                 description: '',
-                query: `MATCH p=(n)-[:ProtectAdminGroups]->(m)\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=(n)-[:ProtectAdminGroups]->(m)\nWHERE ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
         ],
     },
@@ -469,57 +471,57 @@ RETURN p\nLIMIT 1000`,
             {
                 name: 'Entra Users synced from On-Prem Users added to Domain Admins group',
                 description: '',
-                query: `MATCH p = (:AZUser)-[:SyncedToADUser]->(:User)-[:MemberOf]->(t:Group)\nWHERE t.objectid ENDS WITH '-512'\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (:AZUser)-[:SyncedToADUser]->(:User)-[:MemberOf]->(t:Group)\nWHERE t.objectid ENDS WITH '-512'\nAND ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'On-Prem Users synced to Entra Users with Entra Admin Roles (direct)',
                 description: '',
-                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZHasRole]->(:AZRole)\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZHasRole]->(:AZRole)\nWHERE ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'On-Prem Users synced to Entra Users with Entra Admin Roles (group delegated)',
                 description: '',
-                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZHasRole]->(:AZRole)\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZHasRole]->(:AZRole)\nWHERE ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'On-Prem Users synced to Entra Users with Azure RM Roles (direct)',
                 description: '',
-                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZOwner|AZUserAccessAdministrator|AZGetCertificates|AZGetKeys|AZGetSecrets|AZAvereContributor|AZKeyVaultContributor|AZContributor|AZVMAdminLogin|AZVMContributor|AZAKSContributor|AZAutomationContributor|AZLogicAppContributor|AZWebsiteContributor]->(:AZBase)\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZOwner|AZUserAccessAdministrator|AZGetCertificates|AZGetKeys|AZGetSecrets|AZAvereContributor|AZKeyVaultContributor|AZContributor|AZVMAdminLogin|AZVMContributor|AZAKSContributor|AZAutomationContributor|AZLogicAppContributor|AZWebsiteContributor]->(:AZBase)\nWHERE ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'On-Prem Users synced to Entra Users with Azure RM Roles (group delegated)',
                 description: '',
-                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZOwner|AZUserAccessAdministrator|AZGetCertificates|AZGetKeys|AZGetSecrets|AZAvereContributor|AZKeyVaultContributor|AZContributor|AZVMAdminLogin|AZVMContributor|AZAKSContributor|AZAutomationContributor|AZLogicAppContributor|AZWebsiteContributor]->(:AZBase)\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZOwner|AZUserAccessAdministrator|AZGetCertificates|AZGetKeys|AZGetSecrets|AZAvereContributor|AZKeyVaultContributor|AZContributor|AZVMAdminLogin|AZVMContributor|AZAKSContributor|AZAutomationContributor|AZLogicAppContributor|AZWebsiteContributor]->(:AZBase)\nWHERE ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'On-Prem Users synced to Entra Users that Own Entra Objects',
                 description: '',
-                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZOwns]->(:AZBase)\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZOwns]->(:AZBase)\nWHERE ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'On-Prem Users synced to Entra Users with Entra Group Membership',
                 description: '',
-                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)\nWHERE ${excludeDecoyNodesAGI}\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Synced Entra Users with Entra Admin Role direct eligibility',
                 description: '',
-                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZRoleEligible]->(:AZRole)\nRETURN p LIMIT 100`,
+                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZRoleEligible]->(:AZRole)\nWHERE ${excludeDecoyNodesAGI}\nRETURN p LIMIT 100`,
             },
             {
                 name: 'Synced Entra Users with Entra Admin Roles group delegated eligibility',
                 description: '',
-                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZRoleEligible]->(:AZRole)\nRETURN p LIMIT 100`,
+                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZRoleEligible]->(:AZRole)\nWHERE ${excludeDecoyNodesAGI}\nRETURN p LIMIT 100`,
             },
             {
                 name: 'Synced Entra Users with Entra Admin Role approval (direct)',
                 description: '',
-                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZRoleApprover]->(:AZRole)\nRETURN p LIMIT 100`,
+                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZRoleApprover]->(:AZRole)\nWHERE ${excludeDecoyNodesAGI}\nRETURN p LIMIT 100`,
             },
             {
                 name: 'Synced Entra Users with Entra Admin Role approval (group delegated)',
                 description: '',
-                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZRoleApprover]->(:AZRole)\nRETURN p LIMIT 100`,
+                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZRoleApprover]->(:AZRole)\nWHERE ${excludeDecoyNodesAGI}\nRETURN p LIMIT 100`,
             },
         ],
     },
@@ -530,7 +532,7 @@ RETURN p\nLIMIT 1000`,
             {
                 name: 'All coerce and NTLM relay edges',
                 description: '',
-                query: `MATCH p = (n:Base)-[:CoerceAndRelayNTLMToLDAP|CoerceAndRelayNTLMToLDAPS|CoerceAndRelayNTLMToADCS|CoerceAndRelayNTLMToSMB]->(:Base)\nRETURN p LIMIT 500`,
+                query: `MATCH p = (n:Base)-[:CoerceAndRelayNTLMToLDAP|CoerceAndRelayNTLMToLDAPS|CoerceAndRelayNTLMToADCS|CoerceAndRelayNTLMToSMB]->(:Base)\nWHERE ${excludeDecoyNodesAGI}\nRETURN p LIMIT 500`,
             },
             {
                 name: 'ESC8-vulnerable Enterprise CAs',
@@ -545,12 +547,12 @@ RETURN p\nLIMIT 1000`,
             {
                 name: 'All members of Protected Users',
                 description: '',
-                query: `MATCH p = (:Base)-[:MemberOf*1..]->(g:Group)\nWHERE g.objectid ENDS WITH '-525'\nRETURN p LIMIT 1000`,
+                query: `MATCH p = (:Base)-[:MemberOf*1..]->(g:Group)\nWHERE g.objectid ENDS WITH '-525'\nAND ${excludeDecoyNodesAGI}\nRETURN p LIMIT 1000`,
             },
             {
                 name: 'DCs vulnerable to NTLM relay to LDAP attacks',
                 description: '',
-                query: `MATCH p = (dc:Computer)-[:DCFor]->(:Domain)\nWHERE (dc.ldapavailable = True AND dc.ldapsigning = False)\nOR (dc.ldapsavailable = True AND dc.ldapsepa = False)\nOR (dc.ldapavailable = True AND dc.ldapsavailable = True AND dc.ldapsigning = False and dc.ldapsepa = True)\nRETURN p`,
+                query: `MATCH p = (dc:Computer)-[:DCFor]->(:Domain)\nWHERE ((dc.ldapavailable = True AND dc.ldapsigning = False)\nOR (dc.ldapsavailable = True AND dc.ldapsepa = False)\nOR (dc.ldapavailable = True AND dc.ldapsavailable = True AND dc.ldapsigning = False and dc.ldapsepa = True))\nAND ${excludeDecoyNodesAGI}\nRETURN p`,
             },
             {
                 name: 'Computers with the WebClient running',

@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { findIconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { IconName } from '@fortawesome/free-solid-svg-icons';
-import { AssetGroupTag, AssetGroupTagTypeOwned } from 'js-client-library';
+import { AssetGroupTag, AssetGroupTagTypeDecoy, AssetGroupTagTypeOwned } from 'js-client-library';
 import { useEffect, useState } from 'react';
 import {
     DEFAULT_GLYPH_BACKGROUND_COLOR,
@@ -78,6 +78,12 @@ export const createGlyphMapFromTags = (
         if (tag.type === AssetGroupTagTypeOwned) {
             glyphMap.owned = `${TagLabelPrefix}${underscoredTagName}`;
             glyphMap.ownedGlyph = glyphValue;
+            return;
+        }
+
+        if (tag.type === AssetGroupTagTypeDecoy) {
+            glyphMap.decoy = `${TagLabelPrefix}${underscoredTagName}`;
+            glyphMap.decoyGlyph = glyphValue;
             return;
         }
 

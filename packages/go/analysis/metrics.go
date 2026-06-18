@@ -27,7 +27,7 @@ import (
 var (
 	// pzNodeTagCounterVec counts tag_added and tag_removed events that occur during AGT analysis.
 	// The "position" label is the tier position for tiers (e.g. "1", "2") and the tag type for
-	// labels and owned tags ("label", "owned").
+	// labels, owned tags, and decoy tags ("label", "owned", "decoy").
 	pzNodeTagCounterVec = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: model.Namespace,
 		Subsystem: "analysis",
@@ -40,7 +40,7 @@ var (
 )
 
 // tagToPosition returns the value used for the "position" label on pzNodeTagCounterVec.
-// Tiers use their numeric position (e.g. "1", "2"). Labels and owned tags are grouped
+// Tiers use their numeric position (e.g. "1", "2"). Labels, owned tags, and decoy tags are grouped
 // under their type name since they have no meaningful position.
 func tagToPosition(tag model.AssetGroupTag) string {
 	switch tag.Type {
@@ -53,6 +53,8 @@ func tagToPosition(tag model.AssetGroupTag) string {
 		return "label"
 	case model.AssetGroupTagTypeOwned:
 		return "owned"
+	case model.AssetGroupTagTypeDecoy:
+		return "decoy"
 	default:
 		return "unknown"
 	}

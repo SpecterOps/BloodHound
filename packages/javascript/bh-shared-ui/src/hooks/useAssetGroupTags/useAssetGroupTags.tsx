@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+    AssetGroupTagTypeDecoy,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
     AssetGroupTagTypeZone,
@@ -30,6 +31,7 @@ import {
     type RequestOptions,
 } from 'js-client-library';
 import { useInfiniteQuery, useQuery } from 'react-query';
+import { DECOY_OBJECT_TAG, TAG_DECOY_AGT } from '../../constants';
 import { SortOrderAscending, type SortOrder } from '../../types';
 import { apiClient, type GenericQueryOptions } from '../../utils';
 import { createPaginatedFetcher, type PageParam } from '../../utils/paginatedFetcher';
@@ -73,6 +75,8 @@ export const privilegeZonesKeys = {
 
 export const getIsOwnedTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.type === AssetGroupTagTypeOwned);
 
+export const getIsDecoyTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.type === AssetGroupTagTypeDecoy);
+
 export const getIsTierZeroTag = (tags: AssetGroupTag[]) =>
     tags.find((tag) => tag.position === HighestPrivilegePosition);
 
@@ -80,6 +84,16 @@ export const isOwnedObject = (item: ItemResponse): boolean => {
     if (!isNode(item)) return false;
 
     return item.isOwnedObject;
+};
+
+export const isDecoyObject = (item: ItemResponse): boolean => {
+    if (!isNode(item)) return false;
+
+    return (
+        item.isDecoyObject === true ||
+        item.kinds?.includes(TAG_DECOY_AGT) === true ||
+        item.properties?.system_tags?.includes(DECOY_OBJECT_TAG) === true
+    );
 };
 
 export const isTierZero = (item: ItemResponse): boolean => {
@@ -322,7 +336,9 @@ export const useRuleInfo = (tagId: string = '', ruleId: string = '') =>
     useQuery({
         queryKey: privilegeZonesKeys.ruleDetail(tagId, ruleId),
         queryFn: async ({ signal }) => {
-            const response = await apiClient.getAssetGroupTagSelector(tagId, ruleId, { signal });
+            const response = await apiClient.getAssetGroupTagSelector(tagId, ruleId, {
+                signal,
+            });
             return response.data.data[RuleKey];
         },
         enabled: tagId !== '' && ruleId !== '',
@@ -366,7 +382,7 @@ export const useHighestPrivilegeTagId = () => {
 };
 
 export const useLabels = () => {
-    const labelTypes: AssetGroupTagType[] = [AssetGroupTagTypeLabel, AssetGroupTagTypeOwned];
+    const labelTypes: AssetGroupTagType[] = [AssetGroupTagTypeLabel, AssetGroupTagTypeOwned, AssetGroupTagTypeDecoy];
     const select = (tags: AssetGroupTag[]) => tags.filter((tag) => labelTypes.includes(tag.type));
 
     return useTagsQuery({ select });

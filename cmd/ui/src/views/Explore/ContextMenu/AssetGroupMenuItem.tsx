@@ -15,14 +15,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
-import { NodeResponse, apiClient, useExploreGraph, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
+import { apiClient, isNode, useExploreGraph, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
 import { Button } from 'doodle-ui';
 import { FC, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import { selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { useAppSelector } from 'src/store';
 
-const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> = ({ assetGroupId, assetGroupName }) => {
+const AssetGroupMenuItem: FC<{ assetGroupId?: number; assetGroupName: string }> = ({
+    assetGroupId,
+    assetGroupName,
+}) => {
     const { addNotification } = useNotifications();
     const { refetch } = useExploreGraph();
 
@@ -30,12 +33,14 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
 
     const { selectedItemQuery } = useExploreSelectedItem();
     const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
+    const selectedObjectId =
+        selectedItemQuery.data && isNode(selectedItemQuery.data) ? selectedItemQuery.data.objectId : undefined;
 
     const isMenuItemForTierZero = assetGroupId === tierZeroAssetGroupId;
 
     const mutation = useMutation({
         mutationFn: ({ nodeId, action }: { nodeId: string; action: 'add' | 'remove' }) => {
-            return apiClient.updateAssetGroupSelector(assetGroupId, [
+            return apiClient.updateAssetGroupSelector(assetGroupId!, [
                 {
                     selector_name: nodeId,
                     sid: nodeId,
@@ -53,25 +58,30 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
         },
     });
 
-    const { data: assetGroupMembers } = useQuery(['listAssetGroupMembers', assetGroupId], () =>
-        apiClient
-            .listAssetGroupMembers(assetGroupId, undefined, {
-                params: {
-                    object_id: `object_id=eq:${(selectedItemQuery.data as NodeResponse)?.objectId}`,
-                },
-            })
-            .then((res) => res.data.data?.members)
+    const { data: assetGroupMembers } = useQuery(
+        ['listAssetGroupMembers', assetGroupId, selectedObjectId],
+        () =>
+            apiClient
+                .listAssetGroupMembers(assetGroupId!, undefined, {
+                    params: {
+                        object_id: `eq:${selectedObjectId}`,
+                    },
+                })
+                .then((res) => res.data.data?.members),
+        {
+            enabled: assetGroupId !== undefined && selectedObjectId !== undefined,
+        }
     );
 
     const handleAddToAssetGroup = () => {
-        if (selectedItemQuery.data && 'objectId' in selectedItemQuery.data) {
-            mutation.mutate({ nodeId: selectedItemQuery.data.objectId, action: 'add' });
+        if (selectedObjectId) {
+            mutation.mutate({ nodeId: selectedObjectId, action: 'add' });
         }
     };
 
     const handleRemoveFromAssetGroup = () => {
-        if (selectedItemQuery.data && 'objectId' in selectedItemQuery.data) {
-            mutation.mutate({ nodeId: selectedItemQuery.data.objectId, action: 'remove' });
+        if (selectedObjectId) {
+            mutation.mutate({ nodeId: selectedObjectId, action: 'remove' });
         }
     };
 
@@ -83,6 +93,10 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
     const handleCloseConfirmation = () => {
         setOpen(false);
     };
+
+    if (assetGroupId === undefined || selectedObjectId === undefined) {
+        return null;
+    }
 
     // error state, data didn't load
     if (!assetGroupMembers) {

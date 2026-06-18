@@ -144,7 +144,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"node_keys": ["apple", "ball", "key", "zebra"], "edge_keys": ["apple", "ball", "key", "zebra"], "nodes":{"1":{"label":"label","properties": {"apple": "snake", "zebra": "elmo", "key": "value", "ball": "value"},"kind":"","kinds":null, "objectId":"","isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","properties": {"apple": "snake", "zebra": "elmo", "key": "value", "ball": "value"},"kind":"","lastSeen":"0001-01-01T00:00:00Z"}],"literals":[]}}`,
+				responseBody:   `{"data":{"node_keys": ["apple", "ball", "key", "zebra"], "edge_keys": ["apple", "ball", "key", "zebra"], "nodes":{"1":{"label":"label","properties": {"apple": "snake", "zebra": "elmo", "key": "value", "ball": "value"},"kind":"","kinds":null, "objectId":"","isTierZero":false,"isOwnedObject":false,"isDecoyObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","properties": {"apple": "snake", "zebra": "elmo", "key": "value", "ball": "value"},"kind":"","lastSeen":"0001-01-01T00:00:00Z"}],"literals":[]}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -470,7 +470,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"edges":[{"kind":"","label":"","lastSeen":"0001-01-01T00:00:00Z","source":"source","target":""}],"literals": [],"node_keys":["key"],"nodes":{"1":{"isOwnedObject":false,"isTierZero":false,"kind":"","kinds":null,"label":"label","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"key":"value"}}}}}`,
+				responseBody:   `{"data":{"edges":[{"kind":"","label":"","lastSeen":"0001-01-01T00:00:00Z","source":"source","target":""}],"literals": [],"node_keys":["key"],"nodes":{"1":{"isOwnedObject":false,"isDecoyObject":false,"isTierZero":false,"kind":"","kinds":null,"label":"label","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"key":"value"}}}}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -537,7 +537,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"edges":[{"kind":"","label":"","lastSeen":"0001-01-01T00:00:00Z","source":"source","target":""}],"literals":[], "node_keys":["key"],"nodes":{"1":{"isOwnedObject":false,"isTierZero":false,"kind":"","kinds":null,"label":"label","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"key":"value"}}}}}`,
+				responseBody:   `{"data":{"edges":[{"kind":"","label":"","lastSeen":"0001-01-01T00:00:00Z","source":"source","target":""}],"literals":[], "node_keys":["key"],"nodes":{"1":{"isOwnedObject":false,"isDecoyObject":false,"isTierZero":false,"kind":"","kinds":null,"label":"label","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"key":"value"}}}}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -620,7 +620,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"edges":[{"kind":"","label":"","lastSeen":"0001-01-01T00:00:00Z","source":"source","target":"1"},{"kind":"HIDDEN","label":"** Hidden Edge **","lastSeen":"0001-01-01T00:00:00Z","source":"source","target":"2"},{"kind":"HIDDEN","label":"** Hidden Edge **","lastSeen":"0001-01-01T00:00:00Z","source":"2","target":"1"}],"literals":[],"node_keys":["domainsid"],"nodes":{"1":{"isOwnedObject":false,"isTierZero":false,"kind":"","kinds":["kinds"],"label":"label","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"domainsid":"testenv"}},"2":{"hidden":true,"isOwnedObject":false,"isTierZero":false,"kind":"HIDDEN","kinds":[],"label":"** Hidden kinds Object **","lastSeen":"0001-01-01T00:00:00Z","objectId":"HIDDEN"},"source":{"isOwnedObject":false,"isTierZero":false,"kind":"","kinds":["kinds"],"label":"labelSource","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"domainsid":"testenv"}}}}}`,
+				responseBody:   `{"data":{"edges":[{"kind":"","label":"","lastSeen":"0001-01-01T00:00:00Z","source":"source","target":"1"},{"kind":"HIDDEN","label":"** Hidden Edge **","lastSeen":"0001-01-01T00:00:00Z","source":"source","target":"2"},{"kind":"HIDDEN","label":"** Hidden Edge **","lastSeen":"0001-01-01T00:00:00Z","source":"2","target":"1"}],"literals":[],"node_keys":["domainsid"],"nodes":{"1":{"isOwnedObject":false,"isDecoyObject":false,"isTierZero":false,"kind":"","kinds":["kinds"],"label":"label","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"domainsid":"testenv"}},"2":{"hidden":true,"isOwnedObject":false,"isDecoyObject":false,"isTierZero":false,"kind":"HIDDEN","kinds":[],"label":"** Hidden kinds Object **","lastSeen":"0001-01-01T00:00:00Z","objectId":"HIDDEN"},"source":{"isOwnedObject":false,"isDecoyObject":false,"isTierZero":false,"kind":"","kinds":["kinds"],"label":"labelSource","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"domainsid":"testenv"}}}}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -693,7 +693,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"nodes":{"1":{"hidden":true,"isOwnedObject":false,"isTierZero":false,"kind":"HIDDEN","kinds":[],"label":"** Hidden kinds Object **","lastSeen":"0001-01-01T00:00:00Z","objectId":"HIDDEN"},"2":{"hidden":true,"isOwnedObject":false,"isTierZero":false,"kind":"HIDDEN","kinds":[],"label":"** Hidden kinds Object **","lastSeen":"0001-01-01T00:00:00Z","objectId":"HIDDEN"}},"edges":[{"source":"source","target":"1","label":"** Hidden Edge **","kind":"HIDDEN","lastSeen":"0001-01-01T00:00:00Z"}],"literals":[]}}`,
+				responseBody:   `{"data":{"nodes":{"1":{"hidden":true,"isOwnedObject":false,"isDecoyObject":false,"isTierZero":false,"kind":"HIDDEN","kinds":[],"label":"** Hidden kinds Object **","lastSeen":"0001-01-01T00:00:00Z","objectId":"HIDDEN"},"2":{"hidden":true,"isOwnedObject":false,"isDecoyObject":false,"isTierZero":false,"kind":"HIDDEN","kinds":[],"label":"** Hidden kinds Object **","lastSeen":"0001-01-01T00:00:00Z","objectId":"HIDDEN"}},"edges":[{"source":"source","target":"1","label":"** Hidden Edge **","kind":"HIDDEN","lastSeen":"0001-01-01T00:00:00Z"}],"literals":[]}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},

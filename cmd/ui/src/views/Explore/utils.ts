@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faGem, faSkull } from '@fortawesome/free-solid-svg-icons';
+import { faGem, faMask, faSkull } from '@fortawesome/free-solid-svg-icons';
 import {
     GLYPH_SCALE,
     GetIconInfo,
@@ -112,6 +112,12 @@ const GLYPHS = {
     OWNED_OBJECT_DARK: getModifiedSvgUrlFromIcon(faSkull, {
         styles: { color: '#000000', scale: GLYPH_SCALE },
     }),
+    DECOY_OBJECT: getModifiedSvgUrlFromIcon(faMask, {
+        styles: { color: '#FFFFFF', scale: GLYPH_SCALE },
+    }),
+    DECOY_OBJECT_DARK: getModifiedSvgUrlFromIcon(faMask, {
+        styles: { color: '#000000', scale: GLYPH_SCALE },
+    }),
 };
 
 export const getNodeGlyphs = (
@@ -131,6 +137,14 @@ export const getNodeGlyphs = (
             });
         }
 
+        if (node.kinds.includes(tagGlyphs.decoy)) {
+            glyphs.push({
+                location: GlyphLocation.BOTTOM_LEFT,
+                image: tagGlyphs.decoyGlyph,
+                ...themedOptions.glyph.colors,
+            });
+        }
+
         const glyphImage = getGlyphFromKinds(node.kinds, tagGlyphs);
         if (glyphImage) {
             glyphs.push({
@@ -144,6 +158,14 @@ export const getNodeGlyphs = (
             glyphs.push({
                 location: GlyphLocation.BOTTOM_RIGHT,
                 image: options.darkMode ? standardGlyphs.OWNED_OBJECT_DARK : standardGlyphs.OWNED_OBJECT,
+                ...themedOptions.glyph.colors,
+            });
+        }
+
+        if (node.isDecoyObject) {
+            glyphs.push({
+                location: GlyphLocation.BOTTOM_LEFT,
+                image: options.darkMode ? standardGlyphs.DECOY_OBJECT_DARK : standardGlyphs.DECOY_OBJECT,
                 ...themedOptions.glyph.colors,
             });
         }

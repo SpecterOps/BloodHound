@@ -30,6 +30,7 @@ const testNodes = {
         lastSeen: '',
         isTierZero: true,
         isOwnedObject: false,
+        isDecoyObject: false,
     },
     '2': {
         label: 'Group 1',
@@ -39,6 +40,17 @@ const testNodes = {
         lastSeen: '',
         isTierZero: false,
         isOwnedObject: true,
+        isDecoyObject: false,
+    },
+    '3': {
+        label: 'User 2',
+        kind: 'User',
+        kinds: ['User', 'Tag_Decoy'],
+        objectId: 'test-user-2',
+        lastSeen: '',
+        isTierZero: false,
+        isOwnedObject: false,
+        isDecoyObject: true,
     },
 };
 
@@ -135,9 +147,17 @@ describe('getNodeGlyphs', () => {
         TIER_ZERO_DARK: 'tierZeroDark',
         OWNED_OBJECT: 'owned',
         OWNED_OBJECT_DARK: 'ownedDark',
+        DECOY_OBJECT: 'decoy',
+        DECOY_OBJECT_DARK: 'decoyDark',
     };
 
-    const tagGlyphs = { Tag_Tier_Zero: 'gem', owned: 'Tag_Owned', ownedGlyph: 'skull' };
+    const tagGlyphs = {
+        Tag_Tier_Zero: 'gem',
+        owned: 'Tag_Owned',
+        ownedGlyph: 'skull',
+        decoy: 'Tag_Decoy',
+        decoyGlyph: 'mask',
+    };
 
     it('determines glyphs with the tier_managent_engine feature flag disabled', () => {
         const firstNodeGlyphs = getNodeGlyphs(
@@ -185,6 +205,29 @@ describe('getNodeGlyphs', () => {
         expect(secondNodeGlyph.backgroundColor).toBe(themedOptions.glyph.colors.backgroundColor);
         expect(secondNodeGlyph.color).toBe(themedOptions.glyph.colors.color);
         expect(secondNodeGlyph.image).toBe('owned');
+
+        const thirdNodeGlyphs = getNodeGlyphs(
+            testNodes[3],
+            {
+                theme: lightTheme,
+                hideNodes: false,
+                customIcons: {},
+                darkMode: false,
+                themedOptions,
+                tagGlyphs,
+                pzFeatureFlagEnabled: false,
+            },
+            standardGlyphs
+        );
+
+        expect(thirdNodeGlyphs).toHaveLength(1);
+
+        const thirdNodeGlyph = thirdNodeGlyphs[0];
+
+        expect(thirdNodeGlyph.location).toBe(GlyphLocation.BOTTOM_LEFT);
+        expect(thirdNodeGlyph.backgroundColor).toBe(themedOptions.glyph.colors.backgroundColor);
+        expect(thirdNodeGlyph.color).toBe(themedOptions.glyph.colors.color);
+        expect(thirdNodeGlyph.image).toBe('decoy');
     });
 
     it('determines glyphs with the tier_managent_engine feature flag enabled', () => {
@@ -233,5 +276,28 @@ describe('getNodeGlyphs', () => {
         expect(secondNodeGlyph.backgroundColor).toBe(themedOptions.glyph.colors.backgroundColor);
         expect(secondNodeGlyph.color).toBe(themedOptions.glyph.colors.color);
         expect(secondNodeGlyph.image).toBe('skull');
+
+        const thirdNodeGlyphs = getNodeGlyphs(
+            testNodes[3],
+            {
+                theme: lightTheme,
+                hideNodes: false,
+                customIcons: {},
+                darkMode: false,
+                themedOptions,
+                tagGlyphs,
+                pzFeatureFlagEnabled: true,
+            },
+            standardGlyphs
+        );
+
+        expect(thirdNodeGlyphs).toHaveLength(1);
+
+        const thirdNodeGlyph = thirdNodeGlyphs[0];
+
+        expect(thirdNodeGlyph.location).toBe(GlyphLocation.BOTTOM_LEFT);
+        expect(thirdNodeGlyph.backgroundColor).toBe(themedOptions.glyph.colors.backgroundColor);
+        expect(thirdNodeGlyph.color).toBe(themedOptions.glyph.colors.color);
+        expect(thirdNodeGlyph.image).toBe('mask');
     });
 });

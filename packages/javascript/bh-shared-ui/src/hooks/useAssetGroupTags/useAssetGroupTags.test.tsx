@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {
     AssetGroupTag,
+    AssetGroupTagTypeDecoy,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
     AssetGroupTagTypeZone,
@@ -144,7 +145,7 @@ describe('the useAssetGroupTags utilities', () => {
         });
     });
 
-    it('enables filtering out for tags that are treated as Labels (including Owned)', async () => {
+    it('enables filtering out for tags that are treated as Labels (including Owned and Decoy)', async () => {
         server.use(
             rest.get('/api/v2/asset-group-tags', async (_, res, ctx) => {
                 return res(
@@ -155,6 +156,7 @@ describe('the useAssetGroupTags utilities', () => {
                                 { position: null, id: 2, type: AssetGroupTagTypeLabel },
                                 { position: null, id: 3, type: AssetGroupTagTypeLabel },
                                 { position: null, id: 4, type: AssetGroupTagTypeOwned },
+                                { position: null, id: 5, type: AssetGroupTagTypeDecoy },
                             ],
                         },
                     })
@@ -164,7 +166,7 @@ describe('the useAssetGroupTags utilities', () => {
         const { result } = renderHook(() => agtHook.useLabels());
 
         await waitFor(() => {
-            expect(result.current.data).toHaveLength(3);
+            expect(result.current.data).toHaveLength(4);
         });
 
         expect(result.current.data?.filter((tag: AssetGroupTag) => tag.position !== null)).toHaveLength(0);

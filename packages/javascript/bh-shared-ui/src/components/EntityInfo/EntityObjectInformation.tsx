@@ -23,12 +23,13 @@ import { SearchValue } from '../../views/Explore/ExploreSearch';
 import { FieldsContainer, ObjectInfoFields } from '../../views/Explore/fragments';
 import { useObjectInfoPanelContext } from '../../views/Explore/providers/ObjectInfoPanelProvider';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
+import PotentialDecoyBanner from './PotentialDecoyBanner';
 
 const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeType, databaseId }) => {
     const { setExploreParams } = useExploreParams();
     const { isObjectInfoPanelOpen, setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const tagsQuery = useTagsQuery();
-    const { data, informationAvailable, isLoading, isError } = useFetchEntityInfo({
+    const { data, informationAvailable, isLoading, isError, refetch } = useFetchEntityInfo({
         objectId: id,
         nodeType,
         databaseId,
@@ -85,6 +86,13 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
     return (
         <EntityInfoCollapsibleSection onChange={handleOnChange} isExpanded={isObjectInfoPanelOpen} label={sectionLabel}>
             <FieldsContainer>
+                <PotentialDecoyBanner
+                    kinds={data?.kinds}
+                    nodeType={nodeType}
+                    objectId={data?.properties?.objectid ?? id}
+                    onDecoyUpdated={() => refetch()}
+                    properties={data?.properties}
+                />
                 <BasicObjectInfoFields
                     nodeType={nodeType}
                     handleSourceNodeSelected={handleSourceNodeSelected}

@@ -20,6 +20,7 @@ import { apiClient, parseItemId } from '../utils';
 export interface BaseItemResponse {
     id: string;
     kind: string;
+    kinds?: string[];
     label: string;
     lastSeen: string;
     properties?: any;
@@ -29,6 +30,7 @@ export interface NodeResponse extends BaseItemResponse {
     objectId: string;
     isTierZero: boolean;
     isOwnedObject: boolean;
+    isDecoyObject?: boolean;
 }
 
 export interface EdgeResponse extends BaseItemResponse {

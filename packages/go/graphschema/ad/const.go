@@ -19,5 +19,6 @@ package ad
 const (
 	AdminTierZero   = "admin_tier_0"
 	Owned           = "owned"
+	Decoy           = "decoy"
 	DomainSIDPrefix = "S-1-5-21"
 )

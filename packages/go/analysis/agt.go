@@ -891,17 +891,17 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 	} else {
 		// Tiers are hierarchical and must be handled synchronously while labels can be tagged in parallel
 		var (
-			labelsOrOwned []model.AssetGroupTag
-			tiersOrdered  []model.AssetGroupTag
-			nodesSeen     = cardinality.NewBitmap64()
-			nodesToUpdate = make(map[uint64]*graph.Node, 100)
+			labelsOwnedOrDecoy []model.AssetGroupTag
+			tiersOrdered       []model.AssetGroupTag
+			nodesSeen          = cardinality.NewBitmap64()
+			nodesToUpdate      = make(map[uint64]*graph.Node, 100)
 		)
 		for _, tag := range tags {
 			switch tag.Type {
 			case model.AssetGroupTagTypeTier:
 				tiersOrdered = append(tiersOrdered, tag)
-			case model.AssetGroupTagTypeLabel, model.AssetGroupTagTypeOwned:
-				labelsOrOwned = append(labelsOrOwned, tag)
+			case model.AssetGroupTagTypeLabel, model.AssetGroupTagTypeOwned, model.AssetGroupTagTypeDecoy:
+				labelsOwnedOrDecoy = append(labelsOwnedOrDecoy, tag)
 			default:
 				slog.WarnContext(
 					ctx,
@@ -914,7 +914,7 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 		}
 
 		// Fire off the label tagging
-		for _, tag := range labelsOrOwned {
+		for _, tag := range labelsOwnedOrDecoy {
 			if err := tagAssetGroupNodesForTag(ctx, db, graphDb, tag, cardinality.NewBitmap64(), nodesToUpdate); err != nil {
 				errs.Append(err)
 			}

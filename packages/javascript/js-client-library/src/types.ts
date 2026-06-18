@@ -123,16 +123,19 @@ export const HighestPrivilegePosition = 1 as const;
 export const AssetGroupTagTypeZone = 1 as const;
 export const AssetGroupTagTypeLabel = 2 as const;
 export const AssetGroupTagTypeOwned = 3 as const;
+export const AssetGroupTagTypeDecoy = 4 as const;
 
 export type AssetGroupTagType =
     | typeof AssetGroupTagTypeZone
     | typeof AssetGroupTagTypeLabel
-    | typeof AssetGroupTagTypeOwned;
+    | typeof AssetGroupTagTypeOwned
+    | typeof AssetGroupTagTypeDecoy;
 
 export const AssetGroupTagTypeMap = {
     [AssetGroupTagTypeZone]: 'zone',
     [AssetGroupTagTypeLabel]: 'label',
     [AssetGroupTagTypeOwned]: 'owned',
+    [AssetGroupTagTypeDecoy]: 'decoy',
 } as const;
 
 export const RuleKey = 'selector' as const;
@@ -402,6 +405,7 @@ export type GraphNode = {
     lastSeen: string;
     isTierZero: boolean;
     isOwnedObject: boolean;
+    isDecoyObject: boolean;
     properties?: GraphNodeProperties;
 };
 
@@ -422,7 +426,11 @@ export type GraphEdge = {
 
 export type GraphEdges = GraphEdge[];
 
-export type GraphData = { nodes: GraphNodes; edges: GraphEdges; node_keys?: string[] };
+export type GraphData = {
+    nodes: GraphNodes;
+    edges: GraphEdges;
+    node_keys?: string[];
+};
 
 export type StyledGraphNode = {
     color: string;

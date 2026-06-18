@@ -23,15 +23,16 @@ import {
 } from 'js-client-library';
 import { FC } from 'react';
 import {
+    getIsDecoyTag,
     getIsOwnedTag,
     getIsTierZeroTag,
+    isDecoyObject,
     isNode,
     isOwnedObject,
     isTierZero,
     useExploreParams,
     useExploreSelectedItem,
     usePZPathParams,
-    type NodeResponse,
 } from '../../../hooks';
 import { AssetGroupMenuItem } from './AssetGroupMenuItemPrivilegeZonesEnabled';
 import CopyMenuItem from './CopyMenuItem';
@@ -44,22 +45,26 @@ const ContextMenu: FC<{
     const { setExploreParams, primarySearch, secondarySearch } = useExploreParams();
     const { tagDetailsLink } = usePZPathParams();
 
-    const node = selectedItemQuery.data ? (selectedItemQuery.data as NodeResponse) : undefined;
+    const node = selectedItemQuery.data && isNode(selectedItemQuery.data) ? selectedItemQuery.data : undefined;
 
-    const ownedPayload: CreateSelectorRequest = {
-        name: node?.label ?? node?.objectId ?? '',
-        seeds: [
-            {
-                type: SeedTypeObjectId,
-                value: node?.objectId ?? '',
-            },
-        ],
-    };
+    const objectIdSelectorPayload: CreateSelectorRequest | undefined = node
+        ? {
+              name: node.label ?? node.objectId,
+              seeds: [
+                  {
+                      type: SeedTypeObjectId,
+                      value: node.objectId,
+                  },
+              ],
+          }
+        : undefined;
 
-    const tierZeroPayload: CreateSelectorRequest = {
-        ...ownedPayload,
-        auto_certify: AssetGroupTagSelectorAutoCertifySeedsOnly,
-    };
+    const tierZeroPayload: CreateSelectorRequest | undefined = objectIdSelectorPayload
+        ? {
+              ...objectIdSelectorPayload,
+              auto_certify: AssetGroupTagSelectorAutoCertifySeedsOnly,
+          }
+        : undefined;
 
     const handleSetStartingNode = () => {
         const selectedItemData = selectedItemQuery.data;
@@ -88,27 +93,41 @@ const ContextMenu: FC<{
     return (
         <Menu
             open={contextMenu !== null}
-            anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
+            anchorPosition={{
+                left: contextMenu?.mouseX || 0,
+                top: contextMenu?.mouseY || 0,
+            }}
             anchorReference='anchorPosition'
             onClick={onClose}
             keepMounted>
             <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
             <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
 
-            <AssetGroupMenuItem
-                addNodePayload={tierZeroPayload}
-                isCurrentMemberFn={isTierZero}
-                removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'zones')}
-                showConfirmationOnAdd
-                tagIdentifierFn={getIsTierZeroTag}
-            />
+            {objectIdSelectorPayload && tierZeroPayload && (
+                <>
+                    <AssetGroupMenuItem
+                        addNodePayload={tierZeroPayload}
+                        isCurrentMemberFn={isTierZero}
+                        removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'zones')}
+                        showConfirmationOnAdd
+                        tagIdentifierFn={getIsTierZeroTag}
+                    />
 
-            <AssetGroupMenuItem
-                addNodePayload={ownedPayload}
-                isCurrentMemberFn={isOwnedObject}
-                removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
-                tagIdentifierFn={getIsOwnedTag}
-            />
+                    <AssetGroupMenuItem
+                        addNodePayload={objectIdSelectorPayload}
+                        isCurrentMemberFn={isOwnedObject}
+                        removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
+                        tagIdentifierFn={getIsOwnedTag}
+                    />
+
+                    <AssetGroupMenuItem
+                        addNodePayload={objectIdSelectorPayload}
+                        isCurrentMemberFn={isDecoyObject}
+                        removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
+                        tagIdentifierFn={getIsDecoyTag}
+                    />
+                </>
+            )}
 
             <CopyMenuItem />
         </Menu>

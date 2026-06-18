@@ -60,6 +60,7 @@ export const cypherTestResponse = {
                 objectId: 'S-1-5-21-2697957641-2271029196-387917394-2110',
                 isTierZero: false,
                 isOwnedObject: false,
+                isDecoyObject: false,
                 lastSeen: '2025-07-09T00:28:46.306Z',
                 properties: {
                     admincount: true,
@@ -97,6 +98,7 @@ export const cypherTestResponse = {
                 objectId: 'S-1-5-21-2697957641-2271029196-387917394-2216',
                 isTierZero: false,
                 isOwnedObject: false,
+                isDecoyObject: false,
                 lastSeen: '2025-07-09T00:28:46.292Z',
                 properties: {
                     admincount: false,
@@ -134,6 +136,7 @@ export const cypherTestResponse = {
                 objectId: 'S-1-5-21-2697957641-2271029196-387917394-2165',
                 isTierZero: false,
                 isOwnedObject: false,
+                isDecoyObject: false,
                 lastSeen: '2025-07-09T00:28:46.292Z',
                 properties: {
                     admincount: false,
@@ -171,6 +174,7 @@ export const cypherTestResponse = {
                 objectId: 'PHANTOM.CORP-S-1-5-20',
                 isTierZero: false,
                 isOwnedObject: false,
+                isDecoyObject: false,
                 lastSeen: '2025-07-09T00:28:46.055264963Z',
                 properties: {
                     domain: 'PHANTOM.CORP',
@@ -188,6 +192,7 @@ export const cypherTestResponse = {
                 objectId: 'S-1-5-21-2845847946-3451170323-4261139666-1105',
                 isTierZero: true,
                 isOwnedObject: false,
+                isDecoyObject: false,
                 lastSeen: '2025-07-09T00:28:46.525Z',
                 properties: {
                     admincount: true,
@@ -226,6 +231,7 @@ export const cypherTestResponse = {
                 objectId: 'S-1-5-21-2845847946-3451170323-4261139666-1106',
                 isTierZero: true,
                 isOwnedObject: false,
+                isDecoyObject: false,
                 lastSeen: '2025-07-09T00:28:46.525Z',
                 properties: {
                     admincount: true,
@@ -264,6 +270,7 @@ export const cypherTestResponse = {
                 objectId: 'S-1-5-21-2845847946-3451170323-4261139666-500',
                 isTierZero: true,
                 isOwnedObject: false,
+                isDecoyObject: false,
                 lastSeen: '2025-07-09T00:28:46.525Z',
                 properties: {
                     admincount: true,
@@ -302,6 +309,7 @@ export const cypherTestResponse = {
                 objectId: 'S-1-5-21-2845847946-3451170323-4261139666-501',
                 isTierZero: false,
                 isOwnedObject: false,
+                isDecoyObject: false,
                 lastSeen: '2025-07-09T00:28:46.525Z',
                 properties: {
                     admincount: false,
@@ -339,6 +347,7 @@ export const cypherTestResponse = {
                 objectId: 'S-1-5-21-2697957641-2271029196-387917394-2173',
                 isTierZero: true,
                 isOwnedObject: false,
+                isDecoyObject: false,
                 lastSeen: '2025-07-09T00:28:46.292Z',
                 properties: {
                     admincount: true,
@@ -377,6 +386,7 @@ export const cypherTestResponse = {
                 objectId: 'S-1-5-21-2697957641-2271029196-387917394-2201',
                 isTierZero: true,
                 isOwnedObject: false,
+                isDecoyObject: false,
                 lastSeen: '2025-07-09T00:28:46.292Z',
                 properties: {
                     admincount: true,
@@ -424,6 +434,7 @@ export const singleNodeResponse = {
                 objectId: 'S-1-5-21-2697957641-2271029196-387917394-2110',
                 isTierZero: false,
                 isOwnedObject: false,
+                isDecoyObject: false,
                 lastSeen: '2025-07-09T00:28:46.306Z',
                 properties: {
                     admincount: true,

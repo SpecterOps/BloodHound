@@ -38,7 +38,14 @@ const server = setupServer(
         );
     }),
     rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
-        return res(ctx.json({ data: { nodes: { abc: { objectId: 'abc' }, def: { objectId: 'def' } }, edges: [] } }));
+        return res(
+            ctx.json({
+                data: {
+                    nodes: { abc: { objectId: 'abc' }, def: { objectId: 'def' } },
+                    edges: [],
+                },
+            })
+        );
     }),
     rest.get('/api/v2/asset-group-tags', (req, res, ctx) => {
         return res(
@@ -51,6 +58,13 @@ const server = setupServer(
                             kind_id: 2,
                             name: 'Owned',
                             description: 'Owned',
+                        },
+                        {
+                            id: 4,
+                            type: 4,
+                            kind_id: 4,
+                            name: 'Decoy',
+                            description: 'Decoy',
                         },
                         {
                             id: 1,
@@ -77,17 +91,30 @@ describe('ContextMenu', () => {
             route: '/test?selectedItem=abc',
         });
 
-        const startNodeOption = await screen.findByRole('menuitem', { name: /set as starting node/i });
+        const startNodeOption = await screen.findByRole('menuitem', {
+            name: /set as starting node/i,
+        });
         expect(startNodeOption).toBeInTheDocument();
 
-        const endNodeOption = await screen.findByRole('menuitem', { name: /set as ending node/i });
+        const endNodeOption = await screen.findByRole('menuitem', {
+            name: /set as ending node/i,
+        });
         expect(endNodeOption).toBeInTheDocument();
 
-        const addToTierZeroValue = await screen.findByRole('menuitem', { name: /add to tier zero/i });
+        const addToTierZeroValue = await screen.findByRole('menuitem', {
+            name: /add to tier zero/i,
+        });
         expect(addToTierZeroValue).toBeInTheDocument();
 
-        const addToOwned = await screen.findByRole('menuitem', { name: /add to owned/i });
+        const addToOwned = await screen.findByRole('menuitem', {
+            name: /add to owned/i,
+        });
         expect(addToOwned).toBeInTheDocument();
+
+        const addToDecoy = await screen.findByRole('menuitem', {
+            name: /add to decoy/i,
+        });
+        expect(addToDecoy).toBeInTheDocument();
     });
 
     it('renders no asset group edit options without graph write permissions', async () => {
@@ -105,17 +132,30 @@ describe('ContextMenu', () => {
             route: '/test?selectedItem=abc',
         });
 
-        const startNodeOption = await screen.findByRole('menuitem', { name: /set as starting node/i });
+        const startNodeOption = await screen.findByRole('menuitem', {
+            name: /set as starting node/i,
+        });
         expect(startNodeOption).toBeInTheDocument();
 
-        const endNodeOption = await screen.findByRole('menuitem', { name: /set as ending node/i });
+        const endNodeOption = await screen.findByRole('menuitem', {
+            name: /set as ending node/i,
+        });
         expect(endNodeOption).toBeInTheDocument();
 
-        const addToTierZeroValue = screen.queryByRole('menuitem', { name: /add to tier zero/i });
+        const addToTierZeroValue = screen.queryByRole('menuitem', {
+            name: /add to tier zero/i,
+        });
         expect(addToTierZeroValue).not.toBeInTheDocument();
 
-        const addToOwned = screen.queryByRole('menuitem', { name: /add to owned/i });
+        const addToOwned = screen.queryByRole('menuitem', {
+            name: /add to owned/i,
+        });
         expect(addToOwned).not.toBeInTheDocument();
+
+        const addToDecoy = screen.queryByRole('menuitem', {
+            name: /add to decoy/i,
+        });
+        expect(addToDecoy).not.toBeInTheDocument();
     });
 
     it('sets a primarySearch=id and searchType=node when secondarySearch is falsey', async () => {
@@ -123,7 +163,9 @@ describe('ContextMenu', () => {
             route: '/test?selectedItem=abc',
         });
 
-        const startNodeOption = await screen.findByRole('menuitem', { name: /set as starting node/i });
+        const startNodeOption = await screen.findByRole('menuitem', {
+            name: /set as starting node/i,
+        });
 
         const user = userEvent.setup();
         await user.click(startNodeOption);
@@ -138,7 +180,9 @@ describe('ContextMenu', () => {
             route: '/test?selectedItem=abc&secondarySearch=def',
         });
 
-        const startNodeOption = await screen.findByRole('menuitem', { name: /set as starting node/i });
+        const startNodeOption = await screen.findByRole('menuitem', {
+            name: /set as starting node/i,
+        });
         const user = userEvent.setup();
         await user.click(startNodeOption);
 
@@ -152,7 +196,9 @@ describe('ContextMenu', () => {
             route: '/test?selectedItem=abc',
         });
 
-        const endNodeOption = await screen.findByRole('menuitem', { name: /set as ending node/i });
+        const endNodeOption = await screen.findByRole('menuitem', {
+            name: /set as ending node/i,
+        });
         const user = userEvent.setup();
         await user.click(endNodeOption);
 
@@ -166,7 +212,9 @@ describe('ContextMenu', () => {
             route: '/test?selectedItem=abc&primarySearch=def',
         });
 
-        const endNodeOption = await screen.findByRole('menuitem', { name: /set as ending node/i });
+        const endNodeOption = await screen.findByRole('menuitem', {
+            name: /set as ending node/i,
+        });
         const user = userEvent.setup();
         await user.click(endNodeOption);
 

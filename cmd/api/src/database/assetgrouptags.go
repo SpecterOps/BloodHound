@@ -534,6 +534,8 @@ func (s *BloodhoundDB) DeleteAssetGroupTag(ctx context.Context, user model.User,
 			return fmt.Errorf("you cannot delete a tier in the 1st position")
 		} else if assetGroupTag.Type == model.AssetGroupTagTypeOwned {
 			return fmt.Errorf("you cannot delete the owned tag")
+		} else if assetGroupTag.Type == model.AssetGroupTagTypeDecoy {
+			return fmt.Errorf("you cannot delete the decoy tag")
 		}
 
 		if result := tx.Exec(fmt.Sprintf(`
@@ -724,8 +726,10 @@ func (s *BloodhoundDB) GetAssetGroupTagForSelection(ctx context.Context) ([]mode
 			SELECT id FROM asset_group_tags WHERE type = 1 AND position = 1 AND deleted_at IS NULL LIMIT 1
 		), owned AS (
 			SELECT id FROM asset_group_tags WHERE type = 3 AND deleted_at IS NULL LIMIT 1
+		), decoy AS (
+			SELECT id FROM asset_group_tags WHERE type = 4 AND deleted_at IS NULL LIMIT 1
 		)
-		SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled FROM %s WHERE id IN ((SELECT id FROM tier), (SELECT id FROM owned))`,
+		SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled FROM %s WHERE id IN ((SELECT id FROM tier), (SELECT id FROM owned), (SELECT id FROM decoy))`,
 		model.AssetGroupTag{}.TableName())).Find(&tags))
 }
 
