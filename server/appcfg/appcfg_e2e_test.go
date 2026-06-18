@@ -190,6 +190,44 @@ func TestGetDatapipeStatus(t *testing.T) {
 		return req
 	}
 
+	// Authentication tests - validate middleware is properly attached
+	t.Run("returns 401 Unauthorized when no authentication token is provided", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/datapipe/status", nil)
+		require.NoError(t, err)
+		// No Authorization header
+
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+	})
+
+	t.Run("returns 401 Unauthorized when an invalid token is provided", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/datapipe/status", nil)
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer invalid-token-that-is-not-valid")
+
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+	})
+
+	t.Run("returns 400 Bad Request when Bearer prefix is missing", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/datapipe/status", nil)
+		require.NoError(t, err)
+		// Token without "Bearer" prefix
+		req.Header.Set("Authorization", token)
+
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
+
 	t.Run("returns 200 OK with datapipe status in idle state", func(t *testing.T) {
 		// Ensure datapipe is in idle state (default after migration)
 		err := db.SetDatapipeStatus(ctx, model.DatapipeStatusIdle)

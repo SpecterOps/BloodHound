@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,10 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 package handlers
-
-//go:generate go tool mockery
 
 import (
 	"context"
@@ -30,39 +27,35 @@ import (
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
 )
 
-// Appcfg defines the appcfg service boundary for the appcfg handlers package.
-type Appcfg interface {
+//go:generate go tool mockery
+
+type Service interface {
 	GetDatapipeStatus(context.Context) (services.DatapipeStatus, error)
 }
 
-// Handlers is a dependency injection container for appcfg handlers
 type Handlers struct {
-	appcfg Appcfg
+	service Service
 }
 
-// NewHandlersContainer initializes the Handlers dependency injection container
-func NewHandlersContainer(appcfg Appcfg) *Handlers {
+func NewHandlers(service Service) *Handlers {
 	return &Handlers{
-		appcfg: appcfg,
+		service: service,
 	}
 }
 
-// GetDatapipeStatus returns the current status of the datapipe including analysis
-// timestamps and next scheduled analysis time (Enterprise only).
-func (s Handlers) GetDatapipeStatus(response http.ResponseWriter, request *http.Request) {
+func (s *Handlers) GetDatapipeStatus(response http.ResponseWriter, request *http.Request) {
 	var ctx = request.Context()
 
-	status, err := s.appcfg.GetDatapipeStatus(ctx)
+	status, err := s.service.GetDatapipeStatus(ctx)
 	if err != nil {
-		handleAppcfgError(request, response, err)
+		handleServiceError(request, response, err)
 		return
 	}
 
 	responses.WriteBasic(ctx, BuildDatapipeStatusView(status), http.StatusOK, response)
 }
 
-// handleAppcfgError maps sentinel errors from the service layer to HTTP status codes.
-func handleAppcfgError(request *http.Request, response http.ResponseWriter, err error) {
+func handleServiceError(request *http.Request, response http.ResponseWriter, err error) {
 	var ctx = request.Context()
 
 	if errors.Is(err, services.ErrNotFound) {

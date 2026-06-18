@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 package services
 
 import (
@@ -47,27 +46,22 @@ type DatapipeStatus struct {
 	NextScheduledAnalysisAt null.Time
 }
 
-// Sentinel errors returned by the service layer.
 var (
 	ErrNotFound = errors.New("not found")
 )
 
-// Database defines the persistence operations required by the appcfg service.
 type Database interface {
 	GetDatapipeStatus(ctx context.Context) (DatapipeStatus, error)
 }
 
-// Service coordinates domain logic for application configuration features.
 type Service struct {
 	db Database
 }
 
-// NewService returns a new Service backed by the given Database implementation.
-func NewService(databaseInterface Database) *Service {
-	return &Service{db: databaseInterface}
+func NewService(db Database) *Service {
+	return &Service{db: db}
 }
 
-// GetDatapipeStatus returns the current datapipe status.
 func (s *Service) GetDatapipeStatus(ctx context.Context) (DatapipeStatus, error) {
 	return s.db.GetDatapipeStatus(ctx)
 }

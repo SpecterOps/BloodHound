@@ -36,8 +36,8 @@ func TestRegister(t *testing.T) {
 		cfg        = config.Configuration{}
 		authorizer = auth.NewAuthorizer(nil)
 		routerInst = router.NewRouter(cfg, authorizer, "")
-		mock       = mocks.NewMockAppcfg(t)
-		handlerSet = handlers.NewHandlersContainer(mock)
+		mock       = mocks.NewMockService(t)
+		handlerSet = handlers.NewHandlers(mock)
 	)
 
 	routes.Register(&routerInst, handlerSet)
@@ -58,8 +58,8 @@ func TestRegister_RoutesRequireAuthentication(t *testing.T) {
 		cfg        = config.Configuration{}
 		authorizer = auth.NewAuthorizer(nil)
 		routerInst = router.NewRouter(cfg, authorizer, "")
-		mock       = mocks.NewMockAppcfg(t)
-		handlerSet = handlers.NewHandlersContainer(mock)
+		mock       = mocks.NewMockService(t)
+		handlerSet = handlers.NewHandlers(mock)
 	)
 
 	routes.Register(&routerInst, handlerSet)

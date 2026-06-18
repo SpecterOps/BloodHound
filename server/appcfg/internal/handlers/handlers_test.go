@@ -124,8 +124,8 @@ func TestHandlers_GetDatapipeStatus(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var (
-				mockSvc = mocks.NewMockAppcfg(t)
-				h       = handlers.NewHandlersContainer(mockSvc)
+				mockSvc = mocks.NewMockService(t)
+				h       = handlers.NewHandlers(mockSvc)
 				rr      = httptest.NewRecorder()
 				req     = newRequest(t)
 			)

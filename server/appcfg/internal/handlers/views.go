@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 package handlers
 
 import (
@@ -24,9 +23,6 @@ import (
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
 )
 
-// DatapipeStatusView is the JSON shape returned by the datapipe status handler.
-// It is decoupled from services.DatapipeStatus so the wire format can evolve
-// independently of the domain model.
 type DatapipeStatusView struct {
 	Status                  services.DatapipeStatusType `json:"status"`
 	UpdatedAt               time.Time                   `json:"updated_at"`
@@ -35,15 +31,13 @@ type DatapipeStatusView struct {
 	NextScheduledAnalysisAt null.Time                   `json:"next_scheduled_analysis_at"`
 }
 
-// BuildDatapipeStatusView projects a services.DatapipeStatus into the
-// view type the handlers return in their JSON envelope.
-func BuildDatapipeStatusView(ds services.DatapipeStatus) DatapipeStatusView {
+func BuildDatapipeStatusView(status services.DatapipeStatus) DatapipeStatusView {
 	return DatapipeStatusView{
-		Status:                  ds.Status,
-		UpdatedAt:               ds.UpdatedAt,
-		LastCompleteAnalysisAt:  ds.LastCompleteAnalysisAt,
-		LastAnalysisRunAt:       ds.LastAnalysisRunAt,
-		NextScheduledAnalysisAt: ds.NextScheduledAnalysisAt,
+		Status:                  status.Status,
+		UpdatedAt:               status.UpdatedAt,
+		LastCompleteAnalysisAt:  status.LastCompleteAnalysisAt,
+		LastAnalysisRunAt:       status.LastAnalysisRunAt,
+		NextScheduledAnalysisAt: status.NextScheduledAnalysisAt,
 	}
 }
 
