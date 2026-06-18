@@ -47,10 +47,10 @@ func TestService_GetDatapipeStatus(t *testing.T) {
 	)
 
 	tests := []struct {
-		name        string
-		setupMock   func(*mocks.MockDatabase)
-		wantResult  services.DatapipeStatus
-		wantErr     error
+		name       string
+		setupMock  func(*mocks.MockDatabase)
+		wantResult services.DatapipeStatus
+		wantErr    error
 	}{
 		{
 			name: "returns datapipe status on success",
