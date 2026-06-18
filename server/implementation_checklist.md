@@ -61,9 +61,29 @@ Before touching any production code, write a test that covers the HTTP contract 
 
 ---
 
-## Step 3 – Implement persistence in `internal/appdb/appdb.go`
+## Step 3 – Define domain types and interfaces in `internal/services/services.go`
+
+The services package owns domain types and sentinel errors. The `Database` interface lives here (not in appdb) to enable Dependency Inversion.
+
+**This step must come before implementing appdb because appdb depends on the domain types and errors defined here.**
+
+-   [ ] Define the domain struct(s) that this feature owns
+-   [ ] Define sentinel errors (`var ErrNotFound = errors.New(...)`)
+-   [ ] Define the `Database` interface with only the methods this feature calls
+-   [ ] Add `//go:generate go tool mockery` at the top of the file
+-   [ ] Implement the `Service` struct and `NewService` constructor
+-   [ ] Implement Service methods that coordinate domain logic and call the `Database` interface
+-   [ ] Write unit tests in `services_test.go` using the generated `MockDatabase` (use concrete argument values, avoid `mock.Anything`)
+
+📖 See [Services Layer Pattern](#services-layer-pattern) for code example.
+
+---
+
+## Step 4 – Implement persistence in `internal/appdb/appdb.go`
 
 The persistence layer uses [go-sqlbuilder](https://github.com/huandu/go-sqlbuilder) for query construction and [pgx v5](https://github.com/jackc/pgx) for execution.
+
+**This step comes after Step 3 because appdb returns the domain types and sentinel errors defined in the services package.**
 
 -   [ ] Define a package-local `pgxQuerier` interface with only the pgx methods this store calls
 -   [ ] Define package-local row structs with `db:` tags for `pgx.RowToStructByName`
@@ -76,22 +96,6 @@ The persistence layer uses [go-sqlbuilder](https://github.com/huandu/go-sqlbuild
 -   [ ] Write integration tests in `appdb_integration_test.go` using [pgtestdb](https://github.com/peterldowns/pgtestdb) with `//go:build integration`
 
 📖 See [Persistence Layer Pattern](#persistence-layer-pattern) for code example.
-
----
-
-## Step 4 – Define domain types and interfaces in `internal/services/services.go`
-
-The services package owns domain types and sentinel errors. The `Database` interface lives here (not in appdb) to enable Dependency Inversion.
-
--   [ ] Define the domain struct(s) that this feature owns
--   [ ] Define sentinel errors (`var ErrNotFound = errors.New(...)`)
--   [ ] Define the `Database` interface with only the methods this feature calls
--   [ ] Add `//go:generate go tool mockery` at the top of the file
--   [ ] Implement the `Service` struct and `NewService` constructor
--   [ ] Implement Service methods that coordinate domain logic and call the `Database` interface
--   [ ] Write unit tests in `services_test.go` using the generated `MockDatabase` (use concrete argument values, avoid `mock.Anything`)
-
-📖 See [Services Layer Pattern](#services-layer-pattern) for code example.
 
 ---
 
