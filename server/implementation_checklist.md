@@ -13,11 +13,7 @@ For code patterns and examples, see the [Code Patterns Reference](#code-patterns
 
 ## Step 1 – Scaffold the feature directory
 
--   [ ] Create the directory tree under `server/<feature>/` (see structure below)
--   [ ] Add the license header to every new file (run `just generate` or copy from an existing file)
-
-<details>
-<summary>📁 Expected directory structure</summary>
+**Expected directory structure:**
 
 ```
 server/<feature>/
@@ -37,7 +33,11 @@ server/<feature>/
         ├── services.go          # Service struct + domain types + Database interface
         └── services_test.go     # Unit tests (mock)
 ```
-</details>
+
+**Checklist:**
+
+-   [ ] Create the directory tree under `server/<feature>/` as shown above
+-   [ ] Add the license header to every new file (run `just generate` or copy from an existing file)
 
 ---
 
