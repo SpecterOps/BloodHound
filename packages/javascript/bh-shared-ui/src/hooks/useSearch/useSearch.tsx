@@ -36,27 +36,18 @@ export const searchKeys = {
 };
 
 export const useSearch = (keyword = '', type: string | undefined) => {
-    console.log('use search keyword', keyword);
     const timeoutLimitEnabled = useTimeoutLimitConfiguration();
     const timeout = timeoutLimitEnabled ? 60000 : 0;
-
-    const kindsQuery = useGraphNodeKinds();
-    const kinds = kindsQuery.data?.kinds ?? [];
-
-    // the current behavior is to case insensitive match the kind name from the input
-    // find and use the case sensitive kind name because the API requires the correct case
-    const kind = kinds.find((kind) => kind.toLocaleLowerCase() === type?.toLocaleLowerCase()) ?? type;
 
     return useQuery<SearchResults, any>({
         queryKey: searchKeys.detail(keyword, type),
         queryFn: ({ signal }) => {
             if (keyword === '') return [];
-            return apiClient.searchHandler(keyword, kind, { signal, timeout }).then((result) => {
+            return apiClient.searchHandler(keyword, type, { signal, timeout }).then((result) => {
                 if (!result.data.data) return [];
                 return result.data.data;
             });
         },
-        enabled: kindsQuery.isSuccess,
         keepPreviousData: true,
         retry: false,
     });
@@ -75,31 +66,17 @@ export const useKeywordAndTypeValues = (
         // Only do it if more than one char and that way if a user wants to use the : as a search string it works
         const splitValue = inputValue.split(':');
         if (splitValue.length > 1) {
-            const hasNodeKind = !!data?.kinds.find(
+            const nodeKind = data?.kinds.find(
                 (kind) => kind.toLocaleLowerCase() === splitValue[0].toLocaleLowerCase() //abstract
             );
-            if (hasNodeKind) {
-                type = splitValue[0];
+            if (nodeKind) {
+                type = nodeKind;
                 keyword = splitValue.slice(1).join(':');
             }
         }
     }
 
     return { keyword, type };
-};
-
-export const getKeywordAndTypeValues = (inputValue = ''): { keyword: string; type: string | undefined } => {
-    const splitValue = inputValue.split(':');
-
-    let keyword: string;
-    let type: string | undefined = undefined;
-
-    if (splitValue.length > 1) {
-        type = splitValue[0];
-        keyword = splitValue.slice(1).join(':');
-    } else keyword = splitValue[0];
-
-    return { keyword: keyword, type: type };
 };
 
 const getErrorText = (error: any, type: string | undefined): string => {
