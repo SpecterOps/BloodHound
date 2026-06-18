@@ -142,7 +142,7 @@ const reducer = (state: RuleFormState, action: Action): RuleFormState => {
                  * when we introduce a third rule type, simple toggling will be insufficient
                  * and we will need to store all 3 seed types explicitly.
                  * That's because we reuse seeds state for _both_ rule types,
-                 * Event though we store `selectedObjects` separately
+                 * even though we store `selectedObjects` separately
                  */
                 seeds: state.prevSeeds,
                 prevSeeds: state.seeds,
