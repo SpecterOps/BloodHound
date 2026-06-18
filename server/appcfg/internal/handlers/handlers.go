@@ -16,7 +16,7 @@
 
 package handlers
 
-//go:generate go run go.uber.org/mock/mockgen -destination=../mocks/appcfg.go -package=mocks . Appcfg
+//go:generate go tool mockery
 
 // Appcfg defines the service boundary for the appcfg handlers package.
 type Appcfg interface {

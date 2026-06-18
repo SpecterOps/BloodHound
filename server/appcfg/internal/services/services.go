@@ -24,7 +24,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 )
 
-//go:generate go run go.uber.org/mock/mockgen -destination=../mocks/database.go -package=mocks . Database
+//go:generate go tool mockery
 
 // DatapipeStatusType represents the current status of the datapipe.
 type DatapipeStatusType string

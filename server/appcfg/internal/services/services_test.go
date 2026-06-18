@@ -23,11 +23,10 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
-	"github.com/specterops/bloodhound/server/appcfg/internal/mocks"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
+	"github.com/specterops/bloodhound/server/appcfg/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
 )
 
 func TestService_GetDatapipeStatus(t *testing.T) {
@@ -56,21 +55,21 @@ func TestService_GetDatapipeStatus(t *testing.T) {
 		{
 			name: "returns datapipe status on success",
 			setupMock: func(mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetDatapipeStatus(ctx).Return(expected, nil)
+				mockDB.On("GetDatapipeStatus", ctx).Return(expected, nil)
 			},
 			wantResult: expected,
 		},
 		{
 			name: "returns ErrNotFound when database returns ErrNotFound",
 			setupMock: func(mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetDatapipeStatus(ctx).Return(services.DatapipeStatus{}, services.ErrNotFound)
+				mockDB.On("GetDatapipeStatus", ctx).Return(services.DatapipeStatus{}, services.ErrNotFound)
 			},
 			wantErr: services.ErrNotFound,
 		},
 		{
 			name: "propagates database errors",
 			setupMock: func(mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetDatapipeStatus(ctx).Return(services.DatapipeStatus{}, dbErr)
+				mockDB.On("GetDatapipeStatus", ctx).Return(services.DatapipeStatus{}, dbErr)
 			},
 			wantErr: dbErr,
 		},
@@ -78,10 +77,7 @@ func TestService_GetDatapipeStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
-			mockDB := mocks.NewMockDatabase(ctrl)
+			mockDB := mocks.NewMockDatabase(t)
 			tt.setupMock(mockDB)
 
 			svc := services.NewService(mockDB)
