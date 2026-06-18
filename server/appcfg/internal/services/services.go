@@ -16,11 +16,45 @@
 
 package services
 
+import (
+	"context"
+	"errors"
+	"time"
+
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+)
+
 //go:generate go run go.uber.org/mock/mockgen -destination=../mocks/database.go -package=mocks . Database
+
+// DatapipeStatusType represents the current status of the datapipe.
+type DatapipeStatusType string
+
+const (
+	DatapipeStatusIdle      DatapipeStatusType = "idle"
+	DatapipeStatusIngesting DatapipeStatusType = "ingesting"
+	DatapipeStatusAnalyzing DatapipeStatusType = "analyzing"
+	DatapipeStatusPurging   DatapipeStatusType = "purging"
+	DatapipeStatusPruning   DatapipeStatusType = "pruning"
+	DatapipeStatusStarting  DatapipeStatusType = "starting"
+)
+
+// DatapipeStatus represents the current state of the datapipe.
+type DatapipeStatus struct {
+	Status                  DatapipeStatusType
+	UpdatedAt               time.Time
+	LastCompleteAnalysisAt  time.Time
+	LastAnalysisRunAt       time.Time
+	NextScheduledAnalysisAt null.Time
+}
+
+// Sentinel errors returned by the service layer.
+var (
+	ErrNotFound = errors.New("not found")
+)
 
 // Database defines the persistence operations required by the appcfg service.
 type Database interface {
-	// Method stubs will be added as we define them
+	GetDatapipeStatus(ctx context.Context) (DatapipeStatus, error)
 }
 
 // Service coordinates domain logic for application configuration features.
@@ -31,4 +65,9 @@ type Service struct {
 // NewService returns a new Service backed by the given Database implementation.
 func NewService(databaseInterface Database) *Service {
 	return &Service{db: databaseInterface}
+}
+
+// GetDatapipeStatus returns the current datapipe status.
+func (s *Service) GetDatapipeStatus(ctx context.Context) (DatapipeStatus, error) {
+	return s.db.GetDatapipeStatus(ctx)
 }
