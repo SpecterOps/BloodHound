@@ -16,10 +16,6 @@
 
 package services
 
-import (
-	"context"
-)
-
 //go:generate go run go.uber.org/mock/mockgen -destination=../mocks/database.go -package=mocks . Database
 
 // Database defines the persistence operations required by the appcfg service.
