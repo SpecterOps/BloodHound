@@ -29,6 +29,7 @@ import {
     CreateSharpHoundEventRequest,
     CreateUserQueryRequest,
     CreateUserRequest,
+    CreateWebhookRequest,
     DeleteUserQueryPermissionsRequest,
     LoginRequest,
     PostureRequest,
@@ -69,6 +70,7 @@ import {
     AzureDataQualityResponse,
     BasicResponse,
     CreateAuthTokenResponse,
+    CreateWebhookResponse,
     DatapipeStatusResponse,
     EndFileIngestResponse,
     Environment,
@@ -2710,6 +2712,12 @@ class BHEAPIClient {
 
     deleteExtension = (extensionId: string, options?: RequestOptions): Promise<AxiosResponse<void>> =>
         this.baseClient.delete(`/api/v2/extensions/${extensionId}`, options);
+
+    /* alerts */
+    /* webhooks */
+    createWebhook = (payload: CreateWebhookRequest, options?: RequestOptions) => {
+        return this.baseClient.post<BasicResponse<CreateWebhookResponse>>('/api/v2/alert-webhooks', payload, options);
+    };
 }
 
 export default BHEAPIClient;

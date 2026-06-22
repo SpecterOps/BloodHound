@@ -607,3 +607,38 @@ export type FindingAssetsResponse = {
     title: string;
     type: string;
 };
+
+export type Webhook = {
+    id: string;
+    type: 'generic';
+    name: string;
+    description: string;
+    url: string;
+    health: number;
+    attempts: number;
+    failures: number;
+    last_error: {
+        string: string;
+        valid: boolean;
+    };
+    last_errored_at: {
+        time: ISO_DATE_STRING;
+        valid: boolean;
+    };
+    last_succeeded_at: {
+        time: ISO_DATE_STRING;
+        valid: boolean;
+    };
+    created_at: ISO_DATE_STRING;
+    created_by: string;
+    updated_at: ISO_DATE_STRING;
+    updated_by: string;
+    disabled_at: {
+        time: ISO_DATE_STRING;
+        valid: boolean;
+    };
+    disabled_by: {
+        string: string;
+        valid: boolean;
+    };
+};

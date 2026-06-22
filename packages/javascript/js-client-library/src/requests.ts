@@ -295,3 +295,10 @@ export interface CreateUserRequest extends Omit<UpdateUserRequest, 'is_disabled'
 }
 
 export type UpdateConfigurationRequest = ConfigurationPayload;
+
+export interface CreateWebhookRequest {
+    type: 'generic';
+    name: string;
+    description: string;
+    url: string;
+}
