@@ -43,6 +43,66 @@ export const Story: Story = {
     render: (args) => <Checkbox {...args} />,
 };
 
+export const Unchecked: Story = {
+    render: (args) => (
+        <div className='flex items-center gap-2'>
+            <Checkbox id='checkbox-unchecked' checked={false} {...args} />
+            <Label htmlFor='checkbox-unchecked'>Label</Label>
+        </div>
+    ),
+};
+
+export const Checked: Story = {
+    render: (args) => (
+        <div className='flex items-center gap-2'>
+            <Checkbox id='checkbox-checked' checked={true} {...args} />
+            <Label htmlFor='checkbox-checked'>Label</Label>
+        </div>
+    ),
+};
+
+export const Disabled: Story = {
+    render: (args) => (
+        <div className='flex flex-col gap-4'>
+            <div className='flex items-center gap-2'>
+                <Checkbox id='checkbox-disabled-unchecked' disabled checked={false} {...args} />
+                <Label htmlFor='checkbox-disabled-unchecked'>Unchecked disabled</Label>
+            </div>
+
+            <div className='flex items-center gap-2'>
+                <Checkbox id='checkbox-disabled-checked' disabled checked {...args} />
+                <Label htmlFor='checkbox-disabled-checked'>Checked disabled</Label>
+            </div>
+
+            <div className='flex items-center gap-2'>
+                <Checkbox id='checkbox-disabled-indeterminate' disabled checked='indeterminate' {...args} />
+                <Label htmlFor='checkbox-disabled-indeterminate'>Indeterminate disabled</Label>
+            </div>
+        </div>
+    ),
+};
+
+export const Error: Story = {
+    render: (args) => (
+        <div className='flex flex-col gap-4'>
+            <div className='flex items-center gap-2'>
+                <Checkbox id='checkbox-error-unchecked' aria-invalid checked={false} {...args} />
+                <Label htmlFor='checkbox-error-unchecked'>Unchecked error</Label>
+            </div>
+
+            <div className='flex items-center gap-2'>
+                <Checkbox id='checkbox-error-checked' aria-invalid checked={true} {...args} />
+                <Label htmlFor='checkbox-error-checked'>Checked error</Label>
+            </div>
+
+            <div className='flex items-center gap-2'>
+                <Checkbox id='checkbox-error-checked' aria-invalid checked={true} {...args} />
+                <Label htmlFor='checkbox-error-checked'>Indeterminate error</Label>
+            </div>
+        </div>
+    ),
+};
+
 export const Labeled: Story = {
     render: () => {
         return (
