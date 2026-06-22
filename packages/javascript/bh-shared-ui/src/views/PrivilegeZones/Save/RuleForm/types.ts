@@ -33,4 +33,6 @@ export type RuleFormState = {
     seeds: SelectorSeedRequest[];
     selectedObjects: AssetGroupSelectedNodes;
     autoCertify: AssetGroupTagSelectorAutoCertifyType;
+    cypherQueryYieldsNoResults: boolean;
+    staleCypherPreview: boolean;
 };

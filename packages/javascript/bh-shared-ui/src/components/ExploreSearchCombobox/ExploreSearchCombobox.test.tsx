@@ -20,6 +20,7 @@ import { setupServer } from 'msw/node';
 import ExploreSearchCombobox from '.';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import { mockKindsHandler } from '../../mocks';
+import { mockGetConfigurationHandler } from '../../mocks/handlers';
 import { act, render, screen, within } from '../../test-utils';
 
 const testSearchResults = {
@@ -53,7 +54,8 @@ const server = setupServer(
             })
         );
     }),
-    mockKindsHandler()
+    mockKindsHandler(),
+    mockGetConfigurationHandler()
 );
 
 beforeAll(() => server.listen());

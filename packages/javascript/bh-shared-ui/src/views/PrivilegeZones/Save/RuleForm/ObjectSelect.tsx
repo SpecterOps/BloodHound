@@ -28,14 +28,14 @@ import {
     TableRow,
     Tooltip,
 } from 'doodle-ui';
-import { FC, useContext, useState } from 'react';
+import { FC, useState } from 'react';
 import ExploreSearchCombobox from '../../../../components/ExploreSearchCombobox';
 import NodeIcon from '../../../../components/NodeIcon';
 import { SearchValue } from '../../../Explore';
-import RuleFormContext from './RuleFormContext';
+import { useRuleFormContext } from './RuleFormContext';
 
 const ObjectSelect: FC = () => {
-    const { selectedObjects, dispatch } = useContext(RuleFormContext);
+    const { selectedObjects, dispatch } = useRuleFormContext();
     const [searchTerm, setSearchTerm] = useState<string>('');
 
     const handleSelectedNode = (node: SearchValue) => {
