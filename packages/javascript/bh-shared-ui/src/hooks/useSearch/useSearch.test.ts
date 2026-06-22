@@ -14,8 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { setupServer } from 'msw/node';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
-import { getEmptyResultsText, getKeywordAndTypeValues } from './useSearch';
+import { mockKindsHandler } from '../../mocks/handlers';
+import { renderHook, waitFor } from '../../test-utils';
+import { getEmptyResultsText, useKeywordAndTypeValues } from './useSearch';
+
+const server = setupServer(mockKindsHandler(['computer', 'azapp']));
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 describe('Getting the text for the disabled item display for a search when there are no results', () => {
     describe('Loading states', () => {
@@ -86,21 +95,29 @@ describe('Getting the text for the disabled item display for a search when there
 
 describe('Parsing the debounced input for type and keyword values', () => {
     test('`undefined` input is provided', () => {
-        expect(getKeywordAndTypeValues(undefined)).toEqual({ keyword: '', type: undefined });
+        const { result } = renderHook(() => useKeywordAndTypeValues(undefined));
+        expect(result.current).toEqual({ keyword: undefined, type: undefined });
     });
 
     test('Empty input is provided', () => {
-        expect(getKeywordAndTypeValues('')).toEqual({ keyword: '', type: undefined });
+        const { result } = renderHook(() => useKeywordAndTypeValues(''));
+        expect(result.current).toEqual({ keyword: '', type: undefined });
     });
 
     test('Input does not contain a type', () => {
-        expect(getKeywordAndTypeValues('test')).toEqual({ keyword: 'test', type: undefined });
+        const { result } = renderHook(() => useKeywordAndTypeValues('test'));
+        expect(result.current).toEqual({ keyword: 'test', type: undefined });
     });
 
-    it('Will ignore colons after the first and use them as part of the keyword search', () => {
-        expect(getKeywordAndTypeValues('computer:user:domain:ou:gpo:test')).toEqual({
-            keyword: 'user:domain:ou:gpo:test',
-            type: 'computer',
-        });
+    it('Will treat what is to the left of the first colon as a search filter if it matches an existing kind', async () => {
+        const { result } = renderHook(() => useKeywordAndTypeValues('computer:user:domain:ou:gpo:test'));
+        await waitFor(() => expect(result.current.type).toBe('computer'));
+        expect(result.current).toEqual({ keyword: 'user:domain:ou:gpo:test', type: 'computer' });
+    });
+
+    it('Will ignore what is to the left of the first colon if it doesnt match an existing kind and will treat all as keyword', async () => {
+        const { result } = renderHook(() => useKeywordAndTypeValues('testing:user:domain:ou:gpo:test'));
+        await waitFor(() => expect(result.current.keyword).toBe('testing:user:domain:ou:gpo:test'));
+        expect(result.current).toEqual({ keyword: 'testing:user:domain:ou:gpo:test', type: undefined });
     });
 });
