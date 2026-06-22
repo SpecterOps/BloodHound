@@ -84,7 +84,7 @@ export default {
 
                 // contrast: 'var(--common-dark)',
 
-                // 'text-light': 'var(--text-light)',
+                'text-light': 'var(--text-light)',
                 // 'text-contrast': 'var(--text-contrast)',
                 // 'text-primary': 'var(--text-primary)',
                 // 'text-secondary': 'var(--text-secondary)',
