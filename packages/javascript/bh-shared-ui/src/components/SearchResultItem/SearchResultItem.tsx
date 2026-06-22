@@ -72,7 +72,7 @@ const SearchResultItem: FC<{
                                 flexGrow: 1,
                                 marginRight: '1em',
                             }}>
-                            <HighlightedText text={item.label || item.objectId} search={keyword as string} />
+                            <HighlightedText text={item.label || item.objectId} search={keyword} />
                         </Box>
                     </Box>
                 }
