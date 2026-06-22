@@ -43,6 +43,16 @@ export const Story: Story = {
     render: (args) => <Checkbox {...args} />,
 };
 
+export const IconOnly: Story = {
+    render: (args) => (
+        <div className='flex items-center gap-4'>
+            <Checkbox aria-label='Unchecked checkbox' checked={false} {...args} />
+            <Checkbox aria-label='Checked checkbox' checked={true} {...args} />
+            <Checkbox aria-label='Indeterminate checkbox' checked='indeterminate' {...args} />
+        </div>
+    ),
+};
+
 export const Unchecked: Story = {
     render: (args) => (
         <div className='flex items-center gap-2'>
@@ -59,6 +69,28 @@ export const Checked: Story = {
             <Label htmlFor='checkbox-checked'>Label</Label>
         </div>
     ),
+};
+
+export const Indeterminate: Story = {
+    render: (args) => (
+        <div className='flex items-center gap-2'>
+            <Checkbox id='checkbox-indeterminate' checked='indeterminate' {...args} />
+            <Label htmlFor='checkbox-indeterminate'>Label</Label>
+        </div>
+    ),
+};
+
+export const Labeled: Story = {
+    render: () => {
+        return (
+            <div className='flex justify-center flex-row items-center'>
+                <Checkbox id='test-id' />
+                <Label htmlFor='test-id' className='pl-2'>
+                    Testing Label
+                </Label>
+            </div>
+        );
+    },
 };
 
 export const Disabled: Story = {
@@ -96,22 +128,9 @@ export const Error: Story = {
             </div>
 
             <div className='flex items-center gap-2'>
-                <Checkbox id='checkbox-error-checked' aria-invalid checked={true} {...args} />
-                <Label htmlFor='checkbox-error-checked'>Indeterminate error</Label>
+                <Checkbox id='checkbox-error-indeterminate' aria-invalid checked='indeterminate' {...args} />
+                <Label htmlFor='checkbox-error-indeterminate'>Indeterminate error</Label>
             </div>
         </div>
     ),
-};
-
-export const Labeled: Story = {
-    render: () => {
-        return (
-            <div className='flex justify-center flex-row items-center'>
-                <Checkbox id='test-id' />
-                <Label htmlFor='test-id' className='pl-2'>
-                    Testing Label
-                </Label>
-            </div>
-        );
-    },
 };
