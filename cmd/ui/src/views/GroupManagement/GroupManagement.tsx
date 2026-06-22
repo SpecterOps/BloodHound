@@ -53,7 +53,6 @@ const GroupManagement = () => {
     const handleClickMember = (member: AssetGroupMember) => {
         setOpenNode({
             id: member.object_id,
-            graphId: getGraphNodeByObjectId.data?.id ?? '',
             type: member.primary_kind as EntityKinds,
             name: member.name,
         });

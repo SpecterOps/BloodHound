@@ -106,7 +106,7 @@ export type SelectedNode = {
     id: string;
     type: EntityKinds;
     name: string;
-    graphId: string;
+    graphId?: string;
 };
 
 export type BaseGraphLayoutOptions = 'standard' | 'sequential';
