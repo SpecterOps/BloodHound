@@ -251,7 +251,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // TEXT
             '--text-main': common.white,
-            // '--text-light': dark.text.light,
+            '--text-light': text.dark,
             // '--text-contrast': common.dark,
             '--text-disabled': common.disabled,
             // '--text-primary': dark.primary.main,
