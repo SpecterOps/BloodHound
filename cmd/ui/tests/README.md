@@ -24,7 +24,7 @@ A Playwright **setup project** that runs once per Playwright invocation before a
 2. Delegates to `bh-playwright-testing` helpers to manage per-theme auth sessions
 
 > About auth session management:\
-> `loginAndSnapshotThemes` logs in via `/ui/login`, snapshots `storageState` to `playwright/.auth/user-light.json`, toggles dark mode (waiting for the throttled `persistedState` write to land), then snapshots `playwright/.auth/user-dark.json`. Capturing both theme snapshots from a single session avoids the parallel-login race where two setups as the same user would invalidate each other's session. Downstream projects load the snapshot that matches their theme via `authStorageStateFor(theme)`.
+> `loginAndSnapshotThemes` logs in via `/ui/login`, then writes the canonical light/dark `persistedState` (carrying over the session token from login) directly into localStorage to snapshot `storageState` to `playwright/.auth/user-light.json` and `playwright/.auth/user-dark.json`. Capturing both theme snapshots from a single session avoids the parallel-login race where two setups as the same user would invalidate each other's session. Downstream projects load the snapshot that matches their theme via `authStorageStateFor(theme)`.
 
 ## Conventions
 

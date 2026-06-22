@@ -18,6 +18,27 @@ import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 import type { Theme } from './themes';
 
+const persistedState = {
+    auth: {
+        sessionToken: '',
+    },
+    global: {
+        view: {
+            darkMode: false,
+            autoRunQueries: true,
+            notifications: [],
+            exploreLayout: 'sequential',
+            isExploreTableSelected: false,
+            isExploreLayoutSelected: false,
+            selectedExploreTableColumns: { kind: true, label: true, objectId: true, isTierZero: true },
+            pinnedExploreTableColumns: ['action-menu', 'kind', 'label'],
+            timeoutSetting: false,
+            isExploreGraphHighlight: true,
+            isExploreGraphLabelClip: true,
+        },
+    },
+};
+
 export type LoginAndSnapshotThemesOptions = {
     page: Page;
     username: string;
@@ -25,20 +46,16 @@ export type LoginAndSnapshotThemesOptions = {
     // Resolves a per-theme `storageState` file path. Callers typically wrap
     // `authStorageStateFor(theme)` from `./themes` with `path.resolve(...)`.
     storageStatePathFor: (theme: Theme) => string;
-    // Optional hook for dismissing any post-login overlay (e.g. an upload dialog) that
-    // could intercept the dark-mode toggle click. Invoked after the login form clears.
-    dismissPostLogin?: (page: Page) => Promise<void>;
 };
 
 // Login once and snapshot `storageState` for both light and dark themes.
 //
 // Capturing both snapshots from a single session avoids the parallel-login race where two
-// setups as the same user would invalidate each other's session. This relies on the BH
-// shared UI shell (login form labels "Email Address" / "Password", the LOGIN submit button,
-// the `global_nav-dark-mode` toggle, and the `persistedState` localStorage key written by
-// the global store's throttled subscriber) being identical across consumers.
+// setups as the same user would invalidate each other's session. Rather than toggling the
+// theme through the UI, we write the canonical light/dark `persistedState` directly into
+// localStorage (carrying over the real session token from login) before each snapshot.
 export async function loginAndSnapshotThemes(opts: LoginAndSnapshotThemesOptions): Promise<void> {
-    const { page, username, password, storageStatePathFor, dismissPostLogin } = opts;
+    const { page, username, password, storageStatePathFor } = opts;
 
     try {
         await page.goto('/ui/login');
@@ -48,33 +65,27 @@ export async function loginAndSnapshotThemes(opts: LoginAndSnapshotThemesOptions
         // Use `exact` as some environments also have "Login Via SSO".
         await page.getByRole('button', { name: 'LOGIN', exact: true }).click();
 
-        // Race the success path (navigation off /ui/login) against the most common failure
-        // path (rejected creds leave you on /ui/login with an inline toast). This surfaces
-        // auth failures in ~15s with a clear message.
+        // Rejected creds leave you on /ui/login, so waiting to navigate away surfaces auth
+        // failures in ~15s with a clear message.
         await expect(page).not.toHaveURL(/\/ui\/login(\?|$)/, { timeout: 15_000 });
-        await page.getByTestId('global_nav-dark-mode').waitFor({ state: 'visible' });
 
-        if (dismissPostLogin) {
-            await dismissPostLogin(page);
+        // Carry over the real session token written by the login flow so the snapshots stay
+        // authenticated after we overwrite `persistedState`.
+        const sessionToken = await page.evaluate(() => {
+            const raw = localStorage.getItem('persistedState');
+            return raw ? JSON.parse(raw)?.auth?.sessionToken ?? '' : '';
+        });
+
+        for (const [theme, darkMode] of [
+            ['light', false],
+            ['dark', true],
+        ] as const) {
+            const state = structuredClone(persistedState);
+            state.global.view.darkMode = darkMode;
+            state.auth.sessionToken = sessionToken;
+            await page.evaluate((next) => localStorage.setItem('persistedState', JSON.stringify(next)), state);
+            await page.context().storageState({ path: storageStatePathFor(theme) });
         }
-
-        // Snapshot light first, while the UI is still in its default theme.
-        await page.context().storageState({ path: storageStatePathFor('light') });
-
-        // Click the nav dark-mode toggle. The inner Switch is `inert`, so the click handler
-        // lives on the parent item targeted by this test id.
-        await page.getByTestId('global_nav-dark-mode').click();
-
-        // The store persists via a throttled (1s) subscriber. Poll until the new value lands
-        // in localStorage before snapshotting storageState, so the next test boots in dark mode.
-        await expect
-            .poll(async () => {
-                const raw = await page.evaluate(() => localStorage.getItem('persistedState'));
-                return raw ? JSON.parse(raw)?.global?.view?.darkMode : null;
-            })
-            .toBe(true);
-
-        await page.context().storageState({ path: storageStatePathFor('dark') });
     } catch (error) {
         throw new Error(`Auth setup failed at ${page.url()}: ${(error as Error).message}`, { cause: error });
     }

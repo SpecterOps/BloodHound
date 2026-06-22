@@ -23,8 +23,8 @@ test.describe('Download Collectors page accessibility', () => {
     }, testInfo) => {
         await page.goto('/ui/download-collectors');
 
-        // Wait for page label to load
-        await page.getByRole('heading', { name: 'Download Collectors' }).waitFor({ state: 'visible' });
+        // Wait for collector download button to appear
+        await page.getByRole('button', { name: 'Download SharpHound' }).waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });

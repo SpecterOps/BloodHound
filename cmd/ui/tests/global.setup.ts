@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { expect, test as setup } from 'bh-playwright-testing';
+import { test as setup } from 'bh-playwright-testing';
 import { loginAndSnapshotThemes } from 'bh-playwright-testing/auth';
 import { installGraphHasDataStub } from 'bh-playwright-testing/stubs/graph-has-data';
 import { authStorageStateFor, type Theme } from 'bh-playwright-testing/themes';
@@ -41,15 +41,5 @@ setup('Generate and cache auth state for light and dark theme', async ({ page })
         username,
         password,
         storageStatePathFor: (theme: Theme) => path.resolve(__dirname, '..', authStorageStateFor(theme)),
-        // React Query still goes through one undefined render before the stub lands, and MUI's
-        // Dialog backdrop persists during its close transition. If the dialog raced ahead of us,
-        // dismiss it so the dark-mode click is not intercepted.
-        dismissPostLogin: async (page) => {
-            const cancel = page.getByTestId('confirmation-dialog_button-no');
-            await cancel.click({ timeout: 2_000 }).catch(() => {
-                /* dialog never opened — nothing to dismiss */
-            });
-            await expect(cancel).toBeHidden();
-        },
     });
 });
