@@ -56,10 +56,16 @@ export const useSearch = (keyword = '', type: string | undefined) => {
 export const useKeywordAndTypeValues = (
     inputValue: string | undefined
 ): { keyword: string | undefined; type: string | undefined } => {
-    const { data } = useGraphNodeKinds();
+    const { data, isLoading } = useGraphNodeKinds();
 
     let keyword: string | undefined = inputValue;
     let type: string | undefined = undefined;
+
+    const hasQualifier = !!inputValue?.includes(':');
+
+    if (hasQualifier && isLoading) {
+        return { keyword: undefined, type: undefined };
+    }
 
     if (inputValue && inputValue.length > 1) {
         // We use the : as q search/qualifier operator for searches so we need to perform the below to parse it if necessary
