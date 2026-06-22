@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { Check } from 'lucide-react';
+import { Check, Minus } from 'lucide-react';
 import * as React from 'react';
 import { cn } from '../utils';
 
@@ -39,13 +39,21 @@ interface CheckboxProps
 }
 
 const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root>, CheckboxProps>(
-    ({ size = 'md', icon, className, ...props }, ref) => (
-        <CheckboxPrimitive.Root ref={ref} className={cn(CheckboxVariants({ size, className }))} {...props}>
-            <CheckboxPrimitive.Indicator className={cn('flex items-center justify-center text-current')}>
-                {icon ? icon : <Check className='h-full w-full' absoluteStrokeWidth={true} strokeWidth={3} />}
-            </CheckboxPrimitive.Indicator>
-        </CheckboxPrimitive.Root>
-    )
+    ({ size = 'md', icon, className, checked, ...props }, ref) => {
+        const CheckedIcon = checked === 'indeterminate' ? Minus : Check;
+
+        return (
+            <CheckboxPrimitive.Root
+                ref={ref}
+                checked={checked}
+                className={cn(CheckboxVariants({ size, className }))}
+                {...props}>
+                <CheckboxPrimitive.Indicator className={cn('flex items-center justify-center text-current')}>
+                    {icon ? icon : <CheckedIcon className='h-full w-full' absoluteStrokeWidth={true} strokeWidth={3} />}
+                </CheckboxPrimitive.Indicator>
+            </CheckboxPrimitive.Root>
+        );
+    }
 );
 Checkbox.displayName = CheckboxPrimitive.Root.displayName;
 
