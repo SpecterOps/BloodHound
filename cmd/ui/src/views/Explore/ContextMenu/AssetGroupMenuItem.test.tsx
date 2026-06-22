@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { apiClient } from 'bh-shared-ui';
+import { apiClient, mockGetConfigurationHandler } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
@@ -84,7 +84,8 @@ describe('AssetGroupMenuItem', async () => {
             }),
             rest.get('/api/v2/graph-search', (req, res, ctx) => {
                 return res(ctx.json({}));
-            })
+            }),
+            mockGetConfigurationHandler()
         );
 
         beforeAll(() => server.listen());
@@ -207,7 +208,8 @@ describe('AssetGroupMenuItem', async () => {
             }),
             rest.get('/api/v2/graph-search', (req, res, ctx) => {
                 return res(ctx.json({}));
-            })
+            }),
+            mockGetConfigurationHandler()
         );
 
         beforeAll(() => server.listen());

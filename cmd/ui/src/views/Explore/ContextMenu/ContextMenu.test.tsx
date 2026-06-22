@@ -16,7 +16,7 @@
 
 import userEvent from '@testing-library/user-event';
 import * as bhSharedUi from 'bh-shared-ui';
-import { DeepPartial, Permission, createAuthStateWithPermissions } from 'bh-shared-ui';
+import { DeepPartial, Permission, createAuthStateWithPermissions, mockGetConfigurationHandler } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
@@ -59,7 +59,8 @@ const server = setupServer(
                 data: [],
             })
         );
-    })
+    }),
+    mockGetConfigurationHandler()
 );
 
 beforeAll(() => server.listen());

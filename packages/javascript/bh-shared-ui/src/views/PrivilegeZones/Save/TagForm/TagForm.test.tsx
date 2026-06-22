@@ -397,17 +397,13 @@ describe('Tag Form', () => {
     });
 
     test('clicking cancel on the form takes the user back to the page the user was on previously', async () => {
-        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '2' });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: undefined });
         vi.mocked(useLocation).mockReturnValue({ pathname: createNewLabelPath } as Location);
         render(<TagForm />, { route: createNewLabelPath });
 
-        await act(async () => {
-            fireEvent.click(await screen.findByTestId('privilege-zones_save_tag-form_cancel-button'));
-        });
+        await user.click(await screen.findByTestId('privilege-zones_save_tag-form_cancel-button'));
 
-        await waitFor(() => {
-            expect(mockNavigate).toHaveBeenCalledWith(-1);
-        });
+        expect(mockNavigate).toHaveBeenCalledWith(-1);
     });
 
     test('a name value is required to submit the form', async () => {

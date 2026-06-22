@@ -24,7 +24,15 @@ import DownloadCollectors from './DownloadCollectors';
 
 vi.mock('js-file-download');
 
-const server = setupServer();
+const server = setupServer(
+    rest.get('/api/v2/features', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
+    })
+);
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());

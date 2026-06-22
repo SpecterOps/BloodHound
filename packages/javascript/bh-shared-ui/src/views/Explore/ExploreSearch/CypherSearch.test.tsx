@@ -194,7 +194,7 @@ describe('CypherSearch', () => {
     });
 
     it('should call performSearch on keyboard press alt+R', async () => {
-        const { user } = await setup({ ...testState, cypherQuery: 'Anything' });
+        const { user } = await setup({ ...testState, cypherQuery: 'Anything' }, '/', false);
 
         expect(testPerformSearch).not.toHaveBeenCalled();
 
