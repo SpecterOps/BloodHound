@@ -26,7 +26,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/headers"
 )
@@ -124,7 +124,7 @@ func LoggingMiddleware(idResolver auth.IdentityResolver, bypassLimitsParam bool)
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			var (
 				logAttrs       []slog.Attr
-				requestContext = ctx.FromRequest(request)
+				requestContext = bhctx.FromRequest(request)
 				deadline       time.Time
 
 				loggedResponse = &responseRecorder{

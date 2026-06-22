@@ -185,10 +185,13 @@ describe('SchemaUploadDialog', () => {
         await user.click(screen.getByRole('button', { name: 'Upload File' }));
         const fileInput = screen.getByTestId('ingest-file-upload');
         await user.upload(fileInput, testFile);
-        await user.click(screen.getByRole('button', { name: 'Upload' }));
 
-        expect(await screen.findByText('Failed to Upload')).toBeInTheDocument();
-        expect(await screen.findByRole('button', { name: 'Close' })).toBeInTheDocument();
+        await withoutErrorLogging(async () => {
+            await user.click(screen.getByRole('button', { name: 'Upload' }));
+
+            expect(await screen.findByText('Failed to Upload')).toBeInTheDocument();
+            expect(await screen.findByRole('button', { name: 'Close' })).toBeInTheDocument();
+        });
     });
 
     it('invalidates the extensions query after a successful upload', async () => {

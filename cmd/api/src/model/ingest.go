@@ -38,3 +38,14 @@ const (
 	FileTypeJson FileType = iota
 	FileTypeZip
 )
+
+func (s FileType) String() string {
+	switch s {
+	case FileTypeJson:
+		return "json"
+	case FileTypeZip:
+		return "zip"
+	default:
+		return "unknown"
+	}
+}

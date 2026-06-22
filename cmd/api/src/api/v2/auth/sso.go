@@ -29,7 +29,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
@@ -146,7 +146,7 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 				}
 
 				// Format callback url from host
-				provider.FormatProviderURLs(*ctx.Get(requestCtx).Host)
+				provider.FormatProviderURLs(*bhctx.Get(requestCtx).Host)
 
 				switch ssoProvider.Type {
 				case model.SessionAuthProviderOIDC:
@@ -155,7 +155,7 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 					}
 				case model.SessionAuthProviderSAML:
 					if ssoProvider.SAMLProvider != nil {
-						ssoProvider.SAMLProvider.FormatSAMLProviderURLs(*ctx.Get(requestCtx).Host)
+						ssoProvider.SAMLProvider.FormatSAMLProviderURLs(*bhctx.Get(requestCtx).Host)
 						provider.Details = ssoProvider.SAMLProvider
 					}
 				}
@@ -177,7 +177,7 @@ type DeleteSSOProviderResponse struct {
 func (s ManagementResource) DeleteSSOProvider(response http.ResponseWriter, request *http.Request) {
 	var (
 		rawSSOProviderID = mux.Vars(request)[api.URIPathVariableSSOProviderID]
-		requestContext   = ctx.FromRequest(request)
+		requestContext   = bhctx.FromRequest(request)
 	)
 
 	// Convert the incoming string url param to an int

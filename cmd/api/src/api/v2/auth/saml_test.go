@@ -46,7 +46,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2auth "github.com/specterops/bloodhound/cmd/api/src/api/v2/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"go.uber.org/mock/gomock"
@@ -103,10 +103,10 @@ func TestManagementResource_SAMLLoginRedirect(t *testing.T) {
 					},
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "provider").Return(model.SSOProvider{
@@ -200,10 +200,10 @@ func TestManagementResource_SAMLCallbackRedirect(t *testing.T) {
 					Method: http.MethodPost,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "provider").Return(model.SSOProvider{
@@ -316,11 +316,11 @@ func TestManagementResource_ListSAMLSignOnEndpoints(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				oktaProvider := model.SAMLProvider{
@@ -429,11 +429,11 @@ func TestManagementResource_ListSAMLProviders(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
@@ -455,11 +455,11 @@ func TestManagementResource_ListSAMLProviders(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
@@ -2017,10 +2017,10 @@ func TestManagementResource_ServeMetadata(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "provider").Return(model.SSOProvider{
@@ -2051,10 +2051,10 @@ func TestManagementResource_ServeMetadata(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "provider").Return(model.SSOProvider{
@@ -2299,10 +2299,10 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -2327,10 +2327,10 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -2357,10 +2357,10 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -2389,10 +2389,10 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -2425,10 +2425,10 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -2514,10 +2514,10 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -2542,10 +2542,10 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -2572,10 +2572,10 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -2613,10 +2613,10 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -2652,10 +2652,10 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -2691,10 +2691,10 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -2744,10 +2744,10 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.SessionTTLHours).Return(appcfg.Parameter{}, nil)
@@ -2818,10 +2818,10 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.SessionTTLHours).Return(appcfg.Parameter{}, nil).Times(2)
@@ -2906,10 +2906,10 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.SessionTTLHours).Return(appcfg.Parameter{}, nil).Times(2)
@@ -2994,10 +2994,10 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.SessionTTLHours).Return(appcfg.Parameter{}, nil).Times(2)
@@ -3068,10 +3068,10 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			dogTagsOverrides: dogtags.TestOverrides{
 				Bools: map[dogtags.BoolDogTag]bool{
@@ -3170,10 +3170,10 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			dogTagsOverrides: dogtags.TestOverrides{
 				Bools: map[dogtags.BoolDogTag]bool{
