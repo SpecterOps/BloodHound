@@ -29,7 +29,7 @@ export const useNodeSearch = () => {
     const { primarySearch, searchType, setExploreParams } = useExploreParams();
 
     // Wire up search query. we should only recompute the keyword/type when the param value changes
-    const { keyword, type } = useKeywordAndTypeValues(primarySearch ?? undefined);
+    const { keyword, type } = useKeywordAndTypeValues(primarySearch);
     const { data: searchData } = useSearch(keyword, type);
 
     // Watch query params for a new incoming node search and sync to internal state

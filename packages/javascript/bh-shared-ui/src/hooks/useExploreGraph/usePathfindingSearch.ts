@@ -28,10 +28,8 @@ export const usePathfindingSearch = () => {
     const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
 
     // Wire up search queries. we should only recompute keywords when the param values change
-    const { keyword: sourceKeyword, type: sourceType } = useKeywordAndTypeValues(primarySearch ?? undefined);
-    const { keyword: destinationKeyword, type: destinationType } = useKeywordAndTypeValues(
-        secondarySearch ?? undefined
-    );
+    const { keyword: sourceKeyword, type: sourceType } = useKeywordAndTypeValues(primarySearch);
+    const { keyword: destinationKeyword, type: destinationType } = useKeywordAndTypeValues(secondarySearch);
 
     const { data: sourceSearchData } = useSearch(sourceKeyword, sourceType);
     const { data: destinationSearchData } = useSearch(destinationKeyword, destinationType);

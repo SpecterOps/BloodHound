@@ -16,7 +16,7 @@
 
 import { isAxiosError } from 'js-client-library';
 import { useQuery } from 'react-query';
-import { apiClient } from '../../utils';
+import { apiClient, type KeywordAndTypeValues, Maybe, parseKeywordAndTypeValue } from '../../utils';
 import { useTimeoutLimitConfiguration } from '../useConfiguration';
 import { useGraphNodeKinds } from '../useGraphKinds';
 
@@ -53,36 +53,9 @@ export const useSearch = (keyword = '', type: string | undefined) => {
     });
 };
 
-export const useKeywordAndTypeValues = (
-    inputValue: string | undefined
-): { keyword: string | undefined; type: string | undefined } => {
-    const { data, isLoading } = useGraphNodeKinds();
-
-    let keyword: string | undefined = inputValue;
-    let type: string | undefined = undefined;
-
-    const hasQualifier = !!inputValue?.includes(':');
-
-    if (hasQualifier && isLoading) {
-        return { keyword: undefined, type: undefined };
-    }
-
-    if (inputValue && inputValue.length > 1) {
-        // We use the : as q search/qualifier operator for searches so we need to perform the below to parse it if necessary
-        // Only do it if more than one char and that way if a user wants to use the : as a search string it works
-        const splitValue = inputValue.split(':');
-        if (splitValue.length > 1) {
-            const nodeKind = data?.kinds.find(
-                (kind) => kind.toLocaleLowerCase() === splitValue[0].toLocaleLowerCase() //abstract
-            );
-            if (nodeKind) {
-                type = nodeKind;
-                keyword = splitValue.slice(1).join(':');
-            }
-        }
-    }
-
-    return { keyword, type };
+export const useKeywordAndTypeValues = (inputValue: Maybe<string>): KeywordAndTypeValues => {
+    const { data } = useGraphNodeKinds();
+    return parseKeywordAndTypeValue(inputValue, data?.kinds);
 };
 
 const getErrorText = (error: any, type: string | undefined): string => {
