@@ -376,7 +376,7 @@ describe('EdgeInfoContent', () => {
 
             expect(
                 await screen.findByText(
-                    'This edge’s information is not disclosed. Please contact your admin in order to get access.'
+                    "This edge's information is not disclosed. Please contact your admin in order to get access."
                 )
             ).toBeInTheDocument();
         });

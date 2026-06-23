@@ -14,8 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Container, ContainerProps, Typography } from '@mui/material';
-import React from 'react';
+import { Box, Container, ContainerProps } from '@mui/material';
+import { Typography } from 'doodle-ui';
+import React, { createContext, useContext } from 'react';
+import { Helmet } from 'react-helmet-async';
+
+const AppNameContext = createContext('BloodHound Enterprise');
+
+export const AppNameProvider: React.FC<{ name: string; children: React.ReactNode }> = ({ name, children }) => (
+    <AppNameContext.Provider value={name}>{children}</AppNameContext.Provider>
+);
+
+export const useAppName = () => useContext(AppNameContext);
 
 type PageWithTitleProps = ContainerProps<
     'div',
@@ -27,10 +37,22 @@ type PageWithTitleProps = ContainerProps<
 >;
 
 const PageWithTitle: React.FC<PageWithTitleProps> = ({ title, pageDescription, children, ...rest }) => {
+    const appName = useAppName();
     return (
-        <Container maxWidth='xl' {...rest}>
-            <Box component={'header'}>
-                {title && <Typography variant='h1'>{title}</Typography>}
+        <Container maxWidth='xl' {...rest} className='pt-4'>
+            {title && (
+                <Helmet>
+                    <title>
+                        {title} | {appName}
+                    </title>
+                </Helmet>
+            )}
+            <Box component={'header'} className='pb-4'>
+                {title && (
+                    <Typography variant='h1' className='mb-4'>
+                        {title}
+                    </Typography>
+                )}
                 {pageDescription}
             </Box>
             {children}

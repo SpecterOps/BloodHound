@@ -69,7 +69,9 @@ const MainNavListItem: FC<{
     const labelElement = (
         <span className='whitespace-nowrap flex items-center gap-x-2'>
             <span data-testid='global_nav-item-label-icon'>{icon}</span>
-            <span data-testid='global_nav-item-label-text'>{label}</span>
+            <span data-testid='global_nav-item-label-text' aria-label={label}>
+                {label}
+            </span>
         </span>
     );
 

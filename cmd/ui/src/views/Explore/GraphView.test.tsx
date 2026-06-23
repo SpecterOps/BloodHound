@@ -15,22 +15,71 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { cypherTestResponse, mockKindsHandler } from 'bh-shared-ui';
+import {
+    createAuthStateWithPermissions,
+    cypherTestResponse,
+    mockGetConfigurationHandler,
+    mockKindsHandler,
+    singleNodeResponse,
+} from 'bh-shared-ui';
 import { GraphEdge } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, waitFor } from 'src/test-utils';
+import { render, screen, waitFor, within } from 'src/test-utils';
 import GraphView from './GraphView';
+
+// Mock sigma here to avoid rendering conflicts in jsdom
+vi.mock('src/components/SigmaChart', async () => {
+    const { forwardRef, useImperativeHandle } = await import('react');
+
+    return {
+        default: forwardRef((_props, ref) => {
+            useImperativeHandle(ref, () => ({
+                runStandardLayout: vi.fn(),
+                runSequentialLayout: vi.fn(),
+                resetCamera: vi.fn(),
+                zoomTo: vi.fn(),
+            }));
+
+            return <div data-testid='sigma-container-wrapper' />;
+        }),
+    };
+});
+
+const baseGlobalView = {
+    notifications: [],
+    darkMode: false,
+    autoRunQueries: true,
+    exploreLayout: undefined,
+    isExploreTableSelected: false,
+    isExploreLayoutSelected: false,
+    selectedExploreTableColumns: undefined,
+    pinnedExploreTableColumns: undefined,
+    timeoutSetting: false,
+};
+
+const searchedNode = {
+    label: 'Searched Node',
+    kind: 'User',
+    kinds: ['User'],
+    objectId: 'testing-node-123',
+    isTierZero: false,
+    isOwnedObject: false,
+    lastSeen: '',
+};
+const graphSearchResponse = {
+    data: { data: { nodes: { '42': searchedNode }, edges: [] } },
+};
 
 const server = setupServer(
     rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
         return res(ctx.json(cypherTestResponse));
     }),
     rest.get('/api/v2/features', (req, res, ctx) => {
-        return res(ctx.status(200));
+        return res(ctx.json({ data: [] }));
     }),
     rest.get('/api/v2/self', (req, res, ctx) => {
-        return res(ctx.status(200));
+        return res(ctx.json({ data: createAuthStateWithPermissions([]).user }));
     }),
     rest.get(`/api/v2/custom-nodes`, async (_req, res, ctx) => {
         return res(ctx.json({ data: [] }));
@@ -39,18 +88,53 @@ const server = setupServer(
         return res(ctx.json({ data: { tags: [] } }));
     }),
     rest.get('/api/v2/file-upload/accepted-types', async (_, res, ctx) => {
-        return res(ctx.status(200));
+        return res(ctx.json({ data: [] }));
     }),
     rest.get('/api/v2/saved-queries', async (_, res, ctx) => {
-        return res(ctx.status(200));
+        return res(ctx.json({ queries: [] }));
+    }),
+    rest.get('/api/v2/graph-search', (_req, res, ctx) => {
+        return res(ctx.json(graphSearchResponse));
     }),
     mockKindsHandler(),
+    mockGetConfigurationHandler(),
     rest.get(`/api/v2/roles`, (req, res, ctx) => {
         return res(
             ctx.json({
                 data: {
                     roles: [],
                 },
+            })
+        );
+    }),
+    rest.get('/api/v2/search', (_req, res, ctx) => {
+        return res(ctx.json({ data: [] }));
+    }),
+    rest.get('/api/v2/graphs/shortest-path', (_req, res, ctx) => {
+        return res(ctx.json({ data: { nodes: {}, edges: [] } }));
+    }),
+    rest.get('/api/v2/users/:id', (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    data: {
+                        kinds: ['Base', 'User'],
+                        props: {
+                            objectid: searchedNode.objectId,
+                            name: searchedNode.label,
+                        },
+                    },
+                },
+            })
+        );
+    }),
+    rest.get('/api/v2/users/:id/:relationship', (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                count: 0,
+                skip: 0,
+                limit: 128,
+                data: [],
             })
         );
     })
@@ -161,6 +245,58 @@ describe('GraphView', () => {
         expect(sigma).toBeInTheDocument();
         expect(table).not.toBeInTheDocument();
     });
+
+    const autoSelectRoute = `/explore?searchType=node&primarySearch=${searchedNode.objectId}`;
+
+    it('auto-selects when a search result has a matching objectId', async () => {
+        render(<GraphView />, { route: autoSelectRoute });
+
+        await waitFor(() => expect(window.location.search).toContain('selectedItem=42'));
+    });
+
+    it('opens the entity information panel for the auto-selected node', async () => {
+        server.use(
+            rest.post('/api/v2/graphs/cypher', (_req, res, ctx) =>
+                res(
+                    ctx.json({
+                        data: {
+                            nodes: { '42': searchedNode },
+                            edges: [],
+                        },
+                    })
+                )
+            )
+        );
+
+        render(<GraphView />, { route: autoSelectRoute });
+
+        await waitFor(() => expect(window.location.search).toContain('selectedItem=42'));
+
+        const panel = await screen.findByTestId('explore_entity-information-panel');
+        expect(within(panel).getByText('Searched Node')).toBeInTheDocument();
+    });
+
+    it('clears selected item when pathfinding search returns results', async () => {
+        server.use(
+            rest.post('/api/v2/graphs/cypher', (_req, res, ctx) =>
+                res(
+                    ctx.json({
+                        data: {
+                            nodes: { '42': searchedNode },
+                            edges: [],
+                        },
+                    })
+                )
+            )
+        );
+
+        const pathfindingRoute = `/explore?searchType=pathfinding&primarySearch=${searchedNode.objectId}&secondarySearch=some-destination`;
+
+        render(<GraphView />, { route: pathfindingRoute });
+
+        await waitFor(() => expect(window.location.search).not.toContain('selectedItem='));
+    });
+
     it('renders correct search elements after keypresses', async () => {
         render(<GraphView />, { route: `/explore` });
         const user = userEvent.setup();
@@ -192,5 +328,137 @@ describe('GraphView', () => {
         const searchNodesElAfter = screen.queryByPlaceholderText('Search Nodes');
 
         expect(searchNodesElAfter).toBeInTheDocument();
+    });
+
+    describe('Layout selection and de-selection', () => {
+        const cypherRoute = '/explore?searchType=cypher&cypherSearch=encodedquery';
+
+        it('does not auto-display the table for a node-only cypher response when the user has already selected a graph layout', async () => {
+            render(<GraphView />, {
+                route: cypherRoute,
+                initialState: {
+                    global: {
+                        view: {
+                            ...baseGlobalView,
+                            exploreLayout: 'standard',
+                            isExploreLayoutSelected: true,
+                        },
+                    },
+                },
+            });
+
+            expect(await screen.findByTestId('sigma-container-wrapper')).toBeInTheDocument();
+            expect(screen.queryByRole('table')).not.toBeInTheDocument();
+        });
+
+        it('does not auto display the table for single node responses with no edges', async () => {
+            server.use(
+                rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
+                    return res(ctx.json(singleNodeResponse));
+                })
+            );
+            render(<GraphView />, {
+                initialState: {
+                    global: {
+                        view: {
+                            ...baseGlobalView,
+                            exploreLayout: 'table',
+                            isExploreLayoutSelected: true,
+                        },
+                    },
+                },
+            });
+
+            expect(screen.queryByRole('table')).not.toBeInTheDocument();
+        });
+
+        it('reflects the persisted selected layout in the controls menu', async () => {
+            render(<GraphView />, {
+                route: cypherRoute,
+                initialState: {
+                    global: {
+                        view: {
+                            ...baseGlobalView,
+                            exploreLayout: 'standard',
+                            isExploreLayoutSelected: true,
+                        },
+                    },
+                },
+            });
+
+            const user = userEvent.setup();
+            const layoutMenu = await screen.findByText('Layout');
+            await user.click(layoutMenu);
+
+            const standardOption = await screen.findByTestId('explore_graph-controls_standard-buttonLabel');
+            expect(standardOption).toHaveClass('Mui-selected');
+
+            const sequentialOption = await screen.findByTestId('explore_graph-controls_sequential-buttonLabel');
+            expect(sequentialOption).not.toHaveClass('Mui-selected');
+
+            const tableOption = await screen.findByTestId('explore_graph-controls_table-buttonLabel');
+            expect(tableOption).not.toHaveClass('Mui-selected');
+        });
+
+        it('reverts to the default unselected state when the user de-selects the currently selected graph layout', async () => {
+            render(<GraphView />, {
+                route: cypherRoute,
+                initialState: {
+                    global: {
+                        view: {
+                            ...baseGlobalView,
+                            exploreLayout: 'standard',
+                            isExploreLayoutSelected: true,
+                        },
+                    },
+                },
+            });
+
+            const user = userEvent.setup();
+            const layoutMenu = await screen.findByText('Layout');
+            await user.click(layoutMenu);
+
+            const standardOption = await screen.findByTestId('explore_graph-controls_standard-buttonLabel');
+            await user.click(standardOption);
+
+            await user.click(layoutMenu);
+
+            const standardOptionAfter = await screen.findByTestId('explore_graph-controls_standard-buttonLabel');
+            expect(standardOptionAfter).not.toHaveClass('Mui-selected');
+
+            const sequentialOptionAfter = await screen.findByTestId('explore_graph-controls_sequential-buttonLabel');
+            expect(sequentialOptionAfter).not.toHaveClass('Mui-selected');
+
+            const tableOptionAfter = await screen.findByTestId('explore_graph-controls_table-buttonLabel');
+            expect(tableOptionAfter).not.toHaveClass('Mui-selected');
+        });
+
+        it('reverts to the default graph view when the user de-selects the currently selected table layout', async () => {
+            render(<GraphView />, {
+                route: cypherRoute,
+                initialState: {
+                    global: {
+                        view: {
+                            ...baseGlobalView,
+                            isExploreTableSelected: true,
+                            isExploreLayoutSelected: true,
+                        },
+                    },
+                },
+            });
+
+            expect(await screen.findByRole('table')).toBeInTheDocument();
+
+            const user = userEvent.setup();
+            const layoutMenu = screen.getByText('Layout');
+            await user.click(layoutMenu);
+
+            const closeTableBtn = await screen.findByTestId('close-button');
+            await user.click(closeTableBtn);
+
+            await waitFor(() => {
+                expect(screen.queryByRole('table')).not.toBeInTheDocument();
+            });
+        });
     });
 });

@@ -17,6 +17,7 @@
 package router
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -102,8 +103,13 @@ func (s *Route) RequireAllEnvironmentAccess(dogTagsService dogtags.Service) *Rou
 	return s
 }
 
-func (s *Route) CheckFeatureFlag(db database.Database, flagKey string) *Route {
-	s.handler.Use(middleware.FeatureFlagMiddleware(db, flagKey))
+// featureFlag is the minimal interface for a feature flag, it is not to be exported from this pkg
+type featureFlag interface {
+	IsEnabled(ctx context.Context, key string) (bool, error)
+}
+
+func (s *Route) CheckFeatureFlag(ff featureFlag, flagKey string) *Route {
+	s.handler.Use(middleware.FeatureFlagMiddleware(ff, flagKey))
 	return s
 }
 
@@ -127,6 +133,12 @@ func (s Router) UsePostrouting(middleware ...mux.MiddlewareFunc) {
 // matches to a valid route.
 func (s *Router) UsePrerouting(middleware ...mux.MiddlewareFunc) {
 	s.globalMiddleware = append(s.globalMiddleware, middleware...)
+}
+
+// MuxRouter returns the underlying *mux.Router. It is intended for pre-route middleware that needs to resolve the
+// matched route template without dispatching the request, e.g. the Prometheus metrics middleware.
+func (s Router) MuxRouter() *mux.Router {
+	return s.mux
 }
 
 func (s Router) Handler() http.Handler {

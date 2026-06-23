@@ -28,7 +28,10 @@ const GLOBAL_SET_ASSET_GROUP_INDEX = 'app/global/GLOBALSETASSETGROUPINDEX';
 const GLOBAL_SET_ASSET_GROUP_EDIT = 'app/global/GLOBALSETASSETGROUPEDIT';
 const GLOBAL_SET_DARK_MODE = 'app/global/GLOBALSETDARKMODE';
 const GLOBAL_SET_EXPLORE_LAYOUT = 'app/global/GLOBAL_SET_EXPLORE_LAYOUT';
+const GLOBAL_SET_IS_EXPLORE_GRAPH_HIGHLIGHT = 'app/global/GLOBAL_SET_IS_EXPLORE_GRAPH_HIGHLIGHT';
+const GLOBAL_SET_IS_EXPLORE_GRAPH_LABEL_CLIP = 'app/global/GLOBAL_SET_IS_EXPLORE_GRAPH_LABEL_CLIP';
 const GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED = 'app/global/GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED';
+const GLOBAL_SET_IS_EXPLORE_LAYOUT_SELECTED = 'app/global/GLOBAL_SET_IS_EXPLORE_LAYOUT_SELECTED';
 const GLOBAL_SET_AUTO_RUN_QUERIES = 'app/global/GLOBALSETAUTORUNQUERIES';
 const GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS = 'app/global/GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS';
 const GLOBAL_SET_PINNED_EXPLORE_TABLE_COLUMNS = 'app/global/GLOBAL_SET_PINNED_EXPLORE_TABLE_COLUMNS';
@@ -47,6 +50,9 @@ export {
     GLOBAL_SET_DOMAIN,
     GLOBAL_SET_EXPANDED,
     GLOBAL_SET_EXPLORE_LAYOUT,
+    GLOBAL_SET_IS_EXPLORE_GRAPH_HIGHLIGHT,
+    GLOBAL_SET_IS_EXPLORE_GRAPH_LABEL_CLIP,
+    GLOBAL_SET_IS_EXPLORE_LAYOUT_SELECTED,
     GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED,
     GLOBAL_SET_PINNED_EXPLORE_TABLE_COLUMNS,
     GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS,
@@ -58,9 +64,12 @@ export interface GlobalViewState {
     darkMode: boolean;
     autoRunQueries: boolean;
     timeoutSetting: boolean;
+    isExploreGraphHighlight: boolean;
+    isExploreGraphLabelClip: boolean;
     // Future dev: exploreLayout and isExploreTableSelected are undefined until a user selects a layout. After that, the layout is persisted in localStorage (until cache clears)
     exploreLayout?: BaseGraphLayoutOptions;
     isExploreTableSelected?: boolean;
+    isExploreLayoutSelected?: boolean;
     selectedExploreTableColumns?: Record<string, boolean>;
     pinnedExploreTableColumns?: string[];
 }
@@ -117,10 +126,13 @@ export type GlobalViewActionTypes =
     | SetDarkModeAction
     | SetExploreLayoutAction
     | SetIsExploreTableSelectedAction
+    | SetIsExploreLayoutSelectedAction
     | SetAutoRunQueriesAction
     | SetSelectedExploreTableColumns
     | SetPinnedExploreTableColumns
-    | SetTimeoutSettingAction;
+    | SetTimeoutSettingAction
+    | SetIsExploreGraphHighlightAction
+    | SetIsExploreGraphLabelClipAction;
 
 export interface SetDomainAction {
     type: typeof GLOBAL_SET_DOMAIN;
@@ -148,6 +160,11 @@ export interface SetIsExploreTableSelectedAction {
     type: typeof GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED;
     isExploreTableSelected: boolean;
 }
+
+export interface SetIsExploreLayoutSelectedAction {
+    type: typeof GLOBAL_SET_IS_EXPLORE_LAYOUT_SELECTED;
+    isExploreLayoutSelected: boolean;
+}
 export interface SetSelectedExploreTableColumns {
     type: typeof GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS;
     selectedExploreTableColumns: Record<string, boolean>;
@@ -156,6 +173,16 @@ export interface SetSelectedExploreTableColumns {
 export interface SetPinnedExploreTableColumns {
     type: typeof GLOBAL_SET_PINNED_EXPLORE_TABLE_COLUMNS;
     pinnedExploreTableColumns: string[];
+}
+
+export interface SetIsExploreGraphHighlightAction {
+    type: typeof GLOBAL_SET_IS_EXPLORE_GRAPH_HIGHLIGHT;
+    isExploreGraphHighlight: boolean;
+}
+
+export interface SetIsExploreGraphLabelClipAction {
+    type: typeof GLOBAL_SET_IS_EXPLORE_GRAPH_LABEL_CLIP;
+    isExploreGraphLabelClip: boolean;
 }
 
 export type GlobalOptionsActionTypes =

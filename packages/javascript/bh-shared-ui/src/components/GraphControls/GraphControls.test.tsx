@@ -69,7 +69,28 @@ describe('GraphControls', () => {
         onSearchedNodeClickFn.mockClear();
     });
 
-    const setup = ({ showNodeLabels = true, showEdgeLabels = true, json = mockJsonData } = {}) => {
+    type SetupOptions = {
+        showNodeLabels?: boolean;
+        showEdgeLabels?: boolean;
+        json?: Record<string, any>;
+        selectedLayout?: string;
+        layoutOptionsOverride?: readonly string[];
+        isExploreLayoutSelected?: boolean;
+        isExploreTableSelected?: boolean;
+        route?: string;
+    };
+
+    const setup = ({
+        showNodeLabels = true,
+        showEdgeLabels = true,
+        json = mockJsonData,
+        selectedLayout = preselectedLayout,
+        layoutOptionsOverride,
+        isExploreLayoutSelected,
+        isExploreTableSelected,
+        route = '/',
+    }: SetupOptions = {}) => {
+        const options = layoutOptionsOverride ?? layoutOptions;
         render(
             <GraphControls
                 onReset={onResetFn}
@@ -80,10 +101,13 @@ describe('GraphControls', () => {
                 showNodeLabels={showNodeLabels}
                 showEdgeLabels={showEdgeLabels}
                 jsonData={json}
-                layoutOptions={layoutOptions}
-                selectedLayout={preselectedLayout}
+                layoutOptions={options}
+                selectedLayout={selectedLayout}
+                isExploreLayoutSelected={isExploreLayoutSelected}
+                isExploreTableSelected={isExploreTableSelected}
                 currentNodes={currentNodes}
-            />
+            />,
+            { route }
         );
 
         const user = userEvent.setup();
@@ -132,8 +156,9 @@ describe('GraphControls', () => {
             'Toggles node and edge labels on/off depending on their existing state',
             async ({ showEdgeLabels, showNodeLabels }) => {
                 const { user } = setup({ showEdgeLabels, showNodeLabels });
-                const labelMenu = screen.getByText('Hide Labels');
-                await user.click(labelMenu);
+
+                const menuLabel = !showNodeLabels || !showEdgeLabels ? 'Show Labels' : 'Hide Labels';
+                await user.click(screen.getByText(menuLabel));
 
                 const allLabelsController = await screen.findByRole('menuitem', { name: /All Labels/i });
                 await user.click(allLabelsController);
@@ -162,14 +187,119 @@ describe('GraphControls', () => {
 
             expect(onLayoutChangeFn).toBeCalledWith(selectedLayout);
         });
-        it('displays active styles for the selected layout when explore table is enabled', async () => {
-            const { user } = setup();
+
+        it('does not highlight any layout option on first load when no layout has been manually selected', async () => {
+            const { user } = setup({ isExploreLayoutSelected: false });
 
             const layoutMenu = screen.getByText('Layout');
             await user.click(layoutMenu);
 
-            const selectedLayout = await screen.findByText(preselectedLayout);
-            expect(selectedLayout).toHaveClass('Mui-selected');
+            for (const option of layoutOptions) {
+                const menuItem = await screen.findByTestId(`explore_graph-controls_${option}-buttonLabel`);
+                expect(menuItem).not.toHaveClass('Mui-selected');
+            }
+        });
+
+        it('highlights the selectedLayout when isExploreLayoutSelected is true', async () => {
+            const { user } = setup({ isExploreLayoutSelected: true });
+
+            const layoutMenu = screen.getByText('Layout');
+            await user.click(layoutMenu);
+
+            const selected = await screen.findByTestId(`explore_graph-controls_${preselectedLayout}-buttonLabel`);
+            expect(selected).toHaveClass('Mui-selected');
+
+            const otherOptions = layoutOptions.filter((option) => option !== preselectedLayout);
+            for (const option of otherOptions) {
+                const menuItem = await screen.findByTestId(`explore_graph-controls_${option}-buttonLabel`);
+                expect(menuItem).not.toHaveClass('Mui-selected');
+            }
+        });
+
+        it('calls onLayoutChange with the same layout when the currently selected option is clicked, enabling de-selection', async () => {
+            const { user } = setup({ isExploreLayoutSelected: true });
+
+            const layoutMenu = screen.getByText('Layout');
+            await user.click(layoutMenu);
+
+            const selected = await screen.findByTestId(`explore_graph-controls_${preselectedLayout}-buttonLabel`);
+            await user.click(selected);
+
+            expect(onLayoutChangeFn).toBeCalledWith(preselectedLayout);
+        });
+
+        it('reverts all menu options to an unselected state when isExploreLayoutSelected becomes false', async () => {
+            // After a user de-selects a previously selected layout, isExploreLayoutSelected is false even though
+            // selectedLayout may still be present. No option should appear selected.
+            const { user } = setup({ isExploreLayoutSelected: false, selectedLayout: preselectedLayout });
+
+            const layoutMenu = screen.getByText('Layout');
+            await user.click(layoutMenu);
+
+            for (const option of layoutOptions) {
+                const menuItem = await screen.findByTestId(`explore_graph-controls_${option}-buttonLabel`);
+                expect(menuItem).not.toHaveClass('Mui-selected');
+            }
+        });
+    });
+
+    describe('Table view selection state', () => {
+        const layoutOptionsWithTable = ['sequential', 'standard', 'table'] as const;
+
+        it('highlights the table option instead of selectedLayout when table is selected on a cypher query', async () => {
+            const { user } = setup({
+                layoutOptionsOverride: layoutOptionsWithTable,
+                selectedLayout: 'sequential',
+                isExploreLayoutSelected: true,
+                isExploreTableSelected: true,
+                route: '/?searchType=cypher',
+            });
+
+            const layoutMenu = screen.getByText('Layout');
+            await user.click(layoutMenu);
+
+            const tableItem = await screen.findByTestId('explore_graph-controls_table-buttonLabel');
+            expect(tableItem).toHaveClass('Mui-selected');
+
+            const sequentialItem = await screen.findByTestId('explore_graph-controls_sequential-buttonLabel');
+            expect(sequentialItem).not.toHaveClass('Mui-selected');
+        });
+
+        it('does not highlight the table option when isExploreTableSelected is true but isExploreLayoutSelected is false', async () => {
+            const { user } = setup({
+                layoutOptionsOverride: layoutOptionsWithTable,
+                selectedLayout: 'sequential',
+                isExploreLayoutSelected: false,
+                isExploreTableSelected: true,
+                route: '/?searchType=cypher',
+            });
+
+            const layoutMenu = screen.getByText('Layout');
+            await user.click(layoutMenu);
+
+            for (const option of layoutOptionsWithTable) {
+                const menuItem = await screen.findByTestId(`explore_graph-controls_${option}-buttonLabel`);
+                expect(menuItem).not.toHaveClass('Mui-selected');
+            }
+        });
+
+        it('highlights selectedLayout rather than the table option when searchType is not cypher', async () => {
+            const { user } = setup({
+                layoutOptionsOverride: layoutOptionsWithTable,
+                selectedLayout: 'sequential',
+                isExploreLayoutSelected: true,
+                isExploreTableSelected: true,
+                route: '/?searchType=node',
+            });
+
+            const layoutMenu = screen.getByText('Layout');
+            await user.click(layoutMenu);
+
+            const sequentialItem = await screen.findByTestId('explore_graph-controls_sequential-buttonLabel');
+            expect(sequentialItem).toHaveClass('Mui-selected');
+
+            const tableItem = await screen.findByTestId('explore_graph-controls_table-buttonLabel');
+            expect(tableItem).not.toHaveClass('Mui-selected');
         });
     });
     describe('Exporting json', () => {

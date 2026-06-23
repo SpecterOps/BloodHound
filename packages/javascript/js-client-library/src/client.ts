@@ -98,6 +98,7 @@ import {
     SavedQuery,
     SavedQueryPermissionsResponse,
     StartFileIngestResponse,
+    UnifiedFindingResponse,
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
 } from './responses';
@@ -495,6 +496,9 @@ class BHEAPIClient {
     getFindings = (key: string, options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<FindingAssetsResponse>>(`/api/v2/findings/${key}`, options);
 
+    getUnifiedFindings = (options?: RequestOptions) =>
+        this.baseClient.get<UnifiedFindingResponse>('/api/v2/attack-paths/findings', options);
+
     /**
      * getFindingDetails returns data associated with a finding for a given environment
      */
@@ -768,6 +772,9 @@ class BHEAPIClient {
                 options
             )
         );
+
+    requestSupportBundle = (clientId: string, type: string, options?: RequestOptions) =>
+        this.baseClient.post(`/api/v2/clients/${clientId}/management`, { type }, options);
 
     createClient = (
         client: CreateSharpHoundClientRequest | CreateAzureHoundClientRequest | CreateOpenHoundClientRequest,

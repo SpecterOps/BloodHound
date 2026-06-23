@@ -486,6 +486,14 @@ func (s *User) SSOProviderHasRoleProvisionEnabled() bool {
 	return s.SSOProvider != nil && s.SSOProvider.Config.AutoProvision.Enabled && s.SSOProvider.Config.AutoProvision.RoleProvision
 }
 
+func (s *User) GetID() uuid.UUID {
+	return s.ID
+}
+
+func (s *User) HasAllEnvironments() bool {
+	return s.AllEnvironments
+}
+
 type Users []User
 
 func (s Users) IsSortable(column string) bool {

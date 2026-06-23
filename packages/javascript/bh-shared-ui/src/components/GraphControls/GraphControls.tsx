@@ -22,6 +22,7 @@ import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
 import { useRef, useState } from 'react';
 import { useExploreParams, useKeybindings } from '../../hooks';
+import { cn } from '../../utils';
 import { exportToJson } from '../../utils/exportGraphData';
 import GraphButton from '../GraphButton';
 import GraphMenu from '../GraphMenu';
@@ -34,8 +35,9 @@ interface GraphControlsProps<T extends readonly string[]> {
     onToggleEdgeLabels: () => void;
     onSearchedNodeClick: (node: FlatNode) => void;
     isExploreTableSelected?: boolean;
+    isExploreLayoutSelected?: boolean;
     layoutOptions: T;
-    selectedLayout: T[number];
+    selectedLayout?: T[number];
     showNodeLabels: boolean;
     showEdgeLabels: boolean;
     jsonData: Record<string, any> | undefined;
@@ -50,6 +52,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         onToggleEdgeLabels,
         onSearchedNodeClick,
         isExploreTableSelected,
+        isExploreLayoutSelected,
         layoutOptions,
         selectedLayout,
         showNodeLabels,
@@ -61,7 +64,6 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
     const [isCurrentSearchOpen, setIsCurrentSearchOpen] = useState(false);
 
     const currentSearchAnchorElement = useRef(null);
-
     useKeybindings({
         shift: {
             Slash: () => {
@@ -110,21 +112,21 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                     </TooltipRoot>
                 </TooltipProvider>
 
-                <GraphMenu label={'Hide Labels'}>
+                <GraphMenu label={`${!showNodeLabels || !showEdgeLabels ? 'Show' : 'Hide'} Labels`}>
                     <MenuItem
-                        aria-label='All Labels Toggle'
+                        aria-label={`${!showEdgeLabels ? 'Show' : 'Hide'} All Labels Toggle`}
                         data-testid='explore_graph-controls_all-labels-toggle'
                         onClick={handleToggleAllLabels}>
                         {!showNodeLabels || !showEdgeLabels ? 'Show' : 'Hide'} All Labels
                     </MenuItem>
                     <MenuItem
-                        aria-label='Node Labels Toggle'
+                        aria-label={`${showNodeLabels ? 'Hide' : 'Show'} Node Labels Toggle`}
                         data-testid='explore_graph-controls_node-labels-toggle'
                         onClick={onToggleNodeLabels}>
                         {showNodeLabels ? 'Hide' : 'Show'} Node Labels
                     </MenuItem>
                     <MenuItem
-                        aria-label='Edge Labels Toggle'
+                        aria-label={`${showEdgeLabels ? 'Hide' : 'Show'} Edge Labels Toggle`}
                         data-testid='explore_graph-controls_edge-labels-toggle'
                         onClick={onToggleEdgeLabels}>
                         {showEdgeLabels ? 'Hide' : 'Show'} Edge Labels
@@ -135,15 +137,16 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                     {layoutOptions.map((buttonLabel) => {
                         const tableViewIsSelected = isExploreTableSelected && searchType === 'cypher';
                         const isSelected = tableViewIsSelected
-                            ? buttonLabel === 'table'
-                            : buttonLabel === selectedLayout;
+                            ? buttonLabel === 'table' && isExploreLayoutSelected
+                            : buttonLabel === selectedLayout && isExploreLayoutSelected;
 
                         return (
                             <MenuItem
                                 data-testid={`explore_graph-controls_${buttonLabel}-buttonLabel`}
                                 key={buttonLabel}
                                 selected={isSelected}
-                                onClick={() => onLayoutChange(buttonLabel)}>
+                                onClick={() => onLayoutChange(buttonLabel)}
+                                className={cn({ '!bg-primary text-white dark:text-[#121212]': isSelected })}>
                                 {capitalize(buttonLabel)}
                             </MenuItem>
                         );

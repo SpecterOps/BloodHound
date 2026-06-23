@@ -294,12 +294,14 @@ describe('Rule Form', () => {
         await user.click(nameInput);
         await user.paste('foo');
 
-        await waitFor(async () => {
-            expect(screen.getByRole('button', { name: /Save Edits/ })).toBeInTheDocument();
-            await user.click(screen.getByRole('button', { name: /Save Edits/ }));
-        });
+        const saveButton = await screen.findByRole('button', { name: /Save Edits/ });
+        await user.click(saveButton);
 
         expect(screen.queryByText('Please provide a name for the Rule')).not.toBeInTheDocument();
+        expect(
+            screen.queryByText(/This rule's Cypher query produces no results. Do you want to save it anyway?/)
+        ).toBeInTheDocument();
+        await user.click(screen.getByRole('button', { name: /Confirm/ }));
 
         await waitFor(() => {
             expect(mockNavigate).toBeCalled();

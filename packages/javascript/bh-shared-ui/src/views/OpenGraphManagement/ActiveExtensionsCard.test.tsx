@@ -19,7 +19,8 @@ import { AxiosResponse } from 'axios';
 import { Extension } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, waitFor } from '../../test-utils';
+import { withoutErrorLogging } from '../../mocks';
+import { fireEvent, render, screen, waitFor } from '../../test-utils';
 import { apiClient } from '../../utils';
 import {
     ActiveExtensionsCard,
@@ -55,9 +56,9 @@ vi.mock('../../hooks', async () => {
 });
 
 const mockExtensions: Extension[] = [
-    { id: '1', name: 'Active Directory', version: 'v0.0.1', is_builtin: true },
-    { id: '2', name: 'Azure', version: 'v1.0.0', is_builtin: true },
-    { id: '3', name: 'Custom Extension', version: '0.5.0', is_builtin: false },
+    { id: '1', name: 'Active Directory', namespace: 'AD', version: 'v0.0.1', is_builtin: true },
+    { id: '2', name: 'Azure', namespace: 'AZ', version: 'v1.0.0', is_builtin: true },
+    { id: '3', name: 'Custom Extension', namespace: 'CUSTOM', version: '0.5.0', is_builtin: false },
 ];
 
 const server = setupServer(
@@ -112,10 +113,10 @@ describe('ActiveExtensionsCard', () => {
                 return res(ctx.status(500));
             })
         );
-
-        render(<ActiveExtensionsCard />);
-
-        expect(await screen.findByText(ERROR_MESSAGE)).toBeInTheDocument();
+        await withoutErrorLogging(async () => {
+            render(<ActiveExtensionsCard />);
+            expect(await screen.findByText(ERROR_MESSAGE)).toBeInTheDocument();
+        });
     });
 
     it('displays no data message when there are no extensions', async () => {
@@ -133,10 +134,28 @@ describe('ActiveExtensionsCard', () => {
 
         expect(await screen.findByText('Active Directory')).toBeInTheDocument();
         expect(screen.getByText('v0.0.1')).toBeInTheDocument();
+        expect(screen.getByText('AD')).toBeInTheDocument();
         expect(screen.getByText('Azure')).toBeInTheDocument();
         expect(screen.getByText('v1.0.0')).toBeInTheDocument();
+        expect(screen.getByText('AZ')).toBeInTheDocument();
         expect(screen.getByText('Custom Extension')).toBeInTheDocument();
         expect(screen.getByText('0.5.0')).toBeInTheDocument();
+        expect(screen.getByText('CUSTOM')).toBeInTheDocument();
+    });
+
+    it('renders the Namespace column header with focusable info icon', async () => {
+        render(<ActiveExtensionsCard />);
+
+        await screen.findByText('Active Directory');
+
+        // Verify the namespace column header exists
+        const namespaceHeader = screen.getByRole('columnheader', { name: /namespace/i });
+        expect(namespaceHeader).toBeInTheDocument();
+        expect(namespaceHeader).toHaveTextContent('Namespace');
+
+        // Verify the info icon is a focusable button for keyboard accessibility
+        const infoButton = screen.getByRole('button', { name: /namespace information/i });
+        expect(infoButton).toBeInTheDocument();
     });
 
     it('renders delete buttons for each extension', async () => {
@@ -284,12 +303,11 @@ describe('ActiveExtensionsCard', () => {
         expect(confirmButton).toBeDisabled();
 
         const input = screen.getByPlaceholderText('Custom Extension');
-        await user.type(input, 'Wrong Name');
+        fireEvent.change(input, { target: { value: 'Wrong Name' } });
         expect(confirmButton).toBeDisabled();
 
-        await user.clear(input);
-        await user.type(input, 'Custom Extension');
-        expect(confirmButton).not.toBeDisabled();
+        fireEvent.change(input, { target: { value: 'Custom Extension' } });
+        await waitFor(() => expect(confirmButton).not.toBeDisabled());
     });
 
     it('clears input when dialog is closed and reopened', async () => {
@@ -310,8 +328,13 @@ describe('ActiveExtensionsCard', () => {
             expect(screen.queryByText('Delete selected extension')).not.toBeInTheDocument();
         });
 
-        await user.click(deleteButton);
-        expect(screen.getByPlaceholderText('Custom Extension')).toHaveValue('');
+        // Re-query for the button after dialog closes in case the table re-rendered
+        const deleteButtonAfterClose = screen.getByLabelText('Delete Custom Extension');
+        await user.click(deleteButtonAfterClose);
+
+        await waitFor(() => {
+            expect(screen.getByPlaceholderText('Custom Extension')).toHaveValue('');
+        });
     });
 
     it('calls delete mutation when confirm button is clicked with correct input', async () => {
@@ -324,9 +347,10 @@ describe('ActiveExtensionsCard', () => {
         await user.click(deleteButton);
 
         const input = screen.getByPlaceholderText('Custom Extension');
-        await user.type(input, 'Custom Extension');
+        fireEvent.change(input, { target: { value: 'Custom Extension' } });
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
+        await waitFor(() => expect(confirmButton).not.toBeDisabled());
         await user.click(confirmButton);
 
         expect(deleteExtensionSpy).toHaveBeenCalledWith('3');
@@ -340,9 +364,10 @@ describe('ActiveExtensionsCard', () => {
         await user.click(deleteButton);
 
         const input = screen.getByPlaceholderText('Custom Extension');
-        await user.type(input, 'Custom Extension');
+        fireEvent.change(input, { target: { value: 'Custom Extension' } });
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
+        await waitFor(() => expect(confirmButton).not.toBeDisabled());
         await user.click(confirmButton);
 
         await waitFor(() => {
@@ -364,20 +389,24 @@ describe('ActiveExtensionsCard', () => {
         await user.click(deleteButton);
 
         const input = screen.getByPlaceholderText('Custom Extension');
-        await user.type(input, 'Custom Extension');
+        fireEvent.change(input, { target: { value: 'Custom Extension' } });
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
-        await user.click(confirmButton);
+        await waitFor(() => expect(confirmButton).not.toBeDisabled());
 
-        await waitFor(() => {
-            expect(addNotificationSpy).toHaveBeenCalledWith(
-                'Failed to delete extension "Custom Extension". Please try again.',
-                'deleteExtensionError',
-                expect.objectContaining({
-                    variant: 'error',
-                    anchorOrigin: { horizontal: 'right', vertical: 'top' },
-                })
-            );
+        await withoutErrorLogging(async () => {
+            await user.click(confirmButton);
+
+            await waitFor(() => {
+                expect(addNotificationSpy).toHaveBeenCalledWith(
+                    'Failed to delete extension "Custom Extension". Please try again.',
+                    'deleteExtensionError',
+                    expect.objectContaining({
+                        variant: 'error',
+                        anchorOrigin: { horizontal: 'right', vertical: 'top' },
+                    })
+                );
+            });
         });
     });
 });

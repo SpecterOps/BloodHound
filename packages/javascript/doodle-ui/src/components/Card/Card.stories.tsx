@@ -119,7 +119,7 @@ export const BloodHoundUICountCard: Story = {
                         <CardContent>
                             <div className='text-4xl font-light mb-3'>20K</div>
                             <div className='flex items-center justify-center gap-1'>
-                                <Badge label={'10'} icon={<ChevronUp />} color={'#02c577'} />
+                                <Badge label='10' icon={<ChevronUp />} color='green' />
                                 <span className='text-gray-400'>vs last month</span>
                             </div>
                         </CardContent>

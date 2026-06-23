@@ -24,8 +24,8 @@ import {
     DialogTitle,
     DialogTrigger,
 } from 'doodle-ui';
-import { useState } from 'react';
-import { useExecuteOnFileDrag, usePermissions } from '../../hooks';
+import { useCallback, useState } from 'react';
+import { useExecuteOnFileDrag, useFileUploadDialogContext, usePermissions } from '../../hooks';
 import { Permission } from '../../utils';
 import { ConditionalTooltip } from '../ConditionalTooltip';
 import FileDrop from '../FileDrop';
@@ -39,15 +39,22 @@ export const SchemaUploadDialog = () => {
 
     const { checkPermission } = usePermissions();
     const hasUploadPermission = checkPermission(Permission.OPENGRAPH_WRITE);
+    const { showFileIngestDialog } = useFileUploadDialogContext();
+
+    const shouldRespondToDrag = useCallback(
+        () => hasUploadPermission && !showFileIngestDialog,
+        [hasUploadPermission, showFileIngestDialog]
+    );
 
     // Dragging a file into the window displays the dialog. The normal global file upload drag and drop behavior is
-    // disabled for the OpenGraph Management page
+    // disabled for the OpenGraph Management page, unless the user explicitly clicks on the Quick Upload button to open the Quick Upload Dialog
     useExecuteOnFileDrag(
         () => {
             if (hasUploadPermission) setDialogOpen(true);
         },
         {
             acceptedTypes: ['application/json'],
+            condition: shouldRespondToDrag,
         }
     );
 

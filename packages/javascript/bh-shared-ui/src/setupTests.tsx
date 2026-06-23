@@ -36,6 +36,13 @@ beforeAll(() => {
         value: 800,
     });
 
+    // Keep MUI popovers from treating the global 800px offsetHeight mock as viewport overflow
+    Object.defineProperty(window, 'innerHeight', {
+        configurable: true,
+        writable: true,
+        value: 1024,
+    });
+
     // Radix Select relies on pointer events + scroll positioning under the hood
     // (Popper + focus management). In JSDOM, those methods (scrollIntoView,
     // hasPointerCapture, releasePointerCapture) don’t exist by default, so Radix
@@ -68,11 +75,11 @@ vi.mock('@fortawesome/react-fontawesome', () => ({
     }),
 }));
 
-const ResizeObserverMock = vi.fn(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-}));
+class ResizeObserverMock {
+    observe = vi.fn();
+    unobserve = vi.fn();
+    disconnect = vi.fn();
+}
 vi.stubGlobal('ResizeObserver', ResizeObserverMock);
 
 if (typeof window.URL.createObjectURL === 'undefined') {

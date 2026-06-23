@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 import { EdgeInfoProps } from '../index';
 // My AdminSDHolder research demonstrates that SDProp is not the mechanism that applies AdminSDHolder permissions

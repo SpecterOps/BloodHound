@@ -24,6 +24,7 @@ export enum Permission {
     AUTH_MANAGE_PROVIDERS,
     AUTH_MANAGE_SELF,
     AUTH_MANAGE_USERS,
+    AUTH_READ_USERS,
     CLIENTS_MANAGE,
     CLIENTS_READ,
     CLIENTS_TASKING,
@@ -35,6 +36,8 @@ export enum Permission {
     SAVED_QUERIES_WRITE,
     WIPE_DB,
     OPENGRAPH_WRITE,
+    ALERTS_READ,
+    ALERTS_MANAGE,
 }
 
 export type PermissionDefinition = {
@@ -83,6 +86,10 @@ export const PERMISSIONS: PermissionDefinitions = {
         authority: 'auth',
         name: 'ManageUsers',
     },
+    [Permission.AUTH_READ_USERS]: {
+        authority: 'auth',
+        name: 'ReadUsers',
+    },
     [Permission.CLIENTS_MANAGE]: {
         authority: 'clients',
         name: 'Manage',
@@ -126,5 +133,13 @@ export const PERMISSIONS: PermissionDefinitions = {
     [Permission.OPENGRAPH_WRITE]: {
         authority: 'opengraph',
         name: 'Write',
+    },
+    [Permission.ALERTS_READ]: {
+        authority: 'alerts',
+        name: 'Read',
+    },
+    [Permission.ALERTS_MANAGE]: {
+        authority: 'alerts',
+        name: 'Manage',
     },
 };

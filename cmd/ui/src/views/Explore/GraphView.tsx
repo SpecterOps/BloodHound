@@ -32,6 +32,8 @@ import {
     isNode,
     isWebGLEnabled,
     makeStoreMapFromColumnOptions,
+    useAppName,
+    useAutomaticGraphActions,
     useCustomNodeKinds,
     useExploreParams,
     useExploreSelectedItem,
@@ -46,11 +48,13 @@ import {
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataFileUploadDialogWithLinks } from 'src/components/NoDataFileUploadDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
 import {
     setExploreLayout,
+    setIsExploreLayoutSelected,
     setIsExploreTableSelected,
     setPinnedExploreTableColumns,
     setSelectedExploreTableColumns,
@@ -65,16 +69,25 @@ import { transformIconDictionary } from './svgIcons';
 
 const GraphView: FC = () => {
     /* Hooks */
-    const dispatch = useAppDispatch();
-
     const theme = useTheme();
+    const dispatch = useAppDispatch();
+    const appName = useAppName();
+    const title = (
+        <Helmet>
+            <title>Explore | {appName}</title>
+        </Helmet>
+    );
 
-    const graphHasDataQuery = useGraphHasData();
+    const { selectedItem, setSelectedItem, selectedItemQuery, previousSelectedItem, clearSelectedItem } =
+        useExploreSelectedItem();
+    const { searchType, setExploreParams, exploreSearchTab } = useExploreParams();
+
     const graphQuery = useSigmaExploreGraph();
 
-    const { searchType } = useExploreParams();
-    const { selectedItem, setSelectedItem, selectedItemQuery, clearSelectedItem, previousSelectedItem } =
-        useExploreSelectedItem();
+    // Automatically select the first node when performing a node search, or clear selection for pathfinding searches
+    useAutomaticGraphActions(graphQuery.data);
+
+    const graphHasDataQuery = useGraphHasData();
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
@@ -86,13 +99,14 @@ const GraphView: FC = () => {
     const selectedColumns = useAppSelector((state) => state.global.view.selectedExploreTableColumns);
     const pinnedColumns = useAppSelector((state) => state.global.view.pinnedExploreTableColumns);
     const isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
+    const isExploreLayoutSelected = useAppSelector((state) => state.global.view.isExploreLayoutSelected);
 
     const customIconsQuery = useCustomNodeKinds({ select: transformIconDictionary });
 
     const { data: pzFeatureFlag } = useFeatureFlag('tier_management_engine');
     const tagGlyphs = useTagGlyphs(glyphUtils, darkMode);
 
-    const autoDisplayTableEnabled = !exploreLayout && !isExploreTableSelected;
+    const autoDisplayTableEnabled = !isExploreLayoutSelected && !isExploreTableSelected;
     const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay(autoDisplayTableEnabled);
     // TODO: incorporate into larger hook with auto display table logic
     const displayTable = searchType === 'cypher' && (isExploreTableSelected || autoDisplayTable);
@@ -145,8 +159,6 @@ const GraphView: FC = () => {
         [handleContextMenu]
     );
 
-    const { setExploreParams, exploreSearchTab } = useExploreParams();
-
     useKeybindings({
         KeyC: () => {
             if (exploreSearchTab !== 'cypher') {
@@ -185,6 +197,45 @@ const GraphView: FC = () => {
         },
     });
 
+    const resetLayoutToDefault = useCallback(() => {
+        dispatch(setExploreLayout(defaultGraphLayout));
+        dispatch(setIsExploreLayoutSelected(false));
+        dispatch(setIsExploreTableSelected(false));
+    }, [dispatch]);
+
+    const setLayout = useCallback(
+        (layout: BaseExploreLayoutOptions) => {
+            const isDeselectingTable = layout === 'table' && isExploreTableSelected;
+            const isDeselectingLayout = layout !== 'table' && exploreLayout === layout && isExploreLayoutSelected;
+
+            if (isDeselectingTable || isDeselectingLayout) {
+                resetLayoutToDefault();
+                return;
+            }
+
+            if (layout === 'table') {
+                dispatch(setIsExploreTableSelected(true));
+            } else {
+                dispatch(setExploreLayout(layout));
+                dispatch(setIsExploreLayoutSelected(true));
+                dispatch(setIsExploreTableSelected(false));
+
+                if (layout === 'standard') sigmaChartRef.current?.runStandardLayout();
+
+                if (layout === 'sequential') sigmaChartRef.current?.runSequentialLayout();
+            }
+        },
+        [exploreLayout, dispatch, isExploreTableSelected, isExploreLayoutSelected, resetLayoutToDefault]
+    );
+
+    const handleCloseTableView = useCallback(() => {
+        setAutoDisplayTable(false);
+        dispatch(setIsExploreTableSelected(false));
+        if (!isExploreLayoutSelected || !exploreLayout) {
+            dispatch(setExploreLayout(defaultGraphLayout));
+        }
+    }, [setAutoDisplayTable, dispatch, isExploreLayoutSelected, exploreLayout]);
+
     if (graphHasDataQuery.isLoading) {
         return (
             <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
@@ -215,25 +266,12 @@ const GraphView: FC = () => {
         dispatch(setPinnedExploreTableColumns(['action-menu', ...columns]));
     };
 
-    const handleLayoutChange = (layout: BaseExploreLayoutOptions) => {
-        if (layout === 'table') {
-            dispatch(setIsExploreTableSelected(true));
-            return;
-        }
-
-        dispatch(setExploreLayout(layout));
-        dispatch(setIsExploreTableSelected(false));
-
-        if (layout === 'standard') sigmaChartRef.current?.runStandardLayout();
-
-        if (layout === 'sequential') sigmaChartRef.current?.runSequentialLayout();
-    };
-
     return (
         <div
             className='relative h-full w-full overflow-hidden'
             data-testid='explore'
             onContextMenu={(e) => e.preventDefault()}>
+            {title}
             <SigmaChart
                 graph={graphologyGraph}
                 highlightedItem={selectedItem}
@@ -250,9 +288,10 @@ const GraphView: FC = () => {
                 <ExploreSearch />
                 <GraphControls
                     isExploreTableSelected={isExploreTableSelected}
+                    isExploreLayoutSelected={isExploreLayoutSelected}
                     layoutOptions={baseGraphLayouts}
                     selectedLayout={exploreLayout ?? defaultGraphLayout}
-                    onLayoutChange={handleLayoutChange}
+                    onLayoutChange={setLayout}
                     showNodeLabels={showNodeLabels}
                     onToggleNodeLabels={toggleShowNodeLabels}
                     showEdgeLabels={showEdgeLabels}
@@ -292,10 +331,7 @@ const GraphView: FC = () => {
                     onManageColumnsChange={handleManageColumnsChange}
                     onKebabMenuClick={handleKebabMenuClick}
                     onChangePinnedColumns={handleChangePinnedColumns}
-                    onClose={() => {
-                        setAutoDisplayTable(false);
-                        dispatch(setIsExploreTableSelected(false));
-                    }}
+                    onClose={handleCloseTableView}
                 />
             )}
         </div>

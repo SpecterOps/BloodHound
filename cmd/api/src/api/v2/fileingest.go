@@ -31,7 +31,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	ingestModel "github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
@@ -115,7 +115,7 @@ func (s Resources) ListIngestJobs(response http.ResponseWriter, request *http.Re
 
 func (s Resources) StartIngestJob(response http.ResponseWriter, request *http.Request) {
 	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Starting new ingest job")()
-	reqCtx := ctx.Get(request.Context())
+	reqCtx := bhctx.Get(request.Context())
 
 	if user, valid := auth.GetUserFromAuthCtx(reqCtx.AuthCtx); !valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
@@ -128,7 +128,7 @@ func (s Resources) StartIngestJob(response http.ResponseWriter, request *http.Re
 
 func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http.Request) {
 	var (
-		requestId   = ctx.FromRequest(request).RequestID
+		requestId   = bhctx.FromRequest(request).RequestID
 		jobIdString = mux.Vars(request)[FileUploadJobIdPathParameterName]
 		fileName    = request.Header.Get(FileUploadFileNameHeader)
 	)
@@ -159,7 +159,7 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 		e := &api.ErrorWrapper{
 			HTTPStatus: http.StatusBadRequest,
 			Timestamp:  time.Now(),
-			RequestID:  ctx.FromRequest(request).RequestID,
+			RequestID:  bhctx.FromRequest(request).RequestID,
 			Errors:     errDetails,
 		}
 

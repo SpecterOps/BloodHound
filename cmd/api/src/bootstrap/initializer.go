@@ -18,6 +18,7 @@ package bootstrap
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -33,13 +34,15 @@ type DatabaseConnections[DBType database.Database, GraphType graph.Database] str
 }
 
 type DatabaseConstructor[DBType database.Database, GraphType graph.Database] func(ctx context.Context, cfg config.Configuration) (DatabaseConnections[DBType, GraphType], error)
-type InitializerLogic[DBType database.Database, GraphType graph.Database] func(ctx context.Context, cfg config.Configuration, databaseConnections DatabaseConnections[DBType, GraphType]) ([]daemons.Daemon, error)
+type RuntimeDependenciesConstructor[DBType database.Database, GraphType graph.Database] func(ctx context.Context, cfg config.Configuration, databaseConnections DatabaseConnections[DBType, GraphType]) (RuntimeDependencies, error)
+type InitializerLogic[DBType database.Database, GraphType graph.Database] func(ctx context.Context, cfg config.Configuration, databaseConnections DatabaseConnections[DBType, GraphType], dependencies RuntimeDependencies) ([]daemons.Daemon, error)
 
 type Initializer[DBType database.Database, GraphType graph.Database] struct {
 	Configuration       config.Configuration
+	DBConnector         DatabaseConstructor[DBType, GraphType]
+	RuntimeDependencies RuntimeDependenciesConstructor[DBType, GraphType]
 	PreMigrationDaemons InitializerLogic[DBType, GraphType]
 	Entrypoint          InitializerLogic[DBType, GraphType]
-	DBConnector         DatabaseConstructor[DBType, GraphType]
 }
 
 func (s Initializer[DBType, GraphType]) Launch(parentCtx context.Context, handleSignals bool) error {
@@ -47,6 +50,7 @@ func (s Initializer[DBType, GraphType]) Launch(parentCtx context.Context, handle
 		ctx                 = parentCtx
 		daemonManager       = daemons.NewManager(DefaultServerShutdownTimeout)
 		databaseConnections DatabaseConnections[DBType, GraphType]
+		runtimeDependencies RuntimeDependencies
 		err                 error
 	)
 
@@ -65,9 +69,17 @@ func (s Initializer[DBType, GraphType]) Launch(parentCtx context.Context, handle
 	defer databaseConnections.RDMS.Close(ctx)
 	defer databaseConnections.Graph.Close(ctx)
 
+	if s.RuntimeDependencies == nil {
+		return errors.New("runtime dependencies constructor is required")
+	}
+
+	if runtimeDependencies, err = s.RuntimeDependencies(ctx, s.Configuration, databaseConnections); err != nil {
+		return fmt.Errorf("failed to initialize runtime dependencies: %w", err)
+	}
+
 	// Daemons that start prior to blocking db migration
 	if s.PreMigrationDaemons != nil {
-		if daemonInstances, err := s.PreMigrationDaemons(ctx, s.Configuration, databaseConnections); err != nil {
+		if daemonInstances, err := s.PreMigrationDaemons(ctx, s.Configuration, databaseConnections, runtimeDependencies); err != nil {
 			return fmt.Errorf("failed to start services: %w", err)
 		} else {
 			daemonManager.Start(ctx, daemonInstances...)
@@ -75,7 +87,7 @@ func (s Initializer[DBType, GraphType]) Launch(parentCtx context.Context, handle
 	}
 
 	// Daemons that start after blocking db migration
-	if daemonInstances, err := s.Entrypoint(ctx, s.Configuration, databaseConnections); err != nil {
+	if daemonInstances, err := s.Entrypoint(ctx, s.Configuration, databaseConnections, runtimeDependencies); err != nil {
 		return fmt.Errorf("failed to start services: %w", err)
 	} else {
 		daemonManager.Start(ctx, daemonInstances...)

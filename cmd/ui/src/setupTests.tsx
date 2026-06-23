@@ -31,13 +31,6 @@ global.jest = vi;
 expect.extend(matchers);
 
 // mocks
-
-global.ResizeObserver = class ResizeObserver {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-};
-
 beforeAll(() => {
     // DoodleUI Table uses virtualization which requires these properties to be defined or rows do not render
     Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
@@ -45,6 +38,13 @@ beforeAll(() => {
     });
     Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
         value: 800,
+    });
+
+    // Keep MUI popovers from treating the global 800px offsetHeight mock as viewport overflow
+    Object.defineProperty(window, 'innerHeight', {
+        configurable: true,
+        writable: true,
+        value: 1024,
     });
 
     // Radix Select relies on pointer events + scroll positioning under the hood
@@ -69,8 +69,14 @@ if (typeof window.URL.createObjectURL === 'undefined') {
 }
 
 vi.mock('@neo4j-cypher/react-codemirror', async () => {
+    const { forwardRef } = await import('react');
+
     return {
-        CypherEditor: () => 'cypher query',
+        CypherEditor: forwardRef<HTMLDivElement, { value?: string }>(({ value }, ref) => (
+            <div ref={ref} data-testid='cypher-editor'>
+                {value ?? 'cypher query'}
+            </div>
+        )),
     };
 });
 
@@ -92,3 +98,10 @@ vi.mock('@fortawesome/react-fontawesome', () => ({
         return <span>{props.icon.iconName}</span>;
     }),
 }));
+
+class ResizeObserverMock {
+    observe = vi.fn();
+    unobserve = vi.fn();
+    disconnect = vi.fn();
+}
+vi.stubGlobal('ResizeObserver', ResizeObserverMock);

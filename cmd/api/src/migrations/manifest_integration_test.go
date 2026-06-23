@@ -26,6 +26,7 @@ import (
 	"testing"
 
 	"github.com/peterldowns/pgtestdb"
+	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -38,8 +39,8 @@ import (
 )
 
 // IntegrationTestSuite carries only the fields needed to exercise
-// Version_920_Migration: a context, a graph database handle, and a
-// BloodhoundDB that satisfies database.SourceKindsData.
+// Version_930_Migration: a context, a graph database handle, and a
+// BloodhoundDB that satisfies SchemalessNodeKindBackfillData.
 type IntegrationTestSuite struct {
 	context    context.Context
 	graphDB    graph.Database
@@ -61,7 +62,7 @@ func setupIntegrationTestSuite(t *testing.T) *IntegrationTestSuite {
 	cfg, err := config.NewDefaultConnectionConfiguration(connConf.URL())
 	require.NoError(t, err)
 
-	pool, err := pg.NewPool(cfg.Database)
+	pool, err := dbpool.NewDawgsPool(cfg.Database)
 	require.NoError(t, err)
 
 	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)

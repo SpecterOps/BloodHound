@@ -21,7 +21,7 @@ import { DateTime } from 'luxon';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
 import { DataTable, Header } from '../../components';
-import { useAPITokenExpirationConfiguration, usePermissions, useTheme } from '../../hooks';
+import { usePermissions, useTheme } from '../../hooks';
 import { useBloodHoundUsers, useSelf } from '../../hooks/useBloodHoundUsers';
 import { LuxonFormat, Permission, apiClient } from '../../utils';
 import UserActionsMenu from './UserActionsMenu';
@@ -60,7 +60,6 @@ const UsersTable: FC<UsersTableProps> = ({
     setSelectedUserId,
 }) => {
     const theme = useTheme();
-    const { enabled: apiTokenExpirationEnabled } = useAPITokenExpirationConfiguration();
 
     const usersTableHeaders: Header[] = [
         { label: 'Username' },
@@ -69,16 +68,15 @@ const UsersTable: FC<UsersTableProps> = ({
         { label: 'Created' },
         { label: 'Role' },
         { label: 'Status' },
-        ...(apiTokenExpirationEnabled ? [{ label: 'API Expiration Date' }] : []),
         { label: 'Auth Method' },
-        { label: '', alignment: 'right' as const },
+        { label: 'Action Menu', alignment: 'right' as const, srOnly: true },
     ];
 
     const getSelfQuery = useSelf();
     const listUsersQuery = useBloodHoundUsers();
 
     const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS);
+    const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS) || checkPermission(Permission.AUTH_READ_USERS);
 
     const listSSOProvidersQuery = useQuery(
         ['listSSOProviders'],
@@ -98,21 +96,6 @@ const UsersTable: FC<UsersTableProps> = ({
         if (user.AuthSecret?.totp_activated)
             return <span style={{ whiteSpace: 'pre-wrap' }}>{'Username / Password\nMFA Enabled'}</span>;
         return <span>Username / Password</span>;
-    };
-
-    const getAPIExpirationDate = (expiresAt?: string): React.ReactNode => {
-        if (!expiresAt) return null;
-        const date = DateTime.fromISO(expiresAt);
-        if (!date.isValid) return null;
-        const daysUntilExpiry = date.diff(DateTime.now(), 'days').days;
-        if (daysUntilExpiry < 0) return <span className='text-error'>Expired</span>;
-        const isExpiringSoon = daysUntilExpiry < 10;
-        return (
-            <>
-                <span>{date.toFormat('yyyy-MM-dd')}</span>
-                {isExpiringSoon && <div className='text-error'>&lt;10 Days to Expire</div>}
-            </>
-        );
     };
 
     const usersTableRows = listUsersQuery.data?.map((user, index) => {
@@ -145,7 +128,6 @@ const UsersTable: FC<UsersTableProps> = ({
             </span>,
             user.roles?.[0]?.name,
             getUserStatusText(user),
-            ...(apiTokenExpirationEnabled ? [getAPIExpirationDate(user.AuthSecret?.expires_at)] : []),
             getAuthMethodText(user),
             <UserActionsMenu
                 userId={user.id}

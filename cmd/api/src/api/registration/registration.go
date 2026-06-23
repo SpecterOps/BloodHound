@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/chow/pkg/payload"
 	"github.com/specterops/dawgs/graph"
@@ -42,6 +43,7 @@ func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configur
 	// Initialize bypassLimits here so we only run the DB query once and not per request
 	bypassLimitsParam := appcfg.GetTimeoutLimitParameter(context.Background(), db)
 	routerInst.UsePrerouting(middleware.ContextMiddleware(bypassLimitsParam))
+	routerInst.UsePrerouting(middleware.MetricsMiddleware(routerInst.MuxRouter()))
 	routerInst.UsePrerouting(middleware.CORSMiddleware())
 
 	// Set up logging. This must be done after ContextMiddleware is initialized so the context can be accessed in the log logic
@@ -67,6 +69,7 @@ func RegisterFossRoutes(
 	authenticator api.Authenticator,
 	authorizer auth.Authorizer,
 	ingestSchema payload.Schema,
+	fileServiceResolver storage.FileServiceResolver,
 	dogtagsService dogtags.Service,
 	openGraphSchemaService v2.OpenGraphSchemaService,
 ) {
@@ -80,13 +83,13 @@ func RegisterFossRoutes(
 
 		// Redirect root resource to the UI
 		routerInst.GET("/", func(response http.ResponseWriter, request *http.Request) {
-			http.Redirect(response, request, "/ui", http.StatusMovedPermanently)
+			http.Redirect(response, request, api.UserInterfacePath, http.StatusMovedPermanently)
 		}),
-
-		// Static asset handling for the UI
-		routerInst.PathPrefix("/ui", static.AssetHandler),
 	)
 
-	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator, ingestSchema, dogtagsService, openGraphSchemaService)
+	// Static asset handling for the UI. This route intentionally sits outside the default API rate limiter
+	// because a single page load can request many static HTML, JavaScript, CSS, and media assets.
+	routerInst.PathPrefix(api.UserInterfacePath, static.AssetHandler)
+	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator, ingestSchema, fileServiceResolver, dogtagsService, openGraphSchemaService)
 	NewV2API(resources, routerInst)
 }

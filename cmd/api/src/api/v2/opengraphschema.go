@@ -33,6 +33,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/bomenc"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/specterops/dawgs/graph"
@@ -167,15 +168,14 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 // extractExtensionDataFromJSON - extracts a GraphExtensionPayload from the incoming payload. Will return an error
 // if the decoder fails to decode the payload.
 func extractExtensionDataFromJSON(payload io.Reader) (GraphExtensionPayload, error) {
-	var (
-		err            error
-		decoder        = json.NewDecoder(payload)
-		graphExtension GraphExtensionPayload
-	)
+	var graphExtension GraphExtensionPayload
 
-	if err = decoder.Decode(&graphExtension); err != nil {
+	if normFile, err := bomenc.NormalizeToUTF8(payload); err != nil {
+		return graphExtension, fmt.Errorf("failed to normalize json payload: %w", err)
+	} else if err = json.NewDecoder(normFile).Decode(&graphExtension); err != nil {
 		return graphExtension, fmt.Errorf("unable to decode graph extension payload: %w", err)
 	}
+
 	return graphExtension, nil
 }
 
@@ -259,6 +259,7 @@ type ExtensionsResponse struct {
 type ExtensionInfo struct {
 	ID        int32  `json:"id"`
 	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
 	Version   string `json:"version"`
 	IsBuiltIn bool   `json:"is_builtin"`
 }
@@ -279,6 +280,7 @@ func (s Resources) ListExtensions(response http.ResponseWriter, request *http.Re
 				Name:      extension.DisplayName,
 				Version:   extension.Version,
 				IsBuiltIn: extension.IsBuiltin,
+				Namespace: extension.Namespace,
 			}
 		}
 

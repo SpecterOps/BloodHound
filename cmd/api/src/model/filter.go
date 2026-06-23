@@ -46,22 +46,15 @@ const (
 	NotEquals           FilterOperator = "neq"
 	ApproximatelyEquals FilterOperator = "~eq"
 
-	GreaterThanSymbol         string = ">"
-	GreaterThanOrEqualsSymbol string = ">="
-	LessThanSymbol            string = "<"
-	LessThanOrEqualsSymbol    string = "<="
-	EqualsSymbol              string = "="
-	NotEqualsSymbol           string = "<>"
-	ApproximatelyEqualSymbol  string = "ILIKE"
-
-	NullString     = "null"
-	TrueString     = "true"
-	FalseString    = "false"
-	IdString       = "id"
-	ObjectIdString = "objectid"
+	NullString  = "null"
+	TrueString  = "true"
+	FalseString = "false"
 )
 
-var ErrNotFiltered = errors.New("parameter value is not filtered")
+var (
+	ErrNotFiltered              = errors.New("parameter value is not filtered")
+	FmtErrFilterValueConversion = "unable to convert filter value to SQL literal for %s: %w"
+)
 
 type Filtered interface {
 	ValidFilters() map[string][]FilterOperator
@@ -113,7 +106,7 @@ type QueryParameterFilters []QueryParameterFilter
 func (s QueryParameterFilter) BuildGDBNodeFilter() graph.Criteria {
 	var (
 		propertyRef = query.NodeProperty(s.Name)
-		value       = guessFilterValueType(s.Value)
+		value       = guessFilterValueType(s.Value, s.IsStringData)
 	)
 
 	// TODO: Investigate whether we can set the collected property for domains that originate from trusts in ParseDomainTrusts
@@ -160,9 +153,10 @@ func (s QueryParameterFilterMap) ToFiltersModel() Filters {
 		newModelFilters := make([]Filter, len(oldModelFilters))
 		for idx, oldModelFilter := range oldModelFilters {
 			newModelFilters[idx] = Filter{
-				Operator:    oldModelFilter.Operator,
-				Value:       oldModelFilter.Value,
-				SetOperator: oldModelFilter.SetOperator,
+				Operator:     oldModelFilter.Operator,
+				Value:        oldModelFilter.Value,
+				SetOperator:  oldModelFilter.SetOperator,
+				IsStringData: oldModelFilter.IsStringData,
 			}
 		}
 
@@ -173,11 +167,16 @@ func (s QueryParameterFilterMap) ToFiltersModel() Filters {
 }
 
 // filterValueAsPGLiteral takes a string value and returns a PG SQL literal that represents the value in the form of a
-// Go struct. This function will attempt to parse the string value into different types but otherwise defaults to the
+// Go struct. If the filter column is a string type, the value is returned directly as a string literal.
+// Otherwise, this function will attempt to parse the string value into different types but defaults to the
 // given string value as a wrapped literal.
-func filterValueAsPGLiteral(valueStr string, isNullValue bool) (pgsql.Literal, error) {
+func filterValueAsPGLiteral(valueStr string, isNullValue bool, isColumnString bool) (pgsql.Literal, error) {
 	if isNullValue {
 		return pgsql.NullLiteral(), nil
+	}
+
+	if isColumnString {
+		return pgsql.AsLiteral(valueStr)
 	}
 
 	if valueInt64, err := strconv.ParseInt(valueStr, 10, 64); err == nil {
@@ -215,9 +214,10 @@ func BuildSQLFilter(filters Filters, tableAlias models.Optional[string]) (SQLFil
 
 		for _, filter := range filterOperations {
 			var (
-				operator    pgsql.Operator
-				filterValue = filter.Value
-				isNullValue = filterValue == NullString
+				operator             pgsql.Operator
+				filterValue          = filter.Value
+				isNullValue          = filterValue == NullString
+				isFilterColumnString = filter.IsStringData
 			)
 
 			switch filter.Operator {
@@ -255,8 +255,8 @@ func BuildSQLFilter(filters Filters, tableAlias models.Optional[string]) (SQLFil
 				return SQLFilter{}, fmt.Errorf("invalid operator specified")
 			}
 
-			if literalValue, err := filterValueAsPGLiteral(filterValue, isNullValue); err != nil {
-				return SQLFilter{}, fmt.Errorf("invalid filter value specified for %s: %w", name, err)
+			if literalValue, err := filterValueAsPGLiteral(filterValue, isNullValue, isFilterColumnString); err != nil {
+				return SQLFilter{}, fmt.Errorf(FmtErrFilterValueConversion, name, err)
 			} else {
 				setOperator := pgsql.OperatorAnd
 				if filter.SetOperator == FilterOr {
@@ -310,7 +310,15 @@ func (s QueryParameterFilterMap) BuildSQLFilter() (SQLFilter, error) {
 	return s.BuildAliasedSQLFilter(models.EmptyOptional[string]())
 }
 
-func guessFilterValueType(raw string) any {
+// guessFilterValueType takes a raw string filter value and attempts to guess its Go type.
+// If isPropertyString is true, the raw value is returned as is. Otherwise, it
+// attempts boolean, integer, or float parsing before defaulting to string.
+func guessFilterValueType(raw string, isPropertyString bool) any {
+	// skip type guessing when the node property is a string type
+	if isPropertyString {
+		return raw
+	}
+
 	if strings.ToLower(raw) == TrueString {
 		return true
 	}
@@ -340,66 +348,6 @@ func (s QueryParameterFilterMap) BuildGDBNodeFilter() graph.Criteria {
 	}
 
 	return query.And(criteria...)
-}
-
-func (s QueryParameterFilterMap) BuildNeo4jFilter() (string, error) {
-	var (
-		result      = ""
-		firstFilter = true
-		predicate   string
-	)
-
-	for _, filters := range s {
-		for _, filter := range filters {
-			if !firstFilter {
-				result = result + " AND "
-			}
-
-			switch filter.Operator {
-			case GreaterThan:
-				predicate = GreaterThanSymbol
-			case GreaterThanOrEquals:
-				predicate = GreaterThanOrEqualsSymbol
-			case LessThan:
-				predicate = LessThanSymbol
-			case LessThanOrEquals:
-				predicate = LessThanOrEqualsSymbol
-			case Equals:
-				predicate = EqualsSymbol
-			case NotEquals:
-				predicate = NotEqualsSymbol
-			default:
-				return "", fmt.Errorf("invalid filter predicate specified")
-			}
-
-			// our structs hold the data as id but the cypher column is actually objectid
-			if filter.Name == IdString {
-				filter.Name = ObjectIdString
-			}
-
-			filter.Name = fmt.Sprintf("n.%s", filter.Name)
-
-			if filter.IsStringData {
-				// for strings, add single quotes
-				result = result + fmt.Sprintf("%s %s '%s'", filter.Name, predicate, filter.Value)
-			} else {
-				// for booleans, change the predicate to IS or IS NOT
-				if (filter.Value == TrueString || filter.Value == FalseString) && !filter.IsStringData {
-					if predicate == "=" {
-						predicate = "IS"
-					} else {
-						predicate = "IS NOT"
-					}
-				}
-
-				result = result + fmt.Sprintf("%s %s %s", filter.Name, predicate, filter.Value)
-			}
-
-			firstFilter = false
-		}
-	}
-
-	return result, nil
 }
 
 func (s QueryParameterFilterMap) FirstFilter(name string) (QueryParameterFilter, bool) {
@@ -477,9 +425,10 @@ func NewQueryParameterFilterParser() QueryParameterFilterParser {
 }
 
 type Filter struct {
-	Operator    FilterOperator
-	Value       string
-	SetOperator FilterSetOperator
+	Operator     FilterOperator
+	Value        string
+	SetOperator  FilterSetOperator
+	IsStringData bool
 }
 
 type Filters map[string][]Filter

@@ -138,9 +138,10 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetGraphSchemaRelationshipKindsWithSchemaName(gomock.Any(), model.Filters{
 					"schema.name": []model.Filter{{
-						Operator:    model.Equals,
-						Value:       "extension_a",
-						SetOperator: model.FilterOr,
+						Operator:     model.Equals,
+						Value:        "extension_a",
+						SetOperator:  model.FilterOr,
+						IsStringData: true,
 					}}, "is_traversable": []model.Filter{{
 						Operator: model.Equals,
 						Value:    "true",

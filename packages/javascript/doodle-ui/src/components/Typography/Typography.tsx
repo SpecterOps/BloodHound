@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { cva } from 'class-variance-authority';
-import { ElementType } from 'react';
+import { ElementType, forwardRef } from 'react';
 import { cn } from '../utils';
 import { DEFAULT_VARIANT, Variant, variantMapping } from './utils';
 
@@ -47,15 +47,20 @@ interface TypographyProps extends React.HTMLAttributes<HTMLElement> {
     component?: ElementType;
 }
 
-const Typography = ({ variant, component, children, className, ...rest }: TypographyProps) => {
-    const Tag = (component || variantMapping[variant ?? DEFAULT_VARIANT]) as ElementType;
+const Typography = forwardRef<HTMLElement, TypographyProps>(
+    ({ variant, component, children, className, ...rest }, ref) => {
+        const Tag = (component || variantMapping[variant ?? DEFAULT_VARIANT]) as ElementType;
 
-    return (
-        <Tag className={cn(TypographyVariants({ variant }), className)} {...rest}>
-            {children}
-        </Tag>
-    );
-};
+        return (
+            <Tag
+                ref={ref}
+                className={cn(TypographyVariants({ variant }), `typography-${variant}`, className)}
+                {...rest}>
+                {children}
+            </Tag>
+        );
+    }
+);
 
 Typography.displayName = 'Typography';
 

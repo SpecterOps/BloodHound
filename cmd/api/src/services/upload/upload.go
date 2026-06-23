@@ -31,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bomenc"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	"github.com/specterops/bloodhound/packages/go/metrics"
 	"github.com/specterops/chow/pkg/payload"
 )
 
@@ -49,11 +50,13 @@ func SaveIngestFile(location string, request *http.Request, ingestSchema payload
 	case utils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
 		fileType = model.FileTypeJson
 		if tempFileName, report, err = WriteAndValidateJSON(fileData, location, jobID, ingestSchema); err != nil {
+			metrics.RecordIngestTask(metrics.IngestCollectorManual, fileFormatFromFileType(fileType), metrics.IngestTaskStatusFailed)
 			return IngestTaskParams{}, report, err
 		}
 	case utils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
 		fileType = model.FileTypeZip
 		if tempFileName, err = WriteAndValidateZip(fileData, location, jobID); err != nil {
+			metrics.RecordIngestTask(metrics.IngestCollectorManual, fileFormatFromFileType(fileType), metrics.IngestTaskStatusFailed)
 			return IngestTaskParams{}, report, err
 		}
 	default:
@@ -149,4 +152,68 @@ func WriteAndValidateJSON(fileData io.Reader, location string, jobID int64, inge
 	}
 
 	return tempFileName, report, nil
+}
+
+// FileValidator defines the interface for ingest file validation.
+// It receives a source reader (src) and a destination writer (dst).
+// Implementations are responsible for validating the input stream,
+// while simultaneously copying it to the destination for persistence.
+// This abstraction supports format-agnostic payloads (e.g., JSON, ZIP)
+type FileValidator func(src io.Reader, dst io.Writer) (ingest.OriginalMetadata, error)
+
+func ingestFileTempPrefix(jobID int64) string {
+	return fmt.Sprintf("file_upload_job%d_", jobID)
+}
+
+func WriteAndValidateFile(fileData io.Reader, location string, jobID int64, validationFunc FileValidator) (string, error) {
+	return WriteAndValidateFileWithPrefix(fileData, location, ingestFileTempPrefix(jobID), validationFunc)
+}
+
+func WriteAndValidateFileWithPrefix(fileData io.Reader, location string, tempFilePrefix string, validationFunc FileValidator) (string, error) {
+	if validationFunc == nil {
+		return "", fmt.Errorf("validation function is required")
+	}
+
+	var (
+		tempFile      *os.File
+		tempFileName  string
+		err           error
+		validationErr error
+	)
+
+	// Write a temp file. If it passes validation, keep it around and return the filename. Otherwise destroy it.
+	if tempFile, err = os.CreateTemp(location, tempFilePrefix); err != nil {
+		return "", fmt.Errorf("error creating ingest file: %w", err)
+	}
+
+	// Save this for later
+	tempFileName = tempFile.Name()
+
+	// Run validation on the file to see if we even want to keep it
+	_, validationErr = validationFunc(fileData, tempFile)
+
+	// We close the file next, not last. We can't defer this if we might want to delete it.
+	// Note: fileData does not need to be closed because the HTTP server manages it's lifecyle
+	if closeErr := tempFile.Close(); closeErr != nil {
+		slog.Error(
+			"Error closing temp file",
+			slog.String("file", tempFileName),
+			attr.Error(closeErr),
+		)
+	}
+
+	// If the validation was not successful, after we close the file, we remove it and return the error
+	if validationErr != nil {
+		if removeErr := os.Remove(tempFileName); removeErr != nil {
+			slog.Error(
+				"Error deleting temp file",
+				slog.String("file", tempFileName),
+				attr.Error(removeErr),
+			)
+		}
+		return "", validationErr
+	}
+
+	// Assuming no other errors, return the name of the closed temp file
+	return tempFileName, nil
 }

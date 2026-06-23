@@ -14,8 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Link, Paper, Skeleton, Typography } from '@mui/material';
+import { Alert, Box, Link, Paper, Skeleton } from '@mui/material';
 import { CollectorCardList, DocumentationLinks, PageWithTitle, apiClient, useFeatureFlag } from 'bh-shared-ui';
+import { Typography } from 'doodle-ui';
 import { CommunityCollectorType } from 'js-client-library';
 import fileDownload from 'js-file-download';
 import { addSnackbar } from 'src/ducks/global/actions';
@@ -79,7 +80,7 @@ const DownloadCollectors = () => {
             data-testid='download-collectors'
             pageDescription={
                 openHoundEnabled?.enabled ? (
-                    <Typography variant='body2' paragraph>
+                    <Typography variant='body2'>
                         To get started, collect data using SharpHound, AzureHound, or OpenHound.
                         <br />
                         BloodHound CE supports {DocumentationLinks.sharpHoundCELink},{' '}
@@ -90,7 +91,7 @@ const DownloadCollectors = () => {
                         .
                     </Typography>
                 ) : (
-                    <Typography variant='body2' paragraph>
+                    <Typography variant='body2'>
                         To get started, collect data using SharpHound or AzureHound.
                         <br />
                         BloodHound CE supports both {DocumentationLinks.sharpHoundCELink} and{' '}
@@ -98,7 +99,7 @@ const DownloadCollectors = () => {
                     </Typography>
                 )
             }>
-            <div className='grid gap-8'>
+            <div className='grid gap-8 py-4'>
                 {(sharpHoundCollectorsQuery.isError ||
                     azureHoundCollectorsQuery.isError ||
                     sharpHoundCollectorsQuery.data?.data.versions.length === 0) && (
@@ -113,7 +114,7 @@ const DownloadCollectors = () => {
                     {sharpHoundCollectorsQuery.isLoading ? (
                         <Paper>
                             <Box p={2}>
-                                <Typography variant='h6'>
+                                <Typography variant='h6' component='div'>
                                     <Skeleton variant='text' />
                                 </Typography>
                                 <Typography variant='body1'>
@@ -147,7 +148,7 @@ const DownloadCollectors = () => {
                     {azureHoundCollectorsQuery.isLoading ? (
                         <Paper>
                             <Box p={2}>
-                                <Typography variant='h6'>
+                                <Typography variant='h6' component='div'>
                                     <Skeleton variant='text' />
                                 </Typography>
                                 <Typography variant='body1'>

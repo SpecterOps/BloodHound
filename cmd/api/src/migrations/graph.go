@@ -23,7 +23,7 @@ import (
 	"log/slog"
 	"sort"
 
-	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -134,9 +134,18 @@ type GraphMigration interface {
 	executeMigrations(ctx context.Context, originalVersion version.Version, migrationsByVersion MigrationsByVersion) error
 }
 
+// schemalessNodeKindBackfillData is the narrow interface consumed by Version_930_Migration to read
+// display metadata from Postgres and write backfilled custom_node_kinds entries. It is intended to
+// be satisfied by database.Database
+type schemalessNodeKindBackfillData interface {
+	GetCustomNodeKinds(ctx context.Context, filters model.Filters) ([]model.CustomNodeKind, error)
+	GetGraphSchemaNodeKinds(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error)
+	CreateCustomNodeKinds(ctx context.Context, customNodeKinds model.CustomNodeKinds) (model.CustomNodeKinds, error)
+}
+
 type GraphMigrator struct {
-	db              graph.Database
-	sourceKindsData database.SourceKindsData
+	db                             graph.Database
+	schemalessNodeKindBackfillData schemalessNodeKindBackfillData
 }
 
 // Option configures optional dependencies on a GraphMigrator. Most migrations
@@ -145,11 +154,11 @@ type GraphMigrator struct {
 // dependencies without forcing every caller to acknowledge them.
 type Option func(*GraphMigrator)
 
-// WithSourceKinds wires a SourceKindsData provider into the migrator. Migrations
-// that depend on the source_kinds table will short-circuit when this option is
-// not supplied.
-func WithSourceKinds(sourceKindsData database.SourceKindsData) Option {
-	return func(m *GraphMigrator) { m.sourceKindsData = sourceKindsData }
+// WithSchemalessKindBackfill wires a SchemalessNodeKindBackfillData provider into the migrator.
+// Migrations that backfill custom_node_kinds for orphaned schemaless ingest kinds will
+// short-circuit when this option is not supplied.
+func WithSchemalessKindBackfill(nodeKindData schemalessNodeKindBackfillData) Option {
+	return func(m *GraphMigrator) { m.schemalessNodeKindBackfillData = nodeKindData }
 }
 
 func NewGraphMigrator(db graph.Database, opts ...Option) *GraphMigrator {
@@ -239,7 +248,7 @@ func (s *GraphMigrator) executeMigrations(ctx context.Context, originalVersion v
 
 func (s *GraphMigrator) GetMigrationsByVersion() MigrationsByVersion {
 	migrationsByVersion := make(MigrationsByVersion)
-	for _, migration := range GetManifest(s.sourceKindsData) {
+	for _, migration := range GetManifest(s.schemalessNodeKindBackfillData) {
 		migrationsByVersion[migration.Version] = append(migrationsByVersion[migration.Version], migration)
 	}
 	return migrationsByVersion

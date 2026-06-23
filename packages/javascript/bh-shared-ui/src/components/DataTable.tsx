@@ -31,6 +31,7 @@ export interface Header {
     label: string;
     alignment?: TableCellProps['align'];
     className?: HTMLProps<HTMLElement>['className'];
+    srOnly?: boolean;
 }
 
 export interface DataTableProps {
@@ -68,7 +69,7 @@ const DataTable: React.FC<DataTableProps> = ({
                         <TableRow>
                             {headers.map((header, index) => (
                                 <TableCell key={index} align={header.alignment}>
-                                    {header.label}
+                                    {header.srOnly ? <span className='sr-only'>{header.label}</span> : header.label}
                                 </TableCell>
                             ))}
                         </TableRow>

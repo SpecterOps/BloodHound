@@ -181,20 +181,20 @@ func PostEnterpriseCAFor(operation post.StatTrackedOperation[post.EnsureRelation
 	return nil
 }
 
-func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, enterpriseCA *graph.Node, targetDomains *graph.NodeSet) error {
-	if hostCAServiceComputers, err := FetchHostsCAServiceComputers(tx, enterpriseCA); err != nil {
+func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, certChains *EnterpriseCAChainedDomains) error {
+	if hostCAServiceComputers, err := FetchHostsCAServiceComputers(tx, certChains.EnterpriseCA); err != nil {
 		slog.ErrorContext(
 			ctx,
 			"Error fetching host ca computer for enterprise ca",
-			slog.Uint64("enterprise_ca_id", uint64(enterpriseCA.ID)),
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
 			attr.Error(err),
 		)
 	} else {
 		for _, computer := range hostCAServiceComputers {
-			for _, domain := range targetDomains.Slice() {
+			for _, domain := range certChains.Domains.Slice() {
 				channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 					FromID: computer.ID,
-					ToID:   domain.ID,
+					ToID:   graph.ID(domain),
 					Kind:   ad.GoldenCert,
 				})
 			}
@@ -310,14 +310,14 @@ func findNodesByCertThumbprint(certThumbprint string, tx graph.Transaction, kind
 	}))
 }
 
-func expandNodeSliceToBitmapWithoutGroups(nodes []*graph.Node, localGroupData *LocalGroupData) cardinality.Duplex[uint64] {
+func expandCachedPrincipalsToBitmapWithoutGroups(principals CachedPrincipalSet, localGroupData *LocalGroupData) cardinality.Duplex[uint64] {
 	var (
 		nonGroupNodes = cardinality.NewBitmap64()
 	)
 
-	for _, controller := range nodes {
-		if controller.Kinds.ContainsOneOf(ad.Group) {
-			localGroupData.GroupMembershipCache.ReachOfComponentContainingMember(controller.ID.Uint64(), graph.DirectionInbound).Each(func(memberID uint64) bool {
+	principals.AllIDs.Each(func(entityID uint64) bool {
+		if principals.GroupOrLocalGroupIDs.Contains(entityID) {
+			localGroupData.GroupMembershipCache.ReachOfComponentContainingMember(entityID, graph.DirectionInbound).Each(func(memberID uint64) bool {
 				if !localGroupData.Groups.Contains(memberID) {
 					nonGroupNodes.Add(memberID)
 				}
@@ -325,38 +325,50 @@ func expandNodeSliceToBitmapWithoutGroups(nodes []*graph.Node, localGroupData *L
 				return true
 			})
 		} else {
-			nonGroupNodes.Add(controller.ID.Uint64())
+			nonGroupNodes.Add(entityID)
 		}
-	}
+
+		return true
+	})
 
 	return nonGroupNodes
 }
 
-func containsAuthUsersOrEveryone(tx graph.Transaction, nodes []*graph.Node) (bool, error) {
-	if specialGroups, err := FetchAuthUsersAndEveryoneGroups(tx); err != nil {
-		return false, err
-	} else {
-		for _, node := range nodes {
-			if specialGroups.Contains(node) {
-				return true, nil
-			} else if node.Kinds.ContainsOneOf(ad.Group) {
-				for _, group := range specialGroups {
-					if path, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-						return query.And(
-							query.Equals(query.StartID(), group.ID),
-							query.KindIn(query.Relationship(), ad.MemberOf),
-							query.Equals(query.EndID(), node.ID),
-						)
-					})); err != nil {
-						return false, err
-					} else if len(path) > 0 {
-						return true, nil
-					}
-				}
-			}
+func containsAuthUsersOrEveryone(tx graph.Transaction, specialGroups graph.NodeSet, nodes []*graph.Node) (bool, error) {
+	// Collect IDs of special groups and group nodes for a single bulk query
+	var groupNodeIDs []graph.ID
+
+	for _, node := range nodes {
+		// Direct membership check — is this node itself a special group?
+		if specialGroups.Contains(node) {
+			return true, nil
+		}
+
+		if node.Kinds.ContainsOneOf(ad.Group) {
+			groupNodeIDs = append(groupNodeIDs, node.ID)
 		}
 	}
-	return false, nil
+
+	// No group nodes to check transitive membership for
+	if len(groupNodeIDs) == 0 {
+		return false, nil
+	}
+
+	// Build the list of special group IDs
+	specialGroupIDs := specialGroups.IDs()
+
+	// Single bulk query: check if any special group is a MemberOf any of the group nodes
+	if rels, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.InIDs(query.StartID(), specialGroupIDs...),
+			query.KindIn(query.Relationship(), ad.MemberOf),
+			query.InIDs(query.EndID(), groupNodeIDs...),
+		)
+	})); err != nil {
+		return false, err
+	} else {
+		return len(rels) > 0, nil
+	}
 }
 
 func certTemplateValidForUserVictim(certTemplate *graph.Node) bool {
@@ -374,9 +386,20 @@ func certTemplateValidForUserVictim(certTemplate *graph.Node) bool {
 }
 
 func filterUserDNSResults(tx graph.Transaction, bitmap cardinality.Duplex[uint64], certTemplate *graph.Node) (cardinality.Duplex[uint64], error) {
+	// gMSAs and sMSAs are ingested as User nodes but behave like Computer objects in AD
+	// and possess DNS names, so they should not be filtered out of attack paths that
+	// require DNS in the SubjectAltName
 	if userNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
 			query.KindIn(query.Node(), ad.User),
+			query.Not(query.And(
+				query.Exists(query.NodeProperty(ad.GMSA.String())),
+				query.Equals(query.NodeProperty(ad.GMSA.String()), true),
+			)),
+			query.Not(query.And(
+				query.Exists(query.NodeProperty(ad.MSA.String())),
+				query.Equals(query.NodeProperty(ad.MSA.String()), true),
+			)),
 			query.InIDs(query.NodeID(), graph.DuplexToGraphIDs(bitmap)...),
 		)
 	})); err != nil {
@@ -390,11 +413,11 @@ func filterUserDNSResults(tx graph.Transaction, bitmap cardinality.Duplex[uint64
 	return bitmap, nil
 }
 
-func getVictimBitmap(localGroupData *LocalGroupData, certTemplateControllers, ecaControllers []*graph.Node, specialGroupHasTemplateEnroll, specialGroupHasECAEnroll bool) cardinality.Duplex[uint64] {
+func getVictimBitmap(localGroupData *LocalGroupData, certTemplateControllers, ecaControllers CachedPrincipalSet, specialGroupHasTemplateEnroll, specialGroupHasECAEnroll bool) cardinality.Duplex[uint64] {
 	// Expand controllers for the eca + template completely because we don't do group shortcutting here
 	var (
-		templateBitmap = expandNodeSliceToBitmapWithoutGroups(certTemplateControllers, localGroupData)
-		ecaBitmap      = expandNodeSliceToBitmapWithoutGroups(ecaControllers, localGroupData)
+		templateBitmap = expandCachedPrincipalsToBitmapWithoutGroups(certTemplateControllers, localGroupData)
+		ecaBitmap      = expandCachedPrincipalsToBitmapWithoutGroups(ecaControllers, localGroupData)
 		victimBitmap   = cardinality.NewBitmap64()
 	)
 
@@ -429,5 +452,23 @@ func schannelAuthenticationEnabled(certTemplate *graph.Node) (bool, error) {
 		} else {
 			return slices.Contains(effectiveekus, "1.3.6.1.5.5.7.3.2") || slices.Contains(effectiveekus, "2.5.29.37.0") || len(effectiveekus) == 0, nil
 		}
+	}
+}
+
+func logPropertyLookupFailure(ctx context.Context, node *graph.Node, err error) {
+	if errors.Is(err, graph.ErrPropertyNotFound) {
+		slog.WarnContext(
+			ctx,
+			"Property not found for node",
+			slog.Uint64("node_id", uint64(node.ID)),
+			attr.Error(err),
+		)
+	} else {
+		slog.ErrorContext(
+			ctx,
+			"Property error",
+			slog.Uint64("node_id", uint64(node.ID)),
+			attr.Error(err),
+		)
 	}
 }

@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Paper, Typography } from '@mui/material';
+import { Box, Paper } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { CreateUserRequest, PutUserAuthSecretRequest, UpdateUserRequest, User } from 'js-client-library';
 import find from 'lodash/find';
 import { FC, useState } from 'react';
@@ -52,7 +53,7 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
     const [manageUserTokensDialogOpen, toggleManageUserTokensDialog] = useToggle(false);
 
     const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS);
+    const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS) || checkPermission(Permission.AUTH_READ_USERS);
 
     const { addNotification, dismissNotification } = useNotifications();
     const notificationKey = 'manage-users-permission';
@@ -164,7 +165,7 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                 title='Manage Users'
                 data-testid='manage-users'
                 pageDescription={
-                    <Typography variant='body2' paragraph>
+                    <Typography variant='body2'>
                         BloodHound offers multiple roles with degrees of permissions, providing greater security and
                         control of your team.
                         <br />

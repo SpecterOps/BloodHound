@@ -33,8 +33,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -390,7 +390,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 			// The migration sets the default for all_environments to true, which will enable all users to have access to all environments until ETAC is explicitly enabled
 			userTemplate.AllEnvironments = false
 
-			if err := handleETACRequest(request.Context(), createUserRequest.UpdateUserRequest, roles, &userTemplate, s.GraphQuery); err != nil {
+			if err := handleETACRequest(createUserRequest.UpdateUserRequest, roles, &userTemplate, s.GraphQuery); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 				return
 			}
@@ -416,7 +416,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		updateUserRequest v2.UpdateUserRequest
 		pathVars          = mux.Vars(request)
 		rawUserID         = pathVars[api.URIPathVariableUserID]
-		authCtx           = *ctx.FromRequest(request)
+		authCtx           = *bhctx.FromRequest(request)
 	)
 
 	if userID, err := uuid.FromString(rawUserID); err != nil {
@@ -526,7 +526,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 				effectiveRoles = roles
 			}
 
-			if err := handleETACRequest(request.Context(), updateUserRequest, effectiveRoles, &user, s.GraphQuery); err != nil {
+			if err := handleETACRequest(updateUserRequest, effectiveRoles, &user, s.GraphQuery); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 				return
 			}
@@ -562,7 +562,7 @@ func (s ManagementResource) GetUser(response http.ResponseWriter, request *http.
 }
 
 func (s ManagementResource) GetSelf(response http.ResponseWriter, request *http.Request) {
-	bhCtx := ctx.FromRequest(request)
+	bhCtx := bhctx.FromRequest(request)
 	api.WriteBasicResponse(request.Context(), bhCtx.AuthCtx.Owner, http.StatusOK, response)
 }
 
@@ -571,7 +571,7 @@ func (s ManagementResource) DeleteUser(response http.ResponseWriter, request *ht
 		user      model.User
 		pathVars  = mux.Vars(request)
 		rawUserID = pathVars[api.URIPathVariableUserID]
-		bhCtx     = ctx.FromRequest(request)
+		bhCtx     = bhctx.FromRequest(request)
 	)
 
 	if userID, err := uuid.FromString(rawUserID); err != nil {
@@ -615,7 +615,7 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 		setUserSecretRequest v2.SetUserSecretRequest
 		pathVars             = mux.Vars(request)
 		rawUserID            = pathVars[api.URIPathVariableUserID]
-		bhCtx                = ctx.FromRequest(request)
+		bhCtx                = bhctx.FromRequest(request)
 	)
 
 	if loggedInUser, found := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !found {
@@ -755,7 +755,7 @@ func (s ManagementResource) ListAuthTokens(response http.ResponseWriter, request
 
 		// allow filtering by user_id (model.AuthToken.UserID) only if users have permission to manage other users
 		// (non-admin roles are restricted to filtering by their own model.AuthToken.UserID)
-		bhCtx := ctx.FromRequest(request)
+		bhCtx := bhctx.FromRequest(request)
 		if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); isUser {
 			if !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
 				if queryFilters.IsFiltered("user_id") && len(queryFilters["user_id"]) > 0 {
@@ -789,7 +789,7 @@ func (s ManagementResource) ListAuthTokens(response http.ResponseWriter, request
 func (s ManagementResource) CreateAuthToken(response http.ResponseWriter, request *http.Request) {
 	var (
 		createUserTokenRequest = v2.CreateUserToken{}
-		bhCtx                  = ctx.FromRequest(request)
+		bhCtx                  = bhctx.FromRequest(request)
 	)
 
 	if !appcfg.GetAPITokensParameter(request.Context(), s.db) {
@@ -815,7 +815,7 @@ func (s ManagementResource) CreateAuthToken(response http.ResponseWriter, reques
 // This is a helper function that selects the correct user_id to use for the token being created.
 // If no user_id is passed in the request, use the authed user's ID and proceed.
 // If the request contains a user_id other than their own, check to make sure they have permissions to create tokens for other users and reject.
-func verifyUserID(createUserTokenRequest *v2.CreateUserToken, user model.User, bhCtx *ctx.Context, authorizer auth.Authorizer) error {
+func verifyUserID(createUserTokenRequest *v2.CreateUserToken, user model.User, bhCtx *bhctx.Context, authorizer auth.Authorizer) error {
 	if createUserTokenRequest.UserID == "" {
 		createUserTokenRequest.UserID = user.ID.String()
 		return nil
@@ -831,7 +831,7 @@ func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, reques
 	var (
 		pathVars      = mux.Vars(request)
 		rawTokenID    = pathVars[api.URIPathVariableTokenID]
-		bhCtx         = ctx.FromRequest(request)
+		bhCtx         = bhctx.FromRequest(request)
 		auditLogEntry model.AuditEntry
 	)
 
@@ -913,7 +913,7 @@ type MFAStatusResponse struct {
 
 func (s ManagementResource) EnrollMFA(response http.ResponseWriter, request *http.Request) {
 	rawUserId := mux.Vars(request)[api.URIPathVariableUserID]
-	host := *ctx.Get(request.Context()).Host
+	host := *bhctx.Get(request.Context()).Host
 
 	payload := MFAEnrollmentRequest{}
 
@@ -966,7 +966,7 @@ func (s ManagementResource) DisenrollMFA(response http.ResponseWriter, request *
 	} else if user, err := s.db.GetUser(request.Context(), userId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		bhCtx := ctx.FromRequest(request)
+		bhCtx := bhctx.FromRequest(request)
 		if authedUser, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); isUser {
 			// Default the password to check against to the user from the path param
 			secretToValidate := *user.AuthSecret

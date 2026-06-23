@@ -602,18 +602,18 @@ func (mr *MockDatabaseMockRecorder) CreateSavedQueryPermissionsToUsers(ctx, quer
 }
 
 // CreateSchemaFinding mocks base method.
-func (m *MockDatabase) CreateSchemaFinding(ctx context.Context, findingType model.SchemaFindingType, extensionId, kindId, environmentId int32, name, displayName string) (model.SchemaFinding, error) {
+func (m *MockDatabase) CreateSchemaFinding(ctx context.Context, findingType model.SchemaFindingType, extensionId, kindId, environmentId int32, name, displayName, pzDisplayName string) (model.SchemaFinding, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSchemaFinding", ctx, findingType, extensionId, kindId, environmentId, name, displayName)
+	ret := m.ctrl.Call(m, "CreateSchemaFinding", ctx, findingType, extensionId, kindId, environmentId, name, displayName, pzDisplayName)
 	ret0, _ := ret[0].(model.SchemaFinding)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateSchemaFinding indicates an expected call of CreateSchemaFinding.
-func (mr *MockDatabaseMockRecorder) CreateSchemaFinding(ctx, findingType, extensionId, kindId, environmentId, name, displayName any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateSchemaFinding(ctx, findingType, extensionId, kindId, environmentId, name, displayName, pzDisplayName any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaFinding", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaFinding), ctx, findingType, extensionId, kindId, environmentId, name, displayName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaFinding", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaFinding), ctx, findingType, extensionId, kindId, environmentId, name, displayName, pzDisplayName)
 }
 
 // CreateSchemaFindingSubtype mocks base method.
@@ -1134,6 +1134,20 @@ func (m *MockDatabase) EndUserSession(ctx context.Context, userSession model.Use
 func (mr *MockDatabaseMockRecorder) EndUserSession(ctx, userSession any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndUserSession", reflect.TypeOf((*MockDatabase)(nil).EndUserSession), ctx, userSession)
+}
+
+// EnsureStubbedCustomNodeKindForIngest mocks base method.
+func (m *MockDatabase) EnsureStubbedCustomNodeKindForIngest(ctx context.Context, name string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnsureStubbedCustomNodeKindForIngest", ctx, name)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EnsureStubbedCustomNodeKindForIngest indicates an expected call of EnsureStubbedCustomNodeKindForIngest.
+func (mr *MockDatabaseMockRecorder) EnsureStubbedCustomNodeKindForIngest(ctx, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureStubbedCustomNodeKindForIngest", reflect.TypeOf((*MockDatabase)(nil).EnsureStubbedCustomNodeKindForIngest), ctx, name)
 }
 
 // GetADDataQualityAggregations mocks base method.
@@ -2770,6 +2784,21 @@ func (mr *MockDatabaseMockRecorder) InsertSelectorNode(ctx, assetGroupTagId, sel
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertSelectorNode", reflect.TypeOf((*MockDatabase)(nil).InsertSelectorNode), ctx, assetGroupTagId, selectorId, nodeId, certified, certifiedBy, source, primaryKind, environmentId, objectId, name)
 }
 
+// IsEnabled mocks base method.
+func (m *MockDatabase) IsEnabled(ctx context.Context, key string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsEnabled", ctx, key)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsEnabled indicates an expected call of IsEnabled.
+func (mr *MockDatabaseMockRecorder) IsEnabled(ctx, key any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsEnabled", reflect.TypeOf((*MockDatabase)(nil).IsEnabled), ctx, key)
+}
+
 // IsSavedQueryPublic mocks base method.
 func (m *MockDatabase) IsSavedQueryPublic(ctx context.Context, savedQueryID int64) (bool, error) {
 	m.ctrl.T.Helper()
@@ -3014,6 +3043,34 @@ func (m *MockDatabase) SetFlag(ctx context.Context, value appcfg.FeatureFlag) er
 func (mr *MockDatabaseMockRecorder) SetFlag(ctx, value any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFlag", reflect.TypeOf((*MockDatabase)(nil).SetFlag), ctx, value)
+}
+
+// SetLastAnalysisStartTime mocks base method.
+func (m *MockDatabase) SetLastAnalysisStartTime(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetLastAnalysisStartTime", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetLastAnalysisStartTime indicates an expected call of SetLastAnalysisStartTime.
+func (mr *MockDatabaseMockRecorder) SetLastAnalysisStartTime(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLastAnalysisStartTime", reflect.TypeOf((*MockDatabase)(nil).SetLastAnalysisStartTime), ctx)
+}
+
+// SetNextScheduledAnalysisStartTime mocks base method.
+func (m *MockDatabase) SetNextScheduledAnalysisStartTime(ctx context.Context, arg1 null.Time) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetNextScheduledAnalysisStartTime", ctx, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetNextScheduledAnalysisStartTime indicates an expected call of SetNextScheduledAnalysisStartTime.
+func (mr *MockDatabaseMockRecorder) SetNextScheduledAnalysisStartTime(ctx, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetNextScheduledAnalysisStartTime", reflect.TypeOf((*MockDatabase)(nil).SetNextScheduledAnalysisStartTime), ctx, arg1)
 }
 
 // SetUserSessionFlag mocks base method.

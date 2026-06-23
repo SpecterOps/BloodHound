@@ -19,7 +19,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { CircularProgress } from '@mui/material';
 import { Badge, Tabs, TabsList, TabsTrigger } from 'doodle-ui';
 import React, { FC, Suspense } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Route, Routes, useLocation } from 'react-router-dom';
+import { useAppName } from '../../components/PageWithTitle';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams, useRoleBasedFiltering } from '../../hooks';
 import {
     ROUTE_PZ_CERTIFICATIONS,
@@ -79,6 +81,7 @@ const PrivilegeZones: FC = () => {
 
     const { savePaths, Summary, Certification, defaultPath } = usePZContext();
     const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
+    const appName = useAppName();
 
     const isRoleBasedFiltering = useRoleBasedFiltering();
 
@@ -113,15 +116,20 @@ const PrivilegeZones: FC = () => {
     const tabValue = isCertificationsPage ? certificationsPath : isHistoryPage ? historyPath : tagType;
 
     return (
-        <main>
+        <>
+            <Helmet>
+                <title>Privilege Zones | {appName}</title>
+            </Helmet>
             <div className='h-dvh min-w-full px-8'>
                 <div className='flex items-center justify-between pt-8'>
                     <h1 className='text-4xl font-bold'>Zone Builder</h1>
                     {isRoleBasedFiltering && (
                         <Badge
                             data-testid='privilege-zones_etac-filtering-badge'
-                            className='justify-start text-sm text-neutral-dark-1 bg-[#F8EEFD] dark:bg-[#472E54] dark:text-neutral-light-1 border-0'
-                            icon={<FontAwesomeIcon icon={faEyeSlash} className='mr-2' />}
+                            variant='fill'
+                            className='px-2 py-1'
+                            color='primary'
+                            icon={<FontAwesomeIcon icon={faEyeSlash} />}
                             label='Role-based access filtering applied'
                         />
                     )}
@@ -192,7 +200,7 @@ const PrivilegeZones: FC = () => {
                     </Suspense>
                 </div>
             </div>
-        </main>
+        </>
     );
 };
 

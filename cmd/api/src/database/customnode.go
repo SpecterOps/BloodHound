@@ -24,15 +24,38 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/dawgs/graph"
 	"gorm.io/gorm"
 )
 
+var CustomNodeKindStubConfig = model.CustomNodeKindConfig{
+	Icon: graphschema.DisplayNodeIcon{
+		Name:  "question",
+		Type:  graphschema.DisplayNodeTypeFontAwesome,
+		Color: "#FFFFFF",
+	},
+}
+
 type CustomNodeKindData interface {
 	CreateCustomNodeKinds(ctx context.Context, customNodeKind model.CustomNodeKinds) (model.CustomNodeKinds, error)
+	EnsureStubbedCustomNodeKindForIngest(ctx context.Context, name string) error
 	GetCustomNodeKinds(ctx context.Context, filters model.Filters) ([]model.CustomNodeKind, error)
 	GetCustomNodeKind(ctx context.Context, kindName string) (model.CustomNodeKind, error)
 	UpdateCustomNodeKind(ctx context.Context, customNodeKind model.CustomNodeKind) (model.CustomNodeKind, error)
 	DeleteCustomNodeKind(ctx context.Context, kindName string) error
+}
+
+func (s *BloodhoundDB) EnsureStubbedCustomNodeKindForIngest(ctx context.Context, name string) error {
+	if name == "" || model.IsExtendedNodeKind(graph.StringKind(name)) {
+		return errors.New("invalid kind name")
+	}
+
+	if result := s.db.WithContext(ctx).Exec("SELECT ensure_stubbed_custom_node_kind_for_ingest(?, ?);", name, CustomNodeKindStubConfig); result.Error != nil {
+		return fmt.Errorf("failed to ensure custom node kind stub %q: %w", name, result.Error)
+	}
+
+	return nil
 }
 
 func (s *BloodhoundDB) CreateCustomNodeKinds(ctx context.Context, customNodeKinds model.CustomNodeKinds) (model.CustomNodeKinds, error) {

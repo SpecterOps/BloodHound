@@ -54,10 +54,10 @@
   },
   "nodes": [
     {
-      "id": "n0",
+      "id": "n1",
       "position": {
-        "x": 1838.252119921468,
-        "y": 3072.6054852553802
+        "x": 1967.252119921468,
+        "y": 3068.6054852553802
       },
       "caption": "Domain0",
       "labels": [],
@@ -69,10 +69,10 @@
       }
     },
     {
-      "id": "n1",
+      "id": "n2",
       "position": {
-        "x": 1442.7014279325026,
-        "y": 2790.100771284196
+        "x": 1571.7014279325026,
+        "y": 2786.100771284196
       },
       "caption": "NTAuthStore0",
       "labels": [],
@@ -85,10 +85,10 @@
       }
     },
     {
-      "id": "n2",
+      "id": "n3",
       "position": {
-        "x": 1442.7014279325026,
-        "y": 2945.856810078488
+        "x": 1571.7014279325026,
+        "y": 2941.856810078488
       },
       "caption": "RootCA0",
       "labels": [],
@@ -101,10 +101,10 @@
       }
     },
     {
-      "id": "n3",
+      "id": "n4",
       "position": {
-        "x": 446.2054422641344,
-        "y": 2790.100771284196
+        "x": 575.2054422641344,
+        "y": 2786.100771284196
       },
       "caption": "CertTemplate0",
       "labels": [],
@@ -122,8 +122,8 @@
     {
       "id": "n5",
       "position": {
-        "x": 956.6260599607343,
-        "y": 2790.100771284196
+        "x": 1085.6260599607344,
+        "y": 2786.100771284196
       },
       "caption": "EnterpriseCA0",
       "labels": [],
@@ -140,8 +140,8 @@
     {
       "id": "n6",
       "position": {
-        "x": 75.00000000000034,
-        "y": 3072.6054852553802
+        "x": 204.00000000000034,
+        "y": 3068.6054852553802
       },
       "caption": "Group0",
       "labels": [],
@@ -155,8 +155,8 @@
     {
       "id": "n7",
       "position": {
-        "x": 1838.2521199214677,
-        "y": 2555.736538757399
+        "x": 1967.2521199214677,
+        "y": 2551.736538757399
       },
       "caption": "Domain1",
       "labels": [],
@@ -170,8 +170,8 @@
     {
       "id": "n8",
       "position": {
-        "x": 1442.701427932503,
-        "y": 2273.231824786215
+        "x": 1571.701427932503,
+        "y": 2269.231824786215
       },
       "caption": "NTAuthStore1",
       "labels": [],
@@ -186,8 +186,8 @@
     {
       "id": "n9",
       "position": {
-        "x": 1442.701427932503,
-        "y": 2428.987863580507
+        "x": 1571.701427932503,
+        "y": 2424.987863580507
       },
       "caption": "RootCA1",
       "labels": [],
@@ -202,8 +202,8 @@
     {
       "id": "n10",
       "position": {
-        "x": 446.2054422641352,
-        "y": 2273.231824786215
+        "x": 575.2054422641352,
+        "y": 2269.231824786215
       },
       "caption": "CertTemplate1",
       "labels": [],
@@ -219,10 +219,10 @@
       }
     },
     {
-      "id": "n12",
+      "id": "n11",
       "position": {
-        "x": 956.6260599607343,
-        "y": 2273.231824786215
+        "x": 1085.6260599607344,
+        "y": 2269.231824786215
       },
       "caption": "EnterpriseCA1",
       "labels": [],
@@ -236,10 +236,10 @@
       }
     },
     {
-      "id": "n13",
+      "id": "n12",
       "position": {
-        "x": 75.00000000000023,
-        "y": 2555.736538757399
+        "x": 204.00000000000023,
+        "y": 2551.736538757399
       },
       "caption": "Group1",
       "labels": [],
@@ -252,10 +252,10 @@
       }
     },
     {
-      "id": "n14",
+      "id": "n13",
       "position": {
-        "x": 1838.252119921467,
-        "y": 1521.9986457614368
+        "x": 1967.252119921467,
+        "y": 1517.9986457614368
       },
       "caption": "Domain3",
       "labels": [],
@@ -267,10 +267,10 @@
       }
     },
     {
-      "id": "n15",
+      "id": "n14",
       "position": {
-        "x": 1442.7014279325022,
-        "y": 1239.4939317902526
+        "x": 1571.7014279325022,
+        "y": 1235.4939317902526
       },
       "caption": "NTAuthStore3",
       "labels": [],
@@ -283,10 +283,10 @@
       }
     },
     {
-      "id": "n16",
+      "id": "n15",
       "position": {
-        "x": 1442.7014279325022,
-        "y": 1395.249970584544
+        "x": 1571.7014279325022,
+        "y": 1391.249970584544
       },
       "caption": "RootCA3",
       "labels": [],
@@ -299,10 +299,10 @@
       }
     },
     {
-      "id": "n17",
+      "id": "n16",
       "position": {
-        "x": 446.20544226413415,
-        "y": 1239.4939317902526
+        "x": 575.2054422641341,
+        "y": 1235.4939317902526
       },
       "caption": "CertTemplate3",
       "labels": [],
@@ -318,10 +318,10 @@
       }
     },
     {
-      "id": "n19",
+      "id": "n17",
       "position": {
-        "x": 956.6260599607343,
-        "y": 1239.4939317902526
+        "x": 1085.6260599607344,
+        "y": 1235.4939317902526
       },
       "caption": "EnterpriseCA3",
       "labels": [],
@@ -336,10 +336,10 @@
       }
     },
     {
-      "id": "n20",
+      "id": "n18",
       "position": {
-        "x": 75,
-        "y": 1521.9986457614368
+        "x": 204,
+        "y": 1517.9986457614368
       },
       "caption": "Group3",
       "labels": [],
@@ -352,10 +352,10 @@
       }
     },
     {
-      "id": "n21",
+      "id": "n19",
       "position": {
-        "x": 1838.2521199214677,
-        "y": 1005.1296992634557
+        "x": 1967.2521199214677,
+        "y": 1001.1296992634557
       },
       "caption": "Domain4",
       "labels": [],
@@ -367,10 +367,10 @@
       }
     },
     {
-      "id": "n22",
+      "id": "n20",
       "position": {
-        "x": 1442.7014279325026,
-        "y": 722.6249852922715
+        "x": 1571.7014279325026,
+        "y": 718.6249852922715
       },
       "caption": "NTAuthStore4",
       "labels": [],
@@ -383,10 +383,10 @@
       }
     },
     {
-      "id": "n23",
+      "id": "n21",
       "position": {
-        "x": 1442.7014279325026,
-        "y": 878.3810240865628
+        "x": 1571.7014279325026,
+        "y": 874.3810240865628
       },
       "caption": "RootCA4",
       "labels": [],
@@ -399,10 +399,10 @@
       }
     },
     {
-      "id": "n24",
+      "id": "n22",
       "position": {
-        "x": 446.2054422641343,
-        "y": 722.6249852922715
+        "x": 575.2054422641343,
+        "y": 718.6249852922715
       },
       "caption": "CertTemplate4",
       "labels": [],
@@ -418,10 +418,10 @@
       }
     },
     {
-      "id": "n26",
+      "id": "n23",
       "position": {
-        "x": 956.6260599607343,
-        "y": 722.6249852922715
+        "x": 1085.6260599607344,
+        "y": 718.6249852922715
       },
       "caption": "EnterpriseCA4",
       "labels": [],
@@ -436,10 +436,10 @@
       }
     },
     {
-      "id": "n27",
+      "id": "n24",
       "position": {
-        "x": 75.00000000000023,
-        "y": 1005.1296992634557
+        "x": 204.00000000000023,
+        "y": 1001.1296992634557
       },
       "caption": "Group4",
       "labels": [],
@@ -452,10 +452,10 @@
       }
     },
     {
-      "id": "n28",
+      "id": "n25",
       "position": {
-        "x": 1838.2521199214684,
-        "y": 488.26075276547454
+        "x": 1967.2521199214684,
+        "y": 484.26075276547454
       },
       "caption": "Domain5",
       "labels": [],
@@ -467,10 +467,10 @@
       }
     },
     {
-      "id": "n29",
+      "id": "n26",
       "position": {
-        "x": 1442.7014279325026,
-        "y": 205.75603879429036
+        "x": 1571.7014279325026,
+        "y": 201.75603879429036
       },
       "caption": "NTAuthStore5",
       "labels": [],
@@ -483,10 +483,10 @@
       }
     },
     {
-      "id": "n30",
+      "id": "n27",
       "position": {
-        "x": 1442.7014279325026,
-        "y": 361.51207758858163
+        "x": 1571.7014279325026,
+        "y": 357.51207758858163
       },
       "caption": "RootCA5",
       "labels": [],
@@ -499,10 +499,10 @@
       }
     },
     {
-      "id": "n31",
+      "id": "n28",
       "position": {
-        "x": 446.2054422641345,
-        "y": 205.75603879429036
+        "x": 575.2054422641345,
+        "y": 201.75603879429036
       },
       "caption": "CertTemplate5",
       "labels": [],
@@ -518,10 +518,10 @@
       }
     },
     {
-      "id": "n33",
+      "id": "n29",
       "position": {
-        "x": 956.6260599607343,
-        "y": 205.75603879429036
+        "x": 1085.6260599607344,
+        "y": 201.75603879429036
       },
       "caption": "EnterpriseCA5",
       "labels": [],
@@ -536,10 +536,10 @@
       }
     },
     {
-      "id": "n34",
+      "id": "n30",
       "position": {
-        "x": 75.00000000000034,
-        "y": 488.26075276547454
+        "x": 204.00000000000034,
+        "y": 484.26075276547454
       },
       "caption": "Group5",
       "labels": [],
@@ -550,13 +550,83 @@
         "node-color": "#fcc400",
         "border-color": "#73d8ff"
       }
+    },
+    {
+      "id": "n31",
+      "position": {
+        "x": 1085.6260599607344,
+        "y": 3068.6054852553802
+      },
+      "caption": "EnterpriseCA0 host",
+      "labels": [],
+      "properties": {
+        "kind": "Computer",
+        "enabled": "true"
+      },
+      "style": {}
+    },
+    {
+      "id": "n32",
+      "position": {
+        "x": 1085.626059960734,
+        "y": 2527.6662980352057
+      },
+      "caption": "EnterpriseCA1 host",
+      "labels": [],
+      "properties": {
+        "kind": "Computer",
+        "enabled": "true"
+      },
+      "style": {}
+    },
+    {
+      "id": "n33",
+      "position": {
+        "x": 1085.6260599607335,
+        "y": 1517.9986457614368
+      },
+      "caption": "EnterpriseCA3 host",
+      "labels": [],
+      "properties": {
+        "kind": "Computer",
+        "enabled": "true"
+      },
+      "style": {}
+    },
+    {
+      "id": "n34",
+      "position": {
+        "x": 1085.6260599607335,
+        "y": 977.0594585412621
+      },
+      "caption": "EnterpriseCA4 host",
+      "labels": [],
+      "properties": {
+        "kind": "Computer",
+        "enabled": "true"
+      },
+      "style": {}
+    },
+    {
+      "id": "n35",
+      "position": {
+        "x": 1085.6260599607335,
+        "y": 460.19051204328093
+      },
+      "caption": "EnterpriseCA5 host",
+      "labels": [],
+      "properties": {
+        "kind": "Computer",
+        "enabled": "true"
+      },
+      "style": {}
     }
   ],
   "relationships": [
     {
       "id": "n0",
-      "fromId": "n2",
-      "toId": "n0",
+      "fromId": "n3",
+      "toId": "n1",
       "type": "RootCAFor",
       "properties": {},
       "style": {
@@ -565,8 +635,8 @@
     },
     {
       "id": "n1",
-      "fromId": "n1",
-      "toId": "n0",
+      "fromId": "n2",
+      "toId": "n1",
       "type": "NTAuthStoreFor",
       "properties": {},
       "style": {
@@ -574,10 +644,20 @@
       }
     },
     {
-      "id": "n3",
-      "fromId": "n3",
+      "id": "n2",
+      "fromId": "n4",
       "toId": "n5",
       "type": "PublishedTo",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n3",
+      "fromId": "n5",
+      "toId": "n3",
+      "type": "IssuedSignedBy",
       "properties": {},
       "style": {
         "arrow-color": "#000000"
@@ -587,16 +667,6 @@
       "id": "n4",
       "fromId": "n5",
       "toId": "n2",
-      "type": "IssuedSignedBy",
-      "properties": {},
-      "style": {
-        "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n5",
-      "fromId": "n5",
-      "toId": "n1",
       "type": "TrustedForNTAuth",
       "properties": {},
       "style": {
@@ -604,7 +674,7 @@
       }
     },
     {
-      "id": "n6",
+      "id": "n5",
       "fromId": "n6",
       "toId": "n5",
       "type": "Enroll",
@@ -612,15 +682,15 @@
       "style": {}
     },
     {
-      "id": "n7",
+      "id": "n6",
       "fromId": "n6",
-      "toId": "n3",
+      "toId": "n4",
       "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n8",
+      "id": "n7",
       "fromId": "n9",
       "toId": "n7",
       "type": "RootCAFor",
@@ -630,7 +700,7 @@
       }
     },
     {
-      "id": "n9",
+      "id": "n8",
       "fromId": "n8",
       "toId": "n7",
       "type": "NTAuthStoreFor",
@@ -640,9 +710,9 @@
       }
     },
     {
-      "id": "n11",
+      "id": "n9",
       "fromId": "n10",
-      "toId": "n12",
+      "toId": "n11",
       "type": "PublishedTo",
       "properties": {},
       "style": {
@@ -650,8 +720,8 @@
       }
     },
     {
-      "id": "n12",
-      "fromId": "n12",
+      "id": "n10",
+      "fromId": "n11",
       "toId": "n9",
       "type": "IssuedSignedBy",
       "properties": {},
@@ -660,8 +730,8 @@
       }
     },
     {
-      "id": "n13",
-      "fromId": "n12",
+      "id": "n11",
+      "fromId": "n11",
       "toId": "n8",
       "type": "TrustedForNTAuth",
       "properties": {},
@@ -670,25 +740,25 @@
       }
     },
     {
-      "id": "n14",
-      "fromId": "n13",
-      "toId": "n12",
+      "id": "n12",
+      "fromId": "n12",
+      "toId": "n11",
       "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n15",
-      "fromId": "n13",
+      "id": "n13",
+      "fromId": "n12",
       "toId": "n10",
       "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n16",
-      "fromId": "n16",
-      "toId": "n14",
+      "id": "n14",
+      "fromId": "n15",
+      "toId": "n13",
       "type": "RootCAFor",
       "properties": {},
       "style": {
@@ -696,9 +766,9 @@
       }
     },
     {
-      "id": "n17",
-      "fromId": "n15",
-      "toId": "n14",
+      "id": "n15",
+      "fromId": "n14",
+      "toId": "n13",
       "type": "NTAuthStoreFor",
       "properties": {},
       "style": {
@@ -706,9 +776,9 @@
       }
     },
     {
-      "id": "n19",
-      "fromId": "n17",
-      "toId": "n19",
+      "id": "n16",
+      "fromId": "n16",
+      "toId": "n17",
       "type": "PublishedTo",
       "properties": {},
       "style": {
@@ -716,10 +786,36 @@
       }
     },
     {
-      "id": "n20",
-      "fromId": "n19",
-      "toId": "n16",
+      "id": "n17",
+      "fromId": "n17",
+      "toId": "n15",
       "type": "IssuedSignedBy",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n18",
+      "fromId": "n18",
+      "toId": "n17",
+      "type": "Enroll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n19",
+      "fromId": "n18",
+      "toId": "n16",
+      "type": "Enroll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n20",
+      "fromId": "n21",
+      "toId": "n19",
+      "type": "RootCAFor",
       "properties": {},
       "style": {
         "arrow-color": "#000000"
@@ -729,32 +825,6 @@
       "id": "n21",
       "fromId": "n20",
       "toId": "n19",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n22",
-      "fromId": "n20",
-      "toId": "n17",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n23",
-      "fromId": "n23",
-      "toId": "n21",
-      "type": "RootCAFor",
-      "properties": {},
-      "style": {
-        "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n24",
-      "fromId": "n22",
-      "toId": "n21",
       "type": "NTAuthStoreFor",
       "properties": {},
       "style": {
@@ -762,10 +832,46 @@
       }
     },
     {
-      "id": "n26",
-      "fromId": "n24",
-      "toId": "n26",
+      "id": "n22",
+      "fromId": "n22",
+      "toId": "n23",
       "type": "PublishedTo",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n23",
+      "fromId": "n23",
+      "toId": "n20",
+      "type": "TrustedForNTAuth",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n24",
+      "fromId": "n24",
+      "toId": "n23",
+      "type": "Enroll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n25",
+      "fromId": "n24",
+      "toId": "n22",
+      "type": "Enroll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n26",
+      "fromId": "n27",
+      "toId": "n25",
+      "type": "RootCAFor",
       "properties": {},
       "style": {
         "arrow-color": "#000000"
@@ -774,43 +880,7 @@
     {
       "id": "n27",
       "fromId": "n26",
-      "toId": "n22",
-      "type": "TrustedForNTAuth",
-      "properties": {},
-      "style": {
-        "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n28",
-      "fromId": "n27",
-      "toId": "n26",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n29",
-      "fromId": "n27",
-      "toId": "n24",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n30",
-      "fromId": "n30",
-      "toId": "n28",
-      "type": "RootCAFor",
-      "properties": {},
-      "style": {
-        "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n31",
-      "fromId": "n29",
-      "toId": "n28",
+      "toId": "n25",
       "type": "NTAuthStoreFor",
       "properties": {},
       "style": {
@@ -818,9 +888,9 @@
       }
     },
     {
-      "id": "n33",
-      "fromId": "n33",
-      "toId": "n30",
+      "id": "n28",
+      "fromId": "n29",
+      "toId": "n27",
       "type": "IssuedSignedBy",
       "properties": {},
       "style": {
@@ -828,9 +898,9 @@
       }
     },
     {
-      "id": "n34",
-      "fromId": "n33",
-      "toId": "n29",
+      "id": "n29",
+      "fromId": "n29",
+      "toId": "n26",
       "type": "TrustedForNTAuth",
       "properties": {},
       "style": {
@@ -838,18 +908,58 @@
       }
     },
     {
-      "id": "n35",
-      "fromId": "n34",
-      "toId": "n33",
+      "id": "n30",
+      "fromId": "n30",
+      "toId": "n29",
       "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n36",
-      "fromId": "n34",
-      "toId": "n31",
+      "id": "n31",
+      "fromId": "n30",
+      "toId": "n28",
       "type": "Enroll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n32",
+      "fromId": "n31",
+      "toId": "n5",
+      "type": "HostsCAService",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n33",
+      "fromId": "n32",
+      "toId": "n11",
+      "type": "HostsCAService",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n34",
+      "fromId": "n33",
+      "toId": "n17",
+      "type": "HostsCAService",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n35",
+      "fromId": "n34",
+      "toId": "n23",
+      "type": "HostsCAService",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n36",
+      "fromId": "n35",
+      "toId": "n29",
+      "type": "HostsCAService",
       "properties": {},
       "style": {}
     }

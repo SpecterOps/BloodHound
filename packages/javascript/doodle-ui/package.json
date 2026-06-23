@@ -25,7 +25,7 @@
         "prepack": "pinst --disable",
         "postpack": "pinst --enable",
         "preview": "vite preview",
-        "storybook": "storybook dev -p 6006",
+        "storybook": "STORYBOOK_DISABLE_TELEMETRY=true storybook dev -p 6006",
         "build:storybook": "storybook build",
         "build:styles": "npx tailwindcss -i ./src/input.css -o ./dist/styles.css --minify",
         "create-component": "tsx ./scripts/createComponent.ts",
@@ -117,9 +117,9 @@
         "tailwindcss": "^3.4.3",
         "tsx": "^4.7.3",
         "typescript": "^5.9.3",
-        "vite": "^6.4.2",
+        "vite": "^6.4.3",
         "vite-plugin-dts": "^4.4.0",
-        "vitest": "^3.2.4"
+        "vitest": "npm:^4.1.0"
     },
     "peerDependencies": {
         "react": "^18.2.0",

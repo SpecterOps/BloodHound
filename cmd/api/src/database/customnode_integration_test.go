@@ -19,11 +19,13 @@
 package database_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -145,24 +147,21 @@ func TestCreateCustomNodeKinds(t *testing.T) {
 
 func TestGetCustomNodeKinds(t *testing.T) {
 	tests := []struct {
-		name    string
-		setup   func() IntegrationTestSuite
-		wantLen int
-		wantErr error
+		name        string
+		setup       func() (IntegrationTestSuite, int)
+		baselineLen int
+		wantLen     int
+		wantErr     error
 	}{
 		{
-			name: "success - returns empty list when none exist",
-			setup: func() IntegrationTestSuite {
-				return setupIntegrationTestSuite(t)
-			},
-			wantLen: 0,
-			wantErr: nil,
-		},
-		{
 			name: "success - returns all created kinds",
-			setup: func() IntegrationTestSuite {
+			setup: func() (IntegrationTestSuite, int) {
 				testSuite := setupIntegrationTestSuite(t)
-				_, err := testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{
+
+				baselineKinds, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context, nil)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{
 					{
 						KindName: "KindOne",
 						Config: model.CustomNodeKindConfig{
@@ -177,7 +176,7 @@ func TestGetCustomNodeKinds(t *testing.T) {
 					},
 				})
 				require.NoError(t, err)
-				return testSuite
+				return testSuite, len(baselineKinds)
 			},
 			wantLen: 2,
 			wantErr: nil,
@@ -186,7 +185,7 @@ func TestGetCustomNodeKinds(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			testSuite := testCase.setup()
+			testSuite, baselineLen := testCase.setup()
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
 			kinds, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context, nil)
@@ -194,7 +193,7 @@ func TestGetCustomNodeKinds(t *testing.T) {
 				assert.EqualError(t, err, testCase.wantErr.Error())
 			} else {
 				require.NoError(t, err)
-				assert.Len(t, kinds, testCase.wantLen)
+				assert.Len(t, kinds, testCase.wantLen+baselineLen)
 			}
 		})
 	}
@@ -472,6 +471,83 @@ func TestCreateCustomNodeKinds_TxAtomicity(t *testing.T) {
 	require.ErrorIs(t, err, database.ErrNotFound, "kind row should have been rolled back when custom_node_kinds insert failed")
 }
 
+func TestEnsureStubbedCustomNodeKindForIngest(t *testing.T) {
+	t.Run("brand-new kind creates one kind row and one custom node kind stub", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		err := testSuite.BHDatabase.EnsureStubbedCustomNodeKindForIngest(testSuite.Context, "IngestedUnknownKind")
+		require.NoError(t, err)
+
+		kinds, err := testSuite.BHDatabase.GetKindsByNames(testSuite.Context, "IngestedUnknownKind")
+		require.NoError(t, err)
+		require.Len(t, kinds, 1)
+
+		customNodeKind, err := testSuite.BHDatabase.GetCustomNodeKind(testSuite.Context, "IngestedUnknownKind")
+		require.NoError(t, err)
+		assert.Nil(t, customNodeKind.SchemaNodeKindId)
+		assert.Equal(t, model.CustomNodeKindConfig{
+			Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "question", Color: "#FFFFFF"},
+		}, customNodeKind.Config)
+
+		err = testSuite.BHDatabase.EnsureStubbedCustomNodeKindForIngest(testSuite.Context, "IngestedUnknownKind")
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), countKindRows(t, testSuite, "IngestedUnknownKind"))
+		assert.Equal(t, int64(1), countCustomNodeKindRows(t, testSuite, "IngestedUnknownKind"))
+	})
+
+	t.Run("pre-existing bare kind without custom node kind is stubbed", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		_, err := testSuite.BHDatabase.UpsertKind(testSuite.Context, "PreExistingBareKind")
+		require.NoError(t, err)
+
+		err = testSuite.BHDatabase.EnsureStubbedCustomNodeKindForIngest(testSuite.Context, "PreExistingBareKind")
+		require.NoError(t, err)
+
+		customNodeKind, err := testSuite.BHDatabase.GetCustomNodeKind(testSuite.Context, "PreExistingBareKind")
+		require.NoError(t, err)
+		assert.Nil(t, customNodeKind.SchemaNodeKindId)
+		assert.Equal(t, int64(1), countKindRows(t, testSuite, "PreExistingBareKind"))
+		assert.Equal(t, int64(1), countCustomNodeKindRows(t, testSuite, "PreExistingBareKind"))
+	})
+
+	t.Run("existing custom node kind is not duplicated or overwritten", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		_, err := testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{
+			{
+				KindName: "RegisteredCustomKind",
+				Config: model.CustomNodeKindConfig{
+					Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "star", Color: "#000000"},
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		err = testSuite.BHDatabase.EnsureStubbedCustomNodeKindForIngest(testSuite.Context, "RegisteredCustomKind")
+		require.NoError(t, err)
+
+		customNodeKind, err := testSuite.BHDatabase.GetCustomNodeKind(testSuite.Context, "RegisteredCustomKind")
+		require.NoError(t, err)
+		assert.Equal(t, model.CustomNodeKindConfig{
+			Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "star", Color: "#000000"},
+		}, customNodeKind.Config)
+		assert.Equal(t, int64(1), countKindRows(t, testSuite, "RegisteredCustomKind"))
+		assert.Equal(t, int64(1), countCustomNodeKindRows(t, testSuite, "RegisteredCustomKind"))
+	})
+
+	t.Run("extended kind is rejected", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		err := testSuite.BHDatabase.EnsureStubbedCustomNodeKindForIngest(testSuite.Context, common.MigrationData.String())
+		require.EqualError(t, err, "invalid kind name")
+	})
+}
+
 func TestDeleteCustomNodeKind(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -522,4 +598,22 @@ func TestDeleteCustomNodeKind(t *testing.T) {
 			}
 		})
 	}
+}
+
+func countKindRows(t *testing.T, testSuite IntegrationTestSuite, kindName string) int64 {
+	t.Helper()
+
+	var count int64
+	result := testSuite.DB.WithContext(testSuite.Context).Raw(fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE name = ?", model.Kind{}.TableName()), kindName).Scan(&count)
+	require.NoError(t, result.Error)
+	return count
+}
+
+func countCustomNodeKindRows(t *testing.T, testSuite IntegrationTestSuite, kindName string) int64 {
+	t.Helper()
+
+	var count int64
+	result := testSuite.DB.WithContext(testSuite.Context).Raw(fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE kind_name = ?", model.CustomNodeKind{}.TableName()), kindName).Scan(&count)
+	require.NoError(t, result.Error)
+	return count
 }

@@ -29,6 +29,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database/migration"
@@ -36,8 +37,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
-	"github.com/specterops/dawgs/drivers"
-	"github.com/specterops/dawgs/drivers/pg"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -204,6 +203,16 @@ func (s *BloodhoundDB) Close(ctx context.Context) {
 	}
 }
 
+// SQLDB returns the underlying *sql.DB handle managed by GORM.
+func (s *BloodhoundDB) SQLDB() (*sql.DB, error) {
+	return s.db.DB()
+}
+
+// Pool returns the underlying pgx connection pool.
+func (s *BloodhoundDB) Pool() *pgxpool.Pool {
+	return s.pool
+}
+
 func (s *BloodhoundDB) preload(associations []string) *gorm.DB {
 	cursor := s.db
 	for _, association := range associations {
@@ -238,23 +247,28 @@ func (s *BloodhoundDB) Transaction(ctx context.Context, fn func(tx *BloodhoundDB
 	}, opts...)
 }
 
-func OpenDatabase(cfg drivers.DatabaseConfiguration) (*gorm.DB, *pgxpool.Pool, error) {
-	gormConfig := &gorm.Config{
-		Logger: &GormLogAdapter{
-			SlowQueryErrorThreshold: time.Second * 30,
-			SlowQueryWarnThreshold:  time.Second * 10,
-		},
-	}
-	pool, err := pg.NewPool(cfg)
+func OpenDatabase(cfg config.DatabaseConfiguration) (*gorm.DB, *pgxpool.Pool, error) {
+	var (
+		gormConfig = &gorm.Config{
+			Logger: &GormLogAdapter{
+				SlowQueryErrorThreshold: time.Second * 30,
+				SlowQueryWarnThreshold:  time.Second * 10,
+			},
+		}
+	)
+
+	// NewAppPool creates a relational database pool without graph composite type hooks,
+	// keeping the relational and graph connection concerns separate.
+	pool, err := dbpool.NewAppPool(cfg)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	dbPool := stdlib.OpenDBFromPool(pool)
+	dbConn := stdlib.OpenDBFromPool(pool)
 
-	db, err := gorm.Open(postgres.New(postgres.Config{Conn: dbPool}), gormConfig)
+	db, err := gorm.Open(postgres.New(postgres.Config{Conn: dbConn}), gormConfig)
 	if err != nil {
-		_ = dbPool.Close()
+		_ = dbConn.Close()
 		pool.Close()
 		return nil, nil, err
 	}
@@ -288,8 +302,13 @@ func (s *BloodhoundDB) Wipe(ctx context.Context) error {
 
 func (s *BloodhoundDB) Migrate(ctx context.Context) error {
 	// Run the migrator
-	if err := migration.NewMigrator(s.db.WithContext(ctx)).ExecuteStepwiseMigrations(); err != nil {
-		slog.ErrorContext(ctx, "Error during SQL database migration phase", attr.Error(err))
+	migrator, err := migration.NewMigrator(s.db.WithContext(ctx))
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to create migrator: %v", attr.Error(err))
+		return err
+	}
+	if err := migrator.ExecuteGooseMigrations(ctx); err != nil {
+		slog.ErrorContext(ctx, "Failed to execute migrations: %v", attr.Error(err))
 		return err
 	}
 
@@ -297,8 +316,13 @@ func (s *BloodhoundDB) Migrate(ctx context.Context) error {
 }
 
 func (s *BloodhoundDB) PopulateExtensionData(ctx context.Context) error {
-	if err := migration.NewMigrator(s.db.WithContext(ctx)).ExecuteExtensionDataPopulation(); err != nil {
-		slog.ErrorContext(ctx, "Error during extensions data population phase", attr.Error(err))
+	migrator, err := migration.NewMigrator(s.db.WithContext(ctx))
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to create migrator: %v", attr.Error(err))
+		return err
+	}
+	if err := migrator.ExecuteExtensionDataPopulation(); err != nil {
+		slog.ErrorContext(ctx, "Failed to execute extension data population", attr.Error(err))
 		return err
 	}
 

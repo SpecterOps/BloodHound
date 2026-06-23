@@ -43,8 +43,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/auth"
 	authz "github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
@@ -58,8 +58,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 	"github.com/specterops/bloodhound/packages/go/bhlog"
-	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
-	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
@@ -84,7 +82,7 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
 	)
 	defer mockCtrl.Finish()
-	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx := bhctx.Get(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{}))
 	bhCtx.AuthCtx.Owner = goodUser
 	_, isUser := authz.GetUserFromAuthCtx(bhCtx.AuthCtx)
 	require.True(t, isUser)
@@ -200,7 +198,7 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 		}
 	)
 
-	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx := bhctx.Get(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{}))
 	bhCtx.AuthCtx.Owner = adminUser
 
 	defer mockCtrl.Finish()
@@ -349,7 +347,7 @@ func TestManagementResource_ListPermissions_SortingError(t *testing.T) {
 	endpoint := "/api/v2/permissions"
 	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -376,7 +374,7 @@ func TestManagementResource_ListPermissions_InvalidFilterPredicate(t *testing.T)
 	endpoint := "/api/v2/permissions"
 	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -403,7 +401,7 @@ func TestManagementResource_ListPermissions_PredicateMismatchWithColumn(t *testi
 	endpoint := "/api/v2/permissions"
 	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -431,7 +429,7 @@ func TestManagementResource_ListPermissions_DBError(t *testing.T) {
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetAllPermissions(gomock.Any(), "authority desc, name", model.SQLFilter{SQLString: "name = 'foo'"}).Return(model.Permissions{}, fmt.Errorf("foo"))
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -482,7 +480,7 @@ func TestManagementResource_ListPermissions(t *testing.T) {
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetAllPermissions(gomock.Any(), "authority desc, name", model.SQLFilter{SQLString: "name = 'a'"}).Return(model.Permissions{perm1, perm2}, nil)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -628,7 +626,7 @@ func TestManagementResource_ListRoles_SortingError(t *testing.T) {
 	endpoint := "/api/v2/auth/roles"
 	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -655,7 +653,7 @@ func TestManagementResource_ListRoles_InvalidColumn(t *testing.T) {
 	endpoint := "/api/v2/auth/roles"
 	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -682,7 +680,7 @@ func TestManagementResource_ListRoles_InvalidFilterPredicate(t *testing.T) {
 	endpoint := "/api/v2/auth/roles"
 	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -709,7 +707,7 @@ func TestManagementResource_ListRoles_PredicateMismatchWithColumn(t *testing.T) 
 	endpoint := "/api/v2/auth/roles"
 	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -737,7 +735,7 @@ func TestManagementResource_ListRoles_DBError(t *testing.T) {
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetAllRoles(gomock.Any(), "description desc, name", model.SQLFilter{}).Return(model.Roles{}, fmt.Errorf("foo"))
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -781,7 +779,7 @@ func TestManagementResource_ListRoles(t *testing.T) {
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetAllRoles(gomock.Any(), "description desc, name", model.SQLFilter{}).Return(model.Roles{role1, role2}, nil)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -824,7 +822,7 @@ func TestManagementResource_ListRoles_Filtered(t *testing.T) {
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetAllRoles(gomock.Any(), "", model.SQLFilter{SQLString: "name = 'a'"}).Return(model.Roles{role1}, nil)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -1012,7 +1010,7 @@ func TestExpireUserAuthSecret_Failure(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		if req, err := http.NewRequestWithContext(ctx, "DELETE", fmt.Sprintf(endpoint, tc.Input.UserId), nil); err != nil {
 			t.Fatal(err)
 		} else {
@@ -1054,7 +1052,7 @@ func TestExpireUserAuthSecret_Success(t *testing.T) {
 	mockDB.EXPECT().GetUser(gomock.Any(), userId).Return(model.User{AuthSecret: &model.AuthSecret{}}, nil)
 	mockDB.EXPECT().UpdateAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "DELETE", fmt.Sprintf(endpoint, userId), nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -1074,7 +1072,7 @@ func TestManagementResource_ListUsers_SortingError(t *testing.T) {
 	endpoint := "/api/v2/auth/users"
 	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -1101,7 +1099,7 @@ func TestManagementResource_ListUsers_InvalidColumn(t *testing.T) {
 	endpoint := "/api/v2/auth/users"
 	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -1128,7 +1126,7 @@ func TestManagementResource_ListUsers_InvalidFilterPredicate(t *testing.T) {
 	endpoint := "/api/v2/auth/users"
 	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -1155,7 +1153,7 @@ func TestManagementResource_ListUsers_PredicateMismatchWithColumn(t *testing.T) 
 	endpoint := "/api/v2/auth/users"
 	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -1183,7 +1181,7 @@ func TestManagementResource_ListUsers_DBError(t *testing.T) {
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetAllUsers(gomock.Any(), "first_name desc, last_name", model.SQLFilter{SQLString: "support_account = false"}).Return(model.Users{}, fmt.Errorf("foo"))
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -1226,7 +1224,7 @@ func TestManagementResource_ListUsers(t *testing.T) {
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetAllUsers(gomock.Any(), "first_name desc, last_name", model.SQLFilter{SQLString: "support_account = false"}).Return(model.Users{user1, user2}, nil)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -1280,7 +1278,7 @@ func TestManagementResource_ListUsers_Filtered(t *testing.T) {
 		return true
 	})).Return(model.Users{user1}, nil)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -1396,7 +1394,7 @@ func TestCreateUser_Failure(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		if payload, err := json.Marshal(tc.Input.Body); err != nil {
 			t.Fatal(err)
 		} else if req, err := http.NewRequestWithContext(ctx, "POST", endpoint, bytes.NewReader(payload)); err != nil {
@@ -1446,7 +1444,7 @@ func TestCreateUser_FailureDuplicateEmail(t *testing.T) {
 	}, nil)
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(model.User{}, database.ErrDuplicateEmail)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	input := v2.CreateUserRequest{
 		UpdateUserRequest: v2.UpdateUserRequest{
 			Principal: "good user",
@@ -1491,7 +1489,7 @@ func TestCreateUser_Success(t *testing.T) {
 	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	input := v2.CreateUserRequest{
 		UpdateUserRequest: v2.UpdateUserRequest{
 			Principal: "good user",
@@ -1586,17 +1584,9 @@ func TestCreateUser_ETAC(t *testing.T) {
 				},
 			},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
-				mockGraphDB.EXPECT().FetchNodesByObjectIDsAndKinds(gomock.Any(), graph.Kinds{ad.Domain, azure.Tenant}, []string{"12345", "54321"}).Return(graph.NodeSet{
-					graph.ID(1): {
-						Properties: graph.AsProperties(map[string]any{
-							common.ObjectID.String(): "12345",
-						}),
-					},
-					graph.ID(2): {
-						Properties: graph.AsProperties(map[string]any{
-							common.ObjectID.String(): "54321",
-						}),
-					},
+				mockGraphDB.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{
+					{Properties: graph.AsProperties(map[string]any{common.ObjectID.String(): "12345"})},
+					{Properties: graph.AsProperties(map[string]any{common.ObjectID.String(): "54321"})},
 				}, nil)
 				mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 			},
@@ -1732,17 +1722,13 @@ func TestCreateUser_ETAC(t *testing.T) {
 				},
 			},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
-				mockGraphDB.EXPECT().FetchNodesByObjectIDsAndKinds(gomock.Any(), graph.Kinds{ad.Domain, azure.Tenant}, []string{"12345", "54321"}).Return(graph.NodeSet{
-					graph.ID(1): {
-						Properties: graph.AsProperties(map[string]any{
-							common.ObjectID.String(): "12345",
-						}),
-					},
+				mockGraphDB.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{
+					{Properties: graph.AsProperties(map[string]any{common.ObjectID.String(): "12345"})},
 				}, nil)
 			},
 			expectedStatus: http.StatusBadRequest,
 			assertBody: func(t *testing.T, body string) {
-				assert.Contains(t, body, "domain or tenant not found: 54321")
+				assert.Contains(t, body, "environment not found: 54321")
 			},
 		},
 	}
@@ -1775,7 +1761,7 @@ func TestCreateUser_ETAC(t *testing.T) {
 			})
 
 			// request/response
-			ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+			ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 			payload, err := json.Marshal(tc.createReq)
 			require.NoError(t, err)
 
@@ -1844,7 +1830,7 @@ func TestCreateUser_ResetPassword(t *testing.T) {
 
 	bhlog.ConfigureDefaultText(os.Stdout)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	payload, err := json.Marshal(input.Body)
 	require.Nil(t, err)
 
@@ -1893,7 +1879,7 @@ func TestManagementResource_UpdateUser_IDMalformed(t *testing.T) {
 	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	input := v2.CreateUserRequest{
 		UpdateUserRequest: v2.UpdateUserRequest{
 			Principal: "good user",
@@ -1957,7 +1943,7 @@ func TestManagementResource_UpdateUser_GetUserError(t *testing.T) {
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{}, fmt.Errorf("foo"))
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	input := v2.CreateUserRequest{
 		UpdateUserRequest: v2.UpdateUserRequest{
 			Principal: "good user",
@@ -2022,7 +2008,7 @@ func TestManagementResource_UpdateUser_GetRolesError(t *testing.T) {
 	mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(goodUser, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, fmt.Errorf("foo"))
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	input := v2.CreateUserRequest{
 		UpdateUserRequest: v2.UpdateUserRequest{
 			Principal: "good user",
@@ -2071,7 +2057,7 @@ func TestManagementResource_UpdateUser_DuplicateEmailError(t *testing.T) {
 	mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{EmailAddress: null.StringFrom("")}, nil)
 	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(database.ErrDuplicateEmail)
 
-	reqCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	reqCtx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 
 	payload, err := json.Marshal(v2.UpdateUserRequest{EmailAddress: "different"})
 	require.Nil(t, err)
@@ -2122,7 +2108,7 @@ func TestManagementResource_UpdateUser_SelfDisable(t *testing.T) {
 		Serial: model.Serial{},
 	}}, nil)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	input := v2.CreateUserRequest{
 		UpdateUserRequest: v2.UpdateUserRequest{
 			Principal: "good user",
@@ -2185,7 +2171,7 @@ func TestManagementResource_UpdateUser_UserSelfModify(t *testing.T) {
 		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
 	)
 
-	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx := bhctx.Get(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{}))
 	bhCtx.AuthCtx.Owner = adminUser
 
 	defer mockCtrl.Finish()
@@ -2265,7 +2251,7 @@ func TestManagementResource_UpdateUser_LookupActiveSessionsError(t *testing.T) {
 	}}, nil)
 	mockDB.EXPECT().LookupActiveSessionsByUser(gomock.Any(), gomock.Any()).Return([]model.UserSession{}, fmt.Errorf("foo"))
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	input := v2.CreateUserRequest{
 		UpdateUserRequest: v2.UpdateUserRequest{
 			Principal: "good user",
@@ -2346,7 +2332,7 @@ func TestManagementResource_UpdateUser_DBError(t *testing.T) {
 	}}, nil)
 	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(fmt.Errorf("foo"))
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	input := v2.CreateUserRequest{
 		UpdateUserRequest: v2.UpdateUserRequest{
 			Principal: "good user",
@@ -2554,8 +2540,8 @@ func TestManagementResource_GetSelf(t *testing.T) {
 					},
 				}
 
-				userContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-				bhCtx := ctx.Get(userContext)
+				userContext := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+				bhCtx := bhctx.Get(userContext)
 				bhCtx.AuthCtx.Owner = user
 
 				return request.WithContext(userContext)
@@ -2576,8 +2562,8 @@ func TestManagementResource_GetSelf(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				userContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-				bhCtx := ctx.Get(userContext)
+				userContext := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+				bhCtx := bhctx.Get(userContext)
 				bhCtx.AuthCtx.Owner = model.User{}
 
 				return request.WithContext(userContext)
@@ -2620,7 +2606,7 @@ func TestManagementResource_DeleteUser_BadUserID(t *testing.T) {
 
 	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
 	require.Nil(t, err)
 
@@ -2647,7 +2633,7 @@ func TestManagementResource_DeleteUser_UserNotFound(t *testing.T) {
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetUser(gomock.Any(), userID).Return(model.User{}, database.ErrNotFound)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
 	require.Nil(t, err)
 
@@ -2679,7 +2665,7 @@ func TestManagementResource_DeleteUser_UserBhCtxNotFound(t *testing.T) {
 		},
 	}, nil)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 
 	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
 	require.Nil(t, err)
@@ -2720,7 +2706,7 @@ func TestManagementResource_DeleteUser_UserCannotSelfDelete(t *testing.T) {
 		},
 	}, nil)
 
-	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx := bhctx.Get(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{}))
 	bhCtx.AuthCtx.Owner = adminUser
 
 	req, err := http.NewRequestWithContext(bhCtx.ConstructGoContext(), "DELETE", endpoint, nil)
@@ -2749,7 +2735,7 @@ func TestManagementResource_DeleteUser_GetUserError(t *testing.T) {
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetUser(gomock.Any(), userID).Return(model.User{}, fmt.Errorf("foo"))
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
 	require.Nil(t, err)
 
@@ -2792,7 +2778,7 @@ func TestManagementResource_DeleteUser_DeleteUserError(t *testing.T) {
 	mockDB.EXPECT().GetUser(gomock.Any(), userID).Return(user, nil)
 	mockDB.EXPECT().DeleteUser(gomock.Any(), user).Return(fmt.Errorf("foo"))
 
-	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx := bhctx.Get(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{}))
 	bhCtx.AuthCtx.Owner = adminUser
 	req, err := http.NewRequestWithContext(bhCtx.ConstructGoContext(), "DELETE", endpoint, nil)
 	require.NoError(t, err)
@@ -2835,7 +2821,7 @@ func TestManagementResource_DeleteUser_Success(t *testing.T) {
 
 	adminUser := model.User{AuthSecret: defaultDigestAuthSecret(t, "currentPassword"), Unique: model.Unique{ID: must.NewUUIDv4()}, Roles: model.Roles{adminRole}}
 
-	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx := bhctx.Get(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{}))
 	bhCtx.AuthCtx.Owner = adminUser
 	req, err := http.NewRequestWithContext(bhCtx.ConstructGoContext(), "DELETE", endpoint, nil)
 	require.NoError(t, err)
@@ -2891,7 +2877,7 @@ func TestManagementResource_UpdateUser_Success(t *testing.T) {
 	mockDB.EXPECT().LookupActiveSessionsByUser(gomock.Any(), gomock.Any()).Return([]model.UserSession{}, nil)
 	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	input := v2.CreateUserRequest{
 		UpdateUserRequest: v2.UpdateUserRequest{
 			Principal: "good user",
@@ -2995,12 +2981,8 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			assertBody:     func(t *testing.T, _ string) {},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
-				mockGraphDB.EXPECT().FetchNodesByObjectIDsAndKinds(gomock.Any(), graph.Kinds{ad.Domain, azure.Tenant}, []string{"12345"}).Return(graph.NodeSet{
-					graph.ID(1): {
-						Properties: graph.AsProperties(map[string]any{
-							common.ObjectID.String(): "12345",
-						}),
-					},
+				mockGraphDB.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{
+					{Properties: graph.AsProperties(map[string]any{common.ObjectID.String(): "12345"})},
 				}, nil)
 				mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 			},
@@ -3086,15 +3068,11 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			},
 			expectedStatus: http.StatusBadRequest,
 			assertBody: func(t *testing.T, body string) {
-				assert.Contains(t, body, "domain or tenant not found: 54321")
+				assert.Contains(t, body, "environment not found: 54321")
 			},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
-				mockGraphDB.EXPECT().FetchNodesByObjectIDsAndKinds(gomock.Any(), graph.Kinds{ad.Domain, azure.Tenant}, []string{"12345", "54321"}).Return(graph.NodeSet{
-					graph.ID(1): {
-						Properties: graph.AsProperties(map[string]any{
-							common.ObjectID.String(): "12345",
-						}),
-					},
+				mockGraphDB.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{
+					{Properties: graph.AsProperties(map[string]any{common.ObjectID.String(): "12345"})},
 				}, nil)
 			},
 		},
@@ -3130,7 +3108,7 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			// case-specific expectations
 			tc.expectMocks(mockDB, goodUser, mockGraphDB)
 
-			ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+			ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 
 			resources.DogTags = dogtags.NewTestService(dogtags.TestOverrides{
 				Bools: map[dogtags.BoolDogTag]bool{
@@ -3225,8 +3203,8 @@ func TestManagementResource_ListAuthTokens_SortingError(t *testing.T) {
 
 	user.AuthTokens = model.AuthTokens{authToken1, authToken2}
 
-	c := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	bhCtx := ctx.Get(c)
+	c := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+	bhCtx := bhctx.Get(c)
 	bhCtx.AuthCtx.Owner = user
 	_, isUser := authz.GetUserFromAuthCtx(bhCtx.AuthCtx)
 	require.True(t, isUser)
@@ -3260,7 +3238,7 @@ func TestManagementResource_ListAuthTokens_InvalidColumn(t *testing.T) {
 	endpoint := "/api/v2/auth/tokens"
 	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -3287,7 +3265,7 @@ func TestManagementResource_ListAuthTokens_InvalidFilterPredicate(t *testing.T) 
 	endpoint := "/api/v2/auth/tokens"
 	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -3314,7 +3292,7 @@ func TestManagementResource_ListAuthTokens_PredicateMismatchWithColumn(t *testin
 	endpoint := "/api/v2/auth/tokens"
 	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -3348,8 +3326,8 @@ func TestManagementResource_ListAuthTokens_DBError(t *testing.T) {
 
 	user.AuthTokens = model.AuthTokens{}
 
-	c := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	bhCtx := ctx.Get(c)
+	c := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+	bhCtx := bhctx.Get(c)
 	bhCtx.AuthCtx.Owner = user
 	_, isUser := authz.GetUserFromAuthCtx(bhCtx.AuthCtx)
 	require.True(t, isUser)
@@ -3458,8 +3436,8 @@ func TestManagementResource_ListAuthTokens_Admin(t *testing.T) {
 	otherUser.AuthTokens = model.AuthTokens{otherUserToken}
 	allAuthTokens := model.AuthTokens{authToken1, authToken2, otherUserToken}
 
-	c := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	bhCtx := ctx.Get(c)
+	c := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+	bhCtx := bhctx.Get(c)
 	bhCtx.AuthCtx.Owner = user
 	bhCtx.AuthCtx.PermissionOverrides = authz.PermissionOverrides{
 		Enabled: true,
@@ -3585,8 +3563,8 @@ func TestManagementResource_ListAuthTokens_NonAdmin(t *testing.T) {
 	user.AuthTokens = model.AuthTokens{authToken1, authToken2}
 	otherUser.AuthTokens = model.AuthTokens{otherUserToken}
 
-	c := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	bhCtx := ctx.Get(c)
+	c := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+	bhCtx := bhctx.Get(c)
 	bhCtx.AuthCtx.Owner = user
 	_, isUser := authz.GetUserFromAuthCtx(bhCtx.AuthCtx)
 	require.True(t, isUser)
@@ -3659,8 +3637,8 @@ func TestManagementResource_ListAuthTokens_Filtered(t *testing.T) {
 
 	user.AuthTokens = model.AuthTokens{authToken1}
 
-	c := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	bhCtx := ctx.Get(c)
+	c := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+	bhCtx := bhctx.Get(c)
 	bhCtx.AuthCtx.Owner = user
 	_, isUser := authz.GetUserFromAuthCtx(bhCtx.AuthCtx)
 	require.True(t, isUser)
@@ -3809,8 +3787,8 @@ func TestManagementResource_ListAuthTokens_UserIDFilter(t *testing.T) {
 
 			tt.mockSetup(t, mockDB)
 
-			requestContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-			bhCtx := ctx.Get(requestContext)
+			requestContext := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+			bhCtx := bhctx.Get(requestContext)
 			bhCtx.AuthCtx.Owner = nonAdminUser
 			if tt.isUserAdmin {
 				bhCtx.AuthCtx.Owner = adminUser
@@ -3944,7 +3922,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					Method: http.MethodPost,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{},
 					},
@@ -3974,7 +3952,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					Method: http.MethodPost,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{},
 					},
@@ -4005,7 +3983,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					Method: http.MethodPost,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{},
 					},
@@ -4037,7 +4015,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					Body:   io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"1"}`))),
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{},
 					},
@@ -4069,7 +4047,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					Body:   io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"id"}`))),
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{},
 						PermissionOverrides: authz.PermissionOverrides{
@@ -4107,7 +4085,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					Body:   io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"00000000-0000-0000-0000-000000000000"}`))),
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{
 							Roles: model.Roles{
@@ -4152,7 +4130,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					Body:   io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"00000000-0000-0000-0000-000000000000"}`))),
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{
 							Roles: model.Roles{
@@ -4217,7 +4195,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 
 				header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{
 							Roles: model.Roles{
@@ -4324,7 +4302,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					Method: http.MethodPost,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -4346,7 +4324,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					PostForm: url.Values{},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -4371,7 +4349,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					PostForm: url.Values{},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -4396,7 +4374,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					PostForm: url.Values{},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -4422,7 +4400,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					PostForm: url.Values{},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -4449,7 +4427,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					Body:   io.NopCloser(bytes.NewReader([]byte(`{"secret":"valid"}`))),
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -4484,7 +4462,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					PostForm: url.Values{},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -4522,7 +4500,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					PostForm: url.Values{},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -4564,7 +4542,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					Body:   io.NopCloser(bytes.NewReader(mfaBytes)),
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -4608,7 +4586,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					PostForm: url.Values{},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -4654,7 +4632,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					PostForm: url.Values{},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -4808,7 +4786,7 @@ func TestDisenrollMFA_Failure(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		if payload, err := json.Marshal(tc.Input.Body); err != nil {
 			t.Fatal(err)
 		} else if req, err := http.NewRequestWithContext(ctx, "DELETE", fmt.Sprintf(endpoint, tc.Input.UserId), bytes.NewReader(payload)); err != nil {
@@ -4834,7 +4812,7 @@ func TestDisenrollMFA_Success(t *testing.T) {
 
 	input := auth.MFAEnrollmentRequest{"password"}
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if payload, err := json.Marshal(input); err != nil {
 		t.Fatal(err)
 	} else if req, err := http.NewRequestWithContext(ctx, "DELETE", fmt.Sprintf(endpoint, userId.String()), bytes.NewReader(payload)); err != nil {
@@ -4872,8 +4850,8 @@ func TestDisenrollMFA_Admin_Success(t *testing.T) {
 	mockDB.EXPECT().GetUser(gomock.Any(), nonAdminId).Return(model.User{AuthSecret: defaultDigestAuthSecret(t, "password")}, nil)
 	mockDB.EXPECT().UpdateAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
-	adminContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	bhCtx := ctx.Get(adminContext)
+	adminContext := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+	bhCtx := bhctx.Get(adminContext)
 	bhCtx.AuthCtx.Owner = admin
 	bhCtx.AuthCtx.PermissionOverrides = authz.PermissionOverrides{
 		Enabled: true,
@@ -4928,8 +4906,8 @@ func TestDisenrollMFA_Admin_SuccessNoPasswordSSO(t *testing.T) {
 	mockDB.EXPECT().GetUser(gomock.Any(), nonAdminId).Return(model.User{AuthSecret: defaultDigestAuthSecret(t, "password"), Unique: model.Unique{ID: nonAdminId}}, nil).AnyTimes()
 	mockDB.EXPECT().UpdateAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
-	adminContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	bhCtx := ctx.Get(adminContext)
+	adminContext := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+	bhCtx := bhctx.Get(adminContext)
 	bhCtx.AuthCtx.Owner = admin
 	bhCtx.AuthCtx.PermissionOverrides = authz.PermissionOverrides{
 		Enabled: true,
@@ -4977,8 +4955,8 @@ func TestDisenrollMFA_Admin_FailureIncorrectPassword(t *testing.T) {
 		AuthSecret:    defaultDigestAuthSecret(t, "adminpassword"),
 	}
 
-	adminContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	bhCtx := ctx.Get(adminContext)
+	adminContext := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+	bhCtx := bhctx.Get(adminContext)
 	bhCtx.AuthCtx.Owner = admin
 	bhCtx.AuthCtx.PermissionOverrides = authz.PermissionOverrides{
 		Enabled: true,
@@ -5046,7 +5024,7 @@ func TestGetMFAActivationStatus_Failure(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		if payload, err := json.Marshal(tc.Input.Body); err != nil {
 			t.Fatal(err)
 		} else if req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf(endpoint, tc.Input.UserId), bytes.NewReader(payload)); err != nil {
@@ -5107,7 +5085,7 @@ func TestGetMFAActivationStatus_Success(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		if payload, err := json.Marshal(tc.Input.Body); err != nil {
 			t.Fatal(err)
 		} else if req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf(endpoint, tc.Input.UserId), bytes.NewReader(payload)); err != nil {
@@ -5177,7 +5155,7 @@ func TestActivateMFA_Failure(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		if payload, err := json.Marshal(tc.Input.Body); err != nil {
 			t.Fatal(err)
 		} else if req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf(endpoint, tc.Input.UserId), bytes.NewReader(payload)); err != nil {
@@ -5209,7 +5187,7 @@ func TestActivateMFA_Success(t *testing.T) {
 	mockDB.EXPECT().GetUser(gomock.Any(), userId).Return(model.User{AuthSecret: defaultDigestAuthSecretWithTOTP(t, "password", totpSecret.Secret())}, nil)
 	mockDB.EXPECT().UpdateAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	inputBody := auth.MFAActivationRequest{passcode}
 	if payload, err := json.Marshal(inputBody); err != nil {
 		t.Fatal(err)
@@ -5274,7 +5252,7 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 					Method: http.MethodDelete,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{},
 						PermissionOverrides: authz.PermissionOverrides{
@@ -5304,7 +5282,7 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 					Method: http.MethodDelete,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{},
 						PermissionOverrides: authz.PermissionOverrides{
@@ -5336,7 +5314,7 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 					Method: http.MethodDelete,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{},
 						PermissionOverrides: authz.PermissionOverrides{
@@ -5369,7 +5347,7 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 					Method: http.MethodDelete,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{
 							Unique: model.Unique{
@@ -5411,7 +5389,7 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 					Method: http.MethodDelete,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{
 							Unique: model.Unique{
@@ -5460,7 +5438,7 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 					Method: http.MethodDelete,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{
 							Unique: model.Unique{

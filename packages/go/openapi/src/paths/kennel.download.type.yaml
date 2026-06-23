@@ -32,9 +32,9 @@ get:
   responses:
     200:
       $ref: './../responses/binary-response.yaml'
-    400:
-      $ref: './../responses/bad-request.yaml'
     401:
       $ref: './../responses/unauthorized.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'

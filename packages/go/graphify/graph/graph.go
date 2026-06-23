@@ -28,6 +28,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -177,7 +178,7 @@ func (s *CommunityGraphService) InitializeService(ctx context.Context, cfg confi
 
 	if err := s.db.Migrate(ctx); err != nil {
 		return fmt.Errorf("error migrating database: %w", err)
-	} else if err := migrations.NewGraphMigrator(graphDB, migrations.WithSourceKinds(s.db)).Migrate(ctx); err != nil {
+	} else if err := migrations.NewGraphMigrator(graphDB, migrations.WithSchemalessKindBackfill(s.db)).Migrate(ctx); err != nil {
 		return fmt.Errorf("error migrating graph schema: %w", err)
 	} else if err := s.db.PopulateExtensionData(ctx); err != nil {
 		return fmt.Errorf("error populating extension data: %w", err)
@@ -417,7 +418,7 @@ func getNodesAndEdges(ctx context.Context, database graph.Database) ([]*graph.No
 }
 
 func initializeGraphDatabase(ctx context.Context, cfg config.Configuration) (graph.Database, error) {
-	if pool, err := pg.NewPool(cfg.Database); err != nil {
+	if pool, err := dbpool.NewDawgsPool(cfg.Database); err != nil {
 		return nil, fmt.Errorf("error creating postgres connection: %w", err)
 	} else if database, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
 		GraphQueryMemoryLimit: size.Gibibyte,

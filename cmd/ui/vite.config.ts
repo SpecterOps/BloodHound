@@ -20,6 +20,7 @@ import fs from 'fs';
 import path from 'path';
 import { defineConfig, loadEnv, Plugin, searchForWorkspaceRoot } from 'vite';
 import glsl from 'vite-plugin-glsl';
+import { configDefaults } from 'vitest/config';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -41,6 +42,7 @@ export default defineConfig(({ mode }) => {
                     'src'
                 ),
                 'doodle-ui': path.resolve(__dirname, '..', '..', 'packages', 'javascript', 'doodle-ui', 'src'),
+                'react-helmet-async': path.resolve(__dirname, '..', '..', 'node_modules', 'react-helmet-async'),
             },
             dedupe: [
                 'doodle-ui',
@@ -63,6 +65,7 @@ export default defineConfig(({ mode }) => {
                 'react-error-boundary',
                 'react-hook-form',
                 'react-query',
+                'react-helmet-async',
                 'react-router-dom',
                 'tailwindcss',
             ],
@@ -89,6 +92,11 @@ export default defineConfig(({ mode }) => {
         test: {
             globals: true,
             environment: 'jsdom',
+            exclude: [
+                ...configDefaults.exclude,
+                // Playwright accessibility regression suite — run manually via `yarn test:a11y`.
+                'tests/**',
+            ],
             setupFiles: ['./src/setupTests.tsx'],
             testTimeout: 60000, // 1 minute,
             coverage: {

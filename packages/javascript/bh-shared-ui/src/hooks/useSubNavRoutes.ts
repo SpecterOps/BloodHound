@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useMemo } from 'react';
-import { SubNavSection } from '../types';
+import { SubNavItem, SubNavSection } from '../types';
 import { Permission } from '../utils/permissions';
 import { isFeatureFlagEnabled, useFeatureFlags } from './useFeatureFlags';
 import { usePermissions } from './usePermissions';
@@ -24,10 +24,11 @@ import { usePermissions } from './usePermissions';
  * Filters and returns sub-navigation routes based on the current user's authentication state,
  * feature flags, and admin permissions.
  *
- * Items with a `featureFlag` are included only if that flag is enabled.
- * Items marked `adminOnly` are included only if the user has the required application
- * configuration read/write permissions.
- * Sections with no visible items are omitted from the result.
+ * Each configured gate on an item must pass for the item to be visible:
+ *   - `featureFlag` must be enabled (and feature flags must be loaded)
+ *   - `permissions` must all be granted (and permissions must be loaded)
+ *   - `adminOnly` requires application configuration read/write permissions
+ * Items with no gates are always visible. Sections with no visible items are omitted.
  *
  * @param sections - The full list of sub-nav sections and their items to filter.
  * @param isAuthenticated - Whether the current user is authenticated. Controls whether
@@ -37,39 +38,31 @@ import { usePermissions } from './usePermissions';
  */
 export function useSubNavRoutes(sections: SubNavSection[], isAuthenticated: boolean) {
     const { data: featureFlags, isLoading: areRoutesLoading } = useFeatureFlags({ enabled: isAuthenticated });
-    const { checkAllPermissions, isLoading } = usePermissions();
+    const { checkAllPermissions, isLoading: arePermissionsLoading } = usePermissions();
 
     const hasAdminPermissions = checkAllPermissions([
         Permission.APP_READ_APPLICATION_CONFIGURATION,
         Permission.APP_WRITE_APPLICATION_CONFIGURATION,
     ]);
 
-    const routes = useMemo(
-        () =>
-            sections
-                .map(({ title, items }) => ({
-                    title,
-                    items: items.filter((item) => {
-                        // If the item has a feature flag return it if it's enabled
-                        if (item.featureFlag) {
-                            return isFeatureFlagEnabled(item.featureFlag, featureFlags);
-                        }
+    const routes = useMemo(() => {
+        const isItemVisible = (item: SubNavItem) => {
+            if (item.featureFlag && (areRoutesLoading || !isFeatureFlagEnabled(item.featureFlag, featureFlags))) {
+                return false;
+            }
+            if (item.permissions && (arePermissionsLoading || !checkAllPermissions(item.permissions))) {
+                return false;
+            }
+            if (item.adminOnly && (arePermissionsLoading || !hasAdminPermissions)) {
+                return false;
+            }
+            return true;
+        };
 
-                        // If the item is admin only return if the user has admin permissions
-                        if (item.adminOnly && isLoading) {
-                            return false;
-                        } else if (item.adminOnly && !isLoading) {
-                            return hasAdminPermissions;
-                        }
-
-                        // Otherwise return the item
-                        return true;
-                    }),
-                }))
-                // Filter out any sections that have no items
-                .filter((section) => section.items.length > 0),
-        [featureFlags, hasAdminPermissions, isLoading, sections]
-    );
+        return sections
+            .map(({ title, items }) => ({ title, items: items.filter(isItemVisible) }))
+            .filter((section) => section.items.length > 0);
+    }, [sections, featureFlags, areRoutesLoading, arePermissionsLoading, hasAdminPermissions, checkAllPermissions]);
 
     return { routes, areRoutesLoading };
 }

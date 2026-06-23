@@ -18,25 +18,27 @@ import { ColorOptions } from '../../types';
 import { cn, getConditionalStyles, getCssColor } from '../utils';
 
 // These variants are used to determine the component props and wrapper element
-const RiskBadgePropVariants = cva('flex justify-center items-center rounded-full bg-neutral-light-3', {
+const RiskBadgePropVariants = cva('flex justify-center items-center rounded-full text-black', {
     variants: {
         type: {
-            labeled: 'size-[32px] p-2 shadow-none w-auto p-0 leading-[1] ',
-            'sm-circle': 'size-4 p-1 drop-shadow',
-            'md-circle': 'size-8 p-2 drop-shadow',
+            labeled: 'size-[32px] shadow-none w-auto leading-[1]',
+            'sm-labeled': 'size-[24px] p-1 shadow-none w-auto leading-[1]',
+            'sm-circle': 'size-4 p-1 drop-shadow bg-neutral-300',
+            'md-circle': 'size-8 p-2 drop-shadow bg-neutral-300',
         },
     },
 });
 
-const RiskBadgeContentVariants = cva('rounded-full size-full', {
+const RiskBadgeContentVariants = cva('rounded-full', {
     variants: {
         outlined: {
             true: 'border-solid border-2 shadow-none bg-transparent',
         },
         type: {
-            labeled: 'size-full px-6 py-2 border-none text-center',
-            'sm-circle': 'shadow-inner1xl',
-            'md-circle': 'shadow-inner1xl',
+            labeled: 'size-max w-32 px-6 py-2.5 border-none text-center tracking-[.25px]',
+            'sm-labeled': 'size-max px-1 py-1 border-none text-center font-bold min-w-14 w-14 text-sm',
+            'sm-circle': 'size-full shadow-inner1xl',
+            'md-circle': 'size-full shadow-inner1xl',
         },
     },
     compoundVariants: [
@@ -59,13 +61,22 @@ export interface RiskBadgeProps
     color?: ColorOptions;
     outlined: boolean;
     label?: string;
+    labelClassName?: string;
 }
 
 function RiskBadge(props: RiskBadgeProps) {
-    const { className, color: _color = 'secondary', outlined = false, type, label = 'md-circle', ...rest } = props;
+    const {
+        className,
+        labelClassName,
+        color: _color = 'secondary',
+        outlined = false,
+        type,
+        label = 'md-circle',
+        ...rest
+    } = props;
 
     const cssColor = getCssColor(_color);
-    const labeled = type === 'labeled';
+    const labeled = type === 'labeled' || type === 'sm-labeled';
 
     const riskBadgeStyle = getConditionalStyles(
         [!outlined, { backgroundColor: cssColor }],
@@ -78,8 +89,10 @@ function RiskBadge(props: RiskBadgeProps) {
 
     return (
         <div role='status' className={cn(RiskBadgePropVariants({ type }), className)} {...rest}>
-            <div style={riskBadgeStyle} className={cn(RiskBadgeContentVariants({ outlined, type }))}>
-                {labeled ? label : null}
+            <div
+                style={riskBadgeStyle}
+                className={cn(RiskBadgeContentVariants({ outlined, type }), 'risk-badge-label', labelClassName)}>
+                <span>{labeled ? label : null}</span>
             </div>
         </div>
     );

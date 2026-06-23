@@ -18,6 +18,7 @@
       "errcheck"
     ],
     "enable": [
+      "revive",
       "sloglint",
       "staticcheck"
     ],
@@ -65,6 +66,10 @@
         {
           "path": "packages/go/bhlog/measure/measure\\.go",
           "text": "message should be a string literal or a constant"
+        },
+        {
+          "path-except": "server/",
+          "linters": ["revive"]
         }
       ]
     },
@@ -79,6 +84,13 @@
       "govet": {
         "enable": [
           "nilness"
+        ]
+      },
+      "revive": {
+        "rules": [
+          {
+            "name": "receiver-naming"
+          }
         ]
       },
       "sloglint": {

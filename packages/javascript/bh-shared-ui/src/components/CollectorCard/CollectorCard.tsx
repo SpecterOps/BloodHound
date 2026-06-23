@@ -16,8 +16,8 @@
 
 import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Link, Paper, Typography } from '@mui/material';
-import { Button } from 'doodle-ui';
+import { Box, Link, Paper } from '@mui/material';
+import { Button, Typography } from 'doodle-ui';
 import { CommunityCollectorType } from 'js-client-library';
 
 interface CollectorCardProps {
@@ -56,7 +56,7 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
         <Paper>
             <Box p={2} display='flex' justifyContent='space-between' flexWrap='wrap' style={{ rowGap: '1rem' }}>
                 <Box overflow='hidden'>
-                    <Typography variant='h6'>
+                    <Typography variant='h3'>
                         {`${COLLECTOR_TYPE[collectorType]} ${version} ${getLabel(isLatest, isDeprecated)}`.trim()}
                     </Typography>
                     <Typography variant='body1'>

@@ -84,7 +84,7 @@ export const FileIngestTable: FC = () => {
     };
 
     return (
-        <div className='grid h-full grid-cols-[1fr_27rem] grid-rows-[auto_minmax(0,1fr)] pt-4 gap-4'>
+        <div className='grid h-full grid-cols-[1fr_27rem] grid-rows-[auto_minmax(0,1fr)] gap-4'>
             <div className='col-[1] row-[1] flex items-center justify-end gap-2'>
                 <FileIngestFilterDialog onConfirm={handleOnConfirm} />
                 <FileIngestUploadButton />
@@ -101,7 +101,10 @@ export const FileIngestTable: FC = () => {
                             rowsPerPage,
                             count,
                             onPageChange: (_event, page) => setPage(page),
-                            onRowsPerPageChange: (event) => setRowsPerPage(parseInt(event.target.value)),
+                            onRowsPerPageChange: (event) => {
+                                setRowsPerPage(parseInt(event.target.value));
+                                setPage(0);
+                            },
                         }}
                         showPaginationControls
                     />

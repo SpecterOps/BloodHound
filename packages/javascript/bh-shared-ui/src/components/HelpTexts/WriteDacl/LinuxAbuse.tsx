@@ -14,8 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link, Typography } from '@mui/material';
+import { Link } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
+import { AdcsEsc14ScenarioALinux } from '../AdcsEsc14ScenarioA';
 import { EdgeInfoProps } from '../index';
 
 const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = ({
@@ -213,6 +215,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     <Typography variant='body2'>
                         For other optional parameters, view the pyWhisker documentation.
                     </Typography>
+                    <AdcsEsc14ScenarioALinux />
                 </>
             );
         case 'Computer':
@@ -334,6 +337,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                         <Typography variant='body2'>
                             For other optional parameters, view the pyWhisker documentation.
                         </Typography>
+                        <AdcsEsc14ScenarioALinux />
                     </>
                 );
             } else {
@@ -411,6 +415,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                         <Typography variant='body2'>
                             For other optional parameters, view the pyWhisker documentation.
                         </Typography>
+                        <AdcsEsc14ScenarioALinux />
                     </>
                 );
             }
