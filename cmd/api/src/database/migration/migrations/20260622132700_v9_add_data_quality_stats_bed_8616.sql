@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS data_quality_stats (
     metric_type TEXT NOT NULL,
     metric_name TEXT NOT NULL,
     metric_value NUMERIC NOT NULL DEFAULT 0,
-    kind_id INTEGER DEFAULT NULL REFERENCES kind(id),
+    kind_id INTEGER DEFAULT NULL REFERENCES kind(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
     deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL
