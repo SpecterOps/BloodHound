@@ -33,6 +33,11 @@ const (
 	AnalysisRequestDeletion AnalysisRequestType = "deletion"
 )
 
+// NOTE: When a new step is added you must update the
+// analysisFull constant in bhce/server/analysis/internal/appdb/appdb.go
+// until we have a single AnalysisRequest in the codebase.
+// This duplication is an intentional consequence of our ongoing
+// migration to the sliced onion architecture.
 const (
 	////////
 	// Individual bits available to the internal bitmask
