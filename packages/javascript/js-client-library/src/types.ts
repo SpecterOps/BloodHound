@@ -608,9 +608,14 @@ export type FindingAssetsResponse = {
     type: string;
 };
 
+//  Alerts
+//  Webhooks
+
+export type WebhookType = 'generic' | 'slack' | 'ms-teams';
+
 export type Webhook = {
     id: string;
-    type: 'generic';
+    type: WebhookType;
     name: string;
     description: string;
     url: string;
@@ -642,3 +647,33 @@ export type Webhook = {
         valid: boolean;
     };
 };
+
+export type WebhookSortBy = 'name' | 'created_at' | 'updated_at' | 'health';
+
+export interface WebhookParams {
+    skip?: number;
+    limit?: number;
+    sort_by?: string;
+    type?: WebhookType;
+    name?: string;
+    url?: string;
+    disabled?: string;
+    health?: string;
+    attempts?: string;
+    failures?: string;
+    created_at?: string;
+    updated_at?: string;
+    last_errored_at?: string;
+    last_succeeded_at?: string;
+}
+
+export interface WebhookSecret {
+    id: string;
+    hmac_secret: string;
+    created_at: ISO_DATE_STRING;
+}
+
+export interface WebhookTest {
+    event_type: string;
+    version: string;
+}
