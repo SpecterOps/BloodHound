@@ -1120,3 +1120,51 @@ func TestFetchEntityDescendentPaths_TerminalNotConnectedToRoot(t *testing.T) {
 	})
 	require.NoError(t, err)
 }
+
+// TestListEntityDescendents_NestedManagementGroupToSubscription verifies that a Subscription
+// nested under one or more intermediate ManagementGroups is returned when listing the
+// DescendentSubscriptions of an ancestor ManagementGroup.
+func TestListEntityDescendents_NestedManagementGroupToSubscription(t *testing.T) {
+	t.Parallel()
+
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		tenantID        = integration.RandomObjectID(t)
+		mgRootObjectID  = integration.RandomObjectID(t)
+		mgChildObjectID = integration.RandomObjectID(t)
+		subObjectID     = integration.RandomObjectID(t)
+		tenantNode      = NewAzureTenant(t, &suite, tenantID)
+		mgRootNode      = NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
+			common.Name:         "MGRoot",
+			common.ObjectID:     mgRootObjectID,
+			graphAzure.TenantID: tenantID,
+		}), graphAzure.Entity, graphAzure.ManagementGroup)
+		mgChildNode = NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
+			common.Name:         "MGChild",
+			common.ObjectID:     mgChildObjectID,
+			graphAzure.TenantID: tenantID,
+		}), graphAzure.Entity, graphAzure.ManagementGroup)
+		nestedSubNode = NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
+			common.Name:         "NestedSubscription",
+			common.ObjectID:     subObjectID,
+			graphAzure.TenantID: tenantID,
+		}), graphAzure.Entity, graphAzure.Subscription)
+	)
+
+	// tenant --Contains--> mgRoot --Contains--> mgChild --Contains--> nestedSub
+	NewRelationship(t, &suite, tenantNode, mgRootNode, graphAzure.Contains)
+	NewRelationship(t, &suite, mgRootNode, mgChildNode, graphAzure.Contains)
+	NewRelationship(t, &suite, mgChildNode, nestedSubNode, graphAzure.Contains)
+
+	nodes, err := azure.ListEntityDescendents(
+		suite.Context, suite.GraphDB,
+		azure.RelatedEntityTypeDescendentSubscriptions, graphAzure.ManagementGroup,
+		mgRootObjectID, 0, 0,
+	)
+	require.NoError(t, err)
+
+	require.Equal(t, 1, len(nodes), "expected nested subscription to be returned as a descendent of mgRoot")
+	require.Contains(t, nodes.IDs(), nestedSubNode.ID)
+}
