@@ -39,7 +39,7 @@ import {
     sortEnvironmentsByName,
 } from '../../utils/environments';
 import { cn } from '../../utils/theme';
-import { DropdownTrigger, optionStyles, popoverContentStyles, selectorIconStyles } from '../DropdownSelector';
+import { DropdownTrigger, optionIconStyles, optionStyles, popoverContentStyles } from '../DropdownSelector';
 import { SelectedEnvironment, SelectorValueTypes } from './types';
 
 const selectedText = (
@@ -171,7 +171,7 @@ const SimpleEnvironmentSelector: React.FC<{
                                 variant={'text'}>
                                 {environmentInfo[type]?.aggregationDisplayName}
                                 <FontAwesomeIcon
-                                    className={selectorIconStyles}
+                                    className={optionIconStyles}
                                     icon={environmentInfo[type]?.icon}
                                     size='sm'
                                 />
@@ -200,7 +200,7 @@ const SimpleEnvironmentSelector: React.FC<{
                                         </TooltipRoot>
                                     </TooltipProvider>
                                     <FontAwesomeIcon
-                                        className={selectorIconStyles}
+                                        className={optionIconStyles}
                                         icon={environmentInfo[environment.type]?.icon}
                                         size='sm'
                                     />

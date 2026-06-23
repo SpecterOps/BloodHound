@@ -40,9 +40,9 @@ const SearchResultItem: FC<{
             dense
             style={style}
             className={cn(
-                'group hover:bg-secondary hover:text-neutral-light-1 hover:dark:bg-secondary-variant-2 hover:dark:text-neutral-dark-1 focus:bg-secondary focus:text-neutral-light-1 focus:dark:bg-secondary-variant-2 focus:dark:text-neutral-dark-1 focus-visible:bg-secondary focus-visible:text-neutral-light-1 focus-visible:dark:bg-secondary-variant-2 focus-visible:dark:text-neutral-dark-1',
+                'group hover:bg-secondary hover:text-common-white hover:dark:bg-secondary-variant-2 hover:dark:text-common-dark focus:bg-secondary focus:text-common-white focus:dark:bg-secondary-variant-2 focus:dark:text-common-dark focus-visible:bg-secondary focus-visible:text-common-white focus-visible:dark:bg-secondary-variant-2 focus-visible:dark:text-common-dark',
                 {
-                    'bg-secondary text-neutral-light-1 dark:bg-secondary-variant-2 dark:text-neutral-dark-1':
+                    'bg-secondary text-common-white dark:bg-secondary-variant-2 dark:text-common-dark':
                         highlightedIndex === index,
                 }
             )}

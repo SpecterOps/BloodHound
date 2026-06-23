@@ -86,7 +86,7 @@ export default {
                 // 'tertiary-variant': 'var(--tertiary-variant)',
 
                 'common-dark': 'var(--common-dark)',
-                // 'common-white': 'var(--common-white)',
+                'common-white': 'var(--common-white)',
 
                 // contrast: 'var(--common-dark)',
 
