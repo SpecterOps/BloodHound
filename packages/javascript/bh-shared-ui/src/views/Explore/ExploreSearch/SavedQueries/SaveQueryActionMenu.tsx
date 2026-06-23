@@ -32,10 +32,7 @@ const SaveQueryActionMenu: FC<SaveQueryActionMenuProps> = ({ saveAs }) => {
 
     return (
         <Popover>
-            <PopoverTrigger
-                asChild
-                aria-label='Show save query options'
-                onClick={(event) => event.stopPropagation()}>
+            <PopoverTrigger asChild aria-label='Show save query options' onClick={(event) => event.stopPropagation()}>
                 <Button variant='secondary' size='small' className='rounded-l-none pl-2 -ml-1'>
                     <AppIcon.CaretDown size={10} />
                 </Button>
