@@ -788,9 +788,10 @@ func FetchKeyVaultReaderCounts(tx graph.Transaction, keyVault *graph.Node) (KeyV
 	return keyVaultReaders, nil
 }
 
-// containsValidEndKinds maps each valid AZContains start node kind to the set of valid end node kinds.
+// directRelationshipKinds maps each valid AZContains start node kind to the set of valid end node kinds
+// where it is a single hop relationship as opposed to a path of multiple relationships.
 // This is derived directly from the ingestion logic in bhce/packages/go/ein/azure.go.
-var containsValidEndKinds = map[graph.Kind]graph.Kinds{
+var directRelationshipKinds = map[graph.Kind]graph.Kinds{
 	azure.Tenant: {
 		azure.App,
 		azure.Device,
@@ -799,10 +800,6 @@ var containsValidEndKinds = map[graph.Kind]graph.Kinds{
 		azure.ServicePrincipal,
 		azure.Subscription,
 		azure.User,
-	},
-	azure.ManagementGroup: {
-		azure.ManagementGroup,
-		azure.Subscription,
 	},
 	azure.Subscription: {
 		azure.ResourceGroup,
@@ -823,7 +820,7 @@ var containsValidEndKinds = map[graph.Kind]graph.Kinds{
 // isDirectDescendent reports whether targetKind is a valid direct AZContains child of sourceKind,
 // according to the containsValidEndKinds mapping derived from the Azure ingestion logic.
 func isDirectDescendent(sourceKind, targetKind graph.Kind) bool {
-	if validEndKinds, ok := containsValidEndKinds[sourceKind]; ok && validEndKinds.ContainsOneOf(targetKind) {
+	if validEndKinds, ok := directRelationshipKinds[sourceKind]; ok && validEndKinds.ContainsOneOf(targetKind) {
 		return true
 	}
 	return false
