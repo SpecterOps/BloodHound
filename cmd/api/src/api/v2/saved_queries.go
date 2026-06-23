@@ -43,6 +43,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	bhUtils "github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/bomenc"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
@@ -381,6 +382,8 @@ func (s Resources) ImportSavedQueries(response http.ResponseWriter, request *htt
 		if savedQueries, err = extractQueriesFromFileFunc(user.ID, request.Body); err != nil {
 			auditLogEntry.Status = model.AuditLogStatusFailure
 			switch {
+			case strings.Contains(err.Error(), "failed to normalize json file"):
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 			case strings.Contains(err.Error(), "failed to unmarshal json file"):
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 			case strings.Contains(err.Error(), "error during zip validation") || strings.Contains(err.Error(), "not a valid zip file"):
@@ -408,7 +411,10 @@ func extractImportQueriesFromJsonFile(userId uuid.UUID, file io.Reader) (model.S
 		savedQueries = make(model.SavedQueries, 0)
 		query        TransferableSavedQuery
 	)
-	if jsonQueryFile, err := io.ReadAll(file); err != nil {
+
+	if normFile, err := bomenc.NormalizeToUTF8(file); err != nil {
+		return model.SavedQueries{}, fmt.Errorf("failed to normalize json file: %w", err)
+	} else if jsonQueryFile, err := io.ReadAll(normFile); err != nil {
 		return savedQueries, err
 	} else if err = json.Unmarshal(jsonQueryFile, &query); err != nil {
 		return savedQueries, fmt.Errorf("failed to unmarshal json file: %w", err)

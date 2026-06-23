@@ -21,6 +21,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/metrics"
 )
 
 type IngestTaskParams struct {
@@ -29,6 +30,18 @@ type IngestTaskParams struct {
 	FileType         model.FileType
 	RequestID        string
 	JobID            int64
+}
+
+// fileFormatFromFileType converts a model.FileType to metrics.IngestFileFormat.
+func fileFormatFromFileType(ft model.FileType) metrics.IngestFileFormat {
+	switch ft.String() {
+	case "json":
+		return metrics.IngestFileFormatJSON
+	case "zip":
+		return metrics.IngestFileFormatZip
+	default:
+		return metrics.IngestFileFormatUnknown
+	}
 }
 
 func CreateIngestTask(ctx context.Context, db UploadData, params IngestTaskParams) (model.IngestTask, error) {
@@ -40,7 +53,23 @@ func CreateIngestTask(ctx context.Context, db UploadData, params IngestTaskParam
 		FileType:         params.FileType,
 	}
 
-	return db.CreateIngestTask(ctx, newIngestTask)
+	if task, err := db.CreateIngestTask(ctx, newIngestTask); err != nil {
+		// Record metric: file ingest task creation failed
+		metrics.RecordIngestTask(
+			metrics.IngestCollectorManual,
+			fileFormatFromFileType(params.FileType),
+			metrics.IngestTaskStatusFailed,
+		)
+		return task, err
+	} else {
+		// Record metric: file ingest task created and saved to disk
+		metrics.RecordIngestTask(
+			metrics.IngestCollectorManual,
+			fileFormatFromFileType(params.FileType),
+			metrics.IngestTaskStatusSuccess,
+		)
+		return task, nil
+	}
 }
 
 func CreateCompositionInfo(ctx context.Context, db UploadData, nodes model.EdgeCompositionNodes, edges model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error) {
