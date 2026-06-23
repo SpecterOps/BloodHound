@@ -44,10 +44,13 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // END OF SHARED
 
             // MAIN / new colors - 1:1 name match in Figma
+            '--primary': light.primary.main /* failsafe until useTheme is removed.*/,
             '--primary-main': light.primary.main,
             '--primary-variant': light.primary.variant,
+            '--secondary': light.secondary.main /* failsafe until useTheme is removed.*/,
             '--secondary-main': light.secondary.main,
             '--secondary-variant': light.secondary.variant,
+            // '--tertiary': light.tertiary.main, /* failsafe until useTheme is removed.*/
             // '--tertiary-main': light.tertiary.main,
             // '--tertiary-variant': light.tertiary.variant,
             '--disabled': light.disabled,
@@ -237,6 +240,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
         '.dark': {
             // MAIN / new colors - 1:1 name match in Figma
+            '--primary': dark.primary.main,
             '--primary-main': dark.primary.main,
             '--primary-variant': dark.primary.variant,
             '--secondary-main': dark.secondary.main,
