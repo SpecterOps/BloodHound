@@ -52,7 +52,10 @@ export const getColumns = (sortOrder?: string | null, handleSort?: (sortBy: stri
                 return <span className='sr-only'>Action Menu</span>;
             },
             cell: () => (
-                <button className='pl-4' tabIndex={0} aria-label='action-menu'>
+                <button
+                    className='rounded-sm pl-4 focus:outline-none focus-visible:focus-ring'
+                    tabIndex={0}
+                    aria-label='Open row actions'>
                     <FontAwesomeIcon icon={faEllipsis} className='rotate-90 dark:text-neutral-light-1' />
                 </button>
             ),
@@ -93,7 +96,10 @@ export const getColumns = (sortOrder?: string | null, handleSort?: (sortBy: stri
                     </span>
                     Tier Zero Principal
                     {sortOrder !== undefined ? (
-                        <button onClick={() => handleSort?.('tierZeroPrincipal')} className='p-2'>
+                        <button
+                            onClick={() => handleSort?.('tierZeroPrincipal')}
+                            className='rounded-sm p-2 focus:outline-none focus-visible:focus-ring'
+                            aria-label='Sort by Tier Zero Principal'>
                             {!sortOrder && <FontAwesomeIcon icon={faCaretDown} color='black' />}
                             {sortOrder === 'asc' && <FontAwesomeIcon icon={faCaretUp} color='dodgerblue' />}
                             {sortOrder === 'desc' && <FontAwesomeIcon icon={faCaretDown} color='dodgerblue' />}
