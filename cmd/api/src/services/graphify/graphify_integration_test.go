@@ -34,9 +34,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
-	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/chow/pkg/payload"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"
@@ -95,7 +95,7 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 	err = db.PopulateExtensionData(ctx)
 	require.NoError(t, err)
 
-	ingestSchema, err := upload.LoadIngestSchema()
+	ingestSchema, err := payload.LoadSchema()
 	require.NoError(t, err)
 
 	//#endregion

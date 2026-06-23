@@ -64,13 +64,22 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.Ingest
 					RegisterSourceKind: s.RegisterSourceKind(s.ctx),
 				}
 
-				if err := processSingleFile(ic.Ctx, data, ic, readOpts); err != nil {
+				if report, err := processSingleFile(ic.Ctx, data, ic, readOpts); err != nil {
 					var (
 						graphifyError errorlist.Error
 						resolutionErr endpoint.ResolutionError
 					)
 
-					if errors.As(err, &graphifyError) {
+					switch {
+					case len(report.CriticalErrors) > 0 || len(report.ValidationErrors) > 0:
+						for _, criticalErr := range report.CriticalErrors {
+							fileData[i].Errors = append(fileData[i].Errors, criticalErr.Message)
+						}
+						for _, valErr := range report.ValidationErrors {
+							fileData[i].Errors = append(fileData[i].Errors, valErr.Error())
+						}
+						errs.Add(err)
+					case errors.As(err, &graphifyError):
 						for _, graphifyErr := range graphifyError.Errors {
 							if ok := errors.As(graphifyErr, &resolutionErr); ok {
 								// Resolution errors are data quality issues. They are surfaced to the user via
@@ -81,7 +90,7 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.Ingest
 								errs.Add(graphifyErr)
 							}
 						}
-					} else {
+					default:
 						fileData[i].Errors = append(fileData[i].Errors, err.Error())
 						errs.Add(err)
 					}

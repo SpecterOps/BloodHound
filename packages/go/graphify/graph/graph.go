@@ -36,7 +36,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
-	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -45,6 +44,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/specterops/chow/pkg/payload"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"
@@ -137,7 +137,7 @@ type CommunityGraphService struct {
 }
 
 func NewCommunityGraphService() (*CommunityGraphService, error) {
-	schema, err := upload.LoadIngestSchema()
+	schema, err := payload.LoadSchema()
 	if err != nil {
 		return nil, fmt.Errorf("error loading ingest schema: %w", err)
 	}
@@ -190,7 +190,8 @@ func (s *CommunityGraphService) InitializeService(ctx context.Context, cfg confi
 }
 
 func (s *CommunityGraphService) Ingest(ctx context.Context, batch *graphify.IngestContext, reader io.ReadSeeker) error {
-	return graphify.ReadFileForIngest(batch, reader, s.readOpts)
+	_, err := graphify.ReadFileForIngest(batch, reader, s.readOpts)
+	return err
 }
 
 func (s *CommunityGraphService) RunAnalysis(ctx context.Context, graphDB graph.Database) error {

@@ -31,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/bomenc"
 	"github.com/specterops/bloodhound/packages/go/errorlist"
+	"github.com/specterops/chow/pkg/payload"
 )
 
 type IngestFileData struct {
@@ -152,7 +153,7 @@ func extractToTempFile(configuration config.Configuration, file *zip.File, tempF
 	}
 }
 
-func processSingleFile(ctx context.Context, fileData IngestFileData, ingestContext *IngestContext, readOpts ReadOptions) error {
+func processSingleFile(ctx context.Context, fileData IngestFileData, ingestContext *IngestContext, readOpts ReadOptions) (payload.ValidationReport, error) {
 	defer measure.ContextLogAndMeasureWithThreshold(ctx, slog.LevelDebug, "processing single file for ingest", slog.String("filepath", fileData.Path))()
 
 	file, err := os.Open(fileData.Path)
@@ -163,7 +164,7 @@ func processSingleFile(ctx context.Context, fileData IngestFileData, ingestConte
 			slog.String("path", fileData.Path),
 			attr.Error(err),
 		)
-		return err
+		return payload.ValidationReport{}, err
 	}
 
 	defer func() {
@@ -180,15 +181,16 @@ func processSingleFile(ctx context.Context, fileData IngestFileData, ingestConte
 		}
 	}()
 
-	if err := ReadFileForIngest(ingestContext, file, readOpts); err != nil {
+	report, err := ReadFileForIngest(ingestContext, file, readOpts)
+	if err != nil {
 		slog.ErrorContext(
 			ctx,
 			"Error reading ingest file",
 			slog.String("storage_path", fileData.Path),
 			attr.Error(err),
 		)
-		return err
+		return report, err
 	}
 
-	return nil
+	return report, nil
 }

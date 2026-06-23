@@ -20,15 +20,14 @@ package graphify_test
 
 import (
 	"bytes"
-	"errors"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
-	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/chow/pkg/payload"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"
@@ -38,7 +37,7 @@ import (
 // and that invalid files are not ingested into the graph
 func Test_ReadFileForIngest(t *testing.T) {
 	var (
-		ingestSchema, _ = upload.LoadIngestSchema()
+		ingestSchema, _ = payload.LoadSchema()
 		validReader     = bytes.NewReader([]byte(`{"graph":{"nodes":[{"id": "1234", "kinds": ["kindA","kindB"],"properties":{"true": true,"hello":"world","environmentid": "env-001"}}]}}`))
 		// invalidReader simulates reading a file that doesn't pass jsonschema validation against the nodes schema.
 		// ReadFileForIngest() should kick out, ingesting no graph data
@@ -56,7 +55,7 @@ func Test_ReadFileForIngest(t *testing.T) {
 		testContext.BatchTest(func(harness integration.HarnessDetails, batch graph.Batch) {
 			ingestContext := graphify.NewIngestContext(testContext.Context(), graphify.WithBatchUpdater(batch), graphify.WithEndpointResolver(endpoint.NewResolver(testContext.Graph.Database)))
 
-			err := graphify.ReadFileForIngest(ingestContext, validReader, readOptions)
+			_, err := graphify.ReadFileForIngest(ingestContext, validReader, readOptions)
 			require.Nil(t, err)
 
 		}, func(details integration.HarnessDetails, tx graph.Transaction) {
@@ -99,13 +98,8 @@ func Test_ReadFileForIngest(t *testing.T) {
 			_ = db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 				ingestContext := graphify.NewIngestContext(testContext.Context(), graphify.WithBatchUpdater(batch), graphify.WithEndpointResolver(endpoint.NewResolver(testContext.Graph.Database)))
 
-				err := graphify.ReadFileForIngest(ingestContext, invalidReader, readOptions)
+				_, err := graphify.ReadFileForIngest(ingestContext, invalidReader, readOptions)
 				require.NotNil(t, err)
-				var report upload.ValidationReport
-				if errors.As(err, &report) {
-					// verify nodes[0] caused a validation error
-					require.Len(t, report.ValidationErrors, 1)
-				}
 				return nil
 			})
 

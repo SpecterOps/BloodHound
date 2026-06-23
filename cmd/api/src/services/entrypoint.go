@@ -42,13 +42,13 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
 	storageService "github.com/specterops/bloodhound/cmd/api/src/services/storage"
-	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/metricsregistration"
 	"github.com/specterops/bloodhound/packages/go/storage"
 	"github.com/specterops/bloodhound/server/modules"
+	"github.com/specterops/chow/pkg/payload"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -152,7 +152,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		return nil, fmt.Errorf("failed to create in-memory cache for graph queries: %w", err)
 	} else if collectorManifests, err := cfg.SaveCollectorManifests(); err != nil {
 		return nil, fmt.Errorf("failed to save collector manifests: %w", err)
-	} else if ingestSchema, err := upload.LoadIngestSchema(); err != nil {
+	} else if ingestSchema, err := payload.LoadSchema(); err != nil {
 		return nil, fmt.Errorf("failed to load OpenGraph schema: %w", err)
 	} else {
 		startDelay := 0 * time.Second

@@ -28,8 +28,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
-	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/cache"
+	"github.com/specterops/chow/pkg/payload"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -114,7 +114,7 @@ type Resources struct {
 	CollectorManifests         config.CollectorManifests
 	Authorizer                 auth.Authorizer
 	Authenticator              api.Authenticator
-	IngestSchema               upload.IngestSchema
+	IngestSchema               payload.Schema
 	FileServiceResolver        storage.FileServiceResolver
 	OpenGraphSchemaService     OpenGraphSchemaService
 	DogTags                    dogtags.Service
@@ -129,7 +129,7 @@ func NewResources(
 	collectorManifests config.CollectorManifests,
 	authorizer auth.Authorizer,
 	authenticator api.Authenticator,
-	ingestSchema upload.IngestSchema,
+	ingestSchema payload.Schema,
 	fileServiceResolver storage.FileServiceResolver,
 	dogtagsService dogtags.Service,
 	openGraphSchemaService OpenGraphSchemaService,
