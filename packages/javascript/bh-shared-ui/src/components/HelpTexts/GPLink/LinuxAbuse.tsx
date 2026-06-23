@@ -23,12 +23,11 @@ const LinuxAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
             <Typography variant='body2'>
-                If you control a GPO linked to a target object, you may make modifications to that GPO in order to
-                inject malicious configurations into it. You could for instance add a Scheduled Task that will then be
-                executed by all of the computers and/or users to which the GPO applies, thus compromising them. Note
-                that some configurations (such as Scheduled Tasks) implement item-level targeting, allowing to precisely
-                target a specific object. GPOs are applied every 90 minutes for standard objects (with a random offset
-                of 0 to 30 minutes), and every 5 minutes for domain controllers.
+                If you control a GPO linked to a target object, you can modify that GPO to inject malicious
+                configuration. For example, you can add an immediate scheduled task that runs on the computers or users
+                that process the GPO, compromising those objects. Some settings, including scheduled tasks, support
+                item-level targeting, which can limit execution to specific objects. GPOs apply every 90 minutes for
+                standard objects (with a random offset of 0 to 30 minutes), and every 5 minutes for domain controllers.
             </Typography>
 
             <Typography variant='body2'>
@@ -36,10 +35,9 @@ const LinuxAbuse: FC<EdgeInfoProps> = () => {
                 <Link target='_blank' rel='noopener noreferrer' href='https://github.com/synacktiv/GroupPolicyBackdoor'>
                     GroupPolicyBackdoor.py
                 </Link>{' '}
-                tool can be used to perform the attack from a Linux machine. First, define a module file that describes
-                the configuration to inject. The following one defines a computer configuration, with an immediate
-                Scheduled Task adding a domain user as local administrator. A filter is defined, so that it only applies
-                to a specific target.
+                tool can perform the attack from Linux. First, define a module file that describes the configuration to
+                inject. The example below defines a computer configuration with an immediate scheduled task that adds a
+                domain user as a local administrator. The filter limits the configuration to a specific target.
             </Typography>
 
             <Typography component={'pre'}>
@@ -57,8 +55,8 @@ const LinuxAbuse: FC<EdgeInfoProps> = () => {
             </Typography>
 
             <Typography variant='body2'>
-                Place the described configuration into the Scheduled_task_add.ini file, and inject it into the target
-                GPO with the 'inject' command.
+                Save this configuration as Scheduled_task_add.ini, then inject it into the target GPO with the 'inject'
+                command.
             </Typography>
             <Typography component={'pre'}>
                 {
@@ -71,7 +69,7 @@ const LinuxAbuse: FC<EdgeInfoProps> = () => {
                 <Link target='_blank' rel='noopener noreferrer' href='https://github.com/Hackndo/pyGPOAbuse'>
                     pyGPOAbuse.py
                 </Link>{' '}
-                can be used for that purpose.
+                can also be used for this purpose.
             </Typography>
         </>
     );

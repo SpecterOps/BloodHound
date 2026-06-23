@@ -23,22 +23,21 @@ const WindowsAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
             <Typography variant='body2'>
-                If you control a GPO linked to a target object, you may make modifications to that GPO in order to
-                inject malicious configurations into it. You could for instance add a Scheduled Task that will then be
-                executed by all of the computers and/or users to which the GPO applies, thus compromising them. Note
-                that some configurations (such as Scheduled Tasks) implement item-level targeting, allowing to precisely
-                target a specific object. GPOs are applied every 90 minutes for standard objects (with a random offset
-                of 0 to 30 minutes), and every 5 minutes for domain controllers. See the references tab for a more
-                detailed write up on this abuse.
+                If you control a GPO linked to a target object, you can modify that GPO to inject malicious
+                configuration. For example, you can add an immediate scheduled task that runs on the computers or users
+                that process the GPO, compromising those objects. Some settings, including scheduled tasks, support
+                item-level targeting, which can limit execution to specific objects. GPOs apply every 90 minutes for
+                standard objects (with a random offset of 0 to 30 minutes), and every 5 minutes for domain controllers.
+                See the References tab for more detail.
             </Typography>
 
             <Typography variant='body2'>
-                On a domain-joined Windows machine, the native Group Policy Management Console (GPMC) may be used to
-                edit GPOs. On a non-domain joined Windows Machine, the{' '}
+                On a domain-joined Windows machine, you can edit GPOs with the native Group Policy Management Console
+                (GPMC). On a non-domain-joined Windows machine, use the{' '}
                 <Link target='_blank' rel='noopener noreferrer' href='https://github.com/CCob/DRSAT'>
                     DRSAT (Disconnected RSAT)
                 </Link>{' '}
-                tool can be used.
+                tool.
             </Typography>
         </>
     );

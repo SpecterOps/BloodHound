@@ -56,7 +56,7 @@ export const DomainMap = {
     issuancepolicies: { displayText: 'IssuancePolicies', kind: ActiveDirectoryNodeKind.IssuancePolicy },
     sites: { displayText: 'Sites', kind: ActiveDirectoryNodeKind.Site },
     siteservers: { displayText: 'SiteServers', kind: ActiveDirectoryNodeKind.SiteServer },
-    sitesubnets: { displayText: 'SiteSubnet', kind: ActiveDirectoryNodeKind.SiteSubnet },
+    sitesubnets: { displayText: 'SiteSubnets', kind: ActiveDirectoryNodeKind.SiteSubnet },
     containers: {
         displayText: 'Containers',
         kind: ActiveDirectoryNodeKind.Container,

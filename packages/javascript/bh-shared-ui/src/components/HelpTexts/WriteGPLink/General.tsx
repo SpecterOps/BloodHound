@@ -23,21 +23,25 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetType, target
     return (
         <>
             <Typography variant='body2'>
-                {groupSpecialFormat(sourceType, sourceName)} has the permissions to modify the gPLink attribute of{' '}
+                {groupSpecialFormat(sourceType, sourceName)} has permission to modify the gPLink attribute of{' '}
                 {targetType} {targetName}.
             </Typography>
 
             <Typography variant='body2'>
-                The ability to alter the gPLink attribute of an object may allow an attacker to apply a malicious Group
-                Policy Object (GPO) to all child user and computer objects. This can be exploited to make said child
-                objects execute arbitrary commands through e.g. an immediate scheduled task, thus compromising them.
+                Modifying an object's gPLink attribute can allow an attacker to link a malicious Group Policy Object
+                (GPO) so it applies to affected users and computers. That GPO can force those objects to execute
+                arbitrary commands, for example through an immediate scheduled task.
             </Typography>
             <Typography variant='body2'>
-                For domain and OU objects, child user/computer objects are the ones belonging to the domain/OU
-                (including the ones located in nested OUs). In the case of a site, the affected objects are the
-                computers that have an IP address included in one of the site's subnets (or computers that do not belong
-                to any site if this is the default site), as well as users connecting to these computers. Note that
-                Server objects associated with the Site should be located in the Site.
+                For domain and OU objects, affected child users and computers include those contained directly within
+                the domain or OU, as well as those in nested OUs. However, unless the GPO link is enforced, some users
+                and computers may not be affected if GPO inheritance is blocked on a containing OU.
+            </Typography>
+            <Typography variant='body2'>
+                For site objects, affected computers include the site's domain controllers, and also computers whose IP
+                addresses fall within one of the site's subnets. If the site is the default site, affected computers
+                also include computers that do not map to any other site. Affected users are those who sign in to the
+                affected computers.
             </Typography>
         </>
     );

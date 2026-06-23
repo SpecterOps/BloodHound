@@ -91,7 +91,7 @@ export const CommonSearches: CommonSearchType[] = [
                 name: 'Map site servers to computers',
                 description: 'Shows SiteServer nodes and the Computer objects they resolve to through ServerIs.',
                 query: `MATCH p = (:Site)-[:Contains]->(:SiteServer)-[:ServerIs]->(:Computer)\nRETURN p\nLIMIT 1000`,
-            }
+            },
         ],
     },
     {

@@ -214,6 +214,7 @@ const References: FC = () => {
             <Link target='_blank' rel='noopener noreferrer' href='https://github.com/CravateRouge/bloodyAD'>
                 https://github.com/CravateRouge/bloodyAD
             </Link>
+            <br />
             <Link
                 target='_blank'
                 rel='noopener noreferrer'

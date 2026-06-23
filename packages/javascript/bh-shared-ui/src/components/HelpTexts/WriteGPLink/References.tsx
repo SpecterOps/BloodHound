@@ -33,6 +33,7 @@ const References: FC = () => {
                 href='https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory'>
                 https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory
             </Link>
+            <br />
             <Link
                 target='_blank'
                 rel='noopener noreferrer'

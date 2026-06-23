@@ -59,7 +59,9 @@ const RelatedKindField = (
             <Box display='flex' flexDirection='row' flexWrap='wrap' justifyContent='flex-start'>
                 <NodeIcon nodeType={relatedKind} />
                 <Box
-                    onClick={() => onSourceNodeSelected({ objectid: id, type: relatedKind, name: name || displayValue || '' })}
+                    onClick={() =>
+                        onSourceNodeSelected({ objectid: id, type: relatedKind, name: name || displayValue || '' })
+                    }
                     style={{ cursor: 'pointer' }}
                     overflow='hidden'
                     textOverflow='ellipsis'
@@ -102,7 +104,7 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (prop
                     {props.serverreferencecomputer &&
                         RelatedKindField(
                             props.handleSourceNodeSelected,
-                            'Server Reference Computer:',
+                            'Referenced Computer:',
                             ActiveDirectoryNodeKind.Computer,
                             props.serverreferencecomputer,
                             props.serverreferencecomputername,

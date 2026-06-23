@@ -25,17 +25,16 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
             return (
                 <>
                     <Typography variant='body2'>
-                        If you do not have control over an existing GPO (or the ability to create new ones), successful
-                        exploitation will require the possibility to add non-existing DNS records to the domain and to
-                        create machine accounts. Alternatively, an already compromised domain-joined machine may be used
-                        to perform the attack. Note that the attack vector implementation is not trivial and will
-                        require some setup.
+                        If you do not control an existing GPO and cannot create one, exploitation requires the ability
+                        to create machine accounts and add DNS records that do not already exist in the domain. An
+                        already compromised domain-joined machine can also be used. Executing this attack vector is not
+                        trivial and requires setup.
                     </Typography>
 
                     <Typography variant='body2'>
-                        From a domain-joined compromised Windows machine, the gPLink manipulation attack vector may be
-                        exploited through Powermad, PowerView and native Windows functionalities. For a detailed outline
-                        of exploit requirements and implementation, you can refer to{' '}
+                        From a compromised domain-joined Windows machine, you can exploit this gPLink manipulation path
+                        with Powermad, PowerView, and native Windows functionality. For requirements and implementation
+                        details, see{' '}
                         <Link
                             target='_blank'
                             rel='noopener noreferrer'
@@ -46,14 +45,14 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
                     </Typography>
 
                     <Typography variant='body2'>
-                        If you have control over an existing GPO (or the ability to create new ones), the attack is
-                        simpler. You can inject a malicious configuration (e.g. an immediate scheduled task) into a
-                        controlled GPO, and then link the GPO to the target domain object through its gPLink attribute.
+                        If you control an existing GPO or can create one, the attack is simpler: inject a malicious
+                        configuration, such as an immediate scheduled task, into a controlled GPO, then link that GPO to
+                        the target domain object through its gPLink attribute.
                     </Typography>
 
                     <Typography variant='body2'>
-                        Be mindful of the number of users and computers that are in the given domain as they all will
-                        attempt to fetch and apply the malicious GPO.
+                        Consider how many users and computers the target domain contains; each affected object will
+                        attempt to retrieve and apply the malicious GPO.
                     </Typography>
                 </>
             );
@@ -61,17 +60,16 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
             return (
                 <>
                     <Typography variant='body2'>
-                        If you do not have control over an existing GPO (or the ability to create new ones), successful
-                        exploitation will require the possibility to add non-existing DNS records to the domain and to
-                        create machine accounts. Alternatively, an already compromised domain-joined machine may be used
-                        to perform the attack. Note that the attack vector implementation is not trivial and will
-                        require some setup.
+                        If you do not control an existing GPO and cannot create one, exploitation requires the ability
+                        to create machine accounts and add DNS records that do not already exist in the domain. An
+                        already compromised domain-joined machine can also be used. Executing this attack vector is not
+                        trivial and requires setup.
                     </Typography>
 
                     <Typography variant='body2'>
-                        From a domain-joined compromised Windows machine, the gPLink manipulation attack vector may be
-                        exploited through Powermad, PowerView and native Windows functionalities. For a detailed outline
-                        of exploit requirements and implementation, you can refer to{' '}
+                        From a compromised domain-joined Windows machine, you can exploit this gPLink manipulation path
+                        with Powermad, PowerView, and native Windows functionality. For requirements and implementation
+                        details, see{' '}
                         <Link
                             target='_blank'
                             rel='noopener noreferrer'
@@ -82,14 +80,14 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
                     </Typography>
 
                     <Typography variant='body2'>
-                        If you have control over an existing GPO (or the ability to create new ones), the attack is
-                        simpler. You can inject a malicious configuration (e.g. an immediate scheduled task) into a
-                        controlled GPO, and then link the GPO to the target OU object through its gPLink attribute.
+                        If you control an existing GPO or can create one, the attack is simpler: inject a malicious
+                        configuration, such as an immediate scheduled task, into a controlled GPO, then link that GPO to
+                        the target OU through its gPLink attribute.
                     </Typography>
 
                     <Typography variant='body2'>
-                        Be mindful of the number of users and computers that are in the given domain as they all will
-                        attempt to fetch and apply the malicious GPO.
+                        Consider how many users and computers the target OU contains; each affected object will attempt
+                        to retrieve and apply the malicious GPO.
                     </Typography>
                 </>
             );
@@ -97,35 +95,34 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
             return (
                 <>
                     <Typography variant='body2'>
-                        If you do not have control over an existing GPO (or the ability to create new ones), successful
-                        exploitation will require the possibility to add non-existing DNS records to the domain and to
-                        create machine accounts. Alternatively, an already compromised domain-joined machine may be used
-                        to perform the attack. Note that the attack vector implementation is not trivial and will
-                        require some setup.
+                        If you do not control an existing GPO and cannot create one, exploitation requires the ability
+                        to create machine accounts and add DNS records that do not already exist in the domain. An
+                        already compromised domain-joined machine can also be used. Executing this attack vector is not
+                        trivial and requires setup.
                     </Typography>
 
                     <Typography variant='body2'>
-                        From a domain-joined compromised Windows machine, the gPLink manipulation attack vector may be
-                        exploited through Powermad, PowerView and native Windows functionalities. For a detailed outline
-                        of exploit requirements and implementation, you can refer to{' '}
+                        From a compromised domain-joined Windows machine, you can exploit this gPLink manipulation path
+                        with Powermad, PowerView, and native Windows functionality. For site-specific requirements and
+                        implementation details, see{' '}
                         <Link
                             target='_blank'
                             rel='noopener noreferrer'
-                            href='https://labs.withsecure.com/publications/ou-having-a-laugh'>
-                            this article
+                            href='https://www.synacktiv.com/publications/site-unseen-enumerating-and-attacking-active-directory-sites'>
+                            the Site Unseen article
                         </Link>
                         .
                     </Typography>
 
                     <Typography variant='body2'>
-                        If you have control over an existing GPO (or the ability to create new ones), the attack is
-                        simpler. You can inject a malicious configuration (e.g. an immediate scheduled task) in that
-                        GPO, and then link the GPO to the target Site through its gPLink attribute.
+                        If you control an existing GPO or can create one, the attack is simpler: inject a malicious
+                        configuration, such as an immediate scheduled task, into a controlled GPO, then link that GPO to
+                        the target site object through its gPLink attribute.
                     </Typography>
 
                     <Typography variant='body2'>
-                        Be mindful of the number of users and computers that are in the given site as they all will
-                        attempt to fetch and apply the malicious GPO.
+                        Consider how many computers and users the target site affects; each affected object will attempt
+                        to retrieve and apply the malicious GPO.
                     </Typography>
                 </>
             );
