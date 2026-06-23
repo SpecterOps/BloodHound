@@ -97,17 +97,17 @@ export const Disabled: Story = {
     render: (args) => (
         <div className='flex flex-col gap-4'>
             <div className='flex items-center gap-2'>
-                <Checkbox id='checkbox-disabled-unchecked' disabled checked={false} {...args} />
+                <Checkbox id='checkbox-disabled-unchecked' checked={false} {...args} disabled />
                 <Label htmlFor='checkbox-disabled-unchecked'>Unchecked disabled</Label>
             </div>
 
             <div className='flex items-center gap-2'>
-                <Checkbox id='checkbox-disabled-checked' disabled checked {...args} />
+                <Checkbox id='checkbox-disabled-checked' checked {...args} disabled />
                 <Label htmlFor='checkbox-disabled-checked'>Checked disabled</Label>
             </div>
 
             <div className='flex items-center gap-2'>
-                <Checkbox id='checkbox-disabled-indeterminate' disabled checked='indeterminate' {...args} />
+                <Checkbox id='checkbox-disabled-indeterminate' checked='indeterminate' {...args} disabled />
                 <Label htmlFor='checkbox-disabled-indeterminate'>Indeterminate disabled</Label>
             </div>
         </div>
@@ -118,18 +118,24 @@ export const Error: Story = {
     render: (args) => (
         <div className='flex flex-col gap-4'>
             <div className='flex items-center gap-2'>
-                <Checkbox id='checkbox-error-unchecked' aria-invalid checked={false} {...args} />
-                <Label htmlFor='checkbox-error-unchecked'>Unchecked error</Label>
+                <Checkbox id='checkbox-error-unchecked' checked={false} {...args} aria-invalid />
+                <Label htmlFor='checkbox-error-unchecked' className='text-error'>
+                    Unchecked error
+                </Label>
             </div>
 
             <div className='flex items-center gap-2'>
-                <Checkbox id='checkbox-error-checked' aria-invalid checked={true} {...args} />
-                <Label htmlFor='checkbox-error-checked'>Checked error</Label>
+                <Checkbox id='checkbox-error-checked' checked={true} {...args} aria-invalid />
+                <Label htmlFor='checkbox-error-checked' className='text-error'>
+                    Checked error
+                </Label>
             </div>
 
             <div className='flex items-center gap-2'>
-                <Checkbox id='checkbox-error-indeterminate' aria-invalid checked='indeterminate' {...args} />
-                <Label htmlFor='checkbox-error-indeterminate'>Indeterminate error</Label>
+                <Checkbox id='checkbox-error-indeterminate' checked='indeterminate' {...args} aria-invalid />
+                <Label htmlFor='checkbox-error-indeterminate' className='text-error'>
+                    Indeterminate error
+                </Label>
             </div>
         </div>
     ),
