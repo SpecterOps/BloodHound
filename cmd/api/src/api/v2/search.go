@@ -169,26 +169,28 @@ func (s *Resources) ListAvailableEnvironments(response http.ResponseWriter, requ
 	}
 
 	// Build response with domain type display names
-	responseData := BuildEnvironmentSelectors(nodes, filterResult.KindToDisplayName)
+	responseData := BuildEnvironmentSelectors(nodes, filterResult.KindToSchemaEnvironment)
 
 	api.WriteBasicResponse(ctx, responseData, http.StatusOK, response)
 }
 
-func BuildEnvironmentSelectors(nodes []*graph.Node, kindToDisplayName map[string]string) model.EnvironmentSelectors {
+func BuildEnvironmentSelectors(nodes []*graph.Node, kindToSchemaEnvironment model.EnvironmentKindsToEnvironment) model.EnvironmentSelectors {
 	envs := make(model.EnvironmentSelectors, 0, len(nodes))
 
 	for _, node := range nodes {
 		name, _ := node.Properties.GetOrDefault(common.Name.String(), graphschema.DefaultMissingName).String()
 		objectID, _ := node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 
-		envType := resolveEnvType(node, kindToDisplayName)
 		collected := resolveCollected(node)
+		envType := resolveEnvType(node, kindToSchemaEnvironment)
+		schemaExtensionID := resolveSchemaExtensionID(node, kindToSchemaEnvironment)
 
 		envs = append(envs, model.EnvironmentSelector{
-			Type:      envType,
-			Name:      name,
-			ObjectID:  objectID,
-			Collected: collected,
+			Type:              envType,
+			Name:              name,
+			ObjectID:          objectID,
+			Collected:         collected,
+			SchemaExtensionID: schemaExtensionID,
 		})
 	}
 
@@ -213,7 +215,7 @@ func resolveCollected(node *graph.Node) bool {
 	return true
 }
 
-func resolveEnvType(node *graph.Node, kindToDisplayName map[string]string) string {
+func resolveEnvType(node *graph.Node, kindToSchemaEnvironment model.EnvironmentKindsToEnvironment) string {
 	// TODO: Remove hardcoded built-in types once they are saved in DB and not CUE
 	if node.Kinds.ContainsOneOf(azure.Tenant) {
 		return "azure"
@@ -225,18 +227,35 @@ func resolveEnvType(node *graph.Node, kindToDisplayName map[string]string) strin
 	// For custom extensions, use the display name from the schema extension
 	// Note: Nodes should only have one environment kind. In the edge case where there are multiple, we take the first.
 	for _, kind := range node.Kinds {
-		if displayName, ok := kindToDisplayName[kind.String()]; ok {
-			return displayName
+		if schemaEnvironment, ok := kindToSchemaEnvironment[kind.String()]; ok {
+			return schemaEnvironment.SchemaExtensionDisplayName
 		}
 	}
 
 	return ""
 }
 
-// EnvironmentFilterResult contains the filter criteria and display name mapping for environments
+func resolveSchemaExtensionID(node *graph.Node, kindToSchemaEnvironment model.EnvironmentKindsToEnvironment) *int32 {
+	// TODO: Remove hardcoded built-in types once they are saved in DB and not CUE
+	isBuiltinEnvironment := node.Kinds.ContainsOneOf(azure.Tenant, ad.Domain)
+	if isBuiltinEnvironment {
+		return nil
+	}
+
+	// Note: Nodes should only have one environment kind. In the edge case where there are multiple, we take the first.
+	for _, kind := range node.Kinds {
+		if schemaEnvironment, ok := kindToSchemaEnvironment[kind.String()]; ok {
+			return &schemaEnvironment.SchemaExtensionId
+		}
+	}
+
+	return nil
+}
+
+// EnvironmentFilterResult contains the filter criteria environment data for mapping environments
 type EnvironmentFilterResult struct {
-	FilterCriteria    graph.Criteria
-	KindToDisplayName map[string]string
+	FilterCriteria          graph.Criteria
+	KindToSchemaEnvironment model.EnvironmentKindsToEnvironment
 }
 
 // ErrInvalidQueryParameters is an error that is used to wrap other errors when the query parameters are invalid
@@ -251,7 +270,7 @@ func BuildEnvironmentFilter(ctx context.Context, db database.Database, openGraph
 	if err != nil {
 		return result, err
 		// Fetch schema environments and extension display names
-	} else if environmentKinds, envKindToExtensionDisplayName, err := openGraphSchemaService.GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx, !openGraphFlag.Enabled); err != nil {
+	} else if environmentKinds, envKindToExtension, err := openGraphSchemaService.GetEnvironmentKindsAndSchemaEnvironmentData(ctx, !openGraphFlag.Enabled); err != nil {
 		return result, err
 	} else {
 		// Build base filter criteria
@@ -261,7 +280,7 @@ func BuildEnvironmentFilter(ctx context.Context, db database.Database, openGraph
 		}
 
 		result.FilterCriteria = filterCriteria
-		result.KindToDisplayName = envKindToExtensionDisplayName
+		result.KindToSchemaEnvironment = envKindToExtension
 		return result, nil
 	}
 }
