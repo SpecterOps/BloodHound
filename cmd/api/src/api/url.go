@@ -21,7 +21,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/packages/go/headers"
 )
 
@@ -55,7 +55,7 @@ func URLJoinPath(target url.URL, extensions ...string) url.URL {
 }
 
 func RedirectToLoginURL(response http.ResponseWriter, request *http.Request, errorMessage string) {
-	hostURL := *ctx.FromRequest(request).Host
+	hostURL := *bhctx.FromRequest(request).Host
 	redirectURL := URLJoinPath(hostURL, UserLoginPath)
 
 	// Optionally, include the error message as a query parameter or in session storage

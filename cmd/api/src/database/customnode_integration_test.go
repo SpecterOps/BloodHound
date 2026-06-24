@@ -147,24 +147,21 @@ func TestCreateCustomNodeKinds(t *testing.T) {
 
 func TestGetCustomNodeKinds(t *testing.T) {
 	tests := []struct {
-		name    string
-		setup   func() IntegrationTestSuite
-		wantLen int
-		wantErr error
+		name        string
+		setup       func() (IntegrationTestSuite, int)
+		baselineLen int
+		wantLen     int
+		wantErr     error
 	}{
 		{
-			name: "success - returns empty list when none exist",
-			setup: func() IntegrationTestSuite {
-				return setupIntegrationTestSuite(t)
-			},
-			wantLen: 0,
-			wantErr: nil,
-		},
-		{
 			name: "success - returns all created kinds",
-			setup: func() IntegrationTestSuite {
+			setup: func() (IntegrationTestSuite, int) {
 				testSuite := setupIntegrationTestSuite(t)
-				_, err := testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{
+
+				baselineKinds, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context, nil)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{
 					{
 						KindName: "KindOne",
 						Config: model.CustomNodeKindConfig{
@@ -179,7 +176,7 @@ func TestGetCustomNodeKinds(t *testing.T) {
 					},
 				})
 				require.NoError(t, err)
-				return testSuite
+				return testSuite, len(baselineKinds)
 			},
 			wantLen: 2,
 			wantErr: nil,
@@ -188,7 +185,7 @@ func TestGetCustomNodeKinds(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			testSuite := testCase.setup()
+			testSuite, baselineLen := testCase.setup()
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
 			kinds, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context)
@@ -196,7 +193,7 @@ func TestGetCustomNodeKinds(t *testing.T) {
 				assert.EqualError(t, err, testCase.wantErr.Error())
 			} else {
 				require.NoError(t, err)
-				assert.Len(t, kinds, testCase.wantLen)
+				assert.Len(t, kinds, testCase.wantLen+baselineLen)
 			}
 		})
 	}

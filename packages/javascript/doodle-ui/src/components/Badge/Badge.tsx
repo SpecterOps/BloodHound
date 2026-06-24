@@ -31,6 +31,10 @@ const BadgeVariants = cva('inline-flex items-center justify-center rounded text-
             orange: '',
             green: '',
             blue: '',
+            error: '',
+            warning: '',
+            success: '',
+            disabled: '',
         },
         iconPosition: {
             left: 'flex-row',
@@ -50,6 +54,10 @@ const BadgeVariants = cva('inline-flex items-center justify-center rounded text-
         { variant: 'fill', color: 'orange', className: 'bg-badge-orange-fill' },
         { variant: 'fill', color: 'green', className: 'bg-badge-green-fill' },
         { variant: 'fill', color: 'blue', className: 'bg-badge-blue-fill' },
+        { variant: 'fill', color: 'error', className: 'bg-status-error-main' },
+        { variant: 'fill', color: 'warning', className: 'bg-status-warning-main' },
+        { variant: 'fill', color: 'success', className: 'bg-status-success-main' },
+        { variant: 'fill', color: 'disabled', className: 'bg-neutral-500' },
 
         // Outline variants
         {
@@ -86,6 +94,26 @@ const BadgeVariants = cva('inline-flex items-center justify-center rounded text-
             variant: 'outline',
             color: 'blue',
             className: 'border-badge-blue-outline [&>span>svg]:text-badge-blue-outline',
+        },
+        {
+            variant: 'outline',
+            color: 'error',
+            className: 'border-status-error-main [&>span>svg]:text-status-error-main',
+        },
+        {
+            variant: 'outline',
+            color: 'warning',
+            className: 'border-status-warning-main [&>span>svg]:text-status-warning-main',
+        },
+        {
+            variant: 'outline',
+            color: 'success',
+            className: 'border-status-success-main [&>span>svg]:text-status-success-main',
+        },
+        {
+            variant: 'outline',
+            color: 'disabled',
+            className: 'border-neutral-500 [&>span>svg]:text-neutral-500',
         },
     ],
     defaultVariants: {

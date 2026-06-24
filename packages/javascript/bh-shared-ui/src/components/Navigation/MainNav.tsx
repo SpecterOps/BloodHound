@@ -69,7 +69,9 @@ const MainNavListItem: FC<{
     const labelElement = (
         <span className='whitespace-nowrap flex items-center gap-x-2'>
             <span data-testid='global_nav-item-label-icon'>{icon}</span>
-            <span data-testid='global_nav-item-label-text'>{label}</span>
+            <span data-testid='global_nav-item-label-text' aria-label={label}>
+                {label}
+            </span>
         </span>
     );
 
@@ -197,8 +199,8 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                     'bg-neutral-4 dark:bg-neutral-5',
                     'hover:bg-[#B2B8BE] dark:hover:bg-neutral-3',
                     'active:ring-0 active:bg-[#C0C6CB] dark:active:bg-neutral-2',
-                    'focus:text-[#121212] dark:focus:text-white',
-                    'focus:ring-2 focus:ring-offset-2 focus:ring-secondary dark:focus:ring-offset-[#1F1F1F]',
+                    'focus-visible:text-[#121212] dark:focus-visible:text-white',
+                    'focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-focus focus-visible:ring-offset-focus-offset',
                     {
                         'rotate-180 left-[16.75rem]': isExpanded,
                         'left-[2.75rem]': !isExpanded,

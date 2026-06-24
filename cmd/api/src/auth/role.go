@@ -59,7 +59,7 @@ func Roles() map[string]RoleTemplate {
 			Description: "Used for data collection clients, can post data but cannot read data",
 			Permissions: model.Permissions{
 				permissions.ClientsTasking,
-				permissions.GraphDBIngest,
+				permissions.GraphDBIngestManage,
 			},
 		},
 		RoleAuditor: {
@@ -97,7 +97,7 @@ func Roles() map[string]RoleTemplate {
 				permissions.ClientsRead,
 				permissions.ClientsTasking,
 				permissions.CollectionManageJobs,
-				permissions.GraphDBIngest,
+				permissions.GraphDBIngestManage,
 				permissions.GraphDBWrite,
 				permissions.GraphDBRead,
 				permissions.SavedQueriesRead,

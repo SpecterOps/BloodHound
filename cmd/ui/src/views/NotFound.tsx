@@ -15,8 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, AlertTitle } from '@mui/material';
+import { useAppName } from 'bh-shared-ui';
 import { Button } from 'doodle-ui';
 import { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import LoginPage from 'src/components/LoginPage';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
@@ -26,6 +28,7 @@ import { useAppSelector } from 'src/store';
 const NotFound: React.FC = () => {
     const navigate = useNavigate();
     const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const appName = useAppName();
 
     // Redirect to login if unauthenticated
     useEffect(() => {
@@ -38,6 +41,9 @@ const NotFound: React.FC = () => {
 
     return (
         <LoginPage>
+            <Helmet>
+                <title>Page Not Found | {appName}</title>
+            </Helmet>
             <div className='flex flex-col gap-6'>
                 <Alert severity='warning'>
                     <AlertTitle>404 - Page not found</AlertTitle>

@@ -1,0 +1,34 @@
+{
+    "name": "bh-playwright-testing",
+    "description": "Shared Playwright testing utilities for BloodHound UI packages (axe scans, auth bootstrap, route stubs, theme matrix helpers)",
+    "type": "module",
+    "private": true,
+    "scripts": {
+        "test": "echo \"No tests for bh-playwright-testing\"",
+        "check-types": "tsc --noEmit --pretty",
+        "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "format": "prettier --write \"src/**/*.@(ts|md|json)\"",
+        "check-format": "prettier --list-different \"src/**/*.@(ts|md|json)\""
+    },
+    "exports": {
+        ".": "./src/index.ts",
+        "./axe": "./src/axe.ts",
+        "./themes": "./src/themes.ts",
+        "./auth": "./src/auth.ts",
+        "./stubs/graph-has-data": "./src/stubs/graph-has-data.ts"
+    },
+    "devDependencies": {
+        "@axe-core/playwright": "^4.11.3",
+        "@eslint/eslintrc": "^3.3.5",
+        "@eslint/js": "^10.0.1",
+        "@playwright/test": "^1.59.1",
+        "allure-playwright": "^3.4.3",
+        "axe-core": "^4.11.4",
+        "dotenv": "^17.4.2",
+        "eslint": "^9.26.0",
+        "eslint-config-prettier": "^9.1.0",
+        "playwright-core": "^1.59.1",
+        "prettier": "^3.2.5",
+        "typescript": "^5.9.3"
+    }
+}

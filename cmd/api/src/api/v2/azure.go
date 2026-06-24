@@ -28,7 +28,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	bhCtx "github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
@@ -78,15 +78,13 @@ var (
 	ErrParameterRelatedEntityType = errors.New("invalid related entity type")
 )
 
-func graphRelatedEntityType(request *http.Request, db database.Database, graphDb graph.Database, entityType, objectID string) (any, int, *api.ErrorWrapper) {
-	ctx := request.Context()
+func graphRelatedEntityType(request *http.Request, graphDb graph.Database, primaryDisplayKinds graphschema.PrimaryDisplayKinds, options relatedEntityTypeOptions) (any, int, *api.ErrorWrapper) {
+	var (
+		ctx      = request.Context()
+		objectID = options.sourceObjectID
+	)
 
-	primaryDisplayKinds, err := db.GetPrimaryDisplayKinds(request.Context())
-	if err != nil {
-		return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching primary display kinds: %v", err), request)
-	}
-
-	switch relatedEntityType := azure.RelatedEntityType(entityType); relatedEntityType {
+	switch relatedEntityType := azure.RelatedEntityType(options.relatedEntityString); relatedEntityType {
 	case azure.RelatedEntityTypeDescendentUsers, azure.RelatedEntityTypeDescendentGroups,
 		azure.RelatedEntityTypeDescendentManagementGroups, azure.RelatedEntityTypeDescendentSubscriptions,
 		azure.RelatedEntityTypeDescendentResourceGroups, azure.RelatedEntityTypeDescendentVirtualMachines,
@@ -98,116 +96,116 @@ func graphRelatedEntityType(request *http.Request, db database.Database, graphDb
 		azure.RelatedEntityTypeDescendentWebApps,
 		azure.RelatedEntityTypeDescendentAutomationAccounts,
 		azure.RelatedEntityTypeDescendentLogicApps, azure.RelatedEntityTypeDescendentFunctionApps:
-		if descendents, err := azure.ListEntityDescendentPaths(ctx, graphDb, relatedEntityType, objectID); err != nil {
-			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+		if descendents, err := azure.ListEntityDescendentPaths(ctx, graphDb, relatedEntityType, options.sourceKind, objectID); err != nil {
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", options.relatedEntityString, err), request)
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, descendents), descendents.Len(), nil
 		}
 
 	case azure.RelatedEntityTypeActiveAssignments:
 		if assignments, err := azure.ListEntityActiveAssignmentPaths(ctx, graphDb, objectID); err != nil {
-			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", options.relatedEntityString, err), request)
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, assignments), assignments.Len(), nil
 		}
 
 	case azure.RelatedEntityTypePIMAssignments:
 		if assignments, err := azure.ListEntityPIMAssignmentPaths(ctx, graphDb, objectID); err != nil {
-			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", options.relatedEntityString, err), request)
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, assignments), assignments.Len(), nil
 		}
 	case azure.RelatedEntityTypeRoleApprovers:
 		if approvers, err := azure.ListRoleApproverPaths(ctx, graphDb, objectID); err != nil {
-			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", options.relatedEntityString, err), request)
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, approvers), approvers.Len(), nil
 		}
 	case azure.RelatedEntityTypeVaultKeyReaders, azure.RelatedEntityTypeVaultSecretReaders, azure.RelatedEntityTypeVaultCertReaders, azure.RelatedEntityTypeVaultAllReaders:
 		if groupMembers, err := azure.ListKeyVaultReaderPaths(ctx, graphDb, relatedEntityType, objectID); err != nil {
-			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", options.relatedEntityString, err), request)
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, groupMembers), groupMembers.Len(), nil
 		}
 
 	case azure.RelatedEntityTypeGroupMembers:
 		if groupMembers, err := azure.ListEntityGroupMemberPaths(ctx, graphDb, objectID); err != nil {
-			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", options.relatedEntityString, err), request)
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, groupMembers), groupMembers.Len(), nil
 		}
 
 	case azure.RelatedEntityTypeGroupMembership:
 		if groupMembership, err := azure.ListEntityGroupMembershipPaths(ctx, graphDb, objectID); err != nil {
-			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", options.relatedEntityString, err), request)
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, groupMembership), groupMembership.Len(), nil
 		}
 
 	case azure.RelatedEntityTypeRoles:
 		if userRoles, err := azure.ListEntityRolePaths(ctx, graphDb, objectID); err != nil {
-			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", options.relatedEntityString, err), request)
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, userRoles), userRoles.Len(), nil
 		}
 
 	case azure.RelatedEntityTypeEligibleAndApproverRoles:
 		if eligibleAndApproverRoles, err := azure.ListEntityEligibleAndApproverRolePaths(ctx, graphDb, objectID); err != nil {
-			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", options.relatedEntityString, err), request)
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, eligibleAndApproverRoles), eligibleAndApproverRoles.Len(), nil
 		}
 
 	case azure.RelatedEntityTypeOutboundExecutionPrivileges:
 		if executionPrivileges, err := azure.ListEntityExecutionPrivilegePaths(ctx, graphDb, objectID, graph.DirectionOutbound); err != nil {
-			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", options.relatedEntityString, err), request)
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, executionPrivileges), executionPrivileges.Len(), nil
 		}
 
 	case azure.RelatedEntityTypeInboundExecutionPrivileges:
 		if executionPrivileges, err := azure.ListEntityExecutionPrivilegePaths(ctx, graphDb, objectID, graph.DirectionInbound); err != nil {
-			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", options.relatedEntityString, err), request)
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, executionPrivileges), executionPrivileges.Len(), nil
 		}
 
 	case azure.RelatedEntityTypeOutboundAbusableAppRoleAssignments:
 		if objectControl, err := azure.ListEntityAbusableAppRoleAssignmentsPaths(ctx, graphDb, objectID, graph.DirectionOutbound); err != nil {
-			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", options.relatedEntityString, err), request)
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, objectControl), objectControl.Len(), nil
 		}
 
 	case azure.RelatedEntityTypeInboundAbusableAppRoleAssignments:
 		if objectControl, err := azure.ListEntityAbusableAppRoleAssignmentsPaths(ctx, graphDb, objectID, graph.DirectionInbound); err != nil {
-			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", options.relatedEntityString, err), request)
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, objectControl), objectControl.Len(), nil
 		}
 
 	case azure.RelatedEntityTypeOutboundControl:
 		if objectControl, err := azure.ListEntityObjectControlPaths(ctx, graphDb, objectID, graph.DirectionOutbound); err != nil {
-			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", options.relatedEntityString, err), request)
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, objectControl), objectControl.Len(), nil
 		}
 
 	case azure.RelatedEntityTypeInboundControl:
 		if objectControl, err := azure.ListEntityObjectControlPaths(ctx, graphDb, objectID, graph.DirectionInbound); err != nil {
-			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", options.relatedEntityString, err), request)
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, objectControl), objectControl.Len(), nil
 		}
 	case azure.RelatedEntityTypeFederatedIdentityCredentials:
 		if fics, err := azure.ListAppFederatedIdentityCredentialPaths(ctx, graphDb, objectID); err != nil {
-			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", options.relatedEntityString, err), request)
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, fics), fics.Len(), nil
 		}
 
 	default:
-		return nil, 0, api.BuildErrorResponse(http.StatusNotFound, fmt.Sprintf("no matching related entity list type for %s", entityType), request)
+		return nil, 0, api.BuildErrorResponse(http.StatusNotFound, fmt.Sprintf("no matching related entity list type for %s", options.relatedEntityString), request)
 	}
 }
 
@@ -221,13 +219,24 @@ func nodeSetToOrderedSlice(nodeSet graph.NodeSet) []*graph.Node {
 	return nodes
 }
 
-func listRelatedEntityType(ctx context.Context, db graph.Database, primaryDisplayKinds graphschema.PrimaryDisplayKinds, entityType, objectID string, skip, limit int) ([]azure.Node, int, error) {
+type relatedEntityTypeOptions struct {
+	relatedEntityString string
+	sourceKind          graph.Kind
+	sourceObjectID      string
+	skip                int
+	limit               int
+}
+
+func listRelatedEntityType(ctx context.Context, db graph.Database, primaryDisplayKinds graphschema.PrimaryDisplayKinds, options relatedEntityTypeOptions) ([]azure.Node, int, error) {
 	var (
-		nodeSet graph.NodeSet
-		err     error
+		nodeSet  graph.NodeSet
+		err      error
+		objectID = options.sourceObjectID
+		skip     = options.skip
+		limit    = options.limit
 	)
 	// NOTE: All skip/limit passed to lower level queries is currently hardcoded to 0 so we can get the full count of the dataset for skip/limit tracking
-	switch relatedEntityType := azure.RelatedEntityType(entityType); relatedEntityType {
+	switch relatedEntityType := azure.RelatedEntityType(options.relatedEntityString); relatedEntityType {
 	case azure.RelatedEntityTypeDescendentUsers, azure.RelatedEntityTypeDescendentGroups,
 		azure.RelatedEntityTypeDescendentManagementGroups, azure.RelatedEntityTypeDescendentSubscriptions,
 		azure.RelatedEntityTypeDescendentResourceGroups, azure.RelatedEntityTypeDescendentVirtualMachines,
@@ -239,7 +248,7 @@ func listRelatedEntityType(ctx context.Context, db graph.Database, primaryDispla
 		azure.RelatedEntityTypeDescendentWebApps,
 		azure.RelatedEntityTypeDescendentLogicApps, azure.RelatedEntityTypeDescendentFunctionApps,
 		azure.RelatedEntityTypeDescendentAutomationAccounts:
-		if nodeSet, err = azure.ListEntityDescendents(ctx, db, relatedEntityType, objectID, 0, 0); err != nil {
+		if nodeSet, err = azure.ListEntityDescendents(ctx, db, relatedEntityType, options.sourceKind, objectID, 0, 0); err != nil {
 			return nil, 0, err
 		}
 	case azure.RelatedEntityTypeActiveAssignments:
@@ -332,7 +341,7 @@ func listRelatedEntityType(ctx context.Context, db graph.Database, primaryDispla
 	return azure.FromGraphNodes(primaryDisplayKinds, s), nodeCount, nil
 }
 
-func (s *Resources) GetAZRelatedEntities(ctx context.Context, response http.ResponseWriter, request *http.Request, objectID string) {
+func (s *Resources) GetAZRelatedEntities(ctx context.Context, response http.ResponseWriter, request *http.Request, objectID string, sourceKind graph.Kind) {
 	var (
 		queryParams = request.URL.Query()
 		returnType  = queryParams.Get(relatedEntityReturnTypeQueryParameterName)
@@ -351,16 +360,28 @@ func (s *Resources) GetAZRelatedEntities(ctx context.Context, response http.Resp
 		api.WriteErrorResponse(ctx, ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 	} else if limit, err := ParseLimitQueryParameter(queryParams, 100); err != nil {
 		api.WriteErrorResponse(ctx, ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
+	} else if primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(ctx); err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else if returnType == relatedEntityReturnTypeGraph {
-		if data, _, apiErr := graphRelatedEntityType(request, s.DB, s.Graph, relatedEntityType, objectID); apiErr != nil {
+		options := relatedEntityTypeOptions{
+			relatedEntityString: relatedEntityType,
+			sourceObjectID:      objectID,
+			sourceKind:          sourceKind,
+		}
+		if data, _, apiErr := graphRelatedEntityType(request, s.Graph, primaryDisplayKinds, options); apiErr != nil {
 			api.WriteErrorResponse(ctx, apiErr, response)
 		} else {
 			api.WriteJSONResponse(ctx, data, http.StatusOK, response)
 		}
-	} else if primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
-		api.HandleDatabaseError(request, response, err)
 	} else {
-		if nodes, count, err := listRelatedEntityType(ctx, s.Graph, primaryDisplayKinds, relatedEntityType, objectID, skip, limit); err != nil {
+		options := relatedEntityTypeOptions{
+			relatedEntityString: relatedEntityType,
+			sourceObjectID:      objectID,
+			sourceKind:          sourceKind,
+			skip:                skip,
+			limit:               limit,
+		}
+		if nodes, count, err := listRelatedEntityType(ctx, s.Graph, primaryDisplayKinds, options); err != nil {
 			if errors.Is(err, ErrParameterSkip) {
 				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, skip), request), response)
 			} else if errors.Is(err, ErrParameterRelatedEntityType) {
@@ -437,7 +458,7 @@ func (s *Resources) GetAZEntity(response http.ResponseWriter, request *http.Requ
 		entityType  = requestVars[entityTypePathParameterName]
 	)
 
-	user, isUser := auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx)
+	user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx)
 	if !isUser {
 		slog.Error("Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
@@ -457,7 +478,7 @@ func (s *Resources) GetAZEntity(response http.ResponseWriter, request *http.Requ
 	} else if !hasAccess {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
 	} else if relatedEntityTypeStr := queryVars.Get(relatedEntityTypeQueryParameterName); relatedEntityTypeStr != "" {
-		s.GetAZRelatedEntities(request.Context(), response, request, objectID)
+		s.GetAZRelatedEntities(request.Context(), response, request, objectID, azKind)
 	} else if includeCounts, err := api.ParseOptionalBool(queryVars.Get(api.QueryParameterIncludeCounts), true); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 	} else if entityInformation, err := GetAZEntityInformation(request.Context(), s.DB, s.Graph, entityType, objectID, includeCounts); err != nil {

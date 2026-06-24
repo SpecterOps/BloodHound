@@ -18,7 +18,7 @@
 # Global build args
 ################
 ARG SHARPHOUND_VERSION=v2.13.0
-ARG AZUREHOUND_VERSION=v2.12.1
+ARG AZUREHOUND_VERSION=v2.12.2
 
 ########
 # Package other assets
@@ -61,7 +61,7 @@ WORKDIR /tmp/azurehound/artifacts
 RUN 7z a -tzip -mx9 azurehound-${AZUREHOUND_VERSION}.zip *
 RUN sha256sum azurehound-${AZUREHOUND_VERSION}.zip > azurehound-${AZUREHOUND_VERSION}.zip.sha256
 
-FROM docker.io/library/golang:1.26.2-alpine3.22
+FROM docker.io/library/golang:1.26.4-alpine3.22
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 ENV GOFLAGS="-buildvcs=false"

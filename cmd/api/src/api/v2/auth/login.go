@@ -26,8 +26,8 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
@@ -59,7 +59,7 @@ func (s LoginResource) loginSecret(loginRequest api.LoginRequest, response http.
 			slog.ErrorContext(
 				request.Context(),
 				"Error during authentication for request ID",
-				slog.String("request_id", ctx.RequestID(request)),
+				slog.String("request_id", bhctx.RequestID(request)),
 				attr.Error(err),
 			)
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
@@ -109,7 +109,7 @@ func (s LoginResource) patchEULAAcceptance(ctx context.Context, username string)
 }
 
 func (s LoginResource) Logout(response http.ResponseWriter, request *http.Request) {
-	bhCtx := ctx.FromRequest(request)
+	bhCtx := bhctx.FromRequest(request)
 	s.authenticator.Logout(request.Context(), bhCtx.AuthCtx.Session)
 	redirectURL := api.URLJoinPath(*bhCtx.Host, api.UserInterfacePath)
 	http.Redirect(response, request, redirectURL.String(), http.StatusOK)

@@ -17,12 +17,12 @@
 package v2
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
 	"mime"
 	"net/http"
-	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -31,19 +31,22 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	ingestModel "github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/specterops/bloodhound/packages/go/storage"
 
 	"github.com/specterops/bloodhound/cmd/api/src/services/job"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
-const FileUploadJobIdPathParameterName = "file_upload_job_id"
-const FileUploadFileNameHeader = "X-File-Upload-Name"
+const (
+	FileUploadJobIdPathParameterName = "file_upload_job_id"
+	FileUploadFileNameHeader         = "X-File-Upload-Name"
+)
 
 func (s Resources) ListIngestJobs(response http.ResponseWriter, request *http.Request) {
 	var (
@@ -115,7 +118,7 @@ func (s Resources) ListIngestJobs(response http.ResponseWriter, request *http.Re
 
 func (s Resources) StartIngestJob(response http.ResponseWriter, request *http.Request) {
 	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Starting new ingest job")()
-	reqCtx := ctx.Get(request.Context())
+	reqCtx := bhctx.Get(request.Context())
 
 	if user, valid := auth.GetUserFromAuthCtx(reqCtx.AuthCtx); !valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
@@ -128,7 +131,7 @@ func (s Resources) StartIngestJob(response http.ResponseWriter, request *http.Re
 
 func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http.Request) {
 	var (
-		requestId   = ctx.FromRequest(request).RequestID
+		requestId   = bhctx.FromRequest(request).RequestID
 		jobIdString = mux.Vars(request)[FileUploadJobIdPathParameterName]
 		validator   = upload.NewIngestValidator(s.IngestSchema)
 		fileName    = request.Header.Get(FileUploadFileNameHeader)
@@ -146,7 +149,9 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 		api.HandleDatabaseError(request, response, err)
 	} else if ingestJob.Status != model.JobStatusRunning {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "job must be in running status to attach files", request), response)
-	} else if ingestTaskParams, err := upload.SaveIngestFile(s.Config.TempDirectory(), request, validator, ingestJob.ID); errors.Is(err, upload.ErrInvalidJSON) {
+	} else if ingestFileService, err := s.FileServiceResolver.Resolve(storage.FileServiceIngest); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unable to resolve file service for working directories", request), response)
+	} else if ingestTaskParams, err := upload.SaveIngestFile(request.Context(), ingestFileService, request, validator, ingestJob.ID); errors.Is(err, upload.ErrInvalidJSON) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 	} else if report, ok := err.(upload.ValidationReport); ok {
 		var (
@@ -161,7 +166,7 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 		e := &api.ErrorWrapper{
 			HTTPStatus: http.StatusBadRequest,
 			Timestamp:  time.Now(),
-			RequestID:  ctx.FromRequest(request).RequestID,
+			RequestID:  bhctx.FromRequest(request).RequestID,
 			Errors:     errDetails,
 		}
 
@@ -169,7 +174,10 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 	} else if _, err = upload.CreateIngestTask(request.Context(), s.DB, upload.IngestTaskParams{Filename: ingestTaskParams.Filename, ProvidedFileName: checkFileName(fileName, ingestTaskParams.FileType), FileType: ingestTaskParams.FileType, RequestID: requestId, JobID: int64(jobID)}); err != nil {
-		if removeErr := os.Remove(ingestTaskParams.Filename); removeErr != nil {
+		deleteContext, cancel := context.WithTimeout(context.WithoutCancel(request.Context()), 30*time.Second)
+		defer cancel()
+
+		if removeErr := ingestFileService.DeleteFile(deleteContext, ingestTaskParams.Filename); removeErr != nil {
 			slog.WarnContext(request.Context(), "Failed to clean up file after task creation error", attr.Error(removeErr))
 		}
 		api.HandleDatabaseError(request, response, err)
@@ -224,9 +232,7 @@ func IsValidContentTypeForUpload(header http.Header) bool {
 }
 
 func (s Resources) GetCompletedTasks(response http.ResponseWriter, request *http.Request) {
-	var (
-		jobIdString = mux.Vars(request)[FileUploadJobIdPathParameterName]
-	)
+	jobIdString := mux.Vars(request)[FileUploadJobIdPathParameterName]
 
 	if jobID, err := strconv.Atoi(jobIdString); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)

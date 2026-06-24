@@ -2613,11 +2613,11 @@
           "200": {
             "$ref": "#/components/responses/binary-response"
           },
-          "400": {
-            "$ref": "#/components/responses/bad-request"
-          },
           "401": {
             "$ref": "#/components/responses/unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
           },
           "500": {
             "$ref": "#/components/responses/internal-server-error"
@@ -13978,6 +13978,15 @@
                         "last_complete_analysis_at": {
                           "type": "string",
                           "format": "date-time"
+                        },
+                        "last_analysis_run_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "next_scheduled_analysis_at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "The next time a scheduled analysis will run. Note this field is Enterprise-Only."
                         }
                       }
                     }
@@ -14004,7 +14013,7 @@
       "get": {
         "operationId": "GetAnalysisRequest",
         "summary": "Gets analysis request information",
-        "description": "Flags the API to request the information of an analysis request.",
+        "description": "Returns the current analysis request information. Always returns 200 OK with\nthe request details. When no request is pending, returns a zero-valued response\nwith empty strings, false booleans, null arrays, and zero timestamp.\n",
         "tags": [
           "Datapipe",
           "Community",
@@ -14012,32 +14021,43 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "OK. Returns analysis request details if one exists, or a zero-valued\nresponse if no request is pending (requested_by and request_type will be\nempty strings, requested_at will be \"0001-01-01T00:00:00Z\", booleans will\nbe false, and arrays will be null).\n",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "requested_by": {
-                      "type": "string"
-                    },
-                    "request_type": {
-                      "type": "string"
-                    },
-                    "requested_at": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "delete_all_graph": {
-                      "type": "boolean"
-                    },
-                    "delete_sourceless_graph": {
-                      "type": "boolean"
-                    },
-                    "delete_source_kinds": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "requested_by": {
+                          "type": "string"
+                        },
+                        "request_type": {
+                          "type": "string"
+                        },
+                        "requested_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "delete_all_graph": {
+                          "type": "boolean"
+                        },
+                        "delete_sourceless_graph": {
+                          "type": "boolean"
+                        },
+                        "delete_source_kinds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "delete_relationships": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
                       }
                     }
                   }
@@ -14062,7 +14082,7 @@
       "put": {
         "operationId": "StartAnalysis",
         "summary": "Start analysis",
-        "description": "Flags the API to begin analyzing ingest data.",
+        "description": "Submits an analysis request attributed to the authenticated user. The\nendpoint is idempotent — at most one analysis request can be pending at a\ntime. Always returns 202 Accepted with no response body.\n",
         "tags": [
           "Datapipe",
           "Community",

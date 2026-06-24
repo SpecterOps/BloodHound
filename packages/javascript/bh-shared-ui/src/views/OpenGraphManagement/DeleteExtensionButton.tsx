@@ -25,25 +25,38 @@ import {
     Input,
 } from 'doodle-ui';
 import { type Extension } from 'js-client-library';
-import { FC, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import { AppIcon, ConditionalTooltip } from '../../components';
-import { useDeleteExtension, usePermissions } from '../../hooks';
-import { DEFAULT_NOTIFICATION, ERROR_NOTIFICATION, useNotifications } from '../../providers';
-import { Permission } from '../../utils';
 import { cn } from '../../utils/theme';
 
-const ConfirmDeleteExtensionDialog: FC<{
+export const ConfirmDeleteExtensionDialog: FC<{
+    open: boolean;
     extensionName: string;
     onAccept: () => void;
     onCancel: () => void;
     isDeleting: boolean;
-}> = ({ extensionName, onAccept, onCancel, isDeleting }) => {
+}> = ({ open, extensionName, onAccept, onCancel, isDeleting }) => {
     const [inputValue, setInputValue] = useState('');
+
+    // Clear input when dialog closes to ensure clean state for next open
+    useEffect(() => {
+        if (!open) {
+            setInputValue('');
+        }
+    }, [open]);
+
+    const handleCancel = useCallback(() => {
+        onCancel();
+    }, [onCancel]);
+
+    const handleAccept = useCallback(() => {
+        onAccept();
+    }, [onAccept]);
 
     const isConfirmDisabled = isDeleting || inputValue !== extensionName;
 
     return (
-        <Dialog open>
+        <Dialog open={open}>
             <DialogPortal>
                 <DialogContent>
                     <DialogTitle>Delete selected extension</DialogTitle>
@@ -62,10 +75,10 @@ const ConfirmDeleteExtensionDialog: FC<{
                         </div>
                     </DialogDescription>
                     <DialogActions>
-                        <Button variant='text' onClick={onCancel} disabled={isDeleting}>
+                        <Button variant='text' onClick={handleCancel} disabled={isDeleting}>
                             Cancel
                         </Button>
-                        <Button variant='text' fontColor='primary' onClick={onAccept} disabled={isConfirmDisabled}>
+                        <Button variant='text' fontColor='primary' onClick={handleAccept} disabled={isConfirmDisabled}>
                             Confirm
                         </Button>
                     </DialogActions>
@@ -75,38 +88,12 @@ const ConfirmDeleteExtensionDialog: FC<{
     );
 };
 
-export const DeleteExtensionButton: FC<{ extension: Extension }> = ({ extension }) => {
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const deleteExtensionMutation = useDeleteExtension();
-    const { addNotification } = useNotifications();
-
-    const { checkPermission } = usePermissions();
-    const hasDeletePermission = checkPermission(Permission.OPENGRAPH_WRITE);
-
-    const { id: extensionId, name: extensionName, is_builtin: isUndeletable } = extension;
-
-    const handleButtonClick = () => setIsDialogOpen(true);
-    const handleDialogClose = () => setIsDialogOpen(false);
-
-    const handleDelete = () => {
-        deleteExtensionMutation.mutate(extensionId, {
-            onSuccess: () => {
-                addNotification(
-                    `Extension "${extensionName}" was deleted successfully!`,
-                    'deleteExtensionSuccess',
-                    DEFAULT_NOTIFICATION
-                );
-            },
-            onError: () => {
-                addNotification(
-                    `Failed to delete extension "${extensionName}". Please try again.`,
-                    'deleteExtensionError',
-                    ERROR_NOTIFICATION
-                );
-            },
-            onSettled: handleDialogClose,
-        });
-    };
+export const DeleteExtensionButton: FC<{
+    extension: Extension;
+    onDeleteClick: (extension: Extension) => void;
+    hasDeletePermission: boolean;
+}> = ({ extension, onDeleteClick, hasDeletePermission }) => {
+    const { name: extensionName, is_builtin: isUndeletable } = extension;
 
     return (
         <div className='flex content-center justify-center'>
@@ -123,20 +110,11 @@ export const DeleteExtensionButton: FC<{ extension: Extension }> = ({ extension 
                         'cursor-pointer': !isUndeletable && hasDeletePermission,
                         'opacity-50 cursor-not-allowed': isUndeletable || !hasDeletePermission,
                     })}
-                    onClick={handleButtonClick}
+                    onClick={() => onDeleteClick(extension)}
                     disabled={isUndeletable || !hasDeletePermission}>
                     <AppIcon.Trash size={18} />
                 </button>
             </ConditionalTooltip>
-
-            {isDialogOpen && (
-                <ConfirmDeleteExtensionDialog
-                    extensionName={extensionName}
-                    isDeleting={deleteExtensionMutation.isLoading}
-                    onAccept={handleDelete}
-                    onCancel={handleDialogClose}
-                />
-            )}
         </div>
     );
 };

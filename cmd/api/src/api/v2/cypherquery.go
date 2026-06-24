@@ -26,7 +26,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -87,7 +87,7 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		err           error
 	)
 
-	user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx)
+	user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx)
 	if !isUser {
 		slog.Error("Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
@@ -192,7 +192,7 @@ func (s Resources) cypherMutation(request *http.Request, primaryDisplayKinds gra
 		err           error
 	)
 
-	if !s.Authorizer.AllowsPermission(ctx.FromRequest(request).AuthCtx, auth.Permissions().GraphDBMutate) {
+	if !s.Authorizer.AllowsPermission(bhctx.FromRequest(request).AuthCtx, auth.Permissions().GraphDBMutate) {
 		s.Authorizer.AuditLogUnauthorizedAccess(request)
 		return model.UnifiedGraph{}, errUnauthorizedGraphMutation
 	}

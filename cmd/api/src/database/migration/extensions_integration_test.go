@@ -163,6 +163,25 @@ func TestExtensions_GetOnStartExtensionData(t *testing.T) {
 		validateEnvironmentKind(t, extension.Name, environmentKind[0].Name)
 	}
 
+	// Validate all display schema node kinds are present in custom_node_kinds
+	displaySchemaNodeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(
+		testSuite.Context,
+		model.Filters{"is_display_kind": []model.Filter{{Operator: model.Equals, Value: "true", SetOperator: model.FilterAnd}}},
+		model.Sort{}, 0, 0,
+	)
+	require.NoError(t, err)
+
+	customNodeKinds, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context, nil)
+	require.NoError(t, err)
+
+	customNodeKindNames := make(map[string]struct{}, len(customNodeKinds))
+	for _, cnk := range customNodeKinds {
+		customNodeKindNames[cnk.KindName] = struct{}{}
+	}
+
+	for _, snk := range displaySchemaNodeKinds {
+		require.Contains(t, customNodeKindNames, snk.Name, "display schema node kind %q should have a corresponding custom_node_kind entry", snk.Name)
+	}
 }
 
 func validateEnvironmentKind(t *testing.T, extensionName, environmentKindName string) {

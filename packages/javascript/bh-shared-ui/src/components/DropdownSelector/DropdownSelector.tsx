@@ -16,21 +16,22 @@
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { PopperContentProps } from '@radix-ui/react-popper';
-import { Button, ButtonProps, Popover, PopoverContent, Tooltip } from 'doodle-ui';
+import { Button, ButtonProps, Popover, PopoverContent, Tooltip, Typography } from 'doodle-ui';
 import { FC, useState } from 'react';
 import { cn } from '../../utils';
 import DropdownTrigger from './DropdownTrigger';
-import { optionStyles, popoverContentStyles, tooltipStyles } from './constants';
+import { optionIconStyles, optionStyles, popoverContentStyles, tooltipStyles } from './constants';
 import { DropdownOption } from './types';
 
 const DropdownSelector: FC<{
     options: DropdownOption[];
     selectedText: JSX.Element | string;
+    caption?: string;
     onChange: (selection: DropdownOption) => void;
     StartAdornment?: React.FC;
     align?: PopperContentProps['align'];
     variant?: ButtonProps['variant'];
-}> = ({ variant, options, selectedText, StartAdornment, align = 'start', onChange }) => {
+}> = ({ variant, options, selectedText, caption, StartAdornment, align = 'start', onChange }) => {
     const [open, setOpen] = useState<boolean>(false);
 
     const handleClose = () => setOpen(false);
@@ -41,12 +42,20 @@ const DropdownSelector: FC<{
 
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>
-            <DropdownTrigger
-                open={open}
-                selectedText={selectedText}
-                variant={variant}
-                StartAdornment={StartAdornment}
-            />
+            <div className='flex flex-col'>
+                {caption && (
+                    <Typography variant='caption' id='dropdown-caption'>
+                        {caption}
+                    </Typography>
+                )}
+                <DropdownTrigger
+                    open={open}
+                    selectedText={selectedText}
+                    variant={variant}
+                    StartAdornment={StartAdornment}
+                    aria-describedby={caption ? 'dropdown-caption' : undefined}
+                />
+            </div>
             <PopoverContent align={align} className={cn(popoverContentStyles, 'w-48', { 'w-64': buttonPrimary })}>
                 <ul>
                     {options.map((option: DropdownOption) => {
@@ -66,6 +75,7 @@ const DropdownSelector: FC<{
                                         </span>
                                         {option.icon && (
                                             <FontAwesomeIcon
+                                                className={optionIconStyles}
                                                 style={{ width: '10%', alignSelf: 'center' }}
                                                 icon={option.icon}
                                                 data-testid={`dropdown-icon-${option.icon.iconName}`}

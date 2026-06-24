@@ -26,6 +26,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/tools"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	storageService "github.com/specterops/bloodhound/cmd/api/src/services/storage"
+	"github.com/specterops/bloodhound/packages/go/storage"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/neo4j"
 	"github.com/specterops/dawgs/drivers/pg"
@@ -33,13 +35,21 @@ import (
 	"github.com/specterops/dawgs/util/size"
 )
 
+// RuntimeDependencies holds values that must be created before the entrypoint starts. For instance
+// IngestControl is reliant on the FileService. In order for the pre-migration toolapi to have
+// access to the FileServiceRetained, the FileServiceResolver is created prior to the
+// PreMigrationDaemons and the Entrypoint. This could then be passed in.
+type RuntimeDependencies struct {
+	FileServiceResolver storageService.FileServiceResolver
+}
+
 func ensureDirectory(path string) error {
 	if _, err := os.Stat(path); err != nil {
 		if !os.IsNotExist(err) {
 			return err
 		}
 
-		if err := os.MkdirAll(path, 0755); err != nil {
+		if err := os.MkdirAll(path, 0o755); err != nil {
 			return fmt.Errorf("unable to create directory %s: %w", path, err)
 		}
 	}
@@ -58,6 +68,10 @@ func EnsureServerDirectories(cfg config.Configuration) error {
 		return err
 	}
 
+	if err := ensureDirectory(cfg.ScratchDirectory()); err != nil {
+		return err
+	}
+
 	if err := ensureDirectory(cfg.RetainedFilesDirectory()); err != nil {
 		return err
 	}
@@ -68,6 +82,26 @@ func EnsureServerDirectories(cfg config.Configuration) error {
 
 	if err := ensureDirectory(cfg.CollectorsDirectory()); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+var requiredFileServices = []storage.FileServiceName{
+	storage.FileServiceIngest,
+	storage.FileServiceRetained,
+	storage.FileServiceCollectors,
+	storage.FileServiceWork,
+}
+
+// EnsureFileServices confirms that the required file services are created in the supplied fileServiceResolver.
+func EnsureFileServices(
+	fileServiceResolver storageService.FileServiceResolver,
+) error {
+	for _, serviceName := range requiredFileServices {
+		if _, err := fileServiceResolver.Resolve(serviceName); err != nil {
+			return fmt.Errorf("failed to resolve %s file service: %w", serviceName, err)
+		}
 	}
 
 	return nil

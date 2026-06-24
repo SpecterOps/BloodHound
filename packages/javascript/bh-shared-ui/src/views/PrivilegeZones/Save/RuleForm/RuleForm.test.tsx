@@ -298,6 +298,10 @@ describe('Rule Form', () => {
         await user.click(saveButton);
 
         expect(screen.queryByText('Please provide a name for the Rule')).not.toBeInTheDocument();
+        expect(
+            screen.queryByText(/This rule's Cypher query produces no results. Do you want to save it anyway?/)
+        ).toBeInTheDocument();
+        await user.click(screen.getByRole('button', { name: /Confirm/ }));
 
         await waitFor(() => {
             expect(mockNavigate).toBeCalled();
