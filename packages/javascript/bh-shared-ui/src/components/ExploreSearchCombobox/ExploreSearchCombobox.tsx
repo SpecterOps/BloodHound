@@ -17,7 +17,7 @@
 import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants } from '@mui/material';
 import { useCombobox } from 'downshift';
 import { useRef } from 'react';
-import { SearchResult, getEmptyResultsText, getKeywordAndTypeValues, useSearch, useTheme } from '../../hooks';
+import { SearchResult, getEmptyResultsText, useKeywordAndTypeValues, useSearch, useTheme } from '../../hooks';
 import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import NodeIcon from '../NodeIcon';
 import SearchResultItem from '../SearchResultItem';
@@ -44,7 +44,7 @@ const ExploreSearchCombobox: React.FC<{
     const theme = useTheme();
     const searchNodesRef = useRef<HTMLInputElement>();
 
-    const { keyword, type } = getKeywordAndTypeValues(inputValue);
+    const { keyword, type } = useKeywordAndTypeValues(inputValue);
     const { data, error, isError, isLoading, isFetching } = useSearch(keyword, type);
 
     const { isOpen, getMenuProps, getInputProps, highlightedIndex, getItemProps, openMenu } = useCombobox({
