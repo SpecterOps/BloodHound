@@ -14,6 +14,10 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 -- +goose Up
+UPDATE permissions
+SET name = 'IngestManage'
+WHERE authority = 'graphdb' AND name = 'Ingest';
+
 INSERT INTO permissions (authority, name, created_at, updated_at)
 VALUES ('graphdb',
         'IngestRead',
@@ -47,3 +51,7 @@ DELETE FROM roles_permissions
 WHERE permission_id = (SELECT id FROM permissions WHERE authority = 'graphdb' AND name = 'IngestRead');
 
 DELETE FROM permissions WHERE authority = 'graphdb' AND name = 'IngestRead';
+
+UPDATE permissions
+SET name = 'Ingest'
+WHERE authority = 'graphdb' AND name = 'IngestManage';
