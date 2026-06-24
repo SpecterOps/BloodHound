@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-/** For use when value is expected but not yet available */
-export type Maybe<T> = T | null | undefined;
+/** Value maybe be null or undefined; Typically used when value is expected but not yet available */
+export type Nullable<T> = T | null | undefined;
 
 /** Exclusive OR (XOR) type utility. */
 export type XOR<T, U> =

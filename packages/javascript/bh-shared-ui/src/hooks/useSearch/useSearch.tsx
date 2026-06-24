@@ -16,7 +16,7 @@
 
 import { isAxiosError } from 'js-client-library';
 import { useQuery } from 'react-query';
-import { apiClient, type KeywordAndTypeValues, Maybe, parseKeywordAndTypeValue } from '../../utils';
+import { apiClient, type KeywordAndTypeValues, type Nullable, parseKeywordAndTypeValue } from '../../utils';
 import { useTimeoutLimitConfiguration } from '../useConfiguration';
 import { useGraphNodeKinds } from '../useGraphKinds';
 
@@ -53,7 +53,7 @@ export const useSearch = (keyword = '', type: string | undefined) => {
     });
 };
 
-export const useKeywordAndTypeValues = (inputValue: Maybe<string>): KeywordAndTypeValues => {
+export const useKeywordAndTypeValues = (inputValue: Nullable<string>): KeywordAndTypeValues => {
     const { data } = useGraphNodeKinds();
     return parseKeywordAndTypeValue(inputValue, data?.kinds);
 };

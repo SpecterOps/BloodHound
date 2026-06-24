@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Maybe } from './type';
+import { type Nullable } from './type';
 
 /** Represents a string literal type that can be widened to string, keeping intellisense for literal values */
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -36,7 +36,10 @@ export type KeywordAndTypeValues = {
     type: string | undefined;
 };
 
-export function parseKeywordAndTypeValue(inputValue: Maybe<string>, kinds: string[] | undefined): KeywordAndTypeValues {
+export function parseKeywordAndTypeValue(
+    inputValue: Nullable<string>,
+    kinds: string[] | undefined
+): KeywordAndTypeValues {
     const value = inputValue ?? undefined;
 
     if (!value) {
