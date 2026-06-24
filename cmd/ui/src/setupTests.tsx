@@ -40,6 +40,13 @@ beforeAll(() => {
         value: 800,
     });
 
+    // Keep MUI popovers from treating the global 800px offsetHeight mock as viewport overflow
+    Object.defineProperty(window, 'innerHeight', {
+        configurable: true,
+        writable: true,
+        value: 1024,
+    });
+
     // Radix Select relies on pointer events + scroll positioning under the hood
     // (Popper + focus management). In JSDOM, those methods (scrollIntoView,
     // hasPointerCapture, releasePointerCapture) don’t exist by default, so Radix
@@ -62,8 +69,14 @@ if (typeof window.URL.createObjectURL === 'undefined') {
 }
 
 vi.mock('@neo4j-cypher/react-codemirror', async () => {
+    const { forwardRef } = await import('react');
+
     return {
-        CypherEditor: () => 'cypher query',
+        CypherEditor: forwardRef<HTMLDivElement, { value?: string }>(({ value }, ref) => (
+            <div ref={ref} data-testid='cypher-editor'>
+                {value ?? 'cypher query'}
+            </div>
+        )),
     };
 });
 
