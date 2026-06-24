@@ -48,10 +48,11 @@ type PermissionSet struct {
 	CollectionReadJobs   model.Permission
 	CollectionManageJobs model.Permission
 
-	GraphDBIngest model.Permission
-	GraphDBMutate model.Permission
-	GraphDBRead   model.Permission
-	GraphDBWrite  model.Permission
+	GraphDBIngestManage model.Permission
+	GraphDBIngestRead   model.Permission
+	GraphDBMutate       model.Permission
+	GraphDBRead         model.Permission
+	GraphDBWrite        model.Permission
 
 	OpenGraphRead  model.Permission
 	OpenGraphWrite model.Permission
@@ -83,7 +84,8 @@ func (s PermissionSet) All() model.Permissions {
 		s.ClientsTasking,
 		s.CollectionReadJobs,
 		s.CollectionManageJobs,
-		s.GraphDBIngest,
+		s.GraphDBIngestManage,
+		s.GraphDBIngestRead,
 		s.GraphDBMutate,
 		s.GraphDBRead,
 		s.GraphDBWrite,
@@ -106,6 +108,7 @@ func (s PermissionSet) ReadAll() model.Permissions {
 		s.AuthReadUsersMinimal,
 		s.ClientsRead,
 		s.CollectionReadJobs,
+		s.GraphDBIngestRead,
 		s.GraphDBRead,
 		s.OpenGraphRead,
 		s.SavedQueriesRead,
@@ -142,10 +145,11 @@ func Permissions() PermissionSet {
 		CollectionReadJobs:   model.NewPermission("collection", "ReadJobs"),
 		CollectionManageJobs: model.NewPermission("collection", "ManageJobs"),
 
-		GraphDBIngest: model.NewPermission("graphdb", "Ingest"),
-		GraphDBMutate: model.NewPermission("graphdb", "Mutate"),
-		GraphDBRead:   model.NewPermission("graphdb", "Read"),
-		GraphDBWrite:  model.NewPermission("graphdb", "Write"),
+		GraphDBIngestManage: model.NewPermission("graphdb", "IngestManage"),
+		GraphDBIngestRead:   model.NewPermission("graphdb", "IngestRead"),
+		GraphDBMutate:       model.NewPermission("graphdb", "Mutate"),
+		GraphDBRead:         model.NewPermission("graphdb", "Read"),
+		GraphDBWrite:        model.NewPermission("graphdb", "Write"),
 
 		OpenGraphRead:  model.NewPermission("opengraph", "Read"),
 		OpenGraphWrite: model.NewPermission("opengraph", "Write"),
