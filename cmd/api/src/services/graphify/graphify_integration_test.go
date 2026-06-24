@@ -110,7 +110,8 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 
 	cfg.WorkDir = workDir
 	cfg.CollectorsBasePath = t.TempDir()
-	bootstrap.EnsureServerDirectories(cfg)
+	err = bootstrap.EnsureServerDirectories(cfg)
+	require.NoError(t, err)
 
 	fileServices, err := storage.NewDefaultFileServices(cfg)
 	require.NoError(t, err, "error creating default file services")
