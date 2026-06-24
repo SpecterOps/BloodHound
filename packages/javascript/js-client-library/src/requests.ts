@@ -25,6 +25,7 @@ import {
     CertificationRevoked,
     SeedExpansionMethod,
     SSOProviderConfiguration,
+    WebhookType,
 } from './types';
 import { ConfigurationPayload } from './utils';
 
@@ -295,3 +296,17 @@ export interface CreateUserRequest extends Omit<UpdateUserRequest, 'is_disabled'
 }
 
 export type UpdateConfigurationRequest = ConfigurationPayload;
+
+export interface CreateWebhookRequest {
+    type: WebhookType;
+    name: string;
+    description: string;
+    url: string;
+}
+
+export interface UpdateWebhookRequest {
+    type?: WebhookType;
+    name?: string;
+    description?: string;
+    url?: string;
+}

@@ -29,6 +29,7 @@ import {
     CreateSharpHoundEventRequest,
     CreateUserQueryRequest,
     CreateUserRequest,
+    CreateWebhookRequest,
     DeleteUserQueryPermissionsRequest,
     LoginRequest,
     PostureRequest,
@@ -51,6 +52,7 @@ import {
     UpdateUserQueryPermissionsRequest,
     UpdateUserQueryRequest,
     UpdateUserRequest,
+    UpdateWebhookRequest,
 } from './requests';
 import {
     ActiveDirectoryDataQualityResponse,
@@ -69,6 +71,7 @@ import {
     AzureDataQualityResponse,
     BasicResponse,
     CreateAuthTokenResponse,
+    CreateWebhookResponse,
     DatapipeStatusResponse,
     EndFileIngestResponse,
     Environment,
@@ -85,6 +88,8 @@ import {
     GetExtensionsResponse,
     GetScheduledJobDisplayResponse,
     GetSelfResponse,
+    GetWebhookResponse,
+    GetWebhooksResponse,
     GraphKindsResponse,
     GraphResponse,
     ListAuthTokensResponse,
@@ -95,6 +100,7 @@ import {
     PostureHistoryResponse,
     PostureResponse,
     PreviewSelectorsResponse,
+    RotateWebhookSecretResponse,
     SavedQuery,
     SavedQueryPermissionsResponse,
     StartFileIngestResponse,
@@ -2724,6 +2730,41 @@ class BHEAPIClient {
 
     deleteExtension = (extensionId: string, options?: RequestOptions): Promise<AxiosResponse<void>> =>
         this.baseClient.delete(`/api/v2/extensions/${extensionId}`, options);
+
+    /* alerts */
+    /* webhooks */
+    createWebhook = (payload: CreateWebhookRequest, options?: RequestOptions) => {
+        return this.baseClient.post<BasicResponse<CreateWebhookResponse>>('/api/v2/alert-webhooks', payload, options);
+    };
+
+    getWebhooks = (skip?: number, limit?: number, sort_by?: types.WebhookSortBy, options?: RequestOptions) =>
+        this.baseClient.get<GetWebhooksResponse>('/api/v2/alert-webhooks', {
+            ...options,
+            params: {
+                ...options?.params,
+                skip,
+                limit,
+                sort_by,
+            },
+            paramsSerializer: { indexes: null },
+        });
+
+    getWebhook = (webhookId: string, options?: RequestOptions) =>
+        this.baseClient.get<GetWebhookResponse>(`api/v2/alert-webhooks/${webhookId}`, {
+            ...options,
+        });
+
+    updateWebhook = (webhookId: string, payload: UpdateWebhookRequest, options?: RequestOptions) =>
+        this.baseClient.patch<GetWebhookResponse>(`api/v2/alert-webhooks/${webhookId}`, options);
+
+    deleteWebhook = (webhookId: string, options?: RequestOptions) =>
+        this.baseClient.delete<GetWebhookResponse>(`api/v2/alert-webhooks/${webhookId}`, options);
+
+    rotateWebhookSecret = (webhookId: string, options?: RequestOptions) =>
+        this.baseClient.post<RotateWebhookSecretResponse>(`api/v2/alert-webhooks/${webhookId}/rotate-secret`, options);
+
+    testWebhook = (webhookId: string, options?: RequestOptions) =>
+        this.baseClient.post<RotateWebhookSecretResponse>(`api/v2/alert-webhooks/${webhookId}/test`, options);
 }
 
 export default BHEAPIClient;
