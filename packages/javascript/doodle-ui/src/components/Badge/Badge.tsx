@@ -95,6 +95,26 @@ const BadgeVariants = cva('inline-flex items-center justify-center rounded text-
             color: 'blue',
             className: 'border-badge-blue-outline [&>span>svg]:text-badge-blue-outline',
         },
+        {
+            variant: 'outline',
+            color: 'error',
+            className: 'border-status-error-main [&>span>svg]:text-status-error-main',
+        },
+        {
+            variant: 'outline',
+            color: 'warning',
+            className: 'border-status-warning-main [&>span>svg]:text-status-warning-main',
+        },
+        {
+            variant: 'outline',
+            color: 'success',
+            className: 'border-status-success-main [&>span>svg]:text-status-success-main',
+        },
+        {
+            variant: 'outline',
+            color: 'disabled',
+            className: 'border-neutral-500 [&>span>svg]:text-neutral-500',
+        },
     ],
     defaultVariants: {
         variant: 'outline',
