@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,16 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { setupServer } from 'msw/node';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
-import { mockKindsHandler } from '../../mocks/handlers';
 import { getEmptyResultsText } from './useSearch';
-
-const server = setupServer(mockKindsHandler(['computer', 'azapp']));
-
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
 
 describe('Getting the text for the disabled item display for a search when there are no results', () => {
     describe('Loading states', () => {
