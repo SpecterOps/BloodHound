@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { PluginCreator } from 'tailwindcss/types/config';
-import { common, dark, elevation, light, palette } from './colors';
+import { common, dark, elevation, light, palette, text } from './colors';
 
 const plugin: PluginCreator = ({ addBase, addUtilities }) => {
     addBase({
@@ -69,7 +69,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // TEXT
             '--text-main': common.dark,
-            // '--text-light': text.light,
+            '--text-light': text.light,
             // '--text-contrast': common.white,
             '--text-disabled': light.text.disabled,
             '--text-primary': light.primary.main,
@@ -263,7 +263,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // TEXT
             '--text-main': common.white,
-            // '--text-light': dark.text.light,
+            '--text-light': text.dark,
             // '--text-contrast': common.dark,
             '--text-disabled': common.disabled,
             '--text-primary': dark.primary.main,
