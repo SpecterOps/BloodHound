@@ -54,7 +54,7 @@ const ObjectCountPanel: FC = () => {
         return (
             <Card
                 tabIndex={0}
-                className='flex flex-col p-6 select-none overflow-y-auto'
+                className='flex flex-col p-4 select-none overflow-y-auto '
                 data-testid='privilege-zones_object-counts'>
                 <div className='flex justify-between items-center'>
                     <p>Total Count</p>
@@ -62,7 +62,9 @@ const ObjectCountPanel: FC = () => {
                 </div>
                 {Object.entries(objectsCountQuery.data.counts).map(([key, value]) => {
                     return (
-                        <div className='flex justify-between mt-4 items-center' key={key}>
+                        <div
+                            className='flex justify-between mt-4 items-center rounded-lg px-2 py-1 -mx-2 hover:bg-neutral-light-4 dark:hover:bg-neutral-dark-4'
+                            key={key}>
                             <div className='flex gap-1'>
                                 <NodeIcon nodeType={key} />
                                 {key}
