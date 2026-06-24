@@ -20,6 +20,7 @@
 package graphdb
 
 import (
+	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/server/graphdb/internal/appdb"
@@ -32,13 +33,14 @@ import (
 // Register builds the graphdb store -> service -> handler chain and attaches the graphdb
 // routes to the provided router. It is called from the modules registry and receives
 // only the infrastructure it directly needs: the router, the pgx pool (for kind
-// resolution) and the graph database (for graph reads).
-func Register(routerInst *router.Router, pool *pgxpool.Pool, graphDatabase graph.Database) {
+// resolution), the graph database (for graph reads) and the rate limit middleware
+// factory applied to the registered routes.
+func Register(routerInst *router.Router, pool *pgxpool.Pool, graphDatabase graph.Database, rateLimit func() mux.MiddlewareFunc) {
 	var (
 		store      = appdb.NewStore(graphDatabase, pool)
 		service    = services.NewService(store)
 		handlerSet = handlers.NewHandlersContainer(service)
 	)
 
-	routes.Register(routerInst, handlerSet)
+	routes.Register(routerInst, handlerSet, rateLimit)
 }
