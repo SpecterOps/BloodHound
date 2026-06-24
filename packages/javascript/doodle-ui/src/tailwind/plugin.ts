@@ -119,10 +119,10 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Components/Input
             // '--input-label': common.dark,
             // '--input-fill': elevation.light[1],
-            // '--input-fill-disabled': palette.neutral.light[100],
+            '--input-fill-disabled': palette.neutral.light[100],
             // '--input-border-default': palette.grey[700],
             // '--input-border-hover': light.secondary.main,
-            // '--input-border-disabled': palette.neutral.light[900],
+            '--input-border-disabled': palette.neutral.light[900],
             // '--input-placeholder-text': text.placeholder,
 
             // // Components/Input/Selectors
@@ -186,7 +186,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Utilities
             // '--icon': common.dark,
             // '--icon-contrast': common.white,
-            // '--icon-disabled': palette.grey[700],
+            '--icon-disabled': palette.grey[700],
             // '--divider': palette.neutral.light[500],
 
             // Legacy below
@@ -304,10 +304,10 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Components/Input
             // '--input-label': common.white,
             // '--input-fill': elevation.dark[1],
-            // '--input-fill-disabled': palette.neutral.dark[400],
+            '--input-fill-disabled': palette.neutral.dark[400],
             // '--input-border-default': dark.input.border,
             // '--input-border-hover': dark.secondary.main,
-            // '--input-border-disabled': palette.neutral.dark[900],
+            '--input-border-disabled': palette.neutral.dark[900],
             // '--input-placeholder-text': dark.input.placeholder,
 
             // // Components/Input/Selectors
@@ -371,7 +371,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Utilities
             // '--icon': common.white,
             // '--icon-contrast': common.dark,
-            // '--icon-disabled': common.disabled,
+            '--icon-disabled': common.disabled,
             // '--divider': palette.neutral.dark[500],
 
             ///////////// Legacy below //////////

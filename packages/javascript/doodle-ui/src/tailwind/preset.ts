@@ -137,10 +137,10 @@ export default {
 
                 // 'input-label': 'var(--input-label)',
                 // 'input-fill': 'var(--input-fill)',
-                // 'input-fill-disabled': 'var(--input-fill-disabled)',
+                'input-fill-disabled': 'var(--input-fill-disabled)',
                 // 'input-border-default': 'var(--input-border-default)',
                 // 'input-border-hover': 'var(--input-border-hover)',
-                // 'input-border-disabled': 'var(--input-border-disabled)',
+                'input-border-disabled': 'var(--input-border-disabled)',
                 // 'input-placeholder-text': 'var(--input-placeholder-text)',
 
                 // 'selector-disable-fill': 'var(--selector-disable-fill)',
@@ -186,7 +186,7 @@ export default {
 
                 // icon: 'var(--icon)',
                 // 'icon-contrast': 'var(--icon-contrast)',
-                // 'icon-disabled': 'var(--icon-disabled)',
+                'icon-disabled': 'var(--icon-disabled)',
                 // divider: 'var(--divider)',
 
                 // 'risk-critical': 'var(--risk-critical)',
