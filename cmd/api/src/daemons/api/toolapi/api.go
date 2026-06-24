@@ -34,6 +34,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/storage"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -43,12 +44,12 @@ type Daemon struct {
 	server *http.Server
 }
 
-func NewDaemon[DBType database.Database](ctx context.Context, connections bootstrap.DatabaseConnections[DBType, *graph.DatabaseSwitch], cfg config.Configuration, graphSchema graph.Schema, extensions ...func(router *chi.Mux)) Daemon {
+func NewDaemon[DBType database.Database](ctx context.Context, connections bootstrap.DatabaseConnections[DBType, *graph.DatabaseSwitch], cfg config.Configuration, graphSchema graph.Schema, retainedFileService storage.FileService, extensions ...func(router *chi.Mux)) Daemon {
 	var (
 		pgMigrator    = tools.NewPGMigrator(ctx, cfg, graphSchema, connections.Graph)
-		ingestControl = tools.NewIngestControlTool(cfg, connections.RDMS)
 		router        = chi.NewRouter()
 		toolContainer = tools.NewToolContainer(connections.RDMS)
+		ingestControl = tools.NewIngestControlTool(connections.RDMS, retainedFileService)
 	)
 
 	router.Mount("/metrics", promhttp.Handler())

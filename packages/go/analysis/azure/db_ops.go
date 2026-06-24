@@ -25,7 +25,7 @@ import (
 	"github.com/specterops/dawgs/ops"
 )
 
-func ListEntityDescendentPaths(ctx context.Context, db graph.Database, relatedEntityType RelatedEntityType, objectID string) (graph.PathSet, error) {
+func ListEntityDescendentPaths(ctx context.Context, db graph.Database, relatedEntityType RelatedEntityType, sourceKind graph.Kind, objectID string) (graph.PathSet, error) {
 	var paths graph.PathSet
 
 	return paths, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -73,13 +73,17 @@ func ListEntityDescendentPaths(ctx context.Context, db graph.Database, relatedEn
 				return ErrInvalidRelatedEntityType
 			}
 
-			paths, err = FetchEntityDescendentPaths(tx, node, targetKind)
+			if isDirectDescendent(sourceKind, targetKind) {
+				paths, err = FetchDirectDescendentPaths(tx, node, targetKind)
+			} else {
+				paths, err = FetchEntityDescendentPaths(tx, node, targetKind)
+			}
 			return err
 		}
 	})
 }
 
-func ListEntityDescendents(ctx context.Context, db graph.Database, relatedEntityType RelatedEntityType, objectID string, skip, limit int) (graph.NodeSet, error) {
+func ListEntityDescendents(ctx context.Context, db graph.Database, relatedEntityType RelatedEntityType, sourceKind graph.Kind, objectID string, skip, limit int) (graph.NodeSet, error) {
 	var nodes graph.NodeSet
 
 	return nodes, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -127,7 +131,11 @@ func ListEntityDescendents(ctx context.Context, db graph.Database, relatedEntity
 				return ErrInvalidRelatedEntityType
 			}
 
-			nodes, err = FetchEntityDescendents(tx, node, skip, limit, targetKind)
+			if isDirectDescendent(sourceKind, targetKind) {
+				nodes, err = FetchDirectEntityDescendents(tx, node, targetKind)
+			} else {
+				nodes, err = FetchEntityDescendents(tx, node, targetKind)
+			}
 			return err
 		}
 	})

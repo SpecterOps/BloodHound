@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/job"
+	storageService "github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -36,6 +37,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/storage"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -48,21 +50,23 @@ type BHCEPipeline struct {
 	cfg                 config.Configuration
 	orphanedFileSweeper *OrphanFileSweeper
 	ingestSchema        upload.IngestSchema
+	fileServiceResolver storageService.FileServiceResolver
 	jobService          job.JobService
 	graphifyService     graphify.GraphifyService
 	changelog           *changelog.Changelog
 }
 
-func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Database, graphDB graph.Database, cache cache.Cache, ingestSchema upload.IngestSchema, cl *changelog.Changelog) *BHCEPipeline {
+func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Database, graphDB graph.Database, cache cache.Cache, ingestSchema upload.IngestSchema, fileServiceResolver storageService.FileServiceResolver, cl *changelog.Changelog) *BHCEPipeline {
 	return &BHCEPipeline{
 		db:                  db,
 		graphdb:             graphDB,
 		cache:               cache,
 		cfg:                 cfg,
-		orphanedFileSweeper: NewOrphanFileSweeper(NewOSFileOperations(), cfg.TempDirectory()),
+		orphanedFileSweeper: NewOrphanFileSweeper(NewOSFileOperations(), cfg.TempDirectory(), cfg.ScratchDirectory(), string(storage.FileServiceRetained)),
 		ingestSchema:        ingestSchema,
+		fileServiceResolver: fileServiceResolver,
 		jobService:          job.NewJobService(ctx, db),
-		graphifyService:     graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, cl),
+		graphifyService:     graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, fileServiceResolver, cl),
 		changelog:           cl,
 	}
 }
@@ -155,6 +159,8 @@ func filterDeletableKinds(kindsToDelete []string) []string {
 func (s *BHCEPipeline) PruneData(ctx context.Context) error {
 	if ingestTasks, err := s.db.GetAllIngestTasks(ctx); err != nil {
 		return fmt.Errorf("fetching available ingest tasks: %v", err)
+	} else if ingestFileService, err := s.fileServiceResolver.Resolve(storage.FileServiceIngest); err != nil {
+		return fmt.Errorf("error resolving ingest file service: %v", err)
 	} else {
 		expectedFiles := make([]string, len(ingestTasks))
 
@@ -162,7 +168,7 @@ func (s *BHCEPipeline) PruneData(ctx context.Context) error {
 			expectedFiles[idx] = ingestTask.StoredFileName
 		}
 
-		go s.orphanedFileSweeper.Clear(ctx, expectedFiles)
+		go s.orphanedFileSweeper.Clear(ctx, ingestFileService, expectedFiles)
 	}
 	return nil
 }

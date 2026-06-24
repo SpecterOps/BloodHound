@@ -30,14 +30,20 @@ export default {
         },
         extend: {
             colors: {
-                primary: 'var(--primary)',
+                primary: 'var(--primary-main)',
+                'primary-main':
+                    'var(--primary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
                 'primary-variant': 'var(--primary-variant)',
 
                 secondary: 'var(--secondary-main)',
+                'secondary-main':
+                    'var(--secondary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
                 'secondary-variant': 'var(--secondary-variant)',
                 'secondary-variant-2': 'var(--secondary-variant-2)',
 
-                tertiary: 'var(--tertiary)',
+                tertiary: 'var(--tertiary-main)',
+                'tertiary-main':
+                    'var(--tertiary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
                 'tertiary-variant': 'var(--tertiary-variant)',
 
                 'text-main': 'var(--text-main)',
@@ -79,8 +85,8 @@ export default {
                 // tertiary: 'var(--tertiary)',
                 // 'tertiary-variant': 'var(--tertiary-variant)',
 
-                // 'common-dark': 'var(--common-dark)',
-                // 'common-white': 'var(--common-white)',
+                'common-dark': 'var(--common-dark)',
+                'common-white': 'var(--common-white)',
 
                 // contrast: 'var(--common-dark)',
 
