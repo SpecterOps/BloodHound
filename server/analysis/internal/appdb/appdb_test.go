@@ -37,7 +37,7 @@ import (
 const (
 	expectedAnalysisStepsFull int32 = 15
 
-	expectedSelectSQL = `SELECT requested_by, request_type, requested_at, COALESCE(analysis_step, 0) AS analysis_step, delete_all_graph, delete_sourceless_graph, delete_source_kinds, delete_relationships FROM analysis_request_switch LIMIT $1`
+	expectedSelectSQL = `SELECT requested_by, request_type, requested_at, analysis_step, delete_all_graph, delete_sourceless_graph, delete_source_kinds, delete_relationships FROM analysis_request_switch LIMIT $1`
 
 	expectedInsertSQL = `INSERT INTO analysis_request_switch (requested_by, request_type, requested_at, analysis_step, delete_all_graph, delete_sourceless_graph, delete_source_kinds, delete_relationships) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (singleton) DO NOTHING`
 

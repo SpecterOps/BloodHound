@@ -20,7 +20,7 @@
 -- which steps of the analysis pipeline should run. The column stores an AnalysisStep
 -- bitmask (ADPostProcessing=1, AzurePostProcessing=2, Tagging=4, Analysis=8). 
 ALTER TABLE analysis_request_switch
-  ADD COLUMN IF NOT EXISTS analysis_step integer;
+  ADD COLUMN IF NOT EXISTS analysis_step INTEGER NOT NULL DEFAULT 0;
 
 -- If there currently is an analysis request in the DB set it to full analysis.
 UPDATE analysis_request_switch

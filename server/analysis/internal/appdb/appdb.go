@@ -102,7 +102,7 @@ func selectAnalysisRequest(ctx context.Context, querier queryExecer) (services.R
 		"requested_by",
 		"request_type",
 		"requested_at",
-		"COALESCE(analysis_step, 0) AS analysis_step",
+		"analysis_step",
 		"delete_all_graph",
 		"delete_sourceless_graph",
 		"delete_source_kinds",
