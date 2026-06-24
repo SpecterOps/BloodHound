@@ -18,29 +18,34 @@ package upload
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	"github.com/specterops/bloodhound/packages/go/storage"
+	storagemocks "github.com/specterops/bloodhound/packages/go/storage/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func buildValidator(t *testing.T, expectedContent string, validationErr error) FileValidator {
 	t.Helper()
 
 	return func(src io.Reader, dst io.Writer) (ingest.OriginalMetadata, error) {
-		content, err := io.ReadAll(src)
-		require.NoError(t, err)
-		require.Equal(t, expectedContent, string(content))
-
-		_, err = dst.Write(content)
-		require.NoError(t, err)
+		tr := io.TeeReader(src, dst)
+		content, err := io.ReadAll(tr)
+		if err != nil {
+			return ingest.OriginalMetadata{}, err
+		}
+		if string(content) != expectedContent {
+			return ingest.OriginalMetadata{}, fmt.Errorf("expected content %q, got %q", expectedContent, string(content))
+		}
 
 		return ingest.OriginalMetadata{}, validationErr
 	}
@@ -156,39 +161,114 @@ func TestWriteAndValidateJSON_NormalizationError(t *testing.T) {
 	assert.ErrorIs(t, err, ErrInvalidJSON)
 }
 
-func TestWriteAndValidateFileWithPrefix(t *testing.T) {
+func TestUpload_WriteAndValidateFile(t *testing.T) {
 	t.Parallel()
 
 	var (
-		errValidation  = errors.New("validation failed")
-		tempFilePrefix = "custom_prefix_"
+		errValidation = errors.New("validation failed")
+		errWrite      = errors.New("write failed")
 	)
 
-	t.Run("writes validated file using caller supplied prefix", func(t *testing.T) {
-		t.Parallel()
+	type expected struct {
+		errIs    error
+		fileName string
+	}
 
-		tempDirectory := t.TempDir()
-		fileName, err := WriteAndValidateFileWithPrefix(strings.NewReader("content"), tempDirectory, tempFilePrefix, buildValidator(t, "content", nil))
-		require.NoError(t, err)
-		require.Contains(t, filepath.Base(fileName), tempFilePrefix)
+	type testData struct {
+		name          string
+		tempFileName  string
+		writeErr      error
+		validationErr error
+		expected      expected
+		expectDelete  bool
+	}
 
-		fileContent, err := os.ReadFile(fileName)
-		require.NoError(t, err)
-		require.Equal(t, "content", string(fileContent))
-	})
+	tests := []testData{
+		{
+			name:         "writes and validates file",
+			tempFileName: "prefix/tmp-file",
+			expected: expected{
+				fileName: "prefix/tmp-file",
+			},
+		},
+		{
+			name:          "validation error deletes temp file",
+			tempFileName:  "prefix/tmp-file",
+			validationErr: errValidation,
+			expected: expected{
+				errIs: errValidation,
+			},
+			expectDelete: true,
+		},
+		{
+			name:         "write error deletes temp file",
+			tempFileName: "prefix/tmp-file",
+			writeErr:     errWrite,
+			expected: expected{
+				errIs: errWrite,
+			},
+			expectDelete: true,
+		},
+		{
+			name:          "validation error takes precedence over write error",
+			tempFileName:  "prefix/tmp-file",
+			writeErr:      errWrite,
+			validationErr: errValidation,
+			expected: expected{
+				errIs: errValidation,
+			},
+			expectDelete: true,
+		},
+		{
+			name:         "write error without temp path does not delete empty path",
+			tempFileName: "",
+			writeErr:     errWrite,
+			expected: expected{
+				errIs: errWrite,
+			},
+		},
+	}
 
-	t.Run("validation error deletes temp file", func(t *testing.T) {
-		t.Parallel()
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 
-		tempDirectory := t.TempDir()
-		fileName, err := WriteAndValidateFileWithPrefix(strings.NewReader("content"), tempDirectory, tempFilePrefix, buildValidator(t, "content", errValidation))
-		require.ErrorIs(t, err, errValidation)
-		require.Empty(t, fileName)
+			// Arrange
+			ctx := context.Background()
+			mockFileService := storagemocks.NewMockFileService(gomock.NewController(t))
+			validator := buildValidator(t, "content", testCase.validationErr)
 
-		files, err := filepath.Glob(filepath.Join(tempDirectory, tempFilePrefix+"*"))
-		require.NoError(t, err)
-		require.Empty(t, files)
-	})
+			mockFileService.EXPECT().
+				WriteTempFile(ctx, "prefix", gomock.Any(), storage.WriteOptions{}).
+				DoAndReturn(func(_ context.Context, _ string, reader io.Reader, _ storage.WriteOptions) (string, error) {
+					content, err := io.ReadAll(reader)
+					if testCase.validationErr != nil {
+						require.Error(t, err, testCase.validationErr)
+					} else {
+						require.NoError(t, err)
+					}
+					require.Equal(t, "content", string(content))
+
+					return testCase.tempFileName, testCase.writeErr
+				})
+			if testCase.expectDelete {
+				mockFileService.EXPECT().DeleteFile(gomock.Any(), testCase.tempFileName).Return(nil)
+			}
+
+			// Act
+			actualFileName, err := WriteAndValidateFile(ctx, mockFileService, strings.NewReader("content"), "prefix", validator)
+
+			// Assert
+			if testCase.expected.errIs != nil {
+				require.ErrorIs(t, err, testCase.expected.errIs)
+				require.Empty(t, actualFileName)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, testCase.expected.fileName, actualFileName)
+		})
+	}
 }
 
 // ErrorReader is a mock reader that always returns an error
