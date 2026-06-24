@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/server/modules"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -35,6 +36,7 @@ func TestRegister_PanicsOnNilRouter(t *testing.T) {
 		modules.Register(modules.Deps{
 			Router: nil,
 			Pool:   new(pgxpool.Pool),
+			Graph:  &graph.DatabaseSwitch{},
 		})
 	})
 }
@@ -50,15 +52,32 @@ func TestRegister_PanicsOnNilPool(t *testing.T) {
 		modules.Register(modules.Deps{
 			Router: &routerInst,
 			Pool:   nil,
+			Graph:  &graph.DatabaseSwitch{},
 		})
 	})
 }
 
-// TestRegister_WiresAnalysisRoutes verifies that the composition root correctly
-// attaches the analysis module routes to the shared router. Matching a
-// representative route proves that Register successfully delegated to the
-// feature module.
-func TestRegister_WiresAnalysisRoutes(t *testing.T) {
+func TestRegister_PanicsOnNilGraph(t *testing.T) {
+	var (
+		cfg        = config.Configuration{}
+		authorizer = auth.NewAuthorizer(nil)
+		routerInst = router.NewRouter(cfg, authorizer, "")
+	)
+
+	assert.Panics(t, func() {
+		modules.Register(modules.Deps{
+			Router: &routerInst,
+			Pool:   new(pgxpool.Pool),
+			Graph:  nil,
+		})
+	})
+}
+
+// TestRegister_WiresFeatureRoutes verifies that the composition root correctly
+// attaches the feature module routes to the shared router. Matching a
+// representative route from each module proves that Register successfully
+// delegated to the feature modules.
+func TestRegister_WiresFeatureRoutes(t *testing.T) {
 	var (
 		cfg        = config.Configuration{}
 		authorizer = auth.NewAuthorizer(nil)
@@ -66,16 +85,19 @@ func TestRegister_WiresAnalysisRoutes(t *testing.T) {
 		deps       = modules.Deps{
 			Router: &routerInst,
 			Pool:   new(pgxpool.Pool),
+			Graph:  &graph.DatabaseSwitch{},
 		}
 	)
 
 	modules.Register(deps)
 
 	var (
-		muxRouter = routerInst.MuxRouter()
-		request   = httptest.NewRequest(http.MethodGet, "/api/v2/analysis/status", nil)
-		match     mux.RouteMatch
+		muxRouter           = routerInst.MuxRouter()
+		analysisRequest     = httptest.NewRequest(http.MethodGet, "/api/v2/analysis/status", nil)
+		relationshipRequest = httptest.NewRequest(http.MethodGet, "/api/v2/relationships/1", nil)
+		match               mux.RouteMatch
 	)
 
-	assert.True(t, muxRouter.Match(request, &match), "analysis route should be registered by Register")
+	assert.True(t, muxRouter.Match(analysisRequest, &match), "analysis route should be registered by Register")
+	assert.True(t, muxRouter.Match(relationshipRequest, &match), "relationship route should be registered by Register")
 }
