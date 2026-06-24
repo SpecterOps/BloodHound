@@ -43,7 +43,7 @@ JOIN permissions f
     ON f.id = r.permission_id
 JOIN permissions p
     ON (p.authority, p.name) = ('graphdb', 'IngestRead')
-WHERE (f.authority, f.name) = ('graphdb', 'Ingest')
+WHERE (f.authority, f.name) = ('graphdb', 'IngestManage')
 ON CONFLICT DO NOTHING;
 
 -- +goose Down
