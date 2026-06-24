@@ -20457,6 +20457,11 @@
             "type": "boolean",
             "readOnly": true
           },
+          "schema_extension_id": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "OpenGraph schema extension ID for custom environments"
+          },
           "impactValue": {
             "type": "integer",
             "readOnly": true,
