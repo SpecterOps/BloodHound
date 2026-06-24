@@ -62,10 +62,10 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 
 		// SAML resources
 		// DEPRECATED as of v6.4.0: Please use /api/v2/sso-providers/* endpoints instead of /api/v2/saml/*
-		routerInst.GET("/api/v2/saml", managementResource.ListSAMLProviders).RequirePermissions(permissions.AuthManageProviders),
+		routerInst.GET("/api/v2/saml", managementResource.ListSAMLProviders).RequirePermissions(permissions.AuthReadProviders),
 		routerInst.GET("/api/v2/saml/sso", managementResource.ListSAMLSignOnEndpoints),
 		routerInst.POST("/api/v2/saml/providers", managementResource.CreateSAMLProviderMultipart).RequirePermissions(permissions.AuthManageProviders),
-		routerInst.GET(fmt.Sprintf("/api/v2/saml/providers/{%s}", api.URIPathVariableSAMLProviderID), managementResource.GetSAMLProvider).RequirePermissions(permissions.AuthManageProviders),
+		routerInst.GET(fmt.Sprintf("/api/v2/saml/providers/{%s}", api.URIPathVariableSAMLProviderID), managementResource.GetSAMLProvider).RequirePermissions(permissions.AuthReadProviders),
 		routerInst.DELETE(fmt.Sprintf("/api/v2/saml/providers/{%s}", api.URIPathVariableSAMLProviderID), managementResource.DeleteSAMLProvider).RequirePermissions(permissions.AuthManageProviders),
 
 		// SSO
@@ -74,7 +74,7 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 		routerInst.POST("/api/v2/sso-providers/oidc", managementResource.CreateOIDCProvider).CheckFeatureFlag(resources.DB, appcfg.FeatureOIDCSupport).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.DELETE(fmt.Sprintf("/api/v2/sso-providers/{%s}", api.URIPathVariableSSOProviderID), managementResource.DeleteSSOProvider).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.PATCH(fmt.Sprintf("/api/v2/sso-providers/{%s}", api.URIPathVariableSSOProviderID), managementResource.UpdateSSOProvider).RequirePermissions(permissions.AuthManageProviders),
-		routerInst.GET(fmt.Sprintf("/api/v2/sso-providers/{%s}/signing-certificate", api.URIPathVariableSSOProviderID), managementResource.ServeSigningCertificate).RequirePermissions(permissions.AuthManageProviders),
+		routerInst.GET(fmt.Sprintf("/api/v2/sso-providers/{%s}/signing-certificate", api.URIPathVariableSSOProviderID), managementResource.ServeSigningCertificate).RequirePermissions(permissions.AuthReadProviders),
 
 		routerInst.GET(fmt.Sprintf("/api/v2/sso/{%s}/login", api.URIPathVariableSSOProviderSlug), managementResource.SSOLoginHandler),
 		routerInst.PathPrefix(fmt.Sprintf("/api/v2/sso/{%s}/callback", api.URIPathVariableSSOProviderSlug), http.HandlerFunc(managementResource.SSOCallbackHandler)),
