@@ -28,11 +28,10 @@ const ToggleGroup = React.forwardRef<
     React.ElementRef<typeof ToggleGroupPrimitive.Root>,
     React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> & VariantProps<typeof ToggleVariants>
 >(({ className, size, children, ...props }, ref) => (
-    // TODO: Replace hardcoded hex colors with design token CSS variables once the token system is ready.
     <ToggleGroupPrimitive.Root
         ref={ref}
         className={cn(
-            'flex items-center justify-center gap-2 p-1 rounded-lg bg-[#F4F4F4] dark:bg-[#222222] shadow-[0_1px_2px_0_rgba(0,0,0,0.30)]',
+            'flex items-center justify-center gap-2 p-1 rounded-lg bg-neutral-light-2 dark:bg-neutral-dark-2 shadow-outer-1',
             className
         )}
         {...props}>

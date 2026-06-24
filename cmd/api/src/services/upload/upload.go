@@ -17,12 +17,13 @@
 package upload
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
-	"os"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
@@ -31,11 +32,12 @@ import (
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/specterops/bloodhound/packages/go/metrics"
+	"github.com/specterops/bloodhound/packages/go/storage"
 )
 
 var ErrInvalidJSON = errors.New("file is not valid json")
 
-func SaveIngestFile(location string, request *http.Request, validator IngestValidator, jobID int64) (IngestTaskParams, error) {
+func SaveIngestFile(ctx context.Context, fileService storage.FileService, request *http.Request, validator IngestValidator, jobID int64) (IngestTaskParams, error) {
 	fileData := request.Body
 
 	var (
@@ -54,7 +56,7 @@ func SaveIngestFile(location string, request *http.Request, validator IngestVali
 		return IngestTaskParams{}, fmt.Errorf("invalid content type for ingest file")
 	}
 
-	if tempFileName, err := WriteAndValidateFileWithPrefix(fileData, location, ingestFileTempPrefix(jobID), validationFn); err != nil {
+	if tempFileName, err := WriteAndValidateFile(ctx, fileService, fileData, fmt.Sprintf("file_upload_job%d_", jobID), validationFn); err != nil {
 		// Record validation failure metric
 		metrics.RecordIngestTask(metrics.IngestCollectorManual, fileFormatFromFileType(fileType), metrics.IngestTaskStatusFailed)
 		return IngestTaskParams{}, err
@@ -64,62 +66,94 @@ func SaveIngestFile(location string, request *http.Request, validator IngestVali
 			FileType: fileType,
 		}, nil
 	}
-
 }
 
-func ingestFileTempPrefix(jobID int64) string {
-	return fmt.Sprintf("file_upload_job%d_", jobID)
+func cleanupTempFile(ctx context.Context, fileService storage.FileService, tempFileName string) {
+	if tempFileName == "" {
+		return
+	}
+
+	cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+	defer cancel()
+
+	if err := fileService.DeleteFile(cleanupCtx, tempFileName); err != nil {
+		slog.ErrorContext(
+			cleanupCtx,
+			"Failed to delete temp file",
+			slog.String("temp_file_name", tempFileName),
+			attr.Error(err),
+		)
+	}
 }
 
-func WriteAndValidateFile(fileData io.Reader, location string, jobID int64, validationFunc FileValidator) (string, error) {
-	return WriteAndValidateFileWithPrefix(fileData, location, ingestFileTempPrefix(jobID), validationFunc)
-}
-
-func WriteAndValidateFileWithPrefix(fileData io.Reader, location string, tempFilePrefix string, validationFunc FileValidator) (string, error) {
+func WriteAndValidateFile(ctx context.Context, fileService storage.FileService, fileData io.Reader, prefix string, validationFunc FileValidator) (string, error) {
 	if validationFunc == nil {
 		return "", fmt.Errorf("validation function is required")
 	}
 
-	var (
-		tempFile      *os.File
-		tempFileName  string
-		err           error
-		validationErr error
-	)
+	// Create a pipe: pr (read end) and pw (write end).
+	// Data written to pw can be read from pr.
+	pr, pw := io.Pipe()
 
-	// Write a temp file. If it passes validation, keep it around and return the filename. Otherwise destroy it.
-	if tempFile, err = os.CreateTemp(location, tempFilePrefix); err != nil {
-		return "", fmt.Errorf("error creating ingest file: %w", err)
+	// validationErrCh carries the result of the validation goroutine.
+	// Using a buffered channel (size 1) ensures the goroutine never blocks on send,
+	// and gives the main goroutine a synchronization point to wait for the result.
+	validationErrCh := make(chan error, 1)
+
+	// Start validation in a separate goroutine.
+	// validationFunc reads from the request body and writes the validated output to pw.
+	// WriteTempFile reads from pr and persists that validated output.
+	go func() {
+		_, err := validationFunc(fileData, pw)
+		_ = pw.CloseWithError(err)
+		validationErrCh <- err
+	}()
+
+	// Write to storage while validation happens concurrently.
+	tempFileName, writeErr := fileService.WriteTempFile(ctx, prefix, pr, storage.WriteOptions{})
+	if writeErr != nil {
+		_ = pr.CloseWithError(writeErr)
 	}
 
-	// Save this for later
-	tempFileName = tempFile.Name()
-
-	// Run validation on the file to see if we even want to keep it
-	_, validationErr = validationFunc(fileData, tempFile)
-
-	// We close the file next, not last. We can't defer this if we might want to delete it.
-	// Note: fileData does not need to be closed because the HTTP server manages it's lifecyle
-	if closeErr := tempFile.Close(); closeErr != nil {
-		slog.Error(
-			"Error closing temp file",
-			slog.String("file", tempFileName),
-			attr.Error(closeErr),
-		)
-	}
-
-	// If the validation was not successful, after we close the file, we remove it and return the error
-	if validationErr != nil {
-		if removeErr := os.Remove(tempFileName); removeErr != nil {
-			slog.Error(
-				"Error deleting temp file",
-				slog.String("file", tempFileName),
-				attr.Error(removeErr),
-			)
+	var validationErr error
+	select {
+	case validationErr = <-validationErrCh:
+		// Context cancelation wins over validation errors when both are ready
+		if err := ctx.Err(); err != nil {
+			cleanupTempFile(ctx, fileService, tempFileName)
+			return "", err
 		}
+	case <-ctx.Done():
+		_ = pr.CloseWithError(ctx.Err())
+		cleanupTempFile(ctx, fileService, tempFileName)
+		return "", ctx.Err()
+	}
+
+	// Check if validation failed, which should win over write errors.
+	if validationErr != nil {
+		slog.ErrorContext(
+			ctx,
+			"Validation failed",
+			slog.String("temp_file_name",
+				tempFileName),
+			attr.Error(validationErr),
+		)
+		cleanupTempFile(ctx, fileService, tempFileName)
 		return "", validationErr
 	}
 
-	// Assuming no other errors, return the name of the closed temp file
+	// Check if writing failed; the temp file should be cleaned up.
+	if writeErr != nil {
+		slog.ErrorContext(
+			ctx,
+			"Write failed",
+			slog.String("temp_file_name", tempFileName),
+			attr.Error(writeErr),
+		)
+		cleanupTempFile(ctx, fileService, tempFileName)
+		return "", writeErr
+	}
+
+	slog.InfoContext(ctx, "File written and validated", slog.String("temp_file_name", tempFileName))
 	return tempFileName, nil
 }

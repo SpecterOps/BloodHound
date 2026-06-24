@@ -50,7 +50,16 @@ PaginationItem.displayName = 'PaginationItem';
 const PaginationLink = ({ className, isActive, asChild, ...props }: PaginationLinkProps) => {
     const Comp = asChild ? Slot : 'button';
 
-    return <Comp aria-current={isActive ? 'page' : undefined} className={cn(className)} {...props} />;
+    return (
+        <Comp
+            aria-current={isActive ? 'page' : undefined}
+            className={cn(
+                'inline-flex min-h-9 min-w-9 items-center justify-center rounded-md focus:outline-none focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50',
+                className
+            )}
+            {...props}
+        />
+    );
 };
 PaginationLink.displayName = 'PaginationLink';
 
