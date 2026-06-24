@@ -78,15 +78,15 @@ var nodeIcons = map[string]nodeIcon{
 	},
 	"Site": {
 		Icon:  "map-signs",
-		Color: "#bababdff",
+		Color: "#2DD4BF",
 	},
 	"SiteServer": {
 		Icon:  "map-marker",
-		Color: "#dcdce6ff",
+		Color: "#60A5FA",
 	},
 	"SiteSubnet": {
 		Icon:  "map",
-		Color: "#fdfdfdff",
+		Color: "#F59E0B",
 	},
 	"OU": {
 		Icon:  "sitemap",

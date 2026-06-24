@@ -262,9 +262,9 @@ BEGIN
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'NTAuthStore', 'NTAuthStore', '', true, 'store', '#D575F5');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'CertTemplate', 'CertTemplate', '', true, 'id-card', '#B153F3');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'IssuancePolicy', 'IssuancePolicy', '', true, 'clipboard-check', '#99B2DD');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Site', 'Site', '', true, 'map-signs', '#bababdff');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'SiteServer', 'SiteServer', '', true, 'map-marker', '#dcdce6ff');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'SiteSubnet', 'SiteSubnet', '', true, 'map', '#fdfdfdff');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Site', 'Site', '', true, 'map-signs', '#2DD4BF');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'SiteServer', 'SiteServer', '', true, 'map-marker', '#60A5FA');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'SiteSubnet', 'SiteSubnet', '', true, 'map', '#F59E0B');
 
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'Owns', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'GenericAll', '', true);
