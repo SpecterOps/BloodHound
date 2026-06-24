@@ -300,6 +300,9 @@ BEGIN
 	PERFORM genscript_upsert_custom_node_kind('NTAuthStore', '{"icon": {"name": "store", "type": "font-awesome", "color": "#D575F5"}}');
 	PERFORM genscript_upsert_custom_node_kind('CertTemplate', '{"icon": {"name": "id-card", "type": "font-awesome", "color": "#B153F3"}}');
 	PERFORM genscript_upsert_custom_node_kind('IssuancePolicy', '{"icon": {"name": "clipboard-check", "type": "font-awesome", "color": "#99B2DD"}}');
+	PERFORM genscript_upsert_custom_node_kind('Site', '{"icon": {"name": "map-signs", "type": "font-awesome", "color": "#2DD4BF"}}');
+	PERFORM genscript_upsert_custom_node_kind('SiteServer', '{"icon": {"name": "map-marker", "type": "font-awesome", "color": "#60A5FA"}}');
+	PERFORM genscript_upsert_custom_node_kind('SiteSubnet', '{"icon": {"name": "map", "type": "font-awesome", "color": "#F59E0B"}}');
 
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'Owns', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'GenericAll', '', true);
