@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 )
 
@@ -70,7 +71,7 @@ func (s Resources) ToggleFlag(response http.ResponseWriter, request *http.Reques
 					userId = user.ID.String()
 				}
 
-				if err := s.DB.RequestAnalysis(request.Context(), userId); err != nil {
+				if err := s.DB.RequestAnalysis(request.Context(), userId, model.AnalysisModeFull); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				}
