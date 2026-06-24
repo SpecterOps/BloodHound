@@ -39,7 +39,7 @@ func setVariableAnalysisModeFlag(t *testing.T, ctx context.Context, dbInst datab
 	if existingFlag, err := dbInst.GetFlagByKey(ctx, appcfg.FeatureVariableAnalysisMode); errors.Is(err, database.ErrNotFound) {
 		variableAnalysisModeFlag = appcfg.FeatureFlag{
 			Key:           appcfg.FeatureVariableAnalysisMode,
-			Name:          "Variable Analysis Entrypoint",
+			Name:          "Variable Analysis Mode",
 			Description:   "Enables analysis requests to run a subset of the analysis pipeline instead of always running the full pipeline.",
 			UserUpdatable: false,
 		}
