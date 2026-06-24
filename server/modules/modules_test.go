@@ -31,12 +31,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// noopRateLimit is a pass-through middleware factory for use in tests where
+// rate-limiting behaviour is not under test.
+func noopRateLimit() mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler { return next }
+}
+
 func TestRegister_PanicsOnNilRouter(t *testing.T) {
 	assert.Panics(t, func() {
 		modules.Register(modules.Deps{
-			Router: nil,
-			Pool:   new(pgxpool.Pool),
-			Graph:  &graph.DatabaseSwitch{},
+			Router:              nil,
+			Pool:                new(pgxpool.Pool),
+			Graph:               &graph.DatabaseSwitch{},
+			RateLimitMiddleware: noopRateLimit,
 		})
 	})
 }
@@ -50,9 +57,10 @@ func TestRegister_PanicsOnNilPool(t *testing.T) {
 
 	assert.Panics(t, func() {
 		modules.Register(modules.Deps{
-			Router: &routerInst,
-			Pool:   nil,
-			Graph:  &graph.DatabaseSwitch{},
+			Router:              &routerInst,
+			Pool:                nil,
+			Graph:               &graph.DatabaseSwitch{},
+			RateLimitMiddleware: noopRateLimit,
 		})
 	})
 }
@@ -66,9 +74,27 @@ func TestRegister_PanicsOnNilGraph(t *testing.T) {
 
 	assert.Panics(t, func() {
 		modules.Register(modules.Deps{
-			Router: &routerInst,
-			Pool:   new(pgxpool.Pool),
-			Graph:  nil,
+			Router:              &routerInst,
+			Pool:                new(pgxpool.Pool),
+			Graph:               nil,
+			RateLimitMiddleware: noopRateLimit,
+		})
+	})
+}
+
+func TestRegister_PanicsOnNilRateLimitMiddleware(t *testing.T) {
+	var (
+		cfg        = config.Configuration{}
+		authorizer = auth.NewAuthorizer(nil)
+		routerInst = router.NewRouter(cfg, authorizer, "")
+	)
+
+	assert.Panics(t, func() {
+		modules.Register(modules.Deps{
+			Router:              &routerInst,
+			Pool:                new(pgxpool.Pool),
+			Graph:               &graph.DatabaseSwitch{},
+			RateLimitMiddleware: nil,
 		})
 	})
 }
@@ -83,9 +109,10 @@ func TestRegister_WiresFeatureRoutes(t *testing.T) {
 		authorizer = auth.NewAuthorizer(nil)
 		routerInst = router.NewRouter(cfg, authorizer, "")
 		deps       = modules.Deps{
-			Router: &routerInst,
-			Pool:   new(pgxpool.Pool),
-			Graph:  &graph.DatabaseSwitch{},
+			Router:              &routerInst,
+			Pool:                new(pgxpool.Pool),
+			Graph:               &graph.DatabaseSwitch{},
+			RateLimitMiddleware: noopRateLimit,
 		}
 	)
 
