@@ -535,6 +535,25 @@ func TestDatabase_DeleteAllDataQuality(t *testing.T) {
 			},
 		},
 		{
+			name: "Success: deletes data quality aggregations",
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
+				envKind := registerAndGetKind(t, testSuite, "RandomKind")
+
+				_, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, model.DataQualityAggregations{
+					{RunID: "run-abc", SchemaExtensionID: 15, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "computers", MetricValue: 5},
+				})
+				require.NoError(t, err)
+
+				err = testSuite.BHDatabase.DeleteAllDataQuality(testSuite.Context)
+				require.NoError(t, err)
+
+				results, total, err := testSuite.BHDatabase.GetDataQualityAggregations(testSuite.Context, nil, nil, 0, 0)
+				require.NoError(t, err)
+				assert.Equal(t, 0, total)
+				assert.Empty(t, results)
+			},
+		},
+		{
 			name: "Success: no error when tables are already empty",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				err := testSuite.BHDatabase.DeleteAllDataQuality(testSuite.Context)
