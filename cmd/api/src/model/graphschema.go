@@ -199,6 +199,7 @@ type SchemaEnvironment struct {
 	Serial
 	SchemaExtensionId          int32
 	SchemaExtensionDisplayName string
+	IsBuiltin                  bool
 	EnvironmentKindId          int32
 	EnvironmentKindName        string
 	SourceKindId               int32

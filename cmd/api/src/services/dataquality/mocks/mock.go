@@ -28,6 +28,7 @@ package mocks
 import (
 	context "context"
 	reflect "reflect"
+	time "time"
 
 	model "github.com/specterops/bloodhound/cmd/api/src/model"
 	gomock "go.uber.org/mock/gomock"
@@ -115,4 +116,198 @@ func (m *MockDataQualityData) CreateAzureDataQualityStats(ctx context.Context, s
 func (mr *MockDataQualityDataMockRecorder) CreateAzureDataQualityStats(ctx, stats any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityStats", reflect.TypeOf((*MockDataQualityData)(nil).CreateAzureDataQualityStats), ctx, stats)
+}
+
+// CreateDataQualityStats mocks base method.
+func (m *MockDataQualityData) CreateDataQualityStats(ctx context.Context, stats model.DataQualityStats) (model.DataQualityStats, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateDataQualityStats", ctx, stats)
+	ret0, _ := ret[0].(model.DataQualityStats)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateDataQualityStats indicates an expected call of CreateDataQualityStats.
+func (mr *MockDataQualityDataMockRecorder) CreateDataQualityStats(ctx, stats any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDataQualityStats", reflect.TypeOf((*MockDataQualityData)(nil).CreateDataQualityStats), ctx, stats)
+}
+
+// DeleteAllDataQuality mocks base method.
+func (m *MockDataQualityData) DeleteAllDataQuality(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAllDataQuality", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllDataQuality indicates an expected call of DeleteAllDataQuality.
+func (mr *MockDataQualityDataMockRecorder) DeleteAllDataQuality(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllDataQuality", reflect.TypeOf((*MockDataQualityData)(nil).DeleteAllDataQuality), ctx)
+}
+
+// GetADDataQualityAggregations mocks base method.
+func (m *MockDataQualityData) GetADDataQualityAggregations(ctx context.Context, start, end time.Time, sort_by string, limit, skip int) (model.ADDataQualityAggregations, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetADDataQualityAggregations", ctx, start, end, sort_by, limit, skip)
+	ret0, _ := ret[0].(model.ADDataQualityAggregations)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetADDataQualityAggregations indicates an expected call of GetADDataQualityAggregations.
+func (mr *MockDataQualityDataMockRecorder) GetADDataQualityAggregations(ctx, start, end, sort_by, limit, skip any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetADDataQualityAggregations", reflect.TypeOf((*MockDataQualityData)(nil).GetADDataQualityAggregations), ctx, start, end, sort_by, limit, skip)
+}
+
+// GetADDataQualityStats mocks base method.
+func (m *MockDataQualityData) GetADDataQualityStats(ctx context.Context, domainSid string, start, end time.Time, sort_by string, limit, skip int) (model.ADDataQualityStats, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetADDataQualityStats", ctx, domainSid, start, end, sort_by, limit, skip)
+	ret0, _ := ret[0].(model.ADDataQualityStats)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetADDataQualityStats indicates an expected call of GetADDataQualityStats.
+func (mr *MockDataQualityDataMockRecorder) GetADDataQualityStats(ctx, domainSid, start, end, sort_by, limit, skip any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetADDataQualityStats", reflect.TypeOf((*MockDataQualityData)(nil).GetADDataQualityStats), ctx, domainSid, start, end, sort_by, limit, skip)
+}
+
+// GetAggregateADDataQualityStats mocks base method.
+func (m *MockDataQualityData) GetAggregateADDataQualityStats(ctx context.Context, domainSIDs []string, start, end time.Time) (model.ADDataQualityStats, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAggregateADDataQualityStats", ctx, domainSIDs, start, end)
+	ret0, _ := ret[0].(model.ADDataQualityStats)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAggregateADDataQualityStats indicates an expected call of GetAggregateADDataQualityStats.
+func (mr *MockDataQualityDataMockRecorder) GetAggregateADDataQualityStats(ctx, domainSIDs, start, end any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregateADDataQualityStats", reflect.TypeOf((*MockDataQualityData)(nil).GetAggregateADDataQualityStats), ctx, domainSIDs, start, end)
+}
+
+// GetAzureDataQualityAggregations mocks base method.
+func (m *MockDataQualityData) GetAzureDataQualityAggregations(ctx context.Context, start, end time.Time, sort_by string, limit, skip int) (model.AzureDataQualityAggregations, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAzureDataQualityAggregations", ctx, start, end, sort_by, limit, skip)
+	ret0, _ := ret[0].(model.AzureDataQualityAggregations)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetAzureDataQualityAggregations indicates an expected call of GetAzureDataQualityAggregations.
+func (mr *MockDataQualityDataMockRecorder) GetAzureDataQualityAggregations(ctx, start, end, sort_by, limit, skip any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAzureDataQualityAggregations", reflect.TypeOf((*MockDataQualityData)(nil).GetAzureDataQualityAggregations), ctx, start, end, sort_by, limit, skip)
+}
+
+// GetAzureDataQualityStats mocks base method.
+func (m *MockDataQualityData) GetAzureDataQualityStats(ctx context.Context, tenantId string, start, end time.Time, sort_by string, limit, skip int) (model.AzureDataQualityStats, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAzureDataQualityStats", ctx, tenantId, start, end, sort_by, limit, skip)
+	ret0, _ := ret[0].(model.AzureDataQualityStats)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetAzureDataQualityStats indicates an expected call of GetAzureDataQualityStats.
+func (mr *MockDataQualityDataMockRecorder) GetAzureDataQualityStats(ctx, tenantId, start, end, sort_by, limit, skip any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAzureDataQualityStats", reflect.TypeOf((*MockDataQualityData)(nil).GetAzureDataQualityStats), ctx, tenantId, start, end, sort_by, limit, skip)
+}
+
+// GetDataQualityStats mocks base method.
+func (m *MockDataQualityData) GetDataQualityStats(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.DataQualityStats, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDataQualityStats", ctx, filters, sort, skip, limit)
+	ret0, _ := ret[0].(model.DataQualityStats)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetDataQualityStats indicates an expected call of GetDataQualityStats.
+func (mr *MockDataQualityDataMockRecorder) GetDataQualityStats(ctx, filters, sort, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataQualityStats", reflect.TypeOf((*MockDataQualityData)(nil).GetDataQualityStats), ctx, filters, sort, skip, limit)
+}
+
+// GetEnvironments mocks base method.
+func (m *MockDataQualityData) GetEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEnvironments", ctx)
+	ret0, _ := ret[0].([]model.SchemaEnvironment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEnvironments indicates an expected call of GetEnvironments.
+func (mr *MockDataQualityDataMockRecorder) GetEnvironments(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironments", reflect.TypeOf((*MockDataQualityData)(nil).GetEnvironments), ctx)
+}
+
+// GetGraphSchemaNodeKindsByExtensionId mocks base method.
+func (m *MockDataQualityData) GetGraphSchemaNodeKindsByExtensionId(ctx context.Context, extensionId int32) (model.GraphSchemaNodeKinds, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGraphSchemaNodeKindsByExtensionId", ctx, extensionId)
+	ret0, _ := ret[0].(model.GraphSchemaNodeKinds)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetGraphSchemaNodeKindsByExtensionId indicates an expected call of GetGraphSchemaNodeKindsByExtensionId.
+func (mr *MockDataQualityDataMockRecorder) GetGraphSchemaNodeKindsByExtensionId(ctx, extensionId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaNodeKindsByExtensionId", reflect.TypeOf((*MockDataQualityData)(nil).GetGraphSchemaNodeKindsByExtensionId), ctx, extensionId)
+}
+
+// GetKindsByIDs mocks base method.
+func (m *MockDataQualityData) GetKindsByIDs(ctx context.Context, ids ...int32) ([]model.Kind, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx}
+	for _, a := range ids {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetKindsByIDs", varargs...)
+	ret0, _ := ret[0].([]model.Kind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetKindsByIDs indicates an expected call of GetKindsByIDs.
+func (mr *MockDataQualityDataMockRecorder) GetKindsByIDs(ctx any, ids ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx}, ids...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetKindsByIDs", reflect.TypeOf((*MockDataQualityData)(nil).GetKindsByIDs), varargs...)
+}
+
+// GetKindsByNames mocks base method.
+func (m *MockDataQualityData) GetKindsByNames(ctx context.Context, names ...string) ([]model.Kind, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx}
+	for _, a := range names {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetKindsByNames", varargs...)
+	ret0, _ := ret[0].([]model.Kind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetKindsByNames indicates an expected call of GetKindsByNames.
+func (mr *MockDataQualityDataMockRecorder) GetKindsByNames(ctx any, names ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx}, names...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetKindsByNames", reflect.TypeOf((*MockDataQualityData)(nil).GetKindsByNames), varargs...)
 }

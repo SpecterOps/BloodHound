@@ -129,6 +129,36 @@ export type AzureDataQualityStat = TimestampFields & {
 
 export type AzureDataQualityResponse = PaginatedResponse<AzureDataQualityStat[]>;
 
+export type DataQualityEnvironment = Environment & {
+    schema_extension_id: number;
+    schema_extension_display_name: string;
+    is_builtin: boolean;
+    environment_kind_id: number;
+    environment_kind: string;
+    source_kind_id: number;
+    source_kind: string;
+};
+
+export type DataQualityEnvironmentsResponse = BasicResponse<DataQualityEnvironment[]>;
+
+export type DataQualityNodeKindStat = TimestampFields & {
+    run_id: string;
+    schema_extension_id: number;
+    schema_extension_display_name: string;
+    is_builtin: boolean;
+    schema_environment_kind_id: number;
+    environment_kind: string;
+    source_kind: string;
+    environment_id: string;
+    metric_type: 'node' | 'relationship';
+    metric_name: string;
+    metric_value: number;
+    kind_id: number | null;
+    kind_name: string;
+};
+
+export type DataQualityNodeKindStatsResponse = PaginatedResponse<DataQualityNodeKindStat[]>;
+
 type PostureStat = TimestampFields & {
     domain_sid: string;
     exposure_index: number;

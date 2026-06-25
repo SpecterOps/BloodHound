@@ -13552,6 +13552,198 @@
         }
       }
     },
+    "/api/v2/data-quality/environments": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetDataQualityEnvironments",
+        "summary": "Get Data Quality environments",
+        "description": "Gets schema-backed environments available to the Data Quality page.",
+        "tags": [
+          "Data Quality",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are objectid, name.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.data-quality-environment-selector"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/data-quality/node-kind-stats": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetDataQualityNodeKindStats",
+        "summary": "Get Data Quality node kind stats",
+        "description": "Gets historical schema-defined node kind counts for a selected environment kind. Supplying environment_id returns the per-environment view; omitting environment_id returns an aggregate view over all collected environment IDs matching the selected environment kind.\n",
+        "tags": [
+          "Data Quality",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "environment_kind",
+            "description": "Schema environment kind to query.",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "environment_id",
+            "description": "Environment ID for the per-environment view.",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "source_kind",
+            "description": "Optional source kind filter for built-in environment views extended by OpenGraph schema.",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include_builtin",
+            "description": "Whether built-in schema extension stats should be included.",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are created_at, updated_at, metric_name, metric_value, and environment_id.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "start",
+            "description": "Beginning datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime minus 30 days.",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "end",
+            "description": "Ending datetime of range (exclusive) in RFC-3339 format; Defaults to current datetime.",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "$ref": "#/components/schemas/api.response.time-window"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.data-quality-node-kind-stat"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/ad-domains/{domain_id}/data-quality-stats": {
       "parameters": [
         {
@@ -21705,6 +21897,47 @@
           }
         }
       },
+      "model.data-quality-environment-selector": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "collected": {
+            "type": "boolean"
+          },
+          "schema_extension_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "schema_extension_display_name": {
+            "type": "string"
+          },
+          "is_builtin": {
+            "type": "boolean"
+          },
+          "environment_kind_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "environment_kind": {
+            "type": "string"
+          },
+          "source_kind_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "source_kind": {
+            "type": "string"
+          }
+        }
+      },
       "api.response.time-window": {
         "type": "object",
         "properties": {
@@ -21719,6 +21952,70 @@
             "description": "The RFC-3339 timestamp to describe the end of a time range"
           }
         }
+      },
+      "model.data-quality-node-kind-stat": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int32.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "run_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "schema_extension_id": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "schema_extension_display_name": {
+                "type": "string"
+              },
+              "is_builtin": {
+                "type": "boolean"
+              },
+              "schema_environment_kind_id": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "environment_kind": {
+                "type": "string"
+              },
+              "source_kind": {
+                "type": "string"
+              },
+              "environment_id": {
+                "type": "string"
+              },
+              "metric_type": {
+                "type": "string",
+                "enum": [
+                  "node",
+                  "relationship"
+                ]
+              },
+              "metric_name": {
+                "type": "string"
+              },
+              "metric_value": {
+                "type": "number",
+                "format": "double"
+              },
+              "kind_id": {
+                "type": "integer",
+                "format": "int32",
+                "nullable": true
+              },
+              "kind_name": {
+                "type": "string"
+              }
+            }
+          }
+        ]
       },
       "model.ad-data-quality-stat": {
         "allOf": [

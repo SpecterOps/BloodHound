@@ -21,52 +21,70 @@ import {
     DomainInfo,
     LoadingOverlay,
     PageWithTitle,
-    SelectedEnvironment,
-    SimpleEnvironmentSelector,
     TenantInfo,
-    useInitialEnvironment,
+    useDataQualityEnvironmentsQuery,
 } from 'bh-shared-ui';
 import { Typography } from 'doodle-ui';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import DataQualityEnvironmentSelector, { DataQualitySelection } from './DataQualityEnvironmentSelector';
+import OpenGraphNodeKindCounts from './OpenGraphNodeKindCounts';
 import { dataCollectionMessage } from './utils';
 
-const getStatsComponent = (selectedEnvironment: SelectedEnvironment | null, dataErrorHandler: () => void) => {
+const getStatsComponent = (selectedEnvironment: DataQualitySelection | null, dataErrorHandler: () => void) => {
     const contextType = selectedEnvironment?.type;
     const contextId = selectedEnvironment?.id;
-    switch (contextType) {
-        case 'active-directory':
-            if (!contextId) return null;
-            return <DomainInfo contextId={contextId} onDataError={dataErrorHandler} />;
-        case 'active-directory-platform':
+
+    if (contextType === 'active-directory') {
+        if (selectedEnvironment?.selectionType === 'aggregate') {
             return <ActiveDirectoryPlatformInfo onDataError={dataErrorHandler} />;
-        case 'azure':
-            if (!contextId) return null;
-            return <TenantInfo contextId={contextId} onDataError={dataErrorHandler} />;
-        case 'azure-platform':
-            return <AzurePlatformInfo onDataError={dataErrorHandler} />;
-        default:
-            return null;
+        }
+        if (!contextId) return null;
+        return <DomainInfo contextId={contextId} onDataError={dataErrorHandler} />;
     }
+
+    if (contextType === 'azure') {
+        if (selectedEnvironment?.selectionType === 'aggregate') {
+            return <AzurePlatformInfo onDataError={dataErrorHandler} />;
+        }
+        if (!contextId) return null;
+        return <TenantInfo contextId={contextId} onDataError={dataErrorHandler} />;
+    }
+
+    return null;
 };
 
 const DataQuality: React.FC = () => {
-    const { data: initialEnvironment, isLoading } = useInitialEnvironment({ orderBy: 'name' });
+    const { data: environmentsResponse, isLoading, isError } = useDataQualityEnvironmentsQuery();
+    const environments = environmentsResponse?.data ?? [];
 
-    const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedEnvironment | null>(
-        initialEnvironment ?? null
-    );
+    const initialEnvironment = useMemo(() => {
+        return environments
+            .filter((environment) => environment.collected)
+            .sort((first, second) => first.name.localeCompare(second.name))[0];
+    }, [environments]);
 
-    const environment = selectedEnvironment ?? initialEnvironment;
-    const noIdSetForEnvironment =
-        !environment?.id && (environment?.type === 'active-directory' || environment?.type === 'azure');
+    const initialSelection = useMemo<DataQualitySelection | null>(() => {
+        if (!initialEnvironment) return null;
 
-    const handleSelect: (environment: SelectedEnvironment) => void = (selection) => setSelectedEnvironment(selection);
+        return {
+            type: initialEnvironment.type,
+            id: initialEnvironment.id,
+            environmentKind: initialEnvironment.environment_kind,
+            sourceKind: initialEnvironment.source_kind,
+            selectionType: 'environment',
+        };
+    }, [initialEnvironment]);
+
+    const [selectedEnvironment, setSelectedEnvironment] = useState<DataQualitySelection | null>(null);
+    const environment = selectedEnvironment ?? initialSelection;
 
     const [dataError, setDataError] = useState(false);
 
     useEffect(() => {
-        initialEnvironment && setSelectedEnvironment(initialEnvironment);
-    }, [initialEnvironment]);
+        if (!selectedEnvironment && initialSelection) {
+            setSelectedEnvironment(initialSelection);
+        }
+    }, [initialSelection, selectedEnvironment]);
 
     useEffect(() => {
         setDataError(false);
@@ -93,26 +111,26 @@ const DataQuality: React.FC = () => {
         );
     }
 
-    if (!environment?.type || noIdSetForEnvironment) {
+    if (!environment?.type) {
         return (
             <PageWithTitle
                 title='Data Quality'
                 data-testid='data-quality'
                 pageDescription={<QualityAssuranceDescription />}>
                 <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
-                    <SimpleEnvironmentSelector
+                    <DataQualityEnvironmentSelector
                         align='end'
-                        selected={{
-                            type: environment?.type ?? null,
-                            id: environment?.id ?? null,
-                        }}
+                        environments={environments}
                         errorMessage={environmentErrorMessage}
-                        onSelect={handleSelect}
+                        isError={isError}
+                        isLoading={isLoading}
+                        selected={environment}
+                        onSelect={setSelectedEnvironment}
                     />
                 </Box>
                 <Alert severity='info'>
-                    <AlertTitle>No Domain or Tenant Selected</AlertTitle>
-                    Select a domain or tenant to view data. If you are unable to select a domain, you may need to run
+                    <AlertTitle>No Environment Selected</AlertTitle>
+                    Select an environment to view data. If you are unable to select an environment, you may need to run
                     data collection first. {dataCollectionMessage}
                 </Alert>
             </PageWithTitle>
@@ -125,14 +143,14 @@ const DataQuality: React.FC = () => {
             data-testid='data-quality'
             pageDescription={<QualityAssuranceDescription />}>
             <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
-                <SimpleEnvironmentSelector
+                <DataQualityEnvironmentSelector
                     align='end'
-                    selected={{
-                        type: selectedEnvironment?.type ?? null,
-                        id: selectedEnvironment?.id ?? null,
-                    }}
+                    environments={environments}
                     errorMessage={environmentErrorMessage}
-                    onSelect={handleSelect}
+                    isError={isError}
+                    isLoading={isLoading}
+                    selected={environment}
+                    onSelect={setSelectedEnvironment}
                 />
             </Box>
             {dataError && (
@@ -152,6 +170,7 @@ const DataQuality: React.FC = () => {
             <Grid container spacing={2}>
                 <Grid item xs={12} data-testid='data-quality_statistics'>
                     {getStatsComponent(environment, dataErrorHandler)}
+                    <OpenGraphNodeKindCounts selectedEnvironment={environment} />
                 </Grid>
             </Grid>
         </PageWithTitle>

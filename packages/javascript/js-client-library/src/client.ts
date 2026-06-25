@@ -73,6 +73,8 @@ import {
     CreateAuthTokenResponse,
     CreateWebhookResponse,
     DatapipeStatusResponse,
+    DataQualityEnvironmentsResponse,
+    DataQualityNodeKindStatsResponse,
     EndFileIngestResponse,
     Environment,
     FileIngestCompletedTasksResponse,
@@ -680,6 +682,43 @@ class BHEAPIClient {
                         end: end?.toISOString(),
                         limit: limit,
                         sort_by: sort_by,
+                    },
+                },
+                options
+            )
+        );
+    };
+
+    getDataQualityEnvironments = (options?: RequestOptions) => {
+        return this.baseClient.get<DataQualityEnvironmentsResponse>('/api/v2/data-quality/environments', options);
+    };
+
+    getDataQualityNodeKindStats = (
+        params: {
+            environmentKind: string;
+            environmentId?: string | null;
+            sourceKind?: string;
+            includeBuiltin?: boolean;
+            start?: Date;
+            end?: Date;
+            limit?: number;
+            sort_by?: string;
+        },
+        options?: RequestOptions
+    ) => {
+        return this.baseClient.get<DataQualityNodeKindStatsResponse>(
+            '/api/v2/data-quality/node-kind-stats',
+            Object.assign(
+                {
+                    params: {
+                        environment_kind: params.environmentKind,
+                        environment_id: params.environmentId || undefined,
+                        source_kind: params.sourceKind,
+                        include_builtin: params.includeBuiltin,
+                        start: params.start?.toISOString(),
+                        end: params.end?.toISOString(),
+                        limit: params.limit,
+                        sort_by: params.sort_by,
                     },
                 },
                 options

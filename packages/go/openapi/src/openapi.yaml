@@ -609,6 +609,10 @@ paths:
   # data quality
   /api/v2/completeness:
     $ref: './paths/data-quality.completeness.yaml'
+  /api/v2/data-quality/environments:
+    $ref: './paths/data-quality.environments.yaml'
+  /api/v2/data-quality/node-kind-stats:
+    $ref: './paths/data-quality.node-kind-stats.yaml'
   /api/v2/ad-domains/{domain_id}/data-quality-stats:
     $ref: './paths/data-quality.ad-domains.id.data-quality-stats.yaml'
   /api/v2/azure-tenants/{tenant_id}/data-quality-stats:

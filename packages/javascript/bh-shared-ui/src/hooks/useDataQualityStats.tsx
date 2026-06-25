@@ -110,3 +110,49 @@ export const useAzurePlatformsDataQualityStatsQuery = () => {
         })
     );
 };
+
+export const useDataQualityEnvironmentsQuery = () => {
+    return useQuery('data-quality-environments', ({ signal }) =>
+        apiClient.getDataQualityEnvironments({ signal }).then((response) => {
+            if (!response.data) throw new Error('Unable to retrieve Data Quality environments');
+            return response.data;
+        })
+    );
+};
+
+export const useDataQualityNodeKindStatsQuery = (params: {
+    environmentKind?: string;
+    environmentId?: string | null;
+    sourceKind?: string;
+    includeBuiltin?: boolean;
+}) => {
+    return useQuery(
+        [
+            'data-quality-node-kind-stats',
+            params.environmentKind,
+            params.environmentId ?? 'aggregate',
+            params.sourceKind ?? '',
+            params.includeBuiltin,
+        ],
+        ({ signal }) =>
+            apiClient
+                .getDataQualityNodeKindStats(
+                    {
+                        environmentKind: params.environmentKind ?? '',
+                        environmentId: params.environmentId,
+                        sourceKind: params.sourceKind,
+                        includeBuiltin: params.includeBuiltin,
+                        start: DateTime.now().minus({ days: 30 }).toJSDate(),
+                        end: DateTime.now().toJSDate(),
+                        limit: 5000,
+                        sort_by: 'created_at',
+                    },
+                    { signal }
+                )
+                .then((response) => {
+                    if (!response.data) throw new Error('Unable to retrieve Data Quality node kind stats');
+                    return response.data;
+                }),
+        { enabled: Boolean(params.environmentKind) }
+    );
+};

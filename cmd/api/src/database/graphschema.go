@@ -818,6 +818,7 @@ func (s *BloodhoundDB) GetEnvironmentsFiltered(ctx context.Context, filters mode
 			se.id,
 			se.schema_extension_id,
 			ext.display_name as schema_extension_display_name,
+			ext.is_builtin,
 			se.environment_kind_id,
 			k.name as environment_kind_name,
 			se.source_kind_id,

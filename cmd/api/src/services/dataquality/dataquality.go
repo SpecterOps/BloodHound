@@ -25,11 +25,13 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/nan"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -37,6 +39,14 @@ import (
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 )
+
+type DataQualityData interface {
+	database.DataQualityData
+	GetEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error)
+	GetGraphSchemaNodeKindsByExtensionId(ctx context.Context, extensionId int32) (model.GraphSchemaNodeKinds, error)
+	GetKindsByIDs(ctx context.Context, ids ...int32) ([]model.Kind, error)
+	GetKindsByNames(ctx context.Context, names ...string) ([]model.Kind, error)
+}
 
 func adGraphStats(ctx context.Context, db graph.Database) (model.ADDataQualityStats, model.ADDataQualityAggregation, error) {
 	var (
@@ -454,7 +464,205 @@ func azureGraphStats(ctx context.Context, db graph.Database) (model.AzureDataQua
 	return stats, aggregation, err
 }
 
-func SaveDataQuality(ctx context.Context, db database.DataQualityData, graphDB graph.Database) error {
+func schemaEnvironmentCollected(node *graph.Node) bool {
+	if !node.Properties.Exists(common.Collected.String()) {
+		return false
+	}
+
+	collected, _ := node.Properties.Get(common.Collected.String()).Bool()
+	if node.Kinds.ContainsOneOf(azure.Tenant, ad.Domain) {
+		return collected
+	}
+
+	return true
+}
+
+func schemaEnvironmentIDCriteria(environmentKind graph.Kind, sourceKind graph.Kind, environmentID string) graph.Criteria {
+	var criteria = []graph.Criteria{
+		query.Equals(query.NodeProperty(graphschema.EnvironmentIDKey), environmentID),
+	}
+
+	if environmentKind.Is(ad.Domain) || sourceKind.Is(ad.Entity) {
+		criteria = append(criteria, query.Equals(query.NodeProperty(ad.DomainSID.String()), environmentID))
+	}
+
+	if environmentKind.Is(azure.Tenant) || sourceKind.Is(azure.Entity) {
+		criteria = append(criteria, query.Equals(query.NodeProperty(azure.TenantID.String()), environmentID))
+	}
+
+	return query.Or(criteria...)
+}
+
+func schemaSourceKinds(ctx context.Context, db DataQualityData, schemaEnvironments []model.SchemaEnvironment) (map[int32]graph.Kind, error) {
+	var sourceKindIDs []int32
+
+	for _, schemaEnvironment := range schemaEnvironments {
+		sourceKindIDs = append(sourceKindIDs, schemaEnvironment.SourceKindId)
+	}
+
+	kinds, err := db.GetKindsByIDs(ctx, sourceKindIDs...)
+	if err != nil {
+		return nil, err
+	}
+
+	sourceKinds := make(map[int32]graph.Kind, len(kinds))
+	for _, kind := range kinds {
+		sourceKinds[kind.ID] = kind.ToKind()
+	}
+
+	return sourceKinds, nil
+}
+
+func schemaNodeKindMaps(ctx context.Context, db DataQualityData, schemaEnvironments []model.SchemaEnvironment) (map[int32]model.GraphSchemaNodeKinds, map[string]int32, error) {
+	var (
+		nodeKindNames          []string
+		nodeKindsByExtensionID = make(map[int32]model.GraphSchemaNodeKinds)
+		seenExtensionIDs       = make(map[int32]struct{})
+	)
+
+	for _, schemaEnvironment := range schemaEnvironments {
+		if _, seen := seenExtensionIDs[schemaEnvironment.SchemaExtensionId]; seen {
+			continue
+		}
+
+		seenExtensionIDs[schemaEnvironment.SchemaExtensionId] = struct{}{}
+
+		nodeKinds, err := db.GetGraphSchemaNodeKindsByExtensionId(ctx, schemaEnvironment.SchemaExtensionId)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		nodeKindsByExtensionID[schemaEnvironment.SchemaExtensionId] = nodeKinds
+		for _, nodeKind := range nodeKinds {
+			nodeKindNames = append(nodeKindNames, nodeKind.Name)
+		}
+	}
+
+	if len(nodeKindNames) == 0 {
+		return nodeKindsByExtensionID, map[string]int32{}, nil
+	}
+
+	kinds, err := db.GetKindsByNames(ctx, nodeKindNames...)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	kindIDByName := make(map[string]int32, len(kinds))
+	for _, kind := range kinds {
+		kindIDByName[kind.Name] = kind.ID
+	}
+
+	return nodeKindsByExtensionID, kindIDByName, nil
+}
+
+func schemaGraphStats(ctx context.Context, db DataQualityData, graphDB graph.Database) (model.DataQualityStats, error) {
+	var (
+		runID string
+		stats = model.DataQualityStats{}
+	)
+
+	if newUUID, err := uuid.NewV4(); err != nil {
+		return stats, fmt.Errorf("could not generate new UUID: %w", err)
+	} else {
+		runID = newUUID.String()
+	}
+
+	schemaEnvironments, err := db.GetEnvironments(ctx)
+	if err != nil {
+		return stats, err
+	} else if len(schemaEnvironments) == 0 {
+		return stats, nil
+	}
+
+	sourceKinds, err := schemaSourceKinds(ctx, db, schemaEnvironments)
+	if err != nil {
+		return stats, err
+	}
+
+	nodeKindsByExtensionID, kindIDByName, err := schemaNodeKindMaps(ctx, db, schemaEnvironments)
+	if err != nil {
+		return stats, err
+	}
+
+	err = graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		for _, schemaEnvironment := range schemaEnvironments {
+			var (
+				environmentKind = graph.StringKind(schemaEnvironment.EnvironmentKindName)
+				sourceKind      graph.Kind
+				sourceKindFound bool
+			)
+
+			if sourceKind, sourceKindFound = sourceKinds[schemaEnvironment.SourceKindId]; !sourceKindFound {
+				return fmt.Errorf("source kind %d not found for schema environment %d", schemaEnvironment.SourceKindId, schemaEnvironment.ID)
+			}
+
+			environmentNodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
+				return query.Kind(query.Node(), environmentKind)
+			}))
+			if err != nil {
+				return err
+			}
+
+			for _, environmentNode := range environmentNodes {
+				if !schemaEnvironmentCollected(environmentNode) {
+					continue
+				}
+
+				environmentID, err := environmentNode.Properties.Get(common.ObjectID.String()).String()
+				if err != nil {
+					slog.ErrorContext(
+						ctx,
+						"Schema environment node does not have a valid objectid property",
+						slog.Uint64("environment_node_id", uint64(environmentNode.ID)),
+						slog.String("environment_kind", schemaEnvironment.EnvironmentKindName),
+						attr.Error(err),
+					)
+					continue
+				}
+
+				for _, nodeKind := range nodeKindsByExtensionID[schemaEnvironment.SchemaExtensionId] {
+					graphNodeKind := nodeKind.ToKind()
+					if graphNodeKind.Is(sourceKind) {
+						continue
+					}
+
+					kindID, found := kindIDByName[nodeKind.Name]
+					if !found {
+						return fmt.Errorf("kind ID not found for schema node kind %s", nodeKind.Name)
+					}
+
+					count, err := tx.Nodes().Filterf(func() graph.Criteria {
+						return query.And(
+							query.Kind(query.Node(), sourceKind),
+							query.Kind(query.Node(), graphNodeKind),
+							schemaEnvironmentIDCriteria(environmentKind, sourceKind, environmentID),
+						)
+					}).Count()
+					if err != nil {
+						return err
+					}
+
+					stats = append(stats, model.DataQualityStat{
+						RunID:                   runID,
+						SchemaExtensionID:       schemaEnvironment.SchemaExtensionId,
+						SchemaEnvironmentKindID: schemaEnvironment.EnvironmentKindId,
+						EnvironmentID:           environmentID,
+						MetricType:              model.DataQualityMetricTypeNode,
+						MetricName:              nodeKind.Name,
+						MetricValue:             float64(count),
+						KindID:                  null.Int32From(kindID),
+					})
+				}
+			}
+		}
+
+		return nil
+	})
+
+	return stats, err
+}
+
+func SaveDataQuality(ctx context.Context, db DataQualityData, graphDB graph.Database) error {
 	slog.InfoContext(
 		ctx,
 		"Started Data Quality Stats Collection",
@@ -490,6 +698,14 @@ func SaveDataQuality(ctx context.Context, db database.DataQualityData, graphDB g
 			return fmt.Errorf("could not save azure data quality stats: %w", err)
 		} else if _, err := db.CreateAzureDataQualityAggregation(ctx, aggregation); err != nil {
 			return fmt.Errorf("could not save azure data quality stats: %w", err)
+		}
+	}
+
+	if stats, err := schemaGraphStats(ctx, db, graphDB); err != nil {
+		return fmt.Errorf("could not get schema data quality stats: %w", err)
+	} else if len(stats) > 0 {
+		if _, err := db.CreateDataQualityStats(ctx, stats); err != nil {
+			return fmt.Errorf("could not save schema data quality stats: %w", err)
 		}
 	}
 

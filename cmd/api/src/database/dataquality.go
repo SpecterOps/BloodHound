@@ -46,6 +46,8 @@ type DataQualityData interface {
 
 //Data Quality Stats
 
+var defaultDataQualitySort = model.SortItem{Column: "created_at", Direction: model.DescendingSortDirection}
+
 func (s *BloodhoundDB) CreateADDataQualityStats(ctx context.Context, stats model.ADDataQualityStats) (model.ADDataQualityStats, error) {
 	result := s.db.WithContext(ctx).Create(&stats)
 	return stats, CheckError(result)
@@ -197,6 +199,11 @@ func (s *BloodhoundDB) GetDataQualityStats(ctx context.Context, filters model.Fi
 	filter, err := buildSQLFilter(filters)
 	if err != nil {
 		return dataQualityStats, 0, err
+	}
+
+	// Set default sort if no sort provided
+	if len(sort) == 0 {
+		sort = append(sort, defaultDataQualitySort)
 	}
 
 	orderSql, err := buildSQLSort(sort)
