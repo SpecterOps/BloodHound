@@ -19,12 +19,20 @@ import { LoginForm, LoginViaSSOForm, OneTimePasscodeForm, apiClient, useAppName 
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useQuery, useQueryClient } from 'react-query';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import LoginPage from 'src/components/LoginPage';
 
 import { login as loginAction, logout } from 'src/ducks/auth/authSlice';
 import { ROUTE_HOME, ROUTE_USER_DISABLED } from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
+
+type RedirectLocationState = {
+    from?: {
+        pathname: string
+        search?: string
+        hash?: string
+    }
+};
 
 const Login: React.FC = () => {
     /* Hooks */
@@ -34,6 +42,11 @@ const Login: React.FC = () => {
 
     const authState = useAppSelector((state) => state.auth);
     const appName = useAppName();
+
+    const location = useLocation();
+
+    const from = (location.state as RedirectLocationState | null)?.from;
+    const redirectTo = from ? `${from.pathname}${from.search ?? ''}${from.hash ?? ''}` : ROUTE_HOME;
 
     const [useSSO, setUseSSO] = useState(false);
 
@@ -81,7 +94,7 @@ const Login: React.FC = () => {
     /* Implementation */
 
     // Redirect if already logged in
-    if (authState.sessionToken !== null && authState.user !== null) return <Navigate to={ROUTE_HOME} replace />;
+    if (authState.sessionToken !== null && authState.user !== null) return <Navigate to={redirectTo} replace />;
 
     if (listSSOProvidersQuery.isLoading) {
         return (
