@@ -96,6 +96,12 @@ func (s *responseRecorder) WriteHeader(statusCode int) {
 	s.delegate.WriteHeader(statusCode)
 }
 
+func (s *responseRecorder) Flush() {
+	if flusher, ok := s.delegate.(http.Flusher); ok {
+		flusher.Flush()
+	}
+}
+
 func getSignedRequestDate(request *http.Request) (string, bool) {
 	requestDateHeader := request.Header.Get(headers.RequestDate.String())
 	return requestDateHeader, requestDateHeader != ""

@@ -53,6 +53,16 @@ func (s *GzipResponseWriter) Close() error {
 	return s.gw.Close()
 }
 
+func (s *GzipResponseWriter) Flush() {
+	if err := s.gw.Flush(); err != nil {
+		slog.Warn("Failed to flush gzip response", attr.Error(err))
+	}
+
+	if flusher, ok := s.ResponseWriter.(http.Flusher); ok {
+		flusher.Flush()
+	}
+}
+
 func CompressionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
 		var (
