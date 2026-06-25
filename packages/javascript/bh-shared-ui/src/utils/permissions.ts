@@ -117,7 +117,7 @@ export const PERMISSIONS: PermissionDefinitions = {
     },
     [Permission.GRAPH_DB_INGEST_MANAGE]: {
         authority: 'graphdb',
-        name: 'Ingest',
+        name: 'IngestManage',
     },
     [Permission.GRAPH_DB_INGEST_READ]: {
         authority: 'graphdb',
