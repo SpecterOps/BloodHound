@@ -43,11 +43,19 @@ func newRequestWithID(t *testing.T, rawID string) *http.Request {
 func TestHandlers_GetRelationshipByID(t *testing.T) {
 	var (
 		relationshipID = int64(1234567890)
+		kindID         = int32(42)
 		relationship   = services.Relationship{
 			ID:           relationshipID,
 			SourceNodeID: 100,
 			TargetNodeID: 200,
-			Kind:         services.Kind{ID: 42, Name: "MemberOf"},
+			Kind:         services.Kind{ID: &kindID, Name: "MemberOf"},
+			Properties:   map[string]any{"foo": "bar"},
+		}
+		nilKindRelationship = services.Relationship{
+			ID:           relationshipID,
+			SourceNodeID: 100,
+			TargetNodeID: 200,
+			Kind:         services.Kind{Name: "MemberOf"},
 			Properties:   map[string]any{"foo": "bar"},
 		}
 	)
@@ -74,7 +82,26 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 				assert.Equal(t, relationshipID, envelope.Data.RelationshipID)
 				assert.Equal(t, int64(100), envelope.Data.SourceNodeID)
 				assert.Equal(t, int64(200), envelope.Data.TargetNodeID)
-				assert.Equal(t, int32(42), envelope.Data.Kind.RelationshipKindID)
+				require.NotNil(t, envelope.Data.Kind.RelationshipKindID)
+				assert.Equal(t, int32(42), *envelope.Data.Kind.RelationshipKindID)
+				assert.Equal(t, "MemberOf", envelope.Data.Kind.Name)
+			},
+		},
+		{
+			name:  "returns 200 with a null relationship kind id when the kind has no schema entry",
+			rawID: "1234567890",
+			setupMock: func(graphDBMock *mocks.MockGraphDB) {
+				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID).Return(nilKindRelationship, nil)
+			},
+			wantStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body []byte) {
+				assert.Contains(t, string(body), `"relationship_kind_id":null`)
+
+				var envelope struct {
+					Data handlers.RelationshipView `json:"data"`
+				}
+				require.NoError(t, json.Unmarshal(body, &envelope))
+				assert.Nil(t, envelope.Data.Kind.RelationshipKindID)
 				assert.Equal(t, "MemberOf", envelope.Data.Kind.Name)
 			},
 		},

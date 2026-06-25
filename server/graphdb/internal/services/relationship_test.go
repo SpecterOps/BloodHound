@@ -32,6 +32,7 @@ func TestService_GetRelationship(t *testing.T) {
 		ctx              = context.Background()
 		relationshipID   = int64(1234567890)
 		kindName         = "MemberOf"
+		kindID           = int32(42)
 		unexpectedErr    = errors.New("connection refused")
 		baseRelationship = services.Relationship{
 			ID:           relationshipID,
@@ -40,7 +41,8 @@ func TestService_GetRelationship(t *testing.T) {
 			Kind:         services.Kind{Name: kindName},
 			Properties:   map[string]any{"foo": "bar"},
 		}
-		resolvedKind = services.Kind{ID: 42, Name: kindName}
+		resolvedKind = services.Kind{ID: &kindID, Name: kindName}
+		nilIDKind    = services.Kind{Name: kindName}
 	)
 
 	tests := []struct {
@@ -60,6 +62,20 @@ func TestService_GetRelationship(t *testing.T) {
 				SourceNodeID: 100,
 				TargetNodeID: 200,
 				Kind:         resolvedKind,
+				Properties:   map[string]any{"foo": "bar"},
+			},
+		},
+		{
+			name: "preserves a nil kind id when the kind has no schema_relationship_kinds entry",
+			setupMock: func(databaseMock *mocks.MockDatabase) {
+				databaseMock.EXPECT().GetRelationship(ctx, relationshipID).Return(baseRelationship, nil)
+				databaseMock.EXPECT().GetKindByName(ctx, kindName).Return(nilIDKind, nil)
+			},
+			wantResult: services.Relationship{
+				ID:           relationshipID,
+				SourceNodeID: 100,
+				TargetNodeID: 200,
+				Kind:         nilIDKind,
 				Properties:   map[string]any{"foo": "bar"},
 			},
 		},

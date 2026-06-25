@@ -71,7 +71,7 @@ func TestStore_GetKindByName(t *testing.T) {
 	var (
 		ctx            = context.Background()
 		kindName       = "MemberOf"
-		expectedSQL    = `SELECT rk.id, k.name FROM schema_relationship_kinds AS rk JOIN kind AS k ON rk.kind_id = k.id WHERE k.name = $1 LIMIT $2`
+		expectedSQL    = `SELECT rk.id, k.name FROM kind AS k LEFT JOIN schema_relationship_kinds AS rk ON rk.kind_id = k.id WHERE k.name = $1 LIMIT $2`
 		expectedKindID = int32(42)
 	)
 
@@ -84,11 +84,23 @@ func TestStore_GetKindByName(t *testing.T) {
 	t.Run("returns kind on success", func(t *testing.T) {
 		pool.ExpectQuery(expectedSQL).
 			WithArgs(kindName, 1).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "name"}).AddRow(expectedKindID, kindName))
+			WillReturnRows(pgxmock.NewRows([]string{"id", "name"}).AddRow(&expectedKindID, kindName))
 
 		kind, err := store.GetKindByName(ctx, kindName)
 		require.NoError(t, err)
-		assert.Equal(t, expectedKindID, kind.ID)
+		require.NotNil(t, kind.ID)
+		assert.Equal(t, expectedKindID, *kind.ID)
+		assert.Equal(t, kindName, kind.Name)
+	})
+
+	t.Run("returns kind with nil id when no schema_relationship_kinds row", func(t *testing.T) {
+		pool.ExpectQuery(expectedSQL).
+			WithArgs(kindName, 1).
+			WillReturnRows(pgxmock.NewRows([]string{"id", "name"}).AddRow(nil, kindName))
+
+		kind, err := store.GetKindByName(ctx, kindName)
+		require.NoError(t, err)
+		assert.Nil(t, kind.ID)
 		assert.Equal(t, kindName, kind.Name)
 	})
 

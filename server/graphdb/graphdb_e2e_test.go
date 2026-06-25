@@ -215,7 +215,8 @@ func TestGetRelationshipByID(t *testing.T) {
 		assert.Equal(t, harness.sourceNodeID, envelope.Data.SourceNodeID)
 		assert.Equal(t, harness.targetNodeID, envelope.Data.TargetNodeID)
 		assert.Equal(t, "MemberOf", envelope.Data.Kind.Name)
-		assert.Greater(t, envelope.Data.Kind.RelationshipKindID, int32(0))
+		require.NotNil(t, envelope.Data.Kind.RelationshipKindID)
+		assert.Greater(t, *envelope.Data.Kind.RelationshipKindID, int32(0))
 	})
 
 	t.Run("returns 400 when the id is malformed", func(t *testing.T) {
