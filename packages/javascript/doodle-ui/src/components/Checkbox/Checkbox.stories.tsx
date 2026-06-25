@@ -39,6 +39,9 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const labeledCheckboxFocus =
+    'inline-flex items-center gap-2 rounded-sm [&:has(:focus-visible)]:ring-2 [&:has(:focus-visible)]:ring-secondary dark:[&:has(:focus-visible)]:ring-secondary-variant-2 [&:has(:focus-visible)]:ring-offset-2 [&:has(:focus-visible)]:ring-offset-neutral-light-1 dark:[&:has(:focus-visible)]:ring-offset-neutral-dark-1';
+
 export const Story: Story = {
     render: (args) => <Checkbox {...args} />,
 };
@@ -136,6 +139,26 @@ export const Error: Story = {
                 <Label htmlFor='checkbox-error-indeterminate' className='text-error'>
                     Indeterminate error
                 </Label>
+            </div>
+        </div>
+    ),
+};
+
+export const KeyboardFocus: Story = {
+    render: (args) => (
+        <div className='flex flex-col items-start gap-6'>
+            <div className='flex items-center gap-4'>
+                <Checkbox aria-label='Icon only checkbox' checked={false} {...args} />
+            </div>
+
+            <div className={labeledCheckboxFocus}>
+                <Checkbox
+                    id='checkbox-focus-labeled'
+                    checked={false}
+                    className='focus-visible:ring-0 focus-visible:ring-offset-0'
+                    {...args}
+                />
+                <Label htmlFor='checkbox-focus-labeled'>Labeled focus</Label>
             </div>
         </div>
     ),
