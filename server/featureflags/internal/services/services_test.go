@@ -250,4 +250,3 @@ func TestService_ToggleFlag(t *testing.T) {
 		assert.ErrorIs(t, err, setFlagErr)
 	})
 }
-

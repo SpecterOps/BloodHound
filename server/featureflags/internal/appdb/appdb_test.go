@@ -290,16 +290,16 @@ func TestStore_SetFlag(t *testing.T) {
 					WillReturnResult(pgxmock.NewResult("UPDATE", 1))
 				pool.ExpectExec(expectedAuditInsertSQL).
 					WithArgs(
-						pgxmock.AnyArg(),                                                 // created_at
-						userID.String(),                                                  // actor_id
-						"test-user",                                                      // actor_name
-						"",                                                               // actor_email
-						string(model.AuditLogActionToggleEarlyAccessFeatureFlag),         // action
-						pgxmock.AnyArg(),                                                 // fields (json)
-						"test-request",                                                   // request_id
-						"127.0.0.1",                                                      // source_ip_address
-						string(model.AuditLogStatusSuccess),                              // status
-						pgxmock.AnyArg(),                                                 // commit_id
+						pgxmock.AnyArg(), // created_at
+						userID.String(),  // actor_id
+						"test-user",      // actor_name
+						"",               // actor_email
+						string(model.AuditLogActionToggleEarlyAccessFeatureFlag), // action
+						pgxmock.AnyArg(),                    // fields (json)
+						"test-request",                      // request_id
+						"127.0.0.1",                         // source_ip_address
+						string(model.AuditLogStatusSuccess), // status
+						pgxmock.AnyArg(),                    // commit_id
 					).
 					WillReturnResult(pgxmock.NewResult("INSERT", 1))
 				pool.ExpectCommit()
@@ -377,4 +377,3 @@ func TestStore_SetFlag(t *testing.T) {
 		})
 	}
 }
-

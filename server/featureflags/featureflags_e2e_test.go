@@ -240,7 +240,7 @@ func TestToggleFlag(t *testing.T) {
 
 	t.Run("returns 200 OK and flips the flag when it is user-updatable", func(t *testing.T) {
 		var (
-			server   = newServer(t)
+			server    = newServer(t)
 			featureID = seedFeatureFlag(t, ctx, db.Pool(), "e2e_toggle_flag", "E2E Toggle Flag", false, true)
 		)
 
@@ -258,7 +258,7 @@ func TestToggleFlag(t *testing.T) {
 
 	t.Run("returns 403 Forbidden when the flag is not user-updatable", func(t *testing.T) {
 		var (
-			server   = newServer(t)
+			server    = newServer(t)
 			featureID = seedFeatureFlag(t, ctx, db.Pool(), "e2e_locked_flag", "E2E Locked Flag", false, false)
 		)
 
@@ -279,4 +279,3 @@ func TestToggleFlag(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 	})
 }
-

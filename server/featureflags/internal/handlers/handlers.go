@@ -53,7 +53,6 @@ func NewHandlersContainer(featureFlag FeatureFlag) *Handlers {
 	}
 }
 
-
 // GetAllFlags returns the full list of feature flags as a JSON response. The
 // handler delegates to the service layer to load the flags and serializes the
 // result using the package's view builder.
