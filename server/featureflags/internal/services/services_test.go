@@ -37,6 +37,18 @@ func (f fakeFlagDatabase) GetFlagByKey(_ context.Context, _ string) (services.Fe
 	return f.flag, f.err
 }
 
+func (f fakeFlagDatabase) GetFlagByID(_ context.Context, _ int32) (services.FeatureFlag, error) {
+	return f.flag, f.err
+}
+
+func (f fakeFlagDatabase) GetAllFlags(_ context.Context) ([]services.FeatureFlag, error) {
+	return nil, f.err
+}
+
+func (f fakeFlagDatabase) SetFlag(_ context.Context, _ services.FeatureFlag) error {
+	return f.err
+}
+
 func TestNewService(t *testing.T) {
 	mockDb := mocks.NewMockDatabase(t)
 	assert.NotNil(t, services.NewService(mockDb))
@@ -112,3 +124,130 @@ func TestService_IsEnabled(t *testing.T) {
 		})
 	}
 }
+
+func TestService_GetAllFlags(t *testing.T) {
+	var (
+		ctx           = context.Background()
+		unexpectedErr = errors.New("connection refused")
+		expected      = []services.FeatureFlag{
+			{ID: 1, Key: services.FeatureOpenHoundSupport, Enabled: true, UserUpdatable: true},
+			{ID: 2, Key: services.FeatureAlerts, Enabled: false, UserUpdatable: false},
+		}
+	)
+
+	tests := []struct {
+		name       string
+		dbResult   []services.FeatureFlag
+		dbErr      error
+		wantResult []services.FeatureFlag
+		wantErr    error
+	}{
+		{
+			name:       "returns all flags on success",
+			dbResult:   expected,
+			wantResult: expected,
+		},
+		{
+			name:    "propagates database errors",
+			dbErr:   unexpectedErr,
+			wantErr: unexpectedErr,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				databaseMock = mocks.NewMockDatabase(t)
+				svc          = services.NewService(databaseMock)
+			)
+
+			databaseMock.EXPECT().GetAllFlags(ctx).Return(tt.dbResult, tt.dbErr)
+
+			got, err := svc.GetAllFlags(ctx)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.wantResult, got)
+			}
+		})
+	}
+}
+
+func TestService_ToggleFlag(t *testing.T) {
+	var (
+		ctx           = context.Background()
+		requester     = "test-user"
+		unexpectedErr = errors.New("connection refused")
+		setFlagErr    = errors.New("set flag failed")
+		updatableFlag = services.FeatureFlag{
+			ID:            7,
+			Key:           services.FeatureOpenHoundSupport,
+			Enabled:       false,
+			UserUpdatable: true,
+		}
+		nonUpdatableFlag = services.FeatureFlag{
+			ID:            8,
+			Key:           services.FeatureAlerts,
+			Enabled:       true,
+			UserUpdatable: false,
+		}
+	)
+
+	t.Run("toggles the flag and returns the updated value", func(t *testing.T) {
+		var (
+			databaseMock = mocks.NewMockDatabase(t)
+			svc          = services.NewService(databaseMock)
+			toggled      = updatableFlag
+		)
+		toggled.Enabled = !updatableFlag.Enabled
+
+		databaseMock.EXPECT().GetFlagByID(ctx, updatableFlag.ID).Return(updatableFlag, nil)
+		databaseMock.EXPECT().SetFlag(ctx, toggled).Return(nil)
+
+		got, err := svc.ToggleFlag(ctx, updatableFlag.ID, requester)
+		require.NoError(t, err)
+		assert.Equal(t, toggled, got)
+	})
+
+	t.Run("returns ErrNotUserUpdatable when the flag is not user updatable", func(t *testing.T) {
+		var (
+			databaseMock = mocks.NewMockDatabase(t)
+			svc          = services.NewService(databaseMock)
+		)
+
+		databaseMock.EXPECT().GetFlagByID(ctx, nonUpdatableFlag.ID).Return(nonUpdatableFlag, nil)
+
+		got, err := svc.ToggleFlag(ctx, nonUpdatableFlag.ID, requester)
+		assert.ErrorIs(t, err, services.ErrNotUserUpdatable)
+		assert.Equal(t, nonUpdatableFlag, got)
+	})
+
+	t.Run("propagates errors from GetFlagByID", func(t *testing.T) {
+		var (
+			databaseMock = mocks.NewMockDatabase(t)
+			svc          = services.NewService(databaseMock)
+		)
+
+		databaseMock.EXPECT().GetFlagByID(ctx, int32(99)).Return(services.FeatureFlag{}, unexpectedErr)
+
+		_, err := svc.ToggleFlag(ctx, 99, requester)
+		assert.ErrorIs(t, err, unexpectedErr)
+	})
+
+	t.Run("propagates errors from SetFlag", func(t *testing.T) {
+		var (
+			databaseMock = mocks.NewMockDatabase(t)
+			svc          = services.NewService(databaseMock)
+			toggled      = updatableFlag
+		)
+		toggled.Enabled = !updatableFlag.Enabled
+
+		databaseMock.EXPECT().GetFlagByID(ctx, updatableFlag.ID).Return(updatableFlag, nil)
+		databaseMock.EXPECT().SetFlag(ctx, toggled).Return(setFlagErr)
+
+		_, err := svc.ToggleFlag(ctx, updatableFlag.ID, requester)
+		assert.ErrorIs(t, err, setFlagErr)
+	})
+}
+

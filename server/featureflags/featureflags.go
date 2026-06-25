@@ -22,9 +22,13 @@ package featureflags
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/server/featureflags/internal/appdb"
+	"github.com/specterops/bloodhound/server/featureflags/internal/handlers"
+	"github.com/specterops/bloodhound/server/featureflags/internal/routes"
 	"github.com/specterops/bloodhound/server/featureflags/internal/services"
 )
 
@@ -33,12 +37,27 @@ const (
 	FeatureAlerts           = services.FeatureAlerts
 )
 
-type Service interface {
+type FeatureFlagRequestAdapter interface {
 	IsEnabled(ctx context.Context, key string) (bool, error)
+	ToggleFlag(response http.ResponseWriter, request *http.Request)
 }
 
-// Register wires the feature-flag service to its PostgreSQL store and returns
-// the constructed service for use by BHE feature slices.
-func Register(pool *pgxpool.Pool) Service {
-	return services.NewService(appdb.NewStore(pool))
+func NewFeatureFlagRequestAdapter(pool *pgxpool.Pool) FeatureFlagRequestAdapter {
+	var (
+		store      = appdb.NewStore(pool)
+		svc        = services.NewService(store)
+		handlerSet = handlers.NewHandlersContainer(svc)
+	)
+
+	return handlerSet
+}
+
+func Register(routerInst *router.Router, pool *pgxpool.Pool) {
+	var (
+		store      = appdb.NewStore(pool)
+		svc        = services.NewService(store)
+		handlerSet = handlers.NewHandlersContainer(svc)
+	)
+
+	routes.Register(routerInst, handlerSet)
 }

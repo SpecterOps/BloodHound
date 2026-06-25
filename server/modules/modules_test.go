@@ -54,11 +54,11 @@ func TestRegister_PanicsOnNilPool(t *testing.T) {
 	})
 }
 
-// TestRegister_WiresAnalysisRoutes verifies that the composition root correctly
-// attaches the analysis module routes to the shared router. Matching a
-// representative route proves that Register successfully delegated to the
-// feature module.
-func TestRegister_WiresAnalysisRoutes(t *testing.T) {
+// TestRegister_WiresFeatureModuleRoutes verifies that the composition root
+// correctly attaches each feature module's routes to the shared router.
+// Matching a representative route per module proves that Register successfully
+// delegated to the feature module.
+func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 	var (
 		cfg        = config.Configuration{}
 		authorizer = auth.NewAuthorizer(nil)
@@ -71,11 +71,24 @@ func TestRegister_WiresAnalysisRoutes(t *testing.T) {
 
 	modules.Register(deps)
 
-	var (
-		muxRouter = routerInst.MuxRouter()
-		request   = httptest.NewRequest(http.MethodGet, "/api/v2/analysis/status", nil)
-		match     mux.RouteMatch
-	)
+	muxRouter := routerInst.MuxRouter()
 
-	assert.True(t, muxRouter.Match(request, &match), "analysis route should be registered by Register")
+	for _, tc := range []struct {
+		name   string
+		method string
+		path   string
+	}{
+		{"analysis status", http.MethodGet, "/api/v2/analysis/status"},
+		{"feature flags list", http.MethodGet, "/api/v2/features"},
+		{"feature flag toggle", http.MethodPut, "/api/v2/features/1/toggle"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var (
+				request = httptest.NewRequest(tc.method, tc.path, nil)
+				match   mux.RouteMatch
+			)
+
+			assert.True(t, muxRouter.Match(request, &match), "%s %s route should be registered by Register", tc.method, tc.path)
+		})
+	}
 }
