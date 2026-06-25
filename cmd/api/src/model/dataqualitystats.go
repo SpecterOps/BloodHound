@@ -61,3 +61,42 @@ func (s DataQualityStats) IsSortable(column string) bool {
 		return false
 	}
 }
+
+// DataQualityAggregation represent a single aggregated data quality metric for a custom OpenGraph schema,
+// combined across environment instances for one collection run.
+type DataQualityAggregation struct {
+	RunID                   string                `json:"run_id"`
+	SchemaExtensionID       int32                 `json:"schema_extension_id"`
+	SchemaEnvironmentKindID int32                 `json:"schema_environment_kind_id"`
+	MetricType              DataQualityMetricType `json:"metric_type"`
+	MetricName              string                `json:"metric_name"`
+	MetricValue             float64               `json:"metric_value"`
+	KindID                  null.Int32            `json:"kind_id"`
+
+	Serial
+}
+
+func (s DataQualityAggregation) TableName() string {
+	return "data_quality_aggregations"
+}
+
+type DataQualityAggregations []DataQualityAggregation
+
+func (s DataQualityAggregations) IsSortable(column string) bool {
+	switch column {
+	case "run_id",
+		"schema_extension_id",
+		"schema_environment_kind_id",
+		"metric_type",
+		"metric_name",
+		"metric_value",
+		"kind_id",
+		"id",
+		"created_at",
+		"updated_at",
+		"deleted_at":
+		return true
+	default:
+		return false
+	}
+}
