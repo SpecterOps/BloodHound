@@ -232,6 +232,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--primary': dark.primary.main,
             '--primary-variant': dark.primary.variant,
             '--secondary': dark.secondary.main,
+            '--secondary-main': dark.secondary.main,
             '--secondary-variant': dark.secondary.variant,
             // '--tertiary': dark.tertiary.main,
             // '--tertiary-variant': dark.tertiary.variant,

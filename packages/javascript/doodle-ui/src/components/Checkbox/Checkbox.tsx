@@ -29,7 +29,7 @@ const CheckboxVariants = cva(
                 sm: 'h-[12px] w-[12px]',
             },
             isDisabled: {
-                false: 'data-[state=checked]:bg-neutral-dark-1 data-[state=checked]:text-neutral-light-1 data-[state=indeterminate]:bg-neutral-dark-1 data-[state=indeterminate]:text-neutral-light-1 dark:data-[state=checked]:bg-neutral-light-1 dark:data-[state=checked]:text-neutral-dark-1 dark:data-[state=indeterminate]:bg-neutral-light-1 dark:data-[state=indeterminate]:text-neutral-dark-1',
+                false: 'data-[state=checked]:bg-neutral-dark-1 data-[state=checked]:text-neutral-light-1 data-[state=indeterminate]:bg-neutral-dark-1 data-[state=indeterminate]:text-neutral-light-1 dark:data-[state=checked]:bg-neutral-light-1 dark:data-[state=checked]:text-neutral-dark-1 dark:data-[state=indeterminate]:bg-neutral-light-1 dark:data-[state=indeterminate]:text-neutral-dark-1 hover:border-secondary dark:hover:border-secondary active:border-primary-variant hover:data-[state=checked]:bg-secondary hover:data-[state=indeterminate]:bg-secondary dark:hover:data-[state=checked]:bg-secondary dark:hover:data-[state=checked]:text-neutral-light-1 dark:hover:data-[state=indeterminate]:bg-secondary dark:hover:data-[state=indeterminate]:text-neutral-light-1',
                 true: 'cursor-not-allowed border-input-border-disabled dark:border-input-border-disabled bg-input-fill-disabled text-icon-disabled',
             },
         },
@@ -39,11 +39,10 @@ const CheckboxVariants = cva(
     }
 );
 
-interface CheckboxProps
-    extends React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>,
-        VariantProps<typeof CheckboxVariants> {
+type CheckboxProps = React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root> & {
+    size?: VariantProps<typeof CheckboxVariants>['size'];
     icon?: React.ReactNode;
-}
+};
 
 const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root>, CheckboxProps>(
     ({ size = 'md', icon, className, checked, disabled = false, ...props }, ref) => {
