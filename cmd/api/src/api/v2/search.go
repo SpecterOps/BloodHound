@@ -183,14 +183,14 @@ func BuildEnvironmentSelectors(nodes []*graph.Node, kindToSchemaEnvironment mode
 
 		collected := resolveCollected(node)
 		envType := resolveEnvType(node, kindToSchemaEnvironment)
-		schemaExtensionID := resolveSchemaExtensionID(node, kindToSchemaEnvironment)
+		extensionID := resolveExtensionID(node, kindToSchemaEnvironment)
 
 		envs = append(envs, model.EnvironmentSelector{
-			Type:              envType,
-			Name:              name,
-			ObjectID:          objectID,
-			Collected:         collected,
-			SchemaExtensionID: schemaExtensionID,
+			Type:        envType,
+			Name:        name,
+			ObjectID:    objectID,
+			Collected:   collected,
+			ExtensionID: extensionID,
 		})
 	}
 
@@ -235,7 +235,7 @@ func resolveEnvType(node *graph.Node, kindToSchemaEnvironment model.EnvironmentK
 	return ""
 }
 
-func resolveSchemaExtensionID(node *graph.Node, kindToSchemaEnvironment model.EnvironmentKindsToEnvironment) *int32 {
+func resolveExtensionID(node *graph.Node, kindToSchemaEnvironment model.EnvironmentKindsToEnvironment) *int32 {
 	// TODO: Remove hardcoded built-in types once they are saved in DB and not CUE
 	isBuiltinEnvironment := node.Kinds.ContainsOneOf(azure.Tenant, ad.Domain)
 	if isBuiltinEnvironment {
