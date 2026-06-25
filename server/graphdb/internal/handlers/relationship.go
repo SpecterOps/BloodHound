@@ -32,8 +32,9 @@ import (
 const URIPathVariableRelationshipID = "relationship_id"
 
 // RelationshipKindView is the JSON shape of the kind embedded in a RelationshipView.
+// RelationshipKindID is null when the kind has no schema_relationship_kinds entry.
 type RelationshipKindView struct {
-	RelationshipKindID int32  `json:"relationship_kind_id"`
+	RelationshipKindID *int32 `json:"relationship_kind_id"`
 	Name               string `json:"name"`
 }
 

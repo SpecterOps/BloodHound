@@ -31,10 +31,11 @@ import (
 const tableSchemaRelationshipKinds = "schema_relationship_kinds"
 
 // kindRow is the package-local DB row type for a resolved relationship kind. The id is
-// the schema_relationship_kinds row id; the name is the kind name from the kind table.
+// the schema_relationship_kinds row id, which is null when the kind has no
+// schema_relationship_kinds entry; the name is the kind name from the kind table.
 // db: tags drive pgx.RowToStructByName scanning.
 type kindRow struct {
-	ID   int32  `db:"id"`
+	ID   *int32 `db:"id"`
 	Name string `db:"name"`
 }
 
@@ -85,8 +86,9 @@ func (s *Store) GetRelationship(ctx context.Context, id int64) (services.Relatio
 }
 
 // GetKindByName resolves a relationship kind name to its schema_relationship_kinds entry,
-// returning the schema_relationship_kinds row id as the kind id. ErrKindNotFound is returned
-// when the kind has no schema_relationship_kinds row.
+// returning the schema_relationship_kinds row id as the kind id. The kind id is null when
+// the kind exists in the kind table but has no schema_relationship_kinds row. ErrKindNotFound
+// is returned when the kind name has no entry in the kind table.
 func (s *Store) GetKindByName(ctx context.Context, name string) (services.Kind, error) {
 	var (
 		rows pgx.Rows
@@ -96,8 +98,8 @@ func (s *Store) GetKindByName(ctx context.Context, name string) (services.Kind, 
 
 	selectBuilder := sqlbuilder.PostgreSQL.NewSelectBuilder()
 	selectBuilder.Select("rk.id", "k.name")
-	selectBuilder.From(selectBuilder.As(tableSchemaRelationshipKinds, "rk"))
-	selectBuilder.Join(selectBuilder.As(tableKind, "k"), "rk.kind_id = k.id")
+	selectBuilder.From(selectBuilder.As(tableKind, "k"))
+	selectBuilder.JoinWithOption(sqlbuilder.LeftJoin, selectBuilder.As(tableSchemaRelationshipKinds, "rk"), "rk.kind_id = k.id")
 	selectBuilder.Where(selectBuilder.Equal("k.name", name))
 	selectBuilder.Limit(1)
 

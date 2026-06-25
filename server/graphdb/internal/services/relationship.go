@@ -23,9 +23,10 @@ import (
 
 // Kind is the domain representation of a relationship kind, pairing the kind name
 // recorded on the graph relationship with the integer identifier assigned to it in
-// the schema_relationship_kinds table.
+// the schema_relationship_kinds table. ID is nil when the kind has no
+// schema_relationship_kinds entry.
 type Kind struct {
-	ID   int32
+	ID   *int32
 	Name string
 }
 
