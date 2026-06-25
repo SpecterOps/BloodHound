@@ -46,7 +46,7 @@ export const useQuickUploadEnabled = () => {
 
     const isExcludedById = isQuickUploadExcludedById();
     const isExcludedByPath = Object.values(QuickUploadExclusionPaths).includes(pathname as QuickUploadExclusionPaths);
-    const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST);
+    const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST_MANAGE);
 
     return !isExcludedById && !isExcludedByPath && hasPermissionToUpload;
 };
