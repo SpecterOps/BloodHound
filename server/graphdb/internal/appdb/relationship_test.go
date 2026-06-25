@@ -23,28 +23,21 @@ import (
 
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/specterops/bloodhound/server/graphdb/internal/appdb"
+	"github.com/specterops/bloodhound/server/graphdb/internal/appdb/mocks"
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
-
-// fakeGraphReader is a minimal graphReader implementation that returns a fixed error
-// from ReadTransaction without invoking the transaction delegate, leaving the
-// relationship pointer nil. This exercises the error-mapping logic in GetRelationship.
-type fakeGraphReader struct {
-	err error
-}
-
-func (s *fakeGraphReader) ReadTransaction(_ context.Context, _ graph.TransactionDelegate, _ ...graph.TransactionOption) error {
-	return s.err
-}
 
 func TestStore_GetRelationship(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("maps not-found error to ErrRelationshipNotFound", func(t *testing.T) {
-		store := appdb.NewStore(&fakeGraphReader{err: graph.ErrNoResultsFound}, nil)
+		graphReaderMock := mocks.NewMockgraphReader(t)
+		graphReaderMock.EXPECT().ReadTransaction(ctx, mock.Anything).Return(graph.ErrNoResultsFound)
+		store := appdb.NewStore(graphReaderMock, nil)
 
 		_, err := store.GetRelationship(ctx, 1)
 		assert.ErrorIs(t, err, services.ErrRelationshipNotFound)
@@ -52,7 +45,9 @@ func TestStore_GetRelationship(t *testing.T) {
 
 	t.Run("propagates real transaction error", func(t *testing.T) {
 		txErr := errors.New("connection refused")
-		store := appdb.NewStore(&fakeGraphReader{err: txErr}, nil)
+		graphReaderMock := mocks.NewMockgraphReader(t)
+		graphReaderMock.EXPECT().ReadTransaction(ctx, mock.Anything).Return(txErr)
+		store := appdb.NewStore(graphReaderMock, nil)
 
 		_, err := store.GetRelationship(ctx, 1)
 		assert.ErrorIs(t, err, txErr)
@@ -60,7 +55,9 @@ func TestStore_GetRelationship(t *testing.T) {
 	})
 
 	t.Run("returns ErrRelationshipNotFound when relationship is nil without error", func(t *testing.T) {
-		store := appdb.NewStore(&fakeGraphReader{err: nil}, nil)
+		graphReaderMock := mocks.NewMockgraphReader(t)
+		graphReaderMock.EXPECT().ReadTransaction(ctx, mock.Anything).Return(nil)
+		store := appdb.NewStore(graphReaderMock, nil)
 
 		_, err := store.GetRelationship(ctx, 1)
 		assert.ErrorIs(t, err, services.ErrRelationshipNotFound)
