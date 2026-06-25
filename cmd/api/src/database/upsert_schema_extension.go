@@ -143,6 +143,7 @@ func (s *BloodhoundDB) nodeKindReconcileConfig(extensionId int32) reconcileConfi
 			return s.UpdateGraphSchemaNodeKind(ctx, existing)
 		},
 		delete: func(ctx context.Context, existing model.GraphSchemaNodeKind) error {
+			// should we also delete the corresponding custom_node_kinds row?
 			return s.DeleteGraphSchemaNodeKind(ctx, existing.ID)
 		},
 	}
@@ -218,6 +219,7 @@ func (s *BloodhoundDB) upsertCustomIcons(ctx context.Context, nodeKinds model.Gr
 					customNodeKindDefinition := parseIconDefinitionFromNodeKind(nodeKind, &existingIcon)
 					customNodeKindsToUpdate = append(customNodeKindsToUpdate, customNodeKindDefinition)
 				} else {
+					// if it's no longer a display kind, should we delete the corresponding custom_node_kinds row?
 					customNodeKindDefinition := parseIconDefinitionFromNodeKind(nodeKind, nil)
 					customNodeKindsToCreate = append(customNodeKindsToCreate, customNodeKindDefinition)
 				}
