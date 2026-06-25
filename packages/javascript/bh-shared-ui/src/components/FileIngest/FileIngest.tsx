@@ -28,7 +28,8 @@ import PageWithTitle from '../PageWithTitle';
 
 const FileIngest: FC = () => {
     const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.GRAPH_DB_INGEST);
+    const hasPermission =
+        checkPermission(Permission.GRAPH_DB_INGEST_MANAGE) || checkPermission(Permission.GRAPH_DB_INGEST_READ);
 
     const { addNotification, dismissNotification } = useNotifications();
     const notificationKey = 'file-upload-permission';
