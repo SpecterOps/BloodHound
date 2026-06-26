@@ -73,9 +73,7 @@ type DataQualityEnvironmentSelectors []DataQualityEnvironmentSelector
 func (s DataQualityEnvironmentSelectors) IsSortable(column string) bool {
 	switch column {
 	case "environment_id",
-		"environment_name",
-		"objectid",
-		"name":
+		"environment_name":
 		return true
 	default:
 		return false

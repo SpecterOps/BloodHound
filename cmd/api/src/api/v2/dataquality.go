@@ -311,33 +311,39 @@ func enrichDataQualityNodeKindStats(stats model.DataQualityStats, schemaEnvironm
 
 func dataQualityEnvironmentSortItems(request *http.Request) (query.SortItems, error) {
 	var (
-		queryParams   = request.URL.Query()
-		sortByColumns = queryParams["sort_by"]
+		sortByColumns = request.URL.Query()["sort_by"]
+		sortItems     query.SortItems
 	)
 
-	for index, sortByColumn := range sortByColumns {
+	for _, sortByColumn := range sortByColumns {
 		var (
 			descending = strings.HasPrefix(sortByColumn, "-")
 			column     = strings.TrimPrefix(sortByColumn, "-")
+			sortItem   = query.SortItem{Direction: query.SortDirectionAscending}
 		)
 
-		if column != QueryParameterEnvironmentID && column != QueryParameterEnvironmentName {
-			continue
+		if sortByColumn == "" {
+			return query.SortItems{}, fmt.Errorf("%w: %s", api.ErrResponseDetailsCriteriaEmpty, sortByColumn)
 		}
 
-		if column == QueryParameterEnvironmentID && descending {
-			sortByColumns[index] = "-objectid"
-		} else if column == QueryParameterEnvironmentID {
-			sortByColumns[index] = "objectid"
-		} else if descending {
-			sortByColumns[index] = "-name"
-		} else {
-			sortByColumns[index] = "name"
+		if descending {
+			sortItem.Direction = query.SortDirectionDescending
 		}
+
+		if !(model.DataQualityEnvironmentSelectors{}).IsSortable(column) {
+			return query.SortItems{}, fmt.Errorf("%w: %s", api.ErrResponseDetailsCriteriaNotSortable, column)
+		}
+
+		if column == QueryParameterEnvironmentID {
+			sortItem.SortCriteria = query.NodeProperty(common.ObjectID.String())
+		} else {
+			sortItem.SortCriteria = query.NodeProperty(common.Name.String())
+		}
+
+		sortItems = append(sortItems, sortItem)
 	}
 
-	queryParams["sort_by"] = sortByColumns
-	return api.ParseGraphSortParameters(model.DataQualityEnvironmentSelectors{}, queryParams)
+	return sortItems, nil
 }
 
 func (s *Resources) ListDataQualityEnvironments(response http.ResponseWriter, request *http.Request) {
