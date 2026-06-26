@@ -22,8 +22,10 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/registration"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -185,6 +187,10 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		modules.Register(modules.Deps{
 			Router: &routerInst,
 			Pool:   connections.RDMS.Pool(),
+			Graph:  connections.Graph,
+			RateLimitMiddleware: func() mux.MiddlewareFunc {
+				return middleware.DefaultRateLimitMiddleware(connections.RDMS)
+			},
 		})
 
 		// Set neo4j batch and flush sizes

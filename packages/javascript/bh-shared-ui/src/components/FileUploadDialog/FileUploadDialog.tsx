@@ -32,7 +32,7 @@ const FileUploadDialog: React.FC<{
     description?: ReactNode;
 }> = ({ open, onClose: onCloseProp, headerText = 'Upload Files', description }) => {
     const { checkPermission } = usePermissions();
-    const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST);
+    const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST_MANAGE);
 
     const {
         currentlyUploading,

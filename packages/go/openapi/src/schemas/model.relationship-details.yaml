@@ -13,26 +13,33 @@
 # limitations under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
-all: false
-dir: "{{.InterfaceDir}}/mocks"
-filename: "{{.InterfaceName | lower}}.go"
-force-file-write: true
-formatter: goimports
-generate: true
-include-auto-generated: false
-log-level: info
-structname: "Mock{{.InterfaceName}}"
-pkgname: mocks
-recursive: false
-require-template-schema-exists: true
-template: testify
-packages:
-  github.com/specterops/bloodhound/server:
-    config:
-      recursive: true
-      include-interface-regex: "^[A-Z]"
-      exclude-subpkg-regex:
-        - mocks
-  github.com/specterops/bloodhound/server/graphdb/internal/appdb:
-    interfaces:
-      graphReader:
+
+type: object
+properties:
+  relationship_id:
+    type: integer
+    format: int64
+    readOnly: true
+    example: 1234567890
+  source_node_id:
+    type: integer
+    format: int64
+    readOnly: true
+    example: 1234567890
+  target_node_id:
+    type: integer
+    format: int64
+    readOnly: true
+    example: 1234567890
+  kind:
+    type: object
+    properties:
+      relationship_kind_id:
+        type: integer
+        format: int32
+        nullable: true
+      name:
+        type: string
+  properties:
+    type: object
+    additionalProperties: true
