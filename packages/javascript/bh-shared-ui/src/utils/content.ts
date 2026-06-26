@@ -1647,7 +1647,9 @@ export const entityRelationshipEndpoints = {
             .then((res) => res.data),
     'azuser-synced_identities': ({ id, counts, skip, limit, type }) =>
         apiClient
-            .getAZEntityInfoV2('users', id, 'synced-identities', counts, skip, limit, type, { signal: controller.signal })
+            .getAZEntityInfoV2('users', id, 'synced-identities', counts, skip, limit, type, {
+                signal: controller.signal,
+            })
             .then((res) => res.data),
     'azvm-local_admins': ({ id, counts, skip, limit, type }) =>
         apiClient
@@ -1872,5 +1874,7 @@ export const entityRelationshipEndpoints = {
     'user-inbound_object_control': ({ id, skip, limit, type }) =>
         apiClient.getUserControllersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'user-synced_identities': ({ id, skip, limit, type }) =>
-        apiClient.getUserSyncedIdentitiesV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
+        apiClient
+            .getUserSyncedIdentitiesV2(id, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
 } as const satisfies EntityRelationshipEndpoint;
