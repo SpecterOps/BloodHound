@@ -164,17 +164,15 @@ func BuildDataQualityEnvironmentSelectors(nodes []*graph.Node, schemaEnvironment
 			objectID, _ := node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 
 			selectors = append(selectors, model.DataQualityEnvironmentSelector{
-				Type:                       dataQualityEnvironmentType(environmentKind),
-				Name:                       name,
-				ObjectID:                   objectID,
-				Collected:                  dataQualityEnvironmentCollected(node),
-				SchemaExtensionID:          schemaEnvironment.SchemaExtensionId,
-				SchemaExtensionDisplayName: schemaEnvironment.SchemaExtensionDisplayName,
-				IsBuiltin:                  schemaEnvironment.IsBuiltin,
-				EnvironmentKindID:          schemaEnvironment.EnvironmentKindId,
-				EnvironmentKind:            environmentKind,
-				SourceKindID:               sourceKind.ID,
-				SourceKind:                 sourceKind.Name,
+				Type:              dataQualityEnvironmentType(environmentKind),
+				Name:              name,
+				ObjectID:          objectID,
+				Collected:         dataQualityEnvironmentCollected(node),
+				IsBuiltin:         schemaEnvironment.IsBuiltin,
+				EnvironmentKindID: schemaEnvironment.EnvironmentKindId,
+				EnvironmentKind:   environmentKind,
+				SourceKindID:      sourceKind.ID,
+				SourceKind:        sourceKind.Name,
 			})
 			break
 		}
