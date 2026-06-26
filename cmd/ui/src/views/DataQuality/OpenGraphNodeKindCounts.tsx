@@ -18,6 +18,7 @@ import { Alert, Box, Paper, Table, TableBody, TableCell, TableContainer, TableHe
 import { useDataQualityNodeKindStatsQuery } from 'bh-shared-ui';
 import { Typography } from 'doodle-ui';
 import { DataQualityNodeKindStat } from 'js-client-library';
+import { DateTime } from 'luxon';
 import { useMemo } from 'react';
 import { DataQualitySelection } from './DataQualityEnvironmentSelector';
 
@@ -38,6 +39,72 @@ type NodeKindCountRow = {
 const numberFormatter = new Intl.NumberFormat();
 
 const isBuiltInDataQualityType = (type: string) => type === 'active-directory' || type === 'azure';
+
+const OpenGraphNodeKindChart: React.FC<{ rows: NodeKindCountRow[] }> = ({ rows }) => {
+    const width = 900;
+    const height = 360;
+    const padding = 48;
+    const colors = ['#4f46e5', '#0f766e', '#b45309', '#be123c', '#7c3aed', '#0369a1', '#15803d', '#c2410c'];
+    const points = rows.flatMap((row) => row.history);
+    const timestamps = points.map((point) => DateTime.fromISO(point.createdAt).toMillis());
+    const values = points.map((point) => point.value);
+    const minTime = Math.min(...timestamps);
+    const maxTime = Math.max(...timestamps);
+    const maxValue = Math.max(...values, 1);
+    const timeRange = maxTime - minTime || 1;
+
+    const getPoint = (point: HistoryPoint) => {
+        const timestamp = DateTime.fromISO(point.createdAt).toMillis();
+        const x = padding + ((timestamp - minTime) / timeRange) * (width - padding * 2);
+        const y = height - padding - (point.value / maxValue) * (height - padding * 2);
+        return `${x},${y}`;
+    };
+
+    return (
+        <Paper variant='outlined'>
+            <Box p={2}>
+                <Typography variant='h6'>OpenGraph Nodes Over Time</Typography>
+                <svg width='100%' viewBox={`0 0 ${width} ${height}`} role='img' aria-label='OpenGraph nodes over time'>
+                    <line x1={padding} x2={padding} y1={padding} y2={height - padding} stroke='currentColor' />
+                    <line
+                        x1={padding}
+                        x2={width - padding}
+                        y1={height - padding}
+                        y2={height - padding}
+                        stroke='currentColor'
+                    />
+                    {rows.map((row, index) => {
+                        const stroke = colors[index % colors.length];
+                        return (
+                            <polyline
+                                key={row.key}
+                                fill='none'
+                                stroke={stroke}
+                                strokeWidth='2'
+                                points={row.history.map(getPoint).join(' ')}
+                            />
+                        );
+                    })}
+                </svg>
+                <Box display='flex' flexWrap='wrap' gap={1}>
+                    {rows.map((row, index) => (
+                        <Box key={row.key} display='flex' alignItems='center' gap={0.5}>
+                            <Box
+                                width={10}
+                                height={10}
+                                borderRadius='50%'
+                                bgcolor={colors[index % colors.length]}
+                            />
+                            <Typography variant='caption'>
+                                {row.kindName} ({row.extensionName} / {row.sourceKind})
+                            </Typography>
+                        </Box>
+                    ))}
+                </Box>
+            </Box>
+        </Paper>
+    );
+};
 
 const Sparkline: React.FC<{ points: HistoryPoint[] }> = ({ points }) => {
     const width = 140;
@@ -155,7 +222,8 @@ const OpenGraphNodeKindCounts: React.FC<{ selectedEnvironment: DataQualitySelect
             <Box mb={1}>
                 <Typography variant='h5'>OpenGraph Node Counts</Typography>
             </Box>
-            <TableContainer component={Paper} variant='outlined'>
+            <OpenGraphNodeKindChart rows={rows} />
+            <TableContainer component={Paper} variant='outlined' sx={{ mt: 2 }}>
                 <Table size='small' aria-label='OpenGraph node counts'>
                     <TableHead>
                         <TableRow>

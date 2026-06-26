@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Alert, TextField } from '@mui/material';
+import { Alert } from '@mui/material';
 import {
     cn,
     DropdownTrigger,
@@ -49,15 +49,49 @@ export type DataQualitySelection = {
 
 const selectionKey = (environment: DataQualityEnvironment) => `${environment.type}:${environment.environment_kind}`;
 
+const environmentKindLabel = (
+    environment: Pick<DataQualityEnvironment, 'environment_kind' | 'type'>,
+    environmentInfo: ReturnType<typeof getOpenGraphEnvironmentInfoMap>
+) => environmentInfo[environment.type]?.displayName || environment.environment_kind;
+
+const aggregateLabel = (
+    environment: Pick<DataQualityEnvironment, 'environment_kind' | 'type'>,
+    environmentInfo: ReturnType<typeof getOpenGraphEnvironmentInfoMap>
+) => environmentInfo[environment.type]?.aggregationDisplayName || `All ${environment.environment_kind} Environments`;
+
 const selectedText = (selected: DataQualitySelection | null, environments: DataQualityEnvironment[]): string => {
     if (!selected) return 'Select Environment';
 
     const environmentInfo = getOpenGraphEnvironmentInfoMap(environments);
     if (selected.selectionType === 'aggregate') {
-        return environmentInfo[selected.type]?.aggregationDisplayName || `All ${selected.type} Environments`;
+        const selectedEnvironment = environments.find(
+            (environment) =>
+                environment.type === selected.type && environment.environment_kind === selected.environmentKind
+        );
+
+        return selectedEnvironment
+            ? aggregateLabel(selectedEnvironment, environmentInfo)
+            : environmentInfo[selected.type]?.aggregationDisplayName || `All ${selected.environmentKind} Environments`;
     }
 
     return environments.find((environment) => environment.id === selected.id)?.name || 'Select Environment';
+};
+
+const groupedByEnvironmentKind = (environments: DataQualityEnvironment[]) => {
+    const environmentGroups = new Map<string, DataQualityEnvironment[]>();
+
+    for (const environment of environments) {
+        const existingEnvironments = environmentGroups.get(environment.environment_kind) ?? [];
+        environmentGroups.set(environment.environment_kind, [...existingEnvironments, environment]);
+    }
+
+    return [...environmentGroups.entries()]
+        .map(([environmentKind, groupedEnvironments]) => ({
+            environmentKind,
+            representative: groupedEnvironments[0],
+            environments: groupedEnvironments.sort((first, second) => first.id.localeCompare(second.id)),
+        }))
+        .sort((first, second) => first.environmentKind.localeCompare(second.environmentKind));
 };
 
 const DataQualityEnvironmentSelector: React.FC<{
@@ -80,26 +114,28 @@ const DataQualityEnvironmentSelector: React.FC<{
     variant,
 }) => {
     const [open, setOpen] = useState<boolean>(false);
-    const [searchInput, setSearchInput] = useState<string>('');
 
-    const filteredEnvironments = useMemo(
+    const collectedEnvironments = useMemo(
         () =>
             environments
                 .filter((environment) => environment.collected)
-                .filter((environment) => environment.name.toLowerCase().includes(searchInput.toLowerCase()))
                 .sort((first, second) => first.name.localeCompare(second.name)),
-        [environments, searchInput]
+        [environments]
     );
 
     const aggregateEnvironments = useMemo(() => {
         const environmentByKey = new Map<string, DataQualityEnvironment>();
-        for (const environment of filteredEnvironments) {
+        for (const environment of collectedEnvironments) {
             if (!environmentByKey.has(selectionKey(environment))) {
                 environmentByKey.set(selectionKey(environment), environment);
             }
         }
-        return [...environmentByKey.values()].sort((first, second) => first.type.localeCompare(second.type));
-    }, [filteredEnvironments]);
+        return [...environmentByKey.values()].sort((first, second) =>
+            first.environment_kind.localeCompare(second.environment_kind)
+        );
+    }, [collectedEnvironments]);
+
+    const environmentGroups = useMemo(() => groupedByEnvironmentKind(collectedEnvironments), [collectedEnvironments]);
 
     const environmentInfo = getOpenGraphEnvironmentInfoMap(environments);
     const selectedEnvironmentName = selectedText(selected, environments);
@@ -143,18 +179,7 @@ const DataQualityEnvironmentSelector: React.FC<{
             <PopoverContent
                 data-testid='data-quality_context-selector-popover'
                 align={align}
-                className={cn(popoverContentStyles, 'gap-2 p-4')}>
-                <div className='flex px-0 mb-2'>
-                    <TextField
-                        autoFocus={true}
-                        value={searchInput}
-                        onChange={(event) => setSearchInput(event.target.value)}
-                        variant='standard'
-                        fullWidth
-                        label='Search'
-                        data-testid='data-quality_context-selector-search'
-                    />
-                </div>
+                className={cn(popoverContentStyles, 'gap-2 p-2 w-96')}>
                 <ul className='border-b border-neutral-light-5 pb-2 mb-2'>
                     {aggregateEnvironments.map((environment) => (
                         <li key={`${selectionKey(environment)}-aggregate`}>
@@ -162,8 +187,7 @@ const DataQualityEnvironmentSelector: React.FC<{
                                 className={cn(optionStyles, 'flex justify-between items-center gap-2')}
                                 onClick={() => handlePlatformClick(environment)}
                                 variant='text'>
-                                {environmentInfo[environment.type]?.aggregationDisplayName ||
-                                    `All ${environment.type} Environments`}
+                                {aggregateLabel(environment, environmentInfo)}
                                 <FontAwesomeIcon
                                     className={optionIconStyles}
                                     icon={environmentInfo[environment.type]?.icon}
@@ -173,34 +197,47 @@ const DataQualityEnvironmentSelector: React.FC<{
                         </li>
                     ))}
                 </ul>
-                <ul className='max-h-80 overflow-y-auto'>
-                    {filteredEnvironments.map((environment) => (
-                        <li key={`${selectionKey(environment)}:${environment.id}`}>
-                            <Button
-                                className={cn(optionStyles, 'flex justify-between items-center gap-2')}
-                                onClick={() => handleEnvironmentClick(environment)}
-                                variant='text'>
-                                <TooltipProvider>
-                                    <TooltipRoot>
-                                        <TooltipTrigger>
-                                            <span className='uppercase max-w-96 truncate'>{environment.name}</span>
-                                        </TooltipTrigger>
-                                        <TooltipPortal>
-                                            <TooltipContent side='left' className='dark:bg-neutral-dark-5 border-0'>
-                                                <span className='uppercase'>{environment.name}</span>
-                                            </TooltipContent>
-                                        </TooltipPortal>
-                                    </TooltipRoot>
-                                </TooltipProvider>
-                                <FontAwesomeIcon
-                                    className={optionIconStyles}
-                                    icon={environmentInfo[environment.type]?.icon}
-                                    size='sm'
-                                />
-                            </Button>
-                        </li>
+                <div className='max-h-80 overflow-y-auto'>
+                    {environmentGroups.map((group) => (
+                        <section key={group.environmentKind}>
+                            <div className='px-4 py-1 text-xs font-semibold uppercase text-neutral-dark-4 dark:text-neutral-light-4'>
+                                {environmentKindLabel(group.representative, environmentInfo)}
+                            </div>
+                            <ul>
+                                {group.environments.map((environment) => (
+                                    <li key={`${selectionKey(environment)}:${environment.id}`}>
+                                        <Button
+                                            className={cn(optionStyles, 'flex justify-between items-center gap-2')}
+                                            onClick={() => handleEnvironmentClick(environment)}
+                                            variant='text'>
+                                            <TooltipProvider>
+                                                <TooltipRoot>
+                                                    <TooltipTrigger>
+                                                        <span className='uppercase max-w-96 truncate'>
+                                                            {environment.name}
+                                                        </span>
+                                                    </TooltipTrigger>
+                                                    <TooltipPortal>
+                                                        <TooltipContent
+                                                            side='left'
+                                                            className='dark:bg-neutral-dark-5 border-0'>
+                                                            <span className='uppercase'>{environment.id}</span>
+                                                        </TooltipContent>
+                                                    </TooltipPortal>
+                                                </TooltipRoot>
+                                            </TooltipProvider>
+                                            <FontAwesomeIcon
+                                                className={optionIconStyles}
+                                                icon={environmentInfo[environment.type]?.icon}
+                                                size='sm'
+                                            />
+                                        </Button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </section>
                     ))}
-                </ul>
+                </div>
             </PopoverContent>
         </Popover>
     );
