@@ -58,7 +58,7 @@ const CheckboxVariants = cva(
     }
 );
 
-type CheckboxProps = React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root> & {
+export type CheckboxProps = React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root> & {
     size?: VariantProps<typeof CheckboxVariants>['size'];
     icon?: React.ReactNode;
 };

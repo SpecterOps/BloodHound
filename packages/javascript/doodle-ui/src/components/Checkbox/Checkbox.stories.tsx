@@ -44,11 +44,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-    render: (args) => <Checkbox {...args} />,
+    render: (args) => <Checkbox aria-label='Checkbox' {...args} />,
 };
 
 export const WithLabel: Story = {
-    render: (args) => <CheckboxWithLabel {...args} label='Label' defaultChecked={false} />,
+    render: (args) => (
+        <CheckboxWithLabel aria-label='Checkbox with label' {...args} label='Label' defaultChecked={false} />
+    ),
 };
 
 /**
@@ -85,9 +87,27 @@ export const CheckboxWithoutLabel: Story = {
 export const Disabled: Story = {
     render: (args) => (
         <div className='flex items-center gap-2'>
-            <Checkbox id='checkbox-disabled-unchecked' checked={false} {...args} disabled />
-            <Checkbox id='checkbox-disabled-checked' checked {...args} disabled />
-            <Checkbox id='checkbox-disabled-indeterminate' checked='indeterminate' {...args} disabled />
+            <Checkbox
+                aria-label='Disabled unchecked checkbox'
+                id='checkbox-disabled-unchecked'
+                checked={false}
+                {...args}
+                disabled
+            />
+            <Checkbox
+                aria-label='Disabled checked checkbox'
+                id='checkbox-disabled-checked'
+                checked
+                {...args}
+                disabled
+            />
+            <Checkbox
+                aria-label='Disabled indeterminate checkbox'
+                id='checkbox-disabled-indeterminate'
+                checked='indeterminate'
+                {...args}
+                disabled
+            />
         </div>
     ),
 };
@@ -98,9 +118,27 @@ export const Disabled: Story = {
 export const Error: Story = {
     render: (args) => (
         <div className='flex items-center gap-2'>
-            <Checkbox id='checkbox-error-unchecked' checked={false} {...args} aria-invalid />
-            <Checkbox id='checkbox-error-checked' checked={true} {...args} aria-invalid />
-            <Checkbox id='checkbox-error-indeterminate' checked='indeterminate' {...args} aria-invalid />
+            <Checkbox
+                aria-label='Error unchecked checkbox'
+                id='checkbox-error-unchecked'
+                checked={false}
+                {...args}
+                aria-invalid
+            />
+            <Checkbox
+                aria-label='Error checked checkbox'
+                id='checkbox-error-checked'
+                checked={true}
+                {...args}
+                aria-invalid
+            />
+            <Checkbox
+                aria-label='Error indeterminate checkbox'
+                id='checkbox-error-indeterminate'
+                checked='indeterminate'
+                {...args}
+                aria-invalid
+            />
         </div>
     ),
 };
