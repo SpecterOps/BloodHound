@@ -383,6 +383,7 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKindsByEnvironmentIds(ctx context.Conte
 		SchemaEnvironmentID int32
 		ID                  int32
 		Name                string
+		KindId              int32
 		SchemaExtensionId   int32
 		DisplayName         string
 		Description         string
@@ -405,6 +406,7 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKindsByEnvironmentIds(ctx context.Conte
 			se.id AS schema_environment_id,
 			nk.id,
 			k.name,
+			nk.kind_id,
 			nk.schema_extension_id,
 			nk.display_name,
 			nk.description,
@@ -427,6 +429,7 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKindsByEnvironmentIds(ctx context.Conte
 		nodeKindsByEnvironmentID[row.SchemaEnvironmentID] = append(nodeKindsByEnvironmentID[row.SchemaEnvironmentID], model.GraphSchemaNodeKind{
 			Serial:            model.Serial{ID: row.ID},
 			Name:              row.Name,
+			KindId:            row.KindId,
 			SchemaExtensionId: row.SchemaExtensionId,
 			DisplayName:       row.DisplayName,
 			Description:       row.Description,

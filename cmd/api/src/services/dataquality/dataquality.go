@@ -45,7 +45,6 @@ type DataQualityData interface {
 	GetEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error)
 	GetGraphSchemaNodeKindsByEnvironmentIds(ctx context.Context, environmentIDs ...int32) (map[int32]model.GraphSchemaNodeKinds, error)
 	GetKindsByIDs(ctx context.Context, ids ...int32) ([]model.Kind, error)
-	GetKindsByNames(ctx context.Context, names ...string) ([]model.Kind, error)
 }
 
 func adGraphStats(ctx context.Context, db graph.Database) (model.ADDataQualityStats, model.ADDataQualityAggregation, error) {
@@ -513,48 +512,14 @@ func schemaSourceKinds(ctx context.Context, db DataQualityData, schemaEnvironmen
 	return sourceKinds, nil
 }
 
-func schemaNodeKindMaps(ctx context.Context, db DataQualityData, schemaEnvironments []model.SchemaEnvironment) (map[int32]model.GraphSchemaNodeKinds, map[string]int32, error) {
-	var (
-		schemaEnvironmentIDs = make([]int32, 0, len(schemaEnvironments))
-		nodeKindNames        []string
-		seenNodeKindNames    = make(map[string]struct{})
-	)
+func schemaNodeKindMaps(ctx context.Context, db DataQualityData, schemaEnvironments []model.SchemaEnvironment) (map[int32]model.GraphSchemaNodeKinds, error) {
+	var schemaEnvironmentIDs = make([]int32, 0, len(schemaEnvironments))
 
 	for _, schemaEnvironment := range schemaEnvironments {
 		schemaEnvironmentIDs = append(schemaEnvironmentIDs, schemaEnvironment.ID)
 	}
 
-	nodeKindsBySchemaEnvironmentID, err := db.GetGraphSchemaNodeKindsByEnvironmentIds(ctx, schemaEnvironmentIDs...)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	for _, nodeKinds := range nodeKindsBySchemaEnvironmentID {
-		for _, nodeKind := range nodeKinds {
-			if _, seen := seenNodeKindNames[nodeKind.Name]; seen {
-				continue
-			}
-
-			seenNodeKindNames[nodeKind.Name] = struct{}{}
-			nodeKindNames = append(nodeKindNames, nodeKind.Name)
-		}
-	}
-
-	if len(nodeKindNames) == 0 {
-		return nodeKindsBySchemaEnvironmentID, map[string]int32{}, nil
-	}
-
-	kinds, err := db.GetKindsByNames(ctx, nodeKindNames...)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	kindIDByName := make(map[string]int32, len(kinds))
-	for _, kind := range kinds {
-		kindIDByName[kind.Name] = kind.ID
-	}
-
-	return nodeKindsBySchemaEnvironmentID, kindIDByName, nil
+	return db.GetGraphSchemaNodeKindsByEnvironmentIds(ctx, schemaEnvironmentIDs...)
 }
 
 func schemaGraphStats(ctx context.Context, db DataQualityData, graphDB graph.Database) (model.DataQualityStats, error) {
@@ -581,7 +546,7 @@ func schemaGraphStats(ctx context.Context, db DataQualityData, graphDB graph.Dat
 		return stats, err
 	}
 
-	nodeKindsBySchemaEnvironmentID, kindIDByName, err := schemaNodeKindMaps(ctx, db, schemaEnvironments)
+	nodeKindsBySchemaEnvironmentID, err := schemaNodeKindMaps(ctx, db, schemaEnvironments)
 	if err != nil {
 		return stats, err
 	}
@@ -628,11 +593,6 @@ func schemaGraphStats(ctx context.Context, db DataQualityData, graphDB graph.Dat
 						continue
 					}
 
-					kindID, found := kindIDByName[nodeKind.Name]
-					if !found {
-						return fmt.Errorf("kind ID not found for schema node kind %s", nodeKind.Name)
-					}
-
 					count, err := tx.Nodes().Filterf(func() graph.Criteria {
 						return query.And(
 							query.Kind(query.Node(), sourceKind),
@@ -652,7 +612,7 @@ func schemaGraphStats(ctx context.Context, db DataQualityData, graphDB graph.Dat
 						MetricType:              model.DataQualityMetricTypeNode,
 						MetricName:              nodeKind.Name,
 						MetricValue:             float64(count),
-						KindID:                  null.Int32From(kindID),
+						KindID:                  null.Int32From(nodeKind.KindId),
 					})
 				}
 			}
