@@ -14,8 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import type { Meta, StoryObj } from '@storybook/react';
-import { Label } from '../Label';
-import { Checkbox } from './Checkbox';
+import { Checkbox, CheckboxWithLabel } from './Checkbox';
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
@@ -31,24 +30,48 @@ const meta = {
         size: {
             control: 'select',
             options: ['lg', 'md', 'sm'],
+            description: 'Size of the Checkbox.',
+        },
+        disabled: {
+            control: 'boolean',
+            description: 'Disables interaction with the Checkbox.',
         },
     },
-    args: { size: 'md' },
+    args: { size: 'md', disabled: false },
 } satisfies Meta<typeof Checkbox>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const labeledCheckboxFocus =
-    'inline-flex items-center gap-2 rounded-sm [&:has(:focus-visible)]:ring-2 [&:has(:focus-visible)]:ring-secondary dark:[&:has(:focus-visible)]:ring-secondary-variant-2 [&:has(:focus-visible)]:ring-offset-2 [&:has(:focus-visible)]:ring-offset-neutral-light-1 dark:[&:has(:focus-visible)]:ring-offset-neutral-dark-1';
-
-export const Story: Story = {
+export const Default: Story = {
     render: (args) => <Checkbox {...args} />,
 };
 
-export const IconOnly: Story = {
+export const WithLabel: Story = {
+    render: ({ size }) => <CheckboxWithLabel size={size} label='Label' defaultChecked={false} />,
+};
+
+/**
+ *Checkboxes with a label.
+ */
+export const LabelExamples: Story = {
+    render: ({ size }) => (
+        <div className='flex flex-col items-start gap-4'>
+            <CheckboxWithLabel size={size} label='Unchecked' checked={false} />
+            <CheckboxWithLabel size={size} label='Checked' checked />
+            <CheckboxWithLabel size={size} label='Indeterminate' checked='indeterminate' />
+            <CheckboxWithLabel size={size} label='Error' error checked />
+            <CheckboxWithLabel size={size} label='Disabled' disabled checked />
+        </div>
+    ),
+};
+
+/**
+ *Icons only Checkboxes.
+ */
+export const CheckboxWithoutLabel: Story = {
     render: (args) => (
-        <div className='flex items-center gap-4'>
+        <div className='flex items-center gap-2'>
             <Checkbox aria-label='Unchecked checkbox' checked={false} {...args} />
             <Checkbox aria-label='Checked checkbox' checked={true} {...args} />
             <Checkbox aria-label='Indeterminate checkbox' checked='indeterminate' {...args} />
@@ -56,110 +79,28 @@ export const IconOnly: Story = {
     ),
 };
 
-export const Unchecked: Story = {
-    render: (args) => (
-        <div className='flex items-center gap-2'>
-            <Checkbox id='checkbox-unchecked' checked={false} {...args} />
-            <Label htmlFor='checkbox-unchecked'>Label</Label>
-        </div>
-    ),
-};
-
-export const Checked: Story = {
-    render: (args) => (
-        <div className='flex items-center gap-2'>
-            <Checkbox id='checkbox-checked' checked={true} {...args} />
-            <Label htmlFor='checkbox-checked'>Label</Label>
-        </div>
-    ),
-};
-
-export const Indeterminate: Story = {
-    render: (args) => (
-        <div className='flex items-center gap-2'>
-            <Checkbox id='checkbox-indeterminate' checked='indeterminate' {...args} />
-            <Label htmlFor='checkbox-indeterminate'>Label</Label>
-        </div>
-    ),
-};
-
-export const Labeled: Story = {
-    render: () => {
-        return (
-            <div className='flex justify-center flex-row items-center'>
-                <Checkbox id='test-id' />
-                <Label htmlFor='test-id' className='pl-2'>
-                    Testing Label
-                </Label>
-            </div>
-        );
-    },
-};
-
+/**
+ * Disabled Checkbox cannot be interacted with.
+ */
 export const Disabled: Story = {
     render: (args) => (
-        <div className='flex flex-col gap-4'>
-            <div className='flex items-center gap-2'>
-                <Checkbox id='checkbox-disabled-unchecked' checked={false} {...args} disabled />
-                <Label htmlFor='checkbox-disabled-unchecked'>Unchecked disabled</Label>
-            </div>
-
-            <div className='flex items-center gap-2'>
-                <Checkbox id='checkbox-disabled-checked' checked {...args} disabled />
-                <Label htmlFor='checkbox-disabled-checked'>Checked disabled</Label>
-            </div>
-
-            <div className='flex items-center gap-2'>
-                <Checkbox id='checkbox-disabled-indeterminate' checked='indeterminate' {...args} disabled />
-                <Label htmlFor='checkbox-disabled-indeterminate'>Indeterminate disabled</Label>
-            </div>
+        <div className='flex items-center gap-2'>
+            <Checkbox id='checkbox-disabled-unchecked' checked={false} {...args} disabled />
+            <Checkbox id='checkbox-disabled-checked' checked {...args} disabled />
+            <Checkbox id='checkbox-disabled-indeterminate' checked='indeterminate' {...args} disabled />
         </div>
     ),
 };
 
+/**
+ * Error Checkboxes.
+ */
 export const Error: Story = {
     render: (args) => (
-        <div className='flex flex-col gap-4'>
-            <div className='flex items-center gap-2'>
-                <Checkbox id='checkbox-error-unchecked' checked={false} {...args} aria-invalid />
-                <Label htmlFor='checkbox-error-unchecked' className='text-error'>
-                    Unchecked error
-                </Label>
-            </div>
-
-            <div className='flex items-center gap-2'>
-                <Checkbox id='checkbox-error-checked' checked={true} {...args} aria-invalid />
-                <Label htmlFor='checkbox-error-checked' className='text-error'>
-                    Checked error
-                </Label>
-            </div>
-
-            <div className='flex items-center gap-2'>
-                <Checkbox id='checkbox-error-indeterminate' checked='indeterminate' {...args} aria-invalid />
-                <Label htmlFor='checkbox-error-indeterminate' className='text-error'>
-                    Indeterminate error
-                </Label>
-            </div>
-        </div>
-    ),
-};
-
-export const KeyboardFocus: Story = {
-    render: (args) => (
-        <div className='flex flex-col items-start gap-6'>
-            <div className='flex items-center gap-4'>
-                <Checkbox aria-label='Icon only checkbox' checked={false} {...args} />
-            </div>
-
-            <div className={labeledCheckboxFocus}>
-                <Checkbox
-                    id='checkbox-focus-labeled'
-                    checked={false}
-                    className='focus-visible:ring-0 focus-visible:ring-offset-0'
-                    {...args}
-                />
-                <Label htmlFor='checkbox-focus-labeled'>Labeled focus</Label>
-            </div>
+        <div className='flex items-center gap-2'>
+            <Checkbox id='checkbox-error-unchecked' checked={false} {...args} aria-invalid />
+            <Checkbox id='checkbox-error-checked' checked={true} {...args} aria-invalid />
+            <Checkbox id='checkbox-error-indeterminate' checked='indeterminate' {...args} aria-invalid />
         </div>
     ),
 };
