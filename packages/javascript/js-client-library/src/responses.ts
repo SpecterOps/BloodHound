@@ -130,7 +130,7 @@ export type AzureDataQualityStat = TimestampFields & {
 export type AzureDataQualityResponse = PaginatedResponse<AzureDataQualityStat[]>;
 
 export type DataQualityEnvironment = {
-    id: string;
+    environment_id: string;
     name: string;
     environment_kind: string;
 };

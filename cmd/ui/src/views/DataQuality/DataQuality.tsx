@@ -39,7 +39,7 @@ const getStatsComponent = (selectedEnvironment: DataQualitySelection | null, dat
     const contextType = selectedEnvironment
         ? dataQualityTypeFromEnvironmentKind(selectedEnvironment.environmentKind)
         : undefined;
-    const contextId = selectedEnvironment?.id;
+    const contextId = selectedEnvironment?.environmentId;
 
     if (contextType === 'active-directory') {
         if (selectedEnvironment?.selectionType === 'aggregate') {
@@ -72,7 +72,7 @@ const DataQuality: React.FC = () => {
         if (!initialEnvironment) return null;
 
         return {
-            id: initialEnvironment.id,
+            environmentId: initialEnvironment.environment_id,
             environmentKind: initialEnvironment.environment_kind,
             selectionType: 'environment',
         };

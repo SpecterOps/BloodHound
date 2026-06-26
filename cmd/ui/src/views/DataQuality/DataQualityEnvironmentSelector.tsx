@@ -40,7 +40,7 @@ import type { DataQualityEnvironment, Environment } from 'js-client-library';
 import React, { ReactNode, useMemo, useState } from 'react';
 
 export type DataQualitySelection = {
-    id: string | null;
+    environmentId: string | null;
     environmentKind: string;
     selectionType: 'environment' | 'aggregate';
 };
@@ -89,7 +89,9 @@ const selectedText = (selected: DataQualitySelection | null, environments: DataQ
 
     return (
         environments.find(
-            (environment) => environment.id === selected.id && environment.environment_kind === selected.environmentKind
+            (environment) =>
+                environment.environment_id === selected.environmentId &&
+                environment.environment_kind === selected.environmentKind
         )?.name || 'Select Environment'
     );
 };
@@ -98,7 +100,7 @@ const searchMatchesEnvironment = (environment: DataQualityEnvironment, search: s
     const normalizedSearch = search.trim().toLowerCase();
     if (!normalizedSearch) return true;
 
-    return [environment.name, environment.id, environment.environment_kind].some((value) =>
+    return [environment.name, environment.environment_id, environment.environment_kind].some((value) =>
         value.toLowerCase().includes(normalizedSearch)
     );
 };
@@ -160,7 +162,7 @@ const DataQualityEnvironmentSelector: React.FC<{
 
     const handlePlatformClick = (environment: DataQualityEnvironment) => {
         onSelect({
-            id: null,
+            environmentId: null,
             environmentKind: environment.environment_kind,
             selectionType: 'aggregate',
         });
@@ -169,7 +171,7 @@ const DataQualityEnvironmentSelector: React.FC<{
 
     const handleEnvironmentClick = (environment: DataQualityEnvironment) => {
         onSelect({
-            id: environment.id,
+            environmentId: environment.environment_id,
             environmentKind: environment.environment_kind,
             selectionType: 'environment',
         });
@@ -227,7 +229,7 @@ const DataQualityEnvironmentSelector: React.FC<{
                         {filteredEnvironments.map((environment) => {
                             const environmentInfo = environmentInfoForKind(environment.environment_kind);
                             return (
-                                <li key={`${selectionKey(environment)}:${environment.id}`}>
+                                <li key={`${selectionKey(environment)}:${environment.environment_id}`}>
                                     <Button
                                         className={cn(optionStyles, 'flex justify-between items-center gap-2')}
                                         onClick={() => handleEnvironmentClick(environment)}
@@ -243,7 +245,7 @@ const DataQualityEnvironmentSelector: React.FC<{
                                                     <TooltipContent
                                                         side='left'
                                                         className='dark:bg-neutral-dark-5 border-0'>
-                                                        <span className='uppercase'>{environment.id}</span>
+                                                        <span className='uppercase'>{environment.environment_id}</span>
                                                     </TooltipContent>
                                                 </TooltipPortal>
                                             </TooltipRoot>

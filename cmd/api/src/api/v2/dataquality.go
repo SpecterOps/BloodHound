@@ -153,11 +153,11 @@ func BuildDataQualityEnvironmentSelectors(nodes []*graph.Node, schemaEnvironment
 			}
 
 			name, _ := node.Properties.GetOrDefault(common.Name.String(), graphschema.DefaultMissingName).String()
-			objectID, _ := node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
+			environmentID, _ := node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 
 			selectors = append(selectors, model.DataQualityEnvironmentSelector{
 				Name:            name,
-				ObjectID:        objectID,
+				EnvironmentID:   environmentID,
 				EnvironmentKind: environmentKind,
 			})
 			break
@@ -308,10 +308,37 @@ func enrichDataQualityNodeKindStats(stats model.DataQualityStats, schemaEnvironm
 	return enriched
 }
 
+func dataQualityEnvironmentSortItems(request *http.Request) (query.SortItems, error) {
+	var (
+		queryParams   = request.URL.Query()
+		sortByColumns = queryParams["sort_by"]
+	)
+
+	for index, sortByColumn := range sortByColumns {
+		var (
+			descending = strings.HasPrefix(sortByColumn, "-")
+			column     = strings.TrimPrefix(sortByColumn, "-")
+		)
+
+		if column != QueryParameterEnvironmentID {
+			continue
+		}
+
+		if descending {
+			sortByColumns[index] = "-objectid"
+		} else {
+			sortByColumns[index] = "objectid"
+		}
+	}
+
+	queryParams["sort_by"] = sortByColumns
+	return api.ParseGraphSortParameters(model.DataQualityEnvironmentSelectors{}, queryParams)
+}
+
 func (s *Resources) ListDataQualityEnvironments(response http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 
-	sortItems, err := api.ParseGraphSortParameters(model.DataQualityEnvironmentSelectors{}, request.URL.Query())
+	sortItems, err := dataQualityEnvironmentSortItems(request)
 	if err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
 		return

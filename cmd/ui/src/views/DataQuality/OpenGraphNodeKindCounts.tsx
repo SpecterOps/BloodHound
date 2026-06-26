@@ -257,7 +257,8 @@ const OpenGraphNodeKindCounts: React.FC<OpenGraphNodeKindCountsProps> = ({
 
     const { data, isLoading, isError } = useDataQualityNodeKindStatsQuery({
         environmentKind: selectedEnvironment?.environmentKind,
-        environmentId: selectedEnvironment?.selectionType === 'environment' ? selectedEnvironment.id : null,
+        environmentId:
+            selectedEnvironment?.selectionType === 'environment' ? selectedEnvironment.environmentId : null,
         sourceKind,
         includeBuiltin,
     });

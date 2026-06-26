@@ -21903,7 +21903,7 @@
           "name": {
             "type": "string"
           },
-          "id": {
+          "environment_id": {
             "type": "string"
           },
           "environment_kind": {
