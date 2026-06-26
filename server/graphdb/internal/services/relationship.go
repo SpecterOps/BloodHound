@@ -21,15 +21,6 @@ import (
 	"errors"
 )
 
-// Kind is the domain representation of a relationship kind, pairing the kind name
-// recorded on the graph relationship with the integer identifier assigned to it in
-// the schema_relationship_kinds table. ID is nil when the kind has no
-// schema_relationship_kinds entry.
-type Kind struct {
-	ID   *int32
-	Name string
-}
-
 // Relationship is the domain representation of a graph relationship together with
 // its resolved kind, endpoint node ids, and properties.
 type Relationship struct {
@@ -49,8 +40,9 @@ var ErrKindNotFound = errors.New("relationship kind not found")
 
 // GetRelationship returns the relationship identified by the graph-assigned id with its
 // kind resolved to the integer identifier from the kind table. ErrRelationshipNotFound is
-// returned when the relationship does not exist; ErrKindNotFound when the relationship's
-// kind has no entry in the kind table.
+// returned when the relationship does not exist. If the kind has no entry in the
+// schema_relationship_kinds table, the relationship is returned with Kind.Name populated
+// and Kind.ID set to nil (best-effort resolution).
 func (s *Service) GetRelationship(ctx context.Context, id int64) (Relationship, error) {
 	var (
 		relationship Relationship
@@ -58,16 +50,15 @@ func (s *Service) GetRelationship(ctx context.Context, id int64) (Relationship, 
 		err          error
 	)
 
-	relationship, err = s.db.GetRelationship(ctx, id)
-	if err != nil {
+	if relationship, err = s.db.GetRelationship(ctx, id); err != nil {
 		return Relationship{}, err
-	}
-
-	kind, err = s.db.GetKindByName(ctx, relationship.Kind.Name)
-	if err != nil {
+	} else if kind, err = s.db.GetKindByName(ctx, relationship.Kind.Name); errors.Is(err, ErrKindNotFound) {
+		// Kind exists in the graph but not in schema_relationship_kinds; return with nil ID
+		return relationship, nil
+	} else if err != nil {
 		return Relationship{}, err
+	} else {
+		relationship.Kind = kind
+		return relationship, nil
 	}
-
-	relationship.Kind = kind
-	return relationship, nil
 }

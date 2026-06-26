@@ -27,17 +27,19 @@ import (
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestStore_GetRelationship(t *testing.T) {
 	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
+	mockGraph := mocks.NewMockgraphReader(ctrl)
 	t.Run("maps not-found error to ErrRelationshipNotFound", func(t *testing.T) {
-		graphReaderMock := mocks.NewMockgraphReader(t)
-		graphReaderMock.EXPECT().ReadTransaction(ctx, mock.Anything).Return(graph.ErrNoResultsFound)
-		store := appdb.NewStore(graphReaderMock, nil)
+		mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(graph.ErrNoResultsFound)
+		store := appdb.NewStore(mockGraph, nil)
 
 		_, err := store.GetRelationship(ctx, 1)
 		assert.ErrorIs(t, err, services.ErrRelationshipNotFound)
@@ -45,8 +47,8 @@ func TestStore_GetRelationship(t *testing.T) {
 
 	t.Run("propagates real transaction error", func(t *testing.T) {
 		txErr := errors.New("connection refused")
-		graphReaderMock := mocks.NewMockgraphReader(t)
-		graphReaderMock.EXPECT().ReadTransaction(ctx, mock.Anything).Return(txErr)
+		graphReaderMock := mocks.NewMockgraphReader(ctrl)
+		graphReaderMock.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(txErr)
 		store := appdb.NewStore(graphReaderMock, nil)
 
 		_, err := store.GetRelationship(ctx, 1)
@@ -55,8 +57,8 @@ func TestStore_GetRelationship(t *testing.T) {
 	})
 
 	t.Run("returns ErrRelationshipNotFound when relationship is nil without error", func(t *testing.T) {
-		graphReaderMock := mocks.NewMockgraphReader(t)
-		graphReaderMock.EXPECT().ReadTransaction(ctx, mock.Anything).Return(nil)
+		graphReaderMock := mocks.NewMockgraphReader(ctrl)
+		graphReaderMock.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 		store := appdb.NewStore(graphReaderMock, nil)
 
 		_, err := store.GetRelationship(ctx, 1)

@@ -72,7 +72,8 @@ func (s RelationshipView) JSONView() ([]byte, error) {
 
 // GetRelationshipByID returns the details of a graph relationship identified by its
 // graph-assigned integer id. Returns 400 when the id is malformed, 404 when the
-// relationship or its kind cannot be found, and 200 with the relationship details otherwise.
+// relationship cannot be found, and 200 with the relationship details otherwise.
+// Kinds that are not registered in schema_relationship_kinds are returned with ID=nil.
 func (s Handlers) GetRelationshipByID(response http.ResponseWriter, request *http.Request) {
 	var (
 		ctx               = request.Context()
@@ -86,7 +87,7 @@ func (s Handlers) GetRelationshipByID(response http.ResponseWriter, request *htt
 	}
 
 	relationship, err := s.graphDB.GetRelationship(ctx, relationshipID)
-	if errors.Is(err, services.ErrRelationshipNotFound) || errors.Is(err, services.ErrKindNotFound) {
+	if errors.Is(err, services.ErrRelationshipNotFound) {
 		responses.WriteError(ctx, http.StatusNotFound, "relationship not found", response)
 		return
 	}
