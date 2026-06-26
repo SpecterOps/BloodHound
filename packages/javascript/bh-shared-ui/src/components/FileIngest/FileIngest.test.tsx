@@ -17,20 +17,25 @@
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen, waitFor } from '../../test-utils';
+import { Permission } from '../../utils/permissions';
 import FileIngest from './FileIngest';
 
 const checkPermissionMock = vi.fn();
+const addNotificationMock = vi.fn();
 
-vi.mock('../../hooks/usePermissions', async () => {
-    const actual = await vi.importActual('../../hooks');
-    return {
-        ...actual,
-        usePermissions: () => ({
-            checkPermission: checkPermissionMock,
-            isSuccess: true,
-        }),
-    };
-});
+vi.mock('../../hooks/usePermissions', () => ({
+    usePermissions: () => ({
+        checkPermission: checkPermissionMock,
+        isSuccess: true,
+    }),
+}));
+
+vi.mock('../../hooks/useNotifications', () => ({
+    useNotifications: () => ({
+        addNotification: addNotificationMock,
+        dismissNotification: vi.fn(),
+    }),
+}));
 
 const server = setupServer(
     rest.get('/api/v2/features', (req, res, ctx) => {
@@ -77,6 +82,11 @@ afterAll(() => {
     server.resetHandlers();
 });
 
+beforeEach(() => {
+    checkPermissionMock.mockClear();
+    addNotificationMock.mockClear();
+});
+
 describe('FileIngest', () => {
     it('displays a Upload Files button', async () => {
         await act(async () => render(<FileIngest />));
@@ -95,5 +105,28 @@ describe('FileIngest', () => {
 
         expect(screen.getByText('test_email@specterops.io')).toBeInTheDocument();
         expect(screen.getByText('1 min')).toBeInTheDocument();
+    });
+
+    it('does not display notification when user has GRAPH_DB_INGEST_MANAGE permission', async () => {
+        checkPermissionMock.mockImplementation((perm) => perm === Permission.GRAPH_DB_INGEST_MANAGE);
+        render(<FileIngest />);
+
+        // Wait a tick for useMountEffect to run
+        await waitFor(() => {
+            expect(checkPermissionMock).toHaveBeenCalled();
+        });
+
+        expect(addNotificationMock).not.toHaveBeenCalled();
+    });
+
+    it('does not display notification when user has GRAPH_DB_INGEST_READ permission', async () => {
+        checkPermissionMock.mockImplementation((perm) => perm === Permission.GRAPH_DB_INGEST_READ);
+        render(<FileIngest />);
+
+        await waitFor(() => {
+            expect(checkPermissionMock).toHaveBeenCalled();
+        });
+
+        expect(addNotificationMock).not.toHaveBeenCalled();
     });
 });

@@ -71,4 +71,42 @@ describe('Selected Details Tab Content', () => {
 
         expect(entityInfoPanel).toBeInTheDocument();
     });
+    it('renders object information for an OpenGraph object', async () => {
+        server.use(
+            rest.get('/api/v2/asset-group-tags/:tagId/members/:memberId', async (_req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: {
+                            member: {
+                                id: 123,
+                                asset_group_tag_id: 1,
+                                name: 'Custom Node',
+                                object_id: 'CUSTOM-OBJECT-ID',
+                            },
+                        },
+                    })
+                );
+            }),
+            rest.post('/api/v2/graphs/cypher', async (_req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: {
+                            nodes: {
+                                '123': {
+                                    properties: {
+                                        customprop: 'OpenGraph Value',
+                                    },
+                                },
+                            },
+                        },
+                    })
+                );
+            })
+        );
+
+        render(<SelectedDetailsTabContent currentDetailsTab={ObjectTabValue} tagId='1' memberId='123' />);
+
+        expect(await screen.findByText('OpenGraph Value')).toBeInTheDocument();
+        expect(screen.queryByText('Unable to load object information for this node.')).not.toBeInTheDocument();
+    });
 });

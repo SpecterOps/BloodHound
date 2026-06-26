@@ -125,9 +125,6 @@ const SeedSelection: FC<{
                                     dispatch({ type: 'set-rule-type', ruleType: SeedTypeObjectId });
                                 } else if (value === SeedTypeCypher.toString()) {
                                     dispatch({ type: 'set-rule-type', ruleType: SeedTypeCypher });
-                                    dispatch({ type: 'set-seeds', seeds: [] });
-
-                                    dispatch({ type: 'set-stale-cypher-preview', staleCypherPreview: true });
                                 }
                             }}>
                             <SelectTrigger aria-label='select rule seed type' id='rule-seed-type-select'>

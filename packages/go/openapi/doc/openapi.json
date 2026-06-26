@@ -7221,6 +7221,124 @@
         }
       }
     },
+    "/api/v2/relationships/{relationship_id}": {
+      "parameters": [
+        {
+          "name": "relationship_id",
+          "in": "path",
+          "required": true,
+          "description": "The relationship id assigned by the graph",
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetRelationshipByID",
+        "summary": "Get Relationship by Graph Relationship ID",
+        "description": "**Experimental** - Returns the details of a graph relationship identified by its graph-assigned integer ID",
+        "tags": [
+          "OpenGraph (Experimental)",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.relationship-details"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/nodes/{node_id}": {
+      "parameters": [
+        {
+          "name": "node_id",
+          "in": "path",
+          "required": true,
+          "description": "The node id assigned by the graph",
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetNodeByID",
+        "summary": "Get Node by Graph Node ID",
+        "description": "**Experimental** - Returns the details of a graph node identified by its graph-assigned integer ID",
+        "tags": [
+          "OpenGraph (Experimental)",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.node-details"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/graphs/shortest-path": {
       "parameters": [
         {
@@ -21253,6 +21371,98 @@
               "$ref": "#/components/schemas/model.bh-graph.edge"
             }
           ]
+        }
+      },
+      "model.relationship-details": {
+        "type": "object",
+        "properties": {
+          "relationship_id": {
+            "type": "integer",
+            "format": "int64",
+            "readOnly": true,
+            "example": 1234567890
+          },
+          "source_node_id": {
+            "type": "integer",
+            "format": "int64",
+            "readOnly": true,
+            "example": 1234567890
+          },
+          "target_node_id": {
+            "type": "integer",
+            "format": "int64",
+            "readOnly": true,
+            "example": 1234567890
+          },
+          "kind": {
+            "type": "object",
+            "properties": {
+              "relationship_kind_id": {
+                "type": "integer",
+                "format": "int32",
+                "nullable": true
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "model.node-details": {
+        "type": "object",
+        "properties": {
+          "node_id": {
+            "type": "integer",
+            "format": "int64",
+            "readOnly": true,
+            "example": 1234567890
+          },
+          "kinds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "node_kind_id"
+              ],
+              "properties": {
+                "node_kind_id": {
+                  "type": "integer",
+                  "format": "int32",
+                  "nullable": true,
+                  "description": "Schema node kind ID, or null if the kind is not registered in schema_node_kinds"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The kind name from the graph node"
+                }
+              }
+            }
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "objectid": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "displayName": {
+                "type": "string"
+              },
+              "lastSeen": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "additionalProperties": true
+          }
         }
       },
       "api.params.predicate.filter.contains": {

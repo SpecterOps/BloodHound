@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import { useExploreParams } from '../useExploreParams';
-import { getKeywordAndTypeValues, useSearch } from '../useSearch';
+import { useKeywordAndTypeValues, useSearch } from '../useSearch';
 
 export const usePathfindingSearch = () => {
     const [sourceSearchTerm, setSourceSearchTerm] = useState<string>('');
@@ -28,14 +28,9 @@ export const usePathfindingSearch = () => {
     const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
 
     // Wire up search queries. we should only recompute keywords when the param values change
-    const { keyword: sourceKeyword, type: sourceType } = useMemo(
-        () => getKeywordAndTypeValues(primarySearch ?? undefined),
-        [primarySearch]
-    );
-    const { keyword: destinationKeyword, type: destinationType } = useMemo(
-        () => getKeywordAndTypeValues(secondarySearch ?? undefined),
-        [secondarySearch]
-    );
+    const { keyword: sourceKeyword, type: sourceType } = useKeywordAndTypeValues(primarySearch);
+    const { keyword: destinationKeyword, type: destinationType } = useKeywordAndTypeValues(secondarySearch);
+
     const { data: sourceSearchData } = useSearch(sourceKeyword, sourceType);
     const { data: destinationSearchData } = useSearch(destinationKeyword, destinationType);
 
