@@ -88,19 +88,17 @@ func (s DataQualityEnvironmentSelectors) IsSortable(column string) bool {
 
 type DataQualityNodeKindStat struct {
 	Serial
-	RunID                      string                `json:"run_id"`
-	SchemaExtensionID          int32                 `json:"schema_extension_id"`
-	SchemaExtensionDisplayName string                `json:"schema_extension_display_name"`
-	IsBuiltin                  bool                  `json:"is_builtin"`
-	SchemaEnvironmentKindID    int32                 `json:"schema_environment_kind_id"`
-	EnvironmentKind            string                `json:"environment_kind"`
-	SourceKind                 string                `json:"source_kind"`
-	EnvironmentID              string                `json:"environment_id"`
-	MetricType                 DataQualityMetricType `json:"metric_type"`
-	MetricName                 string                `json:"metric_name"`
-	MetricValue                float64               `json:"metric_value"`
-	KindID                     null.Int32            `json:"kind_id"`
-	KindName                   string                `json:"kind_name"`
+	RunID                   string                `json:"run_id"`
+	IsBuiltin               bool                  `json:"is_builtin"`
+	SchemaEnvironmentKindID int32                 `json:"schema_environment_kind_id"`
+	EnvironmentKind         string                `json:"environment_kind"`
+	SourceKind              string                `json:"source_kind"`
+	EnvironmentID           string                `json:"environment_id"`
+	MetricType              DataQualityMetricType `json:"metric_type"`
+	MetricName              string                `json:"metric_name"`
+	MetricValue             float64               `json:"metric_value"`
+	KindID                  null.Int32            `json:"kind_id"`
+	KindName                string                `json:"kind_name"`
 }
 
 type DataQualityNodeKindStats []DataQualityNodeKindStat

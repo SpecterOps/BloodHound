@@ -33,8 +33,6 @@ type MetricCountRow = {
     key: string;
     metricType: DataQualityNodeKindStat['metric_type'];
     kindName: string;
-    sourceKind: string;
-    extensionName: string;
     latestValue: number;
     history: HistoryPoint[];
 };
@@ -194,13 +192,7 @@ const aggregateStats = (stats: DataQualityNodeKindStat[], aggregate: boolean): M
 
     for (const stat of stats) {
         const kindName = metricName(stat);
-        const rowKey = JSON.stringify([
-            stat.metric_type,
-            stat.schema_extension_id,
-            stat.environment_kind,
-            stat.source_kind,
-            kindName,
-        ]);
+        const rowKey = JSON.stringify([stat.metric_type, stat.schema_environment_kind_id, kindName]);
         const pointKey = aggregate ? stat.run_id : `${stat.run_id}:${stat.environment_id}`;
 
         if (!groupedRows.has(rowKey)) {
@@ -208,8 +200,6 @@ const aggregateStats = (stats: DataQualityNodeKindStat[], aggregate: boolean): M
                 key: rowKey,
                 metricType: stat.metric_type,
                 kindName,
-                sourceKind: stat.source_kind,
-                extensionName: stat.schema_extension_display_name || 'OpenGraph',
                 pointsByRun: new Map<string, HistoryPoint>(),
             });
         }
@@ -235,8 +225,6 @@ const aggregateStats = (stats: DataQualityNodeKindStat[], aggregate: boolean): M
                 key: row.key,
                 metricType: row.metricType,
                 kindName: row.kindName,
-                sourceKind: row.sourceKind,
-                extensionName: row.extensionName,
                 latestValue: latestPoint?.value ?? 0,
                 history,
             };

@@ -21961,13 +21961,6 @@
                 "type": "string",
                 "format": "uuid"
               },
-              "schema_extension_id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "schema_extension_display_name": {
-                "type": "string"
-              },
               "is_builtin": {
                 "type": "boolean"
               },

@@ -141,8 +141,6 @@ export type DataQualityEnvironmentsResponse = BasicResponse<DataQualityEnvironme
 
 export type DataQualityNodeKindStat = TimestampFields & {
     run_id: string;
-    schema_extension_id: number;
-    schema_extension_display_name: string;
     is_builtin: boolean;
     schema_environment_kind_id: number;
     environment_kind: string;

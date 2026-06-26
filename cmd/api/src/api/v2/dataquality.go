@@ -304,20 +304,18 @@ func enrichDataQualityNodeKindStats(stats model.DataQualityStats, schemaEnvironm
 		}
 
 		enriched = append(enriched, model.DataQualityNodeKindStat{
-			Serial:                     stat.Serial,
-			RunID:                      stat.RunID,
-			SchemaExtensionID:          stat.SchemaExtensionID,
-			SchemaExtensionDisplayName: schemaEnvironment.SchemaExtensionDisplayName,
-			IsBuiltin:                  schemaEnvironment.IsBuiltin,
-			SchemaEnvironmentKindID:    stat.SchemaEnvironmentKindID,
-			EnvironmentKind:            schemaEnvironment.EnvironmentKindName,
-			SourceKind:                 sourceKindName,
-			EnvironmentID:              stat.EnvironmentID,
-			MetricType:                 stat.MetricType,
-			MetricName:                 stat.MetricName,
-			MetricValue:                stat.MetricValue,
-			KindID:                     stat.KindID,
-			KindName:                   kindName,
+			Serial:                  stat.Serial,
+			RunID:                   stat.RunID,
+			IsBuiltin:               schemaEnvironment.IsBuiltin,
+			SchemaEnvironmentKindID: stat.SchemaEnvironmentKindID,
+			EnvironmentKind:         schemaEnvironment.EnvironmentKindName,
+			SourceKind:              sourceKindName,
+			EnvironmentID:           stat.EnvironmentID,
+			MetricType:              stat.MetricType,
+			MetricName:              stat.MetricName,
+			MetricValue:             stat.MetricValue,
+			KindID:                  stat.KindID,
+			KindName:                kindName,
 		})
 	}
 
