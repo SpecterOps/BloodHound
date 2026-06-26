@@ -2980,17 +2980,17 @@ func (mr *MockDatabaseMockRecorder) RegisterSourceKind(ctx any) *gomock.Call {
 }
 
 // RequestAnalysis mocks base method.
-func (m *MockDatabase) RequestAnalysis(ctx context.Context, requester string) error {
+func (m *MockDatabase) RequestAnalysis(ctx context.Context, requester string, analysisMode model.AnalysisMode) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RequestAnalysis", ctx, requester)
+	ret := m.ctrl.Call(m, "RequestAnalysis", ctx, requester, analysisMode)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RequestAnalysis indicates an expected call of RequestAnalysis.
-func (mr *MockDatabaseMockRecorder) RequestAnalysis(ctx, requester any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RequestAnalysis(ctx, requester, analysisMode any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestAnalysis", reflect.TypeOf((*MockDatabase)(nil).RequestAnalysis), ctx, requester)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestAnalysis", reflect.TypeOf((*MockDatabase)(nil).RequestAnalysis), ctx, requester, analysisMode)
 }
 
 // RequestCollectedGraphDataDeletion mocks base method.
