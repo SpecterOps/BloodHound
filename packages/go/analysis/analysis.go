@@ -142,15 +142,15 @@ const (
 type analysisErrors struct {
 	adPost      bool
 	azurePost   bool
-	agi         bool
+	agt         bool
 	agtPartial  bool
 	dataQuality bool
 }
 
 func (s *analysisErrors) evaluateErrors() error {
-	if s.adPost && s.azurePost && s.agi && s.dataQuality {
+	if s.adPost && s.azurePost && s.agt && s.dataQuality {
 		return ErrAnalysisFailed
-	} else if s.adPost || s.azurePost || s.agi || s.agtPartial || s.dataQuality {
+	} else if s.adPost || s.azurePost || s.agt || s.agtPartial || s.dataQuality {
 		return ErrAnalysisPartiallyCompleted
 	}
 
@@ -311,13 +311,16 @@ func taggingOperation(run analysisPipelineRun) (pipelineStepStatus, []error) {
 		if ContainsOnlyCypherSelectorErrors(errs) {
 			run.analysisErrs.agtPartial = true
 			status = pipelineStepStatusPartialFailure
+		} else {
+			run.analysisErrs.agt = true
+			status = pipelineStepStatusFailed
 		}
 	}
 
 	if !tieringEnabled {
 		if err := agi.RunAssetGroupIsolationCollections(run.ctx, run.db, run.graphDB, graphschema.GetNodeKindDisplayLabel); err != nil {
 			collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
-			run.analysisErrs.agi = true
+			run.analysisErrs.agt = true
 			return pipelineStepStatusFailed, collectedErrors
 		}
 	}

@@ -243,7 +243,7 @@ func TestAnalysisErrorsEvaluateErrors(t *testing.T) {
 			errs: analysisErrors{
 				adPost:      true,
 				azurePost:   true,
-				agi:         true,
+				agt:         true,
 				dataQuality: true,
 			},
 			expectedErr: ErrAnalysisFailed,
@@ -265,7 +265,7 @@ func TestAnalysisErrorsEvaluateErrors(t *testing.T) {
 		{
 			name: "agi failure partially completes",
 			errs: analysisErrors{
-				agi: true,
+				agt: true,
 			},
 			expectedErr: ErrAnalysisPartiallyCompleted,
 		},
