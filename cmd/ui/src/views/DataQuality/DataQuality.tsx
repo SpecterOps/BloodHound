@@ -65,7 +65,9 @@ const DataQuality: React.FC = () => {
     const environments = environmentsResponse?.data ?? [];
 
     const initialEnvironment = useMemo(() => {
-        return [...environments].sort((first, second) => first.name.localeCompare(second.name))[0];
+        return [...environments].sort((first, second) =>
+            first.environment_name.localeCompare(second.environment_name)
+        )[0];
     }, [environments]);
 
     const initialSelection = useMemo<DataQualitySelection | null>(() => {

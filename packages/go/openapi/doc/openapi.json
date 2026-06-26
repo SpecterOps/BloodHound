@@ -3520,7 +3520,7 @@
         "parameters": [
           {
             "name": "sort_by",
-            "description": "Sortable columns are objectid, name.",
+            "description": "Sortable columns are environment_id, environment_name.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
@@ -13570,7 +13570,7 @@
         "parameters": [
           {
             "name": "sort_by",
-            "description": "Sortable columns are objectid, name.",
+            "description": "Sortable columns are environment_id, environment_name.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
@@ -20224,7 +20224,7 @@
       "model.kennel-asset": {
         "type": "object",
         "properties": {
-          "name": {
+          "environment_name": {
             "type": "string"
           },
           "download_url": {
@@ -21900,7 +21900,7 @@
       "model.data-quality-environment-selector": {
         "type": "object",
         "properties": {
-          "name": {
+          "environment_name": {
             "type": "string"
           },
           "environment_id": {

@@ -26,7 +26,7 @@ get:
     - Enterprise
   parameters:
     - name: sort_by
-      description: Sortable columns are objectid, name.
+      description: Sortable columns are environment_id, environment_name.
       in: query
       schema:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'

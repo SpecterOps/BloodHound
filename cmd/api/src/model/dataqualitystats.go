@@ -63,7 +63,7 @@ func (s DataQualityStats) IsSortable(column string) bool {
 }
 
 type DataQualityEnvironmentSelector struct {
-	Name            string `json:"name"`
+	EnvironmentName string `json:"environment_name"`
 	EnvironmentID   string `json:"environment_id"`
 	EnvironmentKind string `json:"environment_kind"`
 }
@@ -73,6 +73,7 @@ type DataQualityEnvironmentSelectors []DataQualityEnvironmentSelector
 func (s DataQualityEnvironmentSelectors) IsSortable(column string) bool {
 	switch column {
 	case "environment_id",
+		"environment_name",
 		"objectid",
 		"name":
 		return true

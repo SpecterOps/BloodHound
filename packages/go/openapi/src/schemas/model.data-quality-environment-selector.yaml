@@ -16,7 +16,7 @@
 
 type: object
 properties:
-  name:
+  environment_name:
     type: string
   environment_id:
     type: string

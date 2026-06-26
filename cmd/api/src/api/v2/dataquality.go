@@ -47,6 +47,7 @@ const (
 
 	QueryParameterEnvironmentKind string = "environment_kind"
 	QueryParameterEnvironmentID   string = "environment_id"
+	QueryParameterEnvironmentName string = "environment_name"
 	QueryParameterSourceKind      string = "source_kind"
 	QueryParameterIncludeBuiltin  string = "include_builtin"
 )
@@ -156,7 +157,7 @@ func BuildDataQualityEnvironmentSelectors(nodes []*graph.Node, schemaEnvironment
 			environmentID, _ := node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 
 			selectors = append(selectors, model.DataQualityEnvironmentSelector{
-				Name:            name,
+				EnvironmentName: name,
 				EnvironmentID:   environmentID,
 				EnvironmentKind: environmentKind,
 			})
@@ -320,14 +321,18 @@ func dataQualityEnvironmentSortItems(request *http.Request) (query.SortItems, er
 			column     = strings.TrimPrefix(sortByColumn, "-")
 		)
 
-		if column != QueryParameterEnvironmentID {
+		if column != QueryParameterEnvironmentID && column != QueryParameterEnvironmentName {
 			continue
 		}
 
-		if descending {
+		if column == QueryParameterEnvironmentID && descending {
 			sortByColumns[index] = "-objectid"
-		} else {
+		} else if column == QueryParameterEnvironmentID {
 			sortByColumns[index] = "objectid"
+		} else if descending {
+			sortByColumns[index] = "-name"
+		} else {
+			sortByColumns[index] = "name"
 		}
 	}
 

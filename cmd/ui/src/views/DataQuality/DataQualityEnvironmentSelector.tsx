@@ -92,7 +92,7 @@ const selectedText = (selected: DataQualitySelection | null, environments: DataQ
             (environment) =>
                 environment.environment_id === selected.environmentId &&
                 environment.environment_kind === selected.environmentKind
-        )?.name || 'Select Environment'
+        )?.environment_name || 'Select Environment'
     );
 };
 
@@ -100,7 +100,7 @@ const searchMatchesEnvironment = (environment: DataQualityEnvironment, search: s
     const normalizedSearch = search.trim().toLowerCase();
     if (!normalizedSearch) return true;
 
-    return [environment.name, environment.environment_id, environment.environment_kind].some((value) =>
+    return [environment.environment_name, environment.environment_id, environment.environment_kind].some((value) =>
         value.toLowerCase().includes(normalizedSearch)
     );
 };
@@ -128,7 +128,7 @@ const DataQualityEnvironmentSelector: React.FC<{
     const [search, setSearch] = useState('');
 
     const availableEnvironments = useMemo(
-        () => [...environments].sort((first, second) => first.name.localeCompare(second.name)),
+        () => [...environments].sort((first, second) => first.environment_name.localeCompare(second.environment_name)),
         [environments]
     );
 
@@ -238,7 +238,7 @@ const DataQualityEnvironmentSelector: React.FC<{
                                             <TooltipRoot>
                                                 <TooltipTrigger>
                                                     <span className='uppercase max-w-96 truncate'>
-                                                        {environment.name}
+                                                        {environment.environment_name}
                                                     </span>
                                                 </TooltipTrigger>
                                                 <TooltipPortal>

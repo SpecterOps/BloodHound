@@ -131,7 +131,7 @@ export type AzureDataQualityResponse = PaginatedResponse<AzureDataQualityStat[]>
 
 export type DataQualityEnvironment = {
     environment_id: string;
-    name: string;
+    environment_name: string;
     environment_kind: string;
 };
 
