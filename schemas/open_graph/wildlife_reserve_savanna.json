@@ -1,0 +1,71 @@
+{
+    "metadata": {
+        "source_kind": "wildlife_Entity"
+    },
+    "graph": {
+        "nodes": [
+            {
+                "id": "SAVANNA-001",
+                "kinds": ["wildlife_Savanna", "wildlife_Entity"],
+                "properties": {
+                    "name": "Serengeti Savanna",
+                    "environmentid": "SAVANNA-001",
+                    "collected": true
+                }
+            },
+            {
+                "id": "SAVANNA-002",
+                "kinds": ["wildlife_Savanna", "wildlife_Entity"],
+                "properties": {
+                    "name": "Kalahari Savanna",
+                    "environmentid": "SAVANNA-002",
+                    "collected": true
+                }
+            },
+            {
+                "id": "RANGER-001",
+                "kinds": ["wildlife_Ranger", "wildlife_Entity"],
+                "properties": {
+                    "name": "Alice Kimathi",
+                    "environmentid": "SAVANNA-001"
+                }
+            },
+            {
+                "id": "ANIMAL-001",
+                "kinds": ["wildlife_Animal", "wildlife_Entity"],
+                "properties": {
+                    "name": "Simba the Lion",
+                    "environmentid": "SAVANNA-001"
+                }
+            },
+            {
+                "id": "ANIMAL-002",
+                "kinds": ["wildlife_Animal", "wildlife_Entity"],
+                "properties": {
+                    "name": "Twiga the Giraffe",
+                    "environmentid": "SAVANNA-001"
+                }
+            }
+        ],
+        "edges": [
+            {
+                "start": { "match_by": "id", "value": "RANGER-001" },
+                "end": { "match_by": "id", "value": "SAVANNA-001" },
+                "kind": "wildlife_Manages",
+                "properties": null
+            },
+            {
+                "start": { "match_by": "id", "value": "SAVANNA-001" },
+                "end": { "match_by": "id", "value": "ANIMAL-001" },
+                "kind": "wildlife_InhabitedBy",
+                "properties": null
+            },
+            {
+                "start": { "match_by": "id", "value": "SAVANNA-001" },
+                "end": { "match_by": "id", "value": "ANIMAL-002" },
+                "kind": "wildlife_InhabitedBy",
+                "properties": null
+            }
+        ]
+    }
+}

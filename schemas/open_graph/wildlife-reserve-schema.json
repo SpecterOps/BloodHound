@@ -1,0 +1,68 @@
+{
+    "schema": {
+        "name": "Wildlife_Reserve_System",
+        "display_name": "Wildlife Reserve System",
+        "version": "v1.0.0",
+        "namespace": "wildlife"
+    },
+    "node_kinds": [
+        {
+            "name": "wildlife_Savanna",
+            "display_name": "Savanna",
+            "description": "Open grassland habitat zone",
+            "is_display_kind": true,
+            "icon": "sun",
+            "color": "#FFC107"
+        },
+        {
+            "name": "wildlife_Ranger",
+            "display_name": "Ranger",
+            "description": "Reserve staff member",
+            "is_display_kind": true,
+            "icon": "person",
+            "color": "#2196F3"
+        },
+        {
+            "name": "wildlife_Animal",
+            "display_name": "Animal",
+            "description": "An animal in the reserve",
+            "is_display_kind": true,
+            "icon": "paw",
+            "color": "#795548"
+        }
+    ],
+    "properties": [],
+    "relationship_kinds": [
+        {
+            "name": "wildlife_Manages",
+            "description": "Ranger manages a habitat zone",
+            "is_traversable": true
+        },
+        {
+            "name": "wildlife_InhabitedBy",
+            "description": "Habitat zone is inhabited by an animal",
+            "is_traversable": true
+        }
+    ],
+    "environments": [
+        {
+            "environment_kind": "wildlife_Savanna",
+            "source_kind": "wildlife_Entity",
+            "principal_kinds": ["wildlife_Ranger", "wildlife_Animal"]
+        }
+    ],
+    "relationship_findings": [
+        {
+            "name": "wildlife_FindRangerAccess",
+            "display_name": "Ranger Manages Savanna",
+            "relationship_kind": "wildlife_Manages",
+            "environment_kind": "wildlife_Savanna",
+            "remediation": {
+                "short_description": "A ranger has management access to a savanna zone",
+                "long_description": "The reserve system identified a ranger with direct management access to a savanna habitat zone.",
+                "short_remediation": "Review ranger zone assignments",
+                "long_remediation": "Verify the ranger's assignment is current and appropriate for the savanna zone."
+            }
+        }
+    ]
+}

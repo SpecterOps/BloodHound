@@ -30,6 +30,8 @@ import DataQualityEnvironmentSelector, { DataQualitySelection } from './DataQual
 import OpenGraphNodeKindCounts from './OpenGraphNodeKindCounts';
 import { dataCollectionMessage } from './utils';
 
+const isBuiltInDataQualityType = (type?: string) => type === 'active-directory' || type === 'azure';
+
 const getStatsComponent = (selectedEnvironment: DataQualitySelection | null, dataErrorHandler: () => void) => {
     const contextType = selectedEnvironment?.type;
     const contextId = selectedEnvironment?.id;
@@ -170,7 +172,10 @@ const DataQuality: React.FC = () => {
             <Grid container spacing={2}>
                 <Grid item xs={12} data-testid='data-quality_statistics'>
                     {getStatsComponent(environment, dataErrorHandler)}
-                    <OpenGraphNodeKindCounts selectedEnvironment={environment} />
+                    <OpenGraphNodeKindCounts
+                        hideEmptyState={isBuiltInDataQualityType(environment?.type)}
+                        selectedEnvironment={environment}
+                    />
                 </Grid>
             </Grid>
         </PageWithTitle>

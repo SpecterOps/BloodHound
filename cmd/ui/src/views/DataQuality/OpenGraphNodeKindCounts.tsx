@@ -14,12 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import { useDataQualityNodeKindStatsQuery } from 'bh-shared-ui';
+import { faUsers } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Alert, Box, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableRow } from '@mui/material';
+import { NodeIcon, useDataQualityNodeKindStatsQuery, useTheme } from 'bh-shared-ui';
 import { Typography } from 'doodle-ui';
 import { DataQualityNodeKindStat } from 'js-client-library';
 import { DateTime } from 'luxon';
-import { useMemo } from 'react';
+import { ReactNode, useMemo } from 'react';
 import { DataQualitySelection } from './DataQualityEnvironmentSelector';
 
 type HistoryPoint = {
@@ -27,8 +29,9 @@ type HistoryPoint = {
     value: number;
 };
 
-type NodeKindCountRow = {
+type MetricCountRow = {
     key: string;
+    metricType: DataQualityNodeKindStat['metric_type'];
     kindName: string;
     sourceKind: string;
     extensionName: string;
@@ -36,11 +39,20 @@ type NodeKindCountRow = {
     history: HistoryPoint[];
 };
 
+type GroupedMetricCountRow = Omit<MetricCountRow, 'history' | 'latestValue'> & {
+    pointsByRun: Map<string, HistoryPoint>;
+};
+
+type OpenGraphNodeKindCountsProps = {
+    hideEmptyState?: boolean;
+    selectedEnvironment: DataQualitySelection | null;
+};
+
 const numberFormatter = new Intl.NumberFormat();
 
 const isBuiltInDataQualityType = (type: string) => type === 'active-directory' || type === 'azure';
 
-const OpenGraphNodeKindChart: React.FC<{ rows: NodeKindCountRow[] }> = ({ rows }) => {
+const OpenGraphNodeKindChart: React.FC<{ rows: MetricCountRow[] }> = ({ rows }) => {
     const width = 900;
     const height = 360;
     const padding = 48;
@@ -64,125 +76,182 @@ const OpenGraphNodeKindChart: React.FC<{ rows: NodeKindCountRow[] }> = ({ rows }
         <Paper variant='outlined'>
             <Box p={2}>
                 <Typography variant='h6'>OpenGraph Nodes Over Time</Typography>
-                <svg width='100%' viewBox={`0 0 ${width} ${height}`} role='img' aria-label='OpenGraph nodes over time'>
-                    <line x1={padding} x2={padding} y1={padding} y2={height - padding} stroke='currentColor' />
-                    <line
-                        x1={padding}
-                        x2={width - padding}
-                        y1={height - padding}
-                        y2={height - padding}
-                        stroke='currentColor'
-                    />
-                    {rows.map((row, index) => {
-                        const stroke = colors[index % colors.length];
-                        return (
-                            <polyline
-                                key={row.key}
-                                fill='none'
-                                stroke={stroke}
-                                strokeWidth='2'
-                                points={row.history.map(getPoint).join(' ')}
+                {points.length === 0 ? (
+                    <Box display='flex' alignItems='center' justifyContent='center' minHeight={height}>
+                        <Typography variant='body2'>No node count history is available for this selection.</Typography>
+                    </Box>
+                ) : (
+                    <>
+                        <svg
+                            width='100%'
+                            viewBox={`0 0 ${width} ${height}`}
+                            role='img'
+                            aria-label='OpenGraph nodes over time'>
+                            <line x1={padding} x2={padding} y1={padding} y2={height - padding} stroke='currentColor' />
+                            <line
+                                x1={padding}
+                                x2={width - padding}
+                                y1={height - padding}
+                                y2={height - padding}
+                                stroke='currentColor'
                             />
-                        );
-                    })}
-                </svg>
-                <Box display='flex' flexWrap='wrap' gap={1}>
-                    {rows.map((row, index) => (
-                        <Box key={row.key} display='flex' alignItems='center' gap={0.5}>
-                            <Box
-                                width={10}
-                                height={10}
-                                borderRadius='50%'
-                                bgcolor={colors[index % colors.length]}
-                            />
-                            <Typography variant='caption'>
-                                {row.kindName} ({row.extensionName} / {row.sourceKind})
-                            </Typography>
+                            {rows.map((row, index) => {
+                                const stroke = colors[index % colors.length];
+                                return (
+                                    <polyline
+                                        key={row.key}
+                                        fill='none'
+                                        stroke={stroke}
+                                        strokeWidth='2'
+                                        points={row.history.map(getPoint).join(' ')}
+                                    />
+                                );
+                            })}
+                        </svg>
+                        <Box display='flex' flexWrap='wrap' gap={1}>
+                            {rows.map((row, index) => (
+                                <Box key={row.key} display='flex' alignItems='center' gap={0.5}>
+                                    <Box
+                                        width={10}
+                                        height={10}
+                                        borderRadius='50%'
+                                        bgcolor={colors[index % colors.length]}
+                                    />
+                                    <Typography variant='caption'>{row.kindName}</Typography>
+                                </Box>
+                            ))}
                         </Box>
-                    ))}
-                </Box>
+                    </>
+                )}
             </Box>
         </Paper>
     );
 };
 
-const Sparkline: React.FC<{ points: HistoryPoint[] }> = ({ points }) => {
-    const width = 140;
-    const height = 36;
-    const padding = 4;
-    const values = points.map((point) => point.value);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const range = max - min;
-
-    const pathPoints = points
-        .map((point, index) => {
-            const x = points.length === 1 ? width / 2 : padding + (index / (points.length - 1)) * (width - padding * 2);
-            const normalized = range === 0 ? 0.5 : (point.value - min) / range;
-            const y = height - padding - normalized * (height - padding * 2);
-            return `${x},${y}`;
-        })
-        .join(' ');
-
+const CountRow: React.FC<{ display: string; icon: ReactNode; value: number }> = ({ display, icon, value }) => {
     return (
-        <svg width={width} height={height} role='img' aria-label='Node count trend'>
-            {points.length === 1 ? (
-                <circle cx={width / 2} cy={height / 2} r='3' fill='currentColor' />
-            ) : (
-                <polyline fill='none' stroke='currentColor' strokeWidth='2' points={pathPoints} />
-            )}
-        </svg>
+        <TableRow sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+            <TableCell>
+                <Box display='inline-block' width='32px' textAlign='center'>
+                    {icon}
+                </Box>
+                {display}
+            </TableCell>
+            <TableCell align='right'>{numberFormatter.format(value)}</TableCell>
+        </TableRow>
     );
 };
 
-const aggregateStats = (stats: DataQualityNodeKindStat[], aggregate: boolean): NodeKindCountRow[] => {
-    const groupedRows = new Map<string, Map<string, HistoryPoint>>();
+const CountTable: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const theme = useTheme();
+
+    return (
+        <TableContainer component={Paper} sx={{ backgroundColor: theme.neutral.secondary }}>
+            <Table>
+                <TableBody>{children}</TableBody>
+            </Table>
+        </TableContainer>
+    );
+};
+
+const OpenGraphCountsPanel: React.FC<{ nodeRows: MetricCountRow[]; relationshipValue?: number }> = ({
+    nodeRows,
+    relationshipValue,
+}) => {
+    return (
+        <Box position='relative'>
+            {nodeRows.length > 0 && (
+                <CountTable>
+                    {nodeRows.map((row) => (
+                        <CountRow
+                            key={row.key}
+                            icon={<NodeIcon nodeType={row.kindName} />}
+                            display={row.kindName}
+                            value={row.latestValue}
+                        />
+                    ))}
+                </CountTable>
+            )}
+            {relationshipValue !== undefined && (
+                <Box mt={nodeRows.length > 0 ? 2 : 0}>
+                    <CountTable>
+                        <CountRow
+                            icon={<FontAwesomeIcon icon={faUsers} />}
+                            display='Relationships'
+                            value={relationshipValue}
+                        />
+                    </CountTable>
+                </Box>
+            )}
+        </Box>
+    );
+};
+
+const metricName = (stat: DataQualityNodeKindStat) => stat.kind_name || stat.metric_name;
+
+const aggregateStats = (stats: DataQualityNodeKindStat[], aggregate: boolean): MetricCountRow[] => {
+    const groupedRows = new Map<string, GroupedMetricCountRow>();
 
     for (const stat of stats) {
-        const rowKey = `${stat.schema_extension_id}:${stat.environment_kind}:${stat.source_kind}:${stat.kind_name}`;
+        const kindName = metricName(stat);
+        const rowKey = JSON.stringify([
+            stat.metric_type,
+            stat.schema_extension_id,
+            stat.environment_kind,
+            stat.source_kind,
+            kindName,
+        ]);
         const pointKey = aggregate ? stat.run_id : `${stat.run_id}:${stat.environment_id}`;
 
         if (!groupedRows.has(rowKey)) {
-            groupedRows.set(rowKey, new Map<string, HistoryPoint>());
+            groupedRows.set(rowKey, {
+                key: rowKey,
+                metricType: stat.metric_type,
+                kindName,
+                sourceKind: stat.source_kind,
+                extensionName: stat.schema_extension_display_name || 'OpenGraph',
+                pointsByRun: new Map<string, HistoryPoint>(),
+            });
         }
 
-        const rowPoints = groupedRows.get(rowKey);
-        if (!rowPoints) continue;
+        const row = groupedRows.get(rowKey);
+        if (!row) continue;
 
-        const existingPoint = rowPoints.get(pointKey);
-        rowPoints.set(pointKey, {
+        const existingPoint = row.pointsByRun.get(pointKey);
+        row.pointsByRun.set(pointKey, {
             createdAt: stat.created_at,
             value: (existingPoint?.value ?? 0) + stat.metric_value,
         });
     }
 
-    return [...groupedRows.entries()]
-        .map(([key, pointsByRun]) => {
-            const [schemaExtensionID, , sourceKind, kindName] = key.split(':');
-            const firstStat = stats.find(
-                (stat) =>
-                    String(stat.schema_extension_id) === schemaExtensionID &&
-                    stat.source_kind === sourceKind &&
-                    stat.kind_name === kindName
-            );
-            const history = [...pointsByRun.values()].sort(
+    return [...groupedRows.values()]
+        .map((row) => {
+            const history = [...row.pointsByRun.values()].sort(
                 (first, second) => new Date(first.createdAt).getTime() - new Date(second.createdAt).getTime()
             );
             const latestPoint = history[history.length - 1];
 
             return {
-                key,
-                kindName,
-                sourceKind,
-                extensionName: firstStat?.schema_extension_display_name || 'OpenGraph',
+                key: row.key,
+                metricType: row.metricType,
+                kindName: row.kindName,
+                sourceKind: row.sourceKind,
+                extensionName: row.extensionName,
                 latestValue: latestPoint?.value ?? 0,
                 history,
             };
         })
-        .sort((first, second) => first.kindName.localeCompare(second.kindName));
+        .sort((first, second) => {
+            if (first.metricType !== second.metricType) {
+                return first.metricType === 'node' ? -1 : 1;
+            }
+
+            return first.kindName.localeCompare(second.kindName);
+        });
 };
 
-const OpenGraphNodeKindCounts: React.FC<{ selectedEnvironment: DataQualitySelection | null }> = ({
+const OpenGraphNodeKindCounts: React.FC<OpenGraphNodeKindCountsProps> = ({
+    hideEmptyState = false,
     selectedEnvironment,
 }) => {
     const includeBuiltin = selectedEnvironment ? !isBuiltInDataQualityType(selectedEnvironment.type) : true;
@@ -203,6 +272,13 @@ const OpenGraphNodeKindCounts: React.FC<{ selectedEnvironment: DataQualitySelect
         [data?.data, selectedEnvironment?.selectionType]
     );
 
+    const nodeRows = useMemo(() => rows.filter((row) => row.metricType === 'node'), [rows]);
+    const relationshipRows = useMemo(() => rows.filter((row) => row.metricType === 'relationship'), [rows]);
+    const relationshipValue = useMemo(() => {
+        if (relationshipRows.length === 0) return undefined;
+        return relationshipRows.reduce((total, row) => total + row.latestValue, 0);
+    }, [relationshipRows]);
+
     if (!selectedEnvironment || isLoading) return null;
 
     if (isError) {
@@ -210,6 +286,8 @@ const OpenGraphNodeKindCounts: React.FC<{ selectedEnvironment: DataQualitySelect
     }
 
     if (rows.length === 0) {
+        if (hideEmptyState) return null;
+
         return (
             <Alert severity='info'>
                 No OpenGraph node kind count history is available for this environment selection.
@@ -222,33 +300,14 @@ const OpenGraphNodeKindCounts: React.FC<{ selectedEnvironment: DataQualitySelect
             <Box mb={1}>
                 <Typography variant='h5'>OpenGraph Node Counts</Typography>
             </Box>
-            <OpenGraphNodeKindChart rows={rows} />
-            <TableContainer component={Paper} variant='outlined' sx={{ mt: 2 }}>
-                <Table size='small' aria-label='OpenGraph node counts'>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Node Kind</TableCell>
-                            <TableCell>Extension</TableCell>
-                            <TableCell>Source</TableCell>
-                            <TableCell align='right'>Latest Count</TableCell>
-                            <TableCell>30 Day Trend</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {rows.map((row) => (
-                            <TableRow key={row.key}>
-                                <TableCell>{row.kindName}</TableCell>
-                                <TableCell>{row.extensionName}</TableCell>
-                                <TableCell>{row.sourceKind}</TableCell>
-                                <TableCell align='right'>{numberFormatter.format(row.latestValue)}</TableCell>
-                                <TableCell>
-                                    <Sparkline points={row.history} />
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+            <Grid container spacing={2}>
+                <Grid item xs={4} data-testid='data-quality_opengraph-statistics'>
+                    <OpenGraphCountsPanel nodeRows={nodeRows} relationshipValue={relationshipValue ?? 0} />
+                </Grid>
+                <Grid item xs={8} data-testid='data-quality_opengraph-data-chart'>
+                    <OpenGraphNodeKindChart rows={nodeRows} />
+                </Grid>
+            </Grid>
         </Box>
     );
 };

@@ -1,0 +1,48 @@
+{
+    "metadata": {
+        "source_kind": "wildlife_Entity"
+    },
+    "graph": {
+        "nodes": [
+            {
+                "id": "SAVANNA-003",
+                "kinds": ["wildlife_Savanna", "wildlife_Entity"],
+                "properties": {
+                    "name": "Okavango Delta",
+                    "environmentid": "SAVANNA-003",
+                    "collected": true
+                }
+            },
+            {
+                "id": "RANGER-002",
+                "kinds": ["wildlife_Ranger", "wildlife_Entity"],
+                "properties": {
+                    "name": "Ben Oduya",
+                    "environmentid": "SAVANNA-003"
+                }
+            },
+            {
+                "id": "ANIMAL-003",
+                "kinds": ["wildlife_Animal", "wildlife_Entity"],
+                "properties": {
+                    "name": "Kiki the Macaw",
+                    "environmentid": "SAVANNA-003"
+                }
+            }
+        ],
+        "edges": [
+            {
+                "start": { "match_by": "id", "value": "RANGER-002" },
+                "end": { "match_by": "id", "value": "SAVANNA-003" },
+                "kind": "wildlife_Manages",
+                "properties": null
+            },
+            {
+                "start": { "match_by": "id", "value": "SAVANNA-003" },
+                "end": { "match_by": "id", "value": "ANIMAL-003" },
+                "kind": "wildlife_InhabitedBy",
+                "properties": null
+            }
+        ]
+    }
+}
