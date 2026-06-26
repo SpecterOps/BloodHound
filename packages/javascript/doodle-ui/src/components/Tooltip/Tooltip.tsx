@@ -31,7 +31,11 @@ const TooltipTrigger = React.forwardRef<React.ElementRef<typeof TooltipPrimitive
         const { className, ...rest } = props;
         const asChild = !!props.children;
         return (
-            <TooltipPrimitive.Trigger ref={ref} className={cn(className)} asChild={asChild} {...rest}>
+            <TooltipPrimitive.Trigger
+                ref={ref}
+                className={cn('focus:outline-none focus-visible:focus-ring', className)}
+                asChild={asChild}
+                {...rest}>
                 {asChild ? (
                     props.children
                 ) : (

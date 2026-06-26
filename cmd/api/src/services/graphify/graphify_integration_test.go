@@ -29,11 +29,13 @@ import (
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bootstrap"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -103,14 +105,22 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 	err = os.CopyFS(workDir, os.DirFS(fixturesPath))
 	require.NoError(t, err)
 
-	err = os.Mkdir(path.Join(workDir, "tmp"), 0755)
+	err = os.Mkdir(path.Join(workDir, "tmp"), 0o755)
 	require.NoError(t, err)
 
 	cfg.WorkDir = workDir
+	cfg.CollectorsBasePath = t.TempDir()
+	err = bootstrap.EnsureServerDirectories(cfg)
+	require.NoError(t, err)
+
+	fileServices, err := storage.NewDefaultFileServices(cfg)
+	require.NoError(t, err, "error creating default file services")
+	fileServiceResolver, err := storage.NewFileServiceResolver(fileServices)
+	require.NoError(t, err, "error creating fileServiceResolver")
 
 	return IntegrationTestSuite{
 		Context:         ctx,
-		GraphifyService: graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, nil),
+		GraphifyService: graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, fileServiceResolver, nil),
 		GraphDB:         graphDB,
 		BHDatabase:      db,
 		WorkDir:         workDir,
