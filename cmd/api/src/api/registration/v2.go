@@ -329,6 +329,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET(fmt.Sprintf("/api/v2/users/{%s}/constrained-delegation-rights", api.URIPathVariableObjectID), resources.ListADEntityConstrainedDelegationRights).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/users/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/users/{%s}/controllables", api.URIPathVariableObjectID), resources.ListADEntityControllables).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/users/{%s}/synced-identities", api.URIPathVariableObjectID), resources.ListADUserSyncedIdentities).RequirePermissions(permissions.GraphDBRead),
 
 		// Group Entity API
 		routerInst.GET(fmt.Sprintf("/api/v2/groups/{%s}", api.URIPathVariableObjectID), resources.GetGroupEntityInfo).RequirePermissions(permissions.GraphDBRead),

@@ -19,6 +19,7 @@ package ad
 import (
 	"github.com/specterops/bloodhound/packages/go/analysis/tiering"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -176,6 +177,10 @@ func FilterEnrollers(node graph.Node) graph.Criteria {
 		query.Kind(query.Relationship(), ad.Enroll),
 		query.Kind(query.Start(), ad.Entity),
 	)
+}
+
+func FilterSyncedIdentities() graph.Criteria {
+	return query.KindIn(query.Relationship(), azure.SyncedToEntraUser)
 }
 
 func FilterPublishedCAs(certTemplate *graph.Node) graph.Criteria {

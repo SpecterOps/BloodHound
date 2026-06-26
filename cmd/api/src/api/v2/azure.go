@@ -204,6 +204,13 @@ func graphRelatedEntityType(request *http.Request, graphDb graph.Database, prima
 			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, fics), fics.Len(), nil
 		}
 
+	case azure.RelatedEntityTypeSyncedIdentities:
+		if paths, err := azure.ListSyncedIdentityPaths(ctx, graphDb, objectID); err != nil {
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", options.relatedEntityString, err), request)
+		} else {
+			return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, paths), paths.Len(), nil
+		}
+
 	default:
 		return nil, 0, api.BuildErrorResponse(http.StatusNotFound, fmt.Sprintf("no matching related entity list type for %s", options.relatedEntityString), request)
 	}
@@ -319,6 +326,11 @@ func listRelatedEntityType(ctx context.Context, db graph.Database, primaryDispla
 		}
 	case azure.RelatedEntityTypeFederatedIdentityCredentials:
 		if nodeSet, err = azure.ListAppFederatedIdentityCredentials(ctx, db, objectID, 0, 0); err != nil {
+			return nil, 0, err
+		}
+
+	case azure.RelatedEntityTypeSyncedIdentities:
+		if nodeSet, err = azure.ListSyncedIdentities(ctx, db, objectID, 0, 0); err != nil {
 			return nil, 0, err
 		}
 

@@ -634,6 +634,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
     [AzureNodeKind.User]: (id: string) => [
         {
             id,
+            label: 'Synced Identities',
+            queryType: 'azuser-synced_identities',
+        },
+        {
+            id,
             label: 'Member Of',
             queryType: 'azuser-member_of',
         },
@@ -1047,6 +1052,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
         },
     ],
     [ActiveDirectoryNodeKind.User]: (id: string) => [
+        {
+            id,
+            label: 'Synced Identities',
+            queryType: 'user-synced_identities',
+        },
         {
             id,
             label: 'Sessions',
@@ -1635,6 +1645,10 @@ export const entityRelationshipEndpoints = {
         apiClient
             .getAZEntityInfoV2('users', id, 'inbound-control', counts, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
+    'azuser-synced_identities': ({ id, counts, skip, limit, type }) =>
+        apiClient
+            .getAZEntityInfoV2('users', id, 'synced-identities', counts, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
     'azvm-local_admins': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('vms', id, 'inbound-execution-privileges', counts, skip, limit, type, {
@@ -1857,4 +1871,6 @@ export const entityRelationshipEndpoints = {
         apiClient.getUserControllablesV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'user-inbound_object_control': ({ id, skip, limit, type }) =>
         apiClient.getUserControllersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
+    'user-synced_identities': ({ id, skip, limit, type }) =>
+        apiClient.getUserSyncedIdentitiesV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
 } as const satisfies EntityRelationshipEndpoint;
