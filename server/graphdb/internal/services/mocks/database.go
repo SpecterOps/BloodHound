@@ -119,6 +119,140 @@ func (_c *MockDatabase_GetKindByName_Call) RunAndReturn(run func(ctx context.Con
 	return _c
 }
 
+// GetNode provides a mock function for the type MockDatabase
+func (_mock *MockDatabase) GetNode(ctx context.Context, id int64) (services.Node, error) {
+	ret := _mock.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetNode")
+	}
+
+	var r0 services.Node
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64) (services.Node, error)); ok {
+		return returnFunc(ctx, id)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64) services.Node); ok {
+		r0 = returnFunc(ctx, id)
+	} else {
+		r0 = ret.Get(0).(services.Node)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+		r1 = returnFunc(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDatabase_GetNode_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetNode'
+type MockDatabase_GetNode_Call struct {
+	*mock.Call
+}
+
+// GetNode is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int64
+func (_e *MockDatabase_Expecter) GetNode(ctx interface{}, id interface{}) *MockDatabase_GetNode_Call {
+	return &MockDatabase_GetNode_Call{Call: _e.mock.On("GetNode", ctx, id)}
+}
+
+func (_c *MockDatabase_GetNode_Call) Run(run func(ctx context.Context, id int64)) *MockDatabase_GetNode_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDatabase_GetNode_Call) Return(node services.Node, err error) *MockDatabase_GetNode_Call {
+	_c.Call.Return(node, err)
+	return _c
+}
+
+func (_c *MockDatabase_GetNode_Call) RunAndReturn(run func(ctx context.Context, id int64) (services.Node, error)) *MockDatabase_GetNode_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetNodeKindsByNames provides a mock function for the type MockDatabase
+func (_mock *MockDatabase) GetNodeKindsByNames(ctx context.Context, names []string) ([]services.Kind, error) {
+	ret := _mock.Called(ctx, names)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetNodeKindsByNames")
+	}
+
+	var r0 []services.Kind
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []string) ([]services.Kind, error)); ok {
+		return returnFunc(ctx, names)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []string) []services.Kind); ok {
+		r0 = returnFunc(ctx, names)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]services.Kind)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, []string) error); ok {
+		r1 = returnFunc(ctx, names)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDatabase_GetNodeKindsByNames_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetNodeKindsByNames'
+type MockDatabase_GetNodeKindsByNames_Call struct {
+	*mock.Call
+}
+
+// GetNodeKindsByNames is a helper method to define mock.On call
+//   - ctx context.Context
+//   - names []string
+func (_e *MockDatabase_Expecter) GetNodeKindsByNames(ctx interface{}, names interface{}) *MockDatabase_GetNodeKindsByNames_Call {
+	return &MockDatabase_GetNodeKindsByNames_Call{Call: _e.mock.On("GetNodeKindsByNames", ctx, names)}
+}
+
+func (_c *MockDatabase_GetNodeKindsByNames_Call) Run(run func(ctx context.Context, names []string)) *MockDatabase_GetNodeKindsByNames_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []string
+		if args[1] != nil {
+			arg1 = args[1].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDatabase_GetNodeKindsByNames_Call) Return(kinds []services.Kind, err error) *MockDatabase_GetNodeKindsByNames_Call {
+	_c.Call.Return(kinds, err)
+	return _c
+}
+
+func (_c *MockDatabase_GetNodeKindsByNames_Call) RunAndReturn(run func(ctx context.Context, names []string) ([]services.Kind, error)) *MockDatabase_GetNodeKindsByNames_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetRelationship provides a mock function for the type MockDatabase
 func (_mock *MockDatabase) GetRelationship(ctx context.Context, id int64) (services.Relationship, error) {
 	ret := _mock.Called(ctx, id)

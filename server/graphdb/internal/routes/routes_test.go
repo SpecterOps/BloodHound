@@ -61,6 +61,7 @@ func TestRegister(t *testing.T) {
 		path   string
 	}{
 		{http.MethodGet, "/api/v2/relationships/123"},
+		{http.MethodGet, "/api/v2/nodes/123"},
 	} {
 		req := httptest.NewRequest(tc.method, tc.path, nil)
 		var match mux.RouteMatch
@@ -143,6 +144,7 @@ func TestRegister_RoutesRequireAuthentication(t *testing.T) {
 		path   string
 	}{
 		{http.MethodGet, "/api/v2/relationships/123"},
+		{http.MethodGet, "/api/v2/nodes/123"},
 	} {
 		t.Run(tc.method+" "+tc.path, func(t *testing.T) {
 			var (
