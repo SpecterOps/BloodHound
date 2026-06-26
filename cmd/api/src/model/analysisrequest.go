@@ -165,6 +165,10 @@ func analysisStepsFromDecodedBits(bits int) (AnalysisSteps, error) {
 		return AnalysisSteps{}, fmt.Errorf("analysis steps cannot be greater than 32 bit integer limit: %d", bits)
 	}
 
+	if bits&^int(analysisFull) != 0 {
+		return AnalysisSteps{}, fmt.Errorf("analysis steps contains undefined bits: %d", bits)
+	}
+
 	return analysisStepsFromBits(bits), nil
 }
 
