@@ -118,6 +118,21 @@ func (mr *MockDataQualityDataMockRecorder) CreateAzureDataQualityStats(ctx, stat
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityStats", reflect.TypeOf((*MockDataQualityData)(nil).CreateAzureDataQualityStats), ctx, stats)
 }
 
+// CreateDataQualityAggregations mocks base method.
+func (m *MockDataQualityData) CreateDataQualityAggregations(ctx context.Context, aggregations model.DataQualityAggregations) (model.DataQualityAggregations, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateDataQualityAggregations", ctx, aggregations)
+	ret0, _ := ret[0].(model.DataQualityAggregations)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateDataQualityAggregations indicates an expected call of CreateDataQualityAggregations.
+func (mr *MockDataQualityDataMockRecorder) CreateDataQualityAggregations(ctx, aggregations any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDataQualityAggregations", reflect.TypeOf((*MockDataQualityData)(nil).CreateDataQualityAggregations), ctx, aggregations)
+}
+
 // CreateDataQualityStats mocks base method.
 func (m *MockDataQualityData) CreateDataQualityStats(ctx context.Context, stats model.DataQualityStats) (model.DataQualityStats, error) {
 	m.ctrl.T.Helper()
@@ -224,6 +239,22 @@ func (m *MockDataQualityData) GetAzureDataQualityStats(ctx context.Context, tena
 func (mr *MockDataQualityDataMockRecorder) GetAzureDataQualityStats(ctx, tenantId, start, end, sort_by, limit, skip any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAzureDataQualityStats", reflect.TypeOf((*MockDataQualityData)(nil).GetAzureDataQualityStats), ctx, tenantId, start, end, sort_by, limit, skip)
+}
+
+// GetDataQualityAggregations mocks base method.
+func (m *MockDataQualityData) GetDataQualityAggregations(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.DataQualityAggregations, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDataQualityAggregations", ctx, filters, sort, skip, limit)
+	ret0, _ := ret[0].(model.DataQualityAggregations)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetDataQualityAggregations indicates an expected call of GetDataQualityAggregations.
+func (mr *MockDataQualityDataMockRecorder) GetDataQualityAggregations(ctx, filters, sort, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataQualityAggregations", reflect.TypeOf((*MockDataQualityData)(nil).GetDataQualityAggregations), ctx, filters, sort, skip, limit)
 }
 
 // GetDataQualityStats mocks base method.

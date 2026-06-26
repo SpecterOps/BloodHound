@@ -122,7 +122,7 @@ export const useDataQualityEnvironmentsQuery = () => {
 
 export const useDataQualityNodeKindStatsQuery = (params: {
     environmentKind?: string;
-    environmentId?: string | null;
+    environmentId?: string;
     sourceKind?: string;
     includeBuiltin?: boolean;
 }) => {
@@ -130,7 +130,7 @@ export const useDataQualityNodeKindStatsQuery = (params: {
         [
             'data-quality-node-kind-stats',
             params.environmentKind,
-            params.environmentId ?? 'aggregate',
+            params.environmentId ?? '',
             params.sourceKind ?? '',
             params.includeBuiltin,
         ],
@@ -139,7 +139,7 @@ export const useDataQualityNodeKindStatsQuery = (params: {
                 .getDataQualityNodeKindStats(
                     {
                         environmentKind: params.environmentKind ?? '',
-                        environmentId: params.environmentId,
+                        environmentId: params.environmentId ?? '',
                         sourceKind: params.sourceKind,
                         includeBuiltin: params.includeBuiltin,
                         start: DateTime.now().minus({ days: 30 }).toJSDate(),
@@ -151,6 +151,40 @@ export const useDataQualityNodeKindStatsQuery = (params: {
                 )
                 .then((response) => {
                     if (!response.data) throw new Error('Unable to retrieve Data Quality node kind stats');
+                    return response.data;
+                }),
+        { enabled: Boolean(params.environmentKind && params.environmentId) }
+    );
+};
+
+export const useDataQualityNodeKindAggregationsQuery = (params: {
+    environmentKind?: string;
+    sourceKind?: string;
+    includeBuiltin?: boolean;
+}) => {
+    return useQuery(
+        [
+            'data-quality-node-kind-aggregations',
+            params.environmentKind,
+            params.sourceKind ?? '',
+            params.includeBuiltin,
+        ],
+        ({ signal }) =>
+            apiClient
+                .getDataQualityNodeKindAggregations(
+                    {
+                        environmentKind: params.environmentKind ?? '',
+                        sourceKind: params.sourceKind,
+                        includeBuiltin: params.includeBuiltin,
+                        start: DateTime.now().minus({ days: 30 }).toJSDate(),
+                        end: DateTime.now().toJSDate(),
+                        limit: 5000,
+                        sort_by: 'created_at',
+                    },
+                    { signal }
+                )
+                .then((response) => {
+                    if (!response.data) throw new Error('Unable to retrieve Data Quality node kind aggregations');
                     return response.data;
                 }),
         { enabled: Boolean(params.environmentKind) }

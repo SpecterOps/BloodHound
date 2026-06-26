@@ -350,6 +350,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		// Data Quality Stats API
 		routerInst.GET("/api/v2/data-quality/environments", resources.ListDataQualityEnvironments).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/data-quality/node-kind-stats", resources.GetDataQualityNodeKindStats).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET("/api/v2/data-quality/node-kind-aggregations", resources.GetDataQualityNodeKindAggregations).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/ad-domains/{%s}/data-quality-stats", api.URIPathVariableDomainID), resources.GetADDataQualityStats).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB, resources.DogTags),
 		routerInst.GET(fmt.Sprintf("/api/v2/azure-tenants/{%s}/data-quality-stats", api.URIPathVariableTenantID), resources.GetAzureDataQualityStats).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB, resources.DogTags),
 		routerInst.GET(fmt.Sprintf("/api/v2/platform/{%s}/data-quality-stats", api.URIPathVariablePlatformID), resources.GetPlatformAggregateStats).RequirePermissions(permissions.GraphDBRead),

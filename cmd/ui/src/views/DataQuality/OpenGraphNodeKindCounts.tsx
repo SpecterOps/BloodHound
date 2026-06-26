@@ -17,7 +17,12 @@
 import { faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Alert, Box, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableRow } from '@mui/material';
-import { NodeIcon, useDataQualityNodeKindStatsQuery, useTheme } from 'bh-shared-ui';
+import {
+    NodeIcon,
+    useDataQualityNodeKindAggregationsQuery,
+    useDataQualityNodeKindStatsQuery,
+    useTheme,
+} from 'bh-shared-ui';
 import { Typography } from 'doodle-ui';
 import { DataQualityNodeKindStat } from 'js-client-library';
 import { DateTime } from 'luxon';
@@ -254,18 +259,27 @@ const OpenGraphNodeKindCounts: React.FC<OpenGraphNodeKindCountsProps> = ({
         selectedEnvironment && isBuiltInDataQualityType(environmentType)
             ? sourceKindFromEnvironmentKind(selectedEnvironment.environmentKind)
             : undefined;
+    const isAggregateSelection = selectedEnvironment?.selectionType === 'aggregate';
 
-    const { data, isLoading, isError } = useDataQualityNodeKindStatsQuery({
-        environmentKind: selectedEnvironment?.environmentKind,
+    const statsQuery = useDataQualityNodeKindStatsQuery({
+        environmentKind: !isAggregateSelection ? selectedEnvironment?.environmentKind : undefined,
         environmentId:
-            selectedEnvironment?.selectionType === 'environment' ? selectedEnvironment.environmentId : null,
+            selectedEnvironment?.selectionType === 'environment' ? selectedEnvironment.environmentId ?? undefined : undefined,
         sourceKind,
         includeBuiltin,
     });
+    const aggregationsQuery = useDataQualityNodeKindAggregationsQuery({
+        environmentKind: isAggregateSelection ? selectedEnvironment?.environmentKind : undefined,
+        sourceKind,
+        includeBuiltin,
+    });
+    const data = isAggregateSelection ? aggregationsQuery.data : statsQuery.data;
+    const isLoading = isAggregateSelection ? aggregationsQuery.isLoading : statsQuery.isLoading;
+    const isError = isAggregateSelection ? aggregationsQuery.isError : statsQuery.isError;
 
     const rows = useMemo(
-        () => aggregateStats(data?.data ?? [], selectedEnvironment?.selectionType === 'aggregate'),
-        [data?.data, selectedEnvironment?.selectionType]
+        () => aggregateStats(data?.data ?? [], isAggregateSelection),
+        [data?.data, isAggregateSelection]
     );
 
     const nodeRows = useMemo(() => rows.filter((row) => row.metricType === 'node'), [rows]);

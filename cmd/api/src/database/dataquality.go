@@ -40,6 +40,8 @@ type DataQualityData interface {
 	GetADDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.ADDataQualityAggregations, int, error)
 	CreateAzureDataQualityAggregation(ctx context.Context, aggregation model.AzureDataQualityAggregation) (model.AzureDataQualityAggregation, error)
 	GetAzureDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityAggregations, int, error)
+	CreateDataQualityAggregations(ctx context.Context, aggregations model.DataQualityAggregations) (model.DataQualityAggregations, error)
+	GetDataQualityAggregations(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.DataQualityAggregations, int, error)
 
 	DeleteAllDataQuality(ctx context.Context) error
 }
@@ -310,8 +312,66 @@ func (s *BloodhoundDB) GetAzureDataQualityAggregations(ctx context.Context, star
 	return azureDataQualityAggregations, int(count), nil
 }
 
+func (s *BloodhoundDB) CreateDataQualityAggregations(ctx context.Context, aggregations model.DataQualityAggregations) (model.DataQualityAggregations, error) {
+	result := s.db.WithContext(ctx).Create(&aggregations)
+	return aggregations, CheckError(result)
+}
+
+// GetDataQualityAggregations gets all rows from the Data Quality Aggregations table that match the given SQL Filter. If no sorting is provided, it will sort rows by the CreatedAt date in descending order.
+func (s *BloodhoundDB) GetDataQualityAggregations(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.DataQualityAggregations, int, error) {
+	var (
+		dataQualityAggregations = model.DataQualityAggregations{}
+		totalRowCount           int
+		skipLimit               string
+		whereClause             = "WHERE deleted_at IS NULL"
+	)
+
+	filter, err := buildSQLFilter(filters)
+	if err != nil {
+		return dataQualityAggregations, 0, err
+	}
+
+	if len(sort) == 0 {
+		sort = append(sort, defaultDataQualitySort)
+	}
+
+	orderSql, err := buildSQLSort(sort)
+	if err != nil {
+		return dataQualityAggregations, 0, err
+	}
+
+	if limit > 0 {
+		skipLimit = fmt.Sprintf(" LIMIT %d", limit)
+	}
+
+	if skip > 0 {
+		skipLimit += fmt.Sprintf(" OFFSET %d", skip)
+	}
+
+	if filter.sqlString != "" {
+		whereClause += fmt.Sprintf(" AND %s", filter.sqlString)
+	}
+
+	sqlStr := fmt.Sprintf(`SELECT * FROM %s %s %s %s`, model.DataQualityAggregation{}.TableName(), whereClause, orderSql, skipLimit)
+
+	if result := s.db.WithContext(ctx).Raw(sqlStr, filter.params...).Scan(&dataQualityAggregations); result.Error != nil {
+		return model.DataQualityAggregations{}, 0, CheckError(result)
+	} else {
+		if limit > 0 || skip > 0 {
+			countSql := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, model.DataQualityAggregation{}.TableName(), whereClause)
+			if err := s.db.WithContext(ctx).Raw(countSql, filter.params...).Scan(&totalRowCount).Error; err != nil {
+				return model.DataQualityAggregations{}, 0, err
+			}
+		} else {
+			totalRowCount = len(dataQualityAggregations)
+		}
+
+		return dataQualityAggregations, totalRowCount, nil
+	}
+}
+
 func (s *BloodhoundDB) DeleteAllDataQuality(ctx context.Context) error {
 	return CheckError(
-		s.db.WithContext(ctx).Exec("DELETE FROM ad_data_quality_aggregations; DELETE FROM ad_data_quality_stats; DELETE FROM azure_data_quality_aggregations; DELETE FROM azure_data_quality_stats; DELETE FROM data_quality_stats;"),
+		s.db.WithContext(ctx).Exec("DELETE FROM ad_data_quality_aggregations; DELETE FROM ad_data_quality_stats; DELETE FROM azure_data_quality_aggregations; DELETE FROM azure_data_quality_stats; DELETE FROM data_quality_aggregations; DELETE FROM data_quality_stats;"),
 	)
 }

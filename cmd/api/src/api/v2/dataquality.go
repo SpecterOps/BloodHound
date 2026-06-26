@@ -36,7 +36,6 @@ import (
 	azureSchema "github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 )
 
@@ -168,34 +167,7 @@ func BuildDataQualityEnvironmentSelectors(nodes []*graph.Node, schemaEnvironment
 	return selectors
 }
 
-func collectedDataQualityEnvironmentIDs(ctx context.Context, graphDB graph.Database, environmentKind string) ([]string, error) {
-	var environmentIDs []string
-
-	err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		nodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
-			return query.Kind(query.Node(), graph.StringKind(environmentKind))
-		}))
-		if err != nil {
-			return err
-		}
-
-		for _, node := range nodes {
-			if !dataQualityEnvironmentCollected(node) {
-				continue
-			}
-
-			if environmentID, err := node.Properties.Get(common.ObjectID.String()).String(); err == nil {
-				environmentIDs = append(environmentIDs, environmentID)
-			}
-		}
-
-		return nil
-	})
-
-	return environmentIDs, err
-}
-
-func dataQualityFilters(start string, end string, environmentIDs []string, schemaEnvironments []model.SchemaEnvironment) model.Filters {
+func dataQualityBaseFilters(start string, end string, schemaEnvironments []model.SchemaEnvironment) model.Filters {
 	filters := model.Filters{
 		"metric_type": []model.Filter{{
 			Operator:     model.Equals,
@@ -206,15 +178,6 @@ func dataQualityFilters(start string, end string, environmentIDs []string, schem
 			{Operator: model.GreaterThanOrEquals, Value: start, IsStringData: true},
 			{Operator: model.LessThanOrEquals, Value: end, IsStringData: true},
 		},
-	}
-
-	for _, environmentID := range environmentIDs {
-		filters["environment_id"] = append(filters["environment_id"], model.Filter{
-			Operator:     model.Equals,
-			Value:        environmentID,
-			IsStringData: true,
-			SetOperator:  model.FilterOr,
-		})
 	}
 
 	for _, schemaEnvironment := range schemaEnvironments {
@@ -231,6 +194,21 @@ func dataQualityFilters(start string, end string, environmentIDs []string, schem
 	}
 
 	return filters
+}
+
+func dataQualityStatFilters(start string, end string, environmentID string, schemaEnvironments []model.SchemaEnvironment) model.Filters {
+	filters := dataQualityBaseFilters(start, end, schemaEnvironments)
+	filters["environment_id"] = []model.Filter{{
+		Operator:     model.Equals,
+		Value:        environmentID,
+		IsStringData: true,
+	}}
+
+	return filters
+}
+
+func dataQualityAggregationFilters(start string, end string, schemaEnvironments []model.SchemaEnvironment) model.Filters {
+	return dataQualityBaseFilters(start, end, schemaEnvironments)
 }
 
 func matchingDataQualitySchemaEnvironments(schemaEnvironments []model.SchemaEnvironment, sourceKindByID map[int32]model.Kind, environmentKind string, sourceKind string, includeBuiltin bool) []model.SchemaEnvironment {
@@ -307,6 +285,100 @@ func enrichDataQualityNodeKindStats(stats model.DataQualityStats, schemaEnvironm
 	}
 
 	return enriched
+}
+
+func enrichDataQualityNodeKindAggregations(aggregations model.DataQualityAggregations, schemaEnvironments []model.SchemaEnvironment, sourceKindByID map[int32]model.Kind, kindByID map[int32]model.Kind) model.DataQualityNodeKindStats {
+	var (
+		enriched               = make(model.DataQualityNodeKindStats, 0, len(aggregations))
+		schemaEnvironmentByKey = make(map[schemaEnvironmentKey]model.SchemaEnvironment, len(schemaEnvironments))
+	)
+
+	for _, schemaEnvironment := range schemaEnvironments {
+		schemaEnvironmentByKey[schemaEnvironmentKey{
+			schemaExtensionID:       schemaEnvironment.SchemaExtensionId,
+			schemaEnvironmentKindID: schemaEnvironment.EnvironmentKindId,
+		}] = schemaEnvironment
+	}
+
+	for _, aggregation := range aggregations {
+		var (
+			kindName          = aggregation.MetricName
+			sourceKindName    string
+			schemaEnvironment = schemaEnvironmentByKey[schemaEnvironmentKey{
+				schemaExtensionID:       aggregation.SchemaExtensionID,
+				schemaEnvironmentKindID: aggregation.SchemaEnvironmentKindID,
+			}]
+		)
+
+		if aggregation.KindID.Valid {
+			if kind, found := kindByID[aggregation.KindID.Int32]; found {
+				kindName = kind.Name
+			}
+		}
+
+		if sourceKind, found := sourceKindByID[schemaEnvironment.SourceKindId]; found {
+			sourceKindName = sourceKind.Name
+		}
+
+		enriched = append(enriched, model.DataQualityNodeKindStat{
+			Serial:                  aggregation.Serial,
+			RunID:                   aggregation.RunID,
+			IsBuiltin:               schemaEnvironment.IsBuiltin,
+			SchemaEnvironmentKindID: aggregation.SchemaEnvironmentKindID,
+			EnvironmentKind:         schemaEnvironment.EnvironmentKindName,
+			SourceKind:              sourceKindName,
+			MetricType:              aggregation.MetricType,
+			MetricName:              aggregation.MetricName,
+			MetricValue:             aggregation.MetricValue,
+			KindID:                  aggregation.KindID,
+			KindName:                kindName,
+		})
+	}
+
+	return enriched
+}
+
+func dataQualityKindIDsFromStats(stats model.DataQualityStats) []int32 {
+	kindIDs := make([]int32, 0, len(stats))
+
+	for _, stat := range stats {
+		if stat.KindID.Valid {
+			kindIDs = append(kindIDs, stat.KindID.Int32)
+		}
+	}
+
+	return kindIDs
+}
+
+func dataQualityKindIDsFromAggregations(aggregations model.DataQualityAggregations) []int32 {
+	kindIDs := make([]int32, 0, len(aggregations))
+
+	for _, aggregation := range aggregations {
+		if aggregation.KindID.Valid {
+			kindIDs = append(kindIDs, aggregation.KindID.Int32)
+		}
+	}
+
+	return kindIDs
+}
+
+func dataQualityKindByID(ctx context.Context, db dataQualityKindReader, kindIDs []int32) (map[int32]model.Kind, error) {
+	kindByID := map[int32]model.Kind{}
+
+	if len(kindIDs) == 0 {
+		return kindByID, nil
+	}
+
+	kinds, err := db.GetKindsByIDs(ctx, kindIDs...)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, kind := range kinds {
+		kindByID[kind.ID] = kind
+	}
+
+	return kindByID, nil
 }
 
 func dataQualityEnvironmentSortItems(request *http.Request) (query.SortItems, error) {
@@ -396,6 +468,12 @@ func (s *Resources) GetDataQualityNodeKindStats(response http.ResponseWriter, re
 		return
 	}
 
+	environmentID := queryParams.Get(QueryParameterEnvironmentID)
+	if environmentID == "" {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no environment ID specified", request), response)
+		return
+	}
+
 	includeBuiltin := true
 	if rawIncludeBuiltin := queryParams.Get(QueryParameterIncludeBuiltin); rawIncludeBuiltin != "" {
 		if parsedIncludeBuiltin, err := strconv.ParseBool(rawIncludeBuiltin); err != nil {
@@ -421,24 +499,7 @@ func (s *Resources) GetDataQualityNodeKindStats(response http.ResponseWriter, re
 	} else if sourceKindByID, err := dataQualitySourceKinds(request.Context(), s.DB, schemaEnvironments); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		var (
-			environmentIDs = []string{}
-			sourceKind     = queryParams.Get(QueryParameterSourceKind)
-		)
-
-		if environmentID := queryParams.Get(QueryParameterEnvironmentID); environmentID != "" {
-			environmentIDs = append(environmentIDs, environmentID)
-		} else if collectedEnvironmentIDs, err := collectedDataQualityEnvironmentIDs(request.Context(), s.Graph, environmentKind); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
-			return
-		} else {
-			environmentIDs = collectedEnvironmentIDs
-		}
-
-		if len(environmentIDs) == 0 {
-			api.WriteResponseWrapperWithTimeWindowAndPagination(request.Context(), model.DataQualityNodeKindStats{}, start, end, limit, skip, 0, http.StatusOK, response)
-			return
-		}
+		sourceKind := queryParams.Get(QueryParameterSourceKind)
 
 		matchingSchemaEnvironments := matchingDataQualitySchemaEnvironments(schemaEnvironments, sourceKindByID, environmentKind, sourceKind, includeBuiltin)
 		if len(matchingSchemaEnvironments) == 0 {
@@ -448,7 +509,7 @@ func (s *Resources) GetDataQualityNodeKindStats(response http.ResponseWriter, re
 
 		stats, count, err := s.DB.GetDataQualityStats(
 			request.Context(),
-			dataQualityFilters(start.Format(time.RFC3339Nano), end.Format(time.RFC3339Nano), environmentIDs, matchingSchemaEnvironments),
+			dataQualityStatFilters(start.Format(time.RFC3339Nano), end.Format(time.RFC3339Nano), environmentID, matchingSchemaEnvironments),
 			sort,
 			skip,
 			limit,
@@ -458,26 +519,79 @@ func (s *Resources) GetDataQualityNodeKindStats(response http.ResponseWriter, re
 			return
 		}
 
-		var kindIDs []int32
-		for _, stat := range stats {
-			if stat.KindID.Valid {
-				kindIDs = append(kindIDs, stat.KindID.Int32)
-			}
-		}
-
-		kindByID := map[int32]model.Kind{}
-		if len(kindIDs) > 0 {
-			if kinds, err := s.DB.GetKindsByIDs(request.Context(), kindIDs...); err != nil {
-				api.HandleDatabaseError(request, response, err)
-				return
-			} else {
-				for _, kind := range kinds {
-					kindByID[kind.ID] = kind
-				}
-			}
+		kindByID, err := dataQualityKindByID(request.Context(), s.DB, dataQualityKindIDsFromStats(stats))
+		if err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
 		}
 
 		api.WriteResponseWrapperWithTimeWindowAndPagination(request.Context(), enrichDataQualityNodeKindStats(stats, schemaEnvironments, sourceKindByID, kindByID), start, end, limit, skip, count, http.StatusOK, response)
+	}
+}
+
+func (s *Resources) GetDataQualityNodeKindAggregations(response http.ResponseWriter, request *http.Request) {
+	var (
+		queryParams              = request.URL.Query()
+		defaultEnd, defaultStart = DefaultTimeRange()
+	)
+
+	environmentKind := queryParams.Get(QueryParameterEnvironmentKind)
+	if environmentKind == "" {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no environment kind specified", request), response)
+		return
+	}
+
+	includeBuiltin := true
+	if rawIncludeBuiltin := queryParams.Get(QueryParameterIncludeBuiltin); rawIncludeBuiltin != "" {
+		if parsedIncludeBuiltin, err := strconv.ParseBool(rawIncludeBuiltin); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("invalid include_builtin specified: %s", rawIncludeBuiltin), request), response)
+			return
+		} else {
+			includeBuiltin = parsedIncludeBuiltin
+		}
+	}
+
+	if start, err := ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["start"]), request), response)
+	} else if end, err := ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["end"]), request), response)
+	} else if limit, err := ParseLimitQueryParameter(queryParams, 1000); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidLimit, queryParams["limit"]), request), response)
+	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, queryParams["skip"]), request), response)
+	} else if sort, err := api.ParseSortParameters(model.DataQualityAggregations{}, queryParams); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
+	} else if schemaEnvironments, err := s.DB.GetEnvironments(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if sourceKindByID, err := dataQualitySourceKinds(request.Context(), s.DB, schemaEnvironments); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		sourceKind := queryParams.Get(QueryParameterSourceKind)
+		matchingSchemaEnvironments := matchingDataQualitySchemaEnvironments(schemaEnvironments, sourceKindByID, environmentKind, sourceKind, includeBuiltin)
+		if len(matchingSchemaEnvironments) == 0 {
+			api.WriteResponseWrapperWithTimeWindowAndPagination(request.Context(), model.DataQualityNodeKindStats{}, start, end, limit, skip, 0, http.StatusOK, response)
+			return
+		}
+
+		aggregations, count, err := s.DB.GetDataQualityAggregations(
+			request.Context(),
+			dataQualityAggregationFilters(start.Format(time.RFC3339Nano), end.Format(time.RFC3339Nano), matchingSchemaEnvironments),
+			sort,
+			skip,
+			limit,
+		)
+		if err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		}
+
+		kindByID, err := dataQualityKindByID(request.Context(), s.DB, dataQualityKindIDsFromAggregations(aggregations))
+		if err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		}
+
+		api.WriteResponseWrapperWithTimeWindowAndPagination(request.Context(), enrichDataQualityNodeKindAggregations(aggregations, schemaEnvironments, sourceKindByID, kindByID), start, end, limit, skip, count, http.StatusOK, response)
 	}
 }
 

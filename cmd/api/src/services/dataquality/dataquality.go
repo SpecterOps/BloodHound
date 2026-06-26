@@ -47,6 +47,13 @@ type DataQualityData interface {
 	GetKindsByIDs(ctx context.Context, ids ...int32) ([]model.Kind, error)
 }
 
+type schemaAggregationKey struct {
+	schemaEnvironmentKindID int32
+	metricType              model.DataQualityMetricType
+	metricName              string
+	kindID                  int32
+}
+
 func adGraphStats(ctx context.Context, db graph.Database) (model.ADDataQualityStats, model.ADDataQualityAggregation, error) {
 	var (
 		aggregation model.ADDataQualityAggregation
@@ -522,36 +529,39 @@ func schemaNodeKindMaps(ctx context.Context, db DataQualityData, schemaEnvironme
 	return db.GetGraphSchemaNodeKindsByEnvironmentIds(ctx, schemaEnvironmentIDs...)
 }
 
-func schemaGraphStats(ctx context.Context, db DataQualityData, graphDB graph.Database) (model.DataQualityStats, error) {
+func schemaGraphStats(ctx context.Context, db DataQualityData, graphDB graph.Database) (model.DataQualityStats, model.DataQualityAggregations, error) {
 	var (
-		runID string
-		stats = model.DataQualityStats{}
+		runID        string
+		stats        = model.DataQualityStats{}
+		aggregations = model.DataQualityAggregations{}
 	)
 
 	if newUUID, err := uuid.NewV4(); err != nil {
-		return stats, fmt.Errorf("could not generate new UUID: %w", err)
+		return stats, aggregations, fmt.Errorf("could not generate new UUID: %w", err)
 	} else {
 		runID = newUUID.String()
 	}
 
 	schemaEnvironments, err := db.GetEnvironments(ctx)
 	if err != nil {
-		return stats, err
+		return stats, aggregations, err
 	} else if len(schemaEnvironments) == 0 {
-		return stats, nil
+		return stats, aggregations, nil
 	}
 
 	sourceKinds, err := schemaSourceKinds(ctx, db, schemaEnvironments)
 	if err != nil {
-		return stats, err
+		return stats, aggregations, err
 	}
 
 	nodeKindsBySchemaEnvironmentID, err := schemaNodeKindMaps(ctx, db, schemaEnvironments)
 	if err != nil {
-		return stats, err
+		return stats, aggregations, err
 	}
 
 	err = graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		aggregationsByKey := map[schemaAggregationKey]model.DataQualityAggregation{}
+
 		for _, schemaEnvironment := range schemaEnvironments {
 			var (
 				environmentKind = graph.StringKind(schemaEnvironment.EnvironmentKindName)
@@ -604,7 +614,7 @@ func schemaGraphStats(ctx context.Context, db DataQualityData, graphDB graph.Dat
 						return err
 					}
 
-					stats = append(stats, model.DataQualityStat{
+					stat := model.DataQualityStat{
 						RunID:                   runID,
 						SchemaExtensionID:       schemaEnvironment.SchemaExtensionId,
 						SchemaEnvironmentKindID: schemaEnvironment.EnvironmentKindId,
@@ -613,15 +623,40 @@ func schemaGraphStats(ctx context.Context, db DataQualityData, graphDB graph.Dat
 						MetricName:              nodeKind.Name,
 						MetricValue:             float64(count),
 						KindID:                  null.Int32From(nodeKind.KindId),
-					})
+					}
+					stats = append(stats, stat)
+
+					aggregationKey := schemaAggregationKey{
+						schemaEnvironmentKindID: stat.SchemaEnvironmentKindID,
+						metricType:              stat.MetricType,
+						metricName:              stat.MetricName,
+						kindID:                  nodeKind.KindId,
+					}
+					aggregation := aggregationsByKey[aggregationKey]
+					if aggregation.RunID == "" {
+						aggregation = model.DataQualityAggregation{
+							RunID:                   runID,
+							SchemaExtensionID:       stat.SchemaExtensionID,
+							SchemaEnvironmentKindID: stat.SchemaEnvironmentKindID,
+							MetricType:              stat.MetricType,
+							MetricName:              stat.MetricName,
+							KindID:                  stat.KindID,
+						}
+					}
+					aggregation.MetricValue += stat.MetricValue
+					aggregationsByKey[aggregationKey] = aggregation
 				}
 			}
+		}
+
+		for _, aggregation := range aggregationsByKey {
+			aggregations = append(aggregations, aggregation)
 		}
 
 		return nil
 	})
 
-	return stats, err
+	return stats, aggregations, err
 }
 
 func SaveDataQuality(ctx context.Context, db DataQualityData, graphDB graph.Database) error {
@@ -663,11 +698,13 @@ func SaveDataQuality(ctx context.Context, db DataQualityData, graphDB graph.Data
 		}
 	}
 
-	if stats, err := schemaGraphStats(ctx, db, graphDB); err != nil {
+	if stats, aggregations, err := schemaGraphStats(ctx, db, graphDB); err != nil {
 		return fmt.Errorf("could not get schema data quality stats: %w", err)
 	} else if len(stats) > 0 {
 		if _, err := db.CreateDataQualityStats(ctx, stats); err != nil {
 			return fmt.Errorf("could not save schema data quality stats: %w", err)
+		} else if _, err := db.CreateDataQualityAggregations(ctx, aggregations); err != nil {
+			return fmt.Errorf("could not save schema data quality aggregations: %w", err)
 		}
 	}
 

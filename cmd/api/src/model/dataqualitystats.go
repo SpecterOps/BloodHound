@@ -62,6 +62,41 @@ func (s DataQualityStats) IsSortable(column string) bool {
 	}
 }
 
+type DataQualityAggregation struct {
+	Serial
+	RunID                   string                `json:"run_id"`
+	SchemaExtensionID       int32                 `json:"schema_extension_id"`
+	SchemaEnvironmentKindID int32                 `json:"schema_environment_kind_id"`
+	MetricType              DataQualityMetricType `json:"metric_type"`
+	MetricName              string                `json:"metric_name"`
+	MetricValue             float64               `json:"metric_value"`
+	KindID                  null.Int32            `json:"kind_id"`
+}
+
+func (DataQualityAggregation) TableName() string {
+	return "data_quality_aggregations"
+}
+
+type DataQualityAggregations []DataQualityAggregation
+
+func (s DataQualityAggregations) IsSortable(column string) bool {
+	switch column {
+	case "id",
+		"run_id",
+		"schema_extension_id",
+		"schema_environment_kind_id",
+		"metric_type",
+		"metric_name",
+		"metric_value",
+		"kind_id",
+		"updated_at",
+		"created_at":
+		return true
+	default:
+		return false
+	}
+}
+
 type DataQualityEnvironmentSelector struct {
 	EnvironmentName string `json:"environment_name"`
 	EnvironmentID   string `json:"environment_id"`

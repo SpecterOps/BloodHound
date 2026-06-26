@@ -17,10 +17,10 @@
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
 get:
-  operationId: GetDataQualityNodeKindStats
-  summary: Get Data Quality node kind stats
+  operationId: GetDataQualityNodeKindAggregations
+  summary: Get Data Quality node kind aggregations
   description: >
-    Gets historical schema-defined node kind counts for a selected environment.
+    Gets historical schema-defined node kind counts aggregated by environment kind.
   tags:
     - Data Quality
     - Community
@@ -28,12 +28,6 @@ get:
   parameters:
     - name: environment_kind
       description: Schema environment kind to query.
-      in: query
-      required: true
-      schema:
-        type: string
-    - name: environment_id
-      description: Environment ID for the per-environment view.
       in: query
       required: true
       schema:
@@ -50,7 +44,7 @@ get:
         type: boolean
         default: true
     - name: sort_by
-      description: Sortable columns are created_at, updated_at, metric_name, metric_value, and environment_id.
+      description: Sortable columns are created_at, updated_at, metric_name, and metric_value.
       in: query
       schema:
         $ref: './../schemas/api.params.query.sort-by.yaml'

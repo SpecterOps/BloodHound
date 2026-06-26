@@ -696,7 +696,7 @@ class BHEAPIClient {
     getDataQualityNodeKindStats = (
         params: {
             environmentKind: string;
-            environmentId?: string | null;
+            environmentId: string;
             sourceKind?: string;
             includeBuiltin?: boolean;
             start?: Date;
@@ -713,6 +713,37 @@ class BHEAPIClient {
                     params: {
                         environment_kind: params.environmentKind,
                         environment_id: params.environmentId || undefined,
+                        source_kind: params.sourceKind,
+                        include_builtin: params.includeBuiltin,
+                        start: params.start?.toISOString(),
+                        end: params.end?.toISOString(),
+                        limit: params.limit,
+                        sort_by: params.sort_by,
+                    },
+                },
+                options
+            )
+        );
+    };
+
+    getDataQualityNodeKindAggregations = (
+        params: {
+            environmentKind: string;
+            sourceKind?: string;
+            includeBuiltin?: boolean;
+            start?: Date;
+            end?: Date;
+            limit?: number;
+            sort_by?: string;
+        },
+        options?: RequestOptions
+    ) => {
+        return this.baseClient.get<DataQualityNodeKindStatsResponse>(
+            '/api/v2/data-quality/node-kind-aggregations',
+            Object.assign(
+                {
+                    params: {
+                        environment_kind: params.environmentKind,
                         source_kind: params.sourceKind,
                         include_builtin: params.includeBuiltin,
                         start: params.start?.toISOString(),

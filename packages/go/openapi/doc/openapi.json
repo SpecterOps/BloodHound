@@ -3520,7 +3520,7 @@
         "parameters": [
           {
             "name": "sort_by",
-            "description": "Sortable columns are environment_id, environment_name.",
+            "description": "Sortable columns are objectid, name.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
@@ -13623,7 +13623,7 @@
       "get": {
         "operationId": "GetDataQualityNodeKindStats",
         "summary": "Get Data Quality node kind stats",
-        "description": "Gets historical schema-defined node kind counts for a selected environment kind. Supplying environment_id returns the per-environment view; omitting environment_id returns an aggregate view over all collected environment IDs matching the selected environment kind.\n",
+        "description": "Gets historical schema-defined node kind counts for a selected environment.\n",
         "tags": [
           "Data Quality",
           "Community",
@@ -13643,6 +13643,7 @@
             "name": "environment_id",
             "description": "Environment ID for the per-environment view.",
             "in": "query",
+            "required": true,
             "schema": {
               "type": "string"
             }
@@ -13667,6 +13668,128 @@
           {
             "name": "sort_by",
             "description": "Sortable columns are created_at, updated_at, metric_name, metric_value, and environment_id.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "start",
+            "description": "Beginning datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime minus 30 days.",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "end",
+            "description": "Ending datetime of range (exclusive) in RFC-3339 format; Defaults to current datetime.",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "$ref": "#/components/schemas/api.response.time-window"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.data-quality-node-kind-stat"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/data-quality/node-kind-aggregations": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetDataQualityNodeKindAggregations",
+        "summary": "Get Data Quality node kind aggregations",
+        "description": "Gets historical schema-defined node kind counts aggregated by environment kind.\n",
+        "tags": [
+          "Data Quality",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "environment_kind",
+            "description": "Schema environment kind to query.",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "source_kind",
+            "description": "Optional source kind filter for built-in environment views extended by OpenGraph schema.",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include_builtin",
+            "description": "Whether built-in schema extension stats should be included.",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are created_at, updated_at, metric_name, and metric_value.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -20224,7 +20347,7 @@
       "model.kennel-asset": {
         "type": "object",
         "properties": {
-          "environment_name": {
+          "name": {
             "type": "string"
           },
           "download_url": {
