@@ -312,7 +312,7 @@ func TestDatabase_CreateDataQualityAggregations(t *testing.T) {
 		{
 			name: "Success: create aggregations and populate IDs",
 			test: func(t *testing.T, testSuite IntegrationTestSuite) {
-				// schema_environment_kind_id is a foreign key, register a real kind and use its id
+				// schema_environment_kind_id is a foreign key, register a real kind and use its ID
 				envKind := registerAndGetKind(t, testSuite, "RandomKind")
 
 				aggregations := model.DataQualityAggregations{
@@ -353,7 +353,7 @@ func TestDatabase_GetDataQualityAggregations(t *testing.T) {
 		{
 			name: "Success: get all aggregations, no filters or sorting",
 			test: func(t *testing.T, testSuite IntegrationTestSuite) {
-				// schema_environment_kind_id is a foreign key, register a real kind and use its id
+				// schema_environment_kind_id is a foreign key, register a real kind and use its ID
 				envKind := registerAndGetKind(t, testSuite, "RandomKind")
 
 				aggregations := model.DataQualityAggregations{
@@ -491,13 +491,76 @@ func TestDatabase_GetDataQualityAggregations(t *testing.T) {
 				results, total, err := testSuite.BHDatabase.GetDataQualityAggregations(testSuite.Context, nil, nil, 0, 2)
 				require.NoError(t, err)
 
-				// total count is 4 - 1 (soft-deleted row), count query respects the deleted_at where clause
+				// total count is 4 - 1 (soft-deleted row), count query respects the deleted_at WHERE clause
 				assert.Equal(t, 3, total)
 				assert.Len(t, results, 2)
 
 				for _, aggregation := range results {
 					assert.NotEqual(t, deletedID, aggregation.ID, "soft-deleted row must not appear in the results")
 				}
+			},
+		},
+		{
+			name: "Success: get aggregations sorted by created_at descending when no sort is provided",
+			test: func(t *testing.T, testSuite IntegrationTestSuite) {
+				envKind := registerAndGetKind(t, testSuite, "RandomEnvKind")
+
+				aggregations := model.DataQualityAggregations{
+					{RunID: "run-ts", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "computers", MetricValue: 1},
+					{RunID: "run-ts", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "users", MetricValue: 2},
+					{RunID: "run-ts", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "groups", MetricValue: 3},
+				}
+				created, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, aggregations)
+				require.NoError(t, err)
+				require.Len(t, created, 3)
+
+				// modify created_at for each row so we have distinct created_at dates
+				rowHourAgo := created[0]
+				rowNow := created[1]
+				rowTwoHoursAgo := created[2]
+				// scramble the created_at order to ensure GetDataQualityAggregations sorts it correctly
+				require.NoError(t, testSuite.DB.WithContext(testSuite.Context).Exec("UPDATE data_quality_aggregations SET created_at = NOW() - INTERVAL '1 hour' WHERE id = ?", rowHourAgo.ID).Error)
+				require.NoError(t, testSuite.DB.WithContext(testSuite.Context).Exec("UPDATE data_quality_aggregations SET created_at = NOW() WHERE id = ?", rowNow.ID).Error)
+				require.NoError(t, testSuite.DB.WithContext(testSuite.Context).Exec("UPDATE data_quality_aggregations SET created_at = NOW() - INTERVAL '2 hours' WHERE id = ?", rowTwoHoursAgo.ID).Error)
+
+				results, _, err := testSuite.BHDatabase.GetDataQualityAggregations(testSuite.Context, nil, nil, 0, 0)
+				require.NoError(t, err)
+				require.Len(t, results, 3)
+
+				gotOrder := []int32{results[0].ID, results[1].ID, results[2].ID}
+				wantOrder := []int32{rowNow.ID, rowHourAgo.ID, rowTwoHoursAgo.ID}
+				assert.Equal(t, wantOrder, gotOrder)
+			},
+		},
+		{
+			name: "Success: get aggregations sorted by id ascending when created_at values are equal",
+			test: func(t *testing.T, testSuite IntegrationTestSuite) {
+				envKind := registerAndGetKind(t, testSuite, "RandomEnvKind")
+
+				aggregations := model.DataQualityAggregations{
+					{RunID: "run-tie", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "computers", MetricValue: 1},
+					{RunID: "run-tie", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "users", MetricValue: 2},
+					{RunID: "run-tie", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "groups", MetricValue: 3},
+				}
+				created, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, aggregations)
+				require.NoError(t, err)
+				require.Len(t, created, 3)
+
+				// name each row by its insert position; serial ids ascend with insert order
+				rowFirst := created[0]
+				rowSecond := created[1]
+				rowThird := created[2]
+				require.True(t, rowFirst.ID < rowSecond.ID && rowSecond.ID < rowThird.ID, "serial ids should ascend in insert order")
+				// tie every created_at so only the id ascending tiebreaker can order the rows
+				require.NoError(t, testSuite.DB.WithContext(testSuite.Context).Exec("UPDATE data_quality_aggregations SET created_at = NOW()").Error)
+
+				results, _, err := testSuite.BHDatabase.GetDataQualityAggregations(testSuite.Context, nil, nil, 0, 0)
+				require.NoError(t, err)
+				require.Len(t, results, 3)
+
+				gotOrder := []int32{results[0].ID, results[1].ID, results[2].ID}
+				wantOrder := []int32{rowFirst.ID, rowSecond.ID, rowThird.ID}
+				assert.Equal(t, wantOrder, gotOrder)
 			},
 		},
 	}
