@@ -26,14 +26,19 @@ import {
 } from 'bh-shared-ui';
 import { Typography } from 'doodle-ui';
 import { useEffect, useMemo, useState } from 'react';
-import DataQualityEnvironmentSelector, { DataQualitySelection } from './DataQualityEnvironmentSelector';
+import DataQualityEnvironmentSelector, {
+    DataQualitySelection,
+    dataQualityTypeFromEnvironmentKind,
+} from './DataQualityEnvironmentSelector';
 import OpenGraphNodeKindCounts from './OpenGraphNodeKindCounts';
 import { dataCollectionMessage } from './utils';
 
 const isBuiltInDataQualityType = (type?: string) => type === 'active-directory' || type === 'azure';
 
 const getStatsComponent = (selectedEnvironment: DataQualitySelection | null, dataErrorHandler: () => void) => {
-    const contextType = selectedEnvironment?.type;
+    const contextType = selectedEnvironment
+        ? dataQualityTypeFromEnvironmentKind(selectedEnvironment.environmentKind)
+        : undefined;
     const contextId = selectedEnvironment?.id;
 
     if (contextType === 'active-directory') {
@@ -60,25 +65,22 @@ const DataQuality: React.FC = () => {
     const environments = environmentsResponse?.data ?? [];
 
     const initialEnvironment = useMemo(() => {
-        return environments
-            .filter((environment) => environment.collected)
-            .sort((first, second) => first.name.localeCompare(second.name))[0];
+        return [...environments].sort((first, second) => first.name.localeCompare(second.name))[0];
     }, [environments]);
 
     const initialSelection = useMemo<DataQualitySelection | null>(() => {
         if (!initialEnvironment) return null;
 
         return {
-            type: initialEnvironment.type,
             id: initialEnvironment.id,
             environmentKind: initialEnvironment.environment_kind,
-            sourceKind: initialEnvironment.source_kind,
             selectionType: 'environment',
         };
     }, [initialEnvironment]);
 
     const [selectedEnvironment, setSelectedEnvironment] = useState<DataQualitySelection | null>(null);
     const environment = selectedEnvironment ?? initialSelection;
+    const environmentType = environment ? dataQualityTypeFromEnvironmentKind(environment.environmentKind) : undefined;
 
     const [dataError, setDataError] = useState(false);
 
@@ -113,7 +115,7 @@ const DataQuality: React.FC = () => {
         );
     }
 
-    if (!environment?.type) {
+    if (!environment || !environmentType) {
         return (
             <PageWithTitle
                 title='Data Quality'
@@ -173,7 +175,7 @@ const DataQuality: React.FC = () => {
                 <Grid item xs={12} data-testid='data-quality_statistics'>
                     {getStatsComponent(environment, dataErrorHandler)}
                     <OpenGraphNodeKindCounts
-                        hideEmptyState={isBuiltInDataQualityType(environment?.type)}
+                        hideEmptyState={isBuiltInDataQualityType(environmentType)}
                         selectedEnvironment={environment}
                     />
                 </Grid>

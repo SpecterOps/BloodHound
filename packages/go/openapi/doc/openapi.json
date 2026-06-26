@@ -21900,33 +21900,13 @@
       "model.data-quality-environment-selector": {
         "type": "object",
         "properties": {
-          "type": {
-            "type": "string"
-          },
           "name": {
             "type": "string"
           },
           "id": {
             "type": "string"
           },
-          "collected": {
-            "type": "boolean"
-          },
-          "is_builtin": {
-            "type": "boolean"
-          },
-          "environment_kind_id": {
-            "type": "integer",
-            "format": "int32"
-          },
           "environment_kind": {
-            "type": "string"
-          },
-          "source_kind_id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "source_kind": {
             "type": "string"
           }
         }

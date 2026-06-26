@@ -19,7 +19,7 @@ import { Alert, TextField } from '@mui/material';
 import {
     cn,
     DropdownTrigger,
-    getOpenGraphEnvironmentInfoMap,
+    getOpenGraphEnvironmentInfo,
     optionIconStyles,
     optionStyles,
     popoverContentStyles,
@@ -36,47 +36,69 @@ import {
     TooltipRoot,
     TooltipTrigger,
 } from 'doodle-ui';
-import { DataQualityEnvironment } from 'js-client-library';
+import type { DataQualityEnvironment, Environment } from 'js-client-library';
 import React, { ReactNode, useMemo, useState } from 'react';
 
 export type DataQualitySelection = {
-    type: string;
     id: string | null;
     environmentKind: string;
-    sourceKind: string;
     selectionType: 'environment' | 'aggregate';
 };
 
-const selectionKey = (environment: DataQualityEnvironment) => `${environment.type}:${environment.environment_kind}`;
+const ACTIVE_DIRECTORY_ENVIRONMENT_KIND = 'Domain';
+const AZURE_ENVIRONMENT_KIND = 'AZTenant';
+const ACTIVE_DIRECTORY_SOURCE_KIND = 'Base';
+const AZURE_SOURCE_KIND = 'AZBase';
 
-const aggregateLabel = (
-    environment: Pick<DataQualityEnvironment, 'environment_kind' | 'type'>,
-    environmentInfo: ReturnType<typeof getOpenGraphEnvironmentInfoMap>
-) => environmentInfo[environment.type]?.aggregationDisplayName || `All ${environment.environment_kind} Environments`;
+export const dataQualityTypeFromEnvironmentKind = (environmentKind: string): Environment['type'] => {
+    switch (environmentKind) {
+        case ACTIVE_DIRECTORY_ENVIRONMENT_KIND:
+            return 'active-directory';
+        case AZURE_ENVIRONMENT_KIND:
+            return 'azure';
+        default:
+            return environmentKind as Environment['type'];
+    }
+};
+
+export const sourceKindFromEnvironmentKind = (environmentKind?: string): string | undefined => {
+    switch (environmentKind) {
+        case ACTIVE_DIRECTORY_ENVIRONMENT_KIND:
+            return ACTIVE_DIRECTORY_SOURCE_KIND;
+        case AZURE_ENVIRONMENT_KIND:
+            return AZURE_SOURCE_KIND;
+        default:
+            return undefined;
+    }
+};
+
+const selectionKey = (environment: DataQualityEnvironment) => environment.environment_kind;
+
+const environmentInfoForKind = (environmentKind: string) =>
+    getOpenGraphEnvironmentInfo(dataQualityTypeFromEnvironmentKind(environmentKind));
+
+const aggregateLabel = (environmentKind: string) =>
+    environmentInfoForKind(environmentKind).aggregationDisplayName || `All ${environmentKind} Environments`;
 
 const selectedText = (selected: DataQualitySelection | null, environments: DataQualityEnvironment[]): string => {
     if (!selected) return 'Select Environment';
 
-    const environmentInfo = getOpenGraphEnvironmentInfoMap(environments);
     if (selected.selectionType === 'aggregate') {
-        const selectedEnvironment = environments.find(
-            (environment) =>
-                environment.type === selected.type && environment.environment_kind === selected.environmentKind
-        );
-
-        return selectedEnvironment
-            ? aggregateLabel(selectedEnvironment, environmentInfo)
-            : environmentInfo[selected.type]?.aggregationDisplayName || `All ${selected.environmentKind} Environments`;
+        return aggregateLabel(selected.environmentKind);
     }
 
-    return environments.find((environment) => environment.id === selected.id)?.name || 'Select Environment';
+    return (
+        environments.find(
+            (environment) => environment.id === selected.id && environment.environment_kind === selected.environmentKind
+        )?.name || 'Select Environment'
+    );
 };
 
 const searchMatchesEnvironment = (environment: DataQualityEnvironment, search: string) => {
     const normalizedSearch = search.trim().toLowerCase();
     if (!normalizedSearch) return true;
 
-    return [environment.name, environment.id, environment.environment_kind, environment.source_kind].some((value) =>
+    return [environment.name, environment.id, environment.environment_kind].some((value) =>
         value.toLowerCase().includes(normalizedSearch)
     );
 };
@@ -103,17 +125,14 @@ const DataQualityEnvironmentSelector: React.FC<{
     const [open, setOpen] = useState<boolean>(false);
     const [search, setSearch] = useState('');
 
-    const collectedEnvironments = useMemo(
-        () =>
-            environments
-                .filter((environment) => environment.collected)
-                .sort((first, second) => first.name.localeCompare(second.name)),
+    const availableEnvironments = useMemo(
+        () => [...environments].sort((first, second) => first.name.localeCompare(second.name)),
         [environments]
     );
 
     const aggregateEnvironments = useMemo(() => {
         const environmentByKey = new Map<string, DataQualityEnvironment>();
-        for (const environment of collectedEnvironments) {
+        for (const environment of availableEnvironments) {
             if (!environmentByKey.has(selectionKey(environment))) {
                 environmentByKey.set(selectionKey(environment), environment);
             }
@@ -121,15 +140,14 @@ const DataQualityEnvironmentSelector: React.FC<{
         return [...environmentByKey.values()].sort((first, second) =>
             first.environment_kind.localeCompare(second.environment_kind)
         );
-    }, [collectedEnvironments]);
+    }, [availableEnvironments]);
 
     const filteredEnvironments = useMemo(
-        () => collectedEnvironments.filter((environment) => searchMatchesEnvironment(environment, search)),
-        [collectedEnvironments, search]
+        () => availableEnvironments.filter((environment) => searchMatchesEnvironment(environment, search)),
+        [availableEnvironments, search]
     );
 
-    const environmentInfo = getOpenGraphEnvironmentInfoMap(environments);
-    const selectedEnvironmentName = selectedText(selected, environments);
+    const selectedEnvironmentName = selectedText(selected, availableEnvironments);
 
     const handleOpenChange = (nextOpen: boolean) => {
         setOpen(nextOpen);
@@ -142,10 +160,8 @@ const DataQualityEnvironmentSelector: React.FC<{
 
     const handlePlatformClick = (environment: DataQualityEnvironment) => {
         onSelect({
-            type: environment.type,
             id: null,
             environmentKind: environment.environment_kind,
-            sourceKind: environment.source_kind,
             selectionType: 'aggregate',
         });
         handleClose();
@@ -153,10 +169,8 @@ const DataQualityEnvironmentSelector: React.FC<{
 
     const handleEnvironmentClick = (environment: DataQualityEnvironment) => {
         onSelect({
-            type: environment.type,
             id: environment.id,
             environmentKind: environment.environment_kind,
-            sourceKind: environment.source_kind,
             selectionType: 'environment',
         });
         handleClose();
@@ -189,50 +203,60 @@ const DataQualityEnvironmentSelector: React.FC<{
                     sx={{ px: 2, pb: 2 }}
                 />
                 <ul className='border-b border-neutral-light-5 pb-2 mb-2'>
-                    {aggregateEnvironments.map((environment) => (
-                        <li key={`${selectionKey(environment)}-aggregate`}>
-                            <Button
-                                className={cn(optionStyles, 'flex justify-between items-center gap-2')}
-                                onClick={() => handlePlatformClick(environment)}
-                                variant='text'>
-                                {aggregateLabel(environment, environmentInfo)}
-                                <FontAwesomeIcon
-                                    className={optionIconStyles}
-                                    icon={environmentInfo[environment.type]?.icon}
-                                    size='sm'
-                                />
-                            </Button>
-                        </li>
-                    ))}
-                </ul>
-                <div className='max-h-80 overflow-y-auto'>
-                    <ul>
-                        {filteredEnvironments.map((environment) => (
-                            <li key={`${selectionKey(environment)}:${environment.id}`}>
+                    {aggregateEnvironments.map((environment) => {
+                        const environmentInfo = environmentInfoForKind(environment.environment_kind);
+                        return (
+                            <li key={`${selectionKey(environment)}-aggregate`}>
                                 <Button
                                     className={cn(optionStyles, 'flex justify-between items-center gap-2')}
-                                    onClick={() => handleEnvironmentClick(environment)}
+                                    onClick={() => handlePlatformClick(environment)}
                                     variant='text'>
-                                    <TooltipProvider>
-                                        <TooltipRoot>
-                                            <TooltipTrigger>
-                                                <span className='uppercase max-w-96 truncate'>{environment.name}</span>
-                                            </TooltipTrigger>
-                                            <TooltipPortal>
-                                                <TooltipContent side='left' className='dark:bg-neutral-dark-5 border-0'>
-                                                    <span className='uppercase'>{environment.id}</span>
-                                                </TooltipContent>
-                                            </TooltipPortal>
-                                        </TooltipRoot>
-                                    </TooltipProvider>
+                                    {aggregateLabel(environment.environment_kind)}
                                     <FontAwesomeIcon
                                         className={optionIconStyles}
-                                        icon={environmentInfo[environment.type]?.icon}
+                                        icon={environmentInfo.icon}
                                         size='sm'
                                     />
                                 </Button>
                             </li>
-                        ))}
+                        );
+                    })}
+                </ul>
+                <div className='max-h-80 overflow-y-auto'>
+                    <ul>
+                        {filteredEnvironments.map((environment) => {
+                            const environmentInfo = environmentInfoForKind(environment.environment_kind);
+                            return (
+                                <li key={`${selectionKey(environment)}:${environment.id}`}>
+                                    <Button
+                                        className={cn(optionStyles, 'flex justify-between items-center gap-2')}
+                                        onClick={() => handleEnvironmentClick(environment)}
+                                        variant='text'>
+                                        <TooltipProvider>
+                                            <TooltipRoot>
+                                                <TooltipTrigger>
+                                                    <span className='uppercase max-w-96 truncate'>
+                                                        {environment.name}
+                                                    </span>
+                                                </TooltipTrigger>
+                                                <TooltipPortal>
+                                                    <TooltipContent
+                                                        side='left'
+                                                        className='dark:bg-neutral-dark-5 border-0'>
+                                                        <span className='uppercase'>{environment.id}</span>
+                                                    </TooltipContent>
+                                                </TooltipPortal>
+                                            </TooltipRoot>
+                                        </TooltipProvider>
+                                        <FontAwesomeIcon
+                                            className={optionIconStyles}
+                                            icon={environmentInfo.icon}
+                                            size='sm'
+                                        />
+                                    </Button>
+                                </li>
+                            );
+                        })}
                     </ul>
                 </div>
             </PopoverContent>

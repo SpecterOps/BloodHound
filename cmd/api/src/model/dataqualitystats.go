@@ -63,15 +63,9 @@ func (s DataQualityStats) IsSortable(column string) bool {
 }
 
 type DataQualityEnvironmentSelector struct {
-	Type              string `json:"type"`
-	Name              string `json:"name"`
-	ObjectID          string `json:"id"`
-	Collected         bool   `json:"collected"`
-	IsBuiltin         bool   `json:"is_builtin"`
-	EnvironmentKindID int32  `json:"environment_kind_id"`
-	EnvironmentKind   string `json:"environment_kind"`
-	SourceKindID      int32  `json:"source_kind_id"`
-	SourceKind        string `json:"source_kind"`
+	Name            string `json:"name"`
+	ObjectID        string `json:"id"`
+	EnvironmentKind string `json:"environment_kind"`
 }
 
 type DataQualityEnvironmentSelectors []DataQualityEnvironmentSelector

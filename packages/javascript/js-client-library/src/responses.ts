@@ -129,12 +129,10 @@ export type AzureDataQualityStat = TimestampFields & {
 
 export type AzureDataQualityResponse = PaginatedResponse<AzureDataQualityStat[]>;
 
-export type DataQualityEnvironment = Environment & {
-    is_builtin: boolean;
-    environment_kind_id: number;
+export type DataQualityEnvironment = {
+    id: string;
+    name: string;
     environment_kind: string;
-    source_kind_id: number;
-    source_kind: string;
 };
 
 export type DataQualityEnvironmentsResponse = BasicResponse<DataQualityEnvironment[]>;

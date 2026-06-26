@@ -22,7 +22,11 @@ import { Typography } from 'doodle-ui';
 import { DataQualityNodeKindStat } from 'js-client-library';
 import { DateTime } from 'luxon';
 import { ReactNode, useMemo } from 'react';
-import { DataQualitySelection } from './DataQualityEnvironmentSelector';
+import {
+    DataQualitySelection,
+    dataQualityTypeFromEnvironmentKind,
+    sourceKindFromEnvironmentKind,
+} from './DataQualityEnvironmentSelector';
 
 type HistoryPoint = {
     createdAt: string;
@@ -48,7 +52,7 @@ type OpenGraphNodeKindCountsProps = {
 
 const numberFormatter = new Intl.NumberFormat();
 
-const isBuiltInDataQualityType = (type: string) => type === 'active-directory' || type === 'azure';
+const isBuiltInDataQualityType = (type?: string) => type === 'active-directory' || type === 'azure';
 
 const OpenGraphNodeKindChart: React.FC<{ rows: MetricCountRow[] }> = ({ rows }) => {
     const width = 900;
@@ -242,10 +246,13 @@ const OpenGraphNodeKindCounts: React.FC<OpenGraphNodeKindCountsProps> = ({
     hideEmptyState = false,
     selectedEnvironment,
 }) => {
-    const includeBuiltin = selectedEnvironment ? !isBuiltInDataQualityType(selectedEnvironment.type) : true;
+    const environmentType = selectedEnvironment
+        ? dataQualityTypeFromEnvironmentKind(selectedEnvironment.environmentKind)
+        : undefined;
+    const includeBuiltin = selectedEnvironment ? !isBuiltInDataQualityType(environmentType) : true;
     const sourceKind =
-        selectedEnvironment && isBuiltInDataQualityType(selectedEnvironment.type)
-            ? selectedEnvironment.sourceKind
+        selectedEnvironment && isBuiltInDataQualityType(environmentType)
+            ? sourceKindFromEnvironmentKind(selectedEnvironment.environmentKind)
             : undefined;
 
     const { data, isLoading, isError } = useDataQualityNodeKindStatsQuery({

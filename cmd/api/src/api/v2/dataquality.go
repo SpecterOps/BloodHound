@@ -86,17 +86,6 @@ type schemaEnvironmentKey struct {
 	schemaEnvironmentKindID int32
 }
 
-func dataQualityEnvironmentType(environmentKind string) string {
-	switch environmentKind {
-	case adSchema.Domain.String():
-		return "active-directory"
-	case azureSchema.Tenant.String():
-		return "azure"
-	default:
-		return environmentKind
-	}
-}
-
 func dataQualityEnvironmentCollected(node *graph.Node) bool {
 	if !node.Properties.Exists(common.Collected.String()) {
 		return false
@@ -154,25 +143,22 @@ func BuildDataQualityEnvironmentSelectors(nodes []*graph.Node, schemaEnvironment
 	)
 
 	for _, node := range nodes {
-		for environmentKind, schemaEnvironment := range environmentByKind {
+		for environmentKind := range environmentByKind {
 			if !node.Kinds.ContainsOneOf(graph.StringKind(environmentKind)) {
 				continue
 			}
 
-			sourceKind := sourceKindByID[schemaEnvironment.SourceKindId]
+			if !dataQualityEnvironmentCollected(node) {
+				break
+			}
+
 			name, _ := node.Properties.GetOrDefault(common.Name.String(), graphschema.DefaultMissingName).String()
 			objectID, _ := node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 
 			selectors = append(selectors, model.DataQualityEnvironmentSelector{
-				Type:              dataQualityEnvironmentType(environmentKind),
-				Name:              name,
-				ObjectID:          objectID,
-				Collected:         dataQualityEnvironmentCollected(node),
-				IsBuiltin:         schemaEnvironment.IsBuiltin,
-				EnvironmentKindID: schemaEnvironment.EnvironmentKindId,
-				EnvironmentKind:   environmentKind,
-				SourceKindID:      sourceKind.ID,
-				SourceKind:        sourceKind.Name,
+				Name:            name,
+				ObjectID:        objectID,
+				EnvironmentKind: environmentKind,
 			})
 			break
 		}
