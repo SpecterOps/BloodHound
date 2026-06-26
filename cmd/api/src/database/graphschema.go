@@ -42,6 +42,7 @@ type OpenGraphSchema interface {
 	GetGraphSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.GraphSchemaNodeKind, error)
 	GetGraphSchemaNodeKinds(ctx context.Context, nodeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error)
 	GetGraphSchemaNodeKindsByExtensionId(ctx context.Context, extensionId int32) (model.GraphSchemaNodeKinds, error)
+	GetGraphSchemaNodeKindsByEnvironmentIds(ctx context.Context, environmentIDs ...int32) (map[int32]model.GraphSchemaNodeKinds, error)
 	UpdateGraphSchemaNodeKind(ctx context.Context, schemaNodeKind model.GraphSchemaNodeKind) (model.GraphSchemaNodeKind, error)
 	UpdateGraphSchemaNodeKindIconById(ctx context.Context, kindId int32, icon graphschema.DisplayNodeIcon) (model.GraphSchemaNodeKind, error)
 	DeleteGraphSchemaNodeKind(ctx context.Context, schemaNodeKindId int32) error
@@ -374,6 +375,68 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKindsByExtensionId(ctx context.Context,
 	} else {
 		return nodeKinds, nil
 	}
+}
+
+// GetGraphSchemaNodeKindsByEnvironmentIds retrieves schema node kinds for each schema environment ID.
+func (s *BloodhoundDB) GetGraphSchemaNodeKindsByEnvironmentIds(ctx context.Context, environmentIDs ...int32) (map[int32]model.GraphSchemaNodeKinds, error) {
+	type schemaEnvironmentNodeKind struct {
+		SchemaEnvironmentID int32
+		ID                  int32
+		Name                string
+		SchemaExtensionId   int32
+		DisplayName         string
+		Description         string
+		IsDisplayKind       bool
+		Icon                string
+		IconColor           string
+	}
+
+	var (
+		nodeKindsByEnvironmentID = make(map[int32]model.GraphSchemaNodeKinds, len(environmentIDs))
+		rows                     []schemaEnvironmentNodeKind
+	)
+
+	if len(environmentIDs) == 0 {
+		return nodeKindsByEnvironmentID, nil
+	}
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT
+			se.id AS schema_environment_id,
+			nk.id,
+			k.name,
+			nk.schema_extension_id,
+			nk.display_name,
+			nk.description,
+			nk.is_display_kind,
+			nk.icon,
+			nk.icon_color
+		FROM %s se
+		INNER JOIN %s nk ON nk.schema_extension_id = se.schema_extension_id
+		INNER JOIN %s k ON nk.kind_id = k.id
+		WHERE se.id = ANY(?)
+			AND se.deleted_at IS NULL
+			AND nk.deleted_at IS NULL
+		ORDER BY se.id, nk.id`,
+		model.SchemaEnvironment{}.TableName(), model.GraphSchemaNodeKind{}.TableName(), model.Kind{}.TableName()),
+		pq.Array(environmentIDs)).Scan(&rows); result.Error != nil {
+		return nil, CheckError(result)
+	}
+
+	for _, row := range rows {
+		nodeKindsByEnvironmentID[row.SchemaEnvironmentID] = append(nodeKindsByEnvironmentID[row.SchemaEnvironmentID], model.GraphSchemaNodeKind{
+			Serial:            model.Serial{ID: row.ID},
+			Name:              row.Name,
+			SchemaExtensionId: row.SchemaExtensionId,
+			DisplayName:       row.DisplayName,
+			Description:       row.Description,
+			IsDisplayKind:     row.IsDisplayKind,
+			Icon:              row.Icon,
+			IconColor:         row.IconColor,
+		})
+	}
+
+	return nodeKindsByEnvironmentID, nil
 }
 
 // GetGraphSchemaNodeKindById - gets a row from the schema_node_kinds table by id. It returns a model.GraphSchemaNodeKind struct populated with the data, or an error if that id does not exist.

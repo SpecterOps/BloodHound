@@ -1992,6 +1992,26 @@ func (mr *MockDatabaseMockRecorder) GetGraphSchemaNodeKindsByExtensionId(ctx, ex
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaNodeKindsByExtensionId", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaNodeKindsByExtensionId), ctx, extensionId)
 }
 
+// GetGraphSchemaNodeKindsByEnvironmentIds mocks base method.
+func (m *MockDatabase) GetGraphSchemaNodeKindsByEnvironmentIds(ctx context.Context, environmentIDs ...int32) (map[int32]model.GraphSchemaNodeKinds, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx}
+	for _, a := range environmentIDs {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetGraphSchemaNodeKindsByEnvironmentIds", varargs...)
+	ret0, _ := ret[0].(map[int32]model.GraphSchemaNodeKinds)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetGraphSchemaNodeKindsByEnvironmentIds indicates an expected call of GetGraphSchemaNodeKindsByEnvironmentIds.
+func (mr *MockDatabaseMockRecorder) GetGraphSchemaNodeKindsByEnvironmentIds(ctx any, environmentIDs ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx}, environmentIDs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaNodeKindsByEnvironmentIds", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaNodeKindsByEnvironmentIds), varargs...)
+}
+
 // GetGraphSchemaProperties mocks base method.
 func (m *MockDatabase) GetGraphSchemaProperties(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaProperties, int, error) {
 	m.ctrl.T.Helper()

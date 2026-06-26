@@ -43,7 +43,7 @@ import (
 type DataQualityData interface {
 	database.DataQualityData
 	GetEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error)
-	GetGraphSchemaNodeKindsByExtensionId(ctx context.Context, extensionId int32) (model.GraphSchemaNodeKinds, error)
+	GetGraphSchemaNodeKindsByEnvironmentIds(ctx context.Context, environmentIDs ...int32) (map[int32]model.GraphSchemaNodeKinds, error)
 	GetKindsByIDs(ctx context.Context, ids ...int32) ([]model.Kind, error)
 	GetKindsByNames(ctx context.Context, names ...string) ([]model.Kind, error)
 }
@@ -515,31 +515,33 @@ func schemaSourceKinds(ctx context.Context, db DataQualityData, schemaEnvironmen
 
 func schemaNodeKindMaps(ctx context.Context, db DataQualityData, schemaEnvironments []model.SchemaEnvironment) (map[int32]model.GraphSchemaNodeKinds, map[string]int32, error) {
 	var (
-		nodeKindNames          []string
-		nodeKindsByExtensionID = make(map[int32]model.GraphSchemaNodeKinds)
-		seenExtensionIDs       = make(map[int32]struct{})
+		schemaEnvironmentIDs = make([]int32, 0, len(schemaEnvironments))
+		nodeKindNames        []string
+		seenNodeKindNames    = make(map[string]struct{})
 	)
 
 	for _, schemaEnvironment := range schemaEnvironments {
-		if _, seen := seenExtensionIDs[schemaEnvironment.SchemaExtensionId]; seen {
-			continue
-		}
+		schemaEnvironmentIDs = append(schemaEnvironmentIDs, schemaEnvironment.ID)
+	}
 
-		seenExtensionIDs[schemaEnvironment.SchemaExtensionId] = struct{}{}
+	nodeKindsBySchemaEnvironmentID, err := db.GetGraphSchemaNodeKindsByEnvironmentIds(ctx, schemaEnvironmentIDs...)
+	if err != nil {
+		return nil, nil, err
+	}
 
-		nodeKinds, err := db.GetGraphSchemaNodeKindsByExtensionId(ctx, schemaEnvironment.SchemaExtensionId)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		nodeKindsByExtensionID[schemaEnvironment.SchemaExtensionId] = nodeKinds
+	for _, nodeKinds := range nodeKindsBySchemaEnvironmentID {
 		for _, nodeKind := range nodeKinds {
+			if _, seen := seenNodeKindNames[nodeKind.Name]; seen {
+				continue
+			}
+
+			seenNodeKindNames[nodeKind.Name] = struct{}{}
 			nodeKindNames = append(nodeKindNames, nodeKind.Name)
 		}
 	}
 
 	if len(nodeKindNames) == 0 {
-		return nodeKindsByExtensionID, map[string]int32{}, nil
+		return nodeKindsBySchemaEnvironmentID, map[string]int32{}, nil
 	}
 
 	kinds, err := db.GetKindsByNames(ctx, nodeKindNames...)
@@ -552,7 +554,7 @@ func schemaNodeKindMaps(ctx context.Context, db DataQualityData, schemaEnvironme
 		kindIDByName[kind.Name] = kind.ID
 	}
 
-	return nodeKindsByExtensionID, kindIDByName, nil
+	return nodeKindsBySchemaEnvironmentID, kindIDByName, nil
 }
 
 func schemaGraphStats(ctx context.Context, db DataQualityData, graphDB graph.Database) (model.DataQualityStats, error) {
@@ -579,7 +581,7 @@ func schemaGraphStats(ctx context.Context, db DataQualityData, graphDB graph.Dat
 		return stats, err
 	}
 
-	nodeKindsByExtensionID, kindIDByName, err := schemaNodeKindMaps(ctx, db, schemaEnvironments)
+	nodeKindsBySchemaEnvironmentID, kindIDByName, err := schemaNodeKindMaps(ctx, db, schemaEnvironments)
 	if err != nil {
 		return stats, err
 	}
@@ -620,7 +622,7 @@ func schemaGraphStats(ctx context.Context, db DataQualityData, graphDB graph.Dat
 					continue
 				}
 
-				for _, nodeKind := range nodeKindsByExtensionID[schemaEnvironment.SchemaExtensionId] {
+				for _, nodeKind := range nodeKindsBySchemaEnvironmentID[schemaEnvironment.ID] {
 					graphNodeKind := nodeKind.ToKind()
 					if graphNodeKind.Is(sourceKind) {
 						continue

@@ -257,19 +257,24 @@ func (mr *MockDataQualityDataMockRecorder) GetEnvironments(ctx any) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironments", reflect.TypeOf((*MockDataQualityData)(nil).GetEnvironments), ctx)
 }
 
-// GetGraphSchemaNodeKindsByExtensionId mocks base method.
-func (m *MockDataQualityData) GetGraphSchemaNodeKindsByExtensionId(ctx context.Context, extensionId int32) (model.GraphSchemaNodeKinds, error) {
+// GetGraphSchemaNodeKindsByEnvironmentIds mocks base method.
+func (m *MockDataQualityData) GetGraphSchemaNodeKindsByEnvironmentIds(ctx context.Context, environmentIDs ...int32) (map[int32]model.GraphSchemaNodeKinds, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGraphSchemaNodeKindsByExtensionId", ctx, extensionId)
-	ret0, _ := ret[0].(model.GraphSchemaNodeKinds)
+	varargs := []any{ctx}
+	for _, a := range environmentIDs {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetGraphSchemaNodeKindsByEnvironmentIds", varargs...)
+	ret0, _ := ret[0].(map[int32]model.GraphSchemaNodeKinds)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetGraphSchemaNodeKindsByExtensionId indicates an expected call of GetGraphSchemaNodeKindsByExtensionId.
-func (mr *MockDataQualityDataMockRecorder) GetGraphSchemaNodeKindsByExtensionId(ctx, extensionId any) *gomock.Call {
+// GetGraphSchemaNodeKindsByEnvironmentIds indicates an expected call of GetGraphSchemaNodeKindsByEnvironmentIds.
+func (mr *MockDataQualityDataMockRecorder) GetGraphSchemaNodeKindsByEnvironmentIds(ctx any, environmentIDs ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaNodeKindsByExtensionId", reflect.TypeOf((*MockDataQualityData)(nil).GetGraphSchemaNodeKindsByExtensionId), ctx, extensionId)
+	varargs := append([]any{ctx}, environmentIDs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaNodeKindsByEnvironmentIds", reflect.TypeOf((*MockDataQualityData)(nil).GetGraphSchemaNodeKindsByEnvironmentIds), varargs...)
 }
 
 // GetKindsByIDs mocks base method.
