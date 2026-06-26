@@ -34,6 +34,9 @@ import {
     Role,
     ScheduledJobDisplay,
     TimestampFields,
+    Webhook,
+    WebhookSecret,
+    WebhookTest,
 } from './types';
 import { ConfigurationPayload } from './utils/config';
 
@@ -404,3 +407,13 @@ export type UnifiedFinding = {
 };
 
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
+
+export type CreateWebhookResponse = {
+    webhook: Webhook;
+    hmac_secret: string;
+};
+
+export type GetWebhooksResponse = PaginatedResponse<Webhook[]>;
+export type GetWebhookResponse = BasicResponse<Webhook>;
+export type RotateWebhookSecretResponse = BasicResponse<WebhookSecret>;
+export type WebhookTestResponse = BasicResponse<WebhookTest>;

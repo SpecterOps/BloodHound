@@ -342,6 +342,21 @@ func (mr *MockDatabaseMockRecorder) CreateCustomNodeKinds(ctx, customNodeKind an
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCustomNodeKinds", reflect.TypeOf((*MockDatabase)(nil).CreateCustomNodeKinds), ctx, customNodeKind)
 }
 
+// CreateDataQualityStats mocks base method.
+func (m *MockDatabase) CreateDataQualityStats(ctx context.Context, stats model.DataQualityStats) (model.DataQualityStats, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateDataQualityStats", ctx, stats)
+	ret0, _ := ret[0].(model.DataQualityStats)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateDataQualityStats indicates an expected call of CreateDataQualityStats.
+func (mr *MockDatabaseMockRecorder) CreateDataQualityStats(ctx, stats any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).CreateDataQualityStats), ctx, stats)
+}
+
 // CreateEnvironment mocks base method.
 func (m *MockDatabase) CreateEnvironment(ctx context.Context, extensionId, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error) {
 	m.ctrl.T.Helper()
@@ -1747,6 +1762,22 @@ func (m *MockDatabase) GetCustomNodeKinds(ctx context.Context, filters model.Fil
 func (mr *MockDatabaseMockRecorder) GetCustomNodeKinds(ctx, filters any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomNodeKinds", reflect.TypeOf((*MockDatabase)(nil).GetCustomNodeKinds), ctx, filters)
+}
+
+// GetDataQualityStats mocks base method.
+func (m *MockDatabase) GetDataQualityStats(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.DataQualityStats, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDataQualityStats", ctx, filters, sort, skip, limit)
+	ret0, _ := ret[0].(model.DataQualityStats)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetDataQualityStats indicates an expected call of GetDataQualityStats.
+func (mr *MockDatabaseMockRecorder) GetDataQualityStats(ctx, filters, sort, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetDataQualityStats), ctx, filters, sort, skip, limit)
 }
 
 // GetDatapipeStatus mocks base method.

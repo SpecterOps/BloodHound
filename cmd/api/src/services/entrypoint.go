@@ -22,8 +22,10 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/registration"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -81,15 +83,15 @@ func ConnectDatabases(ctx context.Context, cfg config.Configuration) (bootstrap.
 // IngestControl which occurs prior to migration. This function can be used to make the struct to contain the services that
 // are necessary for the application.
 func CreateRuntimeDependencies(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) (bootstrap.RuntimeDependencies, error) {
-	var dependencies = bootstrap.RuntimeDependencies{}
+	dependencies := bootstrap.RuntimeDependencies{}
 	if fileServices, err := storageService.NewDefaultFileServices(cfg); err != nil {
 		return dependencies, fmt.Errorf("failed to initialize file services: %w", err)
 	} else if fileServiceResolver, err := storageService.NewFileServiceResolver(fileServices); err != nil {
 		return dependencies, fmt.Errorf("failed to initialize file service resolver: %w", err)
-		// The FileServiceRetained is necessary for the PreMigrationDaemons where it is used in IngestControl for Cleanup.
-		// Checking it here ensures we have the service prior to running the application.
-	} else if _, err := fileServiceResolver.Resolve(storage.FileServiceRetained); err != nil {
-		return dependencies, fmt.Errorf("failed to resolve retained file service: %w", err)
+		// Multiple file services are required at runtime. Checking it here to ensure that they were properly registered
+		// to fail fast if there were any required services that were not registered.
+	} else if err := bootstrap.EnsureFileServices(fileServiceResolver); err != nil {
+		return dependencies, fmt.Errorf("failed to resolve required file service: %w", err)
 	} else {
 		dependencies.FileServiceResolver = fileServiceResolver
 		return dependencies, nil
@@ -98,12 +100,23 @@ func CreateRuntimeDependencies(ctx context.Context, cfg config.Configuration, co
 
 // PreMigrationDaemons Word of caution: These daemons will be launched prior to any migration starting
 func PreMigrationDaemons(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], dependencies bootstrap.RuntimeDependencies) ([]daemons.Daemon, error) {
-	return []daemons.Daemon{
-		toolapi.NewDaemon(ctx, connections, cfg, schema.DefaultGraphSchema()),
-	}, nil
+	if dependencies.FileServiceResolver == nil {
+		return nil, fmt.Errorf("file service resolver is required")
+	}
+
+	if retainedFileService, err := dependencies.FileServiceResolver.Resolve(storage.FileServiceRetained); err != nil {
+		return nil, fmt.Errorf("error resolving FileServiceRetained: %w", err)
+	} else {
+		return []daemons.Daemon{
+			toolapi.NewDaemon(ctx, connections, cfg, schema.DefaultGraphSchema(), retainedFileService),
+		}, nil
+	}
 }
 
 func Entrypoint(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], dependencies bootstrap.RuntimeDependencies) ([]daemons.Daemon, error) {
+	if dependencies.FileServiceResolver == nil {
+		return nil, fmt.Errorf("file service resolver is required")
+	}
 
 	dogtagsService := dogtags.NewDefaultService()
 
@@ -159,7 +172,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 
 		var (
 			cl                     = changelog.NewChangelog(connections.Graph, connections.RDMS, changelog.DefaultOptions())
-			pipeline               = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema, cl)
+			pipeline               = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema, dependencies.FileServiceResolver, cl)
 			graphQuery             = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)
 			authorizer             = auth.NewAuthorizer(connections.RDMS)
 			datapipeDaemon         = datapipe.NewDaemon(pipeline, startDelay, time.Duration(cfg.DatapipeInterval)*time.Second, connections.RDMS)
@@ -174,6 +187,10 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		modules.Register(modules.Deps{
 			Router: &routerInst,
 			Pool:   connections.RDMS.Pool(),
+			Graph:  connections.Graph,
+			RateLimitMiddleware: func() mux.MiddlewareFunc {
+				return middleware.DefaultRateLimitMiddleware(connections.RDMS)
+			},
 		})
 
 		// Set neo4j batch and flush sizes
