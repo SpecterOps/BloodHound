@@ -33,3 +33,6 @@ packages:
       include-interface-regex: "^[A-Z]"
       exclude-subpkg-regex:
         - mocks
+  github.com/specterops/bloodhound/server/graphdb/internal/appdb:
+    interfaces:
+      graphReader:
