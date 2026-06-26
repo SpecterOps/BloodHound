@@ -48,7 +48,7 @@ export const Default: Story = {
 };
 
 export const WithLabel: Story = {
-    render: ({ size }) => <CheckboxWithLabel size={size} label='Label' defaultChecked={false} />,
+    render: (args) => <CheckboxWithLabel {...args} label='Label' defaultChecked={false} />,
 };
 
 /**

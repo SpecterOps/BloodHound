@@ -99,7 +99,20 @@ type CheckboxWithLabelProps = React.ComponentPropsWithoutRef<typeof Checkbox> & 
 };
 
 const CheckboxWithLabel = React.forwardRef<React.ElementRef<typeof Checkbox>, CheckboxWithLabelProps>(
-    ({ id, label, error = false, disabled, className, labelClassName, fieldClassName, ...props }, ref) => {
+    (
+        {
+            id,
+            label,
+            error = false,
+            disabled,
+            className,
+            labelClassName,
+            fieldClassName,
+            'aria-invalid': ariaInvalid,
+            ...props
+        },
+        ref
+    ) => {
         const generatedId = React.useId();
         const checkboxId = id ?? generatedId;
 
@@ -114,12 +127,12 @@ const CheckboxWithLabel = React.forwardRef<React.ElementRef<typeof Checkbox>, Ch
                     fieldClassName
                 )}>
                 <Checkbox
+                    {...props}
                     ref={ref}
                     id={checkboxId}
                     disabled={disabled}
-                    aria-invalid={error || props['aria-invalid']}
+                    aria-invalid={error || ariaInvalid}
                     className={cn('focus-visible:ring-0 focus-visible:ring-offset-0', className)}
-                    {...props}
                 />
 
                 <Label
