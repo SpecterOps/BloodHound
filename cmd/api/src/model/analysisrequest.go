@@ -20,6 +20,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 
@@ -158,6 +159,10 @@ func analysisStepsFromBits(bits int) AnalysisSteps {
 func analysisStepsFromDecodedBits(bits int) (AnalysisSteps, error) {
 	if bits < 0 {
 		return AnalysisSteps{}, fmt.Errorf("analysis steps cannot be negative: %d", bits)
+	}
+
+	if bits > math.MaxInt32 {
+		return AnalysisSteps{}, fmt.Errorf("analysis steps cannot be greater than 32 bit integer limit: %d", bits)
 	}
 
 	return analysisStepsFromBits(bits), nil
