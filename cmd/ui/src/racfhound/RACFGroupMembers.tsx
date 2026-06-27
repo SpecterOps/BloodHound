@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-    apiClient,
     EntityInfoCollapsibleSection,
     EntityInfoDataTableProps,
     InfiniteScrollingTable,
@@ -23,47 +22,15 @@ import {
 } from 'bh-shared-ui';
 import { useQuery } from 'react-query';
 import { getRACFGroupMembersQuery, getRACFGroupSubgroupsQuery, getRACFUserGroupsQuery } from './groupMembers';
+import { fetchRACFRelatedNodes } from './relatedNodes';
 
-type RACFRelatedNode = {
-    objectID: string;
-    name: string;
-    label: string;
-};
-
-const normalizeRelatedNode = (node: Record<string, any>, fallbackKind: string): RACFRelatedNode => ({
-    objectID: node.objectId || node.properties?.objectid || '',
-    name: node.label || node.properties?.name || node.objectId || node.properties?.objectid || 'Unknown',
-    label: node.kind || node.kinds?.[0] || fallbackKind,
-});
-
-const fetchRelatedNodes = async (
-    databaseId: string,
-    getQuery: (databaseId: string) => string,
-    fallbackKind: string
-) => {
-    try {
-        const response = await apiClient.cypherSearch(getQuery(databaseId), undefined, true);
-        const nodes = response.data?.data?.nodes || {};
-
-        return Object.values(nodes).map((node) => normalizeRelatedNode(node as Record<string, any>, fallbackKind));
-    } catch (error) {
-        const status = (error as { response?: { status?: number } }).response?.status;
-
-        if (status === 404) {
-            return [];
-        }
-
-        throw error;
-    }
-};
-
-type RACFRelatedNodesProps = EntityInfoDataTableProps & {
+export type RACFRelatedNodesProps = EntityInfoDataTableProps & {
     queryKey: string;
     getQuery: (databaseId: string) => string;
     fallbackKind: string;
 };
 
-const RACFRelatedNodes = ({
+export const RACFRelatedNodes = ({
     id,
     label,
     parentLabels = [],
@@ -74,7 +41,7 @@ const RACFRelatedNodes = ({
     const { expandedPanelSections, setExploreParams } = useExploreParams();
     const isExpanded = !!expandedPanelSections?.includes(label);
 
-    const relatedNodesQuery = useQuery([queryKey, id], () => fetchRelatedNodes(id, getQuery, fallbackKind), {
+    const relatedNodesQuery = useQuery([queryKey, id], () => fetchRACFRelatedNodes(id, getQuery, fallbackKind), {
         refetchOnWindowFocus: false,
         retry: false,
     });

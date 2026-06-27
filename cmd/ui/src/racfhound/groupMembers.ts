@@ -16,9 +16,18 @@
 
 export const RACF_GROUP_KINDS = ['RACFGroup', 'racf_RACFGroup'] as const;
 export const RACF_USER_KINDS = ['RACFUser', 'racf_RACFUser'] as const;
+export const RACF_CLASS_KINDS = ['RACFClass', 'racf_RACFClass'] as const;
 export const RACF_GROUP_MEMBERS_SECTION = 'All Members';
 export const RACF_GROUP_SUBGROUPS_SECTION = 'Subgroups';
+export const RACF_GROUP_OUTBOUND_RELATIONSHIPS_SECTION = 'Outbound Relationships';
+export const RACF_GROUP_CAN_SUBMIT_AS_SECTION = 'Can Submit As';
 export const RACF_USER_GROUPS_SECTION = 'Groups';
+export const RACF_USER_OUTBOUND_RELATIONSHIPS_SECTION = 'Outbound Relationships';
+export const RACF_USER_INBOUND_RELATIONSHIPS_SECTION = 'Inbound Relationships';
+export const RACF_USER_CAN_SUBMIT_AS_SECTION = 'Can Submit As';
+export const RACF_USER_SUBMITTED_AS_BY_SECTION = 'Can Be Submitted As By';
+export const RACF_USER_CLASS_AUTHORITIES_SECTION = 'Class Authorities';
+export const RACF_CLASS_USERS_WITH_CLAUTH_SECTION = 'Users With CLAUTH';
 
 export const isRACFGroupKind = (kind: string): boolean =>
     RACF_GROUP_KINDS.some(
@@ -27,6 +36,11 @@ export const isRACFGroupKind = (kind: string): boolean =>
 
 export const isRACFUserKind = (kind: string): boolean =>
     RACF_USER_KINDS.some((racfUserKind) => racfUserKind.localeCompare(kind, undefined, { sensitivity: 'base' }) === 0);
+
+export const isRACFClassKind = (kind: string): boolean =>
+    RACF_CLASS_KINDS.some(
+        (racfClassKind) => racfClassKind.localeCompare(kind, undefined, { sensitivity: 'base' }) === 0
+    );
 
 export const getRACFGroupMembersQuery = (databaseId: string): string => {
     if (!/^\d+$/.test(databaseId)) {
@@ -54,6 +68,19 @@ RETURN DISTINCT subgroup
 ORDER BY subgroup.name`;
 };
 
+export const getRACFGroupCanSubmitAsQuery = (databaseId: string): string => {
+    if (!/^\d+$/.test(databaseId)) {
+        throw new Error('RACF group database ID must be an integer');
+    }
+
+    return `
+MATCH (group)
+WHERE ID(group) = ${databaseId}
+MATCH (group)-[:RACFSurrogateFor|racf_RACFSurrogateFor]->(target)
+RETURN DISTINCT target
+ORDER BY target.name`;
+};
+
 export const getRACFUserGroupsQuery = (databaseId: string): string => {
     if (!/^\d+$/.test(databaseId)) {
         throw new Error('RACF user database ID must be an integer');
@@ -65,4 +92,56 @@ WHERE ID(user) = ${databaseId}
 MATCH (user)-[:RACFMemberOf|racf_RACFMemberOf]->(group)
 RETURN DISTINCT group
 ORDER BY group.name`;
+};
+
+export const getRACFUserCanSubmitAsQuery = (databaseId: string): string => {
+    if (!/^\d+$/.test(databaseId)) {
+        throw new Error('RACF user database ID must be an integer');
+    }
+
+    return `
+MATCH (user)
+WHERE ID(user) = ${databaseId}
+MATCH (user)-[:RACFSurrogateFor|racf_RACFSurrogateFor]->(target)
+RETURN DISTINCT target
+ORDER BY target.name`;
+};
+
+export const getRACFUserSubmittedAsByQuery = (databaseId: string): string => {
+    if (!/^\d+$/.test(databaseId)) {
+        throw new Error('RACF user database ID must be an integer');
+    }
+
+    return `
+MATCH (user)
+WHERE ID(user) = ${databaseId}
+MATCH (principal)-[:RACFSurrogateFor|racf_RACFSurrogateFor]->(user)
+RETURN DISTINCT principal
+ORDER BY principal.name`;
+};
+
+export const getRACFUserClassAuthoritiesQuery = (databaseId: string): string => {
+    if (!/^\d+$/.test(databaseId)) {
+        throw new Error('RACF user database ID must be an integer');
+    }
+
+    return `
+MATCH (user)
+WHERE ID(user) = ${databaseId}
+MATCH (user)-[:RACFClassAuth|racf_RACFClassAuth]->(class)
+RETURN DISTINCT class
+ORDER BY class.name`;
+};
+
+export const getRACFClassUsersWithCLAUTHQuery = (databaseId: string): string => {
+    if (!/^\d+$/.test(databaseId)) {
+        throw new Error('RACF class database ID must be an integer');
+    }
+
+    return `
+MATCH (class)
+WHERE ID(class) = ${databaseId}
+MATCH (user)-[:RACFClassAuth|racf_RACFClassAuth]->(class)
+RETURN DISTINCT user
+ORDER BY user.name`;
 };

@@ -25,13 +25,21 @@ import {
     useExploreSelectedItem,
 } from 'bh-shared-ui';
 import { HTMLProps } from 'react';
+import { RACFClassUsersWithCLAUTH } from 'src/racfhound/RACFClassRelationships';
 import { RACFGroupMembers, RACFGroupSubgroups, RACFUserGroups } from 'src/racfhound/RACFGroupMembers';
+import { RACFGroupOutboundRelationships } from 'src/racfhound/RACFGroupRelationships';
+import { RACFUserInboundRelationships, RACFUserOutboundRelationships } from 'src/racfhound/RACFUserRelationships';
 import {
+    isRACFClassKind,
     isRACFGroupKind,
     isRACFUserKind,
+    RACF_CLASS_USERS_WITH_CLAUTH_SECTION,
     RACF_GROUP_MEMBERS_SECTION,
+    RACF_GROUP_OUTBOUND_RELATIONSHIPS_SECTION,
     RACF_GROUP_SUBGROUPS_SECTION,
     RACF_USER_GROUPS_SECTION,
+    RACF_USER_INBOUND_RELATIONSHIPS_SECTION,
+    RACF_USER_OUTBOUND_RELATIONSHIPS_SECTION,
 } from 'src/racfhound/groupMembers';
 
 const defaultClasses: HTMLProps<HTMLElement>['className'] = 'bottom-0 top-0 py-4 absolute right-4';
@@ -53,6 +61,13 @@ const getRACFTables = (nodeType: string, databaseId: string): EntityTables | und
                 },
                 TableComponent: RACFGroupSubgroups,
             },
+            {
+                sectionProps: {
+                    id: databaseId,
+                    label: RACF_GROUP_OUTBOUND_RELATIONSHIPS_SECTION,
+                },
+                TableComponent: RACFGroupOutboundRelationships,
+            },
         ];
     }
 
@@ -64,6 +79,32 @@ const getRACFTables = (nodeType: string, databaseId: string): EntityTables | und
                     label: RACF_USER_GROUPS_SECTION,
                 },
                 TableComponent: RACFUserGroups,
+            },
+            {
+                sectionProps: {
+                    id: databaseId,
+                    label: RACF_USER_OUTBOUND_RELATIONSHIPS_SECTION,
+                },
+                TableComponent: RACFUserOutboundRelationships,
+            },
+            {
+                sectionProps: {
+                    id: databaseId,
+                    label: RACF_USER_INBOUND_RELATIONSHIPS_SECTION,
+                },
+                TableComponent: RACFUserInboundRelationships,
+            },
+        ];
+    }
+
+    if (isRACFClassKind(nodeType)) {
+        return [
+            {
+                sectionProps: {
+                    id: databaseId,
+                    label: RACF_CLASS_USERS_WITH_CLAUTH_SECTION,
+                },
+                TableComponent: RACFClassUsersWithCLAUTH,
             },
         ];
     }

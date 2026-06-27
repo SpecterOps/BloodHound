@@ -540,6 +540,17 @@ Implementation status as of 2026-06-27:
 -   Empty results use the standard disabled zero-count section behavior.
 -   Design and verification notes are in
     `docs/racfhound/user-groups-panel.md`.
+-   Direct control relationships are grouped under `Outbound Relationships`
+    and `Inbound Relationships`.
+-   Outbound relationships currently include `Can Submit As` for outgoing
+    `RACFSurrogateFor` edges and `Class Authorities` for outgoing
+    `RACFClassAuth` edges.
+-   Inbound relationships currently include `Can Be Submitted As By` for
+    incoming `RACFSurrogateFor` edges. Sources may be users or groups.
+-   Relationship lists are direct-only; chained SURROGAT analysis belongs in
+    path views.
+-   Relationship design and verification notes are in
+    `docs/racfhound/user-relationships-panel.md`.
 
 ### RACFGroup panel
 
@@ -573,6 +584,11 @@ Implementation status as of 2026-06-27:
 -   RACF-specific UI code is under `cmd/ui/src/racfhound/`.
 -   Design and verification notes are in
     `docs/racfhound/group-members-panel.md`.
+-   Groups also show `Outbound Relationships` with `Can Submit As` for direct
+    outgoing `RACFSurrogateFor` edges because groups can be SURROGAT ACL
+    principals.
+-   Group relationship design and verification notes are in
+    `docs/racfhound/group-relationships-panel.md`.
 
 ### RACFDataset panel
 
@@ -604,6 +620,26 @@ Include:
 -   Abuse meaning.
 -   Related paths.
 -   Raw evidence.
+
+### RACFClass panel
+
+Include:
+
+-   Overview.
+-   Users with CLAUTH.
+-   Related resources and profiles.
+-   Paths to class authority.
+-   Raw evidence.
+
+Implementation status as of 2026-06-27:
+
+-   The Explore node information panel shows `Users With CLAUTH` for
+    `RACFClass` and `racf_RACFClass` nodes.
+-   It follows incoming direct `RACFClassAuth` relationships and links to the
+    corresponding users.
+-   Empty results use the standard disabled zero-count section behavior.
+-   Design and verification notes are in
+    `docs/racfhound/class-authorities-panel.md`.
 
 ### RACFFinding panel
 
