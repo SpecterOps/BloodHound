@@ -19,13 +19,57 @@ import {
     EntityInfoDataTableGraphed,
     EntityInfoPanel,
     EntityKinds,
+    EntityTables,
     isEdge,
     isNode,
     useExploreSelectedItem,
 } from 'bh-shared-ui';
 import { HTMLProps } from 'react';
+import { RACFGroupMembers, RACFGroupSubgroups, RACFUserGroups } from 'src/racfhound/RACFGroupMembers';
+import {
+    isRACFGroupKind,
+    isRACFUserKind,
+    RACF_GROUP_MEMBERS_SECTION,
+    RACF_GROUP_SUBGROUPS_SECTION,
+    RACF_USER_GROUPS_SECTION,
+} from 'src/racfhound/groupMembers';
 
 const defaultClasses: HTMLProps<HTMLElement>['className'] = 'bottom-0 top-0 py-4 absolute right-4';
+
+const getRACFTables = (nodeType: string, databaseId: string): EntityTables | undefined => {
+    if (isRACFGroupKind(nodeType)) {
+        return [
+            {
+                sectionProps: {
+                    id: databaseId,
+                    label: RACF_GROUP_MEMBERS_SECTION,
+                },
+                TableComponent: RACFGroupMembers,
+            },
+            {
+                sectionProps: {
+                    id: databaseId,
+                    label: RACF_GROUP_SUBGROUPS_SECTION,
+                },
+                TableComponent: RACFGroupSubgroups,
+            },
+        ];
+    }
+
+    if (isRACFUserKind(nodeType)) {
+        return [
+            {
+                sectionProps: {
+                    id: databaseId,
+                    label: RACF_USER_GROUPS_SECTION,
+                },
+                TableComponent: RACFUserGroups,
+            },
+        ];
+    }
+
+    return undefined;
+};
 
 const GraphItemInformationPanel = () => {
     const { selectedItem, selectedItemQuery } = useExploreSelectedItem();
@@ -72,11 +116,14 @@ const GraphItemInformationPanel = () => {
             name: selectedItemQuery.data.label,
             type: selectedItemQuery.data.kind as EntityKinds,
         };
+        const additionalTables = getRACFTables(selectedItemQuery.data.kind, selectedItem);
+
         return (
             <EntityInfoPanel
                 className={defaultClasses}
                 selectedNode={selectedNode}
                 DataTable={EntityInfoDataTableGraphed}
+                additionalTables={additionalTables}
             />
         );
     }
