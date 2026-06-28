@@ -283,7 +283,9 @@ func (s *GraphQuery) getAllShortestPathsInternal(ctx context.Context, startNodeI
 
 func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {
 	defer measure.ContextMeasureWithThreshold(ctx, slog.LevelInfo, "GetAllShortestPaths")()
-	return s.getAllShortestPathsInternal(ctx, startNodeID, endNodeID, filter, analysis.FetchNodeByObjectID)
+	// Built-in nodes are still resolved first. The OpenGraph fallback also
+	// allows legacy RACF custom nodes to participate in mixed paths.
+	return s.getAllShortestPathsInternal(ctx, startNodeID, endNodeID, filter, analysis.FetchNodeByObjectIDIncludeOpenGraph)
 }
 
 func (s *GraphQuery) GetAllShortestPathsWithOpenGraph(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {

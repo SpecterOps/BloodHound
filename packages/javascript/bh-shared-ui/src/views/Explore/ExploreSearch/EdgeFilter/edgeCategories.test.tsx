@@ -32,6 +32,16 @@ describe('Make sure pathfinding filterable edges match schemagen', () => {
         const difference = getDifferenceCount(azEdges, azSchemaEdges);
         expect(difference).toEqual(0);
     });
+
+    it('includes legacy and namespaced RACF edges without evidentiary relationships', () => {
+        const racfEdges = getEdgeListFromCategory('RACF');
+
+        expect(racfEdges).toEqual(
+            expect.arrayContaining(['RACFMemberOf', 'racf_RACFMemberOf', 'RACFCanWrite', 'racf_RACFCanWrite'])
+        );
+        expect(racfEdges).not.toContain('RACFEvidencedBy');
+        expect(racfEdges).not.toContain('racf_RACFEvidencedBy');
+    });
 });
 
 function getDifferenceCount(a: string[] | undefined | null, b: string[] | undefined | null) {

@@ -794,6 +794,20 @@ func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 			require.Equal(t, testCase.expected, actual)
 		})
 	}
+
+	t.Run("legacy pathfinder supports a mixed built-in and OpenGraph path", func(t *testing.T) {
+		paths, err := graphQuery.GetAllShortestPaths(
+			testSuite.Context,
+			"7",
+			"10",
+			query.KindIn(query.Relationship(), allValidKinds...),
+		)
+
+		require.NoError(t, err)
+		require.Len(t, paths, 1)
+		require.Len(t, paths[0].Edges, 1)
+		require.Equal(t, graph.StringKind("Contains"), paths[0].Edges[0].Kind)
+	})
 }
 
 func TestGetFilteredAndSortedNodesPaginated(t *testing.T) {

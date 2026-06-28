@@ -19,6 +19,7 @@ package v2
 import (
 	"testing"
 
+	"github.com/specterops/bloodhound/cmd/api/src/racfhound"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
@@ -66,4 +67,23 @@ func Test_parseRelationshipKindsParam(t *testing.T) {
 	require.Equal(t, 2, len(kinds))
 	require.True(t, kinds.ContainsOneOf(ad.Contains))
 	require.True(t, kinds.ContainsOneOf(ad.GenericAll))
+}
+
+func Test_parseRelationshipKindsParamSupportsRACF(t *testing.T) {
+	validKinds := graph.Kinds(ad.PathfindingRelationshipsMatchFrontend()).
+		Concatenate(azure.PathfindingRelationships()).
+		Concatenate(racfhound.PathfindingRelationships())
+
+	kinds, operator, err := parseRelationshipKindsParam(
+		validKinds,
+		"in:GenericAll,RACFMemberOf,racf_RACFCanWrite",
+	)
+
+	require.NoError(t, err)
+	require.Equal(t, "in", operator)
+	require.Equal(t, graph.Kinds{
+		ad.GenericAll,
+		graph.StringKind("RACFMemberOf"),
+		graph.StringKind("racf_RACFCanWrite"),
+	}, kinds)
 }

@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	"github.com/specterops/bloodhound/cmd/api/src/racfhound"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -86,7 +87,7 @@ func parseRelationshipKindsParam(acceptableKinds graph.Kinds, relationshipKindsP
 			kind := graph.StringKind(kindStr)
 			if acceptableKinds.ContainsOneOf(kind) {
 				parameterKinds = append(parameterKinds, kind)
-			} else if !kindIsValidBuiltIn(kind) {
+			} else if !kindIsValidWithoutSchema(kind) {
 				return nil, "", fmt.Errorf("invalid query parameter 'relationship_kinds': acceptable relationship kinds are: %v", acceptableKinds.Strings())
 			} // silently ignore kinds that are valid built-in kinds but not in the list of acceptable kinds
 		}
@@ -98,9 +99,13 @@ func parseRelationshipKindsParam(acceptableKinds graph.Kinds, relationshipKindsP
 	return acceptableKinds, "in", nil
 }
 
-// kindIsValidBuiltIn determines if a kind exists in the built-in graph
-func kindIsValidBuiltIn(kind graph.Kind) bool {
-	return graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships()).ContainsOneOf(kind)
+// kindIsValidWithoutSchema determines if a kind is built into BloodHound or
+// supported by the RACFHound legacy compatibility layer.
+func kindIsValidWithoutSchema(kind graph.Kind) bool {
+	return graph.Kinds(ad.Relationships()).
+		Concatenate(azure.Relationships()).
+		Concatenate(racfhound.PathfindingRelationships()).
+		ContainsOneOf(kind)
 }
 
 func createRelationshipKindFilterCriteria(relationshipKindsParam string, onlyIncludeTraversableKinds bool, validKinds graph.Kinds) (graph.Criteria, error) {
@@ -132,8 +137,11 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 		requestContext         = request.Context()
 		paths                  graph.PathSet
 		apiError               *api.ErrorWrapper
-		// note: this uses relationships from cue files, not from schema database
-		validBuiltInKinds = graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships())
+		// RACF relationships are kept as a compatibility set until RACFHound
+		// provisioning installs its modern OpenGraph extension schema.
+		validPathfindingKinds = graph.Kinds(ad.Relationships()).
+					Concatenate(azure.Relationships()).
+					Concatenate(racfhound.PathfindingRelationships())
 	)
 
 	onlyIncludeTraversableKinds, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeOnlyTraversableKinds), false)
@@ -151,15 +159,17 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		if onlyIncludeTraversableKinds {
-			validBuiltInKinds = graph.Kinds(ad.PathfindingRelationshipsMatchFrontend()).Concatenate(azure.PathfindingRelationships())
+			validPathfindingKinds = graph.Kinds(ad.PathfindingRelationshipsMatchFrontend()).
+				Concatenate(azure.PathfindingRelationships()).
+				Concatenate(racfhound.PathfindingRelationships())
 		}
 		if ogExtensionManagementFeatureFlag.Enabled {
-			if paths, apiError = s.getAllShortestPathsWithOpenGraph(requestContext, relationshipKindsParam, startNode, endNode, onlyIncludeTraversableKinds, validBuiltInKinds, request); apiError != nil {
+			if paths, apiError = s.getAllShortestPathsWithOpenGraph(requestContext, relationshipKindsParam, startNode, endNode, onlyIncludeTraversableKinds, validPathfindingKinds, request); apiError != nil {
 				api.WriteErrorResponse(requestContext, apiError, response)
 				return
 			}
 		} else {
-			if paths, apiError = s.getAllShortestPaths(requestContext, relationshipKindsParam, startNode, endNode, onlyIncludeTraversableKinds, validBuiltInKinds, request); apiError != nil {
+			if paths, apiError = s.getAllShortestPaths(requestContext, relationshipKindsParam, startNode, endNode, onlyIncludeTraversableKinds, validPathfindingKinds, request); apiError != nil {
 				api.WriteErrorResponse(requestContext, apiError, response)
 				return
 			}
@@ -232,7 +242,7 @@ func (s Resources) getAllShortestPathsWithOpenGraph(ctx context.Context, relatio
 		for _, relationship := range openGraphRelationships {
 			openGraphRelationshipKinds = append(openGraphRelationshipKinds, graph.StringKind(relationship.Name))
 		}
-		validKinds = validKinds.Concatenate(openGraphRelationshipKinds)
+		validKinds = validKinds.Add(openGraphRelationshipKinds...)
 		if kindFilter, err := createRelationshipKindFilterCriteria(relationshipKindsParam, onlyIncludeTraversableKinds, validKinds); err != nil {
 			return nil, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
 		} else if paths, err := s.GraphQuery.GetAllShortestPathsWithOpenGraph(ctx, startNode, endNode, kindFilter); err != nil {

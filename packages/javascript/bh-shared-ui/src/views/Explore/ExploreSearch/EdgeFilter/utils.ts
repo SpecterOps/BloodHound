@@ -45,7 +45,13 @@ export const mapEdgeTypesToCategory = (edgeTypes: EdgeType[], categoryName: stri
  * Removes all built-in and non-traversable edges from a list of edge types
  */
 export const filterUnneededTypes = (data: EdgeType[] | undefined): EdgeType[] | undefined => {
-    return data?.filter((edge) => !edge.is_builtin && edge.is_traversable);
+    const builtInEdgeTypes = new Set(
+        BUILTIN_EDGE_CATEGORIES.flatMap((category) =>
+            category.subcategories.flatMap((subcategory) => subcategory.edgeTypes)
+        )
+    );
+
+    return data?.filter((edge) => !edge.is_builtin && edge.is_traversable && !builtInEdgeTypes.has(edge.name));
 };
 
 /**
