@@ -73,13 +73,13 @@ Repository responsibilities:
 
 This is the transformation and graph-model package. It currently:
 
-- Accepts a parsed `mfpandas.IRRDBU00` object.
-- Builds RACF nodes and relationships.
-- Resolves controlling generic dataset profiles for supplied concrete
-  APF/PARMLIB/PROCLIB datasets.
-- Emits BloodHound OpenGraph JSON.
-- Owns deterministic graph-model, generic-profile, dataset-resolution, and
-  export tests.
+-   Accepts a parsed `mfpandas.IRRDBU00` object.
+-   Builds RACF nodes and relationships.
+-   Resolves controlling generic dataset profiles for supplied concrete
+    APF/PARMLIB/PROCLIB datasets.
+-   Emits BloodHound OpenGraph JSON.
+-   Owns deterministic graph-model, generic-profile, dataset-resolution, and
+    export tests.
 
 RACF semantic derivation belongs here unless it requires data that is outside
 the parsed unload and collector inputs.
@@ -88,12 +88,12 @@ the parsed unload and collector inputs.
 
 This is the user-facing collector and orchestration package. It currently:
 
-- Collects RACF and system context from z/OS using SSH, JCL, and FTP.
-- Calls `mfpandas-racfhound` for transformation.
-- Authenticates to BloodHound.
-- Provisions node presentation metadata.
-- Installs bundled RACF saved queries.
-- Uploads OpenGraph data.
+-   Collects RACF and system context from z/OS using SSH, JCL, and FTP.
+-   Calls `mfpandas-racfhound` for transformation.
+-   Authenticates to BloodHound.
+-   Provisions node presentation metadata.
+-   Installs bundled RACF saved queries.
+-   Uploads OpenGraph data.
 
 Collector behavior, CLI/API compatibility adapters, provisioning, saved-query
 distribution, and end-to-end workflow tests belong here.
@@ -120,11 +120,11 @@ When a feature crosses repositories, change the lowest-level contract first:
 
 BloodHound Community Edition is Apache-2.0 licensed. When modifying or redistributing code:
 
-- Preserve existing copyright notices.
-- Preserve the Apache-2.0 license text.
-- Mark modified files clearly where appropriate.
-- Do not imply that RACFHound or the fork is an official SpecterOps product.
-- Avoid reusing BloodHound/SpecterOps branding beyond accurate attribution such as “based on BloodHound Community Edition.”
+-   Preserve existing copyright notices.
+-   Preserve the Apache-2.0 license text.
+-   Mark modified files clearly where appropriate.
+-   Do not imply that RACFHound or the fork is an official SpecterOps product.
+-   Avoid reusing BloodHound/SpecterOps branding beyond accurate attribution such as “based on BloodHound Community Edition.”
 
 Prefer neutral project naming such as:
 
@@ -140,27 +140,27 @@ Separate RACF reasoning from BloodHound presentation.
 
 BloodHound fork responsibilities:
 
-- RACF-specific UI panels.
-- Entity drill-down views.
-- Dashboards.
-- Clickable graph navigation.
-- Finding and path visualization.
-- Integration with BloodHound data/query APIs.
+-   RACF-specific UI panels.
+-   Entity drill-down views.
+-   Dashboards.
+-   Clickable graph navigation.
+-   Finding and path visualization.
+-   Integration with BloodHound data/query APIs.
 
 Independent RACF core responsibilities:
 
-- IRRDBU00 parsing.
-- DSMon parsing.
-- SETROPTS parsing.
-- STARTED class parsing.
-- APF/LINKLIST/PARMLIB/PROCLIB enrichment.
-- Generic dataset profile matching and precedence handling.
-- Effective access calculation.
-- Group nesting resolution.
-- SURROGAT relationship derivation.
-- Analysis rules.
-- Finding generation.
-- Export to BloodHound/OpenGraph-compatible JSON.
+-   IRRDBU00 parsing.
+-   DSMon parsing.
+-   SETROPTS parsing.
+-   STARTED class parsing.
+-   APF/LINKLIST/PARMLIB/PROCLIB enrichment.
+-   Generic dataset profile matching and precedence handling.
+-   Effective access calculation.
+-   Group nesting resolution.
+-   SURROGAT relationship derivation.
+-   Analysis rules.
+-   Finding generation.
+-   Export to BloodHound/OpenGraph-compatible JSON.
 
 The RACF-specific analysis engine should be usable without the BloodHound UI. It should support headless execution for report generation, CI testing, and client deliverables.
 
@@ -226,23 +226,23 @@ compatibility behavior, not as the permanent integration contract.
 Evolve `racfhound provision` into the customization/bootstrap command. It
 should:
 
-- Detect or accept the target BloodHound compatibility level.
-- Install or update the RACF OpenGraph extension schema.
-- Install saved queries idempotently.
-- Validate required feature flags and permissions.
-- Upload through the supported ingest workflow for the target release.
-- Print actionable diagnostics when the target release is unsupported.
-- Never edit a BloodHound source checkout.
+-   Detect or accept the target BloodHound compatibility level.
+-   Install or update the RACF OpenGraph extension schema.
+-   Install saved queries idempotently.
+-   Validate required feature flags and permissions.
+-   Upload through the supported ingest workflow for the target release.
+-   Print actionable diagnostics when the target release is unsupported.
+-   Never edit a BloodHound source checkout.
 
 If source-level customization is necessary, keep it under a clearly named RACF
 boundary and maintain a machine-readable customization manifest. The manifest
 should identify:
 
-- The upstream base revision tested.
-- Every upstream-owned file touched.
-- The reason each patch is required.
-- The test that proves the customization still applies.
-- Whether a newer public extension point can replace it.
+-   The upstream base revision tested.
+-   Every upstream-owned file touched.
+-   The reason each patch is required.
+-   The test that proves the customization still applies.
+-   Whether a newer public extension point can replace it.
 
 A helper script may verify and apply these tracked customizations, but it must
 fail safely when expected anchors or upstream revisions do not match. Do not
@@ -287,13 +287,13 @@ kinds in one dataset.
 
 The modern data payload should include:
 
-- A stable `metadata.source_kind` owned by the RACF extension.
-- Stable node IDs that do not depend on array order.
-- The display kind plus the RACF base/source kind in each node's `kinds`.
-- `environmentid` and `collected` properties where required by the target
-  OpenGraph environment model.
-- Edge endpoints using the target release's supported `match_by` format.
-- Provenance and explanation properties on derived relationships.
+-   A stable `metadata.source_kind` owned by the RACF extension.
+-   Stable node IDs that do not depend on array order.
+-   The display kind plus the RACF base/source kind in each node's `kinds`.
+-   `environmentid` and `collected` properties where required by the target
+    OpenGraph environment model.
+-   Edge endpoints using the target release's supported `match_by` format.
+-   Provenance and explanation properties on derived relationships.
 
 Keep a compatibility matrix in the `racfhound` documentation with:
 
@@ -309,11 +309,11 @@ verified date
 
 Contract changes require:
 
-- A version increment.
-- Golden schema and graph fixtures.
-- Validation against the BloodHound extension and ingest handlers.
-- Saved-query regression tests.
-- A documented migration path for existing RACF data and queries.
+-   A version increment.
+-   Golden schema and graph fixtures.
+-   Validation against the BloodHound extension and ingest handlers.
+-   Saved-query regression tests.
+-   A documented migration path for existing RACF data and queries.
 
 ## RACF graph model
 
@@ -379,16 +379,16 @@ Suggested edge properties:
 
 ```json
 {
-  "source_record": "0205",
-  "source_file": "IRRDBU00",
-  "access": "ALTER",
-  "profile": "SYS1.PARMLIB",
-  "profile_type": "GENERIC",
-  "class": "DATASET",
-  "effective_via": "GROUPA",
-  "inherited": true,
-  "risk_weight": 80,
-  "explanation": "Group has ALTER access to a sensitive dataset profile"
+    "source_record": "0205",
+    "source_file": "IRRDBU00",
+    "access": "ALTER",
+    "profile": "SYS1.PARMLIB",
+    "profile_type": "GENERIC",
+    "class": "DATASET",
+    "effective_via": "GROUPA",
+    "inherited": true,
+    "risk_weight": 80,
+    "explanation": "Group has ALTER access to a sensitive dataset profile"
 }
 ```
 
@@ -430,25 +430,25 @@ Implement RACF semantics carefully. Do not treat all graph edges as equal.
 
 Support:
 
-- Direct user-to-group connections.
-- Nested groups.
-- Effective group expansion.
-- Connect authority.
-- Group-SPECIAL, group-OPERATIONS, group-AUDITOR flags from user connect data.
-- Default group.
-- Revoked connections where visible.
+-   Direct user-to-group connections.
+-   Nested groups.
+-   Effective group expansion.
+-   Connect authority.
+-   Group-SPECIAL, group-OPERATIONS, group-AUDITOR flags from user connect data.
+-   Default group.
+-   Revoked connections where visible.
 
 ### Dataset access
 
 Support:
 
-- UACC.
-- Access list entries.
-- READ, UPDATE, CONTROL, ALTER.
-- Generic and discrete profiles.
-- Generic profile precedence.
-- Enhanced generic considerations.
-- Sensitive dataset classification.
+-   UACC.
+-   Access list entries.
+-   READ, UPDATE, CONTROL, ALTER.
+-   Generic and discrete profiles.
+-   Generic profile precedence.
+-   Enhanced generic considerations.
+-   Sensitive dataset classification.
 
 Access should be interpreted contextually. For example, WRITE/UPDATE/ALTER to an APF-authorized library has much higher risk than READ to a normal application dataset.
 
@@ -501,11 +501,11 @@ Model started task identities and their privileges.
 
 Important questions:
 
-- Which user ID does this started task run as?
-- What groups is that user connected to?
-- Does the STC user have SPECIAL, OPERATIONS, BPX.SUPERUSER, UID(0), or sensitive dataset access?
-- Can anyone modify the JCL, PROC, PARMLIB, or datasets that influence this STC?
-- Can anyone submit as or otherwise control the STC identity?
+-   Which user ID does this started task run as?
+-   What groups is that user connected to?
+-   Does the STC user have SPECIAL, OPERATIONS, BPX.SUPERUSER, UID(0), or sensitive dataset access?
+-   Can anyone modify the JCL, PROC, PARMLIB, or datasets that influence this STC?
+-   Can anyone submit as or otherwise control the STC identity?
 
 ## Entity drill-down requirements
 
@@ -515,83 +515,145 @@ RACF entities should have rich detail pages or side panels comparable to BloodHo
 
 Include tabs or sections for:
 
-- Overview.
-- Direct groups.
-- Effective groups.
-- Default group.
-- Direct privileges.
-- Inherited privileges.
-- Dataset access.
-- Resource access.
-- SURROGAT relationships.
-- Can submit as.
-- Can become / can influence.
-- Inbound control relationships.
-- Shortest paths to high-value targets.
-- Raw evidence records.
+-   Overview.
+-   Direct groups.
+-   Effective groups.
+-   Default group.
+-   Direct privileges.
+-   Inherited privileges.
+-   Dataset access.
+-   Resource access.
+-   SURROGAT relationships.
+-   Can submit as.
+-   Can become / can influence.
+-   Inbound control relationships.
+-   Shortest paths to high-value targets.
+-   Raw evidence records.
+
+Implementation status as of 2026-06-27:
+
+-   The Explore node information panel shows a `Groups` section for `RACFUser`
+    and `racf_RACFUser` nodes.
+-   It lists only groups connected directly through `RACFMemberOf`; no group
+    hierarchy is traversed or implied.
+-   Clicking a group starts a normal node search for that group.
+-   Empty results use the standard disabled zero-count section behavior.
+-   Design and verification notes are in
+    `docs/racfhound/user-groups-panel.md`.
+-   Direct control relationships are grouped under `Outbound Relationships`
+    and `Inbound Relationships`.
+-   Outbound relationships currently include `Can Submit As` for outgoing
+    `RACFSurrogateFor` edges and `Class Authorities` for outgoing
+    `RACFClassAuth` edges.
+-   Inbound relationships currently include `Can Be Submitted As By` for
+    incoming `RACFSurrogateFor` edges. Sources may be users or groups.
+-   Relationship lists are direct-only; chained SURROGAT analysis belongs in
+    path views.
+-   Relationship design and verification notes are in
+    `docs/racfhound/user-relationships-panel.md`.
 
 ### RACFGroup panel
 
 Include:
 
-- Overview.
-- Direct users.
-- Direct subgroups.
-- Effective recursive members.
-- Parent groups.
-- Group privileges.
-- Dataset access.
-- Resource access.
-- Owned objects.
-- High-risk members.
-- Risk summary.
+-   Overview.
+-   Direct users.
+-   Direct subgroups.
+-   Effective recursive members.
+-   Parent groups.
+-   Group privileges.
+-   Dataset access.
+-   Resource access.
+-   Owned objects.
+-   High-risk members.
+-   Risk summary.
 
 The group page must support “show all effective members” and allow clicking from member lists into user pages.
+
+Implementation status as of 2026-06-27:
+
+-   The Explore node information panel shows an `All Members` section for
+    `RACFGroup` and `racf_RACFGroup` nodes.
+-   It includes only users directly connected to the selected group. Members of
+    subgroups are excluded because they do not inherit permissions from the
+    superior group.
+-   A separate `Subgroups` section lists groups connected directly beneath the
+    selected group.
+-   Duplicate results are shown once.
+-   Clicking a member starts a normal node search for that user.
+-   RACF-specific UI code is under `cmd/ui/src/racfhound/`.
+-   Design and verification notes are in
+    `docs/racfhound/group-members-panel.md`.
+-   Groups also show `Outbound Relationships` with `Can Submit As` for direct
+    outgoing `RACFSurrogateFor` edges because groups can be SURROGAT ACL
+    principals.
+-   Group relationship design and verification notes are in
+    `docs/racfhound/group-relationships-panel.md`.
 
 ### RACFDataset panel
 
 Include:
 
-- Overview.
-- Profile name.
-- Discrete vs generic.
-- Owner.
-- UACC.
-- WARNING status.
-- Access list.
-- Effective users and groups.
-- Write-capable principals.
-- Sensitive classification.
-- Matching logic explaining why a profile applies.
-- Paths to write access.
+-   Overview.
+-   Profile name.
+-   Discrete vs generic.
+-   Owner.
+-   UACC.
+-   WARNING status.
+-   Access list.
+-   Effective users and groups.
+-   Write-capable principals.
+-   Sensitive classification.
+-   Matching logic explaining why a profile applies.
+-   Paths to write access.
 
 ### RACFResource panel
 
 Include:
 
-- Class.
-- Profile.
-- Owner.
-- UACC where applicable.
-- Access list.
-- Effective users and groups.
-- Abuse meaning.
-- Related paths.
-- Raw evidence.
+-   Class.
+-   Profile.
+-   Owner.
+-   UACC where applicable.
+-   Access list.
+-   Effective users and groups.
+-   Abuse meaning.
+-   Related paths.
+-   Raw evidence.
+
+### RACFClass panel
+
+Include:
+
+-   Overview.
+-   Users with CLAUTH.
+-   Related resources and profiles.
+-   Paths to class authority.
+-   Raw evidence.
+
+Implementation status as of 2026-06-27:
+
+-   The Explore node information panel shows `Users With CLAUTH` for
+    `RACFClass` and `racf_RACFClass` nodes.
+-   It follows incoming direct `RACFClassAuth` relationships and links to the
+    corresponding users.
+-   Empty results use the standard disabled zero-count section behavior.
+-   Design and verification notes are in
+    `docs/racfhound/class-authorities-panel.md`.
 
 ### RACFFinding panel
 
 Include:
 
-- Title.
-- Severity.
-- Affected entities.
-- Evidence.
-- Paths.
-- Explanation.
-- Recommendation.
-- False-positive notes.
-- Exportable report text.
+-   Title.
+-   Severity.
+-   Affected entities.
+-   Evidence.
+-   Paths.
+-   Explanation.
+-   Recommendation.
+-   False-positive notes.
+-   Exportable report text.
 
 ## Dashboards
 
@@ -616,13 +678,13 @@ Attack Path Summary
 
 Each dashboard should show:
 
-- Total affected objects.
-- Direct vs inherited exposure.
-- Top risky users/groups.
-- Shortest paths to dangerous targets.
-- Recently changed evidence where timestamps exist.
-- Links to affected entity panels.
-- Links to findings.
+-   Total affected objects.
+-   Direct vs inherited exposure.
+-   Top risky users/groups.
+-   Shortest paths to dangerous targets.
+-   Recently changed evidence where timestamps exist.
+-   Links to affected entity panels.
+-   Links to findings.
 
 Avoid dashboards that only show raw counts without interpretation.
 
@@ -640,16 +702,16 @@ title: Group has write access to APF library
 severity: high
 category: APF
 query: |
-  MATCH p = (:RACFGroup)-[:RACFCanWrite]->(:RACFDataset {apf: true})
-  RETURN p
+    MATCH p = (:RACFGroup)-[:RACFCanWrite]->(:RACFDataset {apf: true})
+    RETURN p
 explanation: |
-  Members of this group may be able to modify APF-authorized code, which can lead to privileged execution on z/OS.
+    Members of this group may be able to modify APF-authorized code, which can lead to privileged execution on z/OS.
 recommendation: |
-  Restrict UPDATE, CONTROL, and ALTER access to APF libraries to tightly controlled system programming groups.
+    Restrict UPDATE, CONTROL, and ALTER access to APF libraries to tightly controlled system programming groups.
 evidence_requirements:
-  - Dataset profile
-  - Access list entry
-  - APF classification source
+    - Dataset profile
+    - Access list entry
+    - APF classification source
 ```
 
 Findings should be first-class objects that can be clicked from dashboards and graph paths.
@@ -721,14 +783,14 @@ Path explanations should avoid overstating certainty. Use wording like “may al
 
 The user experience should support investigative workflows:
 
-- From dashboard to finding.
-- From finding to affected entities.
-- From entity to graph path.
-- From path to evidence.
-- From group to all effective members.
-- From member to user details.
-- From dataset to write-capable principals.
-- From resource to abuse explanation.
+-   From dashboard to finding.
+-   From finding to affected entities.
+-   From entity to graph path.
+-   From path to evidence.
+-   From group to all effective members.
+-   From member to user details.
+-   From dataset to write-capable principals.
+-   From resource to abuse explanation.
 
 Always allow click-through between connected entities.
 
@@ -751,14 +813,14 @@ Prefer explainable, evidence-backed results over clever but opaque inference.
 
 Each derived edge or finding should include:
 
-- Source file or source type.
-- Source record type where applicable.
-- Profile name.
-- Access level.
-- Principal.
-- Effective-via group where applicable.
-- Timestamp where available.
-- Confidence where inference is involved.
+-   Source file or source type.
+-   Source record type where applicable.
+-   Profile name.
+-   Access level.
+-   Principal.
+-   Effective-via group where applicable.
+-   Timestamp where available.
+-   Confidence where inference is involved.
 
 If required source data is missing, surface that clearly in the UI and findings.
 
@@ -794,8 +856,8 @@ PROCLIB write path
 
 Each test should validate both:
 
-- Correct graph objects/edges are produced.
-- Correct findings/path explanations are produced.
+-   Correct graph objects/edges are produced.
+-   Correct findings/path explanations are produced.
 
 Do not rely only on visual testing.
 
@@ -881,23 +943,23 @@ USR002 -> APPDEV -> NESTED1 -> inherited access example
 
 A change is acceptable only if:
 
-- It builds successfully.
-- Existing BloodHound behavior remains intact.
-- RACF-specific code is isolated where practical.
-- Tests or fixtures are added for new RACF behavior.
-- UI changes support click-through investigation.
-- Findings include evidence and explanation.
-- No client-sensitive data is embedded.
-- Documentation is updated when new RACF concepts or rules are introduced.
+-   It builds successfully.
+-   Existing BloodHound behavior remains intact.
+-   RACF-specific code is isolated where practical.
+-   Tests or fixtures are added for new RACF behavior.
+-   UI changes support click-through investigation.
+-   Findings include evidence and explanation.
+-   No client-sensitive data is embedded.
+-   Documentation is updated when new RACF concepts or rules are introduced.
 
 For cross-repository changes, acceptance also requires:
 
-- The ownership boundary above is preserved.
-- The OpenGraph contract version is explicit.
-- Supported BloodHound versions are recorded.
-- Provisioning and saved-query installation remain idempotent.
-- A golden RACF fixture passes exporter-to-ingest compatibility testing.
-- Any fork patch is listed in the customization manifest.
+-   The ownership boundary above is preserved.
+-   The OpenGraph contract version is explicit.
+-   Supported BloodHound versions are recorded.
+-   Provisioning and saved-query installation remain idempotent.
+-   A golden RACF fixture passes exporter-to-ingest compatibility testing.
+-   Any fork patch is listed in the customization manifest.
 
 ## Documentation and decision log
 
