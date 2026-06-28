@@ -42,7 +42,17 @@ export const useMainNavLogoData = (): MainNavData['logo'] => {
     return {
         project: {
             route: routes.ROUTE_EXPLORE,
-            icon: <AppIcon.BHCELogoFull height='40' width='155' className='rounded' />,
+            icon: (
+                <span className='block h-10 w-[168px] overflow-hidden rounded-sm bg-[#faf6ed]'>
+                    <img
+                        alt='RACF-Hound'
+                        className='block w-[168px] max-w-none -translate-y-[27px]'
+                        height={941}
+                        src={`${import.meta.env.BASE_URL}/img/racfhound-logo.png`}
+                        width={1680}
+                    />
+                </span>
+            ),
         },
         specterOps: {
             image: {
@@ -153,20 +163,14 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
             route: routes.ROUTE_API_EXPLORER,
             testId: 'global_nav-api-explorer',
         },
-        {
-            label: 'Docs and Support',
-            icon: <AppIcon.FileMagnifyingGlass size={24} />,
-            route: routes.LINK_DOCS_AND_SUPPORT,
-            target: '_blank',
-            testId: 'global_nav-support',
-        },
-        {
-            label: 'Try BH Enterprise',
-            icon: <AppIcon.BHLogo size={32} className='-mx-1' />,
-            route: routes.LINK_BH_ENTERPRISE,
-            target: '_blank',
-            testId: 'global_nav-bhe',
-        },
+        // TODO: Restore Docs and Support when the RACF-Hound documentation site is available.
+        // {
+        //     label: 'Docs and Support',
+        //     icon: <AppIcon.FileMagnifyingGlass size={24} />,
+        //     route: routes.LINK_DOCS_AND_SUPPORT,
+        //     target: '_blank',
+        //     testId: 'global_nav-support',
+        // },
         {
             label: 'Dark Mode',
             control: (
