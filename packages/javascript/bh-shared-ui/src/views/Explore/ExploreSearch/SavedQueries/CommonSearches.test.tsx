@@ -133,7 +133,7 @@ describe('CommonSearches', () => {
         expect(testListBox).toBeVisible();
 
         const ulElement = testListBox;
-        expect(ulElement.children).toHaveLength(4);
+        expect(ulElement.children).toHaveLength(5);
 
         await user.click(ulElement.children[0]);
 
@@ -162,7 +162,7 @@ describe('CommonSearches', () => {
         expect(testListBox).toBeVisible();
 
         const ulElement = testListBox;
-        expect(ulElement.children).toHaveLength(4);
+        expect(ulElement.children).toHaveLength(5);
 
         //select Azure
         await user.click(ulElement.children[2]);
@@ -194,7 +194,7 @@ describe('CommonSearches', () => {
         await user.click(testPlatforms);
         const testListBox = await screen.findByRole('listbox');
         const ulElement = testListBox;
-        expect(ulElement.children).toHaveLength(4);
+        expect(ulElement.children).toHaveLength(5);
 
         //select AD
         await user.click(ulElement.children[1]);
@@ -205,6 +205,31 @@ describe('CommonSearches', () => {
         //Axure query not present
         const adText = screen.queryByText(/All members of high privileged roles/i);
         expect(adText).toBeNull();
+    });
+
+    it('displays correct content based on platform filter RACF', async () => {
+        const user = userEvent.setup();
+
+        const screen = render(
+            <QueryClientProvider client={queryClient}>
+                <CommonSearches
+                    onSetCypherQuery={vi.fn()}
+                    onPerformCypherSearch={vi.fn()}
+                    onToggleCommonQueries={vi.fn()}
+                    showCommonQueries={false}
+                />
+            </QueryClientProvider>
+        );
+
+        await user.click(await screen.findByLabelText(/platform/i));
+        const platformOptions = await screen.findByRole('listbox');
+
+        // All, Active Directory, Azure, RACF, Saved Queries
+        await user.click(platformOptions.children[3]);
+
+        expect(screen.getByText('RACF Group-SPECIAL administrative scope')).toBeInTheDocument();
+        expect(screen.queryByText(/all domain admins/i)).toBeNull();
+        expect(screen.queryByText(/All members of high privileged roles/i)).toBeNull();
     });
 
     //Toggle switch - test visibility

@@ -89,4 +89,15 @@ describe('NodeIcon', () => {
         expect(screen.getByTitle('Group')).toBeInTheDocument();
         expect(screen.getByText('house')).toBeInTheDocument();
     });
+
+    it.each([
+        ['RACFDataset', 'file', '#F0B429'],
+        ['RACFCertificate', 'certificate', '#D4AC0D'],
+        ['RACFMFAFactor', 'shield-halved', '#2E86C1'],
+    ])('renders the default icon and color for RACF kind %s', async (nodeType, iconName, color) => {
+        const screen = await setup(nodeType);
+
+        expect(screen.getByTitle(nodeType)).toHaveStyle({ backgroundColor: color });
+        expect(screen.getByText(iconName)).toBeInTheDocument();
+    });
 });

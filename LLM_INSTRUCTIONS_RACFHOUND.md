@@ -269,21 +269,21 @@ Maintain one versioned, canonical RACF graph contract. The exporter,
 provisioning schema, saved queries, fork UI, fixtures, and documentation must
 agree on exact kind names, edge direction, required properties, and identifiers.
 
-Modern BloodHound graph-extension kinds must be prefixed with the extension
-namespace. Use namespace `racf` and migrate the existing kinds consistently,
+The RACFHound fork contract uses RACF-native, unprefixed kind names consistently,
 for example:
 
 ```text
-RACFUser       -> racf_RACFUser
-RACFGroup      -> racf_RACFGroup
-RACFMemberOf   -> racf_RACFMemberOf
-RACFCanWrite   -> racf_RACFCanWrite
+RACFUser
+RACFGroup
+RACFMemberOf
+RACFCanWrite
 ```
 
-Keep display labels RACF-native even when stored kind names are namespaced.
-Provide an explicit legacy-output mode only while older BloodHound releases
-must remain supported. Do not emit a mixture of namespaced and legacy RACF
-kinds in one dataset.
+Do not emit or accept a mixture of `RACF...` and `racf_RACF...` kinds. The
+current upstream `/api/v2/extensions` contract requires namespace-prefixed
+kinds, so RACFHound's unprefixed contract continues to use the compatible
+custom-kind and custom-upload APIs. Moving to the extension endpoint requires
+an explicit contract or API change; do not silently rename graph kinds.
 
 The modern data payload should include:
 
@@ -533,7 +533,7 @@ Include tabs or sections for:
 Implementation status as of 2026-06-27:
 
 -   The Explore node information panel shows a `Groups` section for `RACFUser`
-    and `racf_RACFUser` nodes.
+    nodes.
 -   It lists only groups connected directly through `RACFMemberOf`; no group
     hierarchy is traversed or implied.
 -   Clicking a group starts a normal node search for that group.
@@ -573,7 +573,7 @@ The group page must support “show all effective members” and allow clicking 
 Implementation status as of 2026-06-27:
 
 -   The Explore node information panel shows an `All Members` section for
-    `RACFGroup` and `racf_RACFGroup` nodes.
+    `RACFGroup` nodes.
 -   It includes only users directly connected to the selected group. Members of
     subgroups are excluded because they do not inherit permissions from the
     superior group.
@@ -634,7 +634,7 @@ Include:
 Implementation status as of 2026-06-27:
 
 -   The Explore node information panel shows `Users With CLAUTH` for
-    `RACFClass` and `racf_RACFClass` nodes.
+    `RACFClass` nodes.
 -   It follows incoming direct `RACFClassAuth` relationships and links to the
     corresponding users.
 -   Empty results use the standard disabled zero-count section behavior.

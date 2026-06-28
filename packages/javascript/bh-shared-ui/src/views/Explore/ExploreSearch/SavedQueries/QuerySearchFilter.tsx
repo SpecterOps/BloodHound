@@ -130,6 +130,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                             <MenuItem value=''>All</MenuItem>
                             <MenuItem value='Active Directory'>Active Directory</MenuItem>
                             <MenuItem value='Azure'>Azure</MenuItem>
+                            <MenuItem value='RACF'>RACF</MenuItem>
                             <MenuItem value='Saved Queries'>Saved Queries</MenuItem>
                         </Select>
                     </FormControl>

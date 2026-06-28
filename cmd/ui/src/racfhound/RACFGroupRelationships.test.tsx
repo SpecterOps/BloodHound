@@ -89,7 +89,7 @@ describe('RACF group SURROGAT query', () => {
     it('uses a direct outgoing relationship to the target user', () => {
         const query = getRACFGroupCanSubmitAsQuery('70');
 
-        expect(query).toContain('(group)-[:RACFSurrogateFor|racf_RACFSurrogateFor]->(target)');
+        expect(query).toContain('(group)-[:RACFSurrogateFor]->(target)');
         expect(query).not.toContain('*');
     });
 

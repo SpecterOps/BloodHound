@@ -15,31 +15,45 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { findIconDefinition, IconName } from '@fortawesome/fontawesome-svg-core';
-import { RequestOptions } from 'js-client-library';
+import { CustomNodeKindType, RequestOptions } from 'js-client-library';
 import { useQuery, UseQueryResult } from 'react-query';
-import { apiClient, DEFAULT_ICON_BACKGROUND_COLOR, GenericQueryOptions, IconDictionary } from '../utils';
+import {
+    apiClient,
+    DEFAULT_ICON_BACKGROUND_COLOR,
+    GenericQueryOptions,
+    IconDictionary,
+    RACF_NODE_ICONS,
+} from '../utils';
+
+const isStubbedCustomNodeKind = (node: CustomNodeKindType) =>
+    node.config.icon.name === 'question' && node.config.icon.color.toUpperCase() === '#FFFFFF';
+
+export const createCustomIconDictionary = (nodes: CustomNodeKindType[] | undefined): IconDictionary => {
+    const customIcons: IconDictionary = { ...RACF_NODE_ICONS };
+
+    nodes?.forEach((node) => {
+        if (node.kindName in RACF_NODE_ICONS && isStubbedCustomNodeKind(node)) {
+            return;
+        }
+
+        const iconName = node.config.icon.name as IconName;
+        const iconDefinition = findIconDefinition({ prefix: 'fas', iconName: iconName });
+        if (iconDefinition == undefined) {
+            return;
+        }
+
+        customIcons[node.kindName] = {
+            icon: iconDefinition,
+            color: node.config.icon.color ? node.config.icon.color : DEFAULT_ICON_BACKGROUND_COLOR,
+        };
+    });
+
+    return customIcons;
+};
 
 export const getCustomNodeKinds = async (options: RequestOptions): Promise<IconDictionary> =>
     apiClient.getCustomNodeKinds(options).then((res) => {
-        const customIcons: IconDictionary = {};
-
-        if (Array.isArray(res?.data?.data)) {
-            res.data.data.forEach((node) => {
-                const iconName = node.config.icon.name as IconName;
-
-                const iconDefinition = findIconDefinition({ prefix: 'fas', iconName: iconName });
-                if (iconDefinition == undefined) {
-                    return;
-                }
-
-                customIcons[node.kindName] = {
-                    icon: iconDefinition,
-                    color: node.config.icon.color ? node.config.icon.color : DEFAULT_ICON_BACKGROUND_COLOR,
-                };
-            });
-        }
-
-        return customIcons;
+        return createCustomIconDictionary(Array.isArray(res?.data?.data) ? res.data.data : undefined);
     });
 
 export const useCustomNodeKinds = (

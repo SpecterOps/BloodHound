@@ -24,10 +24,8 @@ A user is included only when their `RACFMemberOf` edge targets the selected
 group directly. Subgroups are queried through one direct `RACFHasSubgroup`
 relationship and are never traversed while calculating members.
 
-Results are distinct. Both the current legacy kinds (`RACFGroup`,
-`RACFMemberOf`, and
-`RACFHasSubgroup`) and the planned namespaced equivalents prefixed with `racf_`
-are supported.
+Results are distinct. The graph contract uses the RACF-native `RACFGroup`,
+`RACFMemberOf`, and `RACFHasSubgroup` kind names.
 
 ## Implementation boundary
 
@@ -52,7 +50,7 @@ instead of showing an error.
 
 The component test verifies:
 
--   Legacy and namespaced RACF group-kind detection.
+-   RACF group-kind detection.
 -   Rejection of malformed graph database IDs.
 -   Direct-only membership query construction.
 -   Separation of members and subgroups.

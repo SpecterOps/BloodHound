@@ -92,14 +92,14 @@ describe('RACFClassUsersWithCLAUTH', () => {
 });
 
 describe('RACF class relationship helpers', () => {
-    it.each(['RACFClass', 'racf_RACFClass', 'racfclass'])('recognizes the %s class kind', (kind) => {
+    it.each(['RACFClass', 'racfclass'])('recognizes the %s class kind', (kind) => {
         expect(isRACFClassKind(kind)).toBe(true);
     });
 
     it('queries incoming direct CLAUTH relationships', () => {
         const query = getRACFClassUsersWithCLAUTHQuery('60');
 
-        expect(query).toContain('(user)-[:RACFClassAuth|racf_RACFClassAuth]->(class)');
+        expect(query).toContain('(user)-[:RACFClassAuth]->(class)');
         expect(query).not.toContain('*');
     });
 

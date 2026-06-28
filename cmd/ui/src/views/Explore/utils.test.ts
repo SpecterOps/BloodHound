@@ -110,6 +110,35 @@ describe('Explore utils', () => {
             expect(graph.hasEdge('2_MemberOf_1')).toBeTruthy();
             expect(graph.hasEdge('1_GetChangesAll_2')).toBeTruthy();
         });
+
+        it('applies default RACF colors to graph nodes', () => {
+            const graph = initGraph(
+                {
+                    nodes: {
+                        '1': {
+                            label: 'SYS1.PARMLIB',
+                            kind: 'RACFDataset',
+                            kinds: ['RACFDataset'],
+                            objectId: 'racf-dataset-1',
+                            lastSeen: '',
+                            isTierZero: false,
+                            isOwnedObject: false,
+                        },
+                    },
+                    edges: [],
+                },
+                {
+                    theme: lightTheme,
+                    hideNodes: false,
+                    customIcons: {},
+                    darkMode: false,
+                    tagGlyphs: {},
+                    pzFeatureFlagEnabled,
+                }
+            );
+
+            expect(graph.getNodeAttribute('1', 'color')).toEqual('#F0B429');
+        });
     });
 });
 

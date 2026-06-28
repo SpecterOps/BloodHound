@@ -121,13 +121,9 @@ describe('RACFUserRelationships', () => {
 
 describe('RACF user relationship queries', () => {
     it('uses the correct direct edge direction for each relationship', () => {
-        expect(getRACFUserCanSubmitAsQuery('50')).toContain(
-            '(user)-[:RACFSurrogateFor|racf_RACFSurrogateFor]->(target)'
-        );
-        expect(getRACFUserSubmittedAsByQuery('50')).toContain(
-            '(principal)-[:RACFSurrogateFor|racf_RACFSurrogateFor]->(user)'
-        );
-        expect(getRACFUserClassAuthoritiesQuery('50')).toContain('(user)-[:RACFClassAuth|racf_RACFClassAuth]->(class)');
+        expect(getRACFUserCanSubmitAsQuery('50')).toContain('(user)-[:RACFSurrogateFor]->(target)');
+        expect(getRACFUserSubmittedAsByQuery('50')).toContain('(principal)-[:RACFSurrogateFor]->(user)');
+        expect(getRACFUserClassAuthoritiesQuery('50')).toContain('(user)-[:RACFClassAuth]->(class)');
     });
 
     it('keeps direct relationship lists non-recursive', () => {

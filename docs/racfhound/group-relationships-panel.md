@@ -28,9 +28,8 @@ profile targets a user identity.
 
 ## Compatibility and empty results
 
-The query supports both `RACFSurrogateFor` and its planned
-`racf_RACFSurrogateFor` equivalent. Empty results render as a disabled
-zero-count parent section.
+The query uses `RACFSurrogateFor`. Empty results render as a disabled zero-count
+parent section.
 
 ## Verification
 

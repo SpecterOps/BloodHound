@@ -17,8 +17,8 @@ Only one direct relationship is followed. The panel does not recurse through
 superior or subordinate groups and does not imply permission inheritance.
 Results are distinct.
 
-Both the current legacy kinds (`RACFUser`, `RACFGroup`, and `RACFMemberOf`) and
-the planned namespaced equivalents prefixed with `racf_` are supported.
+The graph contract uses the RACF-native `RACFUser`, `RACFGroup`, and
+`RACFMemberOf` kind names.
 
 ## Behavior
 
@@ -42,7 +42,7 @@ cmd/ui/src/racfhound/
 
 The component tests cover:
 
--   Legacy and namespaced RACF user-kind detection.
+-   RACF user-kind detection.
 -   Direct-only group query construction.
 -   Group count and list rendering.
 -   Empty group results.
