@@ -47,6 +47,7 @@ import {
     IconDefinition,
 } from '@fortawesome/free-solid-svg-icons';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
+import { RACF_NODE_ICONS } from './racfNodeIcons';
 
 library.add(fas);
 
@@ -232,6 +233,8 @@ export const NODE_ICONS: IconDictionary = {
         icon: faKey,
         color: '#FFEE8C',
     },
+
+    ...RACF_NODE_ICONS,
 };
 
 export const UNKNOWN_ICON: IconInfo = {
