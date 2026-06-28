@@ -118,6 +118,32 @@ describe('useEdgeCategories', async () => {
         // check that only built-in categories are included
         expect(hook.result.current.edgeCategories).toEqual(BUILTIN_EDGE_CATEGORIES);
     });
+
+    it('excludes RACF subgroup hierarchy edges even if an extension marks them traversable', async () => {
+        server.use(
+            rest.get('/api/v2/extensions-edges', (_req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: [
+                            {
+                                id: 20,
+                                name: 'RACFHasSubgroup',
+                                description: '',
+                                is_traversable: true,
+                                schema_name: 'RACF',
+                                is_builtin: false,
+                            },
+                        ],
+                    })
+                );
+            })
+        );
+
+        const hook = renderHook(() => useEdgeCategories());
+
+        await waitFor(() => expect(hook.result.current.isLoading).toEqual(false));
+        expect(getEdgeListFromCategory('OpenGraph', hook.result.current.edgeCategories)).toBeUndefined();
+    });
 });
 
 const createOpenGraphFeatureFlag = (enabled: boolean = false) => {

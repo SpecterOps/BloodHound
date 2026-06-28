@@ -76,7 +76,7 @@ func Test_parseRelationshipKindsParamSupportsRACF(t *testing.T) {
 
 	kinds, operator, err := parseRelationshipKindsParam(
 		validKinds,
-		"in:GenericAll,RACFMemberOf,racf_RACFCanWrite",
+		"in:GenericAll,RACFMemberOf,RACFCanWrite",
 	)
 
 	require.NoError(t, err)
@@ -84,6 +84,6 @@ func Test_parseRelationshipKindsParamSupportsRACF(t *testing.T) {
 	require.Equal(t, graph.Kinds{
 		ad.GenericAll,
 		graph.StringKind("RACFMemberOf"),
-		graph.StringKind("racf_RACFCanWrite"),
+		graph.StringKind("RACFCanWrite"),
 	}, kinds)
 }

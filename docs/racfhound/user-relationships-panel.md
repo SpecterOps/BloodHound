@@ -48,10 +48,9 @@ for which the user has CLAUTH.
 
 ## Compatibility and empty results
 
-Queries support both current legacy edge kinds and planned `racf_`-namespaced
-edge kinds. No-result `404` responses from the Cypher endpoint are treated as
-empty lists. Empty parent and child sections use the standard disabled
-zero-count entity-panel behavior.
+Queries use the RACF-native, unprefixed edge kinds. No-result `404` responses
+from the Cypher endpoint are treated as empty lists. Empty parent and child
+sections use the standard disabled zero-count entity-panel behavior.
 
 ## Implementation boundary
 

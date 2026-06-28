@@ -16,6 +16,8 @@
 import { EdgeType } from 'js-client-library';
 import { BUILTIN_EDGE_CATEGORIES, Category, Subcategory } from './edgeCategories';
 
+const RACF_NON_PATHFINDING_EDGE_TYPES = new Set(['RACFHasSubgroup', 'RACFSubgroupOf']);
+
 /**
  *  Maps from our API EdgeType format to a single Category type that can be consumed by our edge filter dialog
  */
@@ -51,7 +53,13 @@ export const filterUnneededTypes = (data: EdgeType[] | undefined): EdgeType[] | 
         )
     );
 
-    return data?.filter((edge) => !edge.is_builtin && edge.is_traversable && !builtInEdgeTypes.has(edge.name));
+    return data?.filter(
+        (edge) =>
+            !edge.is_builtin &&
+            edge.is_traversable &&
+            !builtInEdgeTypes.has(edge.name) &&
+            !RACF_NON_PATHFINDING_EDGE_TYPES.has(edge.name)
+    );
 };
 
 /**

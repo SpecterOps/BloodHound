@@ -27,8 +27,13 @@ func TestPathfindingRelationships(t *testing.T) {
 	relationshipKinds := racfhound.PathfindingRelationships()
 
 	require.True(t, relationshipKinds.ContainsOneOf(graph.StringKind("RACFMemberOf")))
-	require.True(t, relationshipKinds.ContainsOneOf(graph.StringKind("racf_RACFMemberOf")))
 	require.True(t, relationshipKinds.ContainsOneOf(graph.StringKind("RACFCanWrite")))
-	require.True(t, relationshipKinds.ContainsOneOf(graph.StringKind("racf_RACFCanWrite")))
+	require.False(t, relationshipKinds.ContainsOneOf(graph.StringKind("RACFHasSubgroup")))
 	require.False(t, relationshipKinds.ContainsOneOf(graph.StringKind("RACFEvidencedBy")))
+}
+
+func TestIsNonPathfindingRelationship(t *testing.T) {
+	require.True(t, racfhound.IsNonPathfindingRelationship(graph.StringKind("RACFHasSubgroup")))
+	require.True(t, racfhound.IsNonPathfindingRelationship(graph.StringKind("RACFSubgroupOf")))
+	require.False(t, racfhound.IsNonPathfindingRelationship(graph.StringKind("RACFMemberOf")))
 }

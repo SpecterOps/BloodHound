@@ -240,7 +240,10 @@ func (s Resources) getAllShortestPathsWithOpenGraph(ctx context.Context, relatio
 	} else {
 		openGraphRelationshipKinds := make(graph.Kinds, 0, len(openGraphRelationships))
 		for _, relationship := range openGraphRelationships {
-			openGraphRelationshipKinds = append(openGraphRelationshipKinds, graph.StringKind(relationship.Name))
+			relationshipKind := graph.StringKind(relationship.Name)
+			if !racfhound.IsNonPathfindingRelationship(relationshipKind) {
+				openGraphRelationshipKinds = append(openGraphRelationshipKinds, relationshipKind)
+			}
 		}
 		validKinds = validKinds.Add(openGraphRelationshipKinds...)
 		if kindFilter, err := createRelationshipKindFilterCriteria(relationshipKindsParam, onlyIncludeTraversableKinds, validKinds); err != nil {

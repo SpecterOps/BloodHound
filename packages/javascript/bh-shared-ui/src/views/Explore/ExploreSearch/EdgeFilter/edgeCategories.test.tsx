@@ -36,11 +36,9 @@ describe('Make sure pathfinding filterable edges match schemagen', () => {
     it('includes legacy and namespaced RACF edges without evidentiary relationships', () => {
         const racfEdges = getEdgeListFromCategory('RACF');
 
-        expect(racfEdges).toEqual(
-            expect.arrayContaining(['RACFMemberOf', 'racf_RACFMemberOf', 'RACFCanWrite', 'racf_RACFCanWrite'])
-        );
+        expect(racfEdges).toEqual(expect.arrayContaining(['RACFMemberOf', 'RACFCanWrite']));
         expect(racfEdges).not.toContain('RACFEvidencedBy');
-        expect(racfEdges).not.toContain('racf_RACFEvidencedBy');
+        expect(racfEdges).not.toContain('RACFHasSubgroup');
     });
 });
 

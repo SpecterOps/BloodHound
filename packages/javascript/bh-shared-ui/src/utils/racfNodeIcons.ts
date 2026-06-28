@@ -52,7 +52,7 @@ type RACFIconInfo = {
     color: string;
 };
 
-const RACF_LEGACY_NODE_ICONS: Record<RACFNodeKind, RACFIconInfo> = {
+export const RACF_NODE_ICONS: Record<RACFNodeKind, RACFIconInfo> = {
     [RACF_NODE_KINDS.User]: {
         icon: faUser,
         color: '#4A90D9',
@@ -102,13 +102,3 @@ const RACF_LEGACY_NODE_ICONS: Record<RACFNodeKind, RACFIconInfo> = {
         color: '#B2BABB',
     },
 };
-
-// RACFHound currently emits legacy kinds while its modern OpenGraph contract
-// uses the racf_ namespace. Keep both aliases visually identical during the
-// migration.
-export const RACF_NODE_ICONS: Record<string, RACFIconInfo> = Object.fromEntries(
-    Object.entries(RACF_LEGACY_NODE_ICONS).flatMap(([kind, iconInfo]) => [
-        [kind, iconInfo],
-        [`racf_${kind}`, iconInfo],
-    ])
-);

@@ -20,8 +20,6 @@ import "github.com/specterops/dawgs/graph"
 
 var pathfindingRelationshipNames = []string{
 	"RACFMemberOf",
-	"RACFHasSubgroup",
-	"RACFSubgroupOf",
 	"RACFOwns",
 	"RACFHasPrivilege",
 	"RACFClassAuth",
@@ -36,19 +34,26 @@ var pathfindingRelationshipNames = []string{
 	"RACFAffects",
 }
 
+var nonPathfindingRelationshipKinds = graph.Kinds{
+	graph.StringKind("RACFHasSubgroup"),
+	graph.StringKind("RACFSubgroupOf"),
+}
+
 // PathfindingRelationships returns the control relationships Pathfinder may
-// traverse. Legacy and namespaced kinds are included while RACFHound migrates
-// to its versioned OpenGraph contract.
+// traverse.
 func PathfindingRelationships() graph.Kinds {
-	relationshipKinds := make(graph.Kinds, 0, len(pathfindingRelationshipNames)*2)
+	relationshipKinds := make(graph.Kinds, 0, len(pathfindingRelationshipNames))
 
 	for _, relationshipName := range pathfindingRelationshipNames {
-		relationshipKinds = append(
-			relationshipKinds,
-			graph.StringKind(relationshipName),
-			graph.StringKind("racf_"+relationshipName),
-		)
+		relationshipKinds = append(relationshipKinds, graph.StringKind(relationshipName))
 	}
 
 	return relationshipKinds
+}
+
+// IsNonPathfindingRelationship identifies RACF hierarchy edges that describe
+// Group-SPECIAL administrative scope but do not confer permissions through
+// ordinary group membership.
+func IsNonPathfindingRelationship(kind graph.Kind) bool {
+	return nonPathfindingRelationshipKinds.ContainsOneOf(kind)
 }

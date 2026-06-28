@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { RACFCommonSearches } from './commonSearchesRACF';
 import { OWNED_OBJECT_TAG, TIER_ZERO_TAG } from './constants';
 import { ActiveDirectoryPathfindingEdges, AzurePathfindingEdges } from './graphSchema';
 import { CommonSearchType } from './types';
@@ -564,4 +565,5 @@ RETURN p\nLIMIT 1000`,
             },
         ],
     },
+    ...RACFCommonSearches,
 ];

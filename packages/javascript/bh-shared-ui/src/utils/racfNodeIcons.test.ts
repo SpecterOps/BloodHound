@@ -18,9 +18,8 @@ import { GetIconInfo } from './icons';
 import { RACF_NODE_ICONS, RACF_NODE_KINDS } from './racfNodeIcons';
 
 describe('RACF node icons', () => {
-    it.each(Object.values(RACF_NODE_KINDS))('defines matching legacy and namespaced icons for %s', (kind) => {
+    it.each(Object.values(RACF_NODE_KINDS))('defines an icon for %s', (kind) => {
         expect(RACF_NODE_ICONS[kind]).toBeDefined();
-        expect(RACF_NODE_ICONS[`racf_${kind}`]).toEqual(RACF_NODE_ICONS[kind]);
     });
 
     it('allows a server-provided custom type to override the default', () => {

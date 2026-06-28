@@ -35,15 +35,14 @@ describe('createCustomIconDictionary', () => {
         const icons = createCustomIconDictionary(undefined);
 
         expect(icons[RACF_NODE_KINDS.User]).toEqual(RACF_NODE_ICONS[RACF_NODE_KINDS.User]);
-        expect(icons[`racf_${RACF_NODE_KINDS.User}`]).toEqual(RACF_NODE_ICONS[RACF_NODE_KINDS.User]);
     });
 
     it('does not let an automatically generated stub replace a RACF default', () => {
         const icons = createCustomIconDictionary([
-            createCustomNodeKind(`racf_${RACF_NODE_KINDS.Certificate}`, 'question', '#FFFFFF'),
+            createCustomNodeKind(RACF_NODE_KINDS.Certificate, 'question', '#FFFFFF'),
         ]);
 
-        expect(icons[`racf_${RACF_NODE_KINDS.Certificate}`]).toEqual(RACF_NODE_ICONS[RACF_NODE_KINDS.Certificate]);
+        expect(icons[RACF_NODE_KINDS.Certificate]).toEqual(RACF_NODE_ICONS[RACF_NODE_KINDS.Certificate]);
     });
 
     it('allows a provisioned custom type to override a RACF default', () => {

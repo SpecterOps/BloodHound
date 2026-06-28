@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export const RACF_GROUP_KINDS = ['RACFGroup', 'racf_RACFGroup'] as const;
-export const RACF_USER_KINDS = ['RACFUser', 'racf_RACFUser'] as const;
-export const RACF_CLASS_KINDS = ['RACFClass', 'racf_RACFClass'] as const;
+export const RACF_GROUP_KINDS = ['RACFGroup'] as const;
+export const RACF_USER_KINDS = ['RACFUser'] as const;
+export const RACF_CLASS_KINDS = ['RACFClass'] as const;
 export const RACF_GROUP_MEMBERS_SECTION = 'All Members';
 export const RACF_GROUP_SUBGROUPS_SECTION = 'Subgroups';
 export const RACF_GROUP_OUTBOUND_RELATIONSHIPS_SECTION = 'Outbound Relationships';
@@ -50,7 +50,7 @@ export const getRACFGroupMembersQuery = (databaseId: string): string => {
     return `
 MATCH (group)
 WHERE ID(group) = ${databaseId}
-MATCH (member)-[:RACFMemberOf|racf_RACFMemberOf]->(group)
+MATCH (member)-[:RACFMemberOf]->(group)
 RETURN DISTINCT member
 ORDER BY member.name`;
 };
@@ -63,7 +63,7 @@ export const getRACFGroupSubgroupsQuery = (databaseId: string): string => {
     return `
 MATCH (group)
 WHERE ID(group) = ${databaseId}
-MATCH (group)-[:RACFHasSubgroup|racf_RACFHasSubgroup]->(subgroup)
+MATCH (group)-[:RACFHasSubgroup]->(subgroup)
 RETURN DISTINCT subgroup
 ORDER BY subgroup.name`;
 };
@@ -76,7 +76,7 @@ export const getRACFGroupCanSubmitAsQuery = (databaseId: string): string => {
     return `
 MATCH (group)
 WHERE ID(group) = ${databaseId}
-MATCH (group)-[:RACFSurrogateFor|racf_RACFSurrogateFor]->(target)
+MATCH (group)-[:RACFSurrogateFor]->(target)
 RETURN DISTINCT target
 ORDER BY target.name`;
 };
@@ -89,7 +89,7 @@ export const getRACFUserGroupsQuery = (databaseId: string): string => {
     return `
 MATCH (user)
 WHERE ID(user) = ${databaseId}
-MATCH (user)-[:RACFMemberOf|racf_RACFMemberOf]->(group)
+MATCH (user)-[:RACFMemberOf]->(group)
 RETURN DISTINCT group
 ORDER BY group.name`;
 };
@@ -102,7 +102,7 @@ export const getRACFUserCanSubmitAsQuery = (databaseId: string): string => {
     return `
 MATCH (user)
 WHERE ID(user) = ${databaseId}
-MATCH (user)-[:RACFSurrogateFor|racf_RACFSurrogateFor]->(target)
+MATCH (user)-[:RACFSurrogateFor]->(target)
 RETURN DISTINCT target
 ORDER BY target.name`;
 };
@@ -115,7 +115,7 @@ export const getRACFUserSubmittedAsByQuery = (databaseId: string): string => {
     return `
 MATCH (user)
 WHERE ID(user) = ${databaseId}
-MATCH (principal)-[:RACFSurrogateFor|racf_RACFSurrogateFor]->(user)
+MATCH (principal)-[:RACFSurrogateFor]->(user)
 RETURN DISTINCT principal
 ORDER BY principal.name`;
 };
@@ -128,7 +128,7 @@ export const getRACFUserClassAuthoritiesQuery = (databaseId: string): string => 
     return `
 MATCH (user)
 WHERE ID(user) = ${databaseId}
-MATCH (user)-[:RACFClassAuth|racf_RACFClassAuth]->(class)
+MATCH (user)-[:RACFClassAuth]->(class)
 RETURN DISTINCT class
 ORDER BY class.name`;
 };
@@ -141,7 +141,7 @@ export const getRACFClassUsersWithCLAUTHQuery = (databaseId: string): string => 
     return `
 MATCH (class)
 WHERE ID(class) = ${databaseId}
-MATCH (user)-[:RACFClassAuth|racf_RACFClassAuth]->(class)
+MATCH (user)-[:RACFClassAuth]->(class)
 RETURN DISTINCT user
 ORDER BY user.name`;
 };

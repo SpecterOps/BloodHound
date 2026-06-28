@@ -178,11 +178,11 @@ describe('RACFUserGroups', () => {
 });
 
 describe('RACF group member helpers', () => {
-    it.each(['RACFGroup', 'racf_RACFGroup', 'racfgroup'])('recognizes the %s group kind', (kind) => {
+    it.each(['RACFGroup', 'racfgroup'])('recognizes the %s group kind', (kind) => {
         expect(isRACFGroupKind(kind)).toBe(true);
     });
 
-    it.each(['RACFUser', 'racf_RACFUser', 'racfuser'])('recognizes the %s user kind', (kind) => {
+    it.each(['RACFUser', 'racfuser'])('recognizes the %s user kind', (kind) => {
         expect(isRACFUserKind(kind)).toBe(true);
     });
 
@@ -200,7 +200,7 @@ describe('RACF group member helpers', () => {
     it('queries only groups directly connected to the user', () => {
         const query = getRACFUserGroupsQuery('45');
 
-        expect(query).toContain('(user)-[:RACFMemberOf|racf_RACFMemberOf]->(group)');
+        expect(query).toContain('(user)-[:RACFMemberOf]->(group)');
         expect(query).not.toContain('*');
     });
 });

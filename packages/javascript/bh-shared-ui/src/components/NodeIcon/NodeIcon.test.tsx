@@ -92,8 +92,8 @@ describe('NodeIcon', () => {
 
     it.each([
         ['RACFDataset', 'file', '#F0B429'],
-        ['racf_RACFCertificate', 'certificate', '#D4AC0D'],
-        ['racf_RACFMFAFactor', 'shield-halved', '#2E86C1'],
+        ['RACFCertificate', 'certificate', '#D4AC0D'],
+        ['RACFMFAFactor', 'shield-halved', '#2E86C1'],
     ])('renders the default icon and color for RACF kind %s', async (nodeType, iconName, color) => {
         const screen = await setup(nodeType);
 

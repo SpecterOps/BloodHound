@@ -117,8 +117,8 @@ describe('Explore utils', () => {
                     nodes: {
                         '1': {
                             label: 'SYS1.PARMLIB',
-                            kind: 'racf_RACFDataset',
-                            kinds: ['racf_RACFDataset'],
+                            kind: 'RACFDataset',
+                            kinds: ['RACFDataset'],
                             objectId: 'racf-dataset-1',
                             lastSeen: '',
                             isTierZero: false,

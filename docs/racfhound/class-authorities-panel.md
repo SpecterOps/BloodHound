@@ -14,9 +14,7 @@ The query follows incoming class-authority relationships:
 RACFUser --RACFClassAuth--> RACFClass
 ```
 
-Only direct relationships are listed. Results are distinct and support both the
-current `RACFClassAuth` edge kind and its planned
-`racf_RACFClassAuth`-namespaced equivalent.
+Only direct `RACFClassAuth` relationships are listed. Results are distinct.
 
 ## Behavior
 
@@ -27,8 +25,8 @@ current `RACFClassAuth` edge kind and its planned
 
 ## Verification
 
-Tests cover legacy and namespaced class-kind detection, direct incoming query
-direction, user rendering, empty results, and malformed database IDs.
+Tests cover class-kind detection, direct incoming query direction, user
+rendering, empty results, and malformed database IDs.
 
 Run:
 
