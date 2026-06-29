@@ -1957,7 +1957,7 @@ func ConvertAzureRoleEligibilityScheduleInstanceToRel(instance models.RoleEligib
 	id := strings.ToUpper(fmt.Sprintf("%s@%s", instance.RoleDefinitionId, instance.TenantId))
 
 	relationships := make([]IngestibleRelationship, 0)
-	
+
 	relationships = append(relationships, NewIngestibleRelationship(
 		IngestibleEndpoint{
 			Value: strings.ToUpper(instance.PrincipalId),
