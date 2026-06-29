@@ -18,7 +18,6 @@ package datapipe
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -181,16 +180,8 @@ func DeleteCollectedGraphData(ctx context.Context, graphDB graph.Database, delet
 // truncate, so the wipe and recreate are atomic.
 func wipeAllGraphData(ctx context.Context, graphDB graph.Database, wiper graphWiper) error {
 	migrationData, err := migrations.GetMigrationData(ctx, graphDB)
-	if err != nil && !errors.Is(err, migrations.ErrNoMigrationData) {
+	if err != nil {
 		return fmt.Errorf("reading migration data prior to graph wipe: %w", err)
-	} else if errors.Is(err, migrations.ErrNoMigrationData) {
-		// GetMigrationData returns the running binary version when no readable MigrationData node exists, which is the
-		// correct value to recreate after the wipe.
-		slog.WarnContext(
-			ctx,
-			"No readable MigrationData node found prior to graph wipe; recreating with current binary version",
-			slog.String("version", migrationData.String()),
-		)
 	}
 
 	return wiper.WipeGraph(ctx, func(tx graph.Transaction) error {
