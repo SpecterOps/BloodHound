@@ -373,6 +373,10 @@ paths:
     $ref: './paths/graph.pathfinding.yaml'
   /api/v2/graph-search:
     $ref: './paths/graph.graph-search.yaml'
+  /api/v2/relationships/{relationship_id}:
+    $ref: './paths/graph.relationships.id.yaml'
+  /api/v2/nodes/{node_id}:
+    $ref: './paths/graph.nodes.id.yaml'
   /api/v2/graphs/shortest-path:
     $ref: './paths/graph.graphs.shortest-path.yaml'
   /api/v2/graphs/edge-composition:

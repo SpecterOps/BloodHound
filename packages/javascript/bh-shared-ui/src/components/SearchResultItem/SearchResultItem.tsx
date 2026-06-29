@@ -30,10 +30,10 @@ export type NodeSearchResult = {
 const SearchResultItem: FC<{
     item: NodeSearchResult;
     index: number;
-    keyword: string;
     getItemProps: (options: any) => any;
     highlightedIndex?: number;
     style?: React.CSSProperties;
+    keyword?: string;
 }> = ({ style, item, index, highlightedIndex, keyword, getItemProps }) => {
     return (
         <ListItem

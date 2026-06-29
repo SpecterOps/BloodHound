@@ -71,6 +71,7 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
         retry: false,
         refetchOnWindowFocus: false,
         enabled: seeds.length > 0,
+        staleTime: 1000 * 20, // Prevents refetching when changing rule type
     });
 
     const directObjects = sampleResults?.filter((objectItem) => objectItem.source === NodeSourceSeed);
