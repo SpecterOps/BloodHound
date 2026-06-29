@@ -182,15 +182,17 @@ func BuildEnvironmentSelectors(nodes []*graph.Node, kindToSchemaEnvironment mode
 		objectID, _ := node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 
 		collected := resolveCollected(node)
-		envType := resolveEnvType(node, kindToSchemaEnvironment)
-		extensionID := resolveExtensionID(node, kindToSchemaEnvironment)
+		envProperties := resolveEnvProperties(node, kindToSchemaEnvironment)
 
 		envs = append(envs, model.EnvironmentSelector{
-			Type:        envType,
-			Name:        name,
-			ObjectID:    objectID,
-			Collected:   collected,
-			ExtensionID: extensionID,
+			Name:      name,
+			ObjectID:  objectID,
+			Collected: collected,
+			EnvironmentProperties: model.EnvironmentProperties{
+				Type:            envProperties.Type,
+				KindId:          envProperties.KindId,
+				KindDisplayName: envProperties.KindDisplayName,
+			},
 		})
 	}
 
@@ -215,24 +217,25 @@ func resolveCollected(node *graph.Node) bool {
 	return true
 }
 
-func resolveEnvType(node *graph.Node, kindToSchemaEnvironment model.EnvironmentKindsToEnvironment) string {
+func resolveEnvProperties(node *graph.Node, kindToSchemaEnvironment model.EnvironmentKindsToEnvironment) model.EnvironmentProperties {
+	envProperties := model.EnvironmentProperties{}
 	// TODO: Remove hardcoded built-in types once they are saved in DB and not CUE
 	if node.Kinds.ContainsOneOf(azure.Tenant) {
-		return "azure"
-	}
-	if node.Kinds.ContainsOneOf(ad.Domain) {
-		return "active-directory"
-	}
-
-	// For custom extensions, use the display name from the schema extension
-	// Note: Nodes should only have one environment kind. In the edge case where there are multiple, we take the first.
-	for _, kind := range node.Kinds {
-		if schemaEnvironment, ok := kindToSchemaEnvironment[kind.String()]; ok {
-			return schemaEnvironment.SchemaExtensionDisplayName
+		envProperties.Type = "azure"
+	} else if node.Kinds.ContainsOneOf(ad.Domain) {
+		envProperties.Type = "active-directory"
+	} else {
+		// For custom extensions, use the display name from the schema extension
+		// Note: Nodes should only have one environment kind. In the edge case where there are multiple, we take the first.
+		for _, kind := range node.Kinds {
+			if schemaEnvironment, ok := kindToSchemaEnvironment[kind.String()]; ok {
+				envProperties.Type = schemaEnvironment.SchemaExtensionDisplayName
+				envProperties.KindDisplayName = &schemaEnvironment.EnvironmentKindName
+				envProperties.KindId = &schemaEnvironment.EnvironmentKindId
+			}
 		}
 	}
-
-	return ""
+	return envProperties
 }
 
 func resolveExtensionID(node *graph.Node, kindToSchemaEnvironment model.EnvironmentKindsToEnvironment) *int32 {

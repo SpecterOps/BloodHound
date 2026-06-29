@@ -52,10 +52,10 @@ func Test_SetNodeProperties(t *testing.T) {
 			},
 			expected: model.EnvironmentSelectors{
 				{
-					Type:      "active-directory",
-					Name:      "Node1",
-					ObjectID:  "1",
-					Collected: false,
+					EnvironmentProperties: model.EnvironmentProperties{Type: "active-directory"},
+					Name:                  "Node1",
+					ObjectID:              "1",
+					Collected:             false,
 				},
 			},
 		},
@@ -75,10 +75,10 @@ func Test_SetNodeProperties(t *testing.T) {
 			},
 			expected: model.EnvironmentSelectors{
 				{
-					Type:      "azure",
-					Name:      "Node2",
-					ObjectID:  "2",
-					Collected: true,
+					EnvironmentProperties: model.EnvironmentProperties{Type: "azure"},
+					Name:                  "Node2",
+					ObjectID:              "2",
+					Collected:             true,
 				},
 			},
 		},
@@ -93,10 +93,10 @@ func Test_SetNodeProperties(t *testing.T) {
 			},
 			expected: model.EnvironmentSelectors{
 				{
-					Type:      "",
-					Name:      graphschema.DefaultMissingName,
-					ObjectID:  graphschema.DefaultMissingObjectId,
-					Collected: false,
+					EnvironmentProperties: model.EnvironmentProperties{},
+					Name:                  graphschema.DefaultMissingName,
+					ObjectID:              graphschema.DefaultMissingObjectId,
+					Collected:             false,
 				},
 			},
 		},

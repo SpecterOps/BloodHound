@@ -515,7 +515,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: true}, nil)
-				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndSchemaEnvironmentData(gomock.Any(), false).Return(graph.Kinds{graph.StringKind("HeeHaw Kind")}, model.EnvironmentKindsToEnvironment{graph.StringKind("HeeHaw Kind").String(): model.SchemaEnvironment{SchemaExtensionDisplayName: "HeeHaw", SchemaExtensionId: 10}}, nil)
+				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndSchemaEnvironmentData(gomock.Any(), false).Return(graph.Kinds{graph.StringKind("HeeHaw Kind")}, model.EnvironmentKindsToEnvironment{graph.StringKind("HeeHaw Kind").String(): model.SchemaEnvironment{SchemaExtensionDisplayName: "HeeHaw", SchemaExtensionId: 10, EnvironmentKindId: 101, EnvironmentKindName: "heehaw_Kind"}}, nil)
 				mock.mockGraphQuery.EXPECT().
 					GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).
 					Return([]*graph.Node{
@@ -532,7 +532,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":[{"type":"HeeHaw","name":"HeeHaw Name","id":"1","collected":true,"extension_id": 10}]}`,
+				responseBody:   `{"data":[{"type":"HeeHaw","environment_kind_id":101,"environment_kind_display_name":"heehaw_Kind","name":"HeeHaw Name","id":"1","collected":true}]}`,
 			},
 		},
 		{
