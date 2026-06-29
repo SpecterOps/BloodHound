@@ -232,6 +232,7 @@ func resolveEnvProperties(node *graph.Node, kindToSchemaEnvironment model.Enviro
 				envProperties.Type = schemaEnvironment.SchemaExtensionDisplayName
 				envProperties.KindDisplayName = &schemaEnvironment.EnvironmentKindName
 				envProperties.KindId = &schemaEnvironment.EnvironmentKindId
+				break
 			}
 		}
 	}
