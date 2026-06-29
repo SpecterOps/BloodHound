@@ -20457,10 +20457,15 @@
             "type": "boolean",
             "readOnly": true
           },
-          "extension_id": {
+          "environment_kind_id": {
             "type": "integer",
             "readOnly": true,
-            "description": "OpenGraph schema extension ID for custom environments"
+            "description": "OpenGraph environment kind ID for custom environments"
+          },
+          "environment_kind_display_name": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Human-readable display name for the node's environment kind"
           },
           "impactValue": {
             "type": "integer",
