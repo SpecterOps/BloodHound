@@ -58,7 +58,7 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
     const authState = useAppSelector((state) => state.auth);
     const { checkPermission } = usePermissions();
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
-    const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST);
+    const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST_MANAGE);
     const enableFeatureFlagRequests = !!authState.isInitialized && fullyAuthenticated;
     const { data: featureFlags, isSuccess: areFeatureFlagsLoaded } = useFeatureFlags({
         enabled: enableFeatureFlagRequests,

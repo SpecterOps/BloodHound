@@ -15,7 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { AssetGroupTagSelector, AssetGroupTagSelectorAutoCertifyAllMembers, SeedTypeCypher } from 'js-client-library';
+import {
+    AssetGroupTagSelector,
+    AssetGroupTagSelectorAutoCertifyAllMembers,
+    SeedTypeCypher,
+    SeedTypeObjectId,
+} from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { useParams } from 'react-router-dom';
@@ -410,6 +415,121 @@ describe('Rule Form', () => {
                 'Privilege Zone labels should only be used in cypher within the Explore page. Utilizing Privilege Zone labels in a cypher based Rule seed may result in incomplete data.'
             )
         ).not.toBeInTheDocument();
+    });
+
+    it('Preserves sample results when switching between Object ID and Cypher rule types', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
+
+        const cypherPreviewMembers = [
+            {
+                id: 1,
+                object_id: 'S-1-5-21-direct-user',
+                environment_id: 'S-1-5-21',
+                primary_kind: 'User',
+                name: 'direct-cypher-result',
+                source: 1,
+                asset_group_tag_id: 1,
+            },
+            {
+                id: 2,
+                object_id: 'S-1-5-21-expanded-group',
+                environment_id: 'S-1-5-21',
+                primary_kind: 'Group',
+                name: 'expanded-cypher-result',
+                source: 2,
+                asset_group_tag_id: 1,
+            },
+        ];
+
+        const objectIdPreviewMembers = [
+            {
+                id: 3,
+                object_id: '777',
+                environment_id: 'S-1-5-21',
+                primary_kind: 'Bat',
+                name: 'direct-object-result',
+                source: 1,
+                asset_group_tag_id: 1,
+            },
+            {
+                id: 4,
+                object_id: 'S-1-5-21-expanded-object',
+                environment_id: 'S-1-5-21',
+                primary_kind: 'Group',
+                name: 'expanded-object-result',
+                source: 2,
+                asset_group_tag_id: 1,
+            },
+        ];
+
+        server.use(
+            rest.post(`/api/v2/asset-group-tags/preview-selectors`, async (req, res, ctx) => {
+                const body = await req.json();
+                const isObjectIdSeed = body?.seeds?.some((seed: any) => seed.type === SeedTypeObjectId);
+                return res(
+                    ctx.json({
+                        data: { members: isObjectIdSeed ? objectIdPreviewMembers : cypherPreviewMembers },
+                    })
+                );
+            })
+        );
+
+        render(<RuleForm />);
+
+        // Switch to the Cypher rule type and run a query
+        const seedTypeSelect = await screen.findByLabelText('Rule Type');
+        await user.click(seedTypeSelect);
+        await act(async () => {
+            await user.click(await screen.findByRole('option', { name: /Cypher/ }));
+        });
+
+        const textBoxes = screen.getAllByRole('textbox');
+        const cypherTextBox = textBoxes.find((box) => box.className === 'flex-1');
+        await user.click(cypherTextBox!);
+        await act(async () => {
+            await user.paste('match(n:User) return n');
+        });
+
+        await user.click(await screen.findByRole('button', { name: /Run/ }));
+
+        // Cypher rule type renders direct and expanded sample results
+        expect(await screen.findByText('direct-cypher-result')).toBeInTheDocument();
+        expect(await screen.findByText('expanded-cypher-result')).toBeInTheDocument();
+
+        // Switch to Object ID rule type and add an object
+        await user.click(await screen.findByLabelText('Rule Type'));
+        await act(async () => {
+            await user.click(await screen.findByRole('option', { name: /Object ID/ }));
+        });
+
+        const searchInput = await screen.findByLabelText('Search Objects To Add');
+        await user.click(searchInput);
+        await user.paste('bar');
+
+        const objectOption = await screen.findByTestId('explore_search_result-list-item');
+        await user.click(objectOption);
+
+        // Object ID rule type sample results render, cypher results are not visible
+        expect(await screen.findByText('direct-object-result')).toBeInTheDocument();
+        expect(await screen.findByText('expanded-object-result')).toBeInTheDocument();
+        expect(screen.queryByText('direct-cypher-result')).not.toBeInTheDocument();
+        expect(screen.queryByText('expanded-cypher-result')).not.toBeInTheDocument();
+
+        // Switch back to Cypher rule type
+        await user.click(await screen.findByLabelText('Rule Type'));
+        await act(async () => {
+            await user.click(await screen.findByRole('option', { name: /Cypher/ }));
+        });
+
+        // Cypher sample results are preserved and Object ID results are no longer visible
+        expect(await screen.findByText('direct-cypher-result')).toBeInTheDocument();
+        expect(await screen.findByText('expanded-cypher-result')).toBeInTheDocument();
+        expect(screen.queryByText('direct-object-result')).not.toBeInTheDocument();
+        expect(screen.queryByText('expanded-object-result')).not.toBeInTheDocument();
+
+        // The cypher editor's contents are also preserved; the Run button is enabled
+        // because the cypher query state was re-hydrated from the preserved seed
+        expect(await screen.findByRole('button', { name: /Run/ })).toBeEnabled();
     });
 
     it('Explore URL Accounts for irregular characters in cypher query', async () => {

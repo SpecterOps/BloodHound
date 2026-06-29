@@ -20,10 +20,13 @@
 package modules
 
 import (
+	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/server/analysis"
 	"github.com/specterops/bloodhound/server/featureflags"
+	"github.com/specterops/bloodhound/server/graphdb"
+	"github.com/specterops/dawgs/graph"
 )
 
 // Deps carries the shared infrastructure that feature modules need in order to
@@ -31,8 +34,10 @@ import (
 // cutting dependencies (graph database, filesystem, caches, etc.) are added
 // here so that every module has a single, consistent place to pull from.
 type Deps struct {
-	Router *router.Router
-	Pool   *pgxpool.Pool
+	Router              *router.Router
+	Pool                *pgxpool.Pool
+	Graph               graph.Database
+	RateLimitMiddleware func() mux.MiddlewareFunc
 }
 
 // Register wires up all feature modules with the provided infrastructure.
@@ -45,7 +50,14 @@ func Register(deps Deps) {
 	if deps.Pool == nil {
 		panic("modules: Register requires a non-nil Pool")
 	}
+	if deps.Graph == nil {
+		panic("modules: Register requires a non-nil Graph")
+	}
+	if deps.RateLimitMiddleware == nil {
+		panic("modules: Register requires a non-nil RateLimitMiddleware")
+	}
 
 	analysis.Register(deps.Router, deps.Pool)
 	featureflags.Register(deps.Router, deps.Pool)
+	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.RateLimitMiddleware)
 }

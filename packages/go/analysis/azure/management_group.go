@@ -45,7 +45,7 @@ func ManagementGroupEntityDetails(ctx context.Context, db graph.Database, primar
 func PopulateManagementGroupEntityDetailsCounts(tx graph.Transaction, node *graph.Node, details ManagementGroupDetails) (ManagementGroupDetails, error) {
 	var descendentKinds = GetDescendentKinds(azure.ManagementGroup)
 
-	if descendents, err := FetchEntityDescendentCounts(tx, node, 0, 0, descendentKinds...); err != nil {
+	if descendents, err := FetchEntityDescendentCounts(tx, node, descendentKinds...); err != nil {
 		return details, err
 	} else {
 		details.Descendents = descendents

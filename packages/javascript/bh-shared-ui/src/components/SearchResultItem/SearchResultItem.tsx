@@ -30,19 +30,19 @@ export type NodeSearchResult = {
 const SearchResultItem: FC<{
     item: NodeSearchResult;
     index: number;
-    keyword: string;
     getItemProps: (options: any) => any;
     highlightedIndex?: number;
     style?: React.CSSProperties;
+    keyword?: string;
 }> = ({ style, item, index, highlightedIndex, keyword, getItemProps }) => {
     return (
         <ListItem
             dense
             style={style}
             className={cn(
-                'hover:bg-secondary hover:text-neutral-light-1 hover:dark:bg-secondary-variant-2 hover:dark:text-neutral-dark-1',
+                'group hover:bg-secondary hover:text-common-white hover:dark:bg-secondary-variant-2 hover:dark:text-common-dark focus:bg-secondary focus:text-common-white focus:dark:bg-secondary-variant-2 focus:dark:text-common-dark focus-visible:bg-secondary focus-visible:text-common-white focus-visible:dark:bg-secondary-variant-2 focus-visible:dark:text-common-dark',
                 {
-                    'bg-secondary text-neutral-light-1 dark:bg-secondary-variant-2 dark:text-neutral-dark-1':
+                    'bg-secondary text-common-white dark:bg-secondary-variant-2 dark:text-common-dark':
                         highlightedIndex === index,
                 }
             )}
@@ -58,7 +58,15 @@ const SearchResultItem: FC<{
                             display: 'flex',
                             alignItems: 'center',
                         }}>
-                        <NodeIcon nodeType={item.kind} />
+                        <NodeIcon
+                            nodeType={item.kind}
+                            className={cn(
+                                'group-hover:text-inherit group-focus:text-inherit group-focus-visible:text-inherit',
+                                {
+                                    'text-inherit': highlightedIndex === index,
+                                }
+                            )}
+                        />
                         <Box
                             style={{
                                 flexGrow: 1,

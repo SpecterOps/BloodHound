@@ -14,9 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { type Nullable } from './type';
+
 /** Represents a string literal type that can be widened to string, keeping intellisense for literal values */
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type LiteralUnion<T extends string> = T | (string & {});
+
 // Allows to truncate text and add an ellipsis
 export const truncateText = (
     text: string | undefined,
@@ -27,3 +30,46 @@ export const truncateText = (
     if (text.length <= maxChars) return text;
     return text.slice(0, maxChars) + trailingChars;
 };
+
+export type KeywordAndTypeValues = {
+    keyword: string | undefined;
+    type: string | undefined;
+};
+
+export function parseKeywordAndTypeValue(
+    inputValue: Nullable<string>,
+    kinds: string[] | undefined
+): KeywordAndTypeValues {
+    const value = inputValue ?? undefined;
+
+    if (!value) {
+        return {
+            keyword: undefined,
+            type: undefined,
+        };
+    }
+
+    const hasParsableQualifier = value.length > 1 && value.includes(':');
+
+    if (!hasParsableQualifier) {
+        return {
+            keyword: value,
+            type: undefined,
+        };
+    }
+
+    const [qualifier, ...keywordParts] = value.split(':');
+    const nodeKind = kinds?.find((kind) => kind.toLocaleLowerCase() === qualifier.toLocaleLowerCase());
+
+    if (!nodeKind) {
+        return {
+            keyword: value,
+            type: undefined,
+        };
+    }
+
+    return {
+        keyword: keywordParts.join(':'),
+        type: nodeKind,
+    };
+}
