@@ -54,7 +54,7 @@ const ObjectCountPanel: FC = () => {
         return (
             <Card
                 tabIndex={0}
-                className='flex flex-col p-4 select-none overflow-y-auto '
+                className='flex flex-col p-6 select-none overflow-y-auto '
                 data-testid='privilege-zones_object-counts'>
                 <div className='flex justify-between items-center'>
                     <p>Total Count</p>
