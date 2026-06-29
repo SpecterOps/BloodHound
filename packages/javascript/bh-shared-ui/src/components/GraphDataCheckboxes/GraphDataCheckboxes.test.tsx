@@ -46,21 +46,25 @@ const SOURCE_KINDS_RESPONSE = {
 const ACTIVE_DIRECTORY_DATA_ONLY: GraphDataSelections = {
     sourceKinds: [1],
     relationships: [],
+    allGraphData: false,
 };
 
 const ACTIVE_DIRECTORY_ALL_CHECKED: GraphDataSelections = {
     sourceKinds: [1],
     relationships: ['HasSession'],
+    allGraphData: false,
 };
 
 const ALL_GRAPH_DATA_CHECKED: GraphDataSelections = {
     sourceKinds: [0, 1, 2, 3],
     relationships: ['HasSession'],
+    allGraphData: true,
 };
 
 const HAS_SESSION_ONLY: GraphDataSelections = {
     sourceKinds: [],
     relationships: ['HasSession'],
+    allGraphData: false,
 };
 
 describe('GraphDataCheckboxes', () => {
@@ -168,7 +172,7 @@ describe('GraphDataCheckboxes', () => {
 
         // Component `checked` state update is controlled from parent
         // Instead of testing for new checked state, test onChange args
-        expect(onChange).toHaveBeenCalledWith({ sourceKinds: [], relationships: [] });
+        expect(onChange).toHaveBeenCalledWith({ sourceKinds: [], relationships: [], allGraphData: false });
     });
 
     it('toggles parent from none to all', async () => {
@@ -250,7 +254,7 @@ describe('GraphDataCheckboxes', () => {
         await user.click(parent);
 
         // Component `checked` state update is controlled from parent
-        expect(onChange).toHaveBeenCalledWith({ sourceKinds: [], relationships: [] });
+        expect(onChange).toHaveBeenCalledWith({ sourceKinds: [], relationships: [], allGraphData: false });
     });
 
     it('toggles a nested graph data option off', async () => {
@@ -272,7 +276,7 @@ describe('GraphDataCheckboxes', () => {
         const child = screen.getByRole('checkbox', { name: /HasSession/i });
         await user.click(child);
 
-        expect(onChange).toHaveBeenCalledWith({ sourceKinds: [], relationships: [] });
+        expect(onChange).toHaveBeenCalledWith({ sourceKinds: [], relationships: [], allGraphData: false });
     });
 
     it('disables a nested graph data option while its source kind is selected', async () => {
