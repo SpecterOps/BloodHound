@@ -238,23 +238,6 @@ func resolveEnvProperties(node *graph.Node, kindToSchemaEnvironment model.Enviro
 	return envProperties
 }
 
-func resolveExtensionID(node *graph.Node, kindToSchemaEnvironment model.EnvironmentKindsToEnvironment) *int32 {
-	// TODO: Remove hardcoded built-in types once they are saved in DB and not CUE
-	isBuiltinEnvironment := node.Kinds.ContainsOneOf(azure.Tenant, ad.Domain)
-	if isBuiltinEnvironment {
-		return nil
-	}
-
-	// Note: Nodes should only have one environment kind. In the edge case where there are multiple, we take the first.
-	for _, kind := range node.Kinds {
-		if schemaEnvironment, ok := kindToSchemaEnvironment[kind.String()]; ok {
-			return &schemaEnvironment.SchemaExtensionId
-		}
-	}
-
-	return nil
-}
-
 // EnvironmentFilterResult contains the filter criteria environment data for mapping environments
 type EnvironmentFilterResult struct {
 	FilterCriteria          graph.Criteria
