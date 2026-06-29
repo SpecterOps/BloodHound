@@ -41,12 +41,12 @@ type FeatureFlag interface {
 	IsEnabled(ctx context.Context, key string) (bool, error)
 }
 
-// Handlers is a dependency injection container for app_config handlers
+// Handlers is a dependency injection container for featureflags handlers
 type Handlers struct {
 	featureFlag FeatureFlag
 }
 
-// NewHandlersContainer initializes the Handlers dependency injection container
+// NewHandlersContainer initializes the featureflags Handlers dependency injection container
 func NewHandlersContainer(featureFlag FeatureFlag) *Handlers {
 	return &Handlers{
 		featureFlag: featureFlag,
@@ -61,7 +61,7 @@ func (s Handlers) GetAllFlags(response http.ResponseWriter, request *http.Reques
 
 	flags, err := s.featureFlag.GetAllFlags(ctx)
 	if err != nil {
-		handleAppConfigError(request, response, err)
+		handleFeatureFlagError(request, response, err)
 		return
 	}
 
@@ -71,8 +71,7 @@ func (s Handlers) GetAllFlags(response http.ResponseWriter, request *http.Reques
 // ToggleFlag toggles the Enabled state of the feature flag identified by the
 // feature_id path parameter. The handler delegates to the service layer, which
 // loads the existing flag, validates that it is user-updatable, flips its
-// Enabled value, persists the result, and conditionally triggers an analysis
-// request when the ADCS flag is being disabled.
+// Enabled value and persists the result.
 //
 // Authentication is enforced by the route middleware (RequirePermissions); if no
 // user is present on the auth context here it indicates an unexpected internal
@@ -96,7 +95,7 @@ func (s Handlers) ToggleFlag(response http.ResponseWriter, request *http.Request
 
 	flag, err := s.featureFlag.ToggleFlag(ctx, int32(featureID), user.ID.String())
 	if err != nil {
-		handleAppConfigError(request, response, err)
+		handleFeatureFlagError(request, response, err)
 		return
 	}
 
@@ -110,10 +109,10 @@ func (s Handlers) IsEnabled(ctx context.Context, key string) (bool, error) {
 	return s.featureFlag.IsEnabled(ctx, key)
 }
 
-// handleAppConfigError maps service-layer errors to HTTP responses, translating
+// handleFeatureFlagError maps service-layer errors to HTTP responses, translating
 // known sentinel errors to their corresponding status codes and falling back to
 // a logged 500 for anything unexpected.
-func handleAppConfigError(request *http.Request, response http.ResponseWriter, err error) {
+func handleFeatureFlagError(request *http.Request, response http.ResponseWriter, err error) {
 	if errors.Is(err, services.ErrNotFound) {
 		responses.WriteError(request.Context(), http.StatusNotFound, services.ErrNotFound.Error(), response)
 	} else if errors.Is(err, services.ErrNotUserUpdatable) {

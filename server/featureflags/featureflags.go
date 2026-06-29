@@ -22,7 +22,6 @@ package featureflags
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
@@ -39,7 +38,6 @@ const (
 
 type FeatureFlagRequestAdapter interface {
 	IsEnabled(ctx context.Context, key string) (bool, error)
-	ToggleFlag(response http.ResponseWriter, request *http.Request)
 }
 
 func NewFeatureFlagRequestAdapter(pool *pgxpool.Pool) FeatureFlagRequestAdapter {

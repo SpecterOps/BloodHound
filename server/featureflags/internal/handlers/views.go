@@ -16,7 +16,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"time"
 
@@ -24,15 +23,15 @@ import (
 )
 
 type FeatureFlagView struct {
-	ID            int32        `json:"id"`
-	CreatedAt     time.Time    `json:"created_at"`
-	UpdatedAt     time.Time    `json:"updated_at"`
-	DeletedAt     sql.NullTime `json:"deleted_at"`
-	Key           string       `json:"key"`
-	Name          string       `json:"name"`
-	Description   string       `json:"description"`
-	Enabled       bool         `json:"enabled"`
-	UserUpdatable bool         `json:"user_updatable"`
+	ID            int32     `json:"id"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	DeletedAt     time.Time `json:"deleted_at"`
+	Key           string    `json:"key"`
+	Name          string    `json:"name"`
+	Description   string    `json:"description"`
+	Enabled       bool      `json:"enabled"`
+	UserUpdatable bool      `json:"user_updatable"`
 }
 
 func BuildFeatureFlagView(tf services.FeatureFlag) FeatureFlagView {
