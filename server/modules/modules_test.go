@@ -130,9 +130,9 @@ func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			var (
-				muxRouter           = routerInst.MuxRouter()
-				request = httptest.NewRequest(tc.method, tc.path, nil)
-				match   mux.RouteMatch
+				muxRouter = routerInst.MuxRouter()
+				request   = httptest.NewRequest(tc.method, tc.path, nil)
+				match     mux.RouteMatch
 			)
 
 			assert.True(t, muxRouter.Match(request, &match), "%s %s route should be registered by Register", tc.method, tc.path)

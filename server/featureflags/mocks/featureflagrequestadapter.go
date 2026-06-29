@@ -21,7 +21,6 @@ package mocks
 
 import (
 	"context"
-	"net/http"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -116,51 +115,5 @@ func (_c *MockFeatureFlagRequestAdapter_IsEnabled_Call) Return(b bool, err error
 
 func (_c *MockFeatureFlagRequestAdapter_IsEnabled_Call) RunAndReturn(run func(ctx context.Context, key string) (bool, error)) *MockFeatureFlagRequestAdapter_IsEnabled_Call {
 	_c.Call.Return(run)
-	return _c
-}
-
-// ToggleFlag provides a mock function for the type MockFeatureFlagRequestAdapter
-func (_mock *MockFeatureFlagRequestAdapter) ToggleFlag(response http.ResponseWriter, request *http.Request) {
-	_mock.Called(response, request)
-	return
-}
-
-// MockFeatureFlagRequestAdapter_ToggleFlag_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ToggleFlag'
-type MockFeatureFlagRequestAdapter_ToggleFlag_Call struct {
-	*mock.Call
-}
-
-// ToggleFlag is a helper method to define mock.On call
-//   - response http.ResponseWriter
-//   - request *http.Request
-func (_e *MockFeatureFlagRequestAdapter_Expecter) ToggleFlag(response interface{}, request interface{}) *MockFeatureFlagRequestAdapter_ToggleFlag_Call {
-	return &MockFeatureFlagRequestAdapter_ToggleFlag_Call{Call: _e.mock.On("ToggleFlag", response, request)}
-}
-
-func (_c *MockFeatureFlagRequestAdapter_ToggleFlag_Call) Run(run func(response http.ResponseWriter, request *http.Request)) *MockFeatureFlagRequestAdapter_ToggleFlag_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 http.ResponseWriter
-		if args[0] != nil {
-			arg0 = args[0].(http.ResponseWriter)
-		}
-		var arg1 *http.Request
-		if args[1] != nil {
-			arg1 = args[1].(*http.Request)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *MockFeatureFlagRequestAdapter_ToggleFlag_Call) Return() *MockFeatureFlagRequestAdapter_ToggleFlag_Call {
-	_c.Call.Return()
-	return _c
-}
-
-func (_c *MockFeatureFlagRequestAdapter_ToggleFlag_Call) RunAndReturn(run func(response http.ResponseWriter, request *http.Request)) *MockFeatureFlagRequestAdapter_ToggleFlag_Call {
-	_c.Run(run)
 	return _c
 }
