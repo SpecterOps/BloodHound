@@ -78,42 +78,18 @@ func DeleteCollectedGraphData(ctx context.Context, graphDB graph.Database, delet
 	}
 
 	if len(deleteRequest.DeleteRelationships) > 0 {
-		edgeOperation := ops.StartNewOperation[graph.ID](ops.OperationContext{
-			Parent:     ctx,
-			DB:         graphDB,
-			NumReaders: 1,
-			NumWriters: 1,
-		})
-
 		deleteRelationshipKinds := make(graph.Kinds, len(deleteRequest.DeleteRelationships))
 		for i, relationshipKind := range deleteRequest.DeleteRelationships {
 			deleteRelationshipKinds[i] = graph.StringKind(relationshipKind)
 		}
 
-		edgeOperation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- graph.ID) error {
-			edgeQuery := tx.Relationships().Filter(query.KindIn(query.Relationship(), deleteRelationshipKinds...))
-
-			return edgeQuery.FetchIDs(func(cursor graph.Cursor[graph.ID]) error {
-				channels.PipeAll(ctx, cursor.Chan(), outC)
-				return cursor.Error()
-			})
-		})
-
-		edgeOperation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan graph.ID) error {
-			for {
-				if nextID, hasNextID := channels.Receive(ctx, inC); hasNextID {
-					if err := batch.DeleteRelationship(nextID); err != nil {
-						return err
-					}
-				} else {
-					break
-				}
+		// On backends that support it, push the relationship deletes server-side as a set-based delete over the
+		// edge kind index instead of streaming every relationship ID through the application and deleting row-by-row.
+		if deleter, hasCapability := graph.AsDriver[relationshipsByKindDeleter](graphDB); hasCapability {
+			if err := deleter.DeleteRelationshipsByKinds(ctx, deleteRelationshipKinds); err != nil {
+				return fmt.Errorf("error deleting graph edges: %w", err)
 			}
-
-			return nil
-		})
-
-		if err := edgeOperation.Done(); err != nil {
+		} else if err := deleteRelationshipsByOperation(ctx, graphDB, deleteRelationshipKinds); err != nil {
 			return fmt.Errorf("error deleting graph edges: %w", err)
 		}
 	}
@@ -242,4 +218,46 @@ func deleteNodesByOperation(ctx context.Context, graphDB graph.Database, deleteR
 	})
 
 	return nodeOperation.Done()
+}
+
+// relationshipsByKindDeleter is implemented by graph drivers that can perform server-side, set-based relationship
+// deletes filtered by kind.
+type relationshipsByKindDeleter interface {
+	DeleteRelationshipsByKinds(ctx context.Context, kinds graph.Kinds) error
+}
+
+// deleteRelationshipsByOperation is the backend-agnostic fallback that streams matching relationship IDs through the
+// application and deletes them row-by-row. It is used for drivers that do not implement relationshipsByKindDeleter.
+func deleteRelationshipsByOperation(ctx context.Context, graphDB graph.Database, deleteRelationshipKinds graph.Kinds) error {
+	edgeOperation := ops.StartNewOperation[graph.ID](ops.OperationContext{
+		Parent:     ctx,
+		DB:         graphDB,
+		NumReaders: 1,
+		NumWriters: 1,
+	})
+
+	edgeOperation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- graph.ID) error {
+		edgeQuery := tx.Relationships().Filter(query.KindIn(query.Relationship(), deleteRelationshipKinds...))
+
+		return edgeQuery.FetchIDs(func(cursor graph.Cursor[graph.ID]) error {
+			channels.PipeAll(ctx, cursor.Chan(), outC)
+			return cursor.Error()
+		})
+	})
+
+	edgeOperation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan graph.ID) error {
+		for {
+			if nextID, hasNextID := channels.Receive(ctx, inC); hasNextID {
+				if err := batch.DeleteRelationship(nextID); err != nil {
+					return err
+				}
+			} else {
+				break
+			}
+		}
+
+		return nil
+	})
+
+	return edgeOperation.Done()
 }
