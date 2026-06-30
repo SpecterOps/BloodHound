@@ -27,8 +27,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/responses"
 	"github.com/specterops/bloodhound/server/featureflags/internal/services"
@@ -37,7 +35,7 @@ import (
 // FeatureFlag defines the feature flag service boundary for the feature flag handlers package.
 type FeatureFlag interface {
 	GetAllFlags(ctx context.Context) ([]services.FeatureFlag, error)
-	ToggleFlag(ctx context.Context, id int32, requestedBy string) (services.FeatureFlag, error)
+	ToggleFlag(ctx context.Context, id int32) (services.FeatureFlag, error)
 	IsEnabled(ctx context.Context, key string) (bool, error)
 }
 
@@ -79,12 +77,6 @@ func (s Handlers) GetAllFlags(response http.ResponseWriter, request *http.Reques
 func (s Handlers) ToggleFlag(response http.ResponseWriter, request *http.Request) {
 	var ctx = request.Context()
 
-	user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx)
-	if !isUser {
-		responses.WriteInternalServerError(ctx, errors.New("no user on auth context after authentication middleware"), response)
-		return
-	}
-
 	rawFeatureID := mux.Vars(request)[api.URIPathVariableFeatureID]
 
 	featureID, err := strconv.ParseInt(rawFeatureID, 10, 32)
@@ -93,7 +85,7 @@ func (s Handlers) ToggleFlag(response http.ResponseWriter, request *http.Request
 		return
 	}
 
-	flag, err := s.featureFlag.ToggleFlag(ctx, int32(featureID), user.ID.String())
+	flag, err := s.featureFlag.ToggleFlag(ctx, int32(featureID))
 	if err != nil {
 		handleFeatureFlagError(request, response, err)
 		return
