@@ -677,3 +677,200 @@ export interface WebhookTest {
     event_type: string;
     version: string;
 }
+
+// ---------------------------------------------------------------------------
+// Base schemas
+// ---------------------------------------------------------------------------
+
+export interface ExtensionBase {
+    name: string;
+    display_name?: string;
+    namespace: string;
+    version: string;
+}
+
+export interface NodeKindBase {
+    name: string;
+    display_name?: string;
+    description?: string;
+    is_display_kind?: boolean;
+    icon?: string;
+    color?: string;
+}
+
+export interface RelationshipKindBase {
+    name: string;
+    description?: string;
+    is_traversable: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Info content primitives
+// ---------------------------------------------------------------------------
+
+export interface InfoMarkdownContent {
+    markdown: {
+        position?: number;
+        content: string;
+    };
+}
+
+export interface InfoQueryContent {
+    query: {
+        position?: number;
+        content: string;
+    };
+}
+
+export interface InfoPropsContent {
+    props: {
+        position?: number;
+        content: string[];
+    };
+}
+
+// ---------------------------------------------------------------------------
+// Info section scenarios (mutually exclusive via never)
+// ---------------------------------------------------------------------------
+
+export type InfoMarkdown = InfoMarkdownContent & { query?: never; props?: never };
+export type InfoQuery = InfoQueryContent & { markdown?: never; props?: never };
+export type InfoProps = InfoPropsContent & { markdown?: never; query?: never };
+export type InfoMarkdownQuery = InfoMarkdownContent & InfoQueryContent & { props?: never };
+export type InfoMarkdownProps = InfoMarkdownContent & InfoPropsContent & { query?: never };
+
+export type KindInfoContent = InfoMarkdown | InfoQuery | InfoProps | InfoMarkdownQuery | InfoMarkdownProps;
+
+// ---------------------------------------------------------------------------
+// Kind info structures
+// ---------------------------------------------------------------------------
+
+export interface KindInfoBase {
+    title: string;
+    /** Integer >= 1 */
+    position: number;
+}
+
+/** Keys: lowercase alphanumeric, hyphens, underscores, 1–128 chars */
+export type KindInfoDefinition = Record<string, KindInfoBase & KindInfoContent>;
+
+export type KindInfoResponse = { name: string } & KindInfoBase & KindInfoContent;
+
+// ---------------------------------------------------------------------------
+// Definition schemas
+// ---------------------------------------------------------------------------
+
+export interface RemediationDefinition {
+    short_description: string;
+    long_description: string;
+    short_remediation: string;
+    long_remediation: string;
+}
+
+export interface RelationshipFindingDefinition {
+    /** readOnly */
+    relationship_finding_id?: number;
+    name: string;
+    display_name: string;
+    relationship_kind: string;
+    environment_kind: string;
+    remediation: RemediationDefinition;
+}
+
+export interface EnvironmentDefinition {
+    environment_kind: string;
+    source_kind: string;
+    principal_kinds: string[];
+}
+
+export type NodeKindDefinition = NodeKindBase & { info?: KindInfoDefinition };
+
+export type RelationshipKindDefinition = RelationshipKindBase & { info?: KindInfoDefinition };
+
+export interface ExtensionDefinition {
+    schema: ExtensionBase;
+    node_kinds: NodeKindDefinition[];
+    relationship_kinds: RelationshipKindDefinition[];
+    environments?: EnvironmentDefinition[];
+    relationship_findings?: RelationshipFindingDefinition[];
+}
+
+// ---------------------------------------------------------------------------
+// Response body schemas
+// ---------------------------------------------------------------------------
+
+export interface ExtensionDetails {
+    /** readOnly */
+    extension_id?: number;
+    name: string;
+    display_name?: string;
+    namespace: string;
+    is_builtin?: boolean;
+    version: string;
+}
+
+export type NodeKindResponse = NodeKindBase & {
+    /** readOnly */
+    node_kind_id?: number;
+    extension?: ExtensionDetails;
+    info?: KindInfoDefinition;
+};
+
+export type RelationshipKindResponse = RelationshipKindBase & {
+    /** readOnly */
+    relationship_kind_id?: number;
+    extension?: ExtensionDetails;
+    info?: KindInfoDefinition;
+};
+
+export interface NodeKindRef {
+    node_kind_id: number;
+    name: string;
+}
+
+export interface NodeProperties {
+    objectid: string;
+    name?: string;
+    displayName?: string;
+    /** date-time */
+    lastSeen: string;
+    [key: string]: unknown;
+}
+
+export interface NodeDetails {
+    /** readOnly */
+    node_id: number;
+    kinds: NodeKindRef[];
+    properties: NodeProperties;
+}
+
+export type NodeDetailsWithInfo = NodeDetails & {
+    info?: (KindInfoResponse & { node_kind_id: number })[];
+};
+
+export interface RelationshipKindRef {
+    relationship_kind_id: number;
+    name: string;
+}
+
+export interface RelationshipProperties {
+    is_traversable: boolean;
+    /** date-time */
+    lastSeen: string;
+    [key: string]: unknown;
+}
+
+export interface RelationshipDetails {
+    /** readOnly */
+    relationship_id: number;
+    kind: RelationshipKindRef;
+    /** readOnly */
+    source_node_id?: number;
+    /** readOnly */
+    target_node_id?: number;
+    properties: RelationshipProperties;
+}
+
+export type RelationshipDetailsWithInfo = RelationshipDetails & {
+    info?: (KindInfoResponse & { relationship_kind_id: number })[];
+};
