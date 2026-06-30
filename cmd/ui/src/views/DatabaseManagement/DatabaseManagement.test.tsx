@@ -221,8 +221,12 @@ describe('DatabaseManagement', () => {
 
         const user = userEvent.setup();
 
+        // Pre-select a specific graph target so we can verify selecting "All graph data" clears it
+        const sourceKindCheckbox = screen.getByRole('checkbox', { name: /Active Directory data/i });
+        await waitFor(() => expect(sourceKindCheckbox).not.toBeDisabled());
+        await user.click(sourceKindCheckbox);
+
         const checkbox = screen.getByRole('checkbox', { name: /All graph data/i });
-        await waitFor(() => expect(checkbox).not.toBeDisabled());
         await user.click(checkbox);
 
         const deleteButton = screen.getByRole('button', { name: /delete/i });
@@ -238,6 +242,7 @@ describe('DatabaseManagement', () => {
             /Deletion of the data is under way. Depending on data volume, this may take some time to complete./i
         );
         expect(successMessage).toBeInTheDocument();
+        // deleteCollectedGraphData is mutually exclusive with deleteSourceKinds and deleteRelationships
         expect(clearDatabaseRequestBody).toEqual({
             deleteAssetGroupSelectors: [],
             deleteCollectedGraphData: true,
