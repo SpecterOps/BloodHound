@@ -12,8 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
 // SPDX-License-Identifier: Apache-2.0
-interface MultiSelectProps {}
+interface MultiSelectProps {
+    value: string[];
+    onValueChange: (values: string[]) => void;
+    placeholder?: string;
+    disabled?: boolean;
+    error?: boolean;
+    className: string;
+}
 
 /**
  * Description for MultiSelect
@@ -23,3 +31,4 @@ const MultiSelect = ({ ...props }: MultiSelectProps) => {
 };
 
 export { MultiSelect };
+export type { MultiSelectProps };
