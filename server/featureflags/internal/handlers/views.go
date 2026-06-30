@@ -26,7 +26,6 @@ type FeatureFlagView struct {
 	ID            int32     `json:"id"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
-	DeletedAt     time.Time `json:"deleted_at"`
 	Key           string    `json:"key"`
 	Name          string    `json:"name"`
 	Description   string    `json:"description"`

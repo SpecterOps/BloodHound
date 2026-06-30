@@ -107,7 +107,7 @@ func (s *Service) GetAllFlags(ctx context.Context) ([]FeatureFlag, error) {
 }
 
 // ToggleFlag enables/disables the feature flag by the feature flag id
-func (s *Service) ToggleFlag(ctx context.Context, id int32, requestedBy string) (FeatureFlag, error) {
+func (s *Service) ToggleFlag(ctx context.Context, id int32) (FeatureFlag, error) {
 	flag, err := s.db.GetFlagByID(ctx, id)
 	if err != nil {
 		return flag, err
