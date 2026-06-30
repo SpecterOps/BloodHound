@@ -16,8 +16,8 @@
 
 -- +goose Up
 
--- Drop the old data_quality_stats table that is not currently used anywhere but still exists in prod
-DROP TABLE IF EXISTS data_quality_stats;
+-- Rename the old data_quality_stats table that is not currently used anywhere but still exists in prod
+ALTER TABLE IF EXISTS data_quality_stats RENAME TO data_quality_stats_old;
 
 CREATE TABLE IF NOT EXISTS data_quality_stats (
     id SERIAL PRIMARY KEY,
@@ -38,3 +38,4 @@ CREATE INDEX IF NOT EXISTS idx_data_quality_stats_created_at ON data_quality_sta
 
 -- +goose Down
 DROP TABLE IF EXISTS data_quality_stats;
+ALTER TABLE IF EXISTS data_quality_stats_old RENAME TO data_quality_stats;
