@@ -22,7 +22,6 @@ import (
 	"log/slog"
 	"net/http"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -149,21 +148,6 @@ func (s ManagementResource) ListPermissions(response http.ResponseWriter, reques
 	}
 }
 
-func (s ManagementResource) GetPermission(response http.ResponseWriter, request *http.Request) {
-	var (
-		pathVars        = mux.Vars(request)
-		rawPermissionID = pathVars[api.URIPathVariablePermissionID]
-	)
-
-	if permissionID, err := strconv.Atoi(rawPermissionID); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if permission, err := s.db.GetPermission(request.Context(), permissionID); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		api.WriteBasicResponse(request.Context(), permission, http.StatusOK, response)
-	}
-}
-
 func (s ManagementResource) ListRoles(response http.ResponseWriter, request *http.Request) {
 	var (
 		order         []string
@@ -224,21 +208,6 @@ func (s ManagementResource) ListRoles(response http.ResponseWriter, request *htt
 		} else {
 			api.WriteBasicResponse(request.Context(), v2.ListRolesResponse{Roles: roles}, http.StatusOK, response)
 		}
-	}
-}
-
-func (s ManagementResource) GetRole(response http.ResponseWriter, request *http.Request) {
-	var (
-		pathVars  = mux.Vars(request)
-		rawRoleID = pathVars[api.URIPathVariableRoleID]
-	)
-
-	if roleID, err := strconv.ParseInt(rawRoleID, 10, 32); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if role, err := s.db.GetRole(request.Context(), int32(roleID)); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		api.WriteBasicResponse(request.Context(), role, http.StatusOK, response)
 	}
 }
 
