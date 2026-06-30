@@ -38,29 +38,29 @@ const (
 )
 
 // Validation sentinels classify why a set of query parameter filters failed validation. Callers should
-// classify failures with errors.Is and may extract the offending column/operator via a *ValidationError
+// classify failures with errors.Is and may extract the offending field/operator via a *ValidationError
 // using errors.As. These are intentionally free of any transport- or presentation-specific wording.
 var (
 	ErrMalformedFilter      = errors.New("query parameter filter is malformed")
-	ErrColumnNotFilterable  = errors.New("column cannot be filtered")
+	ErrFieldNotFilterable   = errors.New("column cannot be filtered")
 	ErrOperatorNotSupported = errors.New("filter operator is not supported for column")
 )
 
 // ValidationError describes a filter validation failure. It wraps one of the validation sentinels so it
-// can be classified with errors.Is, while also carrying the offending column and operator so callers can
+// can be classified with errors.Is, while also carrying the offending field and operator so callers can
 // build their own messaging without parsing strings.
 type ValidationError struct {
 	Err      error
-	Column   string
+	Field    string
 	Operator FilterOperator
 }
 
 func (s *ValidationError) Error() string {
 	switch {
-	case s.Column != "" && s.Operator != "":
-		return fmt.Sprintf("%s: %s %s", s.Err, s.Column, s.Operator)
-	case s.Column != "":
-		return fmt.Sprintf("%s: %s", s.Err, s.Column)
+	case s.Field != "" && s.Operator != "":
+		return fmt.Sprintf("%s: %s %s", s.Err, s.Field, s.Operator)
+	case s.Field != "":
+		return fmt.Sprintf("%s: %s", s.Err, s.Field)
 	default:
 		return s.Err.Error()
 	}
@@ -72,28 +72,9 @@ func (s *ValidationError) Unwrap() error {
 
 // ParseFilterOperator validates a raw operator string and returns the corresponding FilterOperator.
 func ParseFilterOperator(raw string) (FilterOperator, error) {
-	switch FilterOperator(raw) {
-	case GreaterThan:
-		return GreaterThan, nil
-
-	case GreaterThanOrEquals:
-		return GreaterThanOrEquals, nil
-
-	case LessThan:
-		return LessThan, nil
-
-	case LessThanOrEquals:
-		return LessThanOrEquals, nil
-
-	case Equals:
-		return Equals, nil
-
-	case NotEquals:
-		return NotEquals, nil
-
-	case ApproximatelyEquals:
-		return ApproximatelyEquals, nil
-
+	switch operator := FilterOperator(raw); operator {
+	case GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, Equals, NotEquals, ApproximatelyEquals:
+		return operator, nil
 	default:
 		return "", fmt.Errorf("%w: unknown predicate %q", ErrMalformedFilter, raw)
 	}
@@ -107,28 +88,29 @@ const (
 	FilterOr  FilterSetOperator = "OR"
 )
 
-// Filter is a single validated filter applied to a column.
+// Filter is a single validated filter applied to a field.
 type Filter struct {
+	Field        string
 	Operator     FilterOperator
 	Value        string
 	SetOperator  FilterSetOperator
 	IsStringData bool
 }
 
-// Filters maps a column name to the set of filters applied to it.
+// Filters maps a field name to the set of filters applied to it.
 type Filters map[string][]Filter
 
-// FilterableColumn describes a single column that may be filtered on. It carries the set of operators the
-// column supports, IsStringData (whether the column holds string data), and SetOperator (how multiple
-// filters applied to the column are combined). An empty SetOperator defaults to FilterAnd.
-type FilterableColumn struct {
+// FilterableField describes a single field that may be filtered on. It carries the set of operators the
+// field supports, IsStringData (whether the field holds string data), and SetOperator (how multiple
+// filters applied to the field are combined). An empty SetOperator defaults to FilterAnd.
+type FilterableField struct {
 	Operators    []FilterOperator
 	IsStringData bool
 	SetOperator  FilterSetOperator
 }
 
-// Filterable is implemented by types that expose the columns that may be filtered along with each
-// column's supported operators and data typing.
+// Filterable is implemented by types that expose the fields that may be filtered along with each
+// field's supported operators and data typing.
 type Filterable interface {
-	ValidFilters() map[string]FilterableColumn
+	ValidFilters() map[string]FilterableField
 }

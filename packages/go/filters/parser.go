@@ -22,25 +22,6 @@ import (
 	"slices"
 )
 
-// queryParameterFilter is a single filter parsed from a request's query parameters. The column it applies
-// to is carried as the key of the queryParameterFilterMap rather than duplicated on the struct. It is an
-// internal staging type: ParseAndValidate is the only producer of a validated, enriched Filters value.
-type queryParameterFilter struct {
-	Operator FilterOperator
-	Value    string
-}
-
-// queryParameterFilters is a collection of filters parsed for a single column.
-type queryParameterFilters []queryParameterFilter
-
-// queryParameterFilterMap maps a column name to the filters parsed for it.
-type queryParameterFilterMap map[string]queryParameterFilters
-
-// addFilter appends the given filter to the map under the supplied column name.
-func (s queryParameterFilterMap) addFilter(name string, filter queryParameterFilter) {
-	s[name] = append(s[name], filter)
-}
-
 // QueryParameterFilterParser extracts filters from request query parameters. Parameters whose names are
 // listed in ignoredParameters are skipped, allowing callers to exclude application-specific concerns such
 // as pagination parameters without coupling this package to them.
@@ -57,68 +38,44 @@ func NewQueryParameterFilterParser(ignoredParameters ...string) QueryParameterFi
 	}
 }
 
-// parseQueryParameterFilters parses all eligible query parameters into a filter map.
-func (s QueryParameterFilterParser) parseQueryParameterFilters(values url.Values) (queryParameterFilterMap, error) {
-	filters := make(queryParameterFilterMap)
+// ParseAndValidate parses the supplied query parameters and validates them against the Filterable schema
+// in a single pass, returning a fully-enriched Filters value. Every returned Filter has its SetOperator
+// and IsStringData populated from the column definition. On failure it returns a *ValidationError wrapping
+// one of the validation sentinels.
+func (s QueryParameterFilterParser) ParseAndValidate(values url.Values, filterable Filterable) (Filters, error) {
+	var (
+		validFields   = filterable.ValidFilters()
+		parsedFilters = Filters{}
+	)
 
-	for name, columnValues := range values {
+	for name, fieldValues := range values {
 		if slices.Contains(s.ignoredParameters, name) {
 			continue
 		}
 
-		for _, value := range columnValues {
-			if subgroups := s.valuePattern.FindStringSubmatch(value); len(subgroups) > 0 {
-				if filterPredicate, err := ParseFilterOperator(subgroups[1]); err != nil {
-					return nil, err
-				} else {
-					filters.addFilter(name, queryParameterFilter{
-						Operator: filterPredicate,
-						Value:    subgroups[2],
-					})
+		for _, value := range fieldValues {
+			if subgroups := s.valuePattern.FindStringSubmatch(value); len(subgroups) == 0 {
+				continue
+			} else if operator, err := ParseFilterOperator(subgroups[1]); err != nil {
+				return nil, &ValidationError{Err: err}
+			} else if field, isFilterable := validFields[name]; !isFilterable {
+				return nil, &ValidationError{Err: ErrFieldNotFilterable, Field: name}
+			} else if !slices.Contains(field.Operators, operator) {
+				return nil, &ValidationError{Err: ErrOperatorNotSupported, Field: name, Operator: operator}
+			} else {
+				setOperator := field.SetOperator
+				if setOperator == "" {
+					setOperator = FilterAnd
 				}
+
+				parsedFilters[name] = append(parsedFilters[name], Filter{
+					Field:        name,
+					Operator:     operator,
+					Value:        subgroups[2],
+					SetOperator:  setOperator,
+					IsStringData: field.IsStringData,
+				})
 			}
-		}
-	}
-
-	return filters, nil
-}
-
-// ParseAndValidate parses the supplied query parameters and validates them against the Filterable schema,
-// returning a fully-enriched Filters value. Every returned Filter has its IsStringData populated from the
-// column definition. On failure it returns a *ValidationError wrapping one of the validation sentinels.
-func (s QueryParameterFilterParser) ParseAndValidate(values url.Values, filterable Filterable) (Filters, error) {
-	var (
-		validColumns  = filterable.ValidFilters()
-		parsedFilters = Filters{}
-	)
-
-	queryFilters, err := s.parseQueryParameterFilters(values)
-	if err != nil {
-		return nil, &ValidationError{Err: err}
-	}
-
-	for name, columnFilters := range queryFilters {
-		column, isFilterable := validColumns[name]
-		if !isFilterable {
-			return nil, &ValidationError{Err: ErrColumnNotFilterable, Column: name}
-		}
-
-		setOperator := column.SetOperator
-		if setOperator == "" {
-			setOperator = FilterAnd
-		}
-
-		for _, columnFilter := range columnFilters {
-			if !slices.Contains(column.Operators, columnFilter.Operator) {
-				return nil, &ValidationError{Err: ErrOperatorNotSupported, Column: name, Operator: columnFilter.Operator}
-			}
-
-			parsedFilters[name] = append(parsedFilters[name], Filter{
-				Operator:     columnFilter.Operator,
-				Value:        columnFilter.Value,
-				SetOperator:  setOperator,
-				IsStringData: column.IsStringData,
-			})
 		}
 	}
 
