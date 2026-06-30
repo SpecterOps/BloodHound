@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/packages/go/filters"
 )
 
 // With takes a function returning a mux.MiddlewareFunc type and applies it the to variadic list of routes
@@ -110,6 +111,13 @@ type featureFlag interface {
 
 func (s *Route) CheckFeatureFlag(ff featureFlag, flagKey string) *Route {
 	s.handler.Use(middleware.FeatureFlagMiddleware(ff, flagKey))
+	return s
+}
+
+// WithFilters wires the query parameter filter middleware onto the route, validating any filters against
+// the supplied filters.Filterable definition and enriching the request context with the parsed filters.
+func (s *Route) WithFilters(filterable filters.Filterable) *Route {
+	s.handler.Use(middleware.FilterMiddleware(filterable))
 	return s
 }
 
