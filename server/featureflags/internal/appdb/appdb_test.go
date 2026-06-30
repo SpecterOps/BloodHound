@@ -328,6 +328,19 @@ func TestStore_SetFlag(t *testing.T) {
 			wantErr: dbErr,
 		},
 		{
+			name: "rolls back and returns ErrNotFound when the UPDATE matches no rows",
+			ctx:  authCtx,
+			flag: userFlag,
+			expectations: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectBegin()
+				pool.ExpectExec(expectedUpdateSQL).
+					WithArgs(true, pgxmock.AnyArg(), int32(42)).
+					WillReturnResult(pgxmock.NewResult("UPDATE", 0))
+				pool.ExpectRollback()
+			},
+			wantErr: services.ErrNotFound,
+		},
+		{
 			name: "rolls back when the audit insert fails for a user-updatable flag",
 			ctx:  authCtx,
 			flag: userFlag,

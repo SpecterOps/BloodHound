@@ -244,6 +244,7 @@ func (s *Store) SetFlag(ctx context.Context, flag services.FeatureFlag) error {
 	var (
 		updateBuilder = sqlbuilder.PostgreSQL.NewUpdateBuilder()
 		tx            pgx.Tx
+		commandTag    pgconn.CommandTag
 		err           error
 	)
 
@@ -264,12 +265,12 @@ func (s *Store) SetFlag(ctx context.Context, flag services.FeatureFlag) error {
 	updateBuilder.Where(updateBuilder.Equal("id", flag.ID))
 
 	sqlQuery, args := updateBuilder.Build()
-	_, err = tx.Exec(ctx, sqlQuery, args...)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return services.ErrNotFound
-	}
+	commandTag, err = tx.Exec(ctx, sqlQuery, args...)
 	if err != nil {
 		return err
+	}
+	if commandTag.RowsAffected() == 0 {
+		return services.ErrNotFound
 	}
 
 	if flag.UserUpdatable {

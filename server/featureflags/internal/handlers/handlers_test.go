@@ -129,10 +129,9 @@ func TestHandlers_GetAllFlags(t *testing.T) {
 
 func TestHandlers_ToggleFlag(t *testing.T) {
 	var (
-		userID       = uuid.Must(uuid.NewV4())
-		userIDString = userID.String()
-		toggled      = services.FeatureFlag{ID: 5, Key: services.FeatureAlerts, Name: "Alerts", Enabled: true, UserUpdatable: true}
-		serviceErr   = errors.New("db unavailable")
+		userID     = uuid.Must(uuid.NewV4())
+		toggled    = services.FeatureFlag{ID: 5, Key: services.FeatureAlerts, Name: "Alerts", Enabled: true, UserUpdatable: true}
+		serviceErr = errors.New("db unavailable")
 	)
 
 	tests := []struct {
@@ -148,7 +147,7 @@ func TestHandlers_ToggleFlag(t *testing.T) {
 			featureID:     "5",
 			authenticated: true,
 			expect: func(m *mocks.MockFeatureFlag, ctx context.Context) {
-				m.EXPECT().ToggleFlag(ctx, int32(5), userIDString).Return(toggled, nil)
+				m.EXPECT().ToggleFlag(ctx, int32(5)).Return(toggled, nil)
 			},
 			wantStatus: http.StatusOK,
 			assertBody: func(t *testing.T, body []byte) {
@@ -161,12 +160,6 @@ func TestHandlers_ToggleFlag(t *testing.T) {
 			},
 		},
 		{
-			name:          "returns 500 when the request has no authenticated user",
-			featureID:     "5",
-			authenticated: false,
-			wantStatus:    http.StatusInternalServerError,
-		},
-		{
 			name:          "returns 400 when feature_id is not parseable as an int32",
 			featureID:     "not-a-number",
 			authenticated: true,
@@ -177,7 +170,7 @@ func TestHandlers_ToggleFlag(t *testing.T) {
 			featureID:     "5",
 			authenticated: true,
 			expect: func(m *mocks.MockFeatureFlag, ctx context.Context) {
-				m.EXPECT().ToggleFlag(ctx, int32(5), userIDString).Return(services.FeatureFlag{}, services.ErrNotFound)
+				m.EXPECT().ToggleFlag(ctx, int32(5)).Return(services.FeatureFlag{}, services.ErrNotFound)
 			},
 			wantStatus: http.StatusNotFound,
 		},
@@ -186,7 +179,7 @@ func TestHandlers_ToggleFlag(t *testing.T) {
 			featureID:     "5",
 			authenticated: true,
 			expect: func(m *mocks.MockFeatureFlag, ctx context.Context) {
-				m.EXPECT().ToggleFlag(ctx, int32(5), userIDString).Return(services.FeatureFlag{}, services.ErrNotUserUpdatable)
+				m.EXPECT().ToggleFlag(ctx, int32(5)).Return(services.FeatureFlag{}, services.ErrNotUserUpdatable)
 			},
 			wantStatus: http.StatusForbidden,
 		},
@@ -195,7 +188,7 @@ func TestHandlers_ToggleFlag(t *testing.T) {
 			featureID:     "5",
 			authenticated: true,
 			expect: func(m *mocks.MockFeatureFlag, ctx context.Context) {
-				m.EXPECT().ToggleFlag(ctx, int32(5), userIDString).Return(services.FeatureFlag{}, serviceErr)
+				m.EXPECT().ToggleFlag(ctx, int32(5)).Return(services.FeatureFlag{}, serviceErr)
 			},
 			wantStatus: http.StatusInternalServerError,
 		},
