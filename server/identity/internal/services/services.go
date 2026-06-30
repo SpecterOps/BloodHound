@@ -23,8 +23,6 @@ import (
 	"database/sql"
 	"errors"
 	"time"
-
-	"github.com/gofrs/uuid"
 )
 
 type Permission struct {
@@ -52,22 +50,8 @@ type Role struct {
 // ErrNoRoleFound indicates that no role with the given ID was found.
 var ErrNoRoleFound = errors.New("no role was found")
 
-type User struct {
-	ID            uuid.UUID    `json:"id"`
-	PrincipalName string       `json:"principal_name"`
-	IsDisabled    bool         `json:"is_disabled"`
-	EULAAccepted  bool         `json:"eula_accepted"`
-	CreatedAt     time.Time    `json:"created_at"`
-	UpdatedAt     time.Time    `json:"updated_at"`
-	DeletedAt     sql.NullTime `json:"deleted_at"`
-}
-
-// ErrNoUserFound indicates that no user with the given ID was found.
-var ErrNoUserFound = errors.New("no user was found")
-
 type Database interface {
 	GetRole(ctx context.Context, id int32) (Role, error)
-	GetUser(ctx context.Context, id uuid.UUID) (User, error)
 	GetPermission(ctx context.Context, id int) (Permission, error)
 }
 
@@ -81,10 +65,6 @@ func NewService(databaseInterface Database) *Service {
 
 func (s *Service) GetRole(ctx context.Context, id int32) (Role, error) {
 	return s.db.GetRole(ctx, id)
-}
-
-func (s *Service) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
-	return s.db.GetUser(ctx, id)
 }
 
 func (s *Service) GetPermission(ctx context.Context, id int) (Permission, error) {

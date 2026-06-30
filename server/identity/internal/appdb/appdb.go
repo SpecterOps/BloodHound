@@ -1,3 +1,18 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
 package appdb
 
 import (
@@ -6,7 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
 	"github.com/specterops/bloodhound/server/identity/internal/services"
@@ -16,7 +30,6 @@ const (
 	tablePermissions      = "permissions"
 	tableRoles            = "roles"
 	tableRolesPermissions = "roles_permissions"
-	tableUsers            = "users"
 )
 
 type queryExecer interface {
@@ -41,15 +54,6 @@ type role struct {
 	Description string    `db:"description"`
 	CreatedAt   time.Time `db:"created_at"`
 	UpdatedAt   time.Time `db:"updated_at"`
-}
-
-type user struct {
-	ID            string    `db:"id"`
-	PrincipalName string    `db:"principal_name"`
-	IsDisabled    bool      `db:"is_disabled"`
-	EULAAccepted  bool      `db:"eula_accepted"`
-	CreatedAt     time.Time `db:"created_at"`
-	UpdatedAt     time.Time `db:"updated_at"`
 }
 
 type Store struct {
@@ -83,25 +87,6 @@ func toRole(row role, permissionRows []permission) services.Role {
 		CreatedAt:   row.CreatedAt,
 		UpdatedAt:   row.UpdatedAt,
 	}
-}
-
-func toUser(row user) (services.User, error) {
-	var (
-		userID uuid.UUID
-		err    error
-	)
-	userID, err = uuid.FromString(row.ID)
-	if err != nil {
-		return services.User{}, fmt.Errorf("parsing user id: %w", err)
-	}
-	return services.User{
-		ID:            userID,
-		PrincipalName: row.PrincipalName,
-		IsDisabled:    row.IsDisabled,
-		EULAAccepted:  row.EULAAccepted,
-		CreatedAt:     row.CreatedAt,
-		UpdatedAt:     row.UpdatedAt,
-	}, nil
 }
 
 func (s *Store) GetRole(ctx context.Context, id int32) (services.Role, error) {
@@ -143,35 +128,6 @@ func (s *Store) GetRole(ctx context.Context, id int32) (services.Role, error) {
 	}
 
 	return toRole(roleRow, permissionRows), nil
-}
-
-func (s *Store) GetUser(ctx context.Context, id uuid.UUID) (services.User, error) {
-	var (
-		userSB   = sqlbuilder.PostgreSQL.NewSelectBuilder()
-		userRows pgx.Rows
-		userRow  user
-		err      error
-	)
-
-	userSB.Select("id", "principal_name", "is_disabled", "eula_accepted", "created_at", "updated_at").
-		From(tableUsers).
-		Where(userSB.Equal("id", id.String())).
-		Limit(1)
-	userQuery, userArgs := userSB.Build()
-
-	userRows, err = s.db.Query(ctx, userQuery, userArgs...)
-	if err != nil {
-		return services.User{}, err
-	}
-	userRow, err = pgx.CollectOneRow(userRows, pgx.RowToStructByName[user])
-	if errors.Is(err, pgx.ErrNoRows) {
-		return services.User{}, services.ErrNoUserFound
-	}
-	if err != nil {
-		return services.User{}, fmt.Errorf("finding user: %s", err)
-	}
-
-	return toUser(userRow)
 }
 
 func (s *Store) GetPermission(ctx context.Context, id int) (services.Permission, error) {

@@ -25,7 +25,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -131,24 +130,6 @@ func seededRole(t *testing.T, ctx context.Context, pool *pgxpool.Pool) services.
 	return found
 }
 
-// insertTestUser inserts a minimal user row and returns its UUID.
-func insertTestUser(t *testing.T, ctx context.Context, pool *pgxpool.Pool, principalName string) uuid.UUID {
-	t.Helper()
-
-	var userID uuid.UUID
-	userID, err := uuid.NewV4()
-	require.NoError(t, err)
-
-	_, err = pool.Exec(ctx,
-		"INSERT INTO users (id, principal_name, is_disabled, eula_accepted, created_at, updated_at) VALUES ($1, $2, false, false, NOW(), NOW())",
-		userID.String(),
-		principalName,
-	)
-	require.NoError(t, err)
-
-	return userID
-}
-
 func TestStore_GetPermission_Integration(t *testing.T) {
 	t.Run("returns the permission for a seeded id", func(t *testing.T) {
 		var (
@@ -200,33 +181,5 @@ func TestStore_GetRole_Integration(t *testing.T) {
 
 		_, err := store.GetRole(ctx, 99999999)
 		assert.ErrorIs(t, err, services.ErrNoRoleFound)
-	})
-}
-
-func TestStore_GetUser_Integration(t *testing.T) {
-	t.Run("returns the user for a valid id", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			store, pool = setupStoreAndPool(t)
-			principalName = "integration-test-user@example.com"
-		)
-
-		userID := insertTestUser(t, ctx, pool, principalName)
-
-		retrieved, err := store.GetUser(ctx, userID)
-		require.NoError(t, err)
-		assert.Equal(t, userID, retrieved.ID)
-		assert.Equal(t, principalName, retrieved.PrincipalName)
-	})
-
-	t.Run("returns ErrNoUserFound when the user does not exist", func(t *testing.T) {
-		var (
-			ctx      = context.Background()
-			store, _ = setupStoreAndPool(t)
-		)
-
-		nonExistentID := uuid.Must(uuid.NewV4())
-		_, err := store.GetUser(ctx, nonExistentID)
-		assert.ErrorIs(t, err, services.ErrNoUserFound)
 	})
 }

@@ -22,7 +22,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/specterops/bloodhound/server/identity/internal/appdb"
 	"github.com/specterops/bloodhound/server/identity/internal/services"
@@ -39,9 +38,6 @@ const expectedGetRoleSQL = `SELECT * FROM roles WHERE id = $1 LIMIT $2`
 // expectedGetRolePermissionsSQL is the literal SQL the Store issues for the permissions
 // query in GetRole.
 const expectedGetRolePermissionsSQL = `SELECT p.id, p.authority, p.name, p.created_at, p.updated_at FROM permissions p JOIN roles_permissions rp ON rp.permission_id = p.id WHERE rp.role_id = $1`
-
-// expectedGetUserSQL is the literal SQL the Store issues for GetUser.
-const expectedGetUserSQL = `SELECT id, principal_name, is_disabled, eula_accepted, created_at, updated_at FROM users WHERE id = $1 LIMIT $2`
 
 func newTestStore(t *testing.T) (*appdb.Store, pgxmock.PgxPoolIface) {
 	t.Helper()
@@ -235,86 +231,6 @@ func TestStore_GetRole(t *testing.T) {
 			tt.expectations(pool)
 
 			result, err := store.GetRole(ctx, roleID)
-			switch {
-			case tt.wantErr != nil:
-				assert.ErrorIs(t, err, tt.wantErr)
-			case tt.wantErrContains != "":
-				assert.ErrorContains(t, err, tt.wantErrContains)
-			default:
-				require.NoError(t, err)
-				assert.Equal(t, tt.wantResult, result)
-			}
-			require.NoError(t, pool.ExpectationsWereMet())
-		})
-	}
-}
-
-func userRowColumns() []string {
-	return []string{"id", "principal_name", "is_disabled", "eula_accepted", "created_at", "updated_at"}
-}
-
-func TestStore_GetUser(t *testing.T) {
-	var (
-		ctx      = context.Background()
-		dbErr    = errors.New("connection refused")
-		userID   = uuid.Must(uuid.NewV4())
-		expected = services.User{
-			ID:            userID,
-			PrincipalName: "testuser@example.com",
-			IsDisabled:    false,
-			EULAAccepted:  true,
-			CreatedAt:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-			UpdatedAt:     time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC),
-		}
-	)
-
-	tests := []struct {
-		name            string
-		expectations    func(pool pgxmock.PgxPoolIface)
-		wantResult      services.User
-		wantErr         error
-		wantErrContains string
-	}{
-		{
-			name: "returns the user on success",
-			expectations: func(pool pgxmock.PgxPoolIface) {
-				pool.ExpectQuery(expectedGetUserSQL).WithArgs(userID.String(), 1).WillReturnRows(
-					pool.NewRows(userRowColumns()).AddRow(
-						expected.ID.String(),
-						expected.PrincipalName,
-						expected.IsDisabled,
-						expected.EULAAccepted,
-						expected.CreatedAt,
-						expected.UpdatedAt,
-					),
-				)
-			},
-			wantResult: expected,
-		},
-		{
-			name: "maps CollectOneRow pgx.ErrNoRows to services.ErrNoUserFound",
-			expectations: func(pool pgxmock.PgxPoolIface) {
-				pool.ExpectQuery(expectedGetUserSQL).WithArgs(userID.String(), 1).WillReturnRows(
-					pool.NewRows(userRowColumns()),
-				)
-			},
-			wantErr: services.ErrNoUserFound,
-		},
-		{
-			name: "propagates database errors",
-			expectations: func(pool pgxmock.PgxPoolIface) {
-				pool.ExpectQuery(expectedGetUserSQL).WithArgs(userID.String(), 1).WillReturnError(dbErr)
-			},
-			wantErr: dbErr,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			store, pool := newTestStore(t)
-			tt.expectations(pool)
-
-			result, err := store.GetUser(ctx, userID)
 			switch {
 			case tt.wantErr != nil:
 				assert.ErrorIs(t, err, tt.wantErr)

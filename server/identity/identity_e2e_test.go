@@ -28,16 +28,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/peterldowns/pgtestdb"
-	authapi "github.com/specterops/bloodhound/cmd/api/src/api/v2/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/specterops/bloodhound/server/identity/internal/appdb"
+	"github.com/specterops/bloodhound/server/identity/internal/handlers"
+	"github.com/specterops/bloodhound/server/identity/internal/services"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -108,24 +108,15 @@ func getIdentityPostgresConfig(t *testing.T) pgtestdb.Config {
 	}
 }
 
-// createTestUser inserts a minimal user into the database for use in tests.
-func createTestUser(t *testing.T, ctx context.Context, db *database.BloodhoundDB, principalName string) model.User {
-	t.Helper()
-	user, err := db.CreateUser(ctx, model.User{
-		PrincipalName:   principalName,
-		EULAAccepted:    true,
-		AllEnvironments: true,
-	})
-	require.NoError(t, err)
-	return user
-}
-
-// newManagementResource wires a real ManagementResource backed by the given database.
-func newManagementResource(t *testing.T, db *database.BloodhoundDB) authapi.ManagementResource {
-	t.Helper()
-	cfg, err := config.NewDefaultConfiguration()
-	require.NoError(t, err)
-	return authapi.NewManagementResource(cfg, db, auth.NewAuthorizer(db), nil, nil, dogtags.NewDefaultService())
+// newIdentityHandlers wires the identity store -> service -> handlers chain
+// backed by the given database.
+func newIdentityHandlers(db *database.BloodhoundDB) *handlers.Handlers {
+	var (
+		store      = appdb.NewStore(db.Pool())
+		svc        = services.NewService(store)
+		handlerSet = handlers.NewHandlersContainer(svc)
+	)
+	return handlerSet
 }
 
 // permissionResponseEnvelope is the JSON envelope shape returned by the
@@ -140,18 +131,12 @@ type roleResponseEnvelope struct {
 	Data model.Role `json:"data"`
 }
 
-// userResponseEnvelope is the JSON envelope shape returned by the
-// GET /api/v2/bloodhound-users/{user_id} handler.
-type userResponseEnvelope struct {
-	Data model.User `json:"data"`
-}
-
 func TestGetPermission(t *testing.T) {
 	var (
 		db          = setupIdentityDB(t)
 		ctx         = context.Background()
-		resource    = newManagementResource(t, db)
-		handler     = resource.GetPermission
+		handlerSet  = newIdentityHandlers(db)
+		handler     = handlerSet.GetPermission
 		permissions model.Permissions
 		err         error
 	)
@@ -179,6 +164,9 @@ func TestGetPermission(t *testing.T) {
 		assert.Equal(t, seededPermission.ID, envelope.Data.ID)
 		assert.Equal(t, seededPermission.Authority, envelope.Data.Authority)
 		assert.Equal(t, seededPermission.Name, envelope.Data.Name)
+		assert.True(t, seededPermission.CreatedAt.Equal(envelope.Data.CreatedAt), "created_at should match the seeded permission")
+		assert.True(t, seededPermission.UpdatedAt.Equal(envelope.Data.UpdatedAt), "updated_at should match the seeded permission")
+		assert.Equal(t, seededPermission.DeletedAt.Valid, envelope.Data.DeletedAt.Valid, "deleted_at validity should match the seeded permission")
 	})
 
 	t.Run("returns 404 Not Found when the permission does not exist", func(t *testing.T) {
@@ -196,12 +184,12 @@ func TestGetPermission(t *testing.T) {
 
 func TestGetRole(t *testing.T) {
 	var (
-		db       = setupIdentityDB(t)
-		ctx      = context.Background()
-		resource = newManagementResource(t, db)
-		handler  = resource.GetRole
-		roles    model.Roles
-		err      error
+		db         = setupIdentityDB(t)
+		ctx        = context.Background()
+		handlerSet = newIdentityHandlers(db)
+		handler    = handlerSet.GetRole
+		roles      model.Roles
+		err        error
 	)
 
 	roles, err = db.GetAllRoles(ctx, "", model.SQLFilter{})
@@ -227,6 +215,9 @@ func TestGetRole(t *testing.T) {
 		assert.Equal(t, seededRole.ID, envelope.Data.ID)
 		assert.Equal(t, seededRole.Name, envelope.Data.Name)
 		assert.NotEmpty(t, envelope.Data.Permissions, "expected the role to preload its permissions")
+		assert.True(t, seededRole.CreatedAt.Equal(envelope.Data.CreatedAt), "created_at should match the seeded role")
+		assert.True(t, seededRole.UpdatedAt.Equal(envelope.Data.UpdatedAt), "updated_at should match the seeded role")
+		assert.Equal(t, seededRole.DeletedAt.Valid, envelope.Data.DeletedAt.Valid, "deleted_at validity should match the seeded role")
 	})
 
 	t.Run("returns 404 Not Found when the role does not exist", func(t *testing.T) {
@@ -238,48 +229,6 @@ func TestGetRole(t *testing.T) {
 	t.Run("returns 400 Bad Request for a malformed role ID", func(t *testing.T) {
 		recorder := httptest.NewRecorder()
 		handler(recorder, newRequest(t, "not-an-int"))
-		assert.Equal(t, http.StatusBadRequest, recorder.Code)
-	})
-}
-
-func TestGetUser(t *testing.T) {
-	var (
-		db       = setupIdentityDB(t)
-		ctx      = context.Background()
-		user     = createTestUser(t, ctx, db, "get-user-principal")
-		resource = newManagementResource(t, db)
-		handler  = resource.GetUser
-	)
-
-	newRequest := func(t *testing.T, userID string) *http.Request {
-		t.Helper()
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "/api/v2/bloodhound-users/"+userID, nil)
-		require.NoError(t, err)
-		return mux.SetURLVars(req, map[string]string{"user_id": userID})
-	}
-
-	t.Run("returns 200 OK with the user for a valid ID", func(t *testing.T) {
-		recorder := httptest.NewRecorder()
-		handler(recorder, newRequest(t, user.ID.String()))
-
-		assert.Equal(t, http.StatusOK, recorder.Code)
-
-		var envelope userResponseEnvelope
-		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
-		assert.Equal(t, user.ID, envelope.Data.ID)
-		assert.Equal(t, user.PrincipalName, envelope.Data.PrincipalName)
-	})
-
-	t.Run("returns 404 Not Found when the user does not exist", func(t *testing.T) {
-		nonExistentID := uuid.Must(uuid.NewV4())
-		recorder := httptest.NewRecorder()
-		handler(recorder, newRequest(t, nonExistentID.String()))
-		assert.Equal(t, http.StatusNotFound, recorder.Code)
-	})
-
-	t.Run("returns 400 Bad Request for a malformed user ID", func(t *testing.T) {
-		recorder := httptest.NewRecorder()
-		handler(recorder, newRequest(t, "not-a-uuid"))
 		assert.Equal(t, http.StatusBadRequest, recorder.Code)
 	})
 }
