@@ -23,8 +23,7 @@ const meta = {
     parameters: {
         layout: 'centered',
     },
-    // This story will not appear in Storybook's sidebar or docs page: https://storybook.js.org/docs/writing-stories/tags
-    tags: ['!dev'],
+    tags: ['autodocs'],
     // More on argTypes: https://storybook.js.org/docs/api/argtypes
     argTypes: {},
     args: {},
