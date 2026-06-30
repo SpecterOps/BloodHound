@@ -177,7 +177,6 @@ func TestService_GetAllFlags(t *testing.T) {
 func TestService_ToggleFlag(t *testing.T) {
 	var (
 		ctx           = context.Background()
-		requester     = "test-user"
 		unexpectedErr = errors.New("connection refused")
 		setFlagErr    = errors.New("set flag failed")
 		updatableFlag = services.FeatureFlag{
@@ -205,7 +204,7 @@ func TestService_ToggleFlag(t *testing.T) {
 		databaseMock.EXPECT().GetFlagByID(ctx, updatableFlag.ID).Return(updatableFlag, nil)
 		databaseMock.EXPECT().SetFlag(ctx, toggled).Return(nil)
 
-		got, err := svc.ToggleFlag(ctx, updatableFlag.ID, requester)
+		got, err := svc.ToggleFlag(ctx, updatableFlag.ID)
 		require.NoError(t, err)
 		assert.Equal(t, toggled, got)
 	})
@@ -218,7 +217,7 @@ func TestService_ToggleFlag(t *testing.T) {
 
 		databaseMock.EXPECT().GetFlagByID(ctx, nonUpdatableFlag.ID).Return(nonUpdatableFlag, nil)
 
-		got, err := svc.ToggleFlag(ctx, nonUpdatableFlag.ID, requester)
+		got, err := svc.ToggleFlag(ctx, nonUpdatableFlag.ID)
 		assert.ErrorIs(t, err, services.ErrNotUserUpdatable)
 		assert.Equal(t, nonUpdatableFlag, got)
 	})
@@ -231,7 +230,7 @@ func TestService_ToggleFlag(t *testing.T) {
 
 		databaseMock.EXPECT().GetFlagByID(ctx, int32(99)).Return(services.FeatureFlag{}, unexpectedErr)
 
-		_, err := svc.ToggleFlag(ctx, 99, requester)
+		_, err := svc.ToggleFlag(ctx, 99)
 		assert.ErrorIs(t, err, unexpectedErr)
 	})
 
@@ -246,7 +245,7 @@ func TestService_ToggleFlag(t *testing.T) {
 		databaseMock.EXPECT().GetFlagByID(ctx, updatableFlag.ID).Return(updatableFlag, nil)
 		databaseMock.EXPECT().SetFlag(ctx, toggled).Return(setFlagErr)
 
-		_, err := svc.ToggleFlag(ctx, updatableFlag.ID, requester)
+		_, err := svc.ToggleFlag(ctx, updatableFlag.ID)
 		assert.ErrorIs(t, err, setFlagErr)
 	})
 }
