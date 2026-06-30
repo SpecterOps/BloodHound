@@ -23,6 +23,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/server/analysis"
+	"github.com/specterops/bloodhound/server/identity"
 )
 
 // Deps carries the shared infrastructure that feature modules need in order to
@@ -46,4 +47,5 @@ func Register(deps Deps) {
 	}
 
 	analysis.Register(deps.Router, deps.Pool)
+	identity.Register(deps.Router, deps.Pool)
 }
