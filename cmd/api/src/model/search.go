@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"slices"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 )
@@ -43,9 +44,9 @@ type EnvironmentSelector struct {
 }
 
 type EnvironmentProperties struct {
-	Type            string  `json:"type"`
-	KindId          *int32  `json:"environment_kind_id,omitempty"`
-	KindDisplayName *string `json:"environment_kind_display_name,omitempty"`
+	Type            string      `json:"type"`
+	KindId          null.Int32  `json:"environment_kind_id,omitzero"`
+	KindDisplayName null.String `json:"environment_kind_display_name,omitzero"`
 }
 
 type EnvironmentSelectors []EnvironmentSelector

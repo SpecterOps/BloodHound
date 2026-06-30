@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
@@ -230,8 +231,8 @@ func resolveEnvProperties(node *graph.Node, kindToSchemaEnvironment model.Enviro
 		for _, kind := range node.Kinds {
 			if schemaEnvironment, ok := kindToSchemaEnvironment[kind.String()]; ok {
 				envProperties.Type = schemaEnvironment.SchemaExtensionDisplayName
-				envProperties.KindDisplayName = &schemaEnvironment.EnvironmentKindName
-				envProperties.KindId = &schemaEnvironment.EnvironmentKindId
+				envProperties.KindDisplayName = null.StringFrom(schemaEnvironment.EnvironmentKindName)
+				envProperties.KindId = null.Int32From(schemaEnvironment.EnvironmentKindId)
 				break
 			}
 		}
