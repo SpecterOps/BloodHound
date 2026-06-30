@@ -24,6 +24,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
@@ -39,14 +40,15 @@ type graphWiper interface {
 }
 
 func DeleteCollectedGraphData(ctx context.Context, graphDB graph.Database, deleteRequest model.AnalysisRequest, sourceKinds graph.Kinds) error {
-	slog.InfoContext(
+	defer measure.ContextLogAndMeasure(
 		ctx,
+		slog.LevelInfo,
 		"DeleteCollectedGraphData",
 		slog.Bool("delete_all_data", deleteRequest.DeleteAllGraph),
 		slog.Bool("delete_sourceless_data", deleteRequest.DeleteSourcelessGraph),
 		slog.String("delete_source_kinds", strings.Join(deleteRequest.DeleteSourceKinds, ",")),
 		slog.String("delete_relationships", strings.Join(deleteRequest.DeleteRelationships, ",")),
-	)
+	)()
 
 	// On backends that support a bulk wipe (PostgreSQL), a full graph deletion truncates every node and edge partition
 	// in a single transaction rather than streaming and deleting each node row-by-row. This also clears all edges, so
