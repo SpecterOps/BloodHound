@@ -322,6 +322,30 @@ export type GetExportQueryResponse = AxiosResponse<Blob>;
 
 export type GetClientResponse = PaginatedResponse<Client[]>;
 
+export type SupportBundleOperationStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled';
+export type SupportBundleArtifactStatus = 'pending' | 'complete' | 'failed' | null;
+
+export type SupportBundleCompletedOperation = {
+    operation_id: string;
+    artifact_id: string;
+    operation_status: SupportBundleOperationStatus;
+    artifact_status: SupportBundleArtifactStatus;
+    completed_at: string;
+};
+
+export type SupportBundleActiveOperation = {
+    operation_id: string;
+    operation_status: SupportBundleOperationStatus;
+    requested_at: string;
+    artifact_id: string | null;
+    artifact_status: SupportBundleArtifactStatus;
+};
+
+export type SupportBundleStatus = {
+    latest_completed: SupportBundleCompletedOperation | null;
+    active_operation: SupportBundleActiveOperation | null;
+};
+
 export type EdgeType = {
     id: number;
     name: string;
