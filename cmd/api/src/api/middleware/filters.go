@@ -36,14 +36,16 @@ import (
 // the filters are malformed, reference a column that cannot be filtered, or use an operator the column
 // does not support, the middleware writes a 400 response and halts the chain.
 func FilterMiddleware(filterable filters.Filterable) mux.MiddlewareFunc {
+	if filterable == nil {
+		return func(next http.Handler) http.Handler {
+			return next
+		}
+	}
+
+	parser := filters.NewQueryParameterFilterParser(append(model.IgnoreFilters(), model.AllPaginationQueryParameters()...)...)
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			if filterable == nil {
-				next.ServeHTTP(response, request)
-				return
-			}
-
-			parser := filters.NewQueryParameterFilterParser(append(model.IgnoreFilters(), model.AllPaginationQueryParameters()...)...)
 			if parsedFilters, err := parser.ParseAndValidate(request.URL.Query(), filterable); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, filterErrorMessage(err), request), response)
 				return
