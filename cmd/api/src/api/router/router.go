@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/packages/go/filters"
+	"github.com/specterops/bloodhound/packages/go/sorts"
 )
 
 // With takes a function returning a mux.MiddlewareFunc type and applies it the to variadic list of routes
@@ -118,6 +119,13 @@ func (s *Route) CheckFeatureFlag(ff featureFlag, flagKey string) *Route {
 // the supplied filters.Filterable definition and enriching the request context with the parsed filters.
 func (s *Route) WithFilters(filterable filters.Filterable) *Route {
 	s.handler.Use(middleware.FilterMiddleware(filterable))
+	return s
+}
+
+// WithSort wires the query parameter sort middleware onto the route, validating any sort columns against
+// the supplied sort.Sortable definition and enriching the request context with the parsed sort items.
+func (s *Route) WithSort(sortable sorts.Sortable) *Route {
+	s.handler.Use(middleware.SortMiddleware(sortable))
 	return s
 }
 

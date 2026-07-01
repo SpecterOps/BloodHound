@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/filters"
+	"github.com/specterops/bloodhound/packages/go/sorts"
 )
 
 // Use our own type rather than a primitive to avoid collisions
@@ -45,6 +46,7 @@ type Context struct {
 	RequestIP    string
 	RemoteAddr   string
 	Filters      filters.Filters
+	Sort         sorts.SortItems
 }
 
 func (s *Context) ConstructGoContext() context.Context {
