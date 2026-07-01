@@ -340,6 +340,10 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                     nextCol = Math.min(totalCols - 1, colIndex + 1);
                     break;
                 case 'Tab':
+                    // Only intercept Tab when the cell itself is focused.
+                    if (e.target !== e.currentTarget) {
+                        return;
+                    }
                     if (e.shiftKey) {
                         if (rowIndex === 0) {
                             return;
@@ -369,8 +373,9 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
     // When focusedCell changes, scroll the virtualizer to bring the target row into view,
     // then focus the corresponding <td> element via its data attributes.
     // If the cell contains a focusable interactive element (button, input, etc.), focus that instead.
+    // Skip when childFocused is true
     useEffect(() => {
-        if (!focusedCell) return;
+        if (!focusedCell || focusedCell.childFocused) return;
 
         virtualizer.scrollToIndex(focusedCell.rowIndex, { align: 'auto' });
 
