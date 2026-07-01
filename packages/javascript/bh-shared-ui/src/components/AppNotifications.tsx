@@ -37,11 +37,12 @@ const AppNotifications = () => {
             if (dismissed) {
                 closeSnackbar(key);
             } else if (!displayedNotifications.includes(key)) {
+                const { title, ...snackbarOptions } = options;
                 enqueueSnackbar(message, {
                     key,
-                    ...options,
+                    ...snackbarOptions,
                     content: (id, snackMessage) => (
-                        <MyCustomSnack id={id} message={snackMessage} variant={options.variant} />
+                        <MyCustomSnack id={id} message={snackMessage} variant={snackbarOptions.variant} title={title} />
                     ),
                     onClose: (event, reason, id) => {
                         if (options.onClose) {

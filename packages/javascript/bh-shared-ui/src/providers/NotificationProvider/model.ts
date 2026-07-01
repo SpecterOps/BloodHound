@@ -16,9 +16,11 @@
 
 import { OptionsObject } from 'notistack';
 
+export type NotificationOptions = OptionsObject & { title?: string };
+
 export interface Notification {
     message: string;
     key: string;
     dismissed: boolean;
-    options: OptionsObject;
+    options: NotificationOptions;
 }

@@ -47,26 +47,21 @@ interface MyCustomSnackProps {
     id: string | number;
     message: string | React.ReactNode;
     variant: SnackVariant | null | undefined;
+    title?: string;
 }
 
-const variantTitles: Record<SnackVariant, string> = {
-    default: '',
-    error: 'Error',
-    info: 'Info',
-    warning: 'Warning',
-    success: 'Success',
-};
-
-export const MyCustomSnack = React.forwardRef<HTMLDivElement, MyCustomSnackProps>(({ id, message, variant }, ref) => {
-    const { closeSnackbar } = useSnackbar();
-    return (
-        <SnackbarContent ref={ref} style={{ justifyContent: 'center' }}>
-            <Alert variant={variant} title={variantTitles[variant ?? 'default'] || undefined} onClose={() => closeSnackbar(id)}>
-                {message}
-            </Alert>
-        </SnackbarContent>
-    );
-});
+export const MyCustomSnack = React.forwardRef<HTMLDivElement, MyCustomSnackProps>(
+    ({ id, message, variant, title }, ref) => {
+        const { closeSnackbar } = useSnackbar();
+        return (
+            <SnackbarContent ref={ref} style={{ justifyContent: 'center' }}>
+                <Alert variant={variant} title={title} onClose={() => closeSnackbar(id)}>
+                    {message}
+                </Alert>
+            </SnackbarContent>
+        );
+    }
+);
 
 MyCustomSnack.displayName = 'MyCustomSnack';
 
