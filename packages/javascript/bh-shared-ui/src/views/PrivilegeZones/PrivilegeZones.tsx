@@ -154,7 +154,9 @@ const PrivilegeZones: FC = () => {
                                     });
                                 case zonesPath:
                                 case labelsPath:
-                                    return navigate(`/${privilegeZonesPath}/${value}/${id}/${path}`);
+                                    return navigate(`/${privilegeZonesPath}/${value}/${id}/${path}`, {
+                                        discardQueryParams: path === summaryPath,
+                                    });
                             }
                         }}>
                         <TabsList className='w-full flex justify-start'>
