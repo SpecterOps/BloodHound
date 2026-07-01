@@ -109,6 +109,7 @@ const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRo
             }
         }}>
         <Checkbox
+            tabIndex={-1}
             checked={checked}
             disabled={option.disabled}
             onClick={(event) => event.stopPropagation()}
