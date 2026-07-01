@@ -16,7 +16,7 @@
 import { Button, ButtonProps } from 'doodle-ui';
 import { cn } from '../../utils';
 import { AppIcon } from '../AppIcon';
-import { dropdownIconStateStyles, selectorIconStyles, triggerStyles } from './constants';
+import { selectorIconStyles, triggerStyles } from './constants';
 
 type DropdownTriggerContentsProps = {
     open: boolean;
@@ -45,11 +45,11 @@ const DropdownTriggerContents = ({
         <Button
             variant={variant ?? 'transparent'}
             className={cn(
-                'uppercase group',
-                buttonPrimary && `w-full text-sm ${dropdownIconStateStyles}`,
+                'uppercase group hover:[&_svg]:text-white hover:[&_svg]:fill-current hover:[&_svg_*]:text-white hover:[&_svg_*]:fill-current focus:[&_svg]:text-white focus:[&_svg]:fill-current focus:[&_svg_*]:text-white focus:[&_svg_*]:fill-current focus-visible:[&_svg]:text-white focus-visible:[&_svg]:fill-current focus-visible:[&_svg_*]:text-white focus-visible:[&_svg_*]:fill-current',
                 {
+                    'w-full text-sm': buttonPrimary,
                     [triggerStyles]: !buttonPrimary,
-                    'bg-primary text-white dark:text-neutral-dark-1 border-transparent [&_svg]:text-white dark:[&_svg]:text-neutral-dark-1 [&_svg]:fill-current [&_svg_*]:text-white dark:[&_svg_*]:text-neutral-dark-1 [&_svg_*]:fill-current':
+                    'bg-primary text-white border-transparent [&_svg]:text-white [&_svg]:fill-current [&_svg_*]:text-white [&_svg_*]:fill-current':
                         open,
                 },
                 buttonProps?.className

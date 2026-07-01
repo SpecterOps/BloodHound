@@ -20,7 +20,7 @@ import { Button, ButtonProps, Popover, PopoverContent, Tooltip, Typography } fro
 import { FC, useState } from 'react';
 import { cn } from '../../utils';
 import DropdownTrigger from './DropdownTrigger';
-import { optionIconStyles, optionStyles, popoverContentStyles, tooltipStyles } from './constants';
+import { optionStyles, popoverContentStyles, selectorIconStyles, tooltipStyles } from './constants';
 import { DropdownOption } from './types';
 
 const DropdownSelector: FC<{
@@ -75,7 +75,7 @@ const DropdownSelector: FC<{
                                         </span>
                                         {option.icon && (
                                             <FontAwesomeIcon
-                                                className={optionIconStyles}
+                                                className={selectorIconStyles}
                                                 style={{ width: '10%', alignSelf: 'center' }}
                                                 icon={option.icon}
                                                 data-testid={`dropdown-icon-${option.icon.iconName}`}
