@@ -16,6 +16,7 @@
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton, SvgIcon } from '@mui/material';
+import { MyCustomSnack } from 'bh-shared-ui';
 import { SnackbarKey, useSnackbar } from 'notistack';
 import React, { useCallback, useEffect } from 'react';
 import { removeSnackbar } from 'src/ducks/global/actions';
@@ -73,6 +74,9 @@ const Notifier: React.FC = () => {
             enqueueSnackbar(message, {
                 key,
                 ...options,
+                content: (id, snackMessage) => (
+                    <MyCustomSnack id={id} message={snackMessage} variant={options.variant} />
+                ),
                 onClose: (event, reason, myKey) => {
                     if (options.onClose) {
                         options.onClose(event, reason, myKey);

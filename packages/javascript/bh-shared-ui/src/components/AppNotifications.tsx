@@ -16,7 +16,7 @@
 
 import { useSnackbar } from 'notistack';
 import { useEffect } from 'react';
-import { useNotifications } from '../providers';
+import { MyCustomSnack, useNotifications } from '../providers';
 
 let displayedNotifications: string[] = [];
 
@@ -40,6 +40,9 @@ const AppNotifications = () => {
                 enqueueSnackbar(message, {
                     key,
                     ...options,
+                    content: (id, snackMessage) => (
+                        <MyCustomSnack id={id} message={snackMessage} variant={options.variant} />
+                    ),
                     onClose: (event, reason, id) => {
                         if (options.onClose) {
                             options.onClose(event, reason, id);

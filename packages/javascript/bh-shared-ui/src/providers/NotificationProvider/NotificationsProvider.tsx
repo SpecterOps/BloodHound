@@ -17,12 +17,12 @@
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton, SvgIcon } from '@mui/material';
-import { SnackbarKey, SnackbarProvider, useSnackbar } from 'notistack';
-import { Dispatch, ReactNode, createContext, useReducer } from 'react';
+import { Alert } from 'doodle-ui';
+import { SnackbarContent, SnackbarKey, SnackbarProvider, useSnackbar } from 'notistack';
+import React, { Dispatch, ReactNode, createContext, useReducer } from 'react';
 import { NotificationAction } from './actions';
 import { Notification } from './model';
 import { notificationsReducer } from './reducer';
-
 export const NotificationsContext = createContext<Notification[]>([]);
 export const NotificationsDispatchContext = createContext<Dispatch<NotificationAction> | null>(null);
 
@@ -41,9 +41,37 @@ interface NotificationProviderProps {
     children?: ReactNode;
 }
 
+type SnackVariant = 'default' | 'error' | 'info' | 'warning' | 'success';
+
+interface MyCustomSnackProps {
+    id: string | number;
+    message: string | React.ReactNode;
+    variant: SnackVariant | null | undefined;
+}
+
+const variantTitles: Record<SnackVariant, string> = {
+    default: '',
+    error: 'Error',
+    info: 'Info',
+    warning: 'Warning',
+    success: 'Success',
+};
+
+export const MyCustomSnack = React.forwardRef<HTMLDivElement, MyCustomSnackProps>(({ id, message, variant }, ref) => {
+    const { closeSnackbar } = useSnackbar();
+    return (
+        <SnackbarContent ref={ref} style={{ justifyContent: 'center' }}>
+            <Alert variant={variant} title={variantTitles[variant ?? 'default'] || undefined} onClose={() => closeSnackbar(id)}>
+                {message}
+            </Alert>
+        </SnackbarContent>
+    );
+});
+
+MyCustomSnack.displayName = 'MyCustomSnack';
+
 const NotificationsProvider = ({ children }: NotificationProviderProps) => {
     const [notifications, dispatch] = useReducer(notificationsReducer, []);
-
     return (
         <NotificationsContext.Provider value={notifications}>
             <NotificationsDispatchContext.Provider value={dispatch}>
