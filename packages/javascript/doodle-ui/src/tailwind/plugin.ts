@@ -20,8 +20,8 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
     addBase({
         ' :root': {
             // SHARED (same in light and dark)
-            '--common-dark': common.dark,
-            '--common-white': common.white,
+            // '--common-dark': common.dark,
+            // '--common-white': common.white,
 
             // // UTILITIES / risk level
             // '--risk-critical': palette.purple.A300,
@@ -43,15 +43,13 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // END OF SHARED
 
-            // MAIN / new colors - 1:1 name match in Figma
-            '--primary': light.primary.main /* failsafe until useTheme is removed.*/,
-            '--primary-main': light.primary.main,
+            // MAIN
+            '--primary': light.primary.main,
             '--primary-variant': light.primary.variant,
-            '--secondary': light.secondary.main /* failsafe until useTheme is removed.*/,
+            '--secondary': light.secondary.main,
             '--secondary-main': light.secondary.main,
             '--secondary-variant': light.secondary.variant,
-            // '--tertiary': light.tertiary.main, /* failsafe until useTheme is removed.*/
-            // '--tertiary-main': light.tertiary.main,
+            // '--tertiary': light.tertiary.main,
             // '--tertiary-variant': light.tertiary.variant,
             '--disabled': light.disabled,
 
@@ -72,7 +70,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--text-light': text.light,
             // '--text-contrast': common.white,
             '--text-disabled': light.text.disabled,
-            '--text-primary': light.primary.main,
+            // '--text-primary': light.primary.main,
             // '--text-secondary': light.secondary.main,
 
             // LINKS
@@ -198,9 +196,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--icon-disabled': palette.grey[700],
             // '--divider': palette.neutral.light[500],
 
-            //  End of MAIN / new colors
-
-            // Legacy below - these colors will be phased out over time
+            // Legacy below
             // same as palette.neutral.dark[50]
             '--contrast': '#121212',
 
@@ -239,13 +235,12 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
         },
 
         '.dark': {
-            // MAIN / new colors - 1:1 name match in Figma
+            // MAIN
             '--primary': dark.primary.main,
-            '--primary-main': dark.primary.main,
             '--primary-variant': dark.primary.variant,
             '--secondary-main': dark.secondary.main,
             '--secondary-variant': dark.secondary.variant,
-            // '--tertiary-main': dark.tertiary.main,
+            // '--tertiary': dark.tertiary.main,
             // '--tertiary-variant': dark.tertiary.variant,
             '--disabled': dark.disabled,
 
@@ -266,7 +261,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--text-light': text.dark,
             // '--text-contrast': common.dark,
             '--text-disabled': common.disabled,
-            '--text-primary': dark.primary.main,
+            // '--text-primary': dark.primary.main,
             // '--text-secondary': dark.secondary.main,
 
             // LINKS
@@ -392,9 +387,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--icon-disabled': common.disabled,
             // '--divider': palette.neutral.dark[500],
 
-            // End of Main / new colors
-
-            ///////////// Legacy below ////////// these colors will be phased out over time
+            ///////////// Legacy below //////////
             // same as common.white
             '--contrast': '#ffffff',
             // same palette.neutral.dark[50]
@@ -408,7 +401,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--error': '#e9827c',
         },
     }),
-        // Helpers
         addUtilities({
             '.focus-ring': {
                 outline: 'var(--focus-ring-width) solid var(--focus-ring)',
