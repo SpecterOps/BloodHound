@@ -31,7 +31,8 @@ export enum Permission {
     COLLECTION_MANAGE_JOBS,
     GRAPH_DB_READ,
     GRAPH_DB_WRITE,
-    GRAPH_DB_INGEST,
+    GRAPH_DB_INGEST_MANAGE,
+    GRAPH_DB_INGEST_READ,
     SAVED_QUERIES_READ,
     SAVED_QUERIES_WRITE,
     WIPE_DB,
@@ -114,9 +115,13 @@ export const PERMISSIONS: PermissionDefinitions = {
         authority: 'graphdb',
         name: 'Write',
     },
-    [Permission.GRAPH_DB_INGEST]: {
+    [Permission.GRAPH_DB_INGEST_MANAGE]: {
         authority: 'graphdb',
-        name: 'Ingest',
+        name: 'IngestManage',
+    },
+    [Permission.GRAPH_DB_INGEST_READ]: {
+        authority: 'graphdb',
+        name: 'IngestRead',
     },
     [Permission.SAVED_QUERIES_READ]: {
         authority: 'saved_queries',

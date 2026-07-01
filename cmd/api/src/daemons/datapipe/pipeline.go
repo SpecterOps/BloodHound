@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/job"
+	storageService "github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -36,6 +37,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/storage"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -48,21 +50,23 @@ type BHCEPipeline struct {
 	cfg                 config.Configuration
 	orphanedFileSweeper *OrphanFileSweeper
 	ingestSchema        upload.IngestSchema
+	fileServiceResolver storageService.FileServiceResolver
 	jobService          job.JobService
 	graphifyService     graphify.GraphifyService
 	changelog           *changelog.Changelog
 }
 
-func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Database, graphDB graph.Database, cache cache.Cache, ingestSchema upload.IngestSchema, cl *changelog.Changelog) *BHCEPipeline {
+func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Database, graphDB graph.Database, cache cache.Cache, ingestSchema upload.IngestSchema, fileServiceResolver storageService.FileServiceResolver, cl *changelog.Changelog) *BHCEPipeline {
 	return &BHCEPipeline{
 		db:                  db,
 		graphdb:             graphDB,
 		cache:               cache,
 		cfg:                 cfg,
-		orphanedFileSweeper: NewOrphanFileSweeper(NewOSFileOperations(), cfg.TempDirectory()),
+		orphanedFileSweeper: NewOrphanFileSweeper(NewOSFileOperations(), cfg.TempDirectory(), cfg.ScratchDirectory(), string(storage.FileServiceRetained)),
 		ingestSchema:        ingestSchema,
+		fileServiceResolver: fileServiceResolver,
 		jobService:          job.NewJobService(ctx, db),
-		graphifyService:     graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, cl),
+		graphifyService:     graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, fileServiceResolver, cl),
 		changelog:           cl,
 	}
 }
@@ -78,8 +82,15 @@ func (s *BHCEPipeline) DeleteData(ctx context.Context) error {
 		return nil
 	}
 	defer func() {
-		_ = s.db.DeleteAnalysisRequest(ctx)
-		_ = s.db.RequestAnalysis(ctx, "datapipe")
+		err := s.db.DeleteAnalysisRequest(ctx)
+		if err != nil {
+			slog.Error("Error deleting analysis request", attr.Error(err))
+		}
+
+		err = s.db.RequestAnalysis(ctx, "datapipe", model.AnalysisModeFull)
+		if err != nil {
+			slog.Error("Error requesting analysis", attr.Error(err))
+		}
 	}()
 	defer measure.LogAndMeasure(slog.LevelInfo, "Purge Graph Data")()
 
@@ -155,6 +166,8 @@ func filterDeletableKinds(kindsToDelete []string) []string {
 func (s *BHCEPipeline) PruneData(ctx context.Context) error {
 	if ingestTasks, err := s.db.GetAllIngestTasks(ctx); err != nil {
 		return fmt.Errorf("fetching available ingest tasks: %v", err)
+	} else if ingestFileService, err := s.fileServiceResolver.Resolve(storage.FileServiceIngest); err != nil {
+		return fmt.Errorf("error resolving ingest file service: %v", err)
 	} else {
 		expectedFiles := make([]string, len(ingestTasks))
 
@@ -162,7 +175,7 @@ func (s *BHCEPipeline) PruneData(ctx context.Context) error {
 			expectedFiles[idx] = ingestTask.StoredFileName
 		}
 
-		go s.orphanedFileSweeper.Clear(ctx, expectedFiles)
+		go s.orphanedFileSweeper.Clear(ctx, ingestFileService, expectedFiles)
 	}
 	return nil
 }
@@ -239,70 +252,92 @@ func (s *BHCEPipeline) IsPrimary(ctx context.Context, status model.DatapipeStatu
 	return true, ctx
 }
 
+// Analyze decides whether analysis should run and which steps to execute. Analysis runs when either
+// ingest jobs are waiting (full analysis) or an analysis request is queued (the request's merged
+// step bits). When both triggers are present the step sets are unioned.
 func (s *BHCEPipeline) Analyze(ctx context.Context) error {
-	// If there are completed ingest jobs or if analysis was user-requested, perform analysis.
-	if hasJobsWaitingForAnalysis, err := s.jobService.HasIngestJobsWaitingForAnalysis(); err != nil {
+	var analysisSteps model.AnalysisSteps
+
+	hasJobsWaitingForAnalysis, err := s.jobService.HasIngestJobsWaitingForAnalysis()
+	if err != nil {
 		return fmt.Errorf("looking up jobs for analysis: %v", err)
-	} else if hasJobsWaitingForAnalysis || s.db.HasAnalysisRequest(ctx) {
-		// Ensure that the user-requested analysis switch is deleted. This is done at the beginning of the
-		// function so that any re-analysis requests are caught while analysis is in-progress.
-		if err := s.db.DeleteAnalysisRequest(ctx); err != nil {
-			return fmt.Errorf("clearing analysis request: %v", err)
+	}
+	if hasJobsWaitingForAnalysis {
+		analysisSteps = model.AnalysisStepsFull()
+	}
+
+	analysisRequest, err := s.db.GetAnalysisRequest(ctx)
+	if err != nil && !errors.Is(err, database.ErrNotFound) {
+		return fmt.Errorf("looking up analysis request: %v", err)
+	}
+	if err == nil {
+		analysisSteps = analysisSteps.Merge(analysisRequest.AnalysisSteps)
+	}
+
+	if analysisSteps.IsEmpty() {
+		return nil
+	}
+
+	return s.analyze(ctx, analysisSteps)
+}
+
+func (s *BHCEPipeline) analyze(ctx context.Context, analysisSteps model.AnalysisSteps) error {
+	// Ensure that the user-requested analysis switch is deleted. This is done at the beginning of the
+	// function so that any re-analysis requests are caught while analysis is in-progress.
+	if err := s.db.DeleteAnalysisRequest(ctx); err != nil {
+		return fmt.Errorf("clearing analysis request: %v", err)
+	}
+
+	if s.cfg.DisableAnalysis {
+		return ErrAnalysisDisabled
+	}
+
+	defer measure.LogAndMeasure(
+		slog.LevelInfo,
+		"Graph Analysis",
+		attr.Namespace("analysis"),
+		attr.Function("Analyze"),
+		attr.Scope("summary"),
+	)()
+
+	if err := s.db.SetLastAnalysisStartTime(ctx); err != nil {
+		slog.ErrorContext(ctx, "Error setting last analysis start time", attr.Error(err))
+	}
+
+	if err := analysis.RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg, analysisSteps); err != nil {
+		if errors.Is(err, analysis.ErrAnalysisFailed) {
+			s.jobService.FailAnalyzedIngestJobs()
+		} else if errors.Is(err, analysis.ErrAnalysisPartiallyCompleted) {
+			s.jobService.PartialCompleteIngestJobs()
 		}
-
-		if s.cfg.DisableAnalysis {
-			return ErrAnalysisDisabled
-		}
-
-		defer measure.LogAndMeasure(
-			slog.LevelInfo,
-			"Graph Analysis",
-			attr.Namespace("analysis"),
-			attr.Function("Analyze"),
-			attr.Scope("summary"),
-		)()
-
-		if err := s.db.SetLastAnalysisStartTime(ctx); err != nil {
-			slog.ErrorContext(ctx, "Error setting last analysis start time", attr.Error(err))
-		}
-
-		if err := analysis.RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg); err != nil {
-			if errors.Is(err, analysis.ErrAnalysisFailed) {
-				s.jobService.FailAnalyzedIngestJobs()
-			} else if errors.Is(err, analysis.ErrAnalysisPartiallyCompleted) {
-				s.jobService.PartialCompleteIngestJobs()
-			}
-			return fmt.Errorf("analysis failure: %v", err)
-		} else if err := s.db.UpdateLastAnalysisCompleteTime(ctx); err != nil {
-			return fmt.Errorf("update last analysis completion time: %v", err)
-		} else {
-			s.jobService.CompleteAnalyzedIngestJobs()
-
-			// This is cacheclearing. The analysis is still successful here
-			if _, err := s.db.GetFlagByKey(ctx, appcfg.FeatureEntityPanelCaching); err != nil {
-				slog.ErrorContext(
-					ctx,
-					"Error retrieving entity panel caching flag",
-					attr.Error(err),
-				)
-			} else if err := s.cache.Reset(); err != nil {
-				slog.ErrorContext(
-					ctx,
-					"Error while resetting the cache",
-					attr.Error(err),
-				)
-			} else {
-				slog.InfoContext(
-					ctx,
-					"Cache successfully reset by datapipe daemon",
-					attr.Namespace("analysis"),
-					attr.Function("Analyze"),
-				)
-			}
-
-			return nil
-		}
+		return fmt.Errorf("analysis failure: %v", err)
+	} else if err := s.db.UpdateLastAnalysisCompleteTime(ctx); err != nil {
+		return fmt.Errorf("update last analysis completion time: %v", err)
 	} else {
+		s.jobService.CompleteAnalyzedIngestJobs()
+
+		// This is cacheclearing. The analysis is still successful here
+		if _, err := s.db.GetFlagByKey(ctx, appcfg.FeatureEntityPanelCaching); err != nil {
+			slog.ErrorContext(
+				ctx,
+				"Error retrieving entity panel caching flag",
+				attr.Error(err),
+			)
+		} else if err := s.cache.Reset(); err != nil {
+			slog.ErrorContext(
+				ctx,
+				"Error while resetting the cache",
+				attr.Error(err),
+			)
+		} else {
+			slog.InfoContext(
+				ctx,
+				"Cache successfully reset by datapipe daemon",
+				attr.Namespace("analysis"),
+				attr.Function("Analyze"),
+			)
+		}
+
 		return nil
 	}
 }

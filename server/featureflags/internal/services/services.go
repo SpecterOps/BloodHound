@@ -21,6 +21,8 @@ import (
 	"context"
 	"errors"
 	"time"
+
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 // Feature-flag keys referenced by BHE feature slices. These mirror the keys
@@ -32,7 +34,10 @@ const (
 )
 
 // ErrNotFound indicates that no feature flag exists for the requested key.
-var ErrNotFound = errors.New("feature flag not found")
+var (
+	ErrNotFound         = errors.New("feature flag not found")
+	ErrNotUserUpdatable = errors.New("feature flag is not user updatable")
+)
 
 // FeatureFlag is the domain representation of a row in the feature_flags table.
 type FeatureFlag struct {
@@ -46,12 +51,24 @@ type FeatureFlag struct {
 	UserUpdatable bool
 }
 
+// TODO: once the audit log middleware is instantuated, this should be removed
+func (s FeatureFlag) AuditData() model.AuditData {
+	return model.AuditData{
+		"name":    s.Name,
+		"key":     s.Key,
+		"enabled": s.Enabled,
+	}
+}
+
 // Database describes the persistence capabilities the feature-flag Service
 // requires. Implementations translate driver-level not-found errors into
 // ErrNotFound so the Service can reason about them in domain terms. It is the
 // single port through which a database implementation is injected.
 type Database interface {
 	GetFlagByKey(ctx context.Context, key string) (FeatureFlag, error)
+	GetFlagByID(ctx context.Context, id int32) (FeatureFlag, error)
+	GetAllFlags(ctx context.Context) ([]FeatureFlag, error)
+	SetFlag(ctx context.Context, featureFlag FeatureFlag) error
 }
 
 // Service implements feature-flag use cases on top of a Database implementation.
@@ -82,4 +99,29 @@ func (s *Service) IsEnabled(ctx context.Context, key string) (bool, error) {
 		return false, err
 	}
 	return flag.Enabled, nil
+}
+
+// GetAllFlags returns all the feature flags
+func (s *Service) GetAllFlags(ctx context.Context) ([]FeatureFlag, error) {
+	return s.db.GetAllFlags(ctx)
+}
+
+// ToggleFlag enables/disables the feature flag by the feature flag id
+func (s *Service) ToggleFlag(ctx context.Context, id int32) (FeatureFlag, error) {
+	flag, err := s.db.GetFlagByID(ctx, id)
+	if err != nil {
+		return flag, err
+	}
+
+	if !flag.UserUpdatable {
+		return flag, ErrNotUserUpdatable
+	}
+
+	flag.Enabled = !flag.Enabled
+
+	if err := s.db.SetFlag(ctx, flag); err != nil {
+		return flag, err
+	}
+
+	return flag, nil
 }
