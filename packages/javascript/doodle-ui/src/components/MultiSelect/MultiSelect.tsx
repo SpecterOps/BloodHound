@@ -14,8 +14,11 @@
 //
 
 // SPDX-License-Identifier: Apache-2.0
-import { cva, VariantProps } from 'class-variance-authority';
+import { cva } from 'class-variance-authority';
 import * as React from 'react';
+import { Checkbox } from '../Checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '../Popover';
+import { ScrollArea } from '../ScrollArea';
 import { cn } from '../utils';
 
 // TODO: move to doodle-ui icons system in follow-up ticket
@@ -32,30 +35,33 @@ const CaretDown = ({ className, size = 12 }: { className?: string; size?: number
 );
 
 const MultiSelectTriggerVariants = cva(
-    'flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm text-input-placeholder-text hover:text-white focus:outline-none focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50',
-    {
-        variants: {
-            variant: {
-                default: 'border-input-border-default bg-input-fill hover:border-input-border-hover hover:bg-secondary',
-                error: 'border-status-error-main bg-input-fill',
-                disabled: 'border-input-border-disabled bg-input-fill-disabled',
-            },
-        },
-        defaultVariants: {
-            variant: 'default',
-        },
-    }
+    cn(
+        'flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm',
+
+        // base
+        'border-input-border-default bg-input-fill text-input-placeholder-text',
+
+        // focus
+        'focus:outline-none focus-visible:focus-ring data-[state=open]:focus-ring',
+
+        // enabled states
+        'enabled:hover:border-input-border-hover enabled:hover:bg-secondary enabled:hover:text-white',
+
+        // disabled state
+        'disabled:cursor-not-allowed disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-icon-disabled',
+
+        // error state
+        'aria-[invalid=true]:border-status-error-main'
+    )
 );
 
-interface MultiSelectTriggerProps
-    extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-        VariantProps<typeof MultiSelectTriggerVariants> {
+interface MultiSelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     open?: boolean;
 }
 
 const MultiSelectTrigger = React.forwardRef<HTMLButtonElement, MultiSelectTriggerProps>(
-    ({ className, variant, open, children, ...props }, ref) => (
-        <button ref={ref} type='button' className={cn(MultiSelectTriggerVariants({ variant, className }))} {...props}>
+    ({ className, open, children, ...props }, ref) => (
+        <button ref={ref} type='button' className={cn(MultiSelectTriggerVariants({ className }))} {...props}>
             <span className='truncate'>{children}</span>
             <CaretDown className={cn('ml-2 shrink-0 transition-transform duration-200', open && 'rotate-180')} />
         </button>
@@ -64,6 +70,7 @@ const MultiSelectTrigger = React.forwardRef<HTMLButtonElement, MultiSelectTrigge
 MultiSelectTrigger.displayName = 'MultiSelectTrigger';
 
 interface MultiSelectProps {
+    options: MultiSelectOption[];
     value: string[];
     onValueChange: (values: string[]) => void;
     placeholder?: string;
@@ -78,12 +85,103 @@ interface MultiSelectOption {
     disabled?: boolean;
 }
 
+interface MultiSelectOptionRowProps {
+    option: MultiSelectOption;
+    checked: boolean;
+    onSelect: (value: string) => void;
+}
+
+const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRowProps) => (
+    <div
+        role='option'
+        aria-selected={checked}
+        aria-disabled={option.disabled}
+        tabIndex={option.disabled ? -1 : 0}
+        className={cn(
+            'flex items-center gap-2 mx-1 p-2 py-2 rounded-lg cursor-pointer hover:bg-secondary hover:text-white',
+            option.disabled && 'pointer-events-none opacity-50'
+        )}
+        onClick={() => !option.disabled && onSelect(option.value)}
+        onKeyDown={(event) => {
+            if (!option.disabled && (event.key === 'Enter' || event.key === ' ')) {
+                event.preventDefault();
+                onSelect(option.value);
+            }
+        }}>
+        <Checkbox
+            checked={checked}
+            disabled={option.disabled}
+            onClick={(event) => event.stopPropagation()}
+            onCheckedChange={() => !option.disabled && onSelect(option.value)}
+        />
+        <span className='truncate text-sm'>{option.label}</span>
+    </div>
+);
+
 /**
  * Description for MultiSelect
  */
-const MultiSelect = ({ ...props }: MultiSelectProps) => {
-    return <div {...props} />;
+const MultiSelect = ({ options, value, onValueChange, placeholder, disabled, error, className }: MultiSelectProps) => {
+    const [open, setOpen] = React.useState(false);
+
+    const handleSelect = (selectedValue: string) => {
+        const isSelected = value.includes(selectedValue);
+
+        if (isSelected) {
+            const updatedValues = value.filter((currentValue) => currentValue !== selectedValue);
+            onValueChange(updatedValues);
+            return;
+        }
+
+        const updatedValues = [...value, selectedValue];
+        onValueChange(updatedValues);
+    };
+
+    const getMultiSelectTriggerText = (
+        options: MultiSelectOption[],
+        value: string[],
+        placeholder = 'Select options'
+    ) => {
+        if (value.length === 0) return placeholder;
+
+        if (value.length === 1) {
+            const selectedOption = options.find((option) => option.value === value[0]);
+            return selectedOption?.label ?? value[0];
+        }
+
+        return `${value.length} Selected`;
+    };
+
+    const triggerText = getMultiSelectTriggerText(options, value, placeholder);
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <MultiSelectTrigger
+                    open={open}
+                    disabled={disabled}
+                    aria-invalid={error || undefined}
+                    className={className}>
+                    {triggerText}
+                </MultiSelectTrigger>
+            </PopoverTrigger>
+            <PopoverContent className='p-0 w-[var(--radix-popover-trigger-width)]' align='start'>
+                <ScrollArea className='max-h-60'>
+                    <div role='listbox' aria-multiselectable='true' className='py-1'>
+                        {options.map((option) => (
+                            <MultiSelectOptionRow
+                                key={option.value}
+                                option={option}
+                                checked={value.includes(option.value)}
+                                onSelect={handleSelect}
+                            />
+                        ))}
+                    </div>
+                </ScrollArea>
+            </PopoverContent>
+        </Popover>
+    );
 };
 
-export { MultiSelect, MultiSelectTrigger };
+export { MultiSelect, MultiSelectOptionRow, MultiSelectTrigger };
 export type { MultiSelectOption, MultiSelectProps };
