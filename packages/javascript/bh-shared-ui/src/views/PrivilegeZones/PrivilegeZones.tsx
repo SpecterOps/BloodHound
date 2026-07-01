@@ -155,7 +155,7 @@ const PrivilegeZones: FC = () => {
                                 case zonesPath:
                                 case labelsPath:
                                     return navigate(`/${privilegeZonesPath}/${value}/${id}/${path}`, {
-                                        discardQueryParams: path === summaryPath,
+                                        discardQueryParams: true,
                                     });
                             }
                         }}>
