@@ -51,10 +51,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// graphDBHarness bundles the wired HTTP handler and the ids of the relationship
-// seeded into the graph so the e2e cases can assert the full response contract.
+// graphDBHarness bundles the wired HTTP handler and the test data IDs
+// so E2E test cases can assert the full response contract.
 type graphDBHarness struct {
 	handler        *mux.Router
+	nodeID         int64
 	relationshipID int64
 	sourceNodeID   int64
 	targetNodeID   int64
@@ -139,6 +140,7 @@ func newGraphDBHarness(t *testing.T) graphDBHarness {
 	require.NoError(t, graphDatabase.AssertSchema(ctx, graphschema.DefaultGraphSchema()))
 
 	harness := graphDBHarness{}
+	seedNode(t, ctx, graphDatabase, &harness)
 	seedRelationship(t, ctx, graphDatabase, &harness)
 
 	store := appdb.NewStore(graphDatabase, dbPool)
@@ -146,11 +148,38 @@ func newGraphDBHarness(t *testing.T) graphDBHarness {
 
 	harness.handler = mux.NewRouter()
 	harness.handler.HandleFunc(
+		fmt.Sprintf("/api/v2/nodes/{%s}", handlers.URIPathVariableNodeID),
+		handlerSet.GetNodeByID,
+	).Methods("GET")
+	harness.handler.HandleFunc(
 		fmt.Sprintf("/api/v2/relationships/{%s}", handlers.URIPathVariableRelationshipID),
 		handlerSet.GetRelationshipByID,
 	).Methods("GET")
 
 	return harness
+}
+
+// seedNode creates a test node in the graph with multiple kinds and properties,
+// recording the node ID in the harness.
+func seedNode(t *testing.T, ctx context.Context, graphDB graph.Database, harness *graphDBHarness) {
+	t.Helper()
+
+	err := graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		node, err := tx.CreateNode(
+			graph.AsProperties(graph.PropertyMap{
+				common.Name:     "Administrator",
+				common.ObjectID: uuid.Must(uuid.NewV4()).String(),
+			}),
+			ad.Entity,
+			ad.User,
+		)
+		if err != nil {
+			return err
+		}
+		harness.nodeID = int64(node.ID)
+		return nil
+	})
+	require.NoError(t, err)
 }
 
 // seedRelationship writes two AD nodes and a MemberOf relationship between them
@@ -240,4 +269,74 @@ func TestGetRelationshipByID(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, recorder.Code)
 	})
+}
+
+func TestGetNodeByID(t *testing.T) {
+	var (
+		harness  = newGraphDBHarness(t)
+		basePath = "/api/v2/nodes/"
+	)
+
+	tests := []struct {
+		name           string
+		path           string
+		wantStatusCode int
+		assertBody     func(t *testing.T, body []byte)
+	}{
+		{
+			name:           "returns 200 with the node view for an existing node",
+			path:           basePath + strconv.FormatInt(harness.nodeID, 10),
+			wantStatusCode: http.StatusOK,
+			assertBody: func(t *testing.T, body []byte) {
+				t.Helper()
+
+				var envelope struct {
+					Data handlers.NodeView `json:"data"`
+				}
+				require.NoError(t, json.Unmarshal(body, &envelope))
+
+				assert.Equal(t, harness.nodeID, envelope.Data.NodeID)
+				assert.Len(t, envelope.Data.Kinds, 2)
+				assert.Equal(t, "Administrator", envelope.Data.Properties[common.Name.String()])
+				assert.NotEmpty(t, envelope.Data.Properties[common.ObjectID.String()])
+
+				// Verify at least one kind has a non-nil ID (Entity and User should both be registered)
+				var hasNonNilKindID bool
+				for _, kind := range envelope.Data.Kinds {
+					if kind.NodeKindID != nil {
+						hasNonNilKindID = true
+						break
+					}
+				}
+				assert.True(t, hasNonNilKindID, "at least one kind should have a resolved ID")
+			},
+		},
+		{
+			name:           "returns 400 when the id is malformed",
+			path:           basePath + "not-a-number",
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:           "returns 404 when the node does not exist",
+			path:           basePath + strconv.FormatInt(harness.nodeID+100000, 10),
+			wantStatusCode: http.StatusNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				recorder = httptest.NewRecorder()
+				request  = httptest.NewRequest("GET", tt.path, nil)
+			)
+
+			harness.handler.ServeHTTP(recorder, request)
+
+			assert.Equal(t, tt.wantStatusCode, recorder.Code)
+
+			if tt.assertBody != nil {
+				tt.assertBody(t, recorder.Body.Bytes())
+			}
+		})
+	}
 }

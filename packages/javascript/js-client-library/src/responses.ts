@@ -30,7 +30,13 @@ import {
     FileIngestCompletedTask,
     FileIngestJob,
     GraphData,
+    NodeDetails,
+    NodeDetailsWithInfo,
+    NodeKindResponse,
     NodeSourceTypes,
+    RelationshipDetails,
+    RelationshipDetailsWithInfo,
+    RelationshipKindResponse,
     Role,
     ScheduledJobDisplay,
     TimestampFields,
@@ -441,3 +447,15 @@ export type GetWebhooksResponse = PaginatedResponse<Webhook[]>;
 export type GetWebhookResponse = BasicResponse<Webhook>;
 export type RotateWebhookSecretResponse = BasicResponse<WebhookSecret>;
 export type WebhookTestResponse = BasicResponse<WebhookTest>;
+
+export type GetNodeResponse = BasicResponse<NodeDetails | NodeDetailsWithInfo>;
+
+export type GetRelationshipResponse = BasicResponse<RelationshipDetails | RelationshipDetailsWithInfo>;
+
+export type ListNodeKindsResponse = BasicResponse<NodeKindResponse[]>;
+
+export type GetNodeKindResponse = BasicResponse<NodeKindResponse>;
+
+export type ListRelationshipKindsResponse = BasicResponse<RelationshipKindResponse[]>;
+
+export type GetRelationshipKindResponse = BasicResponse<RelationshipKindResponse>;

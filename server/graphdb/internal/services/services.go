@@ -28,7 +28,17 @@ import (
 // persistence layer.
 type Database interface {
 	GetRelationship(ctx context.Context, id int64) (Relationship, error)
+	GetNode(ctx context.Context, id int64) (Node, error)
 	GetKindByName(ctx context.Context, name string) (Kind, error)
+	GetNodeKindsByNames(ctx context.Context, names []string) ([]Kind, error)
+}
+
+// Kind is the domain representation of a relationship or node kind, pairing the kind name
+// recorded on the graph with the integer identifier assigned to it in the schema_*_kinds table.
+// ID is nil when the kind is not registered in the schema tables (best-effort resolution).
+type Kind struct {
+	ID   *int32
+	Name string
 }
 
 // Service implements the graphdb use cases on top of a Database implementation.

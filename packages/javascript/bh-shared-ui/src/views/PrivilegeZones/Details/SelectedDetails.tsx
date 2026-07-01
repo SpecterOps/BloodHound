@@ -32,6 +32,7 @@ export const SelectedDetails: FC = () => {
 
     if (memberQuery.data) {
         const selectedNode = {
+            graphId: memberQuery.data.id.toString(),
             id: memberQuery.data.object_id,
             name: memberQuery.data.name,
             type: memberQuery.data.primary_kind as EntityKinds,

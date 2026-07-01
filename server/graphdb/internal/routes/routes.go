@@ -32,10 +32,12 @@ import (
 // and can be rejected with 429 before the permissions check runs.
 func Register(routerInst *router.Router, handlerSet *handlers.Handlers, rateLimit func() mux.MiddlewareFunc) {
 	var (
-		permissions  = auth.Permissions()
-		graphDBRoute = routerInst.GET(fmt.Sprintf("/api/v2/relationships/{%s}", handlers.URIPathVariableRelationshipID), handlerSet.GetRelationshipByID)
+		permissions       = auth.Permissions()
+		relationshipRoute = routerInst.GET(fmt.Sprintf("/api/v2/relationships/{%s}", handlers.URIPathVariableRelationshipID), handlerSet.GetRelationshipByID)
+		nodeRoute         = routerInst.GET(fmt.Sprintf("/api/v2/nodes/{%s}", handlers.URIPathVariableNodeID), handlerSet.GetNodeByID)
 	)
 
-	router.With(rateLimit, graphDBRoute)
-	graphDBRoute.RequirePermissions(permissions.GraphDBRead)
+	router.With(rateLimit, relationshipRoute, nodeRoute)
+	relationshipRoute.RequirePermissions(permissions.GraphDBRead)
+	nodeRoute.RequirePermissions(permissions.GraphDBRead)
 }
