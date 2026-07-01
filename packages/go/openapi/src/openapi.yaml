@@ -702,7 +702,13 @@ paths:
   /api/v2/jobs/{job_id}/log:
     $ref: './paths/jobs.jobs.id.log.yaml'
 
-#  tasks (deprecated)
+  # management operations
+  /api/v2/clients/management/start:
+    $ref: './paths/clients.clients.management.start.yaml'
+  /api/v2/clients/management/end:
+    $ref: './paths/clients.clients.management.end.yaml'
+
+  #  tasks (deprecated)
   /api/v2/tasks/available:
     $ref: './paths/tasks.tasks.available.yaml'
   /api/v2/tasks/finished:
