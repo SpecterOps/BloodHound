@@ -14,13 +14,24 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { PopoverTrigger } from 'doodle-ui';
-import DropdownTriggerContents, { DropdownTriggerContentsProps } from './DropdownTriggerContents';
+import { ButtonProps, PopoverTrigger } from 'doodle-ui';
+import { FC } from 'react';
+import DropdownTriggerContents from './DropdownTriggerContents';
 
-const DropdownTrigger = (props: DropdownTriggerContentsProps) => {
+const DropdownTrigger: FC<{
+    open: boolean;
+    selectedText: JSX.Element | string;
+    buttonProps?: ButtonProps;
+    StartAdornment?: React.FC;
+    EndAdornment?: React.FC;
+    testId?: string;
+    variant?: ButtonProps['variant'];
+}> = (props) => {
     return (
         <PopoverTrigger asChild>
-            <DropdownTriggerContents {...props} />
+            <div>
+                <DropdownTriggerContents {...props} />
+            </div>
         </PopoverTrigger>
     );
 };
