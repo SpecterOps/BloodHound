@@ -40,7 +40,7 @@ const SearchResultItem: FC<{
             dense
             style={style}
             className={cn(
-                'group hover:bg-secondary hover:text-neutral-light-1 hover:dark:bg-secondary-variant-2 hover:dark:text-neutral-dark-1 focus:bg-secondary focus:text-neutral-light-1 focus:dark:bg-secondary-variant-2 focus:dark:text-neutral-dark-1 focus-visible:bg-secondary focus-visible:text-neutral-light-1 focus-visible:dark:bg-secondary-variant-2 focus-visible:dark:text-neutral-dark-1',
+                'hover:bg-secondary hover:text-neutral-light-1 hover:dark:bg-secondary-variant-2 hover:dark:text-neutral-dark-1',
                 {
                     'bg-secondary text-neutral-light-1 dark:bg-secondary-variant-2 dark:text-neutral-dark-1':
                         highlightedIndex === index,
@@ -58,15 +58,7 @@ const SearchResultItem: FC<{
                             display: 'flex',
                             alignItems: 'center',
                         }}>
-                        <NodeIcon
-                            nodeType={item.kind}
-                            className={cn(
-                                'group-hover:text-inherit group-focus:text-inherit group-focus-visible:text-inherit',
-                                {
-                                    'text-inherit': highlightedIndex === index,
-                                }
-                            )}
-                        />
+                        <NodeIcon nodeType={item.kind} />
                         <Box
                             style={{
                                 flexGrow: 1,

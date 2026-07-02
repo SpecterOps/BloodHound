@@ -14,13 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const triggerStyles =
-    'max-w-56 text-sm text-contrast rounded-md bg-transparent hover:bg-primary hover:text-white hover:[&_svg]:text-white hover:[&_svg]:fill-current hover:[&_svg_*]:text-white hover:[&_svg_*]:fill-current focus:bg-primary focus:text-white focus:[&_svg]:text-white focus:[&_svg]:fill-current focus:[&_svg_*]:text-white focus:[&_svg_*]:fill-current focus-visible:bg-primary focus-visible:text-white focus-visible:[&_svg]:text-white focus-visible:[&_svg]:fill-current focus-visible:[&_svg_*]:text-white focus-visible:[&_svg_*]:fill-current border shadow-outer-0 hover:border-transparent focus:border-transparent focus-visible:border-transparent border-neutral-light-5 group';
+    'max-w-56 text-sm text-contrast rounded-md bg-transparent hover:bg-primary hover:text-white border shadow-outer-0 hover:border-transparent border-neutral-light-5 group';
 
 export const popoverContentStyles = 'flex flex-col p-0 rounded-md border border-neutral-5 bg-neutral-1';
 
 export const optionStyles =
-    'px-4 py-1 rounded-none w-full justify-normal hover:no-underline hover:bg-neutral-4 hover:[&_svg]:text-white hover:[&_svg]:fill-current hover:[&_svg_*]:text-white hover:[&_svg_*]:fill-current focus:bg-primary focus:text-white focus:[&_svg]:text-white focus:[&_svg]:fill-current focus:[&_svg_*]:text-white focus:[&_svg_*]:fill-current focus-visible:bg-primary focus-visible:text-white focus-visible:[&_svg]:text-white focus-visible:[&_svg]:fill-current focus-visible:[&_svg_*]:text-white focus-visible:[&_svg_*]:fill-current disabled:bg-neutral-4 group';
-
-export const selectorIconStyles = 'group-hover:text-white group-focus:text-white group-focus-visible:text-white';
+    'px-4 py-1 rounded-none w-full justify-normal hover:no-underline hover:bg-neutral-4 disabled:bg-neutral-4';
 
 export const tooltipStyles = 'max-w-80 border-0 dark:bg-neutral-4 dark:text-white';

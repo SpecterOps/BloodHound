@@ -34,10 +34,7 @@ interface RadioGroupProps extends React.ComponentPropsWithoutRef<typeof RadioGro
 
 const RadioGroup = React.forwardRef<React.ElementRef<typeof RadioGroupPrimitive.Root>, RadioGroupProps>(
     ({ className, children, row, ...props }, ref) => (
-        <RadioGroupPrimitive.Root
-            ref={ref}
-            className={cn('rounded-md focus-within:focus-ring', row ? 'flex' : '', className)}
-            {...props}>
+        <RadioGroupPrimitive.Root ref={ref} className={cn(row ? 'flex' : '', className)} {...props}>
             {children}
         </RadioGroupPrimitive.Root>
     )
@@ -51,17 +48,17 @@ interface RadioGroupItemProps extends React.ComponentPropsWithoutRef<typeof Radi
 
 const RadioItem = React.forwardRef<React.ElementRef<typeof RadioGroupPrimitive.Item>, RadioGroupItemProps>(
     ({ className, label, value, ...props }, ref) => (
-        <Label className='flex items-center font-normal cursor-pointer mb-1 mr-4 rounded-md px-1 [&:has(:focus-visible)]:bg-neutral-light-3 dark:[&:has(:focus-visible)]:bg-neutral-dark-4'>
+        <Label className='flex items-center font-normal cursor-pointer mb-1 mr-4 rounded-md [&:has(:focus-visible)]:ring-2 [&:has(:focus-visible)]:ring-secondary ring-offset-1 ring-offset-transparent px-1'>
             <RadioGroupPrimitive.Item
                 value={value}
                 ref={ref}
                 className={
-                    'w-4 h-4 rounded-full border border-neutral-5 dark:border-neutral-light-5 hover:border-secondary dark:hover:border-secondary-variant-2 active:border-primary-variant mr-2 relative focus:outline-none focus-visible:focus-ring data-[disabled]:border-neutral-4 data-[disabled]:bg-neutral-2 peer'
+                    'w-4 h-4 rounded rounded-full border border-neutral-5 dark:border-neutral-light-5 hover:border-secondary dark:hover:border-secondary-variant-2 active:border-primary-variant mr-2 relative data-[disabled]:border-neutral-4 data-[disabled]:bg-neutral-2 peer'
                 }
                 {...props}>
                 <RadioGroupPrimitive.Indicator
                     className={cn(
-                        'bg-primary dark:bg-secondary-variant-2 w-2 h-2 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
+                        'bg-primary dark:bg-secondary-variant-2 w-2 h-2 rounded rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
                     )}
                 />
             </RadioGroupPrimitive.Item>

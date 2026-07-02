@@ -16,7 +16,7 @@
 import { Button, ButtonProps } from 'doodle-ui';
 import { cn } from '../../utils';
 import { AppIcon } from '../AppIcon';
-import { selectorIconStyles, triggerStyles } from './constants';
+import { triggerStyles } from './constants';
 
 type DropdownTriggerContentsProps = {
     open: boolean;
@@ -43,14 +43,13 @@ const DropdownTriggerContents = ({
 
     return (
         <Button
-            variant={variant ?? 'transparent'}
+            variant={variant}
             className={cn(
-                'uppercase group hover:[&_svg]:text-white hover:[&_svg]:fill-current hover:[&_svg_*]:text-white hover:[&_svg_*]:fill-current focus:[&_svg]:text-white focus:[&_svg]:fill-current focus:[&_svg_*]:text-white focus:[&_svg_*]:fill-current focus-visible:[&_svg]:text-white focus-visible:[&_svg]:fill-current focus-visible:[&_svg_*]:text-white focus-visible:[&_svg_*]:fill-current',
+                'uppercase',
                 {
                     'w-full text-sm': buttonPrimary,
                     [triggerStyles]: !buttonPrimary,
-                    'bg-primary text-white border-transparent [&_svg]:text-white [&_svg]:fill-current [&_svg_*]:text-white [&_svg_*]:fill-current':
-                        open,
+                    'bg-primary text-white border-transparent': open,
                 },
                 buttonProps?.className
             )}
@@ -73,7 +72,7 @@ const DropdownTriggerContents = ({
                             'justify-self-end': buttonPrimary,
                             hidden: readOnly,
                         })}>
-                        <AppIcon.CaretDown className={selectorIconStyles} size={12} />
+                        <AppIcon.CaretDown size={12} />
                     </span>
                 )}
             </span>

@@ -39,7 +39,7 @@ import {
     sortEnvironmentsByName,
 } from '../../utils/environments';
 import { cn } from '../../utils/theme';
-import { DropdownTrigger, optionStyles, popoverContentStyles, selectorIconStyles } from '../DropdownSelector';
+import { DropdownTrigger, popoverContentStyles } from '../DropdownSelector';
 import { SelectedEnvironment, SelectorValueTypes } from './types';
 
 const selectedText = (
@@ -156,7 +156,7 @@ const SimpleEnvironmentSelector: React.FC<{
                     {isPrivilegeZonesPage && (
                         <li key='all-environments'>
                             <Button
-                                className={cn(optionStyles, 'flex justify-between items-center gap-2')}
+                                className='flex justify-between items-center gap-2 w-full'
                                 onClick={() => handlePlatformClick()}
                                 variant='text'>
                                 All Environments
@@ -166,15 +166,11 @@ const SimpleEnvironmentSelector: React.FC<{
                     {environmentTypes?.map((type) => (
                         <li key={`${type}-platform`}>
                             <Button
-                                className={cn(optionStyles, 'flex justify-between items-center gap-2')}
+                                className='flex justify-between items-center gap-2 w-full'
                                 onClick={() => handlePlatformClick(type)}
                                 variant={'text'}>
                                 {environmentInfo[type]?.aggregationDisplayName}
-                                <FontAwesomeIcon
-                                    className={selectorIconStyles}
-                                    icon={environmentInfo[type]?.icon}
-                                    size='sm'
-                                />
+                                <FontAwesomeIcon icon={environmentInfo[type]?.icon} size='sm' />
                             </Button>
                         </li>
                     ))}
@@ -184,7 +180,7 @@ const SimpleEnvironmentSelector: React.FC<{
                         return (
                             <li key={environment.id}>
                                 <Button
-                                    className={cn(optionStyles, 'flex justify-between items-center gap-2')}
+                                    className='flex justify-between items-center gap-2 w-full'
                                     onClick={() => handleEnvironmentClick(environment)}
                                     variant='text'>
                                     <TooltipProvider>
@@ -199,11 +195,7 @@ const SimpleEnvironmentSelector: React.FC<{
                                             </TooltipPortal>
                                         </TooltipRoot>
                                     </TooltipProvider>
-                                    <FontAwesomeIcon
-                                        className={selectorIconStyles}
-                                        icon={environmentInfo[environment.type]?.icon}
-                                        size='sm'
-                                    />
+                                    <FontAwesomeIcon icon={environmentInfo[environment.type]?.icon} size='sm' />
                                 </Button>
                             </li>
                         );
