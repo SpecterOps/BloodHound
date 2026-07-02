@@ -21,32 +21,7 @@ import { Label } from '../Label';
 import { cn } from '../utils';
 
 const CheckboxVariants = cva(
-    cn(
-        'peer shrink-0 rounded-sm border-2',
-        'border-input-border-default dark:border-input-border-default',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary dark:focus-visible:ring-secondary',
-        'focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-light-1 dark:focus-visible:ring-offset-neutral-dark-1',
-
-        // enabled states
-        'enabled:hover:border-secondary',
-        'enabled:hover:data-[state=checked]:border-secondary enabled:hover:data-[state=checked]:bg-secondary',
-        'enabled:hover:data-[state=indeterminate]:border-secondary enabled:hover:data-[state=indeterminate]:bg-secondary',
-        'enabled:active:border-primary-variant',
-        'enabled:data-[state=checked]:border-primary enabled:data-[state=checked]:bg-primary enabled:data-[state=checked]:text-neutral-light-1',
-        'enabled:data-[state=indeterminate]:border-primary enabled:data-[state=indeterminate]:bg-primary enabled:data-[state=indeterminate]:text-neutral-light-1',
-        'enabled:dark:data-[state=checked]:text-neutral-dark-1',
-        'enabled:dark:data-[state=indeterminate]:text-neutral-dark-1',
-
-        // disabled state
-        'disabled:cursor-not-allowed disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-icon-disabled',
-
-        // error state
-        'enabled:aria-[invalid=true]:border-status-error-main enabled:aria-[invalid=true]:text-status-error-main',
-        'enabled:aria-[invalid=true]:data-[state=checked]:border-status-error-main enabled:aria-[invalid=true]:data-[state=checked]:bg-status-error-main enabled:aria-[invalid=true]:data-[state=checked]:text-neutral-light-1',
-        'enabled:aria-[invalid=true]:data-[state=indeterminate]:border-status-error-main enabled:aria-[invalid=true]:data-[state=indeterminate]:bg-status-error-main enabled:aria-[invalid=true]:data-[state=indeterminate]:text-neutral-light-1',
-        'enabled:dark:aria-[invalid=true]:data-[state=checked]:text-neutral-dark-1',
-        'enabled:dark:aria-[invalid=true]:data-[state=indeterminate]:text-neutral-dark-1'
-    ),
+    'peer shrink-0 rounded-sm border-2 border-input-border-default dark:border-input-border-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary dark:focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-light-1 dark:focus-visible:ring-offset-neutral-dark-1 enabled:hover:border-secondary enabled:hover:data-[state=checked]:border-secondary enabled:hover:data-[state=checked]:bg-secondary enabled:hover:data-[state=indeterminate]:border-secondary enabled:hover:data-[state=indeterminate]:bg-secondary enabled:active:border-primary-variant enabled:data-[state=checked]:border-primary enabled:data-[state=checked]:bg-primary enabled:data-[state=checked]:text-neutral-light-1 enabled:data-[state=indeterminate]:border-primary enabled:data-[state=indeterminate]:bg-primary enabled:data-[state=indeterminate]:text-neutral-light-1 enabled:dark:data-[state=checked]:text-neutral-dark-1 enabled:dark:data-[state=indeterminate]:text-neutral-dark-1 disabled:cursor-not-allowed disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-icon-disabled enabled:aria-[invalid=true]:border-status-error-main enabled:aria-[invalid=true]:text-status-error-main enabled:aria-[invalid=true]:data-[state=checked]:border-status-error-main enabled:aria-[invalid=true]:data-[state=checked]:bg-status-error-main enabled:aria-[invalid=true]:data-[state=checked]:text-neutral-light-1 enabled:aria-[invalid=true]:data-[state=indeterminate]:border-status-error-main enabled:aria-[invalid=true]:data-[state=indeterminate]:bg-status-error-main enabled:aria-[invalid=true]:data-[state=indeterminate]:text-neutral-light-1 enabled:dark:aria-[invalid=true]:data-[state=checked]:text-neutral-dark-1 enabled:dark:aria-[invalid=true]:data-[state=indeterminate]:text-neutral-dark-1',
     {
         variants: {
             size: {
@@ -55,19 +30,23 @@ const CheckboxVariants = cva(
                 sm: 'size-[12px]',
             },
         },
+        defaultVariants: {
+            size: 'md',
+        },
     }
 );
 
-export type CheckboxProps = React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root> & {
-    size?: VariantProps<typeof CheckboxVariants>['size'];
+export interface CheckboxProps
+    extends React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>,
+        VariantProps<typeof CheckboxVariants> {
     icon?: React.ReactNode;
-};
+}
 
 const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root>, CheckboxProps>(
-    ({ size = 'md', icon, className, ...props }, ref) => {
+    ({ size, icon, className, ...props }, ref) => {
         return (
             <CheckboxPrimitive.Root ref={ref} className={cn(CheckboxVariants({ size, className }))} {...props}>
-                <CheckboxPrimitive.Indicator className={cn('group flex items-center justify-center text-current')}>
+                <CheckboxPrimitive.Indicator className='group flex items-center justify-center text-current'>
                     {icon ? (
                         icon
                     ) : (
@@ -91,12 +70,12 @@ const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root
 );
 Checkbox.displayName = CheckboxPrimitive.Root.displayName;
 
-type CheckboxWithLabelProps = React.ComponentPropsWithoutRef<typeof Checkbox> & {
+interface CheckboxWithLabelProps extends React.ComponentPropsWithoutRef<typeof Checkbox> {
     label: React.ReactNode;
     error?: boolean;
     labelClassName?: string;
     fieldClassName?: string;
-};
+}
 
 const CheckboxWithLabel = React.forwardRef<React.ElementRef<typeof Checkbox>, CheckboxWithLabelProps>(
     (
@@ -149,5 +128,6 @@ const CheckboxWithLabel = React.forwardRef<React.ElementRef<typeof Checkbox>, Ch
         );
     }
 );
+CheckboxWithLabel.displayName = 'CheckboxWithLabel';
 
 export { Checkbox, CheckboxWithLabel };
