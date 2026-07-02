@@ -23,9 +23,9 @@ export const InputVariants = cva(
         variants: {
             variant: {
                 outlined:
-                    'rounded-md ring-1 ring-neutral-dark-5 dark:ring-neutral-light-5 bg-neutral-2 px-3 py-2 text-sm hover:ring-2 focus:outline-none focus-visible:focus-ring',
+                    'rounded-md ring-1 ring-neutral-dark-5 dark:ring-neutral-light-5 bg-neutral-2 px-3 py-2 text-sm ring-offset-secondary dark:ring-offset-secondary-variant-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary dark:focus-visible:ring-secondary-variant-2 focus-visible:ring-offset-2 hover:ring-2',
                 underlined:
-                    'rounded-sm bg-transparent border-b-neutral-dark-5 dark:border-b-neutral-light-5 border-b hover:border-b-2 focus:outline-none focus-visible:focus-ring focus-visible:border-secondary focus-visible:border-b-2 dark:focus-visible:border-secondary-variant-2',
+                    'rounded-none bg-transparent border-b-neutral-dark-5 dark:border-b-neutral-light-5 border-b focus-visible:outline-none focus:border-t-0 focus:border-x-0 focus-visible:ring-offset-0 focus-visible:ring-transparent focus-visible:border-secondary focus-visible:border-b-2 focus:border-secondary focus:border-b-2 dark:focus-visible:outline-none dark:focus:border-t-0 dark:focus:border-x-0 dark:focus-visible:ring-offset-0 dark:focus-visible:ring-transparent dark:focus-visible:border-secondary-variant-2 dark:focus-visible:border-b-2 dark:focus:border-secondary-variant-2 dark:focus:border-b-2 hover:border-b-2',
             },
             intent: {
                 time: 'appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none',
