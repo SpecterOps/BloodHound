@@ -146,8 +146,8 @@ describe('ExploreSearch rendering per tab', async () => {
     it('should render the pathfinding search controls when searchType is pathfinding', async () => {
         await setup('pathfinding');
 
-        expect(screen.getByLabelText(/start node/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/destination node/i)).toBeInTheDocument();
+        expect(screen.getByRole('textbox', { name: /start node/i })).toBeInTheDocument();
+        expect(screen.getByRole('textbox', { name: /destination node/i })).toBeInTheDocument();
 
         expect(screen.getByRole('button', { name: /Swap start and destination/i })).toBeDisabled();
         expect(screen.getByRole('button', { name: /Show pathfinding filter options/i })).toBeInTheDocument();
