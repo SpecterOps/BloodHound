@@ -24,6 +24,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/server/analysis"
+	"github.com/specterops/bloodhound/server/featureflags"
 	"github.com/specterops/bloodhound/server/graphdb"
 	"github.com/specterops/dawgs/graph"
 )
@@ -57,5 +58,6 @@ func Register(deps Deps) {
 	}
 
 	analysis.Register(deps.Router, deps.Pool)
+	featureflags.Register(deps.Router, deps.Pool)
 	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.RateLimitMiddleware)
 }

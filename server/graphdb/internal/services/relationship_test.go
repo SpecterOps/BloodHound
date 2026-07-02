@@ -87,12 +87,18 @@ func TestService_GetRelationship(t *testing.T) {
 			wantErr: services.ErrRelationshipNotFound,
 		},
 		{
-			name: "propagates kind not found",
+			name: "returns relationship with unresolved kind when kind not found in schema",
 			setupMock: func(databaseMock *mocks.MockDatabase) {
 				databaseMock.EXPECT().GetRelationship(ctx, relationshipID).Return(baseRelationship, nil)
 				databaseMock.EXPECT().GetKindByName(ctx, kindName).Return(services.Kind{}, services.ErrKindNotFound)
 			},
-			wantErr: services.ErrKindNotFound,
+			wantResult: services.Relationship{
+				ID:           relationshipID,
+				SourceNodeID: 100,
+				TargetNodeID: 200,
+				Kind:         services.Kind{Name: kindName, ID: nil},
+				Properties:   map[string]any{"foo": "bar"},
+			},
 		},
 		{
 			name: "propagates unexpected database errors",

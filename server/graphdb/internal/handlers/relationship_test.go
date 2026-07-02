@@ -118,14 +118,6 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 			},
 			wantStatus: http.StatusNotFound,
 		},
-		{
-			name:  "returns 404 when the kind is not found",
-			rawID: "1234567890",
-			setupMock: func(graphDBMock *mocks.MockGraphDB) {
-				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID).Return(services.Relationship{}, services.ErrKindNotFound)
-			},
-			wantStatus: http.StatusNotFound,
-		},
 	}
 
 	for _, tt := range tests {
