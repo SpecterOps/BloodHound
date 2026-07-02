@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
 import { useKeywordAndTypeValues, useSearch } from '../useSearch';
@@ -47,30 +47,16 @@ export const usePathfindingSearch = () => {
     const { data: data2 } = useSearch(kw2, t2);
     const { data: data3 } = useSearch(kw3, t3);
 
-    // Sync URL params to node state
-    useEffect(() => {
-        syncNodeFromParam(0, primarySearch, data0);
-    }, [primarySearch, data0]);
+    const updateNode = useCallback((index: number, update: Partial<PathfindingNode>) => {
+        setNodes((prev) => {
+            const next = [...prev];
+            while (next.length <= index) next.push(emptyNode());
+            next[index] = { ...next[index], ...update };
+            return next;
+        });
+    }, []);
 
-    useEffect(() => {
-        syncNodeFromParam(1, secondarySearch, data1);
-    }, [secondarySearch, data1]);
-
-    useEffect(() => {
-        syncNodeFromParam(2, tertiarySearch, data2);
-    }, [tertiarySearch, data2]);
-
-    useEffect(() => {
-        syncNodeFromParam(3, quaternarySearch, data3);
-    }, [quaternarySearch, data3]);
-
-    // Keep extraNodeCount in sync with URL params
-    useEffect(() => {
-        const count = quaternarySearch ? 2 : tertiarySearch ? 1 : 0;
-        setExtraNodeCount(count);
-    }, [tertiarySearch, quaternarySearch]);
-
-    const syncNodeFromParam = (index: number, param: string | null, data: any) => {
+    const syncNodeFromParam = useCallback((index: number, param: string | null, data: any) => {
         if (param && data) {
             const matchedNode = Object.values(data).find((node: any) => node.objectid === param) as
                 | SearchValue
@@ -81,16 +67,30 @@ export const usePathfindingSearch = () => {
         } else if (!param) {
             updateNode(index, emptyNode());
         }
-    };
+    }, [updateNode]);
 
-    const updateNode = (index: number, update: Partial<PathfindingNode>) => {
-        setNodes((prev) => {
-            const next = [...prev];
-            while (next.length <= index) next.push(emptyNode());
-            next[index] = { ...next[index], ...update };
-            return next;
-        });
-    };
+    // Sync URL params to node state
+    useEffect(() => {
+        syncNodeFromParam(0, primarySearch, data0);
+    }, [syncNodeFromParam, primarySearch, data0]);
+
+    useEffect(() => {
+        syncNodeFromParam(1, secondarySearch, data1);
+    }, [syncNodeFromParam, secondarySearch, data1]);
+
+    useEffect(() => {
+        syncNodeFromParam(2, tertiarySearch, data2);
+    }, [syncNodeFromParam, tertiarySearch, data2]);
+
+    useEffect(() => {
+        syncNodeFromParam(3, quaternarySearch, data3);
+    }, [syncNodeFromParam, quaternarySearch, data3]);
+
+    // Keep extraNodeCount in sync with URL params
+    useEffect(() => {
+        const count = quaternarySearch ? 2 : tertiarySearch ? 1 : 0;
+        setExtraNodeCount(count);
+    }, [tertiarySearch, quaternarySearch]);
 
     const totalNodeCount = 2 + extraNodeCount;
 
