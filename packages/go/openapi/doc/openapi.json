@@ -16641,7 +16641,7 @@
       "post": {
         "operationId": "EndClientManagementOperation",
         "summary": "Notifies the API of a management operation ending",
-        "description": "Endpoint for clients to end a management operation and mark the completed time.\n\n\nNote: caller must be a client. For users, this endpoint will return a 403 as\nthey are not expected or allowed to call this endpoint.\n",
+        "description": "Endpoint for clients to end a management operation and mark the completed time.\n\nNote: caller must be a client. For users, this endpoint will return a 403 as\nthey are not expected or allowed to call this endpoint.\n",
         "tags": [
           "Clients",
           "Enterprise"
