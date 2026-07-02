@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
-import { MultiSelect, MultiSelectOptionRow, MultiSelectTrigger } from './MultiSelect';
 import type { MultiSelectProps } from './MultiSelect';
+import { MultiSelect, MultiSelectOptionRow, MultiSelectTrigger } from './MultiSelect';
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
@@ -159,4 +159,33 @@ export const MultipleSelected: Story = {
         placeholder: 'Select',
     },
     render: renderMultiSelect,
+};
+
+export const Disabled: Story = {
+    args: {
+        options: itemOptions,
+        value: [],
+        onValueChange: () => {},
+        placeholder: 'All Zones',
+        disabled: true,
+    },
+    render: renderMultiSelect,
+};
+
+export const WithDisabledOption: Story = {
+    args: {
+        options: [...itemOptions, { value: 'option-d', label: 'Option D', disabled: true }],
+        value: [],
+        onValueChange: () => {},
+        placeholder: 'All Zones',
+    },
+    render: (args) => {
+        const [value, setValue] = useState<string[]>(args.value ?? []);
+
+        return (
+            <div className='w-60'>
+                <MultiSelect {...args} value={value} onValueChange={setValue} />
+            </div>
+        );
+    },
 };
