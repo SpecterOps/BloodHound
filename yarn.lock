@@ -6924,7 +6924,7 @@ __metadata:
     immutable: "npm:^5.0.0-beta.5"
     js-client-library: "workspace:*"
     jsdom: "npm:^27.0.0"
-    json-2-csv: "npm:^5.5.9"
+    json-2-csv: "npm:^5.5.11"
     lodash: "npm:^4.18.1"
     luxon: "npm:^3.3.0"
     memoize-one: "npm:^6.0.0"
@@ -7074,7 +7074,7 @@ __metadata:
     js-cookie: "npm:^3.0.1"
     js-file-download: "npm:^0.4.12"
     jsdom: "npm:^27.0.0"
-    json-2-csv: "npm:^5.5.9"
+    json-2-csv: "npm:^5.5.11"
     lint-staged: "npm:^10.5.4"
     lodash: "npm:^4.18.1"
     luxon: "npm:^3.3.0"
@@ -7888,10 +7888,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"deeks@npm:3.1.0":
-  version: 3.1.0
-  resolution: "deeks@npm:3.1.0"
-  checksum: 10/4297893cb792bc207b1fdac6090094c8c666669227b385bc69d98ea751294614948288a39a38faa0a44d7045d1bf05eacd188eea7516a1a7d0fee9a7faa34e7d
+"deeks@npm:3.2.1":
+  version: 3.2.1
+  resolution: "deeks@npm:3.2.1"
+  checksum: 10/919ec51a4743710d1a1dd0ec7ed3738b24888c9285b69519740e780cb6593a2591a7f748faf38e081fe0b29004374a44e7791913a27e94843140e6b4b23d00ea
   languageName: node
   linkType: hard
 
@@ -8063,10 +8063,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"doc-path@npm:4.1.1":
-  version: 4.1.1
-  resolution: "doc-path@npm:4.1.1"
-  checksum: 10/455dd7458d4fa9ec0662fc307c4c3a7112bd0d554b8a6e0e86a6c6554f125727b4f80af430c1038f5d471ed5586c95354260928a31b80e632519480d745af713
+"doc-path@npm:4.1.4":
+  version: 4.1.4
+  resolution: "doc-path@npm:4.1.4"
+  checksum: 10/665dff8b742c25cb60cf957ad604cced4670daa247e0b710f777847c3c77ebbba00b38ad7e9f34cdc8aa1cda0ddf1fdfea4a8c2531274da7b7ff7acbc8f106f3
   languageName: node
   linkType: hard
 
@@ -10993,13 +10993,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"json-2-csv@npm:^5.5.9":
-  version: 5.5.9
-  resolution: "json-2-csv@npm:5.5.9"
+"json-2-csv@npm:^5.5.11":
+  version: 5.5.11
+  resolution: "json-2-csv@npm:5.5.11"
   dependencies:
-    deeks: "npm:3.1.0"
-    doc-path: "npm:4.1.1"
-  checksum: 10/fa80a1a99e9c7e6844e6e13a48e3d0f11e6e98e90dc46e47fdc46b0fde2ecef324f8e13c68e11dbd0645f714c5089dc46e605a22f25c659294347a3426506947
+    deeks: "npm:3.2.1"
+    doc-path: "npm:4.1.4"
+  checksum: 10/a81c8eeceb5d2099a327e3650cbee1c2ba0e9e23420d15c257782b39a808cbcc268fd349c2aa4cd16327d71da620d74eac276f11aee760b3e5d78991684c632e
   languageName: node
   linkType: hard
 
