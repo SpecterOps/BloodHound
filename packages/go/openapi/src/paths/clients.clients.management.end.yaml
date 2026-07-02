@@ -22,7 +22,6 @@ post:
   description: |
     Endpoint for clients to end a management operation and mark the completed time.
 
-
     Note: caller must be a client. For users, this endpoint will return a 403 as
     they are not expected or allowed to call this endpoint.
   tags:

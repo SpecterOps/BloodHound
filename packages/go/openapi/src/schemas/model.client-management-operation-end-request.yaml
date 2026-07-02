@@ -23,4 +23,8 @@ properties:
     type: string
     format: uuid
   status:
-    $ref: './enum.client-management-operation-status.yaml'
+    type: string
+    enum:
+      - succeeded
+      - failed
+      - canceled

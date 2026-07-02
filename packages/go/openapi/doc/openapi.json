@@ -23443,7 +23443,12 @@
             "format": "uuid"
           },
           "status": {
-            "$ref": "#/components/schemas/enum.client-management-operation-status"
+            "type": "string",
+            "enum": [
+              "succeeded",
+              "failed",
+              "canceled"
+            ]
           }
         }
       },
