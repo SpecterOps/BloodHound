@@ -467,3 +467,4 @@ go-test-results.json
 # Playwright generated
 cmd/ui/playwright
 
+.claude/
