@@ -27,10 +27,11 @@ const ToggleGroupContext = React.createContext<VariantProps<typeof ToggleVariant
 const ToggleGroup = React.forwardRef<
     React.ElementRef<typeof ToggleGroupPrimitive.Root>,
     React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> & VariantProps<typeof ToggleVariants>
->(({ className, size, children, ...props }, ref) => (
+>(({ className, size, children, rovingFocus = false, ...props }, ref) => (
     // TODO: Replace hardcoded hex colors with design token CSS variables once the token system is ready.
     <ToggleGroupPrimitive.Root
         ref={ref}
+        rovingFocus={rovingFocus}
         className={cn(
             'flex items-center justify-center gap-2 p-1 rounded-lg bg-[#F4F4F4] dark:bg-[#222222] shadow-[0_1px_2px_0_rgba(0,0,0,0.30)]',
             className
