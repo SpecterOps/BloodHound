@@ -25,8 +25,9 @@ get:
     - Community
     - Enterprise
   parameters:
-    - name: environment_id
-      description: Filters results to the given environment.
+    - name: environmentid
+      description: Required. Filters results to the given environment.
+      required: true
       in: query
       schema: 
         type: string
