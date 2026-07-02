@@ -147,7 +147,21 @@ const PathfindingSearch = ({
                         className={`relative flex items-center gap-1 rounded transition-all group ${
                             dragIndex === index ? 'opacity-40' : ''
                         } ${dragOverIndex === index ? 'ring-2 ring-primary ring-offset-1' : ''}`}>
-                        <div className='cursor-grab text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 opacity-0 group-hover:opacity-100 transition-opacity'>
+                        <div
+                            role='button'
+                            tabIndex={0}
+                            aria-label={`Reorder ${node.label}, position ${index + 1} of ${visibleNodes.length}`}
+                            aria-roledescription='sortable'
+                            onKeyDown={(e) => {
+                                if (e.key === 'ArrowUp' && index > 0) {
+                                    e.preventDefault();
+                                    handleReorderNodes(index, index - 1);
+                                } else if (e.key === 'ArrowDown' && index < visibleNodes.length - 1) {
+                                    e.preventDefault();
+                                    handleReorderNodes(index, index + 1);
+                                }
+                            }}
+                            className='cursor-grab text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity'>
                             <FontAwesomeIcon icon={faGripVertical} size='sm' />
                         </div>
                         <div className='flex-grow'>

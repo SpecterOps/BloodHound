@@ -58,17 +58,17 @@ export const usePathfindingSearch = () => {
 
     useEffect(() => {
         syncNodeFromParam(2, tertiarySearch, data2);
-        if (tertiarySearch && data2) {
-            setExtraNodeCount((prev) => Math.max(prev, 1));
-        }
     }, [tertiarySearch, data2]);
 
     useEffect(() => {
         syncNodeFromParam(3, quaternarySearch, data3);
-        if (quaternarySearch && data3) {
-            setExtraNodeCount((prev) => Math.max(prev, 2));
-        }
     }, [quaternarySearch, data3]);
+
+    // Keep extraNodeCount in sync with URL params
+    useEffect(() => {
+        const count = quaternarySearch ? 2 : tertiarySearch ? 1 : 0;
+        setExtraNodeCount(count);
+    }, [tertiarySearch, quaternarySearch]);
 
     const syncNodeFromParam = (index: number, param: string | null, data: any) => {
         if (param && data) {
