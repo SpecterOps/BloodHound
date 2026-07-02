@@ -37,7 +37,7 @@ function NodeIcon({ nodeType = '', className }: NodeIconProps) {
             <div className='inline-block relative mr-1'>
                 <div
                     className={cn(
-                        'flex items-center justify-center border border-common-dark rounded-full p-1 size-[22px] text-common-dark bg-common-white pointer-events-none',
+                        'flex items-center justify-center border border-neutral-dark-1 rounded-full p-1 size-[22px] text-neutral-dark-1 bg-neutral-light-1 pointer-events-none',
                         className
                     )}
                     style={iconInfo ? { backgroundColor: iconInfo.color } : undefined}
