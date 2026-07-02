@@ -40,6 +40,20 @@ const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({ children, disal
         [authState?.user, disallowedRoles]
     );
 
+    // If user is not authenticated, redirect to login screen
+    if (authState.sessionToken === null || authState.user === null) {
+        return <Navigate to={ROUTE_LOGIN} state={{ from: location }} />;
+    }
+
+    // If user password is expired, redirect to expired password screen unless they are on the expired password screen
+    if (isAuthExpired) {
+        if (location.pathname !== ROUTE_EXPIRED_PASSWORD) {
+            return <Navigate to={ROUTE_EXPIRED_PASSWORD} state={{ from: location }} />;
+        } else {
+            return children;
+        }
+    }
+
     const hasDisallowedRoles = invalidRolesForThisUser.length > 0;
 
     if (hasDisallowedRoles) {
@@ -54,20 +68,6 @@ const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({ children, disal
                 label={label}
             />
         );
-    }
-
-    // If user is not authenticated, redirect to login screen
-    if (authState.sessionToken === null || authState.user === null) {
-        return <Navigate to={ROUTE_LOGIN} state={{ from: location }} />;
-    }
-
-    // If user password is expired, redirect to expired password screen unless they are on the expired password screen
-    if (isAuthExpired) {
-        if (location.pathname !== ROUTE_EXPIRED_PASSWORD) {
-            return <Navigate to={ROUTE_EXPIRED_PASSWORD} state={{ from: location }} />;
-        } else {
-            return children;
-        }
     }
 
     return children;
