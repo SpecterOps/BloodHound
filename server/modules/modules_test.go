@@ -103,7 +103,7 @@ func TestRegister_PanicsOnNilRateLimitMiddleware(t *testing.T) {
 // attaches the feature module routes to the shared router. Matching a
 // representative route from each module proves that Register successfully
 // delegated to the feature modules.
-func TestRegister_WiresFeatureRoutes(t *testing.T) {
+func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 	var (
 		cfg        = config.Configuration{}
 		authorizer = auth.NewAuthorizer(nil)
@@ -118,13 +118,24 @@ func TestRegister_WiresFeatureRoutes(t *testing.T) {
 
 	modules.Register(deps)
 
-	var (
-		muxRouter           = routerInst.MuxRouter()
-		analysisRequest     = httptest.NewRequest(http.MethodGet, "/api/v2/analysis/status", nil)
-		relationshipRequest = httptest.NewRequest(http.MethodGet, "/api/v2/relationships/1", nil)
-		match               mux.RouteMatch
-	)
+	for _, tc := range []struct {
+		name   string
+		method string
+		path   string
+	}{
+		{"analysis status", http.MethodGet, "/api/v2/analysis/status"},
+		{"feature flags list", http.MethodGet, "/api/v2/features"},
+		{"feature flag toggle", http.MethodPut, "/api/v2/features/1/toggle"},
+		{"relationship request", http.MethodGet, "/api/v2/relationships/1"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var (
+				muxRouter = routerInst.MuxRouter()
+				request   = httptest.NewRequest(tc.method, tc.path, nil)
+				match     mux.RouteMatch
+			)
 
-	assert.True(t, muxRouter.Match(analysisRequest, &match), "analysis route should be registered by Register")
-	assert.True(t, muxRouter.Match(relationshipRequest, &match), "relationship route should be registered by Register")
+			assert.True(t, muxRouter.Match(request, &match), "%s %s route should be registered by Register", tc.method, tc.path)
+		})
+	}
 }

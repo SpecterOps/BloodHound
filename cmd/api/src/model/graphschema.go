@@ -204,6 +204,8 @@ type SchemaEnvironment struct {
 	SourceKindId               int32
 }
 
+type EnvironmentKindsToEnvironment map[string]SchemaEnvironment
+
 func (SchemaEnvironment) TableName() string {
 	return "schema_environments"
 }
