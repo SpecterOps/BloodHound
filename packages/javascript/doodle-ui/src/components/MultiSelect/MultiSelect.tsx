@@ -35,24 +35,7 @@ const CaretDown = ({ className, size = 12 }: { className?: string; size?: number
 );
 
 const MultiSelectTriggerVariants = cva(
-    cn(
-        'flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm',
-
-        // base
-        'border-input-border-default bg-input-fill text-input-placeholder-text',
-
-        // focus
-        'focus:outline-none focus-visible:focus-ring data-[state=open]:focus-ring',
-
-        // enabled states
-        'enabled:hover:border-input-border-hover enabled:hover:bg-secondary enabled:hover:text-white',
-
-        // disabled state
-        'disabled:cursor-not-allowed disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-icon-disabled',
-
-        // error state
-        'aria-[invalid=true]:border-status-error-main'
-    )
+    'flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm border-input-border-default bg-input-fill text-input-placeholder-text focus:outline-none focus-visible:focus-ring data-[state=open]:focus-ring enabled:hover:border-input-border-hover enabled:hover:bg-secondary enabled:hover:text-white disabled:cursor-not-allowed disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-icon-disabled aria-[invalid=true]:border-status-error-main'
 );
 
 interface MultiSelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -99,7 +82,7 @@ const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRo
         tabIndex={option.disabled ? -1 : 0}
         className={cn(
             'flex items-center gap-2 mx-1 p-2 py-2 rounded-lg cursor-pointer hover:bg-secondary hover:text-white',
-            option.disabled && 'pointer-events-none opacity-50'
+            option.disabled && 'cursor-not-allowed opacity-50 hover:bg-transparent hover:text-inherit'
         )}
         onClick={() => !option.disabled && onSelect(option.value)}
         onKeyDown={(event) => {
