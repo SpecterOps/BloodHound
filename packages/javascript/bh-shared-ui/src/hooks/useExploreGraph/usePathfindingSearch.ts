@@ -56,18 +56,21 @@ export const usePathfindingSearch = () => {
         });
     }, []);
 
-    const syncNodeFromParam = useCallback((index: number, param: string | null, data: any) => {
-        if (param && data) {
-            const matchedNode = Object.values(data).find((node: any) => node.objectid === param) as
-                | SearchValue
-                | undefined;
-            if (matchedNode) {
-                updateNode(index, { searchTerm: matchedNode.name, selectedItem: matchedNode });
+    const syncNodeFromParam = useCallback(
+        (index: number, param: string | null, data: any) => {
+            if (param && data) {
+                const matchedNode = Object.values(data).find((node: any) => node.objectid === param) as
+                    | SearchValue
+                    | undefined;
+                if (matchedNode) {
+                    updateNode(index, { searchTerm: matchedNode.name, selectedItem: matchedNode });
+                }
+            } else if (!param) {
+                updateNode(index, emptyNode());
             }
-        } else if (!param) {
-            updateNode(index, emptyNode());
-        }
-    }, [updateNode]);
+        },
+        [updateNode]
+    );
 
     // Sync URL params to node state
     useEffect(() => {
