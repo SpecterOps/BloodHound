@@ -97,7 +97,7 @@ export default {
                 // 'text-secondary': 'var(--text-secondary)',
 
                 // 'neutral-100': 'var(--neutral-100)',
-                // 'neutral-200': 'var(--neutral-200)',
+                'neutral-200': 'var(--neutral-200)',
                 // 'neutral-300': 'var(--neutral-300)',
                 // 'neutral-400': 'var(--neutral-400)',
                 // 'neutral-500': 'var(--neutral-500)',

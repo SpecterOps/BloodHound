@@ -638,14 +638,8 @@ export type Webhook = {
     created_by: string;
     updated_at: ISO_DATE_STRING;
     updated_by: string;
-    disabled_at: {
-        time: ISO_DATE_STRING;
-        valid: boolean;
-    };
-    disabled_by: {
-        string: string;
-        valid: boolean;
-    };
+    disabled_at: ISO_DATE_STRING;
+    disabled_by: string;
 };
 
 export type WebhookSortBy = 'name' | 'created_at' | 'updated_at' | 'health';
