@@ -21,6 +21,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 )
 
 // Database describes the persistence capabilities the graphdb Service requires.
@@ -42,6 +43,7 @@ type Kind struct {
 	Name string
 }
 
+// KindInfo holds the data associated with a single entity panel
 type KindInfo struct {
 	KindID             int32
 	NodeKindID         *int32
@@ -51,6 +53,18 @@ type KindInfo struct {
 	Position           int32
 	Content            json.RawMessage
 }
+
+// ErrKindInfoKindNotFound indicates that a kind info was created with a kind_id that has
+// no corresponding entry in the kind table.
+var ErrKindInfoKindNotFound = errors.New("kind info references a kind that does not exist")
+
+// ErrKindInfoDuplicatePosition indicates that a kind info's position is already in use by
+// another kind info entry for the same kind.
+var ErrKindInfoDuplicatePosition = errors.New("kind info position already in use for this kind")
+
+// ErrKindInfoDuplicateInfoKey indicates that a kind info's info_key is already in use by
+// another kind info entry for the same kind.
+var ErrKindInfoDuplicateInfoKey = errors.New("kind info key already in use for this kind")
 
 // Service implements the graphdb use cases on top of a Database implementation.
 type Service struct {

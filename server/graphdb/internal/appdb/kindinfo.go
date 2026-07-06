@@ -19,13 +19,23 @@ package appdb
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/huandu/go-sqlbuilder"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 )
 
 const tableSchemaKindInfo = "schema_kind_info"
+
+// constraint names from the schema_kind_info table (see the migration that creates it)
+// that are translated into services-layer sentinels.
+const (
+	constraintKindInfoKindIDFKey     = "schema_kind_info_kind_id_fkey"
+	constraintKindInfoUniquePosition = "schema_kind_info_unique_kind_position"
+	constraintKindInfoUniqueInfoKey  = "schema_kind_info_unique_kind_info_key"
+)
 
 func (s *Store) CreateKindInfos(ctx context.Context, kindInfos []services.KindInfo) error {
 	var (
@@ -70,6 +80,18 @@ func (s *Store) CreateKindInfos(ctx context.Context, kindInfos []services.KindIn
 	sqlQuery, args = insertBuilder.Build()
 
 	if _, err = s.db.Exec(ctx, sqlQuery, args...); err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			switch pgErr.ConstraintName {
+			case constraintKindInfoKindIDFKey:
+				return fmt.Errorf("%w: %w", services.ErrKindInfoKindNotFound, err)
+			case constraintKindInfoUniquePosition:
+				return fmt.Errorf("%w: %w", services.ErrKindInfoDuplicatePosition, err)
+			case constraintKindInfoUniqueInfoKey:
+				return fmt.Errorf("%w: %w", services.ErrKindInfoDuplicateInfoKey, err)
+			}
+		}
+
 		return fmt.Errorf("creating kind infos: %w", err)
 	}
 
