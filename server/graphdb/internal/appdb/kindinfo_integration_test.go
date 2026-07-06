@@ -298,6 +298,59 @@ func TestCreateKindInfos_Constraints(t *testing.T) {
 	}
 }
 
+func TestGetKindInfos_NoneExist(t *testing.T) {
+	var (
+		ctx         = context.Background()
+		store, pool = setupKindInfoStore(t)
+		seed        = seedKindInfoPrerequisites(t, ctx, pool)
+	)
+
+	kindInfos, err := store.GetKindInfos(ctx, seed.nodeBackingKindID)
+
+	require.NoError(t, err)
+	assert.Empty(t, kindInfos)
+}
+
+func TestGetKindInfos_HappyPath(t *testing.T) {
+	var (
+		ctx         = context.Background()
+		store, pool = setupKindInfoStore(t)
+		seed        = seedKindInfoPrerequisites(t, ctx, pool)
+	)
+
+	// belongs to a different kind and must not appear in the results
+	insertValidKindInfo(t, ctx, store, services.KindInfo{
+		KindID:             seed.relationshipBackingKindID,
+		RelationshipKindID: &seed.relationshipSchemaKindID,
+		InfoKey:            "other",
+		Title:              "Other",
+		Position:           0,
+		Content:            json.RawMessage(`{"query":{"cypher":"MATCH (n) RETURN n"}}`),
+	})
+
+	insertValidKindInfo(t, ctx, store, services.KindInfo{
+		KindID:     seed.nodeBackingKindID,
+		NodeKindID: &seed.nodeSchemaKindID,
+		InfoKey:    "general",
+		Title:      "General",
+		Position:   0,
+		Content:    json.RawMessage(`{"markdown":{"content":"hello"}}`),
+	})
+
+	kindInfos, err := store.GetKindInfos(ctx, seed.nodeBackingKindID)
+
+	require.NoError(t, err)
+	require.Len(t, kindInfos, 1)
+
+	assert.Equal(t, seed.nodeBackingKindID, kindInfos[0].KindID)
+	assert.Equal(t, &seed.nodeSchemaKindID, kindInfos[0].NodeKindID)
+	assert.Nil(t, kindInfos[0].RelationshipKindID)
+	assert.Equal(t, "general", kindInfos[0].InfoKey)
+	assert.Equal(t, "General", kindInfos[0].Title)
+	assert.Equal(t, int32(0), kindInfos[0].Position)
+	assert.JSONEq(t, `{"markdown":{"content":"hello"}}`, string(kindInfos[0].Content))
+}
+
 func setupKindInfoStore(t *testing.T) (*appdb.Store, *pgxpool.Pool) {
 	t.Helper()
 
