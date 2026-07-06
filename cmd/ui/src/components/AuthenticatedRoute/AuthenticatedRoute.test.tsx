@@ -142,7 +142,6 @@ describe('AuthenticatedRoute', () => {
                             AuthSecret: {
                                 expires_at: '9999-01-01T00:00:00Z', // not expired
                             },
-                            eula_accepted: true, // accepted
                             roles: [
                                 {
                                     name: DISALLOWED_ROLE_NAME,
@@ -169,9 +168,8 @@ describe('AuthenticatedRoute', () => {
                         user: {
                             id: 'validUserId',
                             AuthSecret: {
-                                expires_at: '1970-01-01T00:00:00Z', // expired
+                                expires_at: '9999-01-01T00:00:00Z', // not expired
                             },
-                            eula_accepted: false, // not accepted
                         },
                     },
                 },
