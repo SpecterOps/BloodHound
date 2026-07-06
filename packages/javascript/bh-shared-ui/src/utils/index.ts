@@ -38,6 +38,7 @@ export * from './passwd';
 export * from './permissions';
 export * from './queries';
 export * from './quickUpload';
+export * from './roles';
 export * from './searchParams';
 export * from './strings';
 export * from './testHelpers';
