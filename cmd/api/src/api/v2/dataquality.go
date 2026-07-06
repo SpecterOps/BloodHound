@@ -38,13 +38,12 @@ import (
 )
 
 const (
-	ErrNoTenantId                string = "no tenant id specified in url"
-	ErrNoPlatformId              string = "no platform id specified in url"
-	ErrInvalidPlatformId         string = "invalid platform id specified in url: %v"
-	ErrNoEnvironmentId           string = "environmentid is required"
-	ErrEnvironmentIdDoesNotExist string = "environmentid does not exist"
-	ErrUnknownUser               string = "unknown user"
-	ErrNoAccess                  string = "user does not have permission to access this environment"
+	ErrNoTenantId        string = "no tenant id specified in url"
+	ErrNoPlatformId      string = "no platform id specified in url"
+	ErrInvalidPlatformId string = "invalid platform id specified in url: %v"
+	ErrNoEnvironmentId   string = "environmentid is required"
+	ErrUnknownUser       string = "unknown user"
+	ErrNoAccess          string = "user does not have permission to access this environment"
 )
 
 func (s Resources) GetDatabaseCompleteness(response http.ResponseWriter, request *http.Request) {
