@@ -169,7 +169,20 @@ const SimpleEnvironmentSelector: React.FC<{
                                 className='flex justify-between items-center gap-2 w-full'
                                 onClick={() => handlePlatformClick(type)}
                                 variant={'text'}>
-                                {environmentInfo[type]?.aggregationDisplayName}
+                                <TooltipProvider>
+                                    <TooltipRoot>
+                                        <TooltipTrigger>
+                                            <span className='max-w-96 truncate'>
+                                                {environmentInfo[type]?.aggregationDisplayName}
+                                            </span>
+                                        </TooltipTrigger>
+                                        <TooltipPortal>
+                                            <TooltipContent side='left' className='dark:bg-neutral-dark-5 border-0'>
+                                                <span>{environmentInfo[type]?.aggregationDisplayName}</span>
+                                            </TooltipContent>
+                                        </TooltipPortal>
+                                    </TooltipRoot>
+                                </TooltipProvider>
                                 <FontAwesomeIcon icon={environmentInfo[type]?.icon} size='sm' />
                             </Button>
                         </li>
