@@ -17,7 +17,6 @@
 package v2
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -36,7 +35,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/dawgs/query"
 )
 
 const (
@@ -195,10 +193,6 @@ func (s *Resources) GetDataQualityStats(response http.ResponseWriter, request *h
 		} else if !hasAccess {
 			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, ErrNoAccess, request), response)
 		}
-	} else if environmentExists, err := s.environmentIdExists(ctx, environmentId); err != nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
-	} else if !environmentExists {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusNotFound, ErrEnvironmentIdDoesNotExist, request), response)
 	} else if _, sort, err := parseOrder(queryParams, dataQualityStats); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if start, err := ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
@@ -223,29 +217,7 @@ func (s *Resources) GetDataQualityStats(response http.ResponseWriter, request *h
 		} else {
 			api.WriteResponseWrapperWithTimeWindowAndPagination(ctx, stats, start, end, limit, skip, count, http.StatusOK, response)
 		}
-
 	}
-}
-
-func (s *Resources) environmentIdExists(ctx context.Context, environmentID string) (bool, error) {
-	var exists bool
-
-	err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		count, err := tx.Nodes().Filterf(func() graph.Criteria {
-			return query.Equals(
-				query.NodeProperty(graphschema.EnvironmentIDKey),
-				environmentID,
-			)
-		}).Count()
-		if err != nil {
-			return err
-		}
-
-		exists = count > 0
-		return nil
-	})
-
-	return exists, err
 }
 
 type Sortable interface {

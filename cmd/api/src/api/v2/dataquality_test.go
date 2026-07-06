@@ -34,11 +34,11 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
-	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -526,7 +526,6 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 	user := setupUser()
 	userCtx := setupUserCtx(user)
 	etacError := errors.New("etac error")
-	graphError := errors.New("graph error")
 
 	type Input struct {
 		Params  url.Values
@@ -535,33 +534,11 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 
 	type mockResources struct {
 		Database *mocks.MockDatabase
-		Graph    *graphmocks.MockDatabase
-	}
-
-	expectEnvironmentIDExists := func(mockCtrl *gomock.Controller, mockGraph *graphmocks.MockDatabase, exists bool) {
-		var count int64
-		if exists {
-			count = 1
-		}
-
-		mockTransaction := graphmocks.NewMockTransaction(mockCtrl)
-		mockNodeQuery := graphmocks.NewMockNodeQuery(mockCtrl)
-		mockFilteredNodeQuery := graphmocks.NewMockNodeQuery(mockCtrl)
-
-		mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).DoAndReturn(
-			func(ctx context.Context, txDelegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
-				return txDelegate(mockTransaction)
-			},
-		)
-		mockTransaction.EXPECT().Nodes().Return(mockNodeQuery)
-		mockNodeQuery.EXPECT().Filterf(gomock.Any()).Return(mockFilteredNodeQuery)
-		mockFilteredNodeQuery.EXPECT().Count().Return(count, nil)
 	}
 
 	defaultResources := func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
 		return v2.Resources{
 			DB:      mock.Database,
-			Graph:   mock.Graph,
 			DogTags: dogtags.NewTestService(dogtags.TestOverrides{}),
 		}
 	}
@@ -610,8 +587,7 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 				mock.Database.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), user).Return(nil, etacError)
 
 				return v2.Resources{
-					DB:    mock.Database,
-					Graph: mock.Graph,
+					DB: mock.Database,
 					DogTags: dogtags.NewTestService(dogtags.TestOverrides{
 						Bools: map[dogtags.BoolDogTag]bool{
 							dogtags.ETAC_ENABLED: true,
@@ -638,8 +614,7 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 				}, nil)
 
 				return v2.Resources{
-					DB:    mock.Database,
-					Graph: mock.Graph,
+					DB: mock.Database,
 					DogTags: dogtags.NewTestService(dogtags.TestOverrides{
 						Bools: map[dogtags.BoolDogTag]bool{
 							dogtags.ETAC_ENABLED: true,
@@ -653,24 +628,6 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 			},
 		},
 		{
-			Name: "EnvironmentIDGraphError",
-			Input: Input{
-				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
-				},
-				Context: userCtx,
-			},
-			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
-				mock.Graph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(graphError)
-
-				return defaultResources(mockCtrl, mock)
-			},
-			Expected: api.ErrorWrapper{
-				HTTPStatus: http.StatusInternalServerError,
-				Errors:     []api.ErrorDetails{{Message: graphError.Error()}},
-			},
-		},
-		{
 			Name: "EnvironmentIDNotFound",
 			Input: Input{
 				Params: url.Values{
@@ -679,13 +636,13 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 				Context: userCtx,
 			},
 			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
-				expectEnvironmentIDExists(mockCtrl, mock.Graph, false)
+				mock.Database.EXPECT().GetDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityStats{}, 0, database.ErrNotFound)
 
 				return defaultResources(mockCtrl, mock)
 			},
 			Expected: api.ErrorWrapper{
 				HTTPStatus: http.StatusNotFound,
-				Errors:     []api.ErrorDetails{{Message: v2.ErrEnvironmentIdDoesNotExist}},
+				Errors:     []api.ErrorDetails{{Message: api.ErrorResponseDetailsResourceNotFound}},
 			},
 		},
 		{
@@ -698,8 +655,6 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 				Context: userCtx,
 			},
 			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
-				expectEnvironmentIDExists(mockCtrl, mock.Graph, true)
-
 				return defaultResources(mockCtrl, mock)
 			},
 			Expected: api.ErrorWrapper{
@@ -717,8 +672,6 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 				Context: userCtx,
 			},
 			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
-				expectEnvironmentIDExists(mockCtrl, mock.Graph, true)
-
 				return defaultResources(mockCtrl, mock)
 			},
 			Expected: api.ErrorWrapper{
@@ -736,8 +689,6 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 				Context: userCtx,
 			},
 			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
-				expectEnvironmentIDExists(mockCtrl, mock.Graph, true)
-
 				return defaultResources(mockCtrl, mock)
 			},
 			Expected: api.ErrorWrapper{
@@ -755,8 +706,6 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 				Context: userCtx,
 			},
 			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
-				expectEnvironmentIDExists(mockCtrl, mock.Graph, true)
-
 				return defaultResources(mockCtrl, mock)
 			},
 			Expected: api.ErrorWrapper{
@@ -774,8 +723,6 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 				Context: userCtx,
 			},
 			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
-				expectEnvironmentIDExists(mockCtrl, mock.Graph, true)
-
 				return defaultResources(mockCtrl, mock)
 			},
 			Expected: api.ErrorWrapper{
@@ -792,7 +739,6 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 				Context: userCtx,
 			},
 			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
-				expectEnvironmentIDExists(mockCtrl, mock.Graph, true)
 				mock.Database.EXPECT().GetDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityStats{}, 0, fmt.Errorf("db error"))
 
 				return defaultResources(mockCtrl, mock)
@@ -811,7 +757,6 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 
 			mock := mockResources{
 				Database: mocks.NewMockDatabase(mockCtrl),
-				Graph:    graphmocks.NewMockDatabase(mockCtrl),
 			}
 			resources := tc.Setup(mockCtrl, mock)
 			params := fmt.Sprintf("?%s", tc.Input.Params.Encode())
@@ -854,21 +799,6 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 
 	type Expected struct {
 		Code int
-	}
-
-	expectEnvironmentIDExists := func(mockCtrl *gomock.Controller, mockGraph *graphmocks.MockDatabase) {
-		mockTransaction := graphmocks.NewMockTransaction(mockCtrl)
-		mockNodeQuery := graphmocks.NewMockNodeQuery(mockCtrl)
-		mockFilteredNodeQuery := graphmocks.NewMockNodeQuery(mockCtrl)
-
-		mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).DoAndReturn(
-			func(ctx context.Context, txDelegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
-				return txDelegate(mockTransaction)
-			},
-		)
-		mockTransaction.EXPECT().Nodes().Return(mockNodeQuery)
-		mockNodeQuery.EXPECT().Filterf(gomock.Any()).Return(mockFilteredNodeQuery)
-		mockFilteredNodeQuery.EXPECT().Count().Return(int64(1), nil)
 	}
 
 	var cases = []struct {
@@ -995,13 +925,10 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 			defer mockCtrl.Finish()
 
 			mockDB := mocks.NewMockDatabase(mockCtrl)
-			mockGraph := graphmocks.NewMockDatabase(mockCtrl)
-			expectEnvironmentIDExists(mockCtrl, mockGraph)
 			mockDB.EXPECT().GetDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityStats{}, 0, nil)
 
 			resources := v2.Resources{
 				DB:      mockDB,
-				Graph:   mockGraph,
 				DogTags: dogtags.NewTestService(dogtags.TestOverrides{}),
 			}
 			params := fmt.Sprintf("?%s", tc.Input.Params.Encode())
