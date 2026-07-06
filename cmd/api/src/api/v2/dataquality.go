@@ -28,6 +28,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad"
@@ -43,6 +45,8 @@ const (
 	ErrInvalidPlatformId         string = "invalid platform id specified in url: %v"
 	ErrNoEnvironmentId           string = "environmentid is required"
 	ErrEnvironmentIdDoesNotExist string = "environmentid does not exist"
+	ErrUnknownUser               string = "unknown user"
+	ErrNoAccess                  string = "user does not have permission to access this environment"
 )
 
 func (s Resources) GetDatabaseCompleteness(response http.ResponseWriter, request *http.Request) {
@@ -180,16 +184,23 @@ func (s *Resources) GetDataQualityStats(response http.ResponseWriter, request *h
 		defaultEnd, defaultStart = DefaultTimeRange()
 	)
 
-	// TODO -- ETAC
-
-	if _, sort, err := parseOrder(queryParams, dataQualityStats); err != nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if environmentId := queryParams.Get(graphschema.EnvironmentIDKey); environmentId == "" {
+	if environmentId := queryParams.Get(graphschema.EnvironmentIDKey); environmentId == "" {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, ErrNoEnvironmentId, request), response)
+	} else if user, found := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !found {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, ErrUnknownUser, request), response)
+	} else if ShouldFilterForETAC(s.DogTags, user) {
+		hasAccess, err := CheckUserAccessToEnvironments(ctx, s.DB, user, environmentId)
+		if err != nil {
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		} else if !hasAccess {
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, ErrNoAccess, request), response)
+		}
 	} else if environmentExists, err := s.environmentIdExists(ctx, environmentId); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else if !environmentExists {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusNotFound, ErrEnvironmentIdDoesNotExist, request), response)
+	} else if _, sort, err := parseOrder(queryParams, dataQualityStats); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if start, err := ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["start"]), request), response)
 	} else if end, err := ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
@@ -198,10 +209,21 @@ func (s *Resources) GetDataQualityStats(response http.ResponseWriter, request *h
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidLimit, queryParams["limit"]), request), response)
 	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, queryParams["skip"]), request), response)
-	} else if stats, count, err := s.DB.GetDataQualityStats(ctx, toCreatedAtFilter(start, end), sort, skip, limit); err != nil {
-		api.HandleDatabaseError(request, response, err)
 	} else {
-		api.WriteResponseWrapperWithTimeWindowAndPagination(ctx, stats, start, end, limit, skip, count, http.StatusOK, response)
+		filters := model.Filters{
+			"environment_id": []model.Filter{{
+				Value:       environmentId,
+				Operator:    model.Equals,
+				SetOperator: model.FilterAnd,
+			}},
+			"created_at": []model.Filter{{Value: start.Format(time.RFC3339), Operator: model.GreaterThanOrEquals, SetOperator: model.FilterAnd}, {Value: end.Format(time.RFC3339), Operator: model.LessThanOrEquals, SetOperator: model.FilterAnd}},
+		}
+		if stats, count, err := s.DB.GetDataQualityStats(ctx, filters, sort, skip, limit); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			api.WriteResponseWrapperWithTimeWindowAndPagination(ctx, stats, start, end, limit, skip, count, http.StatusOK, response)
+		}
+
 	}
 }
 
@@ -255,10 +277,4 @@ func parseOrder(queryParams url.Values, sortable Sortable) (string, model.Sort, 
 		}
 	}
 	return strings.Join(order, ", "), sort, nil
-}
-
-// toCreatedAtFilter transforms the given start and end time into database-compatible Filters.
-func toCreatedAtFilter(start, end time.Time) model.Filters {
-	return model.Filters{"created_at": []model.Filter{{Value: start.String(), Operator: model.GreaterThanOrEquals, SetOperator: model.FilterAnd}, {Value: end.String(), Operator: model.LessThanOrEquals, SetOperator: model.FilterAnd}}}
-
 }

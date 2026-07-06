@@ -30,7 +30,7 @@ type DataQualityStat struct {
 	RunID                   string                `json:"run_id"`
 	SchemaExtensionID       int32                 `json:"extension_id"`
 	SchemaEnvironmentKindID int32                 `json:"environment_kind_id"`
-	EnvironmentID           string                `json:"environment_id"`
+	EnvironmentID           string                `json:"environmentid"`
 	MetricType              DataQualityMetricType `json:"metric_type"`
 	MetricName              string                `json:"metric_name"`
 	MetricValue             float64               `json:"metric_value"`

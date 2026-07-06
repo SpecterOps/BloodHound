@@ -35,7 +35,8 @@ allOf:
       metric_value:
         type: number
         format: double
-      metric_kind_id:
+      metric_node_kind_id:
+        description: The kind ID for the counted node kind. Present when `metric_type` is `node`; otherwise null.
         type: integer
         format: int32
         nullable: true
