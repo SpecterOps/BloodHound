@@ -663,6 +663,23 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 			},
 		},
 		{
+			Name: "EmptySortByParameter",
+			Input: Input{
+				Params: url.Values{
+					graphschema.EnvironmentIDKey: []string{environmentID},
+					"sort_by":                    []string{""},
+				},
+				Context: userCtx,
+			},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				return defaultResources(mockCtrl, mock)
+			},
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: api.ErrorResponseEmptySortParameter}},
+			},
+		},
+		{
 			Name: "InvalidStartTime",
 			Input: Input{
 				Params: url.Values{

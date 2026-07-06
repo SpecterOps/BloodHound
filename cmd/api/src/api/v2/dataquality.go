@@ -212,7 +212,7 @@ func (s *Resources) GetDataQualityStats(response http.ResponseWriter, request *h
 				Operator:    model.Equals,
 				SetOperator: model.FilterAnd,
 			}},
-			"created_at": []model.Filter{{Value: start.Format(time.RFC3339), Operator: model.GreaterThanOrEquals, SetOperator: model.FilterAnd}, {Value: end.Format(time.RFC3339), Operator: model.LessThanOrEquals, SetOperator: model.FilterAnd}},
+			"created_at": []model.Filter{{Value: start.Format(time.RFC3339), Operator: model.GreaterThanOrEquals, SetOperator: model.FilterAnd}, {Value: end.Format(time.RFC3339), Operator: model.LessThan, SetOperator: model.FilterAnd}},
 		}
 		if stats, count, err := s.DB.GetDataQualityStats(ctx, filters, sort, skip, limit); err != nil {
 			api.HandleDatabaseError(request, response, err)
@@ -226,11 +226,15 @@ type Sortable interface {
 	IsSortable(column string) bool
 }
 
-// parseOrder is a helper function which parses any sort_by query params into both the legacy sort string format and the model.Sort format. Returns an error if the columns is not sortable.
+// parseOrder is a helper function which parses any sort_by query params into both the legacy sort string format and the model.Sort format. Returns an error if the columns is not sortable, or if an empty sort param is provided.
 func parseOrder(queryParams url.Values, sortable Sortable) (string, model.Sort, error) {
 	order := []string{}
 	sort := model.Sort{}
 	for _, column := range queryParams[api.QueryParameterSortBy] {
+		if column == "" {
+			return "", sort, errors.New(api.ErrorResponseEmptySortParameter)
+		}
+
 		var descending bool
 		if string(column[0]) == "-" {
 			descending = true
@@ -238,7 +242,7 @@ func parseOrder(queryParams url.Values, sortable Sortable) (string, model.Sort, 
 		}
 
 		if !sortable.IsSortable(column) {
-			return strings.Join(order, ", "), sort, errors.New(api.ErrorResponseDetailsNotSortable)
+			return "", sort, errors.New(api.ErrorResponseDetailsNotSortable)
 		}
 
 		if descending {
@@ -249,6 +253,7 @@ func parseOrder(queryParams url.Values, sortable Sortable) (string, model.Sort, 
 			order = append(order, column)
 			sort = append(sort, model.SortItem{Column: column, Direction: model.AscendingSortDirection})
 		}
+
 	}
 	return strings.Join(order, ", "), sort, nil
 }
