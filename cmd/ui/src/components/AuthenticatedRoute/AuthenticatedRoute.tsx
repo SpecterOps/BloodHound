@@ -57,6 +57,8 @@ const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({ children, disal
     const hasDisallowedRoles = invalidRolesForThisUser.length > 0;
 
     if (hasDisallowedRoles) {
+        // We could display all notifications if a user is disallowed from a route for more than one reason
+        // For now, we'll just assume the first 'disallowed reason' is the one we want to convey to the user
         const label = invalidRolesForThisUser?.[0].notification;
 
         return (
