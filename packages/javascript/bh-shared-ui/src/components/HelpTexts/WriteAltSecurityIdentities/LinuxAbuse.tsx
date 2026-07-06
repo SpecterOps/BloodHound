@@ -22,7 +22,9 @@ const LinuxAbuse: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                The write access to the AltSecurityIdentities may enable an ADCS ESC14 Scenario A attack.
+                <p className='my-4'>
+                    The write access to the AltSecurityIdentities may enable an ADCS ESC14 Scenario A attack.
+                </p>
             </Typography>
             <AdcsEsc14ScenarioALinux />
         </>

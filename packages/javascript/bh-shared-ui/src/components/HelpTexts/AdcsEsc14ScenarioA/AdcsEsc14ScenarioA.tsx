@@ -27,10 +27,15 @@ export const AltSecIdentitiesBlurb = () => (
 
 export const AdcsEsc14ScenarioALinux: FC = () => (
     <>
-        <Typography variant='body1'> ADCS ESC14 Scenario A </Typography>
+        <Typography variant='body1'>
+            <b>ADCS ESC14 Scenario A</b>
+        </Typography>
         <Typography variant='body2'>
-            An attacker can add an explicit certificate mapping in the AltSecurityIdentities of the target referring to
-            a certificate in the attacker's possession, and then use this certificate to authenticate as the target.
+            <p className='my-4'>
+                An attacker can add an explicit certificate mapping in the AltSecurityIdentities of the target referring
+                to a certificate in the attacker's possession, and then use this certificate to authenticate as the
+                target.
+            </p>
         </Typography>
         <Typography variant='body2' component='div'>
             The certificate must meet the following requirements:
@@ -63,6 +68,34 @@ export const AdcsEsc14ScenarioALinux: FC = () => (
             </Link>
             ).
         </Typography>
+
+        <Typography variant='body2'>
+            <p className='my-4'>
+                If the attacker cannot obtain a suitable certificate from the target environment, they may also be able
+                to use a third-party Client Authentication certificate.
+            </p>
+            <p className='my-4'>
+                This works because explicit certificate mapping differs from implicit certificate mapping. Implicit
+                mapping requires the certificate to chain to a CA certificate in the domain controller's NTAuth store.
+                Explicit mapping does not. For explicit mapping, the certificate only needs to chain to a trusted root
+                CA on the domain controller.
+            </p>
+            <p className='my-4'>
+                Windows trusts many third-party root CAs by default, so an attacker may be able to buy or steal a
+                third-party certificate with the Client Authentication EKU and use it for ESC14 Scenario A. For example,
+                providers such as{' '}
+                <Link
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    href='https://www.ssl.com/products/device-machine-trust/client-authentication/'>
+                    SSL.com
+                </Link>{' '}
+                are trusted by Windows and offer client authentication certificates.
+            </p>
+        </Typography>
+
+        <Typography variant='body1'> Execution </Typography>
+
         <Typography variant='body2'>
             Obtain a certificate meeting the above requirements for example by dumping a certificate from a computer, or
             enrolling a new certificate as a computer:
@@ -71,18 +104,20 @@ export const AdcsEsc14ScenarioALinux: FC = () => (
             {'certipy req -u computername -p Passw0rd -ca corp-DC-CA -target ca.corp.local -template ESC14'}
         </Typography>
         <Typography variant='body2'>
-            If the enrollment fails with an error message stating that the Email or DNS name is unavailable and cannot
-            be added to the Subject or Subject Alternate name, then it is because the enrollee principal does not have
-            their mail or dNSHostName attribute set, which is required by the certificate template. The mail attribute
-            can be set on both user and computer objects but the dNSHostName attribute can only be set on computer
-            objects. Computers have validated write permission to their own dNSHostName attribute by default, but
-            neither users nor computers can write to their own mail attribute by default.
+            <p className='my-4'>
+                If the enrollment fails with an error message stating that the Email or DNS name is unavailable and
+                cannot be added to the Subject or Subject Alternate name, then it is because the enrollee principal does
+                not have their mail or dNSHostName attribute set, which is required by the certificate template. The
+                mail attribute can be set on both user and computer objects but the dNSHostName attribute can only be
+                set on computer objects. Computers have validated write permission to their own dNSHostName attribute by
+                default, but neither users nor computers can write to their own mail attribute by default.
+            </p>
+            <p className='my-4'>
+                The abuse is possible with the strong explicit certificate mappings X509IssuerSerialNumber or
+                X509SHA1PublicKey. In this example, we use X509SHA1PublicKey.
+            </p>
+            <p className='my-4'>Get the SHA1 hash of the certificate using openssl:</p>
         </Typography>
-        <Typography variant='body2'>
-            The abuse is possible with the strong explicit certificate mappings X509IssuerSerialNumber or
-            X509SHA1PublicKey. In this example, we use X509SHA1PublicKey.
-        </Typography>
-        <Typography variant='body2'>Get the SHA1 hash of the certificate using openssl:</Typography>
         <CodeController>
             {`openssl pkcs12 -info -in computername.pfx -nokeys | openssl x509 -noout -sha1 -fingerprint | tr -d ':' | tr '[:upper:]' '[:lower:]'
 …
@@ -123,11 +158,15 @@ sha1 fingerprint=f61331a504cff8cb5e60c269632c31aa3032a54a`}
 export const AdcsEsc14ScenarioAWindows: FC = () => {
     return (
         <>
-            <Typography variant='body1'> ADCS ESC14 Scenario A </Typography>
+            <Typography variant='body1'>
+                <b>ADCS ESC14 Scenario A</b>
+            </Typography>
             <Typography variant='body2'>
-                An attacker can add an explicit certificate mapping in the altSecurityIdentities of the target referring
-                to a certificate in the attacker's possession, and then use this certificate to authenticate as the
-                target.
+                <p className='my-4'>
+                    An attacker can add an explicit certificate mapping in the altSecurityIdentities of the target
+                    referring to a certificate in the attacker's possession, and then use this certificate to
+                    authenticate as the target.
+                </p>
             </Typography>
             <Typography variant='body2' component='div'>
                 The certificate must meet the following requirements:
@@ -161,6 +200,34 @@ export const AdcsEsc14ScenarioAWindows: FC = () => {
                 </Link>
                 ).
             </Typography>
+
+            <Typography variant='body2'>
+                <p className='my-4'>
+                    If the attacker cannot obtain a suitable certificate from the target environment, they may also be
+                    able to use a third-party Client Authentication certificate.
+                </p>
+                <p className='my-4'>
+                    This works because explicit certificate mapping differs from implicit certificate mapping. Implicit
+                    mapping requires the certificate to chain to a CA certificate in the domain controller's NTAuth
+                    store. Explicit mapping does not. For explicit mapping, the certificate only needs to chain to a
+                    trusted root CA on the domain controller.
+                </p>
+                <p className='my-4'>
+                    Windows trusts many third-party root CAs by default, so an attacker may be able to buy or steal a
+                    third-party certificate with the Client Authentication EKU and use it for ESC14 Scenario A. For
+                    example, providers such as{' '}
+                    <Link
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        href='https://www.ssl.com/products/device-machine-trust/client-authentication/'>
+                        SSL.com
+                    </Link>{' '}
+                    are trusted by Windows and offer client authentication certificates.
+                </p>
+            </Typography>
+
+            <Typography variant='body1'> Execution </Typography>
+
             <Typography variant='body2'>
                 Obtain a certificate meeting the above requirements for example by dumping a certificate from a
                 computer, or enrolling a new certificate as a computer using Certify (2.0):
@@ -171,15 +238,28 @@ export const AdcsEsc14ScenarioAWindows: FC = () => {
                 }
             </Typography>
             <Typography variant='body2'>
-                Save the certificate as cert.pem and the private key as cert.key. Use certutil to obtain the certificate
-                as a PFX file:
+                <p className='my-4'>
+                    If the enrollment fails with an error message stating that the Email or DNS name is unavailable and
+                    cannot be added to the Subject or Subject Alternate name, then it is because the enrollee principal
+                    does not have their mail or dNSHostName attribute set, which is required by the certificate
+                    template. The mail attribute can be set on both user and computer objects but the dNSHostName
+                    attribute can only be set on computer objects. Computers have validated write permission to their
+                    own dNSHostName attribute by default, but neither users nor computers can write to their own mail
+                    attribute by default.
+                </p>
+                <p className='my-4'>
+                    Save the certificate as cert.pem and the private key as cert.key. Use certutil to obtain the
+                    certificate as a PFX file:
+                </p>
             </Typography>
             <Typography component={'pre'}>{'certutil.exe -MergePFX .\\cert.pem .\\cert.pfx'}</Typography>
             <Typography variant='body2'>
-                The abuse is possible with the strong explicit certificate mappings X509IssuerSerialNumber or
-                X509SHA1PublicKey. In this example, we use X509SHA1PublicKey.
+                <p className='my-4'>
+                    The abuse is possible with the strong explicit certificate mappings X509IssuerSerialNumber or
+                    X509SHA1PublicKey. In this example, we use X509SHA1PublicKey.
+                </p>
+                <p className='my-4'>Get the SHA1 hash of the certificate public key using certutil:</p>
             </Typography>
-            <Typography variant='body2'>Get the SHA1 hash of the certificate public key using certutil:</Typography>
             <CodeController>
                 {`certutil.exe -dump -v .\\cert.pfx
 …
