@@ -88,9 +88,9 @@ export const ZoneIcon: FC<ZoneIconProps> = ({
                         <TooltipTrigger>
                             <div className={cn('min-w-4 w-4 mr-2 flex items-center justify-center', wrapperClasses)}>
                                 {iconDefinition ? (
-                                    <FontAwesomeIcon icon={iconDefinition} className={iconClasses} />
+                                    <FontAwesomeIcon icon={iconDefinition} />
                                 ) : (
-                                    <AppIcon.Zones size={size} className={iconClasses} />
+                                    <AppIcon.Zones size={size} />
                                 )}
                             </div>
                         </TooltipTrigger>

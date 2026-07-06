@@ -123,10 +123,7 @@ const TableHead = React.forwardRef(function TableHead<TData, TValue>(
                 {enableDragging && header?.id !== 'empty-column' && (
                     <Tooltip tooltip='Drag to reorder'>
                         <button
-                            className={cn(
-                                'rounded-sm p-1 focus:outline-none focus-visible:focus-ring',
-                                isDragging ? 'cursor-grabbing' : 'cursor-grab'
-                            )}
+                            className={cn(isDragging ? 'cursor-grabbing' : 'cursor-grab')}
                             {...attributes}
                             {...listeners}>
                             <FontAwesomeIcon icon={faGripVertical} className='text-sm mr-2' />

@@ -240,7 +240,7 @@ const CarouselDots = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
                                 : `Go to item ${index + 1} of ${scrollSnaps.length}`
                         }
                         aria-current={isCurrent ? 'true' : undefined}
-                        className={'h-2.5 w-2.5 mx-1.5 border-x border-y rounded-3xl border-black dark:border-white focus:outline-none focus-visible:focus-ring '.concat(
+                        className={'h-2.5 w-2.5 mx-1.5 border-x border-y rounded-3xl border-black dark:border-white '.concat(
                             index === selectedIndex ? 'active bg-black dark:bg-white rounded-3xl' : ''
                         )}
                         onClick={() => onDotButtonClick(index)}></button>

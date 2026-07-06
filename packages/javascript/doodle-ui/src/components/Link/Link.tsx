@@ -21,19 +21,22 @@ import * as React from 'react';
 import { cn } from '../utils';
 
 const styledLinkClasses =
-    'text-link underline underline-offset-1 decoration-secondary hover:text-link-hover hover:decoration-link focus-visible:underline focus-visible:decoration-2 focus-visible:underline-offset-2 dark:no-underline dark:hover:underline';
+    'text-link underline underline-offset-1 decoration-secondary hover:text-link-hover hover:decoration-link dark:no-underline dark:hover:underline';
 
-const linkVariants = cva('inline-flex items-center rounded-sm focus:outline-none focus-visible:focus-ring', {
-    variants: {
-        variant: {
-            styled: styledLinkClasses,
-            unstyled: 'text-inherit no-underline',
+const linkVariants = cva(
+    'inline-flex items-center rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-ring',
+    {
+        variants: {
+            variant: {
+                styled: styledLinkClasses,
+                unstyled: 'text-inherit no-underline',
+            },
         },
-    },
-    defaultVariants: {
-        variant: 'styled',
-    },
-});
+        defaultVariants: {
+            variant: 'styled',
+        },
+    }
+);
 
 export type LinkProps = Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'children' | 'href' | 'target' | 'rel'> &
     VariantProps<typeof linkVariants> & {
