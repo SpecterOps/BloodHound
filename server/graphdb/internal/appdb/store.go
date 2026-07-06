@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 	"github.com/specterops/dawgs/graph"
 )
@@ -51,6 +52,7 @@ type graphReader interface {
 
 // pgxQuerier lists only the pgx methods this package actually calls against PostgreSQL.
 type pgxQuerier interface {
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 }
 

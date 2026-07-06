@@ -20,6 +20,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 )
 
 // Database describes the persistence capabilities the graphdb Service requires.
@@ -39,6 +40,16 @@ type Database interface {
 type Kind struct {
 	ID   *int32
 	Name string
+}
+
+type KindInfo struct {
+	KindID             int32
+	NodeKindID         *int32
+	RelationshipKindID *int32
+	InfoKey            string
+	Title              string
+	Position           int32
+	Content            json.RawMessage
 }
 
 // Service implements the graphdb use cases on top of a Database implementation.
