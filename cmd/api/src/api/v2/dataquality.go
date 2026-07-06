@@ -185,13 +185,6 @@ func (s *Resources) GetDataQualityStats(response http.ResponseWriter, request *h
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, ErrNoEnvironmentId, request), response)
 	} else if user, found := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !found {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, ErrUnknownUser, request), response)
-	} else if ShouldFilterForETAC(s.DogTags, user) {
-		hasAccess, err := CheckUserAccessToEnvironments(ctx, s.DB, user, environmentId)
-		if err != nil {
-			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
-		} else if !hasAccess {
-			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, ErrNoAccess, request), response)
-		}
 	} else if _, sort, err := parseOrder(queryParams, dataQualityStats); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if start, err := ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
@@ -203,6 +196,16 @@ func (s *Resources) GetDataQualityStats(response http.ResponseWriter, request *h
 	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, queryParams["skip"]), request), response)
 	} else {
+		if ShouldFilterForETAC(s.DogTags, user) {
+			hasAccess, err := CheckUserAccessToEnvironments(ctx, s.DB, user, environmentId)
+			if err != nil {
+				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+				return
+			} else if !hasAccess {
+				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, ErrNoAccess, request), response)
+				return
+			}
+		}
 		filters := model.Filters{
 			"environment_id": []model.Filter{{
 				Value:       environmentId,

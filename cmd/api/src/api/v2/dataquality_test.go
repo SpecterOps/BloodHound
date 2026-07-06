@@ -791,10 +791,16 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 func TestGetDataQualityStats_Success(t *testing.T) {
 	environmentID := "environment-1"
 	endpoint := "/api/v2/data-quality-stats%s"
-	userCtx := setupUserCtx(setupUser())
+	etacEnabled := dogtags.TestOverrides{
+		Bools: map[dogtags.BoolDogTag]bool{
+			dogtags.ETAC_ENABLED: true,
+		},
+	}
 
 	type Input struct {
-		Params url.Values
+		Params           url.Values
+		User             model.User
+		DogTagsOverrides dogtags.TestOverrides
 	}
 
 	type Expected struct {
@@ -804,6 +810,7 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 	var cases = []struct {
 		Name     string
 		Input    Input
+		Setup    func(mockDB *mocks.MockDatabase, user model.User)
 		Expected Expected
 	}{
 		{
@@ -917,6 +924,53 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 				Code: http.StatusOK,
 			},
 		},
+		{
+			Name: "ETACDisabledSkipsAccessCheck",
+			Input: Input{
+				Params: url.Values{
+					graphschema.EnvironmentIDKey: []string{environmentID},
+				},
+			},
+			Expected: Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Name: "ETACEnabledWithAllEnvironmentsSkipsAccessCheck",
+			Input: Input{
+				Params: url.Values{
+					graphschema.EnvironmentIDKey: []string{environmentID},
+				},
+				User: func() model.User {
+					user := setupUser()
+					user.AllEnvironments = true
+					return user
+				}(),
+				DogTagsOverrides: etacEnabled,
+			},
+			Expected: Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Name: "ETACEnabledWithEnvironmentAccessChecksAccessThenFetchesStats",
+			Input: Input{
+				Params: url.Values{
+					graphschema.EnvironmentIDKey: []string{environmentID},
+				},
+				DogTagsOverrides: etacEnabled,
+			},
+			Setup: func(mockDB *mocks.MockDatabase, user model.User) {
+				successfulAccessCheck := mockDB.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), user).Return([]model.EnvironmentTargetedAccessControl{
+					{EnvironmentID: environmentID},
+				}, nil).Times(1)
+				successfulStatsFetch := mockDB.EXPECT().GetDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityStats{}, 0, nil).Times(1)
+				gomock.InOrder(successfulAccessCheck, successfulStatsFetch)
+			},
+			Expected: Expected{
+				Code: http.StatusOK,
+			},
+		},
 	}
 
 	for _, tc := range cases {
@@ -924,17 +978,26 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 
+			user := tc.Input.User
+			if user.PrincipalName == "" {
+				user = setupUser()
+			}
+
 			mockDB := mocks.NewMockDatabase(mockCtrl)
-			mockDB.EXPECT().GetDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityStats{}, 0, nil)
+			if tc.Setup == nil {
+				mockDB.EXPECT().GetDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityStats{}, 0, nil).Times(1)
+			} else {
+				tc.Setup(mockDB, user)
+			}
 
 			resources := v2.Resources{
 				DB:      mockDB,
-				DogTags: dogtags.NewTestService(dogtags.TestOverrides{}),
+				DogTags: dogtags.NewTestService(tc.Input.DogTagsOverrides),
 			}
 			params := fmt.Sprintf("?%s", tc.Input.Params.Encode())
 			req, err := http.NewRequest("GET", fmt.Sprintf(endpoint, params), nil)
 			require.NoError(t, err)
-			req = req.WithContext(userCtx)
+			req = req.WithContext(setupUserCtx(user))
 
 			router := mux.NewRouter()
 			router.HandleFunc("/api/v2/data-quality-stats", resources.GetDataQualityStats).Methods("GET")
