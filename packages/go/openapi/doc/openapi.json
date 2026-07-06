@@ -13977,6 +13977,114 @@
         }
       }
     },
+    "/api/v2/data-quality-stats": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetDataQualityStats",
+        "summary": "Get environment-specific data quality stats",
+        "description": "Time series list of data quality stats for a given environment",
+        "tags": [
+          "Data Quality",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "environmentid",
+            "description": "Required. Filters results to the given environment.",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are created_at, updated_at.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "start",
+            "description": "Beginning datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime minus 30 days",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "end",
+            "description": "Ending datetime of range (exclusive) in RFC-3339 format; Defaults to current datetime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "$ref": "#/components/schemas/api.response.time-window"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.data-quality-stat"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/clear-database": {
       "parameters": [
         {
@@ -22218,6 +22326,54 @@
                     }
                   ]
                 }
+              }
+            }
+          }
+        ]
+      },
+      "model.data-quality-stat": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int32.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "extension_id": {
+                "type": "integer"
+              },
+              "environment_kind_id": {
+                "type": "integer"
+              },
+              "environmentid": {
+                "type": "string"
+              },
+              "metric_type": {
+                "type": "string",
+                "enum": [
+                  "node",
+                  "relationship"
+                ]
+              },
+              "metric_name": {
+                "type": "string"
+              },
+              "metric_value": {
+                "type": "number",
+                "format": "double"
+              },
+              "metric_node_kind_id": {
+                "description": "The kind ID for the counted node kind. Present when `metric_type` is `node`; otherwise null.",
+                "type": "integer",
+                "format": "int32",
+                "nullable": true
+              },
+              "run_id": {
+                "type": "string",
+                "format": "uuid"
               }
             }
           }
