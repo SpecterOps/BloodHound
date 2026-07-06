@@ -145,7 +145,7 @@ describe('AuthenticatedRoute', () => {
                             eula_accepted: true, // accepted
                             roles: [
                                 {
-                                    name: TEST_NOTIFICATION,
+                                    name: DISALLOWED_ROLE_NAME,
                                 },
                             ],
                         },

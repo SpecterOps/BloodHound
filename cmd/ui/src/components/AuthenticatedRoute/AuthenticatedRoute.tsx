@@ -35,7 +35,7 @@ const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({ children, disal
     const invalidRolesForThisUser = useMemo(
         () =>
             disallowedRoles?.filter((disallowedRole) =>
-                authState.user?.roles.find((role: any) => role.name === disallowedRole.name)
+                authState.user?.roles?.find((role: any) => role.name === disallowedRole.name)
             ),
         [authState?.user, disallowedRoles]
     );
