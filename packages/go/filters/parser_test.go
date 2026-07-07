@@ -83,9 +83,16 @@ func TestParseAndValidate_Parsing(t *testing.T) {
 	}
 
 	t.Run("silently skips a non-matching value", func(t *testing.T) {
-		parsed, err := parser.ParseAndValidate(url.Values{"parameter": {"eq : hello world"}}, filterable)
+		parsed, err := parser.ParseAndValidate(url.Values{"parameter": {"hello world"}}, filterable)
 		require.NoError(t, err)
 		require.Empty(t, parsed["parameter"])
+	})
+
+	t.Run("supports subsequent ':' in value", func(t *testing.T) {
+		parsed, err := parser.ParseAndValidate(url.Values{"parameter": {"eq:foo:bar"}}, filterable)
+		require.NoError(t, err)
+		require.Len(t, parsed["parameter"], 1)
+		require.Equal(t, "foo:bar", parsed["parameter"][0].Value)
 	})
 
 	t.Run("parses multiple values for the same field in order", func(t *testing.T) {

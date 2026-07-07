@@ -18,22 +18,20 @@ package filters
 
 import (
 	"net/url"
-	"regexp"
 	"slices"
+	"strings"
 )
 
 // QueryParameterFilterParser extracts filters from request query parameters. Parameters whose names are
 // listed in ignoredParameters are skipped, allowing callers to exclude application-specific concerns such
 // as pagination parameters without coupling this package to them.
 type QueryParameterFilterParser struct {
-	valuePattern      *regexp.Regexp
 	ignoredParameters []string
 }
 
 // NewQueryParameterFilterParser returns a parser that ignores the supplied query parameter names.
 func NewQueryParameterFilterParser(ignoredParameters ...string) QueryParameterFilterParser {
 	return QueryParameterFilterParser{
-		valuePattern:      regexp.MustCompile(`([~\w]+):([\w\--_ ]+)`),
 		ignoredParameters: ignoredParameters,
 	}
 }
@@ -54,9 +52,9 @@ func (s QueryParameterFilterParser) ParseAndValidate(values url.Values, filterab
 		}
 
 		for _, value := range fieldValues {
-			if subgroups := s.valuePattern.FindStringSubmatch(value); len(subgroups) == 0 {
+			if subgroups := strings.SplitN(value, ":", 2); len(subgroups) != 2 {
 				continue
-			} else if operator, err := ParseFilterOperator(subgroups[1]); err != nil {
+			} else if operator, err := ParseFilterOperator(subgroups[0]); err != nil {
 				return nil, &ValidationError{Err: err}
 			} else if field, isFilterable := validFields[name]; !isFilterable {
 				return nil, &ValidationError{Err: ErrFieldNotFilterable, Field: name}
@@ -71,7 +69,7 @@ func (s QueryParameterFilterParser) ParseAndValidate(values url.Values, filterab
 				parsedFilters[name] = append(parsedFilters[name], Filter{
 					Field:        name,
 					Operator:     operator,
-					Value:        subgroups[2],
+					Value:        subgroups[1],
 					SetOperator:  setOperator,
 					IsStringData: field.IsStringData,
 				})
