@@ -74,6 +74,7 @@ func TestDeleteTransitEdges(t *testing.T) {
 	// Here, we are choosing to create these edges such that the data describes what we would expect to see after a successful execution of the logic
 	// in bhce/cmd/api/src/analysis/azure/post.go.
 	testCtx.NewRelationship(adUser, azureUser, azure.SyncedToEntraUser)
+	testCtx.NewRelationship(azureUser, adUser, azure.SyncedToEntraDSUser)
 	testCtx.NewRelationship(azureUser, adUser, ad.SyncedToADUser)
 
 	// The way post-processing operates is that all edges created during post-processing are deleted before each analysis run. This helps keep the graph consistent
@@ -87,10 +88,16 @@ func TestDeleteTransitEdges(t *testing.T) {
 
 	err = testCtx.Graph.Database.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 		numEdges, err := tx.Relationships().Filter(query.Kind(query.Relationship(), azure.SyncedToEntraUser)).Count()
+		require.Nil(t, err)
 
 		// This must be true which would mean that the above created SyncedToEntraUser was correctly deleted by the DeleteTransitEdges call
 		require.Equal(t, int64(0), numEdges)
-		return err
+
+		numEdges, err = tx.Relationships().Filter(query.Kind(query.Relationship(), azure.SyncedToEntraDSUser)).Count()
+		require.Nil(t, err)
+		require.Equal(t, int64(0), numEdges)
+
+		return nil
 	})
 
 	// The DB must not return any errors

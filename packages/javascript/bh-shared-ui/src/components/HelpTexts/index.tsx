@@ -130,6 +130,8 @@ import SpoofSIDHistory from './SpoofSIDHistory/SpoofSIDHistory';
 import SyncLAPSPassword from './SyncLAPSPassword/SyncLAPSPassword';
 import SyncedToADUser from './SyncedToADUser/SyncedToADUser';
 import SyncedToEntraUser from './SyncedToEntraUser/SyncedToEntraUser';
+import SyncedToEntraDSUser from './SyncedToEntraDSUser/SyncedToEntraDSUser';
+import SyncedToEntraDSGroup from './SyncedToEntraDSGroup/SyncedToEntraDSGroup';
 import TrustedForNTAuth from './TrustedForNTAuth/TrustedForNTAuth';
 import WriteAccountRestrictions from './WriteAccountRestrictions/WriteAccountRestrictions';
 import WriteAltSecurityIdentities from './WriteAltSecurityIdentities/WriteAltSecurityIdentities';
@@ -272,6 +274,8 @@ const EdgeInfoComponents = {
     ExtendedByPolicy: ExtendedByPolicy,
     SyncedToADUser: SyncedToADUser,
     SyncedToEntraUser: SyncedToEntraUser,
+    SyncedToEntraDSUser: SyncedToEntraDSUser,
+    SyncedToEntraDSGroup: SyncedToEntraDSGroup,
     CoerceAndRelayNTLMToSMB: CoerceAndRelayNTLMToSMB,
     CoerceAndRelayNTLMToLDAP: CoerceAndRelayNTLMToLDAP,
     CoerceAndRelayNTLMToLDAPS: CoerceAndRelayNTLMToLDAPS,

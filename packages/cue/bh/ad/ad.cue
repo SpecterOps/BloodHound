@@ -618,6 +618,13 @@ ObjectGUID: types.#StringEnum & {
 	representation: "objectguid"
 }
 
+AADObjectID: types.#StringEnum & {
+	symbol:         "AADObjectID"
+	schema:         "ad"
+	name:           "Microsoft Entra Object ID"
+	representation: "msds-aadobjectid"
+}
+
 ExpirePasswordsOnSmartCardOnlyAccounts: types.#StringEnum & {
 	symbol:         "ExpirePasswordsOnSmartCardOnlyAccounts"
 	schema:         "ad"
@@ -1120,6 +1127,7 @@ Properties: [
 	CertTemplateOID,
 	GroupLinkID,
 	ObjectGUID,
+	AADObjectID,
 	ExpirePasswordsOnSmartCardOnlyAccounts,
 	MachineAccountQuota,
 	SupportedKerberosEncryptionTypes,

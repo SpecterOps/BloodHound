@@ -818,6 +818,18 @@ SyncedToEntraUser: types.#Kind & {
 	schema: "azure"
 }
 
+SyncedToEntraDSUser: types.#Kind & {
+	symbol:         "SyncedToEntraDSUser"
+	schema:         "azure"
+	representation: "SyncedToEntraDSUser"
+}
+
+SyncedToEntraDSGroup: types.#Kind & {
+	symbol:         "SyncedToEntraDSGroup"
+	schema:         "azure"
+	representation: "SyncedToEntraDSGroup"
+}
+
 AZRoleEligible: types.#Kind & {
 	symbol: "AZRoleEligible"
 	schema: "azure"
@@ -884,6 +896,8 @@ RelationshipKinds: [
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
 	SyncedToEntraUser,
+	SyncedToEntraDSUser,
+	SyncedToEntraDSGroup,
 	AZRoleEligible,
 	AZRoleApprover,
 	AZAuthenticatesTo
@@ -988,6 +1002,7 @@ InboundOutboundRelationshipKinds: [
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
 	SyncedToEntraUser,
+	SyncedToEntraDSUser,
 	AZRoleEligible,
 	AZRoleApprover,
 	Contains,
@@ -999,5 +1014,7 @@ PathfindingRelationships: list.Concat([InboundOutboundRelationshipKinds])
 PostProcessedRelationships: [
 	ExecuteCommand,
 	SyncedToEntraUser,
+	SyncedToEntraDSUser,
+	SyncedToEntraDSGroup,
 	AZRoleApprover,
 ]
