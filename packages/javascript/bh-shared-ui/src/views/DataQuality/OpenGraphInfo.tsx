@@ -14,15 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faStream, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { AzureDataQualityStat } from 'js-client-library';
 import React, { useEffect } from 'react';
 import { NodeIcon } from '../../components';
-import { AzureNodeKind } from '../../graphSchema';
-import { useAzureDataQualityStatsQuery, useAzurePlatformsDataQualityStatsQuery } from '../../hooks';
+import { useOpenGraphDataQualityStatsQuery } from '../../hooks';
 import LoadContainer from './LoadContainer';
 
 const useStyles = makeStyles((theme) => ({
@@ -36,37 +34,22 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-export const OpenGraphMap = {
-    users: { displayText: 'Users', kind: AzureNodeKind.User },
-    groups: { displayText: 'Groups', kind: AzureNodeKind.Group },
-    apps: { displayText: 'Apps', kind: AzureNodeKind.App },
-    service_principals: {
-        displayText: 'Service Principals',
-        kind: AzureNodeKind.ServicePrincipal,
-    },
-    devices: { displayText: 'Devices', kind: AzureNodeKind.Device },
-    management_groups: {
-        displayText: 'Management Groups',
-        kind: AzureNodeKind.ManagementGroup,
-    },
-    subscriptions: { displayText: 'Subscriptions', kind: AzureNodeKind.Subscription },
-    resource_groups: { displayText: 'Resource Groups', kind: AzureNodeKind.ResourceGroup },
-    vms: { displayText: 'VMs', kind: AzureNodeKind.VM },
-    key_vaults: { displayText: 'Key Vaults', kind: AzureNodeKind.KeyVault },
-    automation_accounts: {
-        displayText: 'Automation Accounts',
-        kind: AzureNodeKind.AutomationAccount,
-    },
-    container_registries: {
-        displayText: 'Container Registries',
-        kind: AzureNodeKind.ContainerRegistry,
-    },
-    function_apps: { displayText: 'Function Apps', kind: AzureNodeKind.FunctionApp },
-    logic_apps: { displayText: 'Logic Apps', kind: AzureNodeKind.LogicApp },
-    managed_clusters: { displayText: 'Managed Clusters', kind: AzureNodeKind.ManagedCluster },
-    vm_scale_sets: { displayText: 'VM Scale Sets', kind: AzureNodeKind.VMScaleSet },
-    web_apps: { displayText: 'Web Apps', kind: AzureNodeKind.WebApp },
-    tenants: { displayText: 'Tenants', kind: AzureNodeKind.Tenant },
+// getLatestMetricStats keeps only the latest stat per metric_kind_id (by created_at) and
+// splits the result into node stats and the latest relationship stat.
+const getLatestMetricStats = (data: any[]) => {
+    const latestStatsByMetricKind = new Map<number, any>();
+    for (const stat of data) {
+        const existing = latestStatsByMetricKind.get(stat.metric_kind_id);
+        const isLatest = new Date(stat?.created_at).getTime() > new Date(existing?.created_at).getTime();
+        if (!existing || isLatest) {
+            latestStatsByMetricKind.set(stat.metric_kind_id, stat);
+        }
+    }
+    const stats = Array.from(latestStatsByMetricKind.values());
+    const nodeStats = stats.filter((stat) => stat.metric_type === 'node');
+    const relationshipStats = stats.find((stat) => stat.metric_type === 'relationship');
+
+    return { nodeStats, relationshipStats };
 };
 
 export const OpenGraphInfo: React.FC<{ contextId: string; headers?: boolean; onDataError?: () => void }> = ({
@@ -74,50 +57,64 @@ export const OpenGraphInfo: React.FC<{ contextId: string; headers?: boolean; onD
     headers = false,
     onDataError = () => {},
 }) => {
-    const { data: tenantData, isLoading, isError } = useAzureDataQualityStatsQuery(contextId);
+    const { data: tenantData, isLoading, isError } = useOpenGraphDataQualityStatsQuery(contextId);
+
+    console.log('TD', tenantData);
 
     useEffect(() => {
         if (isError) onDataError();
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout stats={null} headers={headers} loading={true} />;
+        return <Layout nodeStats={null} relationshipStats={null} headers={headers} loading={true} />;
     }
 
     if (isError || !tenantData || !tenantData.data.length) {
         return null;
     }
 
-    const stats = tenantData.data[0];
+    const { nodeStats, relationshipStats } = getLatestMetricStats(tenantData.data);
 
-    return <Layout stats={stats} headers={headers} loading={false} />;
+    return <Layout nodeStats={nodeStats} relationshipStats={relationshipStats} headers={headers} loading={false} />;
 };
 
-export const OpenGraphPlatformInfo: React.FC<{ onDataError?: () => void }> = ({ onDataError = () => {} }) => {
-    const { data: platformData, isLoading, isError } = useAzurePlatformsDataQualityStatsQuery();
+export const OpenGraphPlatformInfo: React.FC<{ contextId: string; onDataError?: () => void }> = ({
+    contextId,
+    onDataError = () => {},
+}) => {
+    const { data: platformData, isLoading, isError } = useOpenGraphPlatformsDataQualityStatsQuery(contextId);
 
     useEffect(() => {
         if (isError) onDataError();
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout stats={null} loading={true} />;
+        return <Layout nodeStats={null} relationshipStats={null} loading={true} />;
     }
 
     if (isError || !platformData || !platformData.data.length) {
         return null;
     }
 
-    const stats = platformData.data[0];
+    const { nodeStats, relationshipStats } = getLatestMetricStats(platformData.data);
 
-    return <Layout stats={stats} loading={false} />;
+    return <Layout nodeStats={nodeStats} relationshipStats={relationshipStats} loading={false} />;
+};
+
+const MetricIcon: React.FC<{ metricName: string; metricType: any }> = ({ metricName, metricType }) => {
+    if (metricType === 'node') {
+        return <NodeIcon nodeType={metricName} />;
+    }
+
+    return <FontAwesomeIcon icon={faStream} />;
 };
 
 const Layout: React.FC<{
-    stats: AzureDataQualityStat | null;
+    nodeStats: any;
+    relationshipStats: any;
     loading: boolean;
     headers?: boolean;
-}> = ({ stats, loading, headers }) => {
+}> = ({ nodeStats, relationshipStats, loading, headers }) => {
     const classes = useStyles();
     return (
         <Box position='relative'>
@@ -132,18 +129,15 @@ const Layout: React.FC<{
                         </TableHead>
                     )}
                     <TableBody>
-                        {Object.keys(OpenGraphMap).map((key) => {
-                            if (key === 'tenants' && stats?.tenants === undefined) return null;
-
-                            const mapValue = OpenGraphMap[key as keyof typeof OpenGraphMap];
-                            const value = stats?.[key as keyof AzureDataQualityStat] as number;
+                        {nodeStats?.map((key: any) => {
+                            if (key.metric_kind_id === key.environment_kind_id) return null;
 
                             return (
                                 <LoadContainer
-                                    key={key}
-                                    icon={<NodeIcon nodeType={mapValue.kind} />}
-                                    display={mapValue.displayText}
-                                    value={value}
+                                    key={key.id}
+                                    icon={<MetricIcon metricName={key.metric_name} metricType={key.metric_type} />}
+                                    display={key.metric_name}
+                                    value={key.metric_value}
                                     loading={loading}
                                 />
                             );
@@ -157,7 +151,7 @@ const Layout: React.FC<{
                         <LoadContainer
                             icon={<FontAwesomeIcon icon={faUsers} />}
                             display='Relationships'
-                            value={stats?.relationships}
+                            value={relationshipStats?.metric_value ?? 0}
                             loading={loading}
                         />
                     </TableBody>

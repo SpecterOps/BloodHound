@@ -135,8 +135,13 @@ const Layout: React.FC<{
                         {Object.keys(TenantMap).map((key) => {
                             if (key === 'tenants' && stats?.tenants === undefined) return null;
 
+                            console.log('stats', stats);
+
                             const mapValue = TenantMap[key as keyof typeof TenantMap];
                             const value = stats?.[key as keyof AzureDataQualityStat] as number;
+
+                            console.log('mapValue', mapValue);
+                            console.log('value', value);
 
                             return (
                                 <LoadContainer

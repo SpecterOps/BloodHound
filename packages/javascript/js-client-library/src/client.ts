@@ -667,6 +667,30 @@ class BHEAPIClient {
         );
     };
 
+    getOpenGraphQualityStats = (
+        id: string,
+        start?: Date,
+        end?: Date,
+        limit?: number,
+        sort_by?: string,
+        options?: RequestOptions
+    ) => {
+        return this.baseClient.get<AzureDataQualityResponse>(
+            `/api/v2/data-quality-stats?environmentid=${id}`,
+            Object.assign(
+                {
+                    params: {
+                        start: start?.toISOString(),
+                        end: end?.toISOString(),
+                        limit: limit,
+                        sort_by: sort_by,
+                    },
+                },
+                options
+            )
+        );
+    };
+
     getPlatformQualityStats = (
         platformtype: string,
         start?: Date,
@@ -677,6 +701,30 @@ class BHEAPIClient {
     ) => {
         return this.baseClient.get(
             `/api/v2/platform/${platformtype}/data-quality-stats`,
+            Object.assign(
+                {
+                    params: {
+                        start: start?.toISOString(),
+                        end: end?.toISOString(),
+                        limit: limit,
+                        sort_by: sort_by,
+                    },
+                },
+                options
+            )
+        );
+    };
+
+    getOpenGraphPlatformQualityStats = (
+        platformtype: string,
+        start?: Date,
+        end?: Date,
+        limit?: number,
+        sort_by?: string,
+        options?: RequestOptions
+    ) => {
+        return this.baseClient.get(
+            `/api/v2/data-quality-stats-aggregation?environment_kind_id=${platformtype}`,
             Object.assign(
                 {
                     params: {

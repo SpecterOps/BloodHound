@@ -62,6 +62,19 @@ export const useAzureDataQualityStatsQuery = (id: string) => {
     });
 };
 
+export const useOpenGraphDataQualityStatsQuery = (id: string) => {
+    return useQuery(['open-graph-data-quality-stats', id], ({ signal }) => {
+        return apiClient
+            .getOpenGraphQualityStats(id, now.minus({ days: 30 }).toJSDate(), now.toJSDate(), undefined, undefined, {
+                signal,
+            })
+            .then((response) => {
+                if (!response.data) throw new Error('Unable to retrieve Open Graph quality stats');
+                return response.data;
+            });
+    });
+};
+
 export const useActiveDirectoryPlatformsDataQualityHistoryQuery = () => {
     return useQuery('active-directory-platform-data-quality-history', ({ signal }) =>
         apiClient
@@ -81,6 +94,17 @@ export const useActiveDirectoryPlatformsDataQualityStatsQuery = () => {
             if (!response.data) throw new Error('Unable to retrieve AD platform quality stats');
             return response.data;
         })
+    );
+};
+
+export const useOpenGraphPlatformsDataQualityStatsQuery = () => {
+    return useQuery('open-graph-platform-data-quality-stats', ({ signal }) =>
+        apiClient
+            .getOpenGraphPlatformQualityStats('ad', undefined, undefined, 1, undefined, { signal })
+            .then((response) => {
+                if (!response.data) throw new Error('Unable to retrieve Open Graph platform quality stats');
+                return response.data;
+            })
     );
 };
 
