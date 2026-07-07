@@ -141,7 +141,7 @@ const PrivilegeZones: FC = () => {
                         className={cn('w-full mt-4', { hidden: location.pathname.includes(savePath) })}
                         onValueChange={(value) => {
                             setSelectedDetailsTab(TagTabValue);
-                            const path = isSummaryPage ? summaryPath : detailsPath;
+                            const summaryOrDetailsPath = isSummaryPage ? summaryPath : detailsPath;
                             const id = value === zonesPath ? tagId : ownedId;
                             switch (value) {
                                 case certificationsPath:
@@ -154,7 +154,9 @@ const PrivilegeZones: FC = () => {
                                     });
                                 case zonesPath:
                                 case labelsPath:
-                                    return navigate(`/${privilegeZonesPath}/${value}/${id}/${path}`);
+                                    return navigate(`/${privilegeZonesPath}/${value}/${id}/${summaryOrDetailsPath}`, {
+                                        discardQueryParams: summaryOrDetailsPath === summaryPath,
+                                    });
                             }
                         }}>
                         <TabsList className='w-full flex justify-start'>
