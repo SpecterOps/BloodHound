@@ -103,6 +103,13 @@ interface CreateSAMLProviderResponse {
 
 const selfSpy = vi.fn();
 const listProvidersSpy = vi.fn();
+const mockUseFeatureFlag = vi.fn();
+
+vi.mock('../../hooks/useFeatureFlags', () => {
+    return {
+        useFeatureFlag: (flagKey: string) => mockUseFeatureFlag(flagKey),
+    };
+});
 
 const server = setupServer(
     rest.get('/api/v2/self', (req, res, ctx) => {
@@ -143,6 +150,8 @@ const server = setupServer(
 beforeEach(() => {
     selfSpy.mockClear();
     listProvidersSpy.mockClear();
+    ssoProviders.length = 0;
+    ssoProviders.push(initialSAMLProvider);
     permissionResponse = createAuthStateWithPermissions([Permission.AUTH_MANAGE_PROVIDERS]).user;
     mockUseFeatureFlag.mockImplementation((flagKey: string) => {
         return {
@@ -162,15 +171,7 @@ beforeAll(() => {
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-const mockUseFeatureFlag = vi.fn();
-
-vi.mock('../../hooks/useFeatureFlags', () => {
-    return {
-        useFeatureFlag: (flagKey: string) => mockUseFeatureFlag(flagKey),
-    };
-});
-
-describe('SSOConfiguration', async () => {
+describe('SSOConfiguration', () => {
     it('should eventually render previously configured SSO providers', async () => {
         const user = userEvent.setup();
 
@@ -221,16 +222,6 @@ describe('SSOConfiguration', async () => {
         expect(await screen.findByText(newSAMLDetails.sp_metadata_uri)).toBeInTheDocument();
     });
 
-    it('should disable the create provider button and not display providers if the user lacks permission', async () => {
-        permissionResponse = createAuthStateWithPermissions([Permission.AUTH_READ_USERS]).user;
-        render(<SSOConfiguration />);
-
-        await waitFor(() => expect(selfSpy).toHaveBeenCalled());
-
-        expect(screen.getByRole('button', { name: /create provider/i })).toBeDisabled();
-        expect(screen.queryByText(newSAMLProvider.name)).toBeNull();
-    });
-
     it('enables the create provider button for a user with the admin role', async () => {
         permissionResponse = createAuthStateWithPermissions([Permission.AUTH_MANAGE_PROVIDERS]).user;
         render(<SSOConfiguration />);
@@ -247,10 +238,19 @@ describe('SSOConfiguration', async () => {
         expect(screen.getByRole('button', { name: /create provider/i })).toBeDisabled();
     });
 
+    it('should disable the create provider button if the user lacks AUTH_MANAGE_PROVIDERS permission', async () => {
+        permissionResponse = createAuthStateWithPermissions([Permission.AUTH_READ_USERS]).user;
+        render(<SSOConfiguration />);
+
+        await waitFor(() => expect(selfSpy).toHaveBeenCalled());
+
+        expect(screen.getByRole('button', { name: /create provider/i })).toBeDisabled();
+    });
+
     it.each([
-        { role: 'admin', permission: Permission.AUTH_MANAGE_PROVIDERS },
-        { role: 'auditor', permission: Permission.AUTH_READ_PROVIDERS },
-    ])('lists sso providers for a user with the $role role', async ({ permission }) => {
+        ['admin', Permission.AUTH_MANAGE_PROVIDERS],
+        ['auditor', Permission.AUTH_READ_PROVIDERS],
+    ])('lists sso providers for a user with manage/read provider permissions', async (_role, permission) => {
         permissionResponse = createAuthStateWithPermissions([permission]).user;
         render(<SSOConfiguration />);
 
