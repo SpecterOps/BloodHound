@@ -23,7 +23,7 @@ allOf:
         type: integer
       environment_kind_id:
         type: integer
-      environmentid:
+      environment_id:
         type: string
       metric_type:
         type: string
@@ -35,7 +35,7 @@ allOf:
       metric_value:
         type: number
         format: double
-      metric_node_kind_id:
+      kind_id:
         description: The kind ID for the counted node kind. Present when `metric_type` is `node`; otherwise null.
         type: integer
         format: int32

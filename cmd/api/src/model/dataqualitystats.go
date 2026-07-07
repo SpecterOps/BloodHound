@@ -30,11 +30,11 @@ type DataQualityStat struct {
 	RunID                   string                `json:"run_id"`
 	SchemaExtensionID       int32                 `json:"extension_id"`
 	SchemaEnvironmentKindID int32                 `json:"environment_kind_id"`
-	EnvironmentID           string                `json:"environmentid"`
+	EnvironmentID           string                `json:"environment_id"`
 	MetricType              DataQualityMetricType `json:"metric_type"`
 	MetricName              string                `json:"metric_name"`
 	MetricValue             float64               `json:"metric_value"`
-	KindID                  null.Int32            `json:"metric_kind_id"`
+	KindID                  null.Int32            `json:"kind_id"`
 }
 
 func (DataQualityStat) TableName() string {
