@@ -22,8 +22,10 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/registration"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -37,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/gc"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
@@ -185,6 +188,10 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		modules.Register(modules.Deps{
 			Router: &routerInst,
 			Pool:   connections.RDMS.Pool(),
+			Graph:  connections.Graph,
+			RateLimitMiddleware: func() mux.MiddlewareFunc {
+				return middleware.DefaultRateLimitMiddleware(connections.RDMS)
+			},
 		})
 
 		// Set neo4j batch and flush sizes
@@ -199,7 +206,8 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 			return nil, fmt.Errorf("failed to register prometheus metrics: %w", err)
 		} else if err := prometheus.DefaultRegisterer.Register(promRegistry); err != nil {
 			return nil, fmt.Errorf("failed to expose prometheus registry: %w", err)
-		} else if err := connections.RDMS.RequestAnalysis(ctx, "init"); err != nil {
+			// Trigger analysis on first start
+		} else if err := connections.RDMS.RequestAnalysis(ctx, "init", model.AnalysisModeFull); err != nil {
 			slog.WarnContext(ctx, "Failed to request init analysis", attr.Error(err))
 		}
 

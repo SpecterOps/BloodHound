@@ -26,8 +26,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
-	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
+	"github.com/specterops/bloodhound/packages/go/storage"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"
@@ -250,7 +250,7 @@ func TestAnalyze_LastAnalysisTimestampUpdated(t *testing.T) {
 	require.True(t, datapipeStatus.LastAnalysisRunAt.IsZero())
 
 	// request analysis so that Analyze will run
-	err = testSuite.BHDatabase.RequestAnalysis(ctx, "test")
+	err = testSuite.BHDatabase.RequestAnalysis(ctx, "test", model.AnalysisModeFull)
 	require.NoError(t, err)
 
 	err = testSuite.Daemon.Analyze(ctx)
@@ -263,7 +263,7 @@ func TestAnalyze_LastAnalysisTimestampUpdated(t *testing.T) {
 	require.Greater(t, updatedDatapipeStatus.LastAnalysisRunAt, datapipeStatus.LastAnalysisRunAt)
 
 	// request analysis again
-	err = testSuite.BHDatabase.RequestAnalysis(ctx, "test")
+	err = testSuite.BHDatabase.RequestAnalysis(ctx, "test", model.AnalysisModeFull)
 	require.NoError(t, err)
 
 	err = testSuite.Daemon.Analyze(ctx)

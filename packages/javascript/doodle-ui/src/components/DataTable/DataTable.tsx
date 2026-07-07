@@ -571,13 +571,6 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                         tableBodyRowRest = rest;
                                     }
 
-                                    const {
-                                        onKeyDown: onTableBodyRowKeyDown,
-                                        role: tableBodyRowRole,
-                                        tabIndex: tableBodyRowTabIndex,
-                                        ...restTableBodyRowAttributes
-                                    } = tableBodyRowRest as React.HTMLAttributes<HTMLTableRowElement>;
-
                                     return (
                                         <TableRow
                                             key={row.id}
@@ -585,24 +578,6 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                 e.stopPropagation();
                                                 handleRowClick(row);
                                             }}
-                                            onKeyDown={(event) => {
-                                                onTableBodyRowKeyDown?.(event);
-
-                                                if (
-                                                    event.defaultPrevented ||
-                                                    event.currentTarget !== event.target ||
-                                                    !onRowClick ||
-                                                    (event.key !== 'Enter' && event.key !== ' ')
-                                                ) {
-                                                    return;
-                                                }
-
-                                                event.preventDefault();
-                                                event.stopPropagation();
-                                                handleRowClick(row);
-                                            }}
-                                            role={tableBodyRowRole}
-                                            tabIndex={tableBodyRowTabIndex ?? (onRowClick ? 0 : undefined)}
                                             data-state={row.getIsSelected() && 'selected'}
                                             className={cn(
                                                 'hover:bg-neutral-light-4 dark:hover:bg-neutral-dark-4',
@@ -615,13 +590,11 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                     'bg-neutral-light-2 dark:bg-neutral-dark-2': row.index % 2 !== 0,
                                                     'cursor-pointer': onRowClick,
                                                     'cursor-default': !onRowClick,
-                                                    'focus:outline-none focus-visible:focus-ring focus-visible:bg-neutral-light-4 dark:focus-visible:bg-neutral-dark-4':
-                                                        onRowClick,
                                                 },
 
                                                 propsClassName
                                             )}
-                                            {...restTableBodyRowAttributes}
+                                            {...tableBodyRowRest}
                                             style={{
                                                 height: `${virtualRow.size}px`,
                                                 transform: `translateY(${virtualRow.start - index * virtualRow.size}px)`,

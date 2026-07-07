@@ -43,6 +43,7 @@ export const SelectedDetailsTabContent: FC<SelectedDetailsTabContent> = ({
 
     if (memberQuery?.data && currentDetailsTab === ObjectTabValue) {
         const selectedNode = {
+            graphId: memberQuery.data.id.toString(),
             id: memberQuery.data.object_id,
             name: memberQuery.data.name,
             type: memberQuery.data.primary_kind as EntityKinds,
