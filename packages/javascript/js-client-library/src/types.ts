@@ -622,15 +622,30 @@ export type Webhook = {
     health: number;
     attempts: number;
     failures: number;
-    last_error: string;
-    last_errored_at: ISO_DATE_STRING;
-    last_succeeded_at: ISO_DATE_STRING;
+    last_error: {
+        string: string;
+        valid: boolean;
+    };
+    last_errored_at: {
+        time: ISO_DATE_STRING;
+        valid: boolean;
+    };
+    last_succeeded_at: {
+        time: ISO_DATE_STRING;
+        valid: boolean;
+    };
     created_at: ISO_DATE_STRING;
     created_by: string;
     updated_at: ISO_DATE_STRING;
     updated_by: string;
-    disabled_at: ISO_DATE_STRING;
-    disabled_by: string;
+    disabled_at: {
+        time: ISO_DATE_STRING;
+        valid: boolean;
+    };
+    disabled_by: {
+        string: string;
+        valid: boolean;
+    };
 };
 
 export type WebhookSortBy = 'name' | 'created_at' | 'updated_at' | 'health';
