@@ -77,7 +77,7 @@ export const NODE_ICONS: IconDictionary = {
 
     [ActiveDirectoryNodeKind.Group]: {
         icon: faUsers,
-        color: '#DBE617',
+        color: '#C6CF30',
     },
 
     [ActiveDirectoryNodeKind.Computer]: {
@@ -236,7 +236,7 @@ export const NODE_ICONS: IconDictionary = {
 
 export const UNKNOWN_ICON: IconInfo = {
     icon: faQuestion,
-    color: '#FFFFFF',
+    color: DEFAULT_ICON_BACKGROUND_COLOR,
 };
 
 /**
