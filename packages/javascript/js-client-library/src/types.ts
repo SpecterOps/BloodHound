@@ -622,18 +622,9 @@ export type Webhook = {
     health: number;
     attempts: number;
     failures: number;
-    last_error: {
-        string: string;
-        valid: boolean;
-    };
-    last_errored_at: {
-        time: ISO_DATE_STRING;
-        valid: boolean;
-    };
-    last_succeeded_at: {
-        time: ISO_DATE_STRING;
-        valid: boolean;
-    };
+    last_error: string;
+    last_errored_at: ISO_DATE_STRING;
+    last_succeeded_at: ISO_DATE_STRING;
     created_at: ISO_DATE_STRING;
     created_by: string;
     updated_at: ISO_DATE_STRING;
