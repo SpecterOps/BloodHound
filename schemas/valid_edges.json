@@ -5,7 +5,8 @@
         "edges": {
             "ingest": [],
             "post": [
-                "SyncedToADUser"
+                "SyncedToADUser",
+                "SyncedToEntraDSUser"
             ]
         }
     },
@@ -559,6 +560,16 @@
             ],
             "post": [
                 "Owns"
+            ]
+        }
+    },
+    {
+        "source": "AZGroup",
+        "target": "Group",
+        "edges": {
+            "ingest": [],
+            "post": [
+                "SyncedToEntraDSGroup"
             ]
         }
     },

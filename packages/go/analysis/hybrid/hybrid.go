@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -77,7 +78,11 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 			// adObjIDMap is used as a reverse mapping of a list of Entra node ids indexed by the AD user objectids
 			adObjIDMap = make(map[string][]graph.ID, 1024)
 			// entraToADMap is the final mapping between an Entra user node id to an AD user node id
-			entraToADMap = make(map[graph.ID]graph.ID, 1024)
+			entraToADMap                = make(map[graph.ID]graph.ID, 1024)
+			entraDSUserAADObjectIDMap   = make(map[string][]graph.ID, 1024)
+			entraDSGroupAADObjectIDMap  = make(map[string][]graph.ID, 1024)
+			syncedToEntraDSUserEdgeMap  = make(map[graph.ID][]graph.ID, 1024)
+			syncedToEntraDSGroupEdgeMap = make(map[graph.ID][]graph.ID, 1024)
 		)
 
 		// Work on Entra users by their tenant association. Loop therefore through each Entra tenant
@@ -85,12 +90,13 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 			// Fetch all users in this Entra tenant
 			if tenantUsers, err := fetchEntraUsers(tx, tenant); err != nil {
 				return err
-			} else if len(tenantUsers) == 0 {
-				// If there are no users present, exit this loop
-				continue
 			} else {
 				// Loop through each Entra user in this tenant
 				for _, tenantUser := range tenantUsers {
+					if err := addNodeToObjectIDMap(entraDSUserAADObjectIDMap, tenantUser); err != nil {
+						return err
+					}
+
 					// Check to see if the Entra user has an on prem sync property set
 					if onPremID, hasOnPrem, err := hasOnPremUser(tenantUser); !hasOnPrem {
 						continue
@@ -99,6 +105,16 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 					} else {
 						// We know this user has an onPrem counterpart, so add the node id and onPremID to our mapping inputs.
 						adObjIDMap[onPremID] = append(adObjIDMap[onPremID], tenantUser.ID)
+					}
+				}
+			}
+
+			if tenantGroups, err := fetchEntraGroups(tx, tenant); err != nil {
+				return err
+			} else {
+				for _, tenantGroup := range tenantGroups {
+					if err := addNodeToObjectIDMap(entraDSGroupAADObjectIDMap, tenantGroup); err != nil {
+						return err
 					}
 				}
 			}
@@ -114,14 +130,25 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 				// Get the user's Object ID
 				if objectID, err := adUser.Properties.Get(common.ObjectID.String()).String(); err != nil {
 					return err
-				} else if azUsers, ok := adObjIDMap[objectID]; !ok {
-					// Skip AD users that do not correspond to any synced Entra users.
-					continue
-				} else {
+				} else if azUsers, ok := adObjIDMap[objectID]; ok {
 					// Because there could theoretically be more than one Entra user mapped to this objectid, we want to loop through all when adding our current id to the final map
 					for _, azUser := range azUsers {
 						entraToADMap[azUser] = adUser.ID
 					}
+				}
+
+				if err := addSyncedToEntraDSEdges(syncedToEntraDSUserEdgeMap, adUser, entraDSUserAADObjectIDMap); err != nil {
+					return err
+				}
+			}
+		}
+
+		if adGroups, err := fetchADGroups(tx); err != nil {
+			return err
+		} else {
+			for _, adGroup := range adGroups {
+				if err := addSyncedToEntraDSEdges(syncedToEntraDSGroupEdgeMap, adGroup, entraDSGroupAADObjectIDMap); err != nil {
+					return err
 				}
 			}
 		}
@@ -149,6 +176,34 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 				}
 			}
 
+			for adNode, azNodes := range syncedToEntraDSUserEdgeMap {
+				for _, azNode := range azNodes {
+					syncedToEntraDSUserRelationship := post.EnsureRelationshipJob{
+						FromID: azNode,
+						ToID:   adNode,
+						Kind:   azure.SyncedToEntraDSUser,
+					}
+
+					if !channels.Submit(ctx, outC, syncedToEntraDSUserRelationship) {
+						return nil
+					}
+				}
+			}
+
+			for adNode, azNodes := range syncedToEntraDSGroupEdgeMap {
+				for _, azNode := range azNodes {
+					syncedToEntraDSGroupRelationship := post.EnsureRelationshipJob{
+						FromID: azNode,
+						ToID:   adNode,
+						Kind:   azure.SyncedToEntraDSGroup,
+					}
+
+					if !channels.Submit(ctx, outC, syncedToEntraDSGroupRelationship) {
+						return nil
+					}
+				}
+			}
+
 			return nil
 		}); err != nil {
 			return err
@@ -164,6 +219,44 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 	}
 
 	return &operation.Stats, nil
+}
+
+func addNodeToObjectIDMap(nodeObjectIDMap map[string][]graph.ID, node *graph.Node) error {
+	if objectID, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
+		return err
+	} else if normalizedObjectID := normalizeObjectID(objectID); len(normalizedObjectID) != 0 {
+		nodeObjectIDMap[normalizedObjectID] = append(nodeObjectIDMap[normalizedObjectID], node.ID)
+	}
+
+	return nil
+}
+
+func addSyncedToEntraDSEdges(edgeMap map[graph.ID][]graph.ID, adNode *graph.Node, azNodeMap map[string][]graph.ID) error {
+	if aadObjectID, hasAADObjectID, err := getEntraDSAADObjectID(adNode); err != nil {
+		return err
+	} else if !hasAADObjectID {
+		return nil
+	} else if azNodeIDs, ok := azNodeMap[aadObjectID]; ok {
+		edgeMap[adNode.ID] = append(edgeMap[adNode.ID], azNodeIDs...)
+	}
+
+	return nil
+}
+
+func getEntraDSAADObjectID(node *graph.Node) (string, bool, error) {
+	if aadObjectID, err := node.Properties.Get(adSchema.AADObjectID.String()).String(); errors.Is(err, graph.ErrPropertyNotFound) {
+		return "", false, nil
+	} else if err != nil {
+		return "", false, err
+	} else if normalizedAADObjectID := normalizeObjectID(aadObjectID); len(normalizedAADObjectID) == 0 {
+		return "", false, nil
+	} else {
+		return normalizedAADObjectID, true, nil
+	}
+}
+
+func normalizeObjectID(objectID string) string {
+	return strings.ToUpper(strings.TrimSpace(objectID))
 }
 
 // hasOnPremUser takes a node and returns the OnPremID as a string, whether the node has an onPrem user defined as a bool
@@ -193,11 +286,31 @@ func fetchEntraUsers(tx graph.Transaction, root *graph.Node) (graph.NodeSet, err
 	}))
 }
 
+// fetchEntraGroups fetches all the Entra groups for a given root node (generally the tenant node)
+func fetchEntraGroups(tx graph.Transaction, root *graph.Node) (graph.NodeSet, error) {
+	return ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.InIDs(query.StartID(), root.ID),
+			query.Kind(query.Relationship(), azure.Contains),
+			query.KindIn(query.End(), azure.Group),
+		)
+	}))
+}
+
 // fetchADUsers gets all AD Users in the graph
 func fetchADUsers(tx graph.Transaction) ([]*graph.Node, error) {
 	return ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
 			query.Kind(query.Node(), adSchema.User),
+		)
+	}))
+}
+
+// fetchADGroups gets all AD Groups in the graph
+func fetchADGroups(tx graph.Transaction) ([]*graph.Node, error) {
+	return ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Kind(query.Node(), adSchema.Group),
 		)
 	}))
 }

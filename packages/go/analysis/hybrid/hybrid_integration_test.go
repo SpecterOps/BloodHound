@@ -20,6 +20,7 @@ package hybrid
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
@@ -179,6 +180,156 @@ func TestHybridAttackPaths(t *testing.T) {
 				verifyHybridPaths(t, db, harness, false)
 			},
 		)
+	})
+}
+
+func TestSyncedToEntraDSEdges(t *testing.T) {
+	t.Run("EdgesCreatedForMatchingADUserAndGroup", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		expectedEdges := []expectedSyncedToEntraDSEdge{}
+
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				tenantID := integration.RandomObjectID(t)
+				tenant := testContext.NewAzureTenant(tenantID)
+
+				azUserObjectID := integration.RandomObjectID(t)
+				azGroupObjectID := integration.RandomObjectID(t)
+				azUser := testContext.NewAzureUser("AZ User", "azuser@specter.dev", "", azUserObjectID, "", tenantID, false)
+				azGroup := testContext.NewAzureGroup("AZ Group", azGroupObjectID, tenantID)
+				testContext.NewRelationship(tenant, azUser, azure.Contains)
+				testContext.NewRelationship(tenant, azGroup, azure.Contains)
+
+				adUserObjectID := integration.RandomObjectID(t)
+				adGroupObjectID := integration.RandomObjectID(t)
+				testContext.NewCustomActiveDirectoryUser(graph.AsProperties(graph.PropertyMap{
+					common.Name:     "ad_user",
+					common.ObjectID: adUserObjectID,
+					ad.DomainSID:    integration.RandomDomainSID(),
+					ad.AADObjectID:  strings.ToLower(azUserObjectID),
+				}))
+				testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+					common.Name:     "ad_group",
+					common.ObjectID: adGroupObjectID,
+					ad.DomainSID:    integration.RandomDomainSID(),
+					ad.AADObjectID:  strings.ToLower(azGroupObjectID),
+				}), ad.Entity, ad.Group)
+
+				expectedEdges = []expectedSyncedToEntraDSEdge{
+					{
+						startObjectID: azUserObjectID,
+						startKind:     azure.User,
+						endObjectID:   adUserObjectID,
+						endKind:       ad.User,
+						kind:          azure.SyncedToEntraDSUser,
+					},
+					{
+						startObjectID: azGroupObjectID,
+						startKind:     azure.Group,
+						endObjectID:   adGroupObjectID,
+						endKind:       ad.Group,
+						kind:          azure.SyncedToEntraDSGroup,
+					},
+				}
+
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				if _, err := PostHybrid(context.Background(), db); err != nil {
+					t.Fatalf("failed post processing for Entra DS sync edges: %v", err)
+				}
+
+				verifySyncedToEntraDSEdges(t, db, expectedEdges)
+			},
+		)
+	})
+
+	t.Run("EdgesNotCreatedAcrossMismatchedObjectTypes", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				tenantID := integration.RandomObjectID(t)
+				tenant := testContext.NewAzureTenant(tenantID)
+
+				azUserObjectID := integration.RandomObjectID(t)
+				azGroupObjectID := integration.RandomObjectID(t)
+				azUser := testContext.NewAzureUser("AZ User", "azuser@specter.dev", "", azUserObjectID, "", tenantID, false)
+				azGroup := testContext.NewAzureGroup("AZ Group", azGroupObjectID, tenantID)
+				testContext.NewRelationship(tenant, azUser, azure.Contains)
+				testContext.NewRelationship(tenant, azGroup, azure.Contains)
+
+				testContext.NewCustomActiveDirectoryUser(graph.AsProperties(graph.PropertyMap{
+					common.Name:     "ad_user",
+					common.ObjectID: integration.RandomObjectID(t),
+					ad.DomainSID:    integration.RandomDomainSID(),
+					ad.AADObjectID:  azGroupObjectID,
+				}))
+				testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+					common.Name:     "ad_group",
+					common.ObjectID: integration.RandomObjectID(t),
+					ad.DomainSID:    integration.RandomDomainSID(),
+					ad.AADObjectID:  azUserObjectID,
+				}), ad.Entity, ad.Group)
+
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				if _, err := PostHybrid(context.Background(), db); err != nil {
+					t.Fatalf("failed post processing for Entra DS sync edges: %v", err)
+				}
+
+				verifySyncedToEntraDSEdges(t, db, nil)
+			},
+		)
+	})
+}
+
+type expectedSyncedToEntraDSEdge struct {
+	startObjectID string
+	startKind     graph.Kind
+	endObjectID   string
+	endKind       graph.Kind
+	kind          graph.Kind
+}
+
+func verifySyncedToEntraDSEdges(t *testing.T, db graph.Database, expectedEdges []expectedSyncedToEntraDSEdge) {
+	t.Helper()
+
+	expectedByObjectIDs := map[string]expectedSyncedToEntraDSEdge{}
+	for _, expectedEdge := range expectedEdges {
+		expectedByObjectIDs[expectedEdge.startObjectID+"|"+expectedEdge.endObjectID] = expectedEdge
+	}
+
+	db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+		edges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+			return query.KindIn(query.Relationship(), azure.SyncedToEntraDSUser, azure.SyncedToEntraDSGroup)
+		}))
+		assert.Nil(t, err)
+		assert.Len(t, edges, len(expectedEdges))
+
+		for _, edge := range edges {
+			start, end, err := ops.FetchRelationshipNodes(tx, edge)
+			assert.Nil(t, err)
+
+			startObjectID, err := start.Properties.Get(common.ObjectID.String()).String()
+			assert.Nil(t, err)
+
+			endObjectID, err := end.Properties.Get(common.ObjectID.String()).String()
+			assert.Nil(t, err)
+
+			expectedEdge, ok := expectedByObjectIDs[startObjectID+"|"+endObjectID]
+			assert.True(t, ok)
+			assert.True(t, start.Kinds.ContainsOneOf(expectedEdge.startKind))
+			assert.True(t, end.Kinds.ContainsOneOf(expectedEdge.endKind))
+			assert.True(t, edge.Kind.Is(expectedEdge.kind))
+
+			delete(expectedByObjectIDs, startObjectID+"|"+endObjectID)
+		}
+
+		assert.Empty(t, expectedByObjectIDs)
+
+		return nil
 	})
 }
 
