@@ -97,10 +97,10 @@ export const useActiveDirectoryPlatformsDataQualityStatsQuery = () => {
     );
 };
 
-export const useOpenGraphPlatformsDataQualityStatsQuery = () => {
+export const useOpenGraphPlatformsDataQualityStatsQuery = (id: string) => {
     return useQuery('open-graph-platform-data-quality-stats', ({ signal }) =>
         apiClient
-            .getOpenGraphPlatformQualityStats('ad', undefined, undefined, 1, undefined, { signal })
+            .getOpenGraphPlatformQualityStats(id, undefined, undefined, 1, undefined, { signal })
             .then((response) => {
                 if (!response.data) throw new Error('Unable to retrieve Open Graph platform quality stats');
                 return response.data;

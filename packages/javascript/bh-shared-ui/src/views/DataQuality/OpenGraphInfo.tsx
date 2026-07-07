@@ -20,7 +20,7 @@ import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, Tab
 import makeStyles from '@mui/styles/makeStyles';
 import React, { useEffect } from 'react';
 import { NodeIcon } from '../../components';
-import { useOpenGraphDataQualityStatsQuery } from '../../hooks';
+import { useOpenGraphDataQualityStatsQuery, useOpenGraphPlatformsDataQualityStatsQuery } from '../../hooks';
 import LoadContainer from './LoadContainer';
 
 const useStyles = makeStyles((theme) => ({
