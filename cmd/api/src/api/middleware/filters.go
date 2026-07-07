@@ -62,17 +62,16 @@ func FilterMiddleware(filterable filters.Filterable) mux.MiddlewareFunc {
 // filterErrorMessage maps a filter validation failure to the appropriate API error response detail,
 // preserving the offending field and operator in the message where available.
 func filterErrorMessage(err error) string {
-	var validationErr *filters.ValidationError
-	if !errors.As(err, &validationErr) {
+	if validationErr, ok := errors.AsType[*filters.ValidationError](err); !ok {
 		return api.ErrorResponseDetailsBadQueryParameterFilters
-	}
-
-	switch {
-	case errors.Is(validationErr, filters.ErrFieldNotFilterable):
-		return fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, validationErr.Field)
-	case errors.Is(validationErr, filters.ErrOperatorNotSupported):
-		return fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, validationErr.Field, validationErr.Operator)
-	default:
-		return api.ErrorResponseDetailsBadQueryParameterFilters
+	} else {
+		switch {
+		case errors.Is(validationErr, filters.ErrFieldNotFilterable):
+			return fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, validationErr.Field)
+		case errors.Is(validationErr, filters.ErrOperatorNotSupported):
+			return fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, validationErr.Field, validationErr.Operator)
+		default:
+			return api.ErrorResponseDetailsBadQueryParameterFilters
+		}
 	}
 }
