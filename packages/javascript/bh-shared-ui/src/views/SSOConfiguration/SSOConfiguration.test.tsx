@@ -19,7 +19,7 @@ import { ListRolesResponse, ListSSOProvidersResponse, Role, SAMLProviderInfo, SS
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { createAuthStateWithPermissions } from '../../mocks';
-import { render, screen } from '../../test-utils';
+import { render, screen, waitFor } from '../../test-utils';
 import { Permission } from '../../utils';
 import { Roles } from '../../utils/roles';
 import SSOConfiguration from './SSOConfiguration';
@@ -55,6 +55,8 @@ const initialSAMLProvider: SSOProvider = {
 };
 
 const ssoProviders = [initialSAMLProvider];
+
+let permissionResponse = createAuthStateWithPermissions([Permission.AUTH_MANAGE_PROVIDERS]).user;
 
 const newSAMLProvider: SSOProvider = {
     id: 2,
@@ -99,11 +101,15 @@ interface CreateSAMLProviderResponse {
     updated_at: string;
 }
 
+const selfSpy = vi.fn();
+const listProvidersSpy = vi.fn();
+
 const server = setupServer(
     rest.get('/api/v2/self', (req, res, ctx) => {
+        selfSpy();
         return res(
             ctx.json({
-                data: createAuthStateWithPermissions([Permission.AUTH_MANAGE_PROVIDERS]).user,
+                data: permissionResponse,
             })
         );
     }),
@@ -117,6 +123,7 @@ const server = setupServer(
         );
     }),
     rest.get<any, any, ListSSOProvidersResponse>('/api/v2/sso-providers', (req, res, ctx) => {
+        listProvidersSpy();
         return res(
             ctx.json({
                 data: ssoProviders,
@@ -134,6 +141,9 @@ const server = setupServer(
 );
 
 beforeEach(() => {
+    selfSpy.mockClear();
+    listProvidersSpy.mockClear();
+    permissionResponse = createAuthStateWithPermissions([Permission.AUTH_MANAGE_PROVIDERS]).user;
     mockUseFeatureFlag.mockImplementation((flagKey: string) => {
         return {
             data: {
@@ -212,10 +222,47 @@ describe('SSOConfiguration', async () => {
     });
 
     it('should disable the create provider button and not display providers if the user lacks permission', async () => {
+        permissionResponse = createAuthStateWithPermissions([Permission.AUTH_READ_USERS]).user;
         render(<SSOConfiguration />);
 
-        expect(screen.getByRole('button', { name: /create provider/i })).toBeDisabled();
+        await waitFor(() => expect(selfSpy).toHaveBeenCalled());
 
+        expect(screen.getByRole('button', { name: /create provider/i })).toBeDisabled();
         expect(screen.queryByText(newSAMLProvider.name)).toBeNull();
+    });
+
+    it('enables the create provider button for a user with the admin role', async () => {
+        permissionResponse = createAuthStateWithPermissions([Permission.AUTH_MANAGE_PROVIDERS]).user;
+        render(<SSOConfiguration />);
+
+        expect(await screen.findByText(initialSAMLProvider.name)).toBeInTheDocument();
+        await waitFor(() => expect(screen.getByRole('button', { name: /create provider/i })).not.toBeDisabled());
+    });
+
+    it('disables the create provider button for a user with the auditor role', async () => {
+        permissionResponse = createAuthStateWithPermissions([Permission.AUTH_READ_PROVIDERS]).user;
+        render(<SSOConfiguration />);
+
+        expect(await screen.findByText(initialSAMLProvider.name)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /create provider/i })).toBeDisabled();
+    });
+
+    it.each([
+        { role: 'admin', permission: Permission.AUTH_MANAGE_PROVIDERS },
+        { role: 'auditor', permission: Permission.AUTH_READ_PROVIDERS },
+    ])('lists sso providers for a user with the $role role', async ({ permission }) => {
+        permissionResponse = createAuthStateWithPermissions([permission]).user;
+        render(<SSOConfiguration />);
+
+        await screen.findByText(initialSAMLProvider.name);
+        expect(listProvidersSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not list sso providers for a role without manage/read provider permission', async () => {
+        permissionResponse = createAuthStateWithPermissions([Permission.AUTH_READ_USERS]).user;
+        render(<SSOConfiguration />);
+
+        await waitFor(() => expect(selfSpy).toHaveBeenCalled());
+        expect(listProvidersSpy).not.toHaveBeenCalled();
     });
 });
