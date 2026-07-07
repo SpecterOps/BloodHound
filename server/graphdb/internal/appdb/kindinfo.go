@@ -25,6 +25,7 @@ import (
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 )
 
@@ -101,6 +102,7 @@ func (s *Store) CreateKindInfos(ctx context.Context, kindInfos []services.KindIn
 
 // kindInfoRow is the package-local DB row type for a schema_kind_info entry.
 type kindInfoRow struct {
+	ID                 int32           `db:"id"`
 	KindID             int32           `db:"kind_id"`
 	NodeKindID         *int32          `db:"node_kind_id"`
 	RelationshipKindID *int32          `db:"relationship_kind_id"`
@@ -108,11 +110,14 @@ type kindInfoRow struct {
 	Title              string          `db:"title"`
 	Position           int32           `db:"position"`
 	Content            json.RawMessage `db:"content"`
+	CreatedAt          null.Time       `db:"created_at"`
+	UpdatedAt          null.Time       `db:"updated_at"`
 }
 
 // toKindInfo translates a raw kind info row into the domain model.
 func toKindInfo(row kindInfoRow) services.KindInfo {
 	return services.KindInfo{
+		ID:                 row.ID,
 		KindID:             row.KindID,
 		NodeKindID:         row.NodeKindID,
 		RelationshipKindID: row.RelationshipKindID,
@@ -120,6 +125,8 @@ func toKindInfo(row kindInfoRow) services.KindInfo {
 		Title:              row.Title,
 		Position:           row.Position,
 		Content:            row.Content,
+		CreatedAt:          row.CreatedAt.ValueOrZero(),
+		UpdatedAt:          row.UpdatedAt.ValueOrZero(),
 	}
 }
 
@@ -136,6 +143,7 @@ func (s *Store) GetKindInfos(ctx context.Context, kindID int32) ([]services.Kind
 	)
 
 	selectBuilder.Select(
+		"id",
 		"kind_id",
 		"node_kind_id",
 		"relationship_kind_id",
@@ -143,6 +151,8 @@ func (s *Store) GetKindInfos(ctx context.Context, kindID int32) ([]services.Kind
 		"title",
 		"position",
 		"content",
+		"created_at",
+		"updated_at",
 	)
 	selectBuilder.From(tableSchemaKindInfo)
 	selectBuilder.Where(selectBuilder.Equal("kind_id", kindID))

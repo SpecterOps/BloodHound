@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -81,15 +82,21 @@ func TestCreateKindInfos(t *testing.T) {
 	assert.Equal(t, 2, rowCount)
 
 	var (
-		title    string
-		content  []byte
-		position int32
+		id        int32
+		title     string
+		content   []byte
+		position  int32
+		createdAt time.Time
+		updatedAt time.Time
 	)
 	require.NoError(t, pool.QueryRow(ctx, `
-		SELECT title, content, position
+		SELECT id, created_at, updated_at, title, content, position
 		FROM schema_kind_info
 		WHERE kind_id = $1 AND info_key = $2
-	`, seed.nodeBackingKindID, "general").Scan(&title, &content, &position))
+	`, seed.nodeBackingKindID, "general").Scan(&id, &createdAt, &updatedAt, &title, &content, &position))
+	assert.NotZero(t, id)
+	assert.False(t, createdAt.IsZero())
+	assert.False(t, updatedAt.IsZero())
 	assert.Equal(t, "General", title)
 	assert.JSONEq(t, `{"markdown":{"content":"hello"}}`, string(content))
 	assert.Equal(t, int32(0), position)
@@ -349,6 +356,9 @@ func TestGetKindInfos_HappyPath(t *testing.T) {
 	assert.Equal(t, "General", kindInfos[0].Title)
 	assert.Equal(t, int32(0), kindInfos[0].Position)
 	assert.JSONEq(t, `{"markdown":{"content":"hello"}}`, string(kindInfos[0].Content))
+	assert.NotZero(t, kindInfos[0].ID)
+	assert.False(t, kindInfos[0].CreatedAt.IsZero())
+	assert.False(t, kindInfos[0].UpdatedAt.IsZero())
 }
 
 func setupKindInfoStore(t *testing.T) (*appdb.Store, *pgxpool.Pool) {
