@@ -77,7 +77,7 @@ export const NODE_ICONS: IconDictionary = {
 
     [ActiveDirectoryNodeKind.Group]: {
         icon: faUsers,
-        color: '#C6CF30',
+        color: '#DBE617',
     },
 
     [ActiveDirectoryNodeKind.Computer]: {
