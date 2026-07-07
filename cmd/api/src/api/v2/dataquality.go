@@ -185,13 +185,6 @@ func (s *Resources) GetDataQualityStats(response http.ResponseWriter, request *h
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, ErrNoEnvironmentId, request), response)
 	} else if user, found := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !found {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, ErrUnknownUser, request), response)
-	} else if ShouldFilterForETAC(s.DogTags, user) {
-		hasAccess, err := CheckUserAccessToEnvironments(ctx, s.DB, user, environmentId)
-		if err != nil {
-			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
-		} else if !hasAccess {
-			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, ErrNoAccess, request), response)
-		}
 	} else if _, sort, err := parseOrder(queryParams, dataQualityStats); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if start, err := ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
@@ -203,13 +196,23 @@ func (s *Resources) GetDataQualityStats(response http.ResponseWriter, request *h
 	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, queryParams["skip"]), request), response)
 	} else {
+		if ShouldFilterForETAC(s.DogTags, user) {
+			hasAccess, err := CheckUserAccessToEnvironments(ctx, s.DB, user, environmentId)
+			if err != nil {
+				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+				return
+			} else if !hasAccess {
+				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, ErrNoAccess, request), response)
+				return
+			}
+		}
 		filters := model.Filters{
 			"environment_id": []model.Filter{{
 				Value:       environmentId,
 				Operator:    model.Equals,
 				SetOperator: model.FilterAnd,
 			}},
-			"created_at": []model.Filter{{Value: start.Format(time.RFC3339), Operator: model.GreaterThanOrEquals, SetOperator: model.FilterAnd}, {Value: end.Format(time.RFC3339), Operator: model.LessThanOrEquals, SetOperator: model.FilterAnd}},
+			"created_at": []model.Filter{{Value: start.Format(time.RFC3339), Operator: model.GreaterThanOrEquals, SetOperator: model.FilterAnd}, {Value: end.Format(time.RFC3339), Operator: model.LessThan, SetOperator: model.FilterAnd}},
 		}
 		if stats, count, err := s.DB.GetDataQualityStats(ctx, filters, sort, skip, limit); err != nil {
 			api.HandleDatabaseError(request, response, err)
@@ -223,11 +226,15 @@ type Sortable interface {
 	IsSortable(column string) bool
 }
 
-// parseOrder is a helper function which parses any sort_by query params into both the legacy sort string format and the model.Sort format. Returns an error if the columns is not sortable.
+// parseOrder is a helper function which parses any sort_by query params into both the legacy sort string format and the model.Sort format. Returns an error if the columns is not sortable, or if an empty sort param is provided.
 func parseOrder(queryParams url.Values, sortable Sortable) (string, model.Sort, error) {
 	order := []string{}
 	sort := model.Sort{}
 	for _, column := range queryParams[api.QueryParameterSortBy] {
+		if column == "" {
+			return "", sort, errors.New(api.ErrorResponseEmptySortParameter)
+		}
+
 		var descending bool
 		if string(column[0]) == "-" {
 			descending = true
@@ -235,7 +242,7 @@ func parseOrder(queryParams url.Values, sortable Sortable) (string, model.Sort, 
 		}
 
 		if !sortable.IsSortable(column) {
-			return strings.Join(order, ", "), sort, errors.New(api.ErrorResponseDetailsNotSortable)
+			return "", sort, errors.New(api.ErrorResponseDetailsNotSortable)
 		}
 
 		if descending {
@@ -246,6 +253,7 @@ func parseOrder(queryParams url.Values, sortable Sortable) (string, model.Sort, 
 			order = append(order, column)
 			sort = append(sort, model.SortItem{Column: column, Direction: model.AscendingSortDirection})
 		}
+
 	}
 	return strings.Join(order, ", "), sort, nil
 }
