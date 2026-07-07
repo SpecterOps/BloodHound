@@ -24,14 +24,14 @@ import TableControls from './TableControls';
 import {
     DEFAULT_EXPLORE_TABLE_COLUMN_KEYS,
     ExploreTableProps,
-    MungedTableRowWithId,
+    MungedTableRowWithGraphId,
     createColumnStateFromKeys,
     defaultColumns,
     getExploreTableData,
 } from './explore-table-utils';
 import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
 
-const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
+const MemoDataTable = memo(DataTable<MungedTableRowWithGraphId, any>);
 
 type DataTableProps = React.ComponentProps<typeof MemoDataTable>;
 
@@ -53,7 +53,7 @@ const tableCellProps: DataTableProps['TableCellProps'] = {
 };
 
 const tableOptions: DataTableProps['tableOptions'] = {
-    getRowId: (row) => row.id,
+    getRowId: (row) => row.bhGraphId,
 };
 
 const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
@@ -117,9 +117,9 @@ const ExploreTable = ({
     );
 
     const handleRowClick = useCallback(
-        (row: MungedTableRowWithId) => {
-            if (row.id !== selectedItem) {
-                setSelectedItem(row.id);
+        (row: MungedTableRowWithGraphId) => {
+            if (row.bhGraphId !== selectedItem) {
+                setSelectedItem(row.bhGraphId);
             } else {
                 clearSelectedItem();
             }
