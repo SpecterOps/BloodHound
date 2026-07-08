@@ -51,3 +51,12 @@ limitations under the License.
 
 Unless otherwise annotated by a lower-level LICENSE file or license header, all files in this repository are released
 under the `Apache-2.0` license. A full copy of the license may be found in the top-level [LICENSE](LICENSE) file.
+
+
+## Known Issues and Workarounds
+
+The maintainers are aware of the following issues:
+
+- Issue mentioned in the bug tracker
+- Users should follow the recommended practices
+- See the documentation for more details
