@@ -43,7 +43,7 @@ func (s QueryParameterSortParser) ParseAndValidate(values url.Values, sortable S
 	)
 
 	for _, requestedField := range requestedFields {
-		if requestedField == "" {
+		if requestedField == "" || requestedField == "-" {
 			return nil, &ValidationError{Err: ErrFieldEmpty}
 		}
 
