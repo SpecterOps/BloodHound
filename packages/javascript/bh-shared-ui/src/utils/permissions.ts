@@ -22,9 +22,9 @@ export enum Permission {
     AUTH_CREATE_TOKEN,
     AUTH_MANAGE_APPLICATION_CONFIGURATIONS,
     AUTH_MANAGE_PROVIDERS,
-    AUTH_READ_PROVIDERS,
     AUTH_MANAGE_SELF,
     AUTH_MANAGE_USERS,
+    AUTH_READ_PROVIDERS,
     AUTH_READ_USERS,
     CLIENTS_MANAGE,
     CLIENTS_READ,
@@ -80,10 +80,6 @@ export const PERMISSIONS: PermissionDefinitions = {
         authority: 'auth',
         name: 'ManageProviders',
     },
-    [Permission.AUTH_READ_PROVIDERS]: {
-        authority: 'auth',
-        name: 'ReadProviders',
-    },
     [Permission.AUTH_MANAGE_SELF]: {
         authority: 'auth',
         name: 'ManageSelf',
@@ -91,6 +87,10 @@ export const PERMISSIONS: PermissionDefinitions = {
     [Permission.AUTH_MANAGE_USERS]: {
         authority: 'auth',
         name: 'ManageUsers',
+    },
+    [Permission.AUTH_READ_PROVIDERS]: {
+        authority: 'auth',
+        name: 'ReadProviders',
     },
     [Permission.AUTH_READ_USERS]: {
         authority: 'auth',
