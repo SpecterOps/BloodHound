@@ -669,7 +669,7 @@ class BHEAPIClient {
     };
 
     getOpenGraphQualityStats = (
-        id: string,
+        platformId: string,
         start?: Date,
         end?: Date,
         limit?: number,
@@ -677,7 +677,7 @@ class BHEAPIClient {
         options?: RequestOptions
     ) => {
         return this.baseClient.get<OpenGraphDataQualityResponse>(
-            `/api/v2/data-quality-stats?environmentid=${id}`,
+            `/api/v2/data-quality-stats?environmentid=${platformId}`,
             Object.assign(
                 {
                     params: {
