@@ -99,6 +99,7 @@ import {
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
     ListFileTypesForIngestResponse,
+    OpenGraphDataQualityResponse,
     PaginatedResponse,
     PostureFindingTrendsResponse,
     PostureHistoryResponse,
@@ -675,7 +676,7 @@ class BHEAPIClient {
         sort_by?: string,
         options?: RequestOptions
     ) => {
-        return this.baseClient.get<AzureDataQualityResponse>(
+        return this.baseClient.get<OpenGraphDataQualityResponse>(
             `/api/v2/data-quality-stats?environmentid=${id}`,
             Object.assign(
                 {

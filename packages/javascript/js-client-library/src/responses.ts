@@ -135,6 +135,20 @@ export type AzureDataQualityStat = TimestampFields & {
 
 export type AzureDataQualityResponse = PaginatedResponse<AzureDataQualityStat[]>;
 
+export type OpenGraphDataQualityStat = TimestampFields & {
+    run_id: string;
+    environment_kind_id: number;
+    environmentid: string;
+    extension_id: number;
+    id: number;
+    metric_kind_id: number;
+    metric_name: string;
+    metric_type: string;
+    metric_value: number;
+};
+
+export type OpenGraphDataQualityResponse = PaginatedResponse<OpenGraphDataQualityStat[]>;
+
 type PostureStat = TimestampFields & {
     domain_sid: string;
     exposure_index: number;
