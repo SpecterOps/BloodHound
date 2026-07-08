@@ -49,9 +49,8 @@ const SSOConfiguration: FC = () => {
 
     const { checkPermission } = usePermissions();
     const hasManagePermission = checkPermission(Permission.AUTH_MANAGE_PROVIDERS);
-    const hasReadermission = checkPermission(Permission.AUTH_READ_PROVIDERS);
-
-    const hasManageOrReadPermission = hasManagePermission || hasReadermission;
+    const hasReadPermission = checkPermission(Permission.AUTH_READ_PROVIDERS);
+    const hasManageOrReadPermission = hasManagePermission || hasReadPermission;
 
     const { addNotification, dismissNotification } = useNotifications();
     const notificationKey = 'manage-sso-providers-permission';
