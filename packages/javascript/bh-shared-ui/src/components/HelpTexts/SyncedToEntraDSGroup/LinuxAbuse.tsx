@@ -20,7 +20,8 @@ import { FC } from 'react';
 const Abuse: FC = () => {
     return (
         <Typography variant='body2'>
-            An attacker may be able to add or remove members of the Entra group, and changes will be synchronized to the Microsoft Entra Domain Services group.
+            An attacker may be able to add or remove members of the Entra group, and changes will be synchronized to the
+            Microsoft Entra Domain Services group.
         </Typography>
     );
 };

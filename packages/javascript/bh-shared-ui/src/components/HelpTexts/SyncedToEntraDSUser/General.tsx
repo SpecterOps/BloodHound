@@ -20,7 +20,10 @@ import { FC } from 'react';
 const General: FC = () => {
     return (
         <>
-            <Typography variant='body2'>The Entra user is synchronized to the user in Microsoft Entra Domain Services (formerly formerly Azure Active Directory Domain Services).</Typography>
+            <Typography variant='body2'>
+                The Entra user is synchronized to the user in Microsoft Entra Domain Services (formerly formerly Azure
+                Active Directory Domain Services).
+            </Typography>
             <Typography variant='body2'>
                 The Entra user may be able to authenticate as the Entra DS user with its own password.
             </Typography>

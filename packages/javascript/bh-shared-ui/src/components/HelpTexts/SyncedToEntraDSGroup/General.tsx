@@ -20,7 +20,10 @@ import { FC } from 'react';
 const General: FC = () => {
     return (
         <>
-            <Typography variant='body2'>The Entra group and the direct/first-level group members are synchronized to the Microsoft Entra Domain Services group  (formerly formerly Azure Active Directory Domain Services).</Typography>
+            <Typography variant='body2'>
+                The Entra group and the direct/first-level group members are synchronized to the Microsoft Entra Domain
+                Services group (formerly formerly Azure Active Directory Domain Services).
+            </Typography>
         </>
     );
 };
