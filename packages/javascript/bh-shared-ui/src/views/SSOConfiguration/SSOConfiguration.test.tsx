@@ -250,7 +250,7 @@ describe('SSOConfiguration', () => {
     it.each([
         ['admin', Permission.AUTH_MANAGE_PROVIDERS],
         ['auditor', Permission.AUTH_READ_PROVIDERS],
-    ])('lists sso providers for a user with manage/read provider permissions', async (_role, permission) => {
+    ])('lists sso providers for a user with manage or read provider permissions', async (_role, permission) => {
         permissionResponse = createAuthStateWithPermissions([permission]).user;
         render(<SSOConfiguration />);
 
@@ -258,7 +258,7 @@ describe('SSOConfiguration', () => {
         expect(listProvidersSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('does not list sso providers for a role without manage/read provider permission', async () => {
+    it('does not list sso providers for a role without both the manage providers and read provider permissions', async () => {
         permissionResponse = createAuthStateWithPermissions([Permission.AUTH_READ_USERS]).user;
         render(<SSOConfiguration />);
 
