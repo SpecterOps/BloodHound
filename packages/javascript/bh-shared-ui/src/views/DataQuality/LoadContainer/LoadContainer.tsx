@@ -39,7 +39,7 @@ const LoadContainer: React.FC<LoadContainerProps> = ({ icon, loading, display, v
         <StyledTableRow>
             <TableCell>
                 {loading ? (
-                    <Skeleton variant='text' />
+                    <Skeleton width={160} variant='text' />
                 ) : (
                     <>
                         <Box display='inline-block' width='32px' textAlign='center'>
@@ -51,7 +51,9 @@ const LoadContainer: React.FC<LoadContainerProps> = ({ icon, loading, display, v
             </TableCell>
             <TableCell align='right'>
                 {loading ? (
-                    <Skeleton variant='text' />
+                    <div className='flex justify-end'>
+                        <Skeleton width={30} variant='text' />
+                    </div>
                 ) : type === 'percent' ? (
                     `${Math.floor(value * 100)}%`
                 ) : (
