@@ -185,7 +185,7 @@ func (s *BloodhoundDB) DeleteCustomNodeKind(ctx context.Context, kindName string
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		if err := tx.Raw(
-			fmt.Sprintf("DELETE FROM %s cnk USING kind k WHERE k.id = cnk.kind_id AND k.name = ? RETURNING cnk.id, cnk.config;", model.CustomNodeKind{}.TableName()),
+			fmt.Sprintf("DELETE FROM %s cnk USING %s k WHERE k.id = cnk.kind_id AND k.name = ? RETURNING cnk.id, cnk.config;", model.CustomNodeKind{}.TableName(), model.Kind{}.TableName()),
 			kindName,
 		).Row().Scan(&customNodeKind.ID, &customNodeKind.Config); errors.Is(err, sql.ErrNoRows) {
 			return ErrNotFound
