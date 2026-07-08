@@ -17,6 +17,7 @@
 package model
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
@@ -567,4 +568,26 @@ type RemediationInput struct {
 	LongDescription  string
 	ShortRemediation string
 	LongRemediation  string
+}
+
+// KindInfoInput represents one entity panel definition as provided in a user's upload JSON
+type KindInfoInput struct {
+	InfoKey  string
+	Title    string
+	Position int32
+	Content  json.RawMessage
+}
+
+// GraphSchemaKindInfo is the storage-layer shape of an entity panel
+type GraphSchemaKindInfo struct {
+	ID                 int32
+	KindID             int32
+	NodeKindID         *int32
+	RelationshipKindID *int32
+	InfoKey            string
+	Title              string
+	Position           int32
+	Content            json.RawMessage
+	CreatedAt          null.Time
+	UpdatedAt          null.Time
 }

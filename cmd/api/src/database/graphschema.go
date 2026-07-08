@@ -90,10 +90,16 @@ type OpenGraphSchema interface {
 	DeletePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error
 
 	GetPrimaryDisplayKinds(ctx context.Context) (graphschema.PrimaryDisplayKinds, error)
+
+	// Entity Panels:
+	CreateKindInfo(ctx context.Context, kindInfo model.GraphSchemaKindInfo) (model.GraphSchemaKindInfo, error)
+	UpdateKindInfo(ctx context.Context, kindInfo model.GraphSchemaKindInfo) (model.GraphSchemaKindInfo, error)
+	GetKindInfos(ctx context.Context, kindID int32) ([]model.GraphSchemaKindInfo, error)
 }
 
 const (
 	DuplicateKeyValueErrorString = "duplicate key value violates unique constraint"
+	graphSchemaKindInfoTableName = "schema_kind_info"
 )
 
 type FilterAndPagination struct {
@@ -1385,6 +1391,124 @@ func (s *BloodhoundDB) GetPrimaryDisplayKinds(ctx context.Context) (graphschema.
 			return primaryDisplayKinds, nil
 		}
 	}
+}
+
+func (s *BloodhoundDB) CreateKindInfo(ctx context.Context, kindInfo model.GraphSchemaKindInfo) (model.GraphSchemaKindInfo, error) {
+	var content = kindInfo.Content
+
+	if len(content) == 0 {
+		content = []byte("{}")
+	}
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		INSERT INTO %s (
+			kind_id,
+			node_kind_id,
+			relationship_kind_id,
+			info_key,
+			title,
+			position,
+			content,
+			created_at,
+			updated_at
+		)
+		VALUES (?, ?, ?, ?, ?, ?, ?::jsonb, NOW(), NOW())
+		RETURNING
+			id,
+			kind_id,
+			node_kind_id,
+			relationship_kind_id,
+			info_key,
+			title,
+			position,
+			content,
+			created_at,
+			updated_at`,
+		graphSchemaKindInfoTableName),
+		kindInfo.KindID,
+		kindInfo.NodeKindID,
+		kindInfo.RelationshipKindID,
+		kindInfo.InfoKey,
+		kindInfo.Title,
+		kindInfo.Position,
+		string(content)).Scan(&kindInfo); result.Error != nil {
+		return model.GraphSchemaKindInfo{}, CheckError(result)
+	}
+
+	return kindInfo, nil
+}
+
+func (s *BloodhoundDB) UpdateKindInfo(ctx context.Context, kindInfo model.GraphSchemaKindInfo) (model.GraphSchemaKindInfo, error) {
+	var content = kindInfo.Content
+
+	if len(content) == 0 {
+		content = []byte("{}")
+	}
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		UPDATE %s
+		SET
+			kind_id = ?,
+			node_kind_id = ?,
+			relationship_kind_id = ?,
+			info_key = ?,
+			title = ?,
+			position = ?,
+			content = ?::jsonb,
+			updated_at = NOW()
+		WHERE id = ?
+		RETURNING
+			id,
+			kind_id,
+			node_kind_id,
+			relationship_kind_id,
+			info_key,
+			title,
+			position,
+			content,
+			created_at,
+			updated_at`,
+		graphSchemaKindInfoTableName),
+		kindInfo.KindID,
+		kindInfo.NodeKindID,
+		kindInfo.RelationshipKindID,
+		kindInfo.InfoKey,
+		kindInfo.Title,
+		kindInfo.Position,
+		string(content),
+		kindInfo.ID).Scan(&kindInfo); result.Error != nil {
+		return model.GraphSchemaKindInfo{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.GraphSchemaKindInfo{}, ErrNotFound
+	}
+
+	return kindInfo, nil
+}
+
+func (s *BloodhoundDB) GetKindInfos(ctx context.Context, kindID int32) ([]model.GraphSchemaKindInfo, error) {
+	var kindInfos []model.GraphSchemaKindInfo
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT
+			id,
+			kind_id,
+			node_kind_id,
+			relationship_kind_id,
+			info_key,
+			title,
+			position,
+			content,
+			created_at,
+			updated_at
+		FROM %s
+		WHERE kind_id = ?
+		ORDER BY position, title`,
+		graphSchemaKindInfoTableName),
+		kindID).Scan(&kindInfos); result.Error != nil {
+		return nil, CheckError(result)
+	}
+
+	return kindInfos, nil
 }
 
 func parseFiltersAndPagination(filters model.Filters, sort model.Sort, skip, limit int) (FilterAndPagination, error) {
