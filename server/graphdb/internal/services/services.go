@@ -21,7 +21,6 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"time"
 )
 
@@ -62,18 +61,6 @@ type KindInfo struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
-
-// ErrKindInfoKindNotFound indicates that a kind info was created with a kind_id that has
-// no corresponding entry in the kind table.
-var ErrKindInfoKindNotFound = errors.New("kind info references a kind that does not exist")
-
-// ErrKindInfoDuplicatePosition indicates that a kind info's position is already in use by
-// another kind info entry for the same kind.
-var ErrKindInfoDuplicatePosition = errors.New("kind info position already in use for this kind")
-
-// ErrKindInfoDuplicateInfoKey indicates that a kind info's info_key is already in use by
-// another kind info entry for the same kind.
-var ErrKindInfoDuplicateInfoKey = errors.New("kind info key already in use for this kind")
 
 // Service implements the graphdb use cases on top of a Database implementation.
 type Service struct {
