@@ -67,19 +67,17 @@ func (s *BloodhoundDB) CreateCustomNodeKinds(ctx context.Context, customNodeKind
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
 
-		// Upsert each kind name into the kind table and capture the assigned ID.
+		// Upsert each kind name into the kind table, then insert its custom_node_kinds row individually so we
+		// can capture the returned id and detect the unique constraint violation on kind_id.
 		for i := range customNodeKinds {
+			var newID int32
+
 			upsertedKind, err := bhdb.UpsertKind(ctx, customNodeKinds[i].KindName)
 			if err != nil {
 				return fmt.Errorf("failed to upsert kind %q: %w", customNodeKinds[i].KindName, err)
 			}
 
 			customNodeKinds[i].KindId = int16(upsertedKind.ID)
-		}
-
-		// Insert each custom_node_kinds row individually so we can capture the returned id and detect the unique constraint violation on kind_id.
-		for i := range customNodeKinds {
-			var newID int32
 
 			result := tx.Raw(
 				fmt.Sprintf("INSERT INTO %s (config, schema_node_kind_id, kind_id) VALUES (?, ?, ?) RETURNING id", model.CustomNodeKind{}.TableName()),
@@ -149,10 +147,10 @@ func (s *BloodhoundDB) UpdateCustomNodeKind(ctx context.Context, customNodeKind 
 		result := tx.Raw(
 			fmt.Sprintf(`UPDATE %s cnk
 				SET schema_node_kind_id = COALESCE(?, schema_node_kind_id), config = ?, updated_at = NOW()
-				FROM kind k
+				FROM %s k
 				WHERE k.id = cnk.kind_id AND k.name = ?
 				RETURNING cnk.id, k.name AS kind_name, cnk.kind_id, cnk.schema_node_kind_id, cnk.config`,
-				model.CustomNodeKind{}.TableName()),
+				model.CustomNodeKind{}.TableName(), model.Kind{}.TableName()),
 			customNodeKind.SchemaNodeKindId, customNodeKind.Config, customNodeKind.KindName,
 		).Scan(&customNodeKind)
 
