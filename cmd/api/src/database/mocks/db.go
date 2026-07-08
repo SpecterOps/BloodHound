@@ -493,18 +493,18 @@ func (mr *MockDatabaseMockRecorder) CreateInstallation(ctx any) *gomock.Call {
 }
 
 // CreateKindInfo mocks base method.
-func (m *MockDatabase) CreateKindInfo(ctx context.Context, kindInfo model.GraphSchemaKindInfo) (model.GraphSchemaKindInfo, error) {
+func (m *MockDatabase) CreateKindInfo(ctx context.Context, kindID int32, nodeKindID, relationshipKindID *int32, kindInfo model.KindInfoInput) (model.GraphSchemaKindInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateKindInfo", ctx, kindInfo)
+	ret := m.ctrl.Call(m, "CreateKindInfo", ctx, kindID, nodeKindID, relationshipKindID, kindInfo)
 	ret0, _ := ret[0].(model.GraphSchemaKindInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateKindInfo indicates an expected call of CreateKindInfo.
-func (mr *MockDatabaseMockRecorder) CreateKindInfo(ctx, kindInfo any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateKindInfo(ctx, kindID, nodeKindID, relationshipKindID, kindInfo any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateKindInfo", reflect.TypeOf((*MockDatabase)(nil).CreateKindInfo), ctx, kindInfo)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateKindInfo", reflect.TypeOf((*MockDatabase)(nil).CreateKindInfo), ctx, kindID, nodeKindID, relationshipKindID, kindInfo)
 }
 
 // CreateOIDCProvider mocks base method.
@@ -1012,6 +1012,20 @@ func (m *MockDatabase) DeleteIngestTask(ctx context.Context, ingestTask model.In
 func (mr *MockDatabaseMockRecorder) DeleteIngestTask(ctx, ingestTask any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteIngestTask", reflect.TypeOf((*MockDatabase)(nil).DeleteIngestTask), ctx, ingestTask)
+}
+
+// DeleteKindInfo mocks base method.
+func (m *MockDatabase) DeleteKindInfo(ctx context.Context, kindInfoID int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteKindInfo", ctx, kindInfoID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteKindInfo indicates an expected call of DeleteKindInfo.
+func (mr *MockDatabaseMockRecorder) DeleteKindInfo(ctx, kindInfoID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteKindInfo", reflect.TypeOf((*MockDatabase)(nil).DeleteKindInfo), ctx, kindInfoID)
 }
 
 // DeletePrincipalKind mocks base method.

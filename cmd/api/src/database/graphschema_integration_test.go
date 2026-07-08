@@ -4913,7 +4913,13 @@ func TestDatabase_CreateKindInfo(t *testing.T) {
 	}
 
 	for _, kindInfo := range kindInfos {
-		_, err := testSuite.BHDatabase.CreateKindInfo(testSuite.Context, kindInfo)
+		_, err := testSuite.BHDatabase.CreateKindInfo(
+			testSuite.Context,
+			kindInfo.KindID,
+			kindInfo.NodeKindID,
+			kindInfo.RelationshipKindID,
+			toKindInfoInput(kindInfo),
+		)
 		require.NoError(t, err)
 	}
 
@@ -5122,7 +5128,13 @@ func TestDatabase_CreateKindInfo_Constraints(t *testing.T) {
 				testCase.setup(t)
 			}
 
-			_, err := testSuite.BHDatabase.CreateKindInfo(testSuite.Context, testCase.kindInfo)
+			_, err := testSuite.BHDatabase.CreateKindInfo(
+				testSuite.Context,
+				testCase.kindInfo.KindID,
+				testCase.kindInfo.NodeKindID,
+				testCase.kindInfo.RelationshipKindID,
+				toKindInfoInput(testCase.kindInfo),
+			)
 
 			assertGraphSchemaKindInfoConstraintError(t, err, testCase.wantConstraint)
 			if testCase.wantSentinel != nil {
@@ -5186,6 +5198,33 @@ func TestDatabase_GetKindInfos_HappyPath(t *testing.T) {
 	assert.False(t, kindInfos[0].UpdatedAt.ValueOrZero().IsZero())
 }
 
+func TestDatabase_DeleteKindInfo(t *testing.T) {
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	seed := seedGraphSchemaKindInfoPrerequisites(t, testSuite)
+
+	createdKindInfo, err := testSuite.BHDatabase.CreateKindInfo(
+		testSuite.Context,
+		seed.nodeBackingKindID,
+		&seed.nodeSchemaKindID,
+		nil,
+		model.KindInfoInput{
+			InfoKey:  "general",
+			Title:    "General",
+			Position: 0,
+			Content:  json.RawMessage(`{"markdown":{"content":"hello"}}`),
+		},
+	)
+	require.NoError(t, err)
+
+	require.NoError(t, testSuite.BHDatabase.DeleteKindInfo(testSuite.Context, createdKindInfo.ID))
+
+	kindInfos, err := testSuite.BHDatabase.GetKindInfos(testSuite.Context, seed.nodeBackingKindID)
+	require.NoError(t, err)
+	assert.Empty(t, kindInfos)
+}
+
 func seedGraphSchemaKindInfoPrerequisites(t *testing.T, testSuite IntegrationTestSuite) graphSchemaKindInfoSeed {
 	t.Helper()
 
@@ -5219,8 +5258,23 @@ func seedGraphSchemaKindInfoPrerequisites(t *testing.T, testSuite IntegrationTes
 func insertValidGraphSchemaKindInfo(t *testing.T, testSuite IntegrationTestSuite, kindInfo model.GraphSchemaKindInfo) {
 	t.Helper()
 
-	_, err := testSuite.BHDatabase.CreateKindInfo(testSuite.Context, kindInfo)
+	_, err := testSuite.BHDatabase.CreateKindInfo(
+		testSuite.Context,
+		kindInfo.KindID,
+		kindInfo.NodeKindID,
+		kindInfo.RelationshipKindID,
+		toKindInfoInput(kindInfo),
+	)
 	require.NoError(t, err)
+}
+
+func toKindInfoInput(kindInfo model.GraphSchemaKindInfo) model.KindInfoInput {
+	return model.KindInfoInput{
+		InfoKey:  kindInfo.InfoKey,
+		Title:    kindInfo.Title,
+		Position: kindInfo.Position,
+		Content:  kindInfo.Content,
+	}
 }
 
 func truncateGraphSchemaKindInfo(t *testing.T, testSuite IntegrationTestSuite) {

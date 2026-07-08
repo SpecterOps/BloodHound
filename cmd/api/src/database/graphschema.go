@@ -93,9 +93,10 @@ type OpenGraphSchema interface {
 	GetPrimaryDisplayKinds(ctx context.Context) (graphschema.PrimaryDisplayKinds, error)
 
 	// Entity Panels:
-	CreateKindInfo(ctx context.Context, kindInfo model.GraphSchemaKindInfo) (model.GraphSchemaKindInfo, error)
+	CreateKindInfo(ctx context.Context, kindID int32, nodeKindID, relationshipKindID *int32, kindInfo model.KindInfoInput) (model.GraphSchemaKindInfo, error)
 	UpdateKindInfo(ctx context.Context, kindInfo model.GraphSchemaKindInfo) (model.GraphSchemaKindInfo, error)
 	GetKindInfos(ctx context.Context, kindID int32) ([]model.GraphSchemaKindInfo, error)
+	DeleteKindInfo(ctx context.Context, kindInfoID int32) error
 }
 
 const (
@@ -1402,8 +1403,19 @@ var (
 	graphSchemaKindInfoConstraintUniqueInfoKey  = "schema_kind_info_unique_kind_info_key"
 )
 
-func (s *BloodhoundDB) CreateKindInfo(ctx context.Context, kindInfo model.GraphSchemaKindInfo) (model.GraphSchemaKindInfo, error) {
-	var content = kindInfo.Content
+func (s *BloodhoundDB) CreateKindInfo(ctx context.Context, kindID int32, nodeKindID, relationshipKindID *int32, kindInfo model.KindInfoInput) (model.GraphSchemaKindInfo, error) {
+	var (
+		content            = kindInfo.Content
+		createdGraphSchema = model.GraphSchemaKindInfo{
+			KindID:             kindID,
+			NodeKindID:         nodeKindID,
+			RelationshipKindID: relationshipKindID,
+			InfoKey:            kindInfo.InfoKey,
+			Title:              kindInfo.Title,
+			Position:           kindInfo.Position,
+			Content:            kindInfo.Content,
+		}
+	)
 
 	if len(content) == 0 {
 		content = []byte("{}")
@@ -1434,17 +1446,17 @@ func (s *BloodhoundDB) CreateKindInfo(ctx context.Context, kindInfo model.GraphS
 			created_at,
 			updated_at`,
 		graphSchemaKindInfoTableName),
-		kindInfo.KindID,
-		kindInfo.NodeKindID,
-		kindInfo.RelationshipKindID,
+		kindID,
+		nodeKindID,
+		relationshipKindID,
 		kindInfo.InfoKey,
 		kindInfo.Title,
 		kindInfo.Position,
-		string(content)).Scan(&kindInfo); result.Error != nil {
+		string(content)).Scan(&createdGraphSchema); result.Error != nil {
 		return model.GraphSchemaKindInfo{}, checkKindInfoError(result)
 	}
 
-	return kindInfo, nil
+	return createdGraphSchema, nil
 }
 
 func (s *BloodhoundDB) UpdateKindInfo(ctx context.Context, kindInfo model.GraphSchemaKindInfo) (model.GraphSchemaKindInfo, error) {
@@ -1518,6 +1530,19 @@ func (s *BloodhoundDB) GetKindInfos(ctx context.Context, kindID int32) ([]model.
 	}
 
 	return kindInfos, nil
+}
+
+func (s *BloodhoundDB) DeleteKindInfo(ctx context.Context, kindInfoID int32) error {
+	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`
+		DELETE FROM %s
+		WHERE id = ?`,
+		graphSchemaKindInfoTableName), kindInfoID); result.Error != nil {
+		return CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }
 
 func checkKindInfoError(result *gorm.DB) error {
