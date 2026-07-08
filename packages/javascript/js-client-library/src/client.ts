@@ -86,6 +86,10 @@ import {
     GetEnterpriseCollectorsResponse,
     GetExportQueryResponse,
     GetExtensionsResponse,
+    GetNodeKindResponse,
+    GetNodeResponse,
+    GetRelationshipKindResponse,
+    GetRelationshipResponse,
     GetScheduledJobDisplayResponse,
     GetSelfResponse,
     GetWebhookResponse,
@@ -2710,6 +2714,47 @@ class BHEAPIClient {
         this.baseClient.get<GetEdgeTypesResponse>('/api/v2/extensions-edges', options);
 
     getDogTags = (options?: RequestOptions) => this.baseClient.get('/api/v2/dog-tags', options);
+
+    /**
+     * **Experimental** - Returns the details of a graph relationship identified by its graph-assigned integer ID
+     * @summary Get Relationship by Graph Relationship ID
+     */
+    getRelationshipByID = (
+        relationshipId: number,
+        options?: AxiosRequestConfig
+    ): Promise<AxiosResponse<GetRelationshipResponse>> => {
+        return this.baseClient.get(`/api/v2/relationships/${relationshipId}`, options);
+    };
+
+    /**
+     * **Experimental** - Returns the details of a graph node identified by its graph-assigned integer ID
+     * @summary Get Node by Graph Node ID
+     */
+    getNodeByID = (nodeId: number, options?: AxiosRequestConfig): Promise<AxiosResponse<GetNodeResponse>> => {
+        return this.baseClient.get(`/api/v2/nodes/${nodeId}`, options);
+    };
+
+    /**
+     * **Experimental** - Returns the details of a graph relationship kind identified by its graph-assigned integer Kind ID
+     * @summary Get Relationship Kind by Graph Relationship Kind ID
+     */
+    getRelationshipKindByRelationshipKindID = (
+        relationshipKindId: number,
+        options?: AxiosRequestConfig
+    ): Promise<AxiosResponse<GetRelationshipKindResponse>> => {
+        return this.baseClient.get(`/api/v2/relationship-kinds/${relationshipKindId}`, options);
+    };
+
+    /**
+     * **Experimental** - Returns the details of a graph node kind identified by its graph-assigned integer Kind ID
+     * @summary Get Node Kind by Graph Node Kind ID
+     */
+    getNodeKindByNodeKindID = (
+        nodeKindId: number,
+        options?: AxiosRequestConfig
+    ): Promise<AxiosResponse<GetNodeKindResponse>> => {
+        return this.baseClient.get(`/api/v2/node-kinds/${nodeKindId}`, options);
+    };
 
     getExtensions = (options?: RequestOptions) =>
         this.baseClient.get<GetExtensionsResponse>('/api/v2/extensions', options);

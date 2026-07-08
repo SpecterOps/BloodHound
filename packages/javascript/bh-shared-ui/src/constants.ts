@@ -124,38 +124,11 @@ export const useStyles = makeStyles((theme: Theme) => ({
     },
 }));
 
-const focusRingStyles = (palette: Palette) => ({
-    outline: `2px solid ${palette.color.links}`,
-    outlineOffset: '2px',
-});
-
-const inheritFocusedIconStyles = {
-    '& svg': {
-        color: 'inherit',
-        fill: 'currentColor',
-    },
-    '& svg *': {
-        color: 'inherit',
-        fill: 'currentColor',
-    },
-};
-
 export const themedComponents = (palette: Palette): ThemeOptions['components'] => ({
-    MuiButtonBase: {
-        styleOverrides: {
-            root: {
-                '&.Mui-focusVisible': {
-                    ...focusRingStyles(palette),
-                    ...inheritFocusedIconStyles,
-                },
-            },
-        },
-    },
     MuiAccordionSummary: {
         styleOverrides: {
             root: {
                 flexDirection: 'row-reverse',
-                '&.Mui-focusVisible': focusRingStyles(palette),
             },
             content: {
                 marginRight: '4px',
@@ -166,13 +139,6 @@ export const themedComponents = (palette: Palette): ThemeOptions['components'] =
         styleOverrides: {
             root: {
                 color: palette.color.links,
-                borderRadius: '2px',
-                '&:focus-visible': {
-                    ...focusRingStyles(palette),
-                    textDecoration: 'underline',
-                    textDecorationThickness: '2px',
-                    textUnderlineOffset: '2px',
-                },
             },
         },
     },
@@ -235,14 +201,6 @@ export const themedComponents = (palette: Palette): ThemeOptions['components'] =
                 },
             },
         },
-        styleOverrides: {
-            option: {
-                '&.Mui-focused, &[aria-selected="true"].Mui-focused': {
-                    backgroundColor: addOpacityToHex(palette.color.links, 16),
-                    boxShadow: `inset 3px 0 0 ${palette.color.links}`,
-                },
-            },
-        },
     },
     MuiDialogActions: {
         styleOverrides: {
@@ -266,32 +224,8 @@ export const themedComponents = (palette: Palette): ThemeOptions['components'] =
     MuiCheckbox: {
         styleOverrides: {
             root: {
-                '&.Mui-focusVisible': {
-                    ...focusRingStyles(palette),
-                    borderRadius: '4px',
-                },
                 '& svg': {
                     color: palette.color.primary,
-                },
-            },
-        },
-    },
-    MuiRadio: {
-        styleOverrides: {
-            root: {
-                '&.Mui-focusVisible': {
-                    ...focusRingStyles(palette),
-                    borderRadius: '50%',
-                },
-            },
-        },
-    },
-    MuiSwitch: {
-        styleOverrides: {
-            root: {
-                '&:has(.Mui-focusVisible)': {
-                    ...focusRingStyles(palette),
-                    borderRadius: '999px',
                 },
             },
         },
@@ -317,35 +251,6 @@ export const themedComponents = (palette: Palette): ThemeOptions['components'] =
                 '& :not(.Mui-selected) > svg': {
                     color: palette.color.primary,
                 },
-            },
-        },
-    },
-    MuiTab: {
-        styleOverrides: {
-            root: {
-                '&.Mui-focusVisible': {
-                    ...focusRingStyles(palette),
-                    ...inheritFocusedIconStyles,
-                },
-            },
-        },
-    },
-    MuiMenuItem: {
-        styleOverrides: {
-            root: {
-                '&.Mui-focusVisible, &:focus-visible': {
-                    backgroundColor: addOpacityToHex(palette.color.links, 16),
-                    boxShadow: `inset 3px 0 0 ${palette.color.links}`,
-                    ...inheritFocusedIconStyles,
-                },
-            },
-        },
-    },
-    MuiTableSortLabel: {
-        styleOverrides: {
-            root: {
-                borderRadius: '2px',
-                '&.Mui-focusVisible, &:focus-visible': focusRingStyles(palette),
             },
         },
     },
