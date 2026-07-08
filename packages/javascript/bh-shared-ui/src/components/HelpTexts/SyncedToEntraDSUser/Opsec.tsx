@@ -20,7 +20,9 @@ import { FC } from 'react';
 const Opsec: FC = () => {
     return (
         <Typography variant='body2'>
-            The attacker may create artifacts of abusing this relationship in Microsoft Entra Domain Services in the form of Windows Logon Events and in log solutions if Azure Monitor Diagnostic settings are enabled for Entra Domain Services.
+            The attacker may create artifacts of abusing this relationship in Microsoft Entra Domain Services in the
+            form of Windows Logon Events and in log solutions if Azure Monitor Diagnostic settings are enabled for Entra
+            Domain Services.
         </Typography>
     );
 };
