@@ -225,8 +225,7 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
                 name: 'Cross Platform',
                 edgeTypes: [
                     AzureRelationshipKind.SyncedToEntraUser,
-                    AzureRelationshipKind.SyncedToEntraDSUser,
-                    AzureRelationshipKind.SyncedToEntraDSGroup
+                    AzureRelationshipKind.SyncedToEntraDSUser
                 ],
             },
         ],
