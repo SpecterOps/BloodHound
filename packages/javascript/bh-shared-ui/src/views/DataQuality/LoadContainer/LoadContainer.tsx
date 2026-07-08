@@ -38,10 +38,16 @@ const LoadContainer: React.FC<LoadContainerProps> = ({ icon, loading, display, v
     return (
         <StyledTableRow>
             <TableCell>
-                <Box display='inline-block' width='32px' textAlign='center'>
-                    {icon}
-                </Box>
-                {display}
+                {loading ? (
+                    <Skeleton variant='text' />
+                ) : (
+                    <>
+                        <Box display='inline-block' width='32px' textAlign='center'>
+                            {icon}
+                        </Box>
+                        {display}
+                    </>
+                )}
             </TableCell>
             <TableCell align='right'>
                 {loading ? (

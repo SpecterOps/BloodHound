@@ -21,6 +21,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import React, { useEffect } from 'react';
 import { NodeIcon } from '../../components';
 import { useOpenGraphDataQualityStatsQuery, useOpenGraphPlatformsDataQualityStatsQuery } from '../../hooks';
+import { cn } from '../../utils';
 import LoadContainer from './LoadContainer';
 
 const useStyles = makeStyles((theme) => ({
@@ -58,8 +59,6 @@ export const OpenGraphInfo: React.FC<{ contextId: string; headers?: boolean; onD
     onDataError = () => {},
 }) => {
     const { data: tenantData, isLoading, isError } = useOpenGraphDataQualityStatsQuery(contextId);
-
-    console.log('TD', tenantData);
 
     useEffect(() => {
         if (isError) onDataError();
@@ -145,7 +144,7 @@ const Layout: React.FC<{
                     </TableBody>
                 </Table>
             </TableContainer>
-            <TableContainer style={{ marginTop: '16px' }} component={Paper} className={classes.container}>
+            <TableContainer component={Paper} className={cn(classes.container, { 'mt-4': !loading })}>
                 <Table>
                     <TableBody>
                         <LoadContainer
