@@ -43,17 +43,13 @@ var (
 	ErrDuplicateSchemaEnvironment                = errors.New("duplicate schema environment")
 	ErrDuplicateSchemaFindingName                = errors.New("duplicate schema finding name")
 	ErrDuplicatePrincipalKind                    = errors.New("duplicate principal kind")
+
+	// entity panel db errors
+	ErrKindInfoKindNotFound      = errors.New("kind info references a kind that does not exist")
+	ErrKindInfoDuplicatePosition = errors.New("kind info position already in use for this kind")
+	ErrKindInfoDuplicateInfoKey  = errors.New("kind info key already in use for this kind")
 )
 
-// ErrIsGraphSchemaDuplicateError - determines if the provided error is one of the following errors:
-// ErrDuplicateGraphSchemaExtensionName
-// ErrDuplicateGraphSchemaExtensionNamespace
-// ErrDuplicateSchemaNodeKindName
-// ErrDuplicateGraphSchemaExtensionPropertyName
-// ErrDuplicateSchemaRelationshipKindName
-// ErrDuplicateSchemaEnvironment
-// ErrDuplicateSchemaFindingName
-// ErrDuplicatePrincipalKind
 func ErrIsGraphSchemaDuplicateError(err error) bool {
 	switch {
 	case errors.Is(err, ErrDuplicateGraphSchemaExtensionName),
@@ -63,7 +59,9 @@ func ErrIsGraphSchemaDuplicateError(err error) bool {
 		errors.Is(err, ErrDuplicateSchemaRelationshipKindName),
 		errors.Is(err, ErrDuplicateSchemaEnvironment),
 		errors.Is(err, ErrDuplicateSchemaFindingName),
-		errors.Is(err, ErrDuplicatePrincipalKind):
+		errors.Is(err, ErrDuplicatePrincipalKind),
+		errors.Is(err, ErrKindInfoDuplicatePosition),
+		errors.Is(err, ErrKindInfoDuplicateInfoKey):
 		return true
 	default:
 		return false

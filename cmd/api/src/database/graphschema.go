@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
@@ -99,7 +100,6 @@ type OpenGraphSchema interface {
 
 const (
 	DuplicateKeyValueErrorString = "duplicate key value violates unique constraint"
-	graphSchemaKindInfoTableName = "schema_kind_info"
 )
 
 type FilterAndPagination struct {
@@ -1393,6 +1393,15 @@ func (s *BloodhoundDB) GetPrimaryDisplayKinds(ctx context.Context) (graphschema.
 	}
 }
 
+// entity panel vars
+var (
+	graphSchemaKindInfoTableName = "schema_kind_info"
+
+	graphSchemaKindInfoConstraintKindIDFKey     = "schema_kind_info_kind_id_fkey"
+	graphSchemaKindInfoConstraintUniquePosition = "schema_kind_info_unique_kind_position"
+	graphSchemaKindInfoConstraintUniqueInfoKey  = "schema_kind_info_unique_kind_info_key"
+)
+
 func (s *BloodhoundDB) CreateKindInfo(ctx context.Context, kindInfo model.GraphSchemaKindInfo) (model.GraphSchemaKindInfo, error) {
 	var content = kindInfo.Content
 
@@ -1432,7 +1441,7 @@ func (s *BloodhoundDB) CreateKindInfo(ctx context.Context, kindInfo model.GraphS
 		kindInfo.Title,
 		kindInfo.Position,
 		string(content)).Scan(&kindInfo); result.Error != nil {
-		return model.GraphSchemaKindInfo{}, CheckError(result)
+		return model.GraphSchemaKindInfo{}, checkKindInfoError(result)
 	}
 
 	return kindInfo, nil
@@ -1477,7 +1486,7 @@ func (s *BloodhoundDB) UpdateKindInfo(ctx context.Context, kindInfo model.GraphS
 		kindInfo.Position,
 		string(content),
 		kindInfo.ID).Scan(&kindInfo); result.Error != nil {
-		return model.GraphSchemaKindInfo{}, CheckError(result)
+		return model.GraphSchemaKindInfo{}, checkKindInfoError(result)
 	} else if result.RowsAffected == 0 {
 		return model.GraphSchemaKindInfo{}, ErrNotFound
 	}
@@ -1509,6 +1518,23 @@ func (s *BloodhoundDB) GetKindInfos(ctx context.Context, kindID int32) ([]model.
 	}
 
 	return kindInfos, nil
+}
+
+func checkKindInfoError(result *gorm.DB) error {
+	var pgErr *pgconn.PgError
+
+	if errors.As(result.Error, &pgErr) {
+		switch pgErr.ConstraintName {
+		case graphSchemaKindInfoConstraintKindIDFKey:
+			return fmt.Errorf("%w: %w", model.ErrKindInfoKindNotFound, result.Error)
+		case graphSchemaKindInfoConstraintUniquePosition:
+			return fmt.Errorf("%w: %w", model.ErrKindInfoDuplicatePosition, result.Error)
+		case graphSchemaKindInfoConstraintUniqueInfoKey:
+			return fmt.Errorf("%w: %w", model.ErrKindInfoDuplicateInfoKey, result.Error)
+		}
+	}
+
+	return CheckError(result)
 }
 
 func parseFiltersAndPagination(filters model.Filters, sort model.Sort, skip, limit int) (FilterAndPagination, error) {
