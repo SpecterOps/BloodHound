@@ -873,6 +873,20 @@ func (mr *MockDatabaseMockRecorder) DeleteAuthToken(ctx, authToken any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAuthToken", reflect.TypeOf((*MockDatabase)(nil).DeleteAuthToken), ctx, authToken)
 }
 
+// DeleteCustomNodeKind mocks base method.
+func (m *MockDatabase) DeleteCustomNodeKind(ctx context.Context, kindName string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteCustomNodeKind", ctx, kindName)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteCustomNodeKind indicates an expected call of DeleteCustomNodeKind.
+func (mr *MockDatabaseMockRecorder) DeleteCustomNodeKind(ctx, kindName any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCustomNodeKind", reflect.TypeOf((*MockDatabase)(nil).DeleteCustomNodeKind), ctx, kindName)
+}
+
 // DeleteEnvironment mocks base method.
 func (m *MockDatabase) DeleteEnvironment(ctx context.Context, environmentId int32) error {
 	m.ctrl.T.Helper()

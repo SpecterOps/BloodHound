@@ -158,7 +158,7 @@ func TestGetCustomNodeKinds(t *testing.T) {
 			setup: func() (IntegrationTestSuite, int) {
 				testSuite := setupIntegrationTestSuite(t)
 
-				baselineKinds, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context, nil)
+				baselineKinds, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context)
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{
@@ -546,6 +546,58 @@ func TestEnsureStubbedCustomNodeKindForIngest(t *testing.T) {
 		err := testSuite.BHDatabase.EnsureStubbedCustomNodeKindForIngest(testSuite.Context, common.MigrationData.String())
 		require.EqualError(t, err, "invalid kind name")
 	})
+}
+
+func TestDeleteCustomNodeKind(t *testing.T) {
+	tests := []struct {
+		name     string
+		setup    func() IntegrationTestSuite
+		kindName string
+		wantErr  error
+	}{
+		{
+			name: "fail - kind not found",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			kindName: "NonExistentKind",
+			wantErr:  database.ErrNotFound,
+		},
+		{
+			name: "success - deletes existing kind",
+			setup: func() IntegrationTestSuite {
+				testSuite := setupIntegrationTestSuite(t)
+				_, err := testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{
+					{
+						KindName: "DeletableKind",
+						Config: model.CustomNodeKindConfig{
+							Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "trash", Color: "#FF0000"},
+						},
+					},
+				})
+				require.NoError(t, err)
+				return testSuite
+			},
+			kindName: "DeletableKind",
+			wantErr:  nil,
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			err := testSuite.BHDatabase.DeleteCustomNodeKind(testSuite.Context, testCase.kindName)
+			if testCase.wantErr != nil {
+				require.ErrorIs(t, err, testCase.wantErr)
+			} else {
+				require.NoError(t, err)
+				_, getErr := testSuite.BHDatabase.GetCustomNodeKind(testSuite.Context, testCase.kindName)
+				require.ErrorIs(t, getErr, database.ErrNotFound)
+			}
+		})
+	}
 }
 
 func countKindRows(t *testing.T, testSuite IntegrationTestSuite, kindName string) int64 {

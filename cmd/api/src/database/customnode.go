@@ -18,6 +18,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"strings"
@@ -42,6 +43,7 @@ type CustomNodeKindData interface {
 	GetCustomNodeKinds(ctx context.Context) ([]model.CustomNodeKind, error)
 	GetCustomNodeKind(ctx context.Context, kindName string) (model.CustomNodeKind, error)
 	UpdateCustomNodeKind(ctx context.Context, customNodeKind model.CustomNodeKind) (model.CustomNodeKind, error)
+	DeleteCustomNodeKind(ctx context.Context, kindName string) error
 }
 
 func (s *BloodhoundDB) EnsureStubbedCustomNodeKindForIngest(ctx context.Context, name string) error {
@@ -169,4 +171,28 @@ func (s *BloodhoundDB) UpdateCustomNodeKind(ctx context.Context, customNodeKind 
 	})
 
 	return customNodeKind, err
+}
+
+func (s *BloodhoundDB) DeleteCustomNodeKind(ctx context.Context, kindName string) error {
+	var (
+		customNodeKind = model.CustomNodeKind{KindName: kindName}
+
+		auditEntry = model.AuditEntry{
+			Action: model.AuditLogActionDeleteCustomNodeKind,
+			Model:  &customNodeKind,
+		}
+	)
+
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		if err := tx.Raw(
+			fmt.Sprintf("DELETE FROM %s cnk USING kind k WHERE k.id = cnk.kind_id AND k.name = ? RETURNING cnk.id, cnk.config;", model.CustomNodeKind{}.TableName()),
+			kindName,
+		).Row().Scan(&customNodeKind.ID, &customNodeKind.Config); errors.Is(err, sql.ErrNoRows) {
+			return ErrNotFound
+		} else {
+			return err
+		}
+	})
+
+	return err
 }
