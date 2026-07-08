@@ -1406,15 +1406,7 @@ var (
 func (s *BloodhoundDB) CreateKindInfo(ctx context.Context, kindID int32, nodeKindID, relationshipKindID *int32, kindInfo model.KindInfoInput) (model.GraphSchemaKindInfo, error) {
 	var (
 		content            = kindInfo.Content
-		createdGraphSchema = model.GraphSchemaKindInfo{
-			KindID:             kindID,
-			NodeKindID:         nodeKindID,
-			RelationshipKindID: relationshipKindID,
-			InfoKey:            kindInfo.InfoKey,
-			Title:              kindInfo.Title,
-			Position:           kindInfo.Position,
-			Content:            kindInfo.Content,
-		}
+		createdGraphSchema = model.GraphSchemaKindInfo{}
 	)
 
 	if len(content) == 0 {
