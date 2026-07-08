@@ -447,21 +447,6 @@ func (mr *MockDatabaseMockRecorder) CreateGraphSchemaRelationshipKind(ctx, name,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGraphSchemaRelationshipKind", reflect.TypeOf((*MockDatabase)(nil).CreateGraphSchemaRelationshipKind), ctx, name, schemaExtensionId, description, isTraversable)
 }
 
-// CreateKindInfo mocks base method.
-func (m *MockDatabase) CreateKindInfo(ctx context.Context, kindInfo model.GraphSchemaKindInfo) (model.GraphSchemaKindInfo, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateKindInfo", ctx, kindInfo)
-	ret0, _ := ret[0].(model.GraphSchemaKindInfo)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateKindInfo indicates an expected call of CreateKindInfo.
-func (mr *MockDatabaseMockRecorder) CreateKindInfo(ctx, kindInfo any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateKindInfo", reflect.TypeOf((*MockDatabase)(nil).CreateKindInfo), ctx, kindInfo)
-}
-
 // CreateIngestJob mocks base method.
 func (m *MockDatabase) CreateIngestJob(ctx context.Context, job model.IngestJob) (model.IngestJob, error) {
 	m.ctrl.T.Helper()
@@ -505,6 +490,21 @@ func (m *MockDatabase) CreateInstallation(ctx context.Context) (model.Installati
 func (mr *MockDatabaseMockRecorder) CreateInstallation(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateInstallation", reflect.TypeOf((*MockDatabase)(nil).CreateInstallation), ctx)
+}
+
+// CreateKindInfo mocks base method.
+func (m *MockDatabase) CreateKindInfo(ctx context.Context, kindInfo model.GraphSchemaKindInfo) (model.GraphSchemaKindInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateKindInfo", ctx, kindInfo)
+	ret0, _ := ret[0].(model.GraphSchemaKindInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateKindInfo indicates an expected call of CreateKindInfo.
+func (mr *MockDatabaseMockRecorder) CreateKindInfo(ctx, kindInfo any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateKindInfo", reflect.TypeOf((*MockDatabase)(nil).CreateKindInfo), ctx, kindInfo)
 }
 
 // CreateOIDCProvider mocks base method.
@@ -2116,21 +2116,6 @@ func (mr *MockDatabaseMockRecorder) GetGraphSchemaRelationshipKindsWithSchemaNam
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaRelationshipKindsWithSchemaName", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaRelationshipKindsWithSchemaName), ctx, filters, sort, skip, limit)
 }
 
-// GetKindInfos mocks base method.
-func (m *MockDatabase) GetKindInfos(ctx context.Context, kindID int32) ([]model.GraphSchemaKindInfo, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetKindInfos", ctx, kindID)
-	ret0, _ := ret[0].([]model.GraphSchemaKindInfo)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetKindInfos indicates an expected call of GetKindInfos.
-func (mr *MockDatabaseMockRecorder) GetKindInfos(ctx, kindID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetKindInfos", reflect.TypeOf((*MockDatabase)(nil).GetKindInfos), ctx, kindID)
-}
-
 // GetIngestJob mocks base method.
 func (m *MockDatabase) GetIngestJob(ctx context.Context, id int64) (model.IngestJob, error) {
 	m.ctrl.T.Helper()
@@ -2189,6 +2174,21 @@ func (m *MockDatabase) GetInstallation(ctx context.Context) (model.Installation,
 func (mr *MockDatabaseMockRecorder) GetInstallation(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInstallation", reflect.TypeOf((*MockDatabase)(nil).GetInstallation), ctx)
+}
+
+// GetKindInfos mocks base method.
+func (m *MockDatabase) GetKindInfos(ctx context.Context, kindID int32) ([]model.GraphSchemaKindInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetKindInfos", ctx, kindID)
+	ret0, _ := ret[0].([]model.GraphSchemaKindInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetKindInfos indicates an expected call of GetKindInfos.
+func (mr *MockDatabaseMockRecorder) GetKindInfos(ctx, kindID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetKindInfos", reflect.TypeOf((*MockDatabase)(nil).GetKindInfos), ctx, kindID)
 }
 
 // GetKindsByIDs mocks base method.
@@ -3422,6 +3422,20 @@ func (mr *MockDatabaseMockRecorder) UpdateGraphSchemaRelationshipKind(ctx, schem
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateGraphSchemaRelationshipKind", reflect.TypeOf((*MockDatabase)(nil).UpdateGraphSchemaRelationshipKind), ctx, schemaRelationshipKind)
 }
 
+// UpdateIngestJob mocks base method.
+func (m *MockDatabase) UpdateIngestJob(ctx context.Context, job model.IngestJob) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateIngestJob", ctx, job)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateIngestJob indicates an expected call of UpdateIngestJob.
+func (mr *MockDatabaseMockRecorder) UpdateIngestJob(ctx, job any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIngestJob", reflect.TypeOf((*MockDatabase)(nil).UpdateIngestJob), ctx, job)
+}
+
 // UpdateKindInfo mocks base method.
 func (m *MockDatabase) UpdateKindInfo(ctx context.Context, kindInfo model.GraphSchemaKindInfo) (model.GraphSchemaKindInfo, error) {
 	m.ctrl.T.Helper()
@@ -3435,20 +3449,6 @@ func (m *MockDatabase) UpdateKindInfo(ctx context.Context, kindInfo model.GraphS
 func (mr *MockDatabaseMockRecorder) UpdateKindInfo(ctx, kindInfo any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateKindInfo", reflect.TypeOf((*MockDatabase)(nil).UpdateKindInfo), ctx, kindInfo)
-}
-
-// UpdateIngestJob mocks base method.
-func (m *MockDatabase) UpdateIngestJob(ctx context.Context, job model.IngestJob) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateIngestJob", ctx, job)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateIngestJob indicates an expected call of UpdateIngestJob.
-func (mr *MockDatabaseMockRecorder) UpdateIngestJob(ctx, job any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIngestJob", reflect.TypeOf((*MockDatabase)(nil).UpdateIngestJob), ctx, job)
 }
 
 // UpdateLastAnalysisCompleteTime mocks base method.

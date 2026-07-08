@@ -29,7 +29,6 @@ import (
 	reflect "reflect"
 
 	pgx "github.com/jackc/pgx/v5"
-	pgconn "github.com/jackc/pgx/v5/pgconn"
 	graph "github.com/specterops/dawgs/graph"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -99,26 +98,6 @@ func NewMockpgxQuerier(ctrl *gomock.Controller) *MockpgxQuerier {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockpgxQuerier) EXPECT() *MockpgxQuerierMockRecorder {
 	return m.recorder
-}
-
-// Exec mocks base method.
-func (m *MockpgxQuerier) Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error) {
-	m.ctrl.T.Helper()
-	varargs := []any{ctx, sql}
-	for _, a := range args {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "Exec", varargs...)
-	ret0, _ := ret[0].(pgconn.CommandTag)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Exec indicates an expected call of Exec.
-func (mr *MockpgxQuerierMockRecorder) Exec(ctx, sql any, args ...any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, sql}, args...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exec", reflect.TypeOf((*MockpgxQuerier)(nil).Exec), varargs...)
 }
 
 // Query mocks base method.
