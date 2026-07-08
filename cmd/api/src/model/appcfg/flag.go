@@ -47,7 +47,6 @@ const (
 	FeatureOpenGraphExtensionManagement = "opengraph_extension_management"
 	FeatureOpenHoundSupport             = "openhound_support"
 	FeatureAPIKeyExpirationSupport      = "api_key_expiration_support"
-	FeatureFindingsTable                = "findings_table"
 	FeatureCollectorSupportBundle       = "collector_support_bundle"
 	FeatureVariableAnalysisMode         = "variable_analysis_mode"
 )
