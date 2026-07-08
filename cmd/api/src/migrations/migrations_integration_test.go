@@ -131,7 +131,7 @@ func TestVersion_910_Migration(t *testing.T) {
 	})
 }
 
-func TestVersion_930_Migration(t *testing.T) {
+func TestVersion_950_Migration(t *testing.T) {
 	t.Run("backfills custom_node_kinds for a schemaless node kind that isn't in custom_node_kinds or schema_node_kinds", func(t *testing.T) {
 		suite := setupIntegrationTestSuite(t)
 		t.Cleanup(func() { suite.teardownIntegrationTestSuite(t) })
@@ -145,7 +145,7 @@ func TestVersion_930_Migration(t *testing.T) {
 		}
 		suite.createNodes(t, schemalessNode)
 
-		err := migrations.Version_930_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
+		err := migrations.Version_950_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
 		require.NoError(t, err)
 
 		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context)
@@ -190,7 +190,7 @@ func TestVersion_930_Migration(t *testing.T) {
 		}
 		suite.createNodes(t, preExistingNode)
 
-		err = migrations.Version_930_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
+		err = migrations.Version_950_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
 		require.NoError(t, err)
 
 		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context)
@@ -227,7 +227,7 @@ func TestVersion_930_Migration(t *testing.T) {
 		}
 		suite.createNodes(t, schemaNode)
 
-		err = migrations.Version_930_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
+		err = migrations.Version_950_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
 		require.NoError(t, err)
 
 		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context)
@@ -257,7 +257,7 @@ func TestVersion_930_Migration(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		err = migrations.Version_930_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
+		err = migrations.Version_950_Migration(suite.bhDatabase)(suite.context, suite.graphDB)
 		require.NoError(t, err)
 
 		customNodeKinds, err := suite.bhDatabase.GetCustomNodeKinds(suite.context)
@@ -272,7 +272,7 @@ func TestVersion_930_Migration(t *testing.T) {
 		suite := setupIntegrationTestSuite(t)
 		t.Cleanup(func() { suite.teardownIntegrationTestSuite(t) })
 
-		err := migrations.Version_930_Migration(nil)(suite.context, suite.graphDB)
+		err := migrations.Version_950_Migration(nil)(suite.context, suite.graphDB)
 		require.Error(t, err)
 	})
 }

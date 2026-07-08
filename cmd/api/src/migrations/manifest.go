@@ -53,16 +53,16 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 	}
 }
 
-// Version_930_Migration returns a migration that backfills custom_node_kinds rows for any node kind
+// Version_950_Migration returns a migration that backfills custom_node_kinds rows for any node kind
 // that exists in the graph but has no corresponding entry in either custom_node_kinds or schema_node_kinds.
 // This covers node kinds that entered the graph through schemaless Open Graph ingest, which were never written
 // to custom_node_kinds.
-func Version_930_Migration(nodeKindData schemalessNodeKindBackfillData) func(ctx context.Context, db graph.Database) error {
+func Version_950_Migration(nodeKindData schemalessNodeKindBackfillData) func(ctx context.Context, db graph.Database) error {
 	return func(ctx context.Context, db graph.Database) error {
 		defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to backfill custom_node_kinds for schemaless ingest kinds")()
 
 		if nodeKindData == nil {
-			return fmt.Errorf("Version_930_Migration requires a SchemalessNodeKindBackfillData provider but none was configured")
+			return fmt.Errorf("Version_950_Migration requires a SchemalessNodeKindBackfillData provider but none was configured")
 		}
 
 		// Fetch all kinds registered in the graph / kind table.
@@ -742,8 +742,8 @@ func GetManifest(nodeKindData schemalessNodeKindBackfillData) []Migration {
 			Execute: Version_910_Migration,
 		},
 		{
-			Version: version.Version{Major: 9, Minor: 3, Patch: 0},
-			Execute: Version_930_Migration(nodeKindData),
+			Version: version.Version{Major: 9, Minor: 5, Patch: 0},
+			Execute: Version_950_Migration(nodeKindData),
 		},
 	}
 }

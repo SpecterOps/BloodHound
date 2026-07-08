@@ -134,7 +134,7 @@ type GraphMigration interface {
 	executeMigrations(ctx context.Context, originalVersion version.Version, migrationsByVersion MigrationsByVersion) error
 }
 
-// schemalessNodeKindBackfillData is the narrow interface consumed by Version_930_Migration to read
+// schemalessNodeKindBackfillData is the narrow interface consumed by Version_950_Migration to read
 // display metadata from Postgres and write backfilled custom_node_kinds entries. It is intended to
 // be satisfied by database.Database
 type schemalessNodeKindBackfillData interface {
