@@ -21,6 +21,7 @@ import {
     DomainInfo,
     LoadingOverlay,
     OpenGraphInfo,
+    OpenGraphPlatformInfo,
     PageWithTitle,
     SelectedEnvironment,
     SimpleEnvironmentSelector,
@@ -46,6 +47,15 @@ const getStatsComponent = (selectedEnvironment: SelectedEnvironment | null, data
         case 'azure-platform':
             return <AzurePlatformInfo onDataError={dataErrorHandler} />;
         default:
+            if (!contextType) return null;
+            if (contextType.endsWith('-platform')) {
+                return (
+                    <OpenGraphPlatformInfo
+                        contextType={contextType.replace('-platform', '')}
+                        onDataError={dataErrorHandler}
+                    />
+                );
+            }
             if (!contextId) return null;
             return <OpenGraphInfo contextId={contextId} onDataError={dataErrorHandler} />;
     }

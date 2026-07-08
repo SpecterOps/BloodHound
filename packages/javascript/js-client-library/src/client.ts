@@ -716,7 +716,7 @@ class BHEAPIClient {
     };
 
     getOpenGraphPlatformQualityStats = (
-        platformtype: string,
+        platformType: string,
         start?: Date,
         end?: Date,
         limit?: number,
@@ -724,7 +724,7 @@ class BHEAPIClient {
         options?: RequestOptions
     ) => {
         return this.baseClient.get(
-            `/api/v2/data-quality-stats-aggregation?environment_kind_id=${platformtype}`,
+            `/api/v2/data-quality-stats-aggregation?environment_kind_id=${platformType}`,
             Object.assign(
                 {
                     params: {

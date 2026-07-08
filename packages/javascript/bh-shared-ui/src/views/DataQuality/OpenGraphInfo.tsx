@@ -78,11 +78,11 @@ export const OpenGraphInfo: React.FC<{ contextId: string; headers?: boolean; onD
     return <Layout nodeStats={nodeStats} relationshipStats={relationshipStats} headers={headers} loading={false} />;
 };
 
-export const OpenGraphPlatformInfo: React.FC<{ contextId: string; onDataError?: () => void }> = ({
-    contextId,
+export const OpenGraphPlatformInfo: React.FC<{ contextType: string; onDataError?: () => void }> = ({
+    contextType,
     onDataError = () => {},
 }) => {
-    const { data: platformData, isLoading, isError } = useOpenGraphPlatformsDataQualityStatsQuery(contextId);
+    const { data: platformData, isLoading, isError } = useOpenGraphPlatformsDataQualityStatsQuery(contextType);
 
     useEffect(() => {
         if (isError) onDataError();
