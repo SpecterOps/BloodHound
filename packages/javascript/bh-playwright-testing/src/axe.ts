@@ -34,6 +34,22 @@ type AxeFixtures = {
 // Consumers that don't care about themes can ignore the option; it defaults to 'light'
 // and has no runtime side effects.
 export const test = base.extend<AxeFixtures, TestOptions>({
+    // Injects window variable that may be checked by app at runtime
+    // Allows BH to determine if it is run by Playwright to disable CSS transition animation
+    context: async ({ context }, use) => {
+        await context.addInitScript(() => {
+            Object.defineProperty(window, '__APP_TEST_RUNTIME__', {
+                value: {
+                    type: 'accessibility',
+                    runner: 'playwright',
+                },
+                configurable: false,
+                writable: false,
+            });
+        });
+
+        await use(context);
+    },
     theme: ['light', { option: true, scope: 'worker' }],
     makeAxeBuilder: async ({ page }, use, testInfo) => {
         testInfo.annotations.push({
@@ -52,14 +68,29 @@ export { expect };
 // textual report so the Playwright/Allure report surfaces a visual indicator next to each
 // violation. Without `page`, behavior is unchanged.
 export type AttachAxeReportOptions = {
-    page?: Page;
+    attachmentNamePrefix?: string;
     maxNodesPerViolation?: number;
+    page?: Page;
 };
 
 const DEFAULT_MAX_NODES_PER_VIOLATION = 5;
 
+/**
+ * Hide the background content. Dialogs often cover background content. When Axe assesses
+ * the obscured content, it produces an `incomplete` result and oftent misses actual issues
+ */
+export async function hideMainContent(page: Page) {
+    await page.addStyleTag({
+        content: `
+            #content-wrapper {
+                visibility: hidden !important;
+            }
+        `,
+    });
+}
+
 export async function attachAxeReport(testInfo: TestInfo, results: AxeResults, opts: AttachAxeReportOptions = {}) {
-    await testInfo.attach('axe-results.json', {
+    await testInfo.attach(prefixedAttachmentName('axe-results.json', opts.attachmentNamePrefix), {
         body: JSON.stringify(results, null, 2),
         contentType: 'application/json',
     });
@@ -68,7 +99,7 @@ export async function attachAxeReport(testInfo: TestInfo, results: AxeResults, o
         return;
     }
 
-    await testInfo.attach('a11y-violations.md', {
+    await testInfo.attach(prefixedAttachmentName('a11y-violations.md', opts.attachmentNamePrefix), {
         body: formatViolations(results.violations),
         contentType: 'text/markdown',
     });
@@ -78,7 +109,8 @@ export async function attachAxeReport(testInfo: TestInfo, results: AxeResults, o
             testInfo,
             opts.page,
             results.violations,
-            opts.maxNodesPerViolation ?? DEFAULT_MAX_NODES_PER_VIOLATION
+            opts.maxNodesPerViolation ?? DEFAULT_MAX_NODES_PER_VIOLATION,
+            opts.attachmentNamePrefix
         );
     }
 }
@@ -124,7 +156,8 @@ async function attachViolationScreenshots(
     testInfo: TestInfo,
     page: Page,
     violations: Result[],
-    maxNodesPerViolation: number
+    maxNodesPerViolation: number,
+    attachmentNamePrefix?: string
 ) {
     for (const violation of violations) {
         const nodes = violation.nodes.slice(0, maxNodesPerViolation);
@@ -142,10 +175,13 @@ async function attachViolationScreenshots(
                     .first()
                     .screenshot({ animations: 'disabled', timeout: 2000 });
 
-                await testInfo.attach(`a11y-${violation.id}-${nodeIndex + 1}.png`, {
-                    body: screenshot,
-                    contentType: 'image/png',
-                });
+                await testInfo.attach(
+                    prefixedAttachmentName(`a11y-${violation.id}-${nodeIndex + 1}.png`, attachmentNamePrefix),
+                    {
+                        body: screenshot,
+                        contentType: 'image/png',
+                    }
+                );
             } catch {
                 // Element may have detached, animated off-screen, or otherwise become
                 // unscreenshottable between the axe scan and now. The textual report still
@@ -153,6 +189,13 @@ async function attachViolationScreenshots(
             }
         }
     }
+}
+
+/**
+ * Builds a Playwright attachment name, optionally namespaced for a specific axe scan.
+ */
+function prefixedAttachmentName(name: string, prefix?: string) {
+    return prefix ? `${prefix}-${name}` : name;
 }
 
 // Used in attachViolationScreenshots. When axe-core reports an accessibility violation,

@@ -16,6 +16,30 @@
 
 import type { Page } from '@playwright/test';
 
+export const GRAPH_HAS_DATA_QUERY = 'MATCH (A) WHERE NOT A:MigrationData RETURN A LIMIT 1';
+
+const GRAPH_HAS_DATA_RESPONSE = {
+    data: {
+        nodes: {
+            seed: {
+                isOwnedObject: false,
+                isTierZero: false,
+                kind: 'Group',
+                label: 'PLAYWRIGHT_SEED',
+                objectId: 'playwright-seed',
+            },
+        },
+        edges: {},
+    },
+};
+
+const GRAPH_HAS_NO_DATA_RESPONSE = {
+    data: {
+        nodes: {},
+        edges: {},
+    },
+};
+
 // Stub every POST to the cypher endpoint with a populated payload so the `useGraphHasData`
 // probe resolves to "true" and the "No Data Available" upload dialog never settles open.
 // Non-POST traffic falls through.
@@ -28,21 +52,24 @@ export async function installGraphHasDataStub(page: Page): Promise<void> {
         if (route.request().method() !== 'POST') {
             return route.fallback();
         }
+
         return route.fulfill({
-            json: {
-                data: {
-                    nodes: {
-                        seed: {
-                            isOwnedObject: false,
-                            isTierZero: false,
-                            kind: 'Group',
-                            label: 'PLAYWRIGHT_SEED',
-                            objectId: 'playwright-seed',
-                        },
-                    },
-                    edges: {},
-                },
-            },
+            json: GRAPH_HAS_DATA_RESPONSE,
         });
+    });
+}
+
+// Overrides only the `useGraphHasData` probe with an empty payload so the "No Data Available"
+// upload dialog renders. Other cypher requests fall through to any lower-priority route handlers.
+export async function installGraphHasNoDataStub(page: Page): Promise<void> {
+    await page.route('**/api/v2/graphs/cypher', async (route) => {
+        const body = route.request().postDataJSON();
+        if (body?.query === GRAPH_HAS_DATA_QUERY) {
+            return route.fulfill({
+                json: GRAPH_HAS_NO_DATA_RESPONSE,
+            });
+        }
+
+        return route.fallback();
     });
 }

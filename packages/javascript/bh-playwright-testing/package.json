@@ -15,7 +15,8 @@
         "./axe": "./src/axe.ts",
         "./themes": "./src/themes.ts",
         "./auth": "./src/auth.ts",
-        "./stubs/graph-has-data": "./src/stubs/graph-has-data.ts"
+        "./stubs/graph-has-data": "./src/stubs/graph-has-data.ts",
+        "./stubs/mfa": "./src/stubs/mfa.ts"
     },
     "devDependencies": {
         "@axe-core/playwright": "^4.11.3",

@@ -31,7 +31,8 @@ The package is consumed via subpath imports so each consumer pulls only what it 
 | `bh-playwright-testing/axe`                  | same as above                                                                                                 | Same named exports as the package root entry. Use this path when you want to be explicit.                                                        |
 | `bh-playwright-testing/themes`               | `Theme`, `THEMES`, `TestOptions`, `authStorageStateFor`                                                       | Type-only and constant helpers for the per-theme storage-state convention used by `loginAndSnapshotThemes` and Playwright configs.               |
 | `bh-playwright-testing/auth`                 | `loginAndSnapshotThemes`, `LoginAndSnapshotThemesOptions`                                                     | One-time login helper that snapshots `storageState` for both light and dark themes from a single session.                                        |
-| `bh-playwright-testing/stubs/graph-has-data` | `installGraphHasDataStub`                                                                                     | Stubs `POST /api/v2/graphs/cypher` so the `useGraphHasData` probe resolves to "true" and the "No Data Available" upload dialog stays closed.     |
+| `bh-playwright-testing/stubs/graph-has-data` | `GRAPH_HAS_DATA_QUERY`, `installGraphHasDataStub`, `installGraphHasNoDataStub`                                | Stubs `POST /api/v2/graphs/cypher` so tests can control whether the `useGraphHasData` probe resolves to populated or empty graph state.          |
+| `bh-playwright-testing/stubs/mfa`            | `installMFAEnrollmentStub`, `MFAEnrollmentStubOptions`                                                        | Stubs the happy path for enabling MFA so tests can advance through enrollment dialogs without changing the real user's MFA state.                |
 
 ### `axe`
 
@@ -52,10 +53,13 @@ The fixture also records an `a11y-tags` annotation on `testInfo` so the active t
 type AttachAxeReportOptions = {
     page?: Page;
     maxNodesPerViolation?: number; // default 5
+    attachmentNamePrefix?: string;
 };
 ```
 
 When `page` is provided and there are violations, the helper screenshots each affected element and attaches it as `a11y-<violation.id>-<n>.png` so that reports can show a visual indicator for each violation next to the textual one. `maxNodesPerViolation` caps how many element screenshots are taken per rule (e.g. a `color-contrast` violation spanning 30 elements only attaches the first 5 PNGs).
+
+`attachmentNamePrefix` keeps attachments distinct when a single test performs multiple scans, for example `mfa-password-axe-results.json`.
 
 Targets that cross iframe or shadow-DOM boundaries are skipped — Playwright requires a different API for those, though the textual report still describes the violation. Per-element screenshot failures (detached/animated-off elements) are swallowed so a missing screenshot never blocks the assertion.
 
@@ -67,11 +71,28 @@ Theme TypeScript types and constants.
 
 ### `auth`
 
-Auth storageState session snapshop helpers.
+Auth storageState session snapshot helpers.
 
 ### `stubs/graph-has-data`
 
 Stubs for tests that need controlled cypher response states.
+
+`installGraphHasDataStub(page)` stubs all cypher `POST` traffic with a populated graph payload. It is useful as a broad suite fixture when the "No Data Available" dialog should stay closed.
+
+`installGraphHasNoDataStub(page)` only overrides the `useGraphHasData` probe with an empty graph payload, then falls through for other cypher requests. Install it inside individual tests after any broad fixture route so Playwright's LIFO routing gives the test-local override priority.
+
+### `stubs/mfa`
+
+Stubs for tests that need to exercise the MFA enrollment flow without mutating account state.
+
+```ts
+import { installMFAEnrollmentStub } from 'bh-playwright-testing/stubs/mfa';
+
+test('MFA dialog', async ({ page }) => {
+    await installMFAEnrollmentStub(page);
+    // Click the MFA toggle and walk the dialog steps.
+});
+```
 
 ## Usage
 

@@ -14,27 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { installGraphHasNoDataStub } from 'bh-playwright-testing/stubs/graph-has-data';
 import { expectNoAccessibilityViolations, test } from '../fixtures';
-
-// The exact cypher query issued by `useGraphHasData`. The shared a11y fixture stubs this query
-// with a populated payload by default; this spec installs a higher-priority handler that returns
-// an empty payload so the "No Data Available" upload dialog renders and can be scanned.
-const GRAPH_HAS_DATA_QUERY = 'MATCH (A) WHERE NOT A:MigrationData RETURN A LIMIT 1';
 
 test.describe('No Data Available dialog accessibility', () => {
     test('upload dialog has no detectable WCAG A/AA violations', async ({ page, makeAxeBuilder }, testInfo) => {
-        // Playwright runs route handlers in LIFO order, so this test-local handler wins for the
-        // graph-has-data probe and overrides the fixture's populated payload with an empty one.
-        // Other cypher requests fall through to the fixture (and then to the real backend).
-        await page.route('**/api/v2/graphs/cypher', async (route) => {
-            const body = route.request().postDataJSON();
-            if (body?.query === GRAPH_HAS_DATA_QUERY) {
-                return route.fulfill({
-                    json: { data: { nodes: {}, edges: {} } },
-                });
-            }
-            return route.fallback();
-        });
+        await installGraphHasNoDataStub(page);
 
         await page.goto('/ui/explore');
 

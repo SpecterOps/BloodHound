@@ -19,4 +19,5 @@
 //   - bh-playwright-testing/themes
 //   - bh-playwright-testing/auth
 //   - bh-playwright-testing/stubs/graph-has-data
+//   - bh-playwright-testing/stubs/mfa
 export * from './axe';
