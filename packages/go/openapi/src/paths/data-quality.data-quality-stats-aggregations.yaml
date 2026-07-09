@@ -20,7 +20,7 @@ get:
   operationId: GetDataQualityAggregations
   summary: Get data quality aggregations
   description: >
-    Returns data quality metric counts aggregated per environment kind for an
+    Returns data quality metric counts aggregated per environment kind, optionally scoped to an
     OpenGraph schema extension, combined across environment instances for each
     collection run. Results can be filtered, sorted, and paginated.
   tags:
@@ -44,13 +44,26 @@ get:
       in: query
       schema:
         $ref: './../schemas/api.params.predicate.filter.integer.yaml'
-    - $ref: './../parameters/query.created-at.yaml'
     - name: sort_by
       description: >
         Sortable columns are created_at, updated_at.
       in: query
       schema:
         $ref: './../schemas/api.params.query.sort-by.yaml'
+    - name: start
+      description: Beginning datetime of range (inclusive) in RFC-3339 format; Defaults
+        to current datetime minus 30 days
+      in: query
+      schema:
+        type: string
+        format: date-time
+    - name: end
+      description: Ending datetime of range (inclusive) in RFC-3339 format; Defaults
+        to current datetime
+      in: query
+      schema:
+        type: string
+        format: date-time
     - $ref: './../parameters/query.skip.yaml'
     - $ref: './../parameters/query.limit.yaml'
   responses:
@@ -61,6 +74,7 @@ get:
           schema:
             allOf:
               - $ref: './../schemas/api.response.pagination.yaml'
+              - $ref: './../schemas/api.response.time-window.yaml'
               - type: object
                 properties:
                   data:

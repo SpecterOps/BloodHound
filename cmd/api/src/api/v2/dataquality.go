@@ -232,6 +232,8 @@ func (s *Resources) GetDataQualityAggregations(response http.ResponseWriter, req
 		queryParams                   = request.URL.Query()
 		sortItems                     model.Sort
 		skip, limit                   int
+		start, end                    time.Time
+		defaultEnd, defaultStart      = DefaultTimeRange()
 	)
 
 	queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request)
@@ -266,7 +268,7 @@ func (s *Resources) GetDataQualityAggregations(response http.ResponseWriter, req
 		}
 	}
 
-	// parse sort_by, skip, and limit
+	// parse sort_by, skip, limit, start, end
 	if sortItems, err = api.ParseSortParameters(model.DataQualityAggregations{}, queryParams); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
@@ -277,6 +279,14 @@ func (s *Resources) GetDataQualityAggregations(response http.ResponseWriter, req
 	}
 	if limit, err = ParseLimitQueryParameter(queryParams, 10); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		return
+	}
+	if start, err = ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["start"]), request), response)
+		return
+	}
+	if end, err = ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["end"]), request), response)
 		return
 	}
 
@@ -302,12 +312,28 @@ func (s *Resources) GetDataQualityAggregations(response http.ResponseWriter, req
 	}
 
 	filters := queryFilters.ToFiltersModel()
+	// created_at is filtered by the start/end params, so set the time window here
+	filters["created_at"] = []model.Filter{
+		{
+			Value:        start.Format(time.RFC3339),
+			Operator:     model.GreaterThanOrEquals,
+			SetOperator:  model.FilterAnd,
+			IsStringData: false,
+		},
+		{
+			Value:        end.Format(time.RFC3339),
+			Operator:     model.LessThanOrEquals,
+			SetOperator:  model.FilterAnd,
+			IsStringData: false,
+		},
+	}
+
 	aggs, count, err := s.DB.GetDataQualityAggregations(ctx, filters, sortItems, skip, limit)
 	if err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return
 	}
-	api.WriteResponseWrapperWithPagination(ctx, aggs, limit, skip, count, http.StatusOK, response)
+	api.WriteResponseWrapperWithTimeWindowAndPagination(ctx, aggs, start, end, limit, skip, count, http.StatusOK, response)
 }
 
 // parseOrder is a helper function which parses any sort_by query params into both the legacy sort string format and the model.Sort format. Returns an error if the columns is not sortable, or if an empty sort param is provided.

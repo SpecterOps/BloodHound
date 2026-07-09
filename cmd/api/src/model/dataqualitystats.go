@@ -99,6 +99,5 @@ func (s DataQualityAggregations) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
 		"schema_extension_id":        {Equals, NotEquals},
 		"schema_environment_kind_id": {Equals, NotEquals},
-		"created_at":                 {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 	}
 }
