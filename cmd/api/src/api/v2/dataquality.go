@@ -22,6 +22,8 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -219,6 +221,93 @@ func (s *Resources) GetDataQualityStats(response http.ResponseWriter, request *h
 			api.WriteResponseWrapperWithTimeWindowAndPagination(ctx, stats, start, end, limit, skip, count, http.StatusOK, response)
 		}
 	}
+}
+
+// GetDataQualityAggregations returns data quality metric counts aggregated per environment kind for an OpenGraph extension,
+// with optional created_at filtering, sorting, and pagination.
+func (s *Resources) GetDataQualityAggregations(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx                           = request.Context()
+		requiredEnvironmentKindColumn = "schema_environment_kind_id"
+		queryParams                   = request.URL.Query()
+		sortItems                     model.Sort
+		skip, limit                   int
+	)
+
+	queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request)
+	if err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+		return
+	}
+
+	// schema_environment_kind_id is required
+	if !queryFilters.IsFiltered(requiredEnvironmentKindColumn) {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest,
+			fmt.Sprintf(api.FmtErrorResponseDetailsMissingRequiredQueryParameter, requiredEnvironmentKindColumn), request),
+			response)
+		return
+	}
+
+	for column, columnFilters := range queryFilters {
+		validPredicates, err := api.GetValidFilterPredicatesAsStrings(model.DataQualityAggregations{}, column)
+		if err != nil {
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, column), request),
+				response)
+			return
+		}
+		for i, filter := range columnFilters {
+			if !slices.Contains(validPredicates, string(filter.Operator)) {
+				api.WriteErrorResponse(ctx,
+					api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request),
+					response)
+				return
+			}
+			queryFilters[column][i].IsStringData = model.DataQualityAggregations{}.IsStringColumn(filter.Name)
+		}
+	}
+
+	// parse sort_by, skip, and limit
+	if sortItems, err = api.ParseSortParameters(model.DataQualityAggregations{}, queryParams); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		return
+	}
+	if skip, err = ParseSkipQueryParameter(queryParams, 0); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		return
+	}
+	if limit, err = ParseLimitQueryParameter(queryParams, 10); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		return
+	}
+
+	// when filtering on schema_extension_id, verify the extension exists or return a 404
+	if extensionFilters, ok := queryFilters["schema_extension_id"]; ok {
+		for _, filter := range extensionFilters {
+			// only check existence for eq operator (exact ID)
+			if filter.Operator != model.Equals {
+				continue
+			}
+
+			id, err := strconv.ParseInt(filter.Value, 10, 32)
+			if err != nil {
+				convErrMessage := fmt.Sprintf("%s: schema_extension_id", api.ErrorResponseDetailsBadQueryParameterFilters)
+				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, convErrMessage, request), response)
+				return
+			}
+			if _, err := s.DB.GetGraphSchemaExtensionById(ctx, int32(id)); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			}
+		}
+	}
+
+	filters := queryFilters.ToFiltersModel()
+	aggs, count, err := s.DB.GetDataQualityAggregations(ctx, filters, sortItems, skip, limit)
+	if err != nil {
+		api.HandleDatabaseError(request, response, err)
+		return
+	}
+	api.WriteResponseWrapperWithPagination(ctx, aggs, limit, skip, count, http.StatusOK, response)
 }
 
 // parseOrder is a helper function which parses any sort_by query params into both the legacy sort string format and the model.Sort format. Returns an error if the columns is not sortable, or if an empty sort param is provided.

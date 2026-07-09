@@ -1425,6 +1425,257 @@ func TestGetPlatformAggregateStats_Success(t *testing.T) {
 	}
 }
 
+func TestGetDataQualityAggregations(t *testing.T) {
+	tests := []struct {
+		name string
+		test func(t *testing.T, mockDB *mocks.MockDatabase)
+	}{
+		{
+			name: "Failure: missing required schema_environment_kind_id returns bad request",
+			test: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				response := serveDataQualityAggregations(t, mockDB, url.Values{})
+
+				assertDataQualityAggregationsError(t, response, http.StatusBadRequest,
+					fmt.Sprintf(api.FmtErrorResponseDetailsMissingRequiredQueryParameter, "schema_environment_kind_id"))
+			},
+		},
+		{
+			name: "Failure: column not filterable returns bad request",
+			test: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				params := url.Values{
+					"schema_environment_kind_id": []string{"eq:100"},
+					"metric_value":               []string{"eq:5"},
+				}
+
+				response := serveDataQualityAggregations(t, mockDB, params)
+
+				assertDataQualityAggregationsError(t, response, http.StatusBadRequest,
+					fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, "metric_value"))
+			},
+		},
+		{
+			name: "Failure: unsupported filter predicate returns bad request",
+			test: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				params := url.Values{
+					"schema_environment_kind_id": []string{"eq:100"},
+					"schema_extension_id":        []string{"gt:5"},
+				}
+
+				response := serveDataQualityAggregations(t, mockDB, params)
+
+				assertDataQualityAggregationsError(t, response, http.StatusBadRequest,
+					fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, "schema_extension_id", "gt"))
+			},
+		},
+		{
+			name: "Failure: invalid sort column returns bad request",
+			test: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				params := url.Values{
+					"schema_environment_kind_id": []string{"eq:100"},
+					"sort_by":                    []string{"invalidColumn"},
+				}
+
+				response := serveDataQualityAggregations(t, mockDB, params)
+
+				assertDataQualityAggregationsError(t, response, http.StatusBadRequest,
+					fmt.Sprintf("%s: %s", api.ErrResponseDetailsColumnNotSortable, "invalidColumn"))
+			},
+		},
+		{
+			name: "Failure: invalid skip returns bad request",
+			test: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				params := url.Values{
+					"schema_environment_kind_id": []string{"eq:100"},
+					"skip":                       []string{"-1"},
+				}
+
+				response := serveDataQualityAggregations(t, mockDB, params)
+
+				assertDataQualityAggregationsError(t, response, http.StatusBadRequest,
+					fmt.Sprintf(utils.ErrorInvalidSkip, -1))
+			},
+		},
+		{
+			name: "Failure: invalid limit returns bad request",
+			test: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				params := url.Values{
+					"schema_environment_kind_id": []string{"eq:100"},
+					"limit":                      []string{"-1"},
+				}
+
+				response := serveDataQualityAggregations(t, mockDB, params)
+
+				assertDataQualityAggregationsError(t, response, http.StatusBadRequest,
+					fmt.Sprintf(utils.ErrorInvalidLimit, -1))
+			},
+		},
+		{
+			name: "Failure: non-integer schema_extension_id returns bad request",
+			test: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				params := url.Values{
+					"schema_environment_kind_id": []string{"eq:100"},
+					"schema_extension_id":        []string{"eq:abc"},
+				}
+
+				response := serveDataQualityAggregations(t, mockDB, params)
+
+				assertDataQualityAggregationsError(t, response, http.StatusBadRequest,
+					fmt.Sprintf("%s: schema_extension_id", api.ErrorResponseDetailsBadQueryParameterFilters))
+			},
+		},
+		{
+			name: "Failure: nonexistent schema_extension_id returns not found",
+			test: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				mockDB.EXPECT().GetGraphSchemaExtensionById(gomock.Any(), gomock.Any()).Return(model.GraphSchemaExtension{}, database.ErrNotFound)
+
+				params := url.Values{
+					"schema_environment_kind_id": []string{"eq:100"},
+					"schema_extension_id":        []string{"eq:999"},
+				}
+
+				response := serveDataQualityAggregations(t, mockDB, params)
+
+				assertDataQualityAggregationsError(t, response, http.StatusNotFound,
+					api.ErrorResponseDetailsResourceNotFound)
+			},
+		},
+		{
+			name: "Failure: database error returns internal server error",
+			test: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				mockDB.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
+
+				params := url.Values{
+					"schema_environment_kind_id": []string{"eq:100"},
+				}
+
+				response := serveDataQualityAggregations(t, mockDB, params)
+
+				assertDataQualityAggregationsError(t, response, http.StatusInternalServerError,
+					api.ErrorResponseDetailsInternalServerError)
+			},
+		},
+		{
+			name: "Success: minimal required filter with eq",
+			test: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				mockDB.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityAggregations{}, 0, nil)
+
+				params := url.Values{"schema_environment_kind_id": []string{"eq:100"}}
+
+				response := serveDataQualityAggregations(t, mockDB, params)
+
+				require.Equalf(t, http.StatusOK, response.Code, "wrong status code; body=%s", response.Body.String())
+			},
+		},
+		{
+			name: "Success: required filter with neq",
+			test: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				mockDB.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityAggregations{}, 0, nil)
+
+				params := url.Values{"schema_environment_kind_id": []string{"neq:100"}}
+
+				response := serveDataQualityAggregations(t, mockDB, params)
+
+				require.Equalf(t, http.StatusOK, response.Code, "wrong status code; body=%s", response.Body.String())
+			},
+		},
+		{
+			name: "Success: with sort, limit, and skip",
+			test: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				mockDB.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityAggregations{}, 0, nil)
+
+				params := url.Values{
+					"schema_environment_kind_id": []string{"eq:100"},
+					"sort_by":                    []string{"-created_at"},
+					"limit":                      []string{"1"},
+					"skip":                       []string{"0"},
+				}
+
+				response := serveDataQualityAggregations(t, mockDB, params)
+
+				require.Equalf(t, http.StatusOK, response.Code, "wrong status code; body=%s", response.Body.String())
+			},
+		},
+		{
+			name: "Success: with created_at range filter",
+			test: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				mockDB.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityAggregations{}, 0, nil)
+
+				params := url.Values{
+					"schema_environment_kind_id": []string{"eq:100"},
+					"created_at":                 []string{"gt:2022-03-23T07:20:50.52Z"},
+				}
+
+				response := serveDataQualityAggregations(t, mockDB, params)
+
+				require.Equalf(t, http.StatusOK, response.Code, "wrong status code; body=%s", response.Body.String())
+			},
+		},
+		{
+			name: "Success: with existing schema_extension_id",
+			test: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				mockDB.EXPECT().GetGraphSchemaExtensionById(gomock.Any(), gomock.Any()).Return(model.GraphSchemaExtension{}, nil)
+				mockDB.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityAggregations{}, 0, nil)
+
+				params := url.Values{
+					"schema_environment_kind_id": []string{"eq:100"},
+					"schema_extension_id":        []string{"eq:42"},
+				}
+
+				response := serveDataQualityAggregations(t, mockDB, params)
+
+				require.Equalf(t, http.StatusOK, response.Code, "wrong status code; body=%s", response.Body.String())
+			},
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			mockDB := mocks.NewMockDatabase(mockCtrl)
+
+			testCase.test(t, mockDB)
+		})
+	}
+}
+
+// serveDataQualityAggregations builds a GET request for the data-quality-stats-aggregations endpoint
+// from the given query params, serves it against the handler, and returns the recorded response.
+func serveDataQualityAggregations(t *testing.T, mockDB *mocks.MockDatabase, params url.Values) *httptest.ResponseRecorder {
+	t.Helper()
+
+	var (
+		endpoint  = "/api/v2/data-quality-stats-aggregations"
+		resources = v2.Resources{DB: mockDB}
+	)
+
+	request, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s?%s", endpoint, params.Encode()), nil)
+	require.NoError(t, err)
+
+	router := mux.NewRouter()
+	router.HandleFunc(endpoint, resources.GetDataQualityAggregations).Methods(http.MethodGet)
+
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, request)
+
+	return recorder
+}
+
+// assertDataQualityAggregationsError asserts that the response has the expected HTTP status code and
+// that the first error detail message matches the expected message.
+func assertDataQualityAggregationsError(t *testing.T, response *httptest.ResponseRecorder, expectedStatus int, expectedMessage string) {
+	t.Helper()
+
+	require.Equalf(t, expectedStatus, response.Code, "wrong status code; body=%s", response.Body.String())
+
+	var body map[string]any
+	require.NoError(t, json.Unmarshal(response.Body.Bytes(), &body))
+
+	message := body["errors"].([]any)[0].(map[string]any)["message"]
+	require.Equal(t, expectedMessage, message)
+}
+
 func TestResources_GetDatabaseCompleteness(t *testing.T) {
 	t.Parallel()
 
