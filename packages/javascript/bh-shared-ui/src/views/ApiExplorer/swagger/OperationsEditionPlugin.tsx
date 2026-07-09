@@ -131,47 +131,50 @@ export class OperationSummaryWithEdition extends PureComponent<{
                         operationProps={operationProps}
                         specPath={specPath}
                     />
-
                     {!showSummary ? null : (
                         <div className='opblock-summary-description'>{toString(resolvedSummary || summary)}</div>
                     )}
 
-                    <CommunityIcon
-                        style={{ marginRight: '10px' }}
-                        fill={isCommunity ? '#EE290D' : 'grey'}
-                        title={
-                            isCommunity
-                                ? 'Available in BloodHound Community Edition'
-                                : 'Not available in BloodHound Community Edition'
-                        }
-                        width='50px'
-                        height='33px'
-                    />
-                    <EnterpriseIcon
-                        style={{ marginRight: '15px' }}
-                        fill={isEnterprise ? '#34318F' : 'grey'}
-                        title={
-                            isEnterprise
-                                ? 'Available in BloodHound Enterprise'
-                                : 'Not available in BloodHound Enterprise'
-                        }
-                        width='47px'
-                        height='30px'
-                    />
-
-                    {displayOperationId && (originalOperationId || operationId) ? (
-                        <span className='opblock-summary-operation-id'>{originalOperationId || operationId}</span>
-                    ) : null}
-
-                    <svg className='arrow' width='20' height='20' aria-hidden='true' focusable='false'>
-                        <use
-                            href={isShown ? '#large-arrow-up' : '#large-arrow-down'}
-                            xlinkHref={isShown ? '#large-arrow-up' : '#large-arrow-down'}
+                    <span className='flex justify-end items-center'>
+                        <CommunityIcon
+                            style={{ marginRight: '10px' }}
+                            fill={isCommunity ? '#EE290D' : 'grey'}
+                            title={
+                                isCommunity
+                                    ? 'Available in BloodHound Community Edition'
+                                    : 'Not available in BloodHound Community Edition'
+                            }
+                            width='50px'
+                            height='33px'
                         />
-                    </svg>
+                        <EnterpriseIcon
+                            style={{ marginRight: '15px' }}
+                            fill={isEnterprise ? '#34318F' : 'grey'}
+                            title={
+                                isEnterprise
+                                    ? 'Available in BloodHound Enterprise'
+                                    : 'Not available in BloodHound Enterprise'
+                            }
+                            width='47px'
+                            height='30px'
+                        />
+
+                        {displayOperationId && (originalOperationId || operationId) ? (
+                            <span className='opblock-summary-operation-id'>{originalOperationId || operationId}</span>
+                        ) : null}
+
+                        <svg className='arrow' width='20' height='20' aria-hidden='true' focusable='false'>
+                            <use
+                                href={isShown ? '#large-arrow-up' : '#large-arrow-down'}
+                                xlinkHref={isShown ? '#large-arrow-up' : '#large-arrow-down'}
+                            />
+                        </svg>
+                    </span>
                 </button>
 
-                {allowAnonymous ? null : (
+                {allowAnonymous ? (
+                    <span className='w-5 ml-2.5'></span>
+                ) : (
                     <AuthorizeOperationBtn
                         isAuthorized={isAuthorized}
                         onClick={() => {
