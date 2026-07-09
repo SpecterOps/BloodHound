@@ -75,7 +75,7 @@ export const DomainInfo: React.FC<{ contextId: string; onDataError?: () => void 
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout stats={null} loading={true} />;
+        return <Layout stats={null} isLoading={true} />;
     }
 
     if (isError || !domainData || !domainData.data.length) {
@@ -84,7 +84,7 @@ export const DomainInfo: React.FC<{ contextId: string; onDataError?: () => void 
 
     const stats = domainData.data[0];
 
-    return <Layout stats={stats} loading={false} />;
+    return <Layout stats={stats} isLoading={false} />;
 };
 
 export const ActiveDirectoryPlatformInfo: React.FC<{ onDataError?: () => void }> = ({ onDataError = () => {} }) => {
@@ -95,7 +95,7 @@ export const ActiveDirectoryPlatformInfo: React.FC<{ onDataError?: () => void }>
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout stats={null} loading={true} />;
+        return <Layout stats={null} isLoading={true} />;
     }
 
     if (isError || !adPlatformData || !adPlatformData.data.length) {
@@ -104,13 +104,13 @@ export const ActiveDirectoryPlatformInfo: React.FC<{ onDataError?: () => void }>
 
     const stats = adPlatformData.data[0];
 
-    return <Layout stats={stats} loading={false} />;
+    return <Layout stats={stats} isLoading={false} />;
 };
 
 const Layout: React.FC<{
     stats: ActiveDirectoryQualityStat | null;
-    loading: boolean;
-}> = ({ stats, loading }) => {
+    isLoading: boolean;
+}> = ({ stats, isLoading }) => {
     const classes = useStyles();
     return (
         <Box position='relative'>
@@ -129,7 +129,7 @@ const Layout: React.FC<{
                                     icon={<NodeIcon nodeType={mapValue.kind} />}
                                     display={mapValue.displayText}
                                     value={value}
-                                    loading={loading}
+                                    isLoading={isLoading}
                                 />
                             );
                         })}
@@ -143,21 +143,21 @@ const Layout: React.FC<{
                             icon={<FontAwesomeIcon icon={faSignInAlt} />}
                             display='Sessions'
                             value={stats?.sessions}
-                            loading={loading}
+                            isLoading={isLoading}
                         />
 
                         <LoadContainer
                             icon={<FontAwesomeIcon icon={faStream} />}
                             display='ACEs'
                             value={stats?.acls}
-                            loading={loading}
+                            isLoading={isLoading}
                         />
 
                         <LoadContainer
                             icon={<FontAwesomeIcon icon={faUsers} />}
                             display='Relationships'
                             value={stats?.relationships}
-                            loading={loading}
+                            isLoading={isLoading}
                         />
                     </TableBody>
                 </Table>
@@ -169,7 +169,7 @@ const Layout: React.FC<{
                             icon={<FontAwesomeIcon icon={faChartPie} />}
                             display='Group Completeness'
                             value={stats?.local_group_completeness}
-                            loading={loading}
+                            isLoading={isLoading}
                             type='percent'
                         />
 
@@ -177,7 +177,7 @@ const Layout: React.FC<{
                             icon={<FontAwesomeIcon icon={faChartPie} />}
                             display='Session Completeness'
                             value={stats?.session_completeness}
-                            loading={loading}
+                            isLoading={isLoading}
                             type='percent'
                         />
                     </TableBody>

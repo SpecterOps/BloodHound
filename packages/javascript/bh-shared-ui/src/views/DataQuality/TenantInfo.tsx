@@ -80,7 +80,7 @@ export const TenantInfo: React.FC<{ contextId: string; onDataError?: () => void 
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout stats={null} loading={true} />;
+        return <Layout stats={null} isLoading={true} />;
     }
 
     if (isError || !tenantData || !tenantData.data.length) {
@@ -89,7 +89,7 @@ export const TenantInfo: React.FC<{ contextId: string; onDataError?: () => void 
 
     const stats = tenantData.data[0];
 
-    return <Layout stats={stats} loading={false} />;
+    return <Layout stats={stats} isLoading={false} />;
 };
 
 export const AzurePlatformInfo: React.FC<{ onDataError?: () => void }> = ({ onDataError = () => {} }) => {
@@ -100,7 +100,7 @@ export const AzurePlatformInfo: React.FC<{ onDataError?: () => void }> = ({ onDa
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout stats={null} loading={true} />;
+        return <Layout stats={null} isLoading={true} />;
     }
 
     if (isError || !platformData || !platformData.data.length) {
@@ -109,13 +109,13 @@ export const AzurePlatformInfo: React.FC<{ onDataError?: () => void }> = ({ onDa
 
     const stats = platformData.data[0];
 
-    return <Layout stats={stats} loading={false} />;
+    return <Layout stats={stats} isLoading={false} />;
 };
 
 const Layout: React.FC<{
     stats: AzureDataQualityStat | null;
-    loading: boolean;
-}> = ({ stats, loading }) => {
+    isLoading: boolean;
+}> = ({ stats, isLoading }) => {
     const classes = useStyles();
     return (
         <Box position='relative'>
@@ -125,13 +125,8 @@ const Layout: React.FC<{
                         {Object.keys(TenantMap).map((key) => {
                             if (key === 'tenants' && stats?.tenants === undefined) return null;
 
-                            console.log('stats', stats);
-
                             const mapValue = TenantMap[key as keyof typeof TenantMap];
                             const value = stats?.[key as keyof AzureDataQualityStat] as number;
-
-                            console.log('mapValue', mapValue);
-                            console.log('value', value);
 
                             return (
                                 <LoadContainer
@@ -139,7 +134,7 @@ const Layout: React.FC<{
                                     icon={<NodeIcon nodeType={mapValue.kind} />}
                                     display={mapValue.displayText}
                                     value={value}
-                                    loading={loading}
+                                    isLoading={isLoading}
                                 />
                             );
                         })}
@@ -153,7 +148,7 @@ const Layout: React.FC<{
                             icon={<FontAwesomeIcon icon={faUsers} />}
                             display='Relationships'
                             value={stats?.relationships}
-                            loading={loading}
+                            isLoading={isLoading}
                         />
                     </TableBody>
                 </Table>

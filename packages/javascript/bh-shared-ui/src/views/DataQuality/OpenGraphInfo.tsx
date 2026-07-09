@@ -64,7 +64,7 @@ export const OpenGraphInfo: React.FC<{ contextId: string; onDataError?: () => vo
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout nodeStats={null} relationshipStats={null} loading={true} />;
+        return <Layout nodeStats={null} relationshipStats={null} isLoading={true} />;
     }
 
     if (isError || !tenantData || !tenantData.data.length) {
@@ -73,7 +73,7 @@ export const OpenGraphInfo: React.FC<{ contextId: string; onDataError?: () => vo
 
     const { nodeStats, relationshipStats } = getLatestMetricStats(tenantData.data);
 
-    return <Layout nodeStats={nodeStats} relationshipStats={relationshipStats} loading={false} />;
+    return <Layout nodeStats={nodeStats} relationshipStats={relationshipStats} isLoading={false} />;
 };
 
 export const OpenGraphPlatformInfo: React.FC<{ contextType: string; onDataError?: () => void }> = ({
@@ -87,7 +87,7 @@ export const OpenGraphPlatformInfo: React.FC<{ contextType: string; onDataError?
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout nodeStats={null} relationshipStats={null} loading={true} />;
+        return <Layout nodeStats={null} relationshipStats={null} isLoading={true} />;
     }
 
     if (isError || !platformData || !platformData.data.length) {
@@ -96,7 +96,7 @@ export const OpenGraphPlatformInfo: React.FC<{ contextType: string; onDataError?
 
     const { nodeStats, relationshipStats } = getLatestMetricStats(platformData.data);
 
-    return <Layout nodeStats={nodeStats} relationshipStats={relationshipStats} loading={false} />;
+    return <Layout nodeStats={nodeStats} relationshipStats={relationshipStats} isLoading={false} />;
 };
 
 const MetricIcon: React.FC<{ metricName: string; metricType: any }> = ({ metricName, metricType }) => {
@@ -110,9 +110,9 @@ const MetricIcon: React.FC<{ metricName: string; metricType: any }> = ({ metricN
 const Layout: React.FC<{
     nodeStats: any;
     relationshipStats: any;
-    loading: boolean;
+    isLoading: boolean;
     headers?: boolean;
-}> = ({ nodeStats, relationshipStats, loading }) => {
+}> = ({ nodeStats, relationshipStats, isLoading }) => {
     const classes = useStyles();
     return (
         <Box position='relative'>
@@ -128,21 +128,21 @@ const Layout: React.FC<{
                                     icon={<MetricIcon metricName={key.metric_name} metricType={key.metric_type} />}
                                     display={key.metric_name}
                                     value={key.metric_value}
-                                    loading={loading}
+                                    isLoading={isLoading}
                                 />
                             );
                         })}
                     </TableBody>
                 </Table>
             </TableContainer>
-            <TableContainer component={Paper} className={cn(classes.container, { 'mt-4': !loading })}>
+            <TableContainer component={Paper} className={cn(classes.container, { 'mt-4': !isLoading })}>
                 <Table>
                     <TableBody>
                         <LoadContainer
                             icon={<FontAwesomeIcon icon={faUsers} />}
                             display='Relationships'
                             value={relationshipStats?.metric_value ?? 0}
-                            loading={loading}
+                            isLoading={isLoading}
                         />
                     </TableBody>
                 </Table>
