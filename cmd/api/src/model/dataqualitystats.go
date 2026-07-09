@@ -58,8 +58,8 @@ func (s DataQualityStats) IsSortable(column string) bool {
 // combined across environment instances for one collection run.
 type DataQualityAggregation struct {
 	RunID                   string                `json:"run_id"`
-	SchemaExtensionID       int32                 `json:"schema_extension_id"`
-	SchemaEnvironmentKindID int32                 `json:"schema_environment_kind_id"`
+	SchemaExtensionID       int32                 `json:"extension_id"`
+	SchemaEnvironmentKindID int32                 `json:"environment_kind_id"`
 	MetricType              DataQualityMetricType `json:"metric_type"`
 	MetricName              string                `json:"metric_name"`
 	MetricValue             float64               `json:"metric_value"`
@@ -76,19 +76,29 @@ type DataQualityAggregations []DataQualityAggregation
 
 func (s DataQualityAggregations) IsSortable(column string) bool {
 	switch column {
-	case "run_id",
-		"schema_extension_id",
-		"schema_environment_kind_id",
-		"metric_type",
-		"metric_name",
-		"metric_value",
-		"kind_id",
-		"id",
-		"created_at",
-		"updated_at",
-		"deleted_at":
+	case "created_at",
+		"updated_at":
 		return true
 	default:
 		return false
+	}
+}
+
+func (s DataQualityAggregations) IsStringColumn(column string) bool {
+	switch column {
+	case "run_id",
+		"metric_name",
+		"metric_type":
+		return true
+	default:
+		return false
+	}
+}
+
+func (s DataQualityAggregations) ValidFilters() map[string][]FilterOperator {
+	return map[string][]FilterOperator{
+		"schema_extension_id":        {Equals, NotEquals},
+		"schema_environment_kind_id": {Equals, NotEquals},
+		"created_at":                 {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 	}
 }
