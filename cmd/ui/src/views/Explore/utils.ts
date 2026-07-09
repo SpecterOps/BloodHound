@@ -239,7 +239,7 @@ const initGraphEdges = (
                 label: edge.label,
                 groupPosition: 0,
                 groupSize: 1,
-                exploreGraphId: edge.exploreGraphId || key,
+                exploreGraphId: key,
                 forceLabel: true,
                 ...themedOptions.labels,
             };
@@ -265,7 +265,7 @@ const initGraphEdges = (
                 edgeParams.groupSize = groupSize;
             }
 
-            graph.addEdgeWithKey(key, edge.source, edge.target, edgeParams);
+            graph.addEdgeWithKey(edge.id, edge.source, edge.target, edgeParams);
         }
     }
 };
