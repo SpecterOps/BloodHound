@@ -25,16 +25,16 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
-	"github.com/specterops/bloodhound/packages/go/sorts"
+	"github.com/specterops/bloodhound/packages/go/params"
 )
 
 // SortMiddleware parses the sort_by query parameters from the request, validates them against the supplied
-// sort.Sortable definition, and enriches the BloodHound context with the resulting sort.SortItems.
+// params.Sortable definition, and enriches the BloodHound context with the resulting params.SortItems.
 //
 // When sortable is nil the middleware performs no parsing and passes the request through unchanged. If a
 // sort field is empty or references a field that cannot be sorted, the middleware writes a 400 response
 // and halts the chain.
-func SortMiddleware(sortable sorts.Sortable) mux.MiddlewareFunc {
+func SortMiddleware(sortable params.Sortable) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			if sortable == nil {
@@ -42,7 +42,7 @@ func SortMiddleware(sortable sorts.Sortable) mux.MiddlewareFunc {
 				return
 			}
 
-			parser := sorts.NewQueryParameterSortParser()
+			parser := params.NewQueryParameterSortParser()
 			if parsedSort, err := parser.ParseAndValidate(request.URL.Query(), sortable); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, sortErrorMessage(err), request), response)
 				return
@@ -59,17 +59,16 @@ func SortMiddleware(sortable sorts.Sortable) mux.MiddlewareFunc {
 // sortErrorMessage maps a sort validation failure to the appropriate API error response detail, preserving
 // the offending field in the message where available.
 func sortErrorMessage(err error) string {
-	var validationErr *sorts.ValidationError
-	if !errors.As(err, &validationErr) {
+	if validationErr, ok := errors.AsType[*params.SortValidationError](err); !ok {
 		return api.ErrorResponseDetailsNotSortable
-	}
-
-	switch {
-	case errors.Is(validationErr, sorts.ErrFieldEmpty):
-		return api.ErrorResponseEmptySortParameter
-	case errors.Is(validationErr, sorts.ErrFieldNotSortable):
-		return fmt.Sprintf("%s: %s", api.ErrorResponseDetailsNotSortable, validationErr.Field)
-	default:
-		return api.ErrorResponseDetailsNotSortable
+	} else {
+		switch {
+		case errors.Is(validationErr, params.ErrFieldEmpty):
+			return api.ErrorResponseEmptySortParameter
+		case errors.Is(validationErr, params.ErrFieldNotSortable):
+			return fmt.Sprintf("%s: %s", api.ErrorResponseDetailsNotSortable, validationErr.Field)
+		default:
+			return api.ErrorResponseDetailsNotSortable
+		}
 	}
 }

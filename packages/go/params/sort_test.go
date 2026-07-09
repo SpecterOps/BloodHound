@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package sorts_test
+package params_test
 
 import (
 	"net/url"
 	"testing"
 
-	"github.com/specterops/bloodhound/packages/go/sorts"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/stretchr/testify/require"
 )
 
@@ -34,9 +34,9 @@ func (s fakeSortable) IsSortable(field string) bool {
 	return s.sortableFields[field]
 }
 
-func TestParseAndValidate_Parsing(t *testing.T) {
+func TestSortParseAndValidate_Parsing(t *testing.T) {
 	var (
-		parser   = sorts.NewQueryParameterSortParser()
+		parser   = params.NewQueryParameterSortParser()
 		sortable = fakeSortable{sortableFields: map[string]bool{"objectid": true, "name": true}}
 	)
 
@@ -46,7 +46,7 @@ func TestParseAndValidate_Parsing(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, parsed, 1)
 		require.Equal(t, "objectid", parsed[0].Field)
-		require.Equal(t, sorts.Ascending, parsed[0].Direction)
+		require.Equal(t, params.Ascending, parsed[0].Direction)
 	})
 
 	t.Run("parses a descending field denoted by a leading -", func(t *testing.T) {
@@ -54,7 +54,7 @@ func TestParseAndValidate_Parsing(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, parsed, 1)
 		require.Equal(t, "objectid", parsed[0].Field)
-		require.Equal(t, sorts.Descending, parsed[0].Direction)
+		require.Equal(t, params.Descending, parsed[0].Direction)
 	})
 
 	t.Run("parses multiple fields in order", func(t *testing.T) {
@@ -62,9 +62,9 @@ func TestParseAndValidate_Parsing(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, parsed, 2)
 		require.Equal(t, "objectid", parsed[0].Field)
-		require.Equal(t, sorts.Ascending, parsed[0].Direction)
+		require.Equal(t, params.Ascending, parsed[0].Direction)
 		require.Equal(t, "name", parsed[1].Field)
-		require.Equal(t, sorts.Descending, parsed[1].Direction)
+		require.Equal(t, params.Descending, parsed[1].Direction)
 	})
 
 	t.Run("returns an empty result when no sort_by parameter is supplied", func(t *testing.T) {
@@ -74,32 +74,32 @@ func TestParseAndValidate_Parsing(t *testing.T) {
 	})
 }
 
-func TestParseAndValidate_Errors(t *testing.T) {
+func TestSortParseAndValidate_Errors(t *testing.T) {
 	var (
-		parser   = sorts.NewQueryParameterSortParser()
+		parser   = params.NewQueryParameterSortParser()
 		sortable = fakeSortable{sortableFields: map[string]bool{"objectid": true}}
 	)
 
 	t.Run("ErrFieldNotSortable for an unsortable field, preserving the offending field", func(t *testing.T) {
 		_, err := parser.ParseAndValidate(url.Values{"sort_by": {"invalidField"}}, sortable)
-		require.ErrorIs(t, err, sorts.ErrFieldNotSortable)
+		require.ErrorIs(t, err, params.ErrFieldNotSortable)
 
-		var validationError *sorts.ValidationError
+		var validationError *params.SortValidationError
 		require.ErrorAs(t, err, &validationError)
 		require.Equal(t, "invalidField", validationError.Field)
 	})
 
 	t.Run("ErrFieldNotSortable applies to the field with its descending prefix stripped", func(t *testing.T) {
 		_, err := parser.ParseAndValidate(url.Values{"sort_by": {"-invalidField"}}, sortable)
-		require.ErrorIs(t, err, sorts.ErrFieldNotSortable)
+		require.ErrorIs(t, err, params.ErrFieldNotSortable)
 
-		var validationError *sorts.ValidationError
+		var validationError *params.SortValidationError
 		require.ErrorAs(t, err, &validationError)
 		require.Equal(t, "invalidField", validationError.Field)
 	})
 
 	t.Run("ErrFieldEmpty for an empty sort_by value", func(t *testing.T) {
 		_, err := parser.ParseAndValidate(url.Values{"sort_by": {""}}, sortable)
-		require.ErrorIs(t, err, sorts.ErrFieldEmpty)
+		require.ErrorIs(t, err, params.ErrFieldEmpty)
 	})
 }

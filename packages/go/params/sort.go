@@ -14,14 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// Package sort provides a storage-agnostic model for parsing and validating sort query parameters.
+// This file provides a storage-agnostic model for parsing and validating sort query parameters.
 // It intentionally carries no knowledge of how the resulting order is ultimately applied (SQL, graph,
 // etc.) so that it can be reused across the API without coupling to any particular persistence layer.
-package sorts
+
+package params
 
 import (
 	"errors"
 	"fmt"
+	"net/url"
+	"strings"
 )
 
 // SortDirection identifies the ordering applied to a sorted field.
@@ -37,22 +40,22 @@ const (
 const DescendingPrefix = "-"
 
 // Validation sentinels classify why a set of sort query parameters failed validation. Callers should
-// classify failures with errors.Is and may extract the offending field via a *ValidationError using
+// classify failures with errors.Is and may extract the offending field via a *SortValidationError using
 // errors.As. These are intentionally free of any transport- or presentation-specific wording.
 var (
 	ErrFieldEmpty       = errors.New("sort column cannot be empty")
 	ErrFieldNotSortable = errors.New("column cannot be sorted")
 )
 
-// ValidationError describes a sort validation failure. It wraps one of the validation sentinels so it can
+// SortValidationError describes a sort validation failure. It wraps one of the validation sentinels so it can
 // be classified with errors.Is, while also carrying the offending field so callers can build their own
 // messaging without parsing strings.
-type ValidationError struct {
+type SortValidationError struct {
 	Err   error
 	Field string
 }
 
-func (s *ValidationError) Error() string {
+func (s *SortValidationError) Error() string {
 	if s.Field != "" {
 		return fmt.Sprintf("%s: %s", s.Err, s.Field)
 	}
@@ -60,7 +63,7 @@ func (s *ValidationError) Error() string {
 	return s.Err.Error()
 }
 
-func (s *ValidationError) Unwrap() error {
+func (s *SortValidationError) Unwrap() error {
 	return s.Err
 }
 
@@ -76,4 +79,46 @@ type SortItems []SortItem
 // Sortable is implemented by types that expose which fields may be sorted on.
 type Sortable interface {
 	IsSortable(field string) bool
+}
+
+// QueryParameter is the query parameter name from which sort fields are read.
+const QueryParameter = "sort_by"
+
+// QueryParameterSortParser extracts sort items from request query parameters.
+type QueryParameterSortParser struct{}
+
+// NewQueryParameterSortParser returns a parser ready to parse and validate sort query parameters.
+func NewQueryParameterSortParser() QueryParameterSortParser {
+	return QueryParameterSortParser{}
+}
+
+// ParseAndValidate parses the sort_by query parameters and validates them against the Sortable schema in a
+// single pass, returning an ordered SortItems value. A leading "-" selects a descending ordering for the
+// referenced field; its absence selects an ascending ordering. On failure it returns a *SortValidationError
+// wrapping one of the validation sentinels.
+func (s QueryParameterSortParser) ParseAndValidate(values url.Values, sortable Sortable) (SortItems, error) {
+	var (
+		requestedFields = values[QueryParameter]
+		parsedSort      = make(SortItems, 0, len(requestedFields))
+	)
+
+	for _, requestedField := range requestedFields {
+		if requestedField == "" || requestedField == "-" {
+			return nil, &SortValidationError{Err: ErrFieldEmpty}
+		}
+
+		sortItem := SortItem{Field: requestedField, Direction: Ascending}
+		if strings.HasPrefix(requestedField, DescendingPrefix) {
+			sortItem.Field = strings.TrimPrefix(requestedField, DescendingPrefix)
+			sortItem.Direction = Descending
+		}
+
+		if !sortable.IsSortable(sortItem.Field) {
+			return nil, &SortValidationError{Err: ErrFieldNotSortable, Field: sortItem.Field}
+		}
+
+		parsedSort = append(parsedSort, sortItem)
+	}
+
+	return parsedSort, nil
 }
