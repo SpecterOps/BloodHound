@@ -1,0 +1,104 @@
+.swagger-ui {
+    .opblock-summary {
+      .opblock-summary-method {
+        color: #000 !important;
+        // color: var(--text-contrast);
+      }
+    }
+
+    // swagger-ui renders each tag name as a bare text node sibling of the
+    // <span> wrapping its .opblock-tag-section, duplicating the h3 heading. CSS
+    // cannot target text nodes directly, so font-size:0 on the container collapses
+    // the stray text; the element children are restored below so only the duplicate
+    // text is hidden.
+    & > div:nth-child(2) > div:nth-child(2) {
+        font-size: 0;
+      }
+  
+    a.nostyle,
+    div.renderedMarkdown > p,
+    .response-col_status,
+    .col_header,
+    div.parameter__name,
+    .parameter__in,
+    .opblock div.opblock-summary-description,
+    div > small,
+    li.tabitem,
+    .response-col_links,
+    .opblock-description-wrapper > p,
+    .btn-group > button,
+    textarea,
+    select,
+    .parameter__type,
+    .prop-format {
+      color: var(--text-light);
+    }
+  
+    input,
+    textarea,
+    select,
+    .models,
+    .filter-container .operation-filter-input {
+      background-color: var(--neutral-50);
+      border: 1px solid var(--input-border-default);
+  
+      &:hover,
+      &:focus {
+        border-color: var(--link-main);
+      }
+  
+      &:focus {
+        outline: 1px solid var(--link-main);
+      }
+    }
+  
+    .models {
+      h4 {
+        border-bottom-color: var(--input-border-default);
+      }
+  
+      span,
+      table {
+        color: var(--text-main);
+      }
+  
+      svg {
+        fill: var(--text-main);
+      }
+  
+      model-box {
+        background-color: var(--neutral-50);
+      }
+    }
+  
+    .parameter__name.required::after {
+      color: var(--status-error-main);
+    }
+  
+    .responses-inner {
+      h4,
+      h5 {
+        color: var(--text-main);
+      }
+    }
+  
+    svg {
+      fill: var(--text-main);
+    }
+  
+    .opblock-deprecated {
+      .opblock-title_normal {
+        color: var(--text-main);
+      }
+    }
+  
+    .opblock-section-header {
+      background-color: var(--neutral-50);
+  
+      h4,
+      .btn {
+        color: var(--text-main);
+      }
+    }
+  }
+  

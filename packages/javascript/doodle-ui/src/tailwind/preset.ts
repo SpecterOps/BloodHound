@@ -41,6 +41,7 @@ export default {
                 'tertiary-variant': 'var(--tertiary-variant)',
 
                 'text-main': 'var(--text-main)',
+                'text-light': 'var(--text-light)',
                 'text-disabled': 'var(--text-disabled)',
 
                 disabled: 'var(--disabled)',
@@ -54,6 +55,7 @@ export default {
 
                 'neutral-50': 'var(--neutral-50)',
                 'neutral-400': 'var(--neutral-400)',
+                'neutral-700': 'var(--neutral-700)',
 
                 // Legacy
                 'neutral-1': 'var(--neutral-1)',
@@ -84,7 +86,6 @@ export default {
 
                 // contrast: 'var(--common-dark)',
 
-                'text-light': 'var(--text-light)',
                 // 'text-contrast': 'var(--text-contrast)',
                 // 'text-primary': 'var(--text-primary)',
                 // 'text-secondary': 'var(--text-secondary)',
@@ -95,7 +96,7 @@ export default {
                 // 'neutral-400': 'var(--neutral-400)',
                 // 'neutral-500': 'var(--neutral-500)',
                 // 'neutral-600': 'var(--neutral-600)',
-                // 'neutral-700': 'var(--neutral-700)',
+
                 // 'neutral-800': 'var(--neutral-800)',
                 // 'neutral-900': 'var(--neutral-900)',
 
@@ -138,7 +139,7 @@ export default {
                 // 'input-label': 'var(--input-label)',
                 // 'input-fill': 'var(--input-fill)',
                 // 'input-fill-disabled': 'var(--input-fill-disabled)',
-                // 'input-border-default': 'var(--input-border-default)',
+                'input-border-default': 'var(--input-border-default)',
                 // 'input-border-hover': 'var(--input-border-hover)',
                 // 'input-border-disabled': 'var(--input-border-disabled)',
                 // 'input-placeholder-text': 'var(--input-placeholder-text)',
