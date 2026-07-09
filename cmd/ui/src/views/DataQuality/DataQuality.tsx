@@ -16,50 +16,16 @@
 
 import { Alert, AlertTitle, Box, Grid, Link } from '@mui/material';
 import {
-    ActiveDirectoryPlatformInfo,
-    AzurePlatformInfo,
-    DomainInfo,
+    getStatsComponent,
     LoadingOverlay,
-    OpenGraphInfo,
-    OpenGraphPlatformInfo,
     PageWithTitle,
     SelectedEnvironment,
     SimpleEnvironmentSelector,
-    TenantInfo,
     useInitialEnvironment,
 } from 'bh-shared-ui';
 import { Typography } from 'doodle-ui';
 import { useEffect, useState } from 'react';
 import { dataCollectionMessage } from './utils';
-
-const getStatsComponent = (selectedEnvironment: SelectedEnvironment | null, dataErrorHandler: () => void) => {
-    const contextType = selectedEnvironment?.type;
-    const contextId = selectedEnvironment?.id;
-    switch (contextType) {
-        case 'active-directory':
-            if (!contextId) return null;
-            return <DomainInfo contextId={contextId} onDataError={dataErrorHandler} />;
-        case 'active-directory-platform':
-            return <ActiveDirectoryPlatformInfo onDataError={dataErrorHandler} />;
-        case 'azure':
-            if (!contextId) return null;
-            return <TenantInfo contextId={contextId} onDataError={dataErrorHandler} />;
-        case 'azure-platform':
-            return <AzurePlatformInfo onDataError={dataErrorHandler} />;
-        default:
-            if (!contextType) return null;
-            if (contextType.endsWith('-platform')) {
-                return (
-                    <OpenGraphPlatformInfo
-                        contextType={contextType.replace('-platform', '')}
-                        onDataError={dataErrorHandler}
-                    />
-                );
-            }
-            if (!contextId) return null;
-            return <OpenGraphInfo contextId={contextId} onDataError={dataErrorHandler} />;
-    }
-};
 
 const DataQuality: React.FC = () => {
     const { data: initialEnvironment, isLoading } = useInitialEnvironment({ orderBy: 'name' });

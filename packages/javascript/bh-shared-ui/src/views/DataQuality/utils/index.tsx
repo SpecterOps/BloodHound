@@ -14,12 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './DomainInfo';
+import { getStatsComponent } from './getStatsComponent';
 
-export { default as LoadContainer } from './LoadContainer';
-
-export * from './TenantInfo';
-
-export * from './OpenGraphInfo';
-
-export { getStatsComponent } from './utils';
+export { getStatsComponent };
