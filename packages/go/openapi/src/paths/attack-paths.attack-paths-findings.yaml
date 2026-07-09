@@ -72,10 +72,9 @@ get:
       in: query
       schema:
         $ref: "./../schemas/api.params.predicate.filter.string.yaml"
-    - name: asset_group_tag_id
+    - name: zone_id
       description: |
-        Filter by one or more asset group tag identifiers. Repeat the parameter to include multiple asset group tags — results are the union of all specified values.
-        Cannot be combined with the `zone_id` filter.
+        Filter by one or more zone identifiers. Repeat the parameter to include multiple zones — results are the union of all specified values.
       in: query
       style: form
       explode: true
@@ -83,11 +82,6 @@ get:
         type: array
         items:
           type: integer
-    - name: zone_id
-      description: Filter by a single zone identifier. Cannot be combined with `asset_group_tag_id`.
-      in: query
-      schema:
-        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
     - name: zone_name
       description: Filter by zone name (e.g. "Tier Zero").
       in: query
