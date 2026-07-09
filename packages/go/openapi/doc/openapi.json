@@ -14094,7 +14094,7 @@
       "get": {
         "operationId": "GetDataQualityAggregations",
         "summary": "Get data quality aggregations",
-        "description": "Returns data quality metric counts aggregated per environment kind for an OpenGraph schema extension, combined across environment instances for each collection run. Results can be filtered, sorted, and paginated.\n",
+        "description": "Returns data quality metric counts aggregated per environment kind, optionally scoped to an OpenGraph schema extension, combined across environment instances for each collection run. Results can be filtered, sorted, and paginated.\n",
         "tags": [
           "Data Quality",
           "Community",
@@ -14119,14 +14119,29 @@
             }
           },
           {
-            "$ref": "#/components/parameters/query.created-at"
-          },
-          {
             "name": "sort_by",
             "description": "Sortable columns are created_at, updated_at.\n",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "start",
+            "description": "Beginning datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime minus 30 days",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "end",
+            "description": "Ending datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
             }
           },
           {
@@ -14145,6 +14160,9 @@
                   "allOf": [
                     {
                       "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "$ref": "#/components/schemas/api.response.time-window"
                     },
                     {
                       "type": "object",
@@ -22514,7 +22532,10 @@
                 "format": "double"
               },
               "kind_id": {
-                "$ref": "#/components/schemas/null.int32"
+                "description": "The kind ID for the counted node kind. Present when `metric_type` is `node`; otherwise null.",
+                "type": "integer",
+                "format": "int32",
+                "nullable": true
               }
             }
           }
