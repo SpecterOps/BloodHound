@@ -410,6 +410,7 @@ export type GraphNodeSpreadWithProperties = Partial<Omit<GraphNode, 'properties'
 export type GraphNodes = Record<string, GraphNode>;
 
 export type GraphEdge = {
+    id: number;
     source: string;
     target: string;
     label: string;
@@ -443,6 +444,7 @@ export type StyledGraphNode = {
 };
 
 export type StyledGraphEdge = {
+    id: number;
     color: string;
     data: Record<string, any>;
     end1?: {
