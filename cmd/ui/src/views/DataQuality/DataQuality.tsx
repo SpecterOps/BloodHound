@@ -84,7 +84,6 @@ const DataQuality: React.FC = () => {
                             type: environment?.type ?? null,
                             id: environment?.id ?? null,
                         }}
-                        includeOpenGraph={true}
                         errorMessage={environmentErrorMessage}
                         onSelect={handleSelect}
                     />
@@ -110,7 +109,6 @@ const DataQuality: React.FC = () => {
                         type: selectedEnvironment?.type ?? null,
                         id: selectedEnvironment?.id ?? null,
                     }}
-                    includeOpenGraph={true}
                     errorMessage={environmentErrorMessage}
                     onSelect={handleSelect}
                 />

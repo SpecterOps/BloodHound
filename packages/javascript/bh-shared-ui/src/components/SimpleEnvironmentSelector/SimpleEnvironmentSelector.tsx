@@ -30,6 +30,7 @@ import {
 } from 'doodle-ui';
 import { Environment } from 'js-client-library';
 import React, { ReactNode, useMemo, useState } from 'react';
+import { useFeatureFlag } from '../../hooks';
 import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments';
 import { usePZPathParams } from '../../hooks/usePZParams/usePZPathParams';
 import {
@@ -71,17 +72,18 @@ const selectedText = (
 const SimpleEnvironmentSelector: React.FC<{
     align?: 'center' | 'start' | 'end';
     errorMessage?: ReactNode;
-    includeOpenGraph?: boolean;
     onSelect?: (newValue: { type: SelectorValueTypes | null; id: string | null }) => void;
     selected: SelectedEnvironment;
     variant?: ButtonProps['variant'];
-}> = ({ align = 'start', errorMessage = '', includeOpenGraph = false, onSelect = () => {}, selected, variant }) => {
+}> = ({ align = 'start', errorMessage = '', onSelect = () => {}, selected, variant }) => {
     const [open, setOpen] = useState<boolean>(false);
     const [searchInput, setSearchInput] = useState<string>('');
     const { data: availableEnvironments, isLoading, isError } = useAvailableEnvironments();
     const { isPrivilegeZonesPage } = usePZPathParams();
+    const { data: openGraphEnabled } = useFeatureFlag('opengraph_extension_management');
 
     const environmentInfo = getOpenGraphEnvironmentInfoMap(availableEnvironments);
+    const hasOpenGraphEnabled = openGraphEnabled?.enabled;
 
     const filteredEnvironments = useMemo(
         () =>
@@ -89,11 +91,11 @@ const SimpleEnvironmentSelector: React.FC<{
                 search: searchInput,
                 filters: {
                     // All environments are included when there are no specific environemt filters
-                    ...(includeOpenGraph ? {} : { 'active-directory': true, azure: true }),
+                    ...(hasOpenGraphEnabled ? {} : { 'active-directory': true, azure: true }),
                     yes: true,
                 },
             }).sort(sortEnvironmentsByName),
-        [availableEnvironments, includeOpenGraph, searchInput]
+        [availableEnvironments, hasOpenGraphEnabled, searchInput]
     );
 
     const environmentTypes = useMemo(
