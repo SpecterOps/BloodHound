@@ -16,7 +16,7 @@
 
 import { faStream, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { Box, Paper, Table, TableBody, TableContainer } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import React, { useEffect } from 'react';
 import { NodeIcon } from '../../components';
@@ -53,9 +53,8 @@ const getLatestMetricStats = (data: any[]) => {
     return { nodeStats, relationshipStats };
 };
 
-export const OpenGraphInfo: React.FC<{ contextId: string; headers?: boolean; onDataError?: () => void }> = ({
+export const OpenGraphInfo: React.FC<{ contextId: string; onDataError?: () => void }> = ({
     contextId,
-    headers = false,
     onDataError = () => {},
 }) => {
     const { data: tenantData, isLoading, isError } = useOpenGraphDataQualityStatsQuery(contextId);
@@ -65,7 +64,7 @@ export const OpenGraphInfo: React.FC<{ contextId: string; headers?: boolean; onD
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout nodeStats={null} relationshipStats={null} headers={headers} loading={true} />;
+        return <Layout nodeStats={null} relationshipStats={null} loading={true} />;
     }
 
     if (isError || !tenantData || !tenantData.data.length) {
@@ -74,7 +73,7 @@ export const OpenGraphInfo: React.FC<{ contextId: string; headers?: boolean; onD
 
     const { nodeStats, relationshipStats } = getLatestMetricStats(tenantData.data);
 
-    return <Layout nodeStats={nodeStats} relationshipStats={relationshipStats} headers={headers} loading={false} />;
+    return <Layout nodeStats={nodeStats} relationshipStats={relationshipStats} loading={false} />;
 };
 
 export const OpenGraphPlatformInfo: React.FC<{ contextType: string; onDataError?: () => void }> = ({
@@ -113,20 +112,12 @@ const Layout: React.FC<{
     relationshipStats: any;
     loading: boolean;
     headers?: boolean;
-}> = ({ nodeStats, relationshipStats, loading, headers }) => {
+}> = ({ nodeStats, relationshipStats, loading }) => {
     const classes = useStyles();
     return (
         <Box position='relative'>
             <TableContainer className={classes.container}>
                 <Table>
-                    {headers && (
-                        <TableHead className={classes.print}>
-                            <TableRow>
-                                <TableCell align={'left'}>Item</TableCell>
-                                <TableCell align={'right'}>Result</TableCell>
-                            </TableRow>
-                        </TableHead>
-                    )}
                     <TableBody>
                         {nodeStats?.map((key: any) => {
                             if (key.metric_kind_id === key.environment_kind_id) return null;
