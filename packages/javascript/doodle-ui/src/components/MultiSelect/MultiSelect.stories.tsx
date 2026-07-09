@@ -52,6 +52,7 @@ export const Default: Story = {
         value: [],
         onValueChange: () => {},
         placeholder: 'All Zones',
+        selectAllLabel: 'All Zones',
     },
     render: (args) => {
         const [value, setValue] = useState<string[]>(args.value ?? []);
@@ -62,24 +63,6 @@ export const Default: Story = {
             </div>
         );
     },
-};
-
-export const Trigger: Story = {
-    args: { options: [], value: [], onValueChange: () => {} },
-    render: () => (
-        <div className='w-60'>
-            <MultiSelectTrigger>Placeholder</MultiSelectTrigger>
-        </div>
-    ),
-};
-
-export const TriggerOpen: Story = {
-    args: { options: [], value: [], onValueChange: () => {} },
-    render: () => (
-        <div className='w-60'>
-            <MultiSelectTrigger open>Placeholder</MultiSelectTrigger>
-        </div>
-    ),
 };
 
 export const TriggerError: Story = {
@@ -131,34 +114,23 @@ export const OptionRows: Story = {
     ),
 };
 
-export const Placeholder: Story = {
+export const WithSelectAll: Story = {
     args: {
         options: itemOptions,
         value: [],
         onValueChange: () => {},
-        placeholder: 'Select',
+        placeholder: 'All Zones',
+        selectAllLabel: 'All Zones',
     },
-    render: renderMultiSelect,
-};
+    render: (args) => {
+        const [value, setValue] = useState<string[]>(args.value ?? []);
 
-export const OneSelected: Story = {
-    args: {
-        options: itemOptions,
-        value: ['option-a'],
-        onValueChange: () => {},
-        placeholder: 'Select',
+        return (
+            <div className='w-60'>
+                <MultiSelect {...args} value={value} onValueChange={setValue} />
+            </div>
+        );
     },
-    render: renderMultiSelect,
-};
-
-export const MultipleSelected: Story = {
-    args: {
-        options: itemOptions,
-        value: ['option-a', 'option-b'],
-        onValueChange: () => {},
-        placeholder: 'Select',
-    },
-    render: renderMultiSelect,
 };
 
 export const Disabled: Story = {

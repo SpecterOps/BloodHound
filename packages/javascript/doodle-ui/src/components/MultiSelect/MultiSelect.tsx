@@ -38,6 +38,9 @@ const MultiSelectTriggerVariants = cva(
     'flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm border-input-border-default bg-input-fill text-input-placeholder-text focus:outline-none focus-visible:focus-ring data-[state=open]:focus-ring enabled:hover:border-input-border-hover enabled:hover:bg-secondary enabled:hover:text-white disabled:cursor-not-allowed disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-icon-disabled aria-[invalid=true]:border-status-error-main'
 );
 
+const multiSelectRowStyles =
+    'flex items-center gap-2 mx-1 p-2 py-2 rounded-lg cursor-pointer hover:bg-secondary hover:text-white';
+
 interface MultiSelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     open?: boolean;
 }
@@ -60,6 +63,7 @@ interface MultiSelectProps {
     disabled?: boolean;
     error?: boolean;
     className?: string;
+    selectAllLabel?: string;
 }
 
 interface MultiSelectOption {
@@ -74,6 +78,12 @@ interface MultiSelectOptionRowProps {
     onSelect: (value: string) => void;
 }
 
+interface MultiSelectActionRowProps {
+    checked: boolean;
+    label: string;
+    onSelect: () => void;
+}
+
 const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRowProps) => (
     <div
         role='option'
@@ -81,7 +91,7 @@ const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRo
         aria-disabled={option.disabled}
         tabIndex={option.disabled ? -1 : 0}
         className={cn(
-            'flex items-center gap-2 mx-1 p-2 py-2 rounded-lg cursor-pointer hover:bg-secondary hover:text-white',
+            multiSelectRowStyles,
             option.disabled && 'cursor-not-allowed opacity-50 hover:bg-transparent hover:text-inherit'
         )}
         onClick={() => !option.disabled && onSelect(option.value)}
@@ -102,10 +112,42 @@ const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRo
     </div>
 );
 
+const MultiSelectActionRow = ({ checked, label, onSelect }: MultiSelectActionRowProps) => (
+    <div
+        role='option'
+        aria-selected={checked}
+        tabIndex={0}
+        className={multiSelectRowStyles}
+        onClick={onSelect}
+        onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onSelect();
+            }
+        }}>
+        <Checkbox
+            tabIndex={-1}
+            checked={checked}
+            onClick={(event) => event.stopPropagation()}
+            onCheckedChange={onSelect}
+        />
+        <span className='truncate text-sm'>{label}</span>
+    </div>
+);
+
 /**
  * Description for MultiSelect
  */
-const MultiSelect = ({ options, value, onValueChange, placeholder, disabled, error, className }: MultiSelectProps) => {
+const MultiSelect = ({
+    options,
+    value,
+    onValueChange,
+    placeholder,
+    disabled,
+    error,
+    className,
+    selectAllLabel,
+}: MultiSelectProps) => {
     const [open, setOpen] = React.useState(false);
 
     const handleSelect = (selectedValue: string) => {
@@ -138,6 +180,24 @@ const MultiSelect = ({ options, value, onValueChange, placeholder, disabled, err
 
     const triggerText = getMultiSelectTriggerText(options, value, placeholder);
 
+    const selectableValues = options.filter((option) => !option.disabled).map((option) => option.value);
+
+    const hasSelectedAllOptions =
+        selectableValues.length > 0 && selectableValues.every((optionValue) => value.includes(optionValue));
+
+    const handleSelectAll = () => {
+        if (hasSelectedAllOptions) {
+            const updatedValues = value.filter((selectedValue) => !selectableValues.includes(selectedValue));
+            onValueChange(updatedValues);
+            return;
+        }
+
+        const unselectedValues = selectableValues.filter((optionValue) => !value.includes(optionValue));
+        const updatedValues = [...value, ...unselectedValues];
+
+        onValueChange(updatedValues);
+    };
+
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
@@ -152,6 +212,13 @@ const MultiSelect = ({ options, value, onValueChange, placeholder, disabled, err
             <PopoverContent className='p-0 w-[var(--radix-popover-trigger-width)]' align='start'>
                 <ScrollArea className='max-h-60'>
                     <div role='listbox' aria-multiselectable='true' className='py-1'>
+                        {selectAllLabel && (
+                            <MultiSelectActionRow
+                                checked={hasSelectedAllOptions}
+                                label={selectAllLabel}
+                                onSelect={handleSelectAll}
+                            />
+                        )}
                         {options.map((option) => (
                             <MultiSelectOptionRow
                                 key={option.value}
