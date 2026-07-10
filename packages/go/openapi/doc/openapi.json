@@ -17936,8 +17936,8 @@
             }
           },
           {
-            "name": "asset_group_tag_id",
-            "description": "Filter by one or more asset group tag identifiers. Repeat the parameter to include multiple asset group tags — results are the union of all specified values.\nCannot be combined with the `zone_id` filter.\n",
+            "name": "zone_id",
+            "description": "Filter by one or more zone identifiers. Repeat the parameter to include multiple zones — results are the union of all specified values.\n",
             "in": "query",
             "style": "form",
             "explode": true,
@@ -17946,14 +17946,6 @@
               "items": {
                 "type": "integer"
               }
-            }
-          },
-          {
-            "name": "zone_id",
-            "description": "Filter by a single zone identifier. Cannot be combined with `asset_group_tag_id`.",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.string"
             }
           },
           {
