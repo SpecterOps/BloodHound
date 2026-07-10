@@ -15,10 +15,13 @@
 
 // SPDX-License-Identifier: Apache-2.0
 import { cva } from 'class-variance-authority';
+import { Search } from 'lucide-react';
 import * as React from 'react';
 import { Checkbox } from '../Checkbox';
+import { Input } from '../Input';
 import { Popover, PopoverContent, PopoverTrigger } from '../Popover';
 import { ScrollArea } from '../ScrollArea';
+import { Typography } from '../Typography';
 import { cn } from '../utils';
 
 // TODO: move to doodle-ui icons system in follow-up ticket
@@ -64,6 +67,9 @@ interface MultiSelectProps {
     error?: boolean;
     className?: string;
     selectAllLabel?: string;
+    isSearchable?: boolean;
+    searchPlaceholder?: string;
+    noResultsText?: string;
 }
 
 interface MultiSelectOption {
@@ -147,8 +153,12 @@ const MultiSelect = ({
     error,
     className,
     selectAllLabel,
+    isSearchable = false,
+    searchPlaceholder = 'Search',
+    noResultsText = 'No matches',
 }: MultiSelectProps) => {
     const [open, setOpen] = React.useState(false);
+    const [searchValue, setSearchValue] = React.useState('');
 
     const handleSelect = (selectedValue: string) => {
         const isSelected = value.includes(selectedValue);
@@ -178,6 +188,7 @@ const MultiSelect = ({
         return `${value.length} Selected`;
     };
 
+    // select all/clear
     const triggerText = getMultiSelectTriggerText(options, value, placeholder);
 
     const selectableValues = options.filter((option) => !option.disabled).map((option) => option.value);
@@ -198,6 +209,15 @@ const MultiSelect = ({
         onValueChange(updatedValues);
     };
 
+    //search
+    const searchTerm = searchValue.trim().toLowerCase();
+
+    const filteredOptions = searchTerm
+        ? options.filter((option) => option.label.toLowerCase().includes(searchTerm))
+        : options;
+
+    const hasNoSearchResults = isSearchable && searchTerm.length > 0 && filteredOptions.length === 0;
+
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
@@ -210,7 +230,18 @@ const MultiSelect = ({
                 </MultiSelectTrigger>
             </PopoverTrigger>
             <PopoverContent className='p-0 w-[var(--radix-popover-trigger-width)]' align='start'>
-                <ScrollArea className='max-h-60'>
+                {isSearchable && (
+                    <div className='flex items-center gap-2 border-b p-2'>
+                        <Search className='h-5 w-5 shrink-0 text-neutral-dark-1' aria-hidden='true' />
+                        <Input
+                            value={searchValue}
+                            onChange={(event) => setSearchValue(event.target.value)}
+                            placeholder={searchPlaceholder}
+                            className='h-8 border-none bg-transparent px-0 focus-visible:ring-0'
+                        />
+                    </div>
+                )}
+                <ScrollArea className='h-60'>
                     <div role='listbox' aria-multiselectable='true' className='py-1'>
                         {selectAllLabel && (
                             <MultiSelectActionRow
@@ -219,14 +250,20 @@ const MultiSelect = ({
                                 onSelect={handleSelectAll}
                             />
                         )}
-                        {options.map((option) => (
-                            <MultiSelectOptionRow
-                                key={option.value}
-                                option={option}
-                                checked={value.includes(option.value)}
-                                onSelect={handleSelect}
-                            />
-                        ))}
+                        {hasNoSearchResults ? (
+                            <Typography variant='body2' component='div' className='px-3 py-2 text-neutral-5'>
+                                {noResultsText}
+                            </Typography>
+                        ) : (
+                            filteredOptions.map((option) => (
+                                <MultiSelectOptionRow
+                                    key={option.value}
+                                    option={option}
+                                    checked={value.includes(option.value)}
+                                    onSelect={handleSelect}
+                                />
+                            ))
+                        )}
                     </div>
                 </ScrollArea>
             </PopoverContent>

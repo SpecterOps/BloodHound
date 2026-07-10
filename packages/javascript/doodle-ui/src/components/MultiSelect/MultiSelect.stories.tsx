@@ -35,9 +35,12 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const itemOptions = [
-    { value: 'option-a', label: 'Option A' },
-    { value: 'option-b', label: 'Option B' },
-    { value: 'option-c', label: 'Option C' },
+    { value: 'a', label: 'Menu Item A' },
+    { value: 'b', label: 'Menu Item B' },
+    { value: 'c', label: 'Menu Item C' },
+    { value: 'd', label: 'Menu Item D' },
+    { value: 'e', label: 'Menu Item E' },
+    { value: 'f', label: 'Menu Item F' },
 ];
 
 const renderMultiSelect = (args: MultiSelectProps) => (
@@ -51,8 +54,8 @@ export const Default: Story = {
         options: itemOptions,
         value: [],
         onValueChange: () => {},
-        placeholder: 'All Zones',
-        selectAllLabel: 'All Zones',
+        placeholder: 'All Items',
+        selectAllLabel: 'All Items',
     },
     render: (args) => {
         const [value, setValue] = useState<string[]>(args.value ?? []);
@@ -87,26 +90,18 @@ export const OptionRows: Story = {
     args: { options: [], value: [], onValueChange: () => {} },
     render: () => (
         <div className='w-60 border rounded-md'>
-            <MultiSelectOptionRow
-                option={{ value: 'option-a', label: 'Option A' }}
-                checked={false}
-                onSelect={() => {}}
-            />
-            <MultiSelectOptionRow
-                option={{ value: 'option-b', label: 'Option B' }}
-                checked={true}
-                onSelect={() => {}}
-            />
+            <MultiSelectOptionRow option={{ value: 'a', label: 'Menu Item A' }} checked={false} onSelect={() => {}} />
+            <MultiSelectOptionRow option={{ value: 'b', label: 'Menu Item B' }} checked={true} onSelect={() => {}} />
             <MultiSelectOptionRow
                 option={{
-                    value: 'option-c',
+                    value: 'c',
                     label: 'A very long label that should be truncated when it overflows the container',
                 }}
                 checked={false}
                 onSelect={() => {}}
             />
             <MultiSelectOptionRow
-                option={{ value: 'option-d', label: 'Option D (disabled)', disabled: true }}
+                option={{ value: 'd', label: 'Menu Item D (disabled)', disabled: true }}
                 checked={false}
                 onSelect={() => {}}
             />
@@ -119,8 +114,30 @@ export const WithSelectAll: Story = {
         options: itemOptions,
         value: [],
         onValueChange: () => {},
-        placeholder: 'All Zones',
-        selectAllLabel: 'All Zones',
+        placeholder: 'All Items',
+        selectAllLabel: 'All Items',
+    },
+    render: (args) => {
+        const [value, setValue] = useState<string[]>(args.value ?? []);
+
+        return (
+            <div className='w-60'>
+                <MultiSelect {...args} value={value} onValueChange={setValue} />
+            </div>
+        );
+    },
+};
+
+export const WithSearch: Story = {
+    args: {
+        options: itemOptions,
+        value: [],
+        onValueChange: () => {},
+        placeholder: 'All Items',
+        selectAllLabel: 'All Items',
+        isSearchable: true,
+        searchPlaceholder: 'Search options',
+        noResultsText: 'No matches',
     },
     render: (args) => {
         const [value, setValue] = useState<string[]>(args.value ?? []);
@@ -138,7 +155,7 @@ export const Disabled: Story = {
         options: itemOptions,
         value: [],
         onValueChange: () => {},
-        placeholder: 'All Zones',
+        placeholder: 'All Items',
         disabled: true,
     },
     render: renderMultiSelect,
@@ -146,10 +163,10 @@ export const Disabled: Story = {
 
 export const WithDisabledOption: Story = {
     args: {
-        options: [...itemOptions, { value: 'option-d', label: 'Option D', disabled: true }],
+        options: [...itemOptions, { value: 'd', label: 'Menu Item D', disabled: true }],
         value: [],
         onValueChange: () => {},
-        placeholder: 'All Zones',
+        placeholder: 'All Items',
     },
     render: (args) => {
         const [value, setValue] = useState<string[]>(args.value ?? []);
