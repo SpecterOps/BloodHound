@@ -18,7 +18,6 @@ package dataquality
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -26,14 +25,12 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/nan"
-	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
-	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -497,7 +494,7 @@ func SaveDataQuality(ctx context.Context, db database.Database, graphDB graph.Da
 		}
 	}
 
-	// OpenGraph node counts
+	// OpenGraph node and relationship counts
 	if openGraphExtensionManagementFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureOpenGraphExtensionManagement); err != nil {
 		return fmt.Errorf("could not get open graph extension management feature flag: %w", err)
 	} else if openGraphExtensionManagementFlag.Enabled {
@@ -517,215 +514,4 @@ func SaveDataQuality(ctx context.Context, db database.Database, graphDB graph.Da
 	}
 
 	return nil
-}
-
-func openGraphStats(ctx context.Context, db database.Database, graphDB graph.Database) (model.DataQualityStats, model.DataQualityAggregations, error) {
-	var (
-		aggregations = make(model.DataQualityAggregations, 0)
-		stats        = make(model.DataQualityStats, 0)
-
-		// We only are concerned with non-builtin types since AD and AZ have their own stat collection
-		// When we move AD and AZ stat collection to this common table, this will need to be changed
-		builtInFilter = model.Filters{"is_builtin": []model.Filter{{Operator: model.Equals, Value: "false"}}}
-	)
-
-	runID, err := uuid.NewV4()
-	if err != nil {
-		return stats, aggregations, fmt.Errorf("could not generate new UUID: %w", err)
-	}
-
-	extensions, _, err := db.GetGraphSchemaExtensions(ctx, builtInFilter, model.Sort{}, 0, 0)
-	if err != nil {
-		return stats, aggregations, fmt.Errorf("could not get graph schema extensions: %w", err)
-	}
-
-	for _, extension := range extensions {
-		environments, err := db.GetEnvironmentsByExtensionId(ctx, extension.ID)
-		if err != nil {
-			return stats, aggregations, fmt.Errorf("could not get environments for extension %d: %w", extension.ID, err)
-		}
-
-		// Each extension may define multiple environments with their own environment kind, principal kinds, and source kind.
-		for _, environment := range environments {
-			environmentSourceKind, err := getOpenGraphSourceKind(ctx, db, environment)
-			if err != nil {
-				return stats, aggregations, err
-			}
-
-			nodeKindCounts, err := countOpenGraphNodesByEnvironment(ctx, graphDB, graph.StringKind(environment.EnvironmentKindName), environmentSourceKind.ToKind())
-			if err != nil {
-				return stats, aggregations, fmt.Errorf("could not count open graph nodes for environment kind %s: %w", environment.EnvironmentKindName, err)
-			}
-
-			kindIDs, err := getOpenGraphCountKindIDs(ctx, db, nodeKindCounts)
-			if err != nil {
-				return stats, aggregations, err
-			}
-
-			environmentStats, environmentAggregations := buildOpenGraphNodeCountStats(runID.String(), extension, environment, nodeKindCounts, kindIDs)
-			stats = append(stats, environmentStats...)
-			aggregations = append(aggregations, environmentAggregations...)
-		}
-	}
-
-	return stats, aggregations, nil
-}
-
-func getOpenGraphSourceKind(ctx context.Context, db database.Database, environment model.SchemaEnvironment) (model.Kind, error) {
-	kinds, err := db.GetKindsByIDs(ctx, environment.SourceKindId)
-	if err != nil {
-		return model.Kind{}, fmt.Errorf("could not get source kind for schema environment %d: %w", environment.ID, err)
-	}
-
-	if len(kinds) == 0 {
-		return model.Kind{}, fmt.Errorf("could not get source kind for schema environment %d: %w", environment.ID, database.ErrNotFound)
-	}
-
-	return kinds[0], nil
-}
-
-func countOpenGraphNodesByEnvironment(ctx context.Context, graphDB graph.Database, environmentKind graph.Kind, sourceKind graph.Kind) (map[string]map[string]int, error) {
-	nodeKindCountsByEnvironmentID := map[string]map[string]int{}
-
-	err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		environmentIDs, err := getOpenGraphEnvironmentIDs(ctx, tx, environmentKind)
-		if err != nil {
-			return err
-		}
-
-		for _, environmentID := range environmentIDs {
-			nodeKindCounts := map[string]int{}
-
-			if err := tx.Nodes().Filterf(func() graph.Criteria {
-				return query.And(
-					query.Kind(query.Node(), sourceKind),
-					query.Equals(query.NodeProperty(graphschema.EnvironmentIDKey), environmentID),
-				)
-			}).FetchKinds(func(cursor graph.Cursor[graph.KindsResult]) error {
-				for result := range cursor.Chan() {
-					countOpenGraphNodeKinds(result.Kinds, sourceKind, nodeKindCounts)
-				}
-
-				return cursor.Error()
-			}); err != nil {
-				return err
-			}
-
-			if len(nodeKindCounts) > 0 {
-				nodeKindCountsByEnvironmentID[environmentID] = nodeKindCounts
-			}
-		}
-
-		return nil
-	})
-
-	return nodeKindCountsByEnvironmentID, err
-}
-
-func countOpenGraphNodeKinds(kinds graph.Kinds, sourceKind graph.Kind, nodeKindCounts map[string]int) {
-	for _, kind := range kinds {
-		if kind.Is(sourceKind) || model.IsExtendedNodeKind(kind) {
-			continue
-		}
-
-		nodeKindCounts[kind.String()]++
-	}
-}
-
-func getOpenGraphEnvironmentIDs(ctx context.Context, tx graph.Transaction, environmentKind graph.Kind) ([]string, error) {
-	var environmentIDs []string
-
-	environments, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
-		return query.Kind(query.Node(), environmentKind)
-	}))
-	if err != nil {
-		return nil, err
-	}
-
-	for _, environment := range environments {
-		environmentID, err := environment.Properties.Get(graphschema.EnvironmentIDKey).String()
-		if err != nil {
-			slog.WarnContext(
-				ctx,
-				"OpenGraph environment node does not have a valid environment ID property",
-				slog.Uint64("node_id", uint64(environment.ID)),
-				slog.String("environment_kind", environmentKind.String()),
-				attr.Error(err),
-			)
-			continue
-		}
-
-		environmentIDs = append(environmentIDs, environmentID)
-	}
-
-	return environmentIDs, nil
-}
-
-func getOpenGraphCountKindIDs(ctx context.Context, db database.Database, countsByEnvironmentID map[string]map[string]int) (map[string]null.Int32, error) {
-	kindNames := make([]string, 0)
-	seenKindNames := map[string]struct{}{}
-
-	for _, nodeKindCounts := range countsByEnvironmentID {
-		for kindName := range nodeKindCounts {
-			if _, seen := seenKindNames[kindName]; !seen {
-				kindNames = append(kindNames, kindName)
-				seenKindNames[kindName] = struct{}{}
-			}
-		}
-	}
-
-	if len(kindNames) == 0 {
-		return map[string]null.Int32{}, nil
-	}
-
-	kinds, err := db.GetKindsByNames(ctx, kindNames...)
-	if err != nil && !errors.Is(err, database.ErrNotFound) {
-		return nil, fmt.Errorf("could not get data quality metric kinds: %w", err)
-	}
-
-	kindIDsByName := make(map[string]null.Int32, len(kinds))
-	for _, kind := range kinds {
-		kindIDsByName[kind.Name] = null.Int32From(kind.ID)
-	}
-
-	return kindIDsByName, nil
-}
-
-func buildOpenGraphNodeCountStats(runID string, extension model.GraphSchemaExtension, environment model.SchemaEnvironment, countsByEnvironmentID map[string]map[string]int, kindIDsByName map[string]null.Int32) (model.DataQualityStats, model.DataQualityAggregations) {
-	var (
-		aggregatedCounts = map[string]int{}
-		stats            = make(model.DataQualityStats, 0)
-		aggregations     = make(model.DataQualityAggregations, 0)
-	)
-
-	for environmentID, kindCounts := range countsByEnvironmentID {
-		for kindName, count := range kindCounts {
-			stats = append(stats, model.DataQualityStat{
-				RunID:                   runID,
-				SchemaExtensionID:       extension.ID,
-				SchemaEnvironmentKindID: environment.EnvironmentKindId,
-				EnvironmentID:           environmentID,
-				MetricType:              model.DataQualityMetricTypeNode,
-				MetricName:              kindName,
-				MetricValue:             float64(count),
-				KindID:                  kindIDsByName[kindName],
-			})
-
-			aggregatedCounts[kindName] += count
-		}
-	}
-
-	for kindName, count := range aggregatedCounts {
-		aggregations = append(aggregations, model.DataQualityAggregation{
-			RunID:                   runID,
-			SchemaExtensionID:       extension.ID,
-			SchemaEnvironmentKindID: environment.EnvironmentKindId,
-			MetricType:              model.DataQualityMetricTypeNode,
-			MetricName:              kindName,
-			MetricValue:             float64(count),
-			KindID:                  kindIDsByName[kindName],
-		})
-	}
-
-	return stats, aggregations
 }
