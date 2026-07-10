@@ -79,9 +79,9 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 		assertBody func(t *testing.T, body []byte)
 	}{
 		{
-			name:     "returns 200 with the node view and info when includeInfo is true",
+			name:     "returns 200 with the node view and info when include-info is true",
 			rawID:    "9876543210",
-			rawQuery: "includeInfo=true",
+			rawQuery: "include-info=true",
 			setupMock: func(graphDBMock *mocks.MockGraphDB) {
 				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, true).Return(node, nil)
 			},
@@ -106,7 +106,7 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 			},
 		},
 		{
-			name:  "returns 200 without info when includeInfo is omitted",
+			name:  "returns 200 without info when include-info is omitted",
 			rawID: "9876543210",
 			setupMock: func(graphDBMock *mocks.MockGraphDB) {
 				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, false).Return(node, nil)
@@ -127,9 +127,9 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 		},
 		{
-			name:       "returns 400 when includeInfo is malformed",
+			name:       "returns 400 when include-info is malformed",
 			rawID:      "9876543210",
-			rawQuery:   "includeInfo=wat",
+			rawQuery:   "include-info=wat",
 			wantStatus: http.StatusBadRequest,
 		},
 		{

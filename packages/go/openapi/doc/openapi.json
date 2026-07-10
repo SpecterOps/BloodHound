@@ -7286,21 +7286,25 @@
           "name": "node_id",
           "in": "path",
           "required": true,
-          "description": "The node id assigned by the graph",
+          "description": "The Graph Node ID",
           "schema": {
-            "type": "integer",
-            "format": "int64"
+            "type": "integer"
+          }
+        },
+        {
+          "name": "include-info",
+          "in": "query",
+          "required": false,
+          "description": "When false or omitted, excludes entity panel information.\nWhen true, returns node details with entity panel information included.\n",
+          "schema": {
+            "type": "boolean"
           }
         }
       ],
       "get": {
-        "operationId": "GetNodeByID",
         "summary": "Get Node by Graph Node ID",
-        "description": "**Experimental** - Returns the details of a graph node identified by its graph-assigned integer ID",
         "tags": [
-          "OpenGraph (Experimental)",
-          "Community",
-          "Enterprise"
+          "OpenGraph (Experimental), Proposal"
         ],
         "responses": {
           "200": {
@@ -7309,32 +7313,50 @@
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "required": [
+                    "data"
+                  ],
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/model.node-details"
+                      "anyOf": [
+                        {
+                          "$ref": "#/components/schemas/NodeDetails"
+                        },
+                        {
+                          "$ref": "#/components/schemas/NodeDetailsWithInfo"
+                        }
+                      ]
                     }
+                  }
+                },
+                "examples": {
+                  "NoInfo": {
+                    "$ref": "#/components/examples/NodeDetailsExample"
+                  },
+                  "WithInfo": {
+                    "$ref": "#/components/examples/NodeDetailsWithInfoExample"
                   }
                 }
               }
             }
           },
           "400": {
-            "$ref": "#/components/responses/bad-request"
+            "description": "Bad Request"
           },
           "401": {
-            "$ref": "#/components/responses/unauthorized"
+            "description": "Unauthorized"
           },
           "403": {
-            "$ref": "#/components/responses/forbidden"
+            "description": "Forbidden"
           },
           "404": {
-            "$ref": "#/components/responses/not-found"
+            "description": "Not found"
           },
           "429": {
-            "$ref": "#/components/responses/too-many-requests"
+            "description": "Too Many Requests"
           },
           "500": {
-            "$ref": "#/components/responses/internal-server-error"
+            "description": "Internal Server Error"
           }
         }
       }
@@ -23041,6 +23063,258 @@
           "attack-paths",
           "archived-findings"
         ]
+      },
+      "NodeDetails": {
+        "type": "object",
+        "required": [
+          "node_id",
+          "kinds",
+          "properties"
+        ],
+        "properties": {
+          "node_id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "kinds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "node_kind_id",
+                "name"
+              ],
+              "properties": {
+                "node_kind_id": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "properties": {
+            "type": "object",
+            "required": [
+              "objectid",
+              "lastSeen"
+            ],
+            "properties": {
+              "objectid": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "displayName": {
+                "type": "string"
+              },
+              "lastSeen": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      },
+      "NodeDetailsWithInfo": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NodeDetails"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "info": {
+                "type": "array",
+                "items": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/KindInfoResponse"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "node_kind_id"
+                      ],
+                      "properties": {
+                        "node_kind_id": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      "KindInfoResponse": {
+        "allOf": [
+          {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "panel_section_1"
+              }
+            }
+          },
+          {
+            "$ref": "#/components/schemas/KindInfoBase"
+          },
+          {
+            "$ref": "#/components/schemas/KindInfoContent"
+          }
+        ]
+      },
+      "KindInfoBase": {
+        "type": "object",
+        "required": [
+          "title",
+          "position"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Entity Panel Section"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "KindInfoContent": {
+        "type": "object",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/InfoMarkdown"
+          }
+        ]
+      },
+      "InfoMarkdownContent": {
+        "type": "object",
+        "required": [
+          "markdown"
+        ],
+        "properties": {
+          "markdown": {
+            "type": "object",
+            "required": [
+              "content"
+            ],
+            "properties": {
+              "content": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "InfoMarkdown": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/InfoMarkdownContent"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "examples": {
+      "NodeDetailsExample": {
+        "summary": "Basic Node Details",
+        "value": {
+          "data": {
+            "node_id": 278346,
+            "kinds": [
+              {
+                "name": "Okta",
+                "node_kind_id": 263476
+              },
+              {
+                "name": "Okta_Organization",
+                "node_kind_id": 28937
+              },
+              {
+                "name": "Tag_Tier_Zero",
+                "node_kind_id": 987234
+              }
+            ],
+            "properties": {
+              "objectid": "00ow0o8if0CNwsKmk697",
+              "name": "contoso.okta.com",
+              "displayName": "Contoso",
+              "oktaDomain": "contoso.okta.com",
+              "subdomain": "contoso",
+              "status": "ACTIVE",
+              "created": "2025-10-02T09:21:31+00:00",
+              "lastSeen": "2025-12-09T23:04:15+00:00",
+              "lastUpdated": "2025-12-09T23:04:15+00:00"
+            }
+          }
+        }
+      },
+      "NodeDetailsWithInfoExample": {
+        "summary": "Node Details with Entity Panel Info",
+        "value": {
+          "data": {
+            "node_id": 278346,
+            "kinds": [
+              {
+                "name": "Okta",
+                "node_kind_id": 263476
+              },
+              {
+                "name": "Okta_Organization",
+                "node_kind_id": 28937
+              },
+              {
+                "name": "Tag_Tier_Zero",
+                "node_kind_id": 987234
+              }
+            ],
+            "properties": {
+              "objectid": "00ow0o8if0CNwsKmk697",
+              "name": "contoso.okta.com",
+              "displayName": "Contoso",
+              "oktaDomain": "contoso.okta.com",
+              "subdomain": "contoso",
+              "status": "ACTIVE",
+              "created": "2025-10-02T09:21:31+00:00",
+              "lastSeen": "2025-12-09T23:04:15+00:00",
+              "lastUpdated": "2025-12-09T23:04:15+00:00"
+            },
+            "info": [
+              {
+                "name": "panel1",
+                "title": "Info Panel Section 1",
+                "position": 1,
+                "node_kind_id": 827364,
+                "markdown": {
+                  "content": "This node represents a user account."
+                }
+              },
+              {
+                "name": "panel2",
+                "title": "Info Panel Section 2",
+                "position": 2,
+                "node_kind_id": 827364,
+                 "markdown": {
+                  "content": "This is some context for your selection."
+                }
+              }
+            ]
+          }
+        }
       }
     },
     "responses": {

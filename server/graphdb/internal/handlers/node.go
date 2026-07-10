@@ -118,14 +118,14 @@ func (s Handlers) GetNodeByID(response http.ResponseWriter, request *http.Reques
 	var (
 		ctx            = request.Context()
 		nodeIDRaw      = mux.Vars(request)[URIPathVariableNodeID]
-		includeInfoRaw = request.URL.Query().Get("includeInfo")
+		includeInfoRaw = request.URL.Query().Get("include-info")
 		includeInfo    bool
 		err            error
 	)
 
 	if includeInfoRaw != "" {
 		if includeInfo, err = strconv.ParseBool(includeInfoRaw); err != nil {
-			responses.WriteError(ctx, http.StatusBadRequest, "includeInfo is malformed", response)
+			responses.WriteError(ctx, http.StatusBadRequest, "include-info is malformed", response)
 			return
 		}
 	}
