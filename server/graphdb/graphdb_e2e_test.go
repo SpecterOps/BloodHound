@@ -34,14 +34,19 @@ import (
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	graphschema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/bloodhound/server/etac"
 	"github.com/specterops/bloodhound/server/graphdb/internal/appdb"
+	"github.com/specterops/bloodhound/server/graphdb/internal/authz"
 	"github.com/specterops/bloodhound/server/graphdb/internal/handlers"
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 	"github.com/specterops/dawgs"
@@ -103,6 +108,20 @@ func getPostgresConfig(t *testing.T) pgtestdb.Config {
 	}
 }
 
+func withAuthenticatedUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		ctx := &bhctx.Context{
+			AuthCtx: auth.Context{
+				Owner: model.User{
+					AllEnvironments: true,
+				},
+			},
+		}
+
+		next.ServeHTTP(response, bhctx.SetRequestContext(request, ctx))
+	})
+}
+
 // newGraphDBHarness spins up an isolated postgres database via pgtestdb, applies
 // the relational and graph migrations, seeds a single MemberOf relationship into
 // the graph, and wires the appdb -> services -> handlers stack onto a mux router.
@@ -144,9 +163,12 @@ func newGraphDBHarness(t *testing.T) graphDBHarness {
 	seedRelationship(t, ctx, graphDatabase, &harness)
 
 	store := appdb.NewStore(graphDatabase, dbPool)
-	handlerSet := handlers.NewHandlersContainer(services.NewService(store))
+	etacService := etac.Register(dbPool, dogtags.NewDefaultService())
+	nodeAuthorizer := authz.NewNodeAuthorizer(etacService)
+	handlerSet := handlers.NewHandlersContainer(services.NewService(store), nodeAuthorizer)
 
 	harness.handler = mux.NewRouter()
+	harness.handler.Use(withAuthenticatedUser)
 	harness.handler.HandleFunc(
 		fmt.Sprintf("/api/v2/nodes/{%s}", handlers.URIPathVariableNodeID),
 		handlerSet.GetNodeByID,

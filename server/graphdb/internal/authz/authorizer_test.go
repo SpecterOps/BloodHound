@@ -123,7 +123,7 @@ func TestNodeAuthorizer_CanAccessNode(t *testing.T) {
 					EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
 						{EnvironmentID: testDomainSID},
 					},
-				}, testDomainSID).Return(true, nil)
+				}, []string{testDomainSID}).Return(true, nil)
 			},
 		},
 		{
@@ -137,7 +137,7 @@ func TestNodeAuthorizer_CanAccessNode(t *testing.T) {
 					EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
 						{EnvironmentID: "S-0-0-00-000"},
 					},
-				}, testDomainSID).Return(false, nil)
+				}, []string{testDomainSID}).Return(false, nil)
 			},
 		},
 		{
@@ -148,7 +148,8 @@ func TestNodeAuthorizer_CanAccessNode(t *testing.T) {
 			mockSetup: func(m *etacMocks.MockService, ctx context.Context, node services.Node) {
 				m.EXPECT().CheckUserAccess(ctx, &model.User{
 					AllEnvironments: true,
-				}, testDomainSID).Return(true, nil)
+					EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{},
+				}, []string{testDomainSID}).Return(true, nil)
 			},
 		},
 		{
@@ -162,7 +163,7 @@ func TestNodeAuthorizer_CanAccessNode(t *testing.T) {
 					EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
 						{EnvironmentID: testTenantID},
 					},
-				}, testTenantID).Return(true, nil)
+				}, []string{testTenantID}).Return(true, nil)
 			},
 		},
 		{
@@ -176,7 +177,7 @@ func TestNodeAuthorizer_CanAccessNode(t *testing.T) {
 					EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
 						{EnvironmentID: testEnvironmentID},
 					},
-				}, testEnvironmentID).Return(true, nil)
+				}, []string{testEnvironmentID}).Return(true, nil)
 			},
 		},
 	}
