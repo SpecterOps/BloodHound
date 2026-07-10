@@ -236,7 +236,14 @@ func (s *Resources) GetDataQualityAggregations(response http.ResponseWriter, req
 		defaultEnd, defaultStart      = DefaultTimeRange()
 	)
 
-	queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request)
+	// omit start and end from parser since they are processed as plain time parsers
+	filterQuery := request.URL.Query()
+	filterQuery.Del("start")
+	filterQuery.Del("end")
+	filterRequest := request.Clone(ctx)
+	filterRequest.URL.RawQuery = filterQuery.Encode()
+
+	queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(filterRequest)
 	if err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 		return
@@ -277,7 +284,7 @@ func (s *Resources) GetDataQualityAggregations(response http.ResponseWriter, req
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
 	}
-	if limit, err = ParseLimitQueryParameter(queryParams, 10); err != nil {
+	if limit, err = ParseLimitQueryParameter(queryParams, 1000); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
 	}
