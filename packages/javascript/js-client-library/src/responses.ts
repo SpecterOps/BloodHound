@@ -420,7 +420,7 @@ export type CreateWebhookResponse = {
 };
 
 export type GetWebhooksResponse = PaginatedResponse<Webhook[]>;
-export type GetWebhookResponse = BasicResponse<Webhook>;
+export type GetWebhookResponse = BasicResponse<{ webhook: Webhook }>;
 export type RotateWebhookSecretResponse = BasicResponse<WebhookSecret>;
 export type WebhookTestResponse = BasicResponse<WebhookTest>;
 
