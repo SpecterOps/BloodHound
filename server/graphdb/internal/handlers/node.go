@@ -61,12 +61,10 @@ type NodeView struct {
 	NodeID     int64          `json:"node_id"`
 	Kinds      []NodeKindView `json:"kinds"`
 	Properties map[string]any `json:"properties"`
-	KindInfos  []KindInfoView `json:"info"`
+	KindInfos  []KindInfoView `json:"info,omitempty"`
 }
 
-// BuildNodeView projects a services.Node into the view type the handlers
-// return in their JSON envelope.
-func BuildNodeView(node services.Node) NodeView {
+func BuildNodeView(node services.Node, includeInfo bool) NodeView {
 	kinds := []NodeKindView{}
 
 	for _, kind := range node.Kinds {
@@ -76,23 +74,25 @@ func BuildNodeView(node services.Node) NodeView {
 		})
 	}
 
-	kindInfos := []KindInfoView{}
-	for _, kindInfo := range node.KindInfos {
-		kindInfos = append(kindInfos, KindInfoView{
-			Name:       kindInfo.InfoKey,
-			Title:      kindInfo.Title,
-			Position:   kindInfo.Position,
-			NodeKindID: int(*kindInfo.NodeKindID),
-			Markdown:   buildMarkdownView(kindInfo.Content),
-		})
-	}
-
-	return NodeView{
+	nodeView := NodeView{
 		NodeID:     node.ID,
 		Kinds:      kinds,
 		Properties: node.Properties,
-		KindInfos:  kindInfos,
 	}
+
+	if includeInfo {
+		for _, kindInfo := range node.KindInfos {
+			nodeView.KindInfos = append(nodeView.KindInfos, KindInfoView{
+				Name:       kindInfo.InfoKey,
+				Title:      kindInfo.Title,
+				Position:   kindInfo.Position,
+				NodeKindID: int(*kindInfo.NodeKindID),
+				Markdown:   buildMarkdownView(kindInfo.Content),
+			})
+		}
+	}
+
+	return nodeView
 }
 
 func buildMarkdownView(content json.RawMessage) MarkdownView {
@@ -116,17 +116,27 @@ func (s NodeView) JSONView() ([]byte, error) {
 // node or its kinds cannot be found, and 200 with the node details otherwise.
 func (s Handlers) GetNodeByID(response http.ResponseWriter, request *http.Request) {
 	var (
-		ctx       = request.Context()
-		rawNodeID = mux.Vars(request)[URIPathVariableNodeID]
+		ctx            = request.Context()
+		nodeIDRaw      = mux.Vars(request)[URIPathVariableNodeID]
+		includeInfoRaw = request.URL.Query().Get("includeInfo")
+		includeInfo    bool
+		err            error
 	)
 
-	if nodeID, err := strconv.ParseInt(rawNodeID, 10, 64); err != nil {
+	if includeInfoRaw != "" {
+		if includeInfo, err = strconv.ParseBool(includeInfoRaw); err != nil {
+			responses.WriteError(ctx, http.StatusBadRequest, "includeInfo is malformed", response)
+			return
+		}
+	}
+
+	if nodeID, err := strconv.ParseInt(nodeIDRaw, 10, 64); err != nil {
 		responses.WriteError(ctx, http.StatusBadRequest, "node id is malformed", response)
-	} else if node, err := s.graphDB.GetNode(ctx, nodeID, true); errors.Is(err, services.ErrNodeNotFound) || errors.Is(err, services.ErrKindNotFound) {
+	} else if node, err := s.graphDB.GetNode(ctx, nodeID, includeInfo); errors.Is(err, services.ErrNodeNotFound) || errors.Is(err, services.ErrKindNotFound) {
 		responses.WriteError(ctx, http.StatusNotFound, "node not found", response)
 	} else if err != nil {
 		responses.WriteInternalServerError(ctx, err, response)
 	} else {
-		responses.WriteBasic(ctx, BuildNodeView(node), http.StatusOK, response)
+		responses.WriteBasic(ctx, BuildNodeView(node, includeInfo), http.StatusOK, response)
 	}
 }

@@ -33,10 +33,13 @@ import (
 
 // newNodeRequestWithID builds a GET request whose mux path variables carry the
 // supplied raw node id, mirroring what the router does at runtime.
-func newNodeRequestWithID(t *testing.T, rawID string) *http.Request {
+func newNodeRequestWithID(t *testing.T, rawID string, rawQuery ...string) *http.Request {
 	t.Helper()
 	request, err := http.NewRequest(http.MethodGet, "/api/v2/nodes/"+rawID, nil)
 	require.NoError(t, err)
+	if len(rawQuery) > 0 {
+		request.URL.RawQuery = rawQuery[0]
+	}
 	return mux.SetURLVars(request, map[string]string{handlers.URIPathVariableNodeID: rawID})
 }
 
@@ -70,13 +73,15 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 	tests := []struct {
 		name       string
 		rawID      string
+		rawQuery   string
 		setupMock  func(graphDBMock *mocks.MockGraphDB)
 		wantStatus int
 		assertBody func(t *testing.T, body []byte)
 	}{
 		{
-			name:  "returns 200 with the node view on success",
-			rawID: "9876543210",
+			name:     "returns 200 with the node view and info when includeInfo is true",
+			rawID:    "9876543210",
+			rawQuery: "includeInfo=true",
 			setupMock: func(graphDBMock *mocks.MockGraphDB) {
 				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, true).Return(node, nil)
 			},
@@ -101,15 +106,37 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 			},
 		},
 		{
+			name:  "returns 200 without info when includeInfo is omitted",
+			rawID: "9876543210",
+			setupMock: func(graphDBMock *mocks.MockGraphDB) {
+				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, false).Return(node, nil)
+			},
+			wantStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body []byte) {
+				var envelope struct {
+					Data map[string]any `json:"data"`
+				}
+				require.NoError(t, json.Unmarshal(body, &envelope))
+				assert.NotContains(t, envelope.Data, "info")
+				assert.NotContains(t, string(body), `"info"`)
+			},
+		},
+		{
 			name:       "returns 400 when the id is malformed",
 			rawID:      "not-a-number",
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:       "returns 400 when includeInfo is malformed",
+			rawID:      "9876543210",
+			rawQuery:   "includeInfo=wat",
 			wantStatus: http.StatusBadRequest,
 		},
 		{
 			name:  "returns 404 when the node is not found",
 			rawID: "9876543210",
 			setupMock: func(graphDBMock *mocks.MockGraphDB) {
-				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, true).Return(services.Node{}, services.ErrNodeNotFound)
+				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, false).Return(services.Node{}, services.ErrNodeNotFound)
 			},
 			wantStatus: http.StatusNotFound,
 		},
@@ -117,7 +144,7 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 			name:  "returns 404 when the kind is not found",
 			rawID: "9876543210",
 			setupMock: func(graphDBMock *mocks.MockGraphDB) {
-				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, true).Return(services.Node{}, services.ErrKindNotFound)
+				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, false).Return(services.Node{}, services.ErrKindNotFound)
 			},
 			wantStatus: http.StatusNotFound,
 		},
@@ -129,7 +156,7 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 				graphDBMock = mocks.NewMockGraphDB(t)
 				handlerSet  = handlers.NewHandlersContainer(graphDBMock)
 				recorder    = httptest.NewRecorder()
-				request     = newNodeRequestWithID(t, tt.rawID)
+				request     = newNodeRequestWithID(t, tt.rawID, tt.rawQuery)
 			)
 
 			if tt.setupMock != nil {
