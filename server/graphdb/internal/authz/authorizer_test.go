@@ -147,7 +147,7 @@ func TestNodeAuthorizer_CanAccessNode(t *testing.T) {
 			want: true,
 			mockSetup: func(m *etacMocks.MockService, ctx context.Context, node services.Node) {
 				m.EXPECT().CheckUserAccess(ctx, &model.User{
-					AllEnvironments: true,
+					AllEnvironments:                  true,
 					EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{},
 				}, []string{testDomainSID}).Return(true, nil)
 			},
