@@ -14,9 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// Convenience re-export of the most-used API (axe fixture, expect, reporting helpers).
-// Auth helpers, route stubs, and theme types/constants are available via subpath imports:
-//   - bh-playwright-testing/themes
-//   - bh-playwright-testing/auth
-//   - bh-playwright-testing/stubs
-export * from './axe';
+export * from './graph-has-data';
+export * from './mfa';
+export * from './password';
+export * from './tokens';

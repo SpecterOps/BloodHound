@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AxeBuilder from '@axe-core/playwright';
-import type { Page, TestInfo } from '@playwright/test';
+import type { ElementHandle, Page, TestInfo } from '@playwright/test';
 import { expect, test as base } from '@playwright/test';
 import type { AxeResults, NodeResult, Result } from 'axe-core';
 import type { TestOptions } from './themes';
@@ -79,14 +79,24 @@ const DEFAULT_MAX_NODES_PER_VIOLATION = 5;
  * Hide the background content. Dialogs often cover background content. When Axe assesses
  * the obscured content, it produces an `incomplete` result and oftent misses actual issues
  */
-export async function hideMainContent(page: Page) {
-    await page.addStyleTag({
+export async function hideBySelector(page: Page, selector: string) {
+    return await page.addStyleTag({
         content: `
-            #content-wrapper {
+            ${selector} {
                 visibility: hidden !important;
             }
         `,
     });
+}
+
+/**
+ * Undo a previous `hideBySelector` call. Pass the `ElementHandle` returned by
+ * `hideBySelector` to remove the injected `<style>` tag from the page, restoring
+ * the previously hidden content.
+ */
+export async function restoreHidden(styleTag: ElementHandle<Node>) {
+    await styleTag.evaluate((node) => node.parentNode?.removeChild(node));
+    await styleTag.dispose();
 }
 
 export async function attachAxeReport(testInfo: TestInfo, results: AxeResults, opts: AttachAxeReportOptions = {}) {

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { installGraphHasNoDataStub } from 'bh-playwright-testing/stubs/graph-has-data';
+import { installGraphHasNoDataStub } from 'bh-playwright-testing/stubs';
 import { expectNoAccessibilityViolations, test } from '../fixtures';
 
 test.describe('No Data Available dialog accessibility', () => {
