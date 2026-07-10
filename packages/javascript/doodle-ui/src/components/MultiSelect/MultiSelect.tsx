@@ -297,7 +297,7 @@ const MultiSelect = ({
 
                 <ScrollArea className='h-60'>
                     <div role='listbox' aria-multiselectable='true' aria-busy={isLoading || undefined} className='py-1'>
-                        {selectAllLabel && !isLoading && hasOptions && (
+                        {selectAllLabel && !isLoading && selectableValues.length > 0 && (
                             <MultiSelectActionRow
                                 checked={selectAllChecked}
                                 label={selectAllLabel}
