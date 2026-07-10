@@ -17851,6 +17851,400 @@
         }
       }
     },
+    "/api/v2/attack-paths/findings": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListAttackPathFindings",
+        "summary": "List attack path findings",
+        "description": "Returns a unified, paginated list of attack path findings. Defaults to active findings of both relationship and list types unless filtered otherwise.\n",
+        "tags": [
+          "Attack Paths",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`, `environment_name`,\n`zone_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `first_seen`, `last_seen`.\n",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "severity",
+            "description": "Filter by severity level.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "finding_type",
+            "description": "Filter by finding type. When not provided, both types are returned.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "finding",
+            "description": "Filter by finding name.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "title",
+            "description": "Filter by human-readable finding title.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "platform",
+            "description": "Filter by platform.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "environment_id",
+            "description": "Filter by one or more environment identifiers. Repeat the parameter to include multiple environments — results are the union of all specified values.\n",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "environment_name",
+            "description": "Filter by environment display name.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "asset_group_tag_id",
+            "description": "Filter by one or more asset group tag identifiers. Repeat the parameter to include multiple asset group tags — results are the union of all specified values.\nCannot be combined with the `zone_id` filter.\n",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "name": "zone_id",
+            "description": "Filter by a single zone identifier. Cannot be combined with `asset_group_tag_id`.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "zone_name",
+            "description": "Filter by zone name (e.g. \"Tier Zero\").",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "source_principal_id",
+            "description": "Filter by source principal identifier.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "source_principal_kind",
+            "description": "Filter by source principal kind.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "source_principal_name",
+            "description": "Filter by source principal display name.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "target_principal_id",
+            "description": "Filter by target principal identifier.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "target_principal_kind",
+            "description": "Filter by target principal kind.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "target_principal_name",
+            "description": "Filter by target principal display name.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "status",
+            "description": "Filter by finding status.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "first_seen",
+            "description": "Filter by first seen timestamp.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "last_seen",
+            "description": "Filter by last seen timestamp.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                },
+                "examples": {
+                  "Unified CSV export": {
+                    "value": "Severity,Finding,Title,FindingType,Platform,EnvironmentID,EnvironmentName,ZoneID,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen\ncritical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z\nhigh,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z\n"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "severity": {
+                                "type": "string",
+                                "description": "Severity level.",
+                                "enum": [
+                                  "critical",
+                                  "high",
+                                  "moderate",
+                                  "low"
+                                ]
+                              },
+                              "finding_type": {
+                                "type": "string",
+                                "description": "The type of finding.",
+                                "enum": [
+                                  "relationship",
+                                  "list"
+                                ]
+                              },
+                              "finding": {
+                                "type": "string",
+                                "description": "Finding name."
+                              },
+                              "title": {
+                                "type": "string",
+                                "description": "Human-readable finding title. May vary based on the zone context (e.g., \"Tier Zero\" vs \"Privilege Zone\" variants)."
+                              },
+                              "platform": {
+                                "type": "string",
+                                "description": "Platform the finding belongs to."
+                              },
+                              "environment_id": {
+                                "type": "string",
+                                "description": "Environment identifier."
+                              },
+                              "environment_name": {
+                                "type": "string",
+                                "description": "Human-readable environment display name resolved from the graph. Falls back to environment_id when unavailable."
+                              },
+                              "zone_id": {
+                                "type": "integer",
+                                "description": "Zone identifier (asset group tag id)."
+                              },
+                              "zone_name": {
+                                "type": "string",
+                                "description": "Human-readable zone name. Empty when the finding is not tied to a named zone."
+                              },
+                              "source_principal_id": {
+                                "type": "string",
+                                "description": "Source principal identifier. Omitted for list findings."
+                              },
+                              "source_principal_kind": {
+                                "type": "string",
+                                "description": "Source principal kind. Omitted for list findings."
+                              },
+                              "source_principal_name": {
+                                "type": "string",
+                                "description": "Source principal display name resolved from principal properties. Empty when unavailable or for list findings."
+                              },
+                              "target_principal_id": {
+                                "type": "string",
+                                "description": "Target principal identifier."
+                              },
+                              "target_principal_kind": {
+                                "type": "string",
+                                "description": "Target principal kind."
+                              },
+                              "target_principal_name": {
+                                "type": "string",
+                                "description": "Target principal display name resolved from principal properties. Empty when unavailable."
+                              },
+                              "status": {
+                                "type": "string",
+                                "description": "Finding status.",
+                                "enum": [
+                                  "active",
+                                  "accepted",
+                                  "remediated",
+                                  "deprecated"
+                                ]
+                              },
+                              "first_seen": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "Timestamp of when the finding was first created."
+                              },
+                              "last_seen": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "Timestamp of last update."
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "examples": {
+                  "Mixed findings (relationship and list)": {
+                    "summary": "Unified response with both finding types",
+                    "value": {
+                      "count": 2,
+                      "skip": 0,
+                      "limit": 10,
+                      "data": [
+                        {
+                          "severity": "critical",
+                          "finding": "T0GenericWrite",
+                          "title": "GenericWrite Privileges on Tier Zero Objects",
+                          "finding_type": "relationship",
+                          "platform": "Active Directory",
+                          "environment_id": "S-1-5-21-1974516972-3116780949-2584384717",
+                          "environment_name": "CORP1.LAB.HOME-LABS.LOL",
+                          "zone_id": 1,
+                          "zone_name": "Tier Zero",
+                          "source_principal_id": "RPATTON@CORP1.LAB.HOME-LABS.LOL",
+                          "source_principal_kind": "User",
+                          "source_principal_name": "Robert Patton",
+                          "target_principal_id": "ADMIN@CORP1.LAB.HOME-LABS.LOL",
+                          "target_principal_kind": "User",
+                          "target_principal_name": "Domain Admin",
+                          "status": "active",
+                          "first_seen": "2026-04-11T00:30:18.491666Z",
+                          "last_seen": "2026-04-14T16:57:35.675609Z"
+                        },
+                        {
+                          "severity": "high",
+                          "finding": "Kerberoasting",
+                          "title": "Kerberoastable User Accounts",
+                          "finding_type": "list",
+                          "platform": "Active Directory",
+                          "environment_id": "S-1-5-21-1974516972-3116780949-2584384717",
+                          "environment_name": "CORP1.LAB.HOME-LABS.LOL",
+                          "zone_id": 1,
+                          "zone_name": "Tier Zero",
+                          "source_principal_id": "",
+                          "source_principal_kind": "",
+                          "source_principal_name": "",
+                          "target_principal_id": "PSX_D_BA@CORP1.LAB.HOME-LABS.LOL",
+                          "target_principal_kind": "User",
+                          "target_principal_name": "Backup Admin",
+                          "status": "accepted",
+                          "first_seen": "2026-04-11T00:30:18.491666Z",
+                          "last_seen": "2026-04-14T16:57:35.675609Z"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/domains/{domain_id}/available-types": {
       "parameters": [
         {
