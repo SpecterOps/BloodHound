@@ -19,6 +19,7 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 )
 
 // Node is the domain representation of a graph node together with
@@ -27,6 +28,7 @@ type Node struct {
 	ID         int64
 	Kinds      []Kind
 	Properties map[string]any
+	KindInfos  []KindInfo
 }
 
 // ErrNodeNotFound indicates that no graph node exists for the requested id.
@@ -36,7 +38,7 @@ var ErrNodeNotFound = errors.New("node not found")
 // kinds resolved to the integer identifiers from the schema_node_kinds table.
 // ErrNodeNotFound is returned when the node does not exist. Kinds that are not
 // registered in schema_node_kinds are returned with ID=nil (best-effort resolution).
-func (s *Service) GetNode(ctx context.Context, id int64) (Node, error) {
+func (s *Service) GetNode(ctx context.Context, id int64, includeKindInfo bool) (Node, error) {
 	var (
 		node      Node
 		kindNames []string
@@ -56,6 +58,27 @@ func (s *Service) GetNode(ctx context.Context, id int64) (Node, error) {
 		return Node{}, err
 	} else {
 		node.Kinds = kinds
-		return node, nil
 	}
+
+	// grab all the associate kind info objects for all the node's kinds that are registered in schema_node_kinds
+	if includeKindInfo {
+		var allKindInfos []KindInfo
+
+		for _, nodeKind := range node.Kinds {
+			if nodeKind.ID == nil {
+				continue
+			}
+
+			kindInfos, err := s.db.GetKindInfos(ctx, nodeKind.ID, nil)
+			if err != nil {
+				return Node{}, fmt.Errorf("failed to get kind info for %s", nodeKind.Name)
+			}
+
+			allKindInfos = append(allKindInfos, kindInfos...)
+		}
+
+		node.KindInfos = allKindInfos
+	}
+
+	return node, nil
 }

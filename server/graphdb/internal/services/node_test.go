@@ -135,7 +135,7 @@ func TestService_GetNode(t *testing.T) {
 
 			tt.setupMock(databaseMock)
 
-			result, err := svc.GetNode(ctx, nodeID)
+			result, err := svc.GetNode(ctx, nodeID, false)
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 			} else {
