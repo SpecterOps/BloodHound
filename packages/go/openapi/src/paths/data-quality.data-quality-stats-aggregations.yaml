@@ -18,7 +18,7 @@ parameters:
   - $ref: './../parameters/header.prefer.yaml'
 get:
   operationId: GetDataQualityAggregations
-  summary: Get data quality aggregations
+  summary: Get data quality aggregations by environment kind
   description: >
     Returns data quality metric counts aggregated per environment kind, optionally scoped to an
     OpenGraph schema extension, combined across environment instances for each
