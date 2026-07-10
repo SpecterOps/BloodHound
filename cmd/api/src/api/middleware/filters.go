@@ -26,23 +26,23 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/packages/go/filters"
+	"github.com/specterops/bloodhound/packages/go/params"
 )
 
 // FilterMiddleware parses query parameter filters from the request, validates them against the supplied
-// filters.Filterable definition, and enriches the BloodHound context with the resulting filters.Filters map.
+// params.Filterable definition, and enriches the BloodHound context with the resulting params.Filters map.
 //
 // When filterable is nil the middleware performs no parsing and passes the request through unchanged. If
 // the filters are malformed, reference a column that cannot be filtered, or use an operator the column
 // does not support, the middleware writes a 400 response and halts the chain.
-func FilterMiddleware(filterable filters.Filterable) mux.MiddlewareFunc {
+func FilterMiddleware(filterable params.Filterable) mux.MiddlewareFunc {
 	if filterable == nil {
 		return func(next http.Handler) http.Handler {
 			return next
 		}
 	}
 
-	parser := filters.NewQueryParameterFilterParser(append(model.IgnoreFilters(), model.AllPaginationQueryParameters()...)...)
+	parser := params.NewQueryParameterFilterParser(append(model.IgnoreFilters(), model.AllPaginationQueryParameters()...)...)
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
@@ -62,13 +62,13 @@ func FilterMiddleware(filterable filters.Filterable) mux.MiddlewareFunc {
 // filterErrorMessage maps a filter validation failure to the appropriate API error response detail,
 // preserving the offending field and operator in the message where available.
 func filterErrorMessage(err error) string {
-	if validationErr, ok := errors.AsType[*filters.ValidationError](err); !ok {
+	if validationErr, ok := errors.AsType[*params.FilterValidationError](err); !ok {
 		return api.ErrorResponseDetailsBadQueryParameterFilters
 	} else {
 		switch {
-		case errors.Is(validationErr, filters.ErrFieldNotFilterable):
+		case errors.Is(validationErr, params.ErrFieldNotFilterable):
 			return fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, validationErr.Field)
-		case errors.Is(validationErr, filters.ErrOperatorNotSupported):
+		case errors.Is(validationErr, params.ErrOperatorNotSupported):
 			return fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, validationErr.Field, validationErr.Operator)
 		default:
 			return api.ErrorResponseDetailsBadQueryParameterFilters
