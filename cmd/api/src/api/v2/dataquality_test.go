@@ -1625,10 +1625,11 @@ func TestGetDataQualityAggregations_Success(t *testing.T) {
 	}
 
 	var cases = []struct {
-		Name     string
-		Input    Input
-		Setup    func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources
-		Expected Expected
+		Name       string
+		Input      Input
+		Setup      func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources
+		Expected   Expected
+		AssertBody func(t *testing.T, body map[string]any)
 	}{
 		{
 			Name:  "minimal required filter with eq",
@@ -1733,7 +1734,52 @@ func TestGetDataQualityAggregations_Success(t *testing.T) {
 			Expected: Expected{Code: http.StatusOK},
 		},
 		{
-			Name: "skip and limit are passed to the database in the correct positions",
+			Name: "descending sort direction is passed to the database",
+			Input: Input{Params: url.Values{
+				"schema_environment_kind_id": []string{"eq:100"},
+				"sort_by":                    []string{"-created_at"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+					func(_ context.Context, _ model.Filters, sort model.Sort, _ int, _ int) (model.DataQualityAggregations, int, error) {
+						require.Len(t, sort, 1)
+						require.Equal(t, "created_at", sort[0].Column)
+						require.Equal(t, model.DescendingSortDirection, sort[0].Direction)
+						return model.DataQualityAggregations{}, 0, nil
+					})
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name: "schema_extension_id existence check only runs for eq, not neq",
+			Input: Input{Params: url.Values{
+				"schema_environment_kind_id": []string{"eq:100"},
+				"schema_extension_id":        []string{"neq:999"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetGraphSchemaExtensionById(gomock.Any(), gomock.Any()).Times(0)
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityAggregations{}, 0, nil)
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name:  "default skip and limit are passed to the database when omitted",
+			Input: Input{Params: url.Values{"schema_environment_kind_id": []string{"eq:100"}}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+					func(_ context.Context, _ model.Filters, _ model.Sort, skip int, limit int) (model.DataQualityAggregations, int, error) {
+						require.Equal(t, 0, skip)
+						require.Equal(t, 1000, limit)
+						return model.DataQualityAggregations{}, 0, nil
+					})
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name: "skip and limit keep correct order in both database call and response",
 			Input: Input{Params: url.Values{
 				"schema_environment_kind_id": []string{"eq:100"},
 				"skip":                       []string{"3"},
@@ -1744,11 +1790,16 @@ func TestGetDataQualityAggregations_Success(t *testing.T) {
 					func(_ context.Context, _ model.Filters, _ model.Sort, skip int, limit int) (model.DataQualityAggregations, int, error) {
 						require.Equal(t, 3, skip)
 						require.Equal(t, 7, limit)
-						return model.DataQualityAggregations{}, 0, nil
+						return model.DataQualityAggregations{}, 42, nil
 					})
 				return v2.Resources{DB: mock.Database}
 			},
 			Expected: Expected{Code: http.StatusOK},
+			AssertBody: func(t *testing.T, body map[string]any) {
+				require.Equal(t, float64(3), body["skip"])
+				require.Equal(t, float64(7), body["limit"])
+				require.Equal(t, float64(42), body["count"])
+			},
 		},
 	}
 	for _, tc := range cases {
@@ -1771,6 +1822,12 @@ func TestGetDataQualityAggregations_Success(t *testing.T) {
 			router.ServeHTTP(rr, req)
 
 			require.Equalf(t, tc.Expected.Code, rr.Code, "wrong status code; body=%s", rr.Body.String())
+
+			if tc.AssertBody != nil {
+				var body map[string]any
+				require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &body))
+				tc.AssertBody(t, body)
+			}
 		})
 	}
 }
