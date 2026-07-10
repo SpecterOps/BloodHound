@@ -125,6 +125,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					Name:          "TEST_GraphSchemaEdgeKind_1",
 					Description:   "GraphSchemaRelationshipKind 1",
 					IsTraversable: true,
+					Info:          make(model.KindInfoInputs, 0),
 				},
 			},
 			NodeKindsInput: model.NodesInput{
@@ -135,6 +136,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					IsDisplayKind: true,
 					Icon:          "User",
 					IconColor:     "blue",
+					Info:          make(model.KindInfoInputs, 0),
 				},
 			},
 			EnvironmentsInput: []model.EnvironmentInput{

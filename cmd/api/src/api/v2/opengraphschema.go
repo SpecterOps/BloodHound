@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package v2
 
 import (
@@ -65,19 +66,28 @@ type GraphSchemaExtensionPayload struct {
 }
 
 type GraphSchemaRelationshipKindsPayload struct {
-	Name          string `json:"name"`
-	Description   string `json:"description"`
-	IsTraversable bool   `json:"is_traversable"` // indicates whether the edge-kind is a traversable path
+	Name          string                     `json:"name"`
+	Description   string                     `json:"description"`
+	IsTraversable bool                       `json:"is_traversable"` // indicates whether the edge-kind is a traversable path
+	Info          map[string]KindInfoPayload `json:"info,omitempty"`
 }
 
 type GraphSchemaNodeKindsPayload struct {
-	Name          string `json:"name"`
-	DisplayName   string `json:"display_name"`    // can be different from name but usually isn't other than Base/Entity
-	Description   string `json:"description"`     // human-readable description of the node kind
-	IsDisplayKind bool   `json:"is_display_kind"` // indicates if this kind should supersede others and be displayed
-	Icon          string `json:"icon"`            // font-awesome icon for the registered node kind
-	IconColor     string `json:"color"`           // icon hex color
+	Name          string                     `json:"name"`
+	DisplayName   string                     `json:"display_name"`    // can be different from name but usually isn't other than Base/Entity
+	Description   string                     `json:"description"`     // human-readable description of the node kind
+	IsDisplayKind bool                       `json:"is_display_kind"` // indicates if this kind should supersede others and be displayed
+	Icon          string                     `json:"icon"`            // font-awesome icon for the registered node kind
+	IconColor     string                     `json:"color"`           // icon hex color
+	Info          map[string]KindInfoPayload `json:"info,omitempty"`
 }
+
+type KindInfoPayload struct {
+	Title    string          `json:"title"`
+	Position int             `json:"position"`
+	Markdown json.RawMessage `json:"markdown"` // Raw: {"content": "..."}
+}
+
 type GraphSchemaPropertiesPayload struct {
 	Name        string `json:"name"`
 	DisplayName string `json:"display_name"`
@@ -139,11 +149,15 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 		return
 	}
 
+	var graphExtensionInput model.GraphExtensionInput
+
 	if graphExtensionPayload, err = extractExtensionData(request.Body); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
-	} else if updated, err = s.OpenGraphSchemaService.UpsertOpenGraphExtension(ctx,
-		convertGraphExtensionPayloadToGraphExtension(graphExtensionPayload)); err != nil {
+	} else if graphExtensionInput, err = convertGraphExtensionPayloadToGraphExtension(graphExtensionPayload); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		return
+	} else if updated, err = s.OpenGraphSchemaService.UpsertOpenGraphExtension(ctx, graphExtensionInput); err != nil {
 		switch {
 		case strings.Contains(err.Error(), model.ErrGraphExtensionValidation.Error()) ||
 			strings.Contains(err.Error(), model.ErrGraphExtensionBuiltIn.Error()):
@@ -179,8 +193,50 @@ func extractExtensionDataFromJSON(payload io.Reader) (GraphExtensionPayload, err
 	return graphExtension, nil
 }
 
+// parseInfoPayload converts the typed KindInfoPayload map to model.KindInfoInputs slice
+func parseInfoPayload(infoPayload map[string]KindInfoPayload) (model.KindInfoInputs, error) {
+	var (
+		wrappedContent map[string]json.RawMessage
+		contentBytes   []byte
+		markdown       json.RawMessage
+		err            error
+	)
+
+	if infoPayload == nil || len(infoPayload) == 0 {
+		return make(model.KindInfoInputs, 0), nil
+	}
+
+	result := make(model.KindInfoInputs, 0, len(infoPayload))
+
+	for key, payload := range infoPayload {
+		// Handle empty markdown by providing empty content structure
+		if len(payload.Markdown) == 0 {
+			markdown = []byte(`{"content":""}`)
+		} else {
+			markdown = payload.Markdown
+		}
+
+		wrappedContent = map[string]json.RawMessage{
+			"markdown": markdown,
+		}
+
+		if contentBytes, err = json.Marshal(wrappedContent); err != nil {
+			return nil, fmt.Errorf("failed to wrap markdown content for info key %s: %w", key, err)
+		}
+
+		result = append(result, model.KindInfoInput{
+			InfoKey:  key,
+			Title:    payload.Title,
+			Position: int32(payload.Position),
+			Content:  contentBytes,
+		})
+	}
+
+	return result, nil
+}
+
 // convertGraphExtensionPayloadToGraphExtension - converts the GraphExtensionInput view layer model to the service layer model.
-func convertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload) model.GraphExtensionInput {
+func convertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload) (model.GraphExtensionInput, error) {
 	var (
 		graphExtension = model.GraphExtensionInput{
 			ExtensionInput: model.ExtensionInput{
@@ -194,9 +250,15 @@ func convertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload)
 			PropertiesInput:        make(model.PropertiesInput, 0),
 			EnvironmentsInput:      make(model.EnvironmentsInput, 0),
 		}
+		infoInputs model.KindInfoInputs
+		err        error
 	)
 
 	for _, nodeKindPayload := range payload.GraphSchemaNodeKinds {
+		if infoInputs, err = parseInfoPayload(nodeKindPayload.Info); err != nil {
+			return model.GraphExtensionInput{}, fmt.Errorf("error parsing node kind %s info: %w", nodeKindPayload.Name, err)
+		}
+
 		graphExtension.NodeKindsInput = append(graphExtension.NodeKindsInput,
 			model.NodeInput{
 				Name:          nodeKindPayload.Name,
@@ -205,28 +267,22 @@ func convertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload)
 				IsDisplayKind: nodeKindPayload.IsDisplayKind,
 				Icon:          nodeKindPayload.Icon,
 				IconColor:     nodeKindPayload.IconColor,
+				Info:          infoInputs,
 			})
 	}
 	for _, edgeKindPayload := range payload.GraphSchemaRelationshipKinds {
+		if infoInputs, err = parseInfoPayload(edgeKindPayload.Info); err != nil {
+			return model.GraphExtensionInput{}, fmt.Errorf("error parsing relationship kind %s info: %w", edgeKindPayload.Name, err)
+		}
+
 		graphExtension.RelationshipKindsInput = append(graphExtension.RelationshipKindsInput,
 			model.RelationshipInput{
 				Name:          edgeKindPayload.Name,
 				Description:   edgeKindPayload.Description,
 				IsTraversable: edgeKindPayload.IsTraversable,
+				Info:          infoInputs,
 			})
 	}
-	/*
-		for _, propertyPayload := range payload.GraphSchemaProperties {
-			graphExtension.PropertiesInput = append(graphExtension.PropertiesInput,
-				model.PropertyInput{
-					Name:        propertyPayload.Name,
-					DisplayName: propertyPayload.DisplayName,
-					DataType:    propertyPayload.DataType,
-					Description: propertyPayload.Description,
-				})
-		}
-
-	*/
 	for _, environmentPayload := range payload.GraphEnvironments {
 		graphExtension.EnvironmentsInput = append(graphExtension.EnvironmentsInput,
 			model.EnvironmentInput{
@@ -249,7 +305,7 @@ func convertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload)
 			},
 		})
 	}
-	return graphExtension
+	return graphExtension, nil
 }
 
 type ExtensionsResponse struct {

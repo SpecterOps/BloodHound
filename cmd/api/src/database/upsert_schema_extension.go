@@ -131,8 +131,15 @@ func (s *BloodhoundDB) nodeKindReconcileConfig(extensionId int32) reconcileConfi
 		getInputKey:    func(input model.NodeInput) string { return input.Name },
 		getExistingKey: func(existing model.GraphSchemaNodeKind) string { return existing.Name },
 		create: func(ctx context.Context, input model.NodeInput) (model.GraphSchemaNodeKind, error) {
-			return s.CreateGraphSchemaNodeKind(ctx, input.Name, extensionId,
-				input.DisplayName, input.Description, input.IsDisplayKind, input.Icon, input.IconColor)
+			// Create the node kind first
+			if createdKind, err := s.CreateGraphSchemaNodeKind(ctx, input.Name, extensionId,
+				input.DisplayName, input.Description, input.IsDisplayKind, input.Icon, input.IconColor); err != nil {
+				return model.GraphSchemaNodeKind{}, err
+			} else if _, err := reconcile(ctx, input.Info, []model.GraphSchemaKindInfo{}, s.kindInfoReconcileConfig(createdKind.KindId, &createdKind.ID, nil)); err != nil {
+				return model.GraphSchemaNodeKind{}, fmt.Errorf("failed to create node kind info: %w", err)
+			} else {
+				return createdKind, nil
+			}
 		},
 		update: func(ctx context.Context, existing model.GraphSchemaNodeKind, input model.NodeInput) (model.GraphSchemaNodeKind, error) {
 			existing.DisplayName = input.DisplayName
@@ -140,7 +147,20 @@ func (s *BloodhoundDB) nodeKindReconcileConfig(extensionId int32) reconcileConfi
 			existing.IsDisplayKind = input.IsDisplayKind
 			existing.Icon = input.Icon
 			existing.IconColor = input.IconColor
-			return s.UpdateGraphSchemaNodeKind(ctx, existing)
+
+			// Update the node kind first
+			if updatedKind, err := s.UpdateGraphSchemaNodeKind(ctx, existing); err != nil {
+				return model.GraphSchemaNodeKind{}, err
+			} else {
+				// Now reconcile info entries for this node kind
+				if existingInfos, err := s.GetKindInfos(ctx, updatedKind.KindId); err != nil {
+					return model.GraphSchemaNodeKind{}, fmt.Errorf("failed to fetch existing node kind info: %w", err)
+				} else if _, err := reconcile(ctx, input.Info, existingInfos, s.kindInfoReconcileConfig(updatedKind.KindId, &updatedKind.ID, nil)); err != nil {
+					return model.GraphSchemaNodeKind{}, fmt.Errorf("failed to reconcile node kind info: %w", err)
+				}
+
+				return updatedKind, nil
+			}
 		},
 		delete: func(ctx context.Context, existing model.GraphSchemaNodeKind) error {
 			return s.DeleteGraphSchemaNodeKind(ctx, existing.ID)
@@ -155,13 +175,33 @@ func (s *BloodhoundDB) relationshipKindReconcileConfig(extensionId int32) reconc
 		getInputKey:    func(input model.RelationshipInput) string { return input.Name },
 		getExistingKey: func(existing model.GraphSchemaRelationshipKind) string { return existing.Name },
 		create: func(ctx context.Context, input model.RelationshipInput) (model.GraphSchemaRelationshipKind, error) {
-			return s.CreateGraphSchemaRelationshipKind(ctx, input.Name, extensionId,
-				input.Description, input.IsTraversable)
+			// Create the relationship kind first
+			if createdKind, err := s.CreateGraphSchemaRelationshipKind(ctx, input.Name, extensionId,
+				input.Description, input.IsTraversable); err != nil {
+				return model.GraphSchemaRelationshipKind{}, err
+			} else if _, err := reconcile(ctx, input.Info, []model.GraphSchemaKindInfo{}, s.kindInfoReconcileConfig(createdKind.KindId, nil, &createdKind.ID)); err != nil {
+				return model.GraphSchemaRelationshipKind{}, fmt.Errorf("failed to create relationship kind info: %w", err)
+			} else {
+				return createdKind, nil
+			}
 		},
 		update: func(ctx context.Context, existing model.GraphSchemaRelationshipKind, input model.RelationshipInput) (model.GraphSchemaRelationshipKind, error) {
 			existing.Description = input.Description
 			existing.IsTraversable = input.IsTraversable
-			return s.UpdateGraphSchemaRelationshipKind(ctx, existing)
+
+			// Update the relationship kind first
+			if updatedKind, err := s.UpdateGraphSchemaRelationshipKind(ctx, existing); err != nil {
+				return model.GraphSchemaRelationshipKind{}, err
+			} else {
+				// Now reconcile info entries for this relationship kind
+				if existingInfos, err := s.GetKindInfos(ctx, updatedKind.KindId); err != nil {
+					return model.GraphSchemaRelationshipKind{}, fmt.Errorf("failed to fetch existing relationship kind info: %w", err)
+				} else if _, err := reconcile(ctx, input.Info, existingInfos, s.kindInfoReconcileConfig(updatedKind.KindId, nil, &updatedKind.ID)); err != nil {
+					return model.GraphSchemaRelationshipKind{}, fmt.Errorf("failed to reconcile relationship kind info: %w", err)
+				}
+
+				return updatedKind, nil
+			}
 		},
 		delete: func(ctx context.Context, existing model.GraphSchemaRelationshipKind) error {
 			return s.DeleteGraphSchemaRelationshipKind(ctx, existing.ID)
@@ -201,6 +241,27 @@ func (s *BloodhoundDB) findingReconcileConfig(extensionId int32) reconcileConfig
 		},
 		delete: func(ctx context.Context, existing model.SchemaFinding) error {
 			return s.DeleteSchemaFinding(ctx, existing.ID)
+		},
+	}
+}
+
+// kindInfoReconcileConfig returns the reconcileConfig for kind info entries, keyed by InfoKey.
+// This is used for both node kinds and relationship kinds.
+func (s *BloodhoundDB) kindInfoReconcileConfig(kindID int32, nodeKindID, relationshipKindID *int32) reconcileConfig[model.KindInfoInput, model.GraphSchemaKindInfo, string] {
+	return reconcileConfig[model.KindInfoInput, model.GraphSchemaKindInfo, string]{
+		getInputKey:    func(input model.KindInfoInput) string { return input.InfoKey },
+		getExistingKey: func(existing model.GraphSchemaKindInfo) string { return existing.InfoKey },
+		create: func(ctx context.Context, input model.KindInfoInput) (model.GraphSchemaKindInfo, error) {
+			return s.CreateKindInfo(ctx, kindID, nodeKindID, relationshipKindID, input)
+		},
+		update: func(ctx context.Context, existing model.GraphSchemaKindInfo, input model.KindInfoInput) (model.GraphSchemaKindInfo, error) {
+			existing.Title = input.Title
+			existing.Position = input.Position
+			existing.Content = input.Content
+			return s.UpdateKindInfo(ctx, existing)
+		},
+		delete: func(ctx context.Context, existing model.GraphSchemaKindInfo) error {
+			return s.DeleteKindInfo(ctx, existing.ID)
 		},
 	}
 }

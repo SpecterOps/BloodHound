@@ -7700,7 +7700,23 @@
                         "description": "A generic node kind",
                         "is_display_kind": true,
                         "icon": "computer",
-                        "color": "#FF0000"
+                        "color": "#FF0000",
+                        "info": {
+                          "overview": {
+                            "title": "Overview",
+                            "position": 1,
+                            "markdown": {
+                              "content": "This is an overview panel for Node Kind 1"
+                            }
+                          },
+                          "details": {
+                            "title": "Additional Details",
+                            "position": 2,
+                            "markdown": {
+                              "content": "This panel provides additional information about the node"
+                            }
+                          }
+                        }
                       },
                       {
                         "name": "OGE_Node_Kind_2",
@@ -7721,7 +7737,16 @@
                       {
                         "name": "OGE_ConnectedTo",
                         "description": "A generic relationship kind",
-                        "is_traversable": true
+                        "is_traversable": true,
+                        "info": {
+                          "abuse": {
+                            "title": "Abuse Info",
+                            "position": 1,
+                            "markdown": {
+                              "content": "Information about how this relationship can be abused"
+                            }
+                          }
+                        }
                       }
                     ],
                     "environments": [
@@ -7767,7 +7792,16 @@
                         "description": "An Active Directory Computer object",
                         "is_display_kind": true,
                         "icon": "computer",
-                        "color": "#FF0000"
+                        "color": "#FF0000",
+                        "info": {
+                          "overview": {
+                            "title": "Computer Overview",
+                            "position": 1,
+                            "markdown": {
+                              "content": "Active Directory computer objects represent physical or virtual machines joined to the domain"
+                            }
+                          }
+                        }
                       },
                       {
                         "name": "AD_User",
@@ -7775,7 +7809,23 @@
                         "description": "An Active Directory User object",
                         "is_display_kind": true,
                         "icon": "user",
-                        "color": "#0000FF"
+                        "color": "#0000FF",
+                        "info": {
+                          "overview": {
+                            "title": "User Overview",
+                            "position": 1,
+                            "markdown": {
+                              "content": "Active Directory user accounts represent individuals who can authenticate to the domain"
+                            }
+                          },
+                          "security": {
+                            "title": "Security Considerations",
+                            "position": 2,
+                            "markdown": {
+                              "content": "User accounts should follow the principle of least privilege"
+                            }
+                          }
+                        }
                       },
                       {
                         "name": "AD_LocalGroup",
@@ -7796,7 +7846,23 @@
                       {
                         "name": "AD_MemberOf",
                         "description": "An Active Directory relationship kind",
-                        "is_traversable": true
+                        "is_traversable": true,
+                        "info": {
+                          "description": {
+                            "title": "MemberOf Relationship",
+                            "position": 1,
+                            "markdown": {
+                              "content": "The MemberOf relationship indicates group membership in Active Directory"
+                            }
+                          },
+                          "abuse": {
+                            "title": "Abuse Information",
+                            "position": 2,
+                            "markdown": {
+                              "content": "Group membership can be leveraged to inherit permissions and access rights"
+                            }
+                          }
+                        }
                       }
                     ],
                     "environments": [
@@ -21620,6 +21686,43 @@
           }
         }
       },
+      "model.graph-extension.kind-info-definition": {
+        "type": "object",
+        "description": "A map of named info panels used in extension definitions.\nEach property key is a stable panel identifier, and each property value\nmust be a valid KindInfo object with title, position, and content.\n",
+        "propertyNames": {
+          "pattern": "^[a-z0-9_-]{1,128}$",
+          "description": "Keys may only include lowercase alphanumeric characters, hyphens, and underscores"
+        },
+        "additionalProperties": {
+          "type": "object",
+          "required": [
+            "title",
+            "position"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "example": "Entity Panel Section"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "markdown": {
+              "type": "object",
+              "required": [
+                "content"
+              ],
+              "properties": {
+                "content": {
+                  "type": "string",
+                  "example": "This is markdown content for the info panel"
+                }
+              }
+            }
+          }
+        }
+      },
       "model.graph-extension.payload": {
         "type": "object",
         "properties": {
@@ -21671,6 +21774,9 @@
                 "color": {
                   "type": "string",
                   "example": "#FF0000"
+                },
+                "info": {
+                  "$ref": "#/components/schemas/model.graph-extension.kind-info-definition"
                 }
               }
             }
@@ -21690,6 +21796,9 @@
                 },
                 "is_traversable": {
                   "type": "boolean"
+                },
+                "info": {
+                  "$ref": "#/components/schemas/model.graph-extension.kind-info-definition"
                 }
               }
             }

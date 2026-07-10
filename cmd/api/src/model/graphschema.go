@@ -20,11 +20,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/dawgs/graph"
@@ -48,6 +50,12 @@ var (
 	ErrKindInfoKindNotFound      = errors.New("kind info references a kind that does not exist")
 	ErrKindInfoDuplicatePosition = errors.New("kind info position already in use for this kind")
 	ErrKindInfoDuplicateInfoKey  = errors.New("kind info key already in use for this kind")
+
+	// entity panel validation errors
+	ErrInvalidKindInfoKey      = errors.New("invalid kind info key: must match pattern ^[a-z0-9_-]{1,128}$")
+	ErrTooManyKindInfoEntries  = errors.New("too many kind info entries: maximum 100 allowed per kind")
+	ErrInvalidKindInfoPosition = errors.New("invalid kind info position: must be >= 1")
+	ErrUnsafeMarkdownContent   = errors.New("markdown content contains unsafe HTML")
 )
 
 func ErrIsGraphSchemaDuplicateError(err error) bool {
@@ -67,6 +75,9 @@ func ErrIsGraphSchemaDuplicateError(err error) bool {
 		return false
 	}
 }
+
+// kindInfoKeyPattern is the regex pattern for validating info keys
+var kindInfoKeyPattern = regexp.MustCompile(`^[a-z0-9_-]{1,128}$`)
 
 // reservedGraphKindNamespaces lists namespaces that cannot be used in custom
 // graph extensions or ingest payloads. These are owned by internal subsystems
@@ -104,6 +115,52 @@ func (s *ReservedKindError) Error() string {
 	return fmt.Sprintf("kind '%s' uses reserved namespace '%s'", s.KindName, s.Namespace)
 }
 
+// ValidateMarkdownSafety checks if markdown content is safe to render as HTML.
+// It returns ErrUnsafeMarkdownContent if the markdown contains HTML that would
+// be stripped by bluemonday's UGC (User Generated Content) policy.
+// The content parameter should be a JSON structure like: {"markdown":{"content":"..."}}
+func ValidateMarkdownSafety(content json.RawMessage) error {
+	var (
+		contentWrapper struct {
+			Markdown struct {
+				Content string `json:"content"`
+			} `json:"markdown"`
+		}
+	)
+
+	if err := json.Unmarshal(content, &contentWrapper); err != nil {
+		return fmt.Errorf("failed to parse markdown content JSON: %w", err)
+	}
+
+	markdown := contentWrapper.Markdown.Content
+	policy := bluemonday.UGCPolicy()
+	sanitized := policy.Sanitize(markdown)
+
+	if sanitized != markdown {
+		return fmt.Errorf("%w: markdown contains disallowed HTML tags or attributes", ErrUnsafeMarkdownContent)
+	}
+
+	return nil
+}
+
+// validateKindInfo validates a map of KindInfo entries
+func validateKindInfo(kindName string, info KindInfoInputs) error {
+	if len(info) > 100 {
+		return fmt.Errorf("%w for kind %s: has %d entries", ErrTooManyKindInfoEntries, kindName, len(info))
+	}
+
+	for _, infoEntry := range info {
+		if !kindInfoKeyPattern.MatchString(infoEntry.InfoKey) {
+			return fmt.Errorf("%w: key '%s' in kind %s", ErrInvalidKindInfoKey, infoEntry.InfoKey, kindName)
+		} else if infoEntry.Position < 1 {
+			return fmt.Errorf("%w: position %d for info key '%s' in kind %s", ErrInvalidKindInfoPosition, infoEntry.Position, infoEntry.InfoKey, kindName)
+		} else if err := ValidateMarkdownSafety(infoEntry.Content); err != nil {
+			return fmt.Errorf("info key '%s' in kind %s: %w", infoEntry.InfoKey, kindName, err)
+		}
+	}
+	return nil
+}
+
 type GraphSchemaExtensions []GraphSchemaExtension
 
 type GraphSchemaExtension struct {
@@ -137,6 +194,7 @@ type GraphSchemaNodeKinds []GraphSchemaNodeKind
 // GraphSchemaNodeKind - represents a node kind for an extension
 type GraphSchemaNodeKind struct {
 	Serial
+	KindId            int32 // DAWGS kind table ID
 	Name              string
 	SchemaExtensionId int32  // indicates which extension this node kind belongs to
 	DisplayName       string // can be different from name but usually isn't other than Base/Entity
@@ -427,6 +485,9 @@ func (s GraphExtensionInput) Validate() error {
 		if kind.IconColor != "" && !IsValidIconColor(kind.IconColor) {
 			return fmt.Errorf("invalid hex color string %s for node kind %s", kind.IconColor, kind.Name)
 		}
+		if err := validateKindInfo(kind.Name, kind.Info); err != nil {
+			return err
+		}
 		nodeKinds[kind.Name] = struct{}{}
 	}
 
@@ -441,6 +502,9 @@ func (s GraphExtensionInput) Validate() error {
 		}
 		if _, ok := nodeKinds[kind.Name]; ok {
 			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
+		}
+		if err := validateKindInfo(kind.Name, kind.Info); err != nil {
+			return err
 		}
 		relationshipKinds[kind.Name] = struct{}{}
 	}
@@ -548,18 +612,20 @@ type PropertyInput struct {
 type NodesInput []NodeInput
 type NodeInput struct {
 	Name          string
-	DisplayName   string // human-readable name
-	Description   string // human-readable description of the node kind
-	IsDisplayKind bool   // indicates if this kind should supersede others and be displayed
-	Icon          string // font-awesome icon for the registered node kind
-	IconColor     string // icon hex color
+	DisplayName   string         // human-readable name
+	Description   string         // human-readable description of the node kind
+	IsDisplayKind bool           // indicates if this kind should supersede others and be displayed
+	Icon          string         // font-awesome icon for the registered node kind
+	IconColor     string         // icon hex color
+	Info          KindInfoInputs // entity panel definitions for this node kind
 }
 
 type RelationshipsInput []RelationshipInput
 type RelationshipInput struct {
 	Name          string
 	Description   string
-	IsTraversable bool // indicates whether the edge-kind is a traversable path
+	IsTraversable bool           // indicates whether the edge-kind is a traversable path
+	Info          KindInfoInputs // entity panel definitions for this relationship kind
 }
 type RemediationInput struct {
 	ShortDescription string
@@ -567,6 +633,9 @@ type RemediationInput struct {
 	ShortRemediation string
 	LongRemediation  string
 }
+
+// represents a slice of entity panel definitions
+type KindInfoInputs []KindInfoInput
 
 // KindInfoInput represents one entity panel definition as provided in a user's upload JSON
 type KindInfoInput struct {

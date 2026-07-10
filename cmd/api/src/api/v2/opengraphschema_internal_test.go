@@ -23,13 +23,16 @@ import (
 )
 
 func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		payload GraphExtensionPayload
 	}
 	tests := []struct {
-		name string
-		args args
-		want model.GraphExtensionInput
+		name    string
+		args    args
+		want    model.GraphExtensionInput
+		wantErr bool
 	}{
 		{
 			name: "success",
@@ -110,6 +113,7 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 						Name:          "GraphSchemaEdgeKind_1",
 						Description:   "GraphSchemaRelationshipKind 1",
 						IsTraversable: true,
+						Info:          make(model.KindInfoInputs, 0),
 					},
 				},
 				NodeKindsInput: model.NodesInput{
@@ -120,6 +124,7 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 						IsDisplayKind: true,
 						Icon:          "User",
 						IconColor:     "blue",
+						Info:          make(model.KindInfoInputs, 0),
 					},
 				},
 				EnvironmentsInput: []model.EnvironmentInput{
@@ -145,10 +150,172 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:    "error_-_invalid_node_info_markdown",
+			wantErr: true,
+			args: args{
+				payload: GraphExtensionPayload{
+					GraphSchemaNodeKinds: []GraphSchemaNodeKindsPayload{
+						{
+							Name: "Bad_Node",
+							Info: map[string]KindInfoPayload{
+								"bad": {Title: "Bad", Position: 1, Markdown: []byte(`{invalid json`)},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, convertGraphExtensionPayloadToGraphExtension(tt.args.payload), "ConvertGraphExtensionPayloadToGraphExtension(%v)", tt.args.payload)
+			t.Parallel()
+
+			got, err := convertGraphExtensionPayloadToGraphExtension(tt.args.payload)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equalf(t, tt.want, got, "ConvertGraphExtensionPayloadToGraphExtension(%v)", tt.args.payload)
+			}
+		})
+	}
+}
+
+func Test_parseInfoPayload(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		input   map[string]KindInfoPayload
+		want    model.KindInfoInputs
+		wantErr bool
+	}{
+		{
+			name:  "empty_info",
+			input: nil,
+			want:  make(model.KindInfoInputs, 0),
+		},
+		{
+			name: "valid_info",
+			input: map[string]KindInfoPayload{
+				"overview": {
+					Title:    "Overview",
+					Position: 1,
+					Markdown: []byte(`{"content":"# Test"}`),
+				},
+			},
+			want: model.KindInfoInputs{
+				{
+					InfoKey:  "overview",
+					Title:    "Overview",
+					Position: 1,
+					Content:  []byte(`{"markdown":{"content":"# Test"}}`),
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "multiple_info_entries",
+			input: map[string]KindInfoPayload{
+				"overview": {
+					Title:    "Overview",
+					Position: 1,
+					Markdown: []byte(`{"content":"# Overview"}`),
+				},
+				"details": {
+					Title:    "Details",
+					Position: 2,
+					Markdown: []byte(`{"content":"## Details"}`),
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "blank_markdown_content",
+			input: map[string]KindInfoPayload{
+				"empty": {
+					Title:    "Empty",
+					Position: 1,
+					Markdown: []byte(`{"content":""}`),
+				},
+			},
+			want: model.KindInfoInputs{
+				{
+					InfoKey:  "empty",
+					Title:    "Empty",
+					Position: 1,
+					Content:  []byte(`{"markdown":{"content":""}}`),
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "empty_json_rawmessage_default",
+			input: map[string]KindInfoPayload{
+				"test": {
+					Title:    "Test",
+					Position: 1,
+					Markdown: []byte{}, // Empty markdown gets default structure
+				},
+			},
+			want: model.KindInfoInputs{
+				{
+					InfoKey:  "test",
+					Title:    "Test",
+					Position: 1,
+					Content:  []byte(`{"markdown":{"content":""}}`), // Empty content
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "nil_json_rawmessage_default",
+			input: map[string]KindInfoPayload{
+				"test": {
+					Title:    "Test",
+					Position: 1,
+					Markdown: nil, // Nil markdown also gets default structure
+				},
+			},
+			want: model.KindInfoInputs{
+				{
+					InfoKey:  "test",
+					Title:    "Test",
+					Position: 1,
+					Content:  []byte(`{"markdown":{"content":""}}`), // Empty content
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "error_-_invalid_markdown_json",
+			input: map[string]KindInfoPayload{
+				"bad": {
+					Title:    "Bad",
+					Position: 1,
+					Markdown: []byte(`{invalid json`), // malformed JSON fails to wrap
+				},
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := parseInfoPayload(tt.input)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				if tt.want != nil {
+					assert.Equal(t, tt.want, got)
+				} else {
+					assert.NotNil(t, got)
+				}
+			}
 		})
 	}
 }

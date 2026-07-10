@@ -17,7 +17,9 @@
 package model
 
 import (
+	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -1004,6 +1006,10 @@ func Test_validateGraphExtension(t *testing.T) {
 							IsDisplayKind: true,
 							DisplayName:   "AD_node_kind_1",
 							Icon:          "person",
+							Info: KindInfoInputs{
+								{InfoKey: "overview", Title: "Overview", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"# Overview\n\nThis is **bold**."}}`)},
+								{InfoKey: "security-notes", Title: "Security Notes", Position: 2, Content: json.RawMessage(`{"markdown":{"content":"- Note 1\n- Note 2"}}`)},
+							},
 						},
 						{
 							Name: "AD_env_kind_1",
@@ -1011,6 +1017,9 @@ func Test_validateGraphExtension(t *testing.T) {
 					},
 					RelationshipKindsInput: RelationshipsInput{{
 						Name: "AD_edge kind 1",
+						Info: KindInfoInputs{
+							{InfoKey: "details", Title: "Details", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"Relationship details"}}`)},
+						},
 					}},
 					EnvironmentsInput: EnvironmentsInput{
 						{
@@ -1037,6 +1046,178 @@ func Test_validateGraphExtension(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.args.graphExtension.Validate(); tt.wantErr != nil {
 				require.ErrorContains(t, err, tt.wantErr.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidateMarkdownSafety(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		markdown string
+		wantErr  error
+	}{
+		{name: "success_-_headings_and_formatting", markdown: "# Heading\n\n**bold** and *italic*", wantErr: nil},
+		{name: "success_-_lists", markdown: "- List item 1\n- List item 2", wantErr: nil},
+		{name: "success_-_links", markdown: "[Link](https://example.com)", wantErr: nil},
+		{name: "success_-_code_blocks", markdown: "`code` and ```code block```", wantErr: nil},
+		{name: "success_-_allowed_html", markdown: "Text with <b>bold</b> and <i>italic</i>", wantErr: nil},
+		{name: "error_-_script_tag", markdown: "<script>alert('xss')</script>", wantErr: ErrUnsafeMarkdownContent},
+		{name: "error_-_img_onerror", markdown: "<img src=x onerror='alert(1)'>", wantErr: ErrUnsafeMarkdownContent},
+		{name: "error_-_iframe", markdown: "<iframe src='evil.com'></iframe>", wantErr: ErrUnsafeMarkdownContent},
+		{name: "error_-_javascript_href", markdown: "<a href='javascript:alert()'>Click</a>", wantErr: ErrUnsafeMarkdownContent},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				wrappedContent = struct {
+					Markdown struct {
+						Content string `json:"content"`
+					} `json:"markdown"`
+				}{}
+			)
+			wrappedContent.Markdown.Content = tc.markdown
+			content, err := json.Marshal(wrappedContent)
+			require.NoError(t, err)
+
+			if err := ValidateMarkdownSafety(json.RawMessage(content)); tc.wantErr != nil {
+				require.ErrorIs(t, err, tc.wantErr)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestKindInfo_Validation(t *testing.T) {
+	t.Parallel()
+
+	var (
+		validContent = json.RawMessage(`{"markdown":{"content":"Valid content"}}`)
+	)
+
+	testCases := []struct {
+		name    string
+		input   GraphExtensionInput
+		wantErr error
+	}{
+		{
+			name: "success_-_valid_info",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{
+						{InfoKey: "overview", Title: "Overview", Position: 1, Content: validContent},
+						{InfoKey: "details", Title: "Details", Position: 2, Content: validContent},
+					},
+				}},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "error_-_uppercase_key",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "INVALID_KEY", Title: "Title", Position: 1, Content: validContent}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoKey,
+		},
+		{
+			name: "error_-_key_with_spaces",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "invalid key", Title: "Title", Position: 1, Content: validContent}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoKey,
+		},
+		{
+			name: "error_-_key_with_special_chars",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "invalid@key", Title: "Title", Position: 1, Content: validContent}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoKey,
+		},
+		{
+			name: "error_-_key_too_long",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: strings.Repeat("a", 129), Title: "Title", Position: 1, Content: validContent}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoKey,
+		},
+		{
+			name: "error_-_empty_key",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "", Title: "Title", Position: 1, Content: validContent}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoKey,
+		},
+		{
+			name: "error_-_too_many_entries",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: func() KindInfoInputs {
+						var entries KindInfoInputs
+						for i := 0; i < 101; i++ {
+							entries = append(entries, KindInfoInput{
+								InfoKey:  fmt.Sprintf("key%d", i),
+								Title:    "Title",
+								Position: int32(i + 1),
+								Content:  validContent,
+							})
+						}
+						return entries
+					}(),
+				}},
+			},
+			wantErr: ErrTooManyKindInfoEntries,
+		},
+		{
+			name: "error_-_invalid_position",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 0, Content: validContent}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoPosition,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			if err := tc.input.Validate(); tc.wantErr != nil {
+				require.ErrorIs(t, err, tc.wantErr)
 			} else {
 				require.NoError(t, err)
 			}

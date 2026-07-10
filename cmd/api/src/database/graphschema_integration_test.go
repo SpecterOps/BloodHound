@@ -693,6 +693,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 
 					// Additional validations for the found item
 					assert.GreaterOrEqualf(t, nk.ID, int32(1), "NodeKind %v - ID is invalid", nk.Name)
+					assert.NotZerof(t, nk.KindId, "NodeKind %v - KindId should be populated from database", nk.Name)
 					assert.Falsef(t, nk.CreatedAt.IsZero(), "NodeKind %v - created_at is zero", nk.Name)
 					assert.Falsef(t, nk.UpdatedAt.IsZero(), "NodeKind %v - updated_at is zero", nk.Name)
 					assert.Falsef(t, nk.DeletedAt.Valid, "NodeKind %v - deleted_at should be null", nk.Name)
@@ -2114,6 +2115,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 
 					// Additional validations for the found item
 					assert.Greater(t, rk.ID, int32(0), "RelationshipKind %v - ID is invalid", rk.Name)
+					assert.NotZerof(t, rk.KindId, "RelationshipKind %v - KindId should be populated from database", rk.Name)
 
 					found = true
 					break
@@ -2187,10 +2189,9 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 					IsTraversable:     false,
 				}
 
-				createdEdgeKind := createTestRelationshipKind(t, testSuite, edgeKind.Name, edgeKind.SchemaExtensionId, edgeKind.Description, edgeKind.IsTraversable)
-				assertContainsRelationshipKind(t, createdEdgeKind, edgeKind)
+				createTestRelationshipKind(t, testSuite, edgeKind.Name, edgeKind.SchemaExtensionId, edgeKind.Description, edgeKind.IsTraversable)
 
-				// Create same Relationship Kind 1gain
+				// Create same Relationship Kind again
 				_, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, edgeKind.Name, edgeKind.SchemaExtensionId, edgeKind.Description, edgeKind.IsTraversable)
 				assert.ErrorIs(t, err, model.ErrDuplicateSchemaRelationshipKindName)
 			},
@@ -2511,7 +2512,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 				assert.NoError(t, err, "unexpected error occurred retrieving updated relationship kind")
 
 				// Validate updated fields
-				assertContainsRelationshipKind(t, updateEdgeKind, edgeKindWithChanges)
+				assertContainsRelationshipKind(t, edgeKindWithChanges, updateEdgeKind)
 			},
 		},
 		{
@@ -5223,6 +5224,127 @@ func TestDatabase_DeleteKindInfo(t *testing.T) {
 	kindInfos, err := testSuite.BHDatabase.GetKindInfos(testSuite.Context, seed.nodeBackingKindID)
 	require.NoError(t, err)
 	assert.Empty(t, kindInfos)
+}
+
+func TestDatabase_UpdateKindInfo(t *testing.T) {
+	type testSetupData struct {
+		createdKindInfo model.GraphSchemaKindInfo
+	}
+	type testCase struct {
+		name   string
+		setup  func(t *testing.T, testSuite IntegrationTestSuite) testSetupData
+		assert func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData)
+	}
+
+	tests := []testCase{
+		{
+			name: "success_-_update_kind_info_fields",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				seed := seedGraphSchemaKindInfoPrerequisites(t, testSuite)
+				createdKindInfo, err := testSuite.BHDatabase.CreateKindInfo(
+					testSuite.Context,
+					seed.nodeBackingKindID,
+					&seed.nodeSchemaKindID,
+					nil,
+					model.KindInfoInput{
+						InfoKey:  "overview",
+						Title:    "Original",
+						Position: 1,
+						Content:  json.RawMessage(`{"markdown":{"content":"v1"}}`),
+					},
+				)
+				require.NoError(t, err)
+				return testSetupData{createdKindInfo: createdKindInfo}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData) {
+				t.Helper()
+				setupData.createdKindInfo.Title = "Updated"
+				setupData.createdKindInfo.Position = 2
+				setupData.createdKindInfo.Content = json.RawMessage(`{"markdown":{"content":"v2"}}`)
+
+				updatedKindInfo, err := testSuite.BHDatabase.UpdateKindInfo(testSuite.Context, setupData.createdKindInfo)
+				require.NoError(t, err)
+				assert.Equal(t, setupData.createdKindInfo.ID, updatedKindInfo.ID)
+				assert.Equal(t, "Updated", updatedKindInfo.Title)
+				assert.Equal(t, int32(2), updatedKindInfo.Position)
+				assert.JSONEq(t, `{"markdown":{"content":"v2"}}`, string(updatedKindInfo.Content))
+			},
+		},
+		{
+			name: "error_-_update_nonexistent_kind_info",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				seed := seedGraphSchemaKindInfoPrerequisites(t, testSuite)
+				return testSetupData{createdKindInfo: model.GraphSchemaKindInfo{
+					ID:         99999,
+					KindID:     seed.nodeBackingKindID,
+					NodeKindID: &seed.nodeSchemaKindID,
+					InfoKey:    "nonexistent",
+					Title:      "Does Not Exist",
+					Position:   1,
+					Content:    json.RawMessage(`{"markdown":{"content":"test"}}`),
+				}}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData) {
+				t.Helper()
+				_, err := testSuite.BHDatabase.UpdateKindInfo(testSuite.Context, setupData.createdKindInfo)
+				require.EqualError(t, err, database.ErrNotFound.Error())
+			},
+		},
+		{
+			name: "error_-_update_to_duplicate_info_key",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				seed := seedGraphSchemaKindInfoPrerequisites(t, testSuite)
+				_, err := testSuite.BHDatabase.CreateKindInfo(testSuite.Context, seed.nodeBackingKindID, &seed.nodeSchemaKindID, nil,
+					model.KindInfoInput{InfoKey: "existing", Title: "Existing", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"existing"}}`)})
+				require.NoError(t, err)
+				created, err := testSuite.BHDatabase.CreateKindInfo(testSuite.Context, seed.nodeBackingKindID, &seed.nodeSchemaKindID, nil,
+					model.KindInfoInput{InfoKey: "other", Title: "Other", Position: 2, Content: json.RawMessage(`{"markdown":{"content":"other"}}`)})
+				require.NoError(t, err)
+				return testSetupData{createdKindInfo: created}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData) {
+				t.Helper()
+				setupData.createdKindInfo.InfoKey = "existing"
+				_, err := testSuite.BHDatabase.UpdateKindInfo(testSuite.Context, setupData.createdKindInfo)
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), "duplicate")
+			},
+		},
+		{
+			name: "error_-_update_to_duplicate_position",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				seed := seedGraphSchemaKindInfoPrerequisites(t, testSuite)
+				_, err := testSuite.BHDatabase.CreateKindInfo(testSuite.Context, seed.nodeBackingKindID, &seed.nodeSchemaKindID, nil,
+					model.KindInfoInput{InfoKey: "first", Title: "First", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"first"}}`)})
+				require.NoError(t, err)
+				created, err := testSuite.BHDatabase.CreateKindInfo(testSuite.Context, seed.nodeBackingKindID, &seed.nodeSchemaKindID, nil,
+					model.KindInfoInput{InfoKey: "second", Title: "Second", Position: 2, Content: json.RawMessage(`{"markdown":{"content":"second"}}`)})
+				require.NoError(t, err)
+				return testSetupData{createdKindInfo: created}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData) {
+				t.Helper()
+				setupData.createdKindInfo.Position = 1
+				_, err := testSuite.BHDatabase.UpdateKindInfo(testSuite.Context, setupData.createdKindInfo)
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), "duplicate")
+			},
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := setupIntegrationTestSuite(t)
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			setupData := testCase.setup(t, testSuite)
+			testCase.assert(t, testSuite, setupData)
+		})
+	}
 }
 
 func seedGraphSchemaKindInfoPrerequisites(t *testing.T, testSuite IntegrationTestSuite) graphSchemaKindInfoSeed {
