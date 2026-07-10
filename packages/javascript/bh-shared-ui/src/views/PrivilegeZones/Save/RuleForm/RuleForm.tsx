@@ -239,7 +239,6 @@ const RuleForm: FC = () => {
 
     const handleCreateRule = useCallback(async () => {
         try {
-            const val = form.getValues();
             if (!tagId) throw new Error(`Missing required ID. tagId: ${tagId}`);
 
             const values = {

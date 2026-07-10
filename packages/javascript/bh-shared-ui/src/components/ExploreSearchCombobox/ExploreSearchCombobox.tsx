@@ -95,7 +95,7 @@ const ExploreSearchCombobox: React.FC<{
                         <FormControl>
                             <Input
                                 {...field}
-                                ref={(node) => {
+                                ref={(node: HTMLInputElement) => {
                                     downshiftInputProps.inputRef(node);
                                     searchNodesRef.current = node;
                                 }}
@@ -108,12 +108,9 @@ const ExploreSearchCombobox: React.FC<{
                                 disabled={disabled}
                                 type='text'
                                 autoComplete='off'
-                                style={{
-                                    backgroundColor: disabled ? theme.neutral.tertiary : 'inherit',
-                                    fontSize: '0.875rem',
-                                }}
+                                className='pl-2 border-[1px] border-primary rounded-md text-sm dark:bg-neutral-dark-1'
                                 startAdornment={selectedItem?.type && <NodeIcon nodeType={selectedItem?.type} />}
-                                autoFocus
+                                autoFocus={autoFocus}
                                 data-testid='explore_search_input-search'
                                 {...downshiftInputProps}
                             />
