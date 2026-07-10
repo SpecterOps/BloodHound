@@ -60,6 +60,9 @@ const HistoryContent = () => {
         fetchMore: query.fetchNextPage,
         loadedCount: records.length,
     });
+    // const [width] = useMeasure(scrollRef);
+
+    // const nameWidth = width > 1800 ? 750 : 550;
 
     const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
         count: records.length ?? 0,
@@ -79,7 +82,7 @@ const HistoryContent = () => {
                 cleared.
             </p>
             <div data-testid='history-wrapper' className='flex gap-6 mt-4 h-[calc(100%-5rem)]'>
-                <Card className='flex flex-col'>
+                <Card className='flex flex-col flex-1 min-w-0'>
                     <CardHeader className='flex-row ml-3 justify-between items-center'>
                         <CardTitle>History Log</CardTitle>
                         <div className='flex items-center'>
@@ -93,8 +96,10 @@ const HistoryContent = () => {
                         ref={scrollRef}
                         // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
                         tabIndex={0}
-                        className='overflow-y-auto mb-1 min-h-32 h-full'>
+                        className='overflow-auto mb-1 min-h-32 h-full'>
                         <DataTable
+                            enableResizing
+                            growLastColumn
                             aria-label='History Log Table'
                             data={records}
                             TableHeaderProps={tableHeaderProps}

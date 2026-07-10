@@ -48,7 +48,7 @@ export const columns = [
             </Tooltip>
         ),
 
-        size: 150,
+        size: 700,
     }),
     columnHelper.accessor('action', {
         id: 'action',
@@ -60,14 +60,14 @@ export const columns = [
                 <div className='truncate'>{actionTranslate[row.original.action]}</div>
             </Tooltip>
         ),
-        size: 150,
+        size: 400,
     }),
     columnHelper.accessor('created_at', {
         id: 'created_at',
         header: () => {
             return <div className='pl-8 text-left'>Date</div>;
         },
-        size: 96,
+        size: 200,
         cell: ({ row }) => <div>{DateTime.fromISO(row.original.created_at).toFormat(LuxonFormat.ISO_8601)}</div>,
     }),
     columnHelper.accessor('tagName', {
@@ -84,7 +84,7 @@ export const columns = [
                 )}
             </Tooltip>
         ),
-        size: 150,
+        size: 250,
     }),
     columnHelper.accessor('actor', {
         id: 'actor',
@@ -96,7 +96,7 @@ export const columns = [
                 <div className='truncate'>{row.original.email || row.original.actor}</div>
             </Tooltip>
         ),
-        size: 150,
+        size: 250,
     }),
     columnHelper.accessor('note', {
         id: 'note',
@@ -105,5 +105,6 @@ export const columns = [
         },
         size: 96,
         cell: ({ row }) => <NoteCell row={row} />,
+        enableResizing: false,
     }),
 ];
