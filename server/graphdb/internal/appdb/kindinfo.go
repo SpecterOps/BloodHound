@@ -59,9 +59,9 @@ func toKindInfo(row kindInfoRow) services.KindInfo {
 	}
 }
 
-// GetKindInfos returns all KindInfo's associated with the given node or relationship kind,
+// GetKindInfos returns all KindInfo's associated with the given kind name,
 // ordered by position then title. An empty slice is returned when no rows match.
-func (s *Store) GetKindInfos(ctx context.Context, nodeKindID *int32, relationshipKindID *int32) ([]services.KindInfo, error) {
+func (s *Store) GetKindInfos(ctx context.Context, kindName string) ([]services.KindInfo, error) {
 	var (
 		selectBuilder = sqlbuilder.PostgreSQL.NewSelectBuilder()
 		sqlQuery      string
@@ -72,30 +72,20 @@ func (s *Store) GetKindInfos(ctx context.Context, nodeKindID *int32, relationshi
 	)
 
 	selectBuilder.Select(
-		"id",
-		"kind_id",
-		"node_kind_id",
-		"relationship_kind_id",
-		"info_key",
-		"title",
-		"position",
-		"content",
-		"created_at",
-		"updated_at",
+		"ki.id",
+		"ki.kind_id",
+		"ki.node_kind_id",
+		"ki.relationship_kind_id",
+		"ki.info_key",
+		"ki.title",
+		"ki.position",
+		"ki.content",
+		"ki.created_at",
+		"ki.updated_at",
 	)
-	selectBuilder.From(tableSchemaKindInfo)
-
-	switch {
-	case nodeKindID == nil && relationshipKindID == nil:
-		return nil, fmt.Errorf("exactly one of nodeKindID or relationshipKindID must be provided")
-	case nodeKindID != nil && relationshipKindID != nil:
-		return nil, fmt.Errorf("exactly one of nodeKindID or relationshipKindID must be provided")
-	case nodeKindID != nil:
-		selectBuilder.Where(selectBuilder.Equal("node_kind_id", *nodeKindID))
-	default:
-		selectBuilder.Where(selectBuilder.Equal("relationship_kind_id", *relationshipKindID))
-	}
-
+	selectBuilder.From(selectBuilder.As(tableSchemaKindInfo, "ki"))
+	selectBuilder.Join(selectBuilder.As(tableKind, "k"), "ki.kind_id = k.id")
+	selectBuilder.Where(selectBuilder.Equal("k.name", kindName))
 	selectBuilder.OrderBy("position", "title")
 
 	sqlQuery, args = selectBuilder.Build()

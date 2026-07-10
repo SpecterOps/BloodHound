@@ -120,8 +120,8 @@ func (_c *MockDatabase_GetKindByName_Call) RunAndReturn(run func(ctx context.Con
 }
 
 // GetKindInfos provides a mock function for the type MockDatabase
-func (_mock *MockDatabase) GetKindInfos(ctx context.Context, nodeKindID *int32, relationshipKindID *int32) ([]services.KindInfo, error) {
-	ret := _mock.Called(ctx, nodeKindID, relationshipKindID)
+func (_mock *MockDatabase) GetKindInfos(ctx context.Context, kindName string) ([]services.KindInfo, error) {
+	ret := _mock.Called(ctx, kindName)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetKindInfos")
@@ -129,18 +129,18 @@ func (_mock *MockDatabase) GetKindInfos(ctx context.Context, nodeKindID *int32, 
 
 	var r0 []services.KindInfo
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *int32, *int32) ([]services.KindInfo, error)); ok {
-		return returnFunc(ctx, nodeKindID, relationshipKindID)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) ([]services.KindInfo, error)); ok {
+		return returnFunc(ctx, kindName)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *int32, *int32) []services.KindInfo); ok {
-		r0 = returnFunc(ctx, nodeKindID, relationshipKindID)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) []services.KindInfo); ok {
+		r0 = returnFunc(ctx, kindName)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]services.KindInfo)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, *int32, *int32) error); ok {
-		r1 = returnFunc(ctx, nodeKindID, relationshipKindID)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = returnFunc(ctx, kindName)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -154,30 +154,24 @@ type MockDatabase_GetKindInfos_Call struct {
 
 // GetKindInfos is a helper method to define mock.On call
 //   - ctx context.Context
-//   - nodeKindID *int32
-//   - relationshipKindID *int32
-func (_e *MockDatabase_Expecter) GetKindInfos(ctx interface{}, nodeKindID interface{}, relationshipKindID interface{}) *MockDatabase_GetKindInfos_Call {
-	return &MockDatabase_GetKindInfos_Call{Call: _e.mock.On("GetKindInfos", ctx, nodeKindID, relationshipKindID)}
+//   - kindName string
+func (_e *MockDatabase_Expecter) GetKindInfos(ctx interface{}, kindName interface{}) *MockDatabase_GetKindInfos_Call {
+	return &MockDatabase_GetKindInfos_Call{Call: _e.mock.On("GetKindInfos", ctx, kindName)}
 }
 
-func (_c *MockDatabase_GetKindInfos_Call) Run(run func(ctx context.Context, nodeKindID *int32, relationshipKindID *int32)) *MockDatabase_GetKindInfos_Call {
+func (_c *MockDatabase_GetKindInfos_Call) Run(run func(ctx context.Context, kindName string)) *MockDatabase_GetKindInfos_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 *int32
+		var arg1 string
 		if args[1] != nil {
-			arg1 = args[1].(*int32)
-		}
-		var arg2 *int32
-		if args[2] != nil {
-			arg2 = args[2].(*int32)
+			arg1 = args[1].(string)
 		}
 		run(
 			arg0,
 			arg1,
-			arg2,
 		)
 	})
 	return _c
@@ -188,7 +182,7 @@ func (_c *MockDatabase_GetKindInfos_Call) Return(kindInfos []services.KindInfo, 
 	return _c
 }
 
-func (_c *MockDatabase_GetKindInfos_Call) RunAndReturn(run func(ctx context.Context, nodeKindID *int32, relationshipKindID *int32) ([]services.KindInfo, error)) *MockDatabase_GetKindInfos_Call {
+func (_c *MockDatabase_GetKindInfos_Call) RunAndReturn(run func(ctx context.Context, kindName string) ([]services.KindInfo, error)) *MockDatabase_GetKindInfos_Call {
 	_c.Call.Return(run)
 	return _c
 }

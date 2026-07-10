@@ -71,7 +71,7 @@ func (s *Service) GetNode(ctx context.Context, id int64, includeKindInfo bool) (
 				continue
 			}
 
-			kindInfos, err := s.db.GetKindInfos(ctx, nodeKind.ID, nil)
+			kindInfos, err := s.db.GetKindInfos(ctx, nodeKind.Name)
 			if err != nil {
 				return Node{}, fmt.Errorf("failed to get kind info for %s", nodeKind.Name)
 			}

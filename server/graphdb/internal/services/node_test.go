@@ -129,12 +129,11 @@ func TestService_GetNode(t *testing.T) {
 			setupMock: func(databaseMock *mocks.MockDatabase) {
 				databaseMock.EXPECT().GetNode(ctx, nodeID).Return(baseNode, nil)
 				databaseMock.EXPECT().GetNodeKindsByNames(ctx, []string{"User", "Group"}).Return(resolvedKinds, nil)
-				var nilPtr *int32 // this slots into the relationshipKindID param, which should be nil
-				databaseMock.EXPECT().GetKindInfos(ctx, resolvedKinds[0].ID, nilPtr).Return([]services.KindInfo{
+				databaseMock.EXPECT().GetKindInfos(ctx, "User").Return([]services.KindInfo{
 					{InfoKey: "user_later", Title: "Beta", Position: 1, NodeKindID: int32Ptr(1)},
 					{InfoKey: "user_tie", Title: "Alpha", Position: 1, NodeKindID: int32Ptr(1)},
 				}, nil)
-				databaseMock.EXPECT().GetKindInfos(ctx, resolvedKinds[1].ID, nilPtr).Return([]services.KindInfo{
+				databaseMock.EXPECT().GetKindInfos(ctx, "Group").Return([]services.KindInfo{
 					{InfoKey: "group_first", Title: "Gamma", Position: 0, NodeKindID: int32Ptr(2)},
 					{InfoKey: "group_tie", Title: "Alpha", Position: 1, NodeKindID: int32Ptr(2)},
 				}, nil)
