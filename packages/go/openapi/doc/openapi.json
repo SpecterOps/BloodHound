@@ -7341,22 +7341,22 @@
             }
           },
           "400": {
-            "description": "Bad Request"
+            "$ref": "#/components/responses/bad-request"
           },
           "401": {
-            "description": "Unauthorized"
+            "$ref": "#/components/responses/unauthorized"
           },
           "403": {
-            "description": "Forbidden"
+            "$ref": "#/components/responses/forbidden"
           },
           "404": {
-            "description": "Not found"
+            "$ref": "#/components/responses/not-found"
           },
           "429": {
-            "description": "Too Many Requests"
+            "$ref": "#/components/responses/too-many-requests"
           },
           "500": {
-            "description": "Internal Server Error"
+            "$ref": "#/components/responses/internal-server-error"
           }
         }
       }
