@@ -33,6 +33,7 @@ type Database interface {
 	GetNode(ctx context.Context, id int64) (Node, error)
 	GetKindByName(ctx context.Context, name string) (Kind, error)
 	GetNodeKindsByNames(ctx context.Context, names []string) ([]Kind, error)
+	GetKindInfos(ctx context.Context, nodeKindID *int32, relationshipKindID *int32) ([]KindInfo, error)
 }
 
 // Kind is the domain representation of a relationship or node kind, pairing the kind name

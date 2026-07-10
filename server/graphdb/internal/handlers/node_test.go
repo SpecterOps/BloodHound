@@ -55,6 +55,15 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 				{ID: int32Ptr(2), Name: "Group"},
 			},
 			Properties: map[string]any{"name": "admin"},
+			KindInfos: []services.KindInfo{
+				{
+					InfoKey:    "overview",
+					Title:      "Overview",
+					Position:   0,
+					NodeKindID: int32Ptr(1),
+					Content:    json.RawMessage(`{"markdown":{"content":"one"}}`),
+				},
+			},
 		}
 	)
 
@@ -69,7 +78,7 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 			name:  "returns 200 with the node view on success",
 			rawID: "9876543210",
 			setupMock: func(graphDBMock *mocks.MockGraphDB) {
-				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID).Return(node, nil)
+				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, true).Return(node, nil)
 			},
 			wantStatus: http.StatusOK,
 			assertBody: func(t *testing.T, body []byte) {
@@ -86,6 +95,9 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 				assert.Equal(t, int32(2), *envelope.Data.Kinds[1].NodeKindID)
 				assert.Equal(t, "Group", envelope.Data.Kinds[1].Name)
 				assert.Equal(t, "admin", envelope.Data.Properties["name"])
+				require.Len(t, envelope.Data.KindInfos, 1)
+				assert.Equal(t, "one", envelope.Data.KindInfos[0].Markdown.Content)
+				assert.NotContains(t, string(body), `\"markdown\"`)
 			},
 		},
 		{
@@ -97,7 +109,7 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 			name:  "returns 404 when the node is not found",
 			rawID: "9876543210",
 			setupMock: func(graphDBMock *mocks.MockGraphDB) {
-				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID).Return(services.Node{}, services.ErrNodeNotFound)
+				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, true).Return(services.Node{}, services.ErrNodeNotFound)
 			},
 			wantStatus: http.StatusNotFound,
 		},
@@ -105,7 +117,7 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 			name:  "returns 404 when the kind is not found",
 			rawID: "9876543210",
 			setupMock: func(graphDBMock *mocks.MockGraphDB) {
-				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID).Return(services.Node{}, services.ErrKindNotFound)
+				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, true).Return(services.Node{}, services.ErrKindNotFound)
 			},
 			wantStatus: http.StatusNotFound,
 		},

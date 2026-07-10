@@ -119,6 +119,80 @@ func (_c *MockDatabase_GetKindByName_Call) RunAndReturn(run func(ctx context.Con
 	return _c
 }
 
+// GetKindInfos provides a mock function for the type MockDatabase
+func (_mock *MockDatabase) GetKindInfos(ctx context.Context, nodeKindID *int32, relationshipKindID *int32) ([]services.KindInfo, error) {
+	ret := _mock.Called(ctx, nodeKindID, relationshipKindID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetKindInfos")
+	}
+
+	var r0 []services.KindInfo
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *int32, *int32) ([]services.KindInfo, error)); ok {
+		return returnFunc(ctx, nodeKindID, relationshipKindID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *int32, *int32) []services.KindInfo); ok {
+		r0 = returnFunc(ctx, nodeKindID, relationshipKindID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]services.KindInfo)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *int32, *int32) error); ok {
+		r1 = returnFunc(ctx, nodeKindID, relationshipKindID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDatabase_GetKindInfos_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetKindInfos'
+type MockDatabase_GetKindInfos_Call struct {
+	*mock.Call
+}
+
+// GetKindInfos is a helper method to define mock.On call
+//   - ctx context.Context
+//   - nodeKindID *int32
+//   - relationshipKindID *int32
+func (_e *MockDatabase_Expecter) GetKindInfos(ctx interface{}, nodeKindID interface{}, relationshipKindID interface{}) *MockDatabase_GetKindInfos_Call {
+	return &MockDatabase_GetKindInfos_Call{Call: _e.mock.On("GetKindInfos", ctx, nodeKindID, relationshipKindID)}
+}
+
+func (_c *MockDatabase_GetKindInfos_Call) Run(run func(ctx context.Context, nodeKindID *int32, relationshipKindID *int32)) *MockDatabase_GetKindInfos_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 *int32
+		if args[1] != nil {
+			arg1 = args[1].(*int32)
+		}
+		var arg2 *int32
+		if args[2] != nil {
+			arg2 = args[2].(*int32)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDatabase_GetKindInfos_Call) Return(kindInfos []services.KindInfo, err error) *MockDatabase_GetKindInfos_Call {
+	_c.Call.Return(kindInfos, err)
+	return _c
+}
+
+func (_c *MockDatabase_GetKindInfos_Call) RunAndReturn(run func(ctx context.Context, nodeKindID *int32, relationshipKindID *int32) ([]services.KindInfo, error)) *MockDatabase_GetKindInfos_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetNode provides a mock function for the type MockDatabase
 func (_mock *MockDatabase) GetNode(ctx context.Context, id int64) (services.Node, error) {
 	ret := _mock.Called(ctx, id)

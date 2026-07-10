@@ -38,6 +38,22 @@ type NodeKindView struct {
 	Name       string `json:"name"`
 }
 
+type KindInfoView struct {
+	Name       string       `json:"name"`
+	Title      string       `json:"title"`
+	Position   int32        `json:"position"`
+	NodeKindID int          `json:"node_kind_id"`
+	Markdown   MarkdownView `json:"markdown"`
+}
+
+type MarkdownView struct {
+	Content string `json:"content"`
+}
+
+type kindInfoContentView struct {
+	Markdown MarkdownView `json:"markdown"`
+}
+
 // NodeView is the JSON shape returned by the node handlers. It is
 // decoupled from services.Node so the wire format can evolve independently of
 // the domain model.
@@ -45,12 +61,13 @@ type NodeView struct {
 	NodeID     int64          `json:"node_id"`
 	Kinds      []NodeKindView `json:"kinds"`
 	Properties map[string]any `json:"properties"`
+	KindInfos  []KindInfoView `json:"info"`
 }
 
 // BuildNodeView projects a services.Node into the view type the handlers
 // return in their JSON envelope.
 func BuildNodeView(node services.Node) NodeView {
-	var kinds []NodeKindView
+	kinds := []NodeKindView{}
 
 	for _, kind := range node.Kinds {
 		kinds = append(kinds, NodeKindView{
@@ -59,11 +76,33 @@ func BuildNodeView(node services.Node) NodeView {
 		})
 	}
 
+	kindInfos := []KindInfoView{}
+	for _, kindInfo := range node.KindInfos {
+		kindInfos = append(kindInfos, KindInfoView{
+			Name:       kindInfo.InfoKey,
+			Title:      kindInfo.Title,
+			Position:   kindInfo.Position,
+			NodeKindID: int(*kindInfo.NodeKindID),
+			Markdown:   buildMarkdownView(kindInfo.Content),
+		})
+	}
+
 	return NodeView{
 		NodeID:     node.ID,
 		Kinds:      kinds,
 		Properties: node.Properties,
+		KindInfos:  kindInfos,
 	}
+}
+
+func buildMarkdownView(content json.RawMessage) MarkdownView {
+	var contentView kindInfoContentView
+
+	if err := json.Unmarshal(content, &contentView); err != nil {
+		return MarkdownView{}
+	}
+
+	return contentView.Markdown
 }
 
 // JSONView marshals the view to the byte slice expected by responses.WriteBasic,
@@ -83,7 +122,7 @@ func (s Handlers) GetNodeByID(response http.ResponseWriter, request *http.Reques
 
 	if nodeID, err := strconv.ParseInt(rawNodeID, 10, 64); err != nil {
 		responses.WriteError(ctx, http.StatusBadRequest, "node id is malformed", response)
-	} else if node, err := s.graphDB.GetNode(ctx, nodeID); errors.Is(err, services.ErrNodeNotFound) || errors.Is(err, services.ErrKindNotFound) {
+	} else if node, err := s.graphDB.GetNode(ctx, nodeID, true); errors.Is(err, services.ErrNodeNotFound) || errors.Is(err, services.ErrKindNotFound) {
 		responses.WriteError(ctx, http.StatusNotFound, "node not found", response)
 	} else if err != nil {
 		responses.WriteInternalServerError(ctx, err, response)
