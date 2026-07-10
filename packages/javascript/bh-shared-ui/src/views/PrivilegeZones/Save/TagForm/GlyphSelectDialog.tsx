@@ -181,7 +181,7 @@ const GlyphSelectDialog: React.FC<{
                         </div>
                     </div>
                     <DialogActions>
-                        <Button variant='tertiary' onClick={handleCancel} data-testid='confirmation-dialog_button-no'>
+                        <Button variant='secondary' onClick={handleCancel} data-testid='confirmation-dialog_button-no'>
                             Cancel
                         </Button>
                         <Button onClick={handleConfirm} data-testid='confirmation-dialog_button-yes'>

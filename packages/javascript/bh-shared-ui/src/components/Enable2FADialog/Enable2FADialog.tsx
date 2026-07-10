@@ -213,7 +213,7 @@ const Enable2FADialog: React.FC<{
                             <>
                                 <Button
                                     type='button'
-                                    variant='tertiary'
+                                    variant='secondary'
                                     onClick={onCancel}
                                     data-testid='enable-2fa-dialog_button-close'>
                                     Cancel
@@ -226,7 +226,7 @@ const Enable2FADialog: React.FC<{
                             <>
                                 <Button
                                     type='button'
-                                    variant='tertiary'
+                                    variant='secondary'
                                     onClick={handleOnClose}
                                     data-testid='enable-2fa-dialog_button-close'>
                                     Close

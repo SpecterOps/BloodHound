@@ -73,7 +73,7 @@ const Disable2FADialog: React.FC<{
                     )}
                 </DialogContent>
                 <DialogActions>
-                    <Button type='button' variant='tertiary' onClick={onCancel}>
+                    <Button type='button' variant='secondary' onClick={onCancel}>
                         Cancel
                     </Button>
                     <Button type='submit'>Disable Multi-Factor Authentication</Button>

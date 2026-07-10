@@ -139,7 +139,7 @@ const ConfirmNodeChangesDialog: FC<{
             <DialogTitle>Confirm Selection</DialogTitle>
             <DialogContent>{dialogContent}</DialogContent>
             <DialogActions>
-                <Button variant='tertiary' onClick={handleCancel}>
+                <Button variant='secondary' onClick={handleCancel}>
                     Cancel
                 </Button>
                 <Button variant='primary' onClick={handleApply}>

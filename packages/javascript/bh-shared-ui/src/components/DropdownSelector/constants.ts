@@ -13,12 +13,22 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-export const triggerStyles =
-    'max-w-56 text-sm text-contrast rounded-md bg-transparent hover:bg-primary hover:text-white border shadow-outer-0 hover:border-transparent border-neutral-light-5 group';
+export const focusedControlStateStyles =
+    'focus:bg-primary focus:text-common-white focus-visible:bg-secondary focus-visible:text-common-white dark:focus-visible:text-common-dark';
 
-export const popoverContentStyles = 'flex flex-col p-0 rounded-md border border-neutral-5 bg-neutral-1';
+export const dropdownIconStateStyles =
+    'hover:[&_svg]:text-common-white dark:hover:[&_svg]:text-common-dark hover:[&_svg]:fill-current hover:[&_svg_*]:text-common-white dark:hover:[&_svg_*]:text-common-dark hover:[&_svg_*]:fill-current focus:[&_svg]:text-common-white focus:[&_svg]:fill-current focus:[&_svg_*]:text-common-white focus:[&_svg_*]:fill-current focus-visible:[&_svg]:text-common-white dark:focus-visible:[&_svg]:text-common-dark focus-visible:[&_svg]:fill-current focus-visible:[&_svg_*]:text-common-white dark:focus-visible:[&_svg_*]:text-common-dark focus-visible:[&_svg_*]:fill-current';
 
-export const optionStyles =
-    'px-4 py-1 rounded-none w-full justify-normal hover:no-underline hover:bg-neutral-4 disabled:bg-neutral-4';
+export const triggerStyles = `max-w-56 text-sm text-main rounded-md bg-transparent hover:bg-primary hover:text-common-white ${focusedControlStateStyles} border shadow-outer-0 hover:border-transparent focus:border-transparent focus-visible:border-transparent border-dropdown-trigger-border group ${dropdownIconStateStyles}`;
 
-export const tooltipStyles = 'max-w-80 border-0 dark:bg-neutral-4 dark:text-white';
+export const popoverContentStyles =
+    'flex flex-col p-0 rounded-md border border-dropdown-popover-border bg-dropdown-popover-fill';
+
+export const optionStyles = `px-4 py-1 rounded-none w-full justify-normal text-main hover:no-underline hover:bg-dropdown-option-hover-fill ${focusedControlStateStyles} ${dropdownIconStateStyles} disabled:bg-dropdown-option-disabled-fill group`;
+
+export const selectorIconStyles =
+    'group-hover:text-common-white dark:group-hover:text-common-dark group-focus:text-common-white group-focus-visible:text-common-white dark:group-focus-visible:text-common-dark';
+
+export const optionIconStyles = selectorIconStyles;
+
+export const tooltipStyles = 'max-w-80 border-0 dark:bg-dropdown-tooltip-fill text-main';

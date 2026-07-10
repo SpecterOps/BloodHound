@@ -30,14 +30,20 @@ export default {
         },
         extend: {
             colors: {
-                primary: 'var(--primary)',
+                primary: 'var(--primary-main)',
+                'primary-main':
+                    'var(--primary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
                 'primary-variant': 'var(--primary-variant)',
 
                 secondary: 'var(--secondary-main)',
+                'secondary-main':
+                    'var(--secondary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
                 'secondary-variant': 'var(--secondary-variant)',
                 'secondary-variant-2': 'var(--secondary-variant-2)',
 
-                tertiary: 'var(--tertiary)',
+                tertiary: 'var(--tertiary)', // this is a legacy token
+                'tertiary-main':
+                    'var(--tertiary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
                 'tertiary-variant': 'var(--tertiary-variant)',
 
                 'text-main': 'var(--text-main)',
@@ -46,11 +52,13 @@ export default {
                 disabled: 'var(--disabled)',
                 contrast: 'var(--contrast)',
                 link: 'var(--link-main)',
-                'link-hover': '(--link-hover)',
+                'link-hover': 'var(--link-hover)',
                 error: 'var(--error)',
 
                 'switch-fill': 'var(--switch-fill)',
                 'switch-disabled-fill': 'var(--switch-disabled-fill)',
+                'switch-thumb-fill': 'var(--switch-thumb-fill)',
+                'switch-thumb-disabled-fill': 'var(--switch-thumb-disabled-fill)',
 
                 'neutral-50': 'var(--neutral-50)',
                 'neutral-400': 'var(--neutral-400)',
@@ -79,8 +87,8 @@ export default {
                 // tertiary: 'var(--tertiary)',
                 // 'tertiary-variant': 'var(--tertiary-variant)',
 
-                // 'common-dark': 'var(--common-dark)',
-                // 'common-white': 'var(--common-white)',
+                'common-dark': 'var(--common-dark)',
+                'common-white': 'var(--common-white)',
 
                 // contrast: 'var(--common-dark)',
 
@@ -129,21 +137,63 @@ export default {
                 // 'brand-secondary-highlight-light-blue': 'var(--brand-secondary-highlight-light-blue)',
                 // 'brand-secondary-highlight-green': 'var(--brand-secondary-highlight-green)',
 
-                // 'secondary-btn-fill': 'var(--secondary-btn-fill)',
-                // 'secondary-btn-active-fill': 'var(--secondary-btn-active-fill)',
-                // 'btn-disabled-fill': 'var(--btn-disabled-fill)',
-                // 'toggle-btn-fill': 'var(--toggle-btn-fill)',
-                // 'toggle-btn-border': 'var(--toggle-btn-border)',
+                'secondary-btn-fill': 'var(--secondary-btn-fill)',
+                'secondary-btn-active-fill': 'var(--secondary-btn-active-fill)',
+                'tertiary-btn-border': 'var(--tertiary-btn-border)',
+                'transparent-btn-border': 'var(--transparent-btn-border)',
+                'icon-btn-fill': 'var(--icon-btn-fill)',
+                'btn-disabled-fill': 'var(--btn-disabled-fill)',
+                'toggle-btn-fill': 'var(--toggle-btn-fill)',
+                'toggle-btn-border': 'var(--toggle-btn-border)',
+                'toggle-group-fill': 'var(--toggle-group-fill)',
+                'checkbox-border': 'var(--checkbox-border)',
+                'checkbox-unchecked-fill': 'var(--checkbox-unchecked-fill)',
+                'checkbox-fill': 'var(--checkbox-fill)',
+                'checkbox-check': 'var(--checkbox-check)',
 
                 // 'input-label': 'var(--input-label)',
-                // 'input-fill': 'var(--input-fill)',
+                'input-fill': 'var(--input-fill)',
                 // 'input-fill-disabled': 'var(--input-fill-disabled)',
-                // 'input-border-default': 'var(--input-border-default)',
+                'input-border-default': 'var(--input-border-default)',
+                'input-border-focus': 'var(--input-border-focus)',
                 // 'input-border-hover': 'var(--input-border-hover)',
                 // 'input-border-disabled': 'var(--input-border-disabled)',
                 // 'input-placeholder-text': 'var(--input-placeholder-text)',
 
+                'textarea-fill': 'var(--textarea-fill)',
+                'textarea-border-default': 'var(--textarea-border-default)',
+                'textarea-border-hover': 'var(--textarea-border-hover)',
+
+                'radio-label-focus-fill': 'var(--radio-label-focus-fill)',
+                'radio-border-default': 'var(--radio-border-default)',
+                'radio-border-hover': 'var(--radio-border-hover)',
+                'radio-disabled-border': 'var(--radio-disabled-border)',
+                'radio-disabled-fill': 'var(--radio-disabled-fill)',
+                'radio-indicator-fill': 'var(--radio-indicator-fill)',
+
                 // 'selector-disable-fill': 'var(--selector-disable-fill)',
+                'select-trigger-fill': 'var(--select-trigger-fill)',
+                'select-trigger-placeholder-text': 'var(--select-trigger-placeholder-text)',
+                'select-trigger-outlined-fill': 'var(--select-trigger-outlined-fill)',
+                'select-border-default': 'var(--select-border-default)',
+                'select-border-focus': 'var(--select-border-focus)',
+                'select-content-border': 'var(--select-content-border)',
+                'select-content-fill': 'var(--select-content-fill)',
+                'select-item-checked-text': 'var(--select-item-checked-text)',
+                'select-separator-fill': 'var(--select-separator-fill)',
+                'dropdown-trigger-border': 'var(--dropdown-trigger-border)',
+                'dropdown-popover-border': 'var(--dropdown-popover-border)',
+                'dropdown-popover-fill': 'var(--dropdown-popover-fill)',
+                'dropdown-option-hover-fill': 'var(--dropdown-option-hover-fill)',
+                'dropdown-option-disabled-fill': 'var(--dropdown-option-disabled-fill)',
+                'dropdown-tooltip-fill': 'var(--dropdown-tooltip-fill)',
+
+                'data-table-fill': 'var(--data-table-fill)',
+                'data-table-header-fill': 'var(--data-table-header-fill)',
+                'data-table-row-even-fill': 'var(--data-table-row-even-fill)',
+                'data-table-row-odd-fill': 'var(--data-table-row-odd-fill)',
+                'data-table-row-hover-fill': 'var(--data-table-row-hover-fill)',
+                'data-table-row-selected-outline': 'var(--data-table-row-selected-outline)',
 
                 // 'menu-bg': 'var(--menu-bg)',
 
@@ -253,7 +303,7 @@ export default {
     safelist: [
         {
             pattern:
-                /(bg|text|border|w|ring|ring-offset)-(primary|secondary|accent|contrast|link|error|tertiary|neutral|base|headline|button|caption|eyeline|body|az|group|ou|computer|user|container|meta|domain|default|gpo|aiaca|root-ca|enterprise-ca|nt-auth-store|cert-template|issuance-policy|az-function-app)/,
+                /(bg|text|border|w|ring|ring-offset)-(primary|secondary|accent|contrast|link|error|tertiary|neutral|checkbox|base|headline|button|caption|eyeline|body|az|group|ou|computer|user|container|meta|domain|default|gpo|aiaca|root-ca|enterprise-ca|nt-auth-store|cert-template|issuance-policy|az-function-app)/,
         },
         {
             pattern: /(w|top|left)-(0|px|[1-9][0-9]?|-[1-9][0-9]?)/, // Safelist padding values including 0, px, and positive/negative numbers

@@ -91,7 +91,7 @@ const UpdateUserForm: React.FC<{
                             disabled={isLoading}
                             role='button'
                             type='button'
-                            variant='tertiary'>
+                            variant='secondary'>
                             Close
                         </Button>
                     </DialogClose>
@@ -500,7 +500,7 @@ const UpdateUserFormInner: React.FC<{
                                     disabled={isLoading}
                                     role='button'
                                     type='button'
-                                    variant='tertiary'>
+                                    variant='secondary'>
                                     Cancel
                                 </Button>
                             </DialogClose>
