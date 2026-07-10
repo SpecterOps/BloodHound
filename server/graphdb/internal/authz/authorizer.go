@@ -18,39 +18,40 @@ package authz
 
 import (
 	"context"
-	"slices"
+	"log/slog"
 
-	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/server/etac"
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 )
 
 type NodeAuthorizer struct {
-	dogTags dogtags.Service
+	etacService etac.Service
 }
 
-func NewNodeAuthorizer(dogTags dogtags.Service) *NodeAuthorizer {
+func NewNodeAuthorizer(etacService etac.Service) *NodeAuthorizer {
 	return &NodeAuthorizer{
-		dogTags: dogTags,
+		etacService: etacService,
 	}
 }
 
 // CanAccessNode returns true if the caller (provided via context) is authorized to access the node.
-// Reusing ShouldFilterForETAC to short-circuit if the feature flag is off or if a user has access to all environments.
+// Uses the ETAC service to check access permissions.
 func (s *NodeAuthorizer) CanAccessNode(ctx context.Context, node services.Node) bool {
 	var (
-		user, isUser = auth.GetUserFromAuthCtx(bhctx.Get(ctx).AuthCtx)
+		modelUser, isUser = auth.GetUserFromAuthCtx(bhctx.Get(ctx).AuthCtx)
 	)
 
 	if !isUser { // Unauthenticated caller: we should never hit this. User context is populated by middleware but we deny as a precaution
 		return false
-	} else if !v2.ShouldFilterForETAC(s.dogTags, user) { // ETAC disabled
-		return true
-	} else if environmentID, ok := node.EnvironmentID(); !ok { // ETAC enabled but unset/malformed environment ID
+	} else if environmentID, ok := node.EnvironmentID(); !ok { // Unset/malformed environment ID
+		return false
+	} else if hasAccess, err := s.etacService.CheckUserAccess(ctx, &modelUser, environmentID); err != nil {
+		slog.ErrorContext(ctx, "Failed to check ETAC user access", attr.Error(err))
 		return false
 	} else {
-		return slices.Contains(v2.ExtractEnvironmentIDsFromUser(&user), environmentID)
+		return hasAccess
 	}
 }

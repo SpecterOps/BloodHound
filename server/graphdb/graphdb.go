@@ -24,6 +24,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/server/etac"
 	"github.com/specterops/bloodhound/server/graphdb/internal/appdb"
 	"github.com/specterops/bloodhound/server/graphdb/internal/authz"
 	"github.com/specterops/bloodhound/server/graphdb/internal/handlers"
@@ -41,7 +42,8 @@ func Register(routerInst *router.Router, pool *pgxpool.Pool, graphDatabase graph
 	var (
 		store          = appdb.NewStore(graphDatabase, pool)
 		service        = services.NewService(store)
-		nodeAuthorizer = authz.NewNodeAuthorizer(dogTags)
+		etacService    = etac.Register(pool, dogTags)
+		nodeAuthorizer = authz.NewNodeAuthorizer(etacService)
 		handlerSet     = handlers.NewHandlersContainer(service, nodeAuthorizer)
 	)
 
