@@ -56,6 +56,9 @@ export const Default: Story = {
         onValueChange: () => {},
         placeholder: 'All Items',
         selectAllLabel: 'All Items',
+        isSearchable: true,
+        searchPlaceholder: 'Search options',
+        noResultsText: 'No matches',
     },
     render: (args) => {
         const [value, setValue] = useState<string[]>(args.value ?? []);
@@ -163,7 +166,7 @@ export const Disabled: Story = {
 
 export const WithDisabledOption: Story = {
     args: {
-        options: [...itemOptions, { value: 'd', label: 'Menu Item D', disabled: true }],
+        options: [...itemOptions, { value: 'g', label: 'Menu Item G', disabled: true }],
         value: [],
         onValueChange: () => {},
         placeholder: 'All Items',
@@ -177,4 +180,28 @@ export const WithDisabledOption: Story = {
             </div>
         );
     },
+};
+
+export const Loading: Story = {
+    args: {
+        options: itemOptions,
+        value: [],
+        onValueChange: () => {},
+        placeholder: 'All Items',
+        isSearchable: true,
+        isLoading: true,
+        loadingText: 'Loading options',
+    },
+    render: renderMultiSelect,
+};
+
+export const Empty: Story = {
+    args: {
+        options: [],
+        value: [],
+        onValueChange: () => {},
+        placeholder: 'All Items',
+        emptyText: 'No options available.',
+    },
+    render: renderMultiSelect,
 };

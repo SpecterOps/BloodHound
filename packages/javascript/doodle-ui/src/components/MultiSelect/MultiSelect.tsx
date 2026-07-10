@@ -21,6 +21,7 @@ import { Checkbox } from '../Checkbox';
 import { Input } from '../Input';
 import { Popover, PopoverContent, PopoverTrigger } from '../Popover';
 import { ScrollArea } from '../ScrollArea';
+import { Skeleton } from '../Skeleton';
 import { Typography } from '../Typography';
 import { cn } from '../utils';
 
@@ -68,7 +69,10 @@ interface MultiSelectProps {
     className?: string;
     selectAllLabel?: string;
     isSearchable?: boolean;
+    isLoading?: boolean;
     searchPlaceholder?: string;
+    loadingText?: string;
+    emptyText?: string;
     noResultsText?: string;
 }
 
@@ -85,7 +89,7 @@ interface MultiSelectOptionRowProps {
 }
 
 interface MultiSelectActionRowProps {
-    checked: boolean;
+    checked: React.ComponentProps<typeof Checkbox>['checked'];
     label: string;
     onSelect: () => void;
 }
@@ -93,7 +97,7 @@ interface MultiSelectActionRowProps {
 const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRowProps) => (
     <div
         role='option'
-        aria-selected={checked}
+        aria-selected={checked === true}
         aria-disabled={option.disabled}
         tabIndex={option.disabled ? -1 : 0}
         className={cn(
@@ -121,7 +125,7 @@ const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRo
 const MultiSelectActionRow = ({ checked, label, onSelect }: MultiSelectActionRowProps) => (
     <div
         role='option'
-        aria-selected={checked}
+        aria-selected={checked === true}
         tabIndex={0}
         className={multiSelectRowStyles}
         onClick={onSelect}
@@ -137,8 +141,25 @@ const MultiSelectActionRow = ({ checked, label, onSelect }: MultiSelectActionRow
             onClick={(event) => event.stopPropagation()}
             onCheckedChange={onSelect}
         />
-        <span className='truncate text-sm'>{label}</span>
+        <span className='truncate text-sm min-w-0'>{label}</span>
     </div>
+);
+
+const MultiSelectLoadingRows = ({ loadingText }: { loadingText: string }) => (
+    <div role='status' aria-label={loadingText}>
+        {Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} className='flex items-center gap-2 mx-1 p-2 py-2'>
+                <Checkbox tabIndex={-1} disabled />
+                <Skeleton className='h-4 flex-1' />
+            </div>
+        ))}
+    </div>
+);
+
+const MultiSelectStateRow = ({ children }: { children: React.ReactNode }) => (
+    <Typography variant='body2' component='div' className='px-3 py-2 text-neutral-5'>
+        {children}
+    </Typography>
 );
 
 /**
@@ -153,8 +174,12 @@ const MultiSelect = ({
     error,
     className,
     selectAllLabel,
+
     isSearchable = false,
+    isLoading = false,
     searchPlaceholder = 'Search',
+    loadingText = 'Loading options',
+    emptyText = 'No options available.',
     noResultsText = 'No matches',
 }: MultiSelectProps) => {
     const [open, setOpen] = React.useState(false);
@@ -188,13 +213,18 @@ const MultiSelect = ({
         return `${value.length} Selected`;
     };
 
-    // select all/clear
     const triggerText = getMultiSelectTriggerText(options, value, placeholder);
 
+    // select all/clear
     const selectableValues = options.filter((option) => !option.disabled).map((option) => option.value);
 
-    const hasSelectedAllOptions =
-        selectableValues.length > 0 && selectableValues.every((optionValue) => value.includes(optionValue));
+    const selectedValueCount = selectableValues.filter((optionValue) => value.includes(optionValue)).length;
+
+    const hasSelectedAllOptions = selectableValues.length > 0 && selectedValueCount === selectableValues.length;
+
+    const hasSelectedSomeOptions = selectedValueCount > 0 && !hasSelectedAllOptions;
+
+    const selectAllChecked = hasSelectedAllOptions ? true : hasSelectedSomeOptions ? 'indeterminate' : false;
 
     const handleSelectAll = () => {
         if (hasSelectedAllOptions) {
@@ -216,8 +246,30 @@ const MultiSelect = ({
         ? options.filter((option) => option.label.toLowerCase().includes(searchTerm))
         : options;
 
-    const hasNoSearchResults = isSearchable && searchTerm.length > 0 && filteredOptions.length === 0;
+    const hasOptions = options.length > 0;
+    const hasSearchText = searchTerm.length > 0;
+    const hasSearchResults = filteredOptions.length > 0;
 
+    const isSearchResultEmpty = isSearchable && hasSearchText && !hasSearchResults;
+
+    let listContent: React.ReactNode;
+
+    if (isLoading) {
+        listContent = <MultiSelectLoadingRows loadingText={loadingText} />;
+    } else if (!hasOptions) {
+        listContent = <MultiSelectStateRow>{emptyText}</MultiSelectStateRow>;
+    } else if (isSearchResultEmpty) {
+        listContent = <MultiSelectStateRow>{noResultsText}</MultiSelectStateRow>;
+    } else {
+        listContent = filteredOptions.map((option) => (
+            <MultiSelectOptionRow
+                key={option.value}
+                option={option}
+                checked={value.includes(option.value)}
+                onSelect={handleSelect}
+            />
+        ));
+    }
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
@@ -234,6 +286,7 @@ const MultiSelect = ({
                     <div className='flex items-center gap-2 border-b p-2'>
                         <Search className='h-5 w-5 shrink-0 text-neutral-dark-1' aria-hidden='true' />
                         <Input
+                            aria-label={searchPlaceholder}
                             value={searchValue}
                             onChange={(event) => setSearchValue(event.target.value)}
                             placeholder={searchPlaceholder}
@@ -241,29 +294,18 @@ const MultiSelect = ({
                         />
                     </div>
                 )}
+
                 <ScrollArea className='h-60'>
-                    <div role='listbox' aria-multiselectable='true' className='py-1'>
-                        {selectAllLabel && (
+                    <div role='listbox' aria-multiselectable='true' aria-busy={isLoading || undefined} className='py-1'>
+                        {selectAllLabel && !isLoading && hasOptions && (
                             <MultiSelectActionRow
-                                checked={hasSelectedAllOptions}
+                                checked={selectAllChecked}
                                 label={selectAllLabel}
                                 onSelect={handleSelectAll}
                             />
                         )}
-                        {hasNoSearchResults ? (
-                            <Typography variant='body2' component='div' className='px-3 py-2 text-neutral-5'>
-                                {noResultsText}
-                            </Typography>
-                        ) : (
-                            filteredOptions.map((option) => (
-                                <MultiSelectOptionRow
-                                    key={option.value}
-                                    option={option}
-                                    checked={value.includes(option.value)}
-                                    onSelect={handleSelect}
-                                />
-                            ))
-                        )}
+
+                        {listContent}
                     </div>
                 </ScrollArea>
             </PopoverContent>
