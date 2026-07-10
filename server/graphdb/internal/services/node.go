@@ -17,9 +17,11 @@
 package services
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 )
 
 // Node is the domain representation of a graph node together with
@@ -60,12 +62,12 @@ func (s *Service) GetNode(ctx context.Context, id int64, includeKindInfo bool) (
 		node.Kinds = kinds
 	}
 
-	// grab all the associate kind info objects for all the node's kinds that are registered in schema_node_kinds
+	// grab all the associated kind info objects for every kind.
 	if includeKindInfo {
 		var allKindInfos []KindInfo
 
 		for _, nodeKind := range node.Kinds {
-			if nodeKind.ID == nil {
+			if nodeKind.ID == nil { // only nodes registered in the schema_node_kind table will have IDs
 				continue
 			}
 
@@ -76,6 +78,16 @@ func (s *Service) GetNode(ctx context.Context, id int64, includeKindInfo bool) (
 
 			allKindInfos = append(allKindInfos, kindInfos...)
 		}
+
+		slices.SortFunc(allKindInfos, func(left, right KindInfo) int {
+			if result := cmp.Compare(left.Position, right.Position); result != 0 {
+				return result
+			} else if result := cmp.Compare(left.Title, right.Title); result != 0 {
+				return result
+			} else {
+				return cmp.Compare(*left.NodeKindID, *right.NodeKindID)
+			}
+		})
 
 		node.KindInfos = allKindInfos
 	}
