@@ -22,6 +22,8 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/mocks"
+	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -179,3 +181,50 @@ func TestMaybeSubmitRelationshipUpdate(t *testing.T) {
 		require.Equal(t, int64(0), relsWritten, "RelationshipsWritten should NOT be incremented when deduplicated")
 	})
 }
+
+// TestIngestibleRelationshipsToUpdates_ObjectIdentifierCasing verifies that
+// relationship endpoint object identifiers are uppercased when the
+// PreserveObjectIdentifierCasing flag is unset (legacy behavior) and preserved
+// when it is set, matching the raw_ingest_object_identifiers feature flag policy.
+func TestIngestibleRelationshipsToUpdates_ObjectIdentifierCasing(t *testing.T) {
+	newRels := func() []ein.IngestibleRelationship {
+		return []ein.IngestibleRelationship{
+			{
+				Source:  ein.IngestibleEndpoint{Value: "mixedCaseSource", Kind: graph.StringKind("Src")},
+				Target:  ein.IngestibleEndpoint{Value: "mixedCaseTarget", Kind: graph.StringKind("Tgt")},
+				RelProps: map[string]any{},
+				RelType:  graph.StringKind("Rel"),
+			},
+		}
+	}
+
+	collectEndpointIDs := func(t *testing.T, ingestCtx *IngestContext) (string, string) {
+		t.Helper()
+		var (
+			startID, endID string
+		)
+		for update := range ingestibleRelationshipsToUpdates(ingestCtx, newRels(), graph.EmptyKind) {
+			gotStart, err := update.Start.Properties.Get(common.ObjectID.String()).String()
+			require.NoError(t, err)
+			gotEnd, err := update.End.Properties.Get(common.ObjectID.String()).String()
+			require.NoError(t, err)
+			startID, endID = gotStart, gotEnd
+		}
+		return startID, endID
+	}
+
+	t.Run("legacy uppercases endpoint identifiers", func(t *testing.T) {
+		ingestCtx := NewIngestContext(context.Background())
+		startID, endID := collectEndpointIDs(t, ingestCtx)
+		require.Equal(t, "MIXEDCASESOURCE", startID)
+		require.Equal(t, "MIXEDCASETARGET", endID)
+	})
+
+	t.Run("preserve keeps raw endpoint identifiers", func(t *testing.T) {
+		ingestCtx := NewIngestContext(context.Background(), WithPreserveObjectIdentifierCasing(true))
+		startID, endID := collectEndpointIDs(t, ingestCtx)
+		require.Equal(t, "mixedCaseSource", startID)
+		require.Equal(t, "mixedCaseTarget", endID)
+	})
+}
+

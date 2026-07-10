@@ -107,8 +107,10 @@ func maybeSubmitRelationshipUpdate(ingestCtx *IngestContext, update graph.Relati
 
 func ingestDNRelationship(batch *IngestContext, nextRel ein.IngestibleRelationship) error {
 	nextRel.RelProps[common.LastSeen.String()] = batch.IngestTime
-	nextRel.Source.Value = strings.ToUpper(nextRel.Source.Value)
-	nextRel.Target.Value = strings.ToUpper(nextRel.Target.Value)
+	if !batch.PreserveObjectIdentifierCasing {
+		nextRel.Source.Value = strings.ToUpper(nextRel.Source.Value)
+		nextRel.Target.Value = strings.ToUpper(nextRel.Target.Value)
+	}
 
 	update := graph.RelationshipUpdate{
 		Relationship: graph.PrepareRelationship(graph.AsProperties(nextRel.RelProps), nextRel.RelType),
@@ -150,8 +152,10 @@ func IngestDNRelationships(batch *IngestContext, relationships []ein.IngestibleR
 }
 
 func ingestSession(batch *IngestContext, nextSession ein.IngestibleSession) error {
-	nextSession.Target = strings.ToUpper(nextSession.Target)
-	nextSession.Source = strings.ToUpper(nextSession.Source)
+	if !batch.PreserveObjectIdentifierCasing {
+		nextSession.Target = strings.ToUpper(nextSession.Target)
+		nextSession.Source = strings.ToUpper(nextSession.Source)
+	}
 
 	update := graph.RelationshipUpdate{
 		Relationship: graph.PrepareRelationship(graph.AsProperties(graph.PropertyMap{
@@ -204,25 +208,30 @@ func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.Ingestibl
 				startKinds = MergeNodeKinds(sourceKind, rel.Source.Kind)
 				endKinds   = MergeNodeKinds(sourceKind, rel.Target.Kind)
 
-				startObjID = strings.ToUpper(rel.Source.Value)
-				endObjID   = strings.ToUpper(rel.Target.Value)
-
-				update = graph.RelationshipUpdate{
-					Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-						common.ObjectID: startObjID,
-						common.LastSeen: batch.IngestTime,
-					}), startKinds...),
-					StartIdentityProperties: []string{common.ObjectID.String()},
-					StartIdentityKind:       sourceKind,
-					End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-						common.ObjectID: endObjID,
-						common.LastSeen: batch.IngestTime,
-					}), endKinds...),
-					EndIdentityKind:       sourceKind,
-					EndIdentityProperties: []string{common.ObjectID.String()},
-					Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
-				}
+				startObjID = rel.Source.Value
+				endObjID   = rel.Target.Value
 			)
+
+			if !batch.PreserveObjectIdentifierCasing {
+				startObjID = strings.ToUpper(startObjID)
+				endObjID = strings.ToUpper(endObjID)
+			}
+
+			update := graph.RelationshipUpdate{
+				Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+					common.ObjectID: startObjID,
+					common.LastSeen: batch.IngestTime,
+				}), startKinds...),
+				StartIdentityProperties: []string{common.ObjectID.String()},
+				StartIdentityKind:       sourceKind,
+				End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+					common.ObjectID: endObjID,
+					common.LastSeen: batch.IngestTime,
+				}), endKinds...),
+				EndIdentityKind:       sourceKind,
+				EndIdentityProperties: []string{common.ObjectID.String()},
+				Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
+			}
 
 			if !yield(update) {
 				break

@@ -74,6 +74,12 @@ type IngestContext struct {
 	seenKinds        map[string]struct{}
 	// RetainIngestedFiles determines if the service should clean up working files after ingest
 	RetainIngestedFiles bool
+	// PreserveObjectIdentifierCasing skips uppercase normalization of object identifiers
+	// and relationship endpoint identifiers when true. Non-identifier properties such as
+	// name, operatingsystem, and distinguishedname are still normalized. Defaults to false
+	// so the legacy uppercasing behavior is preserved when the raw_ingest_object_identifiers
+	// feature flag is disabled or unavailable.
+	PreserveObjectIdentifierCasing bool
 }
 
 func NewIngestContext(ctx context.Context, opts ...IngestOption) *IngestContext {
@@ -137,6 +143,12 @@ func WithBatchUpdater(batchUpdater BatchUpdater) IngestOption {
 func WithJobId(jobId int64) IngestOption {
 	return func(s *IngestContext) {
 		s.JobId = jobId
+	}
+}
+
+func WithPreserveObjectIdentifierCasing(preserve bool) IngestOption {
+	return func(s *IngestContext) {
+		s.PreserveObjectIdentifierCasing = preserve
 	}
 }
 

@@ -36,24 +36,47 @@ import (
 )
 
 func TestNormalizeEinNodeProperties(t *testing.T) {
-	var (
-		nowUTC     = time.Now().UTC()
-		objectID   = "objectid"
-		properties = map[string]any{
-			ReconcileProperty:               false,
-			common.Name.String():            "name",
-			common.OperatingSystem.String(): "temple",
-			ad.DistinguishedName.String():   "distinguished-name",
-		}
-		normalizedProperties = normalizeEinNodeProperties(properties, objectID, nowUTC)
-	)
+	t.Run("legacy uppercasing when object identifier casing is not preserved", func(t *testing.T) {
+		var (
+			nowUTC     = time.Now().UTC()
+			objectID   = "objectid"
+			properties = map[string]any{
+				ReconcileProperty:               false,
+				common.Name.String():            "name",
+				common.OperatingSystem.String(): "temple",
+				ad.DistinguishedName.String():   "distinguished-name",
+			}
+			normalizedProperties = normalizeEinNodeProperties(properties, objectID, nowUTC, false)
+		)
 
-	assert.Nil(t, normalizedProperties[ReconcileProperty])
-	assert.NotNil(t, normalizedProperties[common.LastSeen.String()])
-	assert.Equal(t, "OBJECTID", normalizedProperties[common.ObjectID.String()])
-	assert.Equal(t, "NAME", normalizedProperties[common.Name.String()])
-	assert.Equal(t, "DISTINGUISHED-NAME", normalizedProperties[ad.DistinguishedName.String()])
-	assert.Equal(t, "TEMPLE", normalizedProperties[common.OperatingSystem.String()])
+		assert.Nil(t, normalizedProperties[ReconcileProperty])
+		assert.NotNil(t, normalizedProperties[common.LastSeen.String()])
+		assert.Equal(t, "OBJECTID", normalizedProperties[common.ObjectID.String()])
+		assert.Equal(t, "NAME", normalizedProperties[common.Name.String()])
+		assert.Equal(t, "DISTINGUISHED-NAME", normalizedProperties[ad.DistinguishedName.String()])
+		assert.Equal(t, "TEMPLE", normalizedProperties[common.OperatingSystem.String()])
+	})
+
+	t.Run("preserves object identifier casing while still normalizing non-identifier properties", func(t *testing.T) {
+		var (
+			nowUTC     = time.Now().UTC()
+			objectID   = "MixedCaseObjectID"
+			properties = map[string]any{
+				ReconcileProperty:               false,
+				common.Name.String():            "name",
+				common.OperatingSystem.String(): "temple",
+				ad.DistinguishedName.String():   "distinguished-name",
+			}
+			normalizedProperties = normalizeEinNodeProperties(properties, objectID, nowUTC, true)
+		)
+
+		assert.Nil(t, normalizedProperties[ReconcileProperty])
+		assert.NotNil(t, normalizedProperties[common.LastSeen.String()])
+		assert.Equal(t, "MixedCaseObjectID", normalizedProperties[common.ObjectID.String()])
+		assert.Equal(t, "NAME", normalizedProperties[common.Name.String()])
+		assert.Equal(t, "DISTINGUISHED-NAME", normalizedProperties[ad.DistinguishedName.String()])
+		assert.Equal(t, "TEMPLE", normalizedProperties[common.OperatingSystem.String()])
+	})
 }
 
 func TestMaybeSubmitNodeUpdate(t *testing.T) {

@@ -230,7 +230,7 @@ func decodeAzureData(batch *IngestContext, decoder *json.Decoder) error {
 			}
 			return err
 		} else {
-			convert := getKindConverter(data.Kind)
+			convert := getKindConverter(data.Kind, batch.PreserveObjectIdentifierCasing)
 			convert(data.Data, &convertedData, batch.IngestTime)
 			count++
 			if count == IngestCountThreshold {

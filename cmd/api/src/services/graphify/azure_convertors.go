@@ -39,7 +39,12 @@ const (
 	PrincipalTypeUser             = "User"
 )
 
-func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData, time.Time) {
+// getKindConverter selects the appropriate Azure converter for a given ingest kind. The
+// preserveObjectIdentifierCasing flag is captured by converters that must honor the
+// raw_ingest_object_identifiers feature flag inside the ein layer (currently only role
+// management policy assignments, whose approver slice values are not touched by the
+// graphify normalization layer).
+func getKindConverter(kind enums.Kind, preserveObjectIdentifierCasing bool) func(json.RawMessage, *ConvertedAzureData, time.Time) {
 	switch kind {
 	case enums.KindAZApp:
 		return convertAzureApp
@@ -150,7 +155,9 @@ func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData
 	case enums.KindAZAutomationAccountRoleAssignment:
 		return convertAzureAutomationAccountRoleAssignment
 	case enums.KindAZRoleManagementPolicyAssignment:
-		return convertAzureRoleManagementPolicyAssignment
+		return func(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+			convertAzureRoleManagementPolicyAssignment(raw, converted, ingestTime, preserveObjectIdentifierCasing)
+		}
 	case enums.KindAZRoleEligibilityScheduleInstance:
 		return convertAzureRoleEligibilityScheduleInstance
 	default:
@@ -976,8 +983,10 @@ func convertAzureAutomationAccountRoleAssignment(raw json.RawMessage, converted 
 	}
 }
 
-// convertAzureRoleManagementPolicyAssignment implements function signature required in getKindConverter
-func convertAzureRoleManagementPolicyAssignment(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+// convertAzureRoleManagementPolicyAssignment implements function signature required in getKindConverter.
+// The preserveObjectIdentifierCasing flag is threaded from the ingest context so that EndUserAssignment
+// approver identifiers follow the raw_ingest_object_identifiers feature flag policy.
+func convertAzureRoleManagementPolicyAssignment(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time, preserveObjectIdentifierCasing bool) {
 	var data models.RoleManagementPolicyAssignment
 
 	if err := json.Unmarshal(raw, &data); err != nil {
@@ -987,7 +996,7 @@ func convertAzureRoleManagementPolicyAssignment(raw json.RawMessage, converted *
 			attr.Error(err),
 		)
 	} else {
-		nodes, relationships := ein.ConvertAzureRoleManagementPolicyAssignment(data)
+		nodes, relationships := ein.ConvertAzureRoleManagementPolicyAssignment(data, preserveObjectIdentifierCasing)
 		converted.NodeProps = append(converted.NodeProps, nodes)
 		converted.RelProps = append(converted.RelProps, relationships...)
 	}

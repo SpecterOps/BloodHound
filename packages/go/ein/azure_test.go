@@ -43,9 +43,11 @@ func TestConvertAzureRoleEligibilityScheduleInstanceToRel(t *testing.T) {
 	expectedRels := ein.ConvertAzureRoleEligibilityScheduleInstanceToRel(testData)
 	require.Len(t, expectedRels, 1)
 	expectedRel := expectedRels[0]
-	require.Equal(t, expectedRel.Target.Value, strings.ToUpper(fmt.Sprintf("%s@%s", testData.RoleDefinitionId, testData.TenantId)))
-	require.Equal(t, expectedRel.RelType, azure.AZRoleEligible)
-	require.Equal(t, expectedRel.Source.Value, strings.ToUpper(testData.PrincipalId))
+	// ein now emits raw-case identifiers; the graphify layer applies final
+	// object identifier normalization based on the raw_ingest_object_identifiers flag.
+	require.Equal(t, fmt.Sprintf("%s@%s", testData.RoleDefinitionId, testData.TenantId), expectedRel.Target.Value)
+	require.Equal(t, azure.AZRoleEligible, expectedRel.RelType)
+	require.Equal(t, testData.PrincipalId, expectedRel.Source.Value)
 
 	testData = models.RoleEligibilityScheduleInstance{
 		Id:               "lAPpYvVpN0KRkAEhdxReELKn6QMIlSROgkgWZy9fE3c-1-e",
@@ -107,7 +109,9 @@ func Test_ConvertAppFederatedIdentityCredential(t *testing.T) {
 			require.True(t, node.IsValid())
 			require.True(t, rel.IsValid())
 
-			assert.Equal(t, strings.ToUpper(testCase.testData.ID), node.ObjectID)
+			// ein now emits raw-case identifiers; the graphify layer applies final
+			// object identifier normalization based on the raw_ingest_object_identifiers flag.
+			assert.Equal(t, testCase.testData.ID, node.ObjectID)
 			require.Len(t, node.Labels, 2)
 			assert.Equal(t, azure.FederatedIdentityCredential, node.Labels[0])
 			assert.Equal(t, azure.Entity, node.Labels[1])
@@ -121,9 +125,9 @@ func Test_ConvertAppFederatedIdentityCredential(t *testing.T) {
 
 			assert.Equal(t, azure.AZAuthenticatesTo, rel.RelType)
 			assert.Equal(t, azure.FederatedIdentityCredential, rel.Source.Kind)
-			assert.Equal(t, strings.ToUpper(testCase.testData.ID), rel.Source.Value)
+			assert.Equal(t, testCase.testData.ID, rel.Source.Value)
 			assert.Equal(t, azure.App, rel.Target.Kind)
-			assert.Equal(t, strings.ToUpper(testCase.appID), rel.Target.Value)
+			assert.Equal(t, testCase.appID, rel.Target.Value)
 			assert.Empty(t, rel.RelProps)
 		})
 	}
@@ -152,9 +156,11 @@ func TestConvertAzureManagementGroupContributorToRels(t *testing.T) {
 		rels := ein.ConvertAzureManagementGroupContributorToRels(data)
 
 		require.Len(t, rels, 1)
-		assert.Equal(t, strings.ToUpper(principalId), rels[0].Source.Value)
+		// ein now emits raw-case identifiers; the graphify layer applies final
+		// object identifier normalization based on the raw_ingest_object_identifiers flag.
+		assert.Equal(t, principalId, rels[0].Source.Value)
 		assert.Equal(t, azure.Entity, rels[0].Source.Kind)
-		assert.Equal(t, strings.ToUpper(managementGroupId), rels[0].Target.Value)
+		assert.Equal(t, managementGroupId, rels[0].Target.Value)
 		assert.Equal(t, azure.ManagementGroup, rels[0].Target.Kind)
 		assert.Equal(t, azure.Contributor, rels[0].RelType)
 	})
@@ -204,9 +210,11 @@ func TestConvertAzureResourceGroupContributorToRels(t *testing.T) {
 		rels := ein.ConvertAzureResourceGroupContributorToRels(data)
 
 		require.Len(t, rels, 1)
-		assert.Equal(t, strings.ToUpper(principalId), rels[0].Source.Value)
+		// ein now emits raw-case identifiers; the graphify layer applies final
+		// object identifier normalization based on the raw_ingest_object_identifiers flag.
+		assert.Equal(t, principalId, rels[0].Source.Value)
 		assert.Equal(t, azure.Entity, rels[0].Source.Kind)
-		assert.Equal(t, strings.ToUpper(resourceGroupId), rels[0].Target.Value)
+		assert.Equal(t, resourceGroupId, rels[0].Target.Value)
 		assert.Equal(t, azure.ResourceGroup, rels[0].Target.Kind)
 		assert.Equal(t, azure.Contributor, rels[0].RelType)
 	})
@@ -256,9 +264,11 @@ func TestConvertAzureSubscriptionContributorToRels(t *testing.T) {
 		rels := ein.ConvertAzureSubscriptionContributorToRels(data)
 
 		require.Len(t, rels, 1)
-		assert.Equal(t, strings.ToUpper(principalId), rels[0].Source.Value)
+		// ein now emits raw-case identifiers; the graphify layer applies final
+		// object identifier normalization based on the raw_ingest_object_identifiers flag.
+		assert.Equal(t, principalId, rels[0].Source.Value)
 		assert.Equal(t, azure.Entity, rels[0].Source.Kind)
-		assert.Equal(t, strings.ToUpper(subscriptionId), rels[0].Target.Value)
+		assert.Equal(t, subscriptionId, rels[0].Target.Value)
 		assert.Equal(t, azure.Subscription, rels[0].Target.Kind)
 		assert.Equal(t, azure.Contributor, rels[0].RelType)
 	})
@@ -286,38 +296,42 @@ func TestConvertAzureSubscriptionContributorToRels(t *testing.T) {
 }
 
 func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
-	model := models.RoleManagementPolicyAssignment{
-		Id:                                "id-1234",
-		RoleDefinitionId:                  "role-1234",
-		EndUserAssignmentRequiresApproval: true,
-		EndUserAssignmentRequiresCAPAuthenticationContext: false,
-		EndUserAssignmentUserApprovers: []string{
-			"user-approver-1",
-			"user-approver-2",
-		},
-		EndUserAssignmentGroupApprovers: []string{
-			"group-approver-1",
-			"group-approver-2",
-		},
-		EndUserAssignmentRequiresMFA:               false,
-		EndUserAssignmentRequiresJustification:     false,
-		EndUserAssignmentRequiresTicketInformation: false,
-		TenantId: "tenant-1234",
+	newModel := func() models.RoleManagementPolicyAssignment {
+		return models.RoleManagementPolicyAssignment{
+			Id:                                "id-1234",
+			RoleDefinitionId:                  "role-1234",
+			EndUserAssignmentRequiresApproval: true,
+			EndUserAssignmentRequiresCAPAuthenticationContext: false,
+			EndUserAssignmentUserApprovers: []string{
+				"user-approver-1",
+				"user-approver-2",
+			},
+			EndUserAssignmentGroupApprovers: []string{
+				"group-approver-1",
+				"group-approver-2",
+			},
+			EndUserAssignmentRequiresMFA:               false,
+			EndUserAssignmentRequiresJustification:     false,
+			EndUserAssignmentRequiresTicketInformation: false,
+			TenantId: "tenant-1234",
+		}
 	}
 
 	t.Run("Create AZRole node and no relationships", func(t *testing.T) {
+		model := newModel()
 		model.EndUserAssignmentRequiresApproval = false
 
-		node, rels := ein.ConvertAzureRoleManagementPolicyAssignment(model)
+		node, rels := ein.ConvertAzureRoleManagementPolicyAssignment(model, false)
 
-		// Assert created node properties
-		assert.Equal(t, "ROLE-1234@TENANT-1234", node.ObjectID)
+		// ein now emits raw-case identifiers for TenantID / RoleDefinitionId via the graphify
+		// normalization layer; approver slice values are cased inside ein because the
+		// normalization layer does not touch them.
+		assert.Equal(t, "role-1234@tenant-1234", node.ObjectID)
 		assert.Equal(t, "AZRole", node.Labels[0].String())
 		require.Len(t, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()], 2)
 		assert.Equal(t, []string{"GROUP-APPROVER-1", "GROUP-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()])
 		assert.Equal(t, "TENANT-1234", node.PropertyMap[azure.TenantID.String()])
 		assert.Equal(t, false, node.PropertyMap[azure.EndUserAssignmentRequiresApproval.String()])
-		assert.Equal(t, []string{"USER-APPROVER-1", "USER-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
 		require.Len(t, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()], 2)
 		assert.Equal(t, []string{"USER-APPROVER-1", "USER-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
 
@@ -325,46 +339,77 @@ func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 	})
 
 	t.Run("Create relationships and multiple ndoes for each user and group approver", func(t *testing.T) {
+		model := newModel()
 		model.EndUserAssignmentRequiresApproval = true
 
-		node, rels := ein.ConvertAzureRoleManagementPolicyAssignment(model)
+		node, rels := ein.ConvertAzureRoleManagementPolicyAssignment(model, false)
 
-		// Assert created node properties
-		assert.Equal(t, "ROLE-1234@TENANT-1234", node.ObjectID)
+		assert.Equal(t, "role-1234@tenant-1234", node.ObjectID)
 		assert.Equal(t, "AZRole", node.Labels[0].String())
 		require.Len(t, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()], 2)
 		assert.Equal(t, []string{"GROUP-APPROVER-1", "GROUP-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()])
 		assert.Equal(t, "TENANT-1234", node.PropertyMap[azure.TenantID.String()])
 		assert.Equal(t, true, node.PropertyMap[azure.EndUserAssignmentRequiresApproval.String()])
-		assert.Equal(t, []string{"USER-APPROVER-1", "USER-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
 		require.Len(t, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()], 2)
 		assert.Equal(t, []string{"USER-APPROVER-1", "USER-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
 
-		// Assert created relationships
 		require.Len(t, rels, 4)
 
 		assert.Equal(t, "USER-APPROVER-1", rels[0].Source.Value)
 		assert.Equal(t, azure.User, rels[0].Source.Kind)
 		assert.Equal(t, azure.Role, rels[0].Target.Kind)
-		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[0].Target.Value)
+		assert.Equal(t, "role-1234@tenant-1234", rels[0].Target.Value)
 		assert.Equal(t, azure.AZRoleApprover, rels[0].RelType)
 
 		assert.Equal(t, "USER-APPROVER-2", rels[1].Source.Value)
 		assert.Equal(t, azure.User, rels[1].Source.Kind)
 		assert.Equal(t, azure.Role, rels[1].Target.Kind)
-		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[1].Target.Value)
+		assert.Equal(t, "role-1234@tenant-1234", rels[1].Target.Value)
 		assert.Equal(t, azure.AZRoleApprover, rels[1].RelType)
 
 		assert.Equal(t, "GROUP-APPROVER-1", rels[2].Source.Value)
 		assert.Equal(t, azure.Group, rels[2].Source.Kind)
 		assert.Equal(t, azure.Role, rels[2].Target.Kind)
-		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[2].Target.Value)
+		assert.Equal(t, "role-1234@tenant-1234", rels[2].Target.Value)
 		assert.Equal(t, azure.AZRoleApprover, rels[2].RelType)
 
 		assert.Equal(t, "GROUP-APPROVER-2", rels[3].Source.Value)
 		assert.Equal(t, azure.Group, rels[3].Source.Kind)
 		assert.Equal(t, azure.Role, rels[3].Target.Kind)
-		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[3].Target.Value)
+		assert.Equal(t, "role-1234@tenant-1234", rels[3].Target.Value)
 		assert.Equal(t, azure.AZRoleApprover, rels[3].RelType)
+	})
+
+	t.Run("preserveObjectIdentifierCasing preserves raw approver casing on nodes and endpoints", func(t *testing.T) {
+		model := newModel()
+
+		node, rels := ein.ConvertAzureRoleManagementPolicyAssignment(model, true)
+
+		require.Len(t, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()], 2)
+		assert.Equal(t, []string{"user-approver-1", "user-approver-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
+		require.Len(t, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()], 2)
+		assert.Equal(t, []string{"group-approver-1", "group-approver-2"}, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()])
+
+		require.Len(t, rels, 4)
+		assert.Equal(t, "user-approver-1", rels[0].Source.Value)
+		assert.Equal(t, "user-approver-2", rels[1].Source.Value)
+		assert.Equal(t, "group-approver-1", rels[2].Source.Value)
+		assert.Equal(t, "group-approver-2", rels[3].Source.Value)
+	})
+
+	t.Run("does not mutate caller-owned approver slices", func(t *testing.T) {
+		model := newModel()
+		userApprovers := model.EndUserAssignmentUserApprovers
+		groupApprovers := model.EndUserAssignmentGroupApprovers
+
+		_, _ = ein.ConvertAzureRoleManagementPolicyAssignment(model, false)
+
+		assert.Equal(t, []string{"user-approver-1", "user-approver-2"}, userApprovers)
+		assert.Equal(t, []string{"group-approver-1", "group-approver-2"}, groupApprovers)
+
+		_, _ = ein.ConvertAzureRoleManagementPolicyAssignment(model, true)
+
+		assert.Equal(t, []string{"user-approver-1", "user-approver-2"}, userApprovers)
+		assert.Equal(t, []string{"group-approver-1", "group-approver-2"}, groupApprovers)
 	})
 }
