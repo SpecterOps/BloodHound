@@ -14,11 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants } from '@mui/material';
+import { List, ListItem, ListItemText, Paper, TextFieldVariants } from '@mui/material';
+import { FormControl, FormField, FormItem, FormMessage, Input } from 'doodle-ui';
 import { useCombobox } from 'downshift';
 import { useRef } from 'react';
+import { Control } from 'react-hook-form';
 import { SearchResult, getEmptyResultsText, useKeywordAndTypeValues, useSearch, useTheme } from '../../hooks';
 import { SearchValue } from '../../views/Explore/ExploreSearch/types';
+import { RuleFormInputs } from '../../views/PrivilegeZones/Save/RuleForm/types';
 import NodeIcon from '../NodeIcon';
 import SearchResultItem from '../SearchResultItem';
 
@@ -31,6 +34,7 @@ const ExploreSearchCombobox: React.FC<{
     handleNodeSelected: (selection: SearchValue) => any;
     disabled?: boolean;
     variant?: TextFieldVariants;
+    control?: Control<RuleFormInputs, any, RuleFormInputs>;
 }> = ({
     labelText,
     inputValue,
@@ -40,6 +44,7 @@ const ExploreSearchCombobox: React.FC<{
     autoFocus,
     disabled = false,
     variant = 'outlined',
+    control,
 }) => {
     const theme = useTheme();
     const searchNodesRef = useRef<HTMLInputElement>();
@@ -82,29 +87,40 @@ const ExploreSearchCombobox: React.FC<{
 
     return (
         <div style={{ position: 'relative' }}>
-            <TextField
-                placeholder={labelText}
-                variant={variant}
-                size='small'
-                fullWidth
-                disabled={disabled}
-                inputProps={{
-                    'aria-label': labelText,
-                }}
-                InputProps={{
-                    style: {
-                        backgroundColor: disabled ? theme.neutral.tertiary : 'inherit',
-                        fontSize: '0.875rem',
-                    },
-                    autoFocus,
-                    startAdornment: selectedItem?.type && <NodeIcon nodeType={selectedItem?.type} />,
-                }}
-                {...downshiftInputProps}
-                inputRef={(node) => {
-                    downshiftInputProps.inputRef(node);
-                    searchNodesRef.current = node;
-                }}
-                data-testid='explore_search_input-search'
+            <FormField
+                control={control}
+                name='seeds'
+                render={({ field }) => (
+                    <FormItem>
+                        <FormControl>
+                            <Input
+                                {...field}
+                                ref={(node) => {
+                                    downshiftInputProps.inputRef(node);
+                                    searchNodesRef.current = node;
+                                }}
+                                aria-label={labelText}
+                                name={labelText}
+                                placeholder={labelText}
+                                variant={variant}
+                                size='small'
+                                fullWidth
+                                disabled={disabled}
+                                type='text'
+                                autoComplete='off'
+                                style={{
+                                    backgroundColor: disabled ? theme.neutral.tertiary : 'inherit',
+                                    fontSize: '0.875rem',
+                                }}
+                                startAdornment={selectedItem?.type && <NodeIcon nodeType={selectedItem?.type} />}
+                                autoFocus
+                                data-testid='explore_search_input-search'
+                                {...downshiftInputProps}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
             />
             <div
                 style={{

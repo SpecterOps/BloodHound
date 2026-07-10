@@ -37,7 +37,7 @@ import { useNotifications } from '../../../../providers';
 import { apiClient, useAppNavigate } from '../../../../utils';
 import { SearchValue } from '../../../Explore';
 import { RulesLink } from '../../fragments';
-import { getErrorMessage, handleError } from '../utils';
+import { getErrorMessage, handleError, SEEDS_ARE_REQUIRED } from '../utils';
 import BasicInfo from './BasicInfo';
 import RuleFormContext from './RuleFormContext';
 import SeedSelection from './SeedSelection';
@@ -239,6 +239,7 @@ const RuleForm: FC = () => {
 
     const handleCreateRule = useCallback(async () => {
         try {
+            const val = form.getValues();
             if (!tagId) throw new Error(`Missing required ID. tagId: ${tagId}`);
 
             const values = {
@@ -254,7 +255,10 @@ const RuleForm: FC = () => {
             });
 
             navigate(tagDetailsLink(tagId));
-        } catch (error) {
+        } catch (error: any) {
+            if (ruleType === SeedTypeObjectId && error?.response?.data?.errors?.[0]?.message === SEEDS_ARE_REQUIRED) {
+                form.setError('seeds', { message: 'Please add at least one object to this Rule.' });
+            }
             handleError(error, 'creating', 'rule', addNotification, { ruleType });
         }
     }, [tagId, ruleType, form, seeds, createRuleMutation, addNotification, navigate, tagDetailsLink]);

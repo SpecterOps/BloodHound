@@ -143,7 +143,7 @@ const SeedSelection: FC<{
                     </CardContent>
                 </Card>
                 {ruleType === SeedTypeObjectId ? (
-                    <ObjectSelect />
+                    <ObjectSelect control={control} />
                 ) : (
                     <PrivilegeZonesCypherEditor
                         onChange={setCypherQueryForExploreUrl}
