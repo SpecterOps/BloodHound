@@ -33,13 +33,14 @@ type PageWithTitleProps = ContainerProps<
         title?: string;
         pageDescription?: JSX.Element;
         children?: React.ReactNode;
+        fullWidth?: boolean;
     }
 >;
 
-const PageWithTitle: React.FC<PageWithTitleProps> = ({ title, pageDescription, children, ...rest }) => {
+const PageWithTitle: React.FC<PageWithTitleProps> = ({ title, pageDescription, children, fullWidth, ...rest }) => {
     const appName = useAppName();
     return (
-        <Container maxWidth='xl' {...rest} className='pt-4'>
+        <Container maxWidth={fullWidth ? false : 'xl'} {...rest} className='pt-4 px-0 xl:px-6'>
             {title && (
                 <Helmet>
                     <title>
