@@ -27,6 +27,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
@@ -512,4 +513,465 @@ func TestTagAssetGroupNodesForTag(t *testing.T) {
 		assert.Equal(t, float64(addedCount), testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_added", "position": "2"})))
 		assert.Equal(t, float64(removedCount), testutil.ToFloat64(pzNodeTagCounterVec.With(prometheus.Labels{"action": "tag_removed", "position": "2"})))
 	})
+}
+
+func TestSelectNodes(t *testing.T) {
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		testCtx       = suite.Context
+		bhDB          = suite.BHDatabase
+		graphDB       = suite.GraphDB
+		testActor     = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("12345678-9012-4567-9012-456789012345")}}
+		agtParameters = appcfg.GetAGTParameters(testCtx, bhDB)
+	)
+
+	primaryDisplayKinds, err := bhDB.GetPrimaryDisplayKinds(testCtx)
+	require.NoError(t, err)
+
+	t.Run("inserts seed node with disabled auto certification", func(t *testing.T) {
+		node := createSelectNodesNode(t, testCtx, graphDB, "select-nodes-disabled", ad.User)
+		selector := createSelectNodesSelector(t, testCtx, bhDB, testActor, "select nodes disabled", model.SelectorAutoCertifyMethodDisabled, selectNodesSeedForNode(t, node))
+
+		runSelectNodes(t, testCtx, bhDB, graphDB, agtParameters, primaryDisplayKinds, selector, model.AssetGroupExpansionMethodNone)
+
+		selectorNode := requireSelectorNode(t, testCtx, bhDB, selector.ID, node.ID)
+		assert.Equal(t, model.AssetGroupCertificationPending, selectorNode.Certified)
+		assert.False(t, selectorNode.CertifiedBy.Valid)
+		assert.Equal(t, model.AssetGroupSelectorNodeSourceSeed, selectorNode.Source)
+		assertSelectorNodeProperties(t, primaryDisplayKinds, node, selectorNode)
+	})
+
+	t.Run("auto certifies all inserted seed and child nodes when all members are enabled", func(t *testing.T) {
+		groupNode, childNode := createSelectNodesGroupWithChild(t, testCtx, graphDB, "select-nodes-all-members")
+		selector := createSelectNodesSelector(t, testCtx, bhDB, testActor, "select nodes all members", model.SelectorAutoCertifyMethodAllMembers, selectNodesSeedForNode(t, groupNode))
+
+		runSelectNodes(t, testCtx, bhDB, graphDB, agtParameters, primaryDisplayKinds, selector, model.AssetGroupExpansionMethodChildren)
+
+		selectorNodes := requireSelectorNodesById(t, testCtx, bhDB, selector.ID)
+		require.Len(t, selectorNodes, 2)
+
+		groupSelectorNode := selectorNodes[groupNode.ID]
+		assert.Equal(t, model.AssetGroupCertificationAuto, groupSelectorNode.Certified)
+		assert.Equal(t, model.AssetGroupActorBloodHound, groupSelectorNode.CertifiedBy.String)
+		assert.Equal(t, model.AssetGroupSelectorNodeSourceSeed, groupSelectorNode.Source)
+		assertSelectorNodeProperties(t, primaryDisplayKinds, groupNode, groupSelectorNode)
+
+		childSelectorNode := selectorNodes[childNode.ID]
+		assert.Equal(t, model.AssetGroupCertificationAuto, childSelectorNode.Certified)
+		assert.Equal(t, model.AssetGroupActorBloodHound, childSelectorNode.CertifiedBy.String)
+		assert.Equal(t, model.AssetGroupSelectorNodeSourceChild, childSelectorNode.Source)
+		assertSelectorNodeProperties(t, primaryDisplayKinds, childNode, childSelectorNode)
+	})
+
+	t.Run("auto certifies only inserted seed nodes when seeds only is enabled", func(t *testing.T) {
+		groupNode, childNode := createSelectNodesGroupWithChild(t, testCtx, graphDB, "select-nodes-seeds-only-child")
+		selector := createSelectNodesSelector(t, testCtx, bhDB, testActor, "select nodes seeds only child", model.SelectorAutoCertifyMethodSeedsOnly, selectNodesSeedForNode(t, groupNode))
+
+		runSelectNodes(t, testCtx, bhDB, graphDB, agtParameters, primaryDisplayKinds, selector, model.AssetGroupExpansionMethodChildren)
+
+		selectorNodes := requireSelectorNodesById(t, testCtx, bhDB, selector.ID)
+		require.Len(t, selectorNodes, 2)
+
+		groupSelectorNode := selectorNodes[groupNode.ID]
+		assert.Equal(t, model.AssetGroupCertificationAuto, groupSelectorNode.Certified)
+		assert.Equal(t, model.AssetGroupActorBloodHound, groupSelectorNode.CertifiedBy.String)
+		assert.Equal(t, model.AssetGroupSelectorNodeSourceSeed, groupSelectorNode.Source)
+
+		childSelectorNode := selectorNodes[childNode.ID]
+		assert.Equal(t, model.AssetGroupCertificationPending, childSelectorNode.Certified)
+		assert.False(t, childSelectorNode.CertifiedBy.Valid)
+		assert.Equal(t, model.AssetGroupSelectorNodeSourceChild, childSelectorNode.Source)
+	})
+
+	t.Run("auto certifies only inserted seed nodes and leaves parent expansion pending when seeds only is enabled", func(t *testing.T) {
+		parentNode, seedNode := createSelectNodesOUWithChild(t, testCtx, graphDB, "select-nodes-seeds-only-parent")
+		selector := createSelectNodesSelector(t, testCtx, bhDB, testActor, "select nodes seeds only parent", model.SelectorAutoCertifyMethodSeedsOnly, selectNodesSeedForNode(t, seedNode))
+
+		runSelectNodes(t, testCtx, bhDB, graphDB, agtParameters, primaryDisplayKinds, selector, model.AssetGroupExpansionMethodParents)
+
+		selectorNodes := requireSelectorNodesById(t, testCtx, bhDB, selector.ID)
+		require.Len(t, selectorNodes, 2)
+
+		seedSelectorNode := selectorNodes[seedNode.ID]
+		assert.Equal(t, model.AssetGroupCertificationAuto, seedSelectorNode.Certified)
+		assert.Equal(t, model.AssetGroupActorBloodHound, seedSelectorNode.CertifiedBy.String)
+		assert.Equal(t, model.AssetGroupSelectorNodeSourceSeed, seedSelectorNode.Source)
+
+		parentSelectorNode := selectorNodes[parentNode.ID]
+		assert.Equal(t, model.AssetGroupCertificationPending, parentSelectorNode.Certified)
+		assert.False(t, parentSelectorNode.CertifiedBy.Valid)
+		assert.Equal(t, model.AssetGroupSelectorNodeSourceParent, parentSelectorNode.Source)
+	})
+
+	t.Run("updates stale selected node properties", func(t *testing.T) {
+		node := createSelectNodesNode(t, testCtx, graphDB, "select-nodes-stale-properties", ad.User)
+		selector := createSelectNodesSelector(t, testCtx, bhDB, testActor, "select nodes stale properties", model.SelectorAutoCertifyMethodDisabled, selectNodesSeedForNode(t, node))
+
+		require.NoError(t, bhDB.InsertSelectorNode(
+			testCtx,
+			selector.AssetGroupTagId,
+			selector.ID,
+			node.ID,
+			model.AssetGroupCertificationPending,
+			null.String{},
+			model.AssetGroupSelectorNodeSourceSeed,
+			"stale-kind",
+			"stale-env",
+			"stale-object-id",
+			"stale-name",
+		))
+
+		runSelectNodes(t, testCtx, bhDB, graphDB, agtParameters, primaryDisplayKinds, selector, model.AssetGroupExpansionMethodNone)
+
+		selectorNode := requireSelectorNode(t, testCtx, bhDB, selector.ID, node.ID)
+		assert.Equal(t, model.AssetGroupCertificationPending, selectorNode.Certified)
+		assert.False(t, selectorNode.CertifiedBy.Valid)
+		assertSelectorNodeProperties(t, primaryDisplayKinds, node, selectorNode)
+	})
+
+	t.Run("preserves manual and revoked certifications while updating stale properties", func(t *testing.T) {
+		manualNode := createSelectNodesNode(t, testCtx, graphDB, "select-nodes-manual-preserve", ad.User)
+		revokedNode := createSelectNodesNode(t, testCtx, graphDB, "select-nodes-revoked-preserve", ad.User)
+		selector := createSelectNodesSelector(
+			t,
+			testCtx,
+			bhDB,
+			testActor,
+			"select nodes preserve protected certifications",
+			model.SelectorAutoCertifyMethodAllMembers,
+			selectNodesSeedForNode(t, manualNode),
+			selectNodesSeedForNode(t, revokedNode),
+		)
+
+		manualCertifiedBy := null.StringFrom("manual@example.com")
+		revokedCertifiedBy := null.StringFrom("revoked@example.com")
+		require.NoError(t, bhDB.InsertSelectorNode(
+			testCtx,
+			selector.AssetGroupTagId,
+			selector.ID,
+			manualNode.ID,
+			model.AssetGroupCertificationManual,
+			manualCertifiedBy,
+			model.AssetGroupSelectorNodeSourceSeed,
+			"stale-kind",
+			"stale-env",
+			"stale-object-id",
+			"stale-name",
+		))
+		require.NoError(t, bhDB.InsertSelectorNode(
+			testCtx,
+			selector.AssetGroupTagId,
+			selector.ID,
+			revokedNode.ID,
+			model.AssetGroupCertificationRevoked,
+			revokedCertifiedBy,
+			model.AssetGroupSelectorNodeSourceSeed,
+			"stale-kind",
+			"stale-env",
+			"stale-object-id",
+			"stale-name",
+		))
+
+		runSelectNodes(t, testCtx, bhDB, graphDB, agtParameters, primaryDisplayKinds, selector, model.AssetGroupExpansionMethodNone)
+
+		manualSelectorNode := requireSelectorNode(t, testCtx, bhDB, selector.ID, manualNode.ID)
+		assert.Equal(t, model.AssetGroupCertificationManual, manualSelectorNode.Certified)
+		assert.Equal(t, manualCertifiedBy, manualSelectorNode.CertifiedBy)
+		assertSelectorNodeProperties(t, primaryDisplayKinds, manualNode, manualSelectorNode)
+
+		revokedSelectorNode := requireSelectorNode(t, testCtx, bhDB, selector.ID, revokedNode.ID)
+		assert.Equal(t, model.AssetGroupCertificationRevoked, revokedSelectorNode.Certified)
+		assert.Equal(t, revokedCertifiedBy, revokedSelectorNode.CertifiedBy)
+		assertSelectorNodeProperties(t, primaryDisplayKinds, revokedNode, revokedSelectorNode)
+	})
+
+	t.Run("downgrades existing automatic certification to pending when auto certification is disabled", func(t *testing.T) {
+		node := createSelectNodesNode(t, testCtx, graphDB, "select-nodes-auto-disabled", ad.User)
+		selector := createSelectNodesSelector(t, testCtx, bhDB, testActor, "select nodes auto disabled", model.SelectorAutoCertifyMethodDisabled, selectNodesSeedForNode(t, node))
+
+		require.NoError(t, bhDB.InsertSelectorNode(
+			testCtx,
+			selector.AssetGroupTagId,
+			selector.ID,
+			node.ID,
+			model.AssetGroupCertificationAuto,
+			null.StringFrom(model.AssetGroupActorBloodHound),
+			model.AssetGroupSelectorNodeSourceSeed,
+			ad.User.String(),
+			selectNodesDomainSID("select-nodes-auto-disabled"),
+			selectNodesObjectID("select-nodes-auto-disabled"),
+			selectNodesName("select-nodes-auto-disabled"),
+		))
+
+		runSelectNodes(t, testCtx, bhDB, graphDB, agtParameters, primaryDisplayKinds, selector, model.AssetGroupExpansionMethodNone)
+
+		selectorNode := requireSelectorNode(t, testCtx, bhDB, selector.ID, node.ID)
+		assert.Equal(t, model.AssetGroupCertificationPending, selectorNode.Certified)
+		assert.False(t, selectorNode.CertifiedBy.Valid)
+		assertSelectorNodeProperties(t, primaryDisplayKinds, node, selectorNode)
+	})
+
+	t.Run("deletes old selected nodes that are no longer selected", func(t *testing.T) {
+		selectedNode := createSelectNodesNode(t, testCtx, graphDB, "select-nodes-selected", ad.User)
+		unselectedNode := createSelectNodesNode(t, testCtx, graphDB, "select-nodes-unselected", ad.User)
+		selector := createSelectNodesSelector(t, testCtx, bhDB, testActor, "select nodes delete unselected", model.SelectorAutoCertifyMethodDisabled, selectNodesSeedForNode(t, selectedNode))
+
+		require.NoError(t, bhDB.InsertSelectorNode(
+			testCtx,
+			selector.AssetGroupTagId,
+			selector.ID,
+			selectedNode.ID,
+			model.AssetGroupCertificationPending,
+			null.String{},
+			model.AssetGroupSelectorNodeSourceSeed,
+			ad.User.String(),
+			selectNodesDomainSID("select-nodes-selected"),
+			selectNodesObjectID("select-nodes-selected"),
+			selectNodesName("select-nodes-selected"),
+		))
+		require.NoError(t, bhDB.InsertSelectorNode(
+			testCtx,
+			selector.AssetGroupTagId,
+			selector.ID,
+			unselectedNode.ID,
+			model.AssetGroupCertificationPending,
+			null.String{},
+			model.AssetGroupSelectorNodeSourceSeed,
+			ad.User.String(),
+			selectNodesDomainSID("select-nodes-unselected"),
+			selectNodesObjectID("select-nodes-unselected"),
+			selectNodesName("select-nodes-unselected"),
+		))
+
+		runSelectNodes(t, testCtx, bhDB, graphDB, agtParameters, primaryDisplayKinds, selector, model.AssetGroupExpansionMethodNone)
+
+		selectorNodes := requireSelectorNodesById(t, testCtx, bhDB, selector.ID)
+		require.Len(t, selectorNodes, 1)
+		assert.Contains(t, selectorNodes, selectedNode.ID)
+		assert.NotContains(t, selectorNodes, unselectedNode.ID)
+	})
+
+	t.Run("deletes all old selected nodes when no seeds resolve", func(t *testing.T) {
+		oldNode := createSelectNodesNode(t, testCtx, graphDB, "select-nodes-missing-seed-old", ad.User)
+		selector := createSelectNodesSelector(t, testCtx, bhDB, testActor, "select nodes missing seed", model.SelectorAutoCertifyMethodDisabled, model.SelectorSeed{
+			Type:  model.SelectorTypeObjectId,
+			Value: "select-nodes-missing-seed-object-id",
+		})
+
+		require.NoError(t, bhDB.InsertSelectorNode(
+			testCtx,
+			selector.AssetGroupTagId,
+			selector.ID,
+			oldNode.ID,
+			model.AssetGroupCertificationPending,
+			null.String{},
+			model.AssetGroupSelectorNodeSourceSeed,
+			ad.User.String(),
+			selectNodesDomainSID("select-nodes-missing-seed-old"),
+			selectNodesObjectID("select-nodes-missing-seed-old"),
+			selectNodesName("select-nodes-missing-seed-old"),
+		))
+
+		runSelectNodes(t, testCtx, bhDB, graphDB, agtParameters, primaryDisplayKinds, selector, model.AssetGroupExpansionMethodNone)
+
+		assert.Empty(t, requireSelectorNodesById(t, testCtx, bhDB, selector.ID))
+	})
+
+	t.Run("auto certifies pending old child source row when current selection is a seed", func(t *testing.T) {
+		node := createSelectNodesNode(t, testCtx, graphDB, "select-nodes-stale-source", ad.User)
+		selector := createSelectNodesSelector(t, testCtx, bhDB, testActor, "select nodes stale source", model.SelectorAutoCertifyMethodSeedsOnly, selectNodesSeedForNode(t, node))
+
+		require.NoError(t, bhDB.InsertSelectorNode(
+			testCtx,
+			selector.AssetGroupTagId,
+			selector.ID,
+			node.ID,
+			model.AssetGroupCertificationPending,
+			null.String{},
+			model.AssetGroupSelectorNodeSourceChild,
+			ad.User.String(),
+			selectNodesDomainSID("select-nodes-stale-source"),
+			selectNodesObjectID("select-nodes-stale-source"),
+			selectNodesName("select-nodes-stale-source"),
+		))
+
+		runSelectNodes(t, testCtx, bhDB, graphDB, agtParameters, primaryDisplayKinds, selector, model.AssetGroupExpansionMethodNone)
+
+		selectorNode := requireSelectorNode(t, testCtx, bhDB, selector.ID, node.ID)
+		assert.Equal(t, model.AssetGroupCertificationAuto, selectorNode.Certified)
+		assert.Equal(t, model.AssetGroupActorBloodHound, selectorNode.CertifiedBy.String)
+	})
+}
+
+func createSelectNodesSelector(t *testing.T, ctx context.Context, bhDB interface {
+	CreateAssetGroupTag(ctx context.Context, assetGroupTagType model.AssetGroupTagType, user model.User, name, description string, position null.Int32, requireCertify null.Bool, glyph null.String) (model.AssetGroupTag, error)
+	CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, user model.User, name string, description string, isDefault bool, allowDisable bool, autoCertify model.SelectorAutoCertifyMethod, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error)
+}, testActor model.User, name string, autoCertify model.SelectorAutoCertifyMethod, seeds ...model.SelectorSeed) model.AssetGroupTagSelector {
+	t.Helper()
+
+	tag, err := bhDB.CreateAssetGroupTag(ctx, model.AssetGroupTagTypeLabel, testActor, name+" tag", "", null.Int32{}, null.Bool{}, null.String{})
+	require.NoError(t, err)
+
+	selector, err := bhDB.CreateAssetGroupTagSelector(ctx, tag.ID, testActor, name, "", false, true, autoCertify, seeds)
+	require.NoError(t, err)
+
+	return selector
+}
+
+func createSelectNodesNode(t *testing.T, ctx context.Context, graphDB graph.Database, prefix string, kinds ...graph.Kind) *graph.Node {
+	t.Helper()
+
+	var node *graph.Node
+	require.NoError(t, graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		createdNode, err := tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:     selectNodesName(prefix),
+			common.ObjectID: selectNodesObjectID(prefix),
+			ad.DomainSID:    selectNodesDomainSID(prefix),
+		}), append([]graph.Kind{ad.Entity}, kinds...)...)
+		if err != nil {
+			return err
+		}
+
+		node = createdNode
+		return nil
+	}))
+
+	return node
+}
+
+func createSelectNodesGroupWithChild(t *testing.T, ctx context.Context, graphDB graph.Database, prefix string) (*graph.Node, *graph.Node) {
+	t.Helper()
+
+	var (
+		groupNode *graph.Node
+		childNode *graph.Node
+	)
+
+	require.NoError(t, graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		if groupNode, err = tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:     selectNodesName(prefix + "-group"),
+			common.ObjectID: selectNodesObjectID(prefix + "-group"),
+			ad.DomainSID:    selectNodesDomainSID(prefix),
+		}), ad.Entity, ad.Group); err != nil {
+			return err
+		}
+
+		if childNode, err = tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:     selectNodesName(prefix + "-child"),
+			common.ObjectID: selectNodesObjectID(prefix + "-child"),
+			ad.DomainSID:    selectNodesDomainSID(prefix),
+		}), ad.Entity, ad.User); err != nil {
+			return err
+		}
+
+		_, err = tx.CreateRelationshipByIDs(childNode.ID, groupNode.ID, ad.MemberOf, graph.NewProperties())
+		return err
+	}))
+
+	return groupNode, childNode
+}
+
+func createSelectNodesOUWithChild(t *testing.T, ctx context.Context, graphDB graph.Database, prefix string) (*graph.Node, *graph.Node) {
+	t.Helper()
+
+	var (
+		parentNode *graph.Node
+		childNode  *graph.Node
+	)
+
+	require.NoError(t, graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		if parentNode, err = tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:     selectNodesName(prefix + "-parent"),
+			common.ObjectID: selectNodesObjectID(prefix + "-parent"),
+			ad.DomainSID:    selectNodesDomainSID(prefix),
+		}), ad.Entity, ad.OU); err != nil {
+			return err
+		}
+
+		if childNode, err = tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:       selectNodesName(prefix + "-child"),
+			common.ObjectID:   selectNodesObjectID(prefix + "-child"),
+			ad.DomainSID:      selectNodesDomainSID(prefix),
+			ad.IsACLProtected: false,
+		}), ad.Entity, ad.User); err != nil {
+			return err
+		}
+
+		_, err = tx.CreateRelationshipByIDs(parentNode.ID, childNode.ID, ad.Contains, graph.NewProperties())
+		return err
+	}))
+
+	return parentNode, childNode
+}
+
+func runSelectNodes(t *testing.T, ctx context.Context, bhDB database.Database, graphDB graph.Database, agtParameters appcfg.AGTParameters, primaryDisplayKinds schema.PrimaryDisplayKinds, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) {
+	t.Helper()
+
+	require.Empty(t, SelectNodes(ctx, bhDB, graphDB, agtParameters, primaryDisplayKinds, selector, expansionMethod))
+}
+
+func requireSelectorNode(t *testing.T, ctx context.Context, bhDB interface {
+	GetSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) ([]model.AssetGroupSelectorNode, error)
+}, selectorId int, nodeId graph.ID) model.AssetGroupSelectorNode {
+	t.Helper()
+
+	selectorNodes := requireSelectorNodesById(t, ctx, bhDB, selectorId)
+	selectorNode, ok := selectorNodes[nodeId]
+	require.Truef(t, ok, "expected selector %d to include node %d", selectorId, nodeId)
+
+	return selectorNode
+}
+
+func requireSelectorNodesById(t *testing.T, ctx context.Context, bhDB interface {
+	GetSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) ([]model.AssetGroupSelectorNode, error)
+}, selectorId int) map[graph.ID]model.AssetGroupSelectorNode {
+	t.Helper()
+
+	selectorNodes, err := bhDB.GetSelectorNodesBySelectorIds(ctx, selectorId)
+	require.NoError(t, err)
+
+	selectorNodesById := make(map[graph.ID]model.AssetGroupSelectorNode, len(selectorNodes))
+	for _, selectorNode := range selectorNodes {
+		selectorNodesById[selectorNode.NodeId] = selectorNode
+	}
+
+	return selectorNodesById
+}
+
+func assertSelectorNodeProperties(t *testing.T, primaryDisplayKinds schema.PrimaryDisplayKinds, node *graph.Node, selectorNode model.AssetGroupSelectorNode) {
+	t.Helper()
+
+	primaryKind, displayName, objectId, envId := model.GetAssetGroupMemberProperties(primaryDisplayKinds, node)
+	assert.Equal(t, primaryKind, selectorNode.NodePrimaryKind)
+	assert.Equal(t, displayName, selectorNode.NodeName)
+	assert.Equal(t, objectId, selectorNode.NodeObjectId)
+	assert.Equal(t, envId, selectorNode.NodeEnvironmentId)
+}
+
+func selectNodesSeedForNode(t *testing.T, node *graph.Node) model.SelectorSeed {
+	t.Helper()
+
+	objectId, err := node.Properties.Get(common.ObjectID.String()).String()
+	require.NoError(t, err)
+
+	return model.SelectorSeed{
+		Type:  model.SelectorTypeObjectId,
+		Value: objectId,
+	}
+}
+
+func selectNodesName(prefix string) string {
+	return prefix + "-name"
+}
+
+func selectNodesObjectID(prefix string) string {
+	return prefix + "-object-id"
+}
+
+func selectNodesDomainSID(prefix string) string {
+	return prefix + "-domain-sid"
 }
