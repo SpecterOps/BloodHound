@@ -128,10 +128,10 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Components/Input
             // '--input-label': common.dark,
             // '--input-fill': elevation.light[1],
-            // '--input-fill-disabled': palette.neutral.light[100],
+            '--input-fill-disabled': palette.neutral.light[100],
             // '--input-border-default': palette.grey[700],
             // '--input-border-hover': light.secondary.main,
-            // '--input-border-disabled': palette.neutral.light[900],
+            '--input-border-disabled': palette.neutral.light[900],
             // '--input-placeholder-text': text.placeholder,
 
             // // Components/Input/Selectors
@@ -195,7 +195,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Utilities
             // '--icon': common.dark,
             // '--icon-contrast': common.white,
-            // '--icon-disabled': palette.grey[700],
+            '--icon-disabled': palette.grey[700],
             // '--divider': palette.neutral.light[500],
 
             //  End of MAIN / new colors

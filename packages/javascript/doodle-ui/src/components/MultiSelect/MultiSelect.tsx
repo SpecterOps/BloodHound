@@ -39,11 +39,11 @@ const CaretDown = ({ className, size = 12 }: { className?: string; size?: number
 );
 
 const MultiSelectTriggerVariants = cva(
-    'flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm border-input-border-default bg-input-fill text-input-placeholder-text focus:outline-none focus-visible:focus-ring data-[state=open]:focus-ring enabled:hover:border-input-border-hover enabled:hover:bg-secondary enabled:hover:text-white disabled:cursor-not-allowed disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-icon-disabled aria-[invalid=true]:border-status-error-main'
+    'flex h-10 w-full items-center justify-between rounded-lg bg-primary px-4 py-2 text-base font-normal leading-6 tracking-[0.15px] text-common-white dark:text-neutral-dark-1 focus:outline-none focus-visible:focus-ring data-[state=open]:bg-primary enabled:hover:bg-secondary disabled:cursor-not-allowed disabled:rounded disabled:border disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-text-disabled aria-[invalid=true]:border-status-error-main'
 );
 
 const multiSelectRowStyles =
-    'flex items-center gap-2 mx-1 p-2 py-2 rounded-lg cursor-pointer hover:bg-secondary hover:text-white';
+    'flex w-full items-center gap-2 rounded-lg p-2 cursor-pointer hover:bg-secondary hover:text-common-white dark:hover:text-neutral-dark-1';
 
 interface MultiSelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     open?: boolean;
@@ -281,22 +281,24 @@ const MultiSelect = ({
                     {triggerText}
                 </MultiSelectTrigger>
             </PopoverTrigger>
-            <PopoverContent className='p-0 w-[var(--radix-popover-trigger-width)]' align='start'>
+            <PopoverContent
+                className='w-[var(--radix-popover-trigger-width)] rounded-lg bg-neutral-light-1 dark:bg-neutral-dark-2 p-0 text-text-main dark:text-white'
+                align='start'>
                 {isSearchable && (
                     <div className='flex items-center gap-2 border-b p-2'>
-                        <Search className='h-5 w-5 shrink-0 text-neutral-dark-1' aria-hidden='true' />
+                        <Search className='size-5 shrink-0 text-neutral-dark-1 dark:text-white' aria-hidden='true' />
                         <Input
                             aria-label={searchPlaceholder}
                             value={searchValue}
-                            onChange={(event) => setSearchValue(event.target.value)}
+                            onChange={(e) => setSearchValue(e.target.value)}
                             placeholder={searchPlaceholder}
-                            className='h-8 border-none bg-transparent px-0 focus-visible:ring-0'
+                            className='h-8 border-none bg-transparent px-0 text-text-main placeholder:text-text-main dark:text-white dark:placeholder:text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none'
                         />
                     </div>
                 )}
 
                 <ScrollArea className='h-60'>
-                    <div role='listbox' aria-multiselectable='true' aria-busy={isLoading || undefined} className='py-1'>
+                    <div role='listbox' aria-multiselectable='true' aria-busy={isLoading || undefined} className='p-1'>
                         {selectAllLabel && !isLoading && selectableValues.length > 0 && (
                             <MultiSelectActionRow
                                 checked={selectAllChecked}
