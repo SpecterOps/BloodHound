@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -202,13 +203,19 @@ func parseInfoPayload(infoPayload map[string]KindInfoPayload) (model.KindInfoInp
 		err            error
 	)
 
-	if infoPayload == nil || len(infoPayload) == 0 {
+	if len(infoPayload) == 0 {
 		return make(model.KindInfoInputs, 0), nil
 	}
 
 	result := make(model.KindInfoInputs, 0, len(infoPayload))
 
 	for key, payload := range infoPayload {
+		// Guard against int32 overflow before the cast below; a position outside the
+		// int32 range would silently wrap and corrupt the stored value.
+		if payload.Position > math.MaxInt32 || payload.Position < math.MinInt32 {
+			return nil, fmt.Errorf("%w: position %d for info key %q is outside the int32 range", model.ErrInvalidKindInfoPosition, payload.Position, key)
+		}
+
 		// Handle empty markdown by providing empty content structure
 		if len(payload.Markdown) == 0 {
 			markdown = []byte(`{"content":""}`)

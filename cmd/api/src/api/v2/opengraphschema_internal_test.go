@@ -16,6 +16,7 @@
 package v2
 
 import (
+	"math"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -295,6 +296,17 @@ func Test_parseInfoPayload(t *testing.T) {
 					Title:    "Bad",
 					Position: 1,
 					Markdown: []byte(`{invalid json`), // malformed JSON fails to wrap
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "error_-_position_exceeds_int32",
+			input: map[string]KindInfoPayload{
+				"overflow": {
+					Title:    "Overflow",
+					Position: math.MaxInt32 + 1, // would silently wrap when cast to int32
+					Markdown: []byte(`{"content":"# Test"}`),
 				},
 			},
 			wantErr: true,

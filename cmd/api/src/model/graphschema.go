@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"regexp"
 	"slices"
 	"strconv"
@@ -79,6 +80,16 @@ func ErrIsGraphSchemaDuplicateError(err error) bool {
 // kindInfoKeyPattern is the regex pattern for validating info keys
 var kindInfoKeyPattern = regexp.MustCompile(`^[a-z0-9_-]{1,128}$`)
 
+// dangerousMarkdownURLPattern matches dangerous URL schemes used as the destination
+// of a markdown link or image ("](scheme:" inline or "]: scheme:" reference form).
+// These schemes are invisible to the HTML sanitizer because they are markdown syntax,
+// not HTML, so they must be checked separately.
+var dangerousMarkdownURLPattern = regexp.MustCompile(`(?i)\]\s*[(:]\s*(?:javascript|vbscript|data):`)
+
+// markdownSanitizePolicy is reused across calls; bluemonday policies are safe for
+// concurrent use once constructed.
+var markdownSanitizePolicy = bluemonday.UGCPolicy()
+
 // reservedGraphKindNamespaces lists namespaces that cannot be used in custom
 // graph extensions or ingest payloads. These are owned by internal subsystems
 // (e.g., "tag" is reserved for asset tagging). Comparisons are case-insensitive.
@@ -115,9 +126,11 @@ func (s *ReservedKindError) Error() string {
 	return fmt.Sprintf("kind '%s' uses reserved namespace '%s'", s.KindName, s.Namespace)
 }
 
-// ValidateMarkdownSafety checks if markdown content is safe to render as HTML.
-// It returns ErrUnsafeMarkdownContent if the markdown contains HTML that would
-// be stripped by bluemonday's UGC (User Generated Content) policy.
+// ValidateMarkdownSafety checks that markdown content cannot inject cross-site
+// scripting when rendered as HTML. It is a server-side defense-in-depth gate for
+// consumers that render the stored content without their own sanitization.
+// It returns ErrUnsafeMarkdownContent if the markdown contains disallowed embedded
+// HTML or a link/image whose destination uses a dangerous URL scheme.
 // The content parameter should be a JSON structure like: {"markdown":{"content":"..."}}
 func ValidateMarkdownSafety(content json.RawMessage) error {
 	var (
@@ -133,10 +146,18 @@ func ValidateMarkdownSafety(content json.RawMessage) error {
 	}
 
 	markdown := contentWrapper.Markdown.Content
-	policy := bluemonday.UGCPolicy()
-	sanitized := policy.Sanitize(markdown)
 
-	if sanitized != markdown {
+	// Reject markdown-native links/images that use a dangerous URL scheme. bluemonday
+	// only inspects HTML, so these are invisible to it when written as markdown syntax.
+	if dangerousMarkdownURLPattern.MatchString(markdown) {
+		return fmt.Errorf("%w: markdown link or image uses a disallowed URL scheme", ErrUnsafeMarkdownContent)
+	}
+
+	// Reject embedded raw HTML. bluemonday encodes benign angle brackets and ampersands
+	// to HTML entities; unescaping before comparison tolerates that re-encoding while
+	// still catching any HTML element or attribute that was actually removed or altered.
+	sanitized := markdownSanitizePolicy.Sanitize(markdown)
+	if html.UnescapeString(sanitized) != markdown {
 		return fmt.Errorf("%w: markdown contains disallowed HTML tags or attributes", ErrUnsafeMarkdownContent)
 	}
 
