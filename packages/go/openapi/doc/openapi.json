@@ -14085,6 +14085,122 @@
         }
       }
     },
+    "/api/v2/data-quality-stats-aggregations": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetDataQualityAggregations",
+        "summary": "Get data quality aggregations by environment kind",
+        "description": "Returns data quality metric counts aggregated per environment kind, optionally scoped to an OpenGraph schema extension, combined across environment instances for each collection run. Results can be filtered, sorted, and paginated.\n",
+        "tags": [
+          "Data Quality",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "schema_environment_kind_id",
+            "description": "Required. Filter results by the environment kind id to scope the aggregation to a single kind. Valid filter predicates are `eq` and `neq`.\n",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "schema_extension_id",
+            "description": "Filter results by the OpenGraph schema extension id. When an `eq` predicate is provided, the extension must exist or a 404 is returned. Valid filter predicates are `eq` and `neq`.\n",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are created_at, updated_at.\n",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "start",
+            "description": "Beginning datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime minus 30 days",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "end",
+            "description": "Ending datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "$ref": "#/components/schemas/api.response.time-window"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.data-quality-aggregation"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/clear-database": {
       "parameters": [
         {
@@ -22768,6 +22884,52 @@
               "run_id": {
                 "type": "string",
                 "format": "uuid"
+              }
+            }
+          }
+        ]
+      },
+      "model.data-quality-aggregation": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int32.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "run_id": {
+                "type": "string"
+              },
+              "extension_id": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "environment_kind_id": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "metric_type": {
+                "type": "string",
+                "enum": [
+                  "node",
+                  "relationship"
+                ]
+              },
+              "metric_name": {
+                "type": "string"
+              },
+              "metric_value": {
+                "type": "number",
+                "format": "double"
+              },
+              "kind_id": {
+                "description": "The kind ID for the counted node kind. Present when `metric_type` is `node`; otherwise null.",
+                "type": "integer",
+                "format": "int32",
+                "nullable": true
               }
             }
           }
