@@ -39,7 +39,7 @@ import (
 )
 
 // IntegrationTestSuite carries only the fields needed to exercise
-// Version_950_Migration: a context, a graph database handle, and a
+// Version_930_Migration: a context, a graph database handle, and a
 // BloodhoundDB that satisfies SchemalessNodeKindBackfillData.
 type IntegrationTestSuite struct {
 	context    context.Context
