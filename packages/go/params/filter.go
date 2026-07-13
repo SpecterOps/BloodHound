@@ -14,14 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// Package filters provides a storage-agnostic model for parsing and validating query parameter filters.
+// This file provides a storage-agnostic model for parsing and validating query parameter filters.
 // It intentionally carries no knowledge of how filters are ultimately applied (SQL, graph, etc.) so that
 // it can be reused across the API without coupling to any particular persistence layer.
-package filters
+
+package params
 
 import (
 	"errors"
 	"fmt"
+	"net/url"
+	"slices"
+	"strings"
 )
 
 // FilterOperator identifies the comparison predicate applied to a filtered column.
@@ -38,7 +42,7 @@ const (
 )
 
 // Validation sentinels classify why a set of query parameter filters failed validation. Callers should
-// classify failures with errors.Is and may extract the offending field/operator via a *ValidationError
+// classify failures with errors.Is and may extract the offending field/operator via a *FilterValidationError
 // using errors.As. These are intentionally free of any transport- or presentation-specific wording.
 var (
 	ErrMalformedFilter      = errors.New("query parameter filter is malformed")
@@ -46,16 +50,16 @@ var (
 	ErrOperatorNotSupported = errors.New("filter operator is not supported for column")
 )
 
-// ValidationError describes a filter validation failure. It wraps one of the validation sentinels so it
+// FilterValidationError describes a filter validation failure. It wraps one of the validation sentinels so it
 // can be classified with errors.Is, while also carrying the offending field and operator so callers can
 // build their own messaging without parsing strings.
-type ValidationError struct {
+type FilterValidationError struct {
 	Err      error
 	Field    string
 	Operator FilterOperator
 }
 
-func (s *ValidationError) Error() string {
+func (s *FilterValidationError) Error() string {
 	switch {
 	case s.Field != "" && s.Operator != "":
 		return fmt.Sprintf("%s: %s %s", s.Err, s.Field, s.Operator)
@@ -66,7 +70,7 @@ func (s *ValidationError) Error() string {
 	}
 }
 
-func (s *ValidationError) Unwrap() error {
+func (s *FilterValidationError) Unwrap() error {
 	return s.Err
 }
 
@@ -113,4 +117,62 @@ type FilterableField struct {
 // field's supported operators and data typing.
 type Filterable interface {
 	ValidFilters() map[string]FilterableField
+}
+
+// QueryParameterFilterParser extracts filters from request query parameters. Parameters whose names are
+// listed in ignoredParameters are skipped, allowing callers to exclude application-specific concerns such
+// as pagination parameters without coupling this package to them.
+type QueryParameterFilterParser struct {
+	ignoredParameters []string
+}
+
+// NewQueryParameterFilterParser returns a parser that ignores the supplied query parameter names.
+func NewQueryParameterFilterParser(ignoredParameters ...string) QueryParameterFilterParser {
+	return QueryParameterFilterParser{
+		ignoredParameters: ignoredParameters,
+	}
+}
+
+// ParseAndValidate parses the supplied query parameters and validates them against the Filterable schema
+// in a single pass, returning a fully-enriched Filters value. Every returned Filter has its SetOperator
+// and IsStringData populated from the column definition. On failure it returns a *FilterValidationError
+// wrapping one of the validation sentinels.
+func (s QueryParameterFilterParser) ParseAndValidate(values url.Values, filterable Filterable) (Filters, error) {
+	var (
+		validFields   = filterable.ValidFilters()
+		parsedFilters = Filters{}
+	)
+
+	for name, fieldValues := range values {
+		if slices.Contains(s.ignoredParameters, name) {
+			continue
+		}
+
+		for _, value := range fieldValues {
+			if subgroups := strings.SplitN(value, ":", 2); len(subgroups) != 2 {
+				continue
+			} else if operator, err := ParseFilterOperator(subgroups[0]); err != nil {
+				return nil, &FilterValidationError{Err: err}
+			} else if field, isFilterable := validFields[name]; !isFilterable {
+				return nil, &FilterValidationError{Err: ErrFieldNotFilterable, Field: name}
+			} else if !slices.Contains(field.Operators, operator) {
+				return nil, &FilterValidationError{Err: ErrOperatorNotSupported, Field: name, Operator: operator}
+			} else {
+				setOperator := field.SetOperator
+				if setOperator == "" {
+					setOperator = FilterAnd
+				}
+
+				parsedFilters[name] = append(parsedFilters[name], Filter{
+					Field:        name,
+					Operator:     operator,
+					Value:        subgroups[1],
+					SetOperator:  setOperator,
+					IsStringData: field.IsStringData,
+				})
+			}
+		}
+	}
+
+	return parsedFilters, nil
 }

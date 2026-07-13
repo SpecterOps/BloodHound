@@ -18,5 +18,5 @@
 // Auth helpers, route stubs, and theme types/constants are available via subpath imports:
 //   - bh-playwright-testing/themes
 //   - bh-playwright-testing/auth
-//   - bh-playwright-testing/stubs/graph-has-data
+//   - bh-playwright-testing/stubs
 export * from './axe';

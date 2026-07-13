@@ -20,10 +20,14 @@ package database_test
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"testing"
+	"time"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -4884,4 +4888,419 @@ func TestUpdateSchemaFinding(t *testing.T) {
 			testCase.assert(t, finding, updated, err)
 		})
 	}
+}
+
+type graphSchemaKindInfoSeed struct {
+	nodeBackingKindID             int32
+	nodeSchemaKindID              int32
+	relationshipBackingKindID     int32
+	relationshipSchemaKindID      int32
+	missingBackingKindID          int32
+	missingNodeSchemaKindID       int32
+	missingRelationshipSchemaKind int32
+}
+
+func TestDatabase_CreateKindInfo(t *testing.T) {
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	seed := seedGraphSchemaKindInfoPrerequisites(t, testSuite)
+
+	kindInfos := []model.GraphSchemaKindInfo{
+		{
+			KindID:     seed.nodeBackingKindID,
+			NodeKindID: &seed.nodeSchemaKindID,
+			InfoKey:    "general",
+			Title:      "General",
+			Position:   0,
+			Content:    json.RawMessage(`{"markdown":{"content":"hello"}}`),
+		},
+		{
+			KindID:             seed.relationshipBackingKindID,
+			RelationshipKindID: &seed.relationshipSchemaKindID,
+			InfoKey:            "abuse",
+			Title:              "Abuse",
+			Position:           0,
+			Content:            json.RawMessage(`{"query":{"cypher":"MATCH (n) RETURN n"}}`),
+		},
+	}
+
+	for _, kindInfo := range kindInfos {
+		_, err := testSuite.BHDatabase.CreateKindInfo(
+			testSuite.Context,
+			kindInfo.KindID,
+			kindInfo.NodeKindID,
+			kindInfo.RelationshipKindID,
+			toKindInfoInput(kindInfo),
+		)
+		require.NoError(t, err)
+	}
+
+	var rowCount int
+	require.NoError(t, testSuite.DB.Raw(`SELECT count(*) FROM schema_kind_info`).Row().Scan(&rowCount))
+	assert.Equal(t, 2, rowCount)
+
+	var (
+		id        int32
+		title     string
+		content   []byte
+		position  int32
+		createdAt time.Time
+		updatedAt time.Time
+	)
+
+	require.NoError(t, testSuite.DB.Raw(`
+		SELECT id, created_at, updated_at, title, content, position
+		FROM schema_kind_info
+		WHERE kind_id = ? AND info_key = ?
+	`, seed.nodeBackingKindID, "general").Row().Scan(&id, &createdAt, &updatedAt, &title, &content, &position))
+	assert.NotZero(t, id)
+	assert.False(t, createdAt.IsZero())
+	assert.False(t, updatedAt.IsZero())
+	assert.Equal(t, "General", title)
+	assert.JSONEq(t, `{"markdown":{"content":"hello"}}`, string(content))
+	assert.Equal(t, int32(0), position)
+}
+
+func TestDatabase_CreateKindInfo_Constraints(t *testing.T) {
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	seed := seedGraphSchemaKindInfoPrerequisites(t, testSuite)
+
+	tests := []struct {
+		name           string
+		setup          func(t *testing.T)
+		kindInfo       model.GraphSchemaKindInfo
+		wantConstraint string
+		wantSentinel   error
+	}{
+		{
+			name: "constraint - requires exactly one origin",
+			kindInfo: model.GraphSchemaKindInfo{
+				KindID:   seed.nodeBackingKindID,
+				InfoKey:  "general",
+				Title:    "General",
+				Position: 0,
+				Content:  json.RawMessage(`{"markdown":{"content":"hello"}}`),
+			},
+			wantConstraint: "schema_kind_info_kind_origin",
+		},
+		{
+			name: "constraint - rejects multiple origins",
+			kindInfo: model.GraphSchemaKindInfo{
+				KindID:             seed.nodeBackingKindID,
+				NodeKindID:         &seed.nodeSchemaKindID,
+				RelationshipKindID: &seed.relationshipSchemaKindID,
+				InfoKey:            "general",
+				Title:              "General",
+				Position:           0,
+				Content:            json.RawMessage(`{"markdown":{"content":"hello"}}`),
+			},
+			wantConstraint: "schema_kind_info_kind_origin",
+		},
+		{
+			name: "constraint - rejects blank info key",
+			kindInfo: model.GraphSchemaKindInfo{
+				KindID:     seed.nodeBackingKindID,
+				NodeKindID: &seed.nodeSchemaKindID,
+				InfoKey:    "   ",
+				Title:      "General",
+				Position:   0,
+				Content:    json.RawMessage(`{"markdown":{"content":"hello"}}`),
+			},
+			wantConstraint: "schema_kind_info_info_key_not_empty",
+		},
+		{
+			name: "constraint - rejects blank title",
+			kindInfo: model.GraphSchemaKindInfo{
+				KindID:     seed.nodeBackingKindID,
+				NodeKindID: &seed.nodeSchemaKindID,
+				InfoKey:    "general",
+				Title:      "   ",
+				Position:   0,
+				Content:    json.RawMessage(`{"markdown":{"content":"hello"}}`),
+			},
+			wantConstraint: "schema_kind_info_title_not_empty",
+		},
+		{
+			name: "constraint - rejects negative position",
+			kindInfo: model.GraphSchemaKindInfo{
+				KindID:     seed.nodeBackingKindID,
+				NodeKindID: &seed.nodeSchemaKindID,
+				InfoKey:    "general",
+				Title:      "General",
+				Position:   -1,
+				Content:    json.RawMessage(`{"markdown":{"content":"hello"}}`),
+			},
+			wantConstraint: "schema_kind_info_position_nonnegative_nonzero",
+		},
+		{
+			name: "constraint - rejects non object content",
+			kindInfo: model.GraphSchemaKindInfo{
+				KindID:     seed.nodeBackingKindID,
+				NodeKindID: &seed.nodeSchemaKindID,
+				InfoKey:    "general",
+				Title:      "General",
+				Position:   0,
+				Content:    json.RawMessage(`[]`),
+			},
+			wantConstraint: "schema_kind_info_content_is_object",
+		},
+		{
+			name: "constraint - enforces unique position per kind",
+			setup: func(t *testing.T) {
+				t.Helper()
+				insertValidGraphSchemaKindInfo(t, testSuite, model.GraphSchemaKindInfo{
+					KindID:     seed.nodeBackingKindID,
+					NodeKindID: &seed.nodeSchemaKindID,
+					InfoKey:    "general",
+					Title:      "General",
+					Position:   0,
+					Content:    json.RawMessage(`{"markdown":{"content":"hello"}}`),
+				})
+			},
+			kindInfo: model.GraphSchemaKindInfo{
+				KindID:     seed.nodeBackingKindID,
+				NodeKindID: &seed.nodeSchemaKindID,
+				InfoKey:    "details",
+				Title:      "Details",
+				Position:   0,
+				Content:    json.RawMessage(`{"markdown":{"content":"hello again"}}`),
+			},
+			wantConstraint: "schema_kind_info_unique_kind_position",
+			wantSentinel:   model.ErrKindInfoDuplicatePosition,
+		},
+		{
+			name: "constraint - enforces unique info key per kind",
+			setup: func(t *testing.T) {
+				t.Helper()
+				insertValidGraphSchemaKindInfo(t, testSuite, model.GraphSchemaKindInfo{
+					KindID:     seed.nodeBackingKindID,
+					NodeKindID: &seed.nodeSchemaKindID,
+					InfoKey:    "general",
+					Title:      "General",
+					Position:   0,
+					Content:    json.RawMessage(`{"markdown":{"content":"hello"}}`),
+				})
+			},
+			kindInfo: model.GraphSchemaKindInfo{
+				KindID:     seed.nodeBackingKindID,
+				NodeKindID: &seed.nodeSchemaKindID,
+				InfoKey:    "general",
+				Title:      "General Again",
+				Position:   1,
+				Content:    json.RawMessage(`{"markdown":{"content":"hello again"}}`),
+			},
+			wantConstraint: "schema_kind_info_unique_kind_info_key",
+			wantSentinel:   model.ErrKindInfoDuplicateInfoKey,
+		},
+		{
+			name: "constraint - requires existing kind",
+			kindInfo: model.GraphSchemaKindInfo{
+				KindID:     seed.missingBackingKindID,
+				NodeKindID: &seed.nodeSchemaKindID,
+				InfoKey:    "general",
+				Title:      "General",
+				Position:   0,
+				Content:    json.RawMessage(`{"markdown":{"content":"hello"}}`),
+			},
+			wantConstraint: "schema_kind_info_kind_id_fkey",
+			wantSentinel:   model.ErrKindInfoKindNotFound,
+		},
+		{
+			name: "constraint - requires existing node kind origin",
+			kindInfo: model.GraphSchemaKindInfo{
+				KindID:     seed.nodeBackingKindID,
+				NodeKindID: &seed.missingNodeSchemaKindID,
+				InfoKey:    "general",
+				Title:      "General",
+				Position:   0,
+				Content:    json.RawMessage(`{"markdown":{"content":"hello"}}`),
+			},
+			wantConstraint: "schema_kind_info_node_kind_id_fkey",
+		},
+		{
+			name: "constraint - requires existing relationship kind origin",
+			kindInfo: model.GraphSchemaKindInfo{
+				KindID:             seed.relationshipBackingKindID,
+				RelationshipKindID: &seed.missingRelationshipSchemaKind,
+				InfoKey:            "general",
+				Title:              "General",
+				Position:           0,
+				Content:            json.RawMessage(`{"markdown":{"content":"hello"}}`),
+			},
+			wantConstraint: "schema_kind_info_relationship_kind_id_fkey",
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			truncateGraphSchemaKindInfo(t, testSuite)
+			if testCase.setup != nil {
+				testCase.setup(t)
+			}
+
+			_, err := testSuite.BHDatabase.CreateKindInfo(
+				testSuite.Context,
+				testCase.kindInfo.KindID,
+				testCase.kindInfo.NodeKindID,
+				testCase.kindInfo.RelationshipKindID,
+				toKindInfoInput(testCase.kindInfo),
+			)
+
+			assertGraphSchemaKindInfoConstraintError(t, err, testCase.wantConstraint)
+			if testCase.wantSentinel != nil {
+				assert.ErrorIs(t, err, testCase.wantSentinel)
+			}
+		})
+	}
+}
+
+func TestDatabase_GetKindInfos_NoneExist(t *testing.T) {
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	seed := seedGraphSchemaKindInfoPrerequisites(t, testSuite)
+
+	kindInfos, err := testSuite.BHDatabase.GetKindInfos(testSuite.Context, seed.nodeBackingKindID)
+
+	require.NoError(t, err)
+	assert.Empty(t, kindInfos)
+}
+
+func TestDatabase_GetKindInfos_HappyPath(t *testing.T) {
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	seed := seedGraphSchemaKindInfoPrerequisites(t, testSuite)
+
+	insertValidGraphSchemaKindInfo(t, testSuite, model.GraphSchemaKindInfo{
+		KindID:             seed.relationshipBackingKindID,
+		RelationshipKindID: &seed.relationshipSchemaKindID,
+		InfoKey:            "other",
+		Title:              "Other",
+		Position:           0,
+		Content:            json.RawMessage(`{"query":{"cypher":"MATCH (n) RETURN n"}}`),
+	})
+
+	insertValidGraphSchemaKindInfo(t, testSuite, model.GraphSchemaKindInfo{
+		KindID:     seed.nodeBackingKindID,
+		NodeKindID: &seed.nodeSchemaKindID,
+		InfoKey:    "general",
+		Title:      "General",
+		Position:   0,
+		Content:    json.RawMessage(`{"markdown":{"content":"hello"}}`),
+	})
+
+	kindInfos, err := testSuite.BHDatabase.GetKindInfos(testSuite.Context, seed.nodeBackingKindID)
+
+	require.NoError(t, err)
+	require.Len(t, kindInfos, 1)
+	require.NotNil(t, kindInfos[0].NodeKindID)
+
+	assert.Equal(t, seed.nodeBackingKindID, kindInfos[0].KindID)
+	assert.Equal(t, seed.nodeSchemaKindID, *kindInfos[0].NodeKindID)
+	assert.Nil(t, kindInfos[0].RelationshipKindID)
+	assert.Equal(t, "general", kindInfos[0].InfoKey)
+	assert.Equal(t, "General", kindInfos[0].Title)
+	assert.Equal(t, int32(0), kindInfos[0].Position)
+	assert.JSONEq(t, `{"markdown":{"content":"hello"}}`, string(kindInfos[0].Content))
+	assert.NotZero(t, kindInfos[0].ID)
+	assert.False(t, kindInfos[0].CreatedAt.ValueOrZero().IsZero())
+	assert.False(t, kindInfos[0].UpdatedAt.ValueOrZero().IsZero())
+}
+
+func TestDatabase_DeleteKindInfo(t *testing.T) {
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	seed := seedGraphSchemaKindInfoPrerequisites(t, testSuite)
+
+	createdKindInfo, err := testSuite.BHDatabase.CreateKindInfo(
+		testSuite.Context,
+		seed.nodeBackingKindID,
+		&seed.nodeSchemaKindID,
+		nil,
+		model.KindInfoInput{
+			InfoKey:  "general",
+			Title:    "General",
+			Position: 0,
+			Content:  json.RawMessage(`{"markdown":{"content":"hello"}}`),
+		},
+	)
+	require.NoError(t, err)
+
+	require.NoError(t, testSuite.BHDatabase.DeleteKindInfo(testSuite.Context, createdKindInfo.ID))
+
+	kindInfos, err := testSuite.BHDatabase.GetKindInfos(testSuite.Context, seed.nodeBackingKindID)
+	require.NoError(t, err)
+	assert.Empty(t, kindInfos)
+}
+
+func seedGraphSchemaKindInfoPrerequisites(t *testing.T, testSuite IntegrationTestSuite) graphSchemaKindInfoSeed {
+	t.Helper()
+
+	var (
+		maxBackingKindID          int32
+		maxNodeSchemaKindID       int32
+		maxRelationshipSchemaKind int32
+	)
+
+	extension := createTestExtension(t, testSuite, "KindInfoTestExtension", "Kind Info Test Extension", "1.0.0", "KIT")
+	nodeSchemaKind := createTestNodeKind(t, testSuite, "KindInfoTestNode", extension.ID, "Kind Info Test Node", "Test node kind", true, "cube", "#336699")
+	nodeBackingKind := getKindByName(t, testSuite, nodeSchemaKind.Name)
+	relationshipSchemaKind := createTestRelationshipKind(t, testSuite, "KindInfoTestRelationship", extension.ID, "Test relationship kind", true)
+	relationshipBackingKind := getKindByName(t, testSuite, relationshipSchemaKind.Name)
+
+	require.NoError(t, testSuite.DB.Raw(`SELECT max(id) FROM kind`).Row().Scan(&maxBackingKindID))
+	require.NoError(t, testSuite.DB.Raw(`SELECT max(id) FROM schema_node_kinds`).Row().Scan(&maxNodeSchemaKindID))
+	require.NoError(t, testSuite.DB.Raw(`SELECT max(id) FROM schema_relationship_kinds`).Row().Scan(&maxRelationshipSchemaKind))
+
+	return graphSchemaKindInfoSeed{
+		nodeBackingKindID:             nodeBackingKind.ID,
+		nodeSchemaKindID:              nodeSchemaKind.ID,
+		relationshipBackingKindID:     relationshipBackingKind.ID,
+		relationshipSchemaKindID:      relationshipSchemaKind.ID,
+		missingBackingKindID:          maxBackingKindID + 1,
+		missingNodeSchemaKindID:       maxNodeSchemaKindID + 1,
+		missingRelationshipSchemaKind: maxRelationshipSchemaKind + 1,
+	}
+}
+
+func insertValidGraphSchemaKindInfo(t *testing.T, testSuite IntegrationTestSuite, kindInfo model.GraphSchemaKindInfo) {
+	t.Helper()
+
+	_, err := testSuite.BHDatabase.CreateKindInfo(
+		testSuite.Context,
+		kindInfo.KindID,
+		kindInfo.NodeKindID,
+		kindInfo.RelationshipKindID,
+		toKindInfoInput(kindInfo),
+	)
+	require.NoError(t, err)
+}
+
+func toKindInfoInput(kindInfo model.GraphSchemaKindInfo) model.KindInfoInput {
+	return model.KindInfoInput{
+		InfoKey:  kindInfo.InfoKey,
+		Title:    kindInfo.Title,
+		Position: kindInfo.Position,
+		Content:  kindInfo.Content,
+	}
+}
+
+func truncateGraphSchemaKindInfo(t *testing.T, testSuite IntegrationTestSuite) {
+	t.Helper()
+
+	require.NoError(t, testSuite.DB.Exec(`TRUNCATE TABLE schema_kind_info`).Error)
+}
+
+func assertGraphSchemaKindInfoConstraintError(t *testing.T, err error, expectedConstraint string) {
+	t.Helper()
+
+	var pgErr *pgconn.PgError
+	require.Error(t, err)
+	require.True(t, errors.As(err, &pgErr), "expected wrapped *pgconn.PgError, got %T: %v", err, err)
+	assert.Equal(t, expectedConstraint, pgErr.ConstraintName)
 }

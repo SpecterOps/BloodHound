@@ -47,9 +47,9 @@ const (
 	FeatureOpenGraphExtensionManagement = "opengraph_extension_management"
 	FeatureOpenHoundSupport             = "openhound_support"
 	FeatureAPIKeyExpirationSupport      = "api_key_expiration_support"
-	FeatureFindingsTable                = "findings_table"
 	FeatureCollectorSupportBundle       = "collector_support_bundle"
 	FeatureVariableAnalysisMode         = "variable_analysis_mode"
+	FeatureUseRawObjectID               = "use_raw_object_id"
 )
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be
