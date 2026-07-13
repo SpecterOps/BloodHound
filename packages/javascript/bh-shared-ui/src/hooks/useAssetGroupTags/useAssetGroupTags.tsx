@@ -76,28 +76,17 @@ export const privilegeZonesKeys = {
         [...privilegeZonesKeys.all, 'certifications', filters, search, ...environments] as const,
 };
 
-export const getIsOwnedTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.type === AssetGroupTagTypeOwned);
+export const getOwnedTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.type === AssetGroupTagTypeOwned);
 
-export const getIsTierZeroTag = (tags: AssetGroupTag[]) =>
-    tags.find((tag) => tag.position === HighestPrivilegePosition);
+export const getTierZeroTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.position === HighestPrivilegePosition);
 
-export const isOwnedObject = (
+export const isTaggedObject = (
     node: NodeDetails | RelationshipDetails | RelationshipDetailsWithInfo | NodeDetailsWithInfo | undefined,
-    ownedTag: AssetGroupTag | undefined
+    tag: AssetGroupTag | undefined
 ): boolean => {
-    if (!node || !ownedTag || !isNodeResponse(node)) return false;
+    if (!node || !tag || !isNodeResponse(node)) return false;
 
-    const underscoredTagName = ownedTag.name.split(' ').join('_');
-    return node.kinds.some((kind) => kind.name === `${TagLabelPrefix}${underscoredTagName}`);
-};
-
-export const isTierZero = (
-    node: NodeDetails | RelationshipDetails | RelationshipDetailsWithInfo | NodeDetailsWithInfo | undefined,
-    tierZeroTag: AssetGroupTag | undefined
-): boolean => {
-    if (!node || !tierZeroTag || !isNodeResponse(node)) return false;
-
-    const underscoredTagName = tierZeroTag.name.split(' ').join('_');
+    const underscoredTagName = tag.name.split(' ').join('_');
     return node.kinds.some((kind) => kind.name === `${TagLabelPrefix}${underscoredTagName}`);
 };
 
@@ -366,14 +355,14 @@ export const useOrderedTags = () => {
 
 export const useHighestPrivilegeTag = () => {
     const { data: orderedTags, isLoading, isError } = useOrderedTags();
-    const tag = orderedTags?.find((tag) => tag.position === HighestPrivilegePosition);
+    const tag = getTierZeroTag(orderedTags ?? []);
 
     return { isLoading, isError, tag };
 };
 
 export const useHighestPrivilegeTagId = () => {
     const { data: orderedTags, isLoading, isError } = useOrderedTags();
-    const tagId = orderedTags?.find((tag) => tag.position === HighestPrivilegePosition)?.id;
+    const tagId = getTierZeroTag(orderedTags ?? [])?.id;
 
     return { isLoading, isError, tagId };
 };
@@ -387,5 +376,5 @@ export const useLabels = () => {
 
 export const useOwnedTagId = () => {
     const tagsQuery = useTagsQuery();
-    return tagsQuery.data?.find((tag) => tag.type === AssetGroupTagTypeOwned)?.id;
+    return getOwnedTag(tagsQuery.data ?? [])?.id;
 };

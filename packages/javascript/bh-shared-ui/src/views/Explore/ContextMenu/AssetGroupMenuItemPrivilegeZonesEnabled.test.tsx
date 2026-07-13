@@ -18,7 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { NodeDetails } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { getIsOwnedTag, getIsTierZeroTag, isOwnedObject, isTierZero } from '../../../hooks';
+import { getOwnedTag, getTierZeroTag } from '../../../hooks';
 import { createAuthStateWithPermissions } from '../../../mocks';
 import { withoutErrorLogging } from '../../../mocks/stderr';
 import { render, screen } from '../../../test-utils';
@@ -116,9 +116,8 @@ describe('AssetGroupMenuItem', () => {
         render(
             <AssetGroupMenuItem
                 addNodePayload={{} as any}
-                isCurrentMemberFn={isOwnedObject}
                 removeNodePathFn={() => '/privilege-zones/labels/1/details'}
-                tagIdentifierFn={getIsOwnedTag}
+                tagIdentifierFn={getOwnedTag}
             />,
             {
                 route: ROUTE_WITH_SELECTED_ITEM_PARAM,
@@ -140,9 +139,8 @@ describe('AssetGroupMenuItem', () => {
             render(
                 <AssetGroupMenuItem
                     addNodePayload={{} as any}
-                    isCurrentMemberFn={isOwnedObject}
                     removeNodePathFn={() => '/privilege-zones/labels/1/details'}
-                    tagIdentifierFn={getIsOwnedTag}
+                    tagIdentifierFn={getOwnedTag}
                 />,
                 {
                     route: ROUTE_WITH_SELECTED_ITEM_PARAM,
@@ -160,9 +158,8 @@ describe('AssetGroupMenuItem', () => {
         render(
             <AssetGroupMenuItem
                 addNodePayload={{} as any}
-                isCurrentMemberFn={isTierZero}
                 removeNodePathFn={() => '/privilege-zones/zones/1/details'}
-                tagIdentifierFn={getIsTierZeroTag}
+                tagIdentifierFn={getTierZeroTag}
                 showConfirmationOnAdd={true}
             />,
             {
@@ -193,9 +190,8 @@ describe('AssetGroupMenuItem', () => {
         render(
             <AssetGroupMenuItem
                 addNodePayload={{} as any}
-                isCurrentMemberFn={isOwnedObject}
                 removeNodePathFn={() => '/privilege-zones/labels/1/details'}
-                tagIdentifierFn={getIsOwnedTag}
+                tagIdentifierFn={getOwnedTag}
             />,
             {
                 route: ROUTE_WITH_SELECTED_ITEM_PARAM,
@@ -222,9 +218,8 @@ describe('AssetGroupMenuItem', () => {
         render(
             <AssetGroupMenuItem
                 addNodePayload={{} as any}
-                isCurrentMemberFn={isOwnedObject}
                 removeNodePathFn={() => '/privilege-zones/labels/1/details'}
-                tagIdentifierFn={getIsOwnedTag}
+                tagIdentifierFn={getOwnedTag}
             />,
             { route: ROUTE_WITH_SELECTED_ITEM_PARAM }
         );

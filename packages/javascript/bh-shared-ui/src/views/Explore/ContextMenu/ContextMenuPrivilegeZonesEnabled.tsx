@@ -24,11 +24,9 @@ import {
 } from 'js-client-library';
 import { FC } from 'react';
 import {
-    getIsOwnedTag,
-    getIsTierZeroTag,
+    getOwnedTag,
+    getTierZeroTag,
     isNodeResponse,
-    isOwnedObject,
-    isTierZero,
     useExploreParams,
     useExploreSelectedItem,
     usePZPathParams,
@@ -97,17 +95,15 @@ const ContextMenu: FC<{
 
             <AssetGroupMenuItem
                 addNodePayload={tierZeroPayload}
-                isCurrentMemberFn={isTierZero}
                 removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'zones')}
                 showConfirmationOnAdd
-                tagIdentifierFn={getIsTierZeroTag}
+                tagIdentifierFn={getTierZeroTag}
             />
 
             <AssetGroupMenuItem
                 addNodePayload={ownedPayload}
-                isCurrentMemberFn={isOwnedObject}
                 removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
-                tagIdentifierFn={getIsOwnedTag}
+                tagIdentifierFn={getOwnedTag}
             />
 
             <CopyMenuItem />
