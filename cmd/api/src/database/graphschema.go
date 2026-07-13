@@ -1400,6 +1400,10 @@ var (
 	graphSchemaKindInfoConstraintKindIDFKey     = "schema_kind_info_kind_id_fkey"
 	graphSchemaKindInfoConstraintUniquePosition = "schema_kind_info_unique_kind_position"
 	graphSchemaKindInfoConstraintUniqueInfoKey  = "schema_kind_info_unique_kind_info_key"
+
+	// defaultKindInfoContent is stored when a kind info entry has no content, preserving the
+	// expected {"markdown":{"content":"..."}} structure rather than an empty object.
+	defaultKindInfoContent = `{"markdown":{"content":""}}`
 )
 
 func (s *BloodhoundDB) CreateKindInfo(ctx context.Context, kindID int32, nodeKindID, relationshipKindID *int32, kindInfo model.KindInfoInput) (model.GraphSchemaKindInfo, error) {
@@ -1409,7 +1413,7 @@ func (s *BloodhoundDB) CreateKindInfo(ctx context.Context, kindID int32, nodeKin
 	)
 
 	if len(content) == 0 {
-		content = []byte("{}")
+		content = []byte(defaultKindInfoContent)
 	}
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
@@ -1454,7 +1458,7 @@ func (s *BloodhoundDB) UpdateKindInfo(ctx context.Context, kindInfo model.GraphS
 	var content = kindInfo.Content
 
 	if len(content) == 0 {
-		content = []byte("{}")
+		content = []byte(defaultKindInfoContent)
 	}
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`

@@ -70,7 +70,7 @@ type GraphSchemaRelationshipKindsPayload struct {
 	Name          string                     `json:"name"`
 	Description   string                     `json:"description"`
 	IsTraversable bool                       `json:"is_traversable"` // indicates whether the edge-kind is a traversable path
-	Info          map[string]KindInfoPayload `json:"info,omitempty"`
+	Info          map[string]KindInfoPayload `json:"info"`
 }
 
 type GraphSchemaNodeKindsPayload struct {
@@ -80,7 +80,7 @@ type GraphSchemaNodeKindsPayload struct {
 	IsDisplayKind bool                       `json:"is_display_kind"` // indicates if this kind should supersede others and be displayed
 	Icon          string                     `json:"icon"`            // font-awesome icon for the registered node kind
 	IconColor     string                     `json:"color"`           // icon hex color
-	Info          map[string]KindInfoPayload `json:"info,omitempty"`
+	Info          map[string]KindInfoPayload `json:"info"`
 }
 
 type KindInfoPayload struct {

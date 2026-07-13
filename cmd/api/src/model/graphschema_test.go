@@ -22,7 +22,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -1054,86 +1053,6 @@ func Test_validateGraphExtension(t *testing.T) {
 	}
 }
 
-func TestValidateMarkdownSafety(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name     string
-		markdown string
-		wantErr  error
-	}{
-		{name: "success_-_headings_and_formatting", markdown: "# Heading\n\n**bold** and *italic*", wantErr: nil},
-		{name: "success_-_lists", markdown: "- List item 1\n- List item 2", wantErr: nil},
-		{name: "success_-_links", markdown: "[Link](https://example.com)", wantErr: nil},
-		{name: "success_-_code_blocks", markdown: "`code` and ```code block```", wantErr: nil},
-		{name: "success_-_allowed_html", markdown: "Text with <b>bold</b> and <i>italic</i>", wantErr: nil},
-		{name: "success_-_benign_angle_brackets", markdown: "Run: if a < b && c > d then exit", wantErr: nil},
-		{name: "success_-_quotes_and_apostrophes", markdown: "He said \"hi\" and it's fine", wantErr: nil},
-		{name: "success_-_mailto_link", markdown: "[email us](mailto:team@example.com)", wantErr: nil},
-		{name: "error_-_script_tag", markdown: "<script>alert('xss')</script>", wantErr: ErrUnsafeMarkdownContent},
-		{name: "error_-_img_onerror", markdown: "<img src=x onerror='alert(1)'>", wantErr: ErrUnsafeMarkdownContent},
-		{name: "error_-_iframe", markdown: "<iframe src='evil.com'></iframe>", wantErr: ErrUnsafeMarkdownContent},
-		{name: "error_-_javascript_href", markdown: "<a href='javascript:alert()'>Click</a>", wantErr: ErrUnsafeMarkdownContent},
-		{name: "error_-_markdown_javascript_link", markdown: "[click me](javascript:alert(document.cookie))", wantErr: ErrUnsafeMarkdownContent},
-		{name: "error_-_markdown_javascript_image", markdown: "![img](javascript:alert(1))", wantErr: ErrUnsafeMarkdownContent},
-		{name: "error_-_markdown_vbscript_link", markdown: "[x](vbscript:msgbox(1))", wantErr: ErrUnsafeMarkdownContent},
-		{name: "error_-_markdown_data_uri_link", markdown: "[x](data:text/html;base64,PHNjcmlwdD4=)", wantErr: ErrUnsafeMarkdownContent},
-		{name: "error_-_markdown_reference_javascript_link", markdown: "[ref]: javascript:alert(1)", wantErr: ErrUnsafeMarkdownContent},
-
-		// The following cases document real-world, benign content that the current naive
-		// bluemonday sanitize-and-compare implementation wrongly rejects. The markdown is
-		// sourced from AD/Azure entity-panel help text and repository .md files. They assert
-		// the correct behavior (wantErr: nil) and therefore FAIL against the current
-		// implementation, capturing the false positives to be addressed (BED-8764).
-		{name: "false_positive_-_ntlm_hash_placeholder_in_prose", markdown: "Provide the <ntlm hash> value directly", wantErr: nil},
-		{name: "false_positive_-_service_principal_app_id_placeholder", markdown: "Use the \"<service principal's app id>\" value", wantErr: nil},
-		{name: "false_positive_-_generic_type_in_prose", markdown: "This returns a List<String> value", wantErr: nil},
-		{name: "false_positive_-_superseded_rfc_identifier", markdown: "SUPERSEDED BY <RFC identifier> - deprecated in favor of another", wantErr: nil},
-		{name: "false_positive_-_reference_link_with_amp_entity", markdown: "See [ATT&amp;CK T1098](https://attack.mitre.org/techniques/T1098/).", wantErr: nil},
-		{name: "false_positive_-_placeholder_in_code_span", markdown: "See the folder `cmd/ui/tests/<suite>` for details", wantErr: nil},
-
-		// The following cases pin down the exact boundary of what a markdown-aware
-		// convert-then-sanitize pipeline (goldmark + bluemonday) would and would not fix,
-		// so the ADR author can see the tradeoff concretely (BED-8764).
-		//
-		// An angle-bracket token inside a code span or fenced code block is unambiguously
-		// literal text; goldmark escapes it (e.g. <code>&lt;blah&gt;</code>), so it becomes
-		// safe and should be accepted. These currently FAIL (the bluemonday-only impl is not
-		// markdown-aware and rejects the stripped tag) and would PASS once goldmark is added.
-		{name: "boundary_-_angle_token_in_code_span_should_pass", markdown: "Provide the `<blah>` value", wantErr: nil},
-		{name: "boundary_-_angle_token_in_fenced_code_should_pass", markdown: "```\n<blah>\n```", wantErr: nil},
-		// A bare angle-bracket token in prose is, per the markdown/HTML spec, an actual HTML
-		// tag and is indistinguishable from a real tag like <script>. Reject semantics MUST
-		// reject it; goldmark does NOT change this. This case documents that goldmark is not
-		// a fix for bare-prose tokens - authors must wrap them in backticks. Rejection here is
-		// correct both before and after goldmark, so it PASSES against the current impl.
-		{name: "boundary_-_bare_angle_token_in_prose_stays_rejected", markdown: "Provide the <blah> value", wantErr: ErrUnsafeMarkdownContent},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			var (
-				wrappedContent = struct {
-					Markdown struct {
-						Content string `json:"content"`
-					} `json:"markdown"`
-				}{}
-			)
-			wrappedContent.Markdown.Content = tc.markdown
-			content, err := json.Marshal(wrappedContent)
-			require.NoError(t, err)
-
-			if err := ValidateMarkdownSafety(json.RawMessage(content)); tc.wantErr != nil {
-				assert.ErrorIs(t, err, tc.wantErr)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
 func TestKindInfo_Validation(t *testing.T) {
 	t.Parallel()
 
@@ -1247,6 +1166,83 @@ func TestKindInfo_Validation(t *testing.T) {
 				}},
 			},
 			wantErr: ErrInvalidKindInfoPosition,
+		},
+		{
+			name: "error_-_content_empty",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(``)}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoContent,
+		},
+		{
+			name: "error_-_content_missing_markdown_key",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`{"foo":"bar"}`)}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoContent,
+		},
+		{
+			name: "error_-_content_missing_content_string",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`{"markdown":{}}`)}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoContent,
+		},
+		{
+			name: "success_-_blank_content_string",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"   "}}`)}},
+				}},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "success_-_empty_content_string",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`{"markdown":{"content":""}}`)}},
+				}},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "error_-_content_unknown_field",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"ok"},"extra":"x"}`)}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoContent,
+		},
+		{
+			name: "error_-_content_not_an_object",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`"just a string"`)}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoContent,
 		},
 	}
 

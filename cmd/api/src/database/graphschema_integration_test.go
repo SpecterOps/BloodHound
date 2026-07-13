@@ -4950,6 +4950,35 @@ func TestDatabase_CreateKindInfo(t *testing.T) {
 	assert.Equal(t, int32(0), position)
 }
 
+func TestDatabase_CreateKindInfo_EmptyContentDefaultsToMarkdownStructure(t *testing.T) {
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	seed := seedGraphSchemaKindInfoPrerequisites(t, testSuite)
+
+	created, err := testSuite.BHDatabase.CreateKindInfo(
+		testSuite.Context,
+		seed.nodeBackingKindID,
+		&seed.nodeSchemaKindID,
+		nil,
+		model.KindInfoInput{
+			InfoKey:  "general",
+			Title:    "General",
+			Position: 1,
+		},
+	)
+	require.NoError(t, err)
+	assert.JSONEq(t, `{"markdown":{"content":""}}`, string(created.Content))
+
+	var content []byte
+	require.NoError(t, testSuite.DB.Raw(`
+		SELECT content
+		FROM schema_kind_info
+		WHERE kind_id = ? AND info_key = ?
+	`, seed.nodeBackingKindID, "general").Row().Scan(&content))
+	assert.JSONEq(t, `{"markdown":{"content":""}}`, string(content))
+}
+
 func TestDatabase_CreateKindInfo_Constraints(t *testing.T) {
 	testSuite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &testSuite)
@@ -5332,6 +5361,35 @@ func TestDatabase_UpdateKindInfo(t *testing.T) {
 				_, err := testSuite.BHDatabase.UpdateKindInfo(testSuite.Context, setupData.createdKindInfo)
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), "duplicate")
+			},
+		},
+		{
+			name: "success_-_empty_content_defaults_to_markdown_structure",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				seed := seedGraphSchemaKindInfoPrerequisites(t, testSuite)
+				createdKindInfo, err := testSuite.BHDatabase.CreateKindInfo(
+					testSuite.Context,
+					seed.nodeBackingKindID,
+					&seed.nodeSchemaKindID,
+					nil,
+					model.KindInfoInput{
+						InfoKey:  "overview",
+						Title:    "Original",
+						Position: 1,
+						Content:  json.RawMessage(`{"markdown":{"content":"v1"}}`),
+					},
+				)
+				require.NoError(t, err)
+				return testSetupData{createdKindInfo: createdKindInfo}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData) {
+				t.Helper()
+				setupData.createdKindInfo.Content = nil
+
+				updatedKindInfo, err := testSuite.BHDatabase.UpdateKindInfo(testSuite.Context, setupData.createdKindInfo)
+				require.NoError(t, err)
+				assert.JSONEq(t, `{"markdown":{"content":""}}`, string(updatedKindInfo.Content))
 			},
 		},
 	}

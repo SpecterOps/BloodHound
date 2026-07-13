@@ -20,14 +20,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html"
 	"regexp"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/microcosm-cc/bluemonday"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/dawgs/graph"
@@ -56,7 +54,7 @@ var (
 	ErrInvalidKindInfoKey      = errors.New("invalid kind info key: must match pattern ^[a-z0-9_-]{1,128}$")
 	ErrTooManyKindInfoEntries  = errors.New("too many kind info entries: maximum 100 allowed per kind")
 	ErrInvalidKindInfoPosition = errors.New("invalid kind info position: must be >= 1")
-	ErrUnsafeMarkdownContent   = errors.New("markdown content contains unsafe HTML")
+	ErrInvalidKindInfoContent  = errors.New("invalid kind info content: must be a JSON object of the form {\"markdown\":{\"content\":\"...\"}}")
 )
 
 func ErrIsGraphSchemaDuplicateError(err error) bool {
@@ -79,16 +77,6 @@ func ErrIsGraphSchemaDuplicateError(err error) bool {
 
 // kindInfoKeyPattern is the regex pattern for validating info keys
 var kindInfoKeyPattern = regexp.MustCompile(`^[a-z0-9_-]{1,128}$`)
-
-// dangerousMarkdownURLPattern matches dangerous URL schemes used as the destination
-// of a markdown link or image ("](scheme:" inline or "]: scheme:" reference form).
-// These schemes are invisible to the HTML sanitizer because they are markdown syntax,
-// not HTML, so they must be checked separately.
-var dangerousMarkdownURLPattern = regexp.MustCompile(`(?i)\]\s*[(:]\s*(?:javascript|vbscript|data):`)
-
-// markdownSanitizePolicy is reused across calls; bluemonday policies are safe for
-// concurrent use once constructed.
-var markdownSanitizePolicy = bluemonday.UGCPolicy()
 
 // reservedGraphKindNamespaces lists namespaces that cannot be used in custom
 // graph extensions or ingest payloads. These are owned by internal subsystems
@@ -126,39 +114,26 @@ func (s *ReservedKindError) Error() string {
 	return fmt.Sprintf("kind '%s' uses reserved namespace '%s'", s.KindName, s.Namespace)
 }
 
-// ValidateMarkdownSafety checks that markdown content cannot inject cross-site
-// scripting when rendered as HTML. It is a server-side defense-in-depth gate for
-// consumers that render the stored content without their own sanitization.
-// It returns ErrUnsafeMarkdownContent if the markdown contains disallowed embedded
-// HTML or a link/image whose destination uses a dangerous URL scheme.
-// The content parameter should be a JSON structure like: {"markdown":{"content":"..."}}
-func ValidateMarkdownSafety(content json.RawMessage) error {
+// validateKindInfoContent verifies that entity panel content matches the expected
+// JSON structure: {"markdown":{"content":"..."}}. It validates structure only; it does
+// not sanitize or inspect the markdown for unsafe HTML (see BED-8764).
+func validateKindInfoContent(content json.RawMessage) error {
 	var (
 		contentWrapper struct {
 			Markdown struct {
-				Content string `json:"content"`
+				Content *string `json:"content"`
 			} `json:"markdown"`
 		}
+		decoder = json.NewDecoder(strings.NewReader(string(content)))
 	)
 
-	if err := json.Unmarshal(content, &contentWrapper); err != nil {
-		return fmt.Errorf("failed to parse markdown content JSON: %w", err)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&contentWrapper); err != nil {
+		return ErrInvalidKindInfoContent
 	}
 
-	markdown := contentWrapper.Markdown.Content
-
-	// Reject markdown-native links/images that use a dangerous URL scheme. bluemonday
-	// only inspects HTML, so these are invisible to it when written as markdown syntax.
-	if dangerousMarkdownURLPattern.MatchString(markdown) {
-		return fmt.Errorf("%w: markdown link or image uses a disallowed URL scheme", ErrUnsafeMarkdownContent)
-	}
-
-	// Reject embedded raw HTML. bluemonday encodes benign angle brackets and ampersands
-	// to HTML entities; unescaping before comparison tolerates that re-encoding while
-	// still catching any HTML element or attribute that was actually removed or altered.
-	sanitized := markdownSanitizePolicy.Sanitize(markdown)
-	if html.UnescapeString(sanitized) != markdown {
-		return fmt.Errorf("%w: markdown contains disallowed HTML tags or attributes", ErrUnsafeMarkdownContent)
+	if contentWrapper.Markdown.Content == nil {
+		return ErrInvalidKindInfoContent
 	}
 
 	return nil
@@ -175,7 +150,7 @@ func validateKindInfo(kindName string, info KindInfoInputs) error {
 			return fmt.Errorf("%w: key '%s' in kind %s", ErrInvalidKindInfoKey, infoEntry.InfoKey, kindName)
 		} else if infoEntry.Position < 1 {
 			return fmt.Errorf("%w: position %d for info key '%s' in kind %s", ErrInvalidKindInfoPosition, infoEntry.Position, infoEntry.InfoKey, kindName)
-		} else if err := ValidateMarkdownSafety(infoEntry.Content); err != nil {
+		} else if err := validateKindInfoContent(infoEntry.Content); err != nil {
 			return fmt.Errorf("info key '%s' in kind %s: %w", infoEntry.InfoKey, kindName, err)
 		}
 	}
