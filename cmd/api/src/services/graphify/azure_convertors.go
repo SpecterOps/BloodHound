@@ -41,7 +41,7 @@ const (
 
 // getKindConverter selects the appropriate Azure converter for a given ingest kind. The
 // preserveObjectIdentifierCasing flag is captured by converters that must honor the
-// raw_ingest_object_identifiers feature flag inside the ein layer (currently only role
+// use_raw_object_id feature flag inside the ein layer (currently only role
 // management policy assignments, whose approver slice values are not touched by the
 // graphify normalization layer).
 func getKindConverter(kind enums.Kind, preserveObjectIdentifierCasing bool) func(json.RawMessage, *ConvertedAzureData, time.Time) {
@@ -985,7 +985,7 @@ func convertAzureAutomationAccountRoleAssignment(raw json.RawMessage, converted 
 
 // convertAzureRoleManagementPolicyAssignment implements function signature required in getKindConverter.
 // The preserveObjectIdentifierCasing flag is threaded from the ingest context so that EndUserAssignment
-// approver identifiers follow the raw_ingest_object_identifiers feature flag policy.
+// approver identifiers follow the use_raw_object_id feature flag policy.
 func convertAzureRoleManagementPolicyAssignment(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time, preserveObjectIdentifierCasing bool) {
 	var data models.RoleManagementPolicyAssignment
 

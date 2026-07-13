@@ -44,7 +44,7 @@ func TestConvertAzureRoleEligibilityScheduleInstanceToRel(t *testing.T) {
 	require.Len(t, expectedRels, 1)
 	expectedRel := expectedRels[0]
 	// ein now emits raw-case identifiers; the graphify layer applies final
-	// object identifier normalization based on the raw_ingest_object_identifiers flag.
+	// object identifier normalization based on the use_raw_object_id flag.
 	require.Equal(t, fmt.Sprintf("%s@%s", testData.RoleDefinitionId, testData.TenantId), expectedRel.Target.Value)
 	require.Equal(t, azure.AZRoleEligible, expectedRel.RelType)
 	require.Equal(t, testData.PrincipalId, expectedRel.Source.Value)
@@ -110,7 +110,7 @@ func Test_ConvertAppFederatedIdentityCredential(t *testing.T) {
 			require.True(t, rel.IsValid())
 
 			// ein now emits raw-case identifiers; the graphify layer applies final
-			// object identifier normalization based on the raw_ingest_object_identifiers flag.
+			// object identifier normalization based on the use_raw_object_id flag.
 			assert.Equal(t, testCase.testData.ID, node.ObjectID)
 			require.Len(t, node.Labels, 2)
 			assert.Equal(t, azure.FederatedIdentityCredential, node.Labels[0])
@@ -157,7 +157,7 @@ func TestConvertAzureManagementGroupContributorToRels(t *testing.T) {
 
 		require.Len(t, rels, 1)
 		// ein now emits raw-case identifiers; the graphify layer applies final
-		// object identifier normalization based on the raw_ingest_object_identifiers flag.
+		// object identifier normalization based on the use_raw_object_id flag.
 		assert.Equal(t, principalId, rels[0].Source.Value)
 		assert.Equal(t, azure.Entity, rels[0].Source.Kind)
 		assert.Equal(t, managementGroupId, rels[0].Target.Value)
@@ -211,7 +211,7 @@ func TestConvertAzureResourceGroupContributorToRels(t *testing.T) {
 
 		require.Len(t, rels, 1)
 		// ein now emits raw-case identifiers; the graphify layer applies final
-		// object identifier normalization based on the raw_ingest_object_identifiers flag.
+		// object identifier normalization based on the use_raw_object_id flag.
 		assert.Equal(t, principalId, rels[0].Source.Value)
 		assert.Equal(t, azure.Entity, rels[0].Source.Kind)
 		assert.Equal(t, resourceGroupId, rels[0].Target.Value)
@@ -265,7 +265,7 @@ func TestConvertAzureSubscriptionContributorToRels(t *testing.T) {
 
 		require.Len(t, rels, 1)
 		// ein now emits raw-case identifiers; the graphify layer applies final
-		// object identifier normalization based on the raw_ingest_object_identifiers flag.
+		// object identifier normalization based on the use_raw_object_id flag.
 		assert.Equal(t, principalId, rels[0].Source.Value)
 		assert.Equal(t, azure.Entity, rels[0].Source.Kind)
 		assert.Equal(t, subscriptionId, rels[0].Target.Value)

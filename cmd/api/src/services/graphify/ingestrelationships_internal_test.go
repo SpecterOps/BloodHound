@@ -185,7 +185,7 @@ func TestMaybeSubmitRelationshipUpdate(t *testing.T) {
 // TestIngestibleRelationshipsToUpdates_ObjectIdentifierCasing verifies that
 // relationship endpoint object identifiers are uppercased when the
 // PreserveObjectIdentifierCasing flag is unset (legacy behavior) and preserved
-// when it is set, matching the raw_ingest_object_identifiers feature flag policy.
+// when it is set, matching the use_raw_object_id feature flag policy.
 func TestIngestibleRelationshipsToUpdates_ObjectIdentifierCasing(t *testing.T) {
 	newRels := func() []ein.IngestibleRelationship {
 		return []ein.IngestibleRelationship{

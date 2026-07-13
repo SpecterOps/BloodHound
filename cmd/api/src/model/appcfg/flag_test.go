@@ -43,54 +43,54 @@ func (s stubFlagByKeyer) GetFlagByKey(_ context.Context, key string) (appcfg.Fea
 	return appcfg.FeatureFlag{}, errors.New("flag not found")
 }
 
-// TestGetRawIngestObjectIdentifiersEnabled_DefaultsToDisabledOnLookupError verifies
+// TestGetUseRawObjectIDEnabled_DefaultsToDisabledOnLookupError verifies
 // that a lookup failure from the underlying flag store surfaces as legacy behavior
 // (returns false) so ingest keeps uppercasing object identifiers by default.
-func TestGetRawIngestObjectIdentifiersEnabled_DefaultsToDisabledOnLookupError(t *testing.T) {
+func TestGetUseRawObjectIDEnabled_DefaultsToDisabledOnLookupError(t *testing.T) {
 	service := stubFlagByKeyer{
 		errsByKey: map[string]error{
-			appcfg.FeatureRawIngestObjectIdentifiers: errors.New("db unavailable"),
+			appcfg.FeatureUseRawObjectID: errors.New("db unavailable"),
 		},
 	}
 
-	require.False(t, appcfg.GetRawIngestObjectIdentifiersEnabled(context.Background(), service))
+	require.False(t, appcfg.GetUseRawObjectIDEnabled(context.Background(), service))
 }
 
-// TestGetRawIngestObjectIdentifiersEnabled_DefaultsToDisabledWhenFlagMissing verifies
+// TestGetUseRawObjectIDEnabled_DefaultsToDisabledWhenFlagMissing verifies
 // that a missing flag record (interpreted by the store as an error) also yields the
 // safe default of false, matching the "legacy normalization behavior" contract.
-func TestGetRawIngestObjectIdentifiersEnabled_DefaultsToDisabledWhenFlagMissing(t *testing.T) {
+func TestGetUseRawObjectIDEnabled_DefaultsToDisabledWhenFlagMissing(t *testing.T) {
 	service := stubFlagByKeyer{}
 
-	require.False(t, appcfg.GetRawIngestObjectIdentifiersEnabled(context.Background(), service))
+	require.False(t, appcfg.GetUseRawObjectIDEnabled(context.Background(), service))
 }
 
-// TestGetRawIngestObjectIdentifiersEnabled_ReturnsStoredEnabledValue verifies both
+// TestGetUseRawObjectIDEnabled_ReturnsStoredEnabledValue verifies both
 // enabled and disabled flag states are propagated verbatim from the flag store.
-func TestGetRawIngestObjectIdentifiersEnabled_ReturnsStoredEnabledValue(t *testing.T) {
+func TestGetUseRawObjectIDEnabled_ReturnsStoredEnabledValue(t *testing.T) {
 	t.Run("returns true when the flag is enabled", func(t *testing.T) {
 		service := stubFlagByKeyer{
 			flagsByKey: map[string]appcfg.FeatureFlag{
-				appcfg.FeatureRawIngestObjectIdentifiers: {
-					Key:     appcfg.FeatureRawIngestObjectIdentifiers,
+				appcfg.FeatureUseRawObjectID: {
+					Key:     appcfg.FeatureUseRawObjectID,
 					Enabled: true,
 				},
 			},
 		}
 
-		require.True(t, appcfg.GetRawIngestObjectIdentifiersEnabled(context.Background(), service))
+		require.True(t, appcfg.GetUseRawObjectIDEnabled(context.Background(), service))
 	})
 
 	t.Run("returns false when the flag is disabled", func(t *testing.T) {
 		service := stubFlagByKeyer{
 			flagsByKey: map[string]appcfg.FeatureFlag{
-				appcfg.FeatureRawIngestObjectIdentifiers: {
-					Key:     appcfg.FeatureRawIngestObjectIdentifiers,
+				appcfg.FeatureUseRawObjectID: {
+					Key:     appcfg.FeatureUseRawObjectID,
 					Enabled: false,
 				},
 			},
 		}
 
-		require.False(t, appcfg.GetRawIngestObjectIdentifiersEnabled(context.Background(), service))
+		require.False(t, appcfg.GetUseRawObjectIDEnabled(context.Background(), service))
 	})
 }

@@ -77,7 +77,7 @@ type IngestContext struct {
 	// PreserveObjectIdentifierCasing skips uppercase normalization of object identifiers
 	// and relationship endpoint identifiers when true. Non-identifier properties such as
 	// name, operatingsystem, and distinguishedname are still normalized. Defaults to false
-	// so the legacy uppercasing behavior is preserved when the raw_ingest_object_identifiers
+	// so the legacy uppercasing behavior is preserved when the use_raw_object_id
 	// feature flag is disabled or unavailable.
 	PreserveObjectIdentifierCasing bool
 }

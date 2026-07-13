@@ -49,7 +49,7 @@ const (
 	FeatureAPIKeyExpirationSupport      = "api_key_expiration_support"
 	FeatureCollectorSupportBundle       = "collector_support_bundle"
 	FeatureVariableAnalysisMode         = "variable_analysis_mode"
-	FeatureRawIngestObjectIdentifiers   = "raw_ingest_object_identifiers"
+	FeatureUseRawObjectID               = "use_raw_object_id"
 )
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be
@@ -137,12 +137,12 @@ func GetVariableAnalysisModeEnabled(ctx context.Context, service GetFlagByKeyer)
 	}
 }
 
-// GetRawIngestObjectIdentifiersEnabled returns true if the raw ingest object identifier feature flag is enabled.
+// GetUseRawObjectIDEnabled returns true if the use_raw_object_id feature flag is enabled.
 // Defaults to false (legacy normalization behavior) if the flag cannot be read.
-func GetRawIngestObjectIdentifiersEnabled(ctx context.Context, service GetFlagByKeyer) bool {
-	if rawIngestObjectIdentifiersFlag, err := service.GetFlagByKey(ctx, FeatureRawIngestObjectIdentifiers); err != nil {
+func GetUseRawObjectIDEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+	if useRawObjectIDFlag, err := service.GetFlagByKey(ctx, FeatureUseRawObjectID); err != nil {
 		return false
 	} else {
-		return rawIngestObjectIdentifiersFlag.Enabled
+		return useRawObjectIDFlag.Enabled
 	}
 }
