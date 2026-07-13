@@ -31,6 +31,26 @@ export default {
         },
         extend: {
             colors: {
+                // Legacy
+                'neutral-1': 'var(--neutral-1)',
+                'neutral-2': 'var(--neutral-2)',
+                'neutral-3': 'var(--neutral-3)',
+                'neutral-4': 'var(--neutral-4)',
+                'neutral-5': 'var(--neutral-5)',
+
+                'neutral-light-1': 'var(--neutral-light-1)',
+                'neutral-light-2': 'var(--neutral-light-2)',
+                'neutral-light-3': 'var(--neutral-light-3)',
+                'neutral-light-4': 'var(--neutral-light-4)',
+                'neutral-light-5': 'var(--neutral-light-5)',
+
+                'neutral-dark-1': 'var(--neutral-dark-1)',
+                'neutral-dark-2': 'var(--neutral-dark-2)',
+                'neutral-dark-3': 'var(--neutral-dark-3)',
+                'neutral-dark-4': 'var(--neutral-dark-4)',
+                'neutral-dark-5': 'var(--neutral-dark-5)',
+
+                // New color tokens:
                 primary: 'var(--primary)',
                 'primary-variant': 'var(--primary-variant)',
 
@@ -56,31 +76,6 @@ export default {
 
                 'neutral-50': 'var(--neutral-50)',
                 'neutral-400': 'var(--neutral-400)',
-                'neutral-700': 'var(--neutral-700)',
-
-                // Legacy
-                'neutral-1': 'var(--neutral-1)',
-                'neutral-2': 'var(--neutral-2)',
-                'neutral-3': 'var(--neutral-3)',
-                'neutral-4': 'var(--neutral-4)',
-                'neutral-5': 'var(--neutral-5)',
-
-                'neutral-light-1': 'var(--neutral-light-1)',
-                'neutral-light-2': 'var(--neutral-light-2)',
-                'neutral-light-3': 'var(--neutral-light-3)',
-                'neutral-light-4': 'var(--neutral-light-4)',
-                'neutral-light-5': 'var(--neutral-light-5)',
-
-                'neutral-dark-1': 'var(--neutral-dark-1)',
-                'neutral-dark-2': 'var(--neutral-dark-2)',
-                'neutral-dark-3': 'var(--neutral-dark-3)',
-                'neutral-dark-4': 'var(--neutral-dark-4)',
-                'neutral-dark-5': 'var(--neutral-dark-5)',
-
-                // New color tokens:
-
-                // tertiary: 'var(--tertiary)',
-                // 'tertiary-variant': 'var(--tertiary-variant)',
 
                 // 'common-dark': 'var(--common-dark)',
                 // 'common-white': 'var(--common-white)',
@@ -97,7 +92,7 @@ export default {
                 // 'neutral-400': 'var(--neutral-400)',
                 // 'neutral-500': 'var(--neutral-500)',
                 // 'neutral-600': 'var(--neutral-600)',
-
+                // 'neutral-700': 'var(--neutral-700)',
                 // 'neutral-800': 'var(--neutral-800)',
                 // 'neutral-900': 'var(--neutral-900)',
 
