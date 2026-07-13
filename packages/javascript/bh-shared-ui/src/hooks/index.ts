@@ -18,6 +18,7 @@ export { default as useApiVersion } from './useApiVersion';
 export * from './useAssetGroupTags';
 export * from './useAutomaticGraphActions';
 export * from './useAvailableEnvironments';
+export * from './useBloodHoundUsers';
 export * from './useConfiguration';
 export { default as useCreateDisableZoomRef } from './useCreateDisableZoomRef';
 export * from './useCustomNodeKinds';
