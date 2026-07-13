@@ -82,10 +82,8 @@ test.describe('WCAG A/AA violations - Profile', () => {
         await installUserTokensStub(page);
         await installDeleteUserTokenStub(page);
 
-        // Open dialog
         await page.getByRole('button', { name: 'API Key Management' }).click();
-
-        await page.getByText('2026-01-01 18:00 CST (GMT-0600)').waitFor({ state: 'visible' });
+        await page.getByRole('button', { name: 'Revoke' }).waitFor({ state: 'visible' });
 
         // Dialogs can obscure page content causing false positives
         await hideBySelector(page, '#content-wrapper');

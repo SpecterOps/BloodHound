@@ -16,9 +16,9 @@
 
 import type { Page } from '@playwright/test';
 
-export const GRAPH_HAS_DATA_QUERY = 'MATCH (A) WHERE NOT A:MigrationData RETURN A LIMIT 1';
+export const GRAPHS_CYPHER_QUERY = 'MATCH (A) WHERE NOT A:MigrationData RETURN A LIMIT 1';
 
-const GRAPH_HAS_DATA_RESPONSE = {
+const GRAPH_CYPHER_RESPONSE = {
     data: {
         nodes: {
             seed: {
@@ -33,7 +33,7 @@ const GRAPH_HAS_DATA_RESPONSE = {
     },
 };
 
-const GRAPH_HAS_NO_DATA_RESPONSE = {
+const GRAPH_CYPHER_EMPTY = {
     data: {
         nodes: {},
         edges: {},
@@ -54,7 +54,7 @@ export async function installGraphHasDataStub(page: Page): Promise<void> {
         }
 
         return route.fulfill({
-            json: GRAPH_HAS_DATA_RESPONSE,
+            json: GRAPH_CYPHER_RESPONSE,
         });
     });
 }
@@ -64,9 +64,9 @@ export async function installGraphHasDataStub(page: Page): Promise<void> {
 export async function installGraphHasNoDataStub(page: Page): Promise<void> {
     await page.route('**/api/v2/graphs/cypher', async (route) => {
         const body = route.request().postDataJSON();
-        if (body?.query === GRAPH_HAS_DATA_QUERY) {
+        if (body?.query === GRAPHS_CYPHER_QUERY) {
             return route.fulfill({
-                json: GRAPH_HAS_NO_DATA_RESPONSE,
+                json: GRAPH_CYPHER_EMPTY,
             });
         }
 

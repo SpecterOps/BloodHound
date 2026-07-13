@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './graph-has-data';
-export * from './mfa';
-export * from './password';
-export * from './tokens';
+export * from './bloodhound-users/mfa';
+export * from './bloodhound-users/secret';
+export * from './graphs/cypher';
+export * from './tokens/index';
