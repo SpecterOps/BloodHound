@@ -61,7 +61,7 @@ const CopyMenuItem = () => {
 
     const handleCopyCypher = () => {
         if (nodeInfo) {
-            const cypher = `MATCH (n:${primaryKind}}) WHERE n.objectid = ${escapeCypherString(nodeInfo.properties.objectid || '')} RETURN n`;
+            const cypher = `MATCH (n:${primaryKind}) WHERE n.objectid = ${escapeCypherString(nodeInfo.properties.objectid || '')} RETURN n`;
             navigator.clipboard.writeText(cypher);
             addNotification(`Cypher copied to clipboard`, 'copyToClipboard');
         }

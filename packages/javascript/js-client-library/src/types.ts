@@ -831,7 +831,7 @@ export type RelationshipKindResponse = RelationshipKindBase & {
 };
 
 export interface NodeKindRef {
-    node_kind_id: number;
+    node_kind_id: number | null;
     name: string;
 }
 
@@ -856,7 +856,7 @@ export type NodeDetailsWithInfo = NodeDetails & {
 };
 
 export interface RelationshipKindRef {
-    relationship_kind_id: number;
+    relationship_kind_id: number | null;
     name: string;
 }
 
