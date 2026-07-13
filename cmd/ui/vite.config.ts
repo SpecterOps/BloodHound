@@ -81,7 +81,13 @@ export default defineConfig(({ mode }) => {
             },
             port: 3000,
             host: true,
-            hmr: true,
+            // When running behind the Traefik reverse proxy (docker compose dev), the browser reaches
+            // Vite on the proxy port, not the container's internal 3000. VITE_HMR_CLIENT_PORT points the
+            // HMR websocket back through the proxy. Left as `true` (default) for local `yarn dev`.
+            hmr: env.VITE_HMR_CLIENT_PORT ? { clientPort: Number(env.VITE_HMR_CLIENT_PORT) } : true,
+            // macOS Docker bind mounts don't reliably deliver fs events into the container, so enable
+            // polling there (VITE_USE_POLLING=true) to detect source changes. Off locally to save CPU.
+            watch: env.VITE_USE_POLLING === 'true' ? { usePolling: true, interval: 100 } : undefined,
             fs: {
                 allow: [searchForWorkspaceRoot(process.cwd())],
             },
