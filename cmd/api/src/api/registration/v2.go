@@ -355,11 +355,11 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET("/api/v2/datapipe/status", resources.GetDatapipeStatus).RequireAuth(),
 
 		// Custom Node Management
-		routerInst.GET("/api/v2/custom-nodes", resources.GetCustomNodeKinds).RequireAuth(),
-		routerInst.GET(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.GetCustomNodeKind).RequireAuth(),
-		routerInst.POST("/api/v2/custom-nodes", resources.CreateCustomNodeKind).RequireAuth(),
-		routerInst.PUT(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.UpdateCustomNodeKind).RequireAuth(),
-		routerInst.DELETE(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.DeleteCustomNodeKind).RequireAuth(),
+		routerInst.GET("/api/v2/custom-nodes", resources.GetCustomNodeKinds).RequirePermissions(permissions.OpenGraphRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.GetCustomNodeKind).RequirePermissions(permissions.OpenGraphRead),
+		routerInst.POST("/api/v2/custom-nodes", resources.CreateCustomNodeKind).RequirePermissions(permissions.OpenGraphWrite),
+		routerInst.PUT(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.UpdateCustomNodeKind).RequirePermissions(permissions.OpenGraphWrite),
+		routerInst.DELETE(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.DeleteCustomNodeKind).RequirePermissions(permissions.OpenGraphWrite),
 
 		// Open Graph Schema
 		routerInst.PUT("/api/v2/extensions", resources.OpenGraphSchemaIngest).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement).RequirePermissions(permissions.OpenGraphWrite),
