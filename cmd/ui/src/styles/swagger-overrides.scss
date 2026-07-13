@@ -48,6 +48,15 @@
         color: var(--text-light);
     }
 
+    button:focus-visible,
+    .btn:focus-visible,
+    .opblock-tag:focus-visible,
+    .opblock-summary-control:focus-visible {
+        outline: 2px solid var(--link-main);
+        outline-offset: 2px;
+        border-radius: 2px;
+    }
+
     input,
     textarea,
     select,
