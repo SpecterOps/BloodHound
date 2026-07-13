@@ -18,12 +18,11 @@ import { RequestOptions } from 'js-client-library';
 import { useQuery, UseQueryResult } from 'react-query';
 import { apiClient } from '../../utils/api';
 import { entityInformationEndpoints } from '../../utils/content';
-import { getNodeByDatabaseIdCypher } from '../../utils/entityInfoDisplay';
 import { validateNodeType } from './utils';
 
 export type FetchEntityInfoParams = {
-    objectId: string;
-    nodeType: string;
+    objectId?: string;
+    nodeType?: string;
     databaseId?: string;
 };
 
@@ -46,48 +45,34 @@ export const useFetchEntityInfo: (param: FetchEntityInfoParams) => FetchEntityIn
     nodeType,
     databaseId,
 }) => {
-    const requestDetails: {
-        endpoint: (
-            params: string,
-            options?: RequestOptions,
-            includeProperties?: boolean
-        ) => Promise<Record<string, any>>;
-        param: string;
-    } = {
-        endpoint: async function () {
-            return {};
-        },
-        param: '',
-    };
+    const validatedKind = nodeType ? validateNodeType(nodeType) : undefined;
 
-    const validatedKind = validateNodeType(nodeType);
-
-    if (validatedKind) {
-        requestDetails.endpoint = entityInformationEndpoints[validatedKind];
-        requestDetails.param = objectId;
-    } else if (databaseId) {
-        requestDetails.endpoint = apiClient.cypherSearch;
-        requestDetails.param = getNodeByDatabaseIdCypher(databaseId);
-    }
-
-    const informationAvailable = !!validatedKind || !!databaseId;
+    const informationAvailable = !!databaseId || !!validatedKind;
 
     return {
         ...useQuery(
             [FetchEntityCacheId, nodeType, objectId, databaseId],
-            ({ signal }) =>
-                requestDetails.endpoint(requestDetails.param, { signal }, true).then((res) => {
-                    if (validatedKind) {
+            ({ signal }) => {
+                if (validatedKind && objectId) {
+                    const endpoint = entityInformationEndpoints[validatedKind] as (
+                        params: string,
+                        options?: RequestOptions,
+                        includeProperties?: boolean
+                    ) => Promise<Record<string, any>>;
+                    return endpoint(objectId, { signal }, true).then((res) => {
                         const kinds = res.data.data.kinds;
                         const properties = res.data.data.props;
                         return { kinds, properties };
-                    } else if (databaseId) {
-                        const data = Object.values(res.data.data.nodes as Record<string, any>)[0];
-                        const kinds = data.kinds;
-                        const properties = data.properties;
+                    });
+                } else if (databaseId) {
+                    return apiClient.getNodeByID(Number(databaseId), { signal }).then((res) => {
+                        const kinds = res.data.data.kinds.map((kind) => kind.name);
+                        const properties = res.data.data.properties;
                         return { kinds, properties };
-                    } else return { kinds: [], properties: {} };
-                }),
+                    });
+                }
+                return Promise.resolve({ kinds: [], properties: {} });
+            },
             {
                 refetchOnWindowFocus: false,
                 retry: false,
