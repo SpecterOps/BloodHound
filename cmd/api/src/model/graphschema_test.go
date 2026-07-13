@@ -1116,6 +1116,34 @@ func TestKindInfo_Validation(t *testing.T) {
 			},
 			wantErr: ErrInvalidKindInfoContent,
 		},
+		{
+			name: "error_-_duplicate_info_key",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{
+						{InfoKey: "overview", Title: "Overview", Position: 1, Content: validContent},
+						{InfoKey: "overview", Title: "Details", Position: 2, Content: validContent},
+					},
+				}},
+			},
+			wantErr: ErrKindInfoDuplicateInfoKey,
+		},
+		{
+			name: "error_-_duplicate_position",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{
+						{InfoKey: "overview", Title: "Overview", Position: 1, Content: validContent},
+						{InfoKey: "details", Title: "Details", Position: 1, Content: validContent},
+					},
+				}},
+			},
+			wantErr: ErrKindInfoDuplicatePosition,
+		},
 	}
 
 	for _, tc := range testCases {

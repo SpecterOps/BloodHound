@@ -46,7 +46,9 @@ var (
 	ErrDuplicatePrincipalKind                    = errors.New("duplicate principal kind")
 
 	// entity panel db errors
-	ErrKindInfoKindNotFound      = errors.New("kind info references a kind that does not exist")
+	ErrKindInfoKindNotFound = errors.New("kind info references a kind that does not exist")
+
+	// entity panel duplicate errors, enforced at both the model (validation) and db (uniqueness constraint) layers
 	ErrKindInfoDuplicatePosition = errors.New("kind info position already in use for this kind")
 	ErrKindInfoDuplicateInfoKey  = errors.New("kind info key already in use for this kind")
 
@@ -144,6 +146,11 @@ func validateKindInfo(kindName string, info KindInfoInputs) error {
 		return fmt.Errorf("%w for kind %s: has %d entries", ErrTooManyKindInfoEntries, kindName, len(info))
 	}
 
+	var (
+		seenInfoKeys  = make(map[string]struct{}, len(info))
+		seenPositions = make(map[int32]struct{}, len(info))
+	)
+
 	for _, infoEntry := range info {
 		if !kindInfoKeyPattern.MatchString(infoEntry.InfoKey) {
 			return fmt.Errorf("%w: key '%s' in kind %s", ErrInvalidKindInfoKey, infoEntry.InfoKey, kindName)
@@ -152,6 +159,15 @@ func validateKindInfo(kindName string, info KindInfoInputs) error {
 		} else if err := validateKindInfoContent(infoEntry.Content); err != nil {
 			return fmt.Errorf("info key '%s' in kind %s: %w", infoEntry.InfoKey, kindName, err)
 		}
+
+		if _, exists := seenInfoKeys[infoEntry.InfoKey]; exists {
+			return fmt.Errorf("%w: key '%s' in kind %s", ErrKindInfoDuplicateInfoKey, infoEntry.InfoKey, kindName)
+		} else if _, exists := seenPositions[infoEntry.Position]; exists {
+			return fmt.Errorf("%w: position %d for info key '%s' in kind %s", ErrKindInfoDuplicatePosition, infoEntry.Position, infoEntry.InfoKey, kindName)
+		}
+
+		seenInfoKeys[infoEntry.InfoKey] = struct{}{}
+		seenPositions[infoEntry.Position] = struct{}{}
 	}
 	return nil
 }
