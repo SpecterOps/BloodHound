@@ -42,16 +42,25 @@ DELETE FROM custom_node_kinds WHERE kind_id IS NULL;
 
 -- Enforce NOT NULL and add the FK constraint
 ALTER TABLE custom_node_kinds ALTER COLUMN kind_id SET NOT NULL;
-ALTER TABLE custom_node_kinds
-    ADD CONSTRAINT fk_custom_node_kinds_kind_id FOREIGN KEY (kind_id) REFERENCES kind (id);
+-- +goose StatementBegin
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_custom_node_kinds_kind_id') THEN
+        ALTER TABLE custom_node_kinds
+            ADD CONSTRAINT fk_custom_node_kinds_kind_id FOREIGN KEY (kind_id) REFERENCES kind (id);
+    END IF;
 
--- kind_name previously enforced one unique constraint per row, but now that we've switched to kind_id we need to enforce the same uniqueness on kind_id instead
-ALTER TABLE custom_node_kinds
-    ADD CONSTRAINT custom_node_kinds_kind_id_key UNIQUE (kind_id);
+    -- kind_name previously enforced one unique constraint per row, but now that we've switched to kind_id we need to enforce the same uniqueness on kind_id instead
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'custom_node_kinds_kind_id_key') THEN
+        ALTER TABLE custom_node_kinds
+            ADD CONSTRAINT custom_node_kinds_kind_id_key UNIQUE (kind_id);
+    END IF;
+END $$;
+-- +goose StatementEnd
 
 -- drop the now-superseded kind_name column.
 -- dropping the column implicitly removes the custom_node_kinds_kind_name_key unique constraint.
-ALTER TABLE custom_node_kinds DROP COLUMN kind_name;
+ALTER TABLE custom_node_kinds DROP COLUMN IF EXISTS kind_name;
 
 
 -- we have to recreate ensure_stubbed_custom_node_kind_for_ingest to use the new kind_id column instead of kind_name
@@ -99,13 +108,20 @@ WHERE kind.id = custom_node_kinds.kind_id;
 
 -- Enforce NOT NULL and restore the original unique constraint name.
 ALTER TABLE custom_node_kinds ALTER COLUMN kind_name SET NOT NULL;
-ALTER TABLE custom_node_kinds
-    ADD CONSTRAINT custom_node_kinds_kind_name_key UNIQUE (kind_name);
+-- +goose StatementBegin
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'custom_node_kinds_kind_name_key') THEN
+        ALTER TABLE custom_node_kinds
+            ADD CONSTRAINT custom_node_kinds_kind_name_key UNIQUE (kind_name);
+    END IF;
+END $$;
+-- +goose StatementEnd
 
 -- Drop the FK and unique constraints on kind_id, then drop the column.
 ALTER TABLE custom_node_kinds DROP CONSTRAINT IF EXISTS fk_custom_node_kinds_kind_id;
 ALTER TABLE custom_node_kinds DROP CONSTRAINT IF EXISTS custom_node_kinds_kind_id_key;
-ALTER TABLE custom_node_kinds DROP COLUMN kind_id;
+ALTER TABLE custom_node_kinds DROP COLUMN IF EXISTS kind_id;
 
 -- reset the function to the previous version that relies on kind_name instead of kind_id
 -- +goose StatementBegin
