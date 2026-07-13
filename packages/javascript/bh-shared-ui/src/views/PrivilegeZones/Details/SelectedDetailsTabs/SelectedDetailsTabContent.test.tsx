@@ -87,16 +87,13 @@ describe('Selected Details Tab Content', () => {
                     })
                 );
             }),
-            rest.post('/api/v2/graphs/cypher', async (_req, res, ctx) => {
+            rest.get('/api/v2/nodes/:id', async (_req, res, ctx) => {
                 return res(
                     ctx.json({
                         data: {
-                            nodes: {
-                                '123': {
-                                    properties: {
-                                        customprop: 'OpenGraph Value',
-                                    },
-                                },
+                            kinds: [{ name: 'Custom' }],
+                            properties: {
+                                customprop: 'OpenGraph Value',
                             },
                         },
                     })

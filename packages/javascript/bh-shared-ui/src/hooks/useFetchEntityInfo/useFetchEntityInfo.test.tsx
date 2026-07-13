@@ -37,16 +37,13 @@ vi.mock('../../utils/content', () => ({
 
 vi.mock('../../utils/api', () => ({
     apiClient: {
-        cypherSearch: vi.fn(() =>
+        getNodeByID: vi.fn(() =>
             Promise.resolve({
                 data: {
                     data: {
-                        nodes: {
-                            '1': {
-                                kinds: ['Admin_Tier_0'],
-                                properties: mockEntityProperties,
-                            },
-                        },
+                        node_id: 1,
+                        kinds: [{ node_kind_id: 1, name: 'Admin_Tier_0' }],
+                        properties: mockEntityProperties,
                     },
                 },
             })
@@ -62,24 +59,6 @@ const entityObjectIdRequest = () =>
                     data: {
                         props: mockEntityProperties,
                         kinds: ['Admin_Tier_0'],
-                    },
-                },
-            })
-        )
-    );
-
-const entityGraphIdRequest = () =>
-    rest.post(`/api/v2/graphs/cypher`, async (_req, res, ctx) =>
-        res(
-            ctx.json({
-                data: {
-                    data: {
-                        nodes: {
-                            '1': {
-                                kinds: ['Admin_Tier_0'],
-                                properties: mockEntityProperties,
-                            },
-                        },
                     },
                 },
             })
@@ -106,7 +85,7 @@ const mockEntityProperties = {
 };
 
 describe('useFetchEntityInfo', () => {
-    const server = setupServer(entityObjectIdRequest(), entityGraphIdRequest());
+    const server = setupServer(entityObjectIdRequest());
 
     beforeAll(() => server.listen());
     afterEach(() => server.resetHandlers());
@@ -150,7 +129,7 @@ describe('useFetchEntityInfo', () => {
     });
 
     it('fetches new information when a different databaseId is passed', async () => {
-        const cypherSearchSpy = vi.spyOn(apiClient, 'cypherSearch');
+        const getNodeByIDSpy = vi.spyOn(apiClient, 'getNodeByID');
 
         const { result, rerender } = renderHook<FetchEntityInfoResult, FetchEntityInfoParams>(
             (params) => useFetchEntityInfo(params),
@@ -163,12 +142,12 @@ describe('useFetchEntityInfo', () => {
             expect(result.current.isSuccess).toBe(true);
         });
 
-        expect(cypherSearchSpy).toHaveBeenCalledTimes(1);
+        expect(getNodeByIDSpy).toHaveBeenCalledTimes(1);
 
         rerender({ ...initialPropsCustom, databaseId: '7' });
 
         await waitFor(() => {
-            expect(cypherSearchSpy).toHaveBeenCalledTimes(2);
+            expect(getNodeByIDSpy).toHaveBeenCalledTimes(2);
         });
     });
 });
