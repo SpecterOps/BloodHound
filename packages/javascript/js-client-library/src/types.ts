@@ -680,6 +680,11 @@ export interface WebhookTest {
     version: string;
 }
 
+export type SourceKind = {
+    id: number;
+    name: string;
+};
+
 // ---------------------------------------------------------------------------
 // Base schemas
 // ---------------------------------------------------------------------------
@@ -831,11 +836,11 @@ export interface NodeKindRef {
 }
 
 export interface NodeProperties {
-    objectid: string;
+    objectid?: string;
     name?: string;
-    displayName?: string;
+    displayname?: string;
     /** date-time */
-    lastSeen: string;
+    lastseen?: string;
     [key: string]: unknown;
 }
 
