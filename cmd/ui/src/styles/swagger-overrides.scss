@@ -2,7 +2,6 @@
     .opblock-summary {
       .opblock-summary-method {
         color: #000 !important;
-        // color: var(--text-contrast);
       }
     }
 
@@ -39,7 +38,7 @@
     select,
     .models,
     .filter-container .operation-filter-input {
-      background-color: var(--neutral-50);
+      background-color: var(--input-fill);
       border: 1px solid var(--input-border-default);
   
       &:hover,
@@ -92,8 +91,8 @@
       }
     }
   
-    .opblock-section-header {
-      background-color: var(--neutral-50);
+    .opblock .opblock-section-header {
+    color: var(--text-main);
   
       h4,
       .btn {

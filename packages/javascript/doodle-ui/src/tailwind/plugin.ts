@@ -118,7 +118,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // Components/Input
             // '--input-label': common.dark,
-            // '--input-fill': elevation.light[1],
+            '--input-fill': elevation.light[1],
             // '--input-fill-disabled': palette.neutral.light[100],
             '--input-border-default': palette.grey[700],
             // '--input-border-hover': light.secondary.main,
@@ -303,7 +303,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // Components/Input
             // '--input-label': common.white,
-            // '--input-fill': elevation.dark[1],
+            '--input-fill': elevation.dark[1],
             // '--input-fill-disabled': palette.neutral.dark[400],
             '--input-border-default': dark.input.border,
             // '--input-border-hover': dark.secondary.main,
