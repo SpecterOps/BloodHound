@@ -115,10 +115,10 @@ export default {
                 'status-info-fill': 'var(--status-info-fill)',
                 'status-indeterminate-fill': 'var(--status-indeterminate-fill)',
 
-                // 'bhe-main': 'var(--bhe-main)',
+                'bhe-main': 'var(--bhe-main)',
                 // 'sp-main': 'var(--sp-main)',
-                // 'bhce-main': 'var(--bhce-main)',
-                // 'logo-neutral': 'var(--logo-neutral)',
+                'bhce-main': 'var(--bhce-main)',
+                'logo-neutral': 'var(--logo-neutral)',
 
                 // 'brand-primary-dark-purple': 'var(--brand-primary-dark-purple)',
                 // 'brand-primary-deep-purple': 'var(--brand-primary-deep-purple)',

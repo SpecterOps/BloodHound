@@ -100,9 +100,9 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--status-indeterminate-fill': light.status.indeterminate.fill,
 
             // // BRAND COLORS
-            // '--bhe-main': light.primary.main,
+            '--bhe-main': light.primary.main,
             // '--sp-main': light.primary.main,
-            // '--bhce-main': light['bhce-main'],
+            '--bhce-main': light['bhce-main'],
             // '--logo-neutral': common.black,
             // '--brand-primary-dark-purple': light.primary.variant,
             // '--brand-primary-deep-purple': light.primary.main,
@@ -285,9 +285,9 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--status-indeterminate-fill': dark.status.indeterminate.fill,
 
             // // BRAND COLORS
-            // '--bhe-main': dark.primary.main,
+            '--bhe-main': dark.primary.main,
             // '--sp-main': dark.primary.main,
-            // '--bhce-main': dark['bhce-main'],
+            '--bhce-main': dark['bhce-main'],
             // '--logo-neutral': common.white,
             // '--brand-primary-dark-purple': dark.primary.variant,
             // '--brand-primary-deep-purple': dark.primary.main,

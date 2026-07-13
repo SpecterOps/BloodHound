@@ -138,7 +138,7 @@ export class OperationSummaryWithEdition extends PureComponent<{
                     <span className='flex justify-end items-center'>
                         <CommunityIcon
                             style={{ marginRight: '10px' }}
-                            fill={isCommunity ? '#EE290D' : 'grey'}
+                            fill={isCommunity ? 'var(--bhce-main)' : 'grey'}
                             title={
                                 isCommunity
                                     ? 'Available in BloodHound Community Edition'
@@ -149,7 +149,7 @@ export class OperationSummaryWithEdition extends PureComponent<{
                         />
                         <EnterpriseIcon
                             style={{ marginRight: '15px' }}
-                            fill={isEnterprise ? '#34318F' : 'grey'}
+                            fill={isEnterprise ? 'var(--bhe-main)' : 'grey'}
                             title={
                                 isEnterprise
                                     ? 'Available in BloodHound Enterprise'
