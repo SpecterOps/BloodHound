@@ -16,7 +16,7 @@
 
 import { test as setup } from 'bh-playwright-testing';
 import { loginAndSnapshotThemes } from 'bh-playwright-testing/auth';
-import { installGraphHasDataStub } from 'bh-playwright-testing/stubs/graph-has-data';
+import { installGraphHasDataStub } from 'bh-playwright-testing/stubs';
 import { authStorageStateFor, type Theme } from 'bh-playwright-testing/themes';
 import path from 'path';
 import { fileURLToPath } from 'url';
