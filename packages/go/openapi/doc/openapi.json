@@ -23218,15 +23218,7 @@
         }
       },
       "InfoMarkdown": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/InfoMarkdownContent"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false
-          }
-        ]
+        "$ref": "#/components/schemas/InfoMarkdownContent"
       }
     },
     "examples": {
