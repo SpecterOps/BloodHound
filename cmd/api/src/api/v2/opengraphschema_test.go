@@ -57,14 +57,6 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 				Version:     "1.0.0",
 				Namespace:   "TEST",
 			},
-			/*GraphSchemaProperties: []v2.GraphSchemaPropertiesPayload{
-				{
-					Name:        "Property_1",
-					DisplayName: "Property 1",
-					DataType:    "string",
-					Description: "a property",
-				},
-			},*/
 			GraphSchemaRelationshipKinds: []v2.GraphSchemaRelationshipKindsPayload{
 				{
 					Name:          "TEST_GraphSchemaEdgeKind_1",
@@ -111,15 +103,6 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 				Version:     "1.0.0",
 				Namespace:   "TEST",
 			},
-			PropertiesInput: model.PropertiesInput{},
-			/*PropertiesInput: model.PropertiesInput{
-				{
-					Name:        "Property_1",
-					DisplayName: "Property 1",
-					DataType:    "string",
-					Description: "a property",
-				},
-			},*/
 			RelationshipKindsInput: model.RelationshipsInput{
 				{
 					Name:          "TEST_GraphSchemaEdgeKind_1",

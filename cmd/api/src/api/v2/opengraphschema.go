@@ -51,8 +51,7 @@ type OpenGraphSchemaService interface {
 }
 
 type GraphExtensionPayload struct {
-	GraphSchemaExtension GraphSchemaExtensionPayload `json:"schema"`
-	// GraphSchemaProperties        []GraphSchemaPropertiesPayload        `json:"properties"`
+	GraphSchemaExtension         GraphSchemaExtensionPayload           `json:"schema"`
 	GraphSchemaRelationshipKinds []GraphSchemaRelationshipKindsPayload `json:"relationship_kinds"`
 	GraphSchemaNodeKinds         []GraphSchemaNodeKindsPayload         `json:"node_kinds"`
 	GraphEnvironments            []EnvironmentPayload                  `json:"environments"`
@@ -87,13 +86,6 @@ type KindInfoPayload struct {
 	Title    string          `json:"title"`
 	Position int             `json:"position"`
 	Markdown json.RawMessage `json:"markdown"` // Raw: {"content": "..."}
-}
-
-type GraphSchemaPropertiesPayload struct {
-	Name        string `json:"name"`
-	DisplayName string `json:"display_name"`
-	DataType    string `json:"data_type"`
-	Description string `json:"description"`
 }
 
 type EnvironmentPayload struct {
@@ -254,7 +246,6 @@ func convertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload)
 			},
 			NodeKindsInput:         make(model.NodesInput, 0),
 			RelationshipKindsInput: make(model.RelationshipsInput, 0),
-			PropertiesInput:        make(model.PropertiesInput, 0),
 			EnvironmentsInput:      make(model.EnvironmentsInput, 0),
 		}
 		infoInputs model.KindInfoInputs

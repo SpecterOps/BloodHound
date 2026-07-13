@@ -371,14 +371,6 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_a_duplicate_graph_kind",
 						},
 					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
 				},
 			},
 			wantErr: fmt.Errorf("duplicate graph kinds: %s", "AD_a_duplicate_graph_kind"),
@@ -399,14 +391,6 @@ func Test_validateGraphExtension(t *testing.T) {
 					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
-						},
-					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
 						},
 					},
 					EnvironmentsInput: EnvironmentsInput{
@@ -438,14 +422,6 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
 					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_",
@@ -475,14 +451,6 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
 					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_environment",
@@ -510,14 +478,6 @@ func Test_validateGraphExtension(t *testing.T) {
 					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
-						},
-					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
 						},
 					},
 					EnvironmentsInput: EnvironmentsInput{
@@ -554,14 +514,6 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
 					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
@@ -589,14 +541,6 @@ func Test_validateGraphExtension(t *testing.T) {
 					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
-						},
-					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
 						},
 					},
 					EnvironmentsInput: EnvironmentsInput{
@@ -628,14 +572,6 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
 					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
@@ -663,14 +599,6 @@ func Test_validateGraphExtension(t *testing.T) {
 					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
-						},
-					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
 						},
 					},
 					EnvironmentsInput: EnvironmentsInput{
@@ -702,14 +630,6 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
 					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
@@ -739,14 +659,6 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
 					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
@@ -774,14 +686,6 @@ func Test_validateGraphExtension(t *testing.T) {
 					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
-						},
-					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
 						},
 					},
 					EnvironmentsInput: EnvironmentsInput{
@@ -818,14 +722,6 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
 					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
@@ -858,14 +754,6 @@ func Test_validateGraphExtension(t *testing.T) {
 					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
-						},
-					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
 						},
 					},
 					EnvironmentsInput: EnvironmentsInput{
@@ -902,14 +790,6 @@ func Test_validateGraphExtension(t *testing.T) {
 					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
-						},
-					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
 						},
 					},
 					EnvironmentsInput: EnvironmentsInput{
@@ -949,14 +829,6 @@ func Test_validateGraphExtension(t *testing.T) {
 						},
 						{
 							Name: "AD_edge_kind_2",
-						},
-					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
 						},
 					},
 					EnvironmentsInput: EnvironmentsInput{

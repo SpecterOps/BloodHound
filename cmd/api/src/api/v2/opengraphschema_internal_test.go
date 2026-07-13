@@ -45,14 +45,6 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 						Version:     "1.0.0",
 						Namespace:   "TEST",
 					},
-					/*GraphSchemaProperties: []GraphSchemaPropertiesPayload{
-						{
-							Name:        "Property_1",
-							DisplayName: "Property 1",
-							DataType:    "string",
-							Description: "a property",
-						},
-					},*/
 					GraphSchemaRelationshipKinds: []GraphSchemaRelationshipKindsPayload{
 						{
 							Name:          "GraphSchemaEdgeKind_1",
@@ -100,15 +92,6 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 					Version:     "1.0.0",
 					Namespace:   "TEST",
 				},
-				PropertiesInput: make(model.PropertiesInput, 0),
-				/*PropertiesInput: model.PropertiesInput{
-					{
-						Name:        "Property_1",
-						DisplayName: "Property 1",
-						DataType:    "string",
-						Description: "a property",
-					},
-				},*/
 				RelationshipKindsInput: model.RelationshipsInput{
 					{
 						Name:          "GraphSchemaEdgeKind_1",

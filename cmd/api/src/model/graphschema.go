@@ -62,7 +62,6 @@ func ErrIsGraphSchemaDuplicateError(err error) bool {
 	case errors.Is(err, ErrDuplicateGraphSchemaExtensionName),
 		errors.Is(err, ErrDuplicateGraphSchemaExtensionNamespace),
 		errors.Is(err, ErrDuplicateSchemaNodeKindName),
-		errors.Is(err, ErrDuplicateGraphSchemaExtensionPropertyName),
 		errors.Is(err, ErrDuplicateSchemaRelationshipKindName),
 		errors.Is(err, ErrDuplicateSchemaEnvironment),
 		errors.Is(err, ErrDuplicateSchemaFindingName),
@@ -439,7 +438,6 @@ type GraphSchemaRelationshipKindsWithNamedSchema []GraphSchemaRelationshipKindWi
 
 type GraphExtensionInput struct {
 	ExtensionInput            ExtensionInput
-	PropertiesInput           PropertiesInput
 	RelationshipKindsInput    RelationshipsInput
 	NodeKindsInput            NodesInput
 	EnvironmentsInput         EnvironmentsInput
@@ -451,7 +449,6 @@ func (s GraphExtensionInput) Validate() error {
 	var (
 		nodeKinds         = make(map[string]any, 0)
 		relationshipKinds = make(map[string]any, 0)
-		properties        = make(map[string]any, 0)
 		environments      = make(map[string]any, 0)
 		findings          = make(map[string]any, 0)
 	)
@@ -503,13 +500,6 @@ func (s GraphExtensionInput) Validate() error {
 			return err
 		}
 		relationshipKinds[kind.Name] = struct{}{}
-	}
-
-	for _, property := range s.PropertiesInput {
-		if _, ok := properties[property.Name]; ok {
-			return fmt.Errorf("duplicate graph properties: %s", property.Name)
-		}
-		properties[property.Name] = struct{}{}
 	}
 
 	for _, environment := range s.EnvironmentsInput {
@@ -595,14 +585,6 @@ func (s ExtensionInput) GetDisplayName() string {
 		return s.DisplayName
 	}
 	return s.Name
-}
-
-type PropertiesInput []PropertyInput
-type PropertyInput struct {
-	Name        string
-	DisplayName string
-	DataType    string
-	Description string
 }
 
 type NodesInput []NodeInput
