@@ -19,19 +19,19 @@ import {
     AssetGroupTag,
     AssetGroupTagSelectorAutoCertifySeedsOnly,
     CreateSelectorRequest,
+    NodeDetails,
     SeedTypeObjectId,
 } from 'js-client-library';
 import { FC } from 'react';
 import {
     getIsOwnedTag,
     getIsTierZeroTag,
-    isNode,
+    isNodeResponse,
     isOwnedObject,
     isTierZero,
     useExploreParams,
     useExploreSelectedItem,
     usePZPathParams,
-    type NodeResponse,
 } from '../../../hooks';
 import { AssetGroupMenuItem } from './AssetGroupMenuItemPrivilegeZonesEnabled';
 import CopyMenuItem from './CopyMenuItem';
@@ -44,14 +44,14 @@ const ContextMenu: FC<{
     const { setExploreParams, primarySearch, secondarySearch } = useExploreParams();
     const { tagDetailsLink } = usePZPathParams();
 
-    const node = selectedItemQuery.data ? (selectedItemQuery.data as NodeResponse) : undefined;
+    const node = selectedItemQuery.data ? (selectedItemQuery.data as NodeDetails) : undefined;
 
     const ownedPayload: CreateSelectorRequest = {
-        name: node?.label ?? node?.objectId ?? '',
+        name: node?.properties.name ?? node?.properties.objectid ?? '',
         seeds: [
             {
                 type: SeedTypeObjectId,
-                value: node?.objectId ?? '',
+                value: node?.properties.objectid ?? '',
             },
         ],
     };
@@ -63,24 +63,24 @@ const ContextMenu: FC<{
 
     const handleSetStartingNode = () => {
         const selectedItemData = selectedItemQuery.data;
-        if (selectedItemData && isNode(selectedItemData)) {
+        if (selectedItemData && isNodeResponse(selectedItemData)) {
             const searchType = secondarySearch ? 'pathfinding' : 'node';
             setExploreParams({
                 exploreSearchTab: 'pathfinding',
                 searchType,
-                primarySearch: selectedItemData?.objectId,
+                primarySearch: selectedItemData?.properties.objectid,
             });
         }
     };
 
     const handleSetEndingNode = () => {
         const selectedItemData = selectedItemQuery.data;
-        if (selectedItemData && isNode(selectedItemData)) {
+        if (selectedItemData && isNodeResponse(selectedItemData)) {
             const searchType = primarySearch ? 'pathfinding' : 'node';
             setExploreParams({
                 exploreSearchTab: 'pathfinding',
                 searchType,
-                secondarySearch: selectedItemData?.objectId,
+                secondarySearch: selectedItemData?.properties.objectid,
             });
         }
     };

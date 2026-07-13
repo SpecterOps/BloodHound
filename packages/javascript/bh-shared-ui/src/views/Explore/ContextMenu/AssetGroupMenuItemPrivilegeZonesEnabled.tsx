@@ -20,8 +20,15 @@ import { FC, useState } from 'react';
 import { useMutation } from 'react-query';
 import { Link } from 'react-router-dom';
 
-import type { AssetGroupTag, CreateSelectorRequest } from 'js-client-library';
-import { useExploreSelectedItem, usePermissions, useTagsQuery, type ItemResponse } from '../../../hooks';
+import type {
+    AssetGroupTag,
+    CreateSelectorRequest,
+    NodeDetails,
+    NodeDetailsWithInfo,
+    RelationshipDetails,
+    RelationshipDetailsWithInfo,
+} from 'js-client-library';
+import { useExploreSelectedItem, usePermissions, useTagsQuery } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { Permission, apiClient } from '../../../utils';
 
@@ -54,7 +61,10 @@ const ConfirmNodeChangesDialog: FC<{
 
 export const AssetGroupMenuItem: FC<{
     addNodePayload: CreateSelectorRequest;
-    isCurrentMemberFn: (node: ItemResponse) => boolean;
+    isCurrentMemberFn: (
+        node: NodeDetails | RelationshipDetails | RelationshipDetailsWithInfo | NodeDetailsWithInfo | undefined,
+        tag: AssetGroupTag | undefined
+    ) => boolean;
     removeNodePathFn: (tag: AssetGroupTag) => string;
     showConfirmationOnAdd?: boolean;
     tagIdentifierFn: (tags: AssetGroupTag[]) => AssetGroupTag | undefined;
@@ -89,7 +99,7 @@ export const AssetGroupMenuItem: FC<{
     const hasPermission = checkPermission(Permission.GRAPH_DB_WRITE);
 
     // Is the selected node already a member of tier zero or owned?
-    const isCurrentMember = isCurrentMemberFn(selectedItemQuery.data);
+    const isCurrentMember = isCurrentMemberFn(selectedItemQuery.data, assetGroupTag);
 
     // Don't render anything if the user doesn't have permission or the asset group doesn't exist
     if (!hasPermission) {

@@ -37,8 +37,20 @@ const server = setupServer(
             })
         );
     }),
-    rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
-        return res(ctx.json({ data: { nodes: { abc: { objectId: 'abc' }, def: { objectId: 'def' } }, edges: [] } }));
+    rest.get('/api/v2/nodes/1234', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    node_id: 1234,
+                    kinds: [{ node_kind_id: 3, name: 'User' }],
+                    properties: {
+                        objectid: 'abc',
+                        name: 'Test Node',
+                        lastSeen: '2025-01-01T00:00:00Z',
+                    },
+                },
+            })
+        );
     }),
     rest.get('/api/v2/asset-group-tags', (req, res, ctx) => {
         return res(
@@ -120,7 +132,7 @@ describe('ContextMenu', () => {
 
     it('sets a primarySearch=id and searchType=node when secondarySearch is falsey', async () => {
         render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc',
+            route: '/test?selectedItem=1234',
         });
 
         const startNodeOption = await screen.findByRole('menuitem', { name: /set as starting node/i });
@@ -135,7 +147,7 @@ describe('ContextMenu', () => {
 
     it('sets a primarySearch=id and searchType=pathfinding when secondarySearch is truethy', async () => {
         render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc&secondarySearch=def',
+            route: '/test?selectedItem=1234&secondarySearch=def',
         });
 
         const startNodeOption = await screen.findByRole('menuitem', { name: /set as starting node/i });
@@ -149,7 +161,7 @@ describe('ContextMenu', () => {
 
     it('sets secondarySearch=id and searchType=node when primarySearch is falsey', async () => {
         render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc',
+            route: '/test?selectedItem=1234',
         });
 
         const endNodeOption = await screen.findByRole('menuitem', { name: /set as ending node/i });
@@ -163,7 +175,7 @@ describe('ContextMenu', () => {
 
     it('sets a secondary=id and searchType=pathfinding when primary is truethy', async () => {
         render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc&primarySearch=def',
+            route: '/test?selectedItem=1234&primarySearch=def',
         });
 
         const endNodeOption = await screen.findByRole('menuitem', { name: /set as ending node/i });

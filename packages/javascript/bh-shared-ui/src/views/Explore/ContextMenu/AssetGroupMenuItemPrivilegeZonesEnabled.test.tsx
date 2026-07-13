@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { NodeDetails } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { getIsOwnedTag, getIsTierZeroTag, isOwnedObject, isTierZero } from '../../../hooks';
@@ -46,42 +47,30 @@ const assetGroupTags = {
     },
 };
 
-const cypherSearchResponse = {
-    data: {
-        nodes: {
-            '1234': {
-                label: 'TEST@DOMAIN.CORP',
-                kind: 'GPO',
-                kinds: ['Base', 'GPO'],
-                objectId: 'A1B2C3D4-1111-2222-3333-0123456789AB',
-                isTierZero: false,
-                isOwnedObject: false,
-                lastSeen: '2025-12-04T20:16:49.209Z',
-            },
-        },
-        edges: [],
+const selectedNode: NodeDetails = {
+    node_id: 1234,
+    kinds: [{ node_kind_id: 3, name: 'GPO' }],
+    properties: {
+        objectid: 'A1B2C3D4-1111-2222-3333-0123456789AB',
+        name: 'TEST@DOMAIN.CORP',
+        lastSeen: '2025-12-04T20:16:49.209Z',
     },
 };
 
-const cypherSearchOwnedResponse = {
+const nodeDetailsResponse = {
+    data: selectedNode,
+};
+
+const nodeDetailsOwnedResponse = {
     data: {
-        nodes: {
-            '1234': {
-                ...cypherSearchResponse.data.nodes['1234'],
-                isOwnedObject: true,
-            },
-        },
-        edges: [],
+        ...nodeDetailsResponse.data,
+        kinds: [...nodeDetailsResponse.data.kinds, { node_kind_id: 2, name: 'Tag_Owned' }],
     },
 };
 
 const getEntityInfoTestProps = () => ({
     entityinfo: {
-        selectedNode: {
-            name: 'foo',
-            id: '1234',
-            type: 'User',
-        },
+        selectedNode: selectedNode,
     },
 });
 
@@ -96,8 +85,8 @@ const server = setupServer(
     rest.get('/api/v2/asset-group-tags', (req, res, ctx) => {
         return res(ctx.json(assetGroupTags));
     }),
-    rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
-        return res(ctx.json(cypherSearchResponse));
+    rest.get('/api/v2/nodes/1234', (req, res, ctx) => {
+        return res(ctx.json(nodeDetailsResponse));
     }),
     rest.get('/api/v2/self', (req, res, ctx) => {
         return res(
@@ -111,7 +100,7 @@ const server = setupServer(
     })
 );
 
-const ROUTE_WITH_SELECTED_ITEM_PARAM = `?selectedItem=${getEntityInfoTestProps().entityinfo.selectedNode.id}&searchType=node&primarySearch=${getEntityInfoTestProps().entityinfo.selectedNode.id}`;
+const ROUTE_WITH_SELECTED_ITEM_PARAM = `?selectedItem=${getEntityInfoTestProps().entityinfo.selectedNode.node_id}&searchType=node&primarySearch=${getEntityInfoTestProps().entityinfo.selectedNode.node_id}`;
 
 describe('AssetGroupMenuItem', () => {
     beforeAll(() => server.listen());
@@ -225,8 +214,8 @@ describe('AssetGroupMenuItem', () => {
 
     it('removes a node from an asset group tag', async () => {
         server.use(
-            rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
-                return res(ctx.json(cypherSearchOwnedResponse));
+            rest.get('/api/v2/nodes/1234', (req, res, ctx) => {
+                return res(ctx.json(nodeDetailsOwnedResponse));
             })
         );
 

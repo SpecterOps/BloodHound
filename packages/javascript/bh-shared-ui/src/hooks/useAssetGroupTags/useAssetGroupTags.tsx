@@ -19,8 +19,12 @@ import {
     AssetGroupTagTypeOwned,
     AssetGroupTagTypeZone,
     HighestPrivilegePosition,
+    NodeDetails,
+    NodeDetailsWithInfo,
     ObjectKey,
     ObjectsKey,
+    RelationshipDetails,
+    RelationshipDetailsWithInfo,
     RuleKey,
     RulesKey,
     type AssetGroupTag,
@@ -30,11 +34,12 @@ import {
     type RequestOptions,
 } from 'js-client-library';
 import { useInfiniteQuery, useQuery } from 'react-query';
+import { TagLabelPrefix } from '../../constants';
 import { SortOrderAscending, type SortOrder } from '../../types';
 import { apiClient, type GenericQueryOptions } from '../../utils';
 import { createPaginatedFetcher, type PageParam } from '../../utils/paginatedFetcher';
 import { useFeatureFlag } from '../useFeatureFlags';
-import { isNode, type ItemResponse } from '../useGraphItem';
+import { isNodeResponse } from '../useGraphItem';
 
 export const privilegeZonesKeys = {
     all: ['privilege-zones'] as const,
@@ -76,16 +81,24 @@ export const getIsOwnedTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.t
 export const getIsTierZeroTag = (tags: AssetGroupTag[]) =>
     tags.find((tag) => tag.position === HighestPrivilegePosition);
 
-export const isOwnedObject = (item: ItemResponse): boolean => {
-    if (!isNode(item)) return false;
+export const isOwnedObject = (
+    node: NodeDetails | RelationshipDetails | RelationshipDetailsWithInfo | NodeDetailsWithInfo | undefined,
+    ownedTag: AssetGroupTag | undefined
+): boolean => {
+    if (!node || !ownedTag || !isNodeResponse(node)) return false;
 
-    return item.isOwnedObject;
+    const underscoredTagName = ownedTag.name.split(' ').join('_');
+    return node.kinds.some((kind) => kind.name === `${TagLabelPrefix}${underscoredTagName}`);
 };
 
-export const isTierZero = (item: ItemResponse): boolean => {
-    if (!isNode(item)) return false;
+export const isTierZero = (
+    node: NodeDetails | RelationshipDetails | RelationshipDetailsWithInfo | NodeDetailsWithInfo | undefined,
+    tierZeroTag: AssetGroupTag | undefined
+): boolean => {
+    if (!node || !tierZeroTag || !isNodeResponse(node)) return false;
 
-    return item.isTierZero;
+    const underscoredTagName = tierZeroTag.name.split(' ').join('_');
+    return node.kinds.some((kind) => kind.name === `${TagLabelPrefix}${underscoredTagName}`);
 };
 
 const getAssetGroupTags = (options: RequestOptions) =>
