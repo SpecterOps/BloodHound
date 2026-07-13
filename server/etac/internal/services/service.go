@@ -64,7 +64,7 @@ func NewService(appdb AppDatabase, dogtagsService dogtags.Service) *Service {
 // environments. Returns true without consulting the database when ETAC
 // filtering is not active for this user.
 func (s *Service) CheckUserAccess(ctx context.Context, user users.User, environments ...string) (bool, error) {
-	if !s.shouldFilterForETAC(user) {
+	if !s.ShouldFilterForETAC(user) {
 		return true, nil
 	}
 	return s.CheckUserAccessToEnvironments(ctx, user, environments...)
@@ -73,7 +73,7 @@ func (s *Service) CheckUserAccess(ctx context.Context, user users.User, environm
 // ShouldFilterForETAC determines whether ETAC filtering should be applied based
 // on the feature flag and the user's environment access. Filtering is skipped
 // when the feature is disabled or when the user has access to all environments.
-func (s *Service) shouldFilterForETAC(user users.User) bool {
+func (s *Service) ShouldFilterForETAC(user users.User) bool {
 	if etacEnabled := s.dogtags.GetFlagAsBool(dogtags.ETAC_ENABLED); !etacEnabled {
 		return false
 	} else if user.HasAllEnvironments() {

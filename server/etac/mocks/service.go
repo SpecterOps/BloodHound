@@ -133,3 +133,54 @@ func (_c *MockService_CheckUserAccess_Call) RunAndReturn(run func(ctx context.Co
 	_c.Call.Return(run)
 	return _c
 }
+
+// ShouldFilterForETAC provides a mock function for the type MockService
+func (_mock *MockService) ShouldFilterForETAC(user users.User) bool {
+	ret := _mock.Called(user)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ShouldFilterForETAC")
+	}
+
+	var r0 bool
+	if returnFunc, ok := ret.Get(0).(func(users.User) bool); ok {
+		r0 = returnFunc(user)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+	return r0
+}
+
+// MockService_ShouldFilterForETAC_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ShouldFilterForETAC'
+type MockService_ShouldFilterForETAC_Call struct {
+	*mock.Call
+}
+
+// ShouldFilterForETAC is a helper method to define mock.On call
+//   - user users.User
+func (_e *MockService_Expecter) ShouldFilterForETAC(user interface{}) *MockService_ShouldFilterForETAC_Call {
+	return &MockService_ShouldFilterForETAC_Call{Call: _e.mock.On("ShouldFilterForETAC", user)}
+}
+
+func (_c *MockService_ShouldFilterForETAC_Call) Run(run func(user users.User)) *MockService_ShouldFilterForETAC_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 users.User
+		if args[0] != nil {
+			arg0 = args[0].(users.User)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockService_ShouldFilterForETAC_Call) Return(b bool) *MockService_ShouldFilterForETAC_Call {
+	_c.Call.Return(b)
+	return _c
+}
+
+func (_c *MockService_ShouldFilterForETAC_Call) RunAndReturn(run func(user users.User) bool) *MockService_ShouldFilterForETAC_Call {
+	_c.Call.Return(run)
+	return _c
+}

@@ -33,6 +33,7 @@ import (
 
 type Service interface {
 	CheckUserAccess(ctx context.Context, user users.User, environments ...string) (bool, error)
+	ShouldFilterForETAC(user users.User) bool
 }
 
 // Register wires the ETAC service to its PostgreSQL store and the supplied

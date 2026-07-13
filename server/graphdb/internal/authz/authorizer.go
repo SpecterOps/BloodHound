@@ -46,7 +46,9 @@ func (s *NodeAuthorizer) CanAccessNode(ctx context.Context, node services.Node) 
 
 	if !isUser { // Unauthenticated caller: we should never hit this. User context is populated by middleware but we deny as a precaution
 		return false
-	} else if environmentID, ok := node.EnvironmentID(); !ok { // Unset/malformed environment ID
+	} else if !s.etacService.ShouldFilterForETAC(&modelUser) {
+		return true
+	} else if environmentID, ok := node.EnvironmentID(); !ok { // ETAC filtering enabled but unset/malformed environment ID
 		return false
 	} else if hasAccess, err := s.etacService.CheckUserAccess(ctx, &modelUser, environmentID); err != nil {
 		slog.ErrorContext(ctx, "Failed to check ETAC user access", attr.Error(err))

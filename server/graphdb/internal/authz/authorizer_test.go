@@ -100,7 +100,8 @@ func TestNodeAuthorizer_CanAccessNode(t *testing.T) {
 			node: newTestNode("Okta", "NoEnvironmentID", "NoID4Me"),
 			want: false,
 			mockSetup: func(m *etacMocks.MockService, ctx context.Context, node services.Node) {
-				// No mock calls expected because we short-circuit on missing environment ID
+				user := userWithEnvironments(false)
+				m.EXPECT().ShouldFilterForETAC(&user).Return(true)
 			},
 		},
 		{
@@ -109,7 +110,8 @@ func TestNodeAuthorizer_CanAccessNode(t *testing.T) {
 			node: newTestNode("Okta", "BadEnvironmentID", nil),
 			want: false,
 			mockSetup: func(m *etacMocks.MockService, ctx context.Context, node services.Node) {
-				// No mock calls expected because we short-circuit on malformed environment ID
+				user := userWithEnvironments(false, "42")
+				m.EXPECT().ShouldFilterForETAC(&user).Return(true)
 			},
 		},
 		{
@@ -118,12 +120,9 @@ func TestNodeAuthorizer_CanAccessNode(t *testing.T) {
 			node: newTestNode(ad.Entity.String(), ad.DomainSID.String(), testDomainSID),
 			want: true,
 			mockSetup: func(m *etacMocks.MockService, ctx context.Context, node services.Node) {
-				m.EXPECT().CheckUserAccess(ctx, &model.User{
-					AllEnvironments: false,
-					EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
-						{EnvironmentID: testDomainSID},
-					},
-				}, []string{testDomainSID}).Return(true, nil)
+				user := userWithEnvironments(false, testDomainSID)
+				m.EXPECT().ShouldFilterForETAC(&user).Return(true)
+				m.EXPECT().CheckUserAccess(ctx, &user, []string{testDomainSID}).Return(true, nil)
 			},
 		},
 		{
@@ -132,12 +131,9 @@ func TestNodeAuthorizer_CanAccessNode(t *testing.T) {
 			node: newTestNode(ad.Entity.String(), ad.DomainSID.String(), testDomainSID),
 			want: false,
 			mockSetup: func(m *etacMocks.MockService, ctx context.Context, node services.Node) {
-				m.EXPECT().CheckUserAccess(ctx, &model.User{
-					AllEnvironments: false,
-					EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
-						{EnvironmentID: "S-0-0-00-000"},
-					},
-				}, []string{testDomainSID}).Return(false, nil)
+				user := userWithEnvironments(false, "S-0-0-00-000")
+				m.EXPECT().ShouldFilterForETAC(&user).Return(true)
+				m.EXPECT().CheckUserAccess(ctx, &user, []string{testDomainSID}).Return(false, nil)
 			},
 		},
 		{
@@ -146,10 +142,8 @@ func TestNodeAuthorizer_CanAccessNode(t *testing.T) {
 			node: newTestNode(ad.Entity.String(), ad.DomainSID.String(), testDomainSID),
 			want: true,
 			mockSetup: func(m *etacMocks.MockService, ctx context.Context, node services.Node) {
-				m.EXPECT().CheckUserAccess(ctx, &model.User{
-					AllEnvironments:                  true,
-					EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{},
-				}, []string{testDomainSID}).Return(true, nil)
+				user := userWithEnvironments(true)
+				m.EXPECT().ShouldFilterForETAC(&user).Return(false)
 			},
 		},
 		{
@@ -158,12 +152,9 @@ func TestNodeAuthorizer_CanAccessNode(t *testing.T) {
 			node: newTestNode(azure.Entity.String(), azure.TenantID.String(), testTenantID),
 			want: true,
 			mockSetup: func(m *etacMocks.MockService, ctx context.Context, node services.Node) {
-				m.EXPECT().CheckUserAccess(ctx, &model.User{
-					AllEnvironments: false,
-					EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
-						{EnvironmentID: testTenantID},
-					},
-				}, []string{testTenantID}).Return(true, nil)
+				user := userWithEnvironments(false, testTenantID)
+				m.EXPECT().ShouldFilterForETAC(&user).Return(true)
+				m.EXPECT().CheckUserAccess(ctx, &user, []string{testTenantID}).Return(true, nil)
 			},
 		},
 		{
@@ -172,12 +163,9 @@ func TestNodeAuthorizer_CanAccessNode(t *testing.T) {
 			node: newTestNode("Okta", graphschema.EnvironmentIDKey, testEnvironmentID),
 			want: true,
 			mockSetup: func(m *etacMocks.MockService, ctx context.Context, node services.Node) {
-				m.EXPECT().CheckUserAccess(ctx, &model.User{
-					AllEnvironments: false,
-					EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
-						{EnvironmentID: testEnvironmentID},
-					},
-				}, []string{testEnvironmentID}).Return(true, nil)
+				user := userWithEnvironments(false, testEnvironmentID)
+				m.EXPECT().ShouldFilterForETAC(&user).Return(true)
+				m.EXPECT().CheckUserAccess(ctx, &user, []string{testEnvironmentID}).Return(true, nil)
 			},
 		},
 	}
