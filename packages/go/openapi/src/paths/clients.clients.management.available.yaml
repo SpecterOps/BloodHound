@@ -16,13 +16,6 @@
 
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
-  - name: client_id
-    description: Client ID
-    in: path
-    required: true
-    schema:
-      type: string
-      format: uuid
 
 get:
   summary: Get available management operations

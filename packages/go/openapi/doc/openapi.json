@@ -17027,16 +17027,6 @@
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
-        },
-        {
-          "name": "client_id",
-          "description": "Client ID",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string",
-            "format": "uuid"
-          }
         }
       ],
       "get": {
