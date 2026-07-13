@@ -20,6 +20,8 @@ package services
 
 import (
 	"context"
+	"encoding/json"
+	"time"
 )
 
 // Database describes the persistence capabilities the graphdb Service requires.
@@ -39,6 +41,25 @@ type Database interface {
 type Kind struct {
 	ID   *int32
 	Name string
+}
+
+// KindInfo holds the data associated with a single entity panel
+type KindInfo struct {
+	ID int32
+
+	KindID int32 // dawgs kind id
+	// Only one of NodeKindID or RelationshipKindID will ever be populated
+	// because the underlying table schema enforces that a KindInfo row must only reference one or the other.
+	NodeKindID         *int32
+	RelationshipKindID *int32
+
+	InfoKey  string
+	Title    string
+	Position int32
+	Content  json.RawMessage
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 // Service implements the graphdb use cases on top of a Database implementation.

@@ -38,7 +38,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
-	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -565,7 +564,7 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 			Name: "UnknownUser",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
+					api.QueryParameterEnvironmentId: []string{environmentID},
 				},
 				Context: context.Background(),
 			},
@@ -579,7 +578,7 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 			Name: "CheckUserETACAccessError",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
+					api.QueryParameterEnvironmentId: []string{environmentID},
 				},
 				Context: userCtx,
 			},
@@ -604,7 +603,7 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 			Name: "NoEnvironmentAccess",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
+					api.QueryParameterEnvironmentId: []string{environmentID},
 				},
 				Context: userCtx,
 			},
@@ -631,7 +630,7 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 			Name: "EnvironmentIDNotFound",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
+					api.QueryParameterEnvironmentId: []string{environmentID},
 				},
 				Context: userCtx,
 			},
@@ -649,8 +648,8 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 			Name: "NonSortableColumn",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
-					"sort_by":                    []string{"metric_name"},
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"sort_by":                       []string{"metric_name"},
 				},
 				Context: userCtx,
 			},
@@ -666,8 +665,8 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 			Name: "EmptySortByParameter",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
-					"sort_by":                    []string{""},
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"sort_by":                       []string{""},
 				},
 				Context: userCtx,
 			},
@@ -683,8 +682,8 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 			Name: "InvalidStartTime",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
-					"start":                      []string{"invalidRFC3339"},
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"start":                         []string{"invalidRFC3339"},
 				},
 				Context: userCtx,
 			},
@@ -700,8 +699,8 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 			Name: "InvalidEndTime",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
-					"end":                        []string{"invalidRFC3339"},
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"end":                           []string{"invalidRFC3339"},
 				},
 				Context: userCtx,
 			},
@@ -717,8 +716,8 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 			Name: "InvalidLimit",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
-					"limit":                      []string{"invalidLimit"},
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"limit":                         []string{"invalidLimit"},
 				},
 				Context: userCtx,
 			},
@@ -734,8 +733,8 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 			Name: "InvalidSkip",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
-					"skip":                       []string{"invalidSkip"},
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"skip":                          []string{"invalidSkip"},
 				},
 				Context: userCtx,
 			},
@@ -751,7 +750,7 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 			Name: "DatabaseError",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
+					api.QueryParameterEnvironmentId: []string{environmentID},
 				},
 				Context: userCtx,
 			},
@@ -834,12 +833,12 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 			Name: "AllQueryParams",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
-					"sort_by":                    []string{"-updated_at"},
-					"limit":                      []string{"1"},
-					"start":                      []string{"2022-03-23T07:20:50.52Z"},
-					"end":                        []string{"2022-04-23T07:20:50.52Z"},
-					"skip":                       []string{"0"},
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"sort_by":                       []string{"-updated_at"},
+					"limit":                         []string{"1"},
+					"start":                         []string{"2022-03-23T07:20:50.52Z"},
+					"end":                           []string{"2022-04-23T07:20:50.52Z"},
+					"skip":                          []string{"0"},
 				},
 			},
 			Expected: Expected{
@@ -850,8 +849,8 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 			Name: "SortByUpdatedAtAscending",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
-					"sort_by":                    []string{"updated_at"},
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"sort_by":                       []string{"updated_at"},
 				},
 			},
 			Expected: Expected{
@@ -862,8 +861,8 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 			Name: "SortByCreatedAtAscending",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
-					"sort_by":                    []string{"created_at"},
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"sort_by":                       []string{"created_at"},
 				},
 			},
 			Expected: Expected{
@@ -874,8 +873,8 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 			Name: "SortByCreatedAtDescending",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
-					"sort_by":                    []string{"-created_at"},
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"sort_by":                       []string{"-created_at"},
 				},
 			},
 			Expected: Expected{
@@ -886,8 +885,8 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 			Name: "StartTime",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
-					"start":                      []string{"2022-03-23T07:20:50.52Z"},
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"start":                         []string{"2022-03-23T07:20:50.52Z"},
 				},
 			},
 			Expected: Expected{
@@ -898,8 +897,8 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 			Name: "EndTime",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
-					"end":                        []string{"2022-04-23T07:20:50.52Z"},
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"end":                           []string{"2022-04-23T07:20:50.52Z"},
 				},
 			},
 			Expected: Expected{
@@ -910,8 +909,8 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 			Name: "Limit",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
-					"limit":                      []string{"2"},
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"limit":                         []string{"2"},
 				},
 			},
 			Expected: Expected{
@@ -922,8 +921,8 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 			Name: "Skip",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
-					"skip":                       []string{"1"},
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"skip":                          []string{"1"},
 				},
 			},
 			Expected: Expected{
@@ -934,7 +933,7 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 			Name: "DefaultOptionalParams",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
+					api.QueryParameterEnvironmentId: []string{environmentID},
 				},
 			},
 			Expected: Expected{
@@ -945,7 +944,7 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 			Name: "ETACDisabledSkipsAccessCheck",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
+					api.QueryParameterEnvironmentId: []string{environmentID},
 				},
 			},
 			Expected: Expected{
@@ -956,7 +955,7 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 			Name: "ETACEnabledWithAllEnvironmentsSkipsAccessCheck",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
+					api.QueryParameterEnvironmentId: []string{environmentID},
 				},
 				User: func() model.User {
 					user := setupUser()
@@ -973,7 +972,7 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 			Name: "ETACEnabledWithEnvironmentAccessChecksAccessThenFetchesStats",
 			Input: Input{
 				Params: url.Values{
-					graphschema.EnvironmentIDKey: []string{environmentID},
+					api.QueryParameterEnvironmentId: []string{environmentID},
 				},
 				DogTagsOverrides: etacEnabled,
 			},

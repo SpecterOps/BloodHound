@@ -41,7 +41,7 @@ const (
 	ErrNoTenantId        string = "no tenant id specified in url"
 	ErrNoPlatformId      string = "no platform id specified in url"
 	ErrInvalidPlatformId string = "invalid platform id specified in url: %v"
-	ErrNoEnvironmentId   string = "environmentid is required"
+	ErrNoEnvironmentId   string = "environment_id is required"
 	ErrUnknownUser       string = "unknown user"
 	ErrNoAccess          string = "user does not have permission to access this environment"
 )
@@ -181,7 +181,7 @@ func (s *Resources) GetDataQualityStats(response http.ResponseWriter, request *h
 		defaultEnd, defaultStart = DefaultTimeRange()
 	)
 
-	if environmentId := queryParams.Get(graphschema.EnvironmentIDKey); environmentId == "" {
+	if environmentId := queryParams.Get(api.QueryParameterEnvironmentId); environmentId == "" {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, ErrNoEnvironmentId, request), response)
 	} else if user, found := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !found {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, ErrUnknownUser, request), response)
@@ -222,12 +222,8 @@ func (s *Resources) GetDataQualityStats(response http.ResponseWriter, request *h
 	}
 }
 
-type Sortable interface {
-	IsSortable(column string) bool
-}
-
 // parseOrder is a helper function which parses any sort_by query params into both the legacy sort string format and the model.Sort format. Returns an error if the columns is not sortable, or if an empty sort param is provided.
-func parseOrder(queryParams url.Values, sortable Sortable) (string, model.Sort, error) {
+func parseOrder(queryParams url.Values, sortable api.Sortable) (string, model.Sort, error) {
 	order := []string{}
 	sort := model.Sort{}
 	for _, column := range queryParams[api.QueryParameterSortBy] {
