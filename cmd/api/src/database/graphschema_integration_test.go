@@ -47,6 +47,19 @@ func createTestNodeKind(t *testing.T, testSuite IntegrationTestSuite, name strin
 	// Create Node Kind with input arguments
 	nodeKind, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, name, extensionID, displayName, description, isDisplayKind, icon, iconColor)
 	require.NoError(t, err, "unexpected error occurred when creating node kind")
+
+	// Mirror what upsertCustomIcons does in production: display kinds must also have a custom_node_kinds row
+	if isDisplayKind {
+		_, err = testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{{
+			KindName:         name,
+			SchemaNodeKindId: &nodeKind.ID,
+			Config: model.CustomNodeKindConfig{
+				Icon: graphschema.DisplayNodeIcon{Name: icon, Type: graphschema.DisplayNodeTypeFontAwesome, Color: iconColor},
+			},
+		}})
+		require.NoError(t, err, "unexpected error occurred when creating custom node kind")
+	}
+
 	return nodeKind
 }
 

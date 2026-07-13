@@ -1335,18 +1335,11 @@ func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId in
 	return nil
 }
 
-// GetPrimaryDisplayKinds - returns a map of all node kinds that are display kinds, this pulls from both custom_node_kinds(schemaless)
-// and schema_node_kinds to create a single source of truth for all valid node kinds
+// GetPrimaryDisplayKinds - returns a map of all node kinds that are display kinds. custom_node_kinds is the single source
+// of truth for display node kinds. Schema-backed display kinds are mirrored there on extension upsert, and schemaless kinds encountered
+// during ingest are also upserted.
 func (s *BloodhoundDB) GetPrimaryDisplayKinds(ctx context.Context) (graphschema.PrimaryDisplayKinds, error) {
-	if displaySchemaNodeKinds, _, err := s.GetGraphSchemaNodeKinds(ctx, model.Filters{"is_display_kind": []model.Filter{
-		{
-			Operator:    model.Equals,
-			Value:       "true",
-			SetOperator: model.FilterAnd,
-		},
-	}}, model.Sort{}, 0, 0); err != nil {
-		return nil, err
-	} else if customNodeKinds, err := s.GetCustomNodeKinds(ctx); err != nil {
+	if customNodeKinds, err := s.GetCustomNodeKinds(ctx); err != nil {
 		return nil, err
 	} else {
 		var primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
@@ -1357,16 +1350,6 @@ func (s *BloodhoundDB) GetPrimaryDisplayKinds(ctx context.Context) (graphschema.
 					Name:  customNodeKind.Config.Icon.Name,
 					Type:  customNodeKind.Config.Icon.Type,
 					Color: customNodeKind.Config.Icon.Color,
-				},
-			}
-		}
-		for _, kind := range displaySchemaNodeKinds {
-			primaryDisplayKinds[kind.ToKind()] = graphschema.DisplayKind{
-				Name: kind.Name,
-				Icon: graphschema.DisplayNodeIcon{
-					Name:  kind.Icon,
-					Color: kind.IconColor,
-					Type:  graphschema.DisplayNodeTypeFontAwesome,
 				},
 			}
 		}
