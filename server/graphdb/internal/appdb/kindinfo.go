@@ -86,7 +86,7 @@ func (s *Store) GetKindInfos(ctx context.Context, kindName string) ([]services.K
 	selectBuilder.From(selectBuilder.As(tableSchemaKindInfo, "ki"))
 	selectBuilder.Join(selectBuilder.As(tableKind, "k"), "ki.kind_id = k.id")
 	selectBuilder.Where(selectBuilder.Equal("k.name", kindName))
-	selectBuilder.OrderBy("position", "title")
+	selectBuilder.OrderBy("ki.position", "ki.title")
 
 	sqlQuery, args = selectBuilder.Build()
 

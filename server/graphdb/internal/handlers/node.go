@@ -82,6 +82,10 @@ func BuildNodeView(node services.Node, includeInfo bool) NodeView {
 
 	if includeInfo {
 		for _, kindInfo := range node.KindInfos {
+			if kindInfo.NodeKindID == nil {
+				continue
+			}
+
 			nodeView.KindInfos = append(nodeView.KindInfos, KindInfoView{
 				Name:       kindInfo.InfoKey,
 				Title:      kindInfo.Title,

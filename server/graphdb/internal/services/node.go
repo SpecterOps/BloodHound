@@ -76,7 +76,13 @@ func (s *Service) GetNode(ctx context.Context, id int64, includeKindInfo bool) (
 				return Node{}, fmt.Errorf("failed to get kind info for %s", nodeKind.Name)
 			}
 
-			allKindInfos = append(allKindInfos, kindInfos...)
+			for _, kindInfo := range kindInfos {
+				if kindInfo.NodeKindID == nil { // defensive guard to make the dereference in the sort below safe from a nil-panic.
+					continue
+				}
+
+				allKindInfos = append(allKindInfos, kindInfo)
+			}
 		}
 
 		slices.SortFunc(allKindInfos, func(left, right KindInfo) int {
