@@ -53,6 +53,7 @@ var (
 	ErrKindInfoDuplicateInfoKey  = errors.New("kind info key already in use for this kind")
 
 	// entity panel validation errors
+	ErrInvalidKindInfoTitle    = errors.New("invalid kind info title: must not be empty")
 	ErrInvalidKindInfoKey      = errors.New("invalid kind info key: must match pattern ^[a-z0-9_-]{1,128}$")
 	ErrTooManyKindInfoEntries  = errors.New("too many kind info entries: maximum 100 allowed per kind")
 	ErrInvalidKindInfoPosition = errors.New("invalid kind info position: must be >= 1")
@@ -152,7 +153,9 @@ func validateKindInfo(kindName string, info KindInfoInputs) error {
 	)
 
 	for _, infoEntry := range info {
-		if !kindInfoKeyPattern.MatchString(infoEntry.InfoKey) {
+		if infoEntry.Title == "" {
+			return fmt.Errorf("%w for info key '%s' in kind %s", ErrInvalidKindInfoTitle, infoEntry.InfoKey, kindName)
+		} else if !kindInfoKeyPattern.MatchString(infoEntry.InfoKey) {
 			return fmt.Errorf("%w: key '%s' in kind %s", ErrInvalidKindInfoKey, infoEntry.InfoKey, kindName)
 		} else if infoEntry.Position < 1 {
 			return fmt.Errorf("%w: position %d for info key '%s' in kind %s", ErrInvalidKindInfoPosition, infoEntry.Position, infoEntry.InfoKey, kindName)
