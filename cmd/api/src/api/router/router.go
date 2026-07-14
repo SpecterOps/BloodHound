@@ -128,6 +128,13 @@ func (s *Route) WithSort(sortable params.Sortable) *Route {
 	return s
 }
 
+// WithPaging wires the paging middleware onto the route, parsing the skip and limit query parameters
+// according to the supplied params.PagingConfig and enriching the request context with the parsed values.
+func (s *Route) WithPaging(config params.PagingConfig) *Route {
+	s.handler.Use(middleware.PagingMiddleware(config))
+	return s
+}
+
 func NewRouter(cfg config.Configuration, authorizer auth.Authorizer, contentSecurityPolicy string) Router {
 	muxRouter := mux.NewRouter()
 	muxRouter.Use(middleware.EnsureRequestBodyClosed())
