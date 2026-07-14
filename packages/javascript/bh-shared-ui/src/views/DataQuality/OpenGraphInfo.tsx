@@ -18,6 +18,7 @@ import { faStream, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Paper, Table, TableBody, TableContainer } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
+import { Environment } from 'js-client-library';
 import React, { useEffect } from 'react';
 import { NodeIcon } from '../../components';
 import { useOpenGraphDataQualityStatsQuery, useOpenGraphPlatformsDataQualityStatsQuery } from '../../hooks';
@@ -76,11 +77,11 @@ export const OpenGraphInfo: React.FC<{ contextId: string; onDataError?: () => vo
     return <Layout nodeStats={nodeStats} relationshipStats={relationshipStats} isLoading={false} />;
 };
 
-export const OpenGraphPlatformInfo: React.FC<{ contextType: string; onDataError?: () => void }> = ({
-    contextType,
-    onDataError = () => {},
-}) => {
-    const { data: platformData, isLoading, isError } = useOpenGraphPlatformsDataQualityStatsQuery(contextType);
+export const OpenGraphPlatformInfo: React.FC<{
+    contextKindId: Environment['environment_kind_id'];
+    onDataError?: () => void;
+}> = ({ contextKindId, onDataError = () => {} }) => {
+    const { data: platformData, isLoading, isError } = useOpenGraphPlatformsDataQualityStatsQuery(contextKindId);
 
     useEffect(() => {
         if (isError) onDataError();

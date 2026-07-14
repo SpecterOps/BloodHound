@@ -82,6 +82,8 @@ export type Environment = {
     collected: boolean;
     hygiene_attack_paths: number; // While improbable this number could possibly be higher than the JavaScript max safe integer in the response
     exposures: EnvironmentExposure[];
+    environment_kind_display_name?: string; // OG Environments
+    environment_kind_id?: number; // OG Environments
 };
 
 export type GraphResponse = BasicResponse<GraphData>;

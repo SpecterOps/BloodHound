@@ -20,6 +20,7 @@ import OpenGraphInfo, { OpenGraphPlatformInfo } from '../OpenGraphInfo';
 import TenantInfo, { AzurePlatformInfo } from '../TenantInfo';
 
 export const getStatsComponent = (selectedEnvironment: SelectedEnvironment | null, dataErrorHandler: () => void) => {
+    const contextKindId = selectedEnvironment?.kind_id;
     const contextType = selectedEnvironment?.type;
     const contextId = selectedEnvironment?.id;
     switch (contextType) {
@@ -36,12 +37,8 @@ export const getStatsComponent = (selectedEnvironment: SelectedEnvironment | nul
         default:
             if (!contextType) return null;
             if (contextType.endsWith('-platform')) {
-                return (
-                    <OpenGraphPlatformInfo
-                        contextType={contextType.replace('-platform', '')}
-                        onDataError={dataErrorHandler}
-                    />
-                );
+                if (!contextKindId) return null;
+                return <OpenGraphPlatformInfo contextKindId={contextKindId} onDataError={dataErrorHandler} />;
             }
             if (!contextId) return null;
             return <OpenGraphInfo contextId={contextId} onDataError={dataErrorHandler} />;
