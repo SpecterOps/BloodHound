@@ -30,8 +30,11 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error {
-	objectID := strings.ToUpper(entity.ID) // BloodHound convention: object IDs are uppercased
+func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData, useRawObjectIDs bool) error {
+	objectID := entity.ID
+	if !useRawObjectIDs {
+		objectID = strings.ToUpper(entity.ID) // BloodHound convention: object IDs are uppercased
+	}
 
 	node := ein.IngestibleNode{
 		ObjectID:    objectID,

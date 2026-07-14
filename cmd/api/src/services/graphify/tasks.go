@@ -165,11 +165,12 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, fileService stora
 	}
 }
 
-func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.Time, useChangelog bool, jobId int64) *IngestContext {
+func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.Time, useChangelog bool, jobId int64, useRawObjectIDs bool) *IngestContext {
 	opts := []IngestOption{
 		WithIngestTime(ingestTime),
 		WithEndpointResolver(s.endpointResolver),
 		WithNodeKindRegistrar(s.RegisterNodeKind(ctx)),
+		WithUseRawObjectIDs(useRawObjectIDs),
 	}
 
 	if useChangelog {
@@ -228,11 +229,19 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 		flagChangeLogEnabled = changelogFF.Enabled
 	}
 
+	// Lookup feature flag once per run. dont fail ingest on flag lookup, just default to false
+	flagUseRawObjectIDsEnabled := false
+	if useRawObjectIDsFF, err := s.db.GetFlagByKey(s.ctx, appcfg.FeatureUseRawObjectID); err != nil {
+		slog.WarnContext(s.ctx, "Get use raw object id feature flag failed", attr.Error(err))
+	} else {
+		flagUseRawObjectIDsEnabled = useRawObjectIDsFF.Enabled
+	}
+
 	for _, task := range tasks {
 		// Record task latency metric: time from when task was created until picked up for processing
 		metrics.RecordIngestTaskQueueLatency(task.CreatedAt, metrics.IngestSourceFile)
 
-		ingestCtx := s.NewIngestContext(s.ctx, time.Now().UTC(), flagChangeLogEnabled, task.JobId.ValueOrZero())
+		ingestCtx := s.NewIngestContext(s.ctx, time.Now().UTC(), flagChangeLogEnabled, task.JobId.ValueOrZero(), flagUseRawObjectIDsEnabled)
 		fileData, err := s.ProcessIngestFile(ingestCtx, ingestFileService, task)
 
 		switch {
