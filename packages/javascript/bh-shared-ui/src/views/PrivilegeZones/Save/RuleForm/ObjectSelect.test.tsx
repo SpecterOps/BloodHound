@@ -17,10 +17,12 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { useForm } from 'react-hook-form';
 import { mockGetConfigurationHandler, mockKindsHandler } from '../../../../mocks/handlers';
 import { act, render, screen, waitFor } from '../../../../test-utils';
 import ObjectSelect from './ObjectSelect';
 import RuleFormContext, { initialValue } from './RuleFormContext';
+import { RuleFormInputs } from './types';
 
 const testNodes = [
     {
@@ -61,6 +63,8 @@ describe('Rule Object Select', () => {
 
     beforeEach(async () => {
         await act(async () => {
+            const { control } = useForm<RuleFormInputs>();
+
             render(
                 <RuleFormContext.Provider
                     value={{
@@ -74,7 +78,7 @@ describe('Rule Object Select', () => {
                         ],
                         dispatch,
                     }}>
-                    <ObjectSelect />
+                    <ObjectSelect control={control} />
                 </RuleFormContext.Provider>
             );
         });
