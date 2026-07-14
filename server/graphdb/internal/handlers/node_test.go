@@ -33,10 +33,13 @@ import (
 
 // newNodeRequestWithID builds a GET request whose mux path variables carry the
 // supplied raw node id, mirroring what the router does at runtime.
-func newNodeRequestWithID(t *testing.T, rawID string) *http.Request {
+func newNodeRequestWithID(t *testing.T, rawID string, rawQuery ...string) *http.Request {
 	t.Helper()
 	request, err := http.NewRequest(http.MethodGet, "/api/v2/nodes/"+rawID, nil)
 	require.NoError(t, err)
+	if len(rawQuery) > 0 {
+		request.URL.RawQuery = rawQuery[0]
+	}
 	return mux.SetURLVars(request, map[string]string{handlers.URIPathVariableNodeID: rawID})
 }
 
@@ -55,21 +58,32 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 				{ID: int32Ptr(2), Name: "Group"},
 			},
 			Properties: map[string]any{"name": "admin"},
+			KindInfos: []services.KindInfo{
+				{
+					InfoKey:    "overview",
+					Title:      "Overview",
+					Position:   0,
+					NodeKindID: int32Ptr(1),
+					Content:    json.RawMessage(`{"markdown":{"content":"one"}}`),
+				},
+			},
 		}
 	)
 
 	tests := []struct {
 		name       string
 		rawID      string
+		rawQuery   string
 		setupMock  func(graphDBMock *mocks.MockGraphDB)
 		wantStatus int
 		assertBody func(t *testing.T, body []byte)
 	}{
 		{
-			name:  "returns 200 with the node view on success",
-			rawID: "9876543210",
+			name:     "returns 200 with the node view and info when include-info is true",
+			rawID:    "9876543210",
+			rawQuery: "include-info=true",
 			setupMock: func(graphDBMock *mocks.MockGraphDB) {
-				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID).Return(node, nil)
+				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, true).Return(node, nil)
 			},
 			wantStatus: http.StatusOK,
 			assertBody: func(t *testing.T, body []byte) {
@@ -86,6 +100,25 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 				assert.Equal(t, int32(2), *envelope.Data.Kinds[1].NodeKindID)
 				assert.Equal(t, "Group", envelope.Data.Kinds[1].Name)
 				assert.Equal(t, "admin", envelope.Data.Properties["name"])
+				require.Len(t, envelope.Data.KindInfos, 1)
+				assert.Equal(t, "one", envelope.Data.KindInfos[0].Markdown.Content)
+				assert.NotContains(t, string(body), `\"markdown\"`)
+			},
+		},
+		{
+			name:  "returns 200 without info when include-info is omitted",
+			rawID: "9876543210",
+			setupMock: func(graphDBMock *mocks.MockGraphDB) {
+				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, false).Return(node, nil)
+			},
+			wantStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body []byte) {
+				var envelope struct {
+					Data map[string]any `json:"data"`
+				}
+				require.NoError(t, json.Unmarshal(body, &envelope))
+				assert.NotContains(t, envelope.Data, "info")
+				assert.NotContains(t, string(body), `"info"`)
 			},
 		},
 		{
@@ -94,10 +127,16 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 		},
 		{
+			name:       "returns 400 when include-info is malformed",
+			rawID:      "9876543210",
+			rawQuery:   "include-info=wat",
+			wantStatus: http.StatusBadRequest,
+		},
+		{
 			name:  "returns 404 when the node is not found",
 			rawID: "9876543210",
 			setupMock: func(graphDBMock *mocks.MockGraphDB) {
-				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID).Return(services.Node{}, services.ErrNodeNotFound)
+				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, false).Return(services.Node{}, services.ErrNodeNotFound)
 			},
 			wantStatus: http.StatusNotFound,
 		},
@@ -105,7 +144,7 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 			name:  "returns 404 when the kind is not found",
 			rawID: "9876543210",
 			setupMock: func(graphDBMock *mocks.MockGraphDB) {
-				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID).Return(services.Node{}, services.ErrKindNotFound)
+				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, false).Return(services.Node{}, services.ErrKindNotFound)
 			},
 			wantStatus: http.StatusNotFound,
 		},
@@ -117,7 +156,7 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 				graphDBMock = mocks.NewMockGraphDB(t)
 				handlerSet  = handlers.NewHandlersContainer(graphDBMock)
 				recorder    = httptest.NewRecorder()
-				request     = newNodeRequestWithID(t, tt.rawID)
+				request     = newNodeRequestWithID(t, tt.rawID, tt.rawQuery)
 			)
 
 			if tt.setupMock != nil {
