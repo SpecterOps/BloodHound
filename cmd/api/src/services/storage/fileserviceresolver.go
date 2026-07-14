@@ -40,9 +40,7 @@ type fileServiceResolver struct {
 }
 
 func NewFileServiceResolver(services FileServiceMap) (FileServiceResolver, error) {
-	var (
-		copiedServices = make(FileServiceMap, len(services))
-	)
+	copiedServices := make(FileServiceMap, len(services))
 
 	for serviceName, fileService := range services {
 		if serviceName == "" {
@@ -78,10 +76,10 @@ func (s *fileServiceResolver) Resolve(name storage.FileServiceName) (storage.Fil
 	return fileService, nil
 }
 
-// createLocalStore takes a location to create the storage.LocalStore, and wraps that in a
+// CreateLocalStore takes a location to create the storage.LocalStore, and wraps that in a
 // storage.FileService. Both are returned. If there is an error in this process, nil is
 // returned for both structs, and the error is returned.
-func createLocalStore(location string) (*storage.LocalStore, storage.FileService, error) {
+func CreateLocalStore(location string) (*storage.LocalStore, storage.FileService, error) {
 	var (
 		localStore *storage.LocalStore
 		err        error
@@ -94,9 +92,9 @@ func createLocalStore(location string) (*storage.LocalStore, storage.FileService
 	return localStore, storage.NewFileService(localStore), nil
 }
 
-// closeLocalStores contains the functionality to close any storage.LocalStore that has been opened
+// CloseLocalStores contains the functionality to close any storage.LocalStore that has been opened
 // if there was an error. Errors from the close are joined together and returned as well.
-func closeLocalStores(localStores []*storage.LocalStore) error {
+func CloseLocalStores(localStores []*storage.LocalStore) error {
 	var closeErr error
 
 	for _, localStore := range localStores {
@@ -124,9 +122,9 @@ func NewDefaultFileServices(cfg config.Configuration) (FileServiceMap, error) {
 	)
 
 	for _, definition := range definitions {
-		localStore, fileService, err := createLocalStore(definition.location)
+		localStore, fileService, err := CreateLocalStore(definition.location)
 		if err != nil {
-			return nil, errors.Join(err, closeLocalStores(openedStores))
+			return nil, errors.Join(err, CloseLocalStores(openedStores))
 		}
 
 		openedStores = append(openedStores, localStore)

@@ -275,8 +275,13 @@ func (s Configuration) CollectorsDirectory() string {
 	return s.CollectorsBasePath
 }
 
+// TODO: MC - should this be bhe or bhce?
+func (s Configuration) ArtifactsDirectory() string {
+	return filepath.Join(s.WorkDir, "artifacts")
+}
+
 func WriteConfigurationFile(path string, config Configuration) error {
-	if fout, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644); err != nil {
+	if fout, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644); err != nil {
 		return fmt.Errorf("failed opening configuration file %s: %w", path, err)
 	} else {
 		defer fout.Close()
