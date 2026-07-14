@@ -72,7 +72,6 @@
       }
     }
   ],
-  "properties": [],
   "relationship_kinds": [
     {
       "name": "dogpark_CanAccess",

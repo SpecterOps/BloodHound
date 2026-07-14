@@ -1056,10 +1056,21 @@ func TestKindInfo_Validation(t *testing.T) {
 				ExtensionInput: baseExtensionInput(),
 				NodeKindsInput: NodesInput{{
 					Name: "AD_Node",
-					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 0, Content: validContent}},
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: -1, Content: validContent}},
 				}},
 			},
 			wantErr: ErrInvalidKindInfoPosition,
+		},
+		{
+			name: "success_-_zero_position",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 0, Content: validContent}},
+				}},
+			},
+			wantErr: nil,
 		},
 		{
 			name: "error_-_content_empty",

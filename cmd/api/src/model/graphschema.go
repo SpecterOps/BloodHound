@@ -56,7 +56,7 @@ var (
 	ErrInvalidKindInfoTitle    = errors.New("invalid kind info title: must not be empty or whitespace-only")
 	ErrInvalidKindInfoKey      = errors.New("invalid kind info key: must match pattern ^[a-z0-9_-]{1,128}$")
 	ErrTooManyKindInfoEntries  = errors.New("too many kind info entries: maximum 100 allowed per kind")
-	ErrInvalidKindInfoPosition = errors.New("invalid kind info position: must be >= 1")
+	ErrInvalidKindInfoPosition = errors.New("invalid kind info position: must be >= 0")
 	ErrInvalidKindInfoContent  = errors.New("invalid kind info content: must be a JSON object of the form {\"markdown\":{\"content\":\"...\"}}")
 )
 
@@ -157,7 +157,7 @@ func validateKindInfo(kindName string, info KindInfoInputs) error {
 			return fmt.Errorf("%w for info key '%s' in kind %s", ErrInvalidKindInfoTitle, infoEntry.InfoKey, kindName)
 		} else if !kindInfoKeyPattern.MatchString(infoEntry.InfoKey) {
 			return fmt.Errorf("%w: key '%s' in kind %s", ErrInvalidKindInfoKey, infoEntry.InfoKey, kindName)
-		} else if infoEntry.Position < 1 {
+		} else if infoEntry.Position < 0 {
 			return fmt.Errorf("%w: position %d for info key '%s' in kind %s", ErrInvalidKindInfoPosition, infoEntry.Position, infoEntry.InfoKey, kindName)
 		} else if err := validateKindInfoContent(infoEntry.Content); err != nil {
 			return fmt.Errorf("info key '%s' in kind %s: %w", infoEntry.InfoKey, kindName, err)
