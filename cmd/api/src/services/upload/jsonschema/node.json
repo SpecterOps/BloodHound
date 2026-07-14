@@ -42,6 +42,9 @@
           }
         ]
       },
+      "propertyNames": {
+        "pattern": "^[a-z0-9_-]{1,128}$"
+      },
       "not": {
         "required": [
           "objectid"
