@@ -36,7 +36,7 @@ import { SearchValue } from '../../../Explore';
 import { useRuleFormContext } from './RuleFormContext';
 import { RuleFormInputs } from './types';
 
-const ObjectSelect = ({ control }: { control: Control<RuleFormInputs, any, RuleFormInputs> }) => {
+const ObjectSelect = ({ control }: { control?: Control<RuleFormInputs, any, RuleFormInputs> }) => {
     const { selectedObjects, dispatch } = useRuleFormContext();
     const [searchTerm, setSearchTerm] = useState<string>('');
 
