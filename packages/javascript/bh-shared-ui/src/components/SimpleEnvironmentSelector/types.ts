@@ -25,5 +25,5 @@ export type SelectorValueTypes = Environment['type'] | EnvironmentPlatform;
 export type SelectedEnvironment = {
     type: SelectorValueTypes | null;
     id: string | null;
-    kind_id?: Environment['environment_kind_id'] | null;
+    environment_kind_id?: Environment['environment_kind_id'] | null;
 };

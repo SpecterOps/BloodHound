@@ -173,7 +173,7 @@ const SimpleEnvironmentSelector: React.FC<{
                         <li key={`${type}-platform`}>
                             <Button
                                 className='flex justify-between items-center gap-2 w-full'
-                                onClick={() => handlePlatformClick(type, environmentInfo[type]?.kind_id)}
+                                onClick={() => handlePlatformClick(type, environmentInfo[type]?.environment_kind_id)}
                                 variant={'text'}>
                                 <TooltipProvider>
                                     <TooltipRoot>
