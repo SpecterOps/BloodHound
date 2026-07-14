@@ -110,9 +110,9 @@ describe('Explore utils', () => {
             );
 
             expect(graph.edges().length).toEqual(3);
-            expect(graph.hasEdge('1')).toBeTruthy();
-            expect(graph.hasEdge('2')).toBeTruthy();
-            expect(graph.hasEdge('3')).toBeTruthy();
+            expect(graph.hasEdge('rel_1')).toBeTruthy();
+            expect(graph.hasEdge('rel_2')).toBeTruthy();
+            expect(graph.hasEdge('rel_3')).toBeTruthy();
         });
     });
 });
