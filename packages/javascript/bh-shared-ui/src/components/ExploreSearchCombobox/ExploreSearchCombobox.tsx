@@ -19,7 +19,7 @@ import { FormControl, FormField, FormItem, FormMessage, Input } from 'doodle-ui'
 import { useCombobox } from 'downshift';
 import { useRef } from 'react';
 import { Control } from 'react-hook-form';
-import { SearchResult, getEmptyResultsText, useKeywordAndTypeValues, useSearch, useTheme } from '../../hooks';
+import { SearchResult, getEmptyResultsText, useKeywordAndTypeValues, useSearch } from '../../hooks';
 import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import { RuleFormInputs } from '../../views/PrivilegeZones/Save/RuleForm/types';
 import NodeIcon from '../NodeIcon';
@@ -46,7 +46,6 @@ const ExploreSearchCombobox: React.FC<{
     variant = 'outlined',
     control,
 }) => {
-    const theme = useTheme();
     const searchNodesRef = useRef<HTMLInputElement>();
 
     const { keyword, type } = useKeywordAndTypeValues(inputValue);
