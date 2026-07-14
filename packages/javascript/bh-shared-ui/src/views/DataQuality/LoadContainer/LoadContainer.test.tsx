@@ -29,4 +29,18 @@ describe('LoadContainer', () => {
         );
         expect(screen.getByText('1,000')).toBeInTheDocument();
     });
+
+    it('should render skeletons for both cells while loading', () => {
+        const { container } = render(
+            <Table>
+                <TableBody>
+                    <LoadContainer icon={<>globe</>} display='Test' value={1000} isLoading={true} />
+                </TableBody>
+            </Table>
+        );
+
+        expect(container.querySelectorAll('.MuiSkeleton-root')).toHaveLength(2);
+        expect(screen.queryByText('Test')).not.toBeInTheDocument();
+        expect(screen.queryByText('1,000')).not.toBeInTheDocument();
+    });
 });
