@@ -193,3 +193,38 @@ describe('Context Selector Error', () => {
         expect(await screen.findByText(testErrorMessage)).toBeInTheDocument();
     });
 });
+
+describe('Open Graph platform selection', () => {
+    beforeEach(() => toggleFeatureFlag(true));
+
+    it('includes the platform environment_kind_id in the onSelect payload when an open graph aggregate is clicked', async () => {
+        const user = userEvent.setup();
+        const testOnChange = vi.fn();
+        const testValue = { type: 'active-directory', id: '3a6f8001-11f4-43bb-9de6-25c0d931f244' };
+
+        render(<SimpleEnvironmentSelector selected={testValue} onSelect={testOnChange} errorMessage={errorMessage} />);
+
+        const contextSelector = await screen.findByTestId('data-quality_context-selector');
+        await user.click(contextSelector);
+
+        await user.click(await screen.findByText('All AWS Environments'));
+
+        expect(testOnChange).toHaveBeenLastCalledWith({ type: 'AWS-platform', id: null, kind_id: 101 });
+    });
+
+    it('renders the aggregation display name in the tooltip for an open graph platform', async () => {
+        const user = userEvent.setup();
+        const testValue = { type: 'active-directory', id: '3a6f8001-11f4-43bb-9de6-25c0d931f244' };
+
+        render(<SimpleEnvironmentSelector selected={testValue} onSelect={vi.fn()} errorMessage={errorMessage} />);
+
+        const contextSelector = await screen.findByTestId('data-quality_context-selector');
+        await user.click(contextSelector);
+
+        await user.hover(await screen.findByText('All GitHub Environments'));
+
+        const tooltip = await screen.findByRole('tooltip', {}, { timeout: 2000 });
+        expect(tooltip).toHaveTextContent('All GitHub Environments');
+    });
+});
+
