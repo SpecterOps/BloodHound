@@ -54,7 +54,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // NEUTRALS
             '--neutral-50': palette.neutral.light[50],
-            // '--neutral-100': palette.neutral.light[100],
+            '--neutral-100': palette.neutral.light[100],
             '--neutral-200': palette.neutral.light[200],
             '--neutral-300': palette.neutral.light[300],
             '--neutral-400': palette.neutral.light[400],
@@ -239,10 +239,10 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // NEUTRALS
             '--neutral-50': palette.neutral.dark[50],
-            // '--neutral-100': palette.neutral.dark[100],
-            // '--neutral-200': palette.neutral.dark[200],
-            // '--neutral-300': palette.neutral.dark[300],
-            // '--neutral-400': palette.neutral.dark[400],
+            '--neutral-100': palette.neutral.dark[100],
+            '--neutral-200': palette.neutral.dark[200],
+            '--neutral-300': palette.neutral.dark[300],
+            '--neutral-400': palette.neutral.dark[400],
             // '--neutral-500': palette.neutral.dark[500],
             // '--neutral-600': palette.neutral.dark[600],
             // '--neutral-700': palette.neutral.dark[700],

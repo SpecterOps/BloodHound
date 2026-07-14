@@ -74,9 +74,6 @@ export default {
                 'switch-fill': 'var(--switch-fill)',
                 'switch-disabled-fill': 'var(--switch-disabled-fill)',
 
-                'neutral-50': 'var(--neutral-50)',
-                'neutral-400': 'var(--neutral-400)',
-
                 // 'common-dark': 'var(--common-dark)',
                 // 'common-white': 'var(--common-white)',
 
@@ -86,10 +83,11 @@ export default {
                 // 'text-primary': 'var(--text-primary)',
                 // 'text-secondary': 'var(--text-secondary)',
 
-                // 'neutral-100': 'var(--neutral-100)',
+                'neutral-50': 'var(--neutral-50)',
+                'neutral-100': 'var(--neutral-100)',
                 'neutral-200': 'var(--neutral-200)',
-                // 'neutral-300': 'var(--neutral-300)',
-                // 'neutral-400': 'var(--neutral-400)',
+                'neutral-300': 'var(--neutral-300)',
+                'neutral-400': 'var(--neutral-400)',
                 // 'neutral-500': 'var(--neutral-500)',
                 // 'neutral-600': 'var(--neutral-600)',
                 // 'neutral-700': 'var(--neutral-700)',
