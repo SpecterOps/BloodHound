@@ -143,15 +143,9 @@ func (s *BloodhoundDB) nodeKindReconcileConfig(extensionId int32) reconcileConfi
 			return s.UpdateGraphSchemaNodeKind(ctx, existing)
 		},
 		delete: func(ctx context.Context, existing model.GraphSchemaNodeKind) error {
-			if err := s.DeleteGraphSchemaNodeKind(ctx, existing.ID); err != nil {
-				return err
-			}
-			// keep custom_node_kinds the source of truth for display node kinds.
-			// Node kinds that were not display kinds never had a row, so a missing row could happen and wouldn't be an error
-			if err := s.DeleteCustomNodeKind(ctx, existing.Name); err != nil && !errors.Is(err, ErrNotFound) {
-				return err
-			}
-			return nil
+			// Deleting from schema_node_kinds automatically nulls the schema_node_kind_id FK
+			// in custom_node_kinds via ON DELETE SET NULL.
+			return s.DeleteGraphSchemaNodeKind(ctx, existing.ID)
 		},
 	}
 }
