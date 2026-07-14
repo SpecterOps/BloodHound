@@ -236,6 +236,9 @@ func (s *BloodhoundDB) GetDataQualityStats(ctx context.Context, filters model.Fi
 			totalRowCount = len(dataQualityStats)
 		}
 
+		if totalRowCount == 0 {
+			return dataQualityStats, totalRowCount, ErrNotFound
+		}
 		return dataQualityStats, totalRowCount, nil
 	}
 
