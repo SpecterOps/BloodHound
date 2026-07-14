@@ -20,7 +20,7 @@ import OpenGraphInfo, { OpenGraphPlatformInfo } from '../OpenGraphInfo';
 import TenantInfo, { AzurePlatformInfo } from '../TenantInfo';
 
 export const getStatsComponent = (selectedEnvironment: SelectedEnvironment | null, dataErrorHandler: () => void) => {
-    const contextKindId = selectedEnvironment?.kind_id;
+    const contextKindId = selectedEnvironment?.environment_kind_id;
     const contextType = selectedEnvironment?.type;
     const contextId = selectedEnvironment?.id;
     switch (contextType) {

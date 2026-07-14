@@ -36,7 +36,7 @@ export type AggregateEnvironmentInfo = {
     icon: IconDefinition;
     memberType: string;
     type: Environment['type'];
-    kind_id?: Environment['environment_kind_id'];
+    environment_kind_id?: Environment['environment_kind_id'];
 };
 
 export const DEFAULT_ENVIRONMENTS_FILTER = {
@@ -161,7 +161,7 @@ export function getCheckboxOptions(environmentMap: Record<Environment['type'], {
 /** Return an object containing display name, aggregation name, member type, and icon for a given environment type */
 export function getOpenGraphEnvironmentInfo(
     type: Environment['type'],
-    kind_id?: Environment['environment_kind_id']
+    environment_kind_id?: Environment['environment_kind_id']
 ): AggregateEnvironmentInfo {
     // Known types (AD and Azure) use the known info map
     // Defaults used for OpenGraph types
@@ -179,7 +179,7 @@ export function getOpenGraphEnvironmentInfo(
         icon,
         memberType,
         type,
-        kind_id,
+        environment_kind_id,
     };
 }
 
