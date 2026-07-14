@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,11 +13,19 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import React from 'react';
+import ReactMarkdown, { Components } from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
-package params
+const MarkdownContent: React.FC<{
+    markdown: string;
+    components?: Components;
+}> = ({ markdown, components }) => {
+    return (
+        <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+            {markdown}
+        </ReactMarkdown>
+    );
+};
 
-import "regexp"
-
-var (
-	containsPredicate = regexp.MustCompile(`^(in|nin):(\w+)(,\s*\w+)*$`)
-)
+export default MarkdownContent;

@@ -14,48 +14,48 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package filters_test
+package params_test
 
 import (
 	"net/url"
 	"testing"
 
-	"github.com/specterops/bloodhound/packages/go/filters"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/stretchr/testify/require"
 )
 
 // fakeFilterable is a minimal Filterable used to drive ParseAndValidate without coupling the test to any
 // persistence layer.
 type fakeFilterable struct {
-	fields map[string]filters.FilterableField
+	fields map[string]params.FilterableField
 }
 
-func (s fakeFilterable) ValidFilters() map[string]filters.FilterableField {
+func (s fakeFilterable) ValidFilters() map[string]params.FilterableField {
 	return s.fields
 }
 
 func TestParseFilterOperator(t *testing.T) {
 	for _, raw := range []string{"gt", "gte", "lt", "lte", "eq", "neq", "~eq"} {
 		t.Run("parses "+raw, func(t *testing.T) {
-			operator, err := filters.ParseFilterOperator(raw)
+			operator, err := params.ParseFilterOperator(raw)
 			require.NoError(t, err)
-			require.Equal(t, filters.FilterOperator(raw), operator)
+			require.Equal(t, params.FilterOperator(raw), operator)
 		})
 	}
 
 	t.Run("rejects an unknown predicate and wraps ErrMalformedFilter", func(t *testing.T) {
-		_, err := filters.ParseFilterOperator("bogus")
+		_, err := params.ParseFilterOperator("bogus")
 		require.Error(t, err)
-		require.ErrorIs(t, err, filters.ErrMalformedFilter)
+		require.ErrorIs(t, err, params.ErrMalformedFilter)
 		require.Contains(t, err.Error(), "bogus")
 	})
 }
 
-func TestParseAndValidate_Parsing(t *testing.T) {
+func TestFilterParseAndValidate_Parsing(t *testing.T) {
 	var (
-		parser     = filters.NewQueryParameterFilterParser()
-		filterable = fakeFilterable{fields: map[string]filters.FilterableField{
-			"parameter": {Operators: []filters.FilterOperator{filters.Equals, filters.ApproximatelyEquals}},
+		parser     = params.NewQueryParameterFilterParser()
+		filterable = fakeFilterable{fields: map[string]params.FilterableField{
+			"parameter": {Operators: []params.FilterOperator{params.Equals, params.ApproximatelyEquals}},
 		}}
 	)
 
@@ -63,12 +63,12 @@ func TestParseAndValidate_Parsing(t *testing.T) {
 	cases := []struct {
 		name             string
 		value            string
-		expectedOperator filters.FilterOperator
+		expectedOperator params.FilterOperator
 		expectedValue    string
 	}{
-		{name: "parses a parameter filter", value: "eq:auth.value", expectedOperator: filters.Equals, expectedValue: "auth.value"},
-		{name: "parses a parameter with ~", value: "~eq:auth.value", expectedOperator: filters.ApproximatelyEquals, expectedValue: "auth.value"},
-		{name: "parses a parameter filter with spacing", value: "eq:hello world", expectedOperator: filters.Equals, expectedValue: "hello world"},
+		{name: "parses a parameter filter", value: "eq:auth.value", expectedOperator: params.Equals, expectedValue: "auth.value"},
+		{name: "parses a parameter with ~", value: "~eq:auth.value", expectedOperator: params.ApproximatelyEquals, expectedValue: "auth.value"},
+		{name: "parses a parameter filter with spacing", value: "eq:hello world", expectedOperator: params.Equals, expectedValue: "hello world"},
 	}
 
 	for _, testCase := range cases {
@@ -100,44 +100,44 @@ func TestParseAndValidate_Parsing(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, parsed["parameter"], 2)
 		require.Equal(t, "first", parsed["parameter"][0].Value)
-		require.Equal(t, filters.ApproximatelyEquals, parsed["parameter"][1].Operator)
+		require.Equal(t, params.ApproximatelyEquals, parsed["parameter"][1].Operator)
 		require.Equal(t, "second", parsed["parameter"][1].Value)
 	})
 }
 
-func TestParseAndValidate_Enrichment(t *testing.T) {
-	parser := filters.NewQueryParameterFilterParser()
+func TestFilterParseAndValidate_Enrichment(t *testing.T) {
+	parser := params.NewQueryParameterFilterParser()
 
 	t.Run("enriches IsStringData and defaults an empty SetOperator to FilterAnd", func(t *testing.T) {
-		filterable := fakeFilterable{fields: map[string]filters.FilterableField{
-			"name": {Operators: []filters.FilterOperator{filters.Equals}, IsStringData: true},
+		filterable := fakeFilterable{fields: map[string]params.FilterableField{
+			"name": {Operators: []params.FilterOperator{params.Equals}, IsStringData: true},
 		}}
 
 		parsed, err := parser.ParseAndValidate(url.Values{"name": {"eq:value"}}, filterable)
 		require.NoError(t, err)
 		require.Len(t, parsed["name"], 1)
 		require.True(t, parsed["name"][0].IsStringData)
-		require.Equal(t, filters.FilterAnd, parsed["name"][0].SetOperator)
+		require.Equal(t, params.FilterAnd, parsed["name"][0].SetOperator)
 	})
 
 	t.Run("carries a declared FilterOr SetOperator through to every filter", func(t *testing.T) {
-		filterable := fakeFilterable{fields: map[string]filters.FilterableField{
-			"name": {Operators: []filters.FilterOperator{filters.Equals}, SetOperator: filters.FilterOr},
+		filterable := fakeFilterable{fields: map[string]params.FilterableField{
+			"name": {Operators: []params.FilterOperator{params.Equals}, SetOperator: params.FilterOr},
 		}}
 
 		parsed, err := parser.ParseAndValidate(url.Values{"name": {"eq:a", "eq:b"}}, filterable)
 		require.NoError(t, err)
 		require.Len(t, parsed["name"], 2)
-		require.Equal(t, filters.FilterOr, parsed["name"][0].SetOperator)
-		require.Equal(t, filters.FilterOr, parsed["name"][1].SetOperator)
+		require.Equal(t, params.FilterOr, parsed["name"][0].SetOperator)
+		require.Equal(t, params.FilterOr, parsed["name"][1].SetOperator)
 	})
 }
 
-func TestParseAndValidate_IgnoredParameters(t *testing.T) {
+func TestFilterParseAndValidate_IgnoredParameters(t *testing.T) {
 	var (
-		parser     = filters.NewQueryParameterFilterParser("skip", "limit")
-		filterable = fakeFilterable{fields: map[string]filters.FilterableField{
-			"name": {Operators: []filters.FilterOperator{filters.Equals}},
+		parser     = params.NewQueryParameterFilterParser("skip", "limit")
+		filterable = fakeFilterable{fields: map[string]params.FilterableField{
+			"name": {Operators: []params.FilterOperator{params.Equals}},
 		}}
 	)
 
@@ -154,36 +154,36 @@ func TestParseAndValidate_IgnoredParameters(t *testing.T) {
 	require.NotContains(t, parsed, "limit")
 }
 
-func TestParseAndValidate_Errors(t *testing.T) {
+func TestFilterParseAndValidate_Errors(t *testing.T) {
 	var (
-		parser     = filters.NewQueryParameterFilterParser()
-		filterable = fakeFilterable{fields: map[string]filters.FilterableField{
-			"name": {Operators: []filters.FilterOperator{filters.Equals}},
+		parser     = params.NewQueryParameterFilterParser()
+		filterable = fakeFilterable{fields: map[string]params.FilterableField{
+			"name": {Operators: []params.FilterOperator{params.Equals}},
 		}}
 	)
 
 	t.Run("ErrFieldNotFilterable for an unknown field", func(t *testing.T) {
 		_, err := parser.ParseAndValidate(url.Values{"unknown": {"eq:value"}}, filterable)
-		require.ErrorIs(t, err, filters.ErrFieldNotFilterable)
+		require.ErrorIs(t, err, params.ErrFieldNotFilterable)
 
-		var validationError *filters.ValidationError
+		var validationError *params.FilterValidationError
 		require.ErrorAs(t, err, &validationError)
 		require.Equal(t, "unknown", validationError.Field)
 	})
 
 	t.Run("ErrOperatorNotSupported for an unsupported operator", func(t *testing.T) {
 		_, err := parser.ParseAndValidate(url.Values{"name": {"gt:value"}}, filterable)
-		require.ErrorIs(t, err, filters.ErrOperatorNotSupported)
+		require.ErrorIs(t, err, params.ErrOperatorNotSupported)
 
-		var validationError *filters.ValidationError
+		var validationError *params.FilterValidationError
 		require.ErrorAs(t, err, &validationError)
 		require.Equal(t, "name", validationError.Field)
-		require.Equal(t, filters.GreaterThan, validationError.Operator)
+		require.Equal(t, params.GreaterThan, validationError.Operator)
 	})
 
 	t.Run("ErrMalformedFilter for an unknown predicate, preserving the raw predicate", func(t *testing.T) {
 		_, err := parser.ParseAndValidate(url.Values{"name": {"bogus:value"}}, filterable)
-		require.ErrorIs(t, err, filters.ErrMalformedFilter)
+		require.ErrorIs(t, err, params.ErrMalformedFilter)
 		require.Contains(t, err.Error(), "bogus")
 	})
 }

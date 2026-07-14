@@ -17,8 +17,10 @@
 package services
 
 import (
+	"cmp"
 	"context"
 	"errors"
+	"fmt"
 	"slices"
 
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -33,6 +35,7 @@ type Node struct {
 	ID         int64
 	Kinds      []Kind
 	Properties map[string]any
+	KindInfos  []KindInfo
 }
 
 // KindNames returns the list of kinds in string form
@@ -70,7 +73,7 @@ var ErrNodeNotFound = errors.New("node not found")
 // kinds resolved to the integer identifiers from the schema_node_kinds table.
 // ErrNodeNotFound is returned when the node does not exist. Kinds that are not
 // registered in schema_node_kinds are returned with ID=nil (best-effort resolution).
-func (s *Service) GetNode(ctx context.Context, id int64) (Node, error) {
+func (s *Service) GetNode(ctx context.Context, id int64, includeKindInfo bool) (Node, error) {
 	var (
 		node      Node
 		kindNames []string
@@ -90,6 +93,43 @@ func (s *Service) GetNode(ctx context.Context, id int64) (Node, error) {
 		return Node{}, err
 	} else {
 		node.Kinds = kinds
-		return node, nil
 	}
+
+	// grab all the associated kind info objects for every kind.
+	if includeKindInfo {
+		var allKindInfos []KindInfo
+
+		for _, nodeKind := range node.Kinds {
+			if nodeKind.ID == nil { // only nodes registered in the schema_node_kind table will have IDs
+				continue
+			}
+
+			kindInfos, err := s.db.GetKindInfos(ctx, nodeKind.Name)
+			if err != nil {
+				return Node{}, fmt.Errorf("failed to get kind info for %s", nodeKind.Name)
+			}
+
+			for _, kindInfo := range kindInfos {
+				if kindInfo.NodeKindID == nil { // defensive guard to make the dereference in the sort below safe from a nil-panic.
+					continue
+				}
+
+				allKindInfos = append(allKindInfos, kindInfo)
+			}
+		}
+
+		slices.SortFunc(allKindInfos, func(left, right KindInfo) int {
+			if result := cmp.Compare(left.Position, right.Position); result != 0 {
+				return result
+			} else if result := cmp.Compare(left.Title, right.Title); result != 0 {
+				return result
+			} else {
+				return cmp.Compare(*left.NodeKindID, *right.NodeKindID)
+			}
+		})
+
+		node.KindInfos = allKindInfos
+	}
+
+	return node, nil
 }

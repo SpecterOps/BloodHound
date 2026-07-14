@@ -619,6 +619,8 @@ paths:
     $ref: './paths/data-quality.azure-tenants.id.data-quality-stats.yaml'
   /api/v2/platform/{platform_id}/data-quality-stats:
     $ref: './paths/data-quality.platform.id.data-quality-stats.yaml'
+  /api/v2/data-quality-stats:
+    $ref: './paths/data-quality.data-quality-stats.yaml'
   /api/v2/clear-database:
     $ref: './paths/data-quality.clear-database.yaml'
 
@@ -737,8 +739,8 @@ paths:
     $ref: './paths/attack-paths.attack-paths.yaml'
   /api/v2/attack-paths/details:
     $ref: './paths/attack-paths.attack-paths-details.yaml'
-  # /api/v2/attack-paths/findings:
-  #   $ref: './paths/attack-paths.attack-paths-findings.yaml'
+  /api/v2/attack-paths/findings:
+    $ref: './paths/attack-paths.attack-paths-findings.yaml'
   /api/v2/domains/{domain_id}/available-types:
     $ref: './paths/attack-paths.domains.id.available-types.yaml'
   /api/v2/domains/{domain_id}/details:

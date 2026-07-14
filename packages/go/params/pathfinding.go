@@ -18,14 +18,13 @@ package params
 
 import (
 	"fmt"
-	"net/http"
 	"regexp"
-
-	"github.com/gorilla/mux"
 )
 
 // Query parameters
 var (
+	containsPredicate = regexp.MustCompile(`^(in|nin):(\w+)(,\s*\w+)*$`)
+
 	StartNode         = newParam("start_node", nil)
 	EndNode           = newParam("end_node", nil)
 	RelationshipKinds = newParam("relationship_kinds", containsPredicate)
@@ -58,8 +57,4 @@ func newParam(name string, regexp *regexp.Regexp) param {
 		name:  name,
 		regex: regexp,
 	}
-}
-
-func GetPathVariables(request *http.Request) map[string]string {
-	return mux.Vars(request)
 }

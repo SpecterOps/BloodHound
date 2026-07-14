@@ -20,7 +20,7 @@ import { Button } from 'doodle-ui';
 import { FC, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
-import { useApiVersion, useKeybindings, useLocalStorage } from '../../hooks';
+import { useApiVersion, useKeybindings, useNavExpanded } from '../../hooks';
 import { privilegeZonesPath } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
@@ -28,8 +28,6 @@ import { ConditionalTooltip } from '../ConditionalTooltip';
 import { AppLink } from './AppLink';
 import SubNav from './SubNav';
 import type { MainNavData, MainNavDataListItem, MainNavLogoDataObject, NavActionItem, NavLinkItem } from './types';
-
-const isExpandedStorageKey = 'isNavExpanded';
 
 export const MainNavLogo: FC<{ data: MainNavLogoDataObject }> = ({ data }) => {
     return (
@@ -160,7 +158,7 @@ const MainNavFooter: FC<{
 };
 
 const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
-    const [isExpanded, setIsExpanded] = useLocalStorage<boolean>(isExpandedStorageKey, true);
+    const [isExpanded, setIsExpanded] = useNavExpanded();
     const navigate = useAppNavigate();
 
     const keybindings = useMemo(
