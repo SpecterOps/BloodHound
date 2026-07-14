@@ -34,10 +34,10 @@ export const useBloodHoundUsers = () => {
     });
 };
 
-export const useGetUser = (userId: string) => {
+export const useGetUser = (userId?: string) => {
     return useQuery(
         ['getUser', userId],
-        ({ signal }) => apiClient.getUser(userId, { signal }).then((res) => res.data.data),
-        { cacheTime: 0 }
+        ({ signal }) => apiClient.getUser(userId!, { signal }).then((res) => res.data.data),
+        { cacheTime: 0, enabled: !!userId }
     );
 };
