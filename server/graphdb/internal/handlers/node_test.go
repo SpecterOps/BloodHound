@@ -74,7 +74,7 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 		name       string
 		rawID      string
 		rawQuery   string
-		setupMock  func(graphDBMock *mocks.MockGraphDB)
+		setupMock  func(graphDBMock *mocks.MockGraphDB, authorizerMock *mocks.MockNodeAuthorizer)
 		wantStatus int
 		assertBody func(t *testing.T, body []byte)
 	}{
@@ -82,8 +82,9 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 			name:     "returns 200 with the node view and info when include-info is true",
 			rawID:    "9876543210",
 			rawQuery: "include-info=true",
-			setupMock: func(graphDBMock *mocks.MockGraphDB) {
+			setupMock: func(graphDBMock *mocks.MockGraphDB, authorizerMock *mocks.MockNodeAuthorizer) {
 				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, true).Return(node, nil)
+				authorizerMock.EXPECT().CanAccessNode(mock.Anything, node).Return(true)
 			},
 			wantStatus: http.StatusOK,
 			assertBody: func(t *testing.T, body []byte) {
@@ -108,8 +109,9 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 		{
 			name:  "returns 200 without info when include-info is omitted",
 			rawID: "9876543210",
-			setupMock: func(graphDBMock *mocks.MockGraphDB) {
+			setupMock: func(graphDBMock *mocks.MockGraphDB, authorizerMock *mocks.MockNodeAuthorizer) {
 				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, false).Return(node, nil)
+				authorizerMock.EXPECT().CanAccessNode(mock.Anything, node).Return(true)
 			},
 			wantStatus: http.StatusOK,
 			assertBody: func(t *testing.T, body []byte) {
@@ -135,7 +137,7 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 		{
 			name:  "returns 404 when the node is not found",
 			rawID: "9876543210",
-			setupMock: func(graphDBMock *mocks.MockGraphDB) {
+			setupMock: func(graphDBMock *mocks.MockGraphDB, authorizerMock *mocks.MockNodeAuthorizer) {
 				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, false).Return(services.Node{}, services.ErrNodeNotFound)
 			},
 			wantStatus: http.StatusNotFound,
@@ -143,24 +145,34 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 		{
 			name:  "returns 404 when the kind is not found",
 			rawID: "9876543210",
-			setupMock: func(graphDBMock *mocks.MockGraphDB) {
+			setupMock: func(graphDBMock *mocks.MockGraphDB, authorizerMock *mocks.MockNodeAuthorizer) {
 				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, false).Return(services.Node{}, services.ErrKindNotFound)
 			},
 			wantStatus: http.StatusNotFound,
+		},
+		{
+			name:  "returns 403 when the user cannot access the node",
+			rawID: "9876543210",
+			setupMock: func(graphDBMock *mocks.MockGraphDB, authorizerMock *mocks.MockNodeAuthorizer) {
+				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, false).Return(node, nil)
+				authorizerMock.EXPECT().CanAccessNode(mock.Anything, node).Return(false)
+			},
+			wantStatus: http.StatusForbidden,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var (
-				graphDBMock = mocks.NewMockGraphDB(t)
-				handlerSet  = handlers.NewHandlersContainer(graphDBMock)
-				recorder    = httptest.NewRecorder()
-				request     = newNodeRequestWithID(t, tt.rawID, tt.rawQuery)
+				graphDBMock    = mocks.NewMockGraphDB(t)
+				authorizerMock = mocks.NewMockNodeAuthorizer(t)
+				handlerSet     = handlers.NewHandlersContainer(graphDBMock, authorizerMock)
+				recorder       = httptest.NewRecorder()
+				request        = newNodeRequestWithID(t, tt.rawID, tt.rawQuery)
 			)
 
 			if tt.setupMock != nil {
-				tt.setupMock(graphDBMock)
+				tt.setupMock(graphDBMock, authorizerMock)
 			}
 
 			handlerSet.GetNodeByID(recorder, request)
