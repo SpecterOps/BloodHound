@@ -38,7 +38,7 @@ const useStyles = makeStyles((theme) => ({
 
 // getLatestMetricStats keeps only the latest stat per metric_kind_id (by created_at) and
 // splits the result into node stats and the latest relationship stat.
-const getLatestMetricStats = (data: any[]) => {
+export const getLatestMetricStats = (data: any[]) => {
     const latestStatsByMetricKind = new Map<number, any>();
     for (const stat of data) {
         const existing = latestStatsByMetricKind.get(stat.metric_kind_id);
