@@ -579,7 +579,36 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			},
 		},
 		{
-			name: "success_-_deleted_display_node_kind_removes_custom_node_kind",
+			name: "success_-_non_display_node_kind_flipped_to_display_creates_custom_node_kind",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				extensionInput := model.ExtensionInput{Name: "FlipToDisplayExt", DisplayName: "Flip Non-Display Node Kind to Display NK", Version: "1.0.0", Namespace: "FLIP_TO_DISP"}
+				_, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, model.GraphExtensionInput{
+					ExtensionInput: extensionInput,
+					NodeKindsInput: model.NodesInput{{Name: "StartedAsNonDispNodeKind", DisplayName: "Node Kind", Description: "test", IsDisplayKind: false}},
+				})
+				require.NoError(t, err)
+				// The custom node kind should not exist before the flip.
+				assertCustomNodeKindAbsent(t, testSuite, "StartedAsNonDispNodeKind")
+
+				// Re-upload the extension with the kind flipped to a display kind.
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput: extensionInput,
+						NodeKindsInput: model.NodesInput{{Name: "StartedAsNonDispNodeKind", DisplayName: "Node Kind", Description: "test", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"}},
+					},
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.True(t, updated)
+				assertGraphExtension(t, testSuite, setupData.input)
+				assertCustomNodeKindPresent(t, testSuite, "StartedAsNonDispNodeKind")
+			},
+		},
+		{
+			name: "success_-_deleted_schema_node_kind_nulls_schema_node_kind_id_on_custom_node_kind",
 			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
 				t.Helper()
 				extensionInput := model.ExtensionInput{Name: "DropKindExt", DisplayName: "Drop Kind", Version: "1.0.0", Namespace: "DROP_KIND"}
@@ -607,7 +636,11 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				require.NoError(t, err)
 				assert.True(t, updated)
 				assertGraphExtension(t, testSuite, setupData.input)
-				assertCustomNodeKindAbsent(t, testSuite, "NodeKindToRemove")
+				// verify the schema_node_kind_id FK is nulled
+				assertCustomNodeKindPresent(t, testSuite, "NodeKindToRemove")
+				kind, err := testSuite.BHDatabase.GetCustomNodeKind(testSuite.Context, "NodeKindToRemove")
+				require.NoError(t, err)
+				assert.Nil(t, kind.SchemaNodeKindId)
 			},
 		},
 	}
