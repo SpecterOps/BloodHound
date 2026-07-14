@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { renderHook } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
@@ -63,7 +64,11 @@ describe('Rule Object Select', () => {
 
     beforeEach(async () => {
         await act(async () => {
-            const { control } = useForm<RuleFormInputs>();
+            const {
+                result: {
+                    current: { control },
+                },
+            } = renderHook(() => useForm<RuleFormInputs>());
 
             render(
                 <RuleFormContext.Provider
