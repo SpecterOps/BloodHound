@@ -23672,6 +23672,78 @@
           }
         ]
       },
+      "model.client-management-operation": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.uuid"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "client_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "artifact_id": {
+                "$ref": "#/components/schemas/null.uuid"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "support_bundle"
+                ]
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "queued",
+                  "running",
+                  "succeeded",
+                  "failed",
+                  "canceled"
+                ]
+              },
+              "requested_by": {
+                "$ref": "#/components/schemas/null.uuid"
+              },
+              "started_at": {
+                "$ref": "#/components/schemas/null.time"
+              },
+              "completed_at": {
+                "$ref": "#/components/schemas/null.time"
+              },
+              "execution_time": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "model.client-support-bundle-summary": {
+        "type": "object",
+        "properties": {
+          "current": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/model.client-management-operation"
+              }
+            ]
+          },
+          "last_finished": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/model.client-management-operation"
+              }
+            ]
+          }
+        }
+      },
       "model.client-display": {
         "allOf": [
           {
@@ -23737,6 +23809,9 @@
               },
               "type": {
                 "$ref": "#/components/schemas/enum.client-type"
+              },
+              "support_bundle_summary": {
+                "$ref": "#/components/schemas/model.client-support-bundle-summary"
               }
             }
           }
