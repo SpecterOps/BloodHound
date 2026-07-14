@@ -1007,6 +1007,28 @@ func TestKindInfo_Validation(t *testing.T) {
 			wantErr: ErrInvalidKindInfoKey,
 		},
 		{
+			name: "error_-_empty_title",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "overview", Title: "", Position: 1, Content: validContent}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoTitle,
+		},
+		{
+			name: "error_-_whitespace_title",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "overview", Title: "   ", Position: 1, Content: validContent}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoTitle,
+		},
+		{
 			name: "error_-_too_many_entries",
 			input: GraphExtensionInput{
 				ExtensionInput: baseExtensionInput(),
