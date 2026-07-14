@@ -879,8 +879,8 @@ func Test_validateGraphExtension(t *testing.T) {
 							DisplayName:   "AD_node_kind_1",
 							Icon:          "person",
 							Info: KindInfoInputs{
-								{InfoKey: "overview", Title: "Overview", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"# Overview\n\nThis is **bold**."}}`)},
-								{InfoKey: "security-notes", Title: "Security Notes", Position: 2, Content: json.RawMessage(`{"markdown":{"content":"- Note 1\n- Note 2"}}`)},
+								{InfoKey: "overview", Title: "Overview", Position: 0, Content: json.RawMessage(`{"markdown":{"content":"# Overview\n\nThis is **bold**."}}`)},
+								{InfoKey: "security-notes", Title: "Security Notes", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"- Note 1\n- Note 2"}}`)},
 							},
 						},
 						{
@@ -944,8 +944,8 @@ func TestKindInfo_Validation(t *testing.T) {
 				NodeKindsInput: NodesInput{{
 					Name: "AD_Node",
 					Info: KindInfoInputs{
-						{InfoKey: "overview", Title: "Overview", Position: 1, Content: validContent},
-						{InfoKey: "details", Title: "Details", Position: 2, Content: validContent},
+						{InfoKey: "overview", Title: "Overview", Position: 0, Content: validContent},
+						{InfoKey: "details", Title: "Details", Position: 1, Content: validContent},
 					},
 				}},
 			},
@@ -1156,8 +1156,8 @@ func TestKindInfo_Validation(t *testing.T) {
 				NodeKindsInput: NodesInput{{
 					Name: "AD_Node",
 					Info: KindInfoInputs{
-						{InfoKey: "overview", Title: "Overview", Position: 1, Content: validContent},
-						{InfoKey: "overview", Title: "Details", Position: 2, Content: validContent},
+						{InfoKey: "overview", Title: "Overview", Position: 0, Content: validContent},
+						{InfoKey: "overview", Title: "Details", Position: 1, Content: validContent},
 					},
 				}},
 			},
@@ -1170,8 +1170,8 @@ func TestKindInfo_Validation(t *testing.T) {
 				NodeKindsInput: NodesInput{{
 					Name: "AD_Node",
 					Info: KindInfoInputs{
-						{InfoKey: "overview", Title: "Overview", Position: 1, Content: validContent},
-						{InfoKey: "details", Title: "Details", Position: 1, Content: validContent},
+						{InfoKey: "overview", Title: "Overview", Position: 0, Content: validContent},
+						{InfoKey: "details", Title: "Details", Position: 0, Content: validContent},
 					},
 				}},
 			},

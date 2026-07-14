@@ -204,12 +204,12 @@ func Test_parseInfoPayload(t *testing.T) {
 			input: map[string]KindInfoPayload{
 				"overview": {
 					Title:    "Overview",
-					Position: 1,
+					Position: 0,
 					Markdown: []byte(`{"content":"# Overview"}`),
 				},
 				"details": {
 					Title:    "Details",
-					Position: 2,
+					Position: 1,
 					Markdown: []byte(`{"content":"## Details"}`),
 				},
 			},
@@ -293,6 +293,36 @@ func Test_parseInfoPayload(t *testing.T) {
 				},
 			},
 			wantErr: true,
+		},
+		{
+			name: "error_-_position_below_int32",
+			input: map[string]KindInfoPayload{
+				"underflow": {
+					Title:    "Underflow",
+					Position: math.MinInt32 - 1, // would silently wrap when cast to int32
+					Markdown: []byte(`{"content":"# Test"}`),
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "zero_position",
+			input: map[string]KindInfoPayload{
+				"zero": {
+					Title:    "Zero",
+					Position: 0, // within int32 range; passes the overflow guard
+					Markdown: []byte(`{"content":"# Test"}`),
+				},
+			},
+			want: model.KindInfoInputs{
+				{
+					InfoKey:  "zero",
+					Title:    "Zero",
+					Position: 0,
+					Content:  []byte(`{"markdown":{"content":"# Test"}}`),
+				},
+			},
+			wantErr: false,
 		},
 	}
 
