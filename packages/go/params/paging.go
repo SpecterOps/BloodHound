@@ -39,11 +39,10 @@ const (
 )
 
 // Paging validation sentinels. Callers classify failures with errors.Is and may extract the offending
-// parameter and raw value via a *PagingValidationError using errors.As. These are intentionally free of
+// parameter and raw value via a *PagingValidationError using errors.AsType. These are intentionally free of
 // any transport- or presentation-specific wording.
 var (
-	ErrInvalidSkip  = errors.New("skip must be a non-negative integer")
-	ErrInvalidLimit = errors.New("limit must be a non-negative integer")
+	ErrInvalidInteger = errors.New("must be a non-negative integer")
 )
 
 // PagingConfig declares how a resource owner wants paging parameters parsed and validated. Zero-valued
@@ -67,7 +66,7 @@ type PagingValidationError struct {
 }
 
 func (s *PagingValidationError) Error() string {
-	return fmt.Sprintf("%s: %q", s.Err, s.Value)
+	return fmt.Sprintf("%s: %s %q", s.Err, s.Parameter, s.Value)
 }
 
 func (s *PagingValidationError) Unwrap() error {
@@ -121,7 +120,7 @@ func (s PagingParser) ParseAndValidate(values url.Values) (Paging, error) {
 
 	if rawSkip := values.Get(skipKey); rawSkip != "" {
 		if skip, err := strconv.Atoi(rawSkip); err != nil || skip < 0 {
-			return Paging{}, &PagingValidationError{Err: ErrInvalidSkip, Parameter: skipKey, Value: rawSkip}
+			return Paging{}, &PagingValidationError{Err: ErrInvalidInteger, Parameter: skipKey, Value: rawSkip}
 		} else {
 			paging.Skip = skip
 		}
@@ -129,11 +128,11 @@ func (s PagingParser) ParseAndValidate(values url.Values) (Paging, error) {
 
 	if rawLimit := values.Get(pagingParameterLimit); rawLimit != "" {
 		if limit, err := strconv.Atoi(rawLimit); err != nil {
-			return Paging{}, &PagingValidationError{Err: ErrInvalidLimit, Parameter: pagingParameterLimit, Value: rawLimit}
+			return Paging{}, &PagingValidationError{Err: ErrInvalidInteger, Parameter: pagingParameterLimit, Value: rawLimit}
 		} else if limit == UnlimitedResults && s.config.AllowUnlimited {
 			paging.Limit = limit
 		} else if limit < 0 {
-			return Paging{}, &PagingValidationError{Err: ErrInvalidLimit, Parameter: pagingParameterLimit, Value: rawLimit}
+			return Paging{}, &PagingValidationError{Err: ErrInvalidInteger, Parameter: pagingParameterLimit, Value: rawLimit}
 		} else {
 			paging.Limit = limit
 		}

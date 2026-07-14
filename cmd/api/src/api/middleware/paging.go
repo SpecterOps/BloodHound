@@ -17,7 +17,7 @@
 package middleware
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -37,7 +37,7 @@ func PagingMiddleware(config params.PagingConfig) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			if paging, err := parser.ParseAndValidate(request.URL.Query()); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.FmtErrorResponseDetailsBadQueryParameters, err), request), response)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, pagingErrorMessage(err), request), response)
 				return
 			} else {
 				bhCtx := bhctx.Get(request.Context())
@@ -47,5 +47,20 @@ func PagingMiddleware(config params.PagingConfig) mux.MiddlewareFunc {
 
 			next.ServeHTTP(response, request)
 		})
+	}
+}
+
+// pagingErrorMessage maps a paging validation failure to the appropriate API error response detail,
+// preserving the offending field and operator in the message where available.
+func pagingErrorMessage(err error) string {
+	if validationErr, ok := errors.AsType[*params.PagingValidationError](err); !ok {
+		return api.ErrorResponseDetailsBadQueryParameterFilters
+	} else {
+		switch {
+		case errors.Is(validationErr, params.ErrInvalidInteger):
+			return validationErr.Error()
+		default:
+			return api.ErrorResponseDetailsBadQueryParameterFilters
+		}
 	}
 }
