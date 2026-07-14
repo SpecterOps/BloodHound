@@ -65,9 +65,7 @@ describe('Rule Object Select', () => {
     beforeEach(async () => {
         await act(async () => {
             const {
-                result: {
-                    current: { control },
-                },
+                result: { current },
             } = renderHook(() => useForm<RuleFormInputs>());
 
             render(
@@ -83,7 +81,7 @@ describe('Rule Object Select', () => {
                         ],
                         dispatch,
                     }}>
-                    <ObjectSelect control={control} />
+                    <ObjectSelect control={current?.control} />
                 </RuleFormContext.Provider>
             );
         });
