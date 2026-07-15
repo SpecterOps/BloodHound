@@ -28,14 +28,14 @@ const SelectGroup = SelectPrimitive.Group;
 const SelectValue = SelectPrimitive.Value;
 
 export const SelectTriggerVariants = cva(
-    'flex h-10 w-full items-center justify-between bg-neutral-2 rounded-lg p-2 ring-offset-background placeholder:text-neutral-5 focus:outline-none focus:ring-2 focus:ring-secondary focus:dark:ring-secondary-variant-2  focus:rounded-lg disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 [&[data-state=open]>svg]:rotate-180',
+    'flex h-10 w-full items-center justify-between bg-select-trigger-fill rounded-lg p-2 placeholder:text-select-trigger-placeholder-text focus:outline-none focus-visible:focus-ring data-[state=open]:focus-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 [&[data-state=open]>svg]:rotate-180',
     {
         variants: {
             variant: {
                 outlined:
-                    'rounded-md ring-1 ring-neutral-dark-5 dark:ring-neutral-light-5 px-3 py-2 text-sm ring-offset-secondary dark:ring-offset-secondary-variant-2 focus-visible:border-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary dark:focus-visible:ring-secondary-variant-2 focus-visible:ring-offset-2 hover:ring-2 bg-neutral-1',
+                    'rounded-md ring-1 ring-select-border-default px-3 py-2 text-sm hover:ring-2 bg-select-trigger-outlined-fill',
                 underlined:
-                    'rounded-none ring-none bg-transparent border-b-neutral-dark-5 dark:border-b-neutral-light-5 border-b focus-visible:outline-none focus:border-t-0 focus:border-x-0 focus-visible:ring-offset-0 focus-visible:ring-transparent focus-visible:border-secondary focus-visible:border-b-2 focus:border-secondary focus:border-b-2 dark:focus-visible:outline-none dark:focus:border-t-0 dark:focus:border-x-0 dark:focus-visible:ring-offset-0 dark:focus-visible:ring-transparent dark:focus-visible:border-secondary-variant-2 dark:focus-visible:border-b-2 dark:focus:border-secondary-variant-2 dark:focus:border-b-2 hover:border-b-2',
+                    'rounded-sm ring-none bg-transparent border-b-select-border-default border-b hover:border-b-2 focus-visible:border-select-border-focus focus-visible:border-b-2',
             },
         },
         defaultVariants: {
@@ -90,7 +90,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
         ref={ref}
         className={cn(
-            'relative z-[1500] max-h-96 overflow-hidden border rounded dark:border-neutral-light-5 bg-neutral-light-1 dark:bg-neutral-dark-2 text-black dark:text-white dark:shadow-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
+            'relative z-[1500] max-h-96 overflow-hidden border border-select-content-border rounded bg-select-content-fill text-main dark:shadow-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
             position === 'popper' &&
                 'data-[side=bottom]:-translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
             className
@@ -125,7 +125,7 @@ const SelectItem = React.forwardRef<
     <SelectPrimitive.Item
         ref={ref}
         className={cn(
-            'relative flex w-full cursor-default select-none items-center p-2 outline-none focus:bg-neutral-light-3 dark:focus:bg-neutral-dark-5 focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[state=checked]:text-primary dark:data-[state=checked]:text-secondary-variant-2 data-[state=checked]:font-bold',
+            'relative flex w-full cursor-default select-none items-center p-2 outline-none data-[highlighted]:bg-secondary data-[highlighted]:text-common-white data-[highlighted]:shadow-[inset_3px_0_0_var(--focus-ring)] dark:data-[highlighted]:text-common-dark data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[state=checked]:text-select-item-checked-text data-[highlighted]:data-[state=checked]:text-common-white dark:data-[highlighted]:data-[state=checked]:text-common-dark data-[state=checked]:font-bold',
             className
         )}
         {...props}>
@@ -138,7 +138,11 @@ const SelectSeparator = React.forwardRef<
     React.ElementRef<typeof SelectPrimitive.Separator>,
     React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>
 >(({ className, ...props }, ref) => (
-    <SelectPrimitive.Separator ref={ref} className={cn('-mx-1 my-1 h-px bg-neutral-light-3', className)} {...props} />
+    <SelectPrimitive.Separator
+        ref={ref}
+        className={cn('-mx-1 my-1 h-px bg-select-separator-fill', className)}
+        {...props}
+    />
 ));
 SelectSeparator.displayName = SelectPrimitive.Separator.displayName;
 
