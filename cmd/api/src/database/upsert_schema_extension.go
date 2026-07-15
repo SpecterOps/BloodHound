@@ -143,6 +143,17 @@ func (s *BloodhoundDB) nodeKindReconcileConfig(extensionId int32) reconcileConfi
 			return s.UpdateGraphSchemaNodeKind(ctx, existing)
 		},
 		delete: func(ctx context.Context, existing model.GraphSchemaNodeKind) error {
+			if !existing.IsDisplayKind {
+				// Before deleting the schema_node_kind, create a stub in custom_node_kinds for non-display node kinds. Non-display kinds are
+				// not tracked in custom_node_kinds while the schema is active. It is possible that a schemaless node kind of the same name
+				// existed before this extension upserted it to a non-display node kind, which removes it from the custom node table.
+				// Because of this edge case, inserting a stub here for the non-display node kind ensures that node kind will
+				// remain tracked even after the schema_node_kind is gone, in the event any nodes of those kinds remain in the graph.
+				// Ignore ErrDuplicateCustomNodeKindName. This indicates the kind is already tracked, nothing to do.
+				if _, err := s.CreateCustomNodeKinds(ctx, model.CustomNodeKinds{{KindName: existing.Name, Config: CustomNodeKindStubConfig}}); err != nil && !errors.Is(err, ErrDuplicateCustomNodeKindName) {
+					return fmt.Errorf("failed to ensure stub for non-display schema node kind %q: %w", existing.Name, err)
+				}
+			}
 			// Deleting from schema_node_kinds automatically nulls the schema_node_kind_id FK
 			// in custom_node_kinds via ON DELETE SET NULL.
 			return s.DeleteGraphSchemaNodeKind(ctx, existing.ID)

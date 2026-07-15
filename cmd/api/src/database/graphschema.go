@@ -244,6 +244,8 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 	)
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
+
 		// Retrieve the extension to check if it exists and if it's built-in
 		if result := tx.Raw(fmt.Sprintf(`SELECT is_builtin FROM %s WHERE id = ?`, schemaExtension.TableName()), extensionId).Scan(&isBuiltin); result.Error != nil {
 			return CheckError(result)
@@ -254,6 +256,25 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 		// Prevent deletion of built-in extensions
 		if isBuiltin {
 			return model.ErrGraphExtensionBuiltIn
+		}
+
+		// Before deleting the extension (which cascades to schema_node_kinds), create stubs in custom_node_kinds for all non-display
+		// node kinds. Non-display kinds are not tracked in custom_node_kinds while the schema is active. It is possible that a schemaless
+		// node kind of the same name existed before this extension upserted it to a non-display node kind, which removes it from the custom
+		// node table. Because of this edge case, inserting stubs here for the non-display node kinds ensures that those node kinds will
+		// remain tracked even after the schema is gone, in the event any nodes of those kinds remain in the graph.
+		nodeKinds, err := bhdb.GetGraphSchemaNodeKindsByExtensionId(ctx, extensionId)
+		if err != nil {
+			return fmt.Errorf("failed to fetch node kinds for extension %d: %w", extensionId, err)
+		}
+
+		for _, nodeKind := range nodeKinds {
+			if !nodeKind.IsDisplayKind {
+				// Ignore ErrDuplicateCustomNodeKindName. This indicates the kind is already tracked, nothing to do.
+				if _, err := bhdb.CreateCustomNodeKinds(ctx, model.CustomNodeKinds{{KindName: nodeKind.Name, Config: CustomNodeKindStubConfig}}); err != nil && !errors.Is(err, ErrDuplicateCustomNodeKindName) {
+					return fmt.Errorf("failed to create stub for non-display node kind %q: %w", nodeKind.Name, err)
+				}
+			}
 		}
 
 		// Delete the extension
