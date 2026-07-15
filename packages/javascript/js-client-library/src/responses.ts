@@ -143,7 +143,7 @@ export type OpenGraphDataQualityStat = TimestampFields & {
     environmentid: string;
     extension_id: number;
     id: number;
-    metric_kind_id: number;
+    kind_id: number;
     metric_name: string;
     metric_type: string;
     metric_value: number;
