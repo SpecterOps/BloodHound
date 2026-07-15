@@ -31,10 +31,6 @@ import (
 // graph-assigned relationship id.
 const URIPathVariableRelationshipID = "relationship_id"
 
-// URIQueryParameterIncludeInfo is the name of the query parameter carrying the flag
-// for whether we should fetch the associated KindInfo for the relationship.
-const URIQueryParameterIncludeInfo = "include-info"
-
 // RelationshipKindView is the JSON shape of the kind embedded in a RelationshipView.
 // RelationshipKindID is null when the kind has no schema_relationship_kinds entry.
 type RelationshipKindView struct {
