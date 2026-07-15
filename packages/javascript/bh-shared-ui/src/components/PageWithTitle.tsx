@@ -16,16 +16,9 @@
 
 import { Box, Container, ContainerProps } from '@mui/material';
 import { Typography } from 'doodle-ui';
-import React, { createContext, useContext } from 'react';
+import React from 'react';
 import { Helmet } from 'react-helmet-async';
-
-const AppNameContext = createContext('BloodHound Enterprise');
-
-export const AppNameProvider: React.FC<{ name: string; children: React.ReactNode }> = ({ name, children }) => (
-    <AppNameContext.Provider value={name}>{children}</AppNameContext.Provider>
-);
-
-export const useAppName = () => useContext(AppNameContext);
+import { useAppName } from '../providers/AppNameProvider';
 
 type PageWithTitleProps = ContainerProps<
     'div',
