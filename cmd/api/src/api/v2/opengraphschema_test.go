@@ -50,21 +50,21 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 		mockOpenGraphService = schemamocks.NewMockOpenGraphSchemaService(mockCtrl)
 		userId, err          = uuid2.NewV4()
 
-		graphExtension = v2.GraphExtensionPayload{
-			GraphSchemaExtension: v2.GraphSchemaExtensionPayload{
+		graphExtension = model.GraphExtensionPayload{
+			GraphSchemaExtension: model.GraphSchemaExtensionPayload{
 				Name:        "Test_Extension",
 				DisplayName: "Test Extension",
 				Version:     "1.0.0",
 				Namespace:   "TEST",
 			},
-			GraphSchemaRelationshipKinds: []v2.GraphSchemaRelationshipKindsPayload{
+			GraphSchemaRelationshipKinds: []model.GraphSchemaRelationshipKindsPayload{
 				{
 					Name:          "TEST_GraphSchemaEdgeKind_1",
 					Description:   "GraphSchemaRelationshipKind 1",
 					IsTraversable: true,
 				},
 			},
-			GraphSchemaNodeKinds: []v2.GraphSchemaNodeKindsPayload{
+			GraphSchemaNodeKinds: []model.GraphSchemaNodeKindsPayload{
 				{
 					Name:          "TEST_GraphSchemaNodeKind_1",
 					DisplayName:   "GraphSchemaNodeKind 1",
@@ -74,20 +74,20 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					IconColor:     "blue",
 				},
 			},
-			GraphEnvironments: []v2.EnvironmentPayload{
+			GraphEnvironments: []model.EnvironmentPayload{
 				{
 					EnvironmentKind: "TEST_EnvironmentInput",
 					SourceKind:      "Source_Kind_1",
 					PrincipalKinds:  []string{"User"},
 				},
 			},
-			GraphRelationshipFindings: []v2.RelationshipFindingsPayload{
+			GraphRelationshipFindings: []model.RelationshipFindingsPayload{
 				{
 					Name:             "TEST_Finding_1",
 					DisplayName:      "Finding 1",
 					RelationshipKind: "TEST_GraphSchemaEdgeKind_1",
 					EnvironmentKind:  "TEST_EnvironmentInput",
-					Remediation: v2.RemediationPayload{
+					Remediation: model.RemediationPayload{
 						ShortDescription: "remediation for Finding_1",
 						LongDescription:  "a remediation for Finding 1",
 						ShortRemediation: "do x",
