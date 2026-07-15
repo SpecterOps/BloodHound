@@ -18,7 +18,7 @@ import { faStream, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Paper, Table, TableBody, TableContainer } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { Environment } from 'js-client-library';
+import { Environment, OpenGraphDataQualityStat } from 'js-client-library';
 import React, { useEffect } from 'react';
 import { NodeIcon } from '../../components';
 import { useOpenGraphDataQualityStatsQuery, useOpenGraphPlatformsDataQualityStatsQuery } from '../../hooks';
@@ -38,7 +38,7 @@ const useStyles = makeStyles((theme) => ({
 
 // getLatestMetricStats keeps only the latest stat per kind_id (by created_at) and
 // splits the result into node stats and the latest relationship stat.
-export const getLatestMetricStats = (data: any[]) => {
+export const getLatestMetricStats = (data: OpenGraphDataQualityStat[]) => {
     const latestStatsByMetricKind = new Map<number, any>();
     for (const stat of data) {
         const existing = latestStatsByMetricKind.get(stat.kind_id);
@@ -50,9 +50,9 @@ export const getLatestMetricStats = (data: any[]) => {
 
     const stats = Array.from(latestStatsByMetricKind.values());
     const nodeStats = stats.filter((stat) => stat.metric_type === 'node');
-    const relationshipStats = stats.find((stat) => stat.metric_type === 'relationship');
+    const relationshipStat = stats.find((stat) => stat.metric_type === 'relationship');
 
-    return { nodeStats, relationshipStats };
+    return { nodeStats, relationshipStat };
 };
 
 export const OpenGraphInfo: React.FC<{ contextId: string; onDataError?: () => void }> = ({
@@ -66,16 +66,16 @@ export const OpenGraphInfo: React.FC<{ contextId: string; onDataError?: () => vo
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout nodeStats={null} relationshipStats={null} isLoading={true} />;
+        return <Layout nodeStats={null} relationshipStat={null} isLoading={true} />;
     }
 
     if (isError || !openGraphData || !openGraphData.data.length) {
         return null;
     }
 
-    const { nodeStats, relationshipStats } = getLatestMetricStats(openGraphData.data);
+    const { nodeStats, relationshipStat } = getLatestMetricStats(openGraphData.data);
 
-    return <Layout nodeStats={nodeStats} relationshipStats={relationshipStats} isLoading={false} />;
+    return <Layout nodeStats={nodeStats} relationshipStat={relationshipStat} isLoading={false} />;
 };
 
 export const OpenGraphPlatformInfo: React.FC<{
@@ -89,16 +89,16 @@ export const OpenGraphPlatformInfo: React.FC<{
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout nodeStats={null} relationshipStats={null} isLoading={true} />;
+        return <Layout nodeStats={null} relationshipStat={null} isLoading={true} />;
     }
 
     if (isError || !platformData || !platformData.data.length) {
         return null;
     }
 
-    const { nodeStats, relationshipStats } = getLatestMetricStats(platformData.data);
+    const { nodeStats, relationshipStat } = getLatestMetricStats(platformData.data);
 
-    return <Layout nodeStats={nodeStats} relationshipStats={relationshipStats} isLoading={false} />;
+    return <Layout nodeStats={nodeStats} relationshipStat={relationshipStat} isLoading={false} />;
 };
 
 const MetricIcon: React.FC<{ metricName: string; metricType: any }> = ({ metricName, metricType }) => {
@@ -110,11 +110,11 @@ const MetricIcon: React.FC<{ metricName: string; metricType: any }> = ({ metricN
 };
 
 const Layout: React.FC<{
-    nodeStats: any; // To do
-    relationshipStats: any; // To do
+    nodeStats: OpenGraphDataQualityStat[] | null;
+    relationshipStat: OpenGraphDataQualityStat | null;
     isLoading: boolean;
     headers?: boolean;
-}> = ({ nodeStats, relationshipStats, isLoading }) => {
+}> = ({ nodeStats, relationshipStat, isLoading }) => {
     const classes = useStyles();
 
     return (
@@ -144,7 +144,7 @@ const Layout: React.FC<{
                         <LoadContainer
                             icon={<FontAwesomeIcon icon={faUsers} />}
                             display='Relationships'
-                            value={relationshipStats?.metric_value ?? 0}
+                            value={relationshipStat?.metric_value ?? 0}
                             isLoading={isLoading}
                         />
                     </TableBody>
