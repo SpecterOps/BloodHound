@@ -2787,7 +2787,7 @@ class BHEAPIClient {
         this.baseClient.patch<GetWebhookResponse>(`api/v2/alert-webhooks/${webhookId}`, payload, options);
 
     deleteWebhook = (webhookId: string, options?: RequestOptions) =>
-        this.baseClient.delete<GetWebhookResponse>(`api/v2/alert-webhooks/${webhookId}`, options);
+        this.baseClient.delete(`api/v2/alert-webhooks/${webhookId}`, options);
 
     rotateWebhookSecret = (webhookId: string, options?: RequestOptions) =>
         this.baseClient.post<RotateWebhookSecretResponse>(`api/v2/alert-webhooks/${webhookId}/rotate-secret`, options);
