@@ -33,6 +33,7 @@
     div.renderedMarkdown > p,
     .response-col_status,
     .col_header,
+    .headers .header-col,
     div.parameter__name,
     .parameter__in,
     .opblock div.opblock-summary-description,
@@ -63,6 +64,7 @@
     input,
     textarea,
     select,
+    .content-type-wrapper select,
     .models,
     .filter-container .operation-filter-input {
         background-color: var(--input-fill);
@@ -102,6 +104,10 @@
         h5 {
             color: var(--text-main);
         }
+        .responses-header .col_header,
+        .headers-wrapper .headers .header-row .header-col{
+            border-color: var(--neutral-700);
+        }
     }
 
     svg {
@@ -114,13 +120,18 @@
         }
     }
 
-    .opblock .opblock-section-header {
-        color: var(--text-main);
-        background-color: var(--neutral-100);
-
-        h4,
-        .btn {
+    .opblock {
+        .opblock-section-header {
             color: var(--text-main);
+            background-color: var(--neutral-100);
+
+            h4,
+            .btn {
+                color: var(--text-main);
+            }
+        }
+        .opblock-section .parameters tr .col_header {
+            border-color: var(--neutral-700);
         }
     }
 }
