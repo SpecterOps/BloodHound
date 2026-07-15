@@ -255,7 +255,10 @@ const RuleForm: FC = () => {
 
             navigate(tagDetailsLink(tagId));
         } catch (error: any) {
-            if (ruleType === SeedTypeObjectId && error?.response?.data?.errors?.[0]?.message === SEEDS_ARE_REQUIRED) {
+            const errorMessage = error?.response?.data?.errors?.[0]?.message;
+            const missingObjectError = ruleType === SeedTypeObjectId && errorMessage === SEEDS_ARE_REQUIRED;
+
+            if (missingObjectError) {
                 form.setError('seeds', { message: 'Please add at least one object to this Rule.' });
             }
             handleError(error, 'creating', 'rule', addNotification, { ruleType });
