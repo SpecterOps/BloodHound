@@ -213,8 +213,8 @@ func (s *Resources) GetDataQualityStats(response http.ResponseWriter, request *h
 				Operator:    model.Equals,
 				SetOperator: model.FilterAnd,
 			}},
-			"created_at": []model.Filter{{Value: start.Format(time.RFC3339), Operator: model.GreaterThanOrEquals, SetOperator: model.FilterAnd}, {Value: end.Format(time.RFC3339), Operator: model.LessThan, SetOperator: model.FilterAnd}},
 		}
+		filters["created_at"] = dataQualityCreatedAtFilters(start, end)
 		if stats, count, err := s.DB.GetDataQualityStats(ctx, filters, sort, skip, limit); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
@@ -306,20 +306,7 @@ func (s *Resources) GetDataQualityAggregations(response http.ResponseWriter, req
 	}
 
 	// created_at is filtered by the start/end params, so set the time window here
-	filters["created_at"] = []model.Filter{
-		{
-			Value:        start.Format(time.RFC3339Nano),
-			Operator:     model.GreaterThanOrEquals,
-			SetOperator:  model.FilterAnd,
-			IsStringData: false,
-		},
-		{
-			Value:        end.Format(time.RFC3339Nano),
-			Operator:     model.LessThanOrEquals,
-			SetOperator:  model.FilterAnd,
-			IsStringData: false,
-		},
-	}
+	filters["created_at"] = dataQualityCreatedAtFilters(start, end)
 
 	aggs, count, err := s.DB.GetDataQualityAggregations(ctx, filters, sortItems, skip, limit)
 	if err != nil {
@@ -359,4 +346,22 @@ func parseOrder(queryParams url.Values, sortable api.Sortable) (string, model.So
 
 	}
 	return strings.Join(order, ", "), sort, nil
+}
+
+// dataQualityCreatedAtFilters builds the created_at time window filter, inclusive on start and end bounds
+func dataQualityCreatedAtFilters(start, end time.Time) []model.Filter {
+	return []model.Filter{
+		{
+			Value:        start.Format(time.RFC3339Nano),
+			Operator:     model.GreaterThanOrEquals,
+			SetOperator:  model.FilterAnd,
+			IsStringData: false,
+		},
+		{
+			Value:        end.Format(time.RFC3339Nano),
+			Operator:     model.LessThanOrEquals,
+			SetOperator:  model.FilterAnd,
+			IsStringData: false,
+		},
+	}
 }
