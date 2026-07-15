@@ -140,6 +140,8 @@ func (s Handlers) GetNodeByID(response http.ResponseWriter, request *http.Reques
 		responses.WriteError(ctx, http.StatusNotFound, "node not found", response)
 	} else if err != nil {
 		responses.WriteInternalServerError(ctx, err, response)
+	} else if !s.nodeAuthorizer.CanAccessNode(ctx, node) {
+		responses.WriteError(ctx, http.StatusForbidden, "forbidden", response)
 	} else {
 		responses.WriteBasic(ctx, BuildNodeView(node, includeInfo), http.StatusOK, response)
 	}

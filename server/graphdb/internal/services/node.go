@@ -22,6 +22,11 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+
+	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/slicesext"
 )
 
 // Node is the domain representation of a graph node together with
@@ -31,6 +36,34 @@ type Node struct {
 	Kinds      []Kind
 	Properties map[string]any
 	KindInfos  []KindInfo
+}
+
+// KindNames returns the list of kinds in string form
+func (s Node) KindNames() []string {
+	return slicesext.Map(s.Kinds, func(kind Kind) string {
+		return kind.Name
+	})
+}
+
+// EnvironmentID returns the environment id for the node if set.
+// For Azure nodes, this returns a tenant ID.
+// For Active Directory nodes, this returns a domain SID.
+// For all other types of nodes, this returns the "environmentid" property.
+// For all nodes, the returned boolean will be false if the environment property is not set or improperly declared.
+func (s Node) EnvironmentID() (string, bool) {
+	var (
+		kinds = s.KindNames()
+		key   = graphschema.EnvironmentIDKey
+	)
+
+	if slices.Contains(kinds, ad.Entity.String()) {
+		key = ad.DomainSID.String()
+	} else if slices.Contains(kinds, azure.Entity.String()) {
+		key = azure.TenantID.String()
+	}
+
+	id, ok := s.Properties[key].(string)
+	return id, ok
 }
 
 // ErrNodeNotFound indicates that no graph node exists for the requested id.
