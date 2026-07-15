@@ -14,14 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { List, ListItem, ListItemText, Paper, TextFieldVariants } from '@mui/material';
-import { FormControl, FormField, FormItem, FormMessage, Input, InputProps } from 'doodle-ui';
+import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { useCombobox } from 'downshift';
-import { useMemo, useRef } from 'react';
-import { Control, ControllerRenderProps } from 'react-hook-form';
-import { SearchResult, getEmptyResultsText, useKeywordAndTypeValues, useSearch } from '../../hooks';
+import { useRef } from 'react';
+import { SearchResult, getEmptyResultsText, useKeywordAndTypeValues, useSearch, useTheme } from '../../hooks';
 import { SearchValue } from '../../views/Explore/ExploreSearch/types';
-import { RuleFormInputs } from '../../views/PrivilegeZones/Save/RuleForm/types';
 import NodeIcon from '../NodeIcon';
 import SearchResultItem from '../SearchResultItem';
 
@@ -34,7 +32,7 @@ const ExploreSearchCombobox: React.FC<{
     handleNodeSelected: (selection: SearchValue) => any;
     disabled?: boolean;
     variant?: TextFieldVariants;
-    control?: Control<RuleFormInputs, any, RuleFormInputs>;
+    errorMessage?: string;
 }> = ({
     labelText,
     inputValue,
@@ -44,8 +42,9 @@ const ExploreSearchCombobox: React.FC<{
     autoFocus,
     disabled = false,
     variant = 'outlined',
-    control,
+    errorMessage,
 }) => {
+    const theme = useTheme();
     const searchNodesRef = useRef<HTMLInputElement>();
 
     const { keyword, type } = useKeywordAndTypeValues(inputValue);
@@ -74,63 +73,46 @@ const ExploreSearchCombobox: React.FC<{
         data
     );
 
-    const downshiftInputProps = useMemo(
-        () => ({
-            ...getInputProps({
-                onFocus: openMenu,
-                refKey: 'inputRef',
-                onChange: (e) => {
-                    handleNodeEdited(e.currentTarget.value);
-                },
-            }),
-        }),
-        [getInputProps, handleNodeEdited, openMenu]
-    );
-
-    const sharedInputProps: InputProps = useMemo(
-        () => ({
-            ref: (node: HTMLInputElement) => {
-                downshiftInputProps.inputRef(node);
-                searchNodesRef.current = node;
+    const downshiftInputProps = {
+        ...getInputProps({
+            onFocus: openMenu,
+            refKey: 'inputRef',
+            onChange: (e) => {
+                handleNodeEdited(e.currentTarget.value);
             },
-            'aria- label': labelText,
-            name: labelText,
-            placeholder: labelText,
-            variant: variant,
-            size: 'small',
-            fullWidth: true,
-            disabled,
-            type: 'text',
-            autoComplete: 'off',
-            className: 'pl-2 border-[1px] border-primary rounded-md text-sm dark:bg-neutral-dark-1',
-            startAdornment: selectedItem?.type && <NodeIcon nodeType={selectedItem?.type} />,
-            autoFocus,
-            'data-testid': 'explore_search_input-search',
-            ...downshiftInputProps,
         }),
-        [autoFocus, disabled, downshiftInputProps, labelText, selectedItem?.type, variant]
-    );
+    };
 
     return (
         <div style={{ position: 'relative' }}>
-            {!control ? (
-                <Input {...sharedInputProps} />
-            ) : (
-                <FormField
-                    control={control}
-                    name='seeds'
-                    render={({ field }) => {
-                        const castField = field as ControllerRenderProps<RuleFormInputs, 'seeds'> & { value: string[] };
-                        return (
-                            <FormItem>
-                                <FormControl>
-                                    <Input {...castField} {...sharedInputProps} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        );
-                    }}
-                />
+            <TextField
+                placeholder={labelText}
+                variant={variant}
+                size='small'
+                fullWidth
+                disabled={disabled}
+                inputProps={{
+                    'aria-label': labelText,
+                }}
+                InputProps={{
+                    style: {
+                        backgroundColor: disabled ? theme.neutral.tertiary : 'inherit',
+                        fontSize: '0.875rem',
+                    },
+                    autoFocus,
+                    startAdornment: selectedItem?.type && <NodeIcon nodeType={selectedItem?.type} />,
+                }}
+                {...downshiftInputProps}
+                inputRef={(node) => {
+                    downshiftInputProps.inputRef(node);
+                    searchNodesRef.current = node;
+                }}
+                data-testid='explore_search_input-search'
+            />
+            {errorMessage && (
+                <Typography variant='caption' className='text-error'>
+                    {errorMessage}
+                </Typography>
             )}
             <div
                 style={{

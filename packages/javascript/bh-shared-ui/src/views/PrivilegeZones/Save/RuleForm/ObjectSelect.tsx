@@ -29,14 +29,12 @@ import {
     Tooltip,
 } from 'doodle-ui';
 import { useState } from 'react';
-import { Control } from 'react-hook-form';
 import ExploreSearchCombobox from '../../../../components/ExploreSearchCombobox';
 import NodeIcon from '../../../../components/NodeIcon';
 import { SearchValue } from '../../../Explore';
 import { useRuleFormContext } from './RuleFormContext';
-import { RuleFormInputs } from './types';
 
-const ObjectSelect = ({ control }: { control?: Control<RuleFormInputs, any, RuleFormInputs> }) => {
+const ObjectSelect = ({ errorMessage }: { errorMessage?: string }) => {
     const { selectedObjects, dispatch } = useRuleFormContext();
     const [searchTerm, setSearchTerm] = useState<string>('');
 
@@ -63,7 +61,7 @@ const ObjectSelect = ({ control }: { control?: Control<RuleFormInputs, any, Rule
                 <div className='flex content-center mb-3'>
                     <div className='w-full my-2'>
                         <ExploreSearchCombobox
-                            control={control}
+                            errorMessage={errorMessage}
                             labelText='Search Objects To Add'
                             inputValue={searchTerm}
                             selectedItem={null}
