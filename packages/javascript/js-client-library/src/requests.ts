@@ -309,6 +309,7 @@ export interface UpdateWebhookRequest {
     name?: string;
     description?: string;
     url?: string;
+    disabled?: boolean;
 }
 
 export interface GetWebhookRequest {
