@@ -25,7 +25,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/huandu/go-sqlbuilder"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/dawgs/graph"
@@ -739,6 +742,113 @@ func (s *BloodhoundDB) InsertSelectorNode(ctx context.Context, assetGroupTagId, 
 		}
 		return nil
 	})
+}
+
+func (s *BloodhoundDB) UpdateSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error {
+	const selectorNodeUpdateBatchSize = 5000
+
+	var (
+		err             error
+		transaction     pgx.Tx
+		batchUpperBound int
+	)
+
+	if len(nodes) == 0 {
+		return nil
+	}
+
+	if transaction, err = s.pool.Begin(ctx); err != nil {
+		return fmt.Errorf("beginning selector node batch update transaction: %w", err)
+	}
+
+	defer func() {
+		_ = transaction.Rollback(ctx)
+	}()
+
+	for batchLowerBound := 0; batchLowerBound < len(nodes); batchLowerBound += selectorNodeUpdateBatchSize {
+		batchUpperBound = min(batchLowerBound+selectorNodeUpdateBatchSize, len(nodes))
+		if err = updateSelectorNodesBatch(ctx, transaction, nodes[batchLowerBound:batchUpperBound]); err != nil {
+			return err
+		}
+	}
+
+	if err = transaction.Commit(ctx); err != nil {
+		return fmt.Errorf("committing selector node batch update transaction: %w", err)
+	}
+
+	return nil
+}
+
+func updateSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []model.AssetGroupSelectorNode) error {
+	var (
+		err                error
+		sqlQuery           string
+		sqlArgs            []any
+		updateBuilder      = sqlbuilder.PostgreSQL.NewUpdateBuilder()
+		selectorIds        = make([]int32, 0, len(nodes))
+		nodeIds            = make([]int64, 0, len(nodes))
+		certifications     = make([]int32, 0, len(nodes))
+		certifiedByValues  = make([]*string, 0, len(nodes))
+		sources            = make([]int32, 0, len(nodes))
+		nodePrimaryKinds   = make([]string, 0, len(nodes))
+		nodeEnvironmentIds = make([]string, 0, len(nodes))
+		nodeObjectIds      = make([]string, 0, len(nodes))
+		nodeNames          = make([]string, 0, len(nodes))
+	)
+
+	for _, node := range nodes {
+		selectorIds = append(selectorIds, int32(node.SelectorId))
+		nodeIds = append(nodeIds, node.NodeId.Int64())
+		certifications = append(certifications, int32(node.Certified))
+		sources = append(sources, int32(node.Source))
+		nodePrimaryKinds = append(nodePrimaryKinds, node.NodePrimaryKind)
+		nodeEnvironmentIds = append(nodeEnvironmentIds, node.NodeEnvironmentId)
+		nodeObjectIds = append(nodeObjectIds, node.NodeObjectId)
+		nodeNames = append(nodeNames, node.NodeName)
+
+		if node.CertifiedBy.Valid {
+			certifiedBy := node.CertifiedBy.String
+			certifiedByValues = append(certifiedByValues, &certifiedBy)
+		} else {
+			certifiedByValues = append(certifiedByValues, nil)
+		}
+	}
+
+	updateBuilder.Update(model.AssetGroupSelectorNode{}.TableName() + " AS selector_node")
+	updateBuilder.Set(
+		"certified = batch.certified",
+		"certified_by = batch.certified_by",
+		"source = batch.source",
+		"node_primary_kind = batch.node_primary_kind",
+		"node_environment_id = batch.node_environment_id",
+		"node_object_id = batch.node_object_id",
+		"node_name = batch.node_name",
+		"updated_at = current_timestamp",
+	)
+	updateBuilder.From(fmt.Sprintf(
+		`unnest(%s::int[], %s::bigint[], %s::int[], %s::text[], %s::int[], %s::text[], %s::text[], %s::text[], %s::text[]) 
+		AS batch(selector_id, node_id, certified, certified_by, source, node_primary_kind, node_environment_id, node_object_id, node_name)`,
+		updateBuilder.Var(pgtype.FlatArray[int32](selectorIds)),
+		updateBuilder.Var(pgtype.FlatArray[int64](nodeIds)),
+		updateBuilder.Var(pgtype.FlatArray[int32](certifications)),
+		updateBuilder.Var(pgtype.FlatArray[*string](certifiedByValues)),
+		updateBuilder.Var(pgtype.FlatArray[int32](sources)),
+		updateBuilder.Var(pgtype.FlatArray[string](nodePrimaryKinds)),
+		updateBuilder.Var(pgtype.FlatArray[string](nodeEnvironmentIds)),
+		updateBuilder.Var(pgtype.FlatArray[string](nodeObjectIds)),
+		updateBuilder.Var(pgtype.FlatArray[string](nodeNames)),
+	))
+	updateBuilder.Where(
+		"selector_node.selector_id = batch.selector_id",
+		"selector_node.node_id = batch.node_id",
+	)
+
+	sqlQuery, sqlArgs = updateBuilder.Build()
+	if _, err = transaction.Exec(ctx, sqlQuery, sqlArgs...); err != nil {
+		return fmt.Errorf("batch updating selector nodes: %w", err)
+	}
+
+	return nil
 }
 
 func (s *BloodhoundDB) UpdateSelectorNodesByNodeId(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, primaryKind, environmentId, objectId, displayName string) error {
