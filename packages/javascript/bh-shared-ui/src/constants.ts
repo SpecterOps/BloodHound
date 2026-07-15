@@ -45,82 +45,12 @@ export const HIGH_VALUE_LABEL = 'High Value';
 export const SNACKBAR_DURATION = 5000;
 export const SNACKBAR_DURATION_LONG = 15000;
 
-export const useStyles = makeStyles((theme: Theme) => ({
+export const useStyles = makeStyles(() => ({
     applicationContainer: {
         display: 'flex',
         position: 'relative',
         height: '100%',
         overflow: 'hidden',
-        '@global': {
-            '.api-explorer .swagger-ui': {
-                [`& a.nostyle,
-                    & div.renderedMarkdown > p,
-                    & .response-col_status,
-                    & .col_header,
-                    & div.parameter__name,
-                    & .parameter__in,
-                    & div.opblock-summary-description,
-                    & div > small,
-                    & li.tabitem,
-                    & .response-col_links,
-                    & .opblock-description-wrapper > p,
-                    & .btn-group > button,
-                    & textarea,
-                    & select,
-                    & .parameter__type,
-                    & .prop-format,
-                    `]: {
-                    color: theme.palette.color.primary,
-                },
-                ['& input, & textarea, & select, & .models, & .filter-container .operation-filter-input']: {
-                    backgroundColor: theme.palette.neutral.primary,
-                    border: `1px solid ${theme.palette.grey[700]}`,
-
-                    '&:hover, &:focus': {
-                        borderColor: theme.palette.color.links,
-                    },
-                    '&:focus': {
-                        outline: `1px solid ${theme.palette.color.links}`,
-                    },
-                },
-                '& .models': {
-                    '& h4': {
-                        borderBottomColor: theme.palette.grey[700],
-                    },
-                    '& span, & table': {
-                        color: theme.palette.color.primary,
-                    },
-                    '& svg': {
-                        fill: theme.palette.color.primary,
-                    },
-                    '& model-box': {
-                        backgroundColor: theme.palette.neutral.primary,
-                    },
-                },
-                '& .parameter__name.required::after': {
-                    color: theme.palette.color.error,
-                },
-                '& .responses-inner': {
-                    [`& h4, & h5`]: {
-                        color: theme.palette.color.primary,
-                    },
-                },
-                '& svg': {
-                    fill: theme.palette.color.primary,
-                },
-                '& .opblock-deprecated': {
-                    '& .opblock-title_normal': {
-                        color: theme.palette.color.primary,
-                    },
-                },
-                '& .opblock-section-header': {
-                    backgroundColor: theme.palette.neutral.primary,
-                    '& h4, & .btn': {
-                        color: theme.palette.color.primary,
-                    },
-                },
-            },
-        },
     },
 }));
 
