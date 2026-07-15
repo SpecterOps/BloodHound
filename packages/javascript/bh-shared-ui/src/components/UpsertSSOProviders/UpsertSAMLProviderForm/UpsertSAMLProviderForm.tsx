@@ -165,7 +165,7 @@ const UpsertSAMLProviderForm: FC<{
             <DialogActions>
                 <Button
                     type='button'
-                    variant='tertiary'
+                    variant='secondary'
                     onClick={handleClose}
                     data-testid='create-saml-provider-dialog_button-close'>
                     Cancel

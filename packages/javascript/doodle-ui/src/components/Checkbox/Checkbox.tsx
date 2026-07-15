@@ -41,8 +41,8 @@ interface CheckboxProps
 const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root>, CheckboxProps>(
     ({ size = 'md', icon, className, ...props }, ref) => (
         <CheckboxPrimitive.Root ref={ref} className={cn(CheckboxVariants({ size, className }))} {...props}>
-            <CheckboxPrimitive.Indicator className={cn('flex items-center justify-center text-current')}>
-                {icon ? icon : <Check className='h-full w-full' absoluteStrokeWidth={true} strokeWidth={3} />}
+            <CheckboxPrimitive.Indicator className={cn('flex h-full w-full items-center justify-center text-current')}>
+                {icon ? icon : <Check className='h-[80%] w-[80%]' absoluteStrokeWidth={true} strokeWidth={3} />}
             </CheckboxPrimitive.Indicator>
         </CheckboxPrimitive.Root>
     )
