@@ -20,7 +20,7 @@ import * as React from 'react';
 import { cn } from '../utils';
 
 const CheckboxVariants = cva(
-    'peer shrink-0 rounded-sm border-2 border-text-main focus:outline-none focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-text-main data-[state=checked]:text-neutral-1',
+    'peer shrink-0 rounded-sm border-2 border-neutral-dark-1 dark:border-neutral-light-1 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-neutral-dark-1 data-[state=checked]:text-neutral-light-1 dark:data-[state=checked]:bg-neutral-light-1 dark:data-[state=checked]:text-neutral-dark-1',
     {
         variants: {
             size: {
@@ -41,8 +41,8 @@ interface CheckboxProps
 const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root>, CheckboxProps>(
     ({ size = 'md', icon, className, ...props }, ref) => (
         <CheckboxPrimitive.Root ref={ref} className={cn(CheckboxVariants({ size, className }))} {...props}>
-            <CheckboxPrimitive.Indicator className={cn('flex items-center justify-center text-current')}>
-                {icon ? icon : <Check className='h-full w-full' absoluteStrokeWidth={true} strokeWidth={3} />}
+            <CheckboxPrimitive.Indicator className={cn('flex h-full w-full items-center justify-center text-current')}>
+                {icon ? icon : <Check className='h-[80%] w-[80%]' absoluteStrokeWidth={true} strokeWidth={3} />}
             </CheckboxPrimitive.Indicator>
         </CheckboxPrimitive.Root>
     )

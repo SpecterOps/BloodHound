@@ -44,7 +44,7 @@ type OpenGraphSchemaService interface {
 	UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error)
 	ListExtensions(ctx context.Context) (model.GraphSchemaExtensions, error)
 	DeleteExtension(ctx context.Context, extensionID int32) error
-	GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx context.Context, onlyBuiltin bool) (graph.Kinds, map[string]string, error)
+	GetEnvironmentKindsAndSchemaEnvironmentData(ctx context.Context, onlyBuiltin bool) (graph.Kinds, model.EnvironmentKindsToEnvironment, error)
 	GetSchemaFindings(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) ([]model.SchemaFinding, int, error)
 }
 

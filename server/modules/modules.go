@@ -23,7 +23,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/server/analysis"
+	"github.com/specterops/bloodhound/server/featureflags"
 	"github.com/specterops/bloodhound/server/graphdb"
 	"github.com/specterops/dawgs/graph"
 )
@@ -37,6 +39,7 @@ type Deps struct {
 	Pool                *pgxpool.Pool
 	Graph               graph.Database
 	RateLimitMiddleware func() mux.MiddlewareFunc
+	DogTags             dogtags.Service
 }
 
 // Register wires up all feature modules with the provided infrastructure.
@@ -55,7 +58,11 @@ func Register(deps Deps) {
 	if deps.RateLimitMiddleware == nil {
 		panic("modules: Register requires a non-nil RateLimitMiddleware")
 	}
+	if deps.DogTags == nil {
+		panic("modules: Register requires a non-nil DogTags")
+	}
 
 	analysis.Register(deps.Router, deps.Pool)
-	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.RateLimitMiddleware)
+	featureflags.Register(deps.Router, deps.Pool)
+	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.RateLimitMiddleware, deps.DogTags)
 }

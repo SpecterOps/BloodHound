@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/nan"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -454,7 +455,7 @@ func azureGraphStats(ctx context.Context, db graph.Database) (model.AzureDataQua
 	return stats, aggregation, err
 }
 
-func SaveDataQuality(ctx context.Context, db database.DataQualityData, graphDB graph.Database) error {
+func SaveDataQuality(ctx context.Context, db database.Database, graphDB graph.Database) error {
 	slog.InfoContext(
 		ctx,
 		"Started Data Quality Stats Collection",
@@ -490,6 +491,25 @@ func SaveDataQuality(ctx context.Context, db database.DataQualityData, graphDB g
 			return fmt.Errorf("could not save azure data quality stats: %w", err)
 		} else if _, err := db.CreateAzureDataQualityAggregation(ctx, aggregation); err != nil {
 			return fmt.Errorf("could not save azure data quality stats: %w", err)
+		}
+	}
+
+	// OpenGraph node and relationship counts
+	if openGraphExtensionManagementFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureOpenGraphExtensionManagement); err != nil {
+		return fmt.Errorf("could not get open graph extension management feature flag: %w", err)
+	} else if openGraphExtensionManagementFlag.Enabled {
+		if stats, aggregations, err := openGraphStats(ctx, db, graphDB); err != nil {
+			return fmt.Errorf("could not get open graph stats: %w", err)
+		} else {
+			if len(stats) == 0 {
+				return nil
+			}
+
+			if _, err := db.CreateDataQualityStats(ctx, stats); err != nil {
+				return fmt.Errorf("could not save open graph stats: %w", err)
+			} else if _, err := db.CreateDataQualityAggregations(ctx, aggregations); err != nil {
+				return fmt.Errorf("could not save open graph aggregations: %w", err)
+			}
 		}
 	}
 

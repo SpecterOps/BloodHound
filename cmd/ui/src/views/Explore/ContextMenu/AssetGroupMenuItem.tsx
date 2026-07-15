@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
-import { NodeResponse, apiClient, useExploreGraph, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
+import { apiClient, isNodeResponse, useExploreGraph, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
 import { Button } from 'doodle-ui';
 import { FC, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
@@ -29,6 +29,11 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
     const [open, setOpen] = useState(false);
 
     const { selectedItemQuery } = useExploreSelectedItem();
+
+    const nodeObjectId = isNodeResponse(selectedItemQuery.data)
+        ? selectedItemQuery.data.properties.objectid
+        : undefined;
+
     const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
 
     const isMenuItemForTierZero = assetGroupId === tierZeroAssetGroupId;
@@ -53,25 +58,25 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
         },
     });
 
-    const { data: assetGroupMembers } = useQuery(['listAssetGroupMembers', assetGroupId], () =>
+    const { data: assetGroupMembers } = useQuery(['listAssetGroupMembers', assetGroupId, nodeObjectId], () =>
         apiClient
             .listAssetGroupMembers(assetGroupId, undefined, {
                 params: {
-                    object_id: `object_id=eq:${(selectedItemQuery.data as NodeResponse)?.objectId}`,
+                    object_id: `object_id=eq:${nodeObjectId}`,
                 },
             })
             .then((res) => res.data.data?.members)
     );
 
     const handleAddToAssetGroup = () => {
-        if (selectedItemQuery.data && 'objectId' in selectedItemQuery.data) {
-            mutation.mutate({ nodeId: selectedItemQuery.data.objectId, action: 'add' });
+        if (nodeObjectId) {
+            mutation.mutate({ nodeId: nodeObjectId, action: 'add' });
         }
     };
 
     const handleRemoveFromAssetGroup = () => {
-        if (selectedItemQuery.data && 'objectId' in selectedItemQuery.data) {
-            mutation.mutate({ nodeId: selectedItemQuery.data.objectId, action: 'remove' });
+        if (nodeObjectId) {
+            mutation.mutate({ nodeId: nodeObjectId, action: 'remove' });
         }
     };
 
@@ -139,7 +144,7 @@ const ConfirmNodeChangesDialog: FC<{
             <DialogTitle>Confirm Selection</DialogTitle>
             <DialogContent>{dialogContent}</DialogContent>
             <DialogActions>
-                <Button variant='tertiary' onClick={handleCancel}>
+                <Button variant='secondary' onClick={handleCancel}>
                     Cancel
                 </Button>
                 <Button variant='primary' onClick={handleApply}>
