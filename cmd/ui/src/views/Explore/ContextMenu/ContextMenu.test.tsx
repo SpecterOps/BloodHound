@@ -17,6 +17,7 @@
 import userEvent from '@testing-library/user-event';
 import * as bhSharedUi from 'bh-shared-ui';
 import { DeepPartial, Permission, createAuthStateWithPermissions, mockGetConfigurationHandler } from 'bh-shared-ui';
+import { NodeDetails } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
@@ -28,11 +29,18 @@ const mockUseExploreParams = vi.spyOn(bhSharedUi, 'useExploreParams');
 const mockSelectedItemQuery = vi.spyOn(bhSharedUi, 'useExploreSelectedItem');
 
 const fakeSelectedItemId = 'abc';
+
+const mockNode: NodeDetails = {
+    node_id: 1,
+    kinds: [],
+    properties: {
+        objectid: fakeSelectedItemId,
+    },
+};
+
 mockSelectedItemQuery.mockReturnValue({
     selectedItemQuery: {
-        data: {
-            objectId: fakeSelectedItemId,
-        },
+        data: mockNode,
     },
 } as any);
 
