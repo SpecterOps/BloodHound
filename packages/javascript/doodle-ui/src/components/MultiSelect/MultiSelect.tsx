@@ -39,9 +39,8 @@ const CaretDown = ({ className, size = 12 }: { className?: string; size?: number
 );
 
 const MultiSelectTriggerVariants = cva(
-    'flex h-10 w-full items-center justify-between rounded-lg bg-primary px-4 py-2 text-base font-normal leading-6 tracking-[0.15px] text-common-white dark:text-neutral-dark-1 focus:outline-none focus-visible:focus-ring data-[state=open]:bg-primary enabled:hover:bg-secondary disabled:cursor-not-allowed disabled:rounded disabled:border disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-text-disabled aria-[invalid=true]:border-status-error-main'
+    'flex h-10 w-full items-center justify-between rounded-lg bg-primary px-4 py-2 text-base font-normal leading-6 tracking-[0.15px] text-common-white dark:text-neutral-dark-1 focus:outline-none focus-visible:focus-ring data-[state=open]:bg-primary enabled:hover:bg-secondary disabled:cursor-not-allowed disabled:border disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-text-disabled dark:border-neutral-light-5 dark:bg-neutral-dark-2 dark:text-white aria-[invalid=true]:border aria-[invalid=true]:border-status-error-main aria-[invalid=true]:bg-common-white aria-[invalid=true]:text-input-placeholder-text aria-[invalid=true]:enabled:hover:border-status-error-main aria-[invalid=true]:enabled:hover:bg-common-white aria-[invalid=true]:data-[state=open]:bg-common-white'
 );
-
 const multiSelectRowStyles =
     'flex w-full items-center gap-2 rounded-lg p-2 cursor-pointer hover:bg-secondary hover:text-common-white dark:hover:text-neutral-dark-1';
 
@@ -172,9 +171,9 @@ const MultiSelect = ({
     placeholder,
     disabled,
     error,
+
     className,
     selectAllLabel,
-
     isSearchable = false,
     isLoading = false,
     searchPlaceholder = 'Search',
@@ -270,6 +269,7 @@ const MultiSelect = ({
             />
         ));
     }
+
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>

@@ -71,13 +71,23 @@ export const Default: Story = {
     },
 };
 
-export const TriggerError: Story = {
-    args: { options: [], value: [], onValueChange: () => {} },
-    render: () => (
-        <div className='w-60'>
-            <MultiSelectTrigger aria-invalid='true'>Placeholder</MultiSelectTrigger>
-        </div>
-    ),
+export const Error: Story = {
+    args: {
+        options: itemOptions,
+        value: [],
+        onValueChange: () => {},
+        placeholder: 'All Items',
+        error: true,
+    },
+    render: (args) => {
+        const [value, setValue] = useState<string[]>(args.value ?? []);
+
+        return (
+            <div className='w-60'>
+                <MultiSelect {...args} value={value} onValueChange={setValue} />
+            </div>
+        );
+    },
 };
 
 export const TriggerDisabled: Story = {
