@@ -36,17 +36,18 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-// getLatestMetricStats keeps only the latest stat per metric_kind_id (by created_at) and
+// getLatestMetricStats keeps only the latest stat per kind_id (by created_at) and
 // splits the result into node stats and the latest relationship stat.
 export const getLatestMetricStats = (data: any[]) => {
     const latestStatsByMetricKind = new Map<number, any>();
     for (const stat of data) {
-        const existing = latestStatsByMetricKind.get(stat.metric_kind_id);
+        const existing = latestStatsByMetricKind.get(stat.kind_id);
         const isLatest = new Date(stat?.created_at).getTime() > new Date(existing?.created_at).getTime();
         if (!existing || isLatest) {
-            latestStatsByMetricKind.set(stat.metric_kind_id, stat);
+            latestStatsByMetricKind.set(stat.kind_id, stat);
         }
     }
+
     const stats = Array.from(latestStatsByMetricKind.values());
     const nodeStats = stats.filter((stat) => stat.metric_type === 'node');
     const relationshipStats = stats.find((stat) => stat.metric_type === 'relationship');
@@ -109,19 +110,20 @@ const MetricIcon: React.FC<{ metricName: string; metricType: any }> = ({ metricN
 };
 
 const Layout: React.FC<{
-    nodeStats: any;
-    relationshipStats: any;
+    nodeStats: any; // To do
+    relationshipStats: any; // To do
     isLoading: boolean;
     headers?: boolean;
 }> = ({ nodeStats, relationshipStats, isLoading }) => {
     const classes = useStyles();
+
     return (
         <Box position='relative'>
             <TableContainer className={classes.container}>
                 <Table>
                     <TableBody>
                         {nodeStats?.map((key: any) => {
-                            if (key.metric_kind_id === key.environment_kind_id) return null;
+                            if (key.kind_id === key.environment_kind_id) return null;
 
                             return (
                                 <LoadContainer
