@@ -56,6 +56,7 @@ export { default as useOnClickOutside } from './useOnClickOutside';
 export * from './usePermissions';
 export * from './usePrebuiltQueries';
 export * from './usePreviousValue';
+export * from './usePrimaryKind';
 export * from './usePZParams';
 export { default as useRoleBasedFiltering } from './useRoleBasedFiltering';
 export * from './useSavedQueries';

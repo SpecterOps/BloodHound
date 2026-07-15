@@ -46,6 +46,8 @@ type Context struct {
 	RemoteAddr   string
 	Filters      params.Filters
 	Sort         params.SortItems
+	Skip         int
+	Limit        int
 }
 
 func (s *Context) ConstructGoContext() context.Context {

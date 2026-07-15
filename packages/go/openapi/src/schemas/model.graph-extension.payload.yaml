@@ -53,6 +53,8 @@ properties:
         color:
           type: string
           example: "#FF0000"
+        info:
+          $ref: './model.graph-extension.kind-info-definition.yaml'
   relationship_kinds:
     type: array
     items:
@@ -66,6 +68,8 @@ properties:
           example: An OpenGraph Extension ConnectedTo edge
         is_traversable:
           type: boolean
+        info:
+          $ref: './model.graph-extension.kind-info-definition.yaml'
   #properties:
   #  type: array
   #  items:

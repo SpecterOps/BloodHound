@@ -16,16 +16,16 @@
 import { faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Badge } from 'doodle-ui';
+import { RelationshipDetails } from 'js-client-library';
 import React, { HTMLProps } from 'react';
 import useRoleBasedFiltering from '../../../hooks/useRoleBasedFiltering';
 import { cn } from '../../../utils';
-import { SelectedEdge } from '../ExploreSearch/EdgeFilter/edgeCategories';
 import { ObjectInfoPanelContextProvider } from '../providers';
 import EdgeInfoContent from './EdgeInfoContent';
 import Header from './EdgeInfoHeader';
 
 interface EdgeInfoPaneProps {
-    selectedEdge: SelectedEdge | null;
+    selectedEdge: RelationshipDetails | null;
     className?: HTMLProps<HTMLDivElement>['className'];
 }
 
@@ -52,7 +52,7 @@ const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ className, selectedEdge }) 
             {selectedEdge && (
                 <>
                     <div className='bg-neutral-2 pointer-events-auto rounded-lg shadow-outer-1'>
-                        <Header name={selectedEdge?.name || 'None'} />
+                        <Header name={selectedEdge?.kind.name || 'None'} />
                     </div>
                     <div className='bg-neutral-2 mt-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded-lg shadow-outer-1'>
                         <EdgeInfoContent selectedEdge={selectedEdge} />

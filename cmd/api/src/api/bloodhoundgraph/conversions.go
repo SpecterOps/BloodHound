@@ -63,6 +63,7 @@ func RelationshipToBloodHoundGraph(rel *graph.Relationship) BloodHoundGraphLink 
 	}
 
 	return BloodHoundGraphLink{
+		ID: rel.ID,
 		BloodHoundGraphItem: &BloodHoundGraphItem{
 			Color: defaultRelationshipColor,
 			Data:  relProperties,

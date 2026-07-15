@@ -373,6 +373,7 @@ func TestUpdateCustomNodeKind(t *testing.T) {
 					require.NotNil(t, updated.SchemaNodeKindId)
 					gotSchemaNodeKind, err := testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, *updated.SchemaNodeKindId)
 					require.NoError(t, err)
+					assert.NotZero(t, gotSchemaNodeKind.KindId, "KindId should be populated from database")
 					assert.Equal(t, testCase.want.SchemaNodeKind.Icon, gotSchemaNodeKind.Icon)
 					assert.Equal(t, testCase.want.SchemaNodeKind.IconColor, gotSchemaNodeKind.IconColor)
 				}
