@@ -14,8 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { NodeDetails, NodeDetailsWithInfo, RelationshipDetails, RelationshipDetailsWithInfo } from 'js-client-library';
 import { useQuery } from 'react-query';
-import { apiClient, parseItemId } from '../utils';
+import { apiClient, REL_ID_PREFIX } from '../utils';
 
 export interface BaseItemResponse {
     id: string;
@@ -50,42 +51,56 @@ export const isEdge = (response: ItemResponse): response is EdgeResponse => {
     return 'source' in response;
 };
 
-export const useGraphItem = (itemId?: string) => {
-    return useQuery<ItemResponse>(
-        ['getGraphItem', itemId],
-        () => {
-            const parsedItem = parseItemId(itemId!);
-            return apiClient.cypherSearch(parsedItem.cypherQuery, undefined, true).then((res) => {
-                if (!itemId) {
-                    return undefined;
-                }
-                if (parsedItem.itemType === 'edge') {
-                    const edgeResponse = res.data?.data?.edges?.[0];
-                    const sourceNode = { id: edgeResponse.source, ...res.data?.data?.nodes?.[edgeResponse.source] };
-                    const targetNode = { id: edgeResponse.target, ...res.data?.data?.nodes?.[edgeResponse.target] };
-                    return {
-                        id: itemId,
-                        ...edgeResponse,
-                        sourceNode,
-                        targetNode,
-                    };
-                }
+export const isRelationshipResponse = (
+    response: RelationshipDetails | RelationshipDetailsWithInfo | NodeDetails | NodeDetailsWithInfo
+): response is RelationshipDetails | RelationshipDetailsWithInfo => {
+    return 'relationship_id' in response;
+};
 
-                const [id, nodeData] = Object.entries(res.data?.data?.nodes)[0];
-                return {
-                    id,
-                    ...nodeData,
-                };
-            });
+export const isNodeResponse = (
+    response?: RelationshipDetails | RelationshipDetailsWithInfo | NodeDetails | NodeDetailsWithInfo
+): response is NodeDetails | NodeDetailsWithInfo => {
+    return response ? 'node_id' in response : false;
+};
+
+export const useGetRelationshipById = (id?: number) => {
+    return useQuery({
+        queryKey: ['getRelationshipById', id],
+        queryFn: async () => {
+            return apiClient.getRelationshipByID(id!).then((res) => res.data.data);
         },
-        {
-            enabled: !!itemId,
-            retryOnMount: false,
-            retry: false,
-            refetchOnWindowFocus: false,
-            keepPreviousData: true,
-        }
-    );
+        enabled: !!id,
+        retryOnMount: false,
+        retry: false,
+        refetchOnWindowFocus: false,
+        keepPreviousData: true,
+    });
+};
+
+export const useGetNodeById = (id?: number) => {
+    return useQuery({
+        queryKey: ['getNodeById', id],
+        queryFn: async () => {
+            return apiClient.getNodeByID(id!).then((res) => res.data.data);
+        },
+        enabled: !!id,
+        retryOnMount: false,
+        retry: false,
+        refetchOnWindowFocus: false,
+        keepPreviousData: true,
+    });
+};
+
+export const useGraphItem = (itemId?: string | null) => {
+    const isRelationship = !!itemId?.includes(REL_ID_PREFIX);
+
+    const relationshipId = itemId ? parseInt(itemId.slice(REL_ID_PREFIX.length)) : undefined;
+    const relQuery = useGetRelationshipById(relationshipId);
+
+    const nodeId = itemId ? parseInt(itemId) : undefined;
+    const nodeQuery = useGetNodeById(nodeId);
+
+    return isRelationship ? relQuery : nodeQuery;
 };
 
 export const useNodeByObjectId = (itemId?: string) => {

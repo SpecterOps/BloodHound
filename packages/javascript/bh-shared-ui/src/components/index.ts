@@ -113,7 +113,6 @@ export * from './NodeIcon';
 export { default as NodeIcon } from './NodeIcon';
 export * from './OneTimePasscodeForm';
 export { default as OneTimePasscodeForm } from './OneTimePasscodeForm';
-export * from './PageWithTitle';
 export { default as PageWithTitle } from './PageWithTitle';
 export * from './PasswordDialog';
 export { default as PasswordDialog } from './PasswordDialog';

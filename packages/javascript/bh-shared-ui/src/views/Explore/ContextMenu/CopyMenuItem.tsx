@@ -17,11 +17,13 @@
 import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { MenuItem, Tooltip, TooltipProps, styled, tooltipClasses } from '@mui/material';
-import { NodeResponse, useExploreSelectedItem } from '../../../hooks';
+import { NodeDetails } from 'js-client-library';
+import { useExploreSelectedItem } from '../../../hooks';
+import { usePrimaryKind } from '../../../hooks/usePrimaryKind';
 import { useNotifications } from '../../../providers';
 import { escapeCypherString } from '../../../utils/cypher';
 
-const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
+export const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
     <Tooltip {...props} classes={{ popper: className }} />
 ))(({ theme }) => ({
     [`& .${tooltipClasses.tooltip}`]: {
@@ -39,24 +41,27 @@ const CopyMenuItem = () => {
     const { addNotification } = useNotifications();
 
     const { selectedItemQuery } = useExploreSelectedItem();
+    const nodeInfo = selectedItemQuery.data as NodeDetails | undefined;
+
+    const primaryKind = usePrimaryKind(nodeInfo?.kinds || []);
 
     const handleCopyName = () => {
-        if (selectedItemQuery.data) {
-            navigator.clipboard.writeText(selectedItemQuery.data.label);
+        if (nodeInfo) {
+            navigator.clipboard.writeText(nodeInfo.properties.name || nodeInfo.properties.objectid || '');
             addNotification(`Name copied to clipboard`, 'copyToClipboard');
         }
     };
 
     const handleCopyObjectId = () => {
-        if (selectedItemQuery.data) {
-            navigator.clipboard.writeText((selectedItemQuery.data as NodeResponse).objectId);
+        if (nodeInfo) {
+            navigator.clipboard.writeText(nodeInfo.properties.objectid || '');
             addNotification(`Object ID copied to clipboard`, 'copyToClipboard');
         }
     };
 
     const handleCopyCypher = () => {
-        if (selectedItemQuery.data) {
-            const cypher = `MATCH (n:${selectedItemQuery.data.kind}) WHERE n.objectid = ${escapeCypherString((selectedItemQuery.data as NodeResponse).objectId)} RETURN n`;
+        if (nodeInfo) {
+            const cypher = `MATCH (n:${primaryKind}) WHERE n.objectid = ${escapeCypherString(nodeInfo.properties.objectid || '')} RETURN n`;
             navigator.clipboard.writeText(cypher);
             addNotification(`Cypher copied to clipboard`, 'copyToClipboard');
         }

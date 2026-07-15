@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './AnnouncementProvider';
-export * from './AppNameProvider';
-export * from './NotificationProvider';
+import React, { createContext, useContext } from 'react';
+
+const EnterpriseString = 'BloodHound Enterprise';
+const AppNameContext = createContext(EnterpriseString);
+
+export const AppNameProvider: React.FC<{ name: string; children: React.ReactNode }> = ({ name, children }) => (
+    <AppNameContext.Provider value={name}>{children}</AppNameContext.Provider>
+);
+
+export const useAppName = () => useContext(AppNameContext);
+export const useIsEnterprise = () => useContext(AppNameContext) === EnterpriseString;
