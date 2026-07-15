@@ -230,12 +230,7 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 	}
 
 	// Lookup feature flag once per run. dont fail ingest on flag lookup, just default to false
-	flagUseRawObjectIDsEnabled := false
-	if useRawObjectIDsFF, err := s.db.GetFlagByKey(s.ctx, appcfg.FeatureUseRawObjectID); err != nil {
-		slog.WarnContext(s.ctx, "Get use raw object id feature flag failed", attr.Error(err))
-	} else {
-		flagUseRawObjectIDsEnabled = useRawObjectIDsFF.Enabled
-	}
+	flagUseRawObjectIDsEnabled := appcfg.GetUseRawObjectIDsEnabled(s.ctx, s.db)
 
 	for _, task := range tasks {
 		// Record task latency metric: time from when task was created until picked up for processing
