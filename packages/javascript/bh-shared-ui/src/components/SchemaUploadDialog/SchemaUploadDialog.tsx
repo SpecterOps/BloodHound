@@ -100,7 +100,7 @@ export const SchemaUploadDialog = () => {
                     {file?.status === FileStatus.FAILURE || file?.status === FileStatus.DONE ? (
                         <>
                             <DialogClose asChild>
-                                <Button variant='tertiary'>Close</Button>
+                                <Button variant='secondary'>Close</Button>
                             </DialogClose>
                             <DialogClose asChild>
                                 <Button>Complete</Button>
@@ -109,7 +109,7 @@ export const SchemaUploadDialog = () => {
                     ) : (
                         <>
                             <DialogClose asChild>
-                                <Button variant='tertiary'>Cancel</Button>
+                                <Button variant='secondary'>Cancel</Button>
                             </DialogClose>
                             <Button disabled={!file || file.status === FileStatus.UPLOADING} onClick={handleUpload}>
                                 Upload
