@@ -80,10 +80,12 @@ const SimpleEnvironmentSelector: React.FC<{
     const [searchInput, setSearchInput] = useState<string>('');
     const { data: availableEnvironments, isLoading, isError } = useAvailableEnvironments();
     const { isPrivilegeZonesPage } = usePZPathParams();
-    const { data: openGraphEnabled } = useFeatureFlag('opengraph_extension_management');
+    const { data: openGraphManagementFlag } = useFeatureFlag('opengraph_extension_management');
+    const { data: openGraphFindingsFlag } = useFeatureFlag('opengraph_findings');
 
     const environmentInfo = getOpenGraphEnvironmentInfoMap(availableEnvironments);
-    const hasOpenGraphEnabled = openGraphEnabled?.enabled;
+    const hasOpenGraphManagement = openGraphManagementFlag?.enabled;
+    const hasOpenGraphFindings = openGraphFindingsFlag?.enabled;
 
     const filteredEnvironments = useMemo(
         () =>
@@ -91,11 +93,13 @@ const SimpleEnvironmentSelector: React.FC<{
                 search: searchInput,
                 filters: {
                     // All environments are included when there are no specific environemt filters
-                    ...(hasOpenGraphEnabled ? {} : { 'active-directory': true, azure: true }),
+                    ...(hasOpenGraphManagement && hasOpenGraphFindings
+                        ? {}
+                        : { 'active-directory': true, azure: true }),
                     yes: true,
                 },
             }).sort(sortEnvironmentsByName),
-        [availableEnvironments, hasOpenGraphEnabled, searchInput]
+        [availableEnvironments, hasOpenGraphManagement, hasOpenGraphFindings, searchInput]
     );
 
     const environmentTypes = useMemo(
