@@ -201,7 +201,7 @@ const UserTokenManagementDialog: React.FC<{
                 </DialogContent>
                 <DialogActions>
                     <Button
-                        variant='tertiary'
+                        variant='secondary'
                         onClick={onClose}
                         data-testid='user-token-management-dialog_button-close'>
                         Close
