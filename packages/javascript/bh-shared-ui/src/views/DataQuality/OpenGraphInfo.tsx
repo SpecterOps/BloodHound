@@ -58,7 +58,7 @@ export const OpenGraphInfo: React.FC<{ contextId: string; onDataError?: () => vo
     contextId,
     onDataError = () => {},
 }) => {
-    const { data: tenantData, isLoading, isError } = useOpenGraphDataQualityStatsQuery(contextId);
+    const { data: openGraphData, isLoading, isError } = useOpenGraphDataQualityStatsQuery(contextId);
 
     useEffect(() => {
         if (isError) onDataError();
@@ -68,11 +68,11 @@ export const OpenGraphInfo: React.FC<{ contextId: string; onDataError?: () => vo
         return <Layout nodeStats={null} relationshipStats={null} isLoading={true} />;
     }
 
-    if (isError || !tenantData || !tenantData.data.length) {
+    if (isError || !openGraphData || !openGraphData.data.length) {
         return null;
     }
 
-    const { nodeStats, relationshipStats } = getLatestMetricStats(tenantData.data);
+    const { nodeStats, relationshipStats } = getLatestMetricStats(openGraphData.data);
 
     return <Layout nodeStats={nodeStats} relationshipStats={relationshipStats} isLoading={false} />;
 };
