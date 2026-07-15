@@ -141,11 +141,11 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Components/Input
             // '--input-label': common.dark,
             '--input-fill': palette.neutral.light[100],
-            // '--input-fill-disabled': palette.neutral.light[100],
+            '--input-fill-disabled': palette.neutral.light[100],
             '--input-border-default': palette.neutral.dark[700],
             '--input-border-focus': light.secondary.main,
             // '--input-border-hover': light.secondary.main,
-            // '--input-border-disabled': palette.neutral.light[900],
+            '--input-border-disabled': palette.neutral.light[900],
             // '--input-placeholder-text': text.placeholder,
 
             // // Components/Textarea
@@ -382,11 +382,11 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Components/Input
             // '--input-label': common.white,
             '--input-fill': palette.neutral.dark[400],
-            // '--input-fill-disabled': palette.neutral.dark[400],
+            '--input-fill-disabled': palette.neutral.dark[400],
             '--input-border-default': palette.neutral.light[400],
             '--input-border-focus': secondaryVariant2,
             // '--input-border-hover': dark.secondary.main,
-            // '--input-border-disabled': palette.neutral.dark[900],
+            '--input-border-disabled': palette.neutral.dark[900],
             // '--input-placeholder-text': dark.input.placeholder,
 
             // // Components/Textarea

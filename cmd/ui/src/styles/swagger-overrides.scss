@@ -74,6 +74,11 @@
             border-color: var(--link-main);
             outline: 1px solid var(--link-main);
         }
+
+        &:disabled {
+            background-color: var(--input-fill-disabled);
+            border: var(--input-border-disabled);
+        }
     }
 
     .models {
@@ -105,8 +110,11 @@
             color: var(--text-main);
         }
         .responses-header .col_header,
-        .headers-wrapper .headers .header-row .header-col{
+        .headers-wrapper .headers .header-row .header-col {
             border-color: var(--neutral-700);
+        }
+        .response-controls .content-type-wrapper .content-type svg {
+            color: var(--text-main);
         }
     }
 

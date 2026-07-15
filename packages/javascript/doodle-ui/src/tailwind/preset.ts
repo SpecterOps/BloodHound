@@ -146,11 +146,11 @@ export default {
 
                 // 'input-label': 'var(--input-label)',
                 'input-fill': 'var(--input-fill)',
-                // 'input-fill-disabled': 'var(--input-fill-disabled)',
+                'input-fill-disabled': 'var(--input-fill-disabled)',
                 'input-border-default': 'var(--input-border-default)',
                 'input-border-focus': 'var(--input-border-focus)',
                 // 'input-border-hover': 'var(--input-border-hover)',
-                // 'input-border-disabled': 'var(--input-border-disabled)',
+                'input-border-disabled': 'var(--input-border-disabled)',
                 // 'input-placeholder-text': 'var(--input-placeholder-text)',
 
                 'textarea-fill': 'var(--textarea-fill)',
