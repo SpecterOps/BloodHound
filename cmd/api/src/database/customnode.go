@@ -58,7 +58,6 @@ func (s *BloodhoundDB) EnsureStubbedCustomNodeKindForIngest(ctx context.Context,
 	return nil
 }
 
-
 func (s *BloodhoundDB) CreateCustomNodeKinds(ctx context.Context, customNodeKinds model.CustomNodeKinds) (model.CustomNodeKinds, error) {
 	var auditEntry = model.AuditEntry{
 		Action: model.AuditLogActionCreateCustomNodeKind,
