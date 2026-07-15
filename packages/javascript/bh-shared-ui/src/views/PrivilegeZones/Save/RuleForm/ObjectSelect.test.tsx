@@ -14,16 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { renderHook } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { useForm } from 'react-hook-form';
 import { mockGetConfigurationHandler, mockKindsHandler } from '../../../../mocks/handlers';
 import { act, render, screen, waitFor } from '../../../../test-utils';
 import ObjectSelect from './ObjectSelect';
 import RuleFormContext, { initialValue } from './RuleFormContext';
-import { RuleFormInputs } from './types';
 
 const testNodes = [
     {
@@ -64,10 +61,6 @@ describe('Rule Object Select', () => {
 
     beforeEach(async () => {
         await act(async () => {
-            const {
-                result: { current },
-            } = renderHook(() => useForm<RuleFormInputs>());
-
             render(
                 <RuleFormContext.Provider
                     value={{
@@ -81,7 +74,7 @@ describe('Rule Object Select', () => {
                         ],
                         dispatch,
                     }}>
-                    <ObjectSelect control={current?.control} />
+                    <ObjectSelect />
                 </RuleFormContext.Provider>
             );
         });
