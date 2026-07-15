@@ -16616,7 +16616,7 @@
                   "errors": [
                     {
                       "context": "",
-                      "message": "invalid management operation status"
+                      "message": "invalid management operation status transition"
                     }
                   ]
                 }
@@ -16698,7 +16698,7 @@
                   "errors": [
                     {
                       "context": "",
-                      "message": "invalid management operation status"
+                      "message": "invalid management operation status transition"
                     }
                   ]
                 }

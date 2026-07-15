@@ -63,7 +63,7 @@ post:
             request_id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
             errors:
               - context: ""
-                message: invalid management operation status
+                message: invalid management operation status transition
     429:
       $ref: './../responses/too-many-requests.yaml'
     500:
