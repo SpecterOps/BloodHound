@@ -160,7 +160,7 @@ const UpsertOIDCProviderForm: FC<{
             <DialogActions>
                 <Button
                     type='button'
-                    variant='tertiary'
+                    variant='secondary'
                     onClick={handleClose}
                     data-testid='create-oidc-provider-dialog_button-close'>
                     Cancel
