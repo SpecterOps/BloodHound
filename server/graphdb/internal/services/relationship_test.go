@@ -118,7 +118,7 @@ func TestService_GetRelationship(t *testing.T) {
 
 			tt.setupMock(databaseMock)
 
-			result, err := svc.GetRelationship(ctx, relationshipID)
+			result, err := svc.GetRelationship(ctx, relationshipID, false)
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 			} else {

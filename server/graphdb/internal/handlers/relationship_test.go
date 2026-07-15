@@ -71,7 +71,7 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 			name:  "returns 200 with the relationship view on success",
 			rawID: "1234567890",
 			setupMock: func(graphDBMock *mocks.MockGraphDB) {
-				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID).Return(relationship, nil)
+				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, false).Return(relationship, nil)
 			},
 			wantStatus: http.StatusOK,
 			assertBody: func(t *testing.T, body []byte) {
@@ -91,7 +91,7 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 			name:  "returns 200 with a null relationship kind id when the kind has no schema entry",
 			rawID: "1234567890",
 			setupMock: func(graphDBMock *mocks.MockGraphDB) {
-				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID).Return(nilKindRelationship, nil)
+				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, false).Return(nilKindRelationship, nil)
 			},
 			wantStatus: http.StatusOK,
 			assertBody: func(t *testing.T, body []byte) {
@@ -114,7 +114,7 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 			name:  "returns 404 when the relationship is not found",
 			rawID: "1234567890",
 			setupMock: func(graphDBMock *mocks.MockGraphDB) {
-				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID).Return(services.Relationship{}, services.ErrRelationshipNotFound)
+				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, false).Return(services.Relationship{}, services.ErrRelationshipNotFound)
 			},
 			wantStatus: http.StatusNotFound,
 		},
