@@ -14313,19 +14313,21 @@
         "parameters": [
           {
             "name": "schema_environment_kind_id",
-            "description": "Required. Filter results by the environment kind id to scope the aggregation to a single kind. Valid filter predicates are `eq` and `neq`.\n",
+            "description": "Required. Scopes the aggregation to a single environment kind id.\n",
             "in": "query",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+              "type": "integer",
+              "format": "int32"
             }
           },
           {
             "name": "schema_extension_id",
-            "description": "Filter results by the OpenGraph schema extension id. When an `eq` predicate is provided, the extension must exist or a 404 is returned. Valid filter predicates are `eq` and `neq`.\n",
+            "description": "Optional. Scopes the aggregation to a single OpenGraph schema extension id. The extension must exist or a 404 is returned.\n",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+              "type": "integer",
+              "format": "int32"
             }
           },
           {
