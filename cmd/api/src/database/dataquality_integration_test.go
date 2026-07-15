@@ -583,8 +583,12 @@ func TestDatabase_GetDataQualityAggregations(t *testing.T) {
 				rowSecond := created[1]
 				rowThird := created[2]
 				require.True(t, rowFirst.ID < rowSecond.ID && rowSecond.ID < rowThird.ID, "serial ids should ascend in insert order")
-				// tie every created_at so only the appended id ascending tiebreaker can order the rows
-				require.NoError(t, testSuite.DB.WithContext(testSuite.Context).Exec("UPDATE data_quality_aggregations SET created_at = NOW()").Error)
+				// tie created_at, updating rows in reverse id order so the natural scan order (no tiebreaker)
+				// differs from id ascending; the test can only pass if the id tiebreaker is actually applied
+				tieTime := time.Now().UTC()
+				for _, row := range []model.DataQualityAggregation{rowThird, rowSecond, rowFirst} {
+					require.NoError(t, testSuite.DB.WithContext(testSuite.Context).Exec("UPDATE data_quality_aggregations SET created_at = ? WHERE id = ?", tieTime, row.ID).Error)
+				}
 
 				// explicit client sort on created_at; the id ascending tiebreaker must still be appended
 				sort := model.Sort{
