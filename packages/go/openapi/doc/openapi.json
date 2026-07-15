@@ -23672,52 +23672,92 @@
           }
         ]
       },
+      "enum.client-management-operation-type": {
+        "type": "string",
+        "enum": [
+          "support_bundle"
+        ]
+      },
+      "enum.client-management-operation-status": {
+        "type": "string",
+        "enum": [
+          "queued",
+          "running",
+          "succeeded",
+          "failed",
+          "canceled"
+        ]
+      },
       "model.client-management-operation": {
         "allOf": [
           {
             "$ref": "#/components/schemas/model.components.uuid"
           },
           {
-            "$ref": "#/components/schemas/model.components.timestamps"
-          },
-          {
             "type": "object",
             "properties": {
               "client_id": {
                 "type": "string",
-                "format": "uuid"
+                "format": "uuid",
+                "readOnly": true
               },
               "artifact_id": {
-                "$ref": "#/components/schemas/null.uuid"
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.uuid"
+                  }
+                ]
               },
               "type": {
-                "type": "string",
-                "enum": [
-                  "support_bundle"
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/enum.client-management-operation-type"
+                  }
                 ]
               },
               "status": {
-                "type": "string",
-                "enum": [
-                  "queued",
-                  "running",
-                  "succeeded",
-                  "failed",
-                  "canceled"
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/enum.client-management-operation-status"
+                  }
                 ]
               },
-              "requested_by": {
-                "$ref": "#/components/schemas/null.uuid"
+              "requested_by_user_id": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.uuid"
+                  }
+                ]
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "readOnly": true
               },
               "started_at": {
-                "$ref": "#/components/schemas/null.time"
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.time.response"
+                  }
+                ]
               },
               "completed_at": {
-                "$ref": "#/components/schemas/null.time"
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.time.response"
+                  }
+                ]
               },
               "execution_time": {
                 "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "readOnly": true
               }
             }
           }
@@ -23828,97 +23868,6 @@
             "format": "uuid"
           }
         }
-      },
-      "enum.client-management-operation-type": {
-        "type": "string",
-        "enum": [
-          "support_bundle"
-        ]
-      },
-      "enum.client-management-operation-status": {
-        "type": "string",
-        "enum": [
-          "queued",
-          "running",
-          "succeeded",
-          "failed",
-          "canceled"
-        ]
-      },
-      "model.client-management-operation": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.components.uuid"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "client_id": {
-                "type": "string",
-                "format": "uuid",
-                "readOnly": true
-              },
-              "artifact_id": {
-                "readOnly": true,
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/null.uuid"
-                  }
-                ]
-              },
-              "type": {
-                "readOnly": true,
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/enum.client-management-operation-type"
-                  }
-                ]
-              },
-              "status": {
-                "readOnly": true,
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/enum.client-management-operation-status"
-                  }
-                ]
-              },
-              "requested_by_user_id": {
-                "readOnly": true,
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/null.uuid"
-                  }
-                ]
-              },
-              "created_at": {
-                "type": "string",
-                "format": "date-time",
-                "readOnly": true
-              },
-              "started_at": {
-                "readOnly": true,
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/null.time.response"
-                  }
-                ]
-              },
-              "completed_at": {
-                "readOnly": true,
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/null.time.response"
-                  }
-                ]
-              },
-              "execution_time": {
-                "type": "string",
-                "format": "date-time",
-                "readOnly": true
-              }
-            }
-          }
-        ]
       },
       "model.client-management-operation-end-request": {
         "type": "object",
