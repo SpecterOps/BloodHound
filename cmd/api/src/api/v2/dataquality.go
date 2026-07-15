@@ -308,13 +308,13 @@ func (s *Resources) GetDataQualityAggregations(response http.ResponseWriter, req
 	// created_at is filtered by the start/end params, so set the time window here
 	filters["created_at"] = []model.Filter{
 		{
-			Value:        start.Format(time.RFC3339),
+			Value:        start.Format(time.RFC3339Nano),
 			Operator:     model.GreaterThanOrEquals,
 			SetOperator:  model.FilterAnd,
 			IsStringData: false,
 		},
 		{
-			Value:        end.Format(time.RFC3339),
+			Value:        end.Format(time.RFC3339Nano),
 			Operator:     model.LessThanOrEquals,
 			SetOperator:  model.FilterAnd,
 			IsStringData: false,

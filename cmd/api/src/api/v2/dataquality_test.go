@@ -1675,10 +1675,10 @@ func TestGetDataQualityAggregations_Success(t *testing.T) {
 						createdAt := filters["created_at"]
 						require.Len(t, createdAt, 2)
 						require.Equal(t, model.GreaterThanOrEquals, createdAt[0].Operator)
-						require.Equal(t, "2022-03-23T07:20:50Z", createdAt[0].Value)
+						require.Equal(t, "2022-03-23T07:20:50.52Z", createdAt[0].Value)
 						require.False(t, createdAt[0].IsStringData)
 						require.Equal(t, model.LessThanOrEquals, createdAt[1].Operator)
-						require.Equal(t, "2022-04-23T07:20:50Z", createdAt[1].Value)
+						require.Equal(t, "2022-04-23T07:20:50.52Z", createdAt[1].Value)
 						require.False(t, createdAt[1].IsStringData)
 						return model.DataQualityAggregations{}, 0, nil
 					})
