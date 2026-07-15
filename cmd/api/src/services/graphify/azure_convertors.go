@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"strings"
 	"time"
 
 	"github.com/bloodhoundad/azurehound/v2/enums"
@@ -616,7 +615,7 @@ func convertAzureRoleAssignment(raw json.RawMessage, converted *ConvertedAzureDa
 	} else {
 		for _, raw := range data.RoleAssignments {
 			var (
-				roleObjectId = fmt.Sprintf("%s@%s", strings.ToUpper(raw.RoleDefinitionId), strings.ToUpper(data.TenantId))
+				roleObjectId = fmt.Sprintf("%s@%s", raw.RoleDefinitionId, data.TenantId)
 			)
 
 			converted.RelProps = append(converted.RelProps, ein.ConvertAzureRoleAssignmentToRels(raw, data, roleObjectId)...)
