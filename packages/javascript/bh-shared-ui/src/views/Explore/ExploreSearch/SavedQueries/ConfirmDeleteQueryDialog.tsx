@@ -32,7 +32,7 @@ const ConfirmDeleteQueryDialog: FC<ConfirmDeleteQueryDialogProps> = ({ open, que
                 <DialogContentText>Are you sure you want to delete this query?</DialogContentText>
             </DialogContent>
             <DialogActions>
-                <Button variant='tertiary' onClick={handleClose}>
+                <Button variant='secondary' onClick={handleClose}>
                     Cancel
                 </Button>
                 <Button
