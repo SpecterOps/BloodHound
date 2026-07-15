@@ -41,7 +41,7 @@ import {
 } from '../../utils/environments';
 import { cn } from '../../utils/theme';
 import { DropdownTrigger, popoverContentStyles } from '../DropdownSelector';
-import { SelectedEnvironment, SelectorValueTypes } from './types';
+import { SelectedEnvironment } from './types';
 
 const selectedText = (
     selected: SelectedEnvironment,
@@ -72,11 +72,7 @@ const selectedText = (
 const SimpleEnvironmentSelector: React.FC<{
     align?: 'center' | 'start' | 'end';
     errorMessage?: ReactNode;
-    onSelect?: (newValue: {
-        type: SelectorValueTypes | null;
-        id: string | null;
-        kind_id?: Environment['environment_kind_id'] | null;
-    }) => void;
+    onSelect?: (newValue: SelectedEnvironment) => void;
     selected: SelectedEnvironment;
     variant?: ButtonProps['variant'];
 }> = ({ align = 'start', errorMessage = '', onSelect = () => {}, selected, variant }) => {
@@ -114,8 +110,11 @@ const SimpleEnvironmentSelector: React.FC<{
     const handleChange: React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement> = (e) =>
         setSearchInput(e.target.value);
 
-    const handlePlatformClick = (type?: Environment['type'], kind_id?: Environment['environment_kind_id']) => {
-        onSelect({ type: type ? `${type}-platform` : null, id: null, kind_id });
+    const handlePlatformClick = (
+        type?: Environment['type'],
+        environment_kind_id?: Environment['environment_kind_id']
+    ) => {
+        onSelect({ type: type ? `${type}-platform` : null, id: null, environment_kind_id });
         handleClose();
     };
 
