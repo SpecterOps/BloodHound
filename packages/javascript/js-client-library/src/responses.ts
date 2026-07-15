@@ -424,7 +424,7 @@ export type CreateWebhookResponse = {
 
 export type GetWebhooksResponse = PaginatedResponse<Webhook[]>;
 export type GetWebhookResponse = BasicResponse<{ webhook: Webhook }>;
-export type RotateWebhookSecretResponse = BasicResponse<WebhookSecret>;
+export type RotateWebhookSecretResponse = BasicResponse<{ webhook_secret: WebhookSecret }>;
 export type WebhookTestResponse = BasicResponse<WebhookTest>;
 
 export type GetNodeResponse = BasicResponse<NodeDetails | NodeDetailsWithInfo>;
