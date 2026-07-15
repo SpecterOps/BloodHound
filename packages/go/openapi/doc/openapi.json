@@ -16550,6 +16550,170 @@
         }
       }
     },
+    "/api/v2/clients/management/start": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "StartClientManagementOperation",
+        "summary": "Notifies the API of a management operation start",
+        "description": "Endpoint for clients to start a management operation and mark the start time.\n\nNote: caller must be a client. For users, this endpoint will return a 403 as\nthey are not expected or allowed to call this endpoint.\n",
+        "tags": [
+          "Clients",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/model.client-management-operation-start-request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-management-operation"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                },
+                "example": {
+                  "http_status": 409,
+                  "timestamp": "2026-07-01T13:44:43.247Z",
+                  "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "errors": [
+                    {
+                      "context": "",
+                      "message": "invalid management operation status transition"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/clients/management/end": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "EndClientManagementOperation",
+        "summary": "Notifies the API of a management operation ending",
+        "description": "Endpoint for clients to end a management operation and mark the completed time.\n\nNote: caller must be a client. For users, this endpoint will return a 403 as\nthey are not expected or allowed to call this endpoint.\n",
+        "tags": [
+          "Clients",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/model.client-management-operation-end-request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-management-operation"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                },
+                "example": {
+                  "http_status": 409,
+                  "timestamp": "2026-07-01T13:44:43.247Z",
+                  "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "errors": [
+                    {
+                      "context": "",
+                      "message": "invalid management operation status transition"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/tasks/available": {
       "parameters": [
         {
@@ -23163,6 +23327,130 @@
             }
           }
         ]
+      },
+      "model.client-management-operation-start-request": {
+        "type": "object",
+        "required": [
+          "operation_id"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "enum.client-management-operation-type": {
+        "type": "string",
+        "enum": [
+          "support_bundle"
+        ]
+      },
+      "enum.client-management-operation-status": {
+        "type": "string",
+        "enum": [
+          "queued",
+          "running",
+          "succeeded",
+          "failed",
+          "canceled"
+        ]
+      },
+      "model.client-management-operation": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.uuid"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "client_id": {
+                "type": "string",
+                "format": "uuid",
+                "readOnly": true
+              },
+              "artifact_id": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.uuid"
+                  }
+                ]
+              },
+              "type": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/enum.client-management-operation-type"
+                  }
+                ]
+              },
+              "status": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/enum.client-management-operation-status"
+                  }
+                ]
+              },
+              "requested_by_user_id": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.uuid"
+                  }
+                ]
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "readOnly": true
+              },
+              "started_at": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.time.response"
+                  }
+                ]
+              },
+              "completed_at": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.time.response"
+                  }
+                ]
+              },
+              "execution_time": {
+                "type": "string",
+                "format": "date-time",
+                "readOnly": true
+              }
+            }
+          }
+        ]
+      },
+      "model.client-management-operation-end-request": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "status"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "succeeded",
+              "failed",
+              "canceled"
+            ]
+          }
+        }
       },
       "enum.risk-acceptance": {
         "type": "string",

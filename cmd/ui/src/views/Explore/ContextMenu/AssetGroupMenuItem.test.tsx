@@ -48,6 +48,21 @@ const getAssetGroupTestProps = ({ isTierZero }: { isTierZero: boolean }) => ({
 describe('AssetGroupMenuItem', async () => {
     describe('adding to an asset group', () => {
         const server = setupServer(
+            rest.get('/api/v2/nodes/:nodeId', (req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: {
+                            node_id: parseInt(req.params.nodeId as string),
+                            kinds: [{ node_kind_id: 1, name: 'User' }],
+                            properties: {
+                                objectid: req.params.nodeId,
+                                name: 'foo',
+                                lastSeen: '',
+                            },
+                        },
+                    })
+                );
+            }),
             rest.get('/api/v2/asset-groups/:assetGroupId/members', (req, res, ctx) => {
                 // handle `tier zero` requests
                 if (req.params.assetGroupId === tierZeroAssetGroup.id.toString()) {
@@ -173,6 +188,21 @@ describe('AssetGroupMenuItem', async () => {
 
     describe('removing from an asset group', () => {
         const server = setupServer(
+            rest.get('/api/v2/nodes/:nodeId', (req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: {
+                            node_id: parseInt(req.params.nodeId as string),
+                            kinds: [{ node_kind_id: 1, name: 'User' }],
+                            properties: {
+                                objectid: req.params.nodeId,
+                                name: 'foo',
+                                lastSeen: '',
+                            },
+                        },
+                    })
+                );
+            }),
             rest.get('/api/v2/asset-groups/:assetGroupId/members', (req, res, ctx) => {
                 // handle `tier zero` requests
                 if (req.params.assetGroupId === tierZeroAssetGroup.id.toString()) {
