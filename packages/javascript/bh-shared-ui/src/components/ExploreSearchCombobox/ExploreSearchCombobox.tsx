@@ -18,7 +18,7 @@ import { List, ListItem, ListItemText, Paper, TextFieldVariants } from '@mui/mat
 import { FormControl, FormField, FormItem, FormMessage, Input, InputProps } from 'doodle-ui';
 import { useCombobox } from 'downshift';
 import { useMemo, useRef } from 'react';
-import { Control } from 'react-hook-form';
+import { Control, ControllerRenderProps } from 'react-hook-form';
 import { SearchResult, getEmptyResultsText, useKeywordAndTypeValues, useSearch } from '../../hooks';
 import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import { RuleFormInputs } from '../../views/PrivilegeZones/Save/RuleForm/types';
@@ -119,14 +119,17 @@ const ExploreSearchCombobox: React.FC<{
                 <FormField
                     control={control}
                     name='seeds'
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormControl>
-                                <Input {...sharedInputProps} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
+                    render={({ field }) => {
+                        const castField = field as ControllerRenderProps<RuleFormInputs, 'seeds'> & { value: string[] };
+                        return (
+                            <FormItem>
+                                <FormControl>
+                                    <Input {...castField} {...sharedInputProps} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        );
+                    }}
                 />
             )}
             <div
