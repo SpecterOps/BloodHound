@@ -41,8 +41,7 @@ const server = setupServer(
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(ctx.status(200), ctx.json({ data: [{ key: 'explore_table_view', enabled: true }] }));
     }),
-
-    rest.get('/api/v2/features', (req, res, ctx) => {
+    rest.get('/api/v2/nodes/:id', (req, res, ctx) => {
         return res(ctx.status(200));
     }),
     rest.get('/api/v2/config', (_req, res, ctx) => {

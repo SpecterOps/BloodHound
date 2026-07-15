@@ -16,16 +16,9 @@
 
 import { Checkbox, FormControlLabel } from '@mui/material';
 import { Skeleton } from 'doodle-ui';
-import { type OptionsObject } from 'notistack';
+import { type SourceKind } from 'js-client-library';
 import { type FC } from 'react';
-import { useQuery } from 'react-query';
-import { useNotifications } from '../../providers/NotificationProvider/hooks';
-import { apiClient } from '../../utils/api';
-
-type SourceKind = {
-    id: number;
-    name: string;
-};
+import { useSourceKindsQuery } from '../../hooks/useSourceKinds';
 
 type GraphDataOption = {
     key: string;
@@ -44,25 +37,6 @@ type GraphDataChecked = Record<number, GraphDataSelection>;
 export type GraphDataSelections = {
     sourceKinds: number[];
     relationships: string[];
-};
-
-const ERROR = {
-    key: 'database-management-source-kind',
-    message: 'An error occurred while loading source kinds. Deleting graph data is disabled. Try refreshing the page.',
-    options: {
-        persist: true,
-        anchorOrigin: { vertical: 'top', horizontal: 'right' },
-    } as OptionsObject,
-};
-
-const useSourceKindsQuery = () => {
-    const { addNotification } = useNotifications();
-
-    return useQuery({
-        queryKey: ['source-kinds'],
-        queryFn: ({ signal }) => apiClient.getSourceKinds({ signal }).then((res) => res.data.data.kinds),
-        onError: () => addNotification(ERROR.message, ERROR.key, ERROR.options),
-    });
 };
 
 // Displayed while source kinds are loading

@@ -408,6 +408,11 @@ export const defaultPortalContainer = {
     container: () => document.getElementById('app-root'), // Callback so this is re-run on useLayoutEffect within MUI
 };
 
+// The word "Label" here is used in the sense of a cypher Label,
+// e.g., in the cypher query: `match(u:User) return u`, 'User' is a cypher Label.
+// That is to say the "Label" usage here does not reflect a type of AssetGroupTag
+export const TagLabelPrefix = 'Tag_' as const;
+
 /**
  * Returns a schema object describing node kinds (`labels`), relationship kinds (`relationshipTypes`),
  * and known property keys. This is primarily used for type completion in the cypher editor.

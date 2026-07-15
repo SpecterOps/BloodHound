@@ -137,6 +137,21 @@ const server = setupServer(
                 data: [],
             })
         );
+    }),
+    rest.get('/api/v2/nodes/:id', (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    node_id: 42,
+                    kinds: [{ node_kind_id: 1, name: searchedNode.kind }],
+                    properties: {
+                        objectid: searchedNode.objectId,
+                        name: searchedNode.label,
+                        lastSeen: searchedNode.lastSeen,
+                    },
+                },
+            })
+        );
     })
 );
 
@@ -221,13 +236,14 @@ describe('GraphView', () => {
         };
 
         clonedCypherResponse.data.edges.push({
+            id: 1,
             source: '108',
             target: '108',
             label: 'some label',
-            kind: 'some kind',
+            kind: 'kind',
             lastSeen: 'some lastSeen',
             impactPercent: 10,
-            exploreGraphId: 'some exploreGraphId',
+            exploreGraphId: '108_kind_108',
             data: {},
         });
 

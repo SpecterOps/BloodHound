@@ -19,11 +19,13 @@ import { parseItemId } from '../utils';
 import { useExploreParams } from './useExploreParams';
 import { useGraphItem } from './useGraphItem';
 
+const HIDDEN_STRING = 'HIDDEN';
+
 export const useExploreSelectedItem = () => {
     const [previousSelectedItem, setPreviousSelectedItem] = useState<string | null>();
     const { selectedItem, setExploreParams } = useExploreParams();
 
-    const selectedItemQuery = useGraphItem(selectedItem!);
+    const selectedItemQuery = useGraphItem(selectedItem);
 
     /** Set the selected node or edge. The most recently selected item will stay highlighted */
     const setSelectedItem = useCallback(
@@ -53,23 +55,7 @@ export const useExploreSelectedItem = () => {
         [selectedItem]
     );
 
-    const selectedHiddenEdge = {
-        id: selectedItem ? selectedItem : 'Hidden',
-        name: '** Hidden Edge **',
-        data: {},
-        sourceNode: {
-            id: 'HIDDEN',
-            objectId: 'HIDDEN',
-            name: 'HIDDEN',
-            type: 'HIDDEN',
-        },
-        targetNode: {
-            id: 'HIDDEN',
-            objectId: 'HIDDEN',
-            name: 'HIDDEN',
-            type: 'HIDDEN',
-        },
-    };
+    const isHidden = selectedItem?.includes(HIDDEN_STRING);
 
     return {
         selectedItem,
@@ -77,8 +63,8 @@ export const useExploreSelectedItem = () => {
         setSelectedItem,
         selectedItemType,
         clearSelectedItem,
-        selectedHiddenEdge,
         previousSelectedItem,
         setPreviousSelectedItem,
+        isHidden,
     };
 };
