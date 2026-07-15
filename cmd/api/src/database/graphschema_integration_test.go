@@ -4323,6 +4323,13 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 	principalKinds, err := testSuite.BHDatabase.GetPrincipalKindsByEnvironmentId(testSuite.Context, environment.ID)
 	assert.NoError(t, err)
 	assert.Len(t, principalKinds, 0, "principal kinds should have been cascade deleted")
+
+	// The non-display node kind should have been stubbed into custom_node_kinds before the cascade delete
+	assertCustomNodeKindPresent(t, testSuite, "CascadeTestNodeKind")
+	stubbedKind, err := testSuite.BHDatabase.GetCustomNodeKind(testSuite.Context, "CascadeTestNodeKind")
+	require.NoError(t, err)
+	assert.Equal(t, database.CustomNodeKindStubConfig, stubbedKind.Config, "non-display kind should have been stubbed with the default stub config")
+	assert.Nil(t, stubbedKind.SchemaNodeKindId, "stub should not reference the (now deleted) schema_node_kind row")
 }
 
 func TestDatabase_GetSchemaFindings(t *testing.T) {

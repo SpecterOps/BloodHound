@@ -608,6 +608,42 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			},
 		},
 		{
+			name: "success_-_dropped_non_display_node_kind_is_stubbed_into_custom_node_kinds",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				extensionInput := model.ExtensionInput{Name: "DropNonDisplayExt", DisplayName: "Drop Non-Display Kind", Version: "1.0.0", Namespace: "DROP_ND"}
+				_, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, model.GraphExtensionInput{
+					ExtensionInput: extensionInput,
+					NodeKindsInput: model.NodesInput{
+						{Name: "NonDisplayKindToKeep", DisplayName: "Non-Display Kind 1", Description: "test", IsDisplayKind: false},
+						{Name: "NonDisplayKindToDrop", DisplayName: "Non-Display Kind 2", Description: "test", IsDisplayKind: false},
+					},
+				})
+				require.NoError(t, err)
+				// Non-display kinds are not tracked in custom_node_kinds while the schema is active.
+				assertCustomNodeKindAbsent(t, testSuite, "NonDisplayKindToDrop")
+
+				// Re-upload the extension with NonDisplayKindToDrop removed, triggering a reconciliation delete.
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput: extensionInput,
+						NodeKindsInput: model.NodesInput{{Name: "NonDisplayKindToKeep", DisplayName: "Non-Display Kind 1", Description: "test", IsDisplayKind: false}},
+					},
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.True(t, updated)
+				assertGraphExtension(t, testSuite, setupData.input)
+				// The dropped non-display kind should now be stubbed into custom_node_kinds.
+				assertCustomNodeKindPresent(t, testSuite, "NonDisplayKindToDrop")
+				kind, err := testSuite.BHDatabase.GetCustomNodeKind(testSuite.Context, "NonDisplayKindToDrop")
+				require.NoError(t, err)
+				assert.Nil(t, kind.SchemaNodeKindId, "stub should not reference the (now deleted) schema_node_kind row")
+			},
+		},
+		{
 			name: "success_-_deleted_schema_node_kind_nulls_schema_node_kind_id_on_custom_node_kind",
 			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
 				t.Helper()
