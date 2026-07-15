@@ -104,11 +104,11 @@ func (s RelationshipView) JSONView() ([]byte, error) {
 // Kinds that are not registered in schema_relationship_kinds are returned with ID=nil.
 func (s Handlers) GetRelationshipByID(response http.ResponseWriter, request *http.Request) {
 	var (
-		err                error = nil
-		ctx                      = request.Context()
-		rawRelationshipID        = mux.Vars(request)[URIPathVariableRelationshipID]
-		includeKindInfoRaw       = request.URL.Query().Get("include-info")
-		includeKindInfo          = false
+		err                error
+		ctx                = request.Context()
+		rawRelationshipID  = mux.Vars(request)[URIPathVariableRelationshipID]
+		includeKindInfoRaw = request.URL.Query().Get("include-info")
+		includeKindInfo    = false
 	)
 
 	relationshipID, err := strconv.ParseInt(rawRelationshipID, 10, 64)
