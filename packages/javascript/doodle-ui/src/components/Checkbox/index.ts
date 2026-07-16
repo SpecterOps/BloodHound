@@ -14,3 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export { Checkbox, CheckboxWithLabel } from './Checkbox';
+export type { CheckboxProps } from './Checkbox';

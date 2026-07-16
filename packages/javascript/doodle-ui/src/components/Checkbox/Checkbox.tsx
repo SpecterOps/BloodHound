@@ -36,7 +36,7 @@ const CheckboxVariants = cva(
     }
 );
 
-export interface CheckboxProps
+interface CheckboxProps
     extends React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>,
         VariantProps<typeof CheckboxVariants> {
     icon?: React.ReactNode;
@@ -47,6 +47,11 @@ const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root
         return (
             <CheckboxPrimitive.Root ref={ref} className={cn(CheckboxVariants({ size, className }))} {...props}>
                 <CheckboxPrimitive.Indicator className='group flex items-center justify-center text-current'>
+                    {/*
+    Both icons are rendered with `display: none` by default. When the indicator's `data-state` is
+    set to `checked` or `indeterminate`, the appropriate icon changes to `display: block`. With
+    this pattern, the checkbox supports uncontrolled usage.
+*/}
                     {icon ? (
                         icon
                     ) : (
@@ -110,14 +115,14 @@ const CheckboxWithLabel = React.forwardRef<React.ElementRef<typeof Checkbox>, Ch
                     ref={ref}
                     id={checkboxId}
                     disabled={disabled}
-                    aria-invalid={error || ariaInvalid}
+                    aria-invalid={error ? true : ariaInvalid}
                     className={cn('focus-visible:ring-0 focus-visible:ring-offset-0', className)}
                 />
 
                 <Label
                     htmlFor={checkboxId}
                     className={cn(
-                        'cursor-pointer text-base font-normal leading-[18px]',
+                        'cursor-pointer font-normal leading-[18px]',
                         error && 'text-error',
                         disabled && 'cursor-not-allowed',
                         labelClassName
@@ -131,3 +136,4 @@ const CheckboxWithLabel = React.forwardRef<React.ElementRef<typeof Checkbox>, Ch
 CheckboxWithLabel.displayName = 'CheckboxWithLabel';
 
 export { Checkbox, CheckboxWithLabel };
+export type { CheckboxProps };
