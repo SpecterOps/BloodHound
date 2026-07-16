@@ -417,6 +417,10 @@ export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
 
 export type SourceKindsResponse = BasicResponse<{ kinds: SourceKind[] }>;
 
+// ---------------------------------------------------------------------------
+//  Alert - Webhooks
+// ---------------------------------------------------------------------------
+
 export type CreateWebhookResponse = {
     webhook: Webhook;
     hmac_secret: string;
@@ -426,6 +430,14 @@ export type GetWebhooksResponse = PaginatedResponse<Webhook[]>;
 export type GetWebhookResponse = BasicResponse<{ webhook: Webhook }>;
 export type RotateWebhookSecretResponse = BasicResponse<{ webhook_secret: WebhookSecret }>;
 export type WebhookTestResponse = BasicResponse<WebhookTest>;
+
+// ---------------------------------------------------------------------------
+//  Alert - Events
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+//  Alert - Alerts
+// ---------------------------------------------------------------------------
 
 export type GetNodeResponse = BasicResponse<NodeDetails | NodeDetailsWithInfo>;
 

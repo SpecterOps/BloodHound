@@ -297,6 +297,9 @@ export interface CreateUserRequest extends Omit<UpdateUserRequest, 'is_disabled'
 
 export type UpdateConfigurationRequest = ConfigurationPayload;
 
+// ---------------------------------------------------------------------------
+//  Alert - Webhooks
+// ---------------------------------------------------------------------------
 export interface CreateWebhookRequest {
     type: WebhookType;
     name: string;
@@ -318,4 +321,48 @@ export interface GetWebhookRequest {
 
 export interface GetWebhookRequest {
     id: string;
+}
+
+// ---------------------------------------------------------------------------
+//  Alert - Events
+// ---------------------------------------------------------------------------
+export interface GetAlertEventRequest {
+    id: string;
+}
+
+// ---------------------------------------------------------------------------
+//  Alert - Alerts
+// ---------------------------------------------------------------------------
+
+export interface AlertSubscription {
+    channel_id: string;
+    event_type: string;
+    version: string;
+    disabled: boolean;
+}
+export interface CreateAlertRequest {
+    name: string;
+    description: string;
+    subscriptions: AlertSubscription[] | [];
+}
+
+export interface GetAlertRequest {
+    id: string;
+}
+
+export interface UpdateAlertRequest {
+    name?: string;
+    description?: string;
+    disabled?: boolean;
+    subscriptions?: AlertSubscription[];
+}
+
+export interface DeleteAlertRequest {
+    id: string;
+}
+
+export interface AlertRetryRequest {
+    alert_id: string;
+    channel_id: string;
+    event_id: string;
 }
