@@ -653,19 +653,10 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 			} else {
 				// Auto certify is enabled but this node hasn't been certified, certify it. Further - update any out of sync node properties
 				certified, certifiedBy := certificationForSelectedNode(selector, *node, oldNode)
-				newSelectorNode := buildSelectorNode(primaryDisplayKinds, *node, selector, certified, certifiedBy)
+				selectorNode := buildSelectorNode(primaryDisplayKinds, *node, selector, certified, certifiedBy)
 
-				if shouldUpdateSelectorNode(oldNode, newSelectorNode) {
-
-					oldNode.Certified = newSelectorNode.Certified
-					oldNode.NodeName = newSelectorNode.NodeName
-					oldNode.NodePrimaryKind = newSelectorNode.NodePrimaryKind
-					oldNode.NodeEnvironmentId = newSelectorNode.NodeEnvironmentId
-					oldNode.NodeObjectId = newSelectorNode.NodeObjectId
-					oldNode.Source = newSelectorNode.Source
-					oldNode.CertifiedBy = newSelectorNode.CertifiedBy
-
-					nodesToUpdate = append(nodesToUpdate, oldNode)
+				if shouldUpdateSelectorNode(oldNode, selectorNode) {
+					nodesToUpdate = append(nodesToUpdate, selectorNode)
 				}
 
 				delete(oldSelectedNodesByNodeId, id)
