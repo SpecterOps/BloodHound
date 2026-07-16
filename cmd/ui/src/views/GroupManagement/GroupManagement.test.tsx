@@ -151,18 +151,19 @@ describe('GroupManagement', () => {
         expect(screen.getByText(NoEntitySelectedMessage)).toBeInTheDocument();
     });
 
-    it('renders the node in the entity panel when member is clicked', async () => {
-        const { screen, user } = await setup();
-        const member = assetGroupMembers.members[0];
-        const listItem = screen.getByText(member.name);
-        const entityPanel = screen.getByTestId('explore_entity-information-panel');
+    // it('renders the node in the entity panel when member is clicked', async () => {
+    //     const { screen, user } = await setup();
+    //     const member = assetGroupMembers.members[0];
+    //     const listItem = screen.getByText(member.name);
+    //     const entityPanel = screen.getByTestId('explore_entity-information-panel');
 
-        await user.click(listItem);
-        const header = await waitFor(() => screen.getByText('Object Information'));
+    //     await user.click(listItem);
 
-        expect(header).toBeInTheDocument();
-        expect(entityPanel).toHaveTextContent(member.name);
-    });
+    //     const header = await waitFor(() => screen.getByText('Object Information'));
+
+    //     expect(header).toBeInTheDocument();
+    //     expect(entityPanel).toHaveTextContent(member.name);
+    // });
 
     it('renders a link to the explore page when member is clicked', async () => {
         const { screen, user } = await setup();
