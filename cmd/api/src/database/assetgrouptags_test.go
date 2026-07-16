@@ -1432,10 +1432,11 @@ func TestDatabase_SelectorNodesBatching(t *testing.T) {
 			updatedCertifiedBy = certifiedBy
 		}
 
-		if nodeIndex == firstBatchCertifiedIndex {
+		switch nodeIndex {
+		case firstBatchCertifiedIndex:
 			updatedCertified = model.AssetGroupCertificationManual
 			updatedCertifiedBy = null.StringFrom("temporary-manual-certifier")
-		} else if nodeIndex == secondBatchCertifiedIndex {
+		case secondBatchCertifiedIndex:
 			updatedCertified = model.AssetGroupCertificationRevoked
 			updatedCertifiedBy = null.StringFrom("temporary-revoked-certifier")
 		}
