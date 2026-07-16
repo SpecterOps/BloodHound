@@ -1069,8 +1069,13 @@ func TestDatabase_GetSelectorsByMemberId(t *testing.T) {
 	)
 	_, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
 	require.NoError(t, err)
-	err = dbInst.InsertSelectorNode(testCtx, 1, testSelectorId, graph.ID(testNodeId), model.AssetGroupCertification(certified), certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
-	require.NoError(t, err)
+	insertAssetGroupSelectorNodes(t, testCtx, dbInst, model.AssetGroupSelectorNode{
+		SelectorId:  testSelectorId,
+		NodeId:      graph.ID(testNodeId),
+		Certified:   model.AssetGroupCertification(certified),
+		CertifiedBy: certifiedBy,
+		Source:      model.AssetGroupSelectorNodeSource(source),
+	})
 	selectors, err := dbInst.GetSelectorsByMemberId(testCtx, testMemberId, test1Selector.AssetGroupTagId)
 	require.NoError(t, err)
 	require.Equal(t, testSelectorId, selectors[0].ID)
@@ -1216,12 +1221,29 @@ func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
 	require.NoError(t, err)
 
 	// insert selector nodes
-	err = suite.BHDatabase.InsertSelectorNode(testCtx, testAssetGroupTagId1, testSelectorId1, testNodeId1, model.AssetGroupCertificationRevoked, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
-	require.NoError(t, err)
-	err = suite.BHDatabase.InsertSelectorNode(testCtx, testAssetGroupTagId1, testSelectorId1, testNodeId2, model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
-	require.NoError(t, err)
-	err = suite.BHDatabase.InsertSelectorNode(testCtx, testAssetGroupTagId1, testSelectorId2, testNodeId1, model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
-	require.NoError(t, err)
+	insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase,
+		model.AssetGroupSelectorNode{
+			SelectorId:  testSelectorId1,
+			NodeId:      testNodeId1,
+			Certified:   model.AssetGroupCertificationRevoked,
+			CertifiedBy: certifiedBy,
+			Source:      model.AssetGroupSelectorNodeSource(source),
+		},
+		model.AssetGroupSelectorNode{
+			SelectorId:  testSelectorId1,
+			NodeId:      testNodeId2,
+			Certified:   model.AssetGroupCertificationPending,
+			CertifiedBy: certifiedBy,
+			Source:      model.AssetGroupSelectorNodeSource(source),
+		},
+		model.AssetGroupSelectorNode{
+			SelectorId:  testSelectorId2,
+			NodeId:      testNodeId1,
+			Certified:   model.AssetGroupCertificationPending,
+			CertifiedBy: certifiedBy,
+			Source:      model.AssetGroupSelectorNodeSource(source),
+		},
+	)
 
 	t.Run("updates certification by selector node, certified", func(t *testing.T) {
 		inputs := []database.UpdateCertificationBySelectorNodeInput{updateInputCertify}
@@ -1510,11 +1532,10 @@ func TestDatabase_UpdateSelectorNodes(t *testing.T) {
 
 	t.Run("updates existing selector nodes by selector ID and node ID", func(t *testing.T) {
 		var (
-			assetGroupTagId = 1
-			selectorOne     = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch update selector one")
-			selectorTwo     = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch update selector two")
-			sharedNodeId    = graph.ID(10001)
-			otherNodeId     = graph.ID(10002)
+			selectorOne  = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch update selector one")
+			selectorTwo  = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch update selector two")
+			sharedNodeId = graph.ID(10001)
+			otherNodeId  = graph.ID(10002)
 
 			oldSelectorOneSharedNode = model.AssetGroupSelectorNode{
 				SelectorId:        selectorOne.ID,
@@ -1573,9 +1594,9 @@ func TestDatabase_UpdateSelectorNodes(t *testing.T) {
 			}
 		)
 
-		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, oldSelectorOneSharedNode)
-		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, oldSelectorOneOtherNode)
-		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, untouchedSelectorTwoSharedNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, oldSelectorOneSharedNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, oldSelectorOneOtherNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, untouchedSelectorTwoSharedNode)
 
 		require.NoError(t, suite.BHDatabase.UpdateSelectorNodes(testCtx, []model.AssetGroupSelectorNode{
 			updatedSelectorOneSharedNode,
@@ -1664,9 +1685,9 @@ func TestDatabase_UpdateSelectorNodes(t *testing.T) {
 			}
 		)
 
-		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, oldAutoNode)
-		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, oldManualNode)
-		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, oldRevokedNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, oldAutoNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, oldManualNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, oldRevokedNode)
 
 		require.NoError(t, suite.BHDatabase.UpdateSelectorNodes(testCtx, []model.AssetGroupSelectorNode{
 			updatedAutoNode,
@@ -1683,7 +1704,6 @@ func TestDatabase_UpdateSelectorNodes(t *testing.T) {
 
 	t.Run("does not create asset group history records when certifications are unchanged", func(t *testing.T) {
 		var (
-			assetGroupTagId = 1
 			selector        = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch update history unchanged")
 			unchangedNodeId = graph.ID(40001)
 			missingNodeId   = graph.ID(40002)
@@ -1723,7 +1743,7 @@ func TestDatabase_UpdateSelectorNodes(t *testing.T) {
 			}
 		)
 
-		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, oldUnchangedNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, oldUnchangedNode)
 
 		require.NoError(t, suite.BHDatabase.UpdateSelectorNodes(testCtx, []model.AssetGroupSelectorNode{
 			updatedUnchangedNode,
@@ -1736,10 +1756,9 @@ func TestDatabase_UpdateSelectorNodes(t *testing.T) {
 
 	t.Run("ignores selector nodes that do not already exist", func(t *testing.T) {
 		var (
-			assetGroupTagId = 1
-			selector        = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch update missing row")
-			existingNodeId  = graph.ID(20001)
-			missingNodeId   = graph.ID(20002)
+			selector       = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch update missing row")
+			existingNodeId = graph.ID(20001)
+			missingNodeId  = graph.ID(20002)
 
 			oldExistingNode = model.AssetGroupSelectorNode{
 				SelectorId:        selector.ID,
@@ -1776,7 +1795,7 @@ func TestDatabase_UpdateSelectorNodes(t *testing.T) {
 			}
 		)
 
-		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, oldExistingNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, oldExistingNode)
 
 		require.NoError(t, suite.BHDatabase.UpdateSelectorNodes(testCtx, []model.AssetGroupSelectorNode{
 			updatedExistingNode,
@@ -1807,10 +1826,9 @@ func TestDatabase_DeleteSelectorNodes(t *testing.T) {
 
 	t.Run("deletes requested selector nodes", func(t *testing.T) {
 		var (
-			assetGroupTagId = 1
-			selector        = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch delete requested nodes")
-			deletedNodeId   = graph.ID(70001)
-			retainedNodeId  = graph.ID(70002)
+			selector       = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch delete requested nodes")
+			deletedNodeId  = graph.ID(70001)
+			retainedNodeId = graph.ID(70002)
 
 			deletedNode = model.AssetGroupSelectorNode{
 				SelectorId:        selector.ID,
@@ -1836,8 +1854,8 @@ func TestDatabase_DeleteSelectorNodes(t *testing.T) {
 			}
 		)
 
-		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, deletedNode)
-		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, retainedNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, deletedNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, retainedNode)
 
 		require.NoError(t, suite.BHDatabase.DeleteSelectorNodes(testCtx, []model.AssetGroupSelectorNode{
 			deletedNode,
@@ -1851,7 +1869,6 @@ func TestDatabase_DeleteSelectorNodes(t *testing.T) {
 
 	t.Run("leaves selector nodes not passed in untouched", func(t *testing.T) {
 		var (
-			assetGroupTagId           = 1
 			selectorOne               = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch delete untouched selector one")
 			selectorTwo               = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch delete untouched selector two")
 			sharedNodeId              = graph.ID(80001)
@@ -1892,9 +1909,9 @@ func TestDatabase_DeleteSelectorNodes(t *testing.T) {
 			}
 		)
 
-		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, deletedSelectorOneSharedNode)
-		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, retainedSelectorOneNode)
-		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, retainedSelectorTwoSharedNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, deletedSelectorOneSharedNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, retainedSelectorOneNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, retainedSelectorTwoSharedNode)
 
 		require.NoError(t, suite.BHDatabase.DeleteSelectorNodes(testCtx, []model.AssetGroupSelectorNode{
 			deletedSelectorOneSharedNode,
@@ -1920,23 +1937,20 @@ func createUpdateSelectorNodesTestSelector(t *testing.T, ctx context.Context, bl
 	return selector
 }
 
-func insertUpdateSelectorNodesTestNode(t *testing.T, ctx context.Context, bloodhoundDatabase *database.BloodhoundDB, assetGroupTagId int, node model.AssetGroupSelectorNode) {
+func insertUpdateSelectorNodesTestNode(t *testing.T, ctx context.Context, bloodhoundDatabase interface {
+	InsertSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error
+}, node model.AssetGroupSelectorNode) {
 	t.Helper()
 
-	err := bloodhoundDatabase.InsertSelectorNode(
-		ctx,
-		assetGroupTagId,
-		node.SelectorId,
-		node.NodeId,
-		node.Certified,
-		node.CertifiedBy,
-		node.Source,
-		node.NodePrimaryKind,
-		node.NodeEnvironmentId,
-		node.NodeObjectId,
-		node.NodeName,
-	)
-	require.NoError(t, err)
+	insertAssetGroupSelectorNodes(t, ctx, bloodhoundDatabase, node)
+}
+
+func insertAssetGroupSelectorNodes(t *testing.T, ctx context.Context, bloodhoundDatabase interface {
+	InsertSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error
+}, nodes ...model.AssetGroupSelectorNode) {
+	t.Helper()
+
+	require.NoError(t, bloodhoundDatabase.InsertSelectorNodes(ctx, nodes))
 }
 
 func requireSelectorNodesBySelectorAndNodeId(t *testing.T, ctx context.Context, bloodhoundDatabase *database.BloodhoundDB, selectorIds ...int) map[int]map[graph.ID]model.AssetGroupSelectorNode {
@@ -2039,23 +2053,25 @@ func TestDatabase_GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(t *tes
 	tierTag, err := suite.BHDatabase.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, model.User{}, "tier 1", testDescription, null.Int32From(2), null.BoolFrom(false), null.String{})
 	require.NoError(t, err)
 
-	labelTag, err := suite.BHDatabase.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label", testDescription, null.Int32{}, null.Bool{}, null.String{})
-	require.NoError(t, err)
-
 	selector, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, tierTag.ID, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
 	require.NoError(t, err)
 
-	err = suite.BHDatabase.InsertSelectorNode(testCtx, tierTag.ID, selector.ID, graph.ID(testNodeId1), model.AssetGroupCertificationManual, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
-	require.NoError(t, err)
-
-	err = suite.BHDatabase.InsertSelectorNode(testCtx, tierTag.ID, selector.ID, graph.ID(testNodeId2), model.AssetGroupCertificationManual, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
-	require.NoError(t, err)
-
-	err = suite.BHDatabase.InsertSelectorNode(testCtx, tierTag.ID, selector.ID, graph.ID(testNodeId1), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
-	require.NoError(t, err)
-
-	err = suite.BHDatabase.InsertSelectorNode(testCtx, labelTag.ID, selector.ID, graph.ID(testNodeId1), model.AssetGroupCertificationManual, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
-	require.NoError(t, err)
+	insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase,
+		model.AssetGroupSelectorNode{
+			SelectorId:  selector.ID,
+			NodeId:      graph.ID(testNodeId1),
+			Certified:   model.AssetGroupCertificationManual,
+			CertifiedBy: certifiedBy,
+			Source:      model.AssetGroupSelectorNodeSource(source),
+		},
+		model.AssetGroupSelectorNode{
+			SelectorId:  selector.ID,
+			NodeId:      graph.ID(testNodeId2),
+			Certified:   model.AssetGroupCertificationManual,
+			CertifiedBy: certifiedBy,
+			Source:      model.AssetGroupSelectorNodeSource(source),
+		},
+	)
 
 	tests := map[string]struct {
 		Input          []int
@@ -2136,17 +2152,42 @@ func TestDatabase_GetAggregatedSelectorNodesCertification(t *testing.T) {
 	t.Run("Multiple nodes - verify highest tier wins", func(t *testing.T) {
 		testNodeId := uint64(1)
 
-		// a selector for T0 selects this node
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0")
-		require.NoError(t, err)
-
-		// a selector for T1 also selects this node
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, tier1.ID, sel1.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_1", "environment", "objid", "NodeSelectedByT1")
-		require.NoError(t, err)
-
-		// a selector for T2 also selects this node
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, tier2.ID, sel2.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_2", "environment", "objid", "NodeSelectedByT2")
-		require.NoError(t, err)
+		// Select the same node through selectors in tiers 0, 1, and 2.
+		insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase,
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel1.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_1",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT1",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel2.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_2",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT2",
+			},
+		)
 
 		// filtering on the nodes from this test only
 		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 1"}, 0, 0)
@@ -2162,22 +2203,56 @@ func TestDatabase_GetAggregatedSelectorNodesCertification(t *testing.T) {
 		testNodeId := uint64(30)
 
 		// a selector for T0 selects this node
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, null.StringFrom("Sel0_1_NoCertifier"), model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0")
-		require.NoError(t, err)
+		insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase, model.AssetGroupSelectorNode{
+			SelectorId:        sel0.ID,
+			NodeId:            graph.ID(testNodeId),
+			Certified:         model.AssetGroupCertificationPending,
+			CertifiedBy:       null.StringFrom("Sel0_1_NoCertifier"),
+			Source:            model.AssetGroupSelectorNodeSource(source),
+			NodePrimaryKind:   "kind_0",
+			NodeEnvironmentId: "environment",
+			NodeObjectId:      "objid",
+			NodeName:          "NodeSelectedByT0",
+		})
 
 		timeBeforeSel0_1_NodeInserted := time.Now().UTC()
 
-		// another selector for T0 selects this node
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_1.ID, graph.ID(testNodeId), model.AssetGroupCertificationManual, null.StringFrom("Sel0_1_ManualCertifier"), model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0")
-		require.NoError(t, err)
-
-		// a selector for T1 also selects this node
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, tier1.ID, sel1.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_1", "environment", "objid", "NodeSelectedByT1")
-		require.NoError(t, err)
-
-		// a selector for T2 also selects this node
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, tier2.ID, sel2.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_2", "environment", "objid", "NodeSelectedByT2")
-		require.NoError(t, err)
+		// Insert the later T0 selector plus higher-tier selectors after the timestamp marker.
+		insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase,
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0_1.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationManual,
+				CertifiedBy:       null.StringFrom("Sel0_1_ManualCertifier"),
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel1.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_1",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT1",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel2.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_2",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT2",
+			},
+		)
 
 		// filtering on the nodes from this test only
 		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 30"}, 0, 0)
@@ -2195,21 +2270,54 @@ func TestDatabase_GetAggregatedSelectorNodesCertification(t *testing.T) {
 
 	t.Run("Multiple nodes - verify highest certify wins", func(t *testing.T) {
 		testNodeId := uint64(2)
-		// this one has certification revoked
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(testNodeId), model.AssetGroupCertificationRevoked, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_CertRevoked")
-		require.NoError(t, err)
 
-		// no certification
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_1.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_CertNone")
-		require.NoError(t, err)
-
-		// manual certification
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_2.ID, graph.ID(testNodeId), model.AssetGroupCertificationManual, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_CertManual")
-		require.NoError(t, err)
-
-		// auto certification
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_3.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_CertAuto")
-		require.NoError(t, err)
+		// Select the same node with each certification state.
+		insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase,
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationRevoked,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0_CertRevoked",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0_1.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0_CertNone",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0_2.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationManual,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0_CertManual",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0_3.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0_CertAuto",
+			},
+		)
 
 		// filtering on the nodes from this test only
 		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 2"}, 0, 0)
@@ -2225,20 +2333,56 @@ func TestDatabase_GetAggregatedSelectorNodesCertification(t *testing.T) {
 	t.Run("Multiple nodes - verify earliest create date wins", func(t *testing.T) {
 		testNodeId := uint64(3)
 		// created first
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_First")
-		require.NoError(t, err)
+		insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase, model.AssetGroupSelectorNode{
+			SelectorId:        sel0.ID,
+			NodeId:            graph.ID(testNodeId),
+			Certified:         model.AssetGroupCertificationAuto,
+			CertifiedBy:       certifiedBy,
+			Source:            model.AssetGroupSelectorNodeSource(source),
+			NodePrimaryKind:   "kind_0",
+			NodeEnvironmentId: "environment",
+			NodeObjectId:      "objid",
+			NodeName:          "NodeSelectedByT0_First",
+		})
 
 		// created second
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_1.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_Second")
-		require.NoError(t, err)
+		insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase, model.AssetGroupSelectorNode{
+			SelectorId:        sel0_1.ID,
+			NodeId:            graph.ID(testNodeId),
+			Certified:         model.AssetGroupCertificationAuto,
+			CertifiedBy:       certifiedBy,
+			Source:            model.AssetGroupSelectorNodeSource(source),
+			NodePrimaryKind:   "kind_0",
+			NodeEnvironmentId: "environment",
+			NodeObjectId:      "objid",
+			NodeName:          "NodeSelectedByT0_Second",
+		})
 
 		// created third
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_2.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_Third")
-		require.NoError(t, err)
+		insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase, model.AssetGroupSelectorNode{
+			SelectorId:        sel0_2.ID,
+			NodeId:            graph.ID(testNodeId),
+			Certified:         model.AssetGroupCertificationAuto,
+			CertifiedBy:       certifiedBy,
+			Source:            model.AssetGroupSelectorNodeSource(source),
+			NodePrimaryKind:   "kind_0",
+			NodeEnvironmentId: "environment",
+			NodeObjectId:      "objid",
+			NodeName:          "NodeSelectedByT0_Third",
+		})
 
 		// created fourth
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_3.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_Fourth")
-		require.NoError(t, err)
+		insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase, model.AssetGroupSelectorNode{
+			SelectorId:        sel0_3.ID,
+			NodeId:            graph.ID(testNodeId),
+			Certified:         model.AssetGroupCertificationAuto,
+			CertifiedBy:       certifiedBy,
+			Source:            model.AssetGroupSelectorNodeSource(source),
+			NodePrimaryKind:   "kind_0",
+			NodeEnvironmentId: "environment",
+			NodeObjectId:      "objid",
+			NodeName:          "NodeSelectedByT0_Fourth",
+		})
 
 		// filtering on the nodes from this test only
 		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 3"}, 0, 0)
@@ -2251,21 +2395,53 @@ func TestDatabase_GetAggregatedSelectorNodesCertification(t *testing.T) {
 	})
 
 	t.Run("test pagination", func(t *testing.T) {
-		// create some nodes, all selected by a t0 selector
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(uint64(10)), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_First")
-		require.NoError(t, err)
-
-		// created second
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(uint64(11)), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_Second")
-		require.NoError(t, err)
-
-		// created third
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(uint64(12)), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_Third")
-		require.NoError(t, err)
-
-		// created fourth
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(uint64(13)), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_Fourth")
-		require.NoError(t, err)
+		// Create four nodes, all selected by a T0 selector.
+		insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase,
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0.ID,
+				NodeId:            graph.ID(uint64(10)),
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0_First",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0.ID,
+				NodeId:            graph.ID(uint64(11)),
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0_Second",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0.ID,
+				NodeId:            graph.ID(uint64(12)),
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0_Third",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0.ID,
+				NodeId:            graph.ID(uint64(13)),
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0_Fourth",
+			},
+		)
 
 		// filtering on the nodes from this test only
 		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 0, 0)

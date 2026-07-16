@@ -2876,20 +2876,6 @@ func (mr *MockDatabaseMockRecorder) InitializeSecretAuth(ctx, adminUser, authSec
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeSecretAuth", reflect.TypeOf((*MockDatabase)(nil).InitializeSecretAuth), ctx, adminUser, authSecret)
 }
 
-// InsertSelectorNode mocks base method.
-func (m *MockDatabase) InsertSelectorNode(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource, primaryKind, environmentId, objectId, name string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InsertSelectorNode", ctx, assetGroupTagId, selectorId, nodeId, certified, certifiedBy, source, primaryKind, environmentId, objectId, name)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// InsertSelectorNode indicates an expected call of InsertSelectorNode.
-func (mr *MockDatabaseMockRecorder) InsertSelectorNode(ctx, assetGroupTagId, selectorId, nodeId, certified, certifiedBy, source, primaryKind, environmentId, objectId, name any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertSelectorNode", reflect.TypeOf((*MockDatabase)(nil).InsertSelectorNode), ctx, assetGroupTagId, selectorId, nodeId, certified, certifiedBy, source, primaryKind, environmentId, objectId, name)
-}
-
 // InsertSelectorNodes mocks base method.
 func (m *MockDatabase) InsertSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error {
 	m.ctrl.T.Helper()
