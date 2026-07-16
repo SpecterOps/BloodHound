@@ -34,7 +34,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
-	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 )
 
