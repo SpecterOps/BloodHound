@@ -34,7 +34,7 @@ type DataQualityStat struct {
 	MetricType              DataQualityMetricType `json:"metric_type"`
 	MetricName              string                `json:"metric_name"`
 	MetricValue             float64               `json:"metric_value"`
-	KindID                  null.Int32            `json:"metric_kind_id"`
+	KindID                  null.Int32            `json:"kind_id"`
 }
 
 func (DataQualityStat) TableName() string {
@@ -81,23 +81,5 @@ func (s DataQualityAggregations) IsSortable(column string) bool {
 		return true
 	default:
 		return false
-	}
-}
-
-func (s DataQualityAggregations) IsStringColumn(column string) bool {
-	switch column {
-	case "run_id",
-		"metric_name",
-		"metric_type":
-		return true
-	default:
-		return false
-	}
-}
-
-func (s DataQualityAggregations) ValidFilters() map[string][]FilterOperator {
-	return map[string][]FilterOperator{
-		"schema_extension_id":        {Equals, NotEquals},
-		"schema_environment_kind_id": {Equals, NotEquals},
 	}
 }
