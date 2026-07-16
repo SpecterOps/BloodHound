@@ -178,17 +178,9 @@ const RuleForm: FC = () => {
     const patchRuleMutation = usePatchRule(tagId);
     const createRuleMutation = useCreateRule(tagId);
 
-    const catchObjectIdSeedsError = useCallback(
-        (error: any) => {
-            const errorMessage = error?.response?.data?.errors?.[0]?.message;
-            const missingObjectError = ruleType === SeedTypeObjectId && errorMessage === SEEDS_ARE_REQUIRED;
-
-            if (missingObjectError) {
-                form.setError('seeds', { message: 'Please add at least one object to this Rule.' });
-            }
-        },
-        [form, ruleType]
-    );
+    const setObjectIdError = useCallback(() => {
+        form.setError('seeds', { message: 'Please add at least one object to this Rule.' });
+    }, [form]);
 
     const handlePatchRule = useCallback(async () => {
         try {
@@ -197,6 +189,10 @@ const RuleForm: FC = () => {
             const diffedValues = diffValues(ruleQuery.data, { ...form.getValues(), seeds });
 
             const stalePreviewErrorMessage = getErrorMessage('seeds are required', 'updating', 'rule', ruleType);
+
+            if (ruleType === SeedTypeObjectId && seeds.length === 0) {
+                setObjectIdError();
+            }
 
             if (isEmpty(diffedValues)) {
                 const errorMessage = staleCypherPreview ? stalePreviewErrorMessage : 'No changes to rule detected';
@@ -234,7 +230,6 @@ const RuleForm: FC = () => {
 
             navigate(-1);
         } catch (error) {
-            catchObjectIdSeedsError(error);
             handleError(error, 'updating', 'rule', addNotification, { ruleType });
         }
     }, [
@@ -248,7 +243,7 @@ const RuleForm: FC = () => {
         form,
         seeds,
         staleCypherPreview,
-        catchObjectIdSeedsError,
+        setObjectIdError,
     ]);
 
     const handleCreateRule = useCallback(async () => {
@@ -269,20 +264,15 @@ const RuleForm: FC = () => {
 
             navigate(tagDetailsLink(tagId));
         } catch (error: any) {
-            catchObjectIdSeedsError(error);
+            const errorMessage = error?.response?.data?.errors?.[0]?.message;
+            const missingObjectError = ruleType === SeedTypeObjectId && errorMessage === SEEDS_ARE_REQUIRED;
+
+            if (missingObjectError) {
+                setObjectIdError();
+            }
             handleError(error, 'creating', 'rule', addNotification, { ruleType });
         }
-    }, [
-        tagId,
-        ruleType,
-        form,
-        seeds,
-        createRuleMutation,
-        addNotification,
-        navigate,
-        tagDetailsLink,
-        catchObjectIdSeedsError,
-    ]);
+    }, [tagId, ruleType, form, seeds, createRuleMutation, addNotification, navigate, tagDetailsLink, setObjectIdError]);
 
     const createOrUpdateRule = useCallback(() => {
         if (isUpdate) {
