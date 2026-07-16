@@ -178,6 +178,18 @@ const RuleForm: FC = () => {
     const patchRuleMutation = usePatchRule(tagId);
     const createRuleMutation = useCreateRule(tagId);
 
+    const catchObjectIdSeedsError = useCallback(
+        (error: any) => {
+            const errorMessage = error?.response?.data?.errors?.[0]?.message;
+            const missingObjectError = ruleType === SeedTypeObjectId && errorMessage === SEEDS_ARE_REQUIRED;
+
+            if (missingObjectError) {
+                form.setError('seeds', { message: 'Please add at least one object to this Rule.' });
+            }
+        },
+        [form, ruleType]
+    );
+
     const handlePatchRule = useCallback(async () => {
         try {
             if (!tagId || !ruleId) throw new Error(`Missing required entity IDs; tagId: ${tagId}, ruleId: ${ruleId}`);
@@ -222,6 +234,7 @@ const RuleForm: FC = () => {
 
             navigate(-1);
         } catch (error) {
+            catchObjectIdSeedsError(error);
             handleError(error, 'updating', 'rule', addNotification, { ruleType });
         }
     }, [
@@ -235,6 +248,7 @@ const RuleForm: FC = () => {
         form,
         seeds,
         staleCypherPreview,
+        catchObjectIdSeedsError,
     ]);
 
     const handleCreateRule = useCallback(async () => {
@@ -255,15 +269,20 @@ const RuleForm: FC = () => {
 
             navigate(tagDetailsLink(tagId));
         } catch (error: any) {
-            const errorMessage = error?.response?.data?.errors?.[0]?.message;
-            const missingObjectError = ruleType === SeedTypeObjectId && errorMessage === SEEDS_ARE_REQUIRED;
-
-            if (missingObjectError) {
-                form.setError('seeds', { message: 'Please add at least one object to this Rule.' });
-            }
+            catchObjectIdSeedsError(error);
             handleError(error, 'creating', 'rule', addNotification, { ruleType });
         }
-    }, [tagId, ruleType, form, seeds, createRuleMutation, addNotification, navigate, tagDetailsLink]);
+    }, [
+        tagId,
+        ruleType,
+        form,
+        seeds,
+        createRuleMutation,
+        addNotification,
+        navigate,
+        tagDetailsLink,
+        catchObjectIdSeedsError,
+    ]);
 
     const createOrUpdateRule = useCallback(() => {
         if (isUpdate) {
