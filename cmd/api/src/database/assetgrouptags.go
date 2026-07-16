@@ -64,10 +64,8 @@ type AssetGroupTagSelectorNodeData interface {
 	InsertSelectorNode(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource, primaryKind, environmentId, objectId, name string) error
 	InsertSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error
 	UpdateSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error
-	UpdateSelectorNodesByNodeId(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, primaryKind, environmentId, objectId, name string) error
 	UpdateCertificationBySelectorNode(ctx context.Context, input []UpdateCertificationBySelectorNodeInput) error
 	DeleteSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error
-	DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeId graph.ID) error
 	DeleteSelectorNodesBySelectorIds(ctx context.Context, selectorId ...int) error
 	GetSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) ([]model.AssetGroupSelectorNode, error)
 	GetSelectorNodesBySelectorIdsFilteredAndPaginated(ctx context.Context, sqlFilter model.SQLFilter, sort model.Sort, skip, limit int, selectorIds ...int) ([]model.AssetGroupSelectorNode, int, error)
@@ -1082,22 +1080,6 @@ func selectorNodeCertificationHistoryActionSQLArgs() []any {
 	}
 }
 
-func (s *BloodhoundDB) UpdateSelectorNodesByNodeId(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, primaryKind, environmentId, objectId, displayName string) error {
-	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var oldSelectorNode model.AssetGroupSelectorNode
-		if err := tx.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, node_id, certified, certified_by, node_primary_kind, node_environment_id, node_object_id, node_name, updated_at, created_at FROM %s WHERE selector_id = ? AND node_id = ?", model.AssetGroupSelectorNode{}.TableName()), selectorId, nodeId).First(&oldSelectorNode); err.Error != nil && !errors.Is(err.Error, gorm.ErrRecordNotFound) {
-			return CheckError(err)
-		} else if result := tx.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET certified = ?, certified_by = ?, node_primary_kind = ?, node_environment_id = ?, node_object_id = ?, node_name = ?, updated_at = current_timestamp WHERE selector_id = ? AND node_id = ?", model.AssetGroupSelectorNode{}.TableName()), certified, certifiedBy, primaryKind, environmentId, objectId, displayName, selectorId, nodeId); result.Error != nil {
-			return CheckError(result)
-		} else if oldSelectorNode.Certified != certified {
-			bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
-			return bhdb.CreateAssetGroupHistoryRecord(ctx, model.AssetGroupActorBloodHound, "", displayName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(certified), assetGroupTagId, null.String{}, null.String{})
-		}
-
-		return nil
-	})
-}
-
 type UpdateCertificationBySelectorNodeInput struct {
 	AssetGroupTagId     int
 	SelectorId          int
@@ -1192,10 +1174,6 @@ func deleteSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 	}
 
 	return nil
-}
-
-func (s *BloodhoundDB) DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeId graph.ID) error {
-	return CheckError(s.db.WithContext(ctx).Exec(fmt.Sprintf("DELETE FROM %s WHERE selector_id = ? AND node_id = ?", model.AssetGroupSelectorNode{}.TableName()), selectorId, nodeId))
 }
 
 func (s *BloodhoundDB) DeleteSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) error {
