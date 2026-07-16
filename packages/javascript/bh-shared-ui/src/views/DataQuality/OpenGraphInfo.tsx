@@ -38,7 +38,9 @@ const useStyles = makeStyles((theme) => ({
 
 // getLatestMetricStats keeps only the latest stat per kind_id (by created_at) and
 // splits the result into node stats and the latest relationship stat.
-export const getLatestMetricStats = (data: OpenGraphDataQualityStat[]) => {
+export const getLatestMetricStats = (
+    data: OpenGraphDataQualityStat[]
+): { nodeStats: OpenGraphDataQualityStat[]; relationshipStat: OpenGraphDataQualityStat } => {
     const latestStatsByMetricKind = new Map<number, any>();
     for (const stat of data) {
         const existing = latestStatsByMetricKind.get(stat.kind_id);
