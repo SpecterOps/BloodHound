@@ -573,7 +573,7 @@ func certificationForSelectedNode(selector model.AssetGroupTagSelector, node nod
 	var (
 		certified                    = model.AssetGroupCertificationPending
 		certifiedBy                  null.String
-		isManuallyCertifiedOrRevoked = selectorNode.Certified == model.AssetGroupCertificationRevoked || selectorNode.Certified == model.AssetGroupCertificationManual
+		isManuallyCertifiedOrRevoked = existingSelectorNode != nil && (selectorNode.Certified == model.AssetGroupCertificationRevoked || selectorNode.Certified == model.AssetGroupCertificationManual)
 		shouldAutoCertify            = ((selector.AutoCertify == model.SelectorAutoCertifyMethodSeedsOnly && node.Source == model.AssetGroupSelectorNodeSourceSeed) ||
 			selector.AutoCertify == model.SelectorAutoCertifyMethodAllMembers)
 	)
