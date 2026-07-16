@@ -179,6 +179,14 @@ const MultiSelect = ({
     const [open, setOpen] = React.useState(false);
     const [searchValue, setSearchValue] = React.useState('');
 
+    const handleOpenChange = (nextOpen: boolean) => {
+        setOpen(nextOpen);
+
+        if (!nextOpen) {
+            setSearchValue('');
+        }
+    };
+
     const handleSelect = (selectedValue: string) => {
         const isSelected = value.includes(selectedValue);
 
@@ -266,7 +274,7 @@ const MultiSelect = ({
     }
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={handleOpenChange}>
             <PopoverTrigger asChild>
                 <MultiSelectTrigger
                     open={open}
@@ -298,13 +306,17 @@ const MultiSelect = ({
                         aria-label={placeholder ?? 'Select options'}
                         aria-busy={isLoading || undefined}
                         className='p-1'>
-                        {selectAllLabel && !isLoading && !isSearchResultEmpty && selectableValues.length > 0 && (
-                            <MultiSelectActionRow
-                                checked={selectAllChecked}
-                                label={selectAllLabel}
-                                onSelect={handleSelectAll}
-                            />
-                        )}
+                        {selectAllLabel &&
+                            !isLoading &&
+                            !hasSearchText &&
+                            !isSearchResultEmpty &&
+                            selectableValues.length > 0 && (
+                                <MultiSelectActionRow
+                                    checked={selectAllChecked}
+                                    label={selectAllLabel}
+                                    onSelect={handleSelectAll}
+                                />
+                            )}
 
                         {listContent}
                     </div>
