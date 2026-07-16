@@ -30,20 +30,20 @@ get:
   parameters:
     - name: schema_environment_kind_id
       description: >
-        Required. Filter results by the environment kind id to scope the
-        aggregation to a single kind. Valid filter predicates are `eq` and `neq`.
+        Required. Scopes the aggregation to a single environment kind id.
       in: query
       required: true
       schema:
-        $ref: './../schemas/api.params.predicate.filter.integer.yaml'
+        type: integer
+        format: int32
     - name: schema_extension_id
       description: >
-        Filter results by the OpenGraph schema extension id. When an `eq`
-        predicate is provided, the extension must exist or a 404 is returned.
-        Valid filter predicates are `eq` and `neq`.
+        Optional. Scopes the aggregation to a single OpenGraph schema extension id.
+        The extension must exist or a 404 is returned.
       in: query
       schema:
-        $ref: './../schemas/api.params.predicate.filter.integer.yaml'
+        type: integer
+        format: int32
     - name: sort_by
       description: >
         Sortable columns are created_at, updated_at.

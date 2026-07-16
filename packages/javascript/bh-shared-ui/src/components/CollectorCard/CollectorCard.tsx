@@ -74,7 +74,7 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
                 <Box>
                     <Button
                         aria-label={`Download ${COLLECTOR_TYPE[collectorType]} ${version} (.zip)`}
-                        variant='tertiary'
+                        variant='secondary'
                         onClick={handleOnClickDownload}>
                         <FontAwesomeIcon
                             aria-hidden='true'

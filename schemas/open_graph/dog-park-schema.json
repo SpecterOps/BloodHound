@@ -12,7 +12,23 @@
       "description": "Off-leash play area for large dogs",
       "is_display_kind": true,
       "icon": "shield-dog",
-      "color": "#388E3C"
+      "color": "#388E3C",
+      "info": {
+        "overview": {
+          "title": "Overview",
+          "position": 1,
+          "markdown": {
+            "content": "The **Large Dog Area** is an off-leash play area reserved for large-breed dogs and their registered owners."
+          }
+        },
+        "access_rules": {
+          "title": "Access Rules",
+          "position": 2,
+          "markdown": {
+            "content": "Only patrons with a valid membership and their registered dogs may enter this area."
+          }
+        }
+      }
     },
     {
       "name": "dogpark_Patron",
@@ -20,7 +36,23 @@
       "description": "Dog park member / visitor",
       "is_display_kind": true,
       "icon": "person",
-      "color": "#2196F3"
+      "color": "#2196F3",
+      "info": {
+        "overview": {
+          "title": "Overview",
+          "position": 1,
+          "markdown": {
+            "content": "A **Patron** is a dog park member or visitor who may own one or more dogs and access permitted areas."
+          }
+        },
+        "membership": {
+          "title": "Membership",
+          "position": 2,
+          "markdown": {
+            "content": "Membership grants a patron access to designated areas. Verify status in the registration system."
+          }
+        }
+      }
     },
     {
       "name": "dogpark_Dog",
@@ -28,20 +60,46 @@
       "description": "A happy dog",
       "is_display_kind": true,
       "icon": "dog",
-      "color": "#FF0000"
+      "color": "#FF0000",
+      "info": {
+        "overview": {
+          "title": "Overview",
+          "position": 1,
+          "markdown": {
+            "content": "A **Dog** is a happy park attendee owned by a patron."
+          }
+        }
+      }
     }
   ],
-  "properties": [],
   "relationship_kinds": [
     {
       "name": "dogpark_CanAccess",
       "description": "Principal can enter an area",
-      "is_traversable": true
+      "is_traversable": true,
+      "info": {
+        "overview": {
+          "title": "Overview",
+          "position": 1,
+          "markdown": {
+            "content": "The **CanAccess** edge indicates that a principal is permitted to enter a given area."
+          }
+        }
+      }
     },
     {
       "name": "dogpark_OwnedBy",
       "description": "Dog owned by a patron",
-      "is_traversable": true
+      "is_traversable": true,
+      "info": {
+        "overview": {
+          "title": "Overview",
+          "position": 1,
+          "markdown": {
+            "content": "The **OwnedBy** edge links a dog to the patron who owns it."
+          }
+        }
+      }
     }
   ],
   "environments": [

@@ -165,7 +165,7 @@ const SimpleEnvironmentSelector: React.FC<{
                     {isPrivilegeZonesPage && (
                         <li key='all-environments'>
                             <Button
-                                className='flex justify-between items-center gap-2 w-full'
+                                className={cn(optionStyles, 'flex justify-between items-center gap-2')}
                                 onClick={() => handlePlatformClick()}
                                 variant='text'>
                                 All Environments
@@ -202,7 +202,7 @@ const SimpleEnvironmentSelector: React.FC<{
                         return (
                             <li key={environment.id}>
                                 <Button
-                                    className='flex justify-between items-center gap-2 w-full'
+                                    className={cn(optionStyles, 'flex justify-between items-center gap-2')}
                                     onClick={() => handleEnvironmentClick(environment)}
                                     variant='text'>
                                     <TooltipProvider>
@@ -217,7 +217,11 @@ const SimpleEnvironmentSelector: React.FC<{
                                             </TooltipPortal>
                                         </TooltipRoot>
                                     </TooltipProvider>
-                                    <FontAwesomeIcon icon={environmentInfo[environment.type]?.icon} size='sm' />
+                                    <FontAwesomeIcon
+                                        className={optionIconStyles}
+                                        icon={environmentInfo[environment.type]?.icon}
+                                        size='sm'
+                                    />
                                 </Button>
                             </li>
                         );
