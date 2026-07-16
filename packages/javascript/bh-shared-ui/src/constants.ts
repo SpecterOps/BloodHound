@@ -47,90 +47,47 @@ export const HIGH_VALUE_LABEL = 'High Value';
 export const SNACKBAR_DURATION = 5000;
 export const SNACKBAR_DURATION_LONG = 15000;
 
-export const useStyles = makeStyles((theme: Theme) => ({
+export const useStyles = makeStyles(() => ({
     applicationContainer: {
         display: 'flex',
         position: 'relative',
         height: '100%',
         overflow: 'hidden',
-        '@global': {
-            '.api-explorer .swagger-ui': {
-                [`& a.nostyle,
-                    & div.renderedMarkdown > p,
-                    & .response-col_status,
-                    & .col_header,
-                    & div.parameter__name,
-                    & .parameter__in,
-                    & div.opblock-summary-description,
-                    & div > small,
-                    & li.tabitem,
-                    & .response-col_links,
-                    & .opblock-description-wrapper > p,
-                    & .btn-group > button,
-                    & textarea,
-                    & select,
-                    & .parameter__type,
-                    & .prop-format,
-                    `]: {
-                    color: theme.palette.color.primary,
-                },
-                ['& input, & textarea, & select, & .models, & .filter-container .operation-filter-input']: {
-                    backgroundColor: theme.palette.neutral.primary,
-                    border: `1px solid ${theme.palette.grey[700]}`,
+    },
+}));
 
-                    '&:hover, &:focus': {
-                        borderColor: theme.palette.color.links,
-                    },
-                    '&:focus': {
-                        outline: `1px solid ${theme.palette.color.links}`,
-                    },
-                },
-                '& .models': {
-                    '& h4': {
-                        borderBottomColor: theme.palette.grey[700],
-                    },
-                    '& span, & table': {
-                        color: theme.palette.color.primary,
-                    },
-                    '& svg': {
-                        fill: theme.palette.color.primary,
-                    },
-                    '& model-box': {
-                        backgroundColor: theme.palette.neutral.primary,
-                    },
-                },
-                '& .parameter__name.required::after': {
-                    color: theme.palette.color.error,
-                },
-                '& .responses-inner': {
-                    [`& h4, & h5`]: {
-                        color: theme.palette.color.primary,
-                    },
-                },
-                '& svg': {
-                    fill: theme.palette.color.primary,
-                },
-                '& .opblock-deprecated': {
-                    '& .opblock-title_normal': {
-                        color: theme.palette.color.primary,
-                    },
-                },
-                '& .opblock-section-header': {
-                    backgroundColor: theme.palette.neutral.primary,
-                    '& h4, & .btn': {
-                        color: theme.palette.color.primary,
-                    },
+const focusRingStyles = (palette: Palette) => ({
+    outline: `2px solid ${palette.color.links}`,
+    outlineOffset: '2px',
+});
+
+const inheritFocusedIconStyles = {
+    '& svg': {
+        color: 'inherit',
+        fill: 'currentColor',
+    },
+    '& svg *': {
+        color: 'inherit',
+        fill: 'currentColor',
+    },
+};
+
+export const themedComponents = (palette: Palette): ThemeOptions['components'] => ({
+    MuiButtonBase: {
+        styleOverrides: {
+            root: {
+                '&.Mui-focusVisible': {
+                    ...focusRingStyles(palette),
+                    ...inheritFocusedIconStyles,
                 },
             },
         },
     },
-}));
-
-export const themedComponents = (palette: Palette): ThemeOptions['components'] => ({
     MuiAccordionSummary: {
         styleOverrides: {
             root: {
                 flexDirection: 'row-reverse',
+                '&.Mui-focusVisible': focusRingStyles(palette),
             },
             content: {
                 marginRight: '4px',
@@ -141,6 +98,13 @@ export const themedComponents = (palette: Palette): ThemeOptions['components'] =
         styleOverrides: {
             root: {
                 color: palette.color.links,
+                borderRadius: '2px',
+                '&:focus-visible': {
+                    ...focusRingStyles(palette),
+                    textDecoration: 'underline',
+                    textDecorationThickness: '2px',
+                    textUnderlineOffset: '2px',
+                },
             },
         },
     },
@@ -203,6 +167,14 @@ export const themedComponents = (palette: Palette): ThemeOptions['components'] =
                 },
             },
         },
+        styleOverrides: {
+            option: {
+                '&.Mui-focused, &[aria-selected="true"].Mui-focused': {
+                    backgroundColor: addOpacityToHex(palette.color.links, 16),
+                    boxShadow: `inset 3px 0 0 ${palette.color.links}`,
+                },
+            },
+        },
     },
     MuiDialogActions: {
         styleOverrides: {
@@ -226,8 +198,32 @@ export const themedComponents = (palette: Palette): ThemeOptions['components'] =
     MuiCheckbox: {
         styleOverrides: {
             root: {
+                '&.Mui-focusVisible': {
+                    ...focusRingStyles(palette),
+                    borderRadius: '4px',
+                },
                 '& svg': {
                     color: palette.color.primary,
+                },
+            },
+        },
+    },
+    MuiRadio: {
+        styleOverrides: {
+            root: {
+                '&.Mui-focusVisible': {
+                    ...focusRingStyles(palette),
+                    borderRadius: '50%',
+                },
+            },
+        },
+    },
+    MuiSwitch: {
+        styleOverrides: {
+            root: {
+                '&:has(.Mui-focusVisible)': {
+                    ...focusRingStyles(palette),
+                    borderRadius: '999px',
                 },
             },
         },
@@ -253,6 +249,35 @@ export const themedComponents = (palette: Palette): ThemeOptions['components'] =
                 '& :not(.Mui-selected) > svg': {
                     color: palette.color.primary,
                 },
+            },
+        },
+    },
+    MuiTab: {
+        styleOverrides: {
+            root: {
+                '&.Mui-focusVisible': {
+                    ...focusRingStyles(palette),
+                    ...inheritFocusedIconStyles,
+                },
+            },
+        },
+    },
+    MuiMenuItem: {
+        styleOverrides: {
+            root: {
+                '&.Mui-focusVisible, &:focus-visible': {
+                    backgroundColor: addOpacityToHex(palette.color.links, 16),
+                    boxShadow: `inset 3px 0 0 ${palette.color.links}`,
+                    ...inheritFocusedIconStyles,
+                },
+            },
+        },
+    },
+    MuiTableSortLabel: {
+        styleOverrides: {
+            root: {
+                borderRadius: '2px',
+                '&.Mui-focusVisible, &:focus-visible': focusRingStyles(palette),
             },
         },
     },

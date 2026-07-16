@@ -315,3 +315,7 @@ export interface UpdateWebhookRequest {
 export interface GetWebhookRequest {
     id: string;
 }
+
+export interface GetWebhookRequest {
+    id: string;
+}

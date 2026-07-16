@@ -18,6 +18,7 @@ package services_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"testing"
 
@@ -46,10 +47,11 @@ func TestService_GetRelationship(t *testing.T) {
 	)
 
 	tests := []struct {
-		name       string
-		setupMock  func(databaseMock *mocks.MockDatabase)
-		wantResult services.Relationship
-		wantErr    error
+		name            string
+		includeKindInfo bool
+		setupMock       func(databaseMock *mocks.MockDatabase)
+		wantResult      services.Relationship
+		wantErr         error
 	}{
 		{
 			name: "resolves the kind id and preserves endpoint node ids on success",
@@ -66,7 +68,90 @@ func TestService_GetRelationship(t *testing.T) {
 			},
 		},
 		{
+			name:            "fetches filters and sorts relationship kind infos when requested",
+			includeKindInfo: true,
+			setupMock: func(databaseMock *mocks.MockDatabase) {
+				databaseMock.EXPECT().GetRelationship(ctx, relationshipID).Return(baseRelationship, nil)
+				databaseMock.EXPECT().GetKindByName(ctx, kindName).Return(resolvedKind, nil)
+				databaseMock.EXPECT().GetKindInfos(ctx, kindName).Return([]services.KindInfo{
+					{
+						InfoKey:            "later",
+						Title:              "Beta",
+						Position:           1,
+						RelationshipKindID: int32Ptr(42),
+						Content:            json.RawMessage(`{"markdown":{"content":"later"}}`),
+					},
+					{
+						InfoKey:    "node_info",
+						Title:      "Node Info",
+						Position:   0,
+						NodeKindID: int32Ptr(99),
+						Content:    json.RawMessage(`{"markdown":{"content":"node"}}`),
+					},
+					{
+						InfoKey:            "first",
+						Title:              "Gamma",
+						Position:           0,
+						RelationshipKindID: int32Ptr(42),
+						Content:            json.RawMessage(`{"markdown":{"content":"first"}}`),
+					},
+					{
+						InfoKey:            "middle",
+						Title:              "Alpha",
+						Position:           1,
+						RelationshipKindID: int32Ptr(42),
+						Content:            json.RawMessage(`{"markdown":{"content":"middle"}}`),
+					},
+				}, nil)
+			},
+			wantResult: services.Relationship{
+				ID:           relationshipID,
+				SourceNodeID: 100,
+				TargetNodeID: 200,
+				Kind:         resolvedKind,
+				Properties:   map[string]any{"foo": "bar"},
+				KindInfos: []services.KindInfo{
+					{
+						InfoKey:            "first",
+						Title:              "Gamma",
+						Position:           0,
+						RelationshipKindID: int32Ptr(42),
+						Content:            json.RawMessage(`{"markdown":{"content":"first"}}`),
+					},
+					{
+						InfoKey:            "middle",
+						Title:              "Alpha",
+						Position:           1,
+						RelationshipKindID: int32Ptr(42),
+						Content:            json.RawMessage(`{"markdown":{"content":"middle"}}`),
+					},
+					{
+						InfoKey:            "later",
+						Title:              "Beta",
+						Position:           1,
+						RelationshipKindID: int32Ptr(42),
+						Content:            json.RawMessage(`{"markdown":{"content":"later"}}`),
+					},
+				},
+			},
+		},
+		{
 			name: "preserves a nil kind id when the kind has no schema_relationship_kinds entry",
+			setupMock: func(databaseMock *mocks.MockDatabase) {
+				databaseMock.EXPECT().GetRelationship(ctx, relationshipID).Return(baseRelationship, nil)
+				databaseMock.EXPECT().GetKindByName(ctx, kindName).Return(nilIDKind, nil)
+			},
+			wantResult: services.Relationship{
+				ID:           relationshipID,
+				SourceNodeID: 100,
+				TargetNodeID: 200,
+				Kind:         nilIDKind,
+				Properties:   map[string]any{"foo": "bar"},
+			},
+		},
+		{
+			name:            "does not fetch relationship kind info when the resolved kind id is nil",
+			includeKindInfo: true,
 			setupMock: func(databaseMock *mocks.MockDatabase) {
 				databaseMock.EXPECT().GetRelationship(ctx, relationshipID).Return(baseRelationship, nil)
 				databaseMock.EXPECT().GetKindByName(ctx, kindName).Return(nilIDKind, nil)
@@ -107,6 +192,16 @@ func TestService_GetRelationship(t *testing.T) {
 			},
 			wantErr: unexpectedErr,
 		},
+		{
+			name:            "propagates relationship kind info errors",
+			includeKindInfo: true,
+			setupMock: func(databaseMock *mocks.MockDatabase) {
+				databaseMock.EXPECT().GetRelationship(ctx, relationshipID).Return(baseRelationship, nil)
+				databaseMock.EXPECT().GetKindByName(ctx, kindName).Return(resolvedKind, nil)
+				databaseMock.EXPECT().GetKindInfos(ctx, kindName).Return(nil, unexpectedErr)
+			},
+			wantErr: unexpectedErr,
+		},
 	}
 
 	for _, tt := range tests {
@@ -118,7 +213,7 @@ func TestService_GetRelationship(t *testing.T) {
 
 			tt.setupMock(databaseMock)
 
-			result, err := svc.GetRelationship(ctx, relationshipID)
+			result, err := svc.GetRelationship(ctx, relationshipID, tt.includeKindInfo)
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 			} else {

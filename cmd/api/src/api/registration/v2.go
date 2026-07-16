@@ -349,6 +349,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET(fmt.Sprintf("/api/v2/azure-tenants/{%s}/data-quality-stats", api.URIPathVariableTenantID), resources.GetAzureDataQualityStats).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB, resources.DogTags),
 		routerInst.GET(fmt.Sprintf("/api/v2/platform/{%s}/data-quality-stats", api.URIPathVariablePlatformID), resources.GetPlatformAggregateStats).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/data-quality-stats", resources.GetDataQualityStats).RequirePermissions(permissions.GraphDBRead).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement),
+		routerInst.GET("/api/v2/data-quality-stats-aggregations", resources.GetDataQualityAggregations).RequirePermissions(permissions.GraphDBRead).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement),
 
 		// Datapipe API
 		routerInst.GET("/api/v2/datapipe/status", resources.GetDatapipeStatus).RequireAuth(),

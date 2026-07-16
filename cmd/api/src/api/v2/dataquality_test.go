@@ -1058,7 +1058,7 @@ func TestGetPlatformAggregateStats_Failure(t *testing.T) {
 			},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(v2.ErrInvalidPlatformId, "invalidPlatform")}},
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(v2.FmtErrInvalidPlatformId, "invalidPlatform")}},
 			},
 		},
 		// AD
@@ -1422,6 +1422,386 @@ func TestGetPlatformAggregateStats_Success(t *testing.T) {
 				t.Errorf("handler returned wrong status code: got %v want %v", status, tc.Expected.Code)
 			}
 		}
+	}
+}
+
+func TestGetDataQualityAggregations_Failure(t *testing.T) {
+	var (
+		endpoint                         = "/api/v2/data-quality-stats-aggregations%s"
+		testSchemaEnvironmentKindIDParam = "schema_environment_kind_id"
+		testSchemaExtensionIDParam       = "schema_extension_id"
+	)
+
+	type Input struct {
+		Params url.Values
+	}
+	type mockResources struct {
+		Database *mocks.MockDatabase
+	}
+	defaultResources := func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+		return v2.Resources{DB: mock.Database}
+	}
+
+	var cases = []struct {
+		Name     string
+		Input    Input
+		Setup    func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources
+		Expected api.ErrorWrapper
+	}{
+		{
+			Name:  "missing required schema_environment_kind_id returns bad request",
+			Input: Input{Params: url.Values{}},
+			Setup: defaultResources,
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.FmtErrorResponseDetailsMissingRequiredQueryParameter, testSchemaEnvironmentKindIDParam)}},
+			},
+		},
+		{
+			Name: "non-integer schema_environment_kind_id returns bad request",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"abc"},
+			}},
+			Setup: defaultResources,
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(v2.FmtErrInvalidIntegerQueryParameter, testSchemaEnvironmentKindIDParam)}},
+			},
+		},
+		{
+			Name: "invalid sort column returns bad request",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"sort_by":                        []string{"invalidColumn"},
+			}},
+			Setup: defaultResources,
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf("%s: %s", api.ErrResponseDetailsColumnNotSortable, "invalidColumn")}},
+			},
+		},
+		{
+			Name: "invalid skip returns bad request",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"skip":                           []string{"-1"},
+			}},
+			Setup: defaultResources,
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(utils.ErrorInvalidSkip, -1)}},
+			},
+		},
+		{
+			Name: "invalid limit returns bad request",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"limit":                          []string{"-1"},
+			}},
+			Setup: defaultResources,
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(utils.ErrorInvalidLimit, -1)}},
+			},
+		},
+		{
+			Name: "non-integer schema_extension_id returns bad request",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				testSchemaExtensionIDParam:       []string{"abc"},
+			}},
+			Setup: defaultResources,
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(v2.FmtErrInvalidIntegerQueryParameter, testSchemaExtensionIDParam)}},
+			},
+		},
+		{
+			Name: "nonexistent schema_extension_id returns not found",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				testSchemaExtensionIDParam:       []string{"999"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetGraphSchemaExtensionById(gomock.Any(), gomock.Any()).Return(model.GraphSchemaExtension{}, database.ErrNotFound)
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusNotFound,
+				Errors:     []api.ErrorDetails{{Message: api.ErrorResponseDetailsResourceNotFound}},
+			},
+		},
+		{
+			Name: "database error returns internal server error",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusInternalServerError,
+				Errors:     []api.ErrorDetails{{Message: api.ErrorResponseDetailsInternalServerError}},
+			},
+		},
+		{
+			Name: "invalid start returns bad request",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"start":                          []string{"invalidRFC3339"},
+			}},
+			Setup: defaultResources,
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+			},
+		},
+		{
+			Name: "invalid end returns bad request",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"end":                            []string{"invalidRFC3339"},
+			}},
+			Setup: defaultResources,
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+			},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			mock := mockResources{
+				Database: mocks.NewMockDatabase(mockCtrl),
+			}
+			resources := tc.Setup(mockCtrl, mock)
+			params := fmt.Sprintf("?%s", tc.Input.Params.Encode())
+			req, err := http.NewRequest("GET", fmt.Sprintf(endpoint, params), nil)
+			require.NoError(t, err)
+
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/data-quality-stats-aggregations", resources.GetDataQualityAggregations).Methods("GET")
+
+			rr := httptest.NewRecorder()
+			router.ServeHTTP(rr, req)
+
+			require.Equalf(t, tc.Expected.HTTPStatus, rr.Code, "wrong status code; body=%s", rr.Body.String())
+
+			var body any
+			if err := json.Unmarshal(rr.Body.Bytes(), &body); err != nil {
+				t.Fatal("failed to unmarshal response body")
+			}
+
+			require.Equal(t, 1, len(tc.Expected.Errors))
+			require.Equal(t, tc.Expected.Errors[0].Message, body.(map[string]any)["errors"].([]any)[0].(map[string]any)["message"])
+		})
+	}
+}
+
+func TestGetDataQualityAggregations_Success(t *testing.T) {
+	var (
+		endpoint                         = "/api/v2/data-quality-stats-aggregations%s"
+		testSchemaEnvironmentKindIDParam = "schema_environment_kind_id"
+		testSchemaExtensionIDParam       = "schema_extension_id"
+	)
+
+	type Input struct {
+		Params url.Values
+	}
+	type Expected struct {
+		Code int
+	}
+	type mockResources struct {
+		Database *mocks.MockDatabase
+	}
+
+	var cases = []struct {
+		Name       string
+		Input      Input
+		Setup      func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources
+		Expected   Expected
+		AssertBody func(t *testing.T, body map[string]any)
+	}{
+		{
+			Name:  "minimal required filter",
+			Input: Input{Params: url.Values{testSchemaEnvironmentKindIDParam: []string{"100"}}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityAggregations{}, 0, nil)
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name: "with sort, limit, and skip",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"sort_by":                        []string{"-created_at"},
+				"limit":                          []string{"1"},
+				"skip":                           []string{"0"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityAggregations{}, 0, nil)
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name: "with existing schema_extension_id",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				testSchemaExtensionIDParam:       []string{"42"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetGraphSchemaExtensionById(gomock.Any(), gomock.Any()).Return(model.GraphSchemaExtension{}, nil)
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityAggregations{}, 0, nil)
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name: "with start and end injects inclusive created_at window",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"start":                          []string{"2022-03-23T07:20:50.52Z"},
+				"end":                            []string{"2022-04-23T07:20:50.52Z"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+					func(_ context.Context, filters model.Filters, _ model.Sort, _ int, _ int) (model.DataQualityAggregations, int, error) {
+						createdAt := filters["created_at"]
+						require.Len(t, createdAt, 2)
+						require.Equal(t, model.GreaterThanOrEquals, createdAt[0].Operator)
+						require.Equal(t, "2022-03-23T07:20:50.52Z", createdAt[0].Value)
+						require.False(t, createdAt[0].IsStringData)
+						require.Equal(t, model.LessThanOrEquals, createdAt[1].Operator)
+						require.Equal(t, "2022-04-23T07:20:50.52Z", createdAt[1].Value)
+						require.False(t, createdAt[1].IsStringData)
+						return model.DataQualityAggregations{}, 0, nil
+					})
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name: "with start only",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"start":                          []string{"2022-03-23T07:20:50.52Z"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityAggregations{}, 0, nil)
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name: "with end only",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"end":                            []string{"2022-04-23T07:20:50.52Z"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityAggregations{}, 0, nil)
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name:  "default window when start and end omitted",
+			Input: Input{Params: url.Values{testSchemaEnvironmentKindIDParam: []string{"100"}}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityAggregations{}, 0, nil)
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name: "descending sort direction is passed to the database",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"sort_by":                        []string{"-created_at"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+					func(_ context.Context, _ model.Filters, sort model.Sort, _ int, _ int) (model.DataQualityAggregations, int, error) {
+						require.Len(t, sort, 1)
+						require.Equal(t, "created_at", sort[0].Column)
+						require.Equal(t, model.DescendingSortDirection, sort[0].Direction)
+						return model.DataQualityAggregations{}, 0, nil
+					})
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name:  "default skip and limit are passed to the database when omitted",
+			Input: Input{Params: url.Values{testSchemaEnvironmentKindIDParam: []string{"100"}}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+					func(_ context.Context, _ model.Filters, _ model.Sort, skip int, limit int) (model.DataQualityAggregations, int, error) {
+						require.Equal(t, 0, skip)
+						require.Equal(t, 1000, limit)
+						return model.DataQualityAggregations{}, 0, nil
+					})
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name: "skip and limit keep correct order in both database call and response",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"skip":                           []string{"3"},
+				"limit":                          []string{"7"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+					func(_ context.Context, _ model.Filters, _ model.Sort, skip int, limit int) (model.DataQualityAggregations, int, error) {
+						require.Equal(t, 3, skip)
+						require.Equal(t, 7, limit)
+						return model.DataQualityAggregations{}, 42, nil
+					})
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+			AssertBody: func(t *testing.T, body map[string]any) {
+				require.Equal(t, float64(3), body["skip"])
+				require.Equal(t, float64(7), body["limit"])
+				require.Equal(t, float64(42), body["count"])
+			},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			mock := mockResources{
+				Database: mocks.NewMockDatabase(mockCtrl),
+			}
+			resources := tc.Setup(mockCtrl, mock)
+			params := fmt.Sprintf("?%s", tc.Input.Params.Encode())
+			req, err := http.NewRequest("GET", fmt.Sprintf(endpoint, params), nil)
+			require.NoError(t, err)
+
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/data-quality-stats-aggregations", resources.GetDataQualityAggregations).Methods("GET")
+
+			rr := httptest.NewRecorder()
+			router.ServeHTTP(rr, req)
+
+			require.Equalf(t, tc.Expected.Code, rr.Code, "wrong status code; body=%s", rr.Body.String())
+
+			if tc.AssertBody != nil {
+				var body map[string]any
+				require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &body))
+				tc.AssertBody(t, body)
+			}
+		})
 	}
 }
 
