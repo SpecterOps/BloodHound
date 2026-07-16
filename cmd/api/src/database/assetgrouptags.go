@@ -61,7 +61,6 @@ type AssetGroupTagSelectorData interface {
 
 // AssetGroupTagSelectorNodeData defines the methods required to interact with the asset_group_tag_selector_nodes table
 type AssetGroupTagSelectorNodeData interface {
-	InsertSelectorNode(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource, primaryKind, environmentId, objectId, name string) error
 	InsertSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error
 	UpdateSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error
 	UpdateCertificationBySelectorNode(ctx context.Context, input []UpdateCertificationBySelectorNodeInput) error
@@ -730,18 +729,6 @@ func (s *BloodhoundDB) GetAssetGroupTagForSelection(ctx context.Context) ([]mode
 		)
 		SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled FROM %s WHERE id IN ((SELECT id FROM tier), (SELECT id FROM owned))`,
 		model.AssetGroupTag{}.TableName())).Find(&tags))
-}
-
-func (s *BloodhoundDB) InsertSelectorNode(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource, primaryKind, environmentId, objectId, displayName string) error {
-	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if result := tx.WithContext(ctx).Exec(fmt.Sprintf("INSERT INTO %s (selector_id, node_id, certified, certified_by, source, node_primary_kind, node_environment_id, node_object_id, node_name, created_at, updated_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, current_timestamp, current_timestamp) ON CONFLICT DO NOTHING", model.AssetGroupSelectorNode{}.TableName()), selectorId, nodeId, certified, certifiedBy, source, primaryKind, environmentId, objectId, displayName); result.Error != nil {
-			return CheckError(result)
-		} else if certified != model.AssetGroupCertificationPending {
-			bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
-			return bhdb.CreateAssetGroupHistoryRecord(ctx, model.AssetGroupActorBloodHound, "", displayName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(certified), assetGroupTagId, null.String{}, null.String{})
-		}
-		return nil
-	})
 }
 
 func (s *BloodhoundDB) InsertSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error {

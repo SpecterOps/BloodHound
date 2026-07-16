@@ -398,19 +398,16 @@ func TestTagAssetGroupNodesForTag(t *testing.T) {
 		// Insert a selector node row for the first graph node so that it remains "selected" for this tag.
 		// The remaining nodes have no selector_node row and should each have their tag kind removed.
 		selectedNodeId := previouslyTagged[0]
-		require.NoError(t, bhDB.InsertSelectorNode(
-			testCtx,
-			tag.ID,
-			selector.ID,
-			selectedNodeId,
-			model.AssetGroupCertificationManual,
-			null.StringFrom(model.AssetGroupActorBloodHound),
-			model.AssetGroupSelectorNodeSourceSeed,
-			ad.User.String(),
-			"",
-			"REGRESSION-MIXED-OBJECT-ID-0",
-			"regression-mixed-node-0",
-		))
+		insertSelectorNodes(t, testCtx, bhDB, model.AssetGroupSelectorNode{
+			SelectorId:      selector.ID,
+			NodeId:          selectedNodeId,
+			Certified:       model.AssetGroupCertificationManual,
+			CertifiedBy:     null.StringFrom(model.AssetGroupActorBloodHound),
+			Source:          model.AssetGroupSelectorNodeSourceSeed,
+			NodePrimaryKind: ad.User.String(),
+			NodeObjectId:    "REGRESSION-MIXED-OBJECT-ID-0",
+			NodeName:        "regression-mixed-node-0",
+		})
 
 		var (
 			exclusionSet  = cardinality.NewBitmap64()
@@ -470,19 +467,16 @@ func TestTagAssetGroupNodesForTag(t *testing.T) {
 
 		// add these nodes to the selector so they are "selected" for this tag and should have the tag kind added
 		for i, nodeId := range addedNodeIds {
-			require.NoError(t, bhDB.InsertSelectorNode(
-				testCtx,
-				tag.ID,
-				selector.ID,
-				nodeId,
-				model.AssetGroupCertificationManual,
-				null.StringFrom(model.AssetGroupActorBloodHound),
-				model.AssetGroupSelectorNodeSourceSeed,
-				ad.User.String(),
-				"",
-				fmt.Sprintf("REGRESSION-TIER-ADDED-ID-%d", i),
-				fmt.Sprintf("regression-tier-added-%d", i),
-			))
+			insertSelectorNodes(t, testCtx, bhDB, model.AssetGroupSelectorNode{
+				SelectorId:      selector.ID,
+				NodeId:          nodeId,
+				Certified:       model.AssetGroupCertificationManual,
+				CertifiedBy:     null.StringFrom(model.AssetGroupActorBloodHound),
+				Source:          model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind: ad.User.String(),
+				NodeObjectId:    fmt.Sprintf("REGRESSION-TIER-ADDED-ID-%d", i),
+				NodeName:        fmt.Sprintf("regression-tier-added-%d", i),
+			})
 		}
 
 		// Create nodes that already carry the tag kind but have no selector node row — these drive tag_removed.
@@ -614,19 +608,17 @@ func TestSelectNodes(t *testing.T) {
 		node := insertGraphNode(t, testCtx, graphDB, name, ad.User)
 		selector := insertTagAndTagSelector(t, testCtx, bhDB, testActor, "select nodes stale properties", model.SelectorAutoCertifyMethodDisabled, createSelectorSeed(t, node))
 
-		require.NoError(t, bhDB.InsertSelectorNode(
-			testCtx,
-			selector.AssetGroupTagId,
-			selector.ID,
-			node.ID,
-			model.AssetGroupCertificationPending,
-			null.String{},
-			model.AssetGroupSelectorNodeSourceSeed,
-			"stale-kind",
-			"stale-env",
-			"stale-object-id",
-			"stale-name",
-		))
+		insertSelectorNodes(t, testCtx, bhDB, model.AssetGroupSelectorNode{
+			SelectorId:        selector.ID,
+			NodeId:            node.ID,
+			Certified:         model.AssetGroupCertificationPending,
+			CertifiedBy:       null.String{},
+			Source:            model.AssetGroupSelectorNodeSourceSeed,
+			NodePrimaryKind:   "stale-kind",
+			NodeEnvironmentId: "stale-env",
+			NodeObjectId:      "stale-object-id",
+			NodeName:          "stale-name",
+		})
 
 		runSelectNodes(t, testCtx, bhDB, graphDB, agtParameters, primaryDisplayKinds, selector, model.AssetGroupExpansionMethodNone)
 
@@ -654,32 +646,30 @@ func TestSelectNodes(t *testing.T) {
 
 		manualCertifiedBy := null.StringFrom("manual@example.com")
 		revokedCertifiedBy := null.StringFrom("revoked@example.com")
-		require.NoError(t, bhDB.InsertSelectorNode(
-			testCtx,
-			selector.AssetGroupTagId,
-			selector.ID,
-			manualNode.ID,
-			model.AssetGroupCertificationManual,
-			manualCertifiedBy,
-			model.AssetGroupSelectorNodeSourceSeed,
-			"stale-kind",
-			"stale-env",
-			"stale-object-id",
-			"stale-name",
-		))
-		require.NoError(t, bhDB.InsertSelectorNode(
-			testCtx,
-			selector.AssetGroupTagId,
-			selector.ID,
-			revokedNode.ID,
-			model.AssetGroupCertificationRevoked,
-			revokedCertifiedBy,
-			model.AssetGroupSelectorNodeSourceSeed,
-			"stale-kind",
-			"stale-env",
-			"stale-object-id",
-			"stale-name",
-		))
+		insertSelectorNodes(t, testCtx, bhDB,
+			model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            manualNode.ID,
+				Certified:         model.AssetGroupCertificationManual,
+				CertifiedBy:       manualCertifiedBy,
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "stale-kind",
+				NodeEnvironmentId: "stale-env",
+				NodeObjectId:      "stale-object-id",
+				NodeName:          "stale-name",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            revokedNode.ID,
+				Certified:         model.AssetGroupCertificationRevoked,
+				CertifiedBy:       revokedCertifiedBy,
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "stale-kind",
+				NodeEnvironmentId: "stale-env",
+				NodeObjectId:      "stale-object-id",
+				NodeName:          "stale-name",
+			},
+		)
 
 		runSelectNodes(t, testCtx, bhDB, graphDB, agtParameters, primaryDisplayKinds, selector, model.AssetGroupExpansionMethodNone)
 
@@ -699,19 +689,17 @@ func TestSelectNodes(t *testing.T) {
 		node := insertGraphNode(t, testCtx, graphDB, name, ad.User)
 		selector := insertTagAndTagSelector(t, testCtx, bhDB, testActor, "select nodes auto disabled", model.SelectorAutoCertifyMethodDisabled, createSelectorSeed(t, node))
 
-		require.NoError(t, bhDB.InsertSelectorNode(
-			testCtx,
-			selector.AssetGroupTagId,
-			selector.ID,
-			node.ID,
-			model.AssetGroupCertificationAuto,
-			null.StringFrom(model.AssetGroupActorBloodHound),
-			model.AssetGroupSelectorNodeSourceSeed,
-			ad.User.String(),
-			suffixDomainSID(name),
-			suffixObjectID(name),
-			suffixName(name),
-		))
+		insertSelectorNodes(t, testCtx, bhDB, model.AssetGroupSelectorNode{
+			SelectorId:        selector.ID,
+			NodeId:            node.ID,
+			Certified:         model.AssetGroupCertificationAuto,
+			CertifiedBy:       null.StringFrom(model.AssetGroupActorBloodHound),
+			Source:            model.AssetGroupSelectorNodeSourceSeed,
+			NodePrimaryKind:   ad.User.String(),
+			NodeEnvironmentId: suffixDomainSID(name),
+			NodeObjectId:      suffixObjectID(name),
+			NodeName:          suffixName(name),
+		})
 
 		runSelectNodes(t, testCtx, bhDB, graphDB, agtParameters, primaryDisplayKinds, selector, model.AssetGroupExpansionMethodNone)
 
@@ -728,32 +716,30 @@ func TestSelectNodes(t *testing.T) {
 		unselectedNode := insertGraphNode(t, testCtx, graphDB, unselectedName, ad.User)
 		selector := insertTagAndTagSelector(t, testCtx, bhDB, testActor, "select nodes delete unselected", model.SelectorAutoCertifyMethodDisabled, createSelectorSeed(t, selectedNode))
 
-		require.NoError(t, bhDB.InsertSelectorNode(
-			testCtx,
-			selector.AssetGroupTagId,
-			selector.ID,
-			selectedNode.ID,
-			model.AssetGroupCertificationPending,
-			null.String{},
-			model.AssetGroupSelectorNodeSourceSeed,
-			ad.User.String(),
-			suffixDomainSID(selectedName),
-			suffixObjectID(selectedName),
-			suffixName(selectedName),
-		))
-		require.NoError(t, bhDB.InsertSelectorNode(
-			testCtx,
-			selector.AssetGroupTagId,
-			selector.ID,
-			unselectedNode.ID,
-			model.AssetGroupCertificationPending,
-			null.String{},
-			model.AssetGroupSelectorNodeSourceSeed,
-			ad.User.String(),
-			suffixDomainSID(unselectedName),
-			suffixObjectID(unselectedName),
-			suffixName(unselectedName),
-		))
+		insertSelectorNodes(t, testCtx, bhDB,
+			model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            selectedNode.ID,
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   ad.User.String(),
+				NodeEnvironmentId: suffixDomainSID(selectedName),
+				NodeObjectId:      suffixObjectID(selectedName),
+				NodeName:          suffixName(selectedName),
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            unselectedNode.ID,
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   ad.User.String(),
+				NodeEnvironmentId: suffixDomainSID(unselectedName),
+				NodeObjectId:      suffixObjectID(unselectedName),
+				NodeName:          suffixName(unselectedName),
+			},
+		)
 
 		runSelectNodes(t, testCtx, bhDB, graphDB, agtParameters, primaryDisplayKinds, selector, model.AssetGroupExpansionMethodNone)
 
@@ -773,19 +759,17 @@ func TestSelectNodes(t *testing.T) {
 			},
 		)
 
-		require.NoError(t, bhDB.InsertSelectorNode(
-			testCtx,
-			selector.AssetGroupTagId,
-			selector.ID,
-			oldNode.ID,
-			model.AssetGroupCertificationPending,
-			null.String{},
-			model.AssetGroupSelectorNodeSourceSeed,
-			ad.User.String(),
-			suffixDomainSID(name),
-			suffixObjectID(name),
-			suffixName(name),
-		))
+		insertSelectorNodes(t, testCtx, bhDB, model.AssetGroupSelectorNode{
+			SelectorId:        selector.ID,
+			NodeId:            oldNode.ID,
+			Certified:         model.AssetGroupCertificationPending,
+			CertifiedBy:       null.String{},
+			Source:            model.AssetGroupSelectorNodeSourceSeed,
+			NodePrimaryKind:   ad.User.String(),
+			NodeEnvironmentId: suffixDomainSID(name),
+			NodeObjectId:      suffixObjectID(name),
+			NodeName:          suffixName(name),
+		})
 
 		runSelectNodes(t, testCtx, bhDB, graphDB, agtParameters, primaryDisplayKinds, selector, model.AssetGroupExpansionMethodNone)
 
@@ -797,19 +781,17 @@ func TestSelectNodes(t *testing.T) {
 		node := insertGraphNode(t, testCtx, graphDB, name, ad.User)
 		selector := insertTagAndTagSelector(t, testCtx, bhDB, testActor, "select nodes stale source", model.SelectorAutoCertifyMethodSeedsOnly, createSelectorSeed(t, node))
 
-		require.NoError(t, bhDB.InsertSelectorNode(
-			testCtx,
-			selector.AssetGroupTagId,
-			selector.ID,
-			node.ID,
-			model.AssetGroupCertificationPending,
-			null.String{},
-			model.AssetGroupSelectorNodeSourceChild,
-			ad.User.String(),
-			suffixDomainSID(name),
-			suffixObjectID(name),
-			suffixName(name),
-		))
+		insertSelectorNodes(t, testCtx, bhDB, model.AssetGroupSelectorNode{
+			SelectorId:        selector.ID,
+			NodeId:            node.ID,
+			Certified:         model.AssetGroupCertificationPending,
+			CertifiedBy:       null.String{},
+			Source:            model.AssetGroupSelectorNodeSourceChild,
+			NodePrimaryKind:   ad.User.String(),
+			NodeEnvironmentId: suffixDomainSID(name),
+			NodeObjectId:      suffixObjectID(name),
+			NodeName:          suffixName(name),
+		})
 
 		runSelectNodes(t, testCtx, bhDB, graphDB, agtParameters, primaryDisplayKinds, selector, model.AssetGroupExpansionMethodNone)
 
@@ -928,6 +910,14 @@ func runSelectNodes(t *testing.T, ctx context.Context, bhDB database.Database, g
 	t.Helper()
 
 	require.Empty(t, SelectNodes(ctx, bhDB, graphDB, agtParameters, primaryDisplayKinds, selector, expansionMethod))
+}
+
+func insertSelectorNodes(t *testing.T, ctx context.Context, bhDB interface {
+	InsertSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error
+}, nodes ...model.AssetGroupSelectorNode) {
+	t.Helper()
+
+	require.NoError(t, bhDB.InsertSelectorNodes(ctx, nodes))
 }
 
 func requireSelectorNode(t *testing.T, ctx context.Context, bhDB interface {
