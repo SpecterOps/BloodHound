@@ -54,7 +54,7 @@ const singleNodeGraphResponse = {
 const zeroNodeGraphResponse = {
     data: {
         nodes: {},
-        edges: [{ source: '1', target: '2', label: 'HasSession', kind: 'HasSession', lastSeen: '2023-01-01' }],
+        edges: [{ id: 1, source: '1', target: '2', label: 'HasSession', kind: 'HasSession', lastSeen: '2023-01-01' }],
     },
 };
 

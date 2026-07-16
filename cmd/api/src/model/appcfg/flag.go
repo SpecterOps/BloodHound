@@ -49,6 +49,7 @@ const (
 	FeatureAPIKeyExpirationSupport      = "api_key_expiration_support"
 	FeatureCollectorSupportBundle       = "collector_support_bundle"
 	FeatureVariableAnalysisMode         = "variable_analysis_mode"
+	FeatureUseRawObjectID               = "use_raw_object_id"
 )
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be

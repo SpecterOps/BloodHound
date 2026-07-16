@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { NodeDetails } from 'js-client-library';
 import * as hooks from '../../../hooks';
 import { render } from '../../../test-utils';
 import CopyMenuItem from './CopyMenuItem';
@@ -22,8 +23,10 @@ import CopyMenuItem from './CopyMenuItem';
 const useExploreSelectedItemSpy = vi.spyOn(hooks, 'useExploreSelectedItem');
 
 describe('CopyMenuItem', () => {
-    const selectedNode = {
-        label: 'foo',
+    const selectedNode: NodeDetails = {
+        node_id: 1,
+        kinds: [],
+        properties: { name: 'foo', objectid: 'bar', lastSeen: '' },
     };
 
     const setup = () => {
@@ -48,6 +51,6 @@ describe('CopyMenuItem', () => {
         await user.click(nameOption);
 
         const clipboardText = await navigator.clipboard.readText();
-        expect(clipboardText).toBe(selectedNode.label);
+        expect(clipboardText).toBe(selectedNode.properties.name);
     });
 });
