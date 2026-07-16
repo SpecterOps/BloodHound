@@ -17,6 +17,8 @@
 type: object
 required:
   - relationship_id
+  - source_node_id
+  - target_node_id
   - kind
   - properties
 properties:
