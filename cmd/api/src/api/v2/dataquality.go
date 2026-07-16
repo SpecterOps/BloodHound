@@ -17,13 +17,18 @@
 package v2
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad"
@@ -35,6 +40,9 @@ const (
 	ErrNoTenantId        string = "no tenant id specified in url"
 	ErrNoPlatformId      string = "no platform id specified in url"
 	ErrInvalidPlatformId string = "invalid platform id specified in url: %v"
+	ErrNoEnvironmentId   string = "environment_id is required"
+	ErrUnknownUser       string = "unknown user"
+	ErrNoAccess          string = "user does not have permission to access this environment"
 )
 
 func (s Resources) GetDatabaseCompleteness(response http.ResponseWriter, request *http.Request) {
@@ -65,32 +73,14 @@ func (s Resources) GetDatabaseCompleteness(response http.ResponseWriter, request
 
 func (s *Resources) GetADDataQualityStats(response http.ResponseWriter, request *http.Request) {
 	var (
-		order                    []string
 		adDataQualityStats       model.ADDataQualityStats
 		queryParams              = request.URL.Query()
 		defaultEnd, defaultStart = DefaultTimeRange()
 	)
 
-	for _, column := range queryParams[api.QueryParameterSortBy] {
-		var descending bool
-		if string(column[0]) == "-" {
-			descending = true
-			column = column[1:]
-		}
-
-		if !adDataQualityStats.IsSortable(column) {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
-			return
-		}
-
-		if descending {
-			order = append(order, column+" desc")
-		} else {
-			order = append(order, column)
-		}
-	}
-
-	if id, hasDomainID := mux.Vars(request)[api.URIPathVariableDomainID]; !hasDomainID {
+	if order, _, err := parseOrder(queryParams, adDataQualityStats); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if id, hasDomainID := mux.Vars(request)[api.URIPathVariableDomainID]; !hasDomainID {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorNoDomainId, request), response)
 	} else if start, err := ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["start"]), request), response)
@@ -100,7 +90,7 @@ func (s *Resources) GetADDataQualityStats(response http.ResponseWriter, request 
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidLimit, queryParams["limit"]), request), response)
 	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, queryParams["skip"]), request), response)
-	} else if stats, count, err := s.DB.GetADDataQualityStats(request.Context(), id, start, end, strings.Join(order, ", "), limit, skip); err != nil {
+	} else if stats, count, err := s.DB.GetADDataQualityStats(request.Context(), id, start, end, order, limit, skip); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteResponseWrapperWithTimeWindowAndPagination(request.Context(), stats, start, end, limit, skip, count, http.StatusOK, response)
@@ -109,32 +99,14 @@ func (s *Resources) GetADDataQualityStats(response http.ResponseWriter, request 
 
 func (s *Resources) GetAzureDataQualityStats(response http.ResponseWriter, request *http.Request) {
 	var (
-		order                    []string
 		azureDataQualityStats    model.AzureDataQualityStats
 		queryParams              = request.URL.Query()
 		defaultEnd, defaultStart = DefaultTimeRange()
 	)
 
-	for _, column := range queryParams[api.QueryParameterSortBy] {
-		var descending bool
-		if string(column[0]) == "-" {
-			descending = true
-			column = column[1:]
-		}
-
-		if !azureDataQualityStats.IsSortable(column) {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
-			return
-		}
-
-		if descending {
-			order = append(order, column+" desc")
-		} else {
-			order = append(order, column)
-		}
-	}
-
-	if id, hasTenantID := mux.Vars(request)[api.URIPathVariableTenantID]; !hasTenantID {
+	if order, _, err := parseOrder(queryParams, azureDataQualityStats); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if id, hasTenantID := mux.Vars(request)[api.URIPathVariableTenantID]; !hasTenantID {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrNoTenantId, request), response)
 	} else if start, err := ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["start"]), request), response)
@@ -144,7 +116,7 @@ func (s *Resources) GetAzureDataQualityStats(response http.ResponseWriter, reque
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidLimit, queryParams["limit"]), request), response)
 	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, queryParams["skip"]), request), response)
-	} else if stats, count, err := s.DB.GetAzureDataQualityStats(request.Context(), id, start, end, strings.Join(order, ", "), limit, skip); err != nil {
+	} else if stats, count, err := s.DB.GetAzureDataQualityStats(request.Context(), id, start, end, order, limit, skip); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteResponseWrapperWithTimeWindowAndPagination(request.Context(), stats, start, end, limit, skip, count, http.StatusOK, response)
@@ -153,7 +125,6 @@ func (s *Resources) GetAzureDataQualityStats(response http.ResponseWriter, reque
 
 func (s *Resources) GetPlatformAggregateStats(response http.ResponseWriter, request *http.Request) {
 	var (
-		order                    []string
 		azureDataQualityStats    model.AzureDataQualityStats
 		queryParams              = request.URL.Query()
 		defaultEnd, defaultStart = DefaultTimeRange()
@@ -161,26 +132,9 @@ func (s *Resources) GetPlatformAggregateStats(response http.ResponseWriter, requ
 
 	// TODO: This is currently using only the Azure stat type, but should check against the appropriate aggregate type for the chosen platform
 	// It's safe for now, but should be refactored
-	for _, column := range queryParams[api.QueryParameterSortBy] {
-		var descending bool
-		if string(column[0]) == "-" {
-			descending = true
-			column = column[1:]
-		}
-
-		if !azureDataQualityStats.IsSortable(column) {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
-			return
-		}
-
-		if descending {
-			order = append(order, column+" desc")
-		} else {
-			order = append(order, column)
-		}
-	}
-
-	if id, hasPlatformID := mux.Vars(request)[api.URIPathVariablePlatformID]; !hasPlatformID {
+	if order, _, err := parseOrder(queryParams, azureDataQualityStats); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if id, hasPlatformID := mux.Vars(request)[api.URIPathVariablePlatformID]; !hasPlatformID {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrNoPlatformId, request), response)
 	} else if start, err := ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["start"]), request), response)
@@ -198,13 +152,13 @@ func (s *Resources) GetPlatformAggregateStats(response http.ResponseWriter, requ
 
 		switch id {
 		case "ad":
-			stats, count, err = s.DB.GetADDataQualityAggregations(request.Context(), start, end, strings.Join(order, ", "), limit, skip)
+			stats, count, err = s.DB.GetADDataQualityAggregations(request.Context(), start, end, order, limit, skip)
 			if err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
 			}
 		case "azure":
-			stats, count, err = s.DB.GetAzureDataQualityAggregations(request.Context(), start, end, strings.Join(order, ", "), limit, skip)
+			stats, count, err = s.DB.GetAzureDataQualityAggregations(request.Context(), start, end, order, limit, skip)
 			if err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
@@ -216,4 +170,85 @@ func (s *Resources) GetPlatformAggregateStats(response http.ResponseWriter, requ
 
 		api.WriteResponseWrapperWithTimeWindowAndPagination(request.Context(), stats, start, end, limit, skip, count, http.StatusOK, response)
 	}
+}
+
+func (s *Resources) GetDataQualityStats(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx                      = request.Context()
+		dataQualityStats         model.DataQualityStats
+		queryParams              = request.URL.Query()
+		defaultEnd, defaultStart = DefaultTimeRange()
+	)
+
+	if environmentId := queryParams.Get(api.QueryParameterEnvironmentId); environmentId == "" {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, ErrNoEnvironmentId, request), response)
+	} else if user, found := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !found {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, ErrUnknownUser, request), response)
+	} else if _, sort, err := parseOrder(queryParams, dataQualityStats); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if start, err := ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["start"]), request), response)
+	} else if end, err := ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["end"]), request), response)
+	} else if limit, err := ParseLimitQueryParameter(queryParams, 1000); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidLimit, queryParams["limit"]), request), response)
+	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, queryParams["skip"]), request), response)
+	} else {
+		if ShouldFilterForETAC(s.DogTags, user) {
+			hasAccess, err := CheckUserAccessToEnvironments(ctx, s.DB, user, environmentId)
+			if err != nil {
+				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+				return
+			} else if !hasAccess {
+				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, ErrNoAccess, request), response)
+				return
+			}
+		}
+		filters := model.Filters{
+			"environment_id": []model.Filter{{
+				Value:       environmentId,
+				Operator:    model.Equals,
+				SetOperator: model.FilterAnd,
+			}},
+			"created_at": []model.Filter{{Value: start.Format(time.RFC3339), Operator: model.GreaterThanOrEquals, SetOperator: model.FilterAnd}, {Value: end.Format(time.RFC3339), Operator: model.LessThan, SetOperator: model.FilterAnd}},
+		}
+		if stats, count, err := s.DB.GetDataQualityStats(ctx, filters, sort, skip, limit); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			api.WriteResponseWrapperWithTimeWindowAndPagination(ctx, stats, start, end, limit, skip, count, http.StatusOK, response)
+		}
+	}
+}
+
+// parseOrder is a helper function which parses any sort_by query params into both the legacy sort string format and the model.Sort format. Returns an error if the columns is not sortable, or if an empty sort param is provided.
+func parseOrder(queryParams url.Values, sortable api.Sortable) (string, model.Sort, error) {
+	order := []string{}
+	sort := model.Sort{}
+	for _, column := range queryParams[api.QueryParameterSortBy] {
+		if column == "" {
+			return "", sort, errors.New(api.ErrorResponseEmptySortParameter)
+		}
+
+		var descending bool
+		if string(column[0]) == "-" {
+			descending = true
+			column = column[1:]
+		}
+
+		if !sortable.IsSortable(column) {
+			return "", sort, errors.New(api.ErrorResponseDetailsNotSortable)
+		}
+
+		if descending {
+			order = append(order, column+" desc")
+			sort = append(sort, model.SortItem{Column: column, Direction: model.DescendingSortDirection})
+
+		} else {
+			order = append(order, column)
+			sort = append(sort, model.SortItem{Column: column, Direction: model.AscendingSortDirection})
+		}
+
+	}
+	return strings.Join(order, ", "), sort, nil
 }

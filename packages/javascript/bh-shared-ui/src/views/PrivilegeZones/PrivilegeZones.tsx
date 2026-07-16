@@ -21,8 +21,8 @@ import { Badge, Tabs, TabsList, TabsTrigger } from 'doodle-ui';
 import React, { FC, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Route, Routes, useLocation } from 'react-router-dom';
-import { useAppName } from '../../components/PageWithTitle';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams, useRoleBasedFiltering } from '../../hooks';
+import { useAppName } from '../../providers/AppNameProvider';
 import {
     ROUTE_PZ_CERTIFICATIONS,
     ROUTE_PZ_HISTORY,

@@ -411,6 +411,7 @@ export type GraphNodeSpreadWithProperties = Partial<Omit<GraphNode, 'properties'
 export type GraphNodes = Record<string, GraphNode>;
 
 export type GraphEdge = {
+    id: number;
     source: string;
     target: string;
     label: string;
@@ -444,6 +445,7 @@ export type StyledGraphNode = {
 };
 
 export type StyledGraphEdge = {
+    id: number;
     color: string;
     data: Record<string, any>;
     end1?: {
@@ -680,6 +682,11 @@ export interface WebhookTest {
     version: string;
 }
 
+export type SourceKind = {
+    id: number;
+    name: string;
+};
+
 // ---------------------------------------------------------------------------
 // Base schemas
 // ---------------------------------------------------------------------------
@@ -826,16 +833,16 @@ export type RelationshipKindResponse = RelationshipKindBase & {
 };
 
 export interface NodeKindRef {
-    node_kind_id: number;
+    node_kind_id: number | null;
     name: string;
 }
 
 export interface NodeProperties {
-    objectid: string;
+    objectid?: string;
     name?: string;
-    displayName?: string;
+    displayname?: string;
     /** date-time */
-    lastSeen: string;
+    lastseen?: string;
     [key: string]: unknown;
 }
 
@@ -851,7 +858,7 @@ export type NodeDetailsWithInfo = NodeDetails & {
 };
 
 export interface RelationshipKindRef {
-    relationship_kind_id: number;
+    relationship_kind_id: number | null;
     name: string;
 }
 

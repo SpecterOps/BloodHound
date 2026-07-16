@@ -38,7 +38,7 @@ const SetupKeyDialog: React.FC<{
             <DialogActions>
                 <Button
                     type='button'
-                    variant='tertiary'
+                    variant='secondary'
                     onClick={onClose}
                     data-testid={'setup-key-dialog_button-close'}>
                     Close

@@ -123,10 +123,11 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var (
-				graphDBMock = mocks.NewMockGraphDB(t)
-				handlerSet  = handlers.NewHandlersContainer(graphDBMock)
-				recorder    = httptest.NewRecorder()
-				request     = newRequestWithID(t, tt.rawID)
+				graphDBMock    = mocks.NewMockGraphDB(t)
+				authorizerMock = mocks.NewMockNodeAuthorizer(t)
+				handlerSet     = handlers.NewHandlersContainer(graphDBMock, authorizerMock)
+				recorder       = httptest.NewRecorder()
+				request        = newRequestWithID(t, tt.rawID)
 			)
 
 			if tt.setupMock != nil {

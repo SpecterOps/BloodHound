@@ -14,83 +14,93 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import userEvent from '@testing-library/user-event';
+import { RelationshipDetails } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { INHERITANCE_DROPDOWN_DESCRIPTION } from '../../../components/HelpTexts/shared/ACLInheritance';
 import {
     ActiveDirectoryKindProperties,
-    ActiveDirectoryNodeKind,
     ActiveDirectoryRelationshipKind,
     CommonKindProperties,
 } from '../../../graphSchema';
 import { render, screen, waitFor } from '../../../test-utils';
-import { SelectedEdge } from '../ExploreSearch/EdgeFilter/edgeCategories';
 import { ObjectInfoPanelContextProvider } from '../providers';
 import EdgeInfoContent from './EdgeInfoContent';
 
 const server = setupServer(
-    rest.post(`/api/v2/graphs/cypher`, (req, res, ctx) => {
+    rest.get(`/api/v2/relationships/1`, (req, res, ctx) => {
         return res(
             ctx.json({
                 data: {
-                    nodes: {},
-                    edges: [
-                        {
-                            source: '1',
-                            target: '2',
-                            label: 'CustomEdge',
-                            kind: 'CustomEdge',
-                            lastSeen: '2023-09-07T11:10:33.664596893Z',
-                            properties: {
-                                lastseen: '2023-09-07T11:10:33.664596893Z',
-                                isacl: false,
-                            },
-                        },
-                    ],
-                },
-            })
-        );
-    }),
-    rest.get(`/api/v2/users/:id`, async (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {
-                    props: {
-                        objectid: '2',
+                    relationship_id: 1,
+                    kind: { relationship_kind_id: 1, name: 'CustomEdge' },
+                    source_node_id: 1,
+                    target_node_id: 2,
+                    properties: {
+                        isacl: false,
+                        is_traversable: true,
+                        lastSeen: '2023-09-07T11:10:33.664596893Z',
                     },
                 },
             })
         );
     }),
-    rest.get(`/api/v2/computers/testing-node-123`, async (req, res, ctx) => {
+    rest.get(`/api/v2/nodes/1`, async (req, res, ctx) => {
         return res(
             ctx.json({
                 data: {
-                    props: {
+                    node_id: 1,
+                    kinds: [{ node_kind_id: 1, name: 'User' }],
+                    properties: {
+                        objectid: 'source-node-1',
+                        name: 'Source User',
+                        lastSeen: '2023-09-07T11:10:33.664596893Z',
+                    },
+                },
+            })
+        );
+    }),
+    rest.get(`/api/v2/nodes/2`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    node_id: 2,
+                    kinds: [{ node_kind_id: 2, name: 'User' }],
+                    properties: {
+                        objectid: 'target-node-2',
+                        name: 'Target User',
+                        lastSeen: '2023-09-07T11:10:33.664596893Z',
+                    },
+                },
+            })
+        );
+    }),
+    rest.get(`/api/v2/nodes/3`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    node_id: 3,
+                    kinds: [{ node_kind_id: 3, name: 'Computer' }],
+                    properties: {
+                        objectid: 'target-node-3',
+                        name: 'Target Computer With LAPS',
                         haslaps: true,
-                        objectid: 'testing-node-123',
+                        lastSeen: '2023-09-07T11:10:33.664596893Z',
                     },
                 },
             })
         );
     }),
-    rest.get(`/api/v2/computers/testing-node-456`, async (req, res, ctx) => {
+    rest.get(`/api/v2/nodes/4`, async (req, res, ctx) => {
         return res(
             ctx.json({
                 data: {
-                    props: {
-                        objectid: 'testing-node-456',
-                    },
-                },
-            })
-        );
-    }),
-    rest.get(`/api/v2/groups/testing-node-456`, async (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {
-                    props: {
-                        objectid: 'testing-node-456',
+                    node_id: 4,
+                    kinds: [{ node_kind_id: 4, name: 'Computer' }],
+                    properties: {
+                        objectid: 'target-node-4',
+                        name: 'Target Computer Without LAPS',
+                        lastSeen: '2023-09-07T11:10:33.664596893Z',
                     },
                 },
             })
@@ -114,129 +124,74 @@ const server = setupServer(
         );
     })
 );
-
-const selectedEdge: SelectedEdge = {
-    id: 'rel_1',
-    name: 'CustomEdge',
-    data: {
+const selectedEdge: RelationshipDetails = {
+    relationship_id: 1,
+    kind: { name: 'CustomEdge', relationship_kind_id: 1 },
+    properties: {
+        lastSeen: '',
+        is_traversable: false,
         [ActiveDirectoryKindProperties.IsACL]: false,
         [CommonKindProperties.LastSeen]: '2023-09-07T11:10:33.664596893Z',
     },
-    sourceNode: {
-        name: 'source node',
-        id: '1',
-        objectId: '1',
-        type: ActiveDirectoryNodeKind.User,
-    },
-    targetNode: {
-        name: 'target node',
-        id: '2',
-        objectId: '2',
-        type: ActiveDirectoryNodeKind.User,
-    },
+    source_node_id: 1,
+    target_node_id: 2,
 };
 
-const selectedEdgeHasLapsEnabled: SelectedEdge = {
-    id: '2',
-    name: ActiveDirectoryRelationshipKind.GenericAll,
-    data: {
+const selectedEdgeHasLapsEnabled: RelationshipDetails = {
+    relationship_id: 2,
+    kind: { name: ActiveDirectoryRelationshipKind.GenericAll, relationship_kind_id: 2 },
+    properties: {
+        lastSeen: '',
+        is_traversable: false,
         [ActiveDirectoryKindProperties.IsACL]: false,
         [CommonKindProperties.LastSeen]: '2023-09-07T11:10:33.664596893Z',
     },
-    sourceNode: {
-        name: 'source node',
-        id: '1',
-        objectId: '1',
-        type: ActiveDirectoryNodeKind.User,
-    },
-    targetNode: {
-        name: 'target node',
-        id: '3',
-        objectId: 'testing-node-123',
-        type: ActiveDirectoryNodeKind.Computer,
-    },
+    source_node_id: 1,
+    target_node_id: 3,
 };
 
-const selectedEdgeHasLapsDisabled: SelectedEdge = {
-    id: '3',
-    name: ActiveDirectoryRelationshipKind.GenericAll,
-    data: {
+const selectedEdgeHasLapsDisabled: RelationshipDetails = {
+    relationship_id: 3,
+    kind: { name: ActiveDirectoryRelationshipKind.GenericAll, relationship_kind_id: 2 },
+    properties: {
+        lastSeen: '',
+        is_traversable: false,
         [ActiveDirectoryKindProperties.IsACL]: false,
         [CommonKindProperties.LastSeen]: '2023-09-07T11:10:33.664596893Z',
     },
-    sourceNode: {
-        name: 'source node',
-        id: '1',
-        objectId: '1',
-        type: ActiveDirectoryNodeKind.User,
-    },
-    targetNode: {
-        name: 'target node',
-        id: '4',
-        objectId: 'testing-node-456',
-        type: ActiveDirectoryNodeKind.Computer,
-    },
+    source_node_id: 1,
+    target_node_id: 4,
 };
 
-const selectedEdgeADCSESC4: SelectedEdge = {
+const selectedEdgeADCSESC4: RelationshipDetails = {
     ...selectedEdge,
-    name: ActiveDirectoryRelationshipKind.ADCSESC4,
+    kind: { name: ActiveDirectoryRelationshipKind.ADCSESC4, relationship_kind_id: 4 },
 };
 
-const selectedEdgeHidden: SelectedEdge = {
-    id: 'HIDDEN',
-    name: '*** Hidden Edge ***',
-    data: {},
-    sourceNode: {
-        name: 'hidden',
-        id: 'hidden',
-        objectId: 'hidden',
-        type: 'hidden',
-    },
-    targetNode: {
-        name: 'hidden',
-        id: 'hidden',
-        objectId: 'hidden',
-        type: 'hidden',
-    },
-};
-
-const selectedEdgeACLInheritance: SelectedEdge = {
-    id: '3',
-    name: ActiveDirectoryRelationshipKind.WriteOwner,
-    data: {
+const selectedEdgeACLInheritance: RelationshipDetails = {
+    relationship_id: 2,
+    kind: { name: ActiveDirectoryRelationshipKind.GenericAll, relationship_kind_id: 2 },
+    properties: {
+        lastSeen: '',
+        is_traversable: false,
         [ActiveDirectoryKindProperties.IsACL]: true,
+        [CommonKindProperties.LastSeen]: '2023-09-07T11:10:33.664596893Z',
         [CommonKindProperties.IsInherited]: true,
         [ActiveDirectoryKindProperties.InheritanceHash]: 'test_hash',
     },
-    sourceNode: {
-        name: 'source node',
-        id: '1',
-        objectId: '1',
-        type: ActiveDirectoryNodeKind.Group,
-    },
-    targetNode: {
-        name: 'target node',
-        id: '4',
-        objectId: 'testing-node-456',
-        type: ActiveDirectoryNodeKind.Group,
-    },
+    source_node_id: 1,
+    target_node_id: 4,
 };
 
 const windowsAbuseHasLapsText = (sourceName: string, targetName: string) => {
     return `The GenericAll permission grants ${sourceName} the ability to obtain the LAPS (RID 500 administrator) password of ${targetName}.`;
 };
 
-const hasLapsEnabledTestText = windowsAbuseHasLapsText(
-    selectedEdgeHasLapsEnabled.sourceNode.name,
-    selectedEdgeHasLapsEnabled.targetNode.name
-);
-const hasLapsDisabledTestText = windowsAbuseHasLapsText(
-    selectedEdgeHasLapsDisabled.sourceNode.name,
-    selectedEdgeHasLapsDisabled.targetNode.name
-);
+// Node names are sourced from the MSW mock handlers for /api/v2/nodes/:id
+const hasLapsEnabledTestText = windowsAbuseHasLapsText('Source User', 'Target Computer With LAPS');
+const hasLapsDisabledTestText = windowsAbuseHasLapsText('Source User', 'Target Computer Without LAPS');
 
-const EdgeInfoContentWithProvider = ({ selectedEdge }: { selectedEdge: SelectedEdge }) => (
+const EdgeInfoContentWithProvider = ({ selectedEdge }: { selectedEdge: RelationshipDetails }) => (
     <ObjectInfoPanelContextProvider>
         <EdgeInfoContent selectedEdge={selectedEdge!} />
     </ObjectInfoPanelContextProvider>
@@ -250,12 +205,12 @@ describe('EdgeInfoContent', () => {
     test('Trying to view the edge info does not crash the app when selecting an unrecognized edge', async () => {
         render(<EdgeInfoContentWithProvider selectedEdge={selectedEdge} />);
 
-        expect(await screen.findByText(/source node/)).toBeInTheDocument();
+        expect(await screen.findByText(/Source Node:/)).toBeInTheDocument();
 
         //The text is broken up into different elements because of the span that bolds the custom edge so these assertions are broken up to match that
         //The assertions use regex to avoid having to match on the white space
         expect(screen.getByText(/The edge/)).toBeInTheDocument();
-        expect(screen.getByText(selectedEdge.name)).toBeInTheDocument();
+        expect(screen.getByText(selectedEdge.kind.name)).toBeInTheDocument();
         expect(
             screen.getByText(/does not have any additional contextual information at this time./)
         ).toBeInTheDocument();
@@ -275,7 +230,7 @@ describe('EdgeInfoContent', () => {
         render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeHasLapsEnabled} />);
 
         const user = userEvent.setup();
-        const windowAbuseAccordion = screen.getByText('Windows Abuse');
+        const windowAbuseAccordion = await screen.findByText('Windows Abuse');
         await user.click(windowAbuseAccordion);
 
         expect(screen.getByText(hasLapsEnabledTestText, { exact: false })).toBeInTheDocument();
@@ -284,7 +239,7 @@ describe('EdgeInfoContent', () => {
         render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeHasLapsDisabled} />);
 
         const user = userEvent.setup();
-        const windowAbuseAccordion = screen.getByText('Windows Abuse');
+        const windowAbuseAccordion = await screen.findByText('Windows Abuse');
         await user.click(windowAbuseAccordion);
 
         expect(screen.queryByText(hasLapsDisabledTestText, { exact: false })).not.toBeInTheDocument();
@@ -293,13 +248,13 @@ describe('EdgeInfoContent', () => {
         render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeACLInheritance} />);
 
         const user = userEvent.setup();
-        const inheritanceAccordion = screen.getByText('ACE Inherited From');
+        const inheritanceAccordion = await screen.findByText('ACE Inherited From');
         await user.click(inheritanceAccordion);
 
         expect(screen.queryByText(INHERITANCE_DROPDOWN_DESCRIPTION)).toBeInTheDocument();
     });
     describe('EdgeInfoContent support for Deep Linking', () => {
-        const test_id = selectedEdgeADCSESC4.id;
+        const test_id = selectedEdgeADCSESC4.relationship_id;
         const setup = () => {
             const screen = render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeADCSESC4} />, {
                 route: `?selectedItem=${test_id}`,
@@ -322,18 +277,18 @@ describe('EdgeInfoContent', () => {
         it('calls setExploreParams with searchType and relationshipQueryItemId when selecting a composition accordion', async () => {
             const { user, screen } = setup();
 
-            const compositionAccordion = screen.getByText('Composition');
+            const compositionAccordion = await screen.findByText('Composition');
             await user.click(compositionAccordion);
 
             await waitFor(() => {
                 expect(window.location.search).toContain('searchType=composition');
             });
-            expect(window.location.search).toContain(`relationshipQueryItemId=${test_id}`);
+            expect(window.location.search).toContain(`relationshipQueryItemId=rel_${test_id}`);
         });
         it('calls setExploreParams with only the expandedSection label when selecting any accordion that is not composition', async () => {
             const { user, screen } = setup();
 
-            const generalAccordion = screen.getByText('General');
+            const generalAccordion = await screen.findByText('General');
             await user.click(generalAccordion);
 
             await waitFor(() => expect(window.location.search).toContain('expandedPanelSections=general'));
@@ -344,29 +299,11 @@ describe('EdgeInfoContent', () => {
 
     describe('EdgeInfoContent support for hidden edges', () => {
         const setup = () => {
-            const screen = render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeHidden} />);
+            // isHidden is derived from selectedItem URL param containing 'HIDDEN'
+            const screen = render(<EdgeInfoContentWithProvider selectedEdge={selectedEdge} />, {
+                route: '?selectedItem=HIDDEN',
+            });
             const user = userEvent.setup();
-
-            server.use(
-                rest.post(`/api/v2/graphs/cypher`, (req, res, ctx) => {
-                    return res(
-                        ctx.json({
-                            data: {
-                                nodes: {},
-                                edges: [
-                                    {
-                                        id: 'HIDDEN',
-                                        source: 'HIDDEN',
-                                        target: 'HIDDEN',
-                                        label: 'HIDDEN',
-                                        kind: 'HIDDEN',
-                                    },
-                                ],
-                            },
-                        })
-                    );
-                })
-            );
 
             return { screen, user };
         };

@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/stretchr/testify/assert"
@@ -263,11 +264,11 @@ func TestDatabase_GetDataQualityStats(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: returns empty results when no stats exist",
+			name: "Error: returns not found when no stats exist",
 			args: args{},
 			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				results, total, err := testSuite.BHDatabase.GetDataQualityStats(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
-				require.NoError(t, err)
+				require.ErrorIs(t, err, database.ErrNotFound)
 				assert.Equal(t, 0, total)
 				assert.Empty(t, results)
 			},
@@ -592,7 +593,7 @@ func TestDatabase_DeleteAllDataQuality(t *testing.T) {
 				require.NoError(t, err)
 
 				results, total, err := testSuite.BHDatabase.GetDataQualityStats(testSuite.Context, nil, nil, 0, 0)
-				require.NoError(t, err)
+				require.ErrorIs(t, err, database.ErrNotFound)
 				assert.Equal(t, 0, total)
 				assert.Empty(t, results)
 			},

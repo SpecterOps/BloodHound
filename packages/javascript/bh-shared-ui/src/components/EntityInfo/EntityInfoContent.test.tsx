@@ -45,16 +45,13 @@ const server = setupServer(
             })
         );
     }),
-    rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
+    rest.get('/api/v2/nodes/:id', (req, res, ctx) => {
         return res(
             ctx.json({
                 data: {
-                    nodes: {
-                        '42': {
-                            kind: 'Unknown',
-                            properties: { objectid: 'unknown kind' },
-                        },
-                    },
+                    node_id: 42,
+                    kinds: [{ node_kind_id: 1, name: 'Unknown' }],
+                    properties: { objectid: 'unknown kind' },
                 },
             })
         );
@@ -135,7 +132,7 @@ describe('EntityObjectInformation', () => {
         expect(await screen.findByText('test')).toBeInTheDocument();
     });
 
-    it('Calls the cypher search endpoint for a node with a type that is not in our schema', async () => {
+    it('Calls the get node by id endpoint for a node with a type that is not in our schema', async () => {
         const testId = '1';
         const nodeType = 'Unknown';
         const databaseId = '42';
