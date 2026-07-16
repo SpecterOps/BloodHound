@@ -62,20 +62,20 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // NEUTRALS
             '--neutral-50': palette.neutral.light[50],
-            // '--neutral-100': palette.neutral.light[100],
+            '--neutral-100': palette.neutral.light[100],
             '--neutral-200': palette.neutral.light[200],
             '--neutral-300': palette.neutral.light[300],
             '--neutral-400': palette.neutral.light[400],
-            // '--neutral-500': palette.neutral.light[500],
-            // '--neutral-600': palette.neutral.light[600],
-            // '--neutral-700': palette.neutral.light[700],
-            // '--neutral-800': palette.neutral.light[800],
-            // '--neutral-900': palette.neutral.light[900],
+            '--neutral-500': palette.neutral.light[500],
+            '--neutral-600': palette.neutral.light[600],
+            '--neutral-700': palette.neutral.light[700],
+            '--neutral-800': palette.neutral.light[800],
+            '--neutral-900': palette.neutral.light[900],
 
             // // TEXT
             '--text-main': common.dark,
             '--text-light': text.light,
-            // '--text-contrast': common.white,
+            '--text-contrast': common.white,
             '--text-disabled': light.text.disabled,
             // '--text-primary': light.primary.main,
             // '--text-secondary': light.secondary.main,
@@ -114,9 +114,9 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--status-indeterminate-fill': light.status.indeterminate.fill,
 
             // // BRAND COLORS
-            // '--bhe-main': light.primary.main,
+            '--bhe-main': light.primary.main,
             // '--sp-main': light.primary.main,
-            // '--bhce-main': light['bhce-main'],
+            '--bhce-main': light['bhce-main'],
             // '--logo-neutral': common.black,
             // '--brand-primary-dark-purple': light.primary.variant,
             // '--brand-primary-deep-purple': light.primary.main,
@@ -141,11 +141,11 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Components/Input
             // '--input-label': common.dark,
             '--input-fill': palette.neutral.light[100],
-            // '--input-fill-disabled': palette.neutral.light[100],
+            '--input-fill-disabled': palette.neutral.light[100],
             '--input-border-default': palette.neutral.dark[700],
             '--input-border-focus': light.secondary.main,
             // '--input-border-hover': light.secondary.main,
-            // '--input-border-disabled': palette.neutral.light[900],
+            '--input-border-disabled': palette.neutral.light[900],
             // '--input-placeholder-text': text.placeholder,
 
             // // Components/Textarea
@@ -303,20 +303,20 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // NEUTRALS
             '--neutral-50': palette.neutral.dark[50],
-            // '--neutral-100': palette.neutral.dark[100],
-            // '--neutral-200': palette.neutral.dark[200],
-            // '--neutral-300': palette.neutral.dark[300],
-            // '--neutral-400': palette.neutral.dark[400],
-            // '--neutral-500': palette.neutral.dark[500],
-            // '--neutral-600': palette.neutral.dark[600],
-            // '--neutral-700': palette.neutral.dark[700],
-            // '--neutral-800': palette.neutral.dark[800],
-            // '--neutral-900': palette.neutral.dark[900],
+            '--neutral-100': palette.neutral.dark[100],
+            '--neutral-200': palette.neutral.dark[200],
+            '--neutral-300': palette.neutral.dark[300],
+            '--neutral-400': palette.neutral.dark[400],
+            '--neutral-500': palette.neutral.dark[500],
+            '--neutral-600': palette.neutral.dark[600],
+            '--neutral-700': palette.neutral.dark[700],
+            '--neutral-800': palette.neutral.dark[800],
+            '--neutral-900': palette.neutral.dark[900],
 
             // // TEXT
             '--text-main': common.white,
             '--text-light': text.dark,
-            // '--text-contrast': common.dark,
+            '--text-contrast': common.dark,
             '--text-disabled': common.disabled,
             // '--text-primary': dark.primary.main,
             // '--text-secondary': dark.secondary.main,
@@ -355,9 +355,9 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--status-indeterminate-fill': dark.status.indeterminate.fill,
 
             // // BRAND COLORS
-            // '--bhe-main': dark.primary.main,
+            '--bhe-main': dark.primary.main,
             // '--sp-main': dark.primary.main,
-            // '--bhce-main': dark['bhce-main'],
+            '--bhce-main': dark['bhce-main'],
             // '--logo-neutral': common.white,
             // '--brand-primary-dark-purple': dark.primary.variant,
             // '--brand-primary-deep-purple': dark.primary.main,
@@ -382,11 +382,11 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Components/Input
             // '--input-label': common.white,
             '--input-fill': palette.neutral.dark[400],
-            // '--input-fill-disabled': palette.neutral.dark[400],
+            '--input-fill-disabled': palette.neutral.dark[400],
             '--input-border-default': palette.neutral.light[400],
             '--input-border-focus': secondaryVariant2,
             // '--input-border-hover': dark.secondary.main,
-            // '--input-border-disabled': palette.neutral.dark[900],
+            '--input-border-disabled': palette.neutral.dark[900],
             // '--input-placeholder-text': dark.input.placeholder,
 
             // // Components/Textarea

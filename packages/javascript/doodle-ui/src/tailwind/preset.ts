@@ -31,39 +31,6 @@ export default {
         },
         extend: {
             colors: {
-                primary: 'var(--primary-main)',
-                'primary-main':
-                    'var(--primary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
-                'primary-variant': 'var(--primary-variant)',
-
-                secondary: 'var(--secondary-main)',
-                'secondary-main':
-                    'var(--secondary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
-                'secondary-variant': 'var(--secondary-variant)',
-                'secondary-variant-2': 'var(--secondary-variant-2)',
-
-                tertiary: 'var(--tertiary)', // this is a legacy token
-                'tertiary-main':
-                    'var(--tertiary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
-                'tertiary-variant': 'var(--tertiary-variant)',
-
-                'text-main': 'var(--text-main)',
-                'text-disabled': 'var(--text-disabled)',
-
-                disabled: 'var(--disabled)',
-                contrast: 'var(--contrast)',
-                link: 'var(--link-main)',
-                'link-hover': 'var(--link-hover)',
-                error: 'var(--error)',
-
-                'switch-fill': 'var(--switch-fill)',
-                'switch-disabled-fill': 'var(--switch-disabled-fill)',
-                'switch-thumb-fill': 'var(--switch-thumb-fill)',
-                'switch-thumb-disabled-fill': 'var(--switch-thumb-disabled-fill)',
-
-                'neutral-50': 'var(--neutral-50)',
-                'neutral-400': 'var(--neutral-400)',
-
                 // Legacy
                 'neutral-1': 'var(--neutral-1)',
                 'neutral-2': 'var(--neutral-2)',
@@ -84,29 +51,54 @@ export default {
                 'neutral-dark-5': 'var(--neutral-dark-5)',
 
                 // New color tokens:
+                primary: 'var(--primary-main)',
+                'primary-main':
+                    'var(--primary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
+                'primary-variant': 'var(--primary-variant)',
 
-                // tertiary: 'var(--tertiary)',
-                // 'tertiary-variant': 'var(--tertiary-variant)',
+                secondary: 'var(--secondary-main)',
+                'secondary-main':
+                    'var(--secondary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
+                'secondary-variant': 'var(--secondary-variant)',
+                'secondary-variant-2': 'var(--secondary-variant-2)',
 
-                'common-dark': 'var(--common-dark)',
-                'common-white': 'var(--common-white)',
+                tertiary: 'var(--tertiary)', // this is a legacy token
+                'tertiary-main':
+                    'var(--tertiary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
+                'tertiary-variant': 'var(--tertiary-variant)',
 
-                // contrast: 'var(--common-dark)',
-
+                'text-main': 'var(--text-main)',
                 'text-light': 'var(--text-light)',
+                'text-disabled': 'var(--text-disabled)',
                 // 'text-contrast': 'var(--text-contrast)',
                 // 'text-primary': 'var(--text-primary)',
                 // 'text-secondary': 'var(--text-secondary)',
 
-                // 'neutral-100': 'var(--neutral-100)',
+                disabled: 'var(--disabled)',
+                contrast: 'var(--contrast)',
+                link: 'var(--link-main)',
+                'link-hover': '(--link-hover)',
+                error: 'var(--error)',
+
+                'common-dark': 'var(--common-dark)',
+                'common-white': 'var(--common-white)',
+                // contrast: 'var(--common-dark)',
+
+                'switch-fill': 'var(--switch-fill)',
+                'switch-disabled-fill': 'var(--switch-disabled-fill)',
+                'switch-thumb-fill': 'var(--switch-thumb-fill)',
+                'switch-thumb-disabled-fill': 'var(--switch-thumb-disabled-fill)',
+
+                'neutral-50': 'var(--neutral-50)',
+                'neutral-100': 'var(--neutral-100)',
                 'neutral-200': 'var(--neutral-200)',
-                // 'neutral-300': 'var(--neutral-300)',
-                // 'neutral-400': 'var(--neutral-400)',
-                // 'neutral-500': 'var(--neutral-500)',
-                // 'neutral-600': 'var(--neutral-600)',
-                // 'neutral-700': 'var(--neutral-700)',
-                // 'neutral-800': 'var(--neutral-800)',
-                // 'neutral-900': 'var(--neutral-900)',
+                'neutral-300': 'var(--neutral-300)',
+                'neutral-400': 'var(--neutral-400)',
+                'neutral-500': 'var(--neutral-500)',
+                'neutral-600': 'var(--neutral-600)',
+                'neutral-700': 'var(--neutral-700)',
+                'neutral-800': 'var(--neutral-800)',
+                'neutral-900': 'var(--neutral-900)',
 
                 'status-error-main': 'var(--status-error-main)',
                 'status-error-text': 'var(--status-error-text)',
@@ -122,10 +114,10 @@ export default {
                 'status-info-fill': 'var(--status-info-fill)',
                 'status-indeterminate-fill': 'var(--status-indeterminate-fill)',
 
-                // 'bhe-main': 'var(--bhe-main)',
+                'bhe-main': 'var(--bhe-main)',
                 // 'sp-main': 'var(--sp-main)',
-                // 'bhce-main': 'var(--bhce-main)',
-                // 'logo-neutral': 'var(--logo-neutral)',
+                'bhce-main': 'var(--bhce-main)',
+                'logo-neutral': 'var(--logo-neutral)',
 
                 // 'brand-primary-dark-purple': 'var(--brand-primary-dark-purple)',
                 // 'brand-primary-deep-purple': 'var(--brand-primary-deep-purple)',
@@ -154,11 +146,11 @@ export default {
 
                 // 'input-label': 'var(--input-label)',
                 'input-fill': 'var(--input-fill)',
-                // 'input-fill-disabled': 'var(--input-fill-disabled)',
+                'input-fill-disabled': 'var(--input-fill-disabled)',
                 'input-border-default': 'var(--input-border-default)',
                 'input-border-focus': 'var(--input-border-focus)',
                 // 'input-border-hover': 'var(--input-border-hover)',
-                // 'input-border-disabled': 'var(--input-border-disabled)',
+                'input-border-disabled': 'var(--input-border-disabled)',
                 // 'input-placeholder-text': 'var(--input-placeholder-text)',
 
                 'textarea-fill': 'var(--textarea-fill)',
