@@ -73,7 +73,7 @@ const selectedText = (
 const SelectorListItemContent: React.FC<{
     displayName: string;
     displayIcon: IconProp;
-    onClick: () => void;
+    onClick: VoidFunction;
     isUpperCase?: boolean;
 }> = ({ displayName, displayIcon, isUpperCase = false, onClick }) => {
     return (
