@@ -145,7 +145,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--input-border-default': palette.grey[700],
             // '--input-border-hover': light.secondary.main,
             '--input-border-disabled': palette.neutral.light[900],
-            '--input-border-disabled': palette.neutral.light[900],
+
             // '--input-placeholder-text': text.placeholder,
 
             // // Components/Textarea
@@ -294,7 +294,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--primary-main': dark.primary.main,
             '--primary-variant': dark.primary.variant,
             '--secondary': dark.secondary.main,
-            '--secondary': dark.secondary.main,
+
             '--secondary-main': dark.secondary.main,
             '--secondary-variant': dark.secondary.variant,
             // '--tertiary': dark.tertiary.main,
@@ -387,7 +387,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--input-border-default': dark.input.border,
             // '--input-border-hover': dark.secondary.main,
             '--input-border-disabled': palette.neutral.dark[900],
-            '--input-border-disabled': palette.neutral.dark[900],
+
             // '--input-placeholder-text': dark.input.placeholder,
 
             // // Components/Textarea
