@@ -40,7 +40,7 @@ import {
     sortEnvironmentsByName,
 } from '../../utils/environments';
 import { cn } from '../../utils/theme';
-import { DropdownTrigger, popoverContentStyles } from '../DropdownSelector';
+import { DropdownTrigger, optionIconStyles, optionStyles, popoverContentStyles } from '../DropdownSelector';
 import { SelectedEnvironment } from './types';
 
 const selectedText = (
@@ -175,7 +175,7 @@ const SimpleEnvironmentSelector: React.FC<{
                     {environmentTypes?.map((type) => (
                         <li key={`${type}-platform`}>
                             <Button
-                                className='flex justify-between items-center gap-2 w-full'
+                                className={cn(optionStyles, 'flex justify-between items-center gap-2')}
                                 onClick={() => handlePlatformClick(type, environmentInfo[type]?.environment_kind_id)}
                                 variant={'text'}>
                                 <TooltipProvider>
@@ -192,7 +192,11 @@ const SimpleEnvironmentSelector: React.FC<{
                                         </TooltipPortal>
                                     </TooltipRoot>
                                 </TooltipProvider>
-                                <FontAwesomeIcon icon={environmentInfo[type]?.icon} size='sm' />
+                                <FontAwesomeIcon
+                                    className={optionIconStyles}
+                                    icon={environmentInfo[type]?.icon}
+                                    size='sm'
+                                />
                             </Button>
                         </li>
                     ))}
