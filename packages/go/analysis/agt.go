@@ -590,25 +590,28 @@ func certificationForSelectedNode(selector model.AssetGroupTagSelector, node nod
 	return certified, certifiedBy
 }
 
-func shouldUpdateSelectorNode(oldNode model.AssetGroupSelectorNode, certified model.AssetGroupCertification, displayName, primaryKind, envId, objectId string, source model.AssetGroupSelectorNodeSource) bool {
-	if oldNode.Certified != certified ||
-		oldNode.NodeName != displayName ||
-		oldNode.NodePrimaryKind != primaryKind ||
-		oldNode.NodeEnvironmentId != envId ||
-		oldNode.NodeObjectId != objectId ||
-		oldNode.Source != source {
+func shouldUpdateSelectorNode(oldNode model.AssetGroupSelectorNode, newNode model.AssetGroupSelectorNode) bool {
+	if oldNode.Certified != newNode.Certified ||
+		oldNode.NodeName != newNode.NodeName ||
+		oldNode.NodePrimaryKind != newNode.NodePrimaryKind ||
+		oldNode.NodeEnvironmentId != newNode.NodeEnvironmentId ||
+		oldNode.NodeObjectId != newNode.NodeObjectId ||
+		oldNode.Source != newNode.Source {
 		return true
 	}
 
 	return false
 }
 
-/*
-func buildSelectorNode(primaryDisplayKinds graphschema.PrimaryDisplayKinds, node graph.Node, selector model.AssetGroupTagSelector) model.AssetGroupSelectorNode {
+func buildSelectorNode(primaryDisplayKinds graphschema.PrimaryDisplayKinds, node nodeWithSource, selector model.AssetGroupTagSelector, certified model.AssetGroupCertification, certifiedBy null.String) model.AssetGroupSelectorNode {
 	var (
-		primaryKind, displayName, objectId, envId = model.GetAssetGroupMemberProperties(primaryDisplayKinds, &node)
+		primaryKind, displayName, objectId, envId = model.GetAssetGroupMemberProperties(primaryDisplayKinds, node.Node)
 		selectorNode                              = model.AssetGroupSelectorNode{
-			Certified:         model.AssetGroupCertificationPending,
+			SelectorId:        selector.ID,
+			Source:            node.Source,
+			NodeId:            node.ID,
+			Certified:         certified,
+			CertifiedBy:       certifiedBy,
 			NodePrimaryKind:   primaryKind,
 			NodeName:          displayName,
 			NodeObjectId:      objectId,
@@ -618,15 +621,14 @@ func buildSelectorNode(primaryDisplayKinds graphschema.PrimaryDisplayKinds, node
 
 	return selectorNode
 }
-*/
 
 // SelectNodes - selects all nodes for a given selector and diffs previous db state for minimal db updates
 func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Database, agtParameters appcfg.AGTParameters, primaryDisplayKinds graphschema.PrimaryDisplayKinds, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) []error {
 	defer measure.ContextMeasure(ctx, slog.LevelDebug, "Selecting nodes", slog.String("selector", strconv.Itoa(selector.ID)))()
 
 	var (
-		countInserted int
 		nodesToUpdate []model.AssetGroupSelectorNode
+		nodesToInsert []model.AssetGroupSelectorNode
 		errs          []error
 	)
 
@@ -641,34 +643,38 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 	} else {
 		// 3. Range the graph nodes and insert any that haven't been inserted yet, mark for update any that need updating, pare down the existing map for future deleting
 		for id, node := range nodesWithSrcSet {
-			var (
-				primaryKind, displayName, objectId, envId = model.GetAssetGroupMemberProperties(primaryDisplayKinds, node.Node)
-			)
 
 			// Missing, insert the record
 			if oldNode, ok := oldSelectedNodesByNodeId[id]; !ok {
 				certified, certifiedBy := certificationForSelectedNode(selector, *node)
-				if err = db.InsertSelectorNode(ctx, selector.AssetGroupTagId, selector.ID, id, certified, certifiedBy, node.Source, primaryKind, envId, objectId, displayName); err != nil {
-					errs = append(errs, err)
-				}
-				countInserted++
+				newSelectorNode := buildSelectorNode(primaryDisplayKinds, *node, selector, certified, certifiedBy)
+
+				nodesToInsert = append(nodesToInsert, newSelectorNode)
 			} else {
 				// Auto certify is enabled but this node hasn't been certified, certify it. Further - update any out of sync node properties
 				certified, certifiedBy := certificationForSelectedNode(selector, *node, oldNode)
-				if shouldUpdateSelectorNode(oldNode, certified, displayName, primaryKind, envId, objectId, node.Source) {
+				newSelectorNode := buildSelectorNode(primaryDisplayKinds, *node, selector, certified, certifiedBy)
 
-					oldNode.Certified = certified
-					oldNode.NodeName = displayName
-					oldNode.NodePrimaryKind = primaryKind
-					oldNode.NodeEnvironmentId = envId
-					oldNode.NodeObjectId = objectId
-					oldNode.Source = node.Source
-					oldNode.CertifiedBy = certifiedBy
+				if shouldUpdateSelectorNode(oldNode, newSelectorNode) {
+
+					oldNode.Certified = newSelectorNode.Certified
+					oldNode.NodeName = newSelectorNode.NodeName
+					oldNode.NodePrimaryKind = newSelectorNode.NodePrimaryKind
+					oldNode.NodeEnvironmentId = newSelectorNode.NodeEnvironmentId
+					oldNode.NodeObjectId = newSelectorNode.NodeObjectId
+					oldNode.Source = newSelectorNode.Source
+					oldNode.CertifiedBy = newSelectorNode.CertifiedBy
 
 					nodesToUpdate = append(nodesToUpdate, oldNode)
 				}
 
 				delete(oldSelectedNodesByNodeId, id)
+			}
+		}
+
+		if len(nodesToInsert) > 0 {
+			if err := db.InsertSelectorNodes(ctx, nodesToInsert); err != nil {
+				errs = append(errs, err)
 			}
 		}
 
@@ -692,7 +698,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 			"AGT: Completed selecting",
 			slog.String("selector", selector.Name),
 			slog.Int("count_total", len(nodesWithSrcSet)),
-			slog.Int("count_inserted", countInserted),
+			slog.Int("count_inserted", len(nodesToInsert)),
 			slog.Int("count_updated", len(nodesToUpdate)),
 			slog.Int("count_deleted", len(oldSelectedNodesByNodeId)),
 		)
