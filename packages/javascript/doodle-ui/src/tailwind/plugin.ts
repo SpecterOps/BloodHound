@@ -140,12 +140,12 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // Components/Input
             // '--input-label': common.dark,
-            '--input-fill': palette.neutral.light[100],
+            // '--input-fill': elevation.light[1],
             '--input-fill-disabled': palette.neutral.light[100],
-            '--input-border-default': palette.neutral.dark[700],
-            '--input-border-focus': light.secondary.main,
+            '--input-border-default': palette.grey[700],
             // '--input-border-hover': light.secondary.main,
             '--input-border-disabled': palette.neutral.light[900],
+
             // '--input-placeholder-text': text.placeholder,
 
             // // Components/Textarea
@@ -247,7 +247,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Utilities
             // '--icon': common.dark,
             // '--icon-contrast': common.white,
-            // '--icon-disabled': palette.grey[700],
+            '--icon-disabled': palette.grey[700],
             // '--divider': palette.neutral.light[500],
 
             // Legacy below
@@ -294,6 +294,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--primary-main': dark.primary.main,
             '--primary-variant': dark.primary.variant,
             '--secondary': dark.secondary.main,
+
             '--secondary-main': dark.secondary.main,
             '--secondary-variant': dark.secondary.variant,
             // '--tertiary': dark.tertiary.main,
@@ -381,12 +382,12 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // Components/Input
             // '--input-label': common.white,
-            '--input-fill': palette.neutral.dark[400],
+            // '--input-fill': elevation.dark[1],
             '--input-fill-disabled': palette.neutral.dark[400],
-            '--input-border-default': palette.neutral.light[400],
-            '--input-border-focus': secondaryVariant2,
+            '--input-border-default': dark.input.border,
             // '--input-border-hover': dark.secondary.main,
             '--input-border-disabled': palette.neutral.dark[900],
+
             // '--input-placeholder-text': dark.input.placeholder,
 
             // // Components/Textarea
@@ -488,7 +489,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Utilities
             // '--icon': common.white,
             // '--icon-contrast': common.dark,
-            // '--icon-disabled': common.disabled,
+            '--icon-disabled': common.disabled,
             // '--divider': palette.neutral.dark[500],
 
             ///////////// Legacy below //////////

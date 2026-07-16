@@ -33,7 +33,7 @@ const (
 )
 
 func (s *Resources) GetCustomNodeKinds(response http.ResponseWriter, request *http.Request) {
-	if kinds, err := s.DB.GetCustomNodeKinds(request.Context(), nil); err != nil {
+	if kinds, err := s.DB.GetCustomNodeKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), kinds, http.StatusOK, response)
@@ -131,13 +131,9 @@ func (s *Resources) UpdateCustomNodeKind(response http.ResponseWriter, request *
 }
 
 func (s *Resources) DeleteCustomNodeKind(response http.ResponseWriter, request *http.Request) {
-	var (
-		paramId = mux.Vars(request)[CustomNodeKindParameter]
+	api.WriteErrorResponse(
+		request.Context(),
+		api.BuildErrorResponse(http.StatusGone, "This endpoint has been deprecated and is no longer available", request),
+		response,
 	)
-
-	if err := s.DB.DeleteCustomNodeKind(request.Context(), paramId); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		response.WriteHeader(http.StatusOK)
-	}
 }

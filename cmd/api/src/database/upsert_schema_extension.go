@@ -163,6 +163,19 @@ func (s *BloodhoundDB) nodeKindReconcileConfig(extensionId int32) reconcileConfi
 			}
 		},
 		delete: func(ctx context.Context, existing model.GraphSchemaNodeKind) error {
+			if !existing.IsDisplayKind {
+				// Before deleting the schema_node_kind, create a stub in custom_node_kinds for non-display node kinds. Non-display kinds are
+				// not tracked in custom_node_kinds while the schema is active. It is possible that a schemaless node kind of the same name
+				// existed before this extension upserted it to a non-display node kind, which removes it from the custom node table.
+				// Because of this edge case, inserting a stub here for the non-display node kind ensures that node kind will
+				// remain tracked even after the schema_node_kind is gone, in the event any nodes of those kinds remain in the graph.
+				// Ignore ErrDuplicateCustomNodeKindName. This indicates the kind is already tracked, nothing to do.
+				if _, err := s.CreateCustomNodeKinds(ctx, model.CustomNodeKinds{{KindName: existing.Name, Config: CustomNodeKindStubConfig}}); err != nil && !errors.Is(err, ErrDuplicateCustomNodeKindName) {
+					return fmt.Errorf("failed to ensure stub for non-display schema node kind %q: %w", existing.Name, err)
+				}
+			}
+			// Deleting from schema_node_kinds automatically nulls the schema_node_kind_id FK
+			// in custom_node_kinds via ON DELETE SET NULL.
 			return s.DeleteGraphSchemaNodeKind(ctx, existing.ID)
 		},
 	}
@@ -268,8 +281,12 @@ func (s *BloodhoundDB) kindInfoReconcileConfig(kindID int32, nodeKindID, relatio
 
 // upsertCustomIcons upserts custom icon definitions for the provided node kinds.
 func (s *BloodhoundDB) upsertCustomIcons(ctx context.Context, nodeKinds model.GraphSchemaNodeKinds) error {
-	var customNodeKindsToCreate model.CustomNodeKinds
-	var customNodeKindsToUpdate model.CustomNodeKinds
+	var (
+		customNodeKindsToCreate     model.CustomNodeKinds
+		customNodeKindsToUpdate     model.CustomNodeKinds
+		customNodeKindNamesToDelete []string
+	)
+
 	if existingIconsMap, err := getExistingIconsMap(ctx, s); err != nil {
 		return err
 	} else {
@@ -282,6 +299,10 @@ func (s *BloodhoundDB) upsertCustomIcons(ctx context.Context, nodeKinds model.Gr
 					customNodeKindDefinition := parseIconDefinitionFromNodeKind(nodeKind, nil)
 					customNodeKindsToCreate = append(customNodeKindsToCreate, customNodeKindDefinition)
 				}
+			} else if _, ok := existingIconsMap[nodeKind.Name]; ok {
+				// The kind is no longer a display kind, so drop it from custom_node_kinds to keep
+				// custom_node_kinds the source of truth for display node kinds
+				customNodeKindNamesToDelete = append(customNodeKindNamesToDelete, nodeKind.Name)
 			}
 
 		}
@@ -298,6 +319,14 @@ func (s *BloodhoundDB) upsertCustomIcons(ctx context.Context, nodeKinds model.Gr
 				}
 			}
 		}
+
+		if len(customNodeKindNamesToDelete) > 0 {
+			for _, kindName := range customNodeKindNamesToDelete {
+				if err := s.DeleteCustomNodeKind(ctx, kindName); err != nil {
+					return err
+				}
+			}
+		}
 	}
 	return nil
 }
@@ -305,7 +334,7 @@ func (s *BloodhoundDB) upsertCustomIcons(ctx context.Context, nodeKinds model.Gr
 // getExistingIconsMap creates a map of existing icons for quick lookups.
 func getExistingIconsMap(ctx context.Context, db *BloodhoundDB) (map[string]model.CustomNodeKind, error) {
 	existingIconMap := make(map[string]model.CustomNodeKind)
-	if existingIcons, err := db.GetCustomNodeKinds(ctx, nil); err != nil {
+	if existingIcons, err := db.GetCustomNodeKinds(ctx); err != nil {
 		return existingIconMap, fmt.Errorf("failed to get custom node kinds from database: %w", err)
 	} else {
 		for _, icon := range existingIcons {

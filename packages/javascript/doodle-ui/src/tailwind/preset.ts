@@ -145,10 +145,9 @@ export default {
                 'checkbox-check': 'var(--checkbox-check)',
 
                 // 'input-label': 'var(--input-label)',
-                'input-fill': 'var(--input-fill)',
+                // 'input-fill': 'var(--input-fill)',
                 'input-fill-disabled': 'var(--input-fill-disabled)',
                 'input-border-default': 'var(--input-border-default)',
-                'input-border-focus': 'var(--input-border-focus)',
                 // 'input-border-hover': 'var(--input-border-hover)',
                 'input-border-disabled': 'var(--input-border-disabled)',
                 // 'input-placeholder-text': 'var(--input-placeholder-text)',
@@ -229,7 +228,7 @@ export default {
 
                 // icon: 'var(--icon)',
                 // 'icon-contrast': 'var(--icon-contrast)',
-                // 'icon-disabled': 'var(--icon-disabled)',
+                'icon-disabled': 'var(--icon-disabled)',
                 // divider: 'var(--divider)',
 
                 // 'risk-critical': 'var(--risk-critical)',

@@ -89,6 +89,8 @@ const SeedSelection: FC<{
 
     const firstSeed = seeds.values().next().value;
 
+    const seedError = control.getFieldState('seeds')?.error?.message;
+
     return (
         <>
             <div
@@ -143,7 +145,7 @@ const SeedSelection: FC<{
                     </CardContent>
                 </Card>
                 {ruleType === SeedTypeObjectId ? (
-                    <ObjectSelect />
+                    <ObjectSelect errorMessage={seedError} />
                 ) : (
                     <PrivilegeZonesCypherEditor
                         onChange={setCypherQueryForExploreUrl}
