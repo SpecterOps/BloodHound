@@ -433,6 +433,23 @@ func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 		assert.Equal(t, "role-1234@tenant-1234", rels[3].Target.Value)
 		assert.Equal(t, azure.AZRoleApprover, rels[3].RelType)
 	})
+
+	t.Run("No approvers creates AZRoleApprover edge from uppercased PrivilegedRoleAdministratorRole", func(t *testing.T) {
+		model.EndUserAssignmentRequiresApproval = true
+		model.EndUserAssignmentUserApprovers = nil
+		model.EndUserAssignmentGroupApprovers = nil
+
+		_, rels := ein.ConvertAzureRoleManagementPolicyAssignment(model)
+
+		require.Len(t, rels, 1)
+		expectedSource := strings.ToUpper(fmt.Sprintf("%s@%s", azure.PrivilegedRoleAdministratorRole, "tenant-1234"))
+		assert.Equal(t, expectedSource, rels[0].Source.Value)
+		assert.Equal(t, strings.ToUpper(rels[0].Source.Value), rels[0].Source.Value, "AZRole edge source must be uppercased")
+		assert.Equal(t, azure.Role, rels[0].Source.Kind)
+		assert.Equal(t, "role-1234@tenant-1234", rels[0].Target.Value)
+		assert.Equal(t, azure.Role, rels[0].Target.Kind)
+		assert.Equal(t, azure.AZRoleApprover, rels[0].RelType)
+	})
 }
 
 func TestConvertAzureVirtualMachineAvereContributorToRels(t *testing.T) {

@@ -17,9 +17,13 @@
 package graphify
 
 import (
+	"encoding/json"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -53,5 +57,52 @@ func TestConvertGenericNode(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, converted.NodeProps, 1)
 		assert.Equal(t, "ObjectId", converted.NodeProps[0].ObjectID)
+	})
+}
+
+func TestConvertAzureManagedCluster_NodeResourceGroupID(t *testing.T) {
+	// The collector emits subscriptionId already prefixed with "/subscriptions/".
+	// The converter must not re-prepend it (which produced a doubled
+	// "/subscriptions//subscriptions/" node resource group id and a stub node).
+	t.Run("collector subscriptionId with /subscriptions/ prefix is not doubled", func(t *testing.T) {
+		raw := json.RawMessage(`{
+			"id": "/SUBSCRIPTIONS/SUB-1234/RESOURCEGROUPS/RG-1234/PROVIDERS/MICROSOFT.CONTAINERSERVICE/MANAGEDCLUSTERS/AKS-1234",
+			"name": "aks-1234",
+			"subscriptionId": "/subscriptions/sub-1234",
+			"resourceGroupId": "/SUBSCRIPTIONS/SUB-1234/RESOURCEGROUPS/RG-1234",
+			"tenantId": "tenant-1234",
+			"properties": {"nodeResourceGroup": "MC_rg-1234_aks-1234_centralus"}
+		}`)
+
+		converted := &ConvertedAzureData{}
+		convertAzureManagedCluster(raw, converted, time.Now())
+
+		require.Len(t, converted.NodeProps, 1)
+		nrg, ok := converted.NodeProps[0].PropertyMap[azure.NodeResourceGroupID.String()].(string)
+		require.True(t, ok, "noderesourcegroupid property must be a string")
+		assert.NotContains(t, nrg, "/subscriptions//subscriptions/", "must not double the subscriptions prefix")
+		assert.Equal(t, 1, strings.Count(strings.ToLower(nrg), "/subscriptions/"), "exactly one /subscriptions/ segment")
+		assert.Equal(t, "/SUBSCRIPTIONS/SUB-1234/RESOURCEGROUPS/MC_RG-1234_AKS-1234_CENTRALUS", nrg)
+	})
+
+	t.Run("bare-guid subscriptionId still gets a single /subscriptions/ prefix", func(t *testing.T) {
+		raw := json.RawMessage(`{
+			"id": "/SUBSCRIPTIONS/SUB-1234/RESOURCEGROUPS/RG-1234/PROVIDERS/MICROSOFT.CONTAINERSERVICE/MANAGEDCLUSTERS/AKS-1234",
+			"name": "aks-1234",
+			"subscriptionId": "sub-1234",
+			"resourceGroupId": "/SUBSCRIPTIONS/SUB-1234/RESOURCEGROUPS/RG-1234",
+			"tenantId": "tenant-1234",
+			"properties": {"nodeResourceGroup": "MC_rg-1234_aks-1234_centralus"}
+		}`)
+
+		converted := &ConvertedAzureData{}
+		convertAzureManagedCluster(raw, converted, time.Now())
+
+		require.Len(t, converted.NodeProps, 1)
+		nrg, ok := converted.NodeProps[0].PropertyMap[azure.NodeResourceGroupID.String()].(string)
+		require.True(t, ok)
+		assert.NotContains(t, nrg, "/subscriptions//subscriptions/")
+		assert.Equal(t, 1, strings.Count(strings.ToLower(nrg), "/subscriptions/"))
+		assert.Equal(t, "/SUBSCRIPTIONS/SUB-1234/RESOURCEGROUPS/MC_RG-1234_AKS-1234_CENTRALUS", nrg)
 	})
 }

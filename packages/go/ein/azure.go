@@ -280,7 +280,7 @@ func ConvertAzureAppRoleAssignmentToNodes(data models.AppRoleAssignment) []Inges
 			common.DisplayName.String(): strings.ToUpper(data.PrincipalDisplayName),
 			azure.TenantID.String():     strings.ToUpper(data.TenantId),
 		},
-		ObjectID: data.PrincipalId.String(),
+		ObjectID: strings.ToUpper(data.PrincipalId.String()),
 		Labels:   []graph.Kind{azure.ServicePrincipal},
 	})
 
@@ -289,7 +289,7 @@ func ConvertAzureAppRoleAssignmentToNodes(data models.AppRoleAssignment) []Inges
 			common.DisplayName.String(): strings.ToUpper(data.ResourceDisplayName),
 			azure.TenantID.String():     strings.ToUpper(data.TenantId),
 		},
-		ObjectID: data.ResourceId,
+		ObjectID: strings.ToUpper(data.ResourceId),
 		Labels:   []graph.Kind{azure.ServicePrincipal},
 	})
 
@@ -300,12 +300,12 @@ func ConvertAzureAppRoleAssignmentToRel(data models.AppRoleAssignment) Ingestibl
 	if appRoleKind, hasAppRoleKind := azure.RelationshipKindByAppRoleID[strings.ToLower(data.AppRoleId.String())]; hasAppRoleKind {
 		return NewIngestibleRelationship(
 			IngestibleEndpoint{
-				Value: data.PrincipalId.String(),
+				Value: strings.ToUpper(data.PrincipalId.String()),
 				Kind:  azure.ServicePrincipal,
 			},
 			IngestibleEndpoint{
 				Kind:  azure.ServicePrincipal,
-				Value: data.ResourceId,
+				Value: strings.ToUpper(data.ResourceId),
 			},
 			IngestibleRel{
 				RelProps: map[string]any{},
@@ -1583,12 +1583,16 @@ func ConvertAzureVirtualMachineUserAccessAdminToRels(data models.VirtualMachineU
 
 func ConvertAzureManagedCluster(data models.ManagedCluster, nodeResourceGroupID string, ingestTime time.Time) (IngestibleNode, []IngestibleRelationship) {
 	relationships := make([]IngestibleRelationship, 0)
+	// Uppercase the node resource group id once so the AZNodeResourceGroup edge
+	// target matches the uppercased node property instead of creating a
+	// lowercase stub resource group node.
+	nodeResourceGroupID = strings.ToUpper(nodeResourceGroupID)
 	node := IngestibleNode{
 		ObjectID: data.Id,
 		PropertyMap: map[string]any{
 			common.Name.String():               strings.ToUpper(data.Name),
 			azure.TenantID.String():            strings.ToUpper(data.TenantId),
-			azure.NodeResourceGroupID.String(): strings.ToUpper(nodeResourceGroupID),
+			azure.NodeResourceGroupID.String(): nodeResourceGroupID,
 			common.LastCollected.String():      ingestTime,
 		},
 		Labels: []graph.Kind{azure.ManagedCluster},
@@ -2058,7 +2062,10 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 
 	if len(policyAssignment.EndUserAssignmentUserApprovers) == 0 && len(policyAssignment.EndUserAssignmentGroupApprovers) == 0 {
 		// No users or groups were attached to the policy, we will create the edge from the tenant's PrivilegedRoleAdministratorRole Role node to the target role
-		combinedObjectId := fmt.Sprintf("%s@%s", azure.PrivilegedRoleAdministratorRole, policyAssignment.TenantId)
+		// PrivilegedRoleAdministratorRole is a lowercase constant; uppercase
+		// the AZRole edge-source identity so it matches the canonical
+		// (uppercased) AZRole node objectid under use_raw_object_id.
+		combinedObjectId := strings.ToUpper(fmt.Sprintf("%s@%s", azure.PrivilegedRoleAdministratorRole, policyAssignment.TenantId))
 
 		rels = append(rels, NewIngestibleRelationship(IngestibleEndpoint{
 			Value: combinedObjectId,
