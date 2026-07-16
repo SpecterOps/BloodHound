@@ -75,7 +75,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // TEXT
             '--text-main': common.dark,
             '--text-light': text.light,
-            // '--text-contrast': common.white,
+            '--text-contrast': common.white,
             '--text-disabled': light.text.disabled,
             // '--text-primary': light.primary.main,
             // '--text-secondary': light.secondary.main,
@@ -141,12 +141,12 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Components/Input
             // '--input-label': common.dark,
             '--input-fill': palette.neutral.light[100],
-            // '--input-fill-disabled': palette.neutral.light[100],
+            '--input-fill-disabled': palette.neutral.light[100],
             '--input-border-default': palette.neutral.dark[700],
             '--input-border-focus': light.secondary.main,
             // '--input-border-hover': light.secondary.main,
             '--input-border-disabled': palette.neutral.light[900],
-            // '--input-placeholder-text': text.placeholder,
+            '--input-placeholder-text': text.placeholder,
 
             // // Components/Textarea
             '--textarea-fill': common.white,
@@ -316,7 +316,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // TEXT
             '--text-main': common.white,
             '--text-light': text.dark,
-            // '--text-contrast': common.dark,
+            '--text-contrast': common.dark,
             '--text-disabled': common.disabled,
             // '--text-primary': dark.primary.main,
             // '--text-secondary': dark.secondary.main,
@@ -382,12 +382,12 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Components/Input
             // '--input-label': common.white,
             '--input-fill': palette.neutral.dark[400],
-            // '--input-fill-disabled': palette.neutral.dark[400],
+            '--input-fill-disabled': palette.neutral.dark[400],
             '--input-border-default': palette.neutral.light[400],
             '--input-border-focus': secondaryVariant2,
             // '--input-border-hover': dark.secondary.main,
-            // '--input-border-disabled': palette.neutral.dark[900],
-            // '--input-placeholder-text': dark.input.placeholder,
+            '--input-border-disabled': palette.neutral.dark[900],
+            '--input-placeholder-text': dark.input.placeholder,
 
             // // Components/Textarea
             '--textarea-fill': palette.neutral.dark[700],

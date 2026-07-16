@@ -16,7 +16,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import type { MultiSelectProps } from './MultiSelect';
-import { MultiSelect, MultiSelectOptionRow, MultiSelectTrigger } from './MultiSelect';
+import { MultiSelect, MultiSelectOptionRow } from './MultiSelect';
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
@@ -71,34 +71,6 @@ export const Default: Story = {
     },
 };
 
-export const Error: Story = {
-    args: {
-        options: itemOptions,
-        value: [],
-        onValueChange: () => {},
-        placeholder: 'All Items',
-        error: true,
-    },
-    render: (args) => {
-        const [value, setValue] = useState<string[]>(args.value ?? []);
-
-        return (
-            <div className='w-60'>
-                <MultiSelect {...args} value={value} onValueChange={setValue} />
-            </div>
-        );
-    },
-};
-
-export const TriggerDisabled: Story = {
-    args: { options: [], value: [], onValueChange: () => {} },
-    render: () => (
-        <div className='w-60'>
-            <MultiSelectTrigger disabled>Placeholder</MultiSelectTrigger>
-        </div>
-    ),
-};
-
 export const OptionRows: Story = {
     args: { options: [], value: [], onValueChange: () => {} },
     render: () => (
@@ -147,10 +119,28 @@ export const WithSearch: Story = {
         value: [],
         onValueChange: () => {},
         placeholder: 'All Items',
-        selectAllLabel: 'All Items',
         isSearchable: true,
         searchPlaceholder: 'Search options',
         noResultsText: 'No matches',
+    },
+    render: (args) => {
+        const [value, setValue] = useState<string[]>(args.value ?? []);
+
+        return (
+            <div className='w-60'>
+                <MultiSelect {...args} value={value} onValueChange={setValue} />
+            </div>
+        );
+    },
+};
+
+export const Error: Story = {
+    args: {
+        options: itemOptions,
+        value: [],
+        onValueChange: () => {},
+        placeholder: 'All Items',
+        error: true,
     },
     render: (args) => {
         const [value, setValue] = useState<string[]>(args.value ?? []);

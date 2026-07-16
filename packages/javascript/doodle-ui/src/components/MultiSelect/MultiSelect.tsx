@@ -19,6 +19,7 @@ import { Search } from 'lucide-react';
 import * as React from 'react';
 import { Checkbox } from '../Checkbox';
 import { Input } from '../Input';
+import { Label } from '../Label';
 import { Popover, PopoverContent, PopoverTrigger } from '../Popover';
 import { ScrollArea } from '../ScrollArea';
 import { Skeleton } from '../Skeleton';
@@ -39,11 +40,11 @@ const CaretDown = ({ className, size = 12 }: { className?: string; size?: number
 );
 
 const MultiSelectTriggerVariants = cva(
-    'flex h-10 w-full items-center justify-between rounded-lg bg-primary px-4 py-2 text-base font-normal leading-6 tracking-[0.15px] text-common-white dark:text-neutral-dark-1 focus:outline-none focus-visible:focus-ring data-[state=open]:bg-primary enabled:hover:bg-secondary disabled:cursor-not-allowed disabled:border disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-text-disabled dark:border-neutral-light-5 dark:bg-neutral-dark-2 dark:text-white aria-[invalid=true]:border aria-[invalid=true]:border-status-error-main aria-[invalid=true]:bg-common-white aria-[invalid=true]:text-input-placeholder-text aria-[invalid=true]:enabled:hover:border-status-error-main aria-[invalid=true]:enabled:hover:bg-common-white aria-[invalid=true]:data-[state=open]:bg-common-white'
+    'flex h-10 w-full items-center justify-between rounded bg-primary px-[14px] py-2 text-base font-normal leading-6 tracking-[0.15px] text-text-contrast focus:outline-none focus-visible:focus-ring data-[state=open]:bg-primary enabled:hover:bg-secondary disabled:cursor-not-allowed disabled:border disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-text-disabled aria-[invalid=true]:[&>svg]:text-text-main aria-[invalid=true]:border aria-[invalid=true]:border-status-error-main aria-[invalid=true]:bg-select-trigger-outlined-fill aria-[invalid=true]:text-input-placeholder-text  aria-[invalid=true]:enabled:hover:border-status-error-main aria-[invalid=true]:enabled:hover:bg-select-trigger-outlined-fill aria-[invalid=true]:data-[state=open]:bg-select-trigger-outlined-fill'
 );
-const multiSelectRowStyles =
-    'flex w-full items-center gap-2 rounded-lg p-2 cursor-pointer hover:bg-secondary hover:text-common-white dark:hover:text-neutral-dark-1';
+const multiSelectRowStyles = 'flex w-full items-center gap-2 rounded-lg p-2';
 
+const multiSelectInteractiveRowStyles = 'cursor-pointer hover:bg-secondary hover:text-text-contrast';
 interface MultiSelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     open?: boolean;
 }
@@ -93,56 +94,50 @@ interface MultiSelectActionRowProps {
     onSelect: () => void;
 }
 
-const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRowProps) => (
-    <div
-        role='option'
-        aria-selected={checked === true}
-        aria-disabled={option.disabled}
-        tabIndex={option.disabled ? -1 : 0}
-        className={cn(
-            multiSelectRowStyles,
-            option.disabled && 'cursor-not-allowed opacity-50 hover:bg-transparent hover:text-inherit'
-        )}
-        onClick={() => !option.disabled && onSelect(option.value)}
-        onKeyDown={(event) => {
-            if (!option.disabled && (event.key === 'Enter' || event.key === ' ')) {
-                event.preventDefault();
-                onSelect(option.value);
-            }
-        }}>
-        <Checkbox
-            tabIndex={-1}
-            checked={checked}
-            disabled={option.disabled}
-            onClick={(event) => event.stopPropagation()}
-            onCheckedChange={() => !option.disabled && onSelect(option.value)}
-        />
-        <span className='truncate text-sm'>{option.label}</span>
-    </div>
-);
+const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRowProps) => {
+    const checkboxId = React.useId();
 
-const MultiSelectActionRow = ({ checked, label, onSelect }: MultiSelectActionRowProps) => (
-    <div
-        role='option'
-        aria-selected={checked === true}
-        tabIndex={0}
-        className={multiSelectRowStyles}
-        onClick={onSelect}
-        onKeyDown={(event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                onSelect();
-            }
-        }}>
-        <Checkbox
-            tabIndex={-1}
-            checked={checked}
-            onClick={(event) => event.stopPropagation()}
-            onCheckedChange={onSelect}
-        />
-        <span className='truncate text-sm min-w-0'>{label}</span>
-    </div>
-);
+    return (
+        <div className='p-1'>
+            <Label
+                htmlFor={checkboxId}
+                className={cn(
+                    multiSelectRowStyles,
+                    'text-base font-normal leading-4',
+                    option.disabled
+                        ? 'cursor-not-allowed bg-btn-disabled-fill text-text-disabled'
+                        : multiSelectInteractiveRowStyles
+                )}>
+                <Checkbox
+                    id={checkboxId}
+                    checked={checked}
+                    disabled={option.disabled}
+                    onCheckedChange={() => onSelect(option.value)}
+                />
+                <span className='min-w-0 flex-1 truncate'>{option.label}</span>
+            </Label>
+        </div>
+    );
+};
+
+const MultiSelectActionRow = ({ checked, label, onSelect }: MultiSelectActionRowProps) => {
+    const checkboxId = React.useId();
+
+    return (
+        <div className='p-1'>
+            <Label
+                htmlFor={checkboxId}
+                className={cn(
+                    multiSelectRowStyles,
+                    multiSelectInteractiveRowStyles,
+                    'text-base font-normal leading-4'
+                )}>
+                <Checkbox id={checkboxId} checked={checked} onCheckedChange={onSelect} />
+                <span className='min-w-0 flex-1 truncate'>{label}</span>
+            </Label>
+        </div>
+    );
+};
 
 const MultiSelectLoadingRows = ({ loadingText }: { loadingText: string }) => (
     <div role='status' aria-label={loadingText}>
@@ -156,7 +151,7 @@ const MultiSelectLoadingRows = ({ loadingText }: { loadingText: string }) => (
 );
 
 const MultiSelectStateRow = ({ children }: { children: React.ReactNode }) => (
-    <Typography variant='body2' component='div' className='px-3 py-2 text-neutral-5'>
+    <Typography variant='body1' component='div' className='px-3 py-2 text-center text-text-main'>
         {children}
     </Typography>
 );
@@ -282,24 +277,28 @@ const MultiSelect = ({
                 </MultiSelectTrigger>
             </PopoverTrigger>
             <PopoverContent
-                className='w-[var(--radix-popover-trigger-width)] rounded-lg bg-neutral-light-1 dark:bg-neutral-dark-2 p-0 text-text-main dark:text-white'
+                className='w-[var(--radix-popover-trigger-width)] rounded-lg bg-select-content-fill p-0 text-text-main'
                 align='start'>
                 {isSearchable && (
-                    <div className='flex items-center gap-2 border-b p-2'>
-                        <Search className='size-5 shrink-0 text-neutral-dark-1 dark:text-white' aria-hidden='true' />
+                    <div className='flex items-center gap-2 p-2'>
+                        <Search className='size-4 shrink-0 text-text-main' aria-hidden='true' />
                         <Input
                             aria-label={searchPlaceholder}
                             value={searchValue}
                             onChange={(e) => setSearchValue(e.target.value)}
                             placeholder={searchPlaceholder}
-                            className='h-8 border-none bg-transparent px-0 text-text-main placeholder:text-text-main dark:text-white dark:placeholder:text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none'
+                            className='h-6 border-none bg-transparent px-0 text-text-main leading-4 placeholder:text-text-main focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
                         />
                     </div>
                 )}
 
-                <ScrollArea className='h-60'>
-                    <div role='listbox' aria-multiselectable='true' aria-busy={isLoading || undefined} className='p-1'>
-                        {selectAllLabel && !isLoading && selectableValues.length > 0 && (
+                <ScrollArea className='max-h-60 [&_[data-radix-scroll-area-viewport]]:max-h-60'>
+                    <div
+                        role='group'
+                        aria-label={placeholder ?? 'Select options'}
+                        aria-busy={isLoading || undefined}
+                        className='p-1'>
+                        {selectAllLabel && !isLoading && !isSearchResultEmpty && selectableValues.length > 0 && (
                             <MultiSelectActionRow
                                 checked={selectAllChecked}
                                 label={selectAllLabel}

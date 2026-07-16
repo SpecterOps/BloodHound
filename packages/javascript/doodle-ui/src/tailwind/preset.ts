@@ -94,7 +94,7 @@ export default {
                 // contrast: 'var(--common-dark)',
 
                 'text-light': 'var(--text-light)',
-                // 'text-contrast': 'var(--text-contrast)',
+                'text-contrast': 'var(--text-contrast)',
                 // 'text-primary': 'var(--text-primary)',
                 // 'text-secondary': 'var(--text-secondary)',
 
@@ -154,12 +154,12 @@ export default {
 
                 // 'input-label': 'var(--input-label)',
                 'input-fill': 'var(--input-fill)',
-                // 'input-fill-disabled': 'var(--input-fill-disabled)',
+                'input-fill-disabled': 'var(--input-fill-disabled)',
                 'input-border-default': 'var(--input-border-default)',
                 'input-border-focus': 'var(--input-border-focus)',
                 // 'input-border-hover': 'var(--input-border-hover)',
                 'input-border-disabled': 'var(--input-border-disabled)',
-                // 'input-placeholder-text': 'var(--input-placeholder-text)',
+                'input-placeholder-text': 'var(--input-placeholder-text)',
 
                 'textarea-fill': 'var(--textarea-fill)',
                 'textarea-border-default': 'var(--textarea-border-default)',
