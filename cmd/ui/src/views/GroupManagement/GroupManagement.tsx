@@ -65,8 +65,9 @@ const GroupManagement = () => {
             navigate({
                 pathname: ROUTE_EXPLORE,
                 search: createTypedSearchParams<ExploreQueryParams>({
-                    selectedItem: node?.node_id.toString(),
-                    primarySearch: node?.properties.name || node?.properties.objectid || '',
+                    selectedItem: node?.node_id.toString() ?? openNode.id,
+                    primarySearch:
+                        node?.properties.name || node?.properties.objectid || openNode.name || openNode.id || '',
                     searchType: 'node',
                     exploreSearchTab: 'node',
                 }),

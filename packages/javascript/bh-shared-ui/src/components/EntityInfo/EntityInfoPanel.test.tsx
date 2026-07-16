@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { mockSourceKindsHandler } from '../../mocks';
 import { render, screen } from '../../test-utils';
 
 import { AzureNodeKind } from '../../graphSchema';
@@ -49,7 +50,8 @@ const server = setupServer(
                 data: [],
             })
         );
-    })
+    }),
+    mockSourceKindsHandler()
 );
 
 beforeAll(() => server.listen());

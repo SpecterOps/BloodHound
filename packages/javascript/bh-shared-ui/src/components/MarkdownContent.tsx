@@ -14,11 +14,22 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Divider } from '@mui/material';
-import { Link, Typography } from 'doodle-ui';
+import { Alert, Link, Typography } from 'doodle-ui';
 import React, { useMemo } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 import ReactMarkdown, { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Theme, useTheme } from '../hooks';
+
+const ErrorFallback = () => {
+    return (
+        <div className='py-4 flex justify-end' data-testid='error-boundary'>
+            <Alert variant='error' title='Error'>
+                An unexpected error has occurred. Please refresh the page and try again.
+            </Alert>
+        </div>
+    );
+};
 
 const applyThemeToComponents = (theme: Theme) => {
     return {
@@ -137,4 +148,16 @@ const MarkdownContent: React.FC<{
     );
 };
 
-export default MarkdownContent;
+export default function ErrorBoundaryWrappedMarkdown({
+    markdown,
+    components,
+}: {
+    markdown: string;
+    components?: Components;
+}) {
+    return (
+        <ErrorBoundary fallbackRender={ErrorFallback}>
+            <MarkdownContent markdown={markdown} components={components} />
+        </ErrorBoundary>
+    );
+}

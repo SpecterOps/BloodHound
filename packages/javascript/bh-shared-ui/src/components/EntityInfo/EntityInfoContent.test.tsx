@@ -17,7 +17,8 @@ import { NodeDetails } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
-import { render, screen } from '../../test-utils';
+import { mockSourceKindsHandler } from '../../mocks';
+import { render, screen, waitFor } from '../../test-utils';
 import { ObjectInfoPanelContextProvider } from '../../views';
 import { EntityInfoDataTableGraphed } from '../EntityInfoDataTableGraphed/EntityInfoDataTableGraphed';
 import EntityInfoContent from './EntityInfoContent';
@@ -58,7 +59,8 @@ const server = setupServer(
                 data: [],
             })
         );
-    })
+    }),
+    mockSourceKindsHandler()
 );
 
 const EntityInfoContentWithProvider = ({ selectedNode }: { selectedNode: NodeDetails }) => (
@@ -82,6 +84,9 @@ describe('EntityInfoContent', () => {
         };
 
         render(<EntityInfoContentWithProvider selectedNode={selectedNode} />);
+        // Wait for all section loading spinners to finish before asserting absence,
+        // so the assertion runs only after EntityInfoList finishes loading its data tables.
+        await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
         expect(screen.queryByText('PIM Assignments')).not.toBeInTheDocument();
     });
 });

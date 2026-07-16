@@ -17,7 +17,7 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { createAuthStateWithPermissions } from '../../../mocks';
+import { createAuthStateWithPermissions, mockSourceKindsHandler } from '../../../mocks';
 import { render, screen, waitFor } from '../../../test-utils';
 import { Permission } from '../../../utils';
 import ContextMenu from './ContextMenuPrivilegeZonesEnabled';
@@ -76,7 +76,8 @@ const server = setupServer(
                 },
             })
         );
-    })
+    }),
+    mockSourceKindsHandler()
 );
 
 beforeAll(() => server.listen());

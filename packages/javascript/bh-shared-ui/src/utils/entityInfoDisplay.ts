@@ -372,7 +372,9 @@ const getBuiltInNodeKind = (kind: string): EntityKinds | undefined => {
     return result;
 };
 
-const getBuiltInRelationshipKind = (kind: string): EntityKinds | undefined => {
+const getBuiltInRelationshipKind = (
+    kind: string
+): ActiveDirectoryRelationshipKind | AzureRelationshipKind | undefined => {
     let result = undefined;
 
     Object.values(ActiveDirectoryRelationshipKind).forEach((activeDirectoryType) => {

@@ -18,7 +18,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import * as hooks from '../../hooks';
-import { zoneHandlers } from '../../mocks';
+import { mockSourceKindsHandler, zoneHandlers } from '../../mocks';
 import { zonesPath } from '../../routes';
 import { render, screen } from '../../test-utils';
 import { ObjectInfoPanelContextProvider } from '../../views';
@@ -64,15 +64,7 @@ const server = setupServer(
             })
         );
     }),
-    rest.get('/api/v2/source-kinds', (_, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {
-                    kinds: [{ name: 'Base', id: 1 }],
-                },
-            })
-        );
-    })
+    mockSourceKindsHandler()
 );
 
 const EntityInfoContentWithProvider = ({
@@ -136,15 +128,7 @@ describe('EntityInfoDataTableList', () => {
             />
         );
 
-        // const list = screen.getByTestId('entity-info-data-table-list');
         expect(await screen.findByText('Rules')).toBeInTheDocument();
-        // let listContainsSelectorsSection = false;
-
-        // list.childNodes.forEach((child) => {
-        //     if (child.textContent?.includes('Rules')) listContainsSelectorsSection = true;
-        // });
-
-        // expect(listContainsSelectorsSection).toBeTruthy();
     });
 
     it('Hides selector information if additionalSections is false', async () => {

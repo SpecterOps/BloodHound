@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Divider } from '@mui/material';
-import { Typography } from 'doodle-ui';
 import { RelationshipDetailsWithInfo } from 'js-client-library';
 import { ElementType, FC, Fragment } from 'react';
 import { KindInfoItems } from '../../../components/EntityInfo/KindInfoItems';
@@ -153,30 +152,13 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<RelationshipDetailsWithInf
             ) : (
                 <EdgeObjectInformation selectedEdge={selectedEdge} sourceNode={sourceNode} targetNode={targetNode} />
             )}
-            {sections || shouldRenderACLInheritance ? (
-                <>
-                    {Object.entries(sections).map(renderDropdownFromSection)}
-                    {shouldRenderACLInheritance && renderACLInheritanceDropdown()}
-                    {!isBuiltInKind(selectedEdge.kind.name) && <KindInfoItems items={selectedEdge.info} />}
-                </>
-            ) : (
-                <>
-                    {!isHidden && (
-                        <>
-                            <div className='p-2'>
-                                <Divider />
-                            </div>
+            <>
+                {sections && Object.entries(sections).map(renderDropdownFromSection)}
 
-                            <div className='pl-2'>
-                                <Typography variant='body1' className='text-xs'>
-                                    The edge <strong className='text-xs'>{selectedEdge.kind.name}</strong>
-                                    does not have any additional contextual information at this time.
-                                </Typography>
-                            </div>
-                        </>
-                    )}
-                </>
-            )}
+                {shouldRenderACLInheritance && renderACLInheritanceDropdown()}
+
+                {!isBuiltInKind(selectedEdge.kind.name) && <KindInfoItems items={selectedEdge.info} />}
+            </>
         </div>
     );
 };

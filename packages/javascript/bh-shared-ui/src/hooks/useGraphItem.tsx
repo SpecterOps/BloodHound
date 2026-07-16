@@ -23,6 +23,7 @@ import {
 } from 'js-client-library';
 import { useQuery } from 'react-query';
 import { apiClient, REL_ID_PREFIX } from '../utils';
+import { escapeCypherString } from '../utils/cypher';
 
 export interface BaseItemResponse {
     id: string;
@@ -115,16 +116,21 @@ export const useNodeByObjectId = (objectId?: string) => {
     return useQuery({
         queryKey: ['getGraphNodeByObjectId', objectId],
         queryFn: async () => {
+            const safeObjectId = objectId ? escapeCypherString(objectId) : '';
             return apiClient
-                .cypherSearch(`MATCH (n) WHERE n.objectid = "${objectId}" RETURN n LIMIT 1`, undefined, true)
+                .cypherSearch(`MATCH (n) WHERE n.objectid = "${safeObjectId}" RETURN n LIMIT 1`, undefined, true)
                 .then((res) => {
                     if (!objectId) {
                         return undefined;
                     }
 
-                    const firstElement: GraphNode = Object.values(res.data?.data?.nodes)[0];
+                    const nodes = res.data?.data?.nodes;
+                    if (!nodes || Object.keys(nodes).length === 0) {
+                        return undefined;
+                    }
 
-                    const id = Object.keys(res.data?.data?.nodes)[0];
+                    const firstElement: GraphNode = Object.values(nodes)[0];
+                    const id = Object.keys(nodes)[0];
 
                     const node: NodeDetails = {
                         node_id: parseInt(id),
