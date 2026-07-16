@@ -16,47 +16,52 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { OpenGraphDataQualityStat } from 'js-client-library';
 import { render, screen, waitFor } from '../../test-utils';
 import OpenGraphInfo, { OpenGraphPlatformInfo, getLatestMetricStats } from './OpenGraphInfo';
 
-const nodeStat = (overrides: Record<string, unknown> = {}) => ({
-    metric_kind_id: 1,
+const baseStat = (overrides: Partial<OpenGraphDataQualityStat> = {}): OpenGraphDataQualityStat => ({
+    id: 1,
+    run_id: 'run-1',
+    kind_id: 1,
+    environment_kind_id: 999,
+    environmentid: 'env-1',
+    extension_id: 1,
     metric_type: 'node',
     metric_name: 'User',
     metric_value: 10,
     created_at: '2026-01-01T00:00:00.000Z',
+    updated_at: '2026-01-01T00:00:00.000Z',
+    deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
     ...overrides,
 });
 
-const relationshipStat = (overrides: Record<string, unknown> = {}) => ({
-    metric_kind_id: 100,
-    metric_type: 'relationship',
-    metric_name: 'HasRelationship',
-    metric_value: 50,
-    created_at: '2026-01-01T00:00:00.000Z',
-    ...overrides,
-});
+const testNodeStat = (overrides: Partial<OpenGraphDataQualityStat> = {}) =>
+    baseStat({ kind_id: 1, metric_type: 'node', metric_name: 'User', metric_value: 10, ...overrides });
+
+const testRelationshipStat = (overrides: Partial<OpenGraphDataQualityStat> = {}) =>
+    baseStat({ kind_id: 100, metric_type: 'relationship', metric_name: 'HasRelationship', metric_value: 50, ...overrides });
 
 describe('getLatestMetricStats', () => {
     it('returns empty node stats and undefined relationship stats for empty input', () => {
-        const { nodeStats, relationshipStats } = getLatestMetricStats([]);
+        const { nodeStats, relationshipStat } = getLatestMetricStats([]);
 
         expect(nodeStats).toEqual([]);
-        expect(relationshipStats).toBeUndefined();
+        expect(relationshipStat).toBeUndefined();
     });
 
     it('returns a single node stat and no relationship stat', () => {
-        const stat = nodeStat();
+        const stat = testNodeStat();
 
-        const { nodeStats, relationshipStats } = getLatestMetricStats([stat]);
+        const { nodeStats, relationshipStat } = getLatestMetricStats([stat]);
 
         expect(nodeStats).toEqual([stat]);
-        expect(relationshipStats).toBeUndefined();
+        expect(relationshipStat).toBeUndefined();
     });
 
-    it('keeps only the latest stat per metric_kind_id by created_at', () => {
-        const older = nodeStat({ created_at: '2026-01-01T00:00:00.000Z', metric_value: 10 });
-        const newer = nodeStat({ created_at: '2026-01-02T00:00:00.000Z', metric_value: 25 });
+    it('keeps only the latest stat per kind_id by created_at', () => {
+        const older = testNodeStat({ created_at: '2026-01-01T00:00:00.000Z', metric_value: 10 });
+        const newer = testNodeStat({ created_at: '2026-01-02T00:00:00.000Z', metric_value: 25 });
 
         const { nodeStats } = getLatestMetricStats([older, newer]);
 
@@ -65,8 +70,8 @@ describe('getLatestMetricStats', () => {
     });
 
     it('keeps the latest regardless of input ordering', () => {
-        const older = nodeStat({ created_at: '2026-01-01T00:00:00.000Z', metric_value: 10 });
-        const newer = nodeStat({ created_at: '2026-01-02T00:00:00.000Z', metric_value: 25 });
+        const older = testNodeStat({ created_at: '2026-01-01T00:00:00.000Z', metric_value: 10 });
+        const newer = testNodeStat({ created_at: '2026-01-02T00:00:00.000Z', metric_value: 25 });
 
         const { nodeStats } = getLatestMetricStats([newer, older]);
 
@@ -75,29 +80,29 @@ describe('getLatestMetricStats', () => {
     });
 
     it('splits mixed node and relationship stats', () => {
-        const node1 = nodeStat({ metric_kind_id: 1, metric_name: 'User' });
-        const node2 = nodeStat({ metric_kind_id: 2, metric_name: 'Group' });
-        const relationship = relationshipStat({ metric_kind_id: 100 });
+        const node1 = testNodeStat({ kind_id: 1, metric_name: 'User' });
+        const node2 = testNodeStat({ kind_id: 2, metric_name: 'Group' });
+        const relationship = testRelationshipStat({ kind_id: 100 });
 
-        const { nodeStats, relationshipStats } = getLatestMetricStats([node1, node2, relationship]);
+        const { nodeStats, relationshipStat } = getLatestMetricStats([node1, node2, relationship]);
 
         expect(nodeStats).toEqual([node1, node2]);
-        expect(relationshipStats).toBe(relationship);
+        expect(relationshipStat).toBe(relationship);
     });
 
     it('returns undefined relationship stats when only node stats are present', () => {
-        const node1 = nodeStat({ metric_kind_id: 1 });
-        const node2 = nodeStat({ metric_kind_id: 2 });
+        const node1 = testNodeStat({ kind_id: 1 });
+        const node2 = testNodeStat({ kind_id: 2 });
 
-        const { nodeStats, relationshipStats } = getLatestMetricStats([node1, node2]);
+        const { nodeStats, relationshipStat } = getLatestMetricStats([node1, node2]);
 
         expect(nodeStats).toEqual([node1, node2]);
-        expect(relationshipStats).toBeUndefined();
+        expect(relationshipStat).toBeUndefined();
     });
 
     it('keeps the first-seen stat when created_at values are missing/invalid', () => {
-        const first = nodeStat({ created_at: undefined, metric_value: 10 });
-        const second = nodeStat({ created_at: undefined, metric_value: 25 });
+        const first = testNodeStat({ created_at: undefined, metric_value: 10 });
+        const second = testNodeStat({ created_at: undefined, metric_value: 25 });
 
         const { nodeStats } = getLatestMetricStats([first, second]);
 
@@ -107,18 +112,18 @@ describe('getLatestMetricStats', () => {
 });
 
 const STATS_URL = '/api/v2/data-quality-stats';
-const AGGREGATION_URL = '/api/v2/data-quality-stats-aggregation';
+const AGGREGATION_URL = '/api/v2/data-quality-stats-aggregations';
 
-const ogStat = (overrides: Record<string, unknown> = {}) => ({
-    id: 1,
-    metric_kind_id: 1,
-    environment_kind_id: 999,
-    metric_type: 'node',
-    metric_name: 'User',
-    metric_value: 10,
-    created_at: '2026-01-01T00:00:00.000Z',
-    ...overrides,
-});
+const ogStat = (overrides: Partial<OpenGraphDataQualityStat> = {}) =>
+    baseStat({
+        id: 1,
+        kind_id: 1,
+        environment_kind_id: 999,
+        metric_type: 'node',
+        metric_name: 'User',
+        metric_value: 10,
+        ...overrides,
+    });
 
 const server = setupServer(rest.get('/api/v2/custom-nodes', (_req, res, ctx) => res(ctx.json({ data: {} }))));
 
@@ -162,9 +167,9 @@ describe('OpenGraphInfo', () => {
 
     it('renders a row per node stat plus the relationship row when populated', async () => {
         respondWith(STATS_URL, [
-            ogStat({ id: 1, metric_kind_id: 1, metric_name: 'User', metric_value: 10 }),
-            ogStat({ id: 2, metric_kind_id: 2, metric_name: 'Group', metric_value: 20 }),
-            ogStat({ id: 3, metric_kind_id: 100, metric_type: 'relationship', metric_value: 50 }),
+            ogStat({ id: 1, kind_id: 1, metric_name: 'User', metric_value: 10 }),
+            ogStat({ id: 2, kind_id: 2, metric_name: 'Group', metric_value: 20 }),
+            ogStat({ id: 3, kind_id: 100, metric_type: 'relationship', metric_value: 50 }),
         ]);
 
         render(<OpenGraphInfo contextId='env-1' />);
@@ -175,10 +180,10 @@ describe('OpenGraphInfo', () => {
         expect(screen.getByText('50')).toBeInTheDocument();
     });
 
-    it('skips node rows whose metric_kind_id matches the environment_kind_id', async () => {
+    it('skips node rows whose kind_id matches the environment_kind_id', async () => {
         respondWith(STATS_URL, [
-            ogStat({ id: 1, metric_kind_id: 1, environment_kind_id: 999, metric_name: 'VisibleType' }),
-            ogStat({ id: 2, metric_kind_id: 5, environment_kind_id: 5, metric_name: 'SkippedType' }),
+            ogStat({ id: 1, kind_id: 1, environment_kind_id: 999, metric_name: 'VisibleType' }),
+            ogStat({ id: 2, kind_id: 5, environment_kind_id: 5, metric_name: 'SkippedType' }),
         ]);
 
         render(<OpenGraphInfo contextId='env-1' />);
@@ -188,7 +193,7 @@ describe('OpenGraphInfo', () => {
     });
 
     it('falls back to 0 for the relationship row when no relationship stat is present', async () => {
-        respondWith(STATS_URL, [ogStat({ id: 1, metric_kind_id: 1, metric_name: 'User', metric_value: 10 })]);
+        respondWith(STATS_URL, [ogStat({ id: 1, kind_id: 1, metric_name: 'User', metric_value: 10 })]);
 
         render(<OpenGraphInfo contextId='env-1' />);
 
@@ -200,8 +205,8 @@ describe('OpenGraphInfo', () => {
 describe('OpenGraphPlatformInfo', () => {
     it('renders node and relationship rows from the aggregation endpoint', async () => {
         respondWith(AGGREGATION_URL, [
-            ogStat({ id: 1, metric_kind_id: 1, metric_name: 'User', metric_value: 10 }),
-            ogStat({ id: 2, metric_kind_id: 100, metric_type: 'relationship', metric_value: 50 }),
+            ogStat({ id: 1, kind_id: 1, metric_name: 'User', metric_value: 10 }),
+            ogStat({ id: 2, kind_id: 100, metric_type: 'relationship', metric_value: 50 }),
         ]);
 
         render(<OpenGraphPlatformInfo contextKindId={101} />);
@@ -224,4 +229,3 @@ describe('OpenGraphPlatformInfo', () => {
         consoleError.mockRestore();
     });
 });
-
