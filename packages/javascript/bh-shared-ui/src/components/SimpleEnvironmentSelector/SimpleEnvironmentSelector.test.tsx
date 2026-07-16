@@ -24,7 +24,12 @@ import { render, screen, within } from '../../test-utils';
 let testFeaturesResponse = {};
 
 const toggleFeatureFlag = (isEnabled: boolean) => {
-    testFeaturesResponse = { data: [{ key: 'opengraph_extension_management', enabled: isEnabled }] };
+    testFeaturesResponse = {
+        data: [
+            { key: 'opengraph_extension_management', enabled: isEnabled },
+            { key: 'opengraph_findings', enabled: isEnabled },
+        ],
+    };
 };
 
 const server = setupServer(
@@ -227,4 +232,3 @@ describe('Open Graph platform selection', () => {
         expect(tooltip).toHaveTextContent('All GitHub Environments');
     });
 });
-
