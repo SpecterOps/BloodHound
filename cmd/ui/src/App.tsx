@@ -51,6 +51,14 @@ import {
 import Notifier from './components/Notifier';
 import DialogProviders from './views/Explore/DialogProviders';
 
+type AppTestWindow = Window & {
+    __APP_TEST_RUNTIME__?: {
+        runner?: string;
+    };
+};
+
+const isPlaywrightRuntime = (window as AppTestWindow).__APP_TEST_RUNTIME__?.runner === 'playwright';
+
 // Create history object for unstable_HistoryRouter
 // Type assertion is needed due to incompatibility between history v5 and react-router-dom v6's internal history types
 // React Router team has explicitly deprecated custom history support and does not intend to support it in future versions.
@@ -125,9 +133,16 @@ const App: React.FC = () => {
         palette,
         typography,
     });
+
     // suggested by MUI for defining theme options based on other options. https://mui.com/material-ui/customization/theming/#api
     theme = createTheme(theme, {
         components: themedComponents(palette),
+        ...(isPlaywrightRuntime && {
+            // Disable MUI transitions during A11y tests to ensure correct colors are used in contrast testing
+            transitions: {
+                create: () => 'none',
+            },
+        }),
     });
 
     return (

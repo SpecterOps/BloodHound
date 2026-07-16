@@ -342,6 +342,21 @@ func (mr *MockDatabaseMockRecorder) CreateCustomNodeKinds(ctx, customNodeKind an
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCustomNodeKinds", reflect.TypeOf((*MockDatabase)(nil).CreateCustomNodeKinds), ctx, customNodeKind)
 }
 
+// CreateDataQualityAggregations mocks base method.
+func (m *MockDatabase) CreateDataQualityAggregations(ctx context.Context, aggregations model.DataQualityAggregations) (model.DataQualityAggregations, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateDataQualityAggregations", ctx, aggregations)
+	ret0, _ := ret[0].(model.DataQualityAggregations)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateDataQualityAggregations indicates an expected call of CreateDataQualityAggregations.
+func (mr *MockDatabaseMockRecorder) CreateDataQualityAggregations(ctx, aggregations any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDataQualityAggregations", reflect.TypeOf((*MockDatabase)(nil).CreateDataQualityAggregations), ctx, aggregations)
+}
+
 // CreateDataQualityStats mocks base method.
 func (m *MockDatabase) CreateDataQualityStats(ctx context.Context, stats model.DataQualityStats) (model.DataQualityStats, error) {
 	m.ctrl.T.Helper()
@@ -475,6 +490,21 @@ func (m *MockDatabase) CreateInstallation(ctx context.Context) (model.Installati
 func (mr *MockDatabaseMockRecorder) CreateInstallation(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateInstallation", reflect.TypeOf((*MockDatabase)(nil).CreateInstallation), ctx)
+}
+
+// CreateKindInfo mocks base method.
+func (m *MockDatabase) CreateKindInfo(ctx context.Context, kindID int32, nodeKindID, relationshipKindID *int32, kindInfo model.KindInfoInput) (model.GraphSchemaKindInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateKindInfo", ctx, kindID, nodeKindID, relationshipKindID, kindInfo)
+	ret0, _ := ret[0].(model.GraphSchemaKindInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateKindInfo indicates an expected call of CreateKindInfo.
+func (mr *MockDatabaseMockRecorder) CreateKindInfo(ctx, kindID, nodeKindID, relationshipKindID, kindInfo any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateKindInfo", reflect.TypeOf((*MockDatabase)(nil).CreateKindInfo), ctx, kindID, nodeKindID, relationshipKindID, kindInfo)
 }
 
 // CreateOIDCProvider mocks base method.
@@ -982,6 +1012,20 @@ func (m *MockDatabase) DeleteIngestTask(ctx context.Context, ingestTask model.In
 func (mr *MockDatabaseMockRecorder) DeleteIngestTask(ctx, ingestTask any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteIngestTask", reflect.TypeOf((*MockDatabase)(nil).DeleteIngestTask), ctx, ingestTask)
+}
+
+// DeleteKindInfo mocks base method.
+func (m *MockDatabase) DeleteKindInfo(ctx context.Context, kindInfoID int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteKindInfo", ctx, kindInfoID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteKindInfo indicates an expected call of DeleteKindInfo.
+func (mr *MockDatabaseMockRecorder) DeleteKindInfo(ctx, kindInfoID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteKindInfo", reflect.TypeOf((*MockDatabase)(nil).DeleteKindInfo), ctx, kindInfoID)
 }
 
 // DeletePrincipalKind mocks base method.
@@ -1764,6 +1808,22 @@ func (mr *MockDatabaseMockRecorder) GetCustomNodeKinds(ctx, filters any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomNodeKinds", reflect.TypeOf((*MockDatabase)(nil).GetCustomNodeKinds), ctx, filters)
 }
 
+// GetDataQualityAggregations mocks base method.
+func (m *MockDatabase) GetDataQualityAggregations(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.DataQualityAggregations, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDataQualityAggregations", ctx, filters, sort, skip, limit)
+	ret0, _ := ret[0].(model.DataQualityAggregations)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetDataQualityAggregations indicates an expected call of GetDataQualityAggregations.
+func (mr *MockDatabaseMockRecorder) GetDataQualityAggregations(ctx, filters, sort, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataQualityAggregations", reflect.TypeOf((*MockDatabase)(nil).GetDataQualityAggregations), ctx, filters, sort, skip, limit)
+}
+
 // GetDataQualityStats mocks base method.
 func (m *MockDatabase) GetDataQualityStats(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.DataQualityStats, int, error) {
 	m.ctrl.T.Helper()
@@ -2128,6 +2188,21 @@ func (m *MockDatabase) GetInstallation(ctx context.Context) (model.Installation,
 func (mr *MockDatabaseMockRecorder) GetInstallation(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInstallation", reflect.TypeOf((*MockDatabase)(nil).GetInstallation), ctx)
+}
+
+// GetKindInfos mocks base method.
+func (m *MockDatabase) GetKindInfos(ctx context.Context, kindID int32) ([]model.GraphSchemaKindInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetKindInfos", ctx, kindID)
+	ret0, _ := ret[0].([]model.GraphSchemaKindInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetKindInfos indicates an expected call of GetKindInfos.
+func (mr *MockDatabaseMockRecorder) GetKindInfos(ctx, kindID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetKindInfos", reflect.TypeOf((*MockDatabase)(nil).GetKindInfos), ctx, kindID)
 }
 
 // GetKindsByIDs mocks base method.
@@ -3373,6 +3448,21 @@ func (m *MockDatabase) UpdateIngestJob(ctx context.Context, job model.IngestJob)
 func (mr *MockDatabaseMockRecorder) UpdateIngestJob(ctx, job any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIngestJob", reflect.TypeOf((*MockDatabase)(nil).UpdateIngestJob), ctx, job)
+}
+
+// UpdateKindInfo mocks base method.
+func (m *MockDatabase) UpdateKindInfo(ctx context.Context, kindInfo model.GraphSchemaKindInfo) (model.GraphSchemaKindInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateKindInfo", ctx, kindInfo)
+	ret0, _ := ret[0].(model.GraphSchemaKindInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateKindInfo indicates an expected call of UpdateKindInfo.
+func (mr *MockDatabaseMockRecorder) UpdateKindInfo(ctx, kindInfo any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateKindInfo", reflect.TypeOf((*MockDatabase)(nil).UpdateKindInfo), ctx, kindInfo)
 }
 
 // UpdateLastAnalysisCompleteTime mocks base method.

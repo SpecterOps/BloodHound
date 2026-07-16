@@ -54,8 +54,8 @@ func (_m *MockGraphDB) EXPECT() *MockGraphDB_Expecter {
 }
 
 // GetNode provides a mock function for the type MockGraphDB
-func (_mock *MockGraphDB) GetNode(ctx context.Context, id int64) (services.Node, error) {
-	ret := _mock.Called(ctx, id)
+func (_mock *MockGraphDB) GetNode(ctx context.Context, id int64, includeKindInfo bool) (services.Node, error) {
+	ret := _mock.Called(ctx, id, includeKindInfo)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetNode")
@@ -63,16 +63,16 @@ func (_mock *MockGraphDB) GetNode(ctx context.Context, id int64) (services.Node,
 
 	var r0 services.Node
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int64) (services.Node, error)); ok {
-		return returnFunc(ctx, id)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, bool) (services.Node, error)); ok {
+		return returnFunc(ctx, id, includeKindInfo)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int64) services.Node); ok {
-		r0 = returnFunc(ctx, id)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, bool) services.Node); ok {
+		r0 = returnFunc(ctx, id, includeKindInfo)
 	} else {
 		r0 = ret.Get(0).(services.Node)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, int64) error); ok {
-		r1 = returnFunc(ctx, id)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, bool) error); ok {
+		r1 = returnFunc(ctx, id, includeKindInfo)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -87,11 +87,12 @@ type MockGraphDB_GetNode_Call struct {
 // GetNode is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id int64
-func (_e *MockGraphDB_Expecter) GetNode(ctx interface{}, id interface{}) *MockGraphDB_GetNode_Call {
-	return &MockGraphDB_GetNode_Call{Call: _e.mock.On("GetNode", ctx, id)}
+//   - includeKindInfo bool
+func (_e *MockGraphDB_Expecter) GetNode(ctx interface{}, id interface{}, includeKindInfo interface{}) *MockGraphDB_GetNode_Call {
+	return &MockGraphDB_GetNode_Call{Call: _e.mock.On("GetNode", ctx, id, includeKindInfo)}
 }
 
-func (_c *MockGraphDB_GetNode_Call) Run(run func(ctx context.Context, id int64)) *MockGraphDB_GetNode_Call {
+func (_c *MockGraphDB_GetNode_Call) Run(run func(ctx context.Context, id int64, includeKindInfo bool)) *MockGraphDB_GetNode_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -101,9 +102,14 @@ func (_c *MockGraphDB_GetNode_Call) Run(run func(ctx context.Context, id int64))
 		if args[1] != nil {
 			arg1 = args[1].(int64)
 		}
+		var arg2 bool
+		if args[2] != nil {
+			arg2 = args[2].(bool)
+		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
@@ -114,7 +120,7 @@ func (_c *MockGraphDB_GetNode_Call) Return(node services.Node, err error) *MockG
 	return _c
 }
 
-func (_c *MockGraphDB_GetNode_Call) RunAndReturn(run func(ctx context.Context, id int64) (services.Node, error)) *MockGraphDB_GetNode_Call {
+func (_c *MockGraphDB_GetNode_Call) RunAndReturn(run func(ctx context.Context, id int64, includeKindInfo bool) (services.Node, error)) *MockGraphDB_GetNode_Call {
 	_c.Call.Return(run)
 	return _c
 }

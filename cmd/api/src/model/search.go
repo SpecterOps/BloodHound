@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"slices"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 )
@@ -33,13 +34,19 @@ const (
 )
 
 type EnvironmentSelector struct {
-	Type               string    `json:"type"`
+	EnvironmentProperties
 	Name               string    `json:"name"`
 	ObjectID           string    `json:"id"`
 	Collected          bool      `json:"collected"`
 	ImpactValue        *int      `json:"impactValue,omitempty"`
 	HygieneAttackPaths *int64    `json:"hygiene_attack_paths,omitempty"` // caution: if value is bigger than maxsafeint, the UI will truncate the value
 	Exposures          Exposures `json:"exposures,omitempty"`
+}
+
+type EnvironmentProperties struct {
+	Type            string      `json:"type"`
+	KindId          null.Int32  `json:"environment_kind_id,omitzero"`
+	KindDisplayName null.String `json:"environment_kind_display_name,omitzero"`
 }
 
 type EnvironmentSelectors []EnvironmentSelector

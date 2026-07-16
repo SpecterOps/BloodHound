@@ -72,20 +72,20 @@ func (mr *MockOpenGraphSchemaServiceMockRecorder) DeleteExtension(ctx, extension
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteExtension", reflect.TypeOf((*MockOpenGraphSchemaService)(nil).DeleteExtension), ctx, extensionID)
 }
 
-// GetEnvironmentKindsAndEnvironmentExtensionDisplayNames mocks base method.
-func (m *MockOpenGraphSchemaService) GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx context.Context, onlyBuiltin bool) (graph.Kinds, map[string]string, error) {
+// GetEnvironmentKindsAndSchemaEnvironmentData mocks base method.
+func (m *MockOpenGraphSchemaService) GetEnvironmentKindsAndSchemaEnvironmentData(ctx context.Context, onlyBuiltin bool) (graph.Kinds, model.EnvironmentKindsToEnvironment, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEnvironmentKindsAndEnvironmentExtensionDisplayNames", ctx, onlyBuiltin)
+	ret := m.ctrl.Call(m, "GetEnvironmentKindsAndSchemaEnvironmentData", ctx, onlyBuiltin)
 	ret0, _ := ret[0].(graph.Kinds)
-	ret1, _ := ret[1].(map[string]string)
+	ret1, _ := ret[1].(model.EnvironmentKindsToEnvironment)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// GetEnvironmentKindsAndEnvironmentExtensionDisplayNames indicates an expected call of GetEnvironmentKindsAndEnvironmentExtensionDisplayNames.
-func (mr *MockOpenGraphSchemaServiceMockRecorder) GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx, onlyBuiltin any) *gomock.Call {
+// GetEnvironmentKindsAndSchemaEnvironmentData indicates an expected call of GetEnvironmentKindsAndSchemaEnvironmentData.
+func (mr *MockOpenGraphSchemaServiceMockRecorder) GetEnvironmentKindsAndSchemaEnvironmentData(ctx, onlyBuiltin any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironmentKindsAndEnvironmentExtensionDisplayNames", reflect.TypeOf((*MockOpenGraphSchemaService)(nil).GetEnvironmentKindsAndEnvironmentExtensionDisplayNames), ctx, onlyBuiltin)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironmentKindsAndSchemaEnvironmentData", reflect.TypeOf((*MockOpenGraphSchemaService)(nil).GetEnvironmentKindsAndSchemaEnvironmentData), ctx, onlyBuiltin)
 }
 
 // GetSchemaFindings mocks base method.

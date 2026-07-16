@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 //go:build integration
 
 package appdb_test
@@ -24,11 +25,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/server/featureflags/internal/appdb"
 	"github.com/specterops/bloodhound/server/featureflags/internal/services"
@@ -127,4 +131,165 @@ func TestStore_GetFlagByKey_Integration_NotFound(t *testing.T) {
 
 	_, err := store.GetFlagByKey(ctx, "does_not_exist_flag")
 	assert.ErrorIs(t, err, services.ErrNotFound)
+}
+
+// seedFlag inserts a feature_flags row using the table sequence to allocate an id and
+// returns the assigned id. The Store API does not expose flag creation.
+func seedFlag(t *testing.T, ctx context.Context, pool *pgxpool.Pool, key, name string, enabled, userUpdatable bool) int32 {
+	t.Helper()
+
+	var id int32
+	err := pool.QueryRow(ctx,
+		`INSERT INTO feature_flags (id, key, name, description, enabled, user_updatable, created_at, updated_at)
+		   VALUES (nextval('feature_flags_id_seq'), $1, $2, $3, $4, $5, now(), now())
+		   RETURNING id`,
+		key, name, "seeded by integration test", enabled, userUpdatable,
+	).Scan(&id)
+	require.NoError(t, err)
+	return id
+}
+
+// authedContext attaches a bhctx.Context carrying the supplied user as the
+// auth owner. SetFlag's audit-log path requires this when UserUpdatable is true.
+func authedContext(t *testing.T) context.Context {
+	t.Helper()
+
+	userID, err := uuid.NewV4()
+	require.NoError(t, err)
+
+	return bhctx.Set(context.Background(), &bhctx.Context{
+		RequestID: "integration-request",
+		RequestIP: "127.0.0.1",
+		AuthCtx: auth.Context{
+			Owner: model.User{
+				Unique:        model.Unique{ID: userID},
+				PrincipalName: "integration-user",
+			},
+		},
+	})
+}
+
+func TestStore_GetFlagByID_Integration(t *testing.T) {
+	t.Run("returns the flag for the supplied id", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStore(t)
+			id          = seedFlag(t, ctx, pool, "by_id_flag", "ID Flag", true, false)
+		)
+
+		flag, err := store.GetFlagByID(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, id, flag.ID)
+		assert.Equal(t, "by_id_flag", flag.Key)
+		assert.True(t, flag.Enabled)
+	})
+
+	t.Run("returns ErrNotFound for an unknown id", func(t *testing.T) {
+		var (
+			ctx      = context.Background()
+			store, _ = setupStore(t)
+		)
+
+		_, err := store.GetFlagByID(ctx, 999999)
+		assert.ErrorIs(t, err, services.ErrNotFound)
+	})
+}
+
+func TestStore_GetAllFlags_Integration(t *testing.T) {
+	t.Run("includes seeded and migration-provided flags", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStore(t)
+			seededID    = seedFlag(t, ctx, pool, "get_all_flag", "Get All Flag", false, true)
+		)
+
+		flags, err := store.GetAllFlags(ctx)
+		require.NoError(t, err)
+		require.NotEmpty(t, flags, "migrations should populate baseline flags")
+
+		found := false
+		for _, flag := range flags {
+			if flag.ID == seededID {
+				found = true
+				assert.Equal(t, "get_all_flag", flag.Key)
+				assert.False(t, flag.Enabled)
+				assert.True(t, flag.UserUpdatable)
+			}
+		}
+		assert.True(t, found, "seeded flag should appear in the result set")
+	})
+}
+
+func TestStore_SetFlag_Integration(t *testing.T) {
+	t.Run("flips a non-user-updatable flag without writing an audit log", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStore(t)
+			id          = seedFlag(t, ctx, pool, "set_flag_locked", "Locked", false, false)
+		)
+
+		updated, err := store.GetFlagByID(ctx, id)
+		require.NoError(t, err)
+		updated.Enabled = true
+
+		require.NoError(t, store.SetFlag(ctx, updated))
+
+		got, err := store.GetFlagByID(ctx, id)
+		require.NoError(t, err)
+		assert.True(t, got.Enabled)
+
+		var auditCount int
+		require.NoError(t, pool.QueryRow(ctx,
+			"SELECT COUNT(*) FROM audit_logs WHERE action = $1",
+			string(model.AuditLogActionToggleEarlyAccessFeatureFlag),
+		).Scan(&auditCount))
+		assert.Zero(t, auditCount, "no audit log should be written for non-user-updatable flags")
+	})
+
+	t.Run("flips a user-updatable flag and writes an audit log", func(t *testing.T) {
+		var (
+			ctx         = authedContext(t)
+			store, pool = setupStore(t)
+			id          = seedFlag(t, ctx, pool, "set_flag_unlocked", "Unlocked", false, true)
+		)
+
+		updated, err := store.GetFlagByID(ctx, id)
+		require.NoError(t, err)
+		updated.Enabled = true
+
+		require.NoError(t, store.SetFlag(ctx, updated))
+
+		got, err := store.GetFlagByID(ctx, id)
+		require.NoError(t, err)
+		assert.True(t, got.Enabled)
+
+		var auditCount int
+		require.NoError(t, pool.QueryRow(ctx,
+			"SELECT COUNT(*) FROM audit_logs WHERE action = $1 AND actor_name = $2",
+			string(model.AuditLogActionToggleEarlyAccessFeatureFlag),
+			"integration-user",
+		).Scan(&auditCount))
+		assert.Equal(t, 1, auditCount, "exactly one audit log should be written")
+	})
+
+	t.Run("returns an error when no authenticated user is on the context for a user-updatable flag", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStore(t)
+			id          = seedFlag(t, ctx, pool, "set_flag_anon", "Anon", false, true)
+		)
+
+		updated, err := store.GetFlagByID(ctx, id)
+		require.NoError(t, err)
+		updated.Enabled = true
+
+		err = store.SetFlag(ctx, updated)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "no authenticated user on context")
+
+		// Transaction should have rolled back, leaving the flag disabled.
+		got, err := store.GetFlagByID(ctx, id)
+		require.NoError(t, err)
+		assert.False(t, got.Enabled, "rolled-back update must not be visible")
+	})
 }

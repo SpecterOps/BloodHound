@@ -20,7 +20,7 @@ import { Button } from 'doodle-ui';
 import { FC, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
-import { useApiVersion, useKeybindings, useLocalStorage } from '../../hooks';
+import { useApiVersion, useKeybindings, useNavExpanded } from '../../hooks';
 import { privilegeZonesPath } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
@@ -28,8 +28,6 @@ import { ConditionalTooltip } from '../ConditionalTooltip';
 import { AppLink } from './AppLink';
 import SubNav from './SubNav';
 import type { MainNavData, MainNavDataListItem, MainNavLogoDataObject, NavActionItem, NavLinkItem } from './types';
-
-const isExpandedStorageKey = 'isNavExpanded';
 
 export const MainNavLogo: FC<{ data: MainNavLogoDataObject }> = ({ data }) => {
     return (
@@ -160,7 +158,7 @@ const MainNavFooter: FC<{
 };
 
 const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
-    const [isExpanded, setIsExpanded] = useLocalStorage<boolean>(isExpandedStorageKey, true);
+    const [isExpanded, setIsExpanded] = useNavExpanded();
     const navigate = useAppNavigate();
 
     const keybindings = useMemo(
@@ -195,11 +193,10 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 className={cn(
                     'absolute top-14 w-6 h-6 border-none z-navToggle',
                     'transition-all duration-300 ease-in',
-                    'text-[#121212] dark:text-white',
+                    'text-main',
                     'bg-neutral-4 dark:bg-neutral-5',
                     'hover:bg-[#B2B8BE] dark:hover:bg-neutral-3',
                     'active:ring-0 active:bg-[#C0C6CB] dark:active:bg-neutral-2',
-                    'focus-visible:text-[#121212] dark:focus-visible:text-white',
                     'focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-focus focus-visible:ring-offset-focus-offset',
                     {
                         'rotate-180 left-[16.75rem]': isExpanded,

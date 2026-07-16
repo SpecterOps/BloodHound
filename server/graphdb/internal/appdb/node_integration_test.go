@@ -320,9 +320,10 @@ func TestStore_GetNodeKindsByNames_Integration(t *testing.T) {
 
 				var registeredKind, unregisteredKind services.Kind
 				for _, kind := range kinds {
-					if kind.Name == "TestRegisteredKindMixed" {
+					switch kind.Name {
+					case "TestRegisteredKindMixed":
 						registeredKind = kind
-					} else if kind.Name == "TestUnregisteredKind" {
+					case "TestUnregisteredKind":
 						unregisteredKind = kind
 					}
 				}

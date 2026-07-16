@@ -14,7 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { PluginCreator } from 'tailwindcss/types/config';
-import { common, dark, elevation, light, palette, text } from './colors';
+import { common, dark, light, palette, text } from './colors';
+
+const secondaryVariant2 = '#99a3ff';
+const darkDataTableRowSelectedOutline = '#4A42B5';
+const focusRingWidth = '2px';
+const focusRingOffsetWidth = '1px';
 
 const plugin: PluginCreator = ({ addBase, addUtilities }) => {
     addBase({
@@ -43,36 +48,36 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // END OF SHARED
 
-            // MAIN / new colors - 1:1 name match in Figma
-            '--primary': light.primary.main /* failsafe until useTheme is removed.*/,
+            // MAIN
+            '--primary': light.primary.main,
             '--primary-main': light.primary.main,
             '--primary-variant': light.primary.variant,
-            '--secondary': light.secondary.main /* failsafe until useTheme is removed.*/,
+            '--secondary': light.secondary.main,
             '--secondary-main': light.secondary.main,
             '--secondary-variant': light.secondary.variant,
-            // '--tertiary': light.tertiary.main, /* failsafe until useTheme is removed.*/
-            // '--tertiary-main': light.tertiary.main,
+            // '--tertiary': light.tertiary.main,
+            '--tertiary-main': light.tertiary.main,
             // '--tertiary-variant': light.tertiary.variant,
             '--disabled': light.disabled,
 
             // // NEUTRALS
             '--neutral-50': palette.neutral.light[50],
-            // '--neutral-100': palette.neutral.light[100],
+            '--neutral-100': palette.neutral.light[100],
             '--neutral-200': palette.neutral.light[200],
             '--neutral-300': palette.neutral.light[300],
             '--neutral-400': palette.neutral.light[400],
-            // '--neutral-500': palette.neutral.light[500],
-            // '--neutral-600': palette.neutral.light[600],
-            // '--neutral-700': palette.neutral.light[700],
-            // '--neutral-800': palette.neutral.light[800],
-            // '--neutral-900': palette.neutral.light[900],
+            '--neutral-500': palette.neutral.light[500],
+            '--neutral-600': palette.neutral.light[600],
+            '--neutral-700': palette.neutral.light[700],
+            '--neutral-800': palette.neutral.light[800],
+            '--neutral-900': palette.neutral.light[900],
 
             // // TEXT
             '--text-main': common.dark,
             '--text-light': text.light,
-            // '--text-contrast': common.white,
+            '--text-contrast': common.white,
             '--text-disabled': light.text.disabled,
-            '--text-primary': light.primary.main,
+            // '--text-primary': light.primary.main,
             // '--text-secondary': light.secondary.main,
 
             // LINKS
@@ -82,8 +87,8 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // FOCUS
             '--focus-ring': light.secondary.main,
             '--focus-ring-offset': common.white,
-            '--focus-ring-width': '2px',
-            '--focus-ring-offset-width': '1px',
+            '--focus-ring-width': focusRingWidth,
+            '--focus-ring-offset-width': focusRingOffsetWidth,
 
             // // ELEVATION
             // '--elevation-0': elevation.light[0],
@@ -109,9 +114,9 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--status-indeterminate-fill': light.status.indeterminate.fill,
 
             // // BRAND COLORS
-            // '--bhe-main': light.primary.main,
+            '--bhe-main': light.primary.main,
             // '--sp-main': light.primary.main,
-            // '--bhce-main': light['bhce-main'],
+            '--bhce-main': light['bhce-main'],
             // '--logo-neutral': common.black,
             // '--brand-primary-dark-purple': light.primary.variant,
             // '--brand-primary-deep-purple': light.primary.main,
@@ -119,11 +124,19 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--brand-secondary-highlight-green': light.tertiary.main,
 
             // // Components/Button
-            // '--secondary-btn-fill': palette.neutral.light[300],
-            // '--secondary-btn-active-fill': palette.neutral.light[500],
-            // '--btn-disabled-fill': palette.neutral.light[200],
-            // '--toggle-btn-fill': common.white,
-            // '--toggle-btn-border': palette.neutral.light[500],
+            '--secondary-btn-fill': palette.neutral.light[300],
+            '--secondary-btn-active-fill': palette.neutral.light[400],
+            '--tertiary-btn-border': palette.neutral.light[400],
+            '--transparent-btn-border': palette.neutral.light[400],
+            '--icon-btn-fill': palette.neutral.light[400],
+            '--btn-disabled-fill': palette.neutral.light[200],
+            '--toggle-btn-fill': common.white,
+            '--toggle-btn-border': palette.neutral.light[500],
+            '--toggle-group-fill': palette.neutral.light[100],
+            '--checkbox-border': common.black,
+            '--checkbox-unchecked-fill': common.white,
+            '--checkbox-fill': common.dark,
+            '--checkbox-check': common.white,
 
             // // Components/Input
             // '--input-label': common.dark,
@@ -132,12 +145,51 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--input-border-default': palette.grey[700],
             // '--input-border-hover': light.secondary.main,
             '--input-border-disabled': palette.neutral.light[900],
+            '--input-border-disabled': palette.neutral.light[900],
             // '--input-placeholder-text': text.placeholder,
+
+            // // Components/Textarea
+            '--textarea-fill': common.white,
+            '--textarea-border-default': palette.neutral.light[400],
+            '--textarea-border-hover': light.secondary.main,
+
+            // // Components/RadioGroup
+            '--radio-label-focus-fill': palette.neutral.light[200],
+            '--radio-border-default': palette.neutral.light[400],
+            '--radio-border-hover': light.secondary.main,
+            '--radio-disabled-border': palette.neutral.light[300],
+            '--radio-disabled-fill': palette.neutral.light[100],
+            '--radio-indicator-fill': light.primary.main,
 
             // // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
+            '--select-trigger-fill': palette.neutral.light[100],
+            '--select-trigger-placeholder-text': palette.neutral.light[400],
+            '--select-trigger-outlined-fill': common.white,
+            '--select-border-default': palette.neutral.dark[700],
+            '--select-border-focus': light.secondary.main,
+            '--select-content-border': palette.neutral.light[400],
+            '--select-content-fill': common.white,
+            '--select-item-checked-text': light.primary.main,
+            '--select-separator-fill': palette.neutral.light[200],
+            '--dropdown-trigger-border': palette.neutral.light[400],
+            '--dropdown-popover-border': palette.neutral.light[400],
+            '--dropdown-popover-fill': common.white,
+            '--dropdown-option-hover-fill': palette.neutral.light[300],
+            '--dropdown-option-disabled-fill': palette.neutral.light[300],
+            '--dropdown-tooltip-fill': palette.neutral.light[300],
             '--switch-fill': palette.neutral.dark[700],
             '--switch-disabled-fill': palette.neutral.light[300],
+            '--switch-thumb-fill': palette.neutral.light[50],
+            '--switch-thumb-disabled-fill': palette.neutral.light[400],
+
+            // // Components/Data Display/ DataTable
+            '--data-table-fill': palette.neutral.light[100],
+            '--data-table-header-fill': palette.neutral.light[100],
+            '--data-table-row-even-fill': palette.neutral.light[200],
+            '--data-table-row-odd-fill': palette.neutral.light[100],
+            '--data-table-row-hover-fill': palette.neutral.light[300],
+            '--data-table-row-selected-outline': light.primary.main,
 
             // // Components/Data Display/ Menu
             // '--menu-bg': elevation.light[0],
@@ -198,13 +250,11 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--icon-disabled': palette.grey[700],
             // '--divider': palette.neutral.light[500],
 
-            //  End of MAIN / new colors
-
-            // Legacy below - these colors will be phased out over time
+            // Legacy below
             // same as palette.neutral.dark[50]
             '--contrast': '#121212',
 
-            '--secondary-variant-2': '#99a3ff',
+            '--secondary-variant-2': secondaryVariant2,
             '--tertiary': '#02c577',
             '--tertiary-variant': '#5cc791',
 
@@ -239,35 +289,37 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
         },
 
         '.dark': {
-            // MAIN / new colors - 1:1 name match in Figma
+            // MAIN
             '--primary': dark.primary.main,
             '--primary-main': dark.primary.main,
             '--primary-variant': dark.primary.variant,
             '--secondary': dark.secondary.main,
+            '--secondary': dark.secondary.main,
             '--secondary-main': dark.secondary.main,
             '--secondary-variant': dark.secondary.variant,
-            // '--tertiary-main': dark.tertiary.main,
+            // '--tertiary': dark.tertiary.main,
+            '--tertiary-main': dark.tertiary.main,
             // '--tertiary-variant': dark.tertiary.variant,
             '--disabled': dark.disabled,
 
             // // NEUTRALS
             '--neutral-50': palette.neutral.dark[50],
-            // '--neutral-100': palette.neutral.dark[100],
-            // '--neutral-200': palette.neutral.dark[200],
-            // '--neutral-300': palette.neutral.dark[300],
-            // '--neutral-400': palette.neutral.dark[400],
-            // '--neutral-500': palette.neutral.dark[500],
-            // '--neutral-600': palette.neutral.dark[600],
-            // '--neutral-700': palette.neutral.dark[700],
-            // '--neutral-800': palette.neutral.dark[800],
-            // '--neutral-900': palette.neutral.dark[900],
+            '--neutral-100': palette.neutral.dark[100],
+            '--neutral-200': palette.neutral.dark[200],
+            '--neutral-300': palette.neutral.dark[300],
+            '--neutral-400': palette.neutral.dark[400],
+            '--neutral-500': palette.neutral.dark[500],
+            '--neutral-600': palette.neutral.dark[600],
+            '--neutral-700': palette.neutral.dark[700],
+            '--neutral-800': palette.neutral.dark[800],
+            '--neutral-900': palette.neutral.dark[900],
 
             // // TEXT
             '--text-main': common.white,
             '--text-light': text.dark,
-            // '--text-contrast': common.dark,
+            '--text-contrast': common.dark,
             '--text-disabled': common.disabled,
-            '--text-primary': dark.primary.main,
+            // '--text-primary': dark.primary.main,
             // '--text-secondary': dark.secondary.main,
 
             // LINKS
@@ -277,12 +329,12 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // FOCUS
             '--focus-ring': dark.secondary.main,
             '--focus-ring-offset': palette.neutral.dark[50],
-            '--focus-ring-width': '2px',
-            '--focus-ring-offset-width': '1px',
+            '--focus-ring-width': focusRingWidth,
+            '--focus-ring-offset-width': focusRingOffsetWidth,
 
             // // ELEVATION
             // '--elevation-0': elevation.dark[0],
-            '--elevation-1': elevation.dark[1],
+            // '--elevation-1': elevation.dark[1],
             // '--elevation-2': elevation.dark[2],
             // '--elevation-3': elevation.dark[3],
             // '--elevation-4': elevation.dark[4],
@@ -304,9 +356,9 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--status-indeterminate-fill': dark.status.indeterminate.fill,
 
             // // BRAND COLORS
-            // '--bhe-main': dark.primary.main,
+            '--bhe-main': dark.primary.main,
             // '--sp-main': dark.primary.main,
-            // '--bhce-main': dark['bhce-main'],
+            '--bhce-main': dark['bhce-main'],
             // '--logo-neutral': common.white,
             // '--brand-primary-dark-purple': dark.primary.variant,
             // '--brand-primary-deep-purple': dark.primary.main,
@@ -314,11 +366,19 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--brand-secondary-highlight-green': dark.tertiary.main,
 
             // // Components/Button
-            // '--secondary-btn-fill': palette.neutral.dark[800],
-            // '--secondary-btn-active-fill': palette.neutral.dark[600],
-            // '--btn-disabled-fill': palette.neutral.dark[700],
-            // '--toggle-btn-fill': common.dark,
-            // '--toggle-btn-border': palette.neutral.dark[600],
+            '--secondary-btn-fill': palette.neutral.dark[700],
+            '--secondary-btn-active-fill': palette.neutral.dark[700],
+            '--tertiary-btn-border': palette.neutral.light[400],
+            '--transparent-btn-border': palette.neutral.dark[700],
+            '--icon-btn-fill': palette.neutral.light[400],
+            '--btn-disabled-fill': palette.neutral.dark[700],
+            '--toggle-btn-fill': common.dark,
+            '--toggle-btn-border': palette.neutral.dark[600],
+            '--toggle-group-fill': palette.neutral.dark[400],
+            '--checkbox-border': common.white,
+            '--checkbox-unchecked-fill': common.dark,
+            '--checkbox-fill': common.white,
+            '--checkbox-check': common.dark,
 
             // // Components/Input
             // '--input-label': common.white,
@@ -327,12 +387,51 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--input-border-default': dark.input.border,
             // '--input-border-hover': dark.secondary.main,
             '--input-border-disabled': palette.neutral.dark[900],
+            '--input-border-disabled': palette.neutral.dark[900],
             // '--input-placeholder-text': dark.input.placeholder,
+
+            // // Components/Textarea
+            '--textarea-fill': palette.neutral.dark[700],
+            '--textarea-border-default': palette.neutral.dark[700],
+            '--textarea-border-hover': secondaryVariant2,
+
+            // // Components/RadioGroup
+            '--radio-label-focus-fill': palette.neutral.dark[600],
+            '--radio-border-default': palette.neutral.light[400],
+            '--radio-border-hover': secondaryVariant2,
+            '--radio-disabled-border': palette.neutral.dark[600],
+            '--radio-disabled-fill': palette.neutral.dark[400],
+            '--radio-indicator-fill': secondaryVariant2,
 
             // // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
+            '--select-trigger-fill': palette.neutral.dark[400],
+            '--select-trigger-placeholder-text': palette.neutral.dark[700],
+            '--select-trigger-outlined-fill': palette.neutral.dark[50],
+            '--select-border-default': palette.neutral.light[400],
+            '--select-border-focus': secondaryVariant2,
+            '--select-content-border': palette.neutral.light[400],
+            '--select-content-fill': palette.neutral.dark[400],
+            '--select-item-checked-text': secondaryVariant2,
+            '--select-separator-fill': palette.neutral.light[200],
+            '--dropdown-trigger-border': palette.neutral.light[400],
+            '--dropdown-popover-border': palette.neutral.dark[700],
+            '--dropdown-popover-fill': common.dark,
+            '--dropdown-option-hover-fill': palette.neutral.dark[600],
+            '--dropdown-option-disabled-fill': palette.neutral.dark[600],
+            '--dropdown-tooltip-fill': palette.neutral.dark[600],
             '--switch-fill': common.white,
             '--switch-disabled-fill': common.disabled,
+            '--switch-thumb-fill': palette.neutral.dark[50],
+            '--switch-thumb-disabled-fill': palette.neutral.light[400],
+
+            // // Components/Data Display/ DataTable
+            '--data-table-fill': palette.neutral.dark[400],
+            '--data-table-header-fill': palette.neutral.dark[400],
+            '--data-table-row-even-fill': palette.neutral.dark[500],
+            '--data-table-row-odd-fill': palette.neutral.dark[400],
+            '--data-table-row-hover-fill': palette.neutral.dark[600],
+            '--data-table-row-selected-outline': darkDataTableRowSelectedOutline,
 
             // // Components/Data Display/ Menu
             // '--menu-bg': elevation.dark[2],
@@ -393,9 +492,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--icon-disabled': common.disabled,
             // '--divider': palette.neutral.dark[500],
 
-            // End of Main / new colors
-
-            ///////////// Legacy below ////////// these colors will be phased out over time
+            ///////////// Legacy below //////////
             // same as common.white
             '--contrast': '#ffffff',
             // same palette.neutral.dark[50]
@@ -405,60 +502,61 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--neutral-4': '#2c2c2c',
             '--neutral-5': '#2e2e2e',
 
-            '--link': '#99a3ff',
+            '--link': secondaryVariant2,
+
             '--error': '#e9827c',
         },
-    }),
-        // Helpers
-        addUtilities({
-            '.focus-ring': {
-                outline: 'var(--focus-ring-width) solid var(--focus-ring)',
-                'outline-offset': 'var(--focus-ring-offset-width)',
-                '--tw-ring-offset-width': 'var(--focus-ring-offset-width)',
-                '--tw-ring-offset-color': 'var(--focus-ring-offset)',
-                '--tw-ring-color': 'var(--focus-ring)',
-                '--tw-ring-offset-shadow': '0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color)',
-                '--tw-ring-shadow':
-                    '0 0 0 calc(var(--focus-ring-width) + var(--tw-ring-offset-width)) var(--tw-ring-color)',
-                'box-shadow': 'var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)',
+    });
+
+    addUtilities({
+        '.focus-ring': {
+            outline: 'var(--focus-ring-width) solid var(--focus-ring)',
+            'outline-offset': 'var(--focus-ring-offset-width)',
+            '--tw-ring-offset-width': 'var(--focus-ring-offset-width)',
+            '--tw-ring-offset-color': 'var(--focus-ring-offset)',
+            '--tw-ring-color': 'var(--focus-ring)',
+            '--tw-ring-offset-shadow': '0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color)',
+            '--tw-ring-shadow':
+                '0 0 0 calc(var(--focus-ring-width) + var(--tw-ring-offset-width)) var(--tw-ring-color)',
+            'box-shadow': 'var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)',
+        },
+        '.focus-ring-inset': {
+            outline: 'none',
+            'box-shadow': 'inset 0 0 0 var(--focus-ring-width) var(--focus-ring), var(--tw-shadow, 0 0 #0000)',
+        },
+        '.clip-right-rounded': {
+            'clip-path': 'inset(0 0.5px 0 -100vw round 0.25rem)',
+        },
+        '.clip-left-rounded': {
+            'clip-path': 'inset(0 -100vw 0 0 round 0.25rem)',
+        },
+        ".TooltipContent[data-side='top']": {
+            'animation-name': 'slideUp',
+        },
+        ".TooltipContent[data-side='bottom']": {
+            'animation-name': 'slideDown',
+        },
+        '@keyframes slideDown': {
+            from: {
+                opacity: '0',
+                transform: 'translateY(-10px)',
             },
-            '.focus-ring-inset': {
-                outline: 'none',
-                'box-shadow': 'inset 0 0 0 var(--focus-ring-width) var(--focus-ring), var(--tw-shadow, 0 0 #0000)',
+            to: {
+                opacity: '1',
+                transform: 'translateY(0)',
             },
-            '.clip-right-rounded': {
-                'clip-path': 'inset(0 0.5px 0 -100vw round 0.25rem)',
+        },
+        '@keyframes slideUp': {
+            from: {
+                opacity: '0',
+                transform: 'translateY(10px)',
             },
-            '.clip-left-rounded': {
-                'clip-path': 'inset(0 -100vw 0 0 round 0.25rem)',
+            to: {
+                opacity: '1',
+                transform: 'translateY(0)',
             },
-            ".TooltipContent[data-side='top']": {
-                'animation-name': 'slideUp',
-            },
-            ".TooltipContent[data-side='bottom']": {
-                'animation-name': 'slideDown',
-            },
-            '@keyframes slideDown': {
-                from: {
-                    opacity: '0',
-                    transform: 'translateY(-10px)',
-                },
-                to: {
-                    opacity: '1',
-                    transform: 'translateY(0)',
-                },
-            },
-            '@keyframes slideUp': {
-                from: {
-                    opacity: '0',
-                    transform: 'translateY(10px)',
-                },
-                to: {
-                    opacity: '1',
-                    transform: 'translateY(0)',
-                },
-            },
-        });
+        },
+    });
 };
 
 export default plugin;

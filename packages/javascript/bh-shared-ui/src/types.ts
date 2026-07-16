@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { EntityKinds } from './utils/content';
 import { Permission } from './utils/permissions';
 
 // recursively applies Partial<T> to nested object types
@@ -104,7 +103,7 @@ export type SaveQueryAction = 'edit' | 'save-as' | undefined;
 
 export type SelectedNode = {
     id: string;
-    type: EntityKinds;
+    type: string;
     name: string;
     graphId?: string;
 };

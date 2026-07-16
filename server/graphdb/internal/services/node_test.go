@@ -124,6 +124,32 @@ func TestService_GetNode(t *testing.T) {
 				Properties: map[string]any{"name": "admin"},
 			},
 		},
+		{
+			name: "success_-_sorts_kind_infos_by_position_title_then_node_kind_id",
+			setupMock: func(databaseMock *mocks.MockDatabase) {
+				databaseMock.EXPECT().GetNode(ctx, nodeID).Return(baseNode, nil)
+				databaseMock.EXPECT().GetNodeKindsByNames(ctx, []string{"User", "Group"}).Return(resolvedKinds, nil)
+				databaseMock.EXPECT().GetKindInfos(ctx, "User").Return([]services.KindInfo{
+					{InfoKey: "user_later", Title: "Beta", Position: 1, NodeKindID: int32Ptr(1)},
+					{InfoKey: "user_tie", Title: "Alpha", Position: 1, NodeKindID: int32Ptr(1)},
+				}, nil)
+				databaseMock.EXPECT().GetKindInfos(ctx, "Group").Return([]services.KindInfo{
+					{InfoKey: "group_first", Title: "Gamma", Position: 0, NodeKindID: int32Ptr(2)},
+					{InfoKey: "group_tie", Title: "Alpha", Position: 1, NodeKindID: int32Ptr(2)},
+				}, nil)
+			},
+			wantResult: services.Node{
+				ID:         nodeID,
+				Kinds:      resolvedKinds,
+				Properties: map[string]any{"name": "admin"},
+				KindInfos: []services.KindInfo{
+					{InfoKey: "group_first", Title: "Gamma", Position: 0, NodeKindID: int32Ptr(2)},
+					{InfoKey: "user_tie", Title: "Alpha", Position: 1, NodeKindID: int32Ptr(1)},
+					{InfoKey: "group_tie", Title: "Alpha", Position: 1, NodeKindID: int32Ptr(2)},
+					{InfoKey: "user_later", Title: "Beta", Position: 1, NodeKindID: int32Ptr(1)},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -135,7 +161,7 @@ func TestService_GetNode(t *testing.T) {
 
 			tt.setupMock(databaseMock)
 
-			result, err := svc.GetNode(ctx, nodeID)
+			result, err := svc.GetNode(ctx, nodeID, tt.wantResult.KindInfos != nil)
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 			} else {

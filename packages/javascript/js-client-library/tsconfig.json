@@ -5,6 +5,7 @@
         "moduleResolution": "bundler",
         "outDir": "dist",
         "declarationDir": "dist",
+        "rootDir": "src",
         "declaration": true,
         "declarationMap": true,
         "forceConsistentCasingInFileNames": true,

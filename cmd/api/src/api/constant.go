@@ -53,6 +53,7 @@ const (
 
 	// URI path parameters
 	URIPathVariableApplicationConfigurationParameter = "parameter"
+	URIPathVariableAlertWebhookID                    = "alert_webhook_id"
 	URIPathVariableAssetGroupID                      = "asset_group_id"
 	URIPathVariableAssetGroupSelectorID              = "asset_group_selector_id"
 	URIPathVariableAssetGroupTagID                   = "asset_group_tag_id"
