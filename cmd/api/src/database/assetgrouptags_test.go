@@ -1301,6 +1301,197 @@ func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
 	})
 }
 
+func TestDatabase_InsertSelectorNodes(t *testing.T) {
+	t.Parallel()
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		testCtx   = context.Background()
+		testActor = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
+	)
+
+	t.Run("returns nil for empty input", func(t *testing.T) {
+		require.NoError(t, suite.BHDatabase.InsertSelectorNodes(testCtx, nil))
+		require.NoError(t, suite.BHDatabase.InsertSelectorNodes(testCtx, []model.AssetGroupSelectorNode{}))
+	})
+
+	t.Run("inserts selector nodes and creates asset group history records for certified nodes", func(t *testing.T) {
+		var (
+			assetGroupTagId = 1
+			selector        = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch insert selector nodes")
+			pendingNodeId   = graph.ID(50001)
+			autoNodeId      = graph.ID(50002)
+			manualNodeId    = graph.ID(50003)
+			revokedNodeId   = graph.ID(50004)
+
+			pendingNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            pendingNodeId,
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "pending-primary-kind",
+				NodeEnvironmentId: "pending-environment",
+				NodeObjectId:      "pending-object-id",
+				NodeName:          "insert-history-pending-node",
+			}
+			autoNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            autoNodeId,
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       null.StringFrom(model.AssetGroupActorBloodHound),
+				Source:            model.AssetGroupSelectorNodeSourceParent,
+				NodePrimaryKind:   "auto-primary-kind",
+				NodeEnvironmentId: "auto-environment",
+				NodeObjectId:      "auto-object-id",
+				NodeName:          "insert-history-auto-node",
+			}
+			manualNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            manualNodeId,
+				Certified:         model.AssetGroupCertificationManual,
+				CertifiedBy:       null.StringFrom("manual-certifier"),
+				Source:            model.AssetGroupSelectorNodeSourceChild,
+				NodePrimaryKind:   "manual-primary-kind",
+				NodeEnvironmentId: "manual-environment",
+				NodeObjectId:      "manual-object-id",
+				NodeName:          "insert-history-manual-node",
+			}
+			revokedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            revokedNodeId,
+				Certified:         model.AssetGroupCertificationRevoked,
+				CertifiedBy:       null.StringFrom("revoked-certifier"),
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "revoked-primary-kind",
+				NodeEnvironmentId: "revoked-environment",
+				NodeObjectId:      "revoked-object-id",
+				NodeName:          "insert-history-revoked-node",
+			}
+		)
+
+		require.NoError(t, suite.BHDatabase.InsertSelectorNodes(testCtx, []model.AssetGroupSelectorNode{
+			pendingNode,
+			autoNode,
+			manualNode,
+			revokedNode,
+		}))
+
+		selectorNodesBySelectorId := requireSelectorNodesBySelectorAndNodeId(t, testCtx, suite.BHDatabase, selector.ID)
+		require.Len(t, selectorNodesBySelectorId[selector.ID], 4)
+		assertUpdateSelectorNodesTestNode(t, pendingNode, selectorNodesBySelectorId[selector.ID][pendingNodeId])
+		assertUpdateSelectorNodesTestNode(t, autoNode, selectorNodesBySelectorId[selector.ID][autoNodeId])
+		assertUpdateSelectorNodesTestNode(t, manualNode, selectorNodesBySelectorId[selector.ID][manualNodeId])
+		assertUpdateSelectorNodesTestNode(t, revokedNode, selectorNodesBySelectorId[selector.ID][revokedNodeId])
+
+		historyRecordsByTarget := requireUpdateSelectorNodesHistoryRecordsByTarget(t, testCtx, suite.BHDatabase, pendingNode.NodeName, autoNode.NodeName, manualNode.NodeName, revokedNode.NodeName)
+		require.Len(t, historyRecordsByTarget, 3)
+		assert.NotContains(t, historyRecordsByTarget, pendingNode.NodeName)
+		assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeAuto, autoNode.NodeName, assetGroupTagId, historyRecordsByTarget[autoNode.NodeName])
+		assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeManual, manualNode.NodeName, assetGroupTagId, historyRecordsByTarget[manualNode.NodeName])
+		assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeRevoked, revokedNode.NodeName, assetGroupTagId, historyRecordsByTarget[revokedNode.NodeName])
+
+		require.NoError(t, suite.BHDatabase.InsertSelectorNodes(testCtx, []model.AssetGroupSelectorNode{autoNode}))
+		historyRecordsByTarget = requireUpdateSelectorNodesHistoryRecordsByTarget(t, testCtx, suite.BHDatabase, pendingNode.NodeName, autoNode.NodeName, manualNode.NodeName, revokedNode.NodeName)
+		require.Len(t, historyRecordsByTarget, 3)
+	})
+}
+
+func TestDatabase_SelectorNodesBatching(t *testing.T) {
+	const selectorNodeBatchTestCount = 5001
+
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		testCtx                   = context.Background()
+		testActor                 = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
+		assetGroupTagId           = 1
+		selector                  = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "temporary selector nodes batching")
+		firstBatchCertifiedIndex  = 0
+		secondBatchCertifiedIndex = selectorNodeBatchTestCount - 1
+		firstBatchBoundaryIndex   = selectorNodeBatchTestCount - 2
+		nodes                     = make([]model.AssetGroupSelectorNode, 0, selectorNodeBatchTestCount)
+		updatedNodes              = make([]model.AssetGroupSelectorNode, 0, selectorNodeBatchTestCount)
+	)
+
+	for nodeIndex := 0; nodeIndex < selectorNodeBatchTestCount; nodeIndex++ {
+		var (
+			certified          = model.AssetGroupCertificationPending
+			certifiedBy        = null.String{}
+			updatedCertified   = model.AssetGroupCertificationPending
+			updatedCertifiedBy = null.String{}
+			nodeId             = graph.ID(600000 + nodeIndex)
+		)
+
+		if nodeIndex == firstBatchCertifiedIndex || nodeIndex == secondBatchCertifiedIndex {
+			certified = model.AssetGroupCertificationAuto
+			certifiedBy = null.StringFrom(model.AssetGroupActorBloodHound)
+			updatedCertified = certified
+			updatedCertifiedBy = certifiedBy
+		}
+
+		if nodeIndex == firstBatchCertifiedIndex {
+			updatedCertified = model.AssetGroupCertificationManual
+			updatedCertifiedBy = null.StringFrom("temporary-manual-certifier")
+		} else if nodeIndex == secondBatchCertifiedIndex {
+			updatedCertified = model.AssetGroupCertificationRevoked
+			updatedCertifiedBy = null.StringFrom("temporary-revoked-certifier")
+		}
+
+		nodes = append(nodes, model.AssetGroupSelectorNode{
+			SelectorId:        selector.ID,
+			NodeId:            nodeId,
+			Certified:         certified,
+			CertifiedBy:       certifiedBy,
+			Source:            model.AssetGroupSelectorNodeSourceSeed,
+			NodePrimaryKind:   fmt.Sprintf("temporary-insert-kind-%d", nodeIndex),
+			NodeEnvironmentId: fmt.Sprintf("temporary-insert-environment-%d", nodeIndex),
+			NodeObjectId:      fmt.Sprintf("temporary-insert-object-%d", nodeIndex),
+			NodeName:          fmt.Sprintf("temporary-insert-node-%d", nodeIndex),
+		})
+
+		updatedNodes = append(updatedNodes, model.AssetGroupSelectorNode{
+			SelectorId:        selector.ID,
+			NodeId:            nodeId,
+			Certified:         updatedCertified,
+			CertifiedBy:       updatedCertifiedBy,
+			Source:            model.AssetGroupSelectorNodeSourceParent,
+			NodePrimaryKind:   fmt.Sprintf("temporary-update-kind-%d", nodeIndex),
+			NodeEnvironmentId: fmt.Sprintf("temporary-update-environment-%d", nodeIndex),
+			NodeObjectId:      fmt.Sprintf("temporary-update-object-%d", nodeIndex),
+			NodeName:          fmt.Sprintf("temporary-update-node-%d", nodeIndex),
+		})
+	}
+
+	require.NoError(t, suite.BHDatabase.InsertSelectorNodes(testCtx, nodes))
+
+	selectorNodesBySelectorId := requireSelectorNodesBySelectorAndNodeId(t, testCtx, suite.BHDatabase, selector.ID)
+	require.Len(t, selectorNodesBySelectorId[selector.ID], selectorNodeBatchTestCount)
+	assertUpdateSelectorNodesTestNode(t, nodes[firstBatchCertifiedIndex], selectorNodesBySelectorId[selector.ID][nodes[firstBatchCertifiedIndex].NodeId])
+	assertUpdateSelectorNodesTestNode(t, nodes[firstBatchBoundaryIndex], selectorNodesBySelectorId[selector.ID][nodes[firstBatchBoundaryIndex].NodeId])
+	assertUpdateSelectorNodesTestNode(t, nodes[secondBatchCertifiedIndex], selectorNodesBySelectorId[selector.ID][nodes[secondBatchCertifiedIndex].NodeId])
+
+	historyRecordsByTarget := requireUpdateSelectorNodesHistoryRecordsByTarget(t, testCtx, suite.BHDatabase, nodes[firstBatchCertifiedIndex].NodeName, nodes[secondBatchCertifiedIndex].NodeName)
+	require.Len(t, historyRecordsByTarget, 2)
+	assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeAuto, nodes[firstBatchCertifiedIndex].NodeName, assetGroupTagId, historyRecordsByTarget[nodes[firstBatchCertifiedIndex].NodeName])
+	assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeAuto, nodes[secondBatchCertifiedIndex].NodeName, assetGroupTagId, historyRecordsByTarget[nodes[secondBatchCertifiedIndex].NodeName])
+
+	require.NoError(t, suite.BHDatabase.UpdateSelectorNodes(testCtx, updatedNodes))
+
+	selectorNodesBySelectorId = requireSelectorNodesBySelectorAndNodeId(t, testCtx, suite.BHDatabase, selector.ID)
+	require.Len(t, selectorNodesBySelectorId[selector.ID], selectorNodeBatchTestCount)
+	assertUpdateSelectorNodesTestNode(t, updatedNodes[firstBatchCertifiedIndex], selectorNodesBySelectorId[selector.ID][updatedNodes[firstBatchCertifiedIndex].NodeId])
+	assertUpdateSelectorNodesTestNode(t, updatedNodes[firstBatchBoundaryIndex], selectorNodesBySelectorId[selector.ID][updatedNodes[firstBatchBoundaryIndex].NodeId])
+	assertUpdateSelectorNodesTestNode(t, updatedNodes[secondBatchCertifiedIndex], selectorNodesBySelectorId[selector.ID][updatedNodes[secondBatchCertifiedIndex].NodeId])
+
+	historyRecordsByTarget = requireUpdateSelectorNodesHistoryRecordsByTarget(t, testCtx, suite.BHDatabase, updatedNodes[firstBatchCertifiedIndex].NodeName, updatedNodes[secondBatchCertifiedIndex].NodeName)
+	require.Len(t, historyRecordsByTarget, 2)
+	assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeManual, updatedNodes[firstBatchCertifiedIndex].NodeName, assetGroupTagId, historyRecordsByTarget[updatedNodes[firstBatchCertifiedIndex].NodeName])
+	assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeRevoked, updatedNodes[secondBatchCertifiedIndex].NodeName, assetGroupTagId, historyRecordsByTarget[updatedNodes[secondBatchCertifiedIndex].NodeName])
+}
+
 func TestDatabase_UpdateSelectorNodes(t *testing.T) {
 	t.Parallel()
 	suite := setupIntegrationTestSuite(t)

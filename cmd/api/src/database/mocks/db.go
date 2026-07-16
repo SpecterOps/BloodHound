@@ -2890,6 +2890,20 @@ func (mr *MockDatabaseMockRecorder) InsertSelectorNode(ctx, assetGroupTagId, sel
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertSelectorNode", reflect.TypeOf((*MockDatabase)(nil).InsertSelectorNode), ctx, assetGroupTagId, selectorId, nodeId, certified, certifiedBy, source, primaryKind, environmentId, objectId, name)
 }
 
+// InsertSelectorNodes mocks base method.
+func (m *MockDatabase) InsertSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertSelectorNodes", ctx, nodes)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertSelectorNodes indicates an expected call of InsertSelectorNodes.
+func (mr *MockDatabaseMockRecorder) InsertSelectorNodes(ctx, nodes any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertSelectorNodes", reflect.TypeOf((*MockDatabase)(nil).InsertSelectorNodes), ctx, nodes)
+}
+
 // IsEnabled mocks base method.
 func (m *MockDatabase) IsEnabled(ctx context.Context, key string) (bool, error) {
 	m.ctrl.T.Helper()
