@@ -1396,6 +1396,152 @@ func TestDatabase_UpdateSelectorNodes(t *testing.T) {
 		assertUpdateSelectorNodesTestNode(t, untouchedSelectorTwoSharedNode, selectorNodesBySelectorId[selectorTwo.ID][sharedNodeId])
 	})
 
+	t.Run("creates asset group history records when certifications change", func(t *testing.T) {
+		var (
+			assetGroupTagId = 1
+			selector        = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch update history changes")
+			autoNodeId      = graph.ID(30001)
+			manualNodeId    = graph.ID(30002)
+			revokedNodeId   = graph.ID(30003)
+
+			oldAutoNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            autoNodeId,
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "old-auto-primary-kind",
+				NodeEnvironmentId: "old-auto-environment",
+				NodeObjectId:      "old-auto-object-id",
+				NodeName:          "old-history-auto-node",
+			}
+			oldManualNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            manualNodeId,
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "old-manual-primary-kind",
+				NodeEnvironmentId: "old-manual-environment",
+				NodeObjectId:      "old-manual-object-id",
+				NodeName:          "old-history-manual-node",
+			}
+			oldRevokedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            revokedNodeId,
+				Certified:         model.AssetGroupCertificationManual,
+				CertifiedBy:       null.StringFrom("previous-certifier"),
+				Source:            model.AssetGroupSelectorNodeSourceChild,
+				NodePrimaryKind:   "old-revoked-primary-kind",
+				NodeEnvironmentId: "old-revoked-environment",
+				NodeObjectId:      "old-revoked-object-id",
+				NodeName:          "old-history-revoked-node",
+			}
+			updatedAutoNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            autoNodeId,
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       null.StringFrom(model.AssetGroupActorBloodHound),
+				Source:            model.AssetGroupSelectorNodeSourceParent,
+				NodePrimaryKind:   "new-auto-primary-kind",
+				NodeEnvironmentId: "new-auto-environment",
+				NodeObjectId:      "new-auto-object-id",
+				NodeName:          "history-auto-node",
+			}
+			updatedManualNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            manualNodeId,
+				Certified:         model.AssetGroupCertificationManual,
+				CertifiedBy:       null.StringFrom("manual-certifier"),
+				Source:            model.AssetGroupSelectorNodeSourceParent,
+				NodePrimaryKind:   "new-manual-primary-kind",
+				NodeEnvironmentId: "new-manual-environment",
+				NodeObjectId:      "new-manual-object-id",
+				NodeName:          "history-manual-node",
+			}
+			updatedRevokedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            revokedNodeId,
+				Certified:         model.AssetGroupCertificationRevoked,
+				CertifiedBy:       null.StringFrom("revoked-certifier"),
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "new-revoked-primary-kind",
+				NodeEnvironmentId: "new-revoked-environment",
+				NodeObjectId:      "new-revoked-object-id",
+				NodeName:          "history-revoked-node",
+			}
+		)
+
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, oldAutoNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, oldManualNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, oldRevokedNode)
+
+		require.NoError(t, suite.BHDatabase.UpdateSelectorNodes(testCtx, []model.AssetGroupSelectorNode{
+			updatedAutoNode,
+			updatedManualNode,
+			updatedRevokedNode,
+		}))
+
+		historyRecordsByTarget := requireUpdateSelectorNodesHistoryRecordsByTarget(t, testCtx, suite.BHDatabase, updatedAutoNode.NodeName, updatedManualNode.NodeName, updatedRevokedNode.NodeName)
+		require.Len(t, historyRecordsByTarget, 3)
+		assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeAuto, updatedAutoNode.NodeName, assetGroupTagId, historyRecordsByTarget[updatedAutoNode.NodeName])
+		assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeManual, updatedManualNode.NodeName, assetGroupTagId, historyRecordsByTarget[updatedManualNode.NodeName])
+		assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeRevoked, updatedRevokedNode.NodeName, assetGroupTagId, historyRecordsByTarget[updatedRevokedNode.NodeName])
+	})
+
+	t.Run("does not create asset group history records when certifications are unchanged", func(t *testing.T) {
+		var (
+			assetGroupTagId = 1
+			selector        = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch update history unchanged")
+			unchangedNodeId = graph.ID(40001)
+			missingNodeId   = graph.ID(40002)
+
+			oldUnchangedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            unchangedNodeId,
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "old-unchanged-primary-kind",
+				NodeEnvironmentId: "old-unchanged-environment",
+				NodeObjectId:      "old-unchanged-object-id",
+				NodeName:          "old-history-unchanged-node",
+			}
+			updatedUnchangedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            unchangedNodeId,
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceParent,
+				NodePrimaryKind:   "new-unchanged-primary-kind",
+				NodeEnvironmentId: "new-unchanged-environment",
+				NodeObjectId:      "new-unchanged-object-id",
+				NodeName:          "history-unchanged-node",
+			}
+			missingNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            missingNodeId,
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       null.StringFrom(model.AssetGroupActorBloodHound),
+				Source:            model.AssetGroupSelectorNodeSourceParent,
+				NodePrimaryKind:   "missing-history-primary-kind",
+				NodeEnvironmentId: "missing-history-environment",
+				NodeObjectId:      "missing-history-object-id",
+				NodeName:          "history-missing-node",
+			}
+		)
+
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, oldUnchangedNode)
+
+		require.NoError(t, suite.BHDatabase.UpdateSelectorNodes(testCtx, []model.AssetGroupSelectorNode{
+			updatedUnchangedNode,
+			missingNode,
+		}))
+
+		historyRecordsByTarget := requireUpdateSelectorNodesHistoryRecordsByTarget(t, testCtx, suite.BHDatabase, updatedUnchangedNode.NodeName, missingNode.NodeName)
+		require.Empty(t, historyRecordsByTarget)
+	})
+
 	t.Run("ignores selector nodes that do not already exist", func(t *testing.T) {
 		var (
 			assetGroupTagId = 1
@@ -1515,6 +1661,43 @@ func assertUpdateSelectorNodesTestNode(t *testing.T, expectedNode model.AssetGro
 	assert.Equal(t, expectedNode.NodeObjectId, actualNode.NodeObjectId)
 	assert.Equal(t, expectedNode.NodeName, actualNode.NodeName)
 	assert.False(t, actualNode.UpdatedAt.IsZero())
+}
+
+func requireUpdateSelectorNodesHistoryRecordsByTarget(t *testing.T, ctx context.Context, bloodhoundDatabase *database.BloodhoundDB, targets ...string) map[string]model.AssetGroupHistory {
+	t.Helper()
+
+	var (
+		historyRecordsByTarget = make(map[string]model.AssetGroupHistory)
+		targetsByName          = make(map[string]struct{}, len(targets))
+		historyRecords, _, err = bloodhoundDatabase.GetAssetGroupHistoryRecords(ctx, model.SQLFilter{}, model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}, 0, 0)
+	)
+	require.NoError(t, err)
+
+	for _, target := range targets {
+		targetsByName[target] = struct{}{}
+	}
+
+	for _, historyRecord := range historyRecords {
+		if _, ok := targetsByName[historyRecord.Target]; ok {
+			require.NotContains(t, historyRecordsByTarget, historyRecord.Target)
+			historyRecordsByTarget[historyRecord.Target] = historyRecord
+		}
+	}
+
+	return historyRecordsByTarget
+}
+
+func assertUpdateSelectorNodesHistoryRecord(t *testing.T, expectedAction model.AssetGroupHistoryAction, expectedTarget string, expectedAssetGroupTagId int, actualRecord model.AssetGroupHistory) {
+	t.Helper()
+
+	assert.Equal(t, model.AssetGroupActorBloodHound, actualRecord.Actor)
+	assert.Equal(t, "", actualRecord.Email.ValueOrZero())
+	assert.Equal(t, expectedAction, actualRecord.Action)
+	assert.Equal(t, expectedTarget, actualRecord.Target)
+	assert.Equal(t, expectedAssetGroupTagId, actualRecord.AssetGroupTagId)
+	assert.Equal(t, null.String{}, actualRecord.EnvironmentId)
+	assert.Equal(t, null.String{}, actualRecord.Note)
+	assert.False(t, actualRecord.CreatedAt.IsZero())
 }
 
 func TestDatabase_GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(t *testing.T) {

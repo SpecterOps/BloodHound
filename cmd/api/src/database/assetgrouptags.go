@@ -25,7 +25,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -785,7 +784,6 @@ func updateSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 		err                error
 		sqlQuery           string
 		sqlArgs            []any
-		updateBuilder      = sqlbuilder.PostgreSQL.NewUpdateBuilder()
 		selectorIds        = make([]int32, 0, len(nodes))
 		nodeIds            = make([]int64, 0, len(nodes))
 		certifications     = make([]int32, 0, len(nodes))
@@ -815,36 +813,96 @@ func updateSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 		}
 	}
 
-	updateBuilder.Update(model.AssetGroupSelectorNode{}.TableName() + " AS selector_node")
-	updateBuilder.Set(
-		"certified = batch.certified",
-		"certified_by = batch.certified_by",
-		"source = batch.source",
-		"node_primary_kind = batch.node_primary_kind",
-		"node_environment_id = batch.node_environment_id",
-		"node_object_id = batch.node_object_id",
-		"node_name = batch.node_name",
-		"updated_at = current_timestamp",
+	sqlQuery = fmt.Sprintf(`
+	WITH batch AS (
+		SELECT *
+		FROM unnest(
+			$1::int[],
+			$2::bigint[],
+			$3::int[],
+			$4::text[],
+			$5::int[],
+			$6::text[],
+			$7::text[],
+			$8::text[],
+			$9::text[]
+		) AS batch(selector_id, node_id, certified, certified_by, source, node_primary_kind, node_environment_id, node_object_id, node_name)
+	),
+	changed_certifications AS (
+		SELECT
+			selector_node.selector_id,
+			selector_node.node_id,
+			selector.asset_group_tag_id,
+			batch.node_name,
+			batch.certified
+		FROM %s AS selector_node
+		JOIN batch
+			ON selector_node.selector_id = batch.selector_id
+			AND selector_node.node_id = batch.node_id
+		JOIN %s AS selector
+			ON selector.id = selector_node.selector_id
+		WHERE selector_node.certified IS DISTINCT FROM batch.certified
+	),
+	updated AS (
+		UPDATE %s AS selector_node
+		SET
+			certified = batch.certified,
+			certified_by = batch.certified_by,
+			source = batch.source,
+			node_primary_kind = batch.node_primary_kind,
+			node_environment_id = batch.node_environment_id,
+			node_object_id = batch.node_object_id,
+			node_name = batch.node_name,
+			updated_at = current_timestamp
+		FROM batch
+		WHERE selector_node.selector_id = batch.selector_id
+			AND selector_node.node_id = batch.node_id
+		RETURNING selector_node.selector_id, selector_node.node_id
 	)
-	updateBuilder.From(fmt.Sprintf(
-		`unnest(%s::int[], %s::bigint[], %s::int[], %s::text[], %s::int[], %s::text[], %s::text[], %s::text[], %s::text[]) 
-		AS batch(selector_id, node_id, certified, certified_by, source, node_primary_kind, node_environment_id, node_object_id, node_name)`,
-		updateBuilder.Var(pgtype.FlatArray[int32](selectorIds)),
-		updateBuilder.Var(pgtype.FlatArray[int64](nodeIds)),
-		updateBuilder.Var(pgtype.FlatArray[int32](certifications)),
-		updateBuilder.Var(pgtype.FlatArray[*string](certifiedByValues)),
-		updateBuilder.Var(pgtype.FlatArray[int32](sources)),
-		updateBuilder.Var(pgtype.FlatArray[string](nodePrimaryKinds)),
-		updateBuilder.Var(pgtype.FlatArray[string](nodeEnvironmentIds)),
-		updateBuilder.Var(pgtype.FlatArray[string](nodeObjectIds)),
-		updateBuilder.Var(pgtype.FlatArray[string](nodeNames)),
-	))
-	updateBuilder.Where(
-		"selector_node.selector_id = batch.selector_id",
-		"selector_node.node_id = batch.node_id",
+	INSERT INTO %s (actor, email, target, action, asset_group_tag_id, environment_id, note, created_at)
+	SELECT
+		$10::text,
+		''::text,
+		changed_certifications.node_name,
+		CASE changed_certifications.certified
+			WHEN $11::int THEN $12::text
+			WHEN $13::int THEN $14::text
+			WHEN $15::int THEN $16::text
+			ELSE $17::text
+		END,
+		changed_certifications.asset_group_tag_id,
+		NULL::text,
+		NULL::text,
+		current_timestamp
+	FROM changed_certifications
+	JOIN updated
+		ON updated.selector_id = changed_certifications.selector_id
+		AND updated.node_id = changed_certifications.node_id`,
+		model.AssetGroupSelectorNode{}.TableName(),
+		model.AssetGroupTagSelector{}.TableName(),
+		model.AssetGroupSelectorNode{}.TableName(),
+		model.AssetGroupHistory{}.TableName(),
 	)
+	sqlArgs = []any{
+		pgtype.FlatArray[int32](selectorIds),
+		pgtype.FlatArray[int64](nodeIds),
+		pgtype.FlatArray[int32](certifications),
+		pgtype.FlatArray[*string](certifiedByValues),
+		pgtype.FlatArray[int32](sources),
+		pgtype.FlatArray[string](nodePrimaryKinds),
+		pgtype.FlatArray[string](nodeEnvironmentIds),
+		pgtype.FlatArray[string](nodeObjectIds),
+		pgtype.FlatArray[string](nodeNames),
+		model.AssetGroupActorBloodHound,
+		int32(model.AssetGroupCertificationRevoked),
+		string(model.AssetGroupHistoryActionCertifyNodeRevoked),
+		int32(model.AssetGroupCertificationManual),
+		string(model.AssetGroupHistoryActionCertifyNodeManual),
+		int32(model.AssetGroupCertificationAuto),
+		string(model.AssetGroupHistoryActionCertifyNodeAuto),
+		string(model.ToAssetGroupHistoryActionFromAssetGroupCertification(model.AssetGroupCertificationPending)),
+	}
 
-	sqlQuery, sqlArgs = updateBuilder.Build()
 	if _, err = transaction.Exec(ctx, sqlQuery, sqlArgs...); err != nil {
 		return fmt.Errorf("batch updating selector nodes: %w", err)
 	}
