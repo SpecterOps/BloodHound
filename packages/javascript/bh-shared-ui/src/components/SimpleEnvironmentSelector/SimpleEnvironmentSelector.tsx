@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Alert, TextField } from '@mui/material';
 import {
@@ -67,6 +68,36 @@ const selectedText = (
             return 'Select Environment';
         }
     }
+};
+
+const SelectorListItemContent: React.FC<{
+    displayName: string;
+    displayIcon: IconProp;
+    onClick: () => void;
+    isUpperCase?: boolean;
+}> = ({ displayName, displayIcon, isUpperCase = false, onClick }) => {
+    return (
+        <Button
+            className={cn(optionStyles, 'flex justify-between items-center gap-2')}
+            onClick={onClick}
+            variant={'text'}>
+            <TooltipProvider>
+                <TooltipRoot>
+                    <TooltipTrigger>
+                        <span className={cn('max-w-96 truncate', { uppercase: isUpperCase })}>{displayName}</span>
+                    </TooltipTrigger>
+                    <TooltipPortal>
+                        <TooltipContent
+                            side='left'
+                            className={cn('dark:bg-neutral-dark-5 border-0', { uppercase: isUpperCase })}>
+                            <span>{displayName}</span>
+                        </TooltipContent>
+                    </TooltipPortal>
+                </TooltipRoot>
+            </TooltipProvider>
+            <FontAwesomeIcon className={optionIconStyles} icon={displayIcon} size='sm' />
+        </Button>
+    );
 };
 
 const SimpleEnvironmentSelector: React.FC<{
@@ -174,30 +205,11 @@ const SimpleEnvironmentSelector: React.FC<{
                     )}
                     {environmentTypes?.map((type) => (
                         <li key={`${type}-platform`}>
-                            <Button
-                                className={cn(optionStyles, 'flex justify-between items-center gap-2')}
+                            <SelectorListItemContent
+                                displayName={environmentInfo[type]?.aggregationDisplayName}
+                                displayIcon={environmentInfo[type]?.icon}
                                 onClick={() => handlePlatformClick(type, environmentInfo[type]?.environment_kind_id)}
-                                variant={'text'}>
-                                <TooltipProvider>
-                                    <TooltipRoot>
-                                        <TooltipTrigger>
-                                            <span className='max-w-96 truncate'>
-                                                {environmentInfo[type]?.aggregationDisplayName}
-                                            </span>
-                                        </TooltipTrigger>
-                                        <TooltipPortal>
-                                            <TooltipContent side='left' className='dark:bg-neutral-dark-5 border-0'>
-                                                <span>{environmentInfo[type]?.aggregationDisplayName}</span>
-                                            </TooltipContent>
-                                        </TooltipPortal>
-                                    </TooltipRoot>
-                                </TooltipProvider>
-                                <FontAwesomeIcon
-                                    className={optionIconStyles}
-                                    icon={environmentInfo[type]?.icon}
-                                    size='sm'
-                                />
-                            </Button>
+                            />
                         </li>
                     ))}
                 </ul>
@@ -205,28 +217,12 @@ const SimpleEnvironmentSelector: React.FC<{
                     {filteredEnvironments?.map((environment: Environment) => {
                         return (
                             <li key={environment.id}>
-                                <Button
-                                    className={cn(optionStyles, 'flex justify-between items-center gap-2')}
+                                <SelectorListItemContent
+                                    displayName={environment.name}
+                                    displayIcon={environmentInfo[environment.type]?.icon}
+                                    isUpperCase
                                     onClick={() => handleEnvironmentClick(environment)}
-                                    variant='text'>
-                                    <TooltipProvider>
-                                        <TooltipRoot>
-                                            <TooltipTrigger>
-                                                <span className='uppercase max-w-96 truncate'>{environment.name}</span>
-                                            </TooltipTrigger>
-                                            <TooltipPortal>
-                                                <TooltipContent side='left' className='dark:bg-neutral-dark-5 border-0'>
-                                                    <span className='uppercase'>{environment.name}</span>
-                                                </TooltipContent>
-                                            </TooltipPortal>
-                                        </TooltipRoot>
-                                    </TooltipProvider>
-                                    <FontAwesomeIcon
-                                        className={optionIconStyles}
-                                        icon={environmentInfo[environment.type]?.icon}
-                                        size='sm'
-                                    />
-                                </Button>
+                                />
                             </li>
                         );
                     })}
