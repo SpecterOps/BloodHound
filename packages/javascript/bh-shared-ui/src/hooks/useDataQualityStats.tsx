@@ -98,7 +98,7 @@ export const useActiveDirectoryPlatformsDataQualityStatsQuery = () => {
 };
 
 export const useOpenGraphPlatformsDataQualityStatsQuery = (platformKindId?: number) => {
-    return useQuery('open-graph-platform-data-quality-stats', ({ signal }) =>
+    return useQuery(['open-graph-platform-data-quality-stats', platformKindId], ({ signal }) =>
         apiClient
             .getOpenGraphPlatformQualityStats(platformKindId, undefined, undefined, undefined, undefined, { signal })
             .then((response) => {

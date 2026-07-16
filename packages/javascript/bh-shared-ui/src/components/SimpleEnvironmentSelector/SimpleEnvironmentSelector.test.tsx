@@ -214,7 +214,7 @@ describe('Open Graph platform selection', () => {
 
         await user.click(await screen.findByText('All AWS Environments'));
 
-        expect(testOnChange).toHaveBeenLastCalledWith({ type: 'AWS-platform', id: null, kind_id: 101 });
+        expect(testOnChange).toHaveBeenLastCalledWith({ type: 'AWS-platform', id: null, environment_kind_id: 101 });
     });
 
     it('renders the aggregation display name in the tooltip for an open graph platform', async () => {

@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { OpenGraphDataQualityStat } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { OpenGraphDataQualityStat } from 'js-client-library';
 import { render, screen, waitFor } from '../../test-utils';
 import OpenGraphInfo, { OpenGraphPlatformInfo, getLatestMetricStats } from './OpenGraphInfo';
 
@@ -25,7 +25,7 @@ const baseStat = (overrides: Partial<OpenGraphDataQualityStat> = {}): OpenGraphD
     run_id: 'run-1',
     kind_id: 1,
     environment_kind_id: 999,
-    environmentid: 'env-1',
+    environment_id: 'env-1',
     extension_id: 1,
     metric_type: 'node',
     metric_name: 'User',
@@ -40,7 +40,13 @@ const testNodeStat = (overrides: Partial<OpenGraphDataQualityStat> = {}) =>
     baseStat({ kind_id: 1, metric_type: 'node', metric_name: 'User', metric_value: 10, ...overrides });
 
 const testRelationshipStat = (overrides: Partial<OpenGraphDataQualityStat> = {}) =>
-    baseStat({ kind_id: 100, metric_type: 'relationship', metric_name: 'HasRelationship', metric_value: 50, ...overrides });
+    baseStat({
+        kind_id: 100,
+        metric_type: 'relationship',
+        metric_name: 'HasRelationship',
+        metric_value: 50,
+        ...overrides,
+    });
 
 describe('getLatestMetricStats', () => {
     it('returns empty node stats and undefined relationship stats for empty input', () => {

@@ -141,7 +141,7 @@ export type AzureDataQualityResponse = PaginatedResponse<AzureDataQualityStat[]>
 export type OpenGraphDataQualityStat = TimestampFields & {
     run_id: string;
     environment_kind_id: number;
-    environmentid: string;
+    environment_id: string;
     extension_id: number;
     id: number;
     kind_id: number;
