@@ -244,6 +244,8 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 	)
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
+
 		// Retrieve the extension to check if it exists and if it's built-in
 		if result := tx.Raw(fmt.Sprintf(`SELECT is_builtin FROM %s WHERE id = ?`, schemaExtension.TableName()), extensionId).Scan(&isBuiltin); result.Error != nil {
 			return CheckError(result)
@@ -254,6 +256,25 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 		// Prevent deletion of built-in extensions
 		if isBuiltin {
 			return model.ErrGraphExtensionBuiltIn
+		}
+
+		// Before deleting the extension (which cascades to schema_node_kinds), create stubs in custom_node_kinds for all non-display
+		// node kinds. Non-display kinds are not tracked in custom_node_kinds while the schema is active. It is possible that a schemaless
+		// node kind of the same name existed before this extension upserted it to a non-display node kind, which removes it from the custom
+		// node table. Because of this edge case, inserting stubs here for the non-display node kinds ensures that those node kinds will
+		// remain tracked even after the schema is gone, in the event any nodes of those kinds remain in the graph.
+		nodeKinds, err := bhdb.GetGraphSchemaNodeKindsByExtensionId(ctx, extensionId)
+		if err != nil {
+			return fmt.Errorf("failed to fetch node kinds for extension %d: %w", extensionId, err)
+		}
+
+		for _, nodeKind := range nodeKinds {
+			if !nodeKind.IsDisplayKind {
+				// Ignore ErrDuplicateCustomNodeKindName. This indicates the kind is already tracked, nothing to do.
+				if _, err := bhdb.CreateCustomNodeKinds(ctx, model.CustomNodeKinds{{KindName: nodeKind.Name, Config: CustomNodeKindStubConfig}}); err != nil && !errors.Is(err, ErrDuplicateCustomNodeKindName) {
+					return fmt.Errorf("failed to create stub for non-display node kind %q: %w", nodeKind.Name, err)
+				}
+			}
 		}
 
 		// Delete the extension
@@ -1342,54 +1363,25 @@ func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId in
 	return nil
 }
 
-// GetPrimaryDisplayKinds - returns a map of all node kinds that are display kinds, this pulls from both custom_node_kinds(schemaless)
-// and schema_node_kinds to create a single source of truth for all valid node kinds
+// GetPrimaryDisplayKinds - returns a map of all node kinds that are display kinds. custom_node_kinds is the single source
+// of truth for display node kinds. Schema-backed display kinds are mirrored there on extension upsert, and schemaless kinds encountered
+// during ingest are also upserted.
 func (s *BloodhoundDB) GetPrimaryDisplayKinds(ctx context.Context) (graphschema.PrimaryDisplayKinds, error) {
-	if displaySchemaNodeKinds, _, err := s.GetGraphSchemaNodeKinds(ctx, model.Filters{"is_display_kind": []model.Filter{
-		{
-			Operator:    model.Equals,
-			Value:       "true",
-			SetOperator: model.FilterAnd,
-		},
-	}}, model.Sort{}, 0, 0); err != nil {
-		return nil, err
-	} else if customNodeKinds, err := s.GetCustomNodeKinds(ctx, nil); err != nil {
+	if customNodeKinds, err := s.GetCustomNodeKinds(ctx); err != nil {
 		return nil, err
 	} else {
-		var customNames []string
-		var customKindsByName = make(map[string]model.CustomNodeKind)
-		for _, kind := range customNodeKinds {
-			customNames = append(customNames, kind.KindName)
-			customKindsByName[kind.KindName] = kind
-		}
-		// Until work is complete to ensure custom_node_kinds are properly kind backed, this will filter out invalid kinds
-		if kinds, err := s.GetKindsByNames(ctx, customNames...); err != nil && !errors.Is(err, ErrNotFound) {
-			return nil, err
-		} else {
-			var primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
-			for _, kind := range kinds {
-				customKind := customKindsByName[kind.Name]
-				primaryDisplayKinds[kind.ToKind()] = graphschema.DisplayKind{
-					Name: kind.Name,
-					Icon: graphschema.DisplayNodeIcon{
-						Name:  customKind.Config.Icon.Name,
-						Type:  customKind.Config.Icon.Type,
-						Color: customKind.Config.Icon.Color,
-					},
-				}
+		var primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
+		for _, customNodeKind := range customNodeKinds {
+			primaryDisplayKinds[graph.StringKind(customNodeKind.KindName)] = graphschema.DisplayKind{
+				Name: customNodeKind.KindName,
+				Icon: graphschema.DisplayNodeIcon{
+					Name:  customNodeKind.Config.Icon.Name,
+					Type:  customNodeKind.Config.Icon.Type,
+					Color: customNodeKind.Config.Icon.Color,
+				},
 			}
-			for _, kind := range displaySchemaNodeKinds {
-				primaryDisplayKinds[kind.ToKind()] = graphschema.DisplayKind{
-					Name: kind.Name,
-					Icon: graphschema.DisplayNodeIcon{
-						Name:  kind.Icon,
-						Color: kind.IconColor,
-						Type:  graphschema.DisplayNodeTypeFontAwesome,
-					},
-				}
-			}
-			return primaryDisplayKinds, nil
 		}
+		return primaryDisplayKinds, nil
 	}
 }
 

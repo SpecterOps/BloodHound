@@ -41,6 +41,29 @@ func assertExtensionDoesNotExist(t *testing.T, testSuite IntegrationTestSuite, e
 	assert.Equalf(t, 0, totalRecords, "extension should not exist: %s", extensionName)
 }
 
+// assertCustomNodeKindPresent asserts that a custom_node_kinds row exists for the given kind name.
+func assertCustomNodeKindPresent(t *testing.T, testSuite IntegrationTestSuite, kindName string) {
+	t.Helper()
+	icons, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context)
+	require.NoError(t, err)
+	for _, icon := range icons {
+		if icon.KindName == kindName {
+			return
+		}
+	}
+	assert.Failf(t, "custom node kind missing", "expected custom node kind %q to exist", kindName)
+}
+
+// assertCustomNodeKindAbsent asserts that no custom_node_kinds row exists for the given kind name.
+func assertCustomNodeKindAbsent(t *testing.T, testSuite IntegrationTestSuite, kindName string) {
+	t.Helper()
+	icons, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context)
+	require.NoError(t, err)
+	for _, icon := range icons {
+		assert.NotEqualf(t, kindName, icon.KindName, "custom node kind %q should have been removed", kindName)
+	}
+}
+
 func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 	t.Parallel()
 
@@ -566,7 +589,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				require.NoError(t, err)
 				assert.True(t, updated)
 
-				icons, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context, nil)
+				icons, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context)
 				require.NoError(t, err)
 				var preserved *model.CustomNodeKind
 				for _, icon := range icons {
@@ -665,6 +688,136 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				assert.Empty(t, infos)
 			},
 		},
+		{
+			name: "success_-_display_node_kind_flipped_to_non_display_removes_custom_node_kind",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				extensionInput := model.ExtensionInput{Name: "FlipDisplayExt", DisplayName: "Flip Display Node Kind to Non-Display NK", Version: "1.0.0", Namespace: "FLIP_DISP"}
+				_, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, model.GraphExtensionInput{
+					ExtensionInput: extensionInput,
+					NodeKindsInput: model.NodesInput{{Name: "StartedAsDispNodeKind", DisplayName: "Node Kind", Description: "test", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"}},
+				})
+				require.NoError(t, err)
+				// The custom node kind should exist before the flip.
+				assertCustomNodeKindPresent(t, testSuite, "StartedAsDispNodeKind")
+
+				// Re-upload the extension with the kind flipped to a non-display kind.
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput: extensionInput,
+						NodeKindsInput: model.NodesInput{{Name: "StartedAsDispNodeKind", DisplayName: "Node Kind", Description: "test", IsDisplayKind: false}},
+					},
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.True(t, updated)
+				assertGraphExtension(t, testSuite, setupData.input)
+				assertCustomNodeKindAbsent(t, testSuite, "StartedAsDispNodeKind")
+			},
+		},
+		{
+			name: "success_-_non_display_node_kind_flipped_to_display_creates_custom_node_kind",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				extensionInput := model.ExtensionInput{Name: "FlipToDisplayExt", DisplayName: "Flip Non-Display Node Kind to Display NK", Version: "1.0.0", Namespace: "FLIP_TO_DISP"}
+				_, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, model.GraphExtensionInput{
+					ExtensionInput: extensionInput,
+					NodeKindsInput: model.NodesInput{{Name: "StartedAsNonDispNodeKind", DisplayName: "Node Kind", Description: "test", IsDisplayKind: false}},
+				})
+				require.NoError(t, err)
+				// The custom node kind should not exist before the flip.
+				assertCustomNodeKindAbsent(t, testSuite, "StartedAsNonDispNodeKind")
+
+				// Re-upload the extension with the kind flipped to a display kind.
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput: extensionInput,
+						NodeKindsInput: model.NodesInput{{Name: "StartedAsNonDispNodeKind", DisplayName: "Node Kind", Description: "test", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"}},
+					},
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.True(t, updated)
+				assertGraphExtension(t, testSuite, setupData.input)
+				assertCustomNodeKindPresent(t, testSuite, "StartedAsNonDispNodeKind")
+			},
+		},
+		{
+			name: "success_-_dropped_non_display_node_kind_is_stubbed_into_custom_node_kinds",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				extensionInput := model.ExtensionInput{Name: "DropNonDisplayExt", DisplayName: "Drop Non-Display Kind", Version: "1.0.0", Namespace: "DROP_ND"}
+				_, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, model.GraphExtensionInput{
+					ExtensionInput: extensionInput,
+					NodeKindsInput: model.NodesInput{
+						{Name: "NonDisplayKindToKeep", DisplayName: "Non-Display Kind 1", Description: "test", IsDisplayKind: false},
+						{Name: "NonDisplayKindToDrop", DisplayName: "Non-Display Kind 2", Description: "test", IsDisplayKind: false},
+					},
+				})
+				require.NoError(t, err)
+				// Non-display kinds are not tracked in custom_node_kinds while the schema is active.
+				assertCustomNodeKindAbsent(t, testSuite, "NonDisplayKindToDrop")
+
+				// Re-upload the extension with NonDisplayKindToDrop removed, triggering a reconciliation delete.
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput: extensionInput,
+						NodeKindsInput: model.NodesInput{{Name: "NonDisplayKindToKeep", DisplayName: "Non-Display Kind 1", Description: "test", IsDisplayKind: false}},
+					},
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.True(t, updated)
+				assertGraphExtension(t, testSuite, setupData.input)
+				// The dropped non-display kind should now be stubbed into custom_node_kinds.
+				assertCustomNodeKindPresent(t, testSuite, "NonDisplayKindToDrop")
+				kind, err := testSuite.BHDatabase.GetCustomNodeKind(testSuite.Context, "NonDisplayKindToDrop")
+				require.NoError(t, err)
+				assert.Nil(t, kind.SchemaNodeKindId, "stub should not reference the (now deleted) schema_node_kind row")
+			},
+		},
+		{
+			name: "success_-_deleted_schema_node_kind_nulls_schema_node_kind_id_on_custom_node_kind",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				extensionInput := model.ExtensionInput{Name: "DropKindExt", DisplayName: "Drop Kind", Version: "1.0.0", Namespace: "DROP_KIND"}
+				_, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, model.GraphExtensionInput{
+					ExtensionInput: extensionInput,
+					NodeKindsInput: model.NodesInput{
+						{Name: "NodeKindToKeep", DisplayName: "Node Kind 1", Description: "test", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"},
+						{Name: "NodeKindToRemove", DisplayName: "Node Kind 2", Description: "test", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"},
+					},
+				})
+				require.NoError(t, err)
+				// The custom node kind should exist before the kind is removed.
+				assertCustomNodeKindPresent(t, testSuite, "NodeKindToRemove")
+
+				// Re-upload the extension with NodeKindToRemove removed entirely.
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput: extensionInput,
+						NodeKindsInput: model.NodesInput{{Name: "NodeKindToKeep", DisplayName: "Node Kind 1", Description: "test", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"}},
+					},
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.True(t, updated)
+				assertGraphExtension(t, testSuite, setupData.input)
+				// verify the schema_node_kind_id FK is nulled
+				assertCustomNodeKindPresent(t, testSuite, "NodeKindToRemove")
+				kind, err := testSuite.BHDatabase.GetCustomNodeKind(testSuite.Context, "NodeKindToRemove")
+				require.NoError(t, err)
+				assert.Nil(t, kind.SchemaNodeKindId)
+			},
+		},
 	}
 
 	for _, testCase := range tests {
@@ -735,7 +888,7 @@ func assertNodeKinds(t *testing.T, testSuite IntegrationTestSuite, extensionId i
 	}
 
 	// Custom icon assertions
-	icons, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context, nil)
+	icons, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context)
 	require.NoError(t, err)
 	iconMap := make(map[string]model.CustomNodeKind, len(icons))
 	for _, icon := range icons {
