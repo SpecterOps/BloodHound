@@ -33,10 +33,11 @@ import (
 
 // newRequestWithID builds a GET request whose mux path variables carry the
 // supplied raw relationship id, mirroring what the router does at runtime.
-func newRequestWithID(t *testing.T, rawID string) *http.Request {
+func newRequestWithID(t *testing.T, rawID string, rawQuery string) *http.Request {
 	t.Helper()
 	request, err := http.NewRequest(http.MethodGet, "/api/v2/relationships/"+rawID, nil)
 	require.NoError(t, err)
+	request.URL.RawQuery = rawQuery
 	return mux.SetURLVars(request, map[string]string{handlers.URIPathVariableRelationshipID: rawID})
 }
 
@@ -44,12 +45,29 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 	var (
 		relationshipID = int64(1234567890)
 		kindID         = int32(42)
+		markdown       = "relationship markdown"
 		relationship   = services.Relationship{
 			ID:           relationshipID,
 			SourceNodeID: 100,
 			TargetNodeID: 200,
 			Kind:         services.Kind{ID: &kindID, Name: "MemberOf"},
 			Properties:   map[string]any{"foo": "bar"},
+		}
+		relationshipWithInfo = services.Relationship{
+			ID:           relationshipID,
+			SourceNodeID: 100,
+			TargetNodeID: 200,
+			Kind:         services.Kind{ID: &kindID, Name: "MemberOf"},
+			Properties:   map[string]any{"foo": "bar"},
+			KindInfos: []services.KindInfo{
+				{
+					InfoKey:            "abuse",
+					Title:              "Abuse",
+					Position:           1,
+					RelationshipKindID: &kindID,
+					Content:            json.RawMessage(`{"markdown":{"content":"relationship markdown"}}`),
+				},
+			},
 		}
 		nilKindRelationship = services.Relationship{
 			ID:           relationshipID,
@@ -63,6 +81,7 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 	tests := []struct {
 		name       string
 		rawID      string
+		rawQuery   string
 		setupMock  func(graphDBMock *mocks.MockGraphDB)
 		wantStatus int
 		assertBody func(t *testing.T, body []byte)
@@ -71,7 +90,7 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 			name:  "returns 200 with the relationship view on success",
 			rawID: "1234567890",
 			setupMock: func(graphDBMock *mocks.MockGraphDB) {
-				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID).Return(relationship, nil)
+				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, false).Return(relationship, nil)
 			},
 			wantStatus: http.StatusOK,
 			assertBody: func(t *testing.T, body []byte) {
@@ -85,13 +104,52 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 				require.NotNil(t, envelope.Data.Kind.RelationshipKindID)
 				assert.Equal(t, int32(42), *envelope.Data.Kind.RelationshipKindID)
 				assert.Equal(t, "MemberOf", envelope.Data.Kind.Name)
+				assert.NotContains(t, string(body), `"info"`)
+			},
+		},
+		{
+			name:     "returns 200 with relationship info when include-info is true",
+			rawID:    "1234567890",
+			rawQuery: "include-info=true",
+			setupMock: func(graphDBMock *mocks.MockGraphDB) {
+				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, true).Return(relationshipWithInfo, nil)
+			},
+			wantStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body []byte) {
+				var envelope struct {
+					Data handlers.RelationshipView `json:"data"`
+				}
+				require.NoError(t, json.Unmarshal(body, &envelope))
+				require.Len(t, envelope.Data.Info, 1)
+				assert.Equal(t, "abuse", envelope.Data.Info[0].Name)
+				assert.Equal(t, "Abuse", envelope.Data.Info[0].Title)
+				assert.Equal(t, int32(1), envelope.Data.Info[0].Position)
+				assert.Equal(t, int(kindID), envelope.Data.Info[0].RelationshipKindID)
+				assert.Equal(t, markdown, envelope.Data.Info[0].Markdown.Content)
+			},
+		},
+		{
+			name:     "returns 200 without relationship info when include-info is false",
+			rawID:    "1234567890",
+			rawQuery: "include-info=false",
+			setupMock: func(graphDBMock *mocks.MockGraphDB) {
+				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, false).Return(relationshipWithInfo, nil)
+			},
+			wantStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body []byte) {
+				var envelope struct {
+					Data map[string]any `json:"data"`
+				}
+				require.NoError(t, json.Unmarshal(body, &envelope))
+				assert.NotContains(t, envelope.Data, "info")
+				assert.NotContains(t, string(body), `"info"`)
 			},
 		},
 		{
 			name:  "returns 200 with a null relationship kind id when the kind has no schema entry",
 			rawID: "1234567890",
 			setupMock: func(graphDBMock *mocks.MockGraphDB) {
-				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID).Return(nilKindRelationship, nil)
+				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, false).Return(nilKindRelationship, nil)
 			},
 			wantStatus: http.StatusOK,
 			assertBody: func(t *testing.T, body []byte) {
@@ -111,10 +169,16 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 		},
 		{
+			name:       "returns 400 when include-info is malformed",
+			rawID:      "1234567890",
+			rawQuery:   "include-info=wat",
+			wantStatus: http.StatusBadRequest,
+		},
+		{
 			name:  "returns 404 when the relationship is not found",
 			rawID: "1234567890",
 			setupMock: func(graphDBMock *mocks.MockGraphDB) {
-				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID).Return(services.Relationship{}, services.ErrRelationshipNotFound)
+				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, false).Return(services.Relationship{}, services.ErrRelationshipNotFound)
 			},
 			wantStatus: http.StatusNotFound,
 		},
@@ -127,7 +191,7 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 				authorizerMock = mocks.NewMockNodeAuthorizer(t)
 				handlerSet     = handlers.NewHandlersContainer(graphDBMock, authorizerMock)
 				recorder       = httptest.NewRecorder()
-				request        = newRequestWithID(t, tt.rawID)
+				request        = newRequestWithID(t, tt.rawID, tt.rawQuery)
 			)
 
 			if tt.setupMock != nil {

@@ -7232,6 +7232,15 @@
             "type": "integer",
             "format": "int64"
           }
+        },
+        {
+          "name": "include-info",
+          "in": "query",
+          "required": false,
+          "description": "When false or omitted, excludes entity panel information.\nWhen true, returns relationship details with entity panel information included.\n",
+          "schema": {
+            "type": "boolean"
+          }
         }
       ],
       "get": {
@@ -7252,7 +7261,14 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/model.relationship-details"
+                      "anyOf": [
+                        {
+                          "$ref": "#/components/schemas/model.relationship-details"
+                        },
+                        {
+                          "$ref": "#/components/schemas/model.relationship-details-with-info"
+                        }
+                      ]
                     }
                   }
                 }
@@ -22245,6 +22261,13 @@
       },
       "model.relationship-details": {
         "type": "object",
+        "required": [
+          "relationship_id",
+          "source_node_id",
+          "target_node_id",
+          "kind",
+          "properties"
+        ],
         "properties": {
           "relationship_id": {
             "type": "integer",
@@ -22266,6 +22289,10 @@
           },
           "kind": {
             "type": "object",
+            "required": [
+              "relationship_kind_id",
+              "name"
+            ],
             "properties": {
               "relationship_kind_id": {
                 "type": "integer",
@@ -22279,9 +22306,121 @@
           },
           "properties": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": true,
+            "required": [
+              "is_traversable",
+              "lastSeen"
+            ],
+            "properties": {
+              "is_traversable": {
+                "type": "boolean"
+              },
+              "lastSeen": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
           }
         }
+      },
+      "model.kind-info-base": {
+        "type": "object",
+        "required": [
+          "title",
+          "position"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Entity Panel Section"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "model.kind-info-type-markdown": {
+        "type": "object",
+        "required": [
+          "markdown"
+        ],
+        "properties": {
+          "markdown": {
+            "type": "object",
+            "required": [
+              "content"
+            ],
+            "properties": {
+              "content": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "model.kind-info-content": {
+        "type": "object",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/model.kind-info-type-markdown"
+          }
+        ]
+      },
+      "model.kind-info-response": {
+        "allOf": [
+          {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "panel_section_1"
+              }
+            }
+          },
+          {
+            "$ref": "#/components/schemas/model.kind-info-base"
+          },
+          {
+            "$ref": "#/components/schemas/model.kind-info-content"
+          }
+        ]
+      },
+      "model.relationship-details-with-info": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.relationship-details"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "info": {
+                "type": "array",
+                "items": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/model.kind-info-response"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "relationship_kind_id"
+                      ],
+                      "properties": {
+                        "relationship_kind_id": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
       },
       "model.node-details": {
         "type": "object",
