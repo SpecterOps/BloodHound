@@ -51,6 +51,19 @@ func createTestNodeKind(t *testing.T, testSuite IntegrationTestSuite, name strin
 	// Create Node Kind with input arguments
 	nodeKind, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, name, extensionID, displayName, description, isDisplayKind, icon, iconColor)
 	require.NoError(t, err, "unexpected error occurred when creating node kind")
+
+	// Mirror what upsertCustomIcons does in production: display kinds must also have a custom_node_kinds row
+	if isDisplayKind {
+		_, err = testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{{
+			KindName:         name,
+			SchemaNodeKindId: &nodeKind.ID,
+			Config: model.CustomNodeKindConfig{
+				Icon: graphschema.DisplayNodeIcon{Name: icon, Type: graphschema.DisplayNodeTypeFontAwesome, Color: iconColor},
+			},
+		}})
+		require.NoError(t, err, "unexpected error occurred when creating custom node kind")
+	}
+
 	return nodeKind
 }
 
@@ -4311,6 +4324,13 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 	principalKinds, err := testSuite.BHDatabase.GetPrincipalKindsByEnvironmentId(testSuite.Context, environment.ID)
 	assert.NoError(t, err)
 	assert.Len(t, principalKinds, 0, "principal kinds should have been cascade deleted")
+
+	// The non-display node kind should have been stubbed into custom_node_kinds before the cascade delete
+	assertCustomNodeKindPresent(t, testSuite, "CascadeTestNodeKind")
+	stubbedKind, err := testSuite.BHDatabase.GetCustomNodeKind(testSuite.Context, "CascadeTestNodeKind")
+	require.NoError(t, err)
+	assert.Equal(t, database.CustomNodeKindStubConfig, stubbedKind.Config, "non-display kind should have been stubbed with the default stub config")
+	assert.Nil(t, stubbedKind.SchemaNodeKindId, "stub should not reference the (now deleted) schema_node_kind row")
 }
 
 func TestDatabase_GetSchemaFindings(t *testing.T) {

@@ -15,6 +15,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 type: object
+required:
+  - relationship_id
+  - source_node_id
+  - target_node_id
+  - kind
+  - properties
 properties:
   relationship_id:
     type: integer
@@ -33,6 +39,9 @@ properties:
     example: 1234567890
   kind:
     type: object
+    required:
+      - relationship_kind_id
+      - name
     properties:
       relationship_kind_id:
         type: integer
@@ -43,3 +52,12 @@ properties:
   properties:
     type: object
     additionalProperties: true
+    required:
+      - is_traversable
+      - lastSeen
+    properties:
+      is_traversable:
+        type: boolean
+      lastSeen:
+        type: string
+        format: date-time
