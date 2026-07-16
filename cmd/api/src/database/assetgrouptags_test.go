@@ -1789,6 +1789,125 @@ func TestDatabase_UpdateSelectorNodes(t *testing.T) {
 	})
 }
 
+func TestDatabase_DeleteSelectorNodes(t *testing.T) {
+	t.Parallel()
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		testCtx   = context.Background()
+		testActor = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
+	)
+
+	t.Run("returns nil for empty input", func(t *testing.T) {
+		require.NoError(t, suite.BHDatabase.DeleteSelectorNodes(testCtx, nil))
+		require.NoError(t, suite.BHDatabase.DeleteSelectorNodes(testCtx, []model.AssetGroupSelectorNode{}))
+	})
+
+	t.Run("deletes requested selector nodes", func(t *testing.T) {
+		var (
+			assetGroupTagId = 1
+			selector        = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch delete requested nodes")
+			deletedNodeId   = graph.ID(70001)
+			retainedNodeId  = graph.ID(70002)
+
+			deletedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            deletedNodeId,
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "delete-requested-primary-kind",
+				NodeEnvironmentId: "delete-requested-environment",
+				NodeObjectId:      "delete-requested-object-id",
+				NodeName:          "delete-requested-node",
+			}
+			retainedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            retainedNodeId,
+				Certified:         model.AssetGroupCertificationManual,
+				CertifiedBy:       null.StringFrom("retained-certifier"),
+				Source:            model.AssetGroupSelectorNodeSourceChild,
+				NodePrimaryKind:   "delete-retained-primary-kind",
+				NodeEnvironmentId: "delete-retained-environment",
+				NodeObjectId:      "delete-retained-object-id",
+				NodeName:          "delete-retained-node",
+			}
+		)
+
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, deletedNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, retainedNode)
+
+		require.NoError(t, suite.BHDatabase.DeleteSelectorNodes(testCtx, []model.AssetGroupSelectorNode{
+			deletedNode,
+		}))
+
+		selectorNodesBySelectorId := requireSelectorNodesBySelectorAndNodeId(t, testCtx, suite.BHDatabase, selector.ID)
+		require.Len(t, selectorNodesBySelectorId[selector.ID], 1)
+		assert.NotContains(t, selectorNodesBySelectorId[selector.ID], deletedNodeId)
+		assertUpdateSelectorNodesTestNode(t, retainedNode, selectorNodesBySelectorId[selector.ID][retainedNodeId])
+	})
+
+	t.Run("leaves selector nodes not passed in untouched", func(t *testing.T) {
+		var (
+			assetGroupTagId           = 1
+			selectorOne               = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch delete untouched selector one")
+			selectorTwo               = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch delete untouched selector two")
+			sharedNodeId              = graph.ID(80001)
+			selectorOneRetainedNodeId = graph.ID(80002)
+
+			deletedSelectorOneSharedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selectorOne.ID,
+				NodeId:            sharedNodeId,
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       null.StringFrom(model.AssetGroupActorBloodHound),
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "delete-selector-one-primary-kind",
+				NodeEnvironmentId: "delete-selector-one-environment",
+				NodeObjectId:      "delete-selector-one-object-id",
+				NodeName:          "delete-selector-one-shared-node",
+			}
+			retainedSelectorOneNode = model.AssetGroupSelectorNode{
+				SelectorId:        selectorOne.ID,
+				NodeId:            selectorOneRetainedNodeId,
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceChild,
+				NodePrimaryKind:   "delete-selector-one-retained-primary-kind",
+				NodeEnvironmentId: "delete-selector-one-retained-environment",
+				NodeObjectId:      "delete-selector-one-retained-object-id",
+				NodeName:          "delete-selector-one-retained-node",
+			}
+			retainedSelectorTwoSharedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selectorTwo.ID,
+				NodeId:            sharedNodeId,
+				Certified:         model.AssetGroupCertificationRevoked,
+				CertifiedBy:       null.StringFrom("selector-two-certifier"),
+				Source:            model.AssetGroupSelectorNodeSourceParent,
+				NodePrimaryKind:   "delete-selector-two-primary-kind",
+				NodeEnvironmentId: "delete-selector-two-environment",
+				NodeObjectId:      "delete-selector-two-object-id",
+				NodeName:          "delete-selector-two-shared-node",
+			}
+		)
+
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, deletedSelectorOneSharedNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, retainedSelectorOneNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, assetGroupTagId, retainedSelectorTwoSharedNode)
+
+		require.NoError(t, suite.BHDatabase.DeleteSelectorNodes(testCtx, []model.AssetGroupSelectorNode{
+			deletedSelectorOneSharedNode,
+		}))
+
+		selectorNodesBySelectorId := requireSelectorNodesBySelectorAndNodeId(t, testCtx, suite.BHDatabase, selectorOne.ID, selectorTwo.ID)
+		require.Len(t, selectorNodesBySelectorId[selectorOne.ID], 1)
+		require.Len(t, selectorNodesBySelectorId[selectorTwo.ID], 1)
+		assert.NotContains(t, selectorNodesBySelectorId[selectorOne.ID], sharedNodeId)
+		assertUpdateSelectorNodesTestNode(t, retainedSelectorOneNode, selectorNodesBySelectorId[selectorOne.ID][selectorOneRetainedNodeId])
+		assertUpdateSelectorNodesTestNode(t, retainedSelectorTwoSharedNode, selectorNodesBySelectorId[selectorTwo.ID][sharedNodeId])
+	})
+}
+
 func createUpdateSelectorNodesTestSelector(t *testing.T, ctx context.Context, bloodhoundDatabase *database.BloodhoundDB, testActor model.User, name string) model.AssetGroupTagSelector {
 	t.Helper()
 

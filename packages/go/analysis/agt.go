@@ -675,12 +675,10 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 			}
 		}
 
-		// Delete the selected nodes that need to be deleted
+		// Delete the SelectorNodes that are no longer selected
 		if len(oldSelectedNodesByNodeId) > 0 {
-			for nodeId := range oldSelectedNodesByNodeId {
-				if err = db.DeleteSelectorNodesByNodeId(ctx, selector.ID, nodeId); err != nil {
-					errs = append(errs, err)
-				}
+			if err := db.DeleteSelectorNodes(ctx, slices.Collect(maps.Values(oldSelectedNodesByNodeId))); err != nil {
+				errs = append(errs, err)
 			}
 		}
 

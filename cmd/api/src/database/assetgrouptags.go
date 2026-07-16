@@ -66,6 +66,7 @@ type AssetGroupTagSelectorNodeData interface {
 	UpdateSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error
 	UpdateSelectorNodesByNodeId(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, primaryKind, environmentId, objectId, name string) error
 	UpdateCertificationBySelectorNode(ctx context.Context, input []UpdateCertificationBySelectorNodeInput) error
+	DeleteSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error
 	DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeId graph.ID) error
 	DeleteSelectorNodesBySelectorIds(ctx context.Context, selectorId ...int) error
 	GetSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) ([]model.AssetGroupSelectorNode, error)
@@ -991,6 +992,11 @@ type selectorNodeBatchValues struct {
 	nodeNames          []string
 }
 
+type selectorNodeKeyBatchValues struct {
+	selectorIds []int32
+	nodeIds     []int64
+}
+
 func newSelectorNodeBatchValues(nodes []model.AssetGroupSelectorNode) selectorNodeBatchValues {
 	var (
 		batchValues = selectorNodeBatchValues{
@@ -1027,6 +1033,22 @@ func newSelectorNodeBatchValues(nodes []model.AssetGroupSelectorNode) selectorNo
 	return batchValues
 }
 
+func newSelectorNodeKeyBatchValues(nodes []model.AssetGroupSelectorNode) selectorNodeKeyBatchValues {
+	var (
+		batchValues = selectorNodeKeyBatchValues{
+			selectorIds: make([]int32, 0, len(nodes)),
+			nodeIds:     make([]int64, 0, len(nodes)),
+		}
+	)
+
+	for _, node := range nodes {
+		batchValues.selectorIds = append(batchValues.selectorIds, int32(node.SelectorId))
+		batchValues.nodeIds = append(batchValues.nodeIds, node.NodeId.Int64())
+	}
+
+	return batchValues
+}
+
 func (s selectorNodeBatchValues) sqlArgs() []any {
 	return []any{
 		pgtype.FlatArray[int32](s.selectorIds),
@@ -1038,6 +1060,13 @@ func (s selectorNodeBatchValues) sqlArgs() []any {
 		pgtype.FlatArray[string](s.nodeEnvironmentIds),
 		pgtype.FlatArray[string](s.nodeObjectIds),
 		pgtype.FlatArray[string](s.nodeNames),
+	}
+}
+
+func (s selectorNodeKeyBatchValues) sqlArgs() []any {
+	return []any{
+		pgtype.FlatArray[int32](s.selectorIds),
+		pgtype.FlatArray[int64](s.nodeIds),
 	}
 }
 
@@ -1097,6 +1126,72 @@ func (s *BloodhoundDB) UpdateCertificationBySelectorNode(ctx context.Context, in
 		}
 		return err
 	})
+}
+
+func (s *BloodhoundDB) DeleteSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error {
+	const selectorNodeDeleteBatchSize = 5000
+
+	var (
+		err             error
+		transaction     pgx.Tx
+		batchUpperBound int
+	)
+
+	if len(nodes) == 0 {
+		return nil
+	}
+
+	if transaction, err = s.pool.Begin(ctx); err != nil {
+		return fmt.Errorf("beginning selector node batch delete transaction: %w", err)
+	}
+
+	defer func() {
+		_ = transaction.Rollback(ctx)
+	}()
+
+	for batchLowerBound := 0; batchLowerBound < len(nodes); batchLowerBound += selectorNodeDeleteBatchSize {
+		batchUpperBound = min(batchLowerBound+selectorNodeDeleteBatchSize, len(nodes))
+		if err = deleteSelectorNodesBatch(ctx, transaction, nodes[batchLowerBound:batchUpperBound]); err != nil {
+			return err
+		}
+	}
+
+	if err = transaction.Commit(ctx); err != nil {
+		return fmt.Errorf("committing selector node batch delete transaction: %w", err)
+	}
+
+	return nil
+}
+
+func deleteSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []model.AssetGroupSelectorNode) error {
+	var (
+		batchValues = newSelectorNodeKeyBatchValues(nodes)
+		err         error
+		sqlArgs     []any
+		sqlQuery    string
+	)
+
+	sqlQuery = fmt.Sprintf(`
+	WITH batch AS (
+		SELECT *
+		FROM unnest(
+			$1::int[],
+			$2::bigint[]
+		) AS batch(selector_id, node_id)
+	)
+	DELETE FROM %s AS selector_node
+	USING batch
+	WHERE selector_node.selector_id = batch.selector_id
+		AND selector_node.node_id = batch.node_id`,
+		model.AssetGroupSelectorNode{}.TableName(),
+	)
+	sqlArgs = batchValues.sqlArgs()
+
+	if _, err = transaction.Exec(ctx, sqlQuery, sqlArgs...); err != nil {
+		return fmt.Errorf("batch deleting selector nodes: %w", err)
+	}
+
+	return nil
 }
 
 func (s *BloodhoundDB) DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeId graph.ID) error {

@@ -1117,6 +1117,20 @@ func (mr *MockDatabaseMockRecorder) DeleteSchemaFinding(ctx, findingId any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchemaFinding", reflect.TypeOf((*MockDatabase)(nil).DeleteSchemaFinding), ctx, findingId)
 }
 
+// DeleteSelectorNodes mocks base method.
+func (m *MockDatabase) DeleteSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSelectorNodes", ctx, nodes)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSelectorNodes indicates an expected call of DeleteSelectorNodes.
+func (mr *MockDatabaseMockRecorder) DeleteSelectorNodes(ctx, nodes any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSelectorNodes", reflect.TypeOf((*MockDatabase)(nil).DeleteSelectorNodes), ctx, nodes)
+}
+
 // DeleteSelectorNodesByNodeId mocks base method.
 func (m *MockDatabase) DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeId graph.ID) error {
 	m.ctrl.T.Helper()
