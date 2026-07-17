@@ -23,6 +23,8 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -57,6 +59,78 @@ func TestConvertGenericNode(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, converted.NodeProps, 1)
 		assert.Equal(t, "ObjectId", converted.NodeProps[0].ObjectID)
+	})
+
+	t.Run("flag off: environmentid is uppercased", func(t *testing.T) {
+		var (
+			entity = ein.GenericNode{
+				ID:    "objectid",
+				Kinds: []string{"SomeKind"},
+				Properties: map[string]any{
+					graphschema.EnvironmentIDKey: "my-github-org",
+				},
+			}
+			converted = &ConvertedData{}
+		)
+
+		err := ConvertGenericNode(entity, converted, false)
+		require.NoError(t, err)
+		require.Len(t, converted.NodeProps, 1)
+		assert.Equal(t, "MY-GITHUB-ORG", converted.NodeProps[0].PropertyMap[graphschema.EnvironmentIDKey])
+	})
+
+	t.Run("flag on: environmentid preserves original case", func(t *testing.T) {
+		var (
+			entity = ein.GenericNode{
+				ID:    "objectid",
+				Kinds: []string{"SomeKind"},
+				Properties: map[string]any{
+					graphschema.EnvironmentIDKey: "my-github-org",
+				},
+			}
+			converted = &ConvertedData{}
+		)
+
+		err := ConvertGenericNode(entity, converted, true)
+		require.NoError(t, err)
+		require.Len(t, converted.NodeProps, 1)
+		assert.Equal(t, "my-github-org", converted.NodeProps[0].PropertyMap[graphschema.EnvironmentIDKey])
+	})
+
+	t.Run("flag on: domainsid is still uppercased for consistency with sharphound ingestion", func(t *testing.T) {
+		var (
+			entity = ein.GenericNode{
+				ID:    "objectid",
+				Kinds: []string{"SomeKind"},
+				Properties: map[string]any{
+					ad.DomainSID.String(): "s-1-5-21-abc",
+				},
+			}
+			converted = &ConvertedData{}
+		)
+
+		err := ConvertGenericNode(entity, converted, true)
+		require.NoError(t, err)
+		require.Len(t, converted.NodeProps, 1)
+		assert.Equal(t, "S-1-5-21-ABC", converted.NodeProps[0].PropertyMap[ad.DomainSID.String()])
+	})
+
+	t.Run("flag on: tenantid is still uppercased for consistency with azurehound ingestion", func(t *testing.T) {
+		var (
+			entity = ein.GenericNode{
+				ID:    "objectid",
+				Kinds: []string{"SomeKind"},
+				Properties: map[string]any{
+					azure.TenantID.String(): "tenant-abc",
+				},
+			}
+			converted = &ConvertedData{}
+		)
+
+		err := ConvertGenericNode(entity, converted, true)
+		require.NoError(t, err)
+		require.Len(t, converted.NodeProps, 1)
+		assert.Equal(t, "TENANT-ABC", converted.NodeProps[0].PropertyMap[azure.TenantID.String()])
 	})
 }
 
