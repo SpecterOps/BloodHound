@@ -666,27 +666,10 @@ class BHEAPIClient {
         );
     };
 
-    getOpenGraphQualityStats = (
-        platformId: string,
-        start?: Date,
-        end?: Date,
-        limit?: number,
-        sort_by?: string,
-        options?: RequestOptions
-    ) => {
+    getOpenGraphQualityStats = (platformId: string, options?: RequestOptions) => {
         return this.baseClient.get<OpenGraphDataQualityResponse>(
             `/api/v2/data-quality-stats?environment_id=${platformId}`,
-            Object.assign(
-                {
-                    params: {
-                        start: start?.toISOString(),
-                        end: end?.toISOString(),
-                        limit: limit,
-                        sort_by: sort_by,
-                    },
-                },
-                options
-            )
+            options
         );
     };
 
@@ -714,27 +697,10 @@ class BHEAPIClient {
         );
     };
 
-    getOpenGraphPlatformQualityStats = (
-        platformKindId?: number,
-        start?: Date,
-        end?: Date,
-        limit?: number,
-        sort_by?: string,
-        options?: RequestOptions
-    ) => {
+    getOpenGraphPlatformQualityStats = (platformKindId?: number, options?: RequestOptions) => {
         return this.baseClient.get(
             `/api/v2/data-quality-stats-aggregations?schema_environment_kind_id=${platformKindId}`,
-            Object.assign(
-                {
-                    params: {
-                        start: start?.toISOString(),
-                        end: end?.toISOString(),
-                        limit: limit,
-                        sort_by: sort_by,
-                    },
-                },
-                options
-            )
+            options
         );
     };
 

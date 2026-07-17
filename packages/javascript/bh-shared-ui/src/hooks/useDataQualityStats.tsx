@@ -63,15 +63,18 @@ export const useAzureDataQualityStatsQuery = (id: string) => {
 };
 
 export const useOpenGraphDataQualityStatsQuery = (id: string) => {
-    return useQuery(['open-graph-data-quality-stats', id], ({ signal }) => {
-        return apiClient
-            .getOpenGraphQualityStats(id, now.minus({ days: 30 }).toJSDate(), now.toJSDate(), undefined, undefined, {
-                signal,
-            })
-            .then((response) => {
-                if (!response.data) throw new Error('Unable to retrieve Open Graph quality stats');
-                return response.data;
-            });
+    return useQuery({
+        queryKey: ['open-graph-data-quality-stats', id],
+        queryFn: ({ signal }) => {
+            return apiClient
+                .getOpenGraphQualityStats(id, {
+                    signal,
+                })
+                .then((response) => {
+                    if (!response.data) throw new Error('Unable to retrieve Open Graph quality stats');
+                    return response.data;
+                });
+        },
     });
 };
 
@@ -98,14 +101,18 @@ export const useActiveDirectoryPlatformsDataQualityStatsQuery = () => {
 };
 
 export const useOpenGraphPlatformsDataQualityStatsQuery = (platformKindId?: number) => {
-    return useQuery({queryKey: ['open-graph-platform-data-quality-stats', platformKindId], queryFn: ({ signal }) =>
-        apiClient
-            .getOpenGraphPlatformQualityStats(platformKindId, undefined, undefined, undefined, undefined, { signal })
-            .then((response) => {
-                if (!response.data) throw new Error('Unable to retrieve Open Graph platform quality stats');
-                return response.data;
-            })}
-    );
+    return useQuery({
+        queryKey: ['open-graph-platform-data-quality-stats', platformKindId],
+        queryFn: ({ signal }) =>
+            apiClient
+                .getOpenGraphPlatformQualityStats(platformKindId, {
+                    signal,
+                })
+                .then((response) => {
+                    if (!response.data) throw new Error('Unable to retrieve Open Graph platform quality stats');
+                    return response.data;
+                }),
+    });
 };
 
 export const useAzurePlatformsDataQualityHistoryQuery = () => {
