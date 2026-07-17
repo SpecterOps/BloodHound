@@ -44,7 +44,7 @@ get:
         type: string
         format: date-time
     - name: end
-      description: Ending datetime of range (exclusive) in RFC-3339 format; Defaults
+      description: Ending datetime of range (inclusive) in RFC-3339 format; Defaults
         to current datetime
       in: query
       schema:

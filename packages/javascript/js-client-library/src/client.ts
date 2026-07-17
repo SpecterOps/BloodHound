@@ -2784,7 +2784,7 @@ class BHEAPIClient {
         });
 
     updateWebhook = (webhookId: string, payload: UpdateWebhookRequest, options?: RequestOptions) =>
-        this.baseClient.patch<GetWebhookResponse>(`api/v2/alert-webhooks/${webhookId}`, options);
+        this.baseClient.patch<GetWebhookResponse>(`api/v2/alert-webhooks/${webhookId}`, payload, options);
 
     deleteWebhook = (webhookId: string, options?: RequestOptions) =>
         this.baseClient.delete<GetWebhookResponse>(`api/v2/alert-webhooks/${webhookId}`, options);

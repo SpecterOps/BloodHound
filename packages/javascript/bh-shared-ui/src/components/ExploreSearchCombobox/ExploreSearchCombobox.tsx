@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { useCombobox } from 'downshift';
 import { useRef } from 'react';
 import { SearchResult, getEmptyResultsText, useKeywordAndTypeValues, useSearch, useTheme } from '../../hooks';
@@ -31,6 +32,7 @@ const ExploreSearchCombobox: React.FC<{
     handleNodeSelected: (selection: SearchValue) => any;
     disabled?: boolean;
     variant?: TextFieldVariants;
+    errorMessage?: string;
 }> = ({
     labelText,
     inputValue,
@@ -40,6 +42,7 @@ const ExploreSearchCombobox: React.FC<{
     autoFocus,
     disabled = false,
     variant = 'outlined',
+    errorMessage,
 }) => {
     const theme = useTheme();
     const searchNodesRef = useRef<HTMLInputElement>();
@@ -106,6 +109,11 @@ const ExploreSearchCombobox: React.FC<{
                 }}
                 data-testid='explore_search_input-search'
             />
+            {errorMessage && (
+                <Typography variant='caption' className='text-error'>
+                    {errorMessage}
+                </Typography>
+            )}
             <div
                 style={{
                     position: 'absolute',

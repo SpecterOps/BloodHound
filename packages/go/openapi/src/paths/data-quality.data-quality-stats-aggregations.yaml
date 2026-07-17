@@ -17,22 +17,36 @@
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
 get:
-  operationId: GetDataQualityStats
-  summary: Get environment-specific data quality stats
-  description: Time series list of data quality stats for a given environment
+  operationId: GetDataQualityAggregations
+  summary: Get data quality aggregations by environment kind
+  description: >
+    Returns data quality metric counts aggregated per environment kind, optionally scoped to an
+    OpenGraph schema extension, combined across environment instances for each
+    collection run. Results can be filtered, sorted, and paginated.
   tags:
     - Data Quality
     - Community
     - Enterprise
   parameters:
-    - name: environment_id
-      description: Required. Filters results to the given environment.
-      required: true
+    - name: schema_environment_kind_id
+      description: >
+        Required. Scopes the aggregation to a single environment kind id.
       in: query
-      schema: 
-        type: string
+      required: true
+      schema:
+        type: integer
+        format: int32
+    - name: schema_extension_id
+      description: >
+        Optional. Scopes the aggregation to a single OpenGraph schema extension id.
+        The extension must exist or a 404 is returned.
+      in: query
+      schema:
+        type: integer
+        format: int32
     - name: sort_by
-      description: Sortable columns are created_at, updated_at.
+      description: >
+        Sortable columns are created_at, updated_at.
       in: query
       schema:
         $ref: './../schemas/api.params.query.sort-by.yaml'
@@ -66,15 +80,15 @@ get:
                   data:
                     type: array
                     items:
-                      $ref: './../schemas/model.data-quality-stat.yaml'
-    400: 
+                      $ref: './../schemas/model.data-quality-aggregation.yaml'
+    400:
       $ref: './../responses/bad-request.yaml'
-    404:
-      $ref: './../responses/not-found.yaml'
     401:
       $ref: './../responses/unauthorized.yaml'
     403:
       $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
     429:
       $ref: './../responses/too-many-requests.yaml'
     500:
