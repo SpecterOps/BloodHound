@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { mockSourceKindsHandler } from '../../mocks';
 import { render, screen } from '../../test-utils';
 
 import { AzureNodeKind } from '../../graphSchema';
@@ -49,7 +50,8 @@ const server = setupServer(
                 data: [],
             })
         );
-    })
+    }),
+    mockSourceKindsHandler()
 );
 
 beforeAll(() => server.listen());
@@ -57,8 +59,8 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('EntityInfoPanel', async () => {
-    it('should not display a badge when role based filtering is true and show filter banner is false by default', async () => {
-        mockUseRoleBasedFiltering.mockReturnValue(true);
+    it('should not display a badge when role based filtering is false', async () => {
+        mockUseRoleBasedFiltering.mockReturnValue(false);
 
         render(
             <ObjectInfoPanelContext.Provider value={mockContextValue}>
@@ -76,15 +78,15 @@ describe('EntityInfoPanel', async () => {
 
         render(
             <ObjectInfoPanelContext.Provider value={mockContextValue}>
-                <EntityInfoPanel {...testProps} showFilteringBanner={true} />
+                <EntityInfoPanel {...testProps} />
             </ObjectInfoPanelContext.Provider>
         );
 
         expect(screen.queryByTestId('explore_entity-information-panel-role-based-filtering-badge')).toBeInTheDocument();
     });
 
-    it('should display a none selected header and a message to select an object ', async () => {
-        render(<EntityInfoPanel {...testProps} selectedNode={null} showPlaceholderMessage={true} />);
+    it('should display a none selected header and a message to select an object when there is no selected node', async () => {
+        render(<EntityInfoPanel {...testProps} showPlaceholderMessage={true} />);
 
         const entityHeaderTitle = screen.getByText(NoEntitySelectedHeader);
         const selectObjectMessage = screen.getByText(/Select an object to view the associated information/i);
