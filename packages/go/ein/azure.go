@@ -1991,8 +1991,11 @@ func ConvertAzureRoleEligibilityScheduleInstanceToRel(instance models.RoleEligib
 // If both lists are empty: an edge will be created from the tenant's PrivilegedRoleAdministratorRole to the created AZRole
 func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleManagementPolicyAssignment) (IngestibleNode, []IngestibleRelationship) {
 	var (
-		rels             = make([]IngestibleRelationship, 0)
-		combinedObjectId = fmt.Sprintf("%s@%s", policyAssignment.RoleDefinitionId, policyAssignment.TenantId)
+		rels = make([]IngestibleRelationship, 0)
+		// Uppercase the AZRole identity so the node ObjectID and the
+		// AZRoleApprover edge target match regardless of collector input
+		// casing (consistent with the uppercased RoleDefinitionId/TenantID).
+		combinedObjectId = strings.ToUpper(fmt.Sprintf("%s@%s", policyAssignment.RoleDefinitionId, policyAssignment.TenantId))
 	)
 
 	// We will want to create or update any existing AZRole node that matches the combinedObjectId

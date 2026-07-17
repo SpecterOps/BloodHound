@@ -377,7 +377,7 @@ func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 		node, rels := ein.ConvertAzureRoleManagementPolicyAssignment(model)
 
 		// Assert created node properties
-		assert.Equal(t, "role-1234@tenant-1234", node.ObjectID)
+		assert.Equal(t, "ROLE-1234@TENANT-1234", node.ObjectID)
 		assert.Equal(t, "AZRole", node.Labels[0].String())
 		require.Len(t, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()], 2)
 		assert.Equal(t, []string{"group-approver-1", "group-approver-2"}, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()])
@@ -396,7 +396,7 @@ func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 		node, rels := ein.ConvertAzureRoleManagementPolicyAssignment(model)
 
 		// Assert created node properties
-		assert.Equal(t, "role-1234@tenant-1234", node.ObjectID)
+		assert.Equal(t, "ROLE-1234@TENANT-1234", node.ObjectID)
 		assert.Equal(t, "AZRole", node.Labels[0].String())
 		require.Len(t, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()], 2)
 		assert.Equal(t, []string{"group-approver-1", "group-approver-2"}, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()])
@@ -412,25 +412,25 @@ func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 		assert.Equal(t, "user-approver-1", rels[0].Source.Value)
 		assert.Equal(t, azure.User, rels[0].Source.Kind)
 		assert.Equal(t, azure.Role, rels[0].Target.Kind)
-		assert.Equal(t, "role-1234@tenant-1234", rels[0].Target.Value)
+		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[0].Target.Value)
 		assert.Equal(t, azure.AZRoleApprover, rels[0].RelType)
 
 		assert.Equal(t, "user-approver-2", rels[1].Source.Value)
 		assert.Equal(t, azure.User, rels[1].Source.Kind)
 		assert.Equal(t, azure.Role, rels[1].Target.Kind)
-		assert.Equal(t, "role-1234@tenant-1234", rels[1].Target.Value)
+		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[1].Target.Value)
 		assert.Equal(t, azure.AZRoleApprover, rels[1].RelType)
 
 		assert.Equal(t, "group-approver-1", rels[2].Source.Value)
 		assert.Equal(t, azure.Group, rels[2].Source.Kind)
 		assert.Equal(t, azure.Role, rels[2].Target.Kind)
-		assert.Equal(t, "role-1234@tenant-1234", rels[2].Target.Value)
+		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[2].Target.Value)
 		assert.Equal(t, azure.AZRoleApprover, rels[2].RelType)
 
 		assert.Equal(t, "group-approver-2", rels[3].Source.Value)
 		assert.Equal(t, azure.Group, rels[3].Source.Kind)
 		assert.Equal(t, azure.Role, rels[3].Target.Kind)
-		assert.Equal(t, "role-1234@tenant-1234", rels[3].Target.Value)
+		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[3].Target.Value)
 		assert.Equal(t, azure.AZRoleApprover, rels[3].RelType)
 	})
 
@@ -446,7 +446,7 @@ func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 		assert.Equal(t, expectedSource, rels[0].Source.Value)
 		assert.Equal(t, strings.ToUpper(rels[0].Source.Value), rels[0].Source.Value, "AZRole edge source must be uppercased")
 		assert.Equal(t, azure.Role, rels[0].Source.Kind)
-		assert.Equal(t, "role-1234@tenant-1234", rels[0].Target.Value)
+		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[0].Target.Value)
 		assert.Equal(t, azure.Role, rels[0].Target.Kind)
 		assert.Equal(t, azure.AZRoleApprover, rels[0].RelType)
 	})
