@@ -77,6 +77,10 @@ func (s *Resources) CreateCustomNodeKind(response http.ResponseWriter, request *
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if err := validateCreateCustomNodeRequest(customNodeKindRequest); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseCodeBadRequest, err), request), response)
+	} else if allKinds, err := s.DB.GetCustomNodeKinds(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if isCnkAssociatedWithSchema(allKinds, customNodeKindRequest.CustomTypes) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, fmt.Sprintf("%s: kind name is owned by a schema extension", api.ErrorResponseConflict), request), response)
 	} else if kinds, err := s.DB.CreateCustomNodeKinds(request.Context(), convertCreateCustomNodeRequest(customNodeKindRequest)); errors.Is(err, database.ErrDuplicateCustomNodeKindName) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, fmt.Sprintf("%s: duplicate kind name", api.ErrorResponseConflict), request), response)
 	} else if err != nil {
@@ -86,6 +90,17 @@ func (s *Resources) CreateCustomNodeKind(response http.ResponseWriter, request *
 	} else {
 		api.WriteBasicResponse(request.Context(), kinds, http.StatusCreated, response)
 	}
+}
+
+// isCnkAssociatedWithSchema reports whether any key in customTypes matches a kind that is owned by a schema extension.
+func isCnkAssociatedWithSchema(allKinds []model.CustomNodeKind, customTypes map[string]model.CustomNodeKindConfig) bool {
+	for _, kind := range allKinds {
+		if _, requested := customTypes[kind.KindName]; requested && kind.SchemaNodeKindId != nil {
+			return true
+		}
+	}
+
+	return false
 }
 
 func convertCreateCustomNodeRequest(request CreateCustomNodeRequest) []model.CustomNodeKind {
@@ -123,6 +138,10 @@ func (s *Resources) UpdateCustomNodeKind(response http.ResponseWriter, request *
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if err := customNodeKindRequest.Config.Validate(); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseCodeBadRequest, err), request), response)
+	} else if existing, err := s.DB.GetCustomNodeKind(request.Context(), paramId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if existing.SchemaNodeKindId != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, fmt.Sprintf("%s: kind name is owned by a schema extension", api.ErrorResponseConflict), request), response)
 	} else if kind, err := s.DB.UpdateCustomNodeKind(request.Context(), model.CustomNodeKind{KindName: paramId, Config: assignColorDefault(customNodeKindRequest.Config)}); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
