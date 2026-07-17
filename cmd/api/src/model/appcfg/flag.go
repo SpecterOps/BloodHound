@@ -129,6 +129,11 @@ func GetOpenHoundEnabled(ctx context.Context, service GetFlagByKeyer) bool {
 	return GetFlagEnabled(ctx, service, FeatureOpenHoundSupport)
 }
 
+// GetUseRawObjectIDsEnabled returns true if the use raw object id feature flag is enabled.
+func GetUseRawObjectIDsEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+	return GetFlagEnabled(ctx, service, FeatureUseRawObjectID)
+}
+
 func GetVariableAnalysisModeEnabled(ctx context.Context, service GetFlagByKeyer) bool {
 	if variableAnalysisModeFlag, err := service.GetFlagByKey(ctx, FeatureVariableAnalysisMode); err != nil {
 		return false

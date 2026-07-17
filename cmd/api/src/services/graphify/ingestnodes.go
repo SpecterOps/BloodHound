@@ -51,7 +51,7 @@ func IngestNodes(ingestCtx *IngestContext, baseKind graph.Kind, nodes []ein.Inge
 func IngestNode(ic *IngestContext, baseKind graph.Kind, nextNode ein.IngestibleNode) error {
 	var (
 		nodeKinds            = MergeNodeKinds(baseKind, nextNode.Labels...)
-		normalizedProperties = normalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, ic.IngestTime)
+		normalizedProperties = normalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, ic.IngestTime, ic.UseRawObjectIDs)
 		nodeUpdate           = graph.NodeUpdate{
 			Node:         graph.PrepareNode(graph.AsProperties(normalizedProperties), nodeKinds...),
 			IdentityKind: baseKind,
@@ -136,18 +136,24 @@ func maybeSubmitNodeUpdate(ingestCtx *IngestContext, update graph.NodeUpdate) er
 	return nil
 }
 
-func normalizeEinNodeProperties(properties map[string]any, objectID string, ingestTime time.Time) map[string]any {
+func normalizeEinNodeProperties(properties map[string]any, objectID string, ingestTime time.Time, useRawObjectIDs bool) map[string]any {
 	if properties == nil {
 		properties = make(map[string]any)
 	}
 	delete(properties, ReconcileProperty)
 	properties[common.LastSeen.String()] = ingestTime
-	properties[common.ObjectID.String()] = strings.ToUpper(objectID)
+	if useRawObjectIDs {
+		properties[common.ObjectID.String()] = objectID
+	} else {
+		properties[common.ObjectID.String()] = strings.ToUpper(objectID)
+	}
 
 	// Ensure that name, operatingsystem, and distinguishedname properties are upper case
 	if rawName, hasName := properties[common.Name.String()]; hasName && rawName != nil {
 		if name, typeMatches := rawName.(string); typeMatches {
-			properties[common.Name.String()] = strings.ToUpper(name)
+			if !useRawObjectIDs {
+				properties[common.Name.String()] = strings.ToUpper(name)
+			}
 		} else {
 			slog.Warn(
 				"Bad type found for node name property during ingest",
