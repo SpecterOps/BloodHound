@@ -113,7 +113,7 @@ func Test_ConvertAppFederatedIdentityCredential(t *testing.T) {
 			assert.Equal(t, azure.Entity, node.Labels[1])
 
 			assert.Equal(t, testCase.testData.Description, node.PropertyMap[common.Description.String()])
-			assert.Equal(t, strings.ToUpper(fmt.Sprintf("%s@%s", testCase.testData.Name, testCase.tenantName)), node.PropertyMap[common.Name.String()])
+			assert.Equal(t, fmt.Sprintf("%s@%s", testCase.testData.Name, testCase.tenantName), node.PropertyMap[common.Name.String()])
 			assert.Equal(t, testCase.testData.Issuer, node.PropertyMap[azure.Issuer.String()])
 			assert.Equal(t, testCase.testData.Audiences, node.PropertyMap[azure.Audiences.String()])
 			assert.Equal(t, testCase.testData.Subject, node.PropertyMap[azure.Subject.String()])

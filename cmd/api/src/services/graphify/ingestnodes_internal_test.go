@@ -73,8 +73,9 @@ func TestNormalizeEinNodeProperties(t *testing.T) {
 		assert.Nil(t, normalizedProperties[ReconcileProperty])
 		assert.NotNil(t, normalizedProperties[common.LastSeen.String()])
 		assert.Equal(t, "ObjectId", normalizedProperties[common.ObjectID.String()])
-		// non-objectid properties are unaffected by the flag and remain uppercased
-		assert.Equal(t, "NAME", normalizedProperties[common.Name.String()])
+		// name is also gated by the flag and preserves original case
+		assert.Equal(t, "name", normalizedProperties[common.Name.String()])
+		// operatingsystem and distinguishedname properties are unaffected by the flag and remain uppercased
 		assert.Equal(t, "DISTINGUISHED-NAME", normalizedProperties[ad.DistinguishedName.String()])
 		assert.Equal(t, "TEMPLE", normalizedProperties[common.OperatingSystem.String()])
 	})

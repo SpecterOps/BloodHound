@@ -151,7 +151,9 @@ func normalizeEinNodeProperties(properties map[string]any, objectID string, inge
 	// Ensure that name, operatingsystem, and distinguishedname properties are upper case
 	if rawName, hasName := properties[common.Name.String()]; hasName && rawName != nil {
 		if name, typeMatches := rawName.(string); typeMatches {
-			properties[common.Name.String()] = strings.ToUpper(name)
+			if !useRawObjectIDs {
+				properties[common.Name.String()] = strings.ToUpper(name)
+			}
 		} else {
 			slog.Warn(
 				"Bad type found for node name property during ingest",

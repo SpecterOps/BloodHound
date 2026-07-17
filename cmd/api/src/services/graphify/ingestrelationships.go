@@ -41,7 +41,7 @@ import (
 func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relationships []ein.IngestibleRelationship) error {
 	var (
 		errs                                 = errorlist.NewBuilder()
-		resolvedRelationships, resolveErrors = endpoint.ResolveAll(ingestCtx.Ctx, ingestCtx.EndpointResolver, relationships)
+		resolvedRelationships, resolveErrors = endpoint.ResolveAll(ingestCtx.Ctx, ingestCtx.EndpointResolver, relationships, ingestCtx.UseRawObjectIDs)
 	)
 
 	if resolveErrors != nil {
