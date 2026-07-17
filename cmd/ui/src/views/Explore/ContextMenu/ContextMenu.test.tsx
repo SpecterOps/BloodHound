@@ -16,7 +16,13 @@
 
 import userEvent from '@testing-library/user-event';
 import * as bhSharedUi from 'bh-shared-ui';
-import { DeepPartial, Permission, createAuthStateWithPermissions, mockGetConfigurationHandler } from 'bh-shared-ui';
+import {
+    DeepPartial,
+    Permission,
+    createAuthStateWithPermissions,
+    mockGetConfigurationHandler,
+    mockSourceKindsHandler,
+} from 'bh-shared-ui';
 import { NodeDetails } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
@@ -68,7 +74,8 @@ const server = setupServer(
             })
         );
     }),
-    mockGetConfigurationHandler()
+    mockGetConfigurationHandler(),
+    mockSourceKindsHandler()
 );
 
 beforeAll(() => server.listen());
