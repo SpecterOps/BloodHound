@@ -434,7 +434,7 @@ func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 		assert.Equal(t, azure.AZRoleApprover, rels[3].RelType)
 	})
 
-	t.Run("No approvers creates AZRoleApprover edge from uppercased PrivilegedRoleAdministratorRole", func(t *testing.T) {
+	t.Run("No approvers creates AZRoleApprover edge from raw-case PrivilegedRoleAdministratorRole", func(t *testing.T) {
 		model.EndUserAssignmentRequiresApproval = true
 		model.EndUserAssignmentUserApprovers = nil
 		model.EndUserAssignmentGroupApprovers = nil
@@ -442,9 +442,8 @@ func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 		_, rels := ein.ConvertAzureRoleManagementPolicyAssignment(model)
 
 		require.Len(t, rels, 1)
-		expectedSource := strings.ToUpper(fmt.Sprintf("%s@%s", azure.PrivilegedRoleAdministratorRole, "tenant-1234"))
-		assert.Equal(t, expectedSource, rels[0].Source.Value)
-		assert.Equal(t, strings.ToUpper(rels[0].Source.Value), rels[0].Source.Value, "AZRole edge source must be uppercased")
+		expectedSource := fmt.Sprintf("%s@%s", azure.PrivilegedRoleAdministratorRole, "tenant-1234")
+		assert.Equal(t, expectedSource, rels[0].Source.Value, "AZRole edge source casing is left to graphify ingestion, not baked in here")
 		assert.Equal(t, azure.Role, rels[0].Source.Kind)
 		assert.Equal(t, "role-1234@tenant-1234", rels[0].Target.Value)
 		assert.Equal(t, azure.Role, rels[0].Target.Kind)
