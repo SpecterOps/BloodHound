@@ -107,8 +107,11 @@ func maybeSubmitRelationshipUpdate(ingestCtx *IngestContext, update graph.Relati
 
 func ingestDNRelationship(batch *IngestContext, nextRel ein.IngestibleRelationship) error {
 	nextRel.RelProps[common.LastSeen.String()] = batch.IngestTime
+	// The source is a distinguished name, which is always normalized to
+	// upper case for resolution regardless of use_raw_object_id.
+	nextRel.Source.Value = strings.ToUpper(nextRel.Source.Value)
+	// The target is an object id; only normalize it when not preserving raw casing.
 	if !batch.UseRawObjectIDs {
-		nextRel.Source.Value = strings.ToUpper(nextRel.Source.Value)
 		nextRel.Target.Value = strings.ToUpper(nextRel.Target.Value)
 	}
 

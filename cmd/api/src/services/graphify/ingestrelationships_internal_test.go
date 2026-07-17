@@ -219,7 +219,7 @@ func TestIngestDNRelationship(t *testing.T) {
 		assert.Equal(t, "ABCD1234", endEndpoint.Value)
 	})
 
-	t.Run("flag on: source/target values preserve original case", func(t *testing.T) {
+	t.Run("flag on: source dn is uppercased, target objectid preserves original case", func(t *testing.T) {
 		var (
 			ctrl             = gomock.NewController(t)
 			mockBatchUpdater = mocks.NewMockBatchUpdater(ctrl)
@@ -245,7 +245,7 @@ func TestIngestDNRelationship(t *testing.T) {
 
 		startEndpoint, ok := captured.Start.Properties.Map[ad.DistinguishedName.String()].(ein.IngestibleEndpoint)
 		require.True(t, ok)
-		assert.Equal(t, "cn=Foo,dc=Bar,dc=Com", startEndpoint.Value)
+		assert.Equal(t, "CN=FOO,DC=BAR,DC=COM", startEndpoint.Value)
 
 		endEndpoint, ok := captured.End.Properties.Map[common.ObjectID.String()].(ein.IngestibleEndpoint)
 		require.True(t, ok)
