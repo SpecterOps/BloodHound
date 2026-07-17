@@ -131,8 +131,15 @@ func (s *BloodhoundDB) nodeKindReconcileConfig(extensionId int32) reconcileConfi
 		getInputKey:    func(input model.NodeInput) string { return input.Name },
 		getExistingKey: func(existing model.GraphSchemaNodeKind) string { return existing.Name },
 		create: func(ctx context.Context, input model.NodeInput) (model.GraphSchemaNodeKind, error) {
-			return s.CreateGraphSchemaNodeKind(ctx, input.Name, extensionId,
-				input.DisplayName, input.Description, input.IsDisplayKind, input.Icon, input.IconColor)
+			// Create the node kind first
+			if createdKind, err := s.CreateGraphSchemaNodeKind(ctx, input.Name, extensionId,
+				input.DisplayName, input.Description, input.IsDisplayKind, input.Icon, input.IconColor); err != nil {
+				return model.GraphSchemaNodeKind{}, err
+			} else if _, err := reconcile(ctx, input.Info, []model.GraphSchemaKindInfo{}, s.kindInfoReconcileConfig(createdKind.KindId, &createdKind.ID, nil)); err != nil {
+				return model.GraphSchemaNodeKind{}, fmt.Errorf("failed to create node kind info: %w", err)
+			} else {
+				return createdKind, nil
+			}
 		},
 		update: func(ctx context.Context, existing model.GraphSchemaNodeKind, input model.NodeInput) (model.GraphSchemaNodeKind, error) {
 			existing.DisplayName = input.DisplayName
@@ -140,9 +147,35 @@ func (s *BloodhoundDB) nodeKindReconcileConfig(extensionId int32) reconcileConfi
 			existing.IsDisplayKind = input.IsDisplayKind
 			existing.Icon = input.Icon
 			existing.IconColor = input.IconColor
-			return s.UpdateGraphSchemaNodeKind(ctx, existing)
+
+			// Update the node kind first
+			if updatedKind, err := s.UpdateGraphSchemaNodeKind(ctx, existing); err != nil {
+				return model.GraphSchemaNodeKind{}, err
+			} else {
+				// Now reconcile info entries for this node kind
+				if existingInfos, err := s.GetKindInfos(ctx, updatedKind.KindId); err != nil {
+					return model.GraphSchemaNodeKind{}, fmt.Errorf("failed to fetch existing node kind info: %w", err)
+				} else if _, err := reconcile(ctx, input.Info, existingInfos, s.kindInfoReconcileConfig(updatedKind.KindId, &updatedKind.ID, nil)); err != nil {
+					return model.GraphSchemaNodeKind{}, fmt.Errorf("failed to reconcile node kind info: %w", err)
+				}
+
+				return updatedKind, nil
+			}
 		},
 		delete: func(ctx context.Context, existing model.GraphSchemaNodeKind) error {
+			if !existing.IsDisplayKind {
+				// Before deleting the schema_node_kind, create a stub in custom_node_kinds for non-display node kinds. Non-display kinds are
+				// not tracked in custom_node_kinds while the schema is active. It is possible that a schemaless node kind of the same name
+				// existed before this extension upserted it to a non-display node kind, which removes it from the custom node table.
+				// Because of this edge case, inserting a stub here for the non-display node kind ensures that node kind will
+				// remain tracked even after the schema_node_kind is gone, in the event any nodes of those kinds remain in the graph.
+				// Ignore ErrDuplicateCustomNodeKindName. This indicates the kind is already tracked, nothing to do.
+				if _, err := s.CreateCustomNodeKinds(ctx, model.CustomNodeKinds{{KindName: existing.Name, Config: CustomNodeKindStubConfig}}); err != nil && !errors.Is(err, ErrDuplicateCustomNodeKindName) {
+					return fmt.Errorf("failed to ensure stub for non-display schema node kind %q: %w", existing.Name, err)
+				}
+			}
+			// Deleting from schema_node_kinds automatically nulls the schema_node_kind_id FK
+			// in custom_node_kinds via ON DELETE SET NULL.
 			return s.DeleteGraphSchemaNodeKind(ctx, existing.ID)
 		},
 	}
@@ -155,13 +188,33 @@ func (s *BloodhoundDB) relationshipKindReconcileConfig(extensionId int32) reconc
 		getInputKey:    func(input model.RelationshipInput) string { return input.Name },
 		getExistingKey: func(existing model.GraphSchemaRelationshipKind) string { return existing.Name },
 		create: func(ctx context.Context, input model.RelationshipInput) (model.GraphSchemaRelationshipKind, error) {
-			return s.CreateGraphSchemaRelationshipKind(ctx, input.Name, extensionId,
-				input.Description, input.IsTraversable)
+			// Create the relationship kind first
+			if createdKind, err := s.CreateGraphSchemaRelationshipKind(ctx, input.Name, extensionId,
+				input.Description, input.IsTraversable); err != nil {
+				return model.GraphSchemaRelationshipKind{}, err
+			} else if _, err := reconcile(ctx, input.Info, []model.GraphSchemaKindInfo{}, s.kindInfoReconcileConfig(createdKind.KindId, nil, &createdKind.ID)); err != nil {
+				return model.GraphSchemaRelationshipKind{}, fmt.Errorf("failed to create relationship kind info: %w", err)
+			} else {
+				return createdKind, nil
+			}
 		},
 		update: func(ctx context.Context, existing model.GraphSchemaRelationshipKind, input model.RelationshipInput) (model.GraphSchemaRelationshipKind, error) {
 			existing.Description = input.Description
 			existing.IsTraversable = input.IsTraversable
-			return s.UpdateGraphSchemaRelationshipKind(ctx, existing)
+
+			// Update the relationship kind first
+			if updatedKind, err := s.UpdateGraphSchemaRelationshipKind(ctx, existing); err != nil {
+				return model.GraphSchemaRelationshipKind{}, err
+			} else {
+				// Now reconcile info entries for this relationship kind
+				if existingInfos, err := s.GetKindInfos(ctx, updatedKind.KindId); err != nil {
+					return model.GraphSchemaRelationshipKind{}, fmt.Errorf("failed to fetch existing relationship kind info: %w", err)
+				} else if _, err := reconcile(ctx, input.Info, existingInfos, s.kindInfoReconcileConfig(updatedKind.KindId, nil, &updatedKind.ID)); err != nil {
+					return model.GraphSchemaRelationshipKind{}, fmt.Errorf("failed to reconcile relationship kind info: %w", err)
+				}
+
+				return updatedKind, nil
+			}
 		},
 		delete: func(ctx context.Context, existing model.GraphSchemaRelationshipKind) error {
 			return s.DeleteGraphSchemaRelationshipKind(ctx, existing.ID)
@@ -205,10 +258,35 @@ func (s *BloodhoundDB) findingReconcileConfig(extensionId int32) reconcileConfig
 	}
 }
 
+// kindInfoReconcileConfig returns the reconcileConfig for kind info entries, keyed by InfoKey.
+// This is used for both node kinds and relationship kinds.
+func (s *BloodhoundDB) kindInfoReconcileConfig(kindID int32, nodeKindID, relationshipKindID *int32) reconcileConfig[model.KindInfoInput, model.GraphSchemaKindInfo, string] {
+	return reconcileConfig[model.KindInfoInput, model.GraphSchemaKindInfo, string]{
+		getInputKey:    func(input model.KindInfoInput) string { return input.InfoKey },
+		getExistingKey: func(existing model.GraphSchemaKindInfo) string { return existing.InfoKey },
+		create: func(ctx context.Context, input model.KindInfoInput) (model.GraphSchemaKindInfo, error) {
+			return s.CreateKindInfo(ctx, kindID, nodeKindID, relationshipKindID, input)
+		},
+		update: func(ctx context.Context, existing model.GraphSchemaKindInfo, input model.KindInfoInput) (model.GraphSchemaKindInfo, error) {
+			existing.Title = input.Title
+			existing.Position = input.Position
+			existing.Content = input.Content
+			return s.UpdateKindInfo(ctx, existing)
+		},
+		delete: func(ctx context.Context, existing model.GraphSchemaKindInfo) error {
+			return s.DeleteKindInfo(ctx, existing.ID)
+		},
+	}
+}
+
 // upsertCustomIcons upserts custom icon definitions for the provided node kinds.
 func (s *BloodhoundDB) upsertCustomIcons(ctx context.Context, nodeKinds model.GraphSchemaNodeKinds) error {
-	var customNodeKindsToCreate model.CustomNodeKinds
-	var customNodeKindsToUpdate model.CustomNodeKinds
+	var (
+		customNodeKindsToCreate     model.CustomNodeKinds
+		customNodeKindsToUpdate     model.CustomNodeKinds
+		customNodeKindNamesToDelete []string
+	)
+
 	if existingIconsMap, err := getExistingIconsMap(ctx, s); err != nil {
 		return err
 	} else {
@@ -221,6 +299,10 @@ func (s *BloodhoundDB) upsertCustomIcons(ctx context.Context, nodeKinds model.Gr
 					customNodeKindDefinition := parseIconDefinitionFromNodeKind(nodeKind, nil)
 					customNodeKindsToCreate = append(customNodeKindsToCreate, customNodeKindDefinition)
 				}
+			} else if _, ok := existingIconsMap[nodeKind.Name]; ok {
+				// The kind is no longer a display kind, so drop it from custom_node_kinds to keep
+				// custom_node_kinds the source of truth for display node kinds
+				customNodeKindNamesToDelete = append(customNodeKindNamesToDelete, nodeKind.Name)
 			}
 
 		}
@@ -237,6 +319,14 @@ func (s *BloodhoundDB) upsertCustomIcons(ctx context.Context, nodeKinds model.Gr
 				}
 			}
 		}
+
+		if len(customNodeKindNamesToDelete) > 0 {
+			for _, kindName := range customNodeKindNamesToDelete {
+				if err := s.DeleteCustomNodeKind(ctx, kindName); err != nil {
+					return err
+				}
+			}
+		}
 	}
 	return nil
 }
@@ -244,7 +334,7 @@ func (s *BloodhoundDB) upsertCustomIcons(ctx context.Context, nodeKinds model.Gr
 // getExistingIconsMap creates a map of existing icons for quick lookups.
 func getExistingIconsMap(ctx context.Context, db *BloodhoundDB) (map[string]model.CustomNodeKind, error) {
 	existingIconMap := make(map[string]model.CustomNodeKind)
-	if existingIcons, err := db.GetCustomNodeKinds(ctx, nil); err != nil {
+	if existingIcons, err := db.GetCustomNodeKinds(ctx); err != nil {
 		return existingIconMap, fmt.Errorf("failed to get custom node kinds from database: %w", err)
 	} else {
 		for _, icon := range existingIcons {

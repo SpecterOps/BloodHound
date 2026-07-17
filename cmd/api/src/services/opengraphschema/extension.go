@@ -18,6 +18,7 @@ package opengraphschema
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -35,7 +36,14 @@ func (s *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, o
 	if err = openGraphExtension.Validate(); err != nil {
 		return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
 	} else if schemaExists, err = s.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, openGraphExtension); err != nil {
+		// Translate database-level errors to validation errors for consistent API responses
 		if model.ErrIsGraphSchemaDuplicateError(err) {
+			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
+		}
+		// Translate kind info database errors to validation errors
+		if errors.Is(err, model.ErrKindInfoKindNotFound) ||
+			errors.Is(err, model.ErrKindInfoDuplicatePosition) ||
+			errors.Is(err, model.ErrKindInfoDuplicateInfoKey) {
 			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
 		}
 		return schemaExists, fmt.Errorf("graph schema upsert error: %w", err)

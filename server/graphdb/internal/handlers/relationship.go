@@ -42,17 +42,27 @@ type RelationshipKindView struct {
 // decoupled from services.Relationship so the wire format can evolve independently of
 // the domain model.
 type RelationshipView struct {
-	RelationshipID int64                `json:"relationship_id"`
-	SourceNodeID   int64                `json:"source_node_id"`
-	TargetNodeID   int64                `json:"target_node_id"`
-	Kind           RelationshipKindView `json:"kind"`
-	Properties     map[string]any       `json:"properties"`
+	RelationshipID int64                      `json:"relationship_id"`
+	SourceNodeID   int64                      `json:"source_node_id"`
+	TargetNodeID   int64                      `json:"target_node_id"`
+	Kind           RelationshipKindView       `json:"kind"`
+	Properties     map[string]any             `json:"properties"`
+	Info           []RelationshipKindInfoView `json:"info,omitempty"`
+}
+
+// RelationshipKindInfoView is the JSON shape for each kind-info object associated with a relationship.
+type RelationshipKindInfoView struct {
+	Name               string       `json:"name"`
+	Title              string       `json:"title"`
+	Position           int32        `json:"position"`
+	RelationshipKindID int          `json:"relationship_kind_id"`
+	Markdown           MarkdownView `json:"markdown"`
 }
 
 // BuildRelationshipView projects a services.Relationship into the view type the handlers
 // return in their JSON envelope.
-func BuildRelationshipView(relationship services.Relationship) RelationshipView {
-	return RelationshipView{
+func BuildRelationshipView(relationship services.Relationship, includeKindInfo bool) RelationshipView {
+	relView := RelationshipView{
 		RelationshipID: relationship.ID,
 		SourceNodeID:   relationship.SourceNodeID,
 		TargetNodeID:   relationship.TargetNodeID,
@@ -62,6 +72,20 @@ func BuildRelationshipView(relationship services.Relationship) RelationshipView 
 		},
 		Properties: relationship.Properties,
 	}
+
+	if includeKindInfo {
+		for _, kindInfo := range relationship.KindInfos {
+			relView.Info = append(relView.Info, RelationshipKindInfoView{
+				Name:               kindInfo.InfoKey,
+				Title:              kindInfo.Title,
+				Position:           kindInfo.Position,
+				RelationshipKindID: int(*relationship.Kind.ID),
+				Markdown:           buildMarkdownView(kindInfo.Content),
+			})
+		}
+	}
+
+	return relView
 }
 
 // JSONView marshals the view to the byte slice expected by responses.WriteBasic,
@@ -76,8 +100,11 @@ func (s RelationshipView) JSONView() ([]byte, error) {
 // Kinds that are not registered in schema_relationship_kinds are returned with ID=nil.
 func (s Handlers) GetRelationshipByID(response http.ResponseWriter, request *http.Request) {
 	var (
-		ctx               = request.Context()
-		rawRelationshipID = mux.Vars(request)[URIPathVariableRelationshipID]
+		err                error
+		ctx                = request.Context()
+		rawRelationshipID  = mux.Vars(request)[URIPathVariableRelationshipID]
+		includeKindInfoRaw = request.URL.Query().Get("include-info")
+		includeKindInfo    = false
 	)
 
 	relationshipID, err := strconv.ParseInt(rawRelationshipID, 10, 64)
@@ -86,7 +113,15 @@ func (s Handlers) GetRelationshipByID(response http.ResponseWriter, request *htt
 		return
 	}
 
-	relationship, err := s.graphDB.GetRelationship(ctx, relationshipID)
+	if includeKindInfoRaw != "" {
+		includeKindInfo, err = strconv.ParseBool(includeKindInfoRaw)
+		if err != nil {
+			responses.WriteError(ctx, http.StatusBadRequest, "include-info is malformed", response)
+			return
+		}
+	}
+
+	relationship, err := s.graphDB.GetRelationship(ctx, relationshipID, includeKindInfo)
 	if errors.Is(err, services.ErrRelationshipNotFound) {
 		responses.WriteError(ctx, http.StatusNotFound, "relationship not found", response)
 		return
@@ -96,5 +131,5 @@ func (s Handlers) GetRelationshipByID(response http.ResponseWriter, request *htt
 		return
 	}
 
-	responses.WriteBasic(ctx, BuildRelationshipView(relationship), http.StatusOK, response)
+	responses.WriteBasic(ctx, BuildRelationshipView(relationship, includeKindInfo), http.StatusOK, response)
 }

@@ -39,6 +39,7 @@ import {
     RelationshipKindResponse,
     Role,
     ScheduledJobDisplay,
+    SourceKind,
     TimestampFields,
     Webhook,
     WebhookSecret,
@@ -414,13 +415,15 @@ export type UnifiedFinding = {
 
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
 
+export type SourceKindsResponse = BasicResponse<{ kinds: SourceKind[] }>;
+
 export type CreateWebhookResponse = {
     webhook: Webhook;
     hmac_secret: string;
 };
 
 export type GetWebhooksResponse = PaginatedResponse<Webhook[]>;
-export type GetWebhookResponse = BasicResponse<Webhook>;
+export type GetWebhookResponse = BasicResponse<{ webhook: Webhook }>;
 export type RotateWebhookSecretResponse = BasicResponse<WebhookSecret>;
 export type WebhookTestResponse = BasicResponse<WebhookTest>;
 

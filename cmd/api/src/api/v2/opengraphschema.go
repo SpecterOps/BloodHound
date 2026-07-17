@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package v2
 
 import (
@@ -48,64 +49,6 @@ type OpenGraphSchemaService interface {
 	GetSchemaFindings(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) ([]model.SchemaFinding, int, error)
 }
 
-type GraphExtensionPayload struct {
-	GraphSchemaExtension GraphSchemaExtensionPayload `json:"schema"`
-	// GraphSchemaProperties        []GraphSchemaPropertiesPayload        `json:"properties"`
-	GraphSchemaRelationshipKinds []GraphSchemaRelationshipKindsPayload `json:"relationship_kinds"`
-	GraphSchemaNodeKinds         []GraphSchemaNodeKindsPayload         `json:"node_kinds"`
-	GraphEnvironments            []EnvironmentPayload                  `json:"environments"`
-	GraphRelationshipFindings    []RelationshipFindingsPayload         `json:"relationship_findings"`
-}
-
-type GraphSchemaExtensionPayload struct {
-	Name        string `json:"name"`
-	DisplayName string `json:"display_name"`
-	Version     string `json:"version"`
-	Namespace   string `json:"namespace"`
-}
-
-type GraphSchemaRelationshipKindsPayload struct {
-	Name          string `json:"name"`
-	Description   string `json:"description"`
-	IsTraversable bool   `json:"is_traversable"` // indicates whether the edge-kind is a traversable path
-}
-
-type GraphSchemaNodeKindsPayload struct {
-	Name          string `json:"name"`
-	DisplayName   string `json:"display_name"`    // can be different from name but usually isn't other than Base/Entity
-	Description   string `json:"description"`     // human-readable description of the node kind
-	IsDisplayKind bool   `json:"is_display_kind"` // indicates if this kind should supersede others and be displayed
-	Icon          string `json:"icon"`            // font-awesome icon for the registered node kind
-	IconColor     string `json:"color"`           // icon hex color
-}
-type GraphSchemaPropertiesPayload struct {
-	Name        string `json:"name"`
-	DisplayName string `json:"display_name"`
-	DataType    string `json:"data_type"`
-	Description string `json:"description"`
-}
-
-type EnvironmentPayload struct {
-	EnvironmentKind string   `json:"environment_kind"`
-	SourceKind      string   `json:"source_kind"`
-	PrincipalKinds  []string `json:"principal_kinds"`
-}
-
-type RelationshipFindingsPayload struct {
-	Name             string             `json:"name"`
-	DisplayName      string             `json:"display_name"`
-	RelationshipKind string             `json:"relationship_kind"`
-	EnvironmentKind  string             `json:"environment_kind"`
-	Remediation      RemediationPayload `json:"remediation"`
-}
-
-type RemediationPayload struct {
-	ShortDescription string `json:"short_description"`
-	LongDescription  string `json:"long_description"`
-	ShortRemediation string `json:"short_remediation"`
-	LongRemediation  string `json:"long_remediation"`
-}
-
 // OpenGraphSchemaIngest - handles incoming graph extension upsert requests
 func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *http.Request) {
 	var (
@@ -114,8 +57,8 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 
 		updated bool
 
-		extractExtensionData  func(file io.Reader) (GraphExtensionPayload, error)
-		graphExtensionPayload GraphExtensionPayload
+		extractExtensionData  func(file io.Reader) (model.GraphExtensionPayload, error)
+		graphExtensionPayload model.GraphExtensionPayload
 	)
 
 	if request.Body == nil {
@@ -139,11 +82,15 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 		return
 	}
 
+	var graphExtensionInput model.GraphExtensionInput
+
 	if graphExtensionPayload, err = extractExtensionData(request.Body); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
-	} else if updated, err = s.OpenGraphSchemaService.UpsertOpenGraphExtension(ctx,
-		convertGraphExtensionPayloadToGraphExtension(graphExtensionPayload)); err != nil {
+	} else if graphExtensionInput, err = graphExtensionPayload.ToGraphExtensionInput(); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		return
+	} else if updated, err = s.OpenGraphSchemaService.UpsertOpenGraphExtension(ctx, graphExtensionInput); err != nil {
 		switch {
 		case strings.Contains(err.Error(), model.ErrGraphExtensionValidation.Error()) ||
 			strings.Contains(err.Error(), model.ErrGraphExtensionBuiltIn.Error()):
@@ -165,10 +112,10 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 	}
 }
 
-// extractExtensionDataFromJSON - extracts a GraphExtensionPayload from the incoming payload. Will return an error
+// extractExtensionDataFromJSON - extracts a model.GraphExtensionPayload from the incoming payload. Will return an error
 // if the decoder fails to decode the payload.
-func extractExtensionDataFromJSON(payload io.Reader) (GraphExtensionPayload, error) {
-	var graphExtension GraphExtensionPayload
+func extractExtensionDataFromJSON(payload io.Reader) (model.GraphExtensionPayload, error) {
+	var graphExtension model.GraphExtensionPayload
 
 	if normFile, err := bomenc.NormalizeToUTF8(payload); err != nil {
 		return graphExtension, fmt.Errorf("failed to normalize json payload: %w", err)
@@ -177,79 +124,6 @@ func extractExtensionDataFromJSON(payload io.Reader) (GraphExtensionPayload, err
 	}
 
 	return graphExtension, nil
-}
-
-// convertGraphExtensionPayloadToGraphExtension - converts the GraphExtensionInput view layer model to the service layer model.
-func convertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload) model.GraphExtensionInput {
-	var (
-		graphExtension = model.GraphExtensionInput{
-			ExtensionInput: model.ExtensionInput{
-				Name:        payload.GraphSchemaExtension.Name,
-				DisplayName: payload.GraphSchemaExtension.DisplayName,
-				Version:     payload.GraphSchemaExtension.Version,
-				Namespace:   payload.GraphSchemaExtension.Namespace,
-			},
-			NodeKindsInput:         make(model.NodesInput, 0),
-			RelationshipKindsInput: make(model.RelationshipsInput, 0),
-			PropertiesInput:        make(model.PropertiesInput, 0),
-			EnvironmentsInput:      make(model.EnvironmentsInput, 0),
-		}
-	)
-
-	for _, nodeKindPayload := range payload.GraphSchemaNodeKinds {
-		graphExtension.NodeKindsInput = append(graphExtension.NodeKindsInput,
-			model.NodeInput{
-				Name:          nodeKindPayload.Name,
-				DisplayName:   nodeKindPayload.DisplayName,
-				Description:   nodeKindPayload.Description,
-				IsDisplayKind: nodeKindPayload.IsDisplayKind,
-				Icon:          nodeKindPayload.Icon,
-				IconColor:     nodeKindPayload.IconColor,
-			})
-	}
-	for _, edgeKindPayload := range payload.GraphSchemaRelationshipKinds {
-		graphExtension.RelationshipKindsInput = append(graphExtension.RelationshipKindsInput,
-			model.RelationshipInput{
-				Name:          edgeKindPayload.Name,
-				Description:   edgeKindPayload.Description,
-				IsTraversable: edgeKindPayload.IsTraversable,
-			})
-	}
-	/*
-		for _, propertyPayload := range payload.GraphSchemaProperties {
-			graphExtension.PropertiesInput = append(graphExtension.PropertiesInput,
-				model.PropertyInput{
-					Name:        propertyPayload.Name,
-					DisplayName: propertyPayload.DisplayName,
-					DataType:    propertyPayload.DataType,
-					Description: propertyPayload.Description,
-				})
-		}
-
-	*/
-	for _, environmentPayload := range payload.GraphEnvironments {
-		graphExtension.EnvironmentsInput = append(graphExtension.EnvironmentsInput,
-			model.EnvironmentInput{
-				EnvironmentKindName: environmentPayload.EnvironmentKind,
-				SourceKindName:      environmentPayload.SourceKind,
-				PrincipalKinds:      environmentPayload.PrincipalKinds,
-			})
-	}
-	for _, findingPayload := range payload.GraphRelationshipFindings {
-		graphExtension.RelationshipFindingsInput = append(graphExtension.RelationshipFindingsInput, model.RelationshipFindingInput{
-			Name:                 findingPayload.Name,
-			DisplayName:          findingPayload.DisplayName,
-			RelationshipKindName: findingPayload.RelationshipKind,
-			EnvironmentKindName:  findingPayload.EnvironmentKind,
-			RemediationInput: model.RemediationInput{
-				ShortDescription: findingPayload.Remediation.ShortDescription,
-				LongDescription:  findingPayload.Remediation.LongDescription,
-				ShortRemediation: findingPayload.Remediation.ShortRemediation,
-				LongRemediation:  findingPayload.Remediation.LongRemediation,
-			},
-		})
-	}
-	return graphExtension
 }
 
 type ExtensionsResponse struct {
