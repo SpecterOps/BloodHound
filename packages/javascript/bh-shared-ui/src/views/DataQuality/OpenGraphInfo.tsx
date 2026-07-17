@@ -125,8 +125,6 @@ const Layout: React.FC<{
                 <Table>
                     <TableBody>
                         {nodeStats?.map((key: any) => {
-                            if (key.kind_id === key.environment_kind_id) return null;
-
                             return (
                                 <LoadContainer
                                     key={key.id}
