@@ -1995,15 +1995,6 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 		combinedObjectId = fmt.Sprintf("%s@%s", policyAssignment.RoleDefinitionId, policyAssignment.TenantId)
 	)
 
-	// Format the incoming user and group ids to uppercase string before creating our nodes
-	for i := range policyAssignment.EndUserAssignmentGroupApprovers {
-		policyAssignment.EndUserAssignmentGroupApprovers[i] = strings.ToUpper(policyAssignment.EndUserAssignmentGroupApprovers[i])
-	}
-
-	for i := range policyAssignment.EndUserAssignmentUserApprovers {
-		policyAssignment.EndUserAssignmentUserApprovers[i] = strings.ToUpper(policyAssignment.EndUserAssignmentUserApprovers[i])
-	}
-
 	// We will want to create or update any existing AZRole node that matches the combinedObjectId
 	// If the node exists, we want to add the new properties to the node
 	targetAZRole := IngestibleNode{
