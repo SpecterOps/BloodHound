@@ -714,7 +714,7 @@ paths:
   /api/v2/clients/management/end:
     $ref: './paths/clients.clients.management.end.yaml'
 
-#  tasks (deprecated)
+  #  tasks (deprecated)
   /api/v2/tasks/available:
     $ref: './paths/tasks.tasks.available.yaml'
   /api/v2/tasks/finished:
