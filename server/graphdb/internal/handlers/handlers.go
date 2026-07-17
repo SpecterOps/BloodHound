@@ -26,7 +26,7 @@ import (
 
 // GraphDB defines the graphdb service boundary for the graphdb handlers package.
 type GraphDB interface {
-	GetRelationship(ctx context.Context, id int64) (services.Relationship, error)
+	GetRelationship(ctx context.Context, id int64, includeKindInfo bool) (services.Relationship, error)
 	GetNode(ctx context.Context, id int64, includeKindInfo bool) (services.Node, error)
 }
 
