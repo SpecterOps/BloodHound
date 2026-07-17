@@ -134,7 +134,7 @@ const SimpleEnvironmentSelector: React.FC<{
     );
 
     const environmentTypes = useMemo(
-        () => [...new Set(filteredEnvironments?.map((environment) => environment.type))],
+        () => [...new Set(filteredEnvironments?.map((environment) => environment.type)), 're'],
         [filteredEnvironments]
     );
 
@@ -203,15 +203,20 @@ const SimpleEnvironmentSelector: React.FC<{
                             </Button>
                         </li>
                     )}
-                    {environmentTypes?.map((type) => (
-                        <li key={`${type}-platform`}>
-                            <SelectorListItemContent
-                                displayName={environmentInfo[type]?.aggregationDisplayName}
-                                displayIcon={environmentInfo[type]?.icon}
-                                onClick={() => handlePlatformClick(type, environmentInfo[type]?.environment_kind_id)}
-                            />
-                        </li>
-                    ))}
+                    {environmentTypes?.map(
+                        (type) =>
+                            environmentInfo[type] && (
+                                <li key={`${type}-platform`}>
+                                    <SelectorListItemContent
+                                        displayName={environmentInfo[type].aggregationDisplayName}
+                                        displayIcon={environmentInfo[type].icon}
+                                        onClick={() =>
+                                            handlePlatformClick(type, environmentInfo[type].environment_kind_id)
+                                        }
+                                    />
+                                </li>
+                            )
+                    )}
                 </ul>
                 <ul className='max-h-80 overflow-y-auto'>
                     {filteredEnvironments?.map((environment: Environment) => {
