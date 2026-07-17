@@ -35,9 +35,7 @@ export const getStatsComponent = (selectedEnvironment: SelectedEnvironment | nul
         case 'azure-platform':
             return <AzurePlatformInfo onDataError={dataErrorHandler} />;
         default:
-            if (!contextType) return null;
-            if (contextType.endsWith('-platform')) {
-                if (!contextKindId) return null;
+            if (contextKindId) {
                 return <OpenGraphPlatformInfo contextKindId={contextKindId} onDataError={dataErrorHandler} />;
             }
             if (!contextId) return null;
