@@ -16,7 +16,7 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { zoneHandlers } from '../../../../mocks';
+import { mockSourceKindsHandler, zoneHandlers } from '../../../../mocks';
 import * as zoneMocks from '../../../../mocks/factories/privilegeZones';
 import { render, screen } from '../../../../test-utils';
 import { ObjectTabValue, RuleTabValue, TagTabValue } from '../../utils';
@@ -33,7 +33,8 @@ const server = setupServer(
             })
         );
     }),
-    ...zoneHandlers
+    ...zoneHandlers,
+    mockSourceKindsHandler()
 );
 
 beforeAll(() => server.listen());

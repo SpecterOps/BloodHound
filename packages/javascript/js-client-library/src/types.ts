@@ -746,22 +746,28 @@ export type InfoProps = InfoPropsContent & { markdown?: never; query?: never };
 export type InfoMarkdownQuery = InfoMarkdownContent & InfoQueryContent & { props?: never };
 export type InfoMarkdownProps = InfoMarkdownContent & InfoPropsContent & { query?: never };
 
-export type KindInfoContent = InfoMarkdown | InfoQuery | InfoProps | InfoMarkdownQuery | InfoMarkdownProps;
+// export type KindInfoContent = InfoMarkdown | InfoQuery | InfoProps | InfoMarkdownQuery | InfoMarkdownProps;
+export type KindInfoContent = InfoMarkdown;
 
 // ---------------------------------------------------------------------------
 // Kind info structures
 // ---------------------------------------------------------------------------
-
 export interface KindInfoBase {
     title: string;
-    /** Integer >= 1 */
     position: number;
 }
 
-/** Keys: lowercase alphanumeric, hyphens, underscores, 1–128 chars */
-export type KindInfoDefinition = Record<string, KindInfoBase & KindInfoContent>;
+type KindInfoKey = { name: string };
 
-export type KindInfoResponse = { name: string } & KindInfoBase & KindInfoContent;
+export type KindInfoItem = KindInfoBase & KindInfoContent & KindInfoKey;
+
+export type NodeKindInfoItem = KindInfoItem & { node_kind_id: number };
+/** Keys: lowercase alphanumeric, hyphens, underscores, 1–128 chars */
+export type NodeKindInfo = NodeKindInfoItem[];
+
+export type RelationshipKindInfoItem = KindInfoItem & { relationship_kind_id: number };
+/** Keys: lowercase alphanumeric, hyphens, underscores, 1–128 chars */
+export type RelationshipKindInfo = RelationshipKindInfoItem[];
 
 // ---------------------------------------------------------------------------
 // Definition schemas
@@ -790,9 +796,9 @@ export interface EnvironmentDefinition {
     principal_kinds: string[];
 }
 
-export type NodeKindDefinition = NodeKindBase & { info?: KindInfoDefinition };
+export type NodeKindDefinition = NodeKindBase & { info?: NodeKindInfo };
 
-export type RelationshipKindDefinition = RelationshipKindBase & { info?: KindInfoDefinition };
+export type RelationshipKindDefinition = RelationshipKindBase & { info?: RelationshipKindInfo };
 
 export interface ExtensionDefinition {
     schema: ExtensionBase;
@@ -820,14 +826,14 @@ export type NodeKindResponse = NodeKindBase & {
     /** readOnly */
     node_kind_id?: number;
     extension?: ExtensionDetails;
-    info?: KindInfoDefinition;
+    info?: NodeKindInfo;
 };
 
 export type RelationshipKindResponse = RelationshipKindBase & {
     /** readOnly */
     relationship_kind_id?: number;
     extension?: ExtensionDetails;
-    info?: KindInfoDefinition;
+    info?: RelationshipKindInfo;
 };
 
 export interface NodeKindRef {
@@ -852,7 +858,7 @@ export interface NodeDetails {
 }
 
 export type NodeDetailsWithInfo = NodeDetails & {
-    info?: (KindInfoResponse & { node_kind_id: number })[];
+    info?: NodeKindInfo;
 };
 
 export interface RelationshipKindRef {
@@ -879,5 +885,5 @@ export interface RelationshipDetails {
 }
 
 export type RelationshipDetailsWithInfo = RelationshipDetails & {
-    info?: (KindInfoResponse & { relationship_kind_id: number })[];
+    info?: RelationshipKindInfo;
 };

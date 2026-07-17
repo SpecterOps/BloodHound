@@ -14,42 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { NodeDetails, NodeDetailsWithInfo, RelationshipDetails, RelationshipDetailsWithInfo } from 'js-client-library';
+import {
+    GraphNode,
+    NodeDetails,
+    NodeDetailsWithInfo,
+    RelationshipDetails,
+    RelationshipDetailsWithInfo,
+} from 'js-client-library';
 import { useQuery } from 'react-query';
-import { apiClient, REL_ID_PREFIX } from '../utils';
-
-export interface BaseItemResponse {
-    id: string;
-    kind: string;
-    label: string;
-    lastSeen: string;
-    properties?: any;
-}
-
-export interface NodeResponse extends BaseItemResponse {
-    objectId: string;
-    isTierZero: boolean;
-    isOwnedObject: boolean;
-}
-
-export interface EdgeResponse extends BaseItemResponse {
-    source: string;
-    sourceNode: NodeResponse;
-    target: string;
-    targetNode: NodeResponse;
-}
-
-export type ItemResponse = NodeResponse | EdgeResponse | undefined;
-
-export const isNode = (response: ItemResponse): response is NodeResponse => {
-    if (!response) return false;
-    return 'objectId' in response;
-};
-
-export const isEdge = (response: ItemResponse): response is EdgeResponse => {
-    if (!response) return false;
-    return 'source' in response;
-};
+import { apiClient, REL_ID_PREFIX } from '../../utils';
+import { escapeCypherString } from '../../utils/cypher';
 
 export const isRelationshipResponse = (
     response: RelationshipDetails | RelationshipDetailsWithInfo | NodeDetails | NodeDetailsWithInfo
@@ -67,7 +41,9 @@ export const useGetRelationshipById = (id?: number) => {
     return useQuery({
         queryKey: ['getRelationshipById', id],
         queryFn: async () => {
-            return apiClient.getRelationshipByID(id!).then((res) => res.data.data);
+            return apiClient
+                .getRelationshipByID(id!, { params: { 'include-info': true } })
+                .then((res) => res.data.data);
         },
         enabled: !!id,
         retryOnMount: false,
@@ -81,7 +57,7 @@ export const useGetNodeById = (id?: number) => {
     return useQuery({
         queryKey: ['getNodeById', id],
         queryFn: async () => {
-            return apiClient.getNodeByID(id!).then((res) => res.data.data);
+            return apiClient.getNodeByID(id!, { params: { 'include-info': true } }).then((res) => res.data.data);
         },
         enabled: !!id,
         retryOnMount: false,
@@ -94,7 +70,7 @@ export const useGetNodeById = (id?: number) => {
 export const useGraphItem = (itemId?: string | null) => {
     const isRelationship = !!itemId?.includes(REL_ID_PREFIX);
 
-    const relationshipId = itemId ? parseInt(itemId.slice(REL_ID_PREFIX.length)) : undefined;
+    const relationshipId = isRelationship && itemId ? parseInt(itemId.slice(REL_ID_PREFIX.length)) : undefined;
     const relQuery = useGetRelationshipById(relationshipId);
 
     const nodeId = itemId ? parseInt(itemId) : undefined;
@@ -103,32 +79,41 @@ export const useGraphItem = (itemId?: string | null) => {
     return isRelationship ? relQuery : nodeQuery;
 };
 
-export const useNodeByObjectId = (itemId?: string) => {
-    return useQuery<NodeResponse>(
-        ['getGraphNodeByObjectId', itemId],
-        () => {
+export const useNodeByObjectId = (objectId?: string) => {
+    return useQuery({
+        queryKey: ['getGraphNodeByObjectId', objectId],
+        queryFn: async () => {
+            const safeObjectId = objectId ? escapeCypherString(objectId) : '';
             return apiClient
-                .cypherSearch(`MATCH (n) WHERE n.objectid = "${itemId}" RETURN n LIMIT 1`, undefined, true)
+                .cypherSearch(`MATCH (n) WHERE n.objectid = "${safeObjectId}" RETURN n LIMIT 1`, undefined, true)
                 .then((res) => {
-                    if (!itemId) {
+                    if (!objectId) {
                         return undefined;
                     }
 
-                    const firstElement: any = Object.values(res.data?.data?.nodes)[0];
+                    const nodes = res.data?.data?.nodes;
+                    if (!nodes || Object.keys(nodes).length === 0) {
+                        return undefined;
+                    }
 
-                    const id = Object.keys(res.data?.data?.nodes)[0];
+                    const firstElement: GraphNode = Object.values(nodes)[0];
+                    const id = Object.keys(nodes)[0];
 
-                    return {
-                        id,
-                        ...firstElement,
+                    const node: NodeDetails = {
+                        node_id: parseInt(id),
+                        kinds: firstElement.kinds.map((kind) => {
+                            return { name: kind, node_kind_id: null };
+                        }),
+                        properties: { objectid: objectId, ...firstElement.properties },
                     };
+
+                    return node;
                 });
         },
-        {
-            enabled: !!itemId,
-            retry: false,
-            refetchOnWindowFocus: false,
-            keepPreviousData: true,
-        }
-    );
+
+        enabled: !!objectId,
+        retry: false,
+        refetchOnWindowFocus: false,
+        keepPreviousData: true,
+    });
 };
