@@ -181,7 +181,8 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, nil)
+				// checkSchemaProtection calls GetCustomNodeKind for each submitted kind name; return ErrNotFound to indicate none are schema-protected.
+				mocks.mockDatabase.EXPECT().GetCustomNodeKind(gomock.Any(), gomock.Any()).Return(model.CustomNodeKind{}, database.ErrNotFound).AnyTimes()
 				mocks.mockDatabase.EXPECT().CreateCustomNodeKinds(gomock.Any(), gomock.Any()).Return(model.CustomNodeKinds{
 					{
 						ID:       1,
@@ -250,7 +251,8 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, nil)
+				// checkSchemaProtection calls GetCustomNodeKind; return ErrNotFound so the kind is not schema-protected.
+				mocks.mockDatabase.EXPECT().GetCustomNodeKind(gomock.Any(), "DuplicateKind").Return(model.CustomNodeKind{}, database.ErrNotFound)
 				mocks.mockDatabase.EXPECT().
 					CreateCustomNodeKinds(gomock.Any(), gomock.Any()).
 					Return(model.CustomNodeKinds{}, database.ErrDuplicateCustomNodeKindName)
@@ -296,15 +298,15 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
 				schemaNodeKindId := int32(1)
-				// GetCustomNodeKinds returns the schema-owned "User" kind, triggering the protection check.
-				mocks.mockDatabase.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{
-					{
+				// checkSchemaProtection calls GetCustomNodeKind; return the schema-owned "User" kind to trigger the 409.
+				mocks.mockDatabase.EXPECT().
+					GetCustomNodeKind(gomock.Any(), "User").
+					Return(model.CustomNodeKind{
 						ID:               1,
 						KindId:           1,
 						KindName:         "User",
 						SchemaNodeKindId: &schemaNodeKindId,
-					},
-				}, nil)
+					}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusConflict,

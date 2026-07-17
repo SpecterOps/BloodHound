@@ -17,6 +17,7 @@
 package v2
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -77,9 +78,9 @@ func (s *Resources) CreateCustomNodeKind(response http.ResponseWriter, request *
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if err := validateCreateCustomNodeRequest(customNodeKindRequest); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseCodeBadRequest, err), request), response)
-	} else if allKinds, err := s.DB.GetCustomNodeKinds(request.Context()); err != nil {
+	} else if protected, err := checkSchemaProtection(request.Context(), s.DB, customNodeKindRequest.CustomTypes); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if isCnkAssociatedWithSchema(allKinds, customNodeKindRequest.CustomTypes) {
+	} else if protected {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, fmt.Sprintf("%s: kind name is owned by a schema extension", api.ErrorResponseConflict), request), response)
 	} else if kinds, err := s.DB.CreateCustomNodeKinds(request.Context(), convertCreateCustomNodeRequest(customNodeKindRequest)); errors.Is(err, database.ErrDuplicateCustomNodeKindName) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, fmt.Sprintf("%s: duplicate kind name", api.ErrorResponseConflict), request), response)
@@ -92,15 +93,19 @@ func (s *Resources) CreateCustomNodeKind(response http.ResponseWriter, request *
 	}
 }
 
-// isCnkAssociatedWithSchema reports whether any key in customTypes matches a kind that is owned by a schema extension.
-func isCnkAssociatedWithSchema(allKinds []model.CustomNodeKind, customTypes map[string]model.CustomNodeKindConfig) bool {
-	for _, kind := range allKinds {
-		if _, requested := customTypes[kind.KindName]; requested && kind.SchemaNodeKindId != nil {
-			return true
+// checkSchemaProtection reports whether any of the kind names in customTypes are owned by a schema extension.
+func checkSchemaProtection(ctx context.Context, db database.CustomNodeKindData, customTypes map[string]model.CustomNodeKindConfig) (bool, error) {
+	for kindName := range customTypes {
+		if existing, err := db.GetCustomNodeKind(ctx, kindName); errors.Is(err, database.ErrNotFound) {
+			continue
+		} else if err != nil {
+			return false, err
+		} else if existing.SchemaNodeKindId != nil {
+			return true, nil
 		}
 	}
 
-	return false
+	return false, nil
 }
 
 func convertCreateCustomNodeRequest(request CreateCustomNodeRequest) []model.CustomNodeKind {
