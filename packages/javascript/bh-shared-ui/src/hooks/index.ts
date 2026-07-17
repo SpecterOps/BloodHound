@@ -38,7 +38,7 @@ export * from './useFileUploadDialogContext';
 export * from './useFileUploadQuery';
 export * from './useFinishedJobs';
 export * from './useGraphHasData';
-export * from './useGraphItem';
+export * from './useGraphItem/useGraphItem';
 export * from './useInfiniteScroll';
 export * from './useInitialEnvironment';
 export * from './useIsMouseDragging';

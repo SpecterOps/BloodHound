@@ -22,41 +22,8 @@ import {
     RelationshipDetailsWithInfo,
 } from 'js-client-library';
 import { useQuery } from 'react-query';
-import { apiClient, REL_ID_PREFIX } from '../utils';
-import { escapeCypherString } from '../utils/cypher';
-
-export interface BaseItemResponse {
-    id: string;
-    kind: string;
-    label: string;
-    lastSeen: string;
-    properties?: any;
-}
-
-export interface NodeResponse extends BaseItemResponse {
-    objectId: string;
-    isTierZero: boolean;
-    isOwnedObject: boolean;
-}
-
-export interface EdgeResponse extends BaseItemResponse {
-    source: string;
-    sourceNode: NodeResponse;
-    target: string;
-    targetNode: NodeResponse;
-}
-
-export type ItemResponse = NodeResponse | EdgeResponse | undefined;
-
-export const isNode = (response: ItemResponse): response is NodeResponse => {
-    if (!response) return false;
-    return 'objectId' in response;
-};
-
-export const isEdge = (response: ItemResponse): response is EdgeResponse => {
-    if (!response) return false;
-    return 'source' in response;
-};
+import { apiClient, REL_ID_PREFIX } from '../../utils';
+import { escapeCypherString } from '../../utils/cypher';
 
 export const isRelationshipResponse = (
     response: RelationshipDetails | RelationshipDetailsWithInfo | NodeDetails | NodeDetailsWithInfo
@@ -103,7 +70,7 @@ export const useGetNodeById = (id?: number) => {
 export const useGraphItem = (itemId?: string | null) => {
     const isRelationship = !!itemId?.includes(REL_ID_PREFIX);
 
-    const relationshipId = itemId ? parseInt(itemId.slice(REL_ID_PREFIX.length)) : undefined;
+    const relationshipId = isRelationship && itemId ? parseInt(itemId.slice(REL_ID_PREFIX.length)) : undefined;
     const relQuery = useGetRelationshipById(relationshipId);
 
     const nodeId = itemId ? parseInt(itemId) : undefined;

@@ -39,7 +39,7 @@ import { SortOrderAscending, type SortOrder } from '../../types';
 import { apiClient, type GenericQueryOptions } from '../../utils';
 import { createPaginatedFetcher, type PageParam } from '../../utils/paginatedFetcher';
 import { useFeatureFlag } from '../useFeatureFlags';
-import { isNodeResponse } from '../useGraphItem';
+import { isNodeResponse } from '../useGraphItem/useGraphItem';
 
 export const privilegeZonesKeys = {
     all: ['privilege-zones'] as const,

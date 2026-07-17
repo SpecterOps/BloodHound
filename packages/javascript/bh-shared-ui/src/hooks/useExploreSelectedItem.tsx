@@ -16,7 +16,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useExploreParams } from './useExploreParams';
-import { useGraphItem } from './useGraphItem';
+import { useGraphItem } from './useGraphItem/useGraphItem';
 
 const HIDDEN_STRING = 'HIDDEN';
 
