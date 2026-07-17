@@ -17,6 +17,10 @@
 import type { AxiosResponse } from 'axios';
 import { EnvironmentRequest } from './requests';
 import {
+    Alert,
+    AlertAttempt,
+    AlertEvent,
+    AlertEventType,
     AssetGroupTag,
     AssetGroupTagCertificationRecord,
     AssetGroupTagHistoryRecord,
@@ -420,12 +424,10 @@ export type SourceKindsResponse = BasicResponse<{ kinds: SourceKind[] }>;
 // ---------------------------------------------------------------------------
 //  Alert - Webhooks
 // ---------------------------------------------------------------------------
-
 export type CreateWebhookResponse = {
     webhook: Webhook;
     hmac_secret: string;
 };
-
 export type GetWebhooksResponse = PaginatedResponse<Webhook[]>;
 export type GetWebhookResponse = BasicResponse<{ webhook: Webhook }>;
 export type RotateWebhookSecretResponse = BasicResponse<{ webhook_secret: WebhookSecret }>;
@@ -434,10 +436,19 @@ export type WebhookTestResponse = BasicResponse<WebhookTest>;
 // ---------------------------------------------------------------------------
 //  Alert - Events
 // ---------------------------------------------------------------------------
+export type GetAlertEventsResponse = PaginatedResponse<{ events: AlertEvent[] }>;
+export type GetAlertEventResponse = BasicResponse<{ event: AlertEvent }>;
+export type GetAlertEventTypesResponse = BasicResponse<{ event_types: AlertEventType[] }>;
 
 // ---------------------------------------------------------------------------
 //  Alert - Alerts
 // ---------------------------------------------------------------------------
+export type GetAlertsResponse = PaginatedResponse<{ alerts: Alert[] }>;
+export type GetAlertResponse = BasicResponse<{ alert: Alert }>;
+export type CreateAlertResponse = BasicResponse<{ alert: Alert }>;
+export type UpdateAlertResponse = BasicResponse<{ alert: Alert }>;
+export type GetAlertAttemptsResponse = PaginatedResponse<{ attempts: AlertAttempt[] }>;
+export type CreateAlertAttemptResponse = BasicResponse<{ alert_attempt: AlertAttempt }>;
 
 export type GetNodeResponse = BasicResponse<NodeDetails | NodeDetailsWithInfo>;
 
