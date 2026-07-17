@@ -391,6 +391,7 @@ func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds 
 	)
 
 	if useRawObjectID {
+		nameTerm = nameOrObjectIdQuery
 		objectIDTerm = nameOrObjectIdQuery
 	}
 
@@ -586,6 +587,7 @@ func (s *GraphQuery) searchExactOrFuzzyMatchedNodes(ctx context.Context, kinds g
 	)
 
 	if useRawObjectID {
+		nameTerm = searchValue
 		objectIDTerm = searchValue
 	}
 

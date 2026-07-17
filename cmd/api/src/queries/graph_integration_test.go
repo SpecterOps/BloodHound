@@ -286,6 +286,31 @@ func seedCaseSensitiveObjectIDNodes(t *testing.T, testSuite IntegrationTestSuite
 	require.NoError(t, err)
 }
 
+// seedCaseSensitiveNameNodes creates two nodes whose Name values differ only by case, simulating
+// data that was ingested with the raw-object-id feature flag enabled (which also preserves Name casing).
+func seedCaseSensitiveNameNodes(t *testing.T, testSuite IntegrationTestSuite) {
+	t.Helper()
+
+	err := testSuite.GraphDB.WriteTransaction(testSuite.Context, func(tx graph.Transaction) error {
+		if _, err := tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:     "CaseName1",
+			common.ObjectID: "NAME-CASE-USER-ONE",
+		}), ad.Entity, ad.User); err != nil {
+			return err
+		}
+
+		if _, err := tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:     "CASENAME1",
+			common.ObjectID: "NAME-CASE-USER-TWO",
+		}), ad.Entity, ad.User); err != nil {
+			return err
+		}
+
+		return nil
+	})
+	require.NoError(t, err)
+}
+
 func TestSearchNodesByNameOrObjectId_UseRawObjectID(t *testing.T) {
 	var (
 		testSuite  = setupGraphDb(t)
@@ -320,6 +345,40 @@ func TestSearchNodesByNameOrObjectId_UseRawObjectID(t *testing.T) {
 	})
 }
 
+func TestSearchNodesByNameOrObjectId_UseRawObjectID_NameCasing(t *testing.T) {
+	var (
+		testSuite  = setupGraphDb(t)
+		graphQuery = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
+	)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	seedCaseSensitiveNameNodes(t, testSuite)
+
+	t.Run("flag off: search term is uppercased and only matches the uppercase-stored name", func(t *testing.T) {
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "casename1", 0, 10, false)
+		require.NoError(t, err)
+		require.Len(t, results, 1)
+		name, err := results[0].Properties.Get(common.Name.String()).String()
+		require.NoError(t, err)
+		require.Equal(t, "CASENAME1", name)
+	})
+
+	t.Run("flag on: search term preserves case and only matches the exact-cased name", func(t *testing.T) {
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "CaseName1", 0, 10, true)
+		require.NoError(t, err)
+		require.Len(t, results, 1)
+		name, err := results[0].Properties.Get(common.Name.String()).String()
+		require.NoError(t, err)
+		require.Equal(t, "CaseName1", name)
+	})
+
+	t.Run("flag on: search term with mismatched case matches neither node", func(t *testing.T) {
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "casename1", 0, 10, true)
+		require.NoError(t, err)
+		require.Len(t, results, 0)
+	})
+}
+
 func TestSearchByNameOrObjectID_UseRawObjectID(t *testing.T) {
 	var (
 		testSuite  = setupGraphDb(t)
@@ -343,6 +402,34 @@ func TestSearchByNameOrObjectID_UseRawObjectID(t *testing.T) {
 
 	t.Run("flag on: search term with mismatched case matches neither node", func(t *testing.T) {
 		results, err := graphQuery.SearchByNameOrObjectID(testSuite.Context, false, true, "caseuser1", queries.SearchTypeExact)
+		require.NoError(t, err)
+		require.Equal(t, 0, len(results))
+	})
+}
+
+func TestSearchByNameOrObjectID_UseRawObjectID_NameCasing(t *testing.T) {
+	var (
+		testSuite  = setupGraphDb(t)
+		graphQuery = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
+	)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	seedCaseSensitiveNameNodes(t, testSuite)
+
+	t.Run("flag off: search term is uppercased and only matches the uppercase-stored name", func(t *testing.T) {
+		results, err := graphQuery.SearchByNameOrObjectID(testSuite.Context, false, false, "casename1", queries.SearchTypeExact)
+		require.NoError(t, err)
+		require.Equal(t, 1, len(results))
+	})
+
+	t.Run("flag on: search term preserves case and only matches the exact-cased name", func(t *testing.T) {
+		results, err := graphQuery.SearchByNameOrObjectID(testSuite.Context, false, true, "CaseName1", queries.SearchTypeExact)
+		require.NoError(t, err)
+		require.Equal(t, 1, len(results))
+	})
+
+	t.Run("flag on: search term with mismatched case matches neither node", func(t *testing.T) {
+		results, err := graphQuery.SearchByNameOrObjectID(testSuite.Context, false, true, "casename1", queries.SearchTypeExact)
 		require.NoError(t, err)
 		require.Equal(t, 0, len(results))
 	})
