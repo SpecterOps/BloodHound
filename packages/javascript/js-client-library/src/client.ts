@@ -112,6 +112,7 @@ import {
     UnifiedFindingResponse,
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
+    WebhookTestResponse,
 } from './responses';
 import * as types from './types';
 import { FindingAssetsResponse } from './types';
@@ -2793,7 +2794,7 @@ class BHEAPIClient {
         this.baseClient.post<RotateWebhookSecretResponse>(`api/v2/alert-webhooks/${webhookId}/rotate-secret`, options);
 
     testWebhook = (webhookId: string, options?: RequestOptions) =>
-        this.baseClient.post<RotateWebhookSecretResponse>(`api/v2/alert-webhooks/${webhookId}/test`, options);
+        this.baseClient.post<WebhookTestResponse>(`api/v2/alert-webhooks/${webhookId}/test`, options);
 }
 
 export default BHEAPIClient;

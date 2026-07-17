@@ -323,6 +323,11 @@ export interface GetWebhookRequest {
     id: string;
 }
 
+export interface WebhookTestRequest {
+    event_type: string;
+    version: string;
+}
+
 // ---------------------------------------------------------------------------
 //  Alert - Events
 // ---------------------------------------------------------------------------
