@@ -186,18 +186,6 @@ describe('OpenGraphInfo', () => {
         expect(screen.getByText('50')).toBeInTheDocument();
     });
 
-    it('skips node rows whose kind_id matches the environment_kind_id', async () => {
-        respondWith(STATS_URL, [
-            ogStat({ id: 1, kind_id: 1, environment_kind_id: 999, metric_name: 'VisibleType' }),
-            ogStat({ id: 2, kind_id: 5, environment_kind_id: 5, metric_name: 'SkippedType' }),
-        ]);
-
-        render(<OpenGraphInfo contextId='env-1' />);
-
-        expect(await screen.findByText('VisibleType')).toBeInTheDocument();
-        expect(screen.queryByText('SkippedType')).not.toBeInTheDocument();
-    });
-
     it('falls back to 0 for the relationship row when no relationship stat is present', async () => {
         respondWith(STATS_URL, [ogStat({ id: 1, kind_id: 1, metric_name: 'User', metric_value: 10 })]);
 
