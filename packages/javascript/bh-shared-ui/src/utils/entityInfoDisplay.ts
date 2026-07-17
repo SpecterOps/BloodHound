@@ -200,8 +200,6 @@ export const getEntityName = (selectedEntity: SelectedNode | null | undefined) =
     return name;
 };
 
-export const getNodeByDatabaseIdCypher = (id: string): string => `MATCH (n) WHERE ID(n) = ${id} RETURN n LIMIT 1`;
-
 // Map containing all properties that should display as bitwise integers in the entity panel.
 // The key is the property string, the value is the amount of significant digits the hex value should display with.
 const BitwiseInts = new Map([['certificatemappingmethodsraw', 2]]);

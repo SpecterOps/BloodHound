@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { AssetGroupTag, AssetGroupTagTypeZone } from 'js-client-library';
+import { TagLabelPrefix } from '../../constants';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
 import { EntityKinds } from '../../utils/content';
-import { TagLabelPrefix } from '../useAssetGroupTags';
 
 export const getZoneNameFromKinds = (
     tags: AssetGroupTag[] | undefined,
