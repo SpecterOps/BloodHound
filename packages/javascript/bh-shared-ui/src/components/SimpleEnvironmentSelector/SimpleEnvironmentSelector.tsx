@@ -50,12 +50,13 @@ const selectedText = (
     environmentInfo: ReturnType<typeof getOpenGraphEnvironmentInfoMap>,
     isPrivilegeZonesPage: boolean
 ): string => {
-    const isNonOpenGraphPlatform = selected.type === 'active-directory-platform' || selected.type === 'azure-platform';
-    const isOpenGraphPlatform = !!selected.environment_kind_id;
+    const isNonOpenGraphPlatform = selected.type === 'active-directory-platform' || selected.type === 'azure-platform'; // AD and AZ don't support the new OG architecture
+    const isOpenGraphPlatform = !!selected.environment_kind_id; // Only OG environments have this property
     const isPlatformAggregation = isNonOpenGraphPlatform || isOpenGraphPlatform;
 
     // Check if this is an aggregate platform selection (e.g., "active-directory-platform", "azure-platform", "aws-platform")
-    if (selected.type && isPlatformAggregation) {
+    // Aggregations dont have ids they have environment_kind_id if they are OG ones
+    if (selected.type && !selected.id && isPlatformAggregation) {
         const baseType = selected.type.replace('-platform', '') as Environment['type'];
         // Return the aggregation display name from the environment info map
         return environmentInfo[baseType]?.aggregationDisplayName || `All ${baseType} Environments`;
