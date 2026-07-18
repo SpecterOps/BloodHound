@@ -50,9 +50,11 @@ const selectedText = (
     environmentInfo: ReturnType<typeof getOpenGraphEnvironmentInfoMap>,
     isPrivilegeZonesPage: boolean
 ): string => {
+    const isNonOpenGraphPlatform = selected.type === 'active-directory-platform' || selected.type === 'azure-platform';
+    const isOpenGraphPlatform = !!selected.environment_kind_id;
+
     // Check if this is an aggregate platform selection (e.g., "active-directory-platform", "azure-platform", "aws-platform")
-    if (selected.type?.endsWith('-platform')) {
-        // Extract the base environment type by removing the "-platform" suffix
+    if (selected.type && (isNonOpenGraphPlatform || isOpenGraphPlatform)) {
         const baseType = selected.type.replace('-platform', '') as Environment['type'];
         // Return the aggregation display name from the environment info map
         return environmentInfo[baseType]?.aggregationDisplayName || `All ${baseType} Environments`;
