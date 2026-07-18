@@ -52,9 +52,10 @@ const selectedText = (
 ): string => {
     const isNonOpenGraphPlatform = selected.type === 'active-directory-platform' || selected.type === 'azure-platform';
     const isOpenGraphPlatform = !!selected.environment_kind_id;
+    const isPlatformAggregation = isNonOpenGraphPlatform || isOpenGraphPlatform;
 
     // Check if this is an aggregate platform selection (e.g., "active-directory-platform", "azure-platform", "aws-platform")
-    if (selected.type && (isNonOpenGraphPlatform || isOpenGraphPlatform)) {
+    if (selected.type && isPlatformAggregation) {
         const baseType = selected.type.replace('-platform', '') as Environment['type'];
         // Return the aggregation display name from the environment info map
         return environmentInfo[baseType]?.aggregationDisplayName || `All ${baseType} Environments`;
