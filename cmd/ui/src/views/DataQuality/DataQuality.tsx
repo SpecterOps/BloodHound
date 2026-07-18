@@ -83,6 +83,7 @@ const DataQuality: React.FC = () => {
                         selected={{
                             type: environment?.type ?? null,
                             id: environment?.id ?? null,
+                            environment_kind_id: environment?.environment_kind_id ?? null,
                         }}
                         errorMessage={environmentErrorMessage}
                         onSelect={handleSelect}
@@ -108,6 +109,7 @@ const DataQuality: React.FC = () => {
                     selected={{
                         type: selectedEnvironment?.type ?? null,
                         id: selectedEnvironment?.id ?? null,
+                        environment_kind_id: environment?.environment_kind_id ?? null,
                     }}
                     errorMessage={environmentErrorMessage}
                     onSelect={handleSelect}
