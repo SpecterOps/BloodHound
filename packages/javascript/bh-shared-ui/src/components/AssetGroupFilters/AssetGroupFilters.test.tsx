@@ -52,7 +52,7 @@ describe('AssetGroupEdit', () => {
                 <AssetGroupFilters
                     filterParams={options?.filterParams ?? {}}
                     handleFilterChange={handleFilterChange}
-                    memberCounts={memberCounts}
+                    memberCounts={options?.memberCounts ?? memberCounts}
                 />
             );
         });
@@ -126,6 +126,24 @@ describe('AssetGroupEdit', () => {
 
             expect(handleFilterChange).toBeCalledTimes(1);
             expect(handleFilterChange).toHaveBeenCalledWith('primary_kind', `eq:${expectedNodeKind}`);
+        });
+
+        it('shows human-readable node kind labels while preserving filter values', async () => {
+            const { user, handleFilterChange } = await setup({
+                memberCounts: {
+                    total_count: 1,
+                    counts: {
+                        AZApp: 1,
+                    },
+                },
+            });
+
+            await user.click(screen.getByTestId('display-filters-button'));
+            await user.click(screen.getByLabelText('Node Type'));
+            await user.click(screen.getByText('Azure Application'));
+
+            expect(screen.queryByText('AZApp')).not.toBeInTheDocument();
+            expect(handleFilterChange).toHaveBeenCalledWith('primary_kind', 'eq:AZApp');
         });
     });
 

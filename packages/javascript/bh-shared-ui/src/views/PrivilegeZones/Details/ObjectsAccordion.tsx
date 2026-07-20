@@ -26,7 +26,7 @@ import { useRuleMembersInfiniteQuery, useTagMembersInfiniteQuery } from '../../.
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
 import { ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES } from '../../../routes';
 import { SortOrder } from '../../../types';
-import { cn } from '../../../utils';
+import { cn, getNodeKindDisplayLabel } from '../../../utils';
 import { SelectedHighlight } from './SelectedHighlight';
 
 export interface ObjectsAccordionProps {
@@ -63,7 +63,7 @@ export const ObjectsAccordion: React.FC<ObjectsAccordionProps> = ({
                 className='w-full min-w-0 rounded-none bg-neutral-2'
                 data-testid='privilege-zones_details_objects-accordion'>
                 {Object.entries(kindCounts)
-                    .sort((a, b) => a[0].localeCompare(b[0]))
+                    .sort((a, b) => getNodeKindDisplayLabel(a[0]).localeCompare(getNodeKindDisplayLabel(b[0])))
                     .map(([kind, count]) => (
                         <ObjectAccordionItem
                             key={kind}
@@ -113,6 +113,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
     onObjectClick,
 }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+    const kindDisplayLabel = getNodeKindDisplayLabel(kind);
 
     const environments = useEnvironmentIdList(ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES, false);
 
@@ -154,7 +155,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
             <div className='w-full flex items-center justify-between border-b border-neutral-3'>
                 <div className='w-full flex items-center'>
                     <Button
-                        className='w-6'
+                        className='w-6 text-contrast'
                         variant='text'
                         data-testid={`privilege-zones_details_${kind}-accordion_open-toggle-button`}
                         onClick={() => {
@@ -165,14 +166,14 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
                     <div className='flex flex-1 items-center gap-2'>
                         <NodeIcon nodeType={kind} />
                         <SortableHeader
-                            title={kind}
+                            title={kindDisplayLabel}
                             onSort={() => {
                                 setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
                             }}
                             sortOrder={sortOrder}
                             classes={{
                                 container: cn('flex-1', { 'pointer-events-none cursor-default': !isOpen }),
-                                button: cn('font-bold text-base', {
+                                button: cn('font-bold text-base text-contrast', {
                                     '[&>svg]:hidden': !isOpen,
                                 }),
                             }}

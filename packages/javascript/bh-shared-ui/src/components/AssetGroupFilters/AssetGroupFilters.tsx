@@ -32,7 +32,7 @@ import { AssetGroupMemberCounts } from 'js-client-library';
 import { AssetGroupMemberParams } from 'js-client-library/dist/types';
 import { FC, useState } from 'react';
 import { useTheme } from '../../hooks/useTheme';
-import { cn } from '../../utils';
+import { cn, getNodeKindDisplayLabel } from '../../utils';
 import NodeIcon from '../NodeIcon';
 
 export const FILTERABLE_PARAMS: Array<keyof Pick<AssetGroupMemberParams, 'primary_kind' | 'custom_member'>> = [
@@ -97,7 +97,7 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, member
                                     return (
                                         <MenuItem value={`eq:${value}`} key={value}>
                                             <NodeIcon nodeType={value} />
-                                            {value}
+                                            {getNodeKindDisplayLabel(value)}
                                         </MenuItem>
                                     );
                                 })}

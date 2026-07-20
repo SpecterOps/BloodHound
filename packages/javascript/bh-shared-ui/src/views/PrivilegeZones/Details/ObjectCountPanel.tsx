@@ -18,6 +18,7 @@ import { Badge, Card, Skeleton } from 'doodle-ui';
 import { FC } from 'react';
 import { NodeIcon } from '../../../components';
 import { useObjectCounts } from '../../../hooks/useAssetGroupTags/useObjectCounts';
+import { getNodeKindDisplayLabel } from '../../../utils';
 
 const ObjectCountPanel: FC = () => {
     const objectsCountQuery = useObjectCounts();
@@ -60,19 +61,21 @@ const ObjectCountPanel: FC = () => {
                     <p>Total Count</p>
                     <Badge label={objectsCountQuery.data.total_count.toLocaleString()} />
                 </div>
-                {Object.entries(objectsCountQuery.data.counts).map(([key, value]) => {
-                    return (
-                        <div
-                            className='flex justify-between mt-4 items-center rounded-lg px-2 py-1 -mx-2 hover:bg-neutral-light-4 dark:hover:bg-neutral-dark-4'
-                            key={key}>
-                            <div className='flex gap-1'>
-                                <NodeIcon nodeType={key} />
-                                {key}
+                {Object.entries(objectsCountQuery.data.counts)
+                    .sort(([a], [b]) => getNodeKindDisplayLabel(a).localeCompare(getNodeKindDisplayLabel(b)))
+                    .map(([key, value]) => {
+                        return (
+                            <div
+                                className='flex justify-between mt-4 items-center rounded-lg px-2 py-1 -mx-2 hover:bg-neutral-light-4 dark:hover:bg-neutral-dark-4'
+                                key={key}>
+                                <div className='flex gap-1'>
+                                    <NodeIcon nodeType={key} />
+                                    {getNodeKindDisplayLabel(key)}
+                                </div>
+                                <Badge label={value.toLocaleString()} />
                             </div>
-                            <Badge label={value.toLocaleString()} />
-                        </div>
-                    );
-                })}
+                        );
+                    })}
             </Card>
         );
     }

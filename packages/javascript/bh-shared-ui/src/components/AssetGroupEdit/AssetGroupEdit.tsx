@@ -25,7 +25,7 @@ import { FC, useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
 import { useTheme } from '../../hooks/useTheme';
 import { useNotifications } from '../../providers';
-import { apiClient } from '../../utils';
+import { apiClient, getNodeKindDisplayLabel } from '../../utils';
 import { SubHeader } from '../../views/Explore/fragments';
 import AssetGroupAutocomplete from './AssetGroupAutocomplete';
 import AssetGroupChangelogTable from './AssetGroupChangelogTable';
@@ -115,7 +115,7 @@ const AssetGroupEdit: FC<{
                 </>
             )}
             {Object.entries(memberCounts?.counts ?? {}).map(([kind, count]) => {
-                return <SubHeader key={kind} label={kind} count={count} />;
+                return <SubHeader key={kind} label={getNodeKindDisplayLabel(kind)} count={count} />;
             })}
         </Box>
     );

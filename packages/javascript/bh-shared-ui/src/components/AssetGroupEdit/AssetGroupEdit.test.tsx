@@ -73,6 +73,29 @@ describe('AssetGroupEdit', () => {
         expect(count).toBe(memberCounts.total_count.toString());
     });
 
+    it('should display human-readable node kind count labels', async () => {
+        const screen = await act(async () => {
+            return render(
+                <AssetGroupEdit
+                    assetGroup={assetGroup}
+                    filter={{}}
+                    memberCounts={{
+                        total_count: 3,
+                        counts: {
+                            AZApp: 1,
+                            CertTemplate: 2,
+                        },
+                    }}
+                    isEditable={false}
+                />
+            );
+        });
+
+        expect(screen.getByText('Azure Application')).toBeInTheDocument();
+        expect(screen.getByText('Certificate Template')).toBeInTheDocument();
+        expect(screen.queryByText('AZApp')).not.toBeInTheDocument();
+    });
+
     it('should display search results when the user enters text', async () => {
         const { screen, user } = await setup();
         const input = screen.getByRole('combobox');
