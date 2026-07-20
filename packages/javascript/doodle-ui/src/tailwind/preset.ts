@@ -145,7 +145,7 @@ export default {
                 'checkbox-check': 'var(--checkbox-check)',
 
                 // 'input-label': 'var(--input-label)',
-                'input-fill': 'var(--input-fill)',
+                // 'input-fill': 'var(--input-fill)',
                 'input-fill-disabled': 'var(--input-fill-disabled)',
                 'input-border-default': 'var(--input-border-default)',
                 // 'input-border-hover': 'var(--input-border-hover)',

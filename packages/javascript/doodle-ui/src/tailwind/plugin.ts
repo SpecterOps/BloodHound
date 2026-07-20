@@ -390,7 +390,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--input-border-hover': dark.secondary.main,
             '--input-border-disabled': palette.neutral.dark[900],
 
-            // '--input-placeholder-text': dark.input.placeholder,
+            '--input-placeholder-text': dark.input.placeholder,
 
             // // Components/Textarea
             '--textarea-fill': palette.neutral.dark[700],

@@ -44,7 +44,9 @@ const MultiSelectTriggerVariants = cva(
 );
 const multiSelectRowStyles = 'flex w-full items-center gap-2 rounded-lg p-2';
 
-const multiSelectInteractiveRowStyles = 'cursor-pointer hover:bg-secondary hover:text-text-contrast';
+const multiSelectInteractiveRowStyles = 'group cursor-pointer hover:bg-secondary hover:text-text-contrast';
+
+const multiSelectCheckboxStyles = 'enabled:data-[state=unchecked]:!border-text-main group-hover:!border-text-contrast';
 interface MultiSelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     open?: boolean;
 }
@@ -113,6 +115,7 @@ const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRo
                     checked={checked}
                     disabled={option.disabled}
                     onCheckedChange={() => onSelect(option.value)}
+                    className={multiSelectCheckboxStyles}
                 />
                 <span className='min-w-0 flex-1 truncate'>{option.label}</span>
             </Label>
@@ -132,7 +135,12 @@ const MultiSelectActionRow = ({ checked, label, onSelect }: MultiSelectActionRow
                     multiSelectInteractiveRowStyles,
                     'text-base font-normal leading-4'
                 )}>
-                <Checkbox id={checkboxId} checked={checked} onCheckedChange={onSelect} />
+                <Checkbox
+                    id={checkboxId}
+                    checked={checked}
+                    onCheckedChange={onSelect}
+                    className={multiSelectCheckboxStyles}
+                />
                 <span className='min-w-0 flex-1 truncate'>{label}</span>
             </Label>
         </div>
