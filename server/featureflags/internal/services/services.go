@@ -50,7 +50,7 @@ type FeatureFlag struct {
 	Description   string
 	Enabled       bool
 	UserUpdatable bool
-	DeletedAt sql.NullTime
+	DeletedAt     sql.NullTime
 }
 
 // TODO: once the audit log middleware is instantuated, this should be removed
