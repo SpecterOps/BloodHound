@@ -444,7 +444,7 @@ export type CreateWebhookResponse = {
     webhook: Webhook;
     hmac_secret: string;
 };
-export type GetWebhooksResponse = PaginatedResponse<Webhook[]>;
+export type GetWebhooksResponse = PaginatedResponse<{ webhooks: Webhook[] }>;
 export type GetWebhookResponse = BasicResponse<{ webhook: Webhook }>;
 export type RotateWebhookSecretResponse = BasicResponse<{ webhook_secret: WebhookSecret }>;
 export type WebhookTestResponse = BasicResponse<WebhookTest>;
