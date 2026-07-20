@@ -76,7 +76,7 @@ func toPermission(row permission) services.Permission {
 }
 
 func toRole(row role, permissionRows []permission) services.Role {
-	var permissions []services.Permission
+	permissions := make([]services.Permission, 0, len(permissionRows))
 	for _, permissionRow := range permissionRows {
 		permissions = append(permissions, toPermission(permissionRow))
 	}

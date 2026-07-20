@@ -26,25 +26,25 @@ import (
 )
 
 type Permission struct {
-	Authority string       `json:"authority"`
-	Name      string       `json:"name"`
-	ID        int32        `json:"id"`
-	CreatedAt time.Time    `json:"created_at"`
-	UpdatedAt time.Time    `json:"updated_at"`
-	DeletedAt sql.NullTime `json:"deleted_at"`
+	Authority string
+	Name      string
+	ID        int32
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt sql.NullTime
 }
 
 // ErrNoPermissionFound indicates that no permission with the given ID was found.
 var ErrNoPermissionFound = errors.New("no permission was found")
 
 type Role struct {
-	ID          int32        `json:"id"`
-	Name        string       `json:"name"`
-	Description string       `json:"description"`
-	Permissions []Permission `json:"permissions"`
-	CreatedAt   time.Time    `json:"created_at"`
-	UpdatedAt   time.Time    `json:"updated_at"`
-	DeletedAt   sql.NullTime `json:"deleted_at"`
+	ID          int32
+	Name        string
+	Description string
+	Permissions []Permission
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   sql.NullTime
 }
 
 // ErrNoRoleFound indicates that no role with the given ID was found.
