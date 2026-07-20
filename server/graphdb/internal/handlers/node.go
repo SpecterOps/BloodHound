@@ -153,7 +153,7 @@ func (s Handlers) GetNodeByID(response http.ResponseWriter, request *http.Reques
 	} else if !s.nodeAuthorizer.CanAccessNode(ctx, node) {
 		responses.WriteError(ctx, http.StatusForbidden, "forbidden", response)
 	} else if nodeView, markdownErr := BuildNodeView(node, includeInfo); markdownErr != nil {
-		slog.WarnContext(ctx, "failed to parse node kind info markdown content", attr.Error(markdownErr))
+		slog.WarnContext(ctx, "Failed to parse node kind info markdown content", attr.Error(markdownErr))
 		responses.WriteBasic(ctx, nodeView, http.StatusOK, response)
 	} else {
 		responses.WriteBasic(ctx, nodeView, http.StatusOK, response)

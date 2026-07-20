@@ -133,7 +133,7 @@ func (s Handlers) GetNodeKindByID(response http.ResponseWriter, request *http.Re
 	} else if err != nil {
 		responses.WriteInternalServerError(ctx, err, response)
 	} else if nodeKindView, markdownErr := BuildNodeKindView(nodeKind); markdownErr != nil {
-		slog.WarnContext(ctx, "failed to parse node kind info markdown content", attr.Error(markdownErr))
+		slog.WarnContext(ctx, "Failed to parse node kind info markdown content", attr.Error(markdownErr))
 		responses.WriteBasic(ctx, nodeKindView, http.StatusOK, response)
 	} else {
 		responses.WriteBasic(ctx, nodeKindView, http.StatusOK, response)

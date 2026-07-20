@@ -142,7 +142,7 @@ func (s Handlers) GetRelationshipByID(response http.ResponseWriter, request *htt
 
 	relationshipView, markdownErr := BuildRelationshipView(relationship, includeKindInfo)
 	if markdownErr != nil {
-		slog.WarnContext(ctx, "failed to parse relationship kind info markdown content", attr.Error(markdownErr))
+		slog.WarnContext(ctx, "Failed to parse relationship kind info markdown content", attr.Error(markdownErr))
 	}
 
 	responses.WriteBasic(ctx, relationshipView, http.StatusOK, response)
