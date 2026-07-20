@@ -98,6 +98,21 @@ func TestResources_SearchHandler(t *testing.T) {
 				},
 			},
 			{
+				Name: "GetUseRawObjectIDFeatureFlagError",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "q", "search value")
+					apitest.SetContext(input, userCtx)
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{}, errors.New("database error"))
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, "an internal error has occurred that is preventing the service from servicing this request")
+				},
+			},
+			{
 				Name: "getSearchableNodeKindsError",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "q", "search value")
@@ -106,6 +121,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				},
 				Test: func(output apitest.Output) {
@@ -121,8 +137,9 @@ func TestResources_SearchHandler(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockGraph.EXPECT().
-						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), "search value", 0, 10).
+						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), "search value", 0, 10, false).
 						Return([]*graph.Node{
 							{
 								Properties: graph.AsProperties(map[string]any{
@@ -149,9 +166,10 @@ func TestResources_SearchHandler(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
-						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, errors.New("graph error"))
 				},
 				Test: func(output apitest.Output) {
@@ -167,6 +185,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
 				},
 				Test: func(output apitest.Output) {
@@ -182,9 +201,10 @@ func TestResources_SearchHandler(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
-						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), "search value", 0, 10).
+						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), "search value", 0, 10, false).
 						Return(nil, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -200,9 +220,28 @@ func TestResources_SearchHandler(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
-						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10).
+						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10, false).
+						Return(nil, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success -- UseRawObjectID Feature Flag On",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "q", "search value")
+					apitest.SetContext(input, userCtx)
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+					mockGraph.EXPECT().
+						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10, true).
 						Return(nil, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -236,9 +275,10 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 			},
 			expectedMocks: func(mockDB *dbMocks.MockDatabase, mockGraph *graphMocks.MockGraph) {
 				mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+				mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				mockGraph.EXPECT().
-					SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10).
+					SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10, false).
 					Return(nil, nil)
 			},
 			expectedStatusCode: 200,
@@ -262,9 +302,10 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 			},
 			expectedMocks: func(mockDB *dbMocks.MockDatabase, mockGraph *graphMocks.MockGraph) {
 				mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+				mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				mockGraph.EXPECT().
-					SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10).
+					SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10, false).
 					Return(nil, nil)
 			},
 			expectedStatusCode: 200,

@@ -101,7 +101,7 @@ const Content: React.FC = () => {
                                 <Route
                                     path={route.path}
                                     element={
-                                        <AuthenticatedRoute>
+                                        <AuthenticatedRoute disallowedRoles={route.disallowedRoles}>
                                             <route.component />
                                         </AuthenticatedRoute>
                                     }

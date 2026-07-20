@@ -3302,25 +3302,27 @@
       },
       "delete": {
         "operationId": "DeleteCustomNode",
-        "summary": "Delete custom node",
-        "description": "Delete the configuration for a specific custom node kind.",
+        "deprecated": true,
+        "summary": "Delete custom node (Deprecated)",
+        "description": "**Deprecated**: This endpoint is no longer supported and will return 410 Gone.\n",
         "tags": [
           "Custom Node Management",
           "Community",
           "Enterprise"
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
           "401": {
             "$ref": "#/components/responses/unauthorized"
           },
-          "404": {
-            "$ref": "#/components/responses/not-found"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
+          "410": {
+            "description": "Gone - This endpoint has been deprecated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
           }
         }
       }
@@ -7232,6 +7234,15 @@
             "type": "integer",
             "format": "int64"
           }
+        },
+        {
+          "name": "include-info",
+          "in": "query",
+          "required": false,
+          "description": "When false or omitted, excludes entity panel information.\nWhen true, returns relationship details with entity panel information included.\n",
+          "schema": {
+            "type": "boolean"
+          }
         }
       ],
       "get": {
@@ -7252,7 +7263,14 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/model.relationship-details"
+                      "anyOf": [
+                        {
+                          "$ref": "#/components/schemas/model.relationship-details"
+                        },
+                        {
+                          "$ref": "#/components/schemas/model.relationship-details-with-info"
+                        }
+                      ]
                     }
                   }
                 }
@@ -7302,16 +7320,144 @@
           "Community",
           "Enterprise"
         ],
+        "parameters": [
+          {
+            "name": "include-info",
+            "in": "query",
+            "required": false,
+            "description": "When true, populates `data.info` with kindinfo objects for the node's registered kinds.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "OK\n\nWhen `include-info=true`, the `info` field is populated with kindinfo objects.\n",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/model.node-details"
+                      "allOf": [
+                        {
+                          "$ref": "#/components/schemas/model.node-details"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "info": {
+                              "type": "array",
+                              "description": "Kindinfo objects populated when `include-info=true`.",
+                              "items": {
+                                "type": "object",
+                                "required": [
+                                  "name",
+                                  "title",
+                                  "position",
+                                  "node_kind_id",
+                                  "markdown"
+                                ],
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "description": "Kindinfo key."
+                                  },
+                                  "title": {
+                                    "type": "string",
+                                    "description": "Human-readable kindinfo title."
+                                  },
+                                  "position": {
+                                    "type": "integer",
+                                    "format": "int32",
+                                    "description": "Display position for the kindinfo object."
+                                  },
+                                  "node_kind_id": {
+                                    "type": "integer",
+                                    "format": "int32",
+                                    "description": "Schema node kind ID associated with the kindinfo object."
+                                  },
+                                  "markdown": {
+                                    "type": "object",
+                                    "required": [
+                                      "content"
+                                    ],
+                                    "properties": {
+                                      "content": {
+                                        "type": "string",
+                                        "description": "Markdown content for the kindinfo object."
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "examples": {
+                  "Info omitted": {
+                    "summary": "Node details when include-info is not present",
+                    "value": {
+                      "data": {
+                        "node_id": 1234567890,
+                        "kinds": [
+                          {
+                            "node_kind_id": 1,
+                            "name": "User"
+                          },
+                          {
+                            "node_kind_id": 2,
+                            "name": "Entity"
+                          }
+                        ],
+                        "properties": {
+                          "objectid": "S-1-5-21-3130019616-2776909439-2417379446-1108",
+                          "name": "ADMIN@CORP.EXAMPLE.COM",
+                          "displayName": "Admin",
+                          "lastSeen": "2026-07-14T18:24:32Z"
+                        }
+                      }
+                    }
+                  },
+                  "Info included": {
+                    "summary": "Node details when include-info is true",
+                    "value": {
+                      "data": {
+                        "node_id": 1234567890,
+                        "kinds": [
+                          {
+                            "node_kind_id": 1,
+                            "name": "User"
+                          },
+                          {
+                            "node_kind_id": 2,
+                            "name": "Entity"
+                          }
+                        ],
+                        "properties": {
+                          "objectid": "S-1-5-21-3130019616-2776909439-2417379446-1108",
+                          "name": "ADMIN@CORP.EXAMPLE.COM",
+                          "displayName": "Admin",
+                          "lastSeen": "2026-07-14T18:24:32Z"
+                        },
+                        "info": [
+                          {
+                            "name": "overview",
+                            "title": "Overview",
+                            "position": 0,
+                            "node_kind_id": 1,
+                            "markdown": {
+                              "content": "This user has privileged access in the environment."
+                            }
+                          }
+                        ]
+                      }
                     }
                   }
                 }
@@ -7700,7 +7846,23 @@
                         "description": "A generic node kind",
                         "is_display_kind": true,
                         "icon": "computer",
-                        "color": "#FF0000"
+                        "color": "#FF0000",
+                        "info": {
+                          "overview": {
+                            "title": "Overview",
+                            "position": 1,
+                            "markdown": {
+                              "content": "This is an overview panel for Node Kind 1"
+                            }
+                          },
+                          "details": {
+                            "title": "Additional Details",
+                            "position": 2,
+                            "markdown": {
+                              "content": "This panel provides additional information about the node"
+                            }
+                          }
+                        }
                       },
                       {
                         "name": "OGE_Node_Kind_2",
@@ -7721,7 +7883,16 @@
                       {
                         "name": "OGE_ConnectedTo",
                         "description": "A generic relationship kind",
-                        "is_traversable": true
+                        "is_traversable": true,
+                        "info": {
+                          "abuse": {
+                            "title": "Abuse Info",
+                            "position": 1,
+                            "markdown": {
+                              "content": "Information about how this relationship can be abused"
+                            }
+                          }
+                        }
                       }
                     ],
                     "environments": [
@@ -7767,7 +7938,16 @@
                         "description": "An Active Directory Computer object",
                         "is_display_kind": true,
                         "icon": "computer",
-                        "color": "#FF0000"
+                        "color": "#FF0000",
+                        "info": {
+                          "overview": {
+                            "title": "Computer Overview",
+                            "position": 1,
+                            "markdown": {
+                              "content": "Active Directory computer objects represent physical or virtual machines joined to the domain"
+                            }
+                          }
+                        }
                       },
                       {
                         "name": "AD_User",
@@ -7775,7 +7955,23 @@
                         "description": "An Active Directory User object",
                         "is_display_kind": true,
                         "icon": "user",
-                        "color": "#0000FF"
+                        "color": "#0000FF",
+                        "info": {
+                          "overview": {
+                            "title": "User Overview",
+                            "position": 1,
+                            "markdown": {
+                              "content": "Active Directory user accounts represent individuals who can authenticate to the domain"
+                            }
+                          },
+                          "security": {
+                            "title": "Security Considerations",
+                            "position": 2,
+                            "markdown": {
+                              "content": "User accounts should follow the principle of least privilege"
+                            }
+                          }
+                        }
                       },
                       {
                         "name": "AD_LocalGroup",
@@ -7796,7 +7992,23 @@
                       {
                         "name": "AD_MemberOf",
                         "description": "An Active Directory relationship kind",
-                        "is_traversable": true
+                        "is_traversable": true,
+                        "info": {
+                          "description": {
+                            "title": "MemberOf Relationship",
+                            "position": 1,
+                            "markdown": {
+                              "content": "The MemberOf relationship indicates group membership in Active Directory"
+                            }
+                          },
+                          "abuse": {
+                            "title": "Abuse Information",
+                            "position": 2,
+                            "markdown": {
+                              "content": "Group membership can be leveraged to inherit permissions and access rights"
+                            }
+                          }
+                        }
                       }
                     ],
                     "environments": [
@@ -13714,7 +13926,7 @@
           },
           {
             "name": "end",
-            "description": "Ending datetime of range (exclusive) in RFC-3339 format; Defaults to current datetime",
+            "description": "Ending datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime",
             "in": "query",
             "schema": {
               "type": "string",
@@ -13822,7 +14034,7 @@
           },
           {
             "name": "end",
-            "description": "Ending datetime of range (exclusive) in RFC-3339 format; Defaults to current datetime",
+            "description": "Ending datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime",
             "in": "query",
             "schema": {
               "type": "string",
@@ -13934,7 +14146,7 @@
           },
           {
             "name": "end",
-            "description": "Ending datetime of range (exclusive) in RFC-3339 format; Defaults to current datetime",
+            "description": "Ending datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime",
             "in": "query",
             "schema": {
               "type": "string",
@@ -13967,6 +14179,232 @@
           },
           "403": {
             "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/data-quality-stats": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetDataQualityStats",
+        "summary": "Get environment-specific data quality stats",
+        "description": "Time series list of data quality stats for a given environment",
+        "tags": [
+          "Data Quality",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "environment_id",
+            "description": "Required. Filters results to the given environment.",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are created_at, updated_at.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "start",
+            "description": "Beginning datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime minus 30 days",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "end",
+            "description": "Ending datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "$ref": "#/components/schemas/api.response.time-window"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.data-quality-stat"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/data-quality-stats-aggregations": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetDataQualityAggregations",
+        "summary": "Get data quality aggregations by environment kind",
+        "description": "Returns data quality metric counts aggregated per environment kind, optionally scoped to an OpenGraph schema extension, combined across environment instances for each collection run. Results can be filtered, sorted, and paginated.\n",
+        "tags": [
+          "Data Quality",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "schema_environment_kind_id",
+            "description": "Required. Scopes the aggregation to a single environment kind id.\n",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "schema_extension_id",
+            "description": "Optional. Scopes the aggregation to a single OpenGraph schema extension id. The extension must exist or a 404 is returned.\n",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are created_at, updated_at.\n",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "start",
+            "description": "Beginning datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime minus 30 days",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "end",
+            "description": "Ending datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "$ref": "#/components/schemas/api.response.time-window"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.data-quality-aggregation"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -16314,6 +16752,170 @@
         }
       }
     },
+    "/api/v2/clients/management/start": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "StartClientManagementOperation",
+        "summary": "Notifies the API of a management operation start",
+        "description": "Endpoint for clients to start a management operation and mark the start time.\n\nNote: caller must be a client. For users, this endpoint will return a 403 as\nthey are not expected or allowed to call this endpoint.\n",
+        "tags": [
+          "Clients",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/model.client-management-operation-start-request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-management-operation"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                },
+                "example": {
+                  "http_status": 409,
+                  "timestamp": "2026-07-01T13:44:43.247Z",
+                  "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "errors": [
+                    {
+                      "context": "",
+                      "message": "invalid management operation status transition"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/clients/management/end": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "EndClientManagementOperation",
+        "summary": "Notifies the API of a management operation ending",
+        "description": "Endpoint for clients to end a management operation and mark the completed time.\n\nNote: caller must be a client. For users, this endpoint will return a 403 as\nthey are not expected or allowed to call this endpoint.\n",
+        "tags": [
+          "Clients",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/model.client-management-operation-end-request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-management-operation"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                },
+                "example": {
+                  "http_status": 409,
+                  "timestamp": "2026-07-01T13:44:43.247Z",
+                  "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "errors": [
+                    {
+                      "context": "",
+                      "message": "invalid management operation status transition"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/tasks/available": {
       "parameters": [
         {
@@ -17733,6 +18335,400 @@
           },
           "403": {
             "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/attack-paths/findings": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListAttackPathFindings",
+        "summary": "List attack path findings",
+        "description": "Returns a unified, paginated list of attack path findings. Defaults to active findings of both relationship and list types unless filtered otherwise.\n",
+        "tags": [
+          "Attack Paths",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`, `environment_name`,\n`zone_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `first_seen`, `last_seen`.\n",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "severity",
+            "description": "Filter by severity level.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "finding_type",
+            "description": "Filter by finding type. When not provided, both types are returned.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "finding",
+            "description": "Filter by finding name.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "title",
+            "description": "Filter by human-readable finding title.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "platform",
+            "description": "Filter by platform.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "environment_id",
+            "description": "Filter by one or more environment identifiers. Repeat the parameter to include multiple environments — results are the union of all specified values.\n",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "environment_name",
+            "description": "Filter by environment display name.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "asset_group_tag_id",
+            "description": "Filter by one or more asset group tag identifiers. Repeat the parameter to include multiple asset group tags — results are the union of all specified values.\nCannot be combined with the `zone_id` filter.\n",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "name": "zone_id",
+            "description": "Filter by a single zone identifier. Cannot be combined with `asset_group_tag_id`.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "zone_name",
+            "description": "Filter by zone name (e.g. \"Tier Zero\").",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "source_principal_id",
+            "description": "Filter by source principal identifier.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "source_principal_kind",
+            "description": "Filter by source principal kind.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "source_principal_name",
+            "description": "Filter by source principal display name.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "target_principal_id",
+            "description": "Filter by target principal identifier.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "target_principal_kind",
+            "description": "Filter by target principal kind.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "target_principal_name",
+            "description": "Filter by target principal display name.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "status",
+            "description": "Filter by finding status.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "first_seen",
+            "description": "Filter by first seen timestamp.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "last_seen",
+            "description": "Filter by last seen timestamp.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                },
+                "examples": {
+                  "Unified CSV export": {
+                    "value": "Severity,Finding,Title,FindingType,Platform,EnvironmentID,EnvironmentName,ZoneID,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen\ncritical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z\nhigh,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z\n"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "severity": {
+                                "type": "string",
+                                "description": "Severity level.",
+                                "enum": [
+                                  "critical",
+                                  "high",
+                                  "moderate",
+                                  "low"
+                                ]
+                              },
+                              "finding_type": {
+                                "type": "string",
+                                "description": "The type of finding.",
+                                "enum": [
+                                  "relationship",
+                                  "list"
+                                ]
+                              },
+                              "finding": {
+                                "type": "string",
+                                "description": "Finding name."
+                              },
+                              "title": {
+                                "type": "string",
+                                "description": "Human-readable finding title. May vary based on the zone context (e.g., \"Tier Zero\" vs \"Privilege Zone\" variants)."
+                              },
+                              "platform": {
+                                "type": "string",
+                                "description": "Platform the finding belongs to."
+                              },
+                              "environment_id": {
+                                "type": "string",
+                                "description": "Environment identifier."
+                              },
+                              "environment_name": {
+                                "type": "string",
+                                "description": "Human-readable environment display name resolved from the graph. Falls back to environment_id when unavailable."
+                              },
+                              "zone_id": {
+                                "type": "integer",
+                                "description": "Zone identifier (asset group tag id)."
+                              },
+                              "zone_name": {
+                                "type": "string",
+                                "description": "Human-readable zone name. Empty when the finding is not tied to a named zone."
+                              },
+                              "source_principal_id": {
+                                "type": "string",
+                                "description": "Source principal identifier. Omitted for list findings."
+                              },
+                              "source_principal_kind": {
+                                "type": "string",
+                                "description": "Source principal kind. Omitted for list findings."
+                              },
+                              "source_principal_name": {
+                                "type": "string",
+                                "description": "Source principal display name resolved from principal properties. Empty when unavailable or for list findings."
+                              },
+                              "target_principal_id": {
+                                "type": "string",
+                                "description": "Target principal identifier."
+                              },
+                              "target_principal_kind": {
+                                "type": "string",
+                                "description": "Target principal kind."
+                              },
+                              "target_principal_name": {
+                                "type": "string",
+                                "description": "Target principal display name resolved from principal properties. Empty when unavailable."
+                              },
+                              "status": {
+                                "type": "string",
+                                "description": "Finding status.",
+                                "enum": [
+                                  "active",
+                                  "accepted",
+                                  "remediated",
+                                  "deprecated"
+                                ]
+                              },
+                              "first_seen": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "Timestamp of when the finding was first created."
+                              },
+                              "last_seen": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "Timestamp of last update."
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "examples": {
+                  "Mixed findings (relationship and list)": {
+                    "summary": "Unified response with both finding types",
+                    "value": {
+                      "count": 2,
+                      "skip": 0,
+                      "limit": 10,
+                      "data": [
+                        {
+                          "severity": "critical",
+                          "finding": "T0GenericWrite",
+                          "title": "GenericWrite Privileges on Tier Zero Objects",
+                          "finding_type": "relationship",
+                          "platform": "Active Directory",
+                          "environment_id": "S-1-5-21-1974516972-3116780949-2584384717",
+                          "environment_name": "CORP1.LAB.HOME-LABS.LOL",
+                          "zone_id": 1,
+                          "zone_name": "Tier Zero",
+                          "source_principal_id": "RPATTON@CORP1.LAB.HOME-LABS.LOL",
+                          "source_principal_kind": "User",
+                          "source_principal_name": "Robert Patton",
+                          "target_principal_id": "ADMIN@CORP1.LAB.HOME-LABS.LOL",
+                          "target_principal_kind": "User",
+                          "target_principal_name": "Domain Admin",
+                          "status": "active",
+                          "first_seen": "2026-04-11T00:30:18.491666Z",
+                          "last_seen": "2026-04-14T16:57:35.675609Z"
+                        },
+                        {
+                          "severity": "high",
+                          "finding": "Kerberoasting",
+                          "title": "Kerberoastable User Accounts",
+                          "finding_type": "list",
+                          "platform": "Active Directory",
+                          "environment_id": "S-1-5-21-1974516972-3116780949-2584384717",
+                          "environment_name": "CORP1.LAB.HOME-LABS.LOL",
+                          "zone_id": 1,
+                          "zone_name": "Tier Zero",
+                          "source_principal_id": "",
+                          "source_principal_kind": "",
+                          "source_principal_name": "",
+                          "target_principal_id": "PSX_D_BA@CORP1.LAB.HOME-LABS.LOL",
+                          "target_principal_kind": "User",
+                          "target_principal_name": "Backup Admin",
+                          "status": "accepted",
+                          "first_seen": "2026-04-11T00:30:18.491666Z",
+                          "last_seen": "2026-04-14T16:57:35.675609Z"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -21385,6 +22381,13 @@
       },
       "model.relationship-details": {
         "type": "object",
+        "required": [
+          "relationship_id",
+          "source_node_id",
+          "target_node_id",
+          "kind",
+          "properties"
+        ],
         "properties": {
           "relationship_id": {
             "type": "integer",
@@ -21406,6 +22409,10 @@
           },
           "kind": {
             "type": "object",
+            "required": [
+              "relationship_kind_id",
+              "name"
+            ],
             "properties": {
               "relationship_kind_id": {
                 "type": "integer",
@@ -21419,9 +22426,121 @@
           },
           "properties": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": true,
+            "required": [
+              "is_traversable",
+              "lastSeen"
+            ],
+            "properties": {
+              "is_traversable": {
+                "type": "boolean"
+              },
+              "lastSeen": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
           }
         }
+      },
+      "model.kind-info-base": {
+        "type": "object",
+        "required": [
+          "title",
+          "position"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Entity Panel Section"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "model.kind-info-type-markdown": {
+        "type": "object",
+        "required": [
+          "markdown"
+        ],
+        "properties": {
+          "markdown": {
+            "type": "object",
+            "required": [
+              "content"
+            ],
+            "properties": {
+              "content": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "model.kind-info-content": {
+        "type": "object",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/model.kind-info-type-markdown"
+          }
+        ]
+      },
+      "model.kind-info-response": {
+        "allOf": [
+          {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "panel_section_1"
+              }
+            }
+          },
+          {
+            "$ref": "#/components/schemas/model.kind-info-base"
+          },
+          {
+            "$ref": "#/components/schemas/model.kind-info-content"
+          }
+        ]
+      },
+      "model.relationship-details-with-info": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.relationship-details"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "info": {
+                "type": "array",
+                "items": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/model.kind-info-response"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "relationship_kind_id"
+                      ],
+                      "properties": {
+                        "relationship_kind_id": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
       },
       "model.node-details": {
         "type": "object",
@@ -21620,6 +22739,43 @@
           }
         }
       },
+      "model.graph-extension.kind-info-definition": {
+        "type": "object",
+        "description": "A map of named info panels used in extension definitions.\nEach property key is a stable panel identifier, and each property value\nmust be a valid KindInfo object with title, position, and content.\n",
+        "propertyNames": {
+          "pattern": "^[a-z0-9_-]{1,128}$",
+          "description": "Keys may only include lowercase alphanumeric characters, hyphens, and underscores"
+        },
+        "additionalProperties": {
+          "type": "object",
+          "required": [
+            "title",
+            "position"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "example": "Entity Panel Section"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "markdown": {
+              "type": "object",
+              "required": [
+                "content"
+              ],
+              "properties": {
+                "content": {
+                  "type": "string",
+                  "example": "This is markdown content for the info panel"
+                }
+              }
+            }
+          }
+        }
+      },
       "model.graph-extension.payload": {
         "type": "object",
         "properties": {
@@ -21671,6 +22827,9 @@
                 "color": {
                   "type": "string",
                   "example": "#FF0000"
+                },
+                "info": {
+                  "$ref": "#/components/schemas/model.graph-extension.kind-info-definition"
                 }
               }
             }
@@ -21690,6 +22849,9 @@
                 },
                 "is_traversable": {
                   "type": "boolean"
+                },
+                "info": {
+                  "$ref": "#/components/schemas/model.graph-extension.kind-info-definition"
                 }
               }
             }
@@ -22223,6 +23385,100 @@
           }
         ]
       },
+      "model.data-quality-stat": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int32.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "extension_id": {
+                "type": "integer"
+              },
+              "environment_kind_id": {
+                "type": "integer"
+              },
+              "environment_id": {
+                "type": "string"
+              },
+              "metric_type": {
+                "type": "string",
+                "enum": [
+                  "node",
+                  "relationship"
+                ]
+              },
+              "metric_name": {
+                "type": "string"
+              },
+              "metric_value": {
+                "type": "number",
+                "format": "double"
+              },
+              "kind_id": {
+                "description": "The kind ID for the counted node kind. Present when `metric_type` is `node`; otherwise null.",
+                "type": "integer",
+                "format": "int32",
+                "nullable": true
+              },
+              "run_id": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          }
+        ]
+      },
+      "model.data-quality-aggregation": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int32.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "run_id": {
+                "type": "string"
+              },
+              "extension_id": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "environment_kind_id": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "metric_type": {
+                "type": "string",
+                "enum": [
+                  "node",
+                  "relationship"
+                ]
+              },
+              "metric_name": {
+                "type": "string"
+              },
+              "metric_value": {
+                "type": "number",
+                "format": "double"
+              },
+              "kind_id": {
+                "description": "The kind ID for the counted node kind. Present when `metric_type` is `node`; otherwise null.",
+                "type": "integer",
+                "format": "int32",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
       "enum.datapipe-status": {
         "type": "string",
         "enum": [
@@ -22485,6 +23741,130 @@
             }
           }
         ]
+      },
+      "model.client-management-operation-start-request": {
+        "type": "object",
+        "required": [
+          "operation_id"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "enum.client-management-operation-type": {
+        "type": "string",
+        "enum": [
+          "support_bundle"
+        ]
+      },
+      "enum.client-management-operation-status": {
+        "type": "string",
+        "enum": [
+          "queued",
+          "running",
+          "succeeded",
+          "failed",
+          "canceled"
+        ]
+      },
+      "model.client-management-operation": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.uuid"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "client_id": {
+                "type": "string",
+                "format": "uuid",
+                "readOnly": true
+              },
+              "artifact_id": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.uuid"
+                  }
+                ]
+              },
+              "type": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/enum.client-management-operation-type"
+                  }
+                ]
+              },
+              "status": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/enum.client-management-operation-status"
+                  }
+                ]
+              },
+              "requested_by_user_id": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.uuid"
+                  }
+                ]
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "readOnly": true
+              },
+              "started_at": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.time.response"
+                  }
+                ]
+              },
+              "completed_at": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.time.response"
+                  }
+                ]
+              },
+              "execution_time": {
+                "type": "string",
+                "format": "date-time",
+                "readOnly": true
+              }
+            }
+          }
+        ]
+      },
+      "model.client-management-operation-end-request": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "status"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "succeeded",
+              "failed",
+              "canceled"
+            ]
+          }
+        }
       },
       "enum.risk-acceptance": {
         "type": "string",

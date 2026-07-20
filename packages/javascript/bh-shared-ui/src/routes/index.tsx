@@ -67,4 +67,5 @@ export type Routable = {
     authenticationRequired: boolean;
     navigation: boolean;
     exact?: boolean;
+    disallowedRoles?: { name: string; notification: string }[];
 };

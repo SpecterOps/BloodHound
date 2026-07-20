@@ -211,12 +211,20 @@ func NewResolutionError(err error) ResolutionError {
 }
 
 // rewriteLegacyNameMatchIngestibleEndpoint rewriets an IngestibleEndpoint from a legacy supported
-// match_by "name" strategy to a generic property match.
-func rewriteLegacyNameMatchIngestibleEndpoint(ingestEntry ein.IngestibleEndpoint) (ein.IngestibleEndpoint, error) {
+// match_by "name" strategy to a generic property match. The comparison operator used for the
+// rewritten "name" property match depends on useRawObjectIDs: when true, matching is
+// case-sensitive (ein.OperatorEquals) to align with raw, non-uppercased object IDs; when false,
+// matching remains case-insensitive (ein.OperatorEqualsIgnoreCase) to preserve legacy behavior.
+func rewriteLegacyNameMatchIngestibleEndpoint(ingestEntry ein.IngestibleEndpoint, useRawObjectIDs bool) (ein.IngestibleEndpoint, error) {
 	switch ingestEntry.MatchBy {
 	case ein.MatchByName:
 		if ingestEntry.Value == "" {
 			return ingestEntry, errors.New("empty value for name match_by strategy")
+		}
+
+		nameMatchOperator := ein.OperatorEqualsIgnoreCase
+		if useRawObjectIDs {
+			nameMatchOperator = ein.OperatorEquals
 		}
 
 		return ein.IngestibleEndpoint{
@@ -224,7 +232,7 @@ func rewriteLegacyNameMatchIngestibleEndpoint(ingestEntry ein.IngestibleEndpoint
 			Kind:    ingestEntry.Kind,
 			Matchers: []ein.MatchExpression{{
 				Key:      "name",
-				Operator: ein.OperatorEqualsIgnoreCase,
+				Operator: nameMatchOperator,
 				Value:    ingestEntry.Value,
 			}},
 		}, nil
@@ -236,9 +244,10 @@ func rewriteLegacyNameMatchIngestibleEndpoint(ingestEntry ein.IngestibleEndpoint
 // resolveIngestibleEndpoint attempts to resolve an IngestibleEndpoint by querying the database
 // based on its MatchBy strategy (Property or Name). If successful, it returns a new endpoint
 // where MatchBy is set to MatchByID and Value contains the resolved object ID. If the endpoint
-// is already resolved (MatchByObjectId), it returns it unchanged.
-func resolveIngestibleEndpoint(tx graph.Transaction, ingestEntry ein.IngestibleEndpoint) (ein.IngestibleEndpoint, error) {
-	if ingestEntry, err := rewriteLegacyNameMatchIngestibleEndpoint(ingestEntry); err != nil {
+// is already resolved (MatchByObjectId), it returns it unchanged. useRawObjectIDs is forwarded to
+// rewriteLegacyNameMatchIngestibleEndpoint to determine the casing behavior of legacy "name" matches.
+func resolveIngestibleEndpoint(tx graph.Transaction, ingestEntry ein.IngestibleEndpoint, useRawObjectIDs bool) (ein.IngestibleEndpoint, error) {
+	if ingestEntry, err := rewriteLegacyNameMatchIngestibleEndpoint(ingestEntry, useRawObjectIDs); err != nil {
 		return ingestEntry, err
 	} else {
 		switch ingestEntry.MatchBy {
@@ -266,9 +275,10 @@ func resolveIngestibleEndpoint(tx graph.Transaction, ingestEntry ein.IngestibleE
 // collects the resolved relationships in a separate goroutine, and waits for completion.
 // It returns the fully resolved list of relationships and any aggregated errors encountered
 // during the worker execution. This function logs its duration and operation details to the context logger.
-func ResolveAll(ctx context.Context, endpointResolver *Resolver, ingestEntries []ein.IngestibleRelationship) ([]ein.IngestibleRelationship, error) {
+// useRawObjectIDs determines the casing behavior applied to legacy match_by "name" resolutions.
+func ResolveAll(ctx context.Context, endpointResolver *Resolver, ingestEntries []ein.IngestibleRelationship, useRawObjectIDs bool) ([]ein.IngestibleRelationship, error) {
 	// Start a new parallel resolution
-	endpointResolver.Start(ctx, post.MaximumDatabaseParallelWorkers)
+	endpointResolver.Start(ctx, post.MaximumDatabaseParallelWorkers, useRawObjectIDs)
 
 	// Update ingest entries in-place
 	for idx := range ingestEntries {
