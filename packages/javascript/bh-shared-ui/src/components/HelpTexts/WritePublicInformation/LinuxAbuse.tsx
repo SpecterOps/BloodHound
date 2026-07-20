@@ -23,18 +23,20 @@ const LinuxAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
             <Typography variant='body2'>
-                The write access to the AltSecurityIdentities may enable an ADCS ESC14 Scenario A attack.
-            </Typography>
-            <Typography variant='body2'>
-                Alternatively, the write access to the SPN enable a targeted Kerberoasting attack against user accounts
-                with a weak password. See the{' '}
-                <Link
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    href='https://bloodhound.specterops.io/resources/edges/write-spn'>
-                    WriteSPN
-                </Link>{' '}
-                edge for more details.
+                <p className='my-4'>
+                    The write access to the AltSecurityIdentities may enable an ADCS ESC14 Scenario A attack.
+                </p>
+                <p className='my-4'>
+                    Alternatively, the write access to the SPN enable a targeted Kerberoasting attack against user
+                    accounts with a weak password. See the{' '}
+                    <Link
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        href='https://bloodhound.specterops.io/resources/edges/write-spn'>
+                        WriteSPN
+                    </Link>{' '}
+                    edge for more details.
+                </p>
             </Typography>
             <AdcsEsc14ScenarioALinux />
         </>
