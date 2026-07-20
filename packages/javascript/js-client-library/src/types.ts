@@ -654,7 +654,25 @@ export type Webhook = {
     };
 };
 
-export type WebhookSortBy = 'name' | 'created_at' | 'updated_at' | 'health';
+export type WebhookSortBy =
+    | 'name'
+    | 'created_at'
+    | 'updated_at'
+    | 'health'
+    | 'type'
+    | 'url'
+    | 'last_triggered_at'
+    | 'last_error'
+    | 'attempts'
+    | '-name'
+    | '-created_at'
+    | '-updated_at'
+    | '-health'
+    | '-type'
+    | '-url'
+    | '-last_triggered_at'
+    | '-last_error'
+    | '-attempts';
 
 export interface WebhookParams {
     skip?: number;
