@@ -229,7 +229,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
             <div className='w-full flex items-center justify-between border-b border-neutral-3'>
                 <div className='w-full flex items-center gap-2'>
                     <Button
-                        className='w-6 max-xl:px-2 max-lg:px-6 text-contrast'
+                        className='w-6 text-contrast'
                         variant='text'
                         disabled={isAccordionDisabled}
                         data-testid={`privilege-zones_details_${filterKey}-accordion_open-toggle-button`}
