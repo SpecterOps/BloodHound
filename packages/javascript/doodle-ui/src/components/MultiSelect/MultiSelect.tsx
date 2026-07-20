@@ -90,7 +90,7 @@ interface MultiSelectOptionRowProps {
     onSelect: (value: string) => void;
 }
 
-interface MultiSelectActionRowProps {
+interface MultiSelectAllOptionsRowProps {
     checked: React.ComponentProps<typeof Checkbox>['checked'];
     label: string;
     onSelect: () => void;
@@ -123,7 +123,7 @@ const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRo
     );
 };
 
-const MultiSelectActionRow = ({ checked, label, onSelect }: MultiSelectActionRowProps) => {
+const MultiSelectAllOptionsRow = ({ checked, label, onSelect }: MultiSelectAllOptionsRowProps) => {
     const checkboxId = React.useId();
 
     return (
@@ -319,7 +319,7 @@ const MultiSelect = ({
                             !hasSearchText &&
                             !isSearchResultEmpty &&
                             selectableValues.length > 0 && (
-                                <MultiSelectActionRow
+                                <MultiSelectAllOptionsRow
                                     checked={selectAllChecked}
                                     label={selectAllLabel}
                                     onSelect={handleSelectAll}
