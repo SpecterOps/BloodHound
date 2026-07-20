@@ -21,25 +21,23 @@ import { SimpleEnvironmentSelector } from '.';
 import { testEnvironments } from '../../mocks/handlers/environments';
 import { render, screen, within } from '../../test-utils';
 
+let testFeaturesResponse = {};
+
+const toggleFeatureFlag = (isEnabled: boolean) => {
+    testFeaturesResponse = {
+        data: [
+            { key: 'opengraph_extension_management', enabled: isEnabled },
+            { key: 'opengraph_findings', enabled: isEnabled },
+        ],
+    };
+};
+
 const server = setupServer(
     rest.get(`/api/v2/available-domains`, (req, res, ctx) => {
         return res(ctx.json({ data: testEnvironments }));
     }),
     rest.get(`/api/v2/features`, (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: [
-                    {
-                        id: 1,
-                        key: 'azure_support',
-                        name: 'azure_support',
-                        description: 'azure_support',
-                        enabled: true,
-                        user_updatable: true,
-                    },
-                ],
-            })
-        );
+        return res(ctx.json(testFeaturesResponse));
     })
 );
 beforeAll(() => server.listen());
@@ -49,10 +47,10 @@ afterAll(() => server.close());
 const errorMessage = <>Domains unavailable</>;
 
 describe('Simple Environment Selector', () => {
-    it('should render with a full list of multiple tenants and domains', async () => {
+    it('should render with a full list of multiple tenants and domains and no open graph environments as feature flag is off', async () => {
         const user = userEvent.setup();
         const testOnChange = vi.fn();
-        const testValue = { type: 'active-directory', id: '3a6f8001-11f4-43bb-9de6-25c0d931f244' } as const;
+        const testValue = { type: 'active-directory', id: '3a6f8001-11f4-43bb-9de6-25c0d931f244' };
 
         render(<SimpleEnvironmentSelector selected={testValue} onSelect={testOnChange} errorMessage={errorMessage} />);
 
@@ -69,12 +67,10 @@ describe('Simple Environment Selector', () => {
 
         expect(await screen.findByText('All Active Directory Domains')).toBeInTheDocument();
         expect(await screen.findByText('All Azure Tenants')).toBeInTheDocument();
+        expect(await screen.queryByText('All AWS Environments')).not.toBeInTheDocument();
+        expect(await screen.queryByText('All GitHub Environments')).not.toBeInTheDocument();
 
         const container = await screen.findByTestId('data-quality_context-selector-popover');
-        // With default filter:
-        // Azure - 7
-        // Active Directory - 1
-        // Plus 1 for each aggregate ('All Azure', 'All Active Directory')
         expect(within(container).getAllByRole('button')).toHaveLength(10);
     });
 
@@ -96,6 +92,33 @@ describe('Simple Environment Selector', () => {
         await user.click(screen.getByText('All Active Directory Domains'));
 
         expect(testOnChange).toHaveBeenLastCalledWith({ type: 'active-directory-platform', id: null });
+    });
+});
+
+describe('Open Graph feature flag', () => {
+    it('should show open graph environment options when the feature flag is enabled', async () => {
+        toggleFeatureFlag(true);
+        const user = userEvent.setup();
+        const testOnChange = vi.fn();
+        const testValue = { type: 'active-directory', id: '3a6f8001-11f4-43bb-9de6-25c0d931f244' };
+
+        render(<SimpleEnvironmentSelector selected={testValue} onSelect={testOnChange} errorMessage={errorMessage} />);
+
+        const contextSelector = await screen.findByTestId('data-quality_context-selector');
+        expect(contextSelector).toBeInTheDocument();
+
+        await user.click(contextSelector);
+
+        // Open graph aggregates are shown in addition to the known Active Directory and Azure aggregates
+        expect(await screen.findByText('All AWS Environments')).toBeInTheDocument();
+        expect(await screen.findByText('All GitHub Environments')).toBeInTheDocument();
+
+        // Collected open graph environments are listed alongside Active Directory and Azure environments
+        expect(await screen.findByText('cyan.info')).toBeInTheDocument();
+        expect(await screen.findByText('steve.code')).toBeInTheDocument();
+
+        const container = await screen.findByTestId('data-quality_context-selector-popover');
+        expect(within(container).getAllByRole('button')).toHaveLength(14);
     });
 });
 
@@ -173,5 +196,39 @@ describe('Context Selector Error', () => {
         );
 
         expect(await screen.findByText(testErrorMessage)).toBeInTheDocument();
+    });
+});
+
+describe('Open Graph platform selection', () => {
+    beforeEach(() => toggleFeatureFlag(true));
+
+    it('includes the platform environment_kind_id in the onSelect payload when an open graph aggregate is clicked', async () => {
+        const user = userEvent.setup();
+        const testOnChange = vi.fn();
+        const testValue = { type: 'active-directory', id: '3a6f8001-11f4-43bb-9de6-25c0d931f244' };
+
+        render(<SimpleEnvironmentSelector selected={testValue} onSelect={testOnChange} errorMessage={errorMessage} />);
+
+        const contextSelector = await screen.findByTestId('data-quality_context-selector');
+        await user.click(contextSelector);
+
+        await user.click(await screen.findByText('All AWS Environments'));
+
+        expect(testOnChange).toHaveBeenLastCalledWith({ type: 'AWS-platform', id: null, environment_kind_id: 101 });
+    });
+
+    it('renders the aggregation display name in the tooltip for an open graph platform', async () => {
+        const user = userEvent.setup();
+        const testValue = { type: 'active-directory', id: '3a6f8001-11f4-43bb-9de6-25c0d931f244' };
+
+        render(<SimpleEnvironmentSelector selected={testValue} onSelect={vi.fn()} errorMessage={errorMessage} />);
+
+        const contextSelector = await screen.findByTestId('data-quality_context-selector');
+        await user.click(contextSelector);
+
+        await user.hover(await screen.findByText('All GitHub Environments'));
+
+        const tooltip = await screen.findByRole('tooltip', {}, { timeout: 2000 });
+        expect(tooltip).toHaveTextContent('All GitHub Environments');
     });
 });

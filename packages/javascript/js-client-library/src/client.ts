@@ -99,6 +99,7 @@ import {
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
     ListFileTypesForIngestResponse,
+    OpenGraphDataQualityResponse,
     PaginatedResponse,
     PostureFindingTrendsResponse,
     PostureHistoryResponse,
@@ -666,6 +667,13 @@ class BHEAPIClient {
         );
     };
 
+    getOpenGraphQualityStats = (platformId: string, options?: RequestOptions) => {
+        return this.baseClient.get<OpenGraphDataQualityResponse>(
+            `/api/v2/data-quality-stats?environment_id=${platformId}`,
+            options
+        );
+    };
+
     getPlatformQualityStats = (
         platformtype: string,
         start?: Date,
@@ -687,6 +695,13 @@ class BHEAPIClient {
                 },
                 options
             )
+        );
+    };
+
+    getOpenGraphPlatformQualityStats = (platformKindId?: number, options?: RequestOptions) => {
+        return this.baseClient.get(
+            `/api/v2/data-quality-stats-aggregations?schema_environment_kind_id=${platformKindId}`,
+            options
         );
     };
 
