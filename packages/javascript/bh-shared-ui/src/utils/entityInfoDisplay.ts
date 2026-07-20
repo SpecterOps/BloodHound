@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { GraphNode } from 'js-client-library';
+import { GraphNode, NodeDetails, NodeDetailsWithInfo, PaginatedResponse } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import startCase from 'lodash/startCase';
 import { DateTime } from 'luxon';
@@ -24,13 +24,16 @@ import {
     ActiveDirectoryKindProperties,
     ActiveDirectoryKindPropertiesToDisplay,
     ActiveDirectoryNodeKind,
+    ActiveDirectoryRelationshipKind,
     AzureKindProperties,
     AzureKindPropertiesToDisplay,
     AzureNodeKind,
+    AzureRelationshipKind,
     CommonKindProperties,
     CommonKindPropertiesToDisplay,
 } from '../graphSchema';
-import { MappedStringLiteral, SelectedNode } from '../types';
+import { MappedStringLiteral } from '../types';
+import { EntityKinds } from './content';
 import { LuxonFormat } from './datetime';
 
 export const formatPotentiallyUnknownLabel = (propKey: string) => {
@@ -190,10 +193,10 @@ export enum ADSpecificTimeProperties {
 export const NoEntitySelectedMessage = 'Select a node to view the associated information';
 export const NoEntitySelectedHeader = 'None Selected';
 
-export const getEntityName = (selectedEntity: SelectedNode | null | undefined) => {
+export const getEntityName = (selectedEntity: NodeDetails | NodeDetailsWithInfo | undefined) => {
     if (!selectedEntity) return NoEntitySelectedHeader;
 
-    const { name } = selectedEntity;
+    const name = selectedEntity.properties.name || selectedEntity.properties.objectid;
 
     if (!name) return 'Name not found';
 
@@ -332,3 +335,60 @@ export const getNodeSource = (kinds: string[]): string | undefined => {
     if (kinds.includes(ActiveDirectoryNodeKind.Entity)) return 'Active Directory';
     return 'OpenGraph';
 };
+
+export function getEntityQueryCount<T>(
+    queryData: Array<PromiseFulfilledResult<PaginatedResponse<T>>> | PaginatedResponse<T> | undefined,
+    countLabel: string | undefined
+): number | undefined {
+    if (Array.isArray(queryData)) {
+        const fulfilledData = queryData.filter((result) => result.status === 'fulfilled').map((result) => result.value);
+
+        if (countLabel !== undefined) {
+            const labeledSection = fulfilledData.find((sectionData: any) => sectionData?.countLabel === countLabel);
+            return labeledSection?.count;
+        } else {
+            return fulfilledData.reduce((acc, val) => {
+                const sectionCount = val?.count ?? 0;
+                return acc + sectionCount;
+            }, 0);
+        }
+    } else if (queryData) {
+        return queryData?.count ?? 0;
+    }
+}
+
+const getBuiltInNodeKind = (kind: string): EntityKinds | undefined => {
+    let result = undefined;
+
+    Object.values(ActiveDirectoryNodeKind).forEach((activeDirectoryType) => {
+        if (activeDirectoryType.localeCompare(kind, undefined, { sensitivity: 'base' }) === 0)
+            result = activeDirectoryType;
+    });
+
+    Object.values(AzureNodeKind).forEach((azureType) => {
+        if (azureType.localeCompare(kind, undefined, { sensitivity: 'base' }) === 0) result = azureType;
+    });
+
+    return result;
+};
+
+const getBuiltInRelationshipKind = (
+    kind: string
+): ActiveDirectoryRelationshipKind | AzureRelationshipKind | undefined => {
+    let result = undefined;
+
+    Object.values(ActiveDirectoryRelationshipKind).forEach((activeDirectoryType) => {
+        if (activeDirectoryType.localeCompare(kind, undefined, { sensitivity: 'base' }) === 0)
+            result = activeDirectoryType;
+    });
+
+    Object.values(AzureRelationshipKind).forEach((azureType) => {
+        if (azureType.localeCompare(kind, undefined, { sensitivity: 'base' }) === 0) result = azureType;
+    });
+
+    return result;
+};
+
+const getBuiltInKind = (kind: string) => getBuiltInNodeKind(kind) ?? getBuiltInRelationshipKind(kind);
+
+export const isBuiltInKind = (kind: string): boolean => !!getBuiltInKind(kind);

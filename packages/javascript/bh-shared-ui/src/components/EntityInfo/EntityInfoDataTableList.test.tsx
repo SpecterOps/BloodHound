@@ -13,15 +13,14 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { SeedTypeCypher } from 'js-client-library';
+import { NodeDetails, SeedTypeCypher } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import * as hooks from '../../hooks';
-import { zoneHandlers } from '../../mocks';
+import { mockSourceKindsHandler, zoneHandlers } from '../../mocks';
 import { zonesPath } from '../../routes';
-import { render, screen, waitForElementToBeRemoved } from '../../test-utils';
-import { EntityKinds } from '../../utils';
+import { render, screen } from '../../test-utils';
 import { ObjectInfoPanelContextProvider } from '../../views';
 import EntitysRulesInformation from '../../views/PrivilegeZones/Details/EntityRulesInformation';
 import { EntityInfoDataTable } from '../EntityInfoDataTable';
@@ -53,18 +52,26 @@ const server = setupServer(
                 data: testSelector,
             })
         );
-    })
+    }),
+    rest.get('/api/v2/nodes/:id', (_, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    node_id: 7,
+                    kinds: [{ name: 'User', node_kind_id: 1 }],
+                    properties: { objectid: 'test-user' },
+                },
+            })
+        );
+    }),
+    mockSourceKindsHandler()
 );
 
 const EntityInfoContentWithProvider = ({
-    testId,
-    nodeType,
-    databaseId,
+    selectedNode,
     additionalTables,
 }: {
-    testId: string;
-    nodeType: EntityKinds | string;
-    databaseId?: string;
+    selectedNode: NodeDetails;
     additionalTables?: {
         sectionProps: any;
         TableComponent: React.FC<any>;
@@ -73,10 +80,8 @@ const EntityInfoContentWithProvider = ({
     <ObjectInfoPanelContextProvider>
         <EntityInfoContent
             DataTable={EntityInfoDataTable}
-            id={testId}
-            nodeType={nodeType}
-            databaseId={databaseId}
             additionalTables={additionalTables}
+            selectedNode={selectedNode}
         />
     </ObjectInfoPanelContextProvider>
 );
@@ -95,9 +100,14 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('EntityInfoDataTableList', () => {
-    it('Displays the selectors list if passed in through additional sections', async () => {
+    it('Displays the rules list if passed in through additional sections', async () => {
         const testId = '1';
         const nodeType = ActiveDirectoryNodeKind.User;
+        const selectedNode = {
+            node_id: 1,
+            kinds: [{ name: nodeType, node_kind_id: 1 }],
+            properties: { objectid: testId },
+        };
 
         vi.mocked(hooks.useExploreParams).mockReturnValue({ selectedItem: '7' } as unknown as ReturnType<
             typeof hooks.useExploreParams
@@ -108,8 +118,7 @@ describe('EntityInfoDataTableList', () => {
 
         render(
             <EntityInfoContentWithProvider
-                testId={testId}
-                nodeType={nodeType}
+                selectedNode={selectedNode}
                 additionalTables={[
                     {
                         sectionProps: { tagType: zonesPath },
@@ -119,25 +128,19 @@ describe('EntityInfoDataTableList', () => {
             />
         );
 
-        await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
-
-        const list = screen.getByTestId('entity-info-data-table-list');
-        let listContainsSelectorsSection = false;
-
-        list.childNodes.forEach((child) => {
-            if (child.textContent?.includes('Rules')) listContainsSelectorsSection = true;
-        });
-
-        expect(listContainsSelectorsSection).toBeTruthy();
+        expect(await screen.findByText('Rules')).toBeInTheDocument();
     });
 
     it('Hides selector information if additionalSections is false', async () => {
         const testId = '1';
         const nodeType = ActiveDirectoryNodeKind.User;
+        const selectedNode = {
+            node_id: 1,
+            kinds: [{ name: nodeType, node_kind_id: 1 }],
+            properties: { objectid: testId },
+        };
 
-        render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} />);
-
-        await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
+        render(<EntityInfoContentWithProvider selectedNode={selectedNode} />);
 
         const selectorsInfoSectionTitle = await screen.queryByText(/rules/i);
         expect(selectorsInfoSectionTitle).not.toBeInTheDocument();
