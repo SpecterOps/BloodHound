@@ -8216,6 +8216,85 @@
         }
       }
     },
+    "/api/v2/node-kinds/{node_kind_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "node_kind_id",
+          "description": "Node Kind ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetNodeKind",
+        "summary": "Get Node Kind",
+        "description": "**Experimental** - Retrieves the details of a single OpenGraph node kind by its id, including its entity-panel info map keyed by info key.\n",
+        "tags": [
+          "OpenGraph (Experimental)",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.node-kind-response"
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "node_kind_id": 42,
+                    "name": "User",
+                    "display_name": "User",
+                    "description": "a user node kind",
+                    "is_display_kind": true,
+                    "icon": "user",
+                    "color": "#FFFFFF",
+                    "info": {
+                      "overview": {
+                        "title": "Overview",
+                        "position": 1,
+                        "markdown": {
+                          "content": "This is an overview panel for the node kind"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/saved-queries": {
       "parameters": [
         {
@@ -22456,15 +22535,12 @@
           },
           "position": {
             "type": "integer",
-            "minimum": 1
+            "minimum": 0
           }
         }
       },
-      "model.kind-info-type-markdown": {
+      "model.kind-info-markdown": {
         "type": "object",
-        "required": [
-          "markdown"
-        ],
         "properties": {
           "markdown": {
             "type": "object",
@@ -22478,6 +22554,19 @@
             }
           }
         }
+      },
+      "model.kind-info-type-markdown": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.kind-info-markdown"
+          },
+          {
+            "type": "object",
+            "required": [
+              "markdown"
+            ]
+          }
+        ]
       },
       "model.kind-info-content": {
         "type": "object",
@@ -22747,33 +22836,14 @@
           "description": "Keys may only include lowercase alphanumeric characters, hyphens, and underscores"
         },
         "additionalProperties": {
-          "type": "object",
-          "required": [
-            "title",
-            "position"
-          ],
-          "properties": {
-            "title": {
-              "type": "string",
-              "example": "Entity Panel Section"
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/model.kind-info-base"
             },
-            "position": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "markdown": {
-              "type": "object",
-              "required": [
-                "content"
-              ],
-              "properties": {
-                "content": {
-                  "type": "string",
-                  "example": "This is markdown content for the info panel"
-                }
-              }
+            {
+              "$ref": "#/components/schemas/model.kind-info-markdown"
             }
-          }
+          ]
         }
       },
       "model.graph-extension.payload": {
@@ -22946,6 +23016,43 @@
           },
           "is_builtin": {
             "type": "boolean"
+          }
+        }
+      },
+      "model.node-kind-response": {
+        "type": "object",
+        "properties": {
+          "node_kind_id": {
+            "type": "integer",
+            "format": "int32",
+            "example": 42
+          },
+          "name": {
+            "type": "string",
+            "example": "User"
+          },
+          "display_name": {
+            "type": "string",
+            "example": "User"
+          },
+          "description": {
+            "type": "string",
+            "example": "a user node kind"
+          },
+          "is_display_kind": {
+            "type": "boolean",
+            "example": true
+          },
+          "icon": {
+            "type": "string",
+            "example": "user"
+          },
+          "color": {
+            "type": "string",
+            "example": "#FFFFFF"
+          },
+          "info": {
+            "$ref": "#/components/schemas/model.graph-extension.kind-info-definition"
           }
         }
       },

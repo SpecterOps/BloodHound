@@ -13,8 +13,11 @@
 # limitations under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
-
-allOf:
-  - $ref: "./model.kind-info-markdown.yaml"
-  - type: object
-    required: [markdown]
+type: object
+properties:
+  markdown:
+    type: object
+    required: [content]
+    properties:
+      content:
+        type: string
