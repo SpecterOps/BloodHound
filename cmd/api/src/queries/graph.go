@@ -140,8 +140,8 @@ type Graph interface {
 	GetAssetGroupNodes(ctx context.Context, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error)
 	GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
 	GetAllShortestPathsWithOpenGraph(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
-	SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip int, limit int) ([]*graph.Node, error)
-	SearchByNameOrObjectID(ctx context.Context, includeOpenGraphNodes bool, searchValue string, searchType string) (graph.NodeSet, error)
+	SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip int, limit int, useRawObjectID bool) ([]*graph.Node, error)
+	SearchByNameOrObjectID(ctx context.Context, includeOpenGraphNodes bool, useRawObjectID bool, searchValue string, searchType string) (graph.NodeSet, error)
 	GetADEntityQueryResult(ctx context.Context, primaryNodeKinds graphschema.PrimaryDisplayKinds, params EntityQueryParameters, cacheEnabled bool) (any, int, error)
 	GetEntityByObjectId(ctx context.Context, objectID string, kinds ...graph.Kind) (*graph.Node, error)
 	GetEntityCountResults(ctx context.Context, node *graph.Node, delegates map[string]any) map[string]any
@@ -300,10 +300,10 @@ var groupFilter = query.Not(
 	),
 )
 
-func createNodeSearchGraphCriteria(kinds graph.Kinds, nameOrObjectId string, includeGroupFilter bool) []graph.Criteria {
+func createNodeSearchGraphCriteria(kinds graph.Kinds, nameTerm string, objectIDTerm string, includeGroupFilter bool) []graph.Criteria {
 	filters := []graph.Criteria{query.Or(
-		query.Equals(query.NodeProperty(common.Name.String()), nameOrObjectId),
-		query.Equals(query.NodeProperty(common.ObjectID.String()), nameOrObjectId),
+		query.Equals(query.NodeProperty(common.Name.String()), nameTerm),
+		query.Equals(query.NodeProperty(common.ObjectID.String()), objectIDTerm),
 	)}
 
 	if includeGroupFilter {
@@ -317,13 +317,13 @@ func createNodeSearchGraphCriteria(kinds graph.Kinds, nameOrObjectId string, inc
 	return filters
 }
 
-func createFuzzyNodeSearchGraphCriteria(kinds graph.Kinds, nameOrObjectId string, includeGroupFilter bool) []graph.Criteria {
+func createFuzzyNodeSearchGraphCriteria(kinds graph.Kinds, nameTerm string, objectIDTerm string, includeGroupFilter bool) []graph.Criteria {
 	filters := []graph.Criteria{query.Or(
-		query.StringContains(query.NodeProperty(common.Name.String()), nameOrObjectId),
-		query.StringContains(query.NodeProperty(common.ObjectID.String()), nameOrObjectId),
+		query.StringContains(query.NodeProperty(common.Name.String()), nameTerm),
+		query.StringContains(query.NodeProperty(common.ObjectID.String()), objectIDTerm),
 	),
-		query.Not(query.Equals(query.NodeProperty(common.Name.String()), nameOrObjectId)),
-		query.Not(query.Equals(query.NodeProperty(common.ObjectID.String()), nameOrObjectId)),
+		query.Not(query.Equals(query.NodeProperty(common.Name.String()), nameTerm)),
+		query.Not(query.Equals(query.NodeProperty(common.ObjectID.String()), objectIDTerm)),
 	}
 
 	if includeGroupFilter {
@@ -336,13 +336,13 @@ func createFuzzyNodeSearchGraphCriteria(kinds graph.Kinds, nameOrObjectId string
 	return filters
 }
 
-func createNodeStartsWithSearchGraphCriteria(kinds graph.Kinds, nameOrObjectId string) []graph.Criteria {
+func createNodeStartsWithSearchGraphCriteria(kinds graph.Kinds, nameTerm string, objectIDTerm string) []graph.Criteria {
 	filters := []graph.Criteria{query.Or(
-		query.StringStartsWith(query.NodeProperty(common.Name.String()), nameOrObjectId),
-		query.StringStartsWith(query.NodeProperty(common.ObjectID.String()), nameOrObjectId),
+		query.StringStartsWith(query.NodeProperty(common.Name.String()), nameTerm),
+		query.StringStartsWith(query.NodeProperty(common.ObjectID.String()), objectIDTerm),
 	),
-		query.Not(query.Equals(query.NodeProperty(common.Name.String()), nameOrObjectId)),
-		query.Not(query.Equals(query.NodeProperty(common.ObjectID.String()), nameOrObjectId)),
+		query.Not(query.Equals(query.NodeProperty(common.Name.String()), nameTerm)),
+		query.Not(query.Equals(query.NodeProperty(common.ObjectID.String()), objectIDTerm)),
 	}
 
 	if kinds != nil {
@@ -384,24 +384,34 @@ type NodeSearchResults struct {
 	FuzzyResults []*graph.Node
 }
 
-func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip int, limit int) ([]*graph.Node, error) {
-	if nodes, err := s.searchExactAndFuzzyMatchedNodes(ctx, nodeKinds, strings.ToUpper(nameOrObjectIdQuery)); err != nil {
+func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip int, limit int, useRawObjectID bool) ([]*graph.Node, error) {
+	var (
+		nameTerm     = strings.ToUpper(nameOrObjectIdQuery)
+		objectIDTerm = nameTerm
+	)
+
+	if useRawObjectID {
+		nameTerm = nameOrObjectIdQuery
+		objectIDTerm = nameOrObjectIdQuery
+	}
+
+	if nodes, err := s.searchExactAndFuzzyMatchedNodes(ctx, nodeKinds, nameTerm, objectIDTerm); err != nil {
 		return []*graph.Node{}, err
 	} else {
 		return sortAndSliceResults(nodes, limit, skip), nil
 	}
 }
 
-func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kinds graph.Kinds, formattedQuery string) (NodeSearchResults, error) {
+func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kinds graph.Kinds, nameTerm string, objectIDTerm string) (NodeSearchResults, error) {
 	var results = NodeSearchResults{}
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if exactMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createNodeSearchGraphCriteria(kinds, formattedQuery, true)...))); err != nil {
+		if exactMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createNodeSearchGraphCriteria(kinds, nameTerm, objectIDTerm, true)...))); err != nil {
 			return err
 		} else {
 			results.ExactResults = append(results.ExactResults, exactMatchNodes...)
 		}
 
-		if fuzzyMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createFuzzyNodeSearchGraphCriteria(kinds, formattedQuery, true)...))); err != nil {
+		if fuzzyMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createFuzzyNodeSearchGraphCriteria(kinds, nameTerm, objectIDTerm, true)...))); err != nil {
 			return err
 		} else {
 			results.FuzzyResults = append(results.FuzzyResults, fuzzyMatchNodes...)
@@ -570,13 +580,23 @@ func applyTimeoutReduction(queryWeight int64, availableRuntime time.Duration) (t
 	return availableRuntime, reductionFactor
 }
 
-func (s *GraphQuery) searchExactOrFuzzyMatchedNodes(ctx context.Context, kinds graph.Kinds, searchValue string, searchType SearchType, nodes graph.NodeSet) (graph.NodeSet, error) {
+func (s *GraphQuery) searchExactOrFuzzyMatchedNodes(ctx context.Context, kinds graph.Kinds, searchValue string, useRawObjectID bool, searchType SearchType, nodes graph.NodeSet) (graph.NodeSet, error) {
+	var (
+		nameTerm     = strings.ToUpper(searchValue)
+		objectIDTerm = nameTerm
+	)
+
+	if useRawObjectID {
+		nameTerm = searchValue
+		objectIDTerm = searchValue
+	}
+
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if fetchedNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 			if searchType == SearchTypeExact {
-				return query.And(createNodeSearchGraphCriteria(kinds, strings.ToUpper(searchValue), false)...)
+				return query.And(createNodeSearchGraphCriteria(kinds, nameTerm, objectIDTerm, false)...)
 			} else {
-				return query.And(createNodeStartsWithSearchGraphCriteria(kinds, strings.ToUpper(searchValue))...)
+				return query.And(createNodeStartsWithSearchGraphCriteria(kinds, nameTerm, objectIDTerm)...)
 			}
 		})); err != nil {
 			return err
@@ -590,17 +610,17 @@ func (s *GraphQuery) searchExactOrFuzzyMatchedNodes(ctx context.Context, kinds g
 	return nodes, nil
 }
 
-func (s *GraphQuery) SearchByNameOrObjectID(ctx context.Context, includeOpenGraphNodes bool, searchValue string, searchType SearchType) (graph.NodeSet, error) {
+func (s *GraphQuery) SearchByNameOrObjectID(ctx context.Context, includeOpenGraphNodes bool, useRawObjectID bool, searchValue string, searchType SearchType) (graph.NodeSet, error) {
 	var (
 		nodes = graph.NewNodeSet()
 		err   error
 	)
 	if includeOpenGraphNodes {
-		return s.searchExactOrFuzzyMatchedNodes(ctx, nil, searchValue, searchType, nodes)
+		return s.searchExactOrFuzzyMatchedNodes(ctx, nil, searchValue, useRawObjectID, searchType, nodes)
 
 	} else {
 		defaultSearchKinds := graph.Kinds{ad.Entity, azure.Entity}
-		if nodes, err = s.searchExactOrFuzzyMatchedNodes(ctx, defaultSearchKinds, searchValue, searchType, nodes); err != nil {
+		if nodes, err = s.searchExactOrFuzzyMatchedNodes(ctx, defaultSearchKinds, searchValue, useRawObjectID, searchType, nodes); err != nil {
 			return nil, err
 		}
 		return nodes, nil

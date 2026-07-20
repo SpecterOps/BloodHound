@@ -13,21 +13,22 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Box, Divider } from '@mui/material';
-import { Typography } from 'doodle-ui';
-import { RelationshipDetails } from 'js-client-library';
+import { Divider } from '@mui/material';
+import { RelationshipDetailsWithInfo } from 'js-client-library';
 import { ElementType, FC, Fragment } from 'react';
+import { KindInfoItems } from '../../../components/EntityInfo/KindInfoItems';
 import EdgeInfoComponents from '../../../components/HelpTexts';
 import ACLInheritance from '../../../components/HelpTexts/shared/ACLInheritance';
 import { ActiveDirectoryKindProperties, CommonKindProperties } from '../../../graphSchema';
 import { useExploreParams, useExploreSelectedItem, useGetNodeById } from '../../../hooks';
 import { usePrimaryKind } from '../../../hooks/usePrimaryKind';
+import { isBuiltInKind } from '../../../utils';
 import { EdgeSections } from '../ExploreSearch/EdgeFilter/edgeCategories';
 import { FieldsContainer } from '../fragments';
 import EdgeInfoCollapsibleSection from './EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from './EdgeObjectInformation';
 
-const EdgeInfoContent: FC<{ selectedEdge: NonNullable<RelationshipDetails> }> = ({ selectedEdge }) => {
+const EdgeInfoContent: FC<{ selectedEdge: NonNullable<RelationshipDetailsWithInfo> }> = ({ selectedEdge }) => {
     const { setExploreParams, expandedPanelSections } = useExploreParams();
     const { isHidden } = useExploreSelectedItem();
     const sections = EdgeInfoComponents[selectedEdge.kind.name as keyof typeof EdgeInfoComponents];
@@ -77,9 +78,9 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<RelationshipDetails> }> = 
 
         return (
             <Fragment key={index}>
-                <Box padding={1}>
+                <div className='p-2'>
                     <Divider />
-                </Box>
+                </div>
                 <EdgeInfoCollapsibleSection
                     label={EdgeSections[sectionKeyLabel]}
                     isExpanded={isExpandedPanelSection}
@@ -118,9 +119,9 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<RelationshipDetails> }> = 
 
         return (
             <Fragment key={Object.keys(sections).length}>
-                <Box padding={1}>
+                <div className='p-2'>
                     <Divider />
-                </Box>
+                </div>
                 <EdgeInfoCollapsibleSection
                     label={'ACE Inherited From'}
                     isExpanded={isExpandedPanelSection}
@@ -139,7 +140,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<RelationshipDetails> }> = 
     };
 
     return (
-        <Box>
+        <div>
             {isHidden ? (
                 <FieldsContainer>
                     <div>
@@ -151,30 +152,14 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<RelationshipDetails> }> = 
             ) : (
                 <EdgeObjectInformation selectedEdge={selectedEdge} sourceNode={sourceNode} targetNode={targetNode} />
             )}
-            {sections || shouldRenderACLInheritance ? (
-                <>
-                    {Object.entries(sections).map(renderDropdownFromSection)}
-                    {shouldRenderACLInheritance && renderACLInheritanceDropdown()}
-                </>
-            ) : (
-                <>
-                    {!isHidden && (
-                        <>
-                            <Box padding={1}>
-                                <Divider />
-                            </Box>
+            <>
+                {sections && Object.entries(sections).map(renderDropdownFromSection)}
 
-                            <Box paddingLeft={'0.5rem'}>
-                                <Typography variant='body1' className='text-xs'>
-                                    The edge <strong className='text-xs'>{selectedEdge.kind.name}</strong>
-                                    does not have any additional contextual information at this time.
-                                </Typography>
-                            </Box>
-                        </>
-                    )}
-                </>
-            )}
-        </Box>
+                {shouldRenderACLInheritance && renderACLInheritanceDropdown()}
+
+                {!isBuiltInKind(selectedEdge.kind.name) && <KindInfoItems items={selectedEdge.info} />}
+            </>
+        </div>
     );
 };
 
