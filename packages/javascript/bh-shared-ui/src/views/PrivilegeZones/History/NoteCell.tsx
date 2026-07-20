@@ -25,26 +25,32 @@ export const NoteCell = ({ row }: { row: { original: HistoryItem } }) => {
     const { note, id, actor } = row.original;
 
     const noteIsActive = selected?.id === id;
-    const tip = noteIsActive ? 'Hide note' : 'Show note';
-    const noNoteTooltip = actor === BloodHoundString ? `No notes for ${BloodHoundString} history` : 'No notes';
+
+    const noteToolTipContent = note
+        ? noteIsActive
+            ? 'Hide note'
+            : 'Show note'
+        : actor === BloodHoundString
+          ? `No notes for ${BloodHoundString} history`
+          : 'No notes';
 
     const handleClick = () => (noteIsActive ? clearSelected() : setSelected(row.original));
 
     return (
         <div className='w-full flex justify-center'>
-            {!note ? (
-                <Tooltip tooltip={noNoteTooltip}>
-                    <p>-</p>
-                </Tooltip>
-            ) : (
-                <Tooltip tooltip={tip}>
+            <Tooltip tooltip={noteToolTipContent}>
+                {!note ? (
+                    <span className='inline-flex  h-8 px-6 items-center justify-center'>
+                        <p>-</p>
+                    </span>
+                ) : (
                     <span>
-                        <Button aria-label={tip} variant='text' onClick={handleClick}>
+                        <Button aria-label={noteToolTipContent} variant='text' onClick={handleClick}>
                             <AppIcon.LinedPaper size={24} className='-mb-[3px]' />
                         </Button>
                     </span>
-                </Tooltip>
-            )}
+                )}
+            </Tooltip>
         </div>
     );
 };
