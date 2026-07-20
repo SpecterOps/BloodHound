@@ -215,7 +215,7 @@ get:
                         status:
                           type: string
                           description: Finding status.
-                          enum: [active, accepted, remediated, deprecated]
+                          enum: [active, accepted, remediated, deprecated, orphaned]
                         first_seen:
                           type: string
                           format: date-time
