@@ -43,6 +43,7 @@ type command struct {
 	env        environment.Environment
 	subcommand string
 	subcmdIdx  int
+	flagSet    *flag.FlagSet
 }
 
 // Create new instance of DORA command
@@ -64,18 +65,16 @@ func (s *command) Name() string {
 
 // Parse parses command flags and determines subcommand
 func (s *command) Parse(cmdIndex int) error {
-	var (
-		cmd = flag.NewFlagSet(Name, flag.ExitOnError)
-	)
+	s.flagSet = flag.NewFlagSet(Name, flag.ExitOnError)
 
-	cmd.Usage = func() {
+	s.flagSet.Usage = func() {
 		w := flag.CommandLine.Output()
 		fmt.Fprintf(w, "%s\n\nUsage: %s %s [SUBCOMMAND] [OPTIONS]\n\n", Usage, filepath.Base(os.Args[0]), Name)
 		fmt.Fprintf(w, "Subcommands:\n")
 		fmt.Fprintf(w, "  init      Initialize DORA metrics configuration\n")
 		fmt.Fprintf(w, "  status    Show configuration and authentication status\n")
 		fmt.Fprintf(w, "\nOptions:\n")
-		cmd.PrintDefaults()
+		s.flagSet.PrintDefaults()
 	}
 
 	// Find the subcommand
@@ -93,8 +92,8 @@ func (s *command) Parse(cmdIndex int) error {
 		break
 	}
 
-	if err := cmd.Parse(os.Args[cmdIndex+1:]); err != nil {
-		cmd.Usage()
+	if err := s.flagSet.Parse(os.Args[cmdIndex+1:]); err != nil {
+		s.flagSet.Usage()
 		return fmt.Errorf("parsing %s command: %w", Name, err)
 	}
 
@@ -109,8 +108,10 @@ func (s *command) Run() error {
 	case "status":
 		return s.runStatus()
 	case "":
+		s.flagSet.Usage()
 		return ErrNoSubcommand
 	default:
+		s.flagSet.Usage()
 		return fmt.Errorf("%w: %s", ErrInvalidSubcmd, s.subcommand)
 	}
 }
