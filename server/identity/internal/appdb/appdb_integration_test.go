@@ -31,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/identity/internal/appdb"
 	"github.com/specterops/bloodhound/server/identity/internal/services"
 	"github.com/stretchr/testify/assert"
@@ -181,5 +182,87 @@ func TestStore_GetRole_Integration(t *testing.T) {
 
 		_, err := store.GetRole(ctx, 99999999)
 		assert.ErrorIs(t, err, services.ErrNoRoleFound)
+	})
+}
+
+// seededRoleCount reads the number of roles seeded by the migrations directly
+// from the pool so tests can assert against the full set.
+func seededRoleCount(t *testing.T, ctx context.Context, pool *pgxpool.Pool) int {
+	t.Helper()
+
+	var count int
+	err := pool.QueryRow(ctx, "SELECT count(*) FROM roles").Scan(&count)
+	require.NoError(t, err)
+
+	return count
+}
+
+func TestStore_ListRoles_Integration(t *testing.T) {
+	t.Run("returns every seeded role with its permissions", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+		)
+
+		expectedCount := seededRoleCount(t, ctx, pool)
+		require.NotZero(t, expectedCount, "expected migrations to seed at least one role")
+
+		roles, err := store.ListRoles(ctx, params.Filters{}, params.SortItems{})
+		require.NoError(t, err)
+		assert.Len(t, roles, expectedCount)
+
+		var withPermissions int
+		for _, r := range roles {
+			if len(r.Permissions) > 0 {
+				withPermissions++
+			}
+		}
+		assert.NotZero(t, withPermissions, "expected at least one role to preload its permissions")
+	})
+
+	t.Run("returns roles sorted by name ascending", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+		)
+
+		expectedCount := seededRoleCount(t, ctx, pool)
+
+		roles, err := store.ListRoles(ctx, params.Filters{}, params.SortItems{{Field: "name", Direction: params.Ascending}})
+		require.NoError(t, err)
+		require.Len(t, roles, expectedCount)
+
+		for i := 1; i < len(roles); i++ {
+			assert.LessOrEqual(t, roles[i-1].Name, roles[i].Name, "roles should be sorted by name ascending")
+		}
+	})
+
+	t.Run("returns roles filtered by name", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+		)
+
+		target := seededRole(t, ctx, pool)
+
+		roles, err := store.ListRoles(ctx, params.Filters{
+			"name": {{Field: "name", Operator: params.Equals, Value: target.Name, SetOperator: params.FilterAnd}},
+		}, params.SortItems{})
+		require.NoError(t, err)
+		require.Len(t, roles, 1)
+		assert.Equal(t, target.Name, roles[0].Name)
+	})
+
+	t.Run("returns an empty slice when no role matches the filter", func(t *testing.T) {
+		var (
+			ctx      = context.Background()
+			store, _ = setupStoreAndPool(t)
+		)
+
+		roles, err := store.ListRoles(ctx, params.Filters{
+			"name": {{Field: "name", Operator: params.Equals, Value: "does-not-exist", SetOperator: params.FilterAnd}},
+		}, params.SortItems{})
+		require.NoError(t, err)
+		assert.Empty(t, roles)
 	})
 }
