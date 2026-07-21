@@ -148,18 +148,18 @@ func (s *TerminalReporter) renderQualityTable(snapshot MetricsSnapshot) string {
 		rcValue,
 		rcAssessment))
 
-	// Row 2: Batch Size
+	// Row 2: Batch Size (total commits per release)
 	batchValue := fmt.Sprintf("%.1f commits/release", snapshot.AverageCommitsPerRelease)
 	batchAssessment := s.assessBatchSize(snapshot.AverageCommitsPerRelease)
 	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
-		"Batch Size",
+		"Batch Size (total)",
 		batchValue,
 		batchAssessment))
 
 	// Row 3: Total Activity
 	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
-		"Total Activity",
-		fmt.Sprintf("%d commits in period", snapshot.TotalCommitsInPeriod),
+		"Total Commits",
+		fmt.Sprintf("%d in period", snapshot.TotalCommitsInPeriod),
 		s.dim("—")))
 
 	// Table footer
@@ -169,13 +169,16 @@ func (s *TerminalReporter) renderQualityTable(snapshot MetricsSnapshot) string {
 }
 
 // assessRCs provides short assessment of RC counts for table display
+// RC1 is expected (proposed release), RC2+ indicates stabilization/rework needed
 func (s *TerminalReporter) assessRCs(median float64) string {
-	if median <= 2 {
-		return s.green("✓ Excellent")
+	if median <= 1 {
+		return s.green("✓ Elite (minimal rework)")
+	} else if median <= 2 {
+		return s.cyan("○ Excellent")
 	} else if median <= 4 {
-		return s.cyan("○ Good")
+		return s.yellow("△ Good (some rework)")
 	} else {
-		return s.yellow("△ Needs work")
+		return s.red("✗ High rework needed")
 	}
 }
 
