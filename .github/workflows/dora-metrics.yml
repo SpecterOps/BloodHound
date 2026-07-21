@@ -55,16 +55,21 @@ jobs:
       - name: Collect and generate reports
         id: dora
         run: |
-          # Determine date range
+          # Determine date range and artifact naming
           if [ -n "${{ inputs.start_date }}" ] && [ -n "${{ inputs.end_date }}" ]; then
             DATE_ARGS="-start ${{ inputs.start_date }} -end ${{ inputs.end_date }}"
-            PERIOD_NAME="custom-$(date +%Y%m%d)"
+            # For custom ranges, use dates + run number to ensure uniqueness
+            PERIOD_NAME="custom-${{ inputs.start_date }}-to-${{ inputs.end_date }}-run${{ github.run_number }}"
+            IS_SCHEDULED="false"
           else
             DATE_ARGS="-last-quarter"
+            # For scheduled/automatic runs, use date (one per day is fine)
             PERIOD_NAME="last-quarter-$(date +%Y%m%d)"
+            IS_SCHEDULED="true"
           fi
 
           echo "period=${PERIOD_NAME}" >> $GITHUB_OUTPUT
+          echo "is_scheduled=${IS_SCHEDULED}" >> $GITHUB_OUTPUT
 
           # Collect data
           go tool stbernard dora collect ${DATE_ARGS}
@@ -91,7 +96,8 @@ jobs:
           path: dora-reports/
           retention-days: 400
 
-      - name: Upload latest quarter (overwrite)
+      - name: Upload latest quarter (scheduled runs only)
+        if: steps.dora.outputs.is_scheduled == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: dora-latest-quarter
