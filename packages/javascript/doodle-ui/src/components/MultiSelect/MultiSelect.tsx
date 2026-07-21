@@ -165,7 +165,7 @@ const MultiSelectStateRow = ({ children }: { children: React.ReactNode }) => (
 );
 
 /**
- * Description for MultiSelect
+ * MultiSelect Doodle Component
  */
 const MultiSelect = ({
     options,
@@ -174,14 +174,13 @@ const MultiSelect = ({
     placeholder,
     disabled,
     error,
-
     className,
     selectAllLabel,
     isSearchable = false,
     isLoading = false,
     searchPlaceholder = 'Search',
     loadingText = 'Loading options',
-    emptyText = 'No options available.',
+    emptyText = 'No options available',
     noResultsText = 'No matches',
 }: MultiSelectProps) => {
     const [open, setOpen] = React.useState(false);
