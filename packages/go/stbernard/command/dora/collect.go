@@ -30,6 +30,20 @@ import (
 
 // runCollect handles the collect subcommand
 func (s *command) runCollect() error {
+	paths, err := workspace.FindPaths(s.env)
+	if err != nil {
+		return fmt.Errorf("finding workspace: %w", err)
+	}
+
+	// Load configuration to get default period
+	config, err := dora.LoadConfig(paths.Root)
+	if err != nil {
+		return fmt.Errorf("loading configuration: %w", err)
+	}
+
+	// Parse default period from config
+	defaultDays := parseDefaultPeriod(config.Metrics.DefaultPeriod)
+
 	var (
 		cmd        = flag.NewFlagSet("dora collect", flag.ExitOnError)
 		daysFlag   int
@@ -38,7 +52,7 @@ func (s *command) runCollect() error {
 		prFlag     bool
 	)
 
-	cmd.IntVar(&daysFlag, "days", 30, "Number of days to collect data for")
+	cmd.IntVar(&daysFlag, "days", defaultDays, fmt.Sprintf("Number of days to collect data for (default: %s from config)", config.Metrics.DefaultPeriod))
 	cmd.BoolVar(&deployFlag, "deployments", false, "Collect deployment data only")
 	cmd.BoolVar(&commitFlag, "commits", false, "Collect commit data only")
 	cmd.BoolVar(&prFlag, "prs", false, "Collect pull request data only")
@@ -69,17 +83,6 @@ func (s *command) runCollect() error {
 		if err := cmd.Parse(os.Args[s.subcmdIdx+1:]); err != nil {
 			return fmt.Errorf("parsing collect flags: %w", err)
 		}
-	}
-
-	paths, err := workspace.FindPaths(s.env)
-	if err != nil {
-		return fmt.Errorf("finding workspace: %w", err)
-	}
-
-	// Load configuration
-	config, err := dora.LoadConfig(paths.Root)
-	if err != nil {
-		return fmt.Errorf("loading configuration: %w", err)
 	}
 
 	// Validate configuration

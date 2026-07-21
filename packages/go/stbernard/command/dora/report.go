@@ -22,14 +22,49 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/dora"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 )
 
+// parseDefaultPeriod converts a period string (e.g., "30d", "90d") to number of days
+func parseDefaultPeriod(period string) int {
+	period = strings.TrimSpace(period)
+	if period == "" {
+		return 30
+	}
+
+	// Remove 'd' suffix if present
+	period = strings.TrimSuffix(period, "d")
+	period = strings.TrimSuffix(period, "D")
+
+	days, err := strconv.Atoi(period)
+	if err != nil || days <= 0 {
+		return 30 // Fallback to default
+	}
+
+	return days
+}
+
 // runReport handles the report subcommand
 func (s *command) runReport() error {
+	paths, err := workspace.FindPaths(s.env)
+	if err != nil {
+		return fmt.Errorf("finding workspace: %w", err)
+	}
+
+	// Load configuration to get default period
+	config, err := dora.LoadConfig(paths.Root)
+	if err != nil {
+		return fmt.Errorf("loading configuration: %w", err)
+	}
+
+	// Parse default period from config
+	defaultDays := parseDefaultPeriod(config.Metrics.DefaultPeriod)
+
 	var (
 		cmd        = flag.NewFlagSet("dora report", flag.ExitOnError)
 		daysFlag   int
@@ -38,7 +73,7 @@ func (s *command) runReport() error {
 		noColorFlag bool
 	)
 
-	cmd.IntVar(&daysFlag, "days", 30, "Number of days to report on")
+	cmd.IntVar(&daysFlag, "days", defaultDays, fmt.Sprintf("Number of days to report on (default: %s from config)", config.Metrics.DefaultPeriod))
 	cmd.StringVar(&formatFlag, "format", "terminal", "Output format (terminal, json)")
 	cmd.StringVar(&outputFlag, "output", "", "Output file (default: stdout)")
 	cmd.BoolVar(&noColorFlag, "no-color", false, "Disable color output for terminal format")
@@ -64,17 +99,6 @@ func (s *command) runReport() error {
 		if err := cmd.Parse(os.Args[s.subcmdIdx+1:]); err != nil {
 			return fmt.Errorf("parsing report flags: %w", err)
 		}
-	}
-
-	paths, err := workspace.FindPaths(s.env)
-	if err != nil {
-		return fmt.Errorf("finding workspace: %w", err)
-	}
-
-	// Load configuration
-	config, err := dora.LoadConfig(paths.Root)
-	if err != nil {
-		return fmt.Errorf("loading configuration: %w", err)
 	}
 
 	// Create storage
