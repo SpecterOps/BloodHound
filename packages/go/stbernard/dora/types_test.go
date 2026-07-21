@@ -50,9 +50,6 @@ func TestCommit(t *testing.T) {
 	prNumber := 42
 	commit := Commit{
 		SHA:         "abc123",
-		Author:      "John Doe",
-		AuthorEmail: "john@example.com",
-		Committer:   "John Doe",
 		Message:     "Fix bug",
 		CommittedAt: now,
 		PRNumber:    &prNumber,
@@ -76,7 +73,6 @@ func TestPullRequest(t *testing.T) {
 		State:          "merged",
 		CreatedAt:      now,
 		MergedAt:       &now,
-		Author:         "John Doe",
 		MergeCommitSHA: &mergeCommit,
 		BaseRef:        "main",
 		HeadRef:        "feature-branch",
