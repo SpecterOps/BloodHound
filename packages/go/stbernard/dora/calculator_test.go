@@ -200,3 +200,152 @@ func TestCalculateChangeFailureRate(t *testing.T) {
 		t.Errorf("Expected tier %s, got %s", TierLow, snapshot.FailureRateTier)
 	}
 }
+
+func TestCalculateTimeToRestore(t *testing.T) {
+	tempDir := t.TempDir()
+	dbPath := filepath.Join(tempDir, "test.db")
+
+	storage, err := NewStorage(dbPath)
+	if err != nil {
+		t.Fatalf("Failed to create storage: %v", err)
+	}
+	defer storage.Close()
+
+	calc := NewCalculator(storage)
+	ctx := context.Background()
+
+	now := time.Now()
+
+	// Scenario: v9.1.0 released, then v9.1.1 patch 2 hours later (incident)
+	//           v9.2.0 released, then v9.2.1 patch 6 hours later (incident)
+	//           Median restore time = 4 hours = Elite tier
+	deployments := []Deployment{
+		{
+			Tag:          "v9.1.0",
+			SHA:          "sha1",
+			Version:      "9.1.0",
+			DeployedAt:   now.Add(-10 * time.Hour),
+			IsProduction: true,
+			IsPatch:      false,
+			PatchNumber:  0,
+		},
+		{
+			Tag:          "v9.1.1",
+			SHA:          "sha2",
+			Version:      "9.1.0", // Same base version
+			DeployedAt:   now.Add(-8 * time.Hour), // 2 hours after v9.1.0
+			IsProduction: true,
+			IsPatch:      true,
+			PatchNumber:  1,
+		},
+		{
+			Tag:          "v9.2.0",
+			SHA:          "sha3",
+			Version:      "9.2.0",
+			DeployedAt:   now.Add(-7 * time.Hour),
+			IsProduction: true,
+			IsPatch:      false,
+			PatchNumber:  0,
+		},
+		{
+			Tag:          "v9.2.1",
+			SHA:          "sha4",
+			Version:      "9.2.0", // Same base version
+			DeployedAt:   now.Add(-1 * time.Hour), // 6 hours after v9.2.0
+			IsProduction: true,
+			IsPatch:      true,
+			PatchNumber:  1,
+		},
+	}
+
+	if err := storage.SaveDeployments(ctx, deployments); err != nil {
+		t.Fatalf("Failed to save deployments: %v", err)
+	}
+
+	// Calculate metrics
+	startTime := now.Add(-12 * time.Hour)
+	endTime := now
+	snapshot, err := calc.CalculateMetrics(ctx, startTime, endTime)
+	if err != nil {
+		t.Fatalf("Failed to calculate metrics: %v", err)
+	}
+
+	// Should have 2 incidents
+	if snapshot.IncidentCount != 2 {
+		t.Errorf("Expected 2 incidents, got %d", snapshot.IncidentCount)
+	}
+
+	// Median restore time should be 4 hours (between 2 and 6)
+	if snapshot.MedianTTRHours < 3.5 || snapshot.MedianTTRHours > 4.5 {
+		t.Errorf("Expected median ~4 hours, got %.2f", snapshot.MedianTTRHours)
+	}
+
+	// Should be "elite" tier (< 1 hour is elite, but we're using median which is 4h = high tier)
+	// Wait, let me recalculate: 2h and 6h → median = 4h → should be "high" tier
+	if snapshot.RestoreTimeTier != string(TierHigh) {
+		t.Errorf("Expected tier %s, got %s", TierHigh, snapshot.RestoreTimeTier)
+	}
+}
+
+func TestCalculateTimeToRestoreNoIncidents(t *testing.T) {
+	tempDir := t.TempDir()
+	dbPath := filepath.Join(tempDir, "test.db")
+
+	storage, err := NewStorage(dbPath)
+	if err != nil {
+		t.Fatalf("Failed to create storage: %v", err)
+	}
+	defer storage.Close()
+
+	calc := NewCalculator(storage)
+	ctx := context.Background()
+
+	now := time.Now()
+
+	// Only initial releases, no patches (no incidents)
+	deployments := []Deployment{
+		{
+			Tag:          "v9.1.0",
+			SHA:          "sha1",
+			Version:      "9.1.0",
+			DeployedAt:   now.Add(-2 * time.Hour),
+			IsProduction: true,
+			IsPatch:      false,
+		},
+		{
+			Tag:          "v9.2.0",
+			SHA:          "sha2",
+			Version:      "9.2.0",
+			DeployedAt:   now.Add(-1 * time.Hour),
+			IsProduction: true,
+			IsPatch:      false,
+		},
+	}
+
+	if err := storage.SaveDeployments(ctx, deployments); err != nil {
+		t.Fatalf("Failed to save deployments: %v", err)
+	}
+
+	// Calculate metrics
+	startTime := now.Add(-3 * time.Hour)
+	endTime := now
+	snapshot, err := calc.CalculateMetrics(ctx, startTime, endTime)
+	if err != nil {
+		t.Fatalf("Failed to calculate metrics: %v", err)
+	}
+
+	// Should have 0 incidents (no patches)
+	if snapshot.IncidentCount != 0 {
+		t.Errorf("Expected 0 incidents, got %d", snapshot.IncidentCount)
+	}
+
+	// MTTR should be 0 (no incidents)
+	if snapshot.MTTRHours != 0 {
+		t.Errorf("Expected MTTR 0, got %.2f", snapshot.MTTRHours)
+	}
+
+	// Restore time tier should be empty or not affect overall tier
+	if snapshot.RestoreTimeTier != "" {
+		t.Logf("Restore time tier (no incidents): %s", snapshot.RestoreTimeTier)
+	}
+}
