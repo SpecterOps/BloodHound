@@ -148,7 +148,18 @@ func (s *TerminalReporter) renderQualityTable(snapshot MetricsSnapshot) string {
 		rcValue,
 		rcAssessment))
 
-	// Row 2: Batch Size (total commits per release)
+	// Row 2: RC Stabilization (commits in RC2+)
+	if snapshot.AverageStabilizationCommits > 0 {
+		stabValue := fmt.Sprintf("Avg: %.1f  Median: %.1f per RC",
+			snapshot.AverageStabilizationCommits, snapshot.MedianStabilizationCommits)
+		stabAssessment := s.assessStabilizationCommits(snapshot.MedianStabilizationCommits)
+		sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
+			"RC Stabilization (RC2+)",
+			stabValue,
+			stabAssessment))
+	}
+
+	// Row 3: Batch Size (total commits per release)
 	batchValue := fmt.Sprintf("%.1f commits/release", snapshot.AverageCommitsPerRelease)
 	batchAssessment := s.assessBatchSize(snapshot.AverageCommitsPerRelease)
 	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
@@ -156,7 +167,7 @@ func (s *TerminalReporter) renderQualityTable(snapshot MetricsSnapshot) string {
 		batchValue,
 		batchAssessment))
 
-	// Row 3: Total Activity
+	// Row 4: Total Activity
 	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
 		"Total Commits",
 		fmt.Sprintf("%d in period", snapshot.TotalCommitsInPeriod),
@@ -179,6 +190,19 @@ func (s *TerminalReporter) assessRCs(median float64) string {
 		return s.yellow("△ Good (some rework)")
 	} else {
 		return s.red("✗ High rework needed")
+	}
+}
+
+// assessStabilizationCommits provides short assessment of RC stabilization effort
+func (s *TerminalReporter) assessStabilizationCommits(median float64) string {
+	if median <= 2 {
+		return s.green("✓ Minimal fixes")
+	} else if median <= 5 {
+		return s.cyan("○ Some fixes")
+	} else if median <= 10 {
+		return s.yellow("△ Many fixes")
+	} else {
+		return s.red("✗ Extensive rework")
 	}
 }
 
