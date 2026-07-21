@@ -46,7 +46,7 @@ const multiSelectRowStyles = 'flex w-full items-center gap-2 rounded-lg p-2';
 
 const multiSelectInteractiveRowStyles = 'group cursor-pointer hover:bg-secondary hover:text-text-contrast';
 
-const multiSelectCheckboxStyles = 'enabled:data-[state=unchecked]:!border-current';
+const multiSelectCheckboxStyles = 'enabled:data-[state=unchecked]:!border-current group-hover:enabled:!border-current';
 interface MultiSelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     open?: boolean;
 }
@@ -303,12 +303,15 @@ const MultiSelect = ({
                             value={searchValue}
                             onChange={(e) => setSearchValue(e.target.value)}
                             placeholder={searchPlaceholder}
-                            className='h-6 border-none bg-transparent px-0 text-text-main leading-4 placeholder:text-text-main focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
+                            className='h-6 border-none bg-transparent px-2 text-text-main leading-4 placeholder:text-input-placeholder-text focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
                         />
                     </div>
                 )}
 
-                <ScrollArea className='max-h-60 [&_[data-radix-scroll-area-viewport]]:max-h-60'>
+                {/* TODO: Add theme-aware scrollbar color tokens to ScrollArea and remove this MultiSelect-specific override. */}
+                <ScrollArea
+                    thumbColor='var(--multiselect-scrollbar-thumb)'
+                    className='max-h-60 [--multiselect-scrollbar-thumb:var(--neutral-400)] dark:[--multiselect-scrollbar-thumb:var(--input-placeholder-text)] [&_[data-radix-scroll-area-viewport]]:max-h-60'>
                     <div
                         role='group'
                         aria-label={placeholder ?? 'Select options'}
