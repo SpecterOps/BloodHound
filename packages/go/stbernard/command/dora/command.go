@@ -74,6 +74,7 @@ func (s *command) Parse(cmdIndex int) error {
 		fmt.Fprintf(w, "  init      Initialize DORA metrics configuration\n")
 		fmt.Fprintf(w, "  auth      Authenticate with GitHub\n")
 		fmt.Fprintf(w, "  collect   Collect data from GitHub\n")
+		fmt.Fprintf(w, "  report    Generate DORA metrics report\n")
 		fmt.Fprintf(w, "  status    Show configuration and authentication status\n")
 		fmt.Fprintf(w, "\nOptions:\n")
 		s.flagSet.PrintDefaults()
@@ -111,6 +112,8 @@ func (s *command) Run() error {
 		return s.runAuth()
 	case "collect":
 		return s.runCollect()
+	case "report":
+		return s.runReport()
 	case "status":
 		return s.runStatus()
 	case "":
