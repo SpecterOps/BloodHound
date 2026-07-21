@@ -32,7 +32,7 @@ const meta = {
     // More on argTypes: https://storybook.js.org/docs/api/argtypes
     argTypes: {
         variant: {
-            options: ['primary', 'secondary', 'tertiary', 'transparent', 'icon', 'text'],
+            options: ['primary', 'secondary', 'transparent', 'icon', 'text'],
             control: 'select',
         },
         fontColor: { options: ['primary'], control: 'select' },
@@ -57,13 +57,6 @@ export const Primary: Story = {
 export const Secondary: Story = {
     args: {
         variant: 'secondary',
-        children: 'Next',
-    },
-};
-
-export const Tertiary: Story = {
-    args: {
-        variant: 'tertiary',
         children: 'Next',
     },
 };

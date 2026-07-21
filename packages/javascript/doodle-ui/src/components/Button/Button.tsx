@@ -27,8 +27,6 @@ export const ButtonVariants = cva(
                     'bg-primary text-common-white dark:text-common-dark shadow-outer-1 hover:bg-secondary focus-visible:bg-secondary',
                 secondary:
                     'bg-secondary-btn-fill text-common-dark shadow-outer-1 dark:text-common-white hover:bg-secondary hover:text-common-white dark:hover:text-common-dark active:bg-secondary-btn-active-fill active:text-common-dark dark:active:text-common-white focus-visible:bg-secondary focus-visible:text-common-white dark:focus-visible:text-common-dark disabled:bg-btn-disabled-fill disabled:text-text-disabled disabled:shadow-none disabled:!opacity-100',
-                tertiary:
-                    'bg-transparent border-2 border-tertiary-btn-border shadow-outer-1 hover:bg-tertiary-main dark:hover:text-main hover:border-tertiary focus-visible:bg-tertiary-main dark:focus-visible:text-common-dark dark:focus-visible:bg-secondary focus-visible:border-tertiary',
                 transparent:
                     'bg-transparent border border-transparent-btn-border text-main hover:bg-primary hover:text-common-white dark:hover:text-common-dark hover:border-primary hover:no-underline focus-visible:bg-primary focus-visible:text-common-white dark:focus-visible:text-common-dark focus-visible:border-primary',
                 text: 'text-primary hover:text-secondary active:text-primary-variant focus-visible:text-secondary disabled:text-text-disabled disabled:!opacity-100',

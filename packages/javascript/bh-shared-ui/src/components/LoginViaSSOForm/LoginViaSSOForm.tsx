@@ -67,7 +67,7 @@ const LoginViaSSOForm: React.FC<LoginViaSSOFormProps> = ({ providers, onSubmit, 
                         CONTINUE
                     </Button>
                     <Box mt={2}>
-                        <Button size='large' type='button' onClick={onCancel} variant={'tertiary'} className='w-full'>
+                        <Button size='large' type='button' onClick={onCancel} variant='secondary' className='w-full'>
                             CANCEL
                         </Button>
                     </Box>
