@@ -72,6 +72,7 @@ func (s *command) Parse(cmdIndex int) error {
 		fmt.Fprintf(w, "%s\n\nUsage: %s %s [SUBCOMMAND] [OPTIONS]\n\n", Usage, filepath.Base(os.Args[0]), Name)
 		fmt.Fprintf(w, "Subcommands:\n")
 		fmt.Fprintf(w, "  init      Initialize DORA metrics configuration\n")
+		fmt.Fprintf(w, "  auth      Authenticate with GitHub\n")
 		fmt.Fprintf(w, "  status    Show configuration and authentication status\n")
 		fmt.Fprintf(w, "\nOptions:\n")
 		s.flagSet.PrintDefaults()
@@ -105,6 +106,8 @@ func (s *command) Run() error {
 	switch s.subcommand {
 	case "init":
 		return s.runInit()
+	case "auth":
+		return s.runAuth()
 	case "status":
 		return s.runStatus()
 	case "":
@@ -258,8 +261,10 @@ func (s *command) initCommand(force, local bool) error {
 		fmt.Println()
 		fmt.Println("Next steps:")
 		fmt.Println("  1. Review the configuration in .dora.yaml")
-		fmt.Println("  2. Create .dora.local.yaml for any local overrides (optional)")
-		fmt.Println("  3. Configure authentication (coming soon)")
+		fmt.Println("  2. Authenticate with GitHub:")
+		fmt.Println("     - Option A: Set GITHUB_TOKEN environment variable")
+		fmt.Println("     - Option B: Run 'dora auth' (requires OAuth app setup)")
+		fmt.Println("  3. Start collecting data with 'dora collect'")
 	}
 
 	return nil
