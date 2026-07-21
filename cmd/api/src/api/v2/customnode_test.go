@@ -260,6 +260,37 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			},
 		},
 		{
+			name: "Error: request body is empty",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/custom-nodes",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{},
+				}
+
+				payload := &v2.CreateCustomNodeRequest{
+					CustomTypes: map[string]model.CustomNodeKindConfig{},
+				}
+				jsonPayload, err := json.Marshal(payload)
+				if err != nil {
+					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
+				}
+
+				request.Header.Add(headers.ContentType.String(), "application/json")
+				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
+
+				return request
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"BadRequest: custom_types must contain at least 1 entry"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
 			name: "Error: custom_types has a top-level empty key",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
