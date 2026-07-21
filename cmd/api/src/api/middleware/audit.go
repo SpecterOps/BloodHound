@@ -102,7 +102,7 @@ func buildAuditEntry(request *http.Request, muxRouter *mux.Router) audit.Entry {
 	var (
 		bhCtx = bhctx.FromRequest(request)
 		entry = audit.Entry{
-			Action:          request.Method + " " + routeTemplateFor(muxRouter, request),
+			Action:          request.Method + routeTemplateFor(muxRouter, request),
 			RequestID:       bhCtx.RequestID,
 			SourceIPAddress: parseUserIP(request),
 			Fields:          map[string]any{},

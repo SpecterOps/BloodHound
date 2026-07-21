@@ -80,6 +80,12 @@ SELECT
     'legacy' AS source
 FROM audit_logs;
 
+-- Detach the sequence from the original audit_logs.id before dropping the table.
+-- The sequence is OWNED BY audit_logs.id (see the init migration), which would
+-- otherwise block the DROP with a dependency error. Ownership is re-attached to
+-- the renamed table's column below.
+ALTER SEQUENCE audit_logs_id_seq OWNED BY NONE;
+
 DROP TABLE audit_logs;
 
 ALTER TABLE audit_logs_partitioned RENAME TO audit_logs;
@@ -99,7 +105,17 @@ CREATE INDEX idx_audit_logs_status ON audit_logs(status);
 CREATE INDEX idx_audit_logs_source ON audit_logs(source);
 
 -- +goose Down
+-- The Up block re-attaches audit_logs_id_seq to the partitioned audit_logs.id,
+-- so dropping the table with CASCADE also drops the owned sequence. Recreate the
+-- sequence before the table that references it, then re-own it to the new column.
 DROP TABLE IF EXISTS audit_logs CASCADE;
+
+CREATE SEQUENCE IF NOT EXISTS audit_logs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
 CREATE TABLE audit_logs (
     id                  BIGINT PRIMARY KEY DEFAULT nextval('audit_logs_id_seq'),
@@ -114,6 +130,8 @@ CREATE TABLE audit_logs (
     commit_id           TEXT,
     fields              JSONB
 );
+
+ALTER SEQUENCE audit_logs_id_seq OWNED BY audit_logs.id;
 
 CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
 CREATE INDEX idx_audit_logs_actor_id ON audit_logs(actor_id);
