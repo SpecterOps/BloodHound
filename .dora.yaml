@@ -1,0 +1,11 @@
+github:
+    owner: SpecterOps
+    repo: bloodhound-enterprise
+    production:
+        workflow: cicd-distroless.yml
+        environment: production
+storage:
+    type: sqlite
+    path: .dora/dora.db
+metrics:
+    default_period: 30d
