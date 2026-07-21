@@ -52,15 +52,17 @@ type periodResult struct {
 // runTrends handles the trends subcommand
 func (s *command) runTrends() error {
 	var (
-		cmd        = flag.NewFlagSet("dora trends", flag.ExitOnError)
-		yearsFlag  string
-		periodFlag string
-		outputFlag string
+		cmd             = flag.NewFlagSet("dora trends", flag.ExitOnError)
+		yearsFlag       string
+		periodFlag      string
+		outputFlag      string
+		fiscalStartFlag int
 	)
 
 	cmd.StringVar(&yearsFlag, "years", fmt.Sprintf("%d", time.Now().Year()), "Years to generate reports for (single year, comma-separated, or 'all' for all available data)")
 	cmd.StringVar(&periodFlag, "period", "quarters", "Period type (quarters, months)")
 	cmd.StringVar(&outputFlag, "output", "dora-trends", "Output directory for reports")
+	cmd.IntVar(&fiscalStartFlag, "fiscal-start", 2, "Fiscal year start month (1=January, 2=February, etc.)")
 
 	cmd.Usage = func() {
 		w := flag.CommandLine.Output()
@@ -76,13 +78,19 @@ func (s *command) runTrends() error {
 		fmt.Fprintf(w, "  Multiple: -years 2024,2025,2026\n")
 		fmt.Fprintf(w, "  Range:    -years 2024-2026\n")
 		fmt.Fprintf(w, "  All data: -years all\n")
+		fmt.Fprintf(w, "\nFiscal Year:\n")
+		fmt.Fprintf(w, "  -fiscal-start 2   Fiscal year starting in February (Feb-Jan) [default]\n")
+		fmt.Fprintf(w, "  -fiscal-start 1   Calendar year (Jan-Dec)\n")
+		fmt.Fprintf(w, "  -fiscal-start 4   Fiscal year starting in April (Apr-Mar)\n")
+		fmt.Fprintf(w, "  -fiscal-start 7   Fiscal year starting in July (Jul-Jun)\n")
+		fmt.Fprintf(w, "  -fiscal-start 10  Fiscal year starting in October (Oct-Sep)\n")
 		fmt.Fprintf(w, "\nExamples:\n")
 		fmt.Fprintf(w, "  # Generate quarterly reports for single year\n")
 		fmt.Fprintf(w, "  %s dora trends -years 2024 -period quarters\n\n", filepath.Base(os.Args[0]))
 		fmt.Fprintf(w, "  # Generate for multiple years (one table)\n")
 		fmt.Fprintf(w, "  %s dora trends -years 2024,2025,2026 -period quarters\n\n", filepath.Base(os.Args[0]))
-		fmt.Fprintf(w, "  # Generate for year range\n")
-		fmt.Fprintf(w, "  %s dora trends -years 2024-2026 -period quarters\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  # Fiscal year starting in February\n")
+		fmt.Fprintf(w, "  %s dora trends -years 2024,2025 -period quarters -fiscal-start 2\n\n", filepath.Base(os.Args[0]))
 		fmt.Fprintf(w, "  # Generate for all available data\n")
 		fmt.Fprintf(w, "  %s dora trends -years all -period quarters\n\n", filepath.Base(os.Args[0]))
 		fmt.Fprintf(w, "  # Monthly reports for multiple years\n")
@@ -92,6 +100,12 @@ func (s *command) runTrends() error {
 		fmt.Fprintf(w, "    quarters: 2024-Q1.json, 2024-Q2.json, 2025-Q1.json, ...\n")
 		fmt.Fprintf(w, "    months:   2024-01.json, 2024-02.json, ..., 2025-12.json\n")
 		fmt.Fprintf(w, "  Multiple years shown in single comparison table\n")
+		fmt.Fprintf(w, "\nFiscal Quarter Naming:\n")
+		fmt.Fprintf(w, "  With -fiscal-start 2 (Feb start):\n")
+		fmt.Fprintf(w, "    FY2024-Q1 = Feb 2024 - Apr 2024\n")
+		fmt.Fprintf(w, "    FY2024-Q2 = May 2024 - Jul 2024\n")
+		fmt.Fprintf(w, "    FY2024-Q3 = Aug 2024 - Oct 2024\n")
+		fmt.Fprintf(w, "    FY2024-Q4 = Nov 2024 - Jan 2025\n")
 		fmt.Fprintf(w, "\nAnalysis:\n")
 		fmt.Fprintf(w, "  Use jq to compare metrics across periods:\n")
 		fmt.Fprintf(w, "    jq '.dora_metrics.deployment_frequency.per_day' %s/*.json\n", outputFlag)
@@ -149,10 +163,15 @@ func (s *command) runTrends() error {
 		return fmt.Errorf("no years specified or found in data")
 	}
 
+	// Validate fiscal start month
+	if fiscalStartFlag < 1 || fiscalStartFlag > 12 {
+		return fmt.Errorf("invalid fiscal start month: %d (must be 1-12)", fiscalStartFlag)
+	}
+
 	// Generate reports based on period type
 	switch periodFlag {
 	case "quarters":
-		return s.generateQuarterlyReportsMultiYear(ctx, calculator, years, outputDir)
+		return s.generateQuarterlyReportsMultiYear(ctx, calculator, years, fiscalStartFlag, outputDir)
 	case "months":
 		return s.generateMonthlyReportsMultiYear(ctx, calculator, years, outputDir)
 	default:
@@ -255,29 +274,39 @@ func (s *command) getAllYearsWithData(ctx context.Context, storage *dora.Storage
 }
 
 // generateQuarterlyReportsMultiYear generates quarterly reports for multiple years
-func (s *command) generateQuarterlyReportsMultiYear(ctx context.Context, calc *dora.Calculator, years []int, outputDir string) error {
+func (s *command) generateQuarterlyReportsMultiYear(ctx context.Context, calc *dora.Calculator, years []int, fiscalStartMonth int, outputDir string) error {
+	var (
+		isCalendarYear = fiscalStartMonth == 1
+	)
+
 	if len(years) == 1 {
-		fmt.Printf("Generating quarterly reports for %d...\n\n", years[0])
+		if isCalendarYear {
+			fmt.Printf("Generating quarterly reports for %d (calendar year)...\n\n", years[0])
+		} else {
+			fmt.Printf("Generating quarterly reports for FY%d (fiscal year starting %s)...\n\n", years[0], time.Month(fiscalStartMonth).String())
+		}
 	} else {
-		fmt.Printf("Generating quarterly reports for %d-%d...\n\n", years[0], years[len(years)-1])
+		if isCalendarYear {
+			fmt.Printf("Generating quarterly reports for %d-%d (calendar years)...\n\n", years[0], years[len(years)-1])
+		} else {
+			fmt.Printf("Generating quarterly reports for FY%d-FY%d (fiscal years starting %s)...\n\n", years[0], years[len(years)-1], time.Month(fiscalStartMonth).String())
+		}
 	}
 
 	var allResults []periodResult
 
 	for _, year := range years {
-		quarters := []struct {
-			name  string
-			start time.Time
-			end   time.Time
-		}{
-			{"Q1", time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC), time.Date(year, 3, 31, 23, 59, 59, 0, time.UTC)},
-			{"Q2", time.Date(year, 4, 1, 0, 0, 0, 0, time.UTC), time.Date(year, 6, 30, 23, 59, 59, 0, time.UTC)},
-			{"Q3", time.Date(year, 7, 1, 0, 0, 0, 0, time.UTC), time.Date(year, 9, 30, 23, 59, 59, 0, time.UTC)},
-			{"Q4", time.Date(year, 10, 1, 0, 0, 0, 0, time.UTC), time.Date(year, 12, 31, 23, 59, 59, 0, time.UTC)},
-		}
+		quarters := s.getFiscalQuarters(year, fiscalStartMonth)
 
 		for _, q := range quarters {
-			result, err := s.generatePeriodReport(ctx, calc, fmt.Sprintf("%d-%s", year, q.name), q.start, q.end, outputDir)
+			var periodName string
+			if isCalendarYear {
+				periodName = fmt.Sprintf("%d-%s", year, q.name)
+			} else {
+				periodName = fmt.Sprintf("FY%d-%s", year, q.name)
+			}
+
+			result, err := s.generatePeriodReport(ctx, calc, periodName, q.start, q.end, outputDir)
 			if err != nil {
 				return err
 			}
@@ -298,6 +327,59 @@ func (s *command) generateQuarterlyReportsMultiYear(ctx context.Context, calc *d
 	}
 
 	return nil
+}
+
+// getFiscalQuarters returns the four fiscal quarters for a given fiscal year
+func (s *command) getFiscalQuarters(fiscalYear int, fiscalStartMonth int) []struct {
+	name  string
+	start time.Time
+	end   time.Time
+} {
+	quarters := make([]struct {
+		name  string
+		start time.Time
+		end   time.Time
+	}, 4)
+
+	// Calculate each quarter based on fiscal start month
+	for i := 0; i < 4; i++ {
+		quarterStartMonth := fiscalStartMonth + (i * 3)
+		quarterEndMonth := quarterStartMonth + 2
+
+		// Determine the calendar year for this quarter
+		startYear := fiscalYear
+		endYear := fiscalYear
+
+		// If quarter starts before fiscal start, it's in the next calendar year
+		if quarterStartMonth > 12 {
+			quarterStartMonth -= 12
+			startYear++
+		}
+
+		if quarterEndMonth > 12 {
+			quarterEndMonth -= 12
+			endYear++
+		}
+
+		// Start of quarter
+		start := time.Date(startYear, time.Month(quarterStartMonth), 1, 0, 0, 0, 0, time.UTC)
+
+		// End of quarter (last day of the month at 23:59:59)
+		endMonthStart := time.Date(endYear, time.Month(quarterEndMonth)+1, 1, 0, 0, 0, 0, time.UTC)
+		end := endMonthStart.Add(-time.Second)
+
+		quarters[i] = struct {
+			name  string
+			start time.Time
+			end   time.Time
+		}{
+			name:  fmt.Sprintf("Q%d", i+1),
+			start: start,
+			end:   end,
+		}
+	}
+
+	return quarters
 }
 
 // generateMonthlyReportsMultiYear generates monthly reports for multiple years
