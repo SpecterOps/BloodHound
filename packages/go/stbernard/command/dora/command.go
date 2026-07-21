@@ -136,6 +136,28 @@ func (s *command) runInit() error {
 	cmd.BoolVar(&forceFlag, "force", false, "Overwrite existing configuration")
 	cmd.BoolVar(&localFlag, "local", false, "Create local override configuration (.dora.local.yaml)")
 
+	cmd.Usage = func() {
+		w := flag.CommandLine.Output()
+		fmt.Fprintf(w, "Initialize DORA metrics configuration\n\n")
+		fmt.Fprintf(w, "Usage: %s dora init [OPTIONS]\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "Options:\n")
+		cmd.PrintDefaults()
+		fmt.Fprintf(w, "\nConfiguration Files:\n")
+		fmt.Fprintf(w, "  .dora.yaml       - Main configuration (committed to git)\n")
+		fmt.Fprintf(w, "  .dora.local.yaml - Local overrides (gitignored, for secrets)\n")
+		fmt.Fprintf(w, "\nExamples:\n")
+		fmt.Fprintf(w, "  # Initialize with default configuration\n")
+		fmt.Fprintf(w, "  %s dora init\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  # Create local override file\n")
+		fmt.Fprintf(w, "  %s dora init --local\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  # Overwrite existing configuration\n")
+		fmt.Fprintf(w, "  %s dora init --force\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "\nNext Steps:\n")
+		fmt.Fprintf(w, "  1. Review and edit .dora.yaml\n")
+		fmt.Fprintf(w, "  2. Run 'dora auth' to authenticate\n")
+		fmt.Fprintf(w, "  3. Run 'dora collect' to gather data\n")
+	}
+
 	if s.subcmdIdx > 0 && s.subcmdIdx+1 < len(os.Args) {
 		if err := cmd.Parse(os.Args[s.subcmdIdx+1:]); err != nil {
 			return fmt.Errorf("parsing init flags: %w", err)

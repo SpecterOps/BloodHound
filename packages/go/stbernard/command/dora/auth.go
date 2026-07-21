@@ -22,6 +22,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/dora"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
@@ -35,6 +36,25 @@ func (s *command) runAuth() error {
 	)
 
 	cmd.BoolVar(&statusFlag, "status", false, "Show authentication status")
+
+	cmd.Usage = func() {
+		w := flag.CommandLine.Output()
+		fmt.Fprintf(w, "Authenticate with GitHub or check authentication status\n\n")
+		fmt.Fprintf(w, "Usage: %s dora auth [OPTIONS]\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "Options:\n")
+		cmd.PrintDefaults()
+		fmt.Fprintf(w, "\nAuthentication Methods:\n")
+		fmt.Fprintf(w, "  1. GitHub CLI (gh): Run 'gh auth login' before using dora\n")
+		fmt.Fprintf(w, "  2. Environment: Set GITHUB_TOKEN environment variable\n")
+		fmt.Fprintf(w, "\nExamples:\n")
+		fmt.Fprintf(w, "  # Check authentication status\n")
+		fmt.Fprintf(w, "  %s dora auth --status\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  # Authenticate with GitHub CLI\n")
+		fmt.Fprintf(w, "  %s dora auth\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  # Using environment variable\n")
+		fmt.Fprintf(w, "  export GITHUB_TOKEN=ghp_xxxxxxxxxxxx\n")
+		fmt.Fprintf(w, "  %s dora auth --status\n\n", filepath.Base(os.Args[0]))
+	}
 
 	if s.subcmdIdx > 0 && s.subcmdIdx+1 < len(os.Args) {
 		if err := cmd.Parse(os.Args[s.subcmdIdx+1:]); err != nil {
