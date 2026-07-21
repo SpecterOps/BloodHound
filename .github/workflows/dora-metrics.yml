@@ -84,9 +84,16 @@ jobs:
           cat dora-reports/report.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
-      - name: Upload DORA reports
+      - name: Upload quarterly reports
         uses: actions/upload-artifact@v4
         with:
-          name: dora-metrics-${{ steps.dora.outputs.period }}
+          name: dora-quarterly-${{ steps.dora.outputs.period }}
           path: dora-reports/
-          retention-days: 90
+          retention-days: 400
+
+      - name: Upload latest quarter (overwrite)
+        uses: actions/upload-artifact@v4
+        with:
+          name: dora-latest-quarter
+          path: dora-reports/
+          retention-days: 400
