@@ -93,7 +93,7 @@ func DefaultConfig() Config {
 			Path: filepath.Join(DoraDataDir, DefaultDBName),
 		},
 		Metrics: MetricsConfig{
-			DefaultPeriod: "30d",
+			DefaultPeriod: "90d",
 		},
 	}
 }

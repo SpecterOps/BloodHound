@@ -8,4 +8,4 @@ storage:
     type: sqlite
     path: .dora/dora.db
 metrics:
-    default_period: 30d
+    default_period: 90d
