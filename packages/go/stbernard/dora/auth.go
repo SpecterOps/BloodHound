@@ -22,23 +22,25 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"golang.org/x/oauth2"
 )
 
 const (
 	GitHubTokenFileName = "github-token.json"
-	// GitHub OAuth App Client ID for DORA metrics
-	// This is a public client ID for device flow authentication
-	GitHubClientID = "Ov23liQwertyExample" // TODO: Replace with actual OAuth app client ID
 )
 
 var (
 	ErrTokenNotFound = errors.New("token not found")
 	ErrTokenExpired  = errors.New("token is expired")
 	ErrTokenInvalid  = errors.New("token is invalid")
+	ErrGHCLINotFound = errors.New("GitHub CLI (gh) not found - install from https://cli.github.com/")
 )
 
 // SaveToken saves an OAuth token to a file
@@ -111,95 +113,115 @@ func GetTokenFromEnv() *oauth2.Token {
 	}
 }
 
-// GitHubAuthenticator handles GitHub OAuth authentication
+// GetTokenFromGHCLI retrieves the GitHub token from the gh CLI using cmdrunner
+func GetTokenFromGHCLI(env environment.Environment) (*oauth2.Token, error) {
+	// Check if gh CLI is available
+	if _, err := exec.LookPath("gh"); err != nil {
+		return nil, ErrGHCLINotFound
+	}
+
+	// Run gh auth token
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command:        "gh",
+		Args:           []string{"auth", "token"},
+		Env:            env.Slice(),
+		SuppressErrors: true,
+	}
+
+	result, err := cmdrunner.Run(context.Background(), executionPlan)
+	if err != nil {
+		return nil, fmt.Errorf("getting token from gh CLI: %w", err)
+	}
+
+	tokenStr := strings.TrimSpace(result.StandardOutput.String())
+	if tokenStr == "" {
+		return nil, errors.New("gh CLI returned empty token - run 'gh auth login' first")
+	}
+
+	return &oauth2.Token{
+		AccessToken: tokenStr,
+		TokenType:   "Bearer",
+	}, nil
+}
+
+// CheckGHCLIAuth checks if the user is authenticated with gh CLI
+func CheckGHCLIAuth(env environment.Environment) error {
+	if _, err := exec.LookPath("gh"); err != nil {
+		return ErrGHCLINotFound
+	}
+
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command:        "gh",
+		Args:           []string{"auth", "status"},
+		Env:            env.Slice(),
+		SuppressErrors: true,
+	}
+
+	_, err := cmdrunner.Run(context.Background(), executionPlan)
+	if err != nil {
+		return errors.New("not authenticated with gh CLI - run 'gh auth login' first")
+	}
+
+	return nil
+}
+
+// GitHubAuthenticator handles GitHub authentication
 type GitHubAuthenticator struct {
 	workspaceRoot string
-	config        *oauth2.Config
+	env           environment.Environment
 }
 
 // NewGitHubAuthenticator creates a new GitHub authenticator
-func NewGitHubAuthenticator(workspaceRoot string) *GitHubAuthenticator {
+func NewGitHubAuthenticator(workspaceRoot string, env environment.Environment) *GitHubAuthenticator {
 	return &GitHubAuthenticator{
 		workspaceRoot: workspaceRoot,
-		config: &oauth2.Config{
-			ClientID: GitHubClientID,
-			Endpoint: oauth2.Endpoint{
-				AuthURL:       "https://github.com/login/oauth/authorize",
-				TokenURL:      "https://github.com/login/oauth/access_token",
-				DeviceAuthURL: "https://github.com/login/device/code",
-			},
-			Scopes: []string{"repo", "workflow"},
-		},
+		env:           env,
 	}
 }
 
-// GetToken retrieves a valid token from file or environment
+// GetToken retrieves a valid token from environment or gh CLI
 func (s *GitHubAuthenticator) GetToken(ctx context.Context) (*oauth2.Token, error) {
 	// Try environment variable first
 	if token := GetTokenFromEnv(); token != nil {
 		return token, nil
 	}
 
-	// Try loading from file
-	tokenPath := GetGitHubTokenPath(s.workspaceRoot)
-	token, err := LoadToken(tokenPath)
+	// Try gh CLI
+	token, err := GetTokenFromGHCLI(s.env)
 	if err != nil {
-		if errors.Is(err, ErrTokenNotFound) {
-			return nil, fmt.Errorf("no GitHub token found. Run 'dora auth github' to authenticate")
+		if errors.Is(err, ErrGHCLINotFound) {
+			return nil, fmt.Errorf("no GitHub token found. Install gh CLI from https://cli.github.com/ or set GITHUB_TOKEN environment variable")
 		}
 		return nil, err
 	}
 
-	// Validate token
-	if err := ValidateToken(token); err != nil {
-		return nil, fmt.Errorf("stored token is invalid: %w", err)
-	}
-
 	return token, nil
 }
 
-// AuthenticateDeviceFlow performs OAuth device flow authentication
-func (s *GitHubAuthenticator) AuthenticateDeviceFlow(ctx context.Context) (*oauth2.Token, error) {
-	// Request device code
-	deviceCode, err := s.config.DeviceAuth(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("requesting device code: %w", err)
+// AuthenticateWithGHCLI guides the user to authenticate with gh CLI
+func (s *GitHubAuthenticator) AuthenticateWithGHCLI(ctx context.Context) error {
+	// Check if gh CLI is installed
+	if _, err := exec.LookPath("gh"); err != nil {
+		return ErrGHCLINotFound
 	}
 
-	// Display instructions to user
+	// Check if already authenticated
+	if err := CheckGHCLIAuth(s.env); err == nil {
+		fmt.Println("✅ Already authenticated with GitHub CLI")
+		return nil
+	}
+
+	// Guide user to authenticate
 	fmt.Println()
 	fmt.Println("GitHub Authentication Required")
 	fmt.Println("==============================")
 	fmt.Println()
-	fmt.Printf("Please visit: %s\n", deviceCode.VerificationURI)
-	fmt.Printf("And enter code: %s\n", deviceCode.UserCode)
+	fmt.Println("Please run the following command to authenticate:")
 	fmt.Println()
-	fmt.Println("Waiting for authorization...")
+	fmt.Println("  gh auth login")
+	fmt.Println()
+	fmt.Println("Follow the prompts to complete authentication.")
 	fmt.Println()
 
-	// Poll for token
-	token, err := s.config.DeviceAccessToken(ctx, deviceCode)
-	if err != nil {
-		return nil, fmt.Errorf("waiting for authorization: %w", err)
-	}
-
-	return token, nil
-}
-
-// SaveAuthToken saves the authentication token to file
-func (s *GitHubAuthenticator) SaveAuthToken(token *oauth2.Token) error {
-	tokenPath := GetGitHubTokenPath(s.workspaceRoot)
-	return SaveToken(tokenPath, token)
-}
-
-// ClearToken removes the stored authentication token
-func (s *GitHubAuthenticator) ClearToken() error {
-	tokenPath := GetGitHubTokenPath(s.workspaceRoot)
-	if err := os.Remove(tokenPath); err != nil {
-		if os.IsNotExist(err) {
-			return nil // Already removed
-		}
-		return fmt.Errorf("removing token file: %w", err)
-	}
-	return nil
+	return errors.New("authentication required - please run 'gh auth login'")
 }
