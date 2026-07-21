@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { PluginCreator } from 'tailwindcss/types/config';
-import { common, dark, light, palette, text } from './colors';
+import { common, dark, elevation, light, palette, text } from './colors';
 
 const secondaryVariant2 = '#99a3ff';
 const darkDataTableRowSelectedOutline = '#4A42B5';
@@ -92,11 +92,11 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // ELEVATION
             // '--elevation-0': elevation.light[0],
-            // '--elevation-1': elevation.light[1],
-            // '--elevation-2': elevation.light[2],
-            // '--elevation-3': elevation.light[3],
-            // '--elevation-4': elevation.light[4],
-            // '--elevation-5': elevation.light[5],
+            '--elevation-1': elevation.light[1],
+            '--elevation-2': elevation.light[2],
+            '--elevation-3': elevation.light[3],
+            '--elevation-4': elevation.light[4],
+            '--elevation-5': elevation.light[5],
 
             // STATUS
             '--status-error-main': light.status.error.main,
@@ -334,11 +334,11 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // ELEVATION
             // '--elevation-0': elevation.dark[0],
-            // '--elevation-1': elevation.dark[1],
-            // '--elevation-2': elevation.dark[2],
-            // '--elevation-3': elevation.dark[3],
-            // '--elevation-4': elevation.dark[4],
-            // '--elevation-5': elevation.dark[5],
+            '--elevation-1': elevation.dark[1],
+            '--elevation-2': elevation.dark[2],
+            '--elevation-3': elevation.dark[3],
+            '--elevation-4': elevation.dark[4],
+            '--elevation-5': elevation.dark[5],
 
             // STATUS
             '--status-error-main': dark.status.error.main,

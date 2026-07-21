@@ -52,12 +52,10 @@ const TagToZoneLabel: FC<TagToZoneLabelProps> = (props) => {
     return (
         <>
             <Popover>
-                <PopoverTrigger disabled={!selectedQuery && !cypherQuery}>
-                    <Button variant='secondary' asChild size='small' aria-label='Tag'>
-                        <div>
-                            <span className='mr-2 text-base'>Tag</span>
-                            <AppIcon.CaretDown size={10} />
-                        </div>
+                <PopoverTrigger disabled={!selectedQuery && !cypherQuery} asChild>
+                    <Button variant='secondary' size='small'>
+                        <span className='mr-2 text-base'>Tag</span>
+                        <AppIcon.CaretDown size={10} />
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className='p-0 w-28'>

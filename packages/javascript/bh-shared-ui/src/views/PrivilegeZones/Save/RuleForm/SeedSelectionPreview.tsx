@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Card, CardContent, CardHeader } from 'doodle-ui';
+import { Button, ButtonVariants, Card, CardContent, CardHeader } from 'doodle-ui';
 import {
     NodeSourceSeed,
     SeedExpansionMethod,
@@ -96,17 +96,20 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
             <CardHeader className='pl-6 first:py-6 text-xl font-bold'>
                 <div className='flex justify-between items-center min-h-10'>
                     <span>Sample Results</span>
-                    <Button
-                        asChild
-                        variant='text'
-                        disabled={!exploreUrl}
-                        className={cn('font-normal', {
-                            hidden: !showViewInExploreButton,
-                        })}>
-                        <a href={exploreUrl} target='_blank' rel='noreferrer'>
-                            View in Explore
-                        </a>
-                    </Button>
+                    {showViewInExploreButton &&
+                        (exploreUrl ? (
+                            <a
+                                href={exploreUrl}
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                className={cn(ButtonVariants({ variant: 'text' }), 'font-normal')}>
+                                View in Explore
+                            </a>
+                        ) : (
+                            <Button variant='text' disabled className='font-normal'>
+                                View in Explore
+                            </Button>
+                        ))}
                 </div>
             </CardHeader>
             {sampleResultsFetched ? (

@@ -16,7 +16,7 @@
 import { FC, useContext } from 'react';
 import { PrivilegeZonesContext } from './PrivilegeZonesContext';
 
-import { Button } from 'doodle-ui';
+import { Button, ButtonVariants } from 'doodle-ui';
 import { AppLink } from '../../components';
 import { usePZPathParams } from '../../hooks';
 
@@ -61,46 +61,67 @@ export const LabelsLink: FC = () => {
 
 export const EditTagButtonLink: FC = () => {
     const { tagId, tagType, tagTypeDisplay, tagEditLink } = usePZPathParams();
+    if (!tagId) {
+        return (
+            <Button variant='secondary' disabled>
+                Edit {tagTypeDisplay}
+            </Button>
+        );
+    }
+
     return (
-        <Button variant='secondary' disabled={!tagId} asChild={!!tagId}>
-            {!tagId ? (
-                <span>Edit {tagTypeDisplay}</span>
-            ) : (
-                <AppLink data-testid='privilege-zones_edit-tag-link' to={tagEditLink(tagId, tagType)}>
-                    Edit {tagTypeDisplay}
-                </AppLink>
-            )}
-        </Button>
+        <AppLink
+            data-testid='privilege-zones_edit-tag-link'
+            to={tagEditLink(tagId, tagType)}
+            className={ButtonVariants({
+                variant: 'secondary',
+            })}>
+            Edit {tagTypeDisplay}
+        </AppLink>
     );
 };
 
 export const CreateRuleButtonLink: FC = () => {
     const { tagId, ruleCreateLink } = usePZPathParams();
+    if (!tagId) {
+        return (
+            <Button variant='secondary' disabled>
+                Create Rule
+            </Button>
+        );
+    }
+
     return (
-        <Button variant='secondary' disabled={!tagId} asChild={!!tagId}>
-            {!tagId ? (
-                <span>Create Rule</span>
-            ) : (
-                <AppLink data-testid='privilege-zones_create-rule-link' to={ruleCreateLink(tagId)}>
-                    Create Rule
-                </AppLink>
-            )}
-        </Button>
+        <AppLink
+            data-testid='privilege-zones_create-rule-link'
+            to={ruleCreateLink(tagId)}
+            className={ButtonVariants({
+                variant: 'secondary',
+            })}>
+            Create Rule
+        </AppLink>
     );
 };
 
 export const EditRuleButtonLink: FC = () => {
     const { tagId, ruleEditLink, ruleId } = usePZPathParams();
+    if (!tagId || !ruleId) {
+        return (
+            <Button variant='secondary' disabled>
+                Edit Rule
+            </Button>
+        );
+    }
+
     return (
-        <Button variant='secondary' disabled={!ruleId || !tagId} asChild={!!ruleId && !!tagId}>
-            {!ruleId || !tagId ? (
-                <span>Edit Rule</span>
-            ) : (
-                <AppLink data-testid='privilege-zones_edit-rule-link' to={ruleEditLink(tagId, ruleId)}>
-                    Edit Rule
-                </AppLink>
-            )}
-        </Button>
+        <AppLink
+            data-testid='privilege-zones_edit-rule-link'
+            to={ruleEditLink(tagId, ruleId)}
+            className={ButtonVariants({
+                variant: 'secondary',
+            })}>
+            Edit Rule
+        </AppLink>
     );
 };
 
