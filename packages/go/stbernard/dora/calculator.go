@@ -185,15 +185,18 @@ func (s *Calculator) calculateChangeFailureRate(
 }
 
 // calculateTimeToRestore calculates mean time to restore service (MTTR)
-// Uses patch releases as incidents: time between initial release and patch
-// Example: v9.2.0 released at T0, v9.2.1 (patch) released at T1 → MTTR = T1 - T0
+// Every hotfix/patch (patch number > 0) represents an incident that required a fix.
+// Time to restore = time from previous production release to the hotfix release.
+// Examples:
+//   v9.2.0 (May 26) → v9.2.2 (May 29) = 3 days to restore
+//   v9.0.1 (Apr 14) → v9.0.2 (Apr 20) = 6 days to restore
 func (s *Calculator) calculateTimeToRestore(
 	snapshot *MetricsSnapshot,
 	deployments []Deployment,
 ) error {
 	var (
-		restoreTimes      []float64
-		versionToRelease  = make(map[string]Deployment) // version → initial release
+		restoreTimes       []float64
+		previousProduction *Deployment
 	)
 
 	// Sort deployments by time (oldest first) to process chronologically
@@ -203,28 +206,24 @@ func (s *Calculator) calculateTimeToRestore(
 		return sortedDeps[i].DeployedAt.Before(sortedDeps[j].DeployedAt)
 	})
 
-	// Process deployments to find patches and their initial releases
-	for _, d := range sortedDeps {
+	// Process deployments chronologically
+	for i := range sortedDeps {
+		d := &sortedDeps[i]
 		if !d.IsProduction {
 			continue // Skip RCs
 		}
 
-		// Check if this is a patch release
-		if d.IsPatch && d.PatchNumber > 0 {
-			// Find the initial release (patch 0) for this version
-			baseVersion := d.Version // e.g., "9.2.0" for both v9.2.0 and v9.2.1
-			if initialRelease, exists := versionToRelease[baseVersion]; exists {
-				// Calculate restore time: patch release time - initial release time
-				restoreHours := d.DeployedAt.Sub(initialRelease.DeployedAt).Hours()
-				if restoreHours > 0 {
-					restoreTimes = append(restoreTimes, restoreHours)
-				}
+		// Every patch/hotfix is an incident (patch > 0)
+		if d.IsPatch && d.PatchNumber > 0 && previousProduction != nil {
+			// Calculate restore time: time from previous production release to this hotfix
+			restoreHours := d.DeployedAt.Sub(previousProduction.DeployedAt).Hours()
+			if restoreHours > 0 {
+				restoreTimes = append(restoreTimes, restoreHours)
 			}
-		} else if !d.IsPatch {
-			// This is an initial release (patch number 0)
-			// Store it for future patch lookups
-			versionToRelease[d.Version] = d
 		}
+
+		// Update previous production release for next iteration
+		previousProduction = d
 	}
 
 	snapshot.IncidentCount = len(restoreTimes)
