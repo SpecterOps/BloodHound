@@ -48,11 +48,11 @@ func TestParseDefaultPeriod(t *testing.T) {
 		{"years uppercase", "3YR", 1095},
 		
 		// Edge cases
-		{"empty string", "", 30},
+		{"empty string", "", 90},
 		{"whitespace", "  90d  ", 90},
-		{"invalid", "invalid", 30},
-		{"negative", "-5d", 30},
-		{"zero", "0d", 30},
+		{"invalid", "invalid", 90},
+		{"negative", "-5d", 90},
+		{"zero", "0d", 90},
 	}
 
 	for _, tt := range tests {
