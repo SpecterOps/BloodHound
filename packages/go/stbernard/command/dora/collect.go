@@ -43,6 +43,28 @@ func (s *command) runCollect() error {
 	cmd.BoolVar(&commitFlag, "commits", false, "Collect commit data only")
 	cmd.BoolVar(&prFlag, "prs", false, "Collect pull request data only")
 
+	cmd.Usage = func() {
+		w := flag.CommandLine.Output()
+		fmt.Fprintf(w, "Collect DORA metrics data from GitHub\n\n")
+		fmt.Fprintf(w, "Usage: %s dora collect [OPTIONS]\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "Options:\n")
+		cmd.PrintDefaults()
+		fmt.Fprintf(w, "\nData Types:\n")
+		fmt.Fprintf(w, "  - Deployments: Git tags (semver format: v1.2.3, v1.2.3-rc1)\n")
+		fmt.Fprintf(w, "  - Commits: All commits in the main branch\n")
+		fmt.Fprintf(w, "  - Pull Requests: Merged PRs with timestamps\n")
+		fmt.Fprintf(w, "\nExamples:\n")
+		fmt.Fprintf(w, "  # Collect all data for last 30 days (default)\n")
+		fmt.Fprintf(w, "  %s dora collect\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  # Collect last 90 days\n")
+		fmt.Fprintf(w, "  %s dora collect --days 90\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  # Collect only deployments\n")
+		fmt.Fprintf(w, "  %s dora collect --deployments\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  # Collect commits and PRs only\n")
+		fmt.Fprintf(w, "  %s dora collect --commits --prs\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "\nNote: Data is stored in SQLite database at .dora/dora.db\n")
+	}
+
 	if s.subcmdIdx > 0 && s.subcmdIdx+1 < len(os.Args) {
 		if err := cmd.Parse(os.Args[s.subcmdIdx+1:]); err != nil {
 			return fmt.Errorf("parsing collect flags: %w", err)
