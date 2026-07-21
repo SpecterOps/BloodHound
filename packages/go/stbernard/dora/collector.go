@@ -20,6 +20,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
+	"sort"
+	"strconv"
 	"time"
 
 	"github.com/google/go-github/v67/github"
@@ -71,7 +74,11 @@ func (s *GitHubCollector) getClient(ctx context.Context) (*github.Client, error)
 	return s.client, nil
 }
 
-// CollectDeployments collects deployment data from GitHub Actions
+// CollectDeployments collects deployment data from Git tags
+// Tags follow semver format: vMAJOR.MINOR.PATCH[-rcN]
+// Production deployments are tags without -rc suffix (e.g., v9.4.0)
+// Release candidates have -rcN suffix (e.g., v9.4.0-rc1)
+// Patch releases have PATCH > 0 (e.g., v9.4.1 is a hotfix)
 func (s *GitHubCollector) CollectDeployments(ctx context.Context, startTime, endTime time.Time) ([]Deployment, error) {
 	if startTime.After(endTime) {
 		return nil, ErrInvalidTimeRange
@@ -82,79 +89,40 @@ func (s *GitHubCollector) CollectDeployments(ctx context.Context, startTime, end
 		return nil, fmt.Errorf("getting GitHub client: %w", err)
 	}
 
+	// Fetch all tags from the repository
 	var (
-		deployments []Deployment
-		page        = 1
+		allTags []*github.RepositoryTag
+		page    = 1
 	)
 
 	for {
-		opts := &github.ListWorkflowRunsOptions{
-			Status: "completed",
-			ListOptions: github.ListOptions{
-				Page:    page,
-				PerPage: 100,
-			},
+		opts := &github.ListOptions{
+			Page:    page,
+			PerPage: 100,
 		}
 
-		runs, resp, err := client.Actions.ListRepositoryWorkflowRuns(
+		tags, resp, err := client.Repositories.ListTags(
 			ctx,
 			s.config.GitHub.Owner,
 			s.config.GitHub.Repo,
 			opts,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("listing workflow runs: %w", err)
+			return nil, fmt.Errorf("listing tags: %w", err)
 		}
 
-		for _, run := range runs.WorkflowRuns {
-			// Filter by production workflow if configured
-			if s.config.GitHub.Production.Workflow != "" {
-				if run.GetName() != s.config.GitHub.Production.Workflow {
-					continue
-				}
-			}
-
-			// Filter by time range
-			createdAt := run.GetCreatedAt().Time
-			if createdAt.Before(startTime) || createdAt.After(endTime) {
-				continue
-			}
-
-			deployment := Deployment{
-				ID:           fmt.Sprintf("%d", run.GetID()),
-				SHA:          run.GetHeadSHA(),
-				WorkflowName: run.GetName(),
-				WorkflowFile: run.GetPath(),
-				Environment:  s.config.GitHub.Production.Environment,
-				Status:       run.GetStatus(),
-				DeployedAt:   run.GetCreatedAt().Time,
-				TriggeredBy:  run.GetActor().GetLogin(),
-				Conclusion:   run.GetConclusion(),
-				HTMLURL:      run.GetHTMLURL(),
-			}
-
-			// Calculate duration if run is complete
-			if !run.GetRunStartedAt().IsZero() && !run.GetUpdatedAt().IsZero() {
-				started := run.GetRunStartedAt().Time
-				updated := run.GetUpdatedAt().Time
-				deployment.DurationSecs = int(updated.Sub(started).Seconds())
-			}
-
-			deployments = append(deployments, deployment)
-		}
-
-		// Stop if we've gone past our start time
-		if len(runs.WorkflowRuns) > 0 {
-			lastRun := runs.WorkflowRuns[len(runs.WorkflowRuns)-1]
-			if lastRun.CreatedAt != nil && lastRun.CreatedAt.Time.Before(startTime) {
-				break
-			}
-		}
+		allTags = append(allTags, tags...)
 
 		if resp.NextPage == 0 {
 			break
 		}
 		page = resp.NextPage
+	}
+
+	// Parse tags and build deployments with quality metrics
+	deployments, err := s.parseTagsToDeployments(ctx, client, allTags, startTime, endTime)
+	if err != nil {
+		return nil, fmt.Errorf("parsing tags: %w", err)
 	}
 
 	return deployments, nil
@@ -317,4 +285,151 @@ func (s *GitHubCollector) CollectPullRequests(ctx context.Context, startTime, en
 func extractPRNumber(message string) *int {
 	// TODO: Implement regex-based PR number extraction
 	return nil
+}
+
+// semverTag represents a parsed semantic version tag
+type semverTag struct {
+	Tag          string
+	SHA          string
+	Version      string // e.g., "9.4.0"
+	Major        int
+	Minor        int
+	Patch        int
+	IsRC         bool
+	RCNumber     int
+	Timestamp    time.Time
+	HTMLURL      string
+}
+
+// parseTagsToDeployments parses repository tags into deployments with quality metrics
+func (s *GitHubCollector) parseTagsToDeployments(
+	ctx context.Context,
+	client *github.Client,
+	tags []*github.RepositoryTag,
+	startTime, endTime time.Time,
+) ([]Deployment, error) {
+	var (
+		parsedTags  []semverTag
+		semverRegex = regexp.MustCompile(`^v(\d+)\.(\d+)\.(\d+)(?:-rc(\d+))?$`)
+	)
+
+	// Parse all tags
+	for _, tag := range tags {
+		tagName := tag.GetName()
+		matches := semverRegex.FindStringSubmatch(tagName)
+		if matches == nil {
+			// Skip non-semver tags
+			continue
+		}
+
+		var (
+			major, _    = strconv.Atoi(matches[1])
+			minor, _    = strconv.Atoi(matches[2])
+			patch, _    = strconv.Atoi(matches[3])
+			isRC        = matches[4] != ""
+			rcNumber    = 0
+			version     = fmt.Sprintf("%d.%d.%d", major, minor, patch)
+		)
+
+		if isRC {
+			rcNumber, _ = strconv.Atoi(matches[4])
+		}
+
+		// Get commit timestamp
+		commit, _, err := client.Repositories.GetCommit(
+			ctx,
+			s.config.GitHub.Owner,
+			s.config.GitHub.Repo,
+			tag.GetCommit().GetSHA(),
+			nil,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("getting commit for tag %s: %w", tagName, err)
+		}
+
+		timestamp := commit.GetCommit().GetCommitter().GetDate().Time
+
+		parsedTags = append(parsedTags, semverTag{
+			Tag:       tagName,
+			SHA:       tag.GetCommit().GetSHA(),
+			Version:   version,
+			Major:     major,
+			Minor:     minor,
+			Patch:     patch,
+			IsRC:      isRC,
+			RCNumber:  rcNumber,
+			Timestamp: timestamp,
+			HTMLURL:   fmt.Sprintf("https://github.com/%s/%s/releases/tag/%s", s.config.GitHub.Owner, s.config.GitHub.Repo, tagName),
+		})
+	}
+
+	// Sort tags by timestamp (oldest first) for processing
+	sort.Slice(parsedTags, func(i, j int) bool {
+		return parsedTags[i].Timestamp.Before(parsedTags[j].Timestamp)
+	})
+
+	// Calculate quality metrics and build deployments
+	deployments := s.calculateQualityMetrics(parsedTags, startTime, endTime)
+
+	return deployments, nil
+}
+
+// calculateQualityMetrics calculates RC and patch counts for each deployment
+func (s *GitHubCollector) calculateQualityMetrics(
+	tags []semverTag,
+	startTime, endTime time.Time,
+) []Deployment {
+	var (
+		deployments []Deployment
+		rcCounts    = make(map[string]int) // version -> RC count
+		patchCounts = make(map[string]int) // "major.minor" -> patch count
+	)
+
+	// First pass: count RCs and patches
+	for _, tag := range tags {
+		if tag.IsRC {
+			rcCounts[tag.Version]++
+		} else if tag.Patch > 0 {
+			minorVersion := fmt.Sprintf("%d.%d", tag.Major, tag.Minor)
+			patchCounts[minorVersion]++
+		}
+	}
+
+	// Second pass: build deployments with metrics
+	for _, tag := range tags {
+		// Filter by time range
+		if tag.Timestamp.Before(startTime) || tag.Timestamp.After(endTime) {
+			continue
+		}
+
+		var (
+			rcNumber     *int
+			totalRCs     = rcCounts[tag.Version]
+			minorVersion = fmt.Sprintf("%d.%d", tag.Major, tag.Minor)
+			totalPatches = patchCounts[minorVersion]
+		)
+
+		if tag.IsRC {
+			rcNumber = &tag.RCNumber
+		}
+
+		deployment := Deployment{
+			Tag:          tag.Tag,
+			SHA:          tag.SHA,
+			Version:      tag.Version,
+			DeployedAt:   tag.Timestamp,
+			IsProduction: !tag.IsRC,
+			IsRC:         tag.IsRC,
+			RCNumber:     rcNumber,
+			IsPatch:      tag.Patch > 0,
+			PatchNumber:  tag.Patch,
+			TotalRCs:     totalRCs,
+			TotalPatches: totalPatches,
+			HTMLURL:      tag.HTMLURL,
+		}
+
+		deployments = append(deployments, deployment)
+	}
+
+	return deployments
 }

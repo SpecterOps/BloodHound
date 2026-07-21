@@ -52,15 +52,22 @@ func TestStorageDeployments(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Test saving a deployment
+	// Test saving a production deployment
+	now := time.Now()
+	rcNum := 3
 	deployment := Deployment{
-		ID:           "123",
+		Tag:          "v9.4.0",
 		SHA:          "abc123",
-		WorkflowName: "Deploy",
-		Environment:  "production",
-		Status:       "completed",
-		DeployedAt:   time.Now(),
-		Conclusion:   "success",
+		Version:      "9.4.0",
+		DeployedAt:   now,
+		IsProduction: true,
+		IsRC:         false,
+		RCNumber:     nil,
+		IsPatch:      false,
+		PatchNumber:  0,
+		TotalRCs:     rcNum,
+		TotalPatches: 0,
+		HTMLURL:      "https://github.com/SpecterOps/bloodhound-enterprise/releases/tag/v9.4.0",
 	}
 
 	if err := storage.SaveDeployments(ctx, []Deployment{deployment}); err != nil {
@@ -68,8 +75,8 @@ func TestStorageDeployments(t *testing.T) {
 	}
 
 	// Test retrieving deployments
-	start := time.Now().AddDate(0, 0, -1)
-	end := time.Now().AddDate(0, 0, 1)
+	start := now.AddDate(0, 0, -1)
+	end := now.AddDate(0, 0, 1)
 
 	deployments, err := storage.GetDeployments(ctx, start, end)
 	if err != nil {
@@ -80,8 +87,12 @@ func TestStorageDeployments(t *testing.T) {
 		t.Errorf("Expected 1 deployment, got %d", len(deployments))
 	}
 
-	if deployments[0].ID != deployment.ID {
-		t.Errorf("Expected deployment ID %s, got %s", deployment.ID, deployments[0].ID)
+	if deployments[0].Tag != deployment.Tag {
+		t.Errorf("Expected deployment tag %s, got %s", deployment.Tag, deployments[0].Tag)
+	}
+
+	if deployments[0].TotalRCs != rcNum {
+		t.Errorf("Expected %d RCs, got %d", rcNum, deployments[0].TotalRCs)
 	}
 }
 
