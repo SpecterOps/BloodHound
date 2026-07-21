@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { AxiosResponse } from 'axios';
-import { EnvironmentRequest } from './requests';
-import {
+import type { EnvironmentRequest } from './requests';
+import type {
     AssetGroupTag,
     AssetGroupTagCertificationRecord,
     AssetGroupTagHistoryRecord,
@@ -45,7 +45,7 @@ import {
     WebhookSecret,
     WebhookTest,
 } from './types';
-import { ConfigurationPayload } from './utils/config';
+import type { ConfigurationPayload } from './utils/config';
 
 export interface BasicResponse<T> {
     data: T;
@@ -344,6 +344,38 @@ export type GetScheduledJobDisplayResponse = PaginatedResponse<ScheduledJobDispl
 export type GetExportQueryResponse = AxiosResponse<Blob>;
 
 export type GetClientResponse = PaginatedResponse<Client[]>;
+
+export enum SupportBundleOperationStatus {
+    QUEUED = 'queued',
+    RUNNING = 'running',
+    SUCCEEDED = 'succeeded',
+    FAILED = 'failed',
+    CANCELLED = 'cancelled',
+}
+export type SupportBundleArtifactStatus = 'pending' | 'complete' | 'failed' | null;
+
+export type NullUuid = {
+    uuid: string | null;
+    valid: boolean;
+};
+
+export type SupportBundleOperation = {
+    id: string;
+    client_id: string;
+    artifact_id: NullUuid;
+    type: 'support_bundle';
+    status: SupportBundleOperationStatus;
+    requested_by_user_id: NullUuid;
+    created_at: string;
+    started_at: string | null;
+    completed_at: string | null;
+    execution_time: string;
+};
+
+export type SupportBundleSummary = {
+    last_finished: SupportBundleOperation | null;
+    current: SupportBundleOperation | null;
+};
 
 export type EdgeType = {
     id: number;
