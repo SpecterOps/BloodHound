@@ -1,0 +1,202 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+package dora
+
+import (
+	"context"
+	"path/filepath"
+	"testing"
+	"time"
+)
+
+func TestCalculateDeploymentFrequency(t *testing.T) {
+	tempDir := t.TempDir()
+	dbPath := filepath.Join(tempDir, "test.db")
+
+	storage, err := NewStorage(dbPath)
+	if err != nil {
+		t.Fatalf("Failed to create storage: %v", err)
+	}
+	defer storage.Close()
+
+	calc := NewCalculator(storage)
+	ctx := context.Background()
+
+	// Create test data: 10 production deployments over 30 days
+	now := time.Now()
+	var deployments []Deployment
+	for i := 0; i < 10; i++ {
+		deployments = append(deployments, Deployment{
+			Tag:          "v9." + string(rune('0'+i)) + ".0",
+			SHA:          "sha" + string(rune('0'+i)),
+			Version:      "9." + string(rune('0'+i)) + ".0",
+			DeployedAt:   now.AddDate(0, 0, -i*3), // Every 3 days
+			IsProduction: true,
+			IsRC:         false,
+			IsPatch:      false,
+			PatchNumber:  0,
+		})
+	}
+
+	if err := storage.SaveDeployments(ctx, deployments); err != nil {
+		t.Fatalf("Failed to save deployments: %v", err)
+	}
+
+	// Calculate metrics
+	startTime := now.AddDate(0, 0, -30)
+	endTime := now
+	snapshot, err := calc.CalculateMetrics(ctx, startTime, endTime)
+	if err != nil {
+		t.Fatalf("Failed to calculate metrics: %v", err)
+	}
+
+	// Verify deployment frequency
+	if snapshot.DeploymentCount != 10 {
+		t.Errorf("Expected 10 deployments, got %d", snapshot.DeploymentCount)
+	}
+
+	expectedFreq := 10.0 / 30.0 // ~0.33 per day
+	if snapshot.DeploymentFrequencyPerDay < expectedFreq-0.01 || snapshot.DeploymentFrequencyPerDay > expectedFreq+0.01 {
+		t.Errorf("Expected frequency ~%.2f, got %.2f", expectedFreq, snapshot.DeploymentFrequencyPerDay)
+	}
+
+	// Should be "high" tier (between once per week and once per day)
+	if snapshot.DeploymentTier != string(TierHigh) {
+		t.Errorf("Expected tier %s, got %s", TierHigh, snapshot.DeploymentTier)
+	}
+}
+
+func TestCalculateLeadTime(t *testing.T) {
+	tempDir := t.TempDir()
+	dbPath := filepath.Join(tempDir, "test.db")
+
+	storage, err := NewStorage(dbPath)
+	if err != nil {
+		t.Fatalf("Failed to create storage: %v", err)
+	}
+	defer storage.Close()
+
+	calc := NewCalculator(storage)
+	ctx := context.Background()
+
+	now := time.Now()
+
+	// Create commits (2 hours before deployment)
+	commits := []Commit{
+		{SHA: "sha1", CommittedAt: now.Add(-2 * time.Hour), Message: "Fix bug"},
+		{SHA: "sha2", CommittedAt: now.Add(-4 * time.Hour), Message: "Add feature"},
+	}
+
+	// Create deployments
+	deployments := []Deployment{
+		{
+			Tag:          "v9.1.0",
+			SHA:          "sha1",
+			Version:      "9.1.0",
+			DeployedAt:   now,
+			IsProduction: true,
+		},
+		{
+			Tag:          "v9.2.0",
+			SHA:          "sha2",
+			Version:      "9.2.0",
+			DeployedAt:   now,
+			IsProduction: true,
+		},
+	}
+
+	if err := storage.SaveCommits(ctx, commits); err != nil {
+		t.Fatalf("Failed to save commits: %v", err)
+	}
+
+	if err := storage.SaveDeployments(ctx, deployments); err != nil {
+		t.Fatalf("Failed to save deployments: %v", err)
+	}
+
+	// Calculate metrics
+	startTime := now.AddDate(0, 0, -1)
+	endTime := now.AddDate(0, 0, 1)
+	snapshot, err := calc.CalculateMetrics(ctx, startTime, endTime)
+	if err != nil {
+		t.Fatalf("Failed to calculate metrics: %v", err)
+	}
+
+	// Lead times should be 2 and 4 hours, median = 3 hours
+	if snapshot.LeadTimeP50Hours < 2.9 || snapshot.LeadTimeP50Hours > 3.1 {
+		t.Errorf("Expected P50 ~3 hours, got %.2f", snapshot.LeadTimeP50Hours)
+	}
+
+	// Should be "elite" tier (< 24 hours)
+	if snapshot.LeadTimeTier != string(TierElite) {
+		t.Errorf("Expected tier %s, got %s", TierElite, snapshot.LeadTimeTier)
+	}
+}
+
+func TestCalculateChangeFailureRate(t *testing.T) {
+	tempDir := t.TempDir()
+	dbPath := filepath.Join(tempDir, "test.db")
+
+	storage, err := NewStorage(dbPath)
+	if err != nil {
+		t.Fatalf("Failed to create storage: %v", err)
+	}
+	defer storage.Close()
+
+	calc := NewCalculator(storage)
+	ctx := context.Background()
+
+	now := time.Now()
+
+	// Create deployments: 10 total, 2 required patches (20% failure rate)
+	var deployments []Deployment
+	for i := 0; i < 10; i++ {
+		patches := 0
+		if i < 2 {
+			patches = 1 // First 2 deployments needed patches
+		}
+		deployments = append(deployments, Deployment{
+			Tag:          "v9." + string(rune('0'+i)) + ".0",
+			SHA:          "sha" + string(rune('0'+i)),
+			Version:      "9." + string(rune('0'+i)) + ".0",
+			DeployedAt:   now.AddDate(0, 0, -i),
+			IsProduction: true,
+			TotalPatches: patches,
+		})
+	}
+
+	if err := storage.SaveDeployments(ctx, deployments); err != nil {
+		t.Fatalf("Failed to save deployments: %v", err)
+	}
+
+	// Calculate metrics
+	startTime := now.AddDate(0, 0, -11)
+	endTime := now
+	snapshot, err := calc.CalculateMetrics(ctx, startTime, endTime)
+	if err != nil {
+		t.Fatalf("Failed to calculate metrics: %v", err)
+	}
+
+	// Should have 20% failure rate
+	if snapshot.ChangeFailureRate < 19.0 || snapshot.ChangeFailureRate > 21.0 {
+		t.Errorf("Expected ~20%% failure rate, got %.2f%%", snapshot.ChangeFailureRate)
+	}
+
+	// Should be "low" tier (> 15%)
+	if snapshot.FailureRateTier != string(TierLow) {
+		t.Errorf("Expected tier %s, got %s", TierLow, snapshot.FailureRateTier)
+	}
+}
