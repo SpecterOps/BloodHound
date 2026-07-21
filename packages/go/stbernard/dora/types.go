@@ -122,10 +122,12 @@ type MetricsSnapshot struct {
 	CalculatedAt              time.Time `db:"calculated_at"`
 
 	// Quality metrics (non-DORA but useful for understanding practices)
-	AverageRCsPerRelease     float64 `db:"average_rcs_per_release"`     // Mean RCs before production
-	MedianRCsPerRelease      float64 `db:"median_rcs_per_release"`      // Median RCs (more robust)
-	TotalCommitsInPeriod     int     `db:"total_commits_in_period"`     // All commits in time range
-	AverageCommitsPerRelease float64 `db:"average_commits_per_release"` // Batch size indicator
+	AverageRCsPerRelease         float64 `db:"average_rcs_per_release"`          // Mean RCs before production
+	MedianRCsPerRelease          float64 `db:"median_rcs_per_release"`           // Median RCs (more robust)
+	TotalCommitsInPeriod         int     `db:"total_commits_in_period"`          // All commits in time range
+	AverageCommitsPerRelease     float64 `db:"average_commits_per_release"`      // Total batch size (all commits/releases)
+	AverageStabilizationCommits  float64 `db:"average_stabilization_commits"`    // Commits in RC2+ (stabilization effort)
+	MedianStabilizationCommits   float64 `db:"median_stabilization_commits"`     // Median stabilization commits
 }
 
 // PerformanceTier represents the DORA performance classification
