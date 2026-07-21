@@ -3239,6 +3239,14 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 					assert.Falsef(t, env.UpdatedAt.IsZero(), "Environment - updated_at is zero")
 					assert.Falsef(t, env.DeletedAt.Valid, "Environment - deleted_at should be null")
 
+					// Validate kind name fields when specified on the expected environment
+					if want.EnvironmentKindName != "" {
+						assert.Equalf(t, want.EnvironmentKindName, env.EnvironmentKindName, "Environment - environment_kind_name mismatch")
+					}
+					if want.EnvironmentKindDisplayName != "" {
+						assert.Equalf(t, want.EnvironmentKindDisplayName, env.EnvironmentKindDisplayName, "Environment - environment_kind_display_name mismatch")
+					}
+
 					found = true
 					break
 				}
@@ -3291,10 +3299,12 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				envKind := getKindByName(t, testSuite, nodeKind.Name)
 				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 
+				// CreateEnvironment returns environment_kind_name but not environment_kind_display_name
 				environment := model.SchemaEnvironment{
-					SchemaExtensionId: extension.ID,
-					EnvironmentKindId: envKind.ID,
-					SourceKindId:      int32(sourceKind.ID),
+					SchemaExtensionId:   extension.ID,
+					EnvironmentKindId:   envKind.ID,
+					EnvironmentKindName: nodeKind.Name,
+					SourceKindId:        int32(sourceKind.ID),
 				}
 
 				// Create new environment
@@ -3338,8 +3348,8 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				environmentKind1 := getKindByName(t, testSuite, nodeKind1.Name)
 				environmentKind2 := getKindByName(t, testSuite, nodeKind2.Name)
 
-				environment1 := model.SchemaEnvironment{SchemaExtensionId: extension1.ID, EnvironmentKindId: environmentKind1.ID, SourceKindId: int32(sourceKind.ID)}
-				environment2 := model.SchemaEnvironment{SchemaExtensionId: extension2.ID, EnvironmentKindId: environmentKind2.ID, SourceKindId: int32(sourceKind.ID)}
+				environment1 := model.SchemaEnvironment{SchemaExtensionId: extension1.ID, EnvironmentKindId: environmentKind1.ID, EnvironmentKindName: nodeKind1.Name, EnvironmentKindDisplayName: nodeKind1.DisplayName, SourceKindId: int32(sourceKind.ID)}
+				environment2 := model.SchemaEnvironment{SchemaExtensionId: extension2.ID, EnvironmentKindId: environmentKind2.ID, EnvironmentKindName: nodeKind2.Name, EnvironmentKindDisplayName: nodeKind2.DisplayName, SourceKindId: int32(sourceKind.ID)}
 
 				_, err := testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment1.SchemaExtensionId, environment1.EnvironmentKindId, environment1.SourceKindId)
 				require.NoError(t, err, "unexpected error occurred when creating Environment 1")
@@ -3371,8 +3381,8 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				environmentKind1 := getKindByName(t, testSuite, nodeKind1.Name)
 				environmentKind2 := getKindByName(t, testSuite, nodeKind2.Name)
 
-				environment1 := model.SchemaEnvironment{SchemaExtensionId: extension1.ID, EnvironmentKindId: environmentKind1.ID, SourceKindId: int32(sourceKind.ID)}
-				environment2 := model.SchemaEnvironment{SchemaExtensionId: extension2.ID, EnvironmentKindId: environmentKind2.ID, SourceKindId: int32(sourceKind.ID)}
+				environment1 := model.SchemaEnvironment{SchemaExtensionId: extension1.ID, EnvironmentKindId: environmentKind1.ID, EnvironmentKindName: nodeKind1.Name, EnvironmentKindDisplayName: nodeKind1.DisplayName, SourceKindId: int32(sourceKind.ID)}
+				environment2 := model.SchemaEnvironment{SchemaExtensionId: extension2.ID, EnvironmentKindId: environmentKind2.ID, EnvironmentKindName: nodeKind2.Name, EnvironmentKindDisplayName: nodeKind2.DisplayName, SourceKindId: int32(sourceKind.ID)}
 
 				_, err := testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment1.SchemaExtensionId, environment1.EnvironmentKindId, environment1.SourceKindId)
 				require.NoError(t, err, "unexpected error occurred when creating Environment 1")
@@ -3401,9 +3411,11 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				envKind := getKindByName(t, testSuite, nodeKind.Name)
 
 				environment := model.SchemaEnvironment{
-					SchemaExtensionId: extension.ID,
-					EnvironmentKindId: envKind.ID,
-					SourceKindId:      int32(sourceKind.ID),
+					SchemaExtensionId:          extension.ID,
+					EnvironmentKindId:          envKind.ID,
+					EnvironmentKindName:        nodeKind.Name,
+					EnvironmentKindDisplayName: nodeKind.DisplayName,
+					SourceKindId:               int32(sourceKind.ID),
 				}
 
 				newEnvironment := createTestEnvironment(t, testSuite, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
@@ -3467,14 +3479,18 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				environmentKind2 := getKindByName(t, testSuite, nodeKind2.Name)
 
 				environment1 := model.SchemaEnvironment{
-					SchemaExtensionId: extension.ID,
-					EnvironmentKindId: environmentKind1.ID,
-					SourceKindId:      int32(sourceKind.ID),
+					SchemaExtensionId:          extension.ID,
+					EnvironmentKindId:          environmentKind1.ID,
+					EnvironmentKindName:        nodeKind1.Name,
+					EnvironmentKindDisplayName: nodeKind1.DisplayName,
+					SourceKindId:               int32(sourceKind.ID),
 				}
 				environment2 := model.SchemaEnvironment{
-					SchemaExtensionId: extension.ID,
-					EnvironmentKindId: environmentKind2.ID,
-					SourceKindId:      int32(sourceKind.ID),
+					SchemaExtensionId:          extension.ID,
+					EnvironmentKindId:          environmentKind2.ID,
+					EnvironmentKindName:        nodeKind2.Name,
+					EnvironmentKindDisplayName: nodeKind2.DisplayName,
+					SourceKindId:               int32(sourceKind.ID),
 				}
 
 				// Create Environment 1
@@ -3511,14 +3527,18 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				environmentKind2 := getKindByName(t, testSuite, nodeKind2.Name)
 
 				environment1 := model.SchemaEnvironment{
-					SchemaExtensionId: extension.ID,
-					EnvironmentKindId: environmentKind1.ID,
-					SourceKindId:      int32(sourceKindA.ID),
+					SchemaExtensionId:          extension.ID,
+					EnvironmentKindId:          environmentKind1.ID,
+					EnvironmentKindName:        nodeKind1.Name,
+					EnvironmentKindDisplayName: nodeKind1.DisplayName,
+					SourceKindId:               int32(sourceKindA.ID),
 				}
 				environment2 := model.SchemaEnvironment{
-					SchemaExtensionId: extension.ID,
-					EnvironmentKindId: environmentKind2.ID,
-					SourceKindId:      int32(sourceKindB.ID),
+					SchemaExtensionId:          extension.ID,
+					EnvironmentKindId:          environmentKind2.ID,
+					EnvironmentKindName:        nodeKind2.Name,
+					EnvironmentKindDisplayName: nodeKind2.DisplayName,
+					SourceKindId:               int32(sourceKindB.ID),
 				}
 
 				// Create Environment 1
@@ -3551,10 +3571,12 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				envKind := getKindByName(t, testSuite, nodeKind.Name)
 				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 
+				// CreateEnvironment returns environment_kind_name but not environment_kind_display_name
 				environment := model.SchemaEnvironment{
-					SchemaExtensionId: extension.ID,
-					EnvironmentKindId: envKind.ID,
-					SourceKindId:      int32(sourceKind.ID),
+					SchemaExtensionId:   extension.ID,
+					EnvironmentKindId:   envKind.ID,
+					EnvironmentKindName: nodeKind.Name,
+					SourceKindId:        int32(sourceKind.ID),
 				}
 
 				// Create Environment

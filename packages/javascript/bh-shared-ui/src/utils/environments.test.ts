@@ -386,7 +386,7 @@ describe('getOpenGraphEnvironmentInfo', () => {
     });
 
     it('propagates environment_kind_id when provided', () => {
-        expect(getOpenGraphEnvironmentInfo('AWS', 101).environment_kind_id).toBe(101);
+        expect(getOpenGraphEnvironmentInfo('AWS', 'AWS', 101).environment_kind_id).toBe(101);
     });
 });
 

@@ -21458,6 +21458,11 @@
             "readOnly": true,
             "description": "OpenGraph environment kind ID for custom environments"
           },
+          "environment_kind_name": {
+            "type": "string",
+            "readOnly": true,
+            "description": "OpenGraph environment kind name for custom environments"
+          },
           "environment_kind_display_name": {
             "type": "string",
             "readOnly": true,
