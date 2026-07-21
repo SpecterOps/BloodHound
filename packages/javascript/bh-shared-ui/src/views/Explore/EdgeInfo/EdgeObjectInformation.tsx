@@ -13,71 +13,48 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Skeleton } from '@mui/material';
+import { NodeDetails, RelationshipDetails } from 'js-client-library';
 import { FC, useEffect } from 'react';
-import { useQuery } from 'react-query';
 import { usePreviousValue } from '../../../hooks';
-import { EntityField, apiClient, formatObjectInfoFields } from '../../../utils';
-import { SelectedEdge } from '../ExploreSearch/EdgeFilter/edgeCategories';
+import { EntityField, formatObjectInfoFields } from '../../../utils';
 import { FieldsContainer, ObjectInfoFields } from '../fragments';
 import { useObjectInfoPanelContext } from '../providers';
 import EdgeInfoCollapsibleSection from './EdgeInfoCollapsibleSection';
 
-const selectedEdgeCypherQuery = (sourceId: string | number, targetId: string | number, edgeKind: string): string =>
-    `MATCH (s)-[r:${edgeKind}]->(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId} RETURN r LIMIT 1`;
+type EdgeObjectInformationProps = {
+    selectedEdge: NonNullable<RelationshipDetails>;
+    sourceNode: NodeDetails | undefined;
+    targetNode: NodeDetails | undefined;
+};
 
-const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
+const EdgeObjectInformation: FC<EdgeObjectInformationProps> = ({ selectedEdge, sourceNode, targetNode }) => {
     const { isObjectInfoPanelOpen, setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
 
-    const previousId = usePreviousValue(selectedEdge.id);
+    const previousId = usePreviousValue(selectedEdge.relationship_id);
 
     useEffect(() => {
-        if (previousId !== selectedEdge.id) {
+        if (previousId !== selectedEdge.relationship_id) {
             setIsObjectInfoPanelOpen(true);
         }
-    }, [previousId, selectedEdge.id, setIsObjectInfoPanelOpen]);
-
-    const {
-        data: cypherResponse,
-        isLoading,
-        isError,
-    } = useQuery([selectedEdge.id], async ({ signal }) => {
-        return apiClient
-            .cypherSearch(
-                selectedEdgeCypherQuery(selectedEdge.sourceNode.id, selectedEdge.targetNode.id, selectedEdge.name),
-                { signal },
-                true
-            )
-            .then((result: any) => {
-                if (!result.data.data) return { nodes: {}, edges: [] };
-                return result.data.data;
-            });
-    });
-
-    if (isLoading) {
-        return <Skeleton variant='rectangular' />;
-    }
+    }, [previousId, selectedEdge.relationship_id, setIsObjectInfoPanelOpen]);
 
     const sourceNodeField: EntityField = {
         label: 'Source Node:',
-        value: selectedEdge.sourceNode.name,
+        value: sourceNode?.properties.name || sourceNode?.properties.objectid || '',
     };
 
     const targetNodeField: EntityField = {
         label: 'Target Node:',
-        value: selectedEdge.targetNode.name,
+        value: targetNode?.properties.name || targetNode?.properties.objectid || '',
     };
 
-    let formattedObjectFields: EntityField[] = [sourceNodeField, targetNodeField];
-
-    if (!isError) {
-        formattedObjectFields = [
-            ...formattedObjectFields,
-            ...formatObjectInfoFields({
-                ...(cypherResponse.edges[0]?.properties || {}),
-            }),
-        ];
-    }
+    const formattedObjectFields: EntityField[] = [
+        sourceNodeField,
+        targetNodeField,
+        ...formatObjectInfoFields({
+            ...selectedEdge.properties,
+        }),
+    ];
 
     const sectionLabel = 'Relationship Information';
 

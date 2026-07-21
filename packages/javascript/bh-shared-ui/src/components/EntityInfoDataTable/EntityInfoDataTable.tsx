@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useQuery } from 'react-query';
 import { useExploreParams } from '../../hooks';
-import { EntityInfoDataTableProps, entityRelationshipEndpoints } from '../../utils';
+import { EntityInfoDataTableProps, entityRelationshipEndpoints, getEntityQueryCount } from '../../utils';
 import EntityInfoCollapsibleSection from '../EntityInfo/EntityInfoCollapsibleSection';
 import InfiniteScrollingTable from '../InfiniteScrollingTable';
 
@@ -40,7 +40,7 @@ export const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
                 return endpoint({ id, skip: 0, limit: 128 });
             }
             if (sections)
-                return Promise.all(
+                return Promise.allSettled(
                     sections.map((section: EntityInfoDataTableProps) => {
                         const endpoint = section.queryType ? entityRelationshipEndpoints[section.queryType] : undefined;
                         return endpoint ? endpoint({ id, skip: 0, limit: 128 }) : Promise.resolve();
@@ -70,27 +70,17 @@ export const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         else removeExpandedPanelSectionParams();
     };
 
-    let count: number | undefined;
-    if (Array.isArray(countQuery.data)) {
-        if (countLabel !== undefined) {
-            countQuery.data.forEach((sectionData: any) => {
-                if (sectionData.countLabel === countLabel) count = sectionData.count;
-            });
-        } else {
-            count = countQuery.data.reduce((acc, val) => {
-                const count = val?.count ?? 0;
-                return acc + count;
-            }, 0);
-        }
-    } else if (countQuery.data) {
-        count = countQuery.data?.count ?? 0;
-    }
+    const count = getEntityQueryCount(countQuery.data, countLabel);
+
+    const hasPartialError =
+        Array.isArray(countQuery.data) && countQuery.data.some((result: any) => result?.status === 'rejected');
+    const isError = countQuery.isError || hasPartialError;
 
     return (
         <EntityInfoCollapsibleSection
             count={count}
             error={countQuery.error}
-            isError={countQuery.isError}
+            isError={isError}
             isExpanded={isExpandedPanelSection}
             isLoading={countQuery.isLoading}
             label={label}

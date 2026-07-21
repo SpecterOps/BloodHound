@@ -22,6 +22,14 @@ parameters:
     schema:
       type: integer
       format: int64
+  - name: include-info
+    in: query
+    required: false
+    description: |
+      When false or omitted, excludes entity panel information.
+      When true, returns relationship details with entity panel information included.
+    schema:
+      type: boolean
 get:
   operationId: GetRelationshipByID
   summary: Get Relationship by Graph Relationship ID
@@ -39,16 +47,18 @@ get:
             type: object
             properties:
               data:
-                $ref: './../schemas/model.relationship-details.yaml'
+                anyOf:
+                  - $ref: "./../schemas/model.relationship-details.yaml"
+                  - $ref: "./../schemas/model.relationship-details-with-info.yaml"
     400:
-      $ref: './../responses/bad-request.yaml'
+      $ref: "./../responses/bad-request.yaml"
     401:
-      $ref: './../responses/unauthorized.yaml'
+      $ref: "./../responses/unauthorized.yaml"
     403:
-      $ref: './../responses/forbidden.yaml'
+      $ref: "./../responses/forbidden.yaml"
     404:
-      $ref: './../responses/not-found.yaml'
+      $ref: "./../responses/not-found.yaml"
     429:
-      $ref: './../responses/too-many-requests.yaml'
+      $ref: "./../responses/too-many-requests.yaml"
     500:
-      $ref: './../responses/internal-server-error.yaml'
+      $ref: "./../responses/internal-server-error.yaml"

@@ -13,29 +13,34 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Box, Divider } from '@mui/material';
-import { Typography } from 'doodle-ui';
+import { Divider } from '@mui/material';
+import { RelationshipDetailsWithInfo } from 'js-client-library';
 import { ElementType, FC, Fragment } from 'react';
+import { KindInfoItems } from '../../../components/EntityInfo/KindInfoItems';
 import EdgeInfoComponents from '../../../components/HelpTexts';
 import ACLInheritance from '../../../components/HelpTexts/shared/ACLInheritance';
 import { ActiveDirectoryKindProperties, CommonKindProperties } from '../../../graphSchema';
-import { useExploreParams, useFetchEntityInfo } from '../../../hooks';
-import { EdgeSections, SelectedEdge } from '../ExploreSearch/EdgeFilter/edgeCategories';
+import { useExploreParams, useExploreSelectedItem, useGetNodeById } from '../../../hooks';
+import { usePrimaryKind } from '../../../hooks/usePrimaryKind';
+import { isBuiltInKind } from '../../../utils';
+import { EdgeSections } from '../ExploreSearch/EdgeFilter/edgeCategories';
 import { FieldsContainer } from '../fragments';
 import EdgeInfoCollapsibleSection from './EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from './EdgeObjectInformation';
 
-const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
+const EdgeInfoContent: FC<{ selectedEdge: NonNullable<RelationshipDetailsWithInfo> }> = ({ selectedEdge }) => {
     const { setExploreParams, expandedPanelSections } = useExploreParams();
-    const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
-    const { sourceNode, targetNode } = selectedEdge;
-    const { objectId, type } = targetNode;
-    const { data: targetNodeProperties } = useFetchEntityInfo({
-        objectId,
-        nodeType: type,
-    });
+    const { isHidden } = useExploreSelectedItem();
+    const sections = EdgeInfoComponents[selectedEdge.kind.name as keyof typeof EdgeInfoComponents];
+    const { source_node_id, target_node_id } = selectedEdge;
 
-    const hiddenEdge = selectedEdge.data && selectedEdge.id.includes('HIDDEN') && selectedEdge.name.includes('Hidden');
+    const { data: sourceNode, ...sourceNodeQuery } = useGetNodeById(source_node_id);
+    const { data: targetNode, ...targetNodeQuery } = useGetNodeById(target_node_id);
+
+    const sourcePrimaryKind = usePrimaryKind(sourceNode?.kinds ?? []);
+    const targetPrimaryKind = usePrimaryKind(targetNode?.kinds ?? []);
+
+    if (sourceNodeQuery.isLoading || targetNodeQuery.isLoading) return null;
 
     const removeExpandedPanelSectionParams = () => {
         setExploreParams({
@@ -44,10 +49,10 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
     };
 
     const shouldRenderACLInheritance = !!(
-        selectedEdge.data[ActiveDirectoryKindProperties.IsACL] &&
-        selectedEdge.data[CommonKindProperties.IsInherited] &&
-        typeof selectedEdge.data[ActiveDirectoryKindProperties.InheritanceHash] === 'string' &&
-        selectedEdge.data[ActiveDirectoryKindProperties.InheritanceHash].length > 0
+        selectedEdge.properties[ActiveDirectoryKindProperties.IsACL] &&
+        selectedEdge.properties[CommonKindProperties.IsInherited] &&
+        typeof selectedEdge.properties[ActiveDirectoryKindProperties.InheritanceHash] === 'string' &&
+        selectedEdge.properties[ActiveDirectoryKindProperties.InheritanceHash].length > 0
     );
 
     const renderDropdownFromSection = (section: [string, any], index: number) => {
@@ -61,7 +66,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                 expandedPanelSections: [sectionKeyLabel],
                 ...(sectionKeyLabel === 'composition' && {
                     searchType: 'composition',
-                    relationshipQueryItemId: selectedEdge.id,
+                    relationshipQueryItemId: `rel_${selectedEdge.relationship_id}`,
                 }),
             });
         };
@@ -73,23 +78,23 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
 
         return (
             <Fragment key={index}>
-                <Box padding={1}>
+                <div className='p-2'>
                     <Divider />
-                </Box>
+                </div>
                 <EdgeInfoCollapsibleSection
                     label={EdgeSections[sectionKeyLabel]}
                     isExpanded={isExpandedPanelSection}
                     onChange={handleOnChange}>
                     <Section
-                        edgeName={selectedEdge.name}
-                        sourceDBId={sourceNode.id}
-                        sourceName={sourceNode.name}
-                        sourceType={sourceNode.type}
-                        targetDBId={targetNode.id}
-                        targetName={targetNode.name}
-                        targetType={targetNode.type}
-                        targetId={targetNode.objectId}
-                        haslaps={!!targetNodeProperties?.properties.haslaps}
+                        edgeName={selectedEdge.kind.name}
+                        sourceDBId={source_node_id}
+                        sourceName={sourceNode?.properties.name}
+                        sourceType={sourcePrimaryKind}
+                        targetDBId={target_node_id}
+                        targetName={targetNode?.properties.name}
+                        targetType={targetPrimaryKind}
+                        targetId={targetNode?.properties.objectid}
+                        haslaps={!!targetNode?.properties.haslaps}
                     />
                 </EdgeInfoCollapsibleSection>
             </Fragment>
@@ -103,7 +108,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
             setExploreParams({
                 expandedPanelSections: ['aclinheritance'],
                 searchType: 'aclinheritance',
-                relationshipQueryItemId: selectedEdge.id,
+                relationshipQueryItemId: `rel_${selectedEdge.relationship_id}`,
             });
         };
 
@@ -112,22 +117,22 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
             else removeExpandedPanelSectionParams();
         };
 
-        const castIdToInt = (id: string | number) => (typeof id === 'string' ? parseInt(id) : id);
-
         return (
             <Fragment key={Object.keys(sections).length}>
-                <Box padding={1}>
+                <div className='p-2'>
                     <Divider />
-                </Box>
+                </div>
                 <EdgeInfoCollapsibleSection
                     label={'ACE Inherited From'}
                     isExpanded={isExpandedPanelSection}
                     onChange={handleOnChange}>
                     <ACLInheritance
-                        edgeName={selectedEdge.name}
-                        sourceDBId={castIdToInt(sourceNode.id)}
-                        targetDBId={castIdToInt(targetNode.id)}
-                        inheritanceHash={selectedEdge.data[ActiveDirectoryKindProperties.InheritanceHash]}
+                        edgeName={selectedEdge.kind.name}
+                        sourceDBId={source_node_id}
+                        targetDBId={target_node_id}
+                        inheritanceHash={
+                            selectedEdge.properties[ActiveDirectoryKindProperties.InheritanceHash] as string
+                        }
                     />
                 </EdgeInfoCollapsibleSection>
             </Fragment>
@@ -135,10 +140,8 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
     };
 
     return (
-        <Box>
-            {!hiddenEdge ? (
-                <EdgeObjectInformation selectedEdge={selectedEdge} />
-            ) : (
+        <div>
+            {isHidden ? (
                 <FieldsContainer>
                     <div>
                         <p className='text-sm'>
@@ -146,31 +149,17 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                         </p>
                     </div>
                 </FieldsContainer>
-            )}
-            {sections || shouldRenderACLInheritance ? (
-                <>
-                    {Object.entries(sections).map(renderDropdownFromSection)}
-                    {shouldRenderACLInheritance && renderACLInheritanceDropdown()}
-                </>
             ) : (
-                <>
-                    {!hiddenEdge && (
-                        <>
-                            <Box padding={1}>
-                                <Divider />
-                            </Box>
-
-                            <Box paddingLeft={'0.5rem'}>
-                                <Typography variant='body1' className='text-xs'>
-                                    The edge <strong className='text-xs'>{selectedEdge.name}</strong>
-                                    does not have any additional contextual information at this time.
-                                </Typography>
-                            </Box>
-                        </>
-                    )}
-                </>
+                <EdgeObjectInformation selectedEdge={selectedEdge} sourceNode={sourceNode} targetNode={targetNode} />
             )}
-        </Box>
+            <>
+                {sections && Object.entries(sections).map(renderDropdownFromSection)}
+
+                {shouldRenderACLInheritance && renderACLInheritanceDropdown()}
+
+                {!isBuiltInKind(selectedEdge.kind.name) && <KindInfoItems items={selectedEdge.info} />}
+            </>
+        </div>
     );
 };
 

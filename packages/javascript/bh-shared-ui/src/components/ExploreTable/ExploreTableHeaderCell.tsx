@@ -17,7 +17,7 @@ import { Tooltip } from '@mui/material';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { AppIcon } from '../AppIcon';
-import { MungedTableRowWithId } from './explore-table-utils';
+import { MungedTableRowWithGraphId } from './explore-table-utils';
 
 const ExploreTableHeaderCell = ({
     headerKey,
@@ -25,8 +25,8 @@ const ExploreTableHeaderCell = ({
     sortOrder,
     onClick,
 }: {
-    headerKey: keyof MungedTableRowWithId;
-    sortBy?: keyof MungedTableRowWithId;
+    headerKey: keyof MungedTableRowWithGraphId;
+    sortBy?: keyof MungedTableRowWithGraphId;
     dataType: string;
     sortOrder?: string;
     onClick: () => void;

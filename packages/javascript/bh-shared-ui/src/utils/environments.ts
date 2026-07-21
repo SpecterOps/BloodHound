@@ -36,6 +36,7 @@ export type AggregateEnvironmentInfo = {
     icon: IconDefinition;
     memberType: string;
     type: Environment['type'];
+    environment_kind_id?: Environment['environment_kind_id'];
 };
 
 export const DEFAULT_ENVIRONMENTS_FILTER = {
@@ -158,7 +159,10 @@ export function getCheckboxOptions(environmentMap: Record<Environment['type'], {
 }
 
 /** Return an object containing display name, aggregation name, member type, and icon for a given environment type */
-export function getOpenGraphEnvironmentInfo(type: Environment['type']): AggregateEnvironmentInfo {
+export function getOpenGraphEnvironmentInfo(
+    type: Environment['type'],
+    environment_kind_id?: Environment['environment_kind_id']
+): AggregateEnvironmentInfo {
     // Known types (AD and Azure) use the known info map
     // Defaults used for OpenGraph types
     const { aggregationDisplayName, displayName, icon, memberType } = knownEnvironmentInfoMap[
@@ -175,6 +179,7 @@ export function getOpenGraphEnvironmentInfo(type: Environment['type']): Aggregat
         icon,
         memberType,
         type,
+        environment_kind_id,
     };
 }
 
@@ -186,11 +191,11 @@ export function getOpenGraphEnvironmentInfoMap(environments: Environment[] = [])
     if (environments === null) return knownEnvironmentInfoCopy;
 
     return environments.reduce(
-        (acc, { type }) => {
+        (acc, { type, environment_kind_id }) => {
             // Map starts with known types (AD and Azure)
             // OpenGraph types are added dynamically
             if (!acc[type]) {
-                acc[type] = getOpenGraphEnvironmentInfo(type);
+                acc[type] = getOpenGraphEnvironmentInfo(type, environment_kind_id);
             }
             return acc;
         },

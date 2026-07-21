@@ -39,6 +39,7 @@ import {
     RelationshipKindResponse,
     Role,
     ScheduledJobDisplay,
+    SourceKind,
     TimestampFields,
     Webhook,
     WebhookSecret,
@@ -82,6 +83,8 @@ export type Environment = {
     collected: boolean;
     hygiene_attack_paths: number; // While improbable this number could possibly be higher than the JavaScript max safe integer in the response
     exposures: EnvironmentExposure[];
+    environment_kind_display_name?: string; // OG Environments
+    environment_kind_id?: number; // OG Environments
 };
 
 export type GraphResponse = BasicResponse<GraphData>;
@@ -134,6 +137,20 @@ export type AzureDataQualityStat = TimestampFields & {
 };
 
 export type AzureDataQualityResponse = PaginatedResponse<AzureDataQualityStat[]>;
+
+export type OpenGraphDataQualityStat = TimestampFields & {
+    run_id: string;
+    environment_kind_id: number;
+    environment_id: string;
+    extension_id: number;
+    id: number;
+    kind_id: number;
+    metric_name: string;
+    metric_type: string;
+    metric_value: number;
+};
+
+export type OpenGraphDataQualityResponse = PaginatedResponse<OpenGraphDataQualityStat[]>;
 
 type PostureStat = TimestampFields & {
     domain_sid: string;
@@ -438,13 +455,15 @@ export type UnifiedFinding = {
 
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
 
+export type SourceKindsResponse = BasicResponse<{ kinds: SourceKind[] }>;
+
 export type CreateWebhookResponse = {
     webhook: Webhook;
     hmac_secret: string;
 };
 
 export type GetWebhooksResponse = PaginatedResponse<Webhook[]>;
-export type GetWebhookResponse = BasicResponse<Webhook>;
+export type GetWebhookResponse = BasicResponse<{ webhook: Webhook }>;
 export type RotateWebhookSecretResponse = BasicResponse<WebhookSecret>;
 export type WebhookTestResponse = BasicResponse<WebhookTest>;
 

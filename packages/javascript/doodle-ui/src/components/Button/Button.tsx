@@ -24,18 +24,18 @@ export const ButtonVariants = cva(
         variants: {
             variant: {
                 primary:
-                    'bg-primary text-white dark:text-neutral-dark-1 shadow-outer-1 hover:bg-secondary focus-visible:bg-secondary',
+                    'bg-primary text-common-white dark:text-common-dark shadow-outer-1 hover:bg-secondary focus-visible:bg-secondary',
                 secondary:
-                    'bg-neutral-light-4 text-neutral-dark-1 shadow-outer-1 dark:bg-neutral-dark-5 dark:text-white hover:bg-secondary hover:text-white dark:hover:bg-secondary dark:hover:text-neutral-dark-1 active:bg-neutral-light-5 active:text-neutral-dark-1 dark:active:bg-neutral-dark-5 dark:active:text-white focus-visible:bg-secondary focus-visible:text-white dark:focus-visible:bg-secondary dark:focus-visible:text-neutral-dark-1 disabled:bg-neutral-light-3 disabled:text-text-disabled disabled:shadow-none disabled:!opacity-100 dark:disabled:bg-neutral-dark-5 dark:disabled:text-text-disabled',
+                    'bg-secondary-btn-fill text-common-dark shadow-outer-1 dark:text-common-white hover:bg-secondary hover:text-common-white dark:hover:text-common-dark active:bg-secondary-btn-active-fill active:text-common-dark dark:active:text-common-white focus-visible:bg-secondary focus-visible:text-common-white dark:focus-visible:text-common-dark disabled:bg-btn-disabled-fill disabled:text-text-disabled disabled:shadow-none disabled:!opacity-100',
                 tertiary:
-                    'bg-transparent border-2 border-neutral-light-5 shadow-outer-1 hover:bg-tertiary dark:hover:text-neutral-dark-1 hover:border-tertiary focus-visible:bg-tertiary dark:focus-visible:text-neutral-dark-1 focus-visible:border-tertiary',
+                    'bg-transparent border-2 border-tertiary-btn-border shadow-outer-1 hover:bg-tertiary-main dark:hover:text-main hover:border-tertiary focus-visible:bg-tertiary-main dark:focus-visible:text-common-dark dark:focus-visible:bg-secondary focus-visible:border-tertiary',
                 transparent:
-                    'bg-transparent border border-neutral-5 dark:text-white hover:bg-primary hover:text-white hover:border-primary hover:no-underline focus-visible:bg-primary focus-visible:text-white focus-visible:border-primary',
-                text: 'text-primary dark:text-primary hover:text-secondary dark:hover:text-secondary active:text-primary-variant dark:active:text-primary focus-visible:text-secondary dark:focus-visible:text-secondary disabled:text-text-disabled disabled:!opacity-100 dark:disabled:text-text-disabled',
-                icon: 'rounded-full text-neutral-dark-1 bg-neutral-light-5 p-0 size-10 shadow-outer-1 hover:border-2 hover:border-secondary focus-visible:border-2 focus-visible:border-secondary active:border-none',
+                    'bg-transparent border border-transparent-btn-border text-main hover:bg-primary hover:text-common-white dark:hover:text-common-dark hover:border-primary hover:no-underline focus-visible:bg-primary focus-visible:text-common-white dark:focus-visible:text-common-dark focus-visible:border-primary',
+                text: 'text-primary hover:text-secondary active:text-primary-variant focus-visible:text-secondary disabled:text-text-disabled disabled:!opacity-100',
+                icon: 'rounded-full text-common-dark bg-icon-btn-fill p-0 size-10 shadow-outer-1 hover:border-2 hover:border-secondary focus-visible:border-2 focus-visible:border-secondary active:border-none',
             },
             fontColor: {
-                primary: 'text-primary dark:text-primary',
+                primary: 'text-primary',
             },
             size: {
                 small: 'h-9 px-4 py-1 text-xs',

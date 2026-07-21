@@ -13,35 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { PaginatedResponse } from 'js-client-library';
+import { NodeDetails, NodeDetailsWithInfo } from 'js-client-library';
 import { useQuery } from 'react-query';
 import { NODE_GRAPH_RENDER_LIMIT } from '../../constants';
 import { useExploreParams } from '../../hooks';
-import { SelectedNode } from '../../types';
-import { EntityInfoDataTableProps, entityRelationshipEndpoints } from '../../utils';
+import { EntityInfoDataTableProps, entityRelationshipEndpoints, getEntityQueryCount } from '../../utils';
 import EntityInfoCollapsibleSection from '../EntityInfo/EntityInfoCollapsibleSection';
 import InfiniteScrollingTable from '../InfiniteScrollingTable';
-
-function getCount<T>(
-    queryData: Array<PromiseFulfilledResult<PaginatedResponse<T>>> | PaginatedResponse<T> | undefined,
-    countLabel: string | undefined
-): number | undefined {
-    if (Array.isArray(queryData)) {
-        const fulfilledData = queryData.filter((result) => result.status === 'fulfilled').map((result) => result.value);
-
-        if (countLabel !== undefined) {
-            const labeledSection = fulfilledData.find((sectionData: any) => sectionData?.countLabel === countLabel);
-            return labeledSection?.count;
-        } else {
-            return fulfilledData.reduce((acc, val) => {
-                const sectionCount = val?.count ?? 0;
-                return acc + sectionCount;
-            }, 0);
-        }
-    } else if (queryData) {
-        return queryData?.count ?? 0;
-    }
-}
 
 export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
     id,
@@ -114,19 +92,21 @@ export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
         }
     };
 
-    const setNodeSearchParams = (item: SelectedNode) => {
-        setExploreParams({
-            primarySearch: item.id,
-            searchType: 'node',
-            exploreSearchTab: 'node',
-        });
+    const setNodeSearchParams = (item: NodeDetails | NodeDetailsWithInfo) => {
+        const nameOrObjectId = item.properties.name || item.properties.objectid;
+        if (nameOrObjectId)
+            setExploreParams({
+                primarySearch: nameOrObjectId,
+                searchType: 'node',
+                exploreSearchTab: 'node',
+            });
     };
 
-    const handleOnClick = (item: SelectedNode) => {
+    const handleOnClick = (item: NodeDetails | NodeDetailsWithInfo) => {
         setNodeSearchParams(item);
     };
 
-    const count = getCount(countQuery.data, countLabel);
+    const count = getEntityQueryCount(countQuery.data, countLabel);
 
     return (
         <EntityInfoCollapsibleSection

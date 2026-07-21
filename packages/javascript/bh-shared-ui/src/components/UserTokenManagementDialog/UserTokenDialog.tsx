@@ -45,7 +45,7 @@ const UserTokenDialog: React.FC<{
                 </DialogContentText>
             </DialogContent>
             <DialogActions>
-                <Button variant='tertiary' onClick={onClose} data-testid='user-token-dialog_button-close'>
+                <Button variant='secondary' onClick={onClose} data-testid='user-token-dialog_button-close'>
                     Close
                 </Button>
             </DialogActions>
