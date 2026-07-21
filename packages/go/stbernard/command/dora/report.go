@@ -30,23 +30,52 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 )
 
-// parseDefaultPeriod converts a period string (e.g., "30d", "90d") to number of days
+// parseDefaultPeriod converts a period string to number of days
+// Supports:
+//   - Days: "30d", "90d", "30", "90days"
+//   - Months: "3m", "6mo", "6months" (assumes 30 days/month)
+//   - Years: "1y", "3yr", "3years" (assumes 365 days/year)
+// Falls back to 30 days if parsing fails.
 func parseDefaultPeriod(period string) int {
 	period = strings.TrimSpace(period)
 	if period == "" {
 		return 30
 	}
 
-	// Remove 'd' suffix if present
-	period = strings.TrimSuffix(period, "d")
-	period = strings.TrimSuffix(period, "D")
+	// Detect suffix and multiplier
+	var (
+		multiplier = 1 // Default: days
+		value      string
+	)
 
-	days, err := strconv.Atoi(period)
-	if err != nil || days <= 0 {
-		return 30 // Fallback to default
+	periodLower := strings.ToLower(period)
+
+	// Check for year suffixes
+	if strings.HasSuffix(periodLower, "yr") || strings.HasSuffix(periodLower, "years") {
+		multiplier = 365
+		value = strings.TrimSuffix(strings.TrimSuffix(periodLower, "yr"), "years")
+	} else if strings.HasSuffix(periodLower, "y") {
+		multiplier = 365
+		value = strings.TrimSuffix(periodLower, "y")
+	} else if strings.HasSuffix(periodLower, "mo") || strings.HasSuffix(periodLower, "months") {
+		multiplier = 30
+		value = strings.TrimSuffix(strings.TrimSuffix(periodLower, "mo"), "months")
+	} else if strings.HasSuffix(periodLower, "m") {
+		multiplier = 30
+		value = strings.TrimSuffix(periodLower, "m")
+	} else {
+		// Default: assume days, remove 'd' suffix if present
+		value = strings.TrimSuffix(strings.TrimSuffix(periodLower, "d"), "days")
+		multiplier = 1
 	}
 
-	return days
+	// Parse the numeric value
+	numValue, err := strconv.Atoi(strings.TrimSpace(value))
+	if err != nil || numValue <= 0 {
+		return 30 // Fallback to 30 days
+	}
+
+	return numValue * multiplier
 }
 
 // runReport handles the report subcommand
