@@ -18,19 +18,29 @@ package dora
 
 import "time"
 
-// Deployment represents a production deployment from GitHub Actions
+// Deployment represents a production deployment tracked via Git tags
+// Tags follow semver format: vMAJOR.MINOR.PATCH[-rcN]
+// Examples: v9.4.0 (production), v9.4.0-rc1 (release candidate), v9.4.1 (hotfix patch)
 type Deployment struct {
-	ID           string    `db:"id"`
-	SHA          string    `db:"sha"`
-	WorkflowName string    `db:"workflow_name"`
-	WorkflowFile string    `db:"workflow_file"`
-	Environment  string    `db:"environment"`
-	Status       string    `db:"status"`
-	DeployedAt   time.Time `db:"deployed_at"`
-	DurationSecs int       `db:"duration_seconds"`
-	TriggeredBy  string    `db:"triggered_by"`
-	Conclusion   string    `db:"conclusion"`
-	HTMLURL      string    `db:"html_url"`
+	// Core deployment information
+	Tag        string    `db:"tag"`         // Full tag name (e.g., v9.4.0, v9.4.0-rc1)
+	SHA        string    `db:"sha"`         // Git commit SHA
+	Version    string    `db:"version"`     // Semantic version (e.g., 9.4.0)
+	DeployedAt time.Time `db:"deployed_at"` // Tag creation timestamp
+
+	// Release type classification
+	IsProduction bool `db:"is_production"` // true for v9.4.0, false for v9.4.0-rc1
+	IsRC         bool `db:"is_rc"`         // true for release candidates (-rcN)
+	RCNumber     *int `db:"rc_number"`     // Release candidate number (e.g., 1 for -rc1)
+	IsPatch      bool `db:"is_patch"`      // true for patch releases (PATCH > 0)
+	PatchNumber  int  `db:"patch_number"`  // Patch version number
+
+	// Quality metrics (calculated during collection)
+	TotalRCs     int `db:"total_rcs"`     // Total RCs before this production release
+	TotalPatches int `db:"total_patches"` // Total patches for this minor version
+
+	// GitHub metadata
+	HTMLURL string `db:"html_url"` // GitHub tag URL
 }
 
 // Commit represents a Git commit

@@ -74,23 +74,25 @@ func (s *Storage) Close() error {
 func (s *Storage) initSchema() error {
 	schema := `
 	CREATE TABLE IF NOT EXISTS deployments (
-		id TEXT PRIMARY KEY,
+		tag TEXT PRIMARY KEY,
 		sha TEXT NOT NULL,
-		workflow_name TEXT,
-		workflow_file TEXT,
-		environment TEXT,
-		status TEXT NOT NULL,
+		version TEXT NOT NULL,
 		deployed_at TIMESTAMP NOT NULL,
-		duration_seconds INTEGER,
-		triggered_by TEXT,
-		conclusion TEXT,
+		is_production BOOLEAN NOT NULL,
+		is_rc BOOLEAN NOT NULL,
+		rc_number INTEGER,
+		is_patch BOOLEAN NOT NULL,
+		patch_number INTEGER NOT NULL,
+		total_rcs INTEGER NOT NULL DEFAULT 0,
+		total_patches INTEGER NOT NULL DEFAULT 0,
 		html_url TEXT,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);
 
 	CREATE INDEX IF NOT EXISTS idx_deployments_sha ON deployments(sha);
 	CREATE INDEX IF NOT EXISTS idx_deployments_deployed_at ON deployments(deployed_at);
-	CREATE INDEX IF NOT EXISTS idx_deployments_environment ON deployments(environment);
+	CREATE INDEX IF NOT EXISTS idx_deployments_version ON deployments(version);
+	CREATE INDEX IF NOT EXISTS idx_deployments_is_production ON deployments(is_production);
 
 	CREATE TABLE IF NOT EXISTS commits (
 		sha TEXT PRIMARY KEY,
@@ -144,9 +146,9 @@ func (s *Storage) SaveDeployments(ctx context.Context, deployments []Deployment)
 
 	stmt, err := tx.PrepareContext(ctx, `
 		INSERT OR REPLACE INTO deployments
-		(id, sha, workflow_name, workflow_file, environment, status, deployed_at,
-		 duration_seconds, triggered_by, conclusion, html_url)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		(tag, sha, version, deployed_at, is_production, is_rc, rc_number,
+		 is_patch, patch_number, total_rcs, total_patches, html_url)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`)
 	if err != nil {
 		return fmt.Errorf("preparing statement: %w", err)
@@ -155,12 +157,12 @@ func (s *Storage) SaveDeployments(ctx context.Context, deployments []Deployment)
 
 	for _, d := range deployments {
 		_, err = stmt.ExecContext(ctx,
-			d.ID, d.SHA, d.WorkflowName, d.WorkflowFile, d.Environment,
-			d.Status, d.DeployedAt, d.DurationSecs, d.TriggeredBy,
-			d.Conclusion, d.HTMLURL,
+			d.Tag, d.SHA, d.Version, d.DeployedAt, d.IsProduction, d.IsRC,
+			d.RCNumber, d.IsPatch, d.PatchNumber, d.TotalRCs, d.TotalPatches,
+			d.HTMLURL,
 		)
 		if err != nil {
-			return fmt.Errorf("inserting deployment %s: %w", d.ID, err)
+			return fmt.Errorf("inserting deployment %s: %w", d.Tag, err)
 		}
 	}
 
@@ -170,8 +172,8 @@ func (s *Storage) SaveDeployments(ctx context.Context, deployments []Deployment)
 // GetDeployments retrieves deployments within a time range
 func (s *Storage) GetDeployments(ctx context.Context, start, end time.Time) ([]Deployment, error) {
 	query := `
-		SELECT id, sha, workflow_name, workflow_file, environment, status,
-		       deployed_at, duration_seconds, triggered_by, conclusion, html_url
+		SELECT tag, sha, version, deployed_at, is_production, is_rc, rc_number,
+		       is_patch, patch_number, total_rcs, total_patches, html_url
 		FROM deployments
 		WHERE deployed_at BETWEEN ? AND ?
 		ORDER BY deployed_at DESC
@@ -187,9 +189,9 @@ func (s *Storage) GetDeployments(ctx context.Context, start, end time.Time) ([]D
 	for rows.Next() {
 		var d Deployment
 		err := rows.Scan(
-			&d.ID, &d.SHA, &d.WorkflowName, &d.WorkflowFile, &d.Environment,
-			&d.Status, &d.DeployedAt, &d.DurationSecs, &d.TriggeredBy,
-			&d.Conclusion, &d.HTMLURL,
+			&d.Tag, &d.SHA, &d.Version, &d.DeployedAt, &d.IsProduction, &d.IsRC,
+			&d.RCNumber, &d.IsPatch, &d.PatchNumber, &d.TotalRCs, &d.TotalPatches,
+			&d.HTMLURL,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("scanning deployment: %w", err)

@@ -22,26 +22,79 @@ import (
 )
 
 func TestDeployment(t *testing.T) {
-	now := time.Now()
-	deployment := Deployment{
-		ID:           "123",
-		SHA:          "abc123",
-		WorkflowName: "Deploy Production",
-		WorkflowFile: ".github/workflows/deploy.yml",
-		Environment:  "production",
-		Status:       "success",
-		DeployedAt:   now,
-		DurationSecs: 300,
-		TriggeredBy:  "user",
-		Conclusion:   "success",
-		HTMLURL:      "https://github.com/org/repo/actions/runs/123",
+	var (
+		now      = time.Now()
+		rcNum    = 2
+		rcNumPtr = &rcNum
+	)
+
+	tests := []struct {
+		name       string
+		deployment Deployment
+	}{
+		{
+			name: "production release",
+			deployment: Deployment{
+				Tag:          "v9.4.0",
+				SHA:          "abc123",
+				Version:      "9.4.0",
+				DeployedAt:   now,
+				IsProduction: true,
+				IsRC:         false,
+				RCNumber:     nil,
+				IsPatch:      false,
+				PatchNumber:  0,
+				TotalRCs:     2,
+				TotalPatches: 0,
+			},
+		},
+		{
+			name: "release candidate",
+			deployment: Deployment{
+				Tag:          "v9.4.0-rc2",
+				SHA:          "def456",
+				Version:      "9.4.0",
+				DeployedAt:   now,
+				IsProduction: false,
+				IsRC:         true,
+				RCNumber:     rcNumPtr,
+				IsPatch:      false,
+				PatchNumber:  0,
+				TotalRCs:     0,
+				TotalPatches: 0,
+			},
+		},
+		{
+			name: "patch release",
+			deployment: Deployment{
+				Tag:          "v9.4.1",
+				SHA:          "ghi789",
+				Version:      "9.4.1",
+				DeployedAt:   now,
+				IsProduction: true,
+				IsRC:         false,
+				RCNumber:     nil,
+				IsPatch:      true,
+				PatchNumber:  1,
+				TotalRCs:     0,
+				TotalPatches: 1,
+			},
+		},
 	}
 
-	if deployment.ID != "123" {
-		t.Errorf("Expected ID to be '123', got '%s'", deployment.ID)
-	}
-	if deployment.SHA != "abc123" {
-		t.Errorf("Expected SHA to be 'abc123', got '%s'", deployment.SHA)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := tt.deployment
+			if d.Tag == "" {
+				t.Error("Tag should not be empty")
+			}
+			if d.SHA == "" {
+				t.Error("SHA should not be empty")
+			}
+			if d.Version == "" {
+				t.Error("Version should not be empty")
+			}
+		})
 	}
 }
 
