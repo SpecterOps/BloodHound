@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { AxiosResponse } from 'axios';
-import { EnvironmentRequest } from './requests';
-import {
+import type { EnvironmentRequest } from './requests';
+import type {
     AssetGroupTag,
     AssetGroupTagCertificationRecord,
     AssetGroupTagHistoryRecord,
@@ -45,7 +45,7 @@ import {
     WebhookSecret,
     WebhookTest,
 } from './types';
-import { ConfigurationPayload } from './utils/config';
+import type { ConfigurationPayload } from './utils/config';
 
 export interface BasicResponse<T> {
     data: T;
@@ -345,28 +345,36 @@ export type GetExportQueryResponse = AxiosResponse<Blob>;
 
 export type GetClientResponse = PaginatedResponse<Client[]>;
 
-export type SupportBundleOperationStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled';
+export enum SupportBundleOperationStatus {
+    QUEUED = 'queued',
+    RUNNING = 'running',
+    SUCCEEDED = 'succeeded',
+    FAILED = 'failed',
+    CANCELLED = 'cancelled',
+}
 export type SupportBundleArtifactStatus = 'pending' | 'complete' | 'failed' | null;
 
-export type SupportBundleCompletedOperation = {
-    operation_id: string;
-    artifact_id: string;
-    operation_status: SupportBundleOperationStatus;
-    artifact_status: SupportBundleArtifactStatus;
-    completed_at: string;
+export type NullUuid = {
+    uuid: string | null;
+    valid: boolean;
 };
 
-export type SupportBundleActiveOperation = {
-    operation_id: string;
-    operation_status: SupportBundleOperationStatus;
-    requested_at: string;
-    artifact_id: string | null;
-    artifact_status: SupportBundleArtifactStatus;
+export type SupportBundleOperation = {
+    id: string;
+    client_id: string;
+    artifact_id: NullUuid;
+    type: 'support_bundle';
+    status: SupportBundleOperationStatus;
+    requested_by_user_id: NullUuid;
+    created_at: string;
+    started_at: string | null;
+    completed_at: string | null;
+    execution_time: string;
 };
 
-export type SupportBundleStatus = {
-    latest_completed: SupportBundleCompletedOperation | null;
-    active_operation: SupportBundleActiveOperation | null;
+export type SupportBundleSummary = {
+    last_finished: SupportBundleOperation | null;
+    current: SupportBundleOperation | null;
 };
 
 export type EdgeType = {
