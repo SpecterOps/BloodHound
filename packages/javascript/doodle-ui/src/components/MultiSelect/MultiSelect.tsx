@@ -46,7 +46,7 @@ const multiSelectRowStyles = 'flex w-full items-center gap-2 rounded-lg p-2';
 
 const multiSelectInteractiveRowStyles = 'group cursor-pointer hover:bg-secondary hover:text-text-contrast';
 
-const multiSelectCheckboxStyles = 'enabled:data-[state=unchecked]:!border-text-main group-hover:!border-text-contrast';
+const multiSelectCheckboxStyles = 'enabled:data-[state=unchecked]:!border-current';
 interface MultiSelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     open?: boolean;
 }
