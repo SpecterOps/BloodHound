@@ -847,6 +847,7 @@ func (s *BloodhoundDB) GetEnvironmentsFiltered(ctx context.Context, filters mode
 			ext.display_name as schema_extension_display_name,
 			se.environment_kind_id,
 			k.name as environment_kind_name,
+			sn.display_name as environment_kind_display_name,
 			se.source_kind_id,
 			se.created_at,
 			se.updated_at,
@@ -854,8 +855,9 @@ func (s *BloodhoundDB) GetEnvironmentsFiltered(ctx context.Context, filters mode
 		FROM %s se
 		INNER JOIN %s k ON se.environment_kind_id = k.id
 		INNER JOIN %s ext ON se.schema_extension_id = ext.id
+		INNER JOIN %s sn ON se.environment_kind_id = sn.kind_id
 		%s
-		ORDER BY se.id`, model.SchemaEnvironment{}.TableName(), model.Kind{}.TableName(), model.GraphSchemaExtension{}.TableName(), whereClause)
+		ORDER BY se.id`, model.SchemaEnvironment{}.TableName(), model.Kind{}.TableName(), model.GraphSchemaExtension{}.TableName(), model.GraphSchemaNodeKind{}.TableName(), whereClause)
 
 	if err := CheckError(s.db.WithContext(ctx).Raw(query, sqlFilter.params...).Scan(&result)); err != nil {
 		return nil, err
