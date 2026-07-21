@@ -37,10 +37,15 @@ const meta = {
         },
         fontColor: { options: ['primary'], control: 'select' },
         size: { options: ['small', 'medium', 'large'], control: 'select' },
-        asChild: { options: [false, true], control: 'select' },
+        render: {
+            control: false,
+            table: {
+                disable: true,
+            },
+        },
     },
     // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
-    args: { onClick: fn(), asChild: false },
+    args: { onClick: fn() },
 } satisfies Meta<typeof Button>;
 
 export default meta;
@@ -97,7 +102,7 @@ export const TextButton: Story = {
         return (
             <Button variant='text'>
                 <FontAwesomeIcon icon={faListUl} className='mb-[3px]' />
-                <span className={'ml-2'}>Text Button</span>
+                <span className='ml-2'>Text Button</span>
             </Button>
         );
     },
@@ -106,8 +111,8 @@ export const TextButton: Story = {
 export const TextButtonAlt: Story = {
     render: () => {
         return (
-            <Button variant='text' fontColor={'primary'}>
-                <span className={'ml-2'}>Text Button Alt</span>
+            <Button variant='text' fontColor='primary'>
+                <span className='ml-2'>Text Button Alt</span>
             </Button>
         );
     },

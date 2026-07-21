@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Slot, SlotProps } from '@radix-ui/react-slot';
+import { Button as BaseUIButton } from '@base-ui/react/button';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { cn } from '../utils';
@@ -47,28 +47,24 @@ export const ButtonVariants = cva(
     }
 );
 
-export interface ButtonProps
-    extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-        VariantProps<typeof ButtonVariants> {
-    asChild?: boolean;
-}
+export interface ButtonProps extends BaseUIButton.Props, VariantProps<typeof ButtonVariants> {}
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-    ({ className, variant, size, fontColor, asChild = false, ...props }, ref) => {
-        const defaultType = 'button';
+export const Button = React.forwardRef<React.ComponentRef<typeof BaseUIButton>, ButtonProps>(function Button(
+    { className, variant, size, fontColor, ...props },
+    ref
+) {
+    return (
+        <BaseUIButton
+            {...props}
+            ref={ref}
+            className={(state) =>
+                cn(
+                    ButtonVariants({ variant, size, fontColor }),
+                    typeof className === 'function' ? className(state) : className
+                )
+            }
+        />
+    );
+});
 
-        let Comp: 'button' | React.ForwardRefExoticComponent<SlotProps & React.RefAttributes<HTMLElement>> =
-            defaultType;
-
-        if (asChild) {
-            Comp = Slot;
-        } else {
-            if (!props.type) props.type = defaultType;
-        }
-
-        return <Comp className={cn(ButtonVariants({ variant, size, fontColor, className }))} ref={ref} {...props} />;
-    }
-);
 Button.displayName = 'Button';
-
-export { Button };
