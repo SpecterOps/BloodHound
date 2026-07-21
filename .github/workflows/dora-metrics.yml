@@ -52,95 +52,41 @@ jobs:
           cache: true
           check-latest: true
 
-      - name: Build stbernard
+      - name: Collect and generate reports
+        id: dora
         run: |
-          cd packages/go/stbernard
-          go build -o ${{ runner.temp }}/stbernard .
-
-      - name: Calculate quarter dates
-        id: dates
-        run: |
+          # Determine date range
           if [ -n "${{ inputs.start_date }}" ] && [ -n "${{ inputs.end_date }}" ]; then
-            echo "start=${{ inputs.start_date }}" >> $GITHUB_OUTPUT
-            echo "end=${{ inputs.end_date }}" >> $GITHUB_OUTPUT
-            echo "period=custom" >> $GITHUB_OUTPUT
+            DATE_ARGS="-start ${{ inputs.start_date }} -end ${{ inputs.end_date }}"
+            PERIOD_NAME="custom-$(date +%Y%m%d)"
           else
-            # Calculate most recent complete fiscal quarter (Feb/May/Aug/Nov start)
-            current_month=$(date +%m)
-            current_year=$(date +%Y)
-            
-            # Determine which quarter just completed
-            if [ $current_month -ge 2 ] && [ $current_month -lt 5 ]; then
-              # Feb-Apr: FY Q4 just completed (Nov 1 - Jan 31)
-              start_year=$((current_year - 1))
-              start="$start_year-11-01"
-              end="$current_year-01-31"
-              fy_year=$start_year
-              quarter="Q4"
-            elif [ $current_month -ge 5 ] && [ $current_month -lt 8 ]; then
-              # May-Jul: FY Q1 just completed (Feb 1 - Apr 30)
-              start="$current_year-02-01"
-              end="$current_year-04-30"
-              fy_year=$current_year
-              quarter="Q1"
-            elif [ $current_month -ge 8 ] && [ $current_month -lt 11 ]; then
-              # Aug-Oct: FY Q2 just completed (May 1 - Jul 31)
-              start="$current_year-05-01"
-              end="$current_year-07-31"
-              fy_year=$current_year
-              quarter="Q2"
-            else
-              # Nov-Jan: FY Q3 just completed (Aug 1 - Oct 31)
-              start="$current_year-08-01"
-              end="$current_year-10-31"
-              fy_year=$current_year
-              quarter="Q3"
-            fi
-            
-            echo "start=$start" >> $GITHUB_OUTPUT
-            echo "end=$end" >> $GITHUB_OUTPUT
-            echo "period=FY${fy_year}-${quarter}" >> $GITHUB_OUTPUT
+            DATE_ARGS="-last-quarter"
+            PERIOD_NAME="last-quarter-$(date +%Y%m%d)"
           fi
 
-      - name: Collect DORA data
-        run: |
-          ${{ runner.temp }}/stbernard dora collect \
-            -start ${{ steps.dates.outputs.start }} \
-            -end ${{ steps.dates.outputs.end }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "period=${PERIOD_NAME}" >> $GITHUB_OUTPUT
 
-      - name: Generate DORA report
-        run: |
-          mkdir -p ${{ runner.temp }}/dora-reports
-          
-          # Generate text report
-          ${{ runner.temp }}/stbernard dora report \
-            -start ${{ steps.dates.outputs.start }} \
-            -end ${{ steps.dates.outputs.end }} \
-            -no-color > ${{ runner.temp }}/dora-reports/report.txt
-          
-          # Generate JSON report
-          ${{ runner.temp }}/stbernard dora report \
-            -start ${{ steps.dates.outputs.start }} \
-            -end ${{ steps.dates.outputs.end }} \
-            -format json > ${{ runner.temp }}/dora-reports/report.json
+          # Collect data
+          go tool stbernard dora collect ${DATE_ARGS}
+
+          # Generate reports
+          mkdir -p dora-reports
+          go tool stbernard dora report ${DATE_ARGS} -no-color > dora-reports/report.txt
+          go tool stbernard dora report ${DATE_ARGS} -format json > dora-reports/report.json
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Display summary
         run: |
-          echo "## DORA Metrics Report: ${{ steps.dates.outputs.period }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Period:** ${{ steps.dates.outputs.start }} to ${{ steps.dates.outputs.end }}" >> $GITHUB_STEP_SUMMARY
+          echo "## DORA Metrics Report: ${{ steps.dora.outputs.period }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          cat ${{ runner.temp }}/dora-reports/report.txt >> $GITHUB_STEP_SUMMARY
+          cat dora-reports/report.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Upload DORA reports
         uses: actions/upload-artifact@v4
         with:
-          name: dora-metrics-${{ steps.dates.outputs.period }}
-          path: ${{ runner.temp }}/dora-reports/
+          name: dora-metrics-${{ steps.dora.outputs.period }}
+          path: dora-reports/
           retention-days: 90
