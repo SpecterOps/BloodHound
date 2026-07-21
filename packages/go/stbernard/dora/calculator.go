@@ -68,6 +68,11 @@ func (s *Calculator) CalculateMetrics(ctx context.Context, startTime, endTime ti
 		return snapshot, fmt.Errorf("calculating change failure rate: %w", err)
 	}
 
+	// Calculate Time to Restore Service (MTTR)
+	if err := s.calculateTimeToRestore(&snapshot, deployments); err != nil {
+		return snapshot, fmt.Errorf("calculating time to restore: %w", err)
+	}
+
 	// Determine overall tier
 	snapshot.OverallTier = s.determineOverallTier(snapshot)
 
@@ -176,6 +181,72 @@ func (s *Calculator) calculateChangeFailureRate(
 	return nil
 }
 
+// calculateTimeToRestore calculates mean time to restore service (MTTR)
+// Uses patch releases as incidents: time between initial release and patch
+// Example: v9.2.0 released at T0, v9.2.1 (patch) released at T1 → MTTR = T1 - T0
+func (s *Calculator) calculateTimeToRestore(
+	snapshot *MetricsSnapshot,
+	deployments []Deployment,
+) error {
+	var (
+		restoreTimes      []float64
+		versionToRelease  = make(map[string]Deployment) // version → initial release
+	)
+
+	// Sort deployments by time (oldest first) to process chronologically
+	sortedDeps := make([]Deployment, len(deployments))
+	copy(sortedDeps, deployments)
+	sort.Slice(sortedDeps, func(i, j int) bool {
+		return sortedDeps[i].DeployedAt.Before(sortedDeps[j].DeployedAt)
+	})
+
+	// Process deployments to find patches and their initial releases
+	for _, d := range sortedDeps {
+		if !d.IsProduction {
+			continue // Skip RCs
+		}
+
+		// Check if this is a patch release
+		if d.IsPatch && d.PatchNumber > 0 {
+			// Find the initial release (patch 0) for this version
+			baseVersion := d.Version // e.g., "9.2.0" for both v9.2.0 and v9.2.1
+			if initialRelease, exists := versionToRelease[baseVersion]; exists {
+				// Calculate restore time: patch release time - initial release time
+				restoreHours := d.DeployedAt.Sub(initialRelease.DeployedAt).Hours()
+				if restoreHours > 0 {
+					restoreTimes = append(restoreTimes, restoreHours)
+				}
+			}
+		} else if !d.IsPatch {
+			// This is an initial release (patch number 0)
+			// Store it for future patch lookups
+			versionToRelease[d.Version] = d
+		}
+	}
+
+	snapshot.IncidentCount = len(restoreTimes)
+
+	// Calculate statistics if we have restore times
+	if len(restoreTimes) > 0 {
+		// Calculate mean (MTTR)
+		var sum float64
+		for _, t := range restoreTimes {
+			sum += t
+		}
+		snapshot.MTTRHours = sum / float64(len(restoreTimes))
+
+		// Calculate median and P95
+		sort.Float64s(restoreTimes)
+		snapshot.MedianTTRHours = percentile(restoreTimes, 0.50)
+		snapshot.P95TTRHours = percentile(restoreTimes, 0.95)
+
+		// Classify into tier (use median for classification)
+		snapshot.RestoreTimeTier = classifyRestoreTime(snapshot.MedianTTRHours)
+	}
+
+	return nil
+}
+
 // percentile calculates the nth percentile of a sorted slice
 func percentile(sorted []float64, p float64) float64 {
 	if len(sorted) == 0 {
@@ -234,6 +305,19 @@ func classifyFailureRate(rate float64) string {
 	return string(TierLow) // Over 15%
 }
 
+// classifyRestoreTime classifies time to restore service into DORA tiers
+// Based on: https://dora.dev/guides/dora-metrics-four-keys/#time-to-restore-service
+func classifyRestoreTime(hoursMedian float64) string {
+	if hoursMedian < 1.0 {
+		return string(TierElite) // Less than one hour
+	} else if hoursMedian < 24.0 {
+		return string(TierHigh) // Less than one day
+	} else if hoursMedian < 24.0*7.0 {
+		return string(TierMedium) // Less than one week
+	}
+	return string(TierLow) // More than one week
+}
+
 // determineOverallTier determines the overall performance tier
 // Uses the lowest tier among all metrics (conservative approach)
 func (s *Calculator) determineOverallTier(snapshot MetricsSnapshot) string {
@@ -241,6 +325,11 @@ func (s *Calculator) determineOverallTier(snapshot MetricsSnapshot) string {
 		snapshot.DeploymentTier,
 		snapshot.LeadTimeTier,
 		snapshot.FailureRateTier,
+	}
+
+	// Only include restore time tier if we have incident data
+	if snapshot.IncidentCount > 0 && snapshot.RestoreTimeTier != "" {
+		tiers = append(tiers, snapshot.RestoreTimeTier)
 	}
 
 	// Return the lowest tier (most conservative)
