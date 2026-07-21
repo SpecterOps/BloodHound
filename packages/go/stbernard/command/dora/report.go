@@ -30,6 +30,75 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 )
 
+// calculateLastFiscalQuarter returns the start and end dates of the most recent complete fiscal quarter
+// based on the fiscal year start month (1=Jan, 2=Feb, etc.)
+func calculateLastFiscalQuarter(fiscalStartMonth int) (time.Time, time.Time) {
+	var (
+		now          = time.Now()
+		currentMonth = int(now.Month())
+		currentYear  = now.Year()
+	)
+
+	// Calculate which quarter we're currently in based on fiscal start
+	// and determine the previous complete quarter
+	var quarterStartMonth int
+	var startYear, endYear int
+
+	// Normalize current month relative to fiscal year start
+	// e.g., if fiscal starts in Feb (2), and we're in Apr (4), we're 2 months into FY
+	monthsIntoFY := currentMonth - fiscalStartMonth
+	if monthsIntoFY < 0 {
+		monthsIntoFY += 12
+	}
+
+	// Determine which quarter just completed
+	// Quarters are 3 months each: Q1 (0-2), Q2 (3-5), Q3 (6-8), Q4 (9-11)
+	completedQuarter := (monthsIntoFY - 1) / 3 // -1 because we want the *completed* quarter
+
+	if completedQuarter < 0 {
+		// We're in the first quarter of the FY, so last complete quarter is Q4 of previous FY
+		completedQuarter = 3
+		if fiscalStartMonth == 1 {
+			startYear = currentYear - 1
+		} else if currentMonth < fiscalStartMonth {
+			startYear = currentYear - 1
+		} else {
+			startYear = currentYear
+		}
+	} else {
+		// We're past Q1, so the completed quarter is in the current FY
+		if currentMonth < fiscalStartMonth {
+			startYear = currentYear - 1
+		} else {
+			startYear = currentYear
+		}
+	}
+
+	// Calculate the start month of the completed quarter
+	quarterStartMonth = fiscalStartMonth + (completedQuarter * 3)
+	if quarterStartMonth > 12 {
+		quarterStartMonth -= 12
+		startYear++
+	}
+
+	// Start of quarter
+	start := time.Date(startYear, time.Month(quarterStartMonth), 1, 0, 0, 0, 0, time.UTC)
+
+	// End of quarter (last day of third month at 23:59:59)
+	endMonth := quarterStartMonth + 2
+	endYear = startYear
+	if endMonth > 12 {
+		endMonth -= 12
+		endYear++
+	}
+
+	// Last second of the last day of the month
+	endMonthStart := time.Date(endYear, time.Month(endMonth)+1, 1, 0, 0, 0, 0, time.UTC)
+	end := endMonthStart.Add(-time.Second)
+
+	return start, end
+}
+
 // parseDefaultPeriod converts a period string to number of days
 // Supports:
 //   - Days: "30d", "90d", "30", "90days"
@@ -95,18 +164,22 @@ func (s *command) runReport() error {
 	defaultDays := parseDefaultPeriod(config.Metrics.DefaultPeriod)
 
 	var (
-		cmd         = flag.NewFlagSet("dora report", flag.ExitOnError)
-		daysFlag    int
-		startFlag   string
-		endFlag     string
-		formatFlag  string
-		outputFlag  string
-		noColorFlag bool
+		cmd             = flag.NewFlagSet("dora report", flag.ExitOnError)
+		daysFlag        int
+		startFlag       string
+		endFlag         string
+		formatFlag      string
+		outputFlag      string
+		noColorFlag     bool
+		lastQuarterFlag bool
+		fiscalStartFlag int
 	)
 
 	cmd.IntVar(&daysFlag, "days", defaultDays, fmt.Sprintf("Number of days back from now (default: %s from config)", config.Metrics.DefaultPeriod))
 	cmd.StringVar(&startFlag, "start", "", "Start date (YYYY-MM-DD) - overrides -days")
 	cmd.StringVar(&endFlag, "end", "", "End date (YYYY-MM-DD) - defaults to now")
+	cmd.BoolVar(&lastQuarterFlag, "last-quarter", false, "Report on the last complete fiscal quarter")
+	cmd.IntVar(&fiscalStartFlag, "fiscal-start", 2, "Fiscal year start month (1=Jan, 2=Feb, etc.) - used with -last-quarter")
 	cmd.StringVar(&formatFlag, "format", "terminal", "Output format (terminal, json)")
 	cmd.StringVar(&outputFlag, "output", "", "Output file (default: stdout)")
 	cmd.BoolVar(&noColorFlag, "no-color", false, "Disable color output for terminal format")
@@ -118,20 +191,21 @@ func (s *command) runReport() error {
 		fmt.Fprintf(w, "Options:\n")
 		cmd.PrintDefaults()
 		fmt.Fprintf(w, "\nTime Range Options:\n")
-		fmt.Fprintf(w, "  1. Use -days for recent period (default)\n")
-		fmt.Fprintf(w, "  2. Use -start and -end for specific date range\n")
-		fmt.Fprintf(w, "  3. Use -start alone for period from date to now\n")
+		fmt.Fprintf(w, "  1. Use -last-quarter for most recent complete fiscal quarter\n")
+		fmt.Fprintf(w, "  2. Use -days for recent period (default)\n")
+		fmt.Fprintf(w, "  3. Use -start and -end for specific date range\n")
+		fmt.Fprintf(w, "  4. Use -start alone for period from date to now\n")
 		fmt.Fprintf(w, "\nExamples:\n")
+		fmt.Fprintf(w, "  # Last complete fiscal quarter (automatic)\n")
+		fmt.Fprintf(w, "  %s dora report -last-quarter\n\n", filepath.Base(os.Args[0]))
 		fmt.Fprintf(w, "  # Last 90 days (simple)\n")
 		fmt.Fprintf(w, "  %s dora report -days 90\n\n", filepath.Base(os.Args[0]))
 		fmt.Fprintf(w, "  # Specific quarter (Q1 2024)\n")
 		fmt.Fprintf(w, "  %s dora report -start 2024-01-01 -end 2024-03-31\n\n", filepath.Base(os.Args[0]))
-		fmt.Fprintf(w, "  # Last 90 days of 2023\n")
-		fmt.Fprintf(w, "  %s dora report -start 2023-10-03 -end 2023-12-31\n\n", filepath.Base(os.Args[0]))
 		fmt.Fprintf(w, "  # From specific date to now\n")
 		fmt.Fprintf(w, "  %s dora report -start 2024-01-01\n\n", filepath.Base(os.Args[0]))
-		fmt.Fprintf(w, "  # Export Q4 2023 as JSON\n")
-		fmt.Fprintf(w, "  %s dora report -start 2023-10-01 -end 2023-12-31 -format json -output q4-2023.json\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  # Export last quarter as JSON\n")
+		fmt.Fprintf(w, "  %s dora report -last-quarter -format json -output last-quarter.json\n\n", filepath.Base(os.Args[0]))
 		fmt.Fprintf(w, "  # Terminal report without colors (CI-friendly)\n")
 		fmt.Fprintf(w, "  %s dora report -no-color\n\n", filepath.Base(os.Args[0]))
 	}
@@ -145,7 +219,10 @@ func (s *command) runReport() error {
 	// Calculate time range based on flags
 	var startTime, endTime time.Time
 
-	if startFlag != "" {
+	if lastQuarterFlag {
+		// Calculate the last complete fiscal quarter
+		startTime, endTime = calculateLastFiscalQuarter(fiscalStartFlag)
+	} else if startFlag != "" {
 		// Parse start date
 		parsedStart, err := time.Parse("2006-01-02", startFlag)
 		if err != nil {
