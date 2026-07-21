@@ -17,7 +17,6 @@
 package v2
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -78,10 +77,6 @@ func (s *Resources) CreateCustomNodeKind(response http.ResponseWriter, request *
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if err := validateCreateCustomNodeRequest(customNodeKindRequest); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseCodeBadRequest, err), request), response)
-	} else if protected, err := checkSchemaProtection(request.Context(), s.DB, customNodeKindRequest.CustomTypes); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if protected {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, fmt.Sprintf("%s: kind name is owned by a schema extension", api.ErrorResponseConflict), request), response)
 	} else if kinds, err := s.DB.CreateCustomNodeKinds(request.Context(), convertCreateCustomNodeRequest(customNodeKindRequest)); errors.Is(err, database.ErrDuplicateCustomNodeKindName) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, fmt.Sprintf("%s: duplicate kind name", api.ErrorResponseConflict), request), response)
 	} else if err != nil {
@@ -91,21 +86,6 @@ func (s *Resources) CreateCustomNodeKind(response http.ResponseWriter, request *
 	} else {
 		api.WriteBasicResponse(request.Context(), kinds, http.StatusCreated, response)
 	}
-}
-
-// checkSchemaProtection reports whether any of the kind names in customTypes are owned by a schema extension.
-func checkSchemaProtection(ctx context.Context, db database.CustomNodeKindData, customTypes map[string]model.CustomNodeKindConfig) (bool, error) {
-	for kindName := range customTypes {
-		if existing, err := db.GetCustomNodeKind(ctx, kindName); errors.Is(err, database.ErrNotFound) {
-			continue
-		} else if err != nil {
-			return false, err
-		} else if existing.SchemaNodeKindId != nil {
-			return true, nil
-		}
-	}
-
-	return false, nil
 }
 
 func convertCreateCustomNodeRequest(request CreateCustomNodeRequest) []model.CustomNodeKind {
