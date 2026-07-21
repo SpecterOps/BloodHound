@@ -18,7 +18,6 @@ package dora
 
 import (
 	"context"
-	"database/sql"
 	"os"
 	"path/filepath"
 	"strings"
@@ -183,42 +182,18 @@ func TestStoragePullRequests(t *testing.T) {
 	}
 }
 
-func TestSchemaMigration(t *testing.T) {
+func TestGooseMigration(t *testing.T) {
 	tempDir := t.TempDir()
 	dbPath := filepath.Join(tempDir, "test.db")
 
-	// Create a database with old schema (workflow-based deployments)
-	db, err := sql.Open("sqlite", dbPath)
-	if err != nil {
-		t.Fatalf("Failed to open database: %v", err)
-	}
-
-	// Create old schema
-	oldSchema := `
-		CREATE TABLE deployments (
-			id TEXT PRIMARY KEY,
-			sha TEXT NOT NULL,
-			workflow_name TEXT,
-			status TEXT NOT NULL,
-			deployed_at TIMESTAMP NOT NULL
-		);
-		INSERT INTO deployments (id, sha, workflow_name, status, deployed_at)
-		VALUES ('123', 'abc123', 'Deploy', 'success', '2026-07-01 12:00:00');
-	`
-	_, err = db.Exec(oldSchema)
-	if err != nil {
-		t.Fatalf("Failed to create old schema: %v", err)
-	}
-	db.Close()
-
-	// Now open with NewStorage which should trigger migration
+	// Create storage which should run goose migrations
 	storage, err := NewStorage(dbPath)
 	if err != nil {
-		t.Fatalf("Failed to create storage (migration failed): %v", err)
+		t.Fatalf("Failed to create storage: %v", err)
 	}
 	defer storage.Close()
 
-	// Verify new schema exists
+	// Verify deployments table exists with correct schema
 	var tableInfo string
 	err = storage.db.QueryRow(`
 		SELECT sql FROM sqlite_master
@@ -230,22 +205,24 @@ func TestSchemaMigration(t *testing.T) {
 
 	// Check that new schema has 'tag' column
 	if !strings.Contains(tableInfo, "tag") {
-		t.Error("New schema should have 'tag' column")
+		t.Error("Schema should have 'tag' column")
 	}
 
-	// Check that old schema columns are gone
-	if strings.Contains(tableInfo, "workflow_name") {
-		t.Error("New schema should not have 'workflow_name' column")
-	}
-
-	// Verify schema version was recorded
-	var version int
-	err = storage.db.QueryRow("SELECT MAX(version) FROM schema_version").Scan(&version)
+	// Verify goose version table exists
+	var version int64
+	err = storage.db.QueryRow("SELECT MAX(version_id) FROM goose_db_version").Scan(&version)
 	if err != nil {
-		t.Fatalf("Failed to query schema version: %v", err)
+		t.Fatalf("Failed to query goose version: %v", err)
 	}
 
-	if version != 1 {
-		t.Errorf("Expected schema version 1, got %d", version)
+	if version < 1 {
+		t.Errorf("Expected at least version 1, got %d", version)
 	}
+
+	// Test idempotency - running migrations again should be safe
+	storage2, err := NewStorage(dbPath)
+	if err != nil {
+		t.Fatalf("Failed to reopen storage: %v", err)
+	}
+	defer storage2.Close()
 }
