@@ -110,37 +110,45 @@ func (s *Calculator) calculateDeploymentFrequency(
 	return nil
 }
 
-// calculateLeadTime calculates time from commit to deployment
+// calculateLeadTime calculates time from previous release to hotfix/patch release
+// Lead time for changes measures how long it takes to create and deploy a fix.
+// For patches/hotfixes: time from previous release (when issue was introduced) to patch release.
+// For regular releases: time from previous release (represents the development cycle).
+// Uses tag timestamps directly - no commit data needed.
 func (s *Calculator) calculateLeadTime(
 	snapshot *MetricsSnapshot,
 	deployments []Deployment,
 	commits []Commit,
 ) error {
-	// Build a map of commit SHA to timestamp for quick lookup
-	commitTimes := make(map[string]time.Time)
-	for _, c := range commits {
-		commitTimes[c.SHA] = c.CommittedAt
-	}
+	var (
+		leadTimes          []float64
+		previousProduction *Deployment
+	)
 
-	// Calculate lead time for each deployment
-	var leadTimes []float64
-	for _, d := range deployments {
+	// Sort deployments by time (oldest first) to process chronologically
+	sortedDeps := make([]Deployment, len(deployments))
+	copy(sortedDeps, deployments)
+	sort.Slice(sortedDeps, func(i, j int) bool {
+		return sortedDeps[i].DeployedAt.Before(sortedDeps[j].DeployedAt)
+	})
+
+	// Process deployments chronologically
+	for i := range sortedDeps {
+		d := &sortedDeps[i]
 		if !d.IsProduction {
-			continue // Only measure production deployments
+			continue // Skip RCs
 		}
 
-		// Get commit time for this deployment
-		commitTime, ok := commitTimes[d.SHA]
-		if !ok {
-			// Commit not in our time range, skip
-			continue
+		// Calculate lead time from previous production release to this one
+		if previousProduction != nil {
+			leadTimeHours := d.DeployedAt.Sub(previousProduction.DeployedAt).Hours()
+			if leadTimeHours > 0 {
+				leadTimes = append(leadTimes, leadTimeHours)
+			}
 		}
 
-		// Lead time = deploy time - commit time
-		leadTimeHours := d.DeployedAt.Sub(commitTime).Hours()
-		if leadTimeHours >= 0 {
-			leadTimes = append(leadTimes, leadTimeHours)
-		}
+		// Update previous production release for next iteration
+		previousProduction = d
 	}
 
 	// Calculate percentiles
