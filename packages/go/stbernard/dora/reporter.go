@@ -44,93 +44,30 @@ func (s *TerminalReporter) Report(snapshot MetricsSnapshot, writer io.Writer) er
 	var sb strings.Builder
 
 	// Header
-	sb.WriteString(s.bold("\n╔════════════════════════════════════════════════════════════╗\n"))
-	sb.WriteString(s.bold("║            DORA Metrics Report                             ║\n"))
-	sb.WriteString(s.bold("╚════════════════════════════════════════════════════════════╝\n\n"))
+	sb.WriteString(s.bold("\n╔═════════════════════════════════════════════════════════════════════════════╗\n"))
+	sb.WriteString(s.bold("║                          DORA Metrics Report                                ║\n"))
+	sb.WriteString(s.bold("╚═════════════════════════════════════════════════════════════════════════════╝\n\n"))
 
-	// Period
-	sb.WriteString(s.dim(fmt.Sprintf("Period: %s to %s\n",
+	// Period and metadata
+	sb.WriteString(s.dim(fmt.Sprintf("  Period: %s to %s  |  Generated: %s\n\n",
 		snapshot.PeriodStart.Format("2006-01-02"),
-		snapshot.PeriodEnd.Format("2006-01-02"))))
-	sb.WriteString(s.dim(fmt.Sprintf("Generated: %s\n\n",
+		snapshot.PeriodEnd.Format("2006-01-02"),
 		snapshot.CalculatedAt.Format("2006-01-02 15:04:05"))))
 
 	// Overall Performance
-	sb.WriteString(s.bold("Overall Performance: "))
+	sb.WriteString(s.bold("  Overall Performance: "))
 	sb.WriteString(s.colorTier(snapshot.OverallTier))
 	sb.WriteString("\n\n")
 
-	// DORA Metrics
-	sb.WriteString(s.bold("═══ DORA Metrics ═══\n\n"))
+	// DORA Metrics Table
+	sb.WriteString(s.bold("━━━ DORA Metrics ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"))
+	sb.WriteString(s.renderDORATable(snapshot))
 
-	// 1. Deployment Frequency
-	sb.WriteString(s.formatMetric(
-		"1. Deployment Frequency",
-		fmt.Sprintf("%.2f per day (%d total)", snapshot.DeploymentFrequencyPerDay, snapshot.DeploymentCount),
-		snapshot.DeploymentTier,
-	))
-
-	// 2. Lead Time for Changes
-	leadTimeDesc := fmt.Sprintf("P50: %.1fh | P90: %.1fh | P95: %.1fh",
-		snapshot.LeadTimeP50Hours,
-		snapshot.LeadTimeP90Hours,
-		snapshot.LeadTimeP95Hours)
-	sb.WriteString(s.formatMetric(
-		"2. Lead Time for Changes",
-		leadTimeDesc,
-		snapshot.LeadTimeTier,
-	))
-
-	// 3. Change Failure Rate
-	sb.WriteString(s.formatMetric(
-		"3. Change Failure Rate",
-		fmt.Sprintf("%.1f%% (%d failures / %d deployments)",
-			snapshot.ChangeFailureRate,
-			snapshot.FailedDeploymentCount,
-			snapshot.DeploymentCount),
-		snapshot.FailureRateTier,
-	))
-
-	// 4. Time to Restore Service
-	if snapshot.IncidentCount > 0 {
-		mttrDesc := fmt.Sprintf("Mean: %.1fh | Median: %.1fh | P95: %.1fh (%d incidents)",
-			snapshot.MTTRHours,
-			snapshot.MedianTTRHours,
-			snapshot.P95TTRHours,
-			snapshot.IncidentCount)
-		sb.WriteString(s.formatMetric(
-			"4. Time to Restore Service",
-			mttrDesc,
-			snapshot.RestoreTimeTier,
-		))
-	} else {
-		sb.WriteString(s.formatMetric(
-			"4. Time to Restore Service",
-			"No incidents in period 🎉",
-			"",
-		))
-	}
-
-	// Quality Metrics
+	// Quality Metrics Table
 	if snapshot.TotalCommitsInPeriod > 0 {
 		sb.WriteString("\n")
-		sb.WriteString(s.bold("═══ Quality Indicators ═══\n\n"))
-
-		sb.WriteString(s.formatQualityMetric(
-			"Release Iterations",
-			fmt.Sprintf("Avg: %.1f RCs | Median: %.1f RCs",
-				snapshot.AverageRCsPerRelease,
-				snapshot.MedianRCsPerRelease),
-			s.interpretRCs(snapshot.MedianRCsPerRelease),
-		))
-
-		sb.WriteString(s.formatQualityMetric(
-			"Batch Size",
-			fmt.Sprintf("%.1f commits/release (%d total commits)",
-				snapshot.AverageCommitsPerRelease,
-				snapshot.TotalCommitsInPeriod),
-			s.interpretBatchSize(snapshot.AverageCommitsPerRelease),
-		))
+		sb.WriteString(s.bold("━━━ Quality Indicators ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"))
+		sb.WriteString(s.renderQualityTable(snapshot))
 	}
 
 	sb.WriteString("\n")
@@ -140,30 +77,119 @@ func (s *TerminalReporter) Report(snapshot MetricsSnapshot, writer io.Writer) er
 	return err
 }
 
-// formatMetric formats a DORA metric line
-func (s *TerminalReporter) formatMetric(name, value, tier string) string {
+// renderDORATable creates a formatted table for DORA metrics
+func (s *TerminalReporter) renderDORATable(snapshot MetricsSnapshot) string {
 	var sb strings.Builder
-	sb.WriteString(s.bold(name))
-	sb.WriteString("\n")
-	sb.WriteString(fmt.Sprintf("   %s\n", value))
-	if tier != "" {
-		sb.WriteString(fmt.Sprintf("   Tier: %s\n", s.colorTier(tier)))
+
+	// Table header
+	sb.WriteString("  ┌────────────────────────────────┬──────────────────────────────────┬──────────┐\n")
+	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %-8s │\n",
+		s.bold("Metric"),
+		s.bold("Value"),
+		s.bold("Tier")))
+	sb.WriteString("  ├────────────────────────────────┼──────────────────────────────────┼──────────┘\n")
+
+	// Row 1: Deployment Frequency
+	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
+		"Deployment Frequency",
+		fmt.Sprintf("%.2f per day (%d total)", snapshot.DeploymentFrequencyPerDay, snapshot.DeploymentCount),
+		s.colorTier(snapshot.DeploymentTier)))
+
+	// Row 2: Lead Time
+	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
+		"Lead Time for Changes",
+		fmt.Sprintf("P50: %.1fh  P90: %.1fh  P95: %.1fh", snapshot.LeadTimeP50Hours, snapshot.LeadTimeP90Hours, snapshot.LeadTimeP95Hours),
+		s.colorTier(snapshot.LeadTimeTier)))
+
+	// Row 3: Change Failure Rate
+	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
+		"Change Failure Rate",
+		fmt.Sprintf("%.1f%% (%d/%d deployments)", snapshot.ChangeFailureRate, snapshot.FailedDeploymentCount, snapshot.DeploymentCount),
+		s.colorTier(snapshot.FailureRateTier)))
+
+	// Row 4: Time to Restore
+	var mttrValue string
+	var mttrTier string
+	if snapshot.IncidentCount > 0 {
+		mttrValue = fmt.Sprintf("Median: %.1fh  Mean: %.1fh", snapshot.MedianTTRHours, snapshot.MTTRHours)
+		mttrTier = s.colorTier(snapshot.RestoreTimeTier)
+	} else {
+		mttrValue = "No incidents 🎉"
+		mttrTier = s.dim("N/A")
 	}
-	sb.WriteString("\n")
+	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
+		"Time to Restore Service",
+		mttrValue,
+		mttrTier))
+
+	// Table footer
+	sb.WriteString("  └────────────────────────────────┴──────────────────────────────────┴──────────┘\n")
+
 	return sb.String()
 }
 
-// formatQualityMetric formats a quality indicator line
-func (s *TerminalReporter) formatQualityMetric(name, value, interpretation string) string {
+// renderQualityTable creates a formatted table for quality metrics
+func (s *TerminalReporter) renderQualityTable(snapshot MetricsSnapshot) string {
 	var sb strings.Builder
-	sb.WriteString(s.bold(name))
-	sb.WriteString("\n")
-	sb.WriteString(fmt.Sprintf("   %s\n", value))
-	if interpretation != "" {
-		sb.WriteString(fmt.Sprintf("   %s\n", s.dim(interpretation)))
-	}
-	sb.WriteString("\n")
+
+	// Table header
+	sb.WriteString("  ┌────────────────────────────────┬──────────────────────────────────┬──────────────────────┐\n")
+	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %-20s │\n",
+		s.bold("Indicator"),
+		s.bold("Value"),
+		s.bold("Assessment")))
+	sb.WriteString("  ├────────────────────────────────┼──────────────────────────────────┼──────────────────────┘\n")
+
+	// Row 1: Release Iterations (RCs)
+	rcValue := fmt.Sprintf("Avg: %.1f  Median: %.1f", snapshot.AverageRCsPerRelease, snapshot.MedianRCsPerRelease)
+	rcAssessment := s.assessRCs(snapshot.MedianRCsPerRelease)
+	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
+		"Release Iterations (RCs)",
+		rcValue,
+		rcAssessment))
+
+	// Row 2: Batch Size
+	batchValue := fmt.Sprintf("%.1f commits/release", snapshot.AverageCommitsPerRelease)
+	batchAssessment := s.assessBatchSize(snapshot.AverageCommitsPerRelease)
+	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
+		"Batch Size",
+		batchValue,
+		batchAssessment))
+
+	// Row 3: Total Activity
+	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
+		"Total Activity",
+		fmt.Sprintf("%d commits in period", snapshot.TotalCommitsInPeriod),
+		s.dim("—")))
+
+	// Table footer
+	sb.WriteString("  └────────────────────────────────┴──────────────────────────────────┴──────────────────────┘\n")
+
 	return sb.String()
+}
+
+// assessRCs provides short assessment of RC counts for table display
+func (s *TerminalReporter) assessRCs(median float64) string {
+	if median <= 2 {
+		return s.green("✓ Excellent")
+	} else if median <= 4 {
+		return s.cyan("○ Good")
+	} else {
+		return s.yellow("△ Needs work")
+	}
+}
+
+// assessBatchSize provides short assessment of batch sizes for table display
+func (s *TerminalReporter) assessBatchSize(avg float64) string {
+	if avg <= 5 {
+		return s.green("✓ Excellent")
+	} else if avg <= 10 {
+		return s.cyan("○ Good")
+	} else if avg <= 20 {
+		return s.yellow("△ Large")
+	} else {
+		return s.red("✗ Very large")
+	}
 }
 
 // colorTier returns tier with color formatting
