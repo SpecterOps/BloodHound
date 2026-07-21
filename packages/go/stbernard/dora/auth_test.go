@@ -18,59 +18,14 @@ package dora
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"golang.org/x/oauth2"
 )
-
-func TestTokenStorage(t *testing.T) {
-	tempDir := t.TempDir()
-	tokenPath := filepath.Join(tempDir, "github-token.json")
-
-	// Create a test token
-	token := &oauth2.Token{
-		AccessToken:  "gho_testtoken123",
-		TokenType:    "Bearer",
-		RefreshToken: "refresh123",
-		Expiry:       time.Now().Add(24 * time.Hour),
-	}
-
-	// Save token
-	if err := SaveToken(tokenPath, token); err != nil {
-		t.Fatalf("Failed to save token: %v", err)
-	}
-
-	// Verify file was created
-	if _, err := os.Stat(tokenPath); os.IsNotExist(err) {
-		t.Fatal("Token file was not created")
-	}
-
-	// Load token
-	loadedToken, err := LoadToken(tokenPath)
-	if err != nil {
-		t.Fatalf("Failed to load token: %v", err)
-	}
-
-	// Verify token contents
-	if loadedToken.AccessToken != token.AccessToken {
-		t.Errorf("Expected access token %s, got %s", token.AccessToken, loadedToken.AccessToken)
-	}
-	if loadedToken.TokenType != token.TokenType {
-		t.Errorf("Expected token type %s, got %s", token.TokenType, loadedToken.TokenType)
-	}
-}
-
-func TestLoadTokenNotFound(t *testing.T) {
-	tempDir := t.TempDir()
-	tokenPath := filepath.Join(tempDir, "nonexistent.json")
-
-	_, err := LoadToken(tokenPath)
-	if err == nil {
-		t.Error("Expected error when loading non-existent token")
-	}
-}
 
 func TestTokenValidation(t *testing.T) {
 	tests := []struct {
@@ -147,5 +102,40 @@ func TestTokenFromEnvNotSet(t *testing.T) {
 	token := GetTokenFromEnv()
 	if token != nil {
 		t.Errorf("Expected nil token when env not set, got %v", token)
+	}
+}
+
+func TestGHCLIIntegration(t *testing.T) {
+	env, err := environment.NewEnvironment()
+	if err != nil {
+		t.Fatalf("Failed to create environment: %v", err)
+	}
+
+	// Check if gh CLI is available
+	if _, err := exec.LookPath("gh"); err != nil {
+		t.Skip("gh CLI not installed, skipping integration test")
+	}
+
+	// Check if authenticated
+	if err := CheckGHCLIAuth(env); err != nil {
+		t.Skip("gh CLI not authenticated, skipping integration test")
+	}
+
+	// Try to get token
+	token, err := GetTokenFromGHCLI(env)
+	if err != nil {
+		t.Fatalf("Failed to get token from gh CLI: %v", err)
+	}
+
+	if token == nil {
+		t.Fatal("Expected token, got nil")
+	}
+
+	if token.AccessToken == "" {
+		t.Error("Expected non-empty access token")
+	}
+
+	if token.TokenType != "Bearer" {
+		t.Errorf("Expected token type Bearer, got %s", token.TokenType)
 	}
 }

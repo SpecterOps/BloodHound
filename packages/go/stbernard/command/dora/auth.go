@@ -31,11 +31,9 @@ import (
 func (s *command) runAuth() error {
 	var (
 		cmd        = flag.NewFlagSet("dora auth", flag.ExitOnError)
-		clearFlag  bool
 		statusFlag bool
 	)
 
-	cmd.BoolVar(&clearFlag, "clear", false, "Clear stored authentication token")
 	cmd.BoolVar(&statusFlag, "status", false, "Show authentication status")
 
 	if s.subcmdIdx > 0 && s.subcmdIdx+1 < len(os.Args) {
@@ -49,16 +47,7 @@ func (s *command) runAuth() error {
 		return fmt.Errorf("finding workspace: %w", err)
 	}
 
-	authenticator := dora.NewGitHubAuthenticator(paths.Root)
-
-	// Handle clear flag
-	if clearFlag {
-		if err := authenticator.ClearToken(); err != nil {
-			return fmt.Errorf("clearing token: %w", err)
-		}
-		fmt.Println("✅ Authentication token cleared")
-		return nil
-	}
+	authenticator := dora.NewGitHubAuthenticator(paths.Root, s.env)
 
 	// Handle status flag
 	if statusFlag {
@@ -83,22 +72,30 @@ func (s *command) showAuthStatus(authenticator *dora.GitHubAuthenticator) error 
 		return nil
 	}
 
-	// Check stored token
-	token, err := authenticator.GetToken(ctx)
-	if err != nil {
-		if errors.Is(err, dora.ErrTokenNotFound) {
-			fmt.Println("❌ Not authenticated")
-			fmt.Println()
-			fmt.Println("Run 'dora auth github' to authenticate")
-			return nil
+	// Check gh CLI
+	if err := dora.CheckGHCLIAuth(s.env); err == nil {
+		fmt.Println("✅ Authenticated via GitHub CLI (gh)")
+		token, _ := dora.GetTokenFromGHCLI(s.env)
+		if token != nil && token.AccessToken != "" {
+			fmt.Printf("Token: %s...%s\n", token.AccessToken[:7], token.AccessToken[len(token.AccessToken)-4:])
 		}
-		return fmt.Errorf("checking authentication: %w", err)
+		return nil
+	} else if errors.Is(err, dora.ErrGHCLINotFound) {
+		fmt.Println("❌ GitHub CLI (gh) not installed")
+		fmt.Println()
+		fmt.Println("Install from: https://cli.github.com/")
+		fmt.Println("Or set GITHUB_TOKEN environment variable")
+		return nil
 	}
 
-	if err := dora.ValidateToken(token); err != nil {
-		fmt.Printf("⚠️  Token is invalid: %v\n", err)
+	// Not authenticated
+	token, err := authenticator.GetToken(ctx)
+	if err != nil {
+		fmt.Println("❌ Not authenticated")
 		fmt.Println()
-		fmt.Println("Run 'dora auth github' to re-authenticate")
+		fmt.Println("Options:")
+		fmt.Println("  1. Run: gh auth login")
+		fmt.Println("  2. Set GITHUB_TOKEN environment variable")
 		return nil
 	}
 
@@ -110,34 +107,22 @@ func (s *command) showAuthStatus(authenticator *dora.GitHubAuthenticator) error 
 	return nil
 }
 
-// authenticateGitHub performs GitHub OAuth device flow authentication
+// authenticateGitHub guides user to authenticate with gh CLI
 func (s *command) authenticateGitHub(authenticator *dora.GitHubAuthenticator) error {
 	ctx := context.Background()
 
 	// Check if already authenticated
-	if token, err := authenticator.GetToken(ctx); err == nil && dora.ValidateToken(token) == nil {
-		fmt.Println("Already authenticated with GitHub")
-		fmt.Println("Use --clear to remove existing authentication")
+	if _, err := authenticator.GetToken(ctx); err == nil {
+		fmt.Println("✅ Already authenticated with GitHub")
+		fmt.Println()
+		if dora.GetTokenFromEnv() != nil {
+			fmt.Println("Using GITHUB_TOKEN environment variable")
+		} else {
+			fmt.Println("Using GitHub CLI (gh)")
+		}
 		return nil
 	}
 
-	// Perform device flow authentication
-	fmt.Println("Starting GitHub authentication...")
-	fmt.Println()
-
-	token, err := authenticator.AuthenticateDeviceFlow(ctx)
-	if err != nil {
-		return fmt.Errorf("authentication failed: %w", err)
-	}
-
-	// Save token
-	if err := authenticator.SaveAuthToken(token); err != nil {
-		return fmt.Errorf("saving token: %w", err)
-	}
-
-	fmt.Println("✅ Successfully authenticated with GitHub!")
-	fmt.Println()
-	fmt.Println("Token has been saved securely.")
-
-	return nil
+	// Guide user to authenticate
+	return authenticator.AuthenticateWithGHCLI(ctx)
 }
