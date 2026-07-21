@@ -186,10 +186,10 @@ const MultiSelect = ({
     const [open, setOpen] = React.useState(false);
     const [searchValue, setSearchValue] = React.useState('');
 
-    const handleOpenChange = (nextOpen: boolean) => {
-        setOpen(nextOpen);
+    const handleOpenChange = (shouldOpen: boolean) => {
+        setOpen(shouldOpen);
 
-        if (!nextOpen) {
+        if (!shouldOpen) {
             setSearchValue('');
         }
     };
@@ -225,24 +225,25 @@ const MultiSelect = ({
     const triggerText = getMultiSelectTriggerText(options, value, placeholder);
 
     // select all/clear
-    const selectableValues = options.filter((option) => !option.disabled).map((option) => option.value);
+    const enabledOptionValues = options.filter((option) => !option.disabled).map((option) => option.value);
 
-    const selectedValueCount = selectableValues.filter((optionValue) => value.includes(optionValue)).length;
+    const selectedEnabledOptionCount = enabledOptionValues.filter((optionValue) => value.includes(optionValue)).length;
 
-    const hasSelectedAllOptions = selectableValues.length > 0 && selectedValueCount === selectableValues.length;
+    const hasSelectedAllEnabledOptions =
+        enabledOptionValues.length > 0 && selectedEnabledOptionCount === enabledOptionValues.length;
 
-    const hasSelectedSomeOptions = selectedValueCount > 0 && !hasSelectedAllOptions;
+    const hasSelectedSomeOptions = selectedEnabledOptionCount > 0 && !hasSelectedAllEnabledOptions;
 
-    const selectAllChecked = hasSelectedAllOptions ? true : hasSelectedSomeOptions ? 'indeterminate' : false;
+    const selectAllChecked = hasSelectedAllEnabledOptions ? true : hasSelectedSomeOptions ? 'indeterminate' : false;
 
     const handleSelectAll = () => {
-        if (hasSelectedAllOptions) {
-            const updatedValues = value.filter((selectedValue) => !selectableValues.includes(selectedValue));
+        if (hasSelectedAllEnabledOptions) {
+            const updatedValues = value.filter((selectedValue) => !enabledOptionValues.includes(selectedValue));
             onValueChange(updatedValues);
             return;
         }
 
-        const unselectedValues = selectableValues.filter((optionValue) => !value.includes(optionValue));
+        const unselectedValues = enabledOptionValues.filter((optionValue) => !value.includes(optionValue));
         const updatedValues = [...value, ...unselectedValues];
 
         onValueChange(updatedValues);
@@ -317,7 +318,7 @@ const MultiSelect = ({
                             !isLoading &&
                             !hasSearchText &&
                             !isSearchResultEmpty &&
-                            selectableValues.length > 0 && (
+                            enabledOptionValues.length > 0 && (
                                 <MultiSelectAllOptionsRow
                                     checked={selectAllChecked}
                                     label={selectAllLabel}
