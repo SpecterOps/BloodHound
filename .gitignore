@@ -35,6 +35,9 @@ integration-config-local.json
 coverage/
 coverage.*
 
+# DORA metrics generated files
+.dora/trends/
+
 # Log files
 logs
 *.log

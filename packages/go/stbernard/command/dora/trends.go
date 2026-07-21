@@ -61,7 +61,7 @@ func (s *command) runTrends() error {
 
 	cmd.StringVar(&yearsFlag, "years", fmt.Sprintf("%d", time.Now().Year()), "Years to generate reports for (single year, comma-separated, or 'all' for all available data)")
 	cmd.StringVar(&periodFlag, "period", "quarters", "Period type (quarters, months)")
-	cmd.StringVar(&outputFlag, "output", "dora-trends", "Output directory for reports")
+	cmd.StringVar(&outputFlag, "output", ".dora/trends", "Output directory for reports")
 	cmd.IntVar(&fiscalStartFlag, "fiscal-start", 2, "Fiscal year start month (1=January, 2=February, etc.)")
 
 	cmd.Usage = func() {
@@ -96,20 +96,20 @@ func (s *command) runTrends() error {
 		fmt.Fprintf(w, "  # Monthly reports for multiple years\n")
 		fmt.Fprintf(w, "  %s dora trends -years 2024,2025 -period months\n\n", filepath.Base(os.Args[0]))
 		fmt.Fprintf(w, "\nOutput:\n")
-		fmt.Fprintf(w, "  Creates JSON files in the output directory:\n")
-		fmt.Fprintf(w, "    quarters: 2024-Q1.json, 2024-Q2.json, 2025-Q1.json, ...\n")
+		fmt.Fprintf(w, "  Creates JSON files in .dora/trends/ directory:\n")
+		fmt.Fprintf(w, "    quarters: FY2024-Q1.json, FY2024-Q2.json, FY2025-Q1.json, ...\n")
 		fmt.Fprintf(w, "    months:   2024-01.json, 2024-02.json, ..., 2025-12.json\n")
 		fmt.Fprintf(w, "  Multiple years shown in single comparison table\n")
 		fmt.Fprintf(w, "\nFiscal Quarter Naming:\n")
-		fmt.Fprintf(w, "  With -fiscal-start 2 (Feb start):\n")
+		fmt.Fprintf(w, "  With -fiscal-start 2 (Feb start, default):\n")
 		fmt.Fprintf(w, "    FY2024-Q1 = Feb 2024 - Apr 2024\n")
 		fmt.Fprintf(w, "    FY2024-Q2 = May 2024 - Jul 2024\n")
 		fmt.Fprintf(w, "    FY2024-Q3 = Aug 2024 - Oct 2024\n")
 		fmt.Fprintf(w, "    FY2024-Q4 = Nov 2024 - Jan 2025\n")
 		fmt.Fprintf(w, "\nAnalysis:\n")
 		fmt.Fprintf(w, "  Use jq to compare metrics across periods:\n")
-		fmt.Fprintf(w, "    jq '.dora_metrics.deployment_frequency.per_day' %s/*.json\n", outputFlag)
-		fmt.Fprintf(w, "    jq '.dora_metrics.change_failure_rate.percentage' %s/*.json\n", outputFlag)
+		fmt.Fprintf(w, "    jq '.dora_metrics.deployment_frequency.per_day' .dora/trends/*.json\n")
+		fmt.Fprintf(w, "    jq '.dora_metrics.change_failure_rate.percentage' .dora/trends/*.json\n")
 	}
 
 	if s.subcmdIdx > 0 && s.subcmdIdx+1 < len(os.Args) {
