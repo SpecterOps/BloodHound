@@ -201,9 +201,7 @@ func (s *BloodhoundDB) GetDataQualityStats(ctx context.Context, filters model.Fi
 		return dataQualityStats, 0, err
 	}
 
-	if len(sort) == 0 {
-		sort = defaultDataQualitySort()
-	}
+	sort = deterministicDataQualitySort(sort)
 
 	orderSql, err := buildSQLSort(sort)
 	if err != nil {
@@ -337,10 +335,8 @@ func (s *BloodhoundDB) GetDataQualityAggregations(ctx context.Context, filters m
 		return aggregations, 0, err
 	}
 
-	// use a default sort when none is provided
-	if len(sort) == 0 {
-		sort = defaultDataQualitySort()
-	}
+	// use a default sort when none is provided and add an id tie-breaker for created_at and updated_at columns
+	sort = deterministicDataQualitySort(sort)
 	orderSql, err := buildSQLSort(sort)
 	if err != nil {
 		return aggregations, 0, err
@@ -386,19 +382,34 @@ func (s *BloodhoundDB) DeleteAllDataQuality(ctx context.Context) error {
 	)
 }
 
-// defaultDataQualitySort returns a default sort when none is provided: sort by created_at DESC,
-// with id ASC as a tiebreaker so pagination stays deterministic when created_at values are not unique
-func defaultDataQualitySort() model.Sort {
-	defaultSort := model.Sort{
-		{
-			Direction: model.DescendingSortDirection,
-			Column:    "created_at",
-		},
-		{
+// deterministicDataQualitySort defaults to created_at DESC when no sort is provided, and appends id ASC as a tiebreaker
+// so pagination stays deterministic when created_at or updated_at values are not unique
+func deterministicDataQualitySort(sort model.Sort) model.Sort {
+	if len(sort) == 0 {
+		sort = model.Sort{
+			{
+				Direction: model.DescendingSortDirection,
+				Column:    "created_at",
+			},
+		}
+	}
+	// only append the id tiebreaker if sort doesn't already have it
+	if !sortContainsColumn(sort, "id") {
+		sort = append(sort, model.SortItem{
 			Direction: model.AscendingSortDirection,
 			Column:    "id",
-		},
+		})
 	}
 
-	return defaultSort
+	return sort
+}
+
+// helper for deterministicDataQualitySort()
+func sortContainsColumn(sort model.Sort, column string) bool {
+	for _, item := range sort {
+		if item.Column == column {
+			return true
+		}
+	}
+	return false
 }

@@ -75,10 +75,10 @@ BEGIN
 
 	SELECT id INTO retrieved_schema_node_kind_id FROM schema_node_kinds WHERE kind_id = retrieved_kind_id;
 
-	IF NOT EXISTS (SELECT id FROM custom_node_kinds cnk WHERE cnk.kind_name = v_kind_name) THEN
-		INSERT INTO custom_node_kinds (kind_name, config, schema_node_kind_id, created_at, updated_at) VALUES (v_kind_name, v_config, retrieved_schema_node_kind_id, NOW(), NOW());
+	IF NOT EXISTS (SELECT id FROM custom_node_kinds cnk WHERE cnk.kind_id = retrieved_kind_id) THEN
+		INSERT INTO custom_node_kinds (kind_id, config, schema_node_kind_id, created_at, updated_at) VALUES (retrieved_kind_id, v_config, retrieved_schema_node_kind_id, NOW(), NOW());
 	ELSE
-		UPDATE custom_node_kinds SET config = v_config, schema_node_kind_id = retrieved_schema_node_kind_id, updated_at = NOW() WHERE kind_name = v_kind_name;
+		UPDATE custom_node_kinds SET config = v_config, schema_node_kind_id = retrieved_schema_node_kind_id, updated_at = NOW() WHERE kind_id = retrieved_kind_id;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;

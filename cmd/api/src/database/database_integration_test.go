@@ -262,11 +262,9 @@ func TestGetNodeKindDisplayLabel(t *testing.T) {
 
 	extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 	require.NoError(t, err)
-	// Create 2 OG display kinds
-	nodeKindDis, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, "TestKindDis", extension.ID, "", "", true, "", "")
-	require.NoError(t, err)
-	nodeKindNoDis, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, "TestKindNoDis", extension.ID, "", "", false, "", "")
-	require.NoError(t, err)
+	// Create 2 OG display kinds using the helper that ensures custom_node_kinds are populated
+	nodeKindDis := createTestNodeKind(t, testSuite, "TestKindDis", extension.ID, "", "", true, "", "")
+	nodeKindNoDis := createTestNodeKind(t, testSuite, "TestKindNoDis", extension.ID, "", "", false, "", "")
 
 	primaryNodeKinds, err := testSuite.BHDatabase.GetPrimaryDisplayKinds(testSuite.Context)
 	require.NoError(t, err)

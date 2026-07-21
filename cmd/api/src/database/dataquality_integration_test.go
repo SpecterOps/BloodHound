@@ -564,6 +564,45 @@ func TestDatabase_GetDataQualityAggregations(t *testing.T) {
 				assert.Equal(t, wantOrder, gotOrder)
 			},
 		},
+		{
+			name: "Success: appends id ascending tiebreaker to an explicit created_at sort when created_at values are equal",
+			test: func(t *testing.T, testSuite IntegrationTestSuite) {
+				envKind := registerAndGetKind(t, testSuite, "RandomEnvKind")
+
+				aggregations := model.DataQualityAggregations{
+					{RunID: "run-tie", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "computers", MetricValue: 1},
+					{RunID: "run-tie", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "users", MetricValue: 2},
+					{RunID: "run-tie", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "groups", MetricValue: 3},
+				}
+				created, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, aggregations)
+				require.NoError(t, err)
+				require.Len(t, created, 3)
+
+				// name each row by its insert position; serial ids ascend with insert order
+				rowFirst := created[0]
+				rowSecond := created[1]
+				rowThird := created[2]
+				require.True(t, rowFirst.ID < rowSecond.ID && rowSecond.ID < rowThird.ID, "serial ids should ascend in insert order")
+				// tie created_at, updating rows in reverse id order so the natural scan order (no tiebreaker)
+				// differs from id ascending; the test can only pass if the id tiebreaker is actually applied
+				tieTime := time.Now().UTC()
+				for _, row := range []model.DataQualityAggregation{rowThird, rowSecond, rowFirst} {
+					require.NoError(t, testSuite.DB.WithContext(testSuite.Context).Exec("UPDATE data_quality_aggregations SET created_at = ? WHERE id = ?", tieTime, row.ID).Error)
+				}
+
+				// explicit client sort on created_at; the id ascending tiebreaker must still be appended
+				sort := model.Sort{
+					{Direction: model.AscendingSortDirection, Column: "created_at"},
+				}
+				results, _, err := testSuite.BHDatabase.GetDataQualityAggregations(testSuite.Context, nil, sort, 0, 0)
+				require.NoError(t, err)
+				require.Len(t, results, 3)
+
+				gotOrder := []int32{results[0].ID, results[1].ID, results[2].ID}
+				wantOrder := []int32{rowFirst.ID, rowSecond.ID, rowThird.ID}
+				assert.Equal(t, wantOrder, gotOrder)
+			},
+		},
 	}
 
 	for _, testCase := range tests {

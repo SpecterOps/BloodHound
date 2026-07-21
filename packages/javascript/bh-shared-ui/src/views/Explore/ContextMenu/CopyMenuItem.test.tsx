@@ -16,9 +16,17 @@
 
 import userEvent from '@testing-library/user-event';
 import { NodeDetails } from 'js-client-library';
+import { setupServer } from 'msw/node';
 import * as hooks from '../../../hooks';
+import { mockSourceKindsHandler } from '../../../mocks';
 import { render } from '../../../test-utils';
 import CopyMenuItem from './CopyMenuItem';
+
+const server = setupServer(mockSourceKindsHandler());
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 const useExploreSelectedItemSpy = vi.spyOn(hooks, 'useExploreSelectedItem');
 

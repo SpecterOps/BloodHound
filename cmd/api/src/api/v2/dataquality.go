@@ -22,6 +22,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -37,12 +38,13 @@ import (
 )
 
 const (
-	ErrNoTenantId        string = "no tenant id specified in url"
-	ErrNoPlatformId      string = "no platform id specified in url"
-	ErrInvalidPlatformId string = "invalid platform id specified in url: %v"
-	ErrNoEnvironmentId   string = "environment_id is required"
-	ErrUnknownUser       string = "unknown user"
-	ErrNoAccess          string = "user does not have permission to access this environment"
+	ErrNoAccess                        string = "user does not have permission to access this environment"
+	ErrNoEnvironmentId                 string = "environment_id is required"
+	ErrNoTenantId                      string = "no tenant id specified in url"
+	ErrNoPlatformId                    string = "no platform id specified in url"
+	ErrUnknownUser                     string = "unknown user"
+	FmtErrInvalidIntegerQueryParameter string = "query parameter must be an integer: %s"
+	FmtErrInvalidPlatformId            string = "invalid platform id specified in url: %v"
 )
 
 func (s Resources) GetDatabaseCompleteness(response http.ResponseWriter, request *http.Request) {
@@ -164,7 +166,7 @@ func (s *Resources) GetPlatformAggregateStats(response http.ResponseWriter, requ
 				return
 			}
 		default:
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(ErrInvalidPlatformId, id), request), response)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(FmtErrInvalidPlatformId, id), request), response)
 			return
 		}
 
@@ -211,14 +213,107 @@ func (s *Resources) GetDataQualityStats(response http.ResponseWriter, request *h
 				Operator:    model.Equals,
 				SetOperator: model.FilterAnd,
 			}},
-			"created_at": []model.Filter{{Value: start.Format(time.RFC3339), Operator: model.GreaterThanOrEquals, SetOperator: model.FilterAnd}, {Value: end.Format(time.RFC3339), Operator: model.LessThan, SetOperator: model.FilterAnd}},
 		}
+		filters["created_at"] = dataQualityCreatedAtFilters(start, end)
 		if stats, count, err := s.DB.GetDataQualityStats(ctx, filters, sort, skip, limit); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteResponseWrapperWithTimeWindowAndPagination(ctx, stats, start, end, limit, skip, count, http.StatusOK, response)
 		}
 	}
+}
+
+// GetDataQualityAggregations returns data quality metric counts aggregated per environment kind for an OpenGraph extension.
+// Requires a schema_environment_kind_id, with optional schema_extension_id, created_at range, sorting, and pagination.
+func (s *Resources) GetDataQualityAggregations(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx         = request.Context()
+		queryParams = request.URL.Query()
+
+		schemaEnvironmentKindIDParam = "schema_environment_kind_id"
+		schemaExtensionIDParam       = "schema_extension_id"
+
+		err         error
+		sortItems   model.Sort
+		skip, limit int
+		start, end  time.Time
+
+		defaultEnd, defaultStart = DefaultTimeRange()
+	)
+
+	// schema_environment_kind_id is required
+	kindID := queryParams.Get(schemaEnvironmentKindIDParam)
+	if kindID == "" {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest,
+			fmt.Sprintf(api.FmtErrorResponseDetailsMissingRequiredQueryParameter, schemaEnvironmentKindIDParam), request),
+			response)
+		return
+	}
+	if _, err := strconv.ParseInt(kindID, 10, 32); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest,
+			fmt.Sprintf(FmtErrInvalidIntegerQueryParameter, schemaEnvironmentKindIDParam), request),
+			response)
+		return
+	}
+
+	// parse sort_by, skip, limit, start, end
+	if sortItems, err = api.ParseSortParameters(model.DataQualityAggregations{}, queryParams); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		return
+	}
+	if skip, err = ParseSkipQueryParameter(queryParams, 0); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		return
+	}
+	if limit, err = ParseLimitQueryParameter(queryParams, 1000); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		return
+	}
+	if start, err = ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["start"]), request), response)
+		return
+	}
+	if end, err = ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["end"]), request), response)
+		return
+	}
+
+	// when filtering on schema_extension_id, verify the extension exists or return a 404
+	extensionID := queryParams.Get(schemaExtensionIDParam)
+	if extensionID != "" {
+		id, err := strconv.ParseInt(extensionID, 10, 32)
+		if err != nil {
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest,
+				fmt.Sprintf(FmtErrInvalidIntegerQueryParameter, schemaExtensionIDParam), request),
+				response)
+			return
+		}
+		if _, err := s.DB.GetGraphSchemaExtensionById(ctx, int32(id)); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		}
+	}
+
+	filters := model.Filters{
+		schemaEnvironmentKindIDParam: []model.Filter{
+			{Value: kindID, Operator: model.Equals, SetOperator: model.FilterAnd, IsStringData: false},
+		},
+	}
+	if extensionID != "" {
+		filters[schemaExtensionIDParam] = []model.Filter{
+			{Value: extensionID, Operator: model.Equals, SetOperator: model.FilterAnd, IsStringData: false},
+		}
+	}
+
+	// created_at is filtered by the start/end params, so set the time window here
+	filters["created_at"] = dataQualityCreatedAtFilters(start, end)
+
+	aggs, count, err := s.DB.GetDataQualityAggregations(ctx, filters, sortItems, skip, limit)
+	if err != nil {
+		api.HandleDatabaseError(request, response, err)
+		return
+	}
+	api.WriteResponseWrapperWithTimeWindowAndPagination(ctx, aggs, start, end, limit, skip, count, http.StatusOK, response)
 }
 
 // parseOrder is a helper function which parses any sort_by query params into both the legacy sort string format and the model.Sort format. Returns an error if the columns is not sortable, or if an empty sort param is provided.
@@ -251,4 +346,22 @@ func parseOrder(queryParams url.Values, sortable api.Sortable) (string, model.So
 
 	}
 	return strings.Join(order, ", "), sort, nil
+}
+
+// dataQualityCreatedAtFilters builds the created_at time window filter, inclusive on start and end bounds
+func dataQualityCreatedAtFilters(start, end time.Time) []model.Filter {
+	return []model.Filter{
+		{
+			Value:        start.Format(time.RFC3339Nano),
+			Operator:     model.GreaterThanOrEquals,
+			SetOperator:  model.FilterAnd,
+			IsStringData: false,
+		},
+		{
+			Value:        end.Format(time.RFC3339Nano),
+			Operator:     model.LessThanOrEquals,
+			SetOperator:  model.FilterAnd,
+			IsStringData: false,
+		},
+	}
 }

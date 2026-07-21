@@ -39,7 +39,7 @@ import { SortOrderAscending, type SortOrder } from '../../types';
 import { apiClient, type GenericQueryOptions } from '../../utils';
 import { createPaginatedFetcher, type PageParam } from '../../utils/paginatedFetcher';
 import { useFeatureFlag } from '../useFeatureFlags';
-import { isNodeResponse } from '../useGraphItem';
+import { isNodeResponse } from '../useGraphItem/useGraphItem';
 
 export const privilegeZonesKeys = {
     all: ['privilege-zones'] as const,
@@ -76,6 +76,27 @@ export const privilegeZonesKeys = {
         [...privilegeZonesKeys.all, 'certifications', filters, search, ...environments] as const,
 };
 
+const tagNameToKind = (tagName: string) => {
+    const underscoredTagName = tagName.split(' ').join('_');
+    return `${TagLabelPrefix}${underscoredTagName}`;
+};
+
+export const getZoneNameFromKinds = (
+    tags: AssetGroupTag[] | undefined,
+    kinds: string[] | undefined
+): string | undefined => {
+    const kindsSet = new Set(kinds);
+
+    const match = tags?.find((tag) => {
+        if (tag.type !== AssetGroupTagTypeZone) return false;
+
+        const tagKind = tagNameToKind(tag.name);
+        return kindsSet.has(tagKind);
+    });
+
+    return match?.name;
+};
+
 export const getOwnedTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.type === AssetGroupTagTypeOwned);
 
 export const getTierZeroTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.position === HighestPrivilegePosition);
@@ -86,8 +107,8 @@ export const isTaggedObject = (
 ): boolean => {
     if (!node || !tag || !isNodeResponse(node)) return false;
 
-    const underscoredTagName = tag.name.split(' ').join('_');
-    return node.kinds.some((kind) => kind.name === `${TagLabelPrefix}${underscoredTagName}`);
+    const tagKind = tagNameToKind(tag.name);
+    return node.kinds.some((kind) => kind.name === tagKind);
 };
 
 const getAssetGroupTags = (options: RequestOptions) =>

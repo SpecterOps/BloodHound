@@ -31,6 +31,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -59,11 +60,13 @@ import (
 // graphDBHarness bundles the wired HTTP handler and the test data IDs
 // so E2E test cases can assert the full response contract.
 type graphDBHarness struct {
-	handler        *mux.Router
-	nodeID         int64
-	relationshipID int64
-	sourceNodeID   int64
-	targetNodeID   int64
+	handler                  *mux.Router
+	nodeID                   int64
+	relationshipID           int64
+	relationshipKindID       int32
+	relationshipInfoMarkdown string
+	sourceNodeID             int64
+	targetNodeID             int64
 }
 
 // getPostgresConfig reads the integration test configuration from the environment
@@ -161,6 +164,7 @@ func newGraphDBHarness(t *testing.T) graphDBHarness {
 	harness := graphDBHarness{}
 	seedNode(t, ctx, graphDatabase, &harness)
 	seedRelationship(t, ctx, graphDatabase, &harness)
+	seedRelationshipKindInfo(t, ctx, bhDatabase, dbPool, &harness)
 
 	store := appdb.NewStore(graphDatabase, dbPool)
 	etacService := etac.Register(dbPool, dogtags.NewDefaultService())
@@ -241,6 +245,26 @@ func seedRelationship(t *testing.T, ctx context.Context, graphDB graph.Database,
 	require.NoError(t, err)
 }
 
+func seedRelationshipKindInfo(t *testing.T, ctx context.Context, bloodhoundDB *database.BloodhoundDB, dbPool *pgxpool.Pool, harness *graphDBHarness) {
+	t.Helper()
+
+	var backingKindID int32
+	require.NoError(t, dbPool.QueryRow(ctx, `
+		SELECT k.id, rk.id
+		FROM kind k
+		JOIN schema_relationship_kinds rk ON rk.kind_id = k.id
+		WHERE k.name = $1`, ad.MemberOf.String()).Scan(&backingKindID, &harness.relationshipKindID))
+
+	harness.relationshipInfoMarkdown = "relationship kind info markdown"
+	_, err := bloodhoundDB.CreateKindInfo(ctx, backingKindID, nil, &harness.relationshipKindID, model.KindInfoInput{
+		InfoKey:  "relationship_test_info",
+		Title:    "Relationship Test Info",
+		Position: 1,
+		Content:  json.RawMessage(`{"markdown":{"content":"relationship kind info markdown"}}`),
+	})
+	require.NoError(t, err)
+}
+
 func TestGetRelationshipByID(t *testing.T) {
 	var (
 		harness  = newGraphDBHarness(t)
@@ -268,6 +292,53 @@ func TestGetRelationshipByID(t *testing.T) {
 		assert.Equal(t, "MemberOf", envelope.Data.Kind.Name)
 		require.NotNil(t, envelope.Data.Kind.RelationshipKindID)
 		assert.Greater(t, *envelope.Data.Kind.RelationshipKindID, int32(0))
+		assert.NotContains(t, recorder.Body.String(), `"info"`)
+	})
+
+	t.Run("returns 200 without relationship info when include-info is false", func(t *testing.T) {
+		var (
+			recorder = httptest.NewRecorder()
+			request  = httptest.NewRequest("GET", basePath+strconv.FormatInt(harness.relationshipID, 10)+"?include-info=false", nil)
+		)
+
+		harness.handler.ServeHTTP(recorder, request)
+
+		require.Equal(t, http.StatusOK, recorder.Code)
+		assert.NotContains(t, recorder.Body.String(), `"info"`)
+	})
+
+	t.Run("returns 200 with relationship info when include-info is true", func(t *testing.T) {
+		var (
+			recorder = httptest.NewRecorder()
+			request  = httptest.NewRequest("GET", basePath+strconv.FormatInt(harness.relationshipID, 10)+"?include-info=true", nil)
+		)
+
+		harness.handler.ServeHTTP(recorder, request)
+
+		require.Equal(t, http.StatusOK, recorder.Code)
+
+		var envelope struct {
+			Data handlers.RelationshipView `json:"data"`
+		}
+		require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &envelope))
+
+		require.Len(t, envelope.Data.Info, 1)
+		assert.Equal(t, "relationship_test_info", envelope.Data.Info[0].Name)
+		assert.Equal(t, "Relationship Test Info", envelope.Data.Info[0].Title)
+		assert.Equal(t, int32(1), envelope.Data.Info[0].Position)
+		assert.Equal(t, int(harness.relationshipKindID), envelope.Data.Info[0].RelationshipKindID)
+		assert.Equal(t, harness.relationshipInfoMarkdown, envelope.Data.Info[0].Markdown.Content)
+	})
+
+	t.Run("returns 400 when include-info is malformed", func(t *testing.T) {
+		var (
+			recorder = httptest.NewRecorder()
+			request  = httptest.NewRequest("GET", basePath+strconv.FormatInt(harness.relationshipID, 10)+"?include-info=wat", nil)
+		)
+
+		harness.handler.ServeHTTP(recorder, request)
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
 	})
 
 	t.Run("returns 400 when the id is malformed", func(t *testing.T) {

@@ -15,9 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useCallback, useMemo, useState } from 'react';
-import { parseItemId } from '../utils';
 import { useExploreParams } from './useExploreParams';
-import { useGraphItem } from './useGraphItem';
+import { useGraphItem } from './useGraphItem/useGraphItem';
 
 const HIDDEN_STRING = 'HIDDEN';
 
@@ -50,18 +49,12 @@ export const useExploreSelectedItem = () => {
         }
     }, [setExploreParams, selectedItem]);
 
-    const selectedItemType = useMemo(
-        () => (selectedItem ? parseItemId(selectedItem).itemType : undefined),
-        [selectedItem]
-    );
-
-    const isHidden = selectedItem?.includes(HIDDEN_STRING);
+    const isHidden = useMemo(() => selectedItem?.includes(HIDDEN_STRING), [selectedItem]);
 
     return {
         selectedItem,
         selectedItemQuery,
         setSelectedItem,
-        selectedItemType,
         clearSelectedItem,
         previousSelectedItem,
         setPreviousSelectedItem,

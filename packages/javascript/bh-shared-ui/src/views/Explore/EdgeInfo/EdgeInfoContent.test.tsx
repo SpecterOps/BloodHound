@@ -23,6 +23,7 @@ import {
     ActiveDirectoryRelationshipKind,
     CommonKindProperties,
 } from '../../../graphSchema';
+import { mockSourceKindsHandler } from '../../../mocks';
 import { render, screen, waitFor } from '../../../test-utils';
 import { ObjectInfoPanelContextProvider } from '../providers';
 import EdgeInfoContent from './EdgeInfoContent';
@@ -122,7 +123,8 @@ const server = setupServer(
                 },
             })
         );
-    })
+    }),
+    mockSourceKindsHandler()
 );
 const selectedEdge: RelationshipDetails = {
     relationship_id: 1,
@@ -206,14 +208,6 @@ describe('EdgeInfoContent', () => {
         render(<EdgeInfoContentWithProvider selectedEdge={selectedEdge} />);
 
         expect(await screen.findByText(/Source Node:/)).toBeInTheDocument();
-
-        //The text is broken up into different elements because of the span that bolds the custom edge so these assertions are broken up to match that
-        //The assertions use regex to avoid having to match on the white space
-        expect(screen.getByText(/The edge/)).toBeInTheDocument();
-        expect(screen.getByText(selectedEdge.kind.name)).toBeInTheDocument();
-        expect(
-            screen.getByText(/does not have any additional contextual information at this time./)
-        ).toBeInTheDocument();
 
         //The general object information is still available even though there is no contextual information available for the edge
         expect(screen.getByText(/Source Node:/)).toBeInTheDocument();

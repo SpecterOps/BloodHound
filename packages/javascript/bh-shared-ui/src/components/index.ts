@@ -103,6 +103,7 @@ export { default as LoginForm } from './LoginForm';
 export * from './LoginViaSSOForm';
 export { default as LoginViaSSOForm } from './LoginViaSSOForm';
 export * from './ManagedDatePicker';
+export * from './MarkdownContent';
 export { default as MarkdownContent } from './MarkdownContent';
 export * from './MaskedInput';
 export * from './MenuItem';

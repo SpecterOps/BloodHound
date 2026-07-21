@@ -14,42 +14,22 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { NodeDetails, RelationshipDetails } from 'js-client-library';
 import { HTMLProps } from 'react';
 import { EntityInfoDataTableGraphed, EntityInfoPanel } from '../../components';
-import { isNodeResponse, isRelationshipResponse, useExploreSelectedItem, usePrimaryKind } from '../../hooks';
-import { useIsEnterprise } from '../../providers/AppNameProvider';
+import { isNodeResponse, isRelationshipResponse, useExploreSelectedItem } from '../../hooks';
 import { EdgeInfoPane } from './EdgeInfo';
 
 const defaultClasses: HTMLProps<HTMLElement>['className'] = 'bottom-0 top-0 py-4 absolute right-4';
 
-const getItemKinds = (item: NodeDetails | RelationshipDetails | undefined) => {
-    if (!item) return [];
-
-    return isNodeResponse(item) ? item.kinds : [item.kind];
-};
-
 const GraphItemInformationPanel = () => {
     const { selectedItem, selectedItemQuery } = useExploreSelectedItem();
-
-    const showFilteringBanner = useIsEnterprise();
-
-    const kinds = getItemKinds(selectedItemQuery.data);
-    const primaryKind = usePrimaryKind(kinds);
 
     if (!selectedItem || selectedItemQuery.isLoading) {
         return null;
     }
 
     if (selectedItemQuery.isError) {
-        return (
-            <EntityInfoPanel
-                showFilteringBanner={showFilteringBanner}
-                DataTable={EntityInfoDataTableGraphed}
-                className={defaultClasses}
-                selectedNode={{ graphId: selectedItem, id: '', name: 'Unknown', type: 'Unknown' }}
-            />
-        );
+        return <EntityInfoPanel DataTable={EntityInfoDataTableGraphed} className={defaultClasses} />;
     }
 
     if (!selectedItemQuery.data) return null;
@@ -59,17 +39,10 @@ const GraphItemInformationPanel = () => {
     }
 
     if (isNodeResponse(selectedItemQuery.data)) {
-        const selectedNode = {
-            graphId: selectedItemQuery.data.node_id.toString(),
-            id: selectedItemQuery.data.properties.objectid ?? '',
-            name: selectedItemQuery.data.properties.name || selectedItemQuery.data.properties.objectid || '',
-            type: primaryKind,
-        };
         return (
             <EntityInfoPanel
-                showFilteringBanner={showFilteringBanner}
                 className={defaultClasses}
-                selectedNode={selectedNode}
+                selectedNode={selectedItemQuery.data}
                 DataTable={EntityInfoDataTableGraphed}
             />
         );

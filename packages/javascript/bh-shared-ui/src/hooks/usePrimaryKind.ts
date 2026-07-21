@@ -31,7 +31,7 @@ const isKindNames = (kinds: KindList): kinds is KindNames => {
     return !kinds[0] || typeof kinds[0] === 'string';
 };
 
-const kindObjectsToKindNames = (kinds: KindObjects): KindNames => {
+export const kindObjectsToKindNames = (kinds: KindObjects): KindNames => {
     return kinds.map((kind) => kind.name);
 };
 
@@ -42,7 +42,7 @@ const getSourceKindNames = (sourceKinds: SourceKind[] | undefined): KindNames =>
 };
 
 const filterTagsAndSourceKinds = (kinds: KindNames, sourceKindNames: KindNames) => {
-    return kinds.filter((kind) => !kind.startsWith(TagLabelPrefix) && !sourceKindNames.includes(kind));
+    return kinds.filter((kind) => kind && !kind.startsWith(TagLabelPrefix) && !sourceKindNames.includes(kind));
 };
 
 export const usePrimaryKind = (kinds: KindList) => {

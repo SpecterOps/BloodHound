@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { faCircleNodes, faCloud, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { type Environment } from 'js-client-library';
 import { getEnvironmentAggregationIds } from '../hooks/useEnvironmentIdList';
 import { testEnvironments } from '../mocks/handlers/environments';
@@ -21,6 +22,8 @@ import {
     CRITICAL_THRESHOLD,
     DEFAULT_ENVIRONMENTS_FILTER,
     filterAndSearchEnvironments,
+    getOpenGraphEnvironmentInfo,
+    getOpenGraphEnvironmentInfoMap,
     HIGH_THRESHOLD,
     MODERATE_THRESHOLD,
 } from './environments';
@@ -345,5 +348,74 @@ describe('getEnvironmentAggregationIds', () => {
         ];
         const actual = getEnvironmentAggregationIds('all', testEnvironments);
         expect(actual).toEqual(expected);
+    });
+});
+
+describe('getOpenGraphEnvironmentInfo', () => {
+    it('returns the known info map values for a known type (Active Directory)', () => {
+        expect(getOpenGraphEnvironmentInfo('active-directory')).toEqual({
+            aggregationDisplayName: 'All Active Directory Domains',
+            displayName: 'Active Directory',
+            icon: faGlobe,
+            memberType: 'Domain',
+            type: 'active-directory',
+            environment_kind_id: undefined,
+        });
+    });
+
+    it('returns the known info map values for a known type (Azure)', () => {
+        expect(getOpenGraphEnvironmentInfo('azure')).toEqual({
+            aggregationDisplayName: 'All Azure Tenants',
+            displayName: 'Azure',
+            icon: faCloud,
+            memberType: 'Tenant',
+            type: 'azure',
+            environment_kind_id: undefined,
+        });
+    });
+
+    it('returns OpenGraph defaults for an unknown type', () => {
+        expect(getOpenGraphEnvironmentInfo('AWS')).toEqual({
+            aggregationDisplayName: 'All AWS Environments',
+            displayName: 'AWS',
+            icon: faCircleNodes,
+            memberType: 'Name',
+            type: 'AWS',
+            environment_kind_id: undefined,
+        });
+    });
+
+    it('propagates environment_kind_id when provided', () => {
+        expect(getOpenGraphEnvironmentInfo('AWS', 101).environment_kind_id).toBe(101);
+    });
+});
+
+describe('getOpenGraphEnvironmentInfoMap', () => {
+    it('returns only the known types when no environments are provided', () => {
+        expect(Object.keys(getOpenGraphEnvironmentInfoMap())).toEqual(['active-directory', 'azure']);
+    });
+
+    it('returns only the known types when environments is null', () => {
+        expect(Object.keys(getOpenGraphEnvironmentInfoMap(null as unknown as Environment[]))).toEqual([
+            'active-directory',
+            'azure',
+        ]);
+    });
+
+    it('adds OpenGraph types dynamically alongside the known types', () => {
+        const result = getOpenGraphEnvironmentInfoMap(testEnvironments);
+        expect(Object.keys(result)).toEqual(['active-directory', 'azure', 'AWS', 'GitHub']);
+    });
+
+    it('propagates environment_kind_id for OpenGraph types', () => {
+        const result = getOpenGraphEnvironmentInfoMap(testEnvironments);
+        expect(result['AWS'].environment_kind_id).toBe(101);
+        expect(result['GitHub'].environment_kind_id).toBe(102);
+    });
+
+    it('does not set environment_kind_id on the known types', () => {
+        const result = getOpenGraphEnvironmentInfoMap(testEnvironments);
+        expect(result['active-directory'].environment_kind_id).toBeUndefined();
+        expect(result['azure'].environment_kind_id).toBeUndefined();
     });
 });
