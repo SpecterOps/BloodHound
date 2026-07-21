@@ -274,8 +274,7 @@ export const GraphDataCheckboxes: FC<{
     // Feature disabled is passed in prop or if query fails
     const isDisabled = disabled || !isSuccess;
     const amountChecked = isSuccess ? getAllGraphDataSelectionAmount(checked, sourceKinds) : 'none';
-    const notifyChange = (nextChecked: GraphDataChecked) =>
-        onChange(getGraphDataSelections(nextChecked, sourceKinds));
+    const notifyChange = (nextChecked: GraphDataChecked) => onChange(getGraphDataSelections(nextChecked, sourceKinds));
 
     // If all boxes are checked, they are all unchecked; other wise all boxes are checked
     const toggleAllChecked = () => {
