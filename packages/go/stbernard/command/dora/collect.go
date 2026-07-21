@@ -21,6 +21,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/dora"
@@ -64,6 +65,18 @@ func (s *command) runCollect() error {
 		return fmt.Errorf("invalid configuration: %w", err)
 	}
 
+	// Create storage
+	storagePath := config.Storage.Path
+	if !filepath.IsAbs(storagePath) {
+		storagePath = filepath.Join(paths.Root, storagePath)
+	}
+
+	storage, err := dora.NewStorage(storagePath)
+	if err != nil {
+		return fmt.Errorf("creating storage: %w", err)
+	}
+	defer storage.Close()
+
 	// Create collector
 	collector := dora.NewGitHubCollector(&config, s.env)
 
@@ -78,15 +91,22 @@ func (s *command) runCollect() error {
 
 	// Collect deployments
 	if collectAll || deployFlag {
-		fmt.Printf("Collecting deployments from %s to %s...\n", 
-			startTime.Format("2006-01-02"), 
+		fmt.Printf("Collecting deployments from %s to %s...\n",
+			startTime.Format("2006-01-02"),
 			endTime.Format("2006-01-02"))
-		
+
 		deployments, err := collector.CollectDeployments(ctx, startTime, endTime)
 		if err != nil {
 			return fmt.Errorf("collecting deployments: %w", err)
 		}
 		fmt.Printf("✅ Collected %d deployments\n", len(deployments))
+
+		if len(deployments) > 0 {
+			if err := storage.SaveDeployments(ctx, deployments); err != nil {
+				return fmt.Errorf("saving deployments: %w", err)
+			}
+			fmt.Printf("💾 Saved %d deployments to database\n", len(deployments))
+		}
 	}
 
 	// Collect commits
@@ -100,6 +120,13 @@ func (s *command) runCollect() error {
 			return fmt.Errorf("collecting commits: %w", err)
 		}
 		fmt.Printf("✅ Collected %d commits\n", len(commits))
+
+		if len(commits) > 0 {
+			if err := storage.SaveCommits(ctx, commits); err != nil {
+				return fmt.Errorf("saving commits: %w", err)
+			}
+			fmt.Printf("💾 Saved %d commits to database\n", len(commits))
+		}
 	}
 
 	// Collect pull requests
@@ -113,12 +140,17 @@ func (s *command) runCollect() error {
 			return fmt.Errorf("collecting pull requests: %w", err)
 		}
 		fmt.Printf("✅ Collected %d pull requests\n", len(prs))
+
+		if len(prs) > 0 {
+			if err := storage.SavePullRequests(ctx, prs); err != nil {
+				return fmt.Errorf("saving pull requests: %w", err)
+			}
+			fmt.Printf("💾 Saved %d pull requests to database\n", len(prs))
+		}
 	}
 
 	fmt.Println()
-	fmt.Println("✅ Data collection complete!")
-	fmt.Println()
-	fmt.Println("Note: Data is not yet stored (storage layer coming in next phase)")
+	fmt.Printf("✅ Data collection complete! Database: %s\n", storagePath)
 
 	return nil
 }
