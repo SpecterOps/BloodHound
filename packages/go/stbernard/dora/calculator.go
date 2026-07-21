@@ -256,12 +256,19 @@ func (s *Calculator) calculateQualityMetrics(
 	deployments []Deployment,
 	commits []Commit,
 ) {
-	var rcCounts []int
+	var (
+		rcCounts              []int
+		stabilizationCommits  []int
+	)
 
-	// Collect RC counts from production releases
+	// Collect RC counts and stabilization commits from production releases
 	for _, d := range deployments {
 		if d.IsProduction && !d.IsRC {
 			rcCounts = append(rcCounts, d.TotalRCs)
+		}
+		// Collect stabilization commits from RC2+ (RC1 always has 0)
+		if d.IsRC && d.StabilizationCommits > 0 {
+			stabilizationCommits = append(stabilizationCommits, d.StabilizationCommits)
 		}
 	}
 
@@ -281,6 +288,25 @@ func (s *Calculator) calculateQualityMetrics(
 			snapshot.MedianRCsPerRelease = float64(rcCounts[medianIdx-1]+rcCounts[medianIdx]) / 2.0
 		} else {
 			snapshot.MedianRCsPerRelease = float64(rcCounts[medianIdx])
+		}
+	}
+
+	// Calculate stabilization commit statistics (RC2+ only)
+	if len(stabilizationCommits) > 0 {
+		// Mean stabilization commits
+		var sum int
+		for _, count := range stabilizationCommits {
+			sum += count
+		}
+		snapshot.AverageStabilizationCommits = float64(sum) / float64(len(stabilizationCommits))
+
+		// Median stabilization commits (more robust to outliers)
+		sort.Ints(stabilizationCommits)
+		medianIdx := len(stabilizationCommits) / 2
+		if len(stabilizationCommits)%2 == 0 && len(stabilizationCommits) > 1 {
+			snapshot.MedianStabilizationCommits = float64(stabilizationCommits[medianIdx-1]+stabilizationCommits[medianIdx]) / 2.0
+		} else {
+			snapshot.MedianStabilizationCommits = float64(stabilizationCommits[medianIdx])
 		}
 	}
 

@@ -108,11 +108,11 @@ func (s *Storage) SaveDeployments(ctx context.Context, deployments []Deployment)
 		ib.InsertInto("deployments")
 		ib.Cols(
 			"tag", "sha", "version", "deployed_at", "is_production", "is_rc",
-			"rc_number", "is_patch", "patch_number", "total_rcs", "total_patches", "html_url",
+			"rc_number", "is_patch", "patch_number", "total_rcs", "total_patches", "stabilization_commits", "html_url",
 		)
 		ib.Values(
 			d.Tag, d.SHA, d.Version, d.DeployedAt, d.IsProduction, d.IsRC,
-			d.RCNumber, d.IsPatch, d.PatchNumber, d.TotalRCs, d.TotalPatches, d.HTMLURL,
+			d.RCNumber, d.IsPatch, d.PatchNumber, d.TotalRCs, d.TotalPatches, d.StabilizationCommits, d.HTMLURL,
 		)
 
 		// SQLite uses INSERT OR REPLACE for upsert
@@ -132,7 +132,7 @@ func (s *Storage) GetDeployments(ctx context.Context, start, end time.Time) ([]D
 	sb := sqlbuilder.NewSelectBuilder()
 	sb.Select(
 		"tag", "sha", "version", "deployed_at", "is_production", "is_rc", "rc_number",
-		"is_patch", "patch_number", "total_rcs", "total_patches", "html_url",
+		"is_patch", "patch_number", "total_rcs", "total_patches", "stabilization_commits", "html_url",
 	)
 	sb.From("deployments")
 	sb.Where(
@@ -152,7 +152,7 @@ func (s *Storage) GetDeployments(ctx context.Context, start, end time.Time) ([]D
 		var d Deployment
 		err := rows.Scan(
 			&d.Tag, &d.SHA, &d.Version, &d.DeployedAt, &d.IsProduction, &d.IsRC,
-			&d.RCNumber, &d.IsPatch, &d.PatchNumber, &d.TotalRCs, &d.TotalPatches,
+			&d.RCNumber, &d.IsPatch, &d.PatchNumber, &d.TotalRCs, &d.TotalPatches, &d.StabilizationCommits,
 			&d.HTMLURL,
 		)
 		if err != nil {
