@@ -186,6 +186,11 @@ func (s *BHCEPipeline) IngestTasks(ctx context.Context) error {
 	// Ingest all available ingest tasks
 	s.graphifyService.ProcessTasks(updateJobFunc(ctx, s.db))
 
+	// Vacuum dead tuples produced by reconciliation deletes and ingest writes
+	if err := s.graphdb.OptimizeStorage(ctx); err != nil {
+		slog.ErrorContext(ctx, "Error optimizing graph storage after ingest", attr.Error(err))
+	}
+
 	// Manage time-out state progression for ingest jobs
 	s.jobService.ProcessStaleIngestJobs()
 
@@ -315,6 +320,11 @@ func (s *BHCEPipeline) analyze(ctx context.Context, analysisSteps model.Analysis
 		return fmt.Errorf("update last analysis completion time: %v", err)
 	} else {
 		s.jobService.CompleteAnalyzedIngestJobs()
+
+		// Vacuum dead tuples produced by analysis edge writes
+		if err := s.graphdb.OptimizeStorage(ctx); err != nil {
+			slog.ErrorContext(ctx, "Error optimizing graph storage after analysis", attr.Error(err))
+		}
 
 		// This is cacheclearing. The analysis is still successful here
 		if _, err := s.db.GetFlagByKey(ctx, appcfg.FeatureEntityPanelCaching); err != nil {
