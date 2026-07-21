@@ -88,7 +88,7 @@ const hasGraphDataSelection = (selection: GraphDataSelection): boolean => {
     return Boolean(selection.selected) || Object.keys(selection.options ?? {}).length > 0;
 };
 
-const getGraphDataSelections = (checked: GraphDataChecked, sourceKinds: SourceKind[]): GraphDataSelections => {
+const getGraphDataSelections = (checked: GraphDataChecked, sourceKinds: SourceKind[] = []): GraphDataSelections => {
     return {
         sourceKinds: Object.entries(checked).flatMap(([sourceKindId, selection]) => {
             return selection.selected ? [Number(sourceKindId)] : [];
@@ -102,7 +102,7 @@ const getGraphDataSelections = (checked: GraphDataChecked, sourceKinds: SourceKi
 
 const getGraphDataChecked = (
     value: Pick<GraphDataSelections, 'sourceKinds' | 'relationships'>,
-    sourceKinds: SourceKind[]
+    sourceKinds: SourceKind[] = []
 ): GraphDataChecked => {
     const checked = value.sourceKinds.reduce<GraphDataChecked>((allChecked, sourceKindId) => {
         allChecked[sourceKindId] = { selected: true };
@@ -268,14 +268,14 @@ export const GraphDataCheckboxes: FC<{
             sourceKinds: checkedSourceKinds,
             relationships: checkedRelationships,
         },
-        sourceKinds ?? []
+        sourceKinds
     );
 
     // Feature disabled is passed in prop or if query fails
     const isDisabled = disabled || !isSuccess;
     const amountChecked = isSuccess ? getAllGraphDataSelectionAmount(checked, sourceKinds) : 'none';
     const notifyChange = (nextChecked: GraphDataChecked) =>
-        onChange(getGraphDataSelections(nextChecked, sourceKinds ?? []));
+        onChange(getGraphDataSelections(nextChecked, sourceKinds));
 
     // If all boxes are checked, they are all unchecked; other wise all boxes are checked
     const toggleAllChecked = () => {
