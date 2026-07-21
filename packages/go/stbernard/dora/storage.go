@@ -70,8 +70,75 @@ func (s *Storage) Close() error {
 	return nil
 }
 
-// initSchema creates the database tables if they don't exist
+// initSchema creates the database tables if they don't exist and runs migrations
 func (s *Storage) initSchema() error {
+	// Create schema_version table first
+	_, err := s.db.Exec(`
+		CREATE TABLE IF NOT EXISTS schema_version (
+			version INTEGER PRIMARY KEY,
+			applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			description TEXT
+		);
+	`)
+	if err != nil {
+		return fmt.Errorf("creating schema_version table: %w", err)
+	}
+
+	// Get current schema version
+	var currentVersion int
+	err = s.db.QueryRow("SELECT COALESCE(MAX(version), 0) FROM schema_version").Scan(&currentVersion)
+	if err != nil {
+		return fmt.Errorf("getting current schema version: %w", err)
+	}
+
+	// Run migrations
+	if currentVersion == 0 {
+		// Initial schema - tag-based deployments
+		if err := s.migrateToV1(); err != nil {
+			return fmt.Errorf("migrating to v1: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// migrateToV1 creates the initial schema with tag-based deployments
+// If an old workflow-based deployments table exists, data is preserved in commits/PRs
+// but the deployments table is recreated for tag-based tracking
+func (s *Storage) migrateToV1() error {
+	// Check if old deployments table exists with old schema
+	var hasOldDeployments bool
+	err := s.db.QueryRow(`
+		SELECT COUNT(*) > 0
+		FROM sqlite_master
+		WHERE type='table' AND name='deployments'
+	`).Scan(&hasOldDeployments)
+	if err != nil {
+		return fmt.Errorf("checking for existing deployments table: %w", err)
+	}
+
+	if hasOldDeployments {
+		// Check if it's the old schema by looking for workflow_name column
+		var hasOldSchema bool
+		err = s.db.QueryRow(`
+			SELECT COUNT(*) > 0
+			FROM pragma_table_info('deployments')
+			WHERE name='workflow_name'
+		`).Scan(&hasOldSchema)
+		if err != nil {
+			return fmt.Errorf("checking deployments schema: %w", err)
+		}
+
+		if hasOldSchema {
+			// Rename old table to preserve data temporarily
+			_, err = s.db.Exec(`ALTER TABLE deployments RENAME TO deployments_old`)
+			if err != nil {
+				return fmt.Errorf("renaming old deployments table: %w", err)
+			}
+		}
+	}
+
+	// Create new schema
 	schema := `
 	CREATE TABLE IF NOT EXISTS deployments (
 		tag TEXT PRIMARY KEY,
@@ -121,19 +188,39 @@ func (s *Storage) initSchema() error {
 
 	CREATE INDEX IF NOT EXISTS idx_prs_merged_at ON pull_requests(merged_at);
 	CREATE INDEX IF NOT EXISTS idx_prs_state ON pull_requests(state);
-
-	CREATE TABLE IF NOT EXISTS schema_version (
-		version INTEGER PRIMARY KEY,
-		applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		description TEXT
-	);
-
-	INSERT OR IGNORE INTO schema_version (version, description)
-	VALUES (1, 'Initial schema');
 	`
 
-	_, err := s.db.Exec(schema)
-	return err
+	_, err = s.db.Exec(schema)
+	if err != nil {
+		return fmt.Errorf("creating new schema: %w", err)
+	}
+
+	// Check if we have old data to inform the user
+	var oldRowCount int
+	err = s.db.QueryRow(`SELECT COUNT(*) FROM deployments_old`).Scan(&oldRowCount)
+	if err == nil && oldRowCount > 0 {
+		fmt.Printf("\n⚠️  Migration Notice:\n")
+		fmt.Printf("   The deployment data model has changed from workflow runs to Git tags.\n")
+		fmt.Printf("   Your %d old deployment records (workflow-based) cannot be automatically migrated.\n", oldRowCount)
+		fmt.Printf("   Please run 'stbernard dora collect' to re-collect deployment data from Git tags.\n\n")
+	}
+
+	// Drop old deployments table
+	_, err = s.db.Exec(`DROP TABLE IF EXISTS deployments_old`)
+	if err != nil {
+		return fmt.Errorf("dropping old deployments table: %w", err)
+	}
+
+	// Record migration
+	_, err = s.db.Exec(`
+		INSERT INTO schema_version (version, description)
+		VALUES (1, 'Initial schema with tag-based deployments')
+	`)
+	if err != nil {
+		return fmt.Errorf("recording migration: %w", err)
+	}
+
+	return nil
 }
 
 // SaveDeployments saves multiple deployments to the database
