@@ -34,11 +34,10 @@ type Deployment struct {
 }
 
 // Commit represents a Git commit
+// Note: Author information is intentionally excluded to maintain team-level focus
+// and prevent misuse of DORA metrics for individual performance evaluation
 type Commit struct {
 	SHA         string    `db:"sha"`
-	Author      string    `db:"author"`
-	AuthorEmail string    `db:"author_email"`
-	Committer   string    `db:"committer"`
 	Message     string    `db:"message"`
 	CommittedAt time.Time `db:"committed_at"`
 	PRNumber    *int      `db:"pr_number"`
@@ -46,6 +45,8 @@ type Commit struct {
 }
 
 // PullRequest represents a GitHub pull request
+// Note: Author information is intentionally excluded to maintain team-level focus
+// and prevent misuse of DORA metrics for individual performance evaluation
 type PullRequest struct {
 	Number         int        `db:"number"`
 	Title          string     `db:"title"`
@@ -53,7 +54,6 @@ type PullRequest struct {
 	CreatedAt      time.Time  `db:"created_at"`
 	MergedAt       *time.Time `db:"merged_at"`
 	ClosedAt       *time.Time `db:"closed_at"`
-	Author         string     `db:"author"`
 	MergeCommitSHA *string    `db:"merge_commit_sha"`
 	BaseRef        string     `db:"base_ref"`
 	HeadRef        string     `db:"head_ref"`
@@ -61,6 +61,8 @@ type PullRequest struct {
 }
 
 // Issue represents a JIRA issue
+// Note: Assignee/reporter information is intentionally excluded to maintain team-level focus
+// and prevent misuse of DORA metrics for individual performance evaluation
 type Issue struct {
 	Key        string     `db:"key"`
 	Summary    string     `db:"summary"`
@@ -71,21 +73,19 @@ type Issue struct {
 	UpdatedAt  *time.Time `db:"updated_at"`
 	ResolvedAt *time.Time `db:"resolved_at"`
 	Resolution *string    `db:"resolution"`
-	Assignee   *string    `db:"assignee"`
-	Reporter   string     `db:"reporter"`
 	Labels     []string   `db:"labels"` // Stored as JSON in DB
 	IsIncident bool       `db:"is_incident"`
 	HTMLURL    string     `db:"html_url"`
 }
 
 // IssueTransition represents a status change for a JIRA issue
+// Note: Author information is intentionally excluded to maintain team-level focus
 type IssueTransition struct {
 	ID             int       `db:"id"`
 	IssueKey       string    `db:"issue_key"`
 	FromStatus     *string   `db:"from_status"`
 	ToStatus       string    `db:"to_status"`
 	TransitionedAt time.Time `db:"transitioned_at"`
-	Author         string    `db:"author"`
 }
 
 // MetricsSnapshot represents calculated metrics for a time period
