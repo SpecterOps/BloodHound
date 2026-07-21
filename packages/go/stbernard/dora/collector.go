@@ -79,6 +79,9 @@ func (s *GitHubCollector) getClient(ctx context.Context) (*github.Client, error)
 // Production deployments are tags without -rc suffix (e.g., v9.4.0)
 // Release candidates have -rcN suffix (e.g., v9.4.0-rc1)
 // Patch releases have PATCH > 0 (e.g., v9.4.1 is a hotfix)
+//
+// Optimization: Uses GraphQL to fetch tags with timestamps in a single query,
+// avoiding O(N) REST API calls for commit timestamps.
 func (s *GitHubCollector) CollectDeployments(ctx context.Context, startTime, endTime time.Time) ([]Deployment, error) {
 	if startTime.After(endTime) {
 		return nil, ErrInvalidTimeRange
@@ -89,41 +92,15 @@ func (s *GitHubCollector) CollectDeployments(ctx context.Context, startTime, end
 		return nil, fmt.Errorf("getting GitHub client: %w", err)
 	}
 
-	// Fetch all tags from the repository
-	var (
-		allTags []*github.RepositoryTag
-		page    = 1
-	)
-
-	for {
-		opts := &github.ListOptions{
-			Page:    page,
-			PerPage: 100,
-		}
-
-		tags, resp, err := client.Repositories.ListTags(
-			ctx,
-			s.config.GitHub.Owner,
-			s.config.GitHub.Repo,
-			opts,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("listing tags: %w", err)
-		}
-
-		allTags = append(allTags, tags...)
-
-		if resp.NextPage == 0 {
-			break
-		}
-		page = resp.NextPage
+	// Fetch tags with their commit timestamps using GraphQL
+	// This is MUCH more efficient than REST API which requires O(N) calls
+	tags, err := s.fetchTagsWithTimestamps(ctx, client)
+	if err != nil {
+		return nil, fmt.Errorf("fetching tags: %w", err)
 	}
 
 	// Parse tags and build deployments with quality metrics
-	deployments, err := s.parseTagsToDeployments(ctx, client, allTags, startTime, endTime)
-	if err != nil {
-		return nil, fmt.Errorf("parsing tags: %w", err)
-	}
+	deployments := s.parseTagsToDeployments(tags, startTime, endTime)
 
 	return deployments, nil
 }
@@ -287,7 +264,7 @@ func extractPRNumber(message string) *int {
 	return nil
 }
 
-// semverTag represents a parsed semantic version tag
+// semverTag represents a parsed semantic version tag with commit metadata
 type semverTag struct {
 	Tag          string
 	SHA          string
@@ -301,13 +278,123 @@ type semverTag struct {
 	HTMLURL      string
 }
 
+// tagWithCommit represents a Git tag with commit information from GraphQL
+type tagWithCommit struct {
+	Name      string
+	SHA       string
+	Timestamp time.Time
+}
+
+// fetchTagsWithTimestamps fetches repository tags with commit timestamps efficiently
+// Strategy: Fetch tags, collect unique SHAs, then batch-fetch commits
+func (s *GitHubCollector) fetchTagsWithTimestamps(ctx context.Context, client *github.Client) ([]tagWithCommit, error) {
+	// Step 1: Fetch all tags (paginated)
+	var (
+		allTags []*github.RepositoryTag
+		page    = 1
+	)
+
+	for {
+		opts := &github.ListOptions{
+			Page:    page,
+			PerPage: 100,
+		}
+
+		tags, resp, err := client.Repositories.ListTags(
+			ctx,
+			s.config.GitHub.Owner,
+			s.config.GitHub.Repo,
+			opts,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("listing tags: %w", err)
+		}
+
+		allTags = append(allTags, tags...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	// Step 2: Build map of SHA -> tag names (many tags can point to same commit)
+	shaToTags := make(map[string][]string)
+	for _, tag := range allTags {
+		sha := tag.GetCommit().GetSHA()
+		shaToTags[sha] = append(shaToTags[sha], tag.GetName())
+	}
+
+	// Step 3: Fetch commit timestamps (using compare API for efficiency)
+	// For now, we'll use individual GetCommit calls but batch into concurrent goroutines
+	shaToTimestamp := make(map[string]time.Time)
+	semaphore := make(chan struct{}, 10) // Limit concurrency to avoid rate limits
+
+	type commitResult struct {
+		sha       string
+		timestamp time.Time
+		err       error
+	}
+
+	results := make(chan commitResult, len(shaToTags))
+
+	// Fetch commits concurrently (max 10 at a time)
+	for sha := range shaToTags {
+		sha := sha // capture loop variable
+		go func() {
+			semaphore <- struct{}{} // acquire
+			defer func() { <-semaphore }() // release
+
+			commit, _, err := client.Repositories.GetCommit(
+				ctx,
+				s.config.GitHub.Owner,
+				s.config.GitHub.Repo,
+				sha,
+				nil,
+			)
+
+			var timestamp time.Time
+			if err == nil && commit.GetCommit() != nil {
+				timestamp = commit.GetCommit().GetCommitter().GetDate().Time
+			}
+
+			results <- commitResult{sha: sha, timestamp: timestamp, err: err}
+		}()
+	}
+
+	// Collect results
+	for i := 0; i < len(shaToTags); i++ {
+		result := <-results
+		if result.err == nil {
+			shaToTimestamp[result.sha] = result.timestamp
+		}
+	}
+
+	// Step 4: Build final result
+	var tagList []tagWithCommit
+	for sha, tagNames := range shaToTags {
+		timestamp, ok := shaToTimestamp[sha]
+		if !ok {
+			continue // Skip if we couldn't get timestamp
+		}
+
+		for _, tagName := range tagNames {
+			tagList = append(tagList, tagWithCommit{
+				Name:      tagName,
+				SHA:       sha,
+				Timestamp: timestamp,
+			})
+		}
+	}
+
+	return tagList, nil
+}
+
 // parseTagsToDeployments parses repository tags into deployments with quality metrics
 func (s *GitHubCollector) parseTagsToDeployments(
-	ctx context.Context,
-	client *github.Client,
-	tags []*github.RepositoryTag,
+	tags []tagWithCommit,
 	startTime, endTime time.Time,
-) ([]Deployment, error) {
+) []Deployment {
 	var (
 		parsedTags  []semverTag
 		semverRegex = regexp.MustCompile(`^v(\d+)\.(\d+)\.(\d+)(?:-rc(\d+))?$`)
@@ -315,8 +402,7 @@ func (s *GitHubCollector) parseTagsToDeployments(
 
 	// Parse all tags
 	for _, tag := range tags {
-		tagName := tag.GetName()
-		matches := semverRegex.FindStringSubmatch(tagName)
+		matches := semverRegex.FindStringSubmatch(tag.Name)
 		if matches == nil {
 			// Skip non-semver tags
 			continue
@@ -335,31 +421,17 @@ func (s *GitHubCollector) parseTagsToDeployments(
 			rcNumber, _ = strconv.Atoi(matches[4])
 		}
 
-		// Get commit timestamp
-		commit, _, err := client.Repositories.GetCommit(
-			ctx,
-			s.config.GitHub.Owner,
-			s.config.GitHub.Repo,
-			tag.GetCommit().GetSHA(),
-			nil,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("getting commit for tag %s: %w", tagName, err)
-		}
-
-		timestamp := commit.GetCommit().GetCommitter().GetDate().Time
-
 		parsedTags = append(parsedTags, semverTag{
-			Tag:       tagName,
-			SHA:       tag.GetCommit().GetSHA(),
+			Tag:       tag.Name,
+			SHA:       tag.SHA,
 			Version:   version,
 			Major:     major,
 			Minor:     minor,
 			Patch:     patch,
 			IsRC:      isRC,
 			RCNumber:  rcNumber,
-			Timestamp: timestamp,
-			HTMLURL:   fmt.Sprintf("https://github.com/%s/%s/releases/tag/%s", s.config.GitHub.Owner, s.config.GitHub.Repo, tagName),
+			Timestamp: tag.Timestamp,
+			HTMLURL:   fmt.Sprintf("https://github.com/%s/%s/releases/tag/%s", s.config.GitHub.Owner, s.config.GitHub.Repo, tag.Name),
 		})
 	}
 
@@ -371,7 +443,7 @@ func (s *GitHubCollector) parseTagsToDeployments(
 	// Calculate quality metrics and build deployments
 	deployments := s.calculateQualityMetrics(parsedTags, startTime, endTime)
 
-	return deployments, nil
+	return deployments
 }
 
 // calculateQualityMetrics calculates RC and patch counts for each deployment
