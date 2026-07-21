@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -194,17 +195,21 @@ func (s *Calculator) calculateChangeFailureRate(
 
 // calculateTimeToRestore calculates mean time to restore service (MTTR)
 // Every hotfix/patch (patch number > 0) represents an incident that required a fix.
-// Time to restore = time from previous production release to the hotfix release.
+// Time to restore = time from previous release IN THE SAME MINOR VERSION to the hotfix.
+// This correctly handles sequential patches like v9.0.1 → v9.0.2 → v9.0.3
+// But EXCLUDES cross-version jumps like v9.3.0 → v9.4.0 (different release cycles)
 // Examples:
-//   v9.2.0 (May 26) → v9.2.2 (May 29) = 3 days to restore
-//   v9.0.1 (Apr 14) → v9.0.2 (Apr 20) = 6 days to restore
+//   v9.2.0 (May 26) → v9.2.2 (May 29) = 3 days to restore ✓
+//   v9.0.1 (Apr 14) → v9.0.2 (Apr 20) = 6 days to restore ✓
+//   v9.3.0 (Jun 15) → v9.4.0 (Jul 2)  = NOT tracked (different minor versions)
 func (s *Calculator) calculateTimeToRestore(
 	snapshot *MetricsSnapshot,
 	deployments []Deployment,
 ) error {
 	var (
-		restoreTimes       []float64
-		previousProduction *Deployment
+		restoreTimes []float64
+		// Map: "major.minor" -> most recent production release in that series
+		minorVersionToRelease = make(map[string]*Deployment)
 	)
 
 	// Sort deployments by time (oldest first) to process chronologically
@@ -221,17 +226,26 @@ func (s *Calculator) calculateTimeToRestore(
 			continue // Skip RCs
 		}
 
+		// Parse version to get major.minor
+		// Version format is "major.minor.patch" (e.g., "9.2.0" or "9.2.2")
+		minorVersion := getMinorVersion(d.Version)
+
 		// Every patch/hotfix is an incident (patch > 0)
-		if d.IsPatch && d.PatchNumber > 0 && previousProduction != nil {
-			// Calculate restore time: time from previous production release to this hotfix
-			restoreHours := d.DeployedAt.Sub(previousProduction.DeployedAt).Hours()
-			if restoreHours > 0 {
-				restoreTimes = append(restoreTimes, restoreHours)
+		if d.IsPatch && d.PatchNumber > 0 {
+			// Find the previous release in this minor version series
+			if previousRelease, exists := minorVersionToRelease[minorVersion]; exists {
+				// Calculate restore time: time from previous release to this hotfix
+				// Previous could be the .0 release or another patch
+				restoreHours := d.DeployedAt.Sub(previousRelease.DeployedAt).Hours()
+				if restoreHours > 0 {
+					restoreTimes = append(restoreTimes, restoreHours)
+				}
 			}
 		}
 
-		// Update previous production release for next iteration
-		previousProduction = d
+		// Update the most recent release for this minor version
+		// This could be .0 (initial release) or a patch (for sequential hotfixes)
+		minorVersionToRelease[minorVersion] = d
 	}
 
 	snapshot.IncidentCount = len(restoreTimes)
@@ -402,6 +416,16 @@ func classifyRestoreTime(hoursMedian float64) string {
 		return string(TierMedium) // Less than one week
 	}
 	return string(TierLow) // More than one week
+}
+
+// getMinorVersion extracts the major.minor version from a semver string
+// Example: "9.2.0" -> "9.2", "9.0.3" -> "9.0"
+func getMinorVersion(version string) string {
+	parts := strings.Split(version, ".")
+	if len(parts) >= 2 {
+		return parts[0] + "." + parts[1]
+	}
+	return version
 }
 
 // determineOverallTier determines the overall performance tier

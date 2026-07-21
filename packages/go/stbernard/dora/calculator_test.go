@@ -435,3 +435,79 @@ func TestCalculateQualityMetrics(t *testing.T) {
 	t.Logf("  Total commits: %d", snapshot.TotalCommitsInPeriod)
 	t.Logf("  Average commits per release: %.2f", snapshot.AverageCommitsPerRelease)
 }
+
+func TestCalculateTimeToRestoreMinorVersionBoundary(t *testing.T) {
+	tempDir := t.TempDir()
+	dbPath := filepath.Join(tempDir, "test.db")
+
+	storage, err := NewStorage(dbPath)
+	if err != nil {
+		t.Fatalf("Failed to create storage: %v", err)
+	}
+	defer storage.Close()
+
+	calc := NewCalculator(storage)
+	ctx := context.Background()
+
+	// Create test scenario matching real-world example:
+	// v9.0.0, v9.0.1, v9.0.2 (same minor version - should track)
+	// v9.2.0, v9.2.2 (same minor version - should track)
+	// v9.3.0, v9.4.0 (different minor versions - should NOT track)
+
+	baseTime := time.Date(2026, 4, 1, 0, 0, 0, 0, time.UTC)
+
+	deployments := []Deployment{
+		// v9.0 series
+		{Tag: "v9.0.0", Version: "9.0.0", DeployedAt: baseTime, IsProduction: true, IsPatch: false, PatchNumber: 0},
+		{Tag: "v9.0.1", Version: "9.0.1", DeployedAt: baseTime.Add(14 * 24 * time.Hour), IsProduction: true, IsPatch: true, PatchNumber: 1}, // 14 days later
+		{Tag: "v9.0.2", Version: "9.0.2", DeployedAt: baseTime.Add(20 * 24 * time.Hour), IsProduction: true, IsPatch: true, PatchNumber: 2}, // 6 days after .1
+
+		// v9.2 series
+		{Tag: "v9.2.0", Version: "9.2.0", DeployedAt: baseTime.Add(30 * 24 * time.Hour), IsProduction: true, IsPatch: false, PatchNumber: 0},
+		{Tag: "v9.2.2", Version: "9.2.2", DeployedAt: baseTime.Add(33 * 24 * time.Hour), IsProduction: true, IsPatch: true, PatchNumber: 2}, // 3 days later
+
+		// v9.3 and v9.4 (different minor versions - should NOT track between them)
+		{Tag: "v9.3.0", Version: "9.3.0", DeployedAt: baseTime.Add(45 * 24 * time.Hour), IsProduction: true, IsPatch: false, PatchNumber: 0},
+		{Tag: "v9.4.0", Version: "9.4.0", DeployedAt: baseTime.Add(60 * 24 * time.Hour), IsProduction: true, IsPatch: false, PatchNumber: 0},
+	}
+
+	// Save deployments
+	if err := storage.SaveDeployments(ctx, deployments); err != nil {
+		t.Fatalf("Failed to save deployments: %v", err)
+	}
+
+	// Calculate metrics
+	snapshot, err := calc.CalculateMetrics(ctx, baseTime.Add(-1*time.Hour), baseTime.Add(61*24*time.Hour))
+	if err != nil {
+		t.Fatalf("Failed to calculate metrics: %v", err)
+	}
+
+	// Expected MTTR data points:
+	// v9.0.0 → v9.0.1: 14 days = 336 hours
+	// v9.0.1 → v9.0.2: 6 days = 144 hours
+	// v9.2.0 → v9.2.2: 3 days = 72 hours
+	// NOT COUNTED: v9.3.0 → v9.4.0 (different minor versions)
+
+	expectedIncidents := 3 // v9.0.1, v9.0.2, v9.2.2
+	if snapshot.IncidentCount != expectedIncidents {
+		t.Errorf("Expected %d incidents, got %d", expectedIncidents, snapshot.IncidentCount)
+	}
+
+	// Median of [72, 144, 336] = 144
+	expectedMedian := 144.0
+	if snapshot.MedianTTRHours < expectedMedian-1 || snapshot.MedianTTRHours > expectedMedian+1 {
+		t.Errorf("Expected median MTTR ~%.1f hours, got %.2f", expectedMedian, snapshot.MedianTTRHours)
+	}
+
+	// Mean of [72, 144, 336] = 184
+	expectedMean := 184.0
+	if snapshot.MTTRHours < expectedMean-1 || snapshot.MTTRHours > expectedMean+1 {
+		t.Errorf("Expected mean MTTR ~%.1f hours, got %.2f", expectedMean, snapshot.MTTRHours)
+	}
+
+	t.Logf("MTTR Metrics (respects minor version boundaries):")
+	t.Logf("  Incidents tracked: %d (expected: %d)", snapshot.IncidentCount, expectedIncidents)
+	t.Logf("  Median MTTR: %.2f hours (%.1f days)", snapshot.MedianTTRHours, snapshot.MedianTTRHours/24)
+	t.Logf("  Mean MTTR: %.2f hours (%.1f days)", snapshot.MTTRHours, snapshot.MTTRHours/24)
+	t.Logf("  ✓ Correctly excluded v9.3.0 → v9.4.0 (different minor versions)")
+}
