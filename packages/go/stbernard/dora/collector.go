@@ -102,6 +102,11 @@ func (s *GitHubCollector) CollectDeployments(ctx context.Context, startTime, end
 	// Parse tags and build deployments with quality metrics
 	deployments := s.parseTagsToDeployments(tags, startTime, endTime)
 
+	// Calculate stabilization commits (commits between RCs)
+	if err := s.calculateStabilizationCommits(ctx, client, deployments); err != nil {
+		return nil, fmt.Errorf("calculating stabilization commits: %w", err)
+	}
+
 	return deployments, nil
 }
 
@@ -504,4 +509,66 @@ func (s *GitHubCollector) calculateQualityMetrics(
 	}
 
 	return deployments
+}
+
+// calculateStabilizationCommits calculates commits between consecutive RCs
+// This measures the rework/stabilization effort: RC1 has 0, RC2+ has commits from previous RC
+// Example: v9.3.0-rc1 → v9.3.0-rc2 had 3 commits → RC2 has 3 stabilization commits
+func (s *GitHubCollector) calculateStabilizationCommits(
+	ctx context.Context,
+	client *github.Client,
+	deployments []Deployment,
+) error {
+	// Group RCs by version for processing
+	versionToRCs := make(map[string][]*Deployment)
+	for i := range deployments {
+		d := &deployments[i]
+		if d.IsRC {
+			versionToRCs[d.Version] = append(versionToRCs[d.Version], d)
+		}
+	}
+
+	// For each version, calculate commits between sequential RCs
+	for version, rcs := range versionToRCs {
+		// Sort RCs by RC number (should already be sorted, but ensure it)
+		sort.Slice(rcs, func(i, j int) bool {
+			rcI := 0
+			if rcs[i].RCNumber != nil {
+				rcI = *rcs[i].RCNumber
+			}
+			rcJ := 0
+			if rcs[j].RCNumber != nil {
+				rcJ = *rcs[j].RCNumber
+			}
+			return rcI < rcJ
+		})
+
+		// Calculate commits between each pair of RCs
+		for i := 1; i < len(rcs); i++ {
+			prevRC := rcs[i-1]
+			currentRC := rcs[i]
+
+			// Use GitHub Compare API to get commits between the two tags
+			comparison, _, err := client.Repositories.CompareCommits(
+				ctx,
+				s.config.GitHub.Owner,
+				s.config.GitHub.Repo,
+				prevRC.Tag,
+				currentRC.Tag,
+				nil,
+			)
+
+			if err != nil {
+				// Log warning but don't fail the whole operation
+				fmt.Printf("Warning: failed to compare %s and %s for version %s: %v\n",
+					prevRC.Tag, currentRC.Tag, version, err)
+				continue
+			}
+
+			// Store the commit count
+			currentRC.StabilizationCommits = comparison.GetTotalCommits()
+		}
+	}
+
+	return nil
 }

@@ -36,8 +36,9 @@ type Deployment struct {
 	PatchNumber  int  `db:"patch_number"`  // Patch version number
 
 	// Quality metrics (calculated during collection)
-	TotalRCs     int `db:"total_rcs"`     // Total RCs before this production release
-	TotalPatches int `db:"total_patches"` // Total patches for this minor version
+	TotalRCs             int `db:"total_rcs"`              // Total RCs before this production release
+	TotalPatches         int `db:"total_patches"`          // Total patches for this minor version
+	StabilizationCommits int `db:"stabilization_commits"`  // Commits in this RC (0 for RC1, count for RC2+)
 
 	// GitHub metadata
 	HTMLURL string `db:"html_url"` // GitHub tag URL
