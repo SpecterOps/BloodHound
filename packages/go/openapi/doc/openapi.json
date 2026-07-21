@@ -23672,88 +23672,6 @@
           }
         ]
       },
-      "model.client-display": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.components.uuid"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "name": {
-                "type": "string"
-              },
-              "ip_address": {
-                "type": "string",
-                "format": "ipv4"
-              },
-              "hostname": {
-                "type": "string"
-              },
-              "configured_user": {
-                "type": "string"
-              },
-              "last_checkin": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "events": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/model.client-schedule-display"
-                }
-              },
-              "token": {
-                "$ref": "#/components/schemas/model.auth-token"
-              },
-              "current_job_id": {
-                "$ref": "#/components/schemas/null.int64"
-              },
-              "current_task_id": {
-                "$ref": "#/components/schemas/null.int64"
-              },
-              "current_job": {
-                "$ref": "#/components/schemas/model.client-scheduled-job-display"
-              },
-              "current_task": {
-                "$ref": "#/components/schemas/model.client-scheduled-job-display"
-              },
-              "completed_job_count": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "completed_task_count": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "domain_controller": {
-                "$ref": "#/components/schemas/null.string"
-              },
-              "version": {
-                "type": "string"
-              },
-              "user_sid": {
-                "$ref": "#/components/schemas/null.string"
-              },
-              "type": {
-                "$ref": "#/components/schemas/enum.client-type"
-              }
-            }
-          }
-        ]
-      },
-      "model.client-management-operation-start-request": {
-        "type": "object",
-        "required": [
-          "operation_id"
-        ],
-        "properties": {
-          "operation_id": {
-            "type": "string",
-            "format": "uuid"
-          }
-        }
-      },
       "enum.client-management-operation-type": {
         "type": "string",
         "enum": [
@@ -23844,6 +23762,112 @@
             }
           }
         ]
+      },
+      "model.client-support-bundle-summary": {
+        "type": "object",
+        "properties": {
+          "current": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/model.client-management-operation"
+              }
+            ]
+          },
+          "last_finished": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/model.client-management-operation"
+              }
+            ]
+          }
+        }
+      },
+      "model.client-display": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.uuid"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "ip_address": {
+                "type": "string",
+                "format": "ipv4"
+              },
+              "hostname": {
+                "type": "string"
+              },
+              "configured_user": {
+                "type": "string"
+              },
+              "last_checkin": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "events": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/model.client-schedule-display"
+                }
+              },
+              "token": {
+                "$ref": "#/components/schemas/model.auth-token"
+              },
+              "current_job_id": {
+                "$ref": "#/components/schemas/null.int64"
+              },
+              "current_task_id": {
+                "$ref": "#/components/schemas/null.int64"
+              },
+              "current_job": {
+                "$ref": "#/components/schemas/model.client-scheduled-job-display"
+              },
+              "current_task": {
+                "$ref": "#/components/schemas/model.client-scheduled-job-display"
+              },
+              "completed_job_count": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "completed_task_count": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "domain_controller": {
+                "$ref": "#/components/schemas/null.string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "user_sid": {
+                "$ref": "#/components/schemas/null.string"
+              },
+              "type": {
+                "$ref": "#/components/schemas/enum.client-type"
+              },
+              "support_bundle_summary": {
+                "$ref": "#/components/schemas/model.client-support-bundle-summary"
+              }
+            }
+          }
+        ]
+      },
+      "model.client-management-operation-start-request": {
+        "type": "object",
+        "required": [
+          "operation_id"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
       },
       "model.client-management-operation-end-request": {
         "type": "object",
