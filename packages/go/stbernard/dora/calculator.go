@@ -84,15 +84,23 @@ func (s *Calculator) CalculateMetrics(ctx context.Context, startTime, endTime ti
 }
 
 // calculateDeploymentFrequency calculates how often deployments occur
+// Only counts feature releases (minor/major versions), not hotfixes/patches.
+// Hotfixes are counted separately in Change Failure Rate and MTTR metrics.
+// Examples:
+//   v9.2.0 (patch=0) → Counts as deployment ✓
+//   v9.3.0 (patch=0) → Counts as deployment ✓
+//   v9.2.1 (patch=1) → Does NOT count (hotfix) ✗
+//   v9.2.2 (patch=2) → Does NOT count (hotfix) ✗
 func (s *Calculator) calculateDeploymentFrequency(
 	snapshot *MetricsSnapshot,
 	deployments []Deployment,
 	startTime, endTime time.Time,
 ) error {
-	// Count only production deployments (not RCs)
+	// Count only production deployments that are NOT patches
+	// Patches/hotfixes are excluded because they represent failure resolution, not new deployments
 	productionCount := 0
 	for _, d := range deployments {
-		if d.IsProduction {
+		if d.IsProduction && !d.IsPatch {
 			productionCount++
 		}
 	}
@@ -165,6 +173,12 @@ func (s *Calculator) calculateLeadTime(
 }
 
 // calculateChangeFailureRate calculates percentage of deployments requiring patches
+// Only counts feature releases (patch=0) as deployments. Patches are fixes, not deployments.
+// A deployment "fails" if it required any hotfixes/patches.
+// Examples:
+//   v9.2.0 with patches v9.2.1, v9.2.2 → Failed deployment (TotalPatches=2)
+//   v9.3.0 with no patches → Successful deployment (TotalPatches=0)
+//   v9.2.1 (patch itself) → Not counted as a deployment
 func (s *Calculator) calculateChangeFailureRate(
 	snapshot *MetricsSnapshot,
 	deployments []Deployment,
@@ -173,7 +187,8 @@ func (s *Calculator) calculateChangeFailureRate(
 	failedCount := 0
 
 	for _, d := range deployments {
-		if d.IsProduction {
+		// Only count feature releases (not patches) as deployments
+		if d.IsProduction && !d.IsPatch {
 			productionCount++
 			// A deployment is considered "failed" if it required patches (hotfixes)
 			if d.TotalPatches > 0 {

@@ -511,3 +511,70 @@ func TestCalculateTimeToRestoreMinorVersionBoundary(t *testing.T) {
 	t.Logf("  Mean MTTR: %.2f hours (%.1f days)", snapshot.MTTRHours, snapshot.MTTRHours/24)
 	t.Logf("  ✓ Correctly excluded v9.3.0 → v9.4.0 (different minor versions)")
 }
+
+func TestDeploymentFrequencyExcludesPatches(t *testing.T) {
+	tempDir := t.TempDir()
+	dbPath := filepath.Join(tempDir, "test.db")
+
+	storage, err := NewStorage(dbPath)
+	if err != nil {
+		t.Fatalf("Failed to create storage: %v", err)
+	}
+	defer storage.Close()
+
+	calc := NewCalculator(storage)
+	ctx := context.Background()
+
+	// Create test scenario:
+	// v9.1.0 (feature release, no patches)
+	// v9.2.0 (feature release, has patches)
+	// v9.2.2 (patch - should NOT count as deployment)
+	// v9.3.0 (feature release, no patches)
+	// v9.4.0 (feature release, no patches)
+
+	baseTime := time.Date(2026, 5, 1, 0, 0, 0, 0, time.UTC)
+
+	deployments := []Deployment{
+		{Tag: "v9.1.0", Version: "9.1.0", DeployedAt: baseTime, IsProduction: true, IsPatch: false, PatchNumber: 0, TotalPatches: 0},
+		{Tag: "v9.2.0", Version: "9.2.0", DeployedAt: baseTime.Add(7 * 24 * time.Hour), IsProduction: true, IsPatch: false, PatchNumber: 0, TotalPatches: 1},
+		{Tag: "v9.2.2", Version: "9.2.2", DeployedAt: baseTime.Add(10 * 24 * time.Hour), IsProduction: true, IsPatch: true, PatchNumber: 2, TotalPatches: 0},
+		{Tag: "v9.3.0", Version: "9.3.0", DeployedAt: baseTime.Add(20 * 24 * time.Hour), IsProduction: true, IsPatch: false, PatchNumber: 0, TotalPatches: 0},
+		{Tag: "v9.4.0", Version: "9.4.0", DeployedAt: baseTime.Add(35 * 24 * time.Hour), IsProduction: true, IsPatch: false, PatchNumber: 0, TotalPatches: 0},
+	}
+
+	// Save deployments
+	if err := storage.SaveDeployments(ctx, deployments); err != nil {
+		t.Fatalf("Failed to save deployments: %v", err)
+	}
+
+	// Calculate metrics
+	snapshot, err := calc.CalculateMetrics(ctx, baseTime.Add(-1*time.Hour), baseTime.Add(36*24*time.Hour))
+	if err != nil {
+		t.Fatalf("Failed to calculate metrics: %v", err)
+	}
+
+	// Expected: 4 deployments (excludes v9.2.2 patch)
+	expectedDeployments := 4
+	if snapshot.DeploymentCount != expectedDeployments {
+		t.Errorf("Expected %d deployments, got %d (should exclude patches)", expectedDeployments, snapshot.DeploymentCount)
+	}
+
+	// Expected: 1 failure (v9.2.0 had patches)
+	expectedFailures := 1
+	if snapshot.FailedDeploymentCount != expectedFailures {
+		t.Errorf("Expected %d failed deployments, got %d", expectedFailures, snapshot.FailedDeploymentCount)
+	}
+
+	// Expected: 25% failure rate (1/4)
+	expectedRate := 25.0
+	if snapshot.ChangeFailureRate < expectedRate-0.1 || snapshot.ChangeFailureRate > expectedRate+0.1 {
+		t.Errorf("Expected failure rate ~%.1f%%, got %.2f%%", expectedRate, snapshot.ChangeFailureRate)
+	}
+
+	t.Logf("Deployment Frequency (excludes patches):")
+	t.Logf("  Total deployments: %d (expected: %d)", snapshot.DeploymentCount, expectedDeployments)
+	t.Logf("  Failed deployments: %d (expected: %d)", snapshot.FailedDeploymentCount, expectedFailures)
+	t.Logf("  Failure rate: %.1f%% (expected: %.1f%%)", snapshot.ChangeFailureRate, expectedRate)
+	t.Logf("  ✓ Correctly excluded v9.2.2 patch from deployment count")
+	t.Logf("  ✓ Counted v9.2.0 as failed (TotalPatches=1)")
+}
