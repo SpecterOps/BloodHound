@@ -53,11 +53,11 @@ func (s *command) runReport() error {
 		fmt.Fprintf(w, "  # Generate terminal report for last 30 days\n")
 		fmt.Fprintf(w, "  %s dora report\n\n", filepath.Base(os.Args[0]))
 		fmt.Fprintf(w, "  # Generate report for last 90 days\n")
-		fmt.Fprintf(w, "  %s dora report --days 90\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  %s dora report -days 90\n\n", filepath.Base(os.Args[0]))
 		fmt.Fprintf(w, "  # Export as JSON\n")
-		fmt.Fprintf(w, "  %s dora report --format json --output metrics.json\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  %s dora report -format json -output metrics.json\n\n", filepath.Base(os.Args[0]))
 		fmt.Fprintf(w, "  # Terminal report without colors (CI-friendly)\n")
-		fmt.Fprintf(w, "  %s dora report --no-color\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  %s dora report -no-color\n\n", filepath.Base(os.Args[0]))
 	}
 
 	if s.subcmdIdx > 0 && s.subcmdIdx+1 < len(os.Args) {

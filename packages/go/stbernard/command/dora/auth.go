@@ -48,12 +48,12 @@ func (s *command) runAuth() error {
 		fmt.Fprintf(w, "  2. Environment: Set GITHUB_TOKEN environment variable\n")
 		fmt.Fprintf(w, "\nExamples:\n")
 		fmt.Fprintf(w, "  # Check authentication status\n")
-		fmt.Fprintf(w, "  %s dora auth --status\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  %s dora auth -status\n\n", filepath.Base(os.Args[0]))
 		fmt.Fprintf(w, "  # Authenticate with GitHub CLI\n")
 		fmt.Fprintf(w, "  %s dora auth\n\n", filepath.Base(os.Args[0]))
 		fmt.Fprintf(w, "  # Using environment variable\n")
 		fmt.Fprintf(w, "  export GITHUB_TOKEN=ghp_xxxxxxxxxxxx\n")
-		fmt.Fprintf(w, "  %s dora auth --status\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  %s dora auth -status\n\n", filepath.Base(os.Args[0]))
 	}
 
 	if s.subcmdIdx > 0 && s.subcmdIdx+1 < len(os.Args) {
