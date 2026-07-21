@@ -810,6 +810,7 @@ func (s *BloodhoundDB) GetEnvironmentsFiltered(ctx context.Context, filters mode
 		envKindColumnAliases = map[string]string{
 			"id":                  "se.id",
 			"schema_extension_id": "se.schema_extension_id",
+			"display_name":        "ext.display_name",
 			"is_builtin":          "ext.is_builtin",
 			"name":                "k.name",
 			"environment_kind_id": "se.environment_kind_id",
