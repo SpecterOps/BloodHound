@@ -18,6 +18,7 @@ package dora
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"testing"
 	"time"
@@ -348,4 +349,89 @@ func TestCalculateTimeToRestoreNoIncidents(t *testing.T) {
 	if snapshot.RestoreTimeTier != "" {
 		t.Logf("Restore time tier (no incidents): %s", snapshot.RestoreTimeTier)
 	}
+}
+
+func TestCalculateQualityMetrics(t *testing.T) {
+	tempDir := t.TempDir()
+	dbPath := filepath.Join(tempDir, "test.db")
+
+	storage, err := NewStorage(dbPath)
+	if err != nil {
+		t.Fatalf("Failed to create storage: %v", err)
+	}
+	defer storage.Close()
+
+	calc := NewCalculator(storage)
+	ctx := context.Background()
+
+	now := time.Now()
+
+	// Create scenario:
+	// - v9.1.0 with 2 RCs (v9.1.0-rc1, v9.1.0-rc2, then v9.1.0)
+	// - v9.2.0 with 3 RCs (v9.2.0-rc1, v9.2.0-rc2, v9.2.0-rc3, then v9.2.0)
+	// - v9.3.0 with 1 RC (v9.3.0-rc1, then v9.3.0)
+	// Expected: Average RCs = (2+3+1)/3 = 2.0, Median = 2
+	deployments := []Deployment{
+		// v9.1.0 series (2 RCs)
+		{Tag: "v9.1.0", SHA: "sha1", Version: "9.1.0", DeployedAt: now.Add(-10 * time.Hour), IsProduction: true, TotalRCs: 2},
+		// v9.2.0 series (3 RCs)
+		{Tag: "v9.2.0", SHA: "sha2", Version: "9.2.0", DeployedAt: now.Add(-5 * time.Hour), IsProduction: true, TotalRCs: 3},
+		// v9.3.0 series (1 RC)
+		{Tag: "v9.3.0", SHA: "sha3", Version: "9.3.0", DeployedAt: now.Add(-1 * time.Hour), IsProduction: true, TotalRCs: 1},
+	}
+
+	// Create 15 commits (5 commits per release on average)
+	// Make sure they're all within the time range we'll query
+	var commits []Commit
+	for i := 0; i < 15; i++ {
+		commits = append(commits, Commit{
+			SHA:         fmt.Sprintf("commit-sha-%d", i),
+			CommittedAt: now.Add(-time.Duration(11-i/2) * time.Hour), // Spread within 11 hours
+			Message:     fmt.Sprintf("Commit %d", i),
+		})
+	}
+
+	if err := storage.SaveDeployments(ctx, deployments); err != nil {
+		t.Fatalf("Failed to save deployments: %v", err)
+	}
+
+	if err := storage.SaveCommits(ctx, commits); err != nil {
+		t.Fatalf("Failed to save commits: %v", err)
+	}
+
+	// Calculate metrics
+	startTime := now.Add(-12 * time.Hour)
+	endTime := now
+	snapshot, err := calc.CalculateMetrics(ctx, startTime, endTime)
+	if err != nil {
+		t.Fatalf("Failed to calculate metrics: %v", err)
+	}
+
+	// Verify RC metrics
+	expectedAvgRCs := 2.0 // (2 + 3 + 1) / 3
+	if snapshot.AverageRCsPerRelease < expectedAvgRCs-0.1 || snapshot.AverageRCsPerRelease > expectedAvgRCs+0.1 {
+		t.Errorf("Expected average RCs ~%.1f, got %.2f", expectedAvgRCs, snapshot.AverageRCsPerRelease)
+	}
+
+	expectedMedianRCs := 2.0 // sorted: [1, 2, 3] → median = 2
+	if snapshot.MedianRCsPerRelease != expectedMedianRCs {
+		t.Errorf("Expected median RCs %.1f, got %.2f", expectedMedianRCs, snapshot.MedianRCsPerRelease)
+	}
+
+	// Verify commit metrics
+	if snapshot.TotalCommitsInPeriod != 15 {
+		t.Errorf("Expected 15 total commits, got %d", snapshot.TotalCommitsInPeriod)
+	}
+
+	expectedAvgCommits := 5.0 // 15 commits / 3 releases
+	if snapshot.AverageCommitsPerRelease < expectedAvgCommits-0.1 || snapshot.AverageCommitsPerRelease > expectedAvgCommits+0.1 {
+		t.Errorf("Expected average commits ~%.1f, got %.2f", expectedAvgCommits, snapshot.AverageCommitsPerRelease)
+	}
+
+	// Log insights
+	t.Logf("Quality Metrics:")
+	t.Logf("  Average RCs per release: %.2f", snapshot.AverageRCsPerRelease)
+	t.Logf("  Median RCs per release: %.2f", snapshot.MedianRCsPerRelease)
+	t.Logf("  Total commits: %d", snapshot.TotalCommitsInPeriod)
+	t.Logf("  Average commits per release: %.2f", snapshot.AverageCommitsPerRelease)
 }
