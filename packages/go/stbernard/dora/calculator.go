@@ -73,6 +73,9 @@ func (s *Calculator) CalculateMetrics(ctx context.Context, startTime, endTime ti
 		return snapshot, fmt.Errorf("calculating time to restore: %w", err)
 	}
 
+	// Calculate Quality Metrics (RC counts, batch sizes)
+	s.calculateQualityMetrics(&snapshot, deployments, commits)
+
 	// Determine overall tier
 	snapshot.OverallTier = s.determineOverallTier(snapshot)
 
@@ -245,6 +248,56 @@ func (s *Calculator) calculateTimeToRestore(
 	}
 
 	return nil
+}
+
+// calculateQualityMetrics calculates non-DORA quality indicators
+// These metrics help understand development practices and release complexity
+func (s *Calculator) calculateQualityMetrics(
+	snapshot *MetricsSnapshot,
+	deployments []Deployment,
+	commits []Commit,
+) {
+	var rcCounts []int
+
+	// Collect RC counts from production releases
+	for _, d := range deployments {
+		if d.IsProduction && !d.IsRC {
+			rcCounts = append(rcCounts, d.TotalRCs)
+		}
+	}
+
+	// Calculate RC statistics
+	if len(rcCounts) > 0 {
+		// Mean RCs per release
+		var sum int
+		for _, count := range rcCounts {
+			sum += count
+		}
+		snapshot.AverageRCsPerRelease = float64(sum) / float64(len(rcCounts))
+
+		// Median RCs per release (more robust to outliers)
+		sort.Ints(rcCounts)
+		medianIdx := len(rcCounts) / 2
+		if len(rcCounts)%2 == 0 && len(rcCounts) > 1 {
+			snapshot.MedianRCsPerRelease = float64(rcCounts[medianIdx-1]+rcCounts[medianIdx]) / 2.0
+		} else {
+			snapshot.MedianRCsPerRelease = float64(rcCounts[medianIdx])
+		}
+	}
+
+	// Total commits in period
+	snapshot.TotalCommitsInPeriod = len(commits)
+
+	// Average commits per release (batch size indicator)
+	productionCount := 0
+	for _, d := range deployments {
+		if d.IsProduction && !d.IsRC {
+			productionCount++
+		}
+	}
+	if productionCount > 0 {
+		snapshot.AverageCommitsPerRelease = float64(len(commits)) / float64(productionCount)
+	}
 }
 
 // percentile calculates the nth percentile of a sorted slice
