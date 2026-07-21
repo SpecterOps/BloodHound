@@ -120,6 +120,9 @@ func TestTerminalReporter(t *testing.T) {
 		if !strings.Contains(output, "HIGH") {
 			t.Error("Missing uppercase tier name")
 		}
+
+		// Log clean output for visual inspection
+		t.Logf("Clean table output:\n%s", output)
 	})
 
 	t.Run("no incidents scenario", func(t *testing.T) {
