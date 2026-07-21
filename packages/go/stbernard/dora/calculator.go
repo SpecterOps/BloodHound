@@ -119,11 +119,16 @@ func (s *Calculator) calculateDeploymentFrequency(
 	return nil
 }
 
-// calculateLeadTime calculates time from previous release to hotfix/patch release
-// Lead time for changes measures how long it takes to create and deploy a fix.
-// For patches/hotfixes: time from previous release (when issue was introduced) to patch release.
-// For regular releases: time from previous release (represents the development cycle).
-// Uses tag timestamps directly - no commit data needed.
+// calculateLeadTime calculates time from first commit to production deployment
+// This is the true DORA "Lead Time for Changes" metric: how long from code commit to production.
+//
+// Algorithm:
+//  1. For each production deployment, find commits between previous and current release
+//  2. Use the earliest commit timestamp as the "start" of the change
+//  3. Calculate time from earliest commit to production deployment
+//  4. If no commits found (or no previous release), use deployment tag timestamp
+//
+// This measures the full cycle: code written → merged → tested → deployed to production
 func (s *Calculator) calculateLeadTime(
 	snapshot *MetricsSnapshot,
 	deployments []Deployment,
@@ -141,6 +146,12 @@ func (s *Calculator) calculateLeadTime(
 		return sortedDeps[i].DeployedAt.Before(sortedDeps[j].DeployedAt)
 	})
 
+	// Build a map of commits by SHA for quick lookup
+	commitMap := make(map[string]Commit)
+	for _, c := range commits {
+		commitMap[c.SHA] = c
+	}
+
 	// Process deployments chronologically
 	for i := range sortedDeps {
 		d := &sortedDeps[i]
@@ -148,12 +159,35 @@ func (s *Calculator) calculateLeadTime(
 			continue // Skip RCs
 		}
 
-		// Calculate lead time from previous production release to this one
+		// Skip patches - only count feature releases for deployment frequency
+		// But we still calculate lead time for ALL production releases including patches
+		// because patches represent work that was committed and deployed
+
+		var earliestCommitTime time.Time
+
 		if previousProduction != nil {
-			leadTimeHours := d.DeployedAt.Sub(previousProduction.DeployedAt).Hours()
-			if leadTimeHours > 0 {
-				leadTimes = append(leadTimes, leadTimeHours)
-			}
+			// Find commits between previous release and current release
+			// These are the commits that "went into" this release
+			earliestCommitTime = s.findEarliestCommitBetween(
+				previousProduction.DeployedAt,
+				d.DeployedAt,
+				commits,
+			)
+		}
+
+		// If we found commits, use earliest commit time; otherwise use tag time
+		var startTime time.Time
+		if !earliestCommitTime.IsZero() {
+			startTime = earliestCommitTime
+		} else {
+			// No commits found - could be first release or no commit data
+			// Fall back to using tag timestamp (essentially 0 lead time)
+			startTime = d.DeployedAt
+		}
+
+		leadTimeHours := d.DeployedAt.Sub(startTime).Hours()
+		if leadTimeHours > 0 {
+			leadTimes = append(leadTimes, leadTimeHours)
 		}
 
 		// Update previous production release for next iteration
@@ -170,6 +204,23 @@ func (s *Calculator) calculateLeadTime(
 	}
 
 	return nil
+}
+
+// findEarliestCommitBetween finds the earliest commit between two timestamps
+// This represents when work started on the changes that went into the release
+func (s *Calculator) findEarliestCommitBetween(start, end time.Time, commits []Commit) time.Time {
+	var earliestTime time.Time
+
+	for _, c := range commits {
+		// Commit must be after previous release and before/at current release
+		if c.CommittedAt.After(start) && !c.CommittedAt.After(end) {
+			if earliestTime.IsZero() || c.CommittedAt.Before(earliestTime) {
+				earliestTime = c.CommittedAt
+			}
+		}
+	}
+
+	return earliestTime
 }
 
 // calculateChangeFailureRate calculates percentage of deployments requiring patches
