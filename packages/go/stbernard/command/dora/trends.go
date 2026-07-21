@@ -53,12 +53,12 @@ type periodResult struct {
 func (s *command) runTrends() error {
 	var (
 		cmd        = flag.NewFlagSet("dora trends", flag.ExitOnError)
-		yearFlag   int
+		yearsFlag  string
 		periodFlag string
 		outputFlag string
 	)
 
-	cmd.IntVar(&yearFlag, "year", time.Now().Year(), "Year to generate reports for")
+	cmd.StringVar(&yearsFlag, "years", fmt.Sprintf("%d", time.Now().Year()), "Years to generate reports for (single year, comma-separated, or 'all' for all available data)")
 	cmd.StringVar(&periodFlag, "period", "quarters", "Period type (quarters, months)")
 	cmd.StringVar(&outputFlag, "output", "dora-trends", "Output directory for reports")
 
@@ -71,21 +71,31 @@ func (s *command) runTrends() error {
 		fmt.Fprintf(w, "\nPeriod Types:\n")
 		fmt.Fprintf(w, "  quarters - Generate Q1, Q2, Q3, Q4 reports\n")
 		fmt.Fprintf(w, "  months   - Generate reports for each month\n")
+		fmt.Fprintf(w, "\nYear Specification:\n")
+		fmt.Fprintf(w, "  Single:   -years 2024\n")
+		fmt.Fprintf(w, "  Multiple: -years 2024,2025,2026\n")
+		fmt.Fprintf(w, "  Range:    -years 2024-2026\n")
+		fmt.Fprintf(w, "  All data: -years all\n")
 		fmt.Fprintf(w, "\nExamples:\n")
-		fmt.Fprintf(w, "  # Generate quarterly reports for 2024\n")
-		fmt.Fprintf(w, "  %s dora trends -year 2024 -period quarters\n\n", filepath.Base(os.Args[0]))
-		fmt.Fprintf(w, "  # Generate monthly reports for 2025\n")
-		fmt.Fprintf(w, "  %s dora trends -year 2025 -period months\n\n", filepath.Base(os.Args[0]))
-		fmt.Fprintf(w, "  # Custom output directory\n")
-		fmt.Fprintf(w, "  %s dora trends -year 2024 -output reports/2024-quarters\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  # Generate quarterly reports for single year\n")
+		fmt.Fprintf(w, "  %s dora trends -years 2024 -period quarters\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  # Generate for multiple years (one table)\n")
+		fmt.Fprintf(w, "  %s dora trends -years 2024,2025,2026 -period quarters\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  # Generate for year range\n")
+		fmt.Fprintf(w, "  %s dora trends -years 2024-2026 -period quarters\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  # Generate for all available data\n")
+		fmt.Fprintf(w, "  %s dora trends -years all -period quarters\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  # Monthly reports for multiple years\n")
+		fmt.Fprintf(w, "  %s dora trends -years 2024,2025 -period months\n\n", filepath.Base(os.Args[0]))
 		fmt.Fprintf(w, "\nOutput:\n")
 		fmt.Fprintf(w, "  Creates JSON files in the output directory:\n")
-		fmt.Fprintf(w, "    quarters: 2024-Q1.json, 2024-Q2.json, 2024-Q3.json, 2024-Q4.json\n")
-		fmt.Fprintf(w, "    months:   2024-01.json, 2024-02.json, ..., 2024-12.json\n")
+		fmt.Fprintf(w, "    quarters: 2024-Q1.json, 2024-Q2.json, 2025-Q1.json, ...\n")
+		fmt.Fprintf(w, "    months:   2024-01.json, 2024-02.json, ..., 2025-12.json\n")
+		fmt.Fprintf(w, "  Multiple years shown in single comparison table\n")
 		fmt.Fprintf(w, "\nAnalysis:\n")
 		fmt.Fprintf(w, "  Use jq to compare metrics across periods:\n")
-		fmt.Fprintf(w, "    jq '.dora_metrics.deployment_frequency.per_day' %s/2024-*.json\n", outputFlag)
-		fmt.Fprintf(w, "    jq '.dora_metrics.change_failure_rate.percentage' %s/2024-*.json\n", outputFlag)
+		fmt.Fprintf(w, "    jq '.dora_metrics.deployment_frequency.per_day' %s/*.json\n", outputFlag)
+		fmt.Fprintf(w, "    jq '.dora_metrics.change_failure_rate.percentage' %s/*.json\n", outputFlag)
 	}
 
 	if s.subcmdIdx > 0 && s.subcmdIdx+1 < len(os.Args) {
@@ -129,86 +139,202 @@ func (s *command) runTrends() error {
 		return fmt.Errorf("creating output directory: %w", err)
 	}
 
+	// Parse years
+	years, err := s.parseYears(yearsFlag, ctx, storage)
+	if err != nil {
+		return fmt.Errorf("parsing years: %w", err)
+	}
+
+	if len(years) == 0 {
+		return fmt.Errorf("no years specified or found in data")
+	}
+
 	// Generate reports based on period type
 	switch periodFlag {
 	case "quarters":
-		return s.generateQuarterlyReports(ctx, calculator, yearFlag, outputDir)
+		return s.generateQuarterlyReportsMultiYear(ctx, calculator, years, outputDir)
 	case "months":
-		return s.generateMonthlyReports(ctx, calculator, yearFlag, outputDir)
+		return s.generateMonthlyReportsMultiYear(ctx, calculator, years, outputDir)
 	default:
 		return fmt.Errorf("invalid period type: %s (use 'quarters' or 'months')", periodFlag)
 	}
 }
 
-// generateQuarterlyReports generates Q1-Q4 reports for a given year
-func (s *command) generateQuarterlyReports(ctx context.Context, calc *dora.Calculator, year int, outputDir string) error {
-	quarters := []struct {
-		name  string
-		start time.Time
-		end   time.Time
-	}{
-		{"Q1", time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC), time.Date(year, 3, 31, 23, 59, 59, 0, time.UTC)},
-		{"Q2", time.Date(year, 4, 1, 0, 0, 0, 0, time.UTC), time.Date(year, 6, 30, 23, 59, 59, 0, time.UTC)},
-		{"Q3", time.Date(year, 7, 1, 0, 0, 0, 0, time.UTC), time.Date(year, 9, 30, 23, 59, 59, 0, time.UTC)},
-		{"Q4", time.Date(year, 10, 1, 0, 0, 0, 0, time.UTC), time.Date(year, 12, 31, 23, 59, 59, 0, time.UTC)},
+// parseYears parses the years flag and returns a list of years to process
+func (s *command) parseYears(yearsFlag string, ctx context.Context, storage *dora.Storage) ([]int, error) {
+	yearsFlag = strings.TrimSpace(yearsFlag)
+
+	// Special case: "all" means all years with data
+	if yearsFlag == "all" {
+		return s.getAllYearsWithData(ctx, storage)
 	}
 
-	fmt.Printf("Generating quarterly reports for %d...\n\n", year)
+	var years []int
 
-	var results []periodResult
-
-	for _, q := range quarters {
-		result, err := s.generatePeriodReport(ctx, calc, fmt.Sprintf("%d-%s", year, q.name), q.start, q.end, outputDir)
-		if err != nil {
-			return err
+	// Check for range (e.g., "2024-2026")
+	if strings.Contains(yearsFlag, "-") {
+		parts := strings.Split(yearsFlag, "-")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("invalid year range: %s (use format: 2024-2026)", yearsFlag)
 		}
 
-		// Only include periods with data
-		if result.HasData {
-			results = append(results, result)
+		startYear, err := time.Parse("2006", strings.TrimSpace(parts[0]))
+		if err != nil {
+			return nil, fmt.Errorf("invalid start year: %s", parts[0])
+		}
+
+		endYear, err := time.Parse("2006", strings.TrimSpace(parts[1]))
+		if err != nil {
+			return nil, fmt.Errorf("invalid end year: %s", parts[1])
+		}
+
+		for year := startYear.Year(); year <= endYear.Year(); year++ {
+			years = append(years, year)
+		}
+
+		return years, nil
+	}
+
+	// Check for comma-separated list
+	if strings.Contains(yearsFlag, ",") {
+		parts := strings.Split(yearsFlag, ",")
+		for _, part := range parts {
+			year, err := time.Parse("2006", strings.TrimSpace(part))
+			if err != nil {
+				return nil, fmt.Errorf("invalid year: %s", part)
+			}
+			years = append(years, year.Year())
+		}
+		return years, nil
+	}
+
+	// Single year
+	year, err := time.Parse("2006", yearsFlag)
+	if err != nil {
+		return nil, fmt.Errorf("invalid year: %s", yearsFlag)
+	}
+
+	return []int{year.Year()}, nil
+}
+
+// getAllYearsWithData finds all years that have deployment data
+func (s *command) getAllYearsWithData(ctx context.Context, storage *dora.Storage) ([]int, error) {
+	// Get all deployments to find the year range
+	deployments, err := storage.GetDeployments(ctx, time.Time{}, time.Now())
+	if err != nil {
+		return nil, fmt.Errorf("getting deployments: %w", err)
+	}
+
+	if len(deployments) == 0 {
+		return nil, fmt.Errorf("no deployments found in database")
+	}
+
+	// Find min and max years
+	yearSet := make(map[int]bool)
+	for _, d := range deployments {
+		if d.IsProduction {
+			yearSet[d.DeployedAt.Year()] = true
+		}
+	}
+
+	var years []int
+	for year := range yearSet {
+		years = append(years, year)
+	}
+
+	// Sort years
+	for i := 0; i < len(years)-1; i++ {
+		for j := i + 1; j < len(years); j++ {
+			if years[i] > years[j] {
+				years[i], years[j] = years[j], years[i]
+			}
+		}
+	}
+
+	return years, nil
+}
+
+// generateQuarterlyReportsMultiYear generates quarterly reports for multiple years
+func (s *command) generateQuarterlyReportsMultiYear(ctx context.Context, calc *dora.Calculator, years []int, outputDir string) error {
+	if len(years) == 1 {
+		fmt.Printf("Generating quarterly reports for %d...\n\n", years[0])
+	} else {
+		fmt.Printf("Generating quarterly reports for %d-%d...\n\n", years[0], years[len(years)-1])
+	}
+
+	var allResults []periodResult
+
+	for _, year := range years {
+		quarters := []struct {
+			name  string
+			start time.Time
+			end   time.Time
+		}{
+			{"Q1", time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC), time.Date(year, 3, 31, 23, 59, 59, 0, time.UTC)},
+			{"Q2", time.Date(year, 4, 1, 0, 0, 0, 0, time.UTC), time.Date(year, 6, 30, 23, 59, 59, 0, time.UTC)},
+			{"Q3", time.Date(year, 7, 1, 0, 0, 0, 0, time.UTC), time.Date(year, 9, 30, 23, 59, 59, 0, time.UTC)},
+			{"Q4", time.Date(year, 10, 1, 0, 0, 0, 0, time.UTC), time.Date(year, 12, 31, 23, 59, 59, 0, time.UTC)},
+		}
+
+		for _, q := range quarters {
+			result, err := s.generatePeriodReport(ctx, calc, fmt.Sprintf("%d-%s", year, q.name), q.start, q.end, outputDir)
+			if err != nil {
+				return err
+			}
+
+			// Only include periods with data
+			if result.HasData {
+				allResults = append(allResults, result)
+			}
 		}
 	}
 
 	// Print summary table
-	if len(results) > 0 {
-		s.printResultsTable(results, "Quarterly")
-		fmt.Printf("\n✅ Generated %d quarterly reports in %s/\n", len(results), outputDir)
+	if len(allResults) > 0 {
+		s.printResultsTable(allResults, "Quarterly")
+		fmt.Printf("\n✅ Generated %d quarterly reports in %s/\n", len(allResults), outputDir)
 	} else {
-		fmt.Printf("\n⚠️  No data found for %d\n", year)
+		fmt.Printf("\n⚠️  No data found for specified years\n")
 	}
 
 	return nil
 }
 
-// generateMonthlyReports generates monthly reports for a given year
-func (s *command) generateMonthlyReports(ctx context.Context, calc *dora.Calculator, year int, outputDir string) error {
-	fmt.Printf("Generating monthly reports for %d...\n\n", year)
+// generateMonthlyReportsMultiYear generates monthly reports for multiple years
+func (s *command) generateMonthlyReportsMultiYear(ctx context.Context, calc *dora.Calculator, years []int, outputDir string) error {
+	if len(years) == 1 {
+		fmt.Printf("Generating monthly reports for %d...\n\n", years[0])
+	} else {
+		fmt.Printf("Generating monthly reports for %d-%d...\n\n", years[0], years[len(years)-1])
+	}
 
-	var results []periodResult
+	var allResults []periodResult
 
-	for month := 1; month <= 12; month++ {
-		startTime := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
-		// Last day of month
-		endTime := time.Date(year, time.Month(month+1), 1, 0, 0, 0, 0, time.UTC).Add(-time.Second)
+	for _, year := range years {
+		for month := 1; month <= 12; month++ {
+			startTime := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+			// Last day of month
+			endTime := time.Date(year, time.Month(month+1), 1, 0, 0, 0, 0, time.UTC).Add(-time.Second)
 
-		periodName := fmt.Sprintf("%d-%02d", year, month)
-		result, err := s.generatePeriodReport(ctx, calc, periodName, startTime, endTime, outputDir)
-		if err != nil {
-			return err
-		}
+			periodName := fmt.Sprintf("%d-%02d", year, month)
+			result, err := s.generatePeriodReport(ctx, calc, periodName, startTime, endTime, outputDir)
+			if err != nil {
+				return err
+			}
 
-		// Only include months with data
-		if result.HasData {
-			results = append(results, result)
+			// Only include months with data
+			if result.HasData {
+				allResults = append(allResults, result)
+			}
 		}
 	}
 
 	// Print summary table
-	if len(results) > 0 {
-		s.printResultsTable(results, "Monthly")
-		fmt.Printf("\n✅ Generated %d monthly reports in %s/\n", len(results), outputDir)
+	if len(allResults) > 0 {
+		s.printResultsTable(allResults, "Monthly")
+		fmt.Printf("\n✅ Generated %d monthly reports in %s/\n", len(allResults), outputDir)
 	} else {
-		fmt.Printf("\n⚠️  No data found for %d\n", year)
+		fmt.Printf("\n⚠️  No data found for specified years\n")
 	}
 
 	return nil
