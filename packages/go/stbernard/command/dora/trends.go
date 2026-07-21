@@ -23,11 +23,31 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/dora"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 )
+
+// periodResult holds the results for a single period
+type periodResult struct {
+	Name               string
+	StartTime          time.Time
+	EndTime            time.Time
+	DeploymentCount    int
+	FrequencyPerDay    float64
+	LeadTimeP50        float64
+	FailureRate        float64
+	MTTR               float64
+	IncidentCount      int
+	DeploymentTier     string
+	LeadTimeTier       string
+	FailureRateTier    string
+	RestoreTimeTier    string
+	OverallTier        string
+	HasData            bool
+}
 
 // runTrends handles the trends subcommand
 func (s *command) runTrends() error {
@@ -135,13 +155,28 @@ func (s *command) generateQuarterlyReports(ctx context.Context, calc *dora.Calcu
 
 	fmt.Printf("Generating quarterly reports for %d...\n\n", year)
 
+	var results []periodResult
+
 	for _, q := range quarters {
-		if err := s.generatePeriodReport(ctx, calc, fmt.Sprintf("%d-%s", year, q.name), q.start, q.end, outputDir); err != nil {
+		result, err := s.generatePeriodReport(ctx, calc, fmt.Sprintf("%d-%s", year, q.name), q.start, q.end, outputDir)
+		if err != nil {
 			return err
+		}
+
+		// Only include periods with data
+		if result.HasData {
+			results = append(results, result)
 		}
 	}
 
-	fmt.Printf("\n✅ All quarterly reports generated in %s/\n", outputDir)
+	// Print summary table
+	if len(results) > 0 {
+		s.printResultsTable(results, "Quarterly")
+		fmt.Printf("\n✅ Generated %d quarterly reports in %s/\n", len(results), outputDir)
+	} else {
+		fmt.Printf("\n⚠️  No data found for %d\n", year)
+	}
+
 	return nil
 }
 
@@ -149,32 +184,71 @@ func (s *command) generateQuarterlyReports(ctx context.Context, calc *dora.Calcu
 func (s *command) generateMonthlyReports(ctx context.Context, calc *dora.Calculator, year int, outputDir string) error {
 	fmt.Printf("Generating monthly reports for %d...\n\n", year)
 
+	var results []periodResult
+
 	for month := 1; month <= 12; month++ {
 		startTime := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
 		// Last day of month
 		endTime := time.Date(year, time.Month(month+1), 1, 0, 0, 0, 0, time.UTC).Add(-time.Second)
 
 		periodName := fmt.Sprintf("%d-%02d", year, month)
-		if err := s.generatePeriodReport(ctx, calc, periodName, startTime, endTime, outputDir); err != nil {
+		result, err := s.generatePeriodReport(ctx, calc, periodName, startTime, endTime, outputDir)
+		if err != nil {
 			return err
+		}
+
+		// Only include months with data
+		if result.HasData {
+			results = append(results, result)
 		}
 	}
 
-	fmt.Printf("\n✅ All monthly reports generated in %s/\n", outputDir)
+	// Print summary table
+	if len(results) > 0 {
+		s.printResultsTable(results, "Monthly")
+		fmt.Printf("\n✅ Generated %d monthly reports in %s/\n", len(results), outputDir)
+	} else {
+		fmt.Printf("\n⚠️  No data found for %d\n", year)
+	}
+
 	return nil
 }
 
 // generatePeriodReport generates a single report for a time period
-func (s *command) generatePeriodReport(ctx context.Context, calc *dora.Calculator, periodName string, startTime, endTime time.Time, outputDir string) error {
-	outputFile := filepath.Join(outputDir, periodName+".json")
-
-	fmt.Printf("📊 %s: %s to %s\n", periodName, startTime.Format("2006-01-02"), endTime.Format("2006-01-02"))
+func (s *command) generatePeriodReport(ctx context.Context, calc *dora.Calculator, periodName string, startTime, endTime time.Time, outputDir string) (periodResult, error) {
+	result := periodResult{
+		Name:      periodName,
+		StartTime: startTime,
+		EndTime:   endTime,
+	}
 
 	// Calculate metrics
 	snapshot, err := calc.CalculateMetrics(ctx, startTime, endTime)
 	if err != nil {
-		return fmt.Errorf("calculating metrics for %s: %w", periodName, err)
+		return result, fmt.Errorf("calculating metrics for %s: %w", periodName, err)
 	}
+
+	// Check if there's any data in this period
+	if snapshot.DeploymentCount == 0 {
+		fmt.Printf("⊘  %s: No data (skipped)\n", periodName)
+		return result, nil
+	}
+
+	result.HasData = true
+	result.DeploymentCount = snapshot.DeploymentCount
+	result.FrequencyPerDay = snapshot.DeploymentFrequencyPerDay
+	result.LeadTimeP50 = snapshot.LeadTimeP50Hours
+	result.FailureRate = snapshot.ChangeFailureRate
+	result.MTTR = snapshot.MedianTTRHours
+	result.IncidentCount = snapshot.IncidentCount
+	result.DeploymentTier = snapshot.DeploymentTier
+	result.LeadTimeTier = snapshot.LeadTimeTier
+	result.FailureRateTier = snapshot.FailureRateTier
+	result.RestoreTimeTier = snapshot.RestoreTimeTier
+	result.OverallTier = snapshot.OverallTier
+
+	outputFile := filepath.Join(outputDir, periodName+".json")
+	fmt.Printf("📊 %s: %s to %s\n", periodName, startTime.Format("2006-01-02"), endTime.Format("2006-01-02"))
 
 	// Create JSON output structure
 	output := map[string]any{
@@ -225,14 +299,14 @@ func (s *command) generatePeriodReport(ctx context.Context, calc *dora.Calculato
 	// Write JSON file
 	file, err := os.Create(outputFile)
 	if err != nil {
-		return fmt.Errorf("creating output file %s: %w", outputFile, err)
+		return result, fmt.Errorf("creating output file %s: %w", outputFile, err)
 	}
 	defer file.Close()
 
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
 	if err := encoder.Encode(output); err != nil {
-		return fmt.Errorf("encoding JSON for %s: %w", periodName, err)
+		return result, fmt.Errorf("encoding JSON for %s: %w", periodName, err)
 	}
 
 	// Print summary
@@ -244,5 +318,70 @@ func (s *command) generatePeriodReport(ctx context.Context, calc *dora.Calculato
 	)
 	fmt.Printf("   📁 Saved to %s\n\n", outputFile)
 
-	return nil
+	return result, nil
+}
+
+// printResultsTable prints a comparative table of all period results
+func (s *command) printResultsTable(results []periodResult, periodType string) {
+	if len(results) == 0 {
+		return
+	}
+
+	fmt.Println()
+	fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+	fmt.Printf("%s Comparison\n", periodType)
+	fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+	fmt.Println()
+
+	// Table header
+	fmt.Printf("%-10s │ %8s │ %9s │ %13s │ %12s │ %13s │ %8s\n",
+		"Period", "Deploys", "Freq/Day", "Lead (P50)", "Failure %", "MTTR (Med)", "Tier")
+	fmt.Println(strings.Repeat("─", 130))
+
+	// Table rows
+	for _, r := range results {
+		fmt.Printf("%-10s │ %8d │ %9.2f │ %10.1fh │ %11.1f%% │ %10.1fh │ %8s\n",
+			r.Name,
+			r.DeploymentCount,
+			r.FrequencyPerDay,
+			r.LeadTimeP50,
+			r.FailureRate,
+			r.MTTR,
+			r.OverallTier,
+		)
+	}
+
+	fmt.Println()
+
+	// Summary statistics
+	var (
+		totalDeploys   int
+		avgFreq        float64
+		avgLeadTime    float64
+		avgFailureRate float64
+		avgMTTR        float64
+	)
+
+	for _, r := range results {
+		totalDeploys += r.DeploymentCount
+		avgFreq += r.FrequencyPerDay
+		avgLeadTime += r.LeadTimeP50
+		avgFailureRate += r.FailureRate
+		if r.IncidentCount > 0 {
+			avgMTTR += r.MTTR
+		}
+	}
+
+	n := float64(len(results))
+	avgFreq /= n
+	avgLeadTime /= n
+	avgFailureRate /= n
+	avgMTTR /= n
+
+	fmt.Println("Summary:")
+	fmt.Printf("  Total Deployments: %d across %d periods\n", totalDeploys, len(results))
+	fmt.Printf("  Average Frequency: %.2f deployments/day\n", avgFreq)
+	fmt.Printf("  Average Lead Time: %.1f hours (%.1f days)\n", avgLeadTime, avgLeadTime/24)
+	fmt.Printf("  Average Failure Rate: %.1f%%\n", avgFailureRate)
+	fmt.Printf("  Average MTTR: %.1f hours (%.1f days)\n", avgMTTR, avgMTTR/24)
 }
