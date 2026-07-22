@@ -37,7 +37,7 @@
         "braces": ">=3.0.3 <4.0.0",
         "cross-spawn": "^7.0.5",
         "dompurify": "3.2.4",
-        "fast-uri": "^3.1.3",
+        "fast-uri": "3.1.4",
         "form-data": "^4.0.6",
         "glob": "^11.1.0",
         "immutable": "^4.3.9",
