@@ -291,4 +291,18 @@ describe('MultiSelect', () => {
         expect(screen.getByRole('status', { name: 'Loading Items' })).toBeInTheDocument();
         expect(screen.queryByRole('checkbox', { name: 'Menu Item A' })).not.toBeInTheDocument();
     });
+
+    it('displays the select-all trigger label when all enabled options are selected', () => {
+        render(
+            <MultiSelect
+                options={options}
+                value={['a', 'b']}
+                onValueChange={vi.fn()}
+                placeholder='Select Items'
+                selectAllLabel='All Items'
+            />
+        );
+
+        expect(screen.getByRole('button', { name: 'All Items' })).toBeInTheDocument();
+    });
 });

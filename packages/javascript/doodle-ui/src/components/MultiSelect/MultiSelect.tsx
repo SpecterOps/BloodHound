@@ -222,8 +222,6 @@ const MultiSelect = ({
         return `${value.length} Selected`;
     };
 
-    const triggerText = getMultiSelectTriggerText(options, value, placeholder);
-
     // select all/clear
     const enabledOptionValues = options.filter((option) => !option.disabled).map((option) => option.value);
 
@@ -231,6 +229,11 @@ const MultiSelect = ({
 
     const hasSelectedAllEnabledOptions =
         enabledOptionValues.length > 0 && selectedEnabledOptionCount === enabledOptionValues.length;
+
+    const triggerText =
+        hasSelectedAllEnabledOptions && selectAllLabel
+            ? selectAllLabel
+            : getMultiSelectTriggerText(options, value, placeholder);
 
     const hasSelectedSomeOptions = selectedEnabledOptionCount > 0 && !hasSelectedAllEnabledOptions;
 
@@ -252,9 +255,12 @@ const MultiSelect = ({
     //search
     const searchTerm = searchValue.trim().toLowerCase();
 
-    const filteredOptions = searchTerm
-        ? options.filter((option) => option.label.toLowerCase().includes(searchTerm))
-        : options;
+    const filteredOptions = React.useMemo(() => {
+        if (!searchTerm) {
+            return options;
+        }
+        return options.filter((option) => option.label.toLowerCase().includes(searchTerm));
+    }, [options, searchTerm]);
 
     const hasOptions = options.length > 0;
     const hasSearchText = searchTerm.length > 0;

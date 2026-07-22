@@ -54,7 +54,7 @@ export const Default: Story = {
         options: itemOptions,
         value: [],
         onValueChange: () => {},
-        placeholder: 'All Items',
+        placeholder: 'Select Items',
         selectAllLabel: 'All Items',
         isSearchable: true,
         searchPlaceholder: 'Search options',
@@ -99,7 +99,26 @@ export const WithSelectAll: Story = {
         options: itemOptions,
         value: [],
         onValueChange: () => {},
-        placeholder: 'All Items',
+        placeholder: 'Select Items',
+        selectAllLabel: 'All Items',
+    },
+    render: (args) => {
+        const [value, setValue] = useState<string[]>(args.value ?? []);
+
+        return (
+            <div className='w-60'>
+                <MultiSelect {...args} value={value} onValueChange={setValue} />
+            </div>
+        );
+    },
+};
+
+export const AllSelected: Story = {
+    args: {
+        options: itemOptions,
+        value: itemOptions.map((option) => option.value),
+        onValueChange: () => {},
+        placeholder: 'Select Items',
         selectAllLabel: 'All Items',
     },
     render: (args) => {
@@ -118,7 +137,7 @@ export const WithSearch: Story = {
         options: itemOptions,
         value: [],
         onValueChange: () => {},
-        placeholder: 'All Items',
+        placeholder: 'Select Items',
         isSearchable: true,
         searchPlaceholder: 'Search options',
         noResultsText: 'No matches',
@@ -139,7 +158,7 @@ export const Error: Story = {
         options: itemOptions,
         value: [],
         onValueChange: () => {},
-        placeholder: 'All Items',
+        placeholder: 'Select Items',
         error: true,
     },
     render: (args) => {
@@ -158,7 +177,7 @@ export const Disabled: Story = {
         options: itemOptions,
         value: [],
         onValueChange: () => {},
-        placeholder: 'All Items',
+        placeholder: 'Select Items',
         disabled: true,
     },
     render: renderMultiSelect,
@@ -169,7 +188,7 @@ export const WithDisabledOption: Story = {
         options: [...itemOptions, { value: 'g', label: 'Menu Item G', disabled: true }],
         value: [],
         onValueChange: () => {},
-        placeholder: 'All Items',
+        placeholder: 'Select Items',
     },
     render: (args) => {
         const [value, setValue] = useState<string[]>(args.value ?? []);
@@ -187,7 +206,7 @@ export const Loading: Story = {
         options: itemOptions,
         value: [],
         onValueChange: () => {},
-        placeholder: 'All Items',
+        placeholder: 'Select Items',
         isSearchable: true,
         isLoading: true,
         loadingText: 'Loading options',
@@ -200,7 +219,7 @@ export const Empty: Story = {
         options: [],
         value: [],
         onValueChange: () => {},
-        placeholder: 'All Items',
+        placeholder: 'Select Items',
         emptyText: 'No options available.',
     },
     render: renderMultiSelect,
