@@ -16,7 +16,7 @@
 
 import { faCaretRight, faExternalLink } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Button } from 'doodle-ui';
+import { IconButton } from 'doodle-ui';
 import { FC, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
@@ -186,7 +186,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     return (
         <>
             {/* Nav expand/collapse button */}
-            <Button
+            <IconButton
                 aria-expanded={isExpanded}
                 aria-label='Toggle Navigation'
                 // Negative right margin allows button to hover outside nav bar bounds
@@ -195,18 +195,17 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                     'transition-all duration-300 ease-in',
                     'text-main',
                     'bg-neutral-4 dark:bg-neutral-5',
-                    'hover:bg-[#B2B8BE] dark:hover:bg-neutral-3',
+                    'hover:bg-[#B2B8BE] hover:text-main dark:hover:bg-neutral-3 dark:hover:text-main',
                     'active:ring-0 active:bg-[#C0C6CB] dark:active:bg-neutral-2',
-                    'focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-focus focus-visible:ring-offset-focus-offset',
+                    'dark:focus-visible:text-white',
                     {
                         'rotate-180 left-[16.75rem]': isExpanded,
                         'left-[2.75rem]': !isExpanded,
                     }
                 )}
-                onClick={handleToggleNav}
-                variant='icon'>
+                onClick={handleToggleNav}>
                 <FontAwesomeIcon icon={faCaretRight} />
-            </Button>
+            </IconButton>
 
             <nav
                 className={cn(

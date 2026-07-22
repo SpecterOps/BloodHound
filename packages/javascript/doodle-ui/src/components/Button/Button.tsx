@@ -29,8 +29,8 @@ export const ButtonVariants = cva(
                     'bg-secondary-btn-fill text-common-dark shadow-outer-1 dark:text-common-white hover:bg-secondary hover:text-common-white dark:hover:text-common-dark active:bg-secondary-btn-active-fill active:text-common-dark dark:active:text-common-white focus-visible:bg-secondary focus-visible:text-common-white dark:focus-visible:text-common-dark disabled:bg-btn-disabled-fill disabled:text-text-disabled disabled:shadow-none disabled:!opacity-100',
                 transparent:
                     'bg-transparent border border-transparent-btn-border text-main hover:bg-primary hover:text-common-white dark:hover:text-common-dark hover:border-primary hover:no-underline focus-visible:bg-primary focus-visible:text-common-white dark:focus-visible:text-common-dark focus-visible:border-primary',
-                text: 'text-primary hover:text-secondary active:text-primary-variant focus-visible:text-secondary disabled:text-text-disabled disabled:!opacity-100',
-                icon: 'rounded-full text-common-dark bg-icon-btn-fill p-0 size-10 shadow-outer-1 hover:border-2 hover:border-secondary focus-visible:border-2 focus-visible:border-secondary active:border-none',
+                text: 'text-primary px-2 py-0 hover:text-secondary active:text-primary-variant focus-visible:text-secondary disabled:text-text-disabled disabled:!opacity-100',
+                // icon: 'text-common-dark bg-icon-btn-fill shadow-outer-1 hover:bg-primary hover:border-2 hover:border-primary focus-visible:border-2 focus-visible:border-secondary active:border-none',
             },
             fontColor: {
                 primary: 'text-primary',
@@ -39,6 +39,7 @@ export const ButtonVariants = cva(
                 small: 'h-9 px-4 py-1 text-xs',
                 medium: 'h-10 px-6 py-2',
                 large: 'h-11 px-8 py-3 text-base',
+                icon: 'size-10 p-0 rounded-full hover:no-underline',
             },
         },
         defaultVariants: {
@@ -68,3 +69,21 @@ export const Button = React.forwardRef<React.ComponentRef<typeof BaseUIButton>, 
 });
 
 Button.displayName = 'Button';
+
+export interface IconButtonProps extends Omit<ButtonProps, 'size' | 'children'> {
+    variant?: 'primary' | 'secondary';
+    'aria-label': string;
+    children: React.ReactElement;
+}
+
+export const IconButton = React.forwardRef<React.ComponentRef<typeof BaseUIButton>, IconButtonProps>(
+    function IconButton({ variant = 'secondary', children, ...props }, ref) {
+        return (
+            <Button {...props} ref={ref} variant={variant} size='icon'>
+                {children}
+            </Button>
+        );
+    }
+);
+
+IconButton.displayName = 'IconButton';

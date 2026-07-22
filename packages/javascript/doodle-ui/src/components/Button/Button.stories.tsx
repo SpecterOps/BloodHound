@@ -17,7 +17,7 @@ import { faGear, faListUl } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, within } from '@storybook/test';
-import { Button } from './Button';
+import { Button, IconButton as IconButtonComponent } from './Button';
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
@@ -90,9 +90,9 @@ export const Small: Story = {
 export const IconButton: Story = {
     render: () => {
         return (
-            <Button variant='icon' aria-label='Gear Icon'>
+            <IconButtonComponent aria-label='Gear Icon'>
                 <FontAwesomeIcon icon={faGear} style={{ fontSize: '24px' }} />
-            </Button>
+            </IconButtonComponent>
         );
     },
 };
@@ -101,7 +101,7 @@ export const TextButton: Story = {
     render: () => {
         return (
             <Button variant='text'>
-                <FontAwesomeIcon icon={faListUl} className='mb-[3px]' />
+                <FontAwesomeIcon icon={faListUl} />
                 <span className='ml-2'>Text Button</span>
             </Button>
         );

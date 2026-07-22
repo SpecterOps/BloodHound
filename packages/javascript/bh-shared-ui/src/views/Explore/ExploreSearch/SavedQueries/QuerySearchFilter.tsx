@@ -16,7 +16,7 @@
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
-import { Button, Input } from 'doodle-ui';
+import { Button, IconButton, Input } from 'doodle-ui';
 import { useState } from 'react';
 import { AppIcon } from '../../../../components';
 import { useSavedQueriesContext } from '../../providers';
@@ -107,14 +107,13 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                             onClick={exportHandler}>
                             Export
                         </Button>
-                        <Button
+                        <IconButton
                             aria-label='delete'
                             disabled={!deleteEnabled}
                             className='ml-2'
-                            variant='icon'
                             onClick={() => deleteHandler(selectedQuery?.id as number)}>
                             <FontAwesomeIcon icon={faTrash} />
-                        </Button>
+                        </IconButton>
                     </div>
                 </div>
                 <div className='flex w-full items-center justify-between flex-row'>

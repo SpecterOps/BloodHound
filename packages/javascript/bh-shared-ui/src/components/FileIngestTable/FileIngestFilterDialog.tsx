@@ -24,6 +24,7 @@ import {
     DialogPortal,
     DialogTitle,
     DialogTrigger,
+    IconButton,
     VisuallyHidden,
 } from 'doodle-ui';
 import isEqual from 'lodash/isEqual';
@@ -93,9 +94,9 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
     return (
         <Dialog onOpenChange={undoChanges}>
             <DialogTrigger asChild>
-                <Button data-testid='file_ingest_log-open_filter_dialog' variant='icon'>
+                <IconButton aria-label='Open file ingest' data-testid='file_ingest_log-open_filter_dialog'>
                     <AppIcon.FilterOutline size={22} />
-                </Button>
+                </IconButton>
             </DialogTrigger>
 
             <DialogPortal>
