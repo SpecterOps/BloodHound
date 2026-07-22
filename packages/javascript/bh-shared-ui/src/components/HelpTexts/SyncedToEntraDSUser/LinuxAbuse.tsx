@@ -20,9 +20,10 @@ import { FC } from 'react';
 const Abuse: FC = () => {
     return (
         <Typography variant='body2'>
-            An attacker may authenticate as the Microsoft Entra Domain Services user using the Entra user’s credentials,
-            for example by key-logging the user’s password, or by changing the Entra user’s password and waiting for the
-            password write-back operation to complete.
+            An attacker may authenticate as the Entra Domain Services user using the Entra user's credentials. For a
+            cloud-only user that has not changed its password while the managed domain is active, changing the Entra
+            user's password and waiting for Entra Domain Services synchronization to complete generates the password
+            material required for authentication.
         </Typography>
     );
 };

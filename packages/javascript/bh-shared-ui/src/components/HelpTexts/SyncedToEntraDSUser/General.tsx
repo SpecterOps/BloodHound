@@ -21,11 +21,19 @@ const General: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                The Entra user is synchronized to the user in Microsoft Entra Domain Services (formerly formerly Azure
-                Active Directory Domain Services).
+                This relationship indicates that the Entra user and the Entra Domain Services user are the same identity
+                across the Entra ID and managed domain boundary.
             </Typography>
             <Typography variant='body2'>
-                The Entra user may be able to authenticate as the Entra DS user with its own password.
+                The Entra Domain Services user is created from the Entra user during synchronization and can be
+                correlated through the BloodHound aadobjectid property, collected from the LDAP attribute
+                msDS-aadObjectId. Password changes in Entra ID generate and synchronize the password material required
+                for the Entra Domain Services user to authenticate.
+            </Typography>
+            <Typography variant='body2'>
+                For cloud-only users, Entra ID does not generate the NT hash required by Entra Domain Services until a
+                password change occurs while the managed domain is active. A newly synchronized cloud-only user may
+                exist in Entra Domain Services but remain unusable until the password is changed in Entra ID.
             </Typography>
         </>
     );
