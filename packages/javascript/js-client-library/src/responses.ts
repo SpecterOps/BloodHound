@@ -345,7 +345,7 @@ export type GetExportQueryResponse = AxiosResponse<Blob>;
 
 export type GetClientResponse = PaginatedResponse<Client[]>;
 
-export enum SupportBundleOperationStatus {
+export enum ManagementOperationStatus {
     QUEUED = 'queued',
     RUNNING = 'running',
     SUCCEEDED = 'succeeded',
@@ -359,12 +359,12 @@ export type NullUuid = {
     valid: boolean;
 };
 
-export type SupportBundleOperation = {
+export type ManagementOperation = {
     id: string;
     client_id: string;
     artifact_id: NullUuid;
     type: 'support_bundle';
-    status: SupportBundleOperationStatus;
+    status: ManagementOperationStatus;
     requested_by_user_id: NullUuid;
     created_at: string;
     started_at: string | null;
@@ -373,8 +373,8 @@ export type SupportBundleOperation = {
 };
 
 export type SupportBundleSummary = {
-    last_finished: SupportBundleOperation | null;
-    current: SupportBundleOperation | null;
+    last_finished: ManagementOperation | null;
+    current: ManagementOperation | null;
 };
 
 export type EdgeType = {
