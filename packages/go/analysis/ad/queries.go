@@ -1468,6 +1468,24 @@ func FetchLinkedGroup(ctx context.Context, db graph.Database, node *graph.Node) 
 	})
 }
 
+func FetchSyncedIdentityPaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:        node,
+		Direction:   graph.DirectionOutbound,
+		BranchQuery: FilterSyncedIdentities,
+	})
+}
+
+func FetchSyncedIdentities(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:        node,
+		Direction:   graph.DirectionOutbound,
+		BranchQuery: FilterSyncedIdentities,
+		Skip:        skip,
+		Limit:       limit,
+	})
+}
+
 func FetchGroupMemberPaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 	return ops.TraversePaths(tx, ops.TraversalPlan{
 		Root:        node,
