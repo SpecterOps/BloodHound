@@ -19,6 +19,7 @@ package services
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"time"
 
@@ -49,6 +50,7 @@ type FeatureFlag struct {
 	Description   string
 	Enabled       bool
 	UserUpdatable bool
+	DeletedAt     sql.NullTime
 }
 
 // TODO: once the audit log middleware is instantuated, this should be removed

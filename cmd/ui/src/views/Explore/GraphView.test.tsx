@@ -20,6 +20,7 @@ import {
     cypherTestResponse,
     mockGetConfigurationHandler,
     mockKindsHandler,
+    mockSourceKindsHandler,
     singleNodeResponse,
 } from 'bh-shared-ui';
 import { GraphEdge } from 'js-client-library';
@@ -98,6 +99,7 @@ const server = setupServer(
     }),
     mockKindsHandler(),
     mockGetConfigurationHandler(),
+    mockSourceKindsHandler(),
     rest.get(`/api/v2/roles`, (req, res, ctx) => {
         return res(
             ctx.json({

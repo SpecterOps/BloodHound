@@ -70,7 +70,18 @@ const server = setupServer(
             ctx.json({
                 data: {
                     edges: [],
-                    nodes: [],
+                    nodes: {
+                        '1': {
+                            label: 'USER_00001@TESTLAB.LOCAL',
+                            kind: 'User',
+                            kinds: ['User', 'Base'],
+                            objectId: '00000-00001',
+                            lastSeen: '',
+                            isTierZero: false,
+                            isOwnedObject: false,
+                            properties: { objectid: '00000-00001', name: 'USER_00001@TESTLAB.LOCAL' },
+                        },
+                    },
                 },
             })
         );
@@ -158,6 +169,7 @@ describe('GroupManagement', () => {
         const entityPanel = screen.getByTestId('explore_entity-information-panel');
 
         await user.click(listItem);
+
         const header = await waitFor(() => screen.getByText('Object Information'));
 
         expect(header).toBeInTheDocument();
