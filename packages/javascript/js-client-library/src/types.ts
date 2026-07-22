@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { EnvironmentRequest } from './requests';
-import { SupportBundleStatus } from './responses';
+import { SupportBundleSummaryStatus } from './responses';
 
 export interface Serial {
     id: number;
@@ -573,7 +573,7 @@ export type Client = {
     type: string;
     issuer_address: string;
     issuer_address_override: string;
-    support_bundle?: SupportBundleStatus | null;
+    support_bundle_summary?: SupportBundleSummaryStatus | null;
 };
 
 export type FileIngestJob = TimestampFields & {
