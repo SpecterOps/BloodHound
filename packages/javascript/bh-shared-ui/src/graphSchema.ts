@@ -444,6 +444,7 @@ export enum ActiveDirectoryKindProperties {
     CertTemplateOID = 'certtemplateoid',
     GroupLinkID = 'grouplinkid',
     ObjectGUID = 'objectguid',
+    AADObjectID = 'aadobjectid',
     ExpirePasswordsOnSmartCardOnlyAccounts = 'expirepasswordsonsmartcardonlyaccounts',
     MachineAccountQuota = 'machineaccountquota',
     SupportedKerberosEncryptionTypes = 'supportedencryptiontypes',
@@ -669,6 +670,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Group Link ID';
         case ActiveDirectoryKindProperties.ObjectGUID:
             return 'Object GUID';
+        case ActiveDirectoryKindProperties.AADObjectID:
+            return 'Microsoft Entra Object ID';
         case ActiveDirectoryKindProperties.ExpirePasswordsOnSmartCardOnlyAccounts:
             return 'Expire Passwords on Smart Card only Accounts';
         case ActiveDirectoryKindProperties.MachineAccountQuota:
@@ -1041,6 +1044,8 @@ export enum AzureRelationshipKind {
     AZMGGrantAppRoles = 'AZMGGrantAppRoles',
     AZMGGrantRole = 'AZMGGrantRole',
     SyncedToEntraUser = 'SyncedToEntraUser',
+    SyncedToEntraDSUser = 'SyncedToEntraDSUser',
+    SyncedToEntraDSGroup = 'SyncedToEntraDSGroup',
     AZRoleEligible = 'AZRoleEligible',
     AZRoleApprover = 'AZRoleApprover',
     AZAuthenticatesTo = 'AZAuthenticatesTo',
@@ -1141,6 +1146,10 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'AZMGGrantRole';
         case AzureRelationshipKind.SyncedToEntraUser:
             return 'SyncedToEntraUser';
+        case AzureRelationshipKind.SyncedToEntraDSUser:
+            return 'SyncedToEntraDSUser';
+        case AzureRelationshipKind.SyncedToEntraDSGroup:
+            return 'SyncedToEntraDSGroup';
         case AzureRelationshipKind.AZRoleEligible:
             return 'AZRoleEligible';
         case AzureRelationshipKind.AZRoleApprover:
@@ -1332,6 +1341,7 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZMGGrantAppRoles,
         AzureRelationshipKind.AZMGGrantRole,
         AzureRelationshipKind.SyncedToEntraUser,
+        AzureRelationshipKind.SyncedToEntraDSUser,
         AzureRelationshipKind.AZRoleEligible,
         AzureRelationshipKind.AZRoleApprover,
         AzureRelationshipKind.Contains,
