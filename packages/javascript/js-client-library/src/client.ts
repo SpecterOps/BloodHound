@@ -2796,7 +2796,7 @@ class BHEAPIClient {
                 skip,
                 limit,
                 sort_by,
-                name,
+                name: name ? `~eq:${name}` : undefined,
             },
             paramsSerializer: { indexes: null },
         });
