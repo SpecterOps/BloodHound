@@ -16,7 +16,7 @@
 
 import { Button, ButtonProps } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { FC, ReactNode } from 'react';
+import { forwardRef, ReactNode } from 'react';
 
 const useStyles = makeStyles((theme) => ({
     button: {
@@ -44,17 +44,19 @@ export interface GraphButtonProps extends ButtonProps {
     displayText: string | ReactNode;
 }
 
-const GraphButton: FC<GraphButtonProps> = (props) => {
+const GraphButton = forwardRef<HTMLButtonElement, GraphButtonProps>((props, ref) => {
     const { displayText } = props;
     const attributes = { ...props };
     delete attributes.displayText;
     const styles = useStyles();
 
     return (
-        <Button {...attributes} disableRipple classes={{ root: styles.button }}>
+        <Button {...attributes} ref={ref} disableRipple classes={{ root: styles.button }}>
             {displayText}
         </Button>
     );
-};
+});
+
+GraphButton.displayName = 'GraphButton';
 
 export default GraphButton;
