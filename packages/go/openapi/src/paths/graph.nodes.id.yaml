@@ -30,16 +30,102 @@ get:
     - OpenGraph (Experimental)
     - Community
     - Enterprise
+  parameters:
+    - name: include-info
+      in: query
+      required: false
+      description: When true, populates `data.info` with kindinfo objects for the node's registered kinds.
+      schema:
+        type: boolean
+        default: false
   responses:
     200:
-      description: OK
+      description: |
+        OK
+
+        When `include-info=true`, the `info` field is populated with kindinfo objects.
       content:
         application/json:
           schema:
             type: object
             properties:
               data:
-                $ref: './../schemas/model.node-details.yaml'
+                allOf:
+                  - $ref: './../schemas/model.node-details.yaml'
+                  - type: object
+                    properties:
+                      info:
+                        type: array
+                        description: Kindinfo objects populated when `include-info=true`.
+                        items:
+                          type: object
+                          required:
+                            - name
+                            - title
+                            - position
+                            - node_kind_id
+                            - markdown
+                          properties:
+                            name:
+                              type: string
+                              description: Kindinfo key.
+                            title:
+                              type: string
+                              description: Human-readable kindinfo title.
+                            position:
+                              type: integer
+                              format: int32
+                              description: Display position for the kindinfo object.
+                            node_kind_id:
+                              type: integer
+                              format: int32
+                              description: Schema node kind ID associated with the kindinfo object.
+                            markdown:
+                              type: object
+                              required:
+                                - content
+                              properties:
+                                content:
+                                  type: string
+                                  description: Markdown content for the kindinfo object.
+          examples:
+            Info omitted:
+              summary: Node details when include-info is not present
+              value:
+                data:
+                  node_id: 1234567890
+                  kinds:
+                    - node_kind_id: 1
+                      name: User
+                    - node_kind_id: 2
+                      name: Entity
+                  properties:
+                    objectid: S-1-5-21-3130019616-2776909439-2417379446-1108
+                    name: ADMIN@CORP.EXAMPLE.COM
+                    displayName: Admin
+                    lastSeen: "2026-07-14T18:24:32Z"
+            Info included:
+              summary: Node details when include-info is true
+              value:
+                data:
+                  node_id: 1234567890
+                  kinds:
+                    - node_kind_id: 1
+                      name: User
+                    - node_kind_id: 2
+                      name: Entity
+                  properties:
+                    objectid: S-1-5-21-3130019616-2776909439-2417379446-1108
+                    name: ADMIN@CORP.EXAMPLE.COM
+                    displayName: Admin
+                    lastSeen: "2026-07-14T18:24:32Z"
+                  info:
+                    - name: overview
+                      title: Overview
+                      position: 0
+                      node_kind_id: 1
+                      markdown:
+                        content: This user has privileged access in the environment.
     400:
       $ref: './../responses/bad-request.yaml'
     401:

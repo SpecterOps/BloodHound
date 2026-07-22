@@ -171,7 +171,7 @@ func TestExtensions_GetOnStartExtensionData(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	customNodeKinds, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context, nil)
+	customNodeKinds, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context)
 	require.NoError(t, err)
 
 	customNodeKindNames := make(map[string]struct{}, len(customNodeKinds))

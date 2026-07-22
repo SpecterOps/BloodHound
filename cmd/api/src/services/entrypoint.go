@@ -192,6 +192,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 			RateLimitMiddleware: func() mux.MiddlewareFunc {
 				return middleware.DefaultRateLimitMiddleware(connections.RDMS)
 			},
+			DogTags: dogtagsService,
 		})
 
 		// Set neo4j batch and flush sizes

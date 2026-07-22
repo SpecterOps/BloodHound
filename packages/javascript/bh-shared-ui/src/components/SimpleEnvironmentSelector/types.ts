@@ -22,4 +22,8 @@ export const AZ_PLATFORM = 'azure-platform' as const;
 export type EnvironmentPlatform = typeof AD_PLATFORM | typeof AZ_PLATFORM;
 export type SelectorValueTypes = Environment['type'] | EnvironmentPlatform;
 
-export type SelectedEnvironment = { type: SelectorValueTypes | null; id: string | null };
+export type SelectedEnvironment = {
+    type: SelectorValueTypes | null;
+    id: string | null;
+    environment_kind_id?: Environment['environment_kind_id'] | null;
+};

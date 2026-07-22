@@ -15,15 +15,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useCallback, useMemo, useState } from 'react';
-import { parseItemId } from '../utils';
 import { useExploreParams } from './useExploreParams';
-import { useGraphItem } from './useGraphItem';
+import { useGraphItem } from './useGraphItem/useGraphItem';
+
+const HIDDEN_STRING = 'HIDDEN';
 
 export const useExploreSelectedItem = () => {
     const [previousSelectedItem, setPreviousSelectedItem] = useState<string | null>();
     const { selectedItem, setExploreParams } = useExploreParams();
 
-    const selectedItemQuery = useGraphItem(selectedItem!);
+    const selectedItemQuery = useGraphItem(selectedItem);
 
     /** Set the selected node or edge. The most recently selected item will stay highlighted */
     const setSelectedItem = useCallback(
@@ -48,37 +49,15 @@ export const useExploreSelectedItem = () => {
         }
     }, [setExploreParams, selectedItem]);
 
-    const selectedItemType = useMemo(
-        () => (selectedItem ? parseItemId(selectedItem).itemType : undefined),
-        [selectedItem]
-    );
-
-    const selectedHiddenEdge = {
-        id: selectedItem ? selectedItem : 'Hidden',
-        name: '** Hidden Edge **',
-        data: {},
-        sourceNode: {
-            id: 'HIDDEN',
-            objectId: 'HIDDEN',
-            name: 'HIDDEN',
-            type: 'HIDDEN',
-        },
-        targetNode: {
-            id: 'HIDDEN',
-            objectId: 'HIDDEN',
-            name: 'HIDDEN',
-            type: 'HIDDEN',
-        },
-    };
+    const isHidden = useMemo(() => selectedItem?.includes(HIDDEN_STRING), [selectedItem]);
 
     return {
         selectedItem,
         selectedItemQuery,
         setSelectedItem,
-        selectedItemType,
         clearSelectedItem,
-        selectedHiddenEdge,
         previousSelectedItem,
         setPreviousSelectedItem,
+        isHidden,
     };
 };

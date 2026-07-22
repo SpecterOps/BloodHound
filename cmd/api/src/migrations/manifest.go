@@ -72,7 +72,7 @@ func Version_930_Migration(nodeKindData schemalessNodeKindBackfillData) func(ctx
 		}
 
 		// Build a set of kind names already covered by custom_node_kinds.
-		existingCustomNodeKinds, err := nodeKindData.GetCustomNodeKinds(ctx, nil)
+		existingCustomNodeKinds, err := nodeKindData.GetCustomNodeKinds(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to fetch custom node kinds: %w", err)
 		}

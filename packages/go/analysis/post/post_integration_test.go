@@ -133,7 +133,7 @@ func TestFixManagementGroupNames(t *testing.T) {
 		common.ObjectID.String(): "ABC123",
 	}), azure.Entity, azure.Tenant)
 
-	err := azureAnalysis.FixManagementGroupNames(context.Background(), testCtx.Graph.Database)
+	err := azureAnalysis.FixManagementGroupNames(context.Background(), testCtx.Graph.Database, false)
 	require.NoError(t, err)
 
 	err = testCtx.Graph.Database.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
@@ -145,6 +145,50 @@ func TestFixManagementGroupNames(t *testing.T) {
 				} else {
 					count++
 					require.Equal(t, "MANAGEMENT GROUP@SPECTERDEV", name)
+				}
+			}
+
+			require.Equal(t, 1, count)
+
+			return nil
+		})
+	})
+
+	require.NoError(t, err)
+}
+
+func TestFixManagementGroupNames_UseRawObjectIDs(t *testing.T) {
+	var (
+		// This creates a new live integration test context with the graph database
+		// This call will load whatever BHE configuration the environment variable `INTEGRATION_CONFIG_PATH` points to.
+		testCtx = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+	)
+
+	// Management Group created with barebone details, using mixed casing to verify it is preserved
+	testCtx.NewNode(graph.AsProperties(map[string]any{
+		common.DisplayName.String(): "Management Group",
+		common.ObjectID.String():    "1234",
+		azure.TenantID.String():     "ABC123",
+	}), azure.Entity, azure.ManagementGroup)
+
+	// Tenant
+	testCtx.NewNode(graph.AsProperties(map[string]any{
+		common.Name.String():     "SpecterDev",
+		common.ObjectID.String(): "ABC123",
+	}), azure.Entity, azure.Tenant)
+
+	err := azureAnalysis.FixManagementGroupNames(context.Background(), testCtx.Graph.Database, true)
+	require.NoError(t, err)
+
+	err = testCtx.Graph.Database.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+		return tx.Nodes().Filter(query.Kind(query.Node(), azure.ManagementGroup)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+			count := 0
+			for node := range cursor.Chan() {
+				if name, err := node.Properties.Get(common.Name.String()).String(); err != nil {
+					return err
+				} else {
+					count++
+					require.Equal(t, "Management Group@SpecterDev", name)
 				}
 			}
 

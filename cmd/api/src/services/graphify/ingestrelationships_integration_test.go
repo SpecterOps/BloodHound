@@ -423,7 +423,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel}, ingestContext.UseRawObjectIDs)
 					require.NoError(t, err)
 
 					updates := slices.Collect(
@@ -467,7 +467,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel}, ingestContext.UseRawObjectIDs)
 					require.ErrorContains(t, err, "unable to resolve endpoint")
 					require.Empty(t, updatedIngestibleRels)
 
@@ -496,7 +496,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel}, ingestContext.UseRawObjectIDs)
 					require.ErrorContains(t, err, "unable to resolve endpoint")
 					require.Empty(t, updatedIngestibleRels)
 
@@ -525,7 +525,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel}, ingestContext.UseRawObjectIDs)
 					require.ErrorContains(t, err, "unable to resolve endpoint")
 					require.Empty(t, updatedIngestibleRels)
 
@@ -554,7 +554,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel}, ingestContext.UseRawObjectIDs)
 					require.ErrorContains(t, err, "ambigious matcher")
 					require.Empty(t, updatedIngestibleRels)
 
@@ -583,7 +583,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel}, ingestContext.UseRawObjectIDs)
 					require.ErrorContains(t, err, "ambigious matcher")
 					require.Empty(t, updatedIngestibleRels)
 
@@ -612,7 +612,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel}, ingestContext.UseRawObjectIDs)
 					require.NoError(t, err)
 
 					updates := slices.Collect(
@@ -657,7 +657,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel}, ingestContext.UseRawObjectIDs)
 					require.NoError(t, err)
 
 					updates := slices.Collect(
@@ -701,7 +701,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel}, ingestContext.UseRawObjectIDs)
 					require.NoError(t, err)
 
 					updates := slices.Collect(
@@ -744,7 +744,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel}, ingestContext.UseRawObjectIDs)
 					require.NoError(t, err)
 
 					updates := slices.Collect(
@@ -786,7 +786,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel}, ingestContext.UseRawObjectIDs)
 					require.ErrorContains(t, err, "unable to resolve endpoint")
 					require.Empty(t, updatedIngestibleRels)
 
@@ -815,7 +815,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel}, ingestContext.UseRawObjectIDs)
 					require.ErrorContains(t, err, "empty value")
 					require.Empty(t, updatedIngestibleRels)
 
@@ -844,7 +844,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel}, ingestContext.UseRawObjectIDs)
 					require.NoError(t, err)
 
 					updates := slices.Collect(
@@ -916,7 +916,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, rels)
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, rels, ingestContext.UseRawObjectIDs)
 					require.NoError(t, err)
 
 					updates := slices.Collect(
@@ -974,7 +974,7 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 
 				rels := []ein.IngestibleRelationship{rel} // simulate a "batch"
 
-				updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), endpoint.NewResolver(testContext.Graph.Database), rels)
+				updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), endpoint.NewResolver(testContext.Graph.Database), rels, false)
 				require.NoError(t, err)
 
 				require.Len(t, updatedIngestibleRels, 1)
@@ -1001,7 +1001,7 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 
 				rels := []ein.IngestibleRelationship{rel} // simulate a "batch"
 
-				updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), endpoint.NewResolver(testContext.Graph.Database), rels)
+				updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), endpoint.NewResolver(testContext.Graph.Database), rels, false)
 				require.Error(t, err)
 				require.Len(t, updatedIngestibleRels, 0)
 
@@ -1028,7 +1028,7 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 
 				rels := []ein.IngestibleRelationship{rel} // simulate a "batch"
 
-				updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), endpoint.NewResolver(testContext.Graph.Database), rels)
+				updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), endpoint.NewResolver(testContext.Graph.Database), rels, false)
 				require.Error(t, err)
 				require.Len(t, updatedIngestibleRels, 0)
 
@@ -1055,7 +1055,7 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 
 				rels := []ein.IngestibleRelationship{rel} // simulate a "batch"
 
-				updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), endpoint.NewResolver(testContext.Graph.Database), rels)
+				updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), endpoint.NewResolver(testContext.Graph.Database), rels, false)
 				require.NoError(t, err)
 
 				require.Len(t, updatedIngestibleRels, 1)
@@ -1077,7 +1077,7 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 			err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 				rels := []ein.IngestibleRelationship{} // simulate a "batch"
 
-				updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), endpoint.NewResolver(testContext.Graph.Database), rels)
+				updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), endpoint.NewResolver(testContext.Graph.Database), rels, false)
 				require.NoError(t, err)
 
 				require.Len(t, updatedIngestibleRels, 0)
