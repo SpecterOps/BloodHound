@@ -372,7 +372,7 @@ export type ManagementOperation = {
     execution_time: string;
 };
 
-export type SupportBundleSummary = {
+export type SupportBundleSummaryStatus = {
     last_finished: ManagementOperation | null;
     current: ManagementOperation | null;
 };
