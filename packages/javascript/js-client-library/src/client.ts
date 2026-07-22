@@ -799,9 +799,6 @@ class BHEAPIClient {
     requestSupportBundle = (clientId: string, type: string, options?: RequestOptions) =>
         this.baseClient.post(`/api/v2/clients/${clientId}/management`, { type }, options);
 
-    getSupportBundleArtifactStatus = (clientId: string, artifactId: string, options?: RequestOptions) =>
-        this.baseClient.get(`/api/v2/clients/${clientId}/artifacts/${artifactId}/status`, options);
-
     downloadSupportBundleArtifact = (clientId: string, artifactId: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/clients/${clientId}/artifacts/${artifactId}`,
