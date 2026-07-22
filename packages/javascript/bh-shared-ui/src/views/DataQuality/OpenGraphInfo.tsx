@@ -37,7 +37,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 // getLatestMetricStats keeps only the latest stat per kind_id (by created_at) and
-// splits the result into node stats and the latest relationship stat.
+// splits the result into node stats and the total relationship stat.
 export const getLatestMetricStats = (
     data: OpenGraphDataQualityStat[]
 ): { nodeStats: OpenGraphDataQualityStat[]; relationshipStat: OpenGraphDataQualityStat } => {
@@ -52,7 +52,11 @@ export const getLatestMetricStats = (
 
     const stats = Array.from(latestStatsByMetricKind.values());
     const nodeStats = stats.filter((stat) => stat.metric_type === 'node');
-    const relationshipStat = stats.find((stat) => stat.metric_type === 'relationship');
+    const relationshipStats = stats.filter((stat) => stat.metric_type === 'relationship');
+    const relationshipStat = relationshipStats.reduce(
+        (total, stat) => ({ ...stat, metric_value: (total?.metric_value ?? 0) + stat.metric_value }),
+        undefined
+    );
 
     return { nodeStats, relationshipStat };
 };

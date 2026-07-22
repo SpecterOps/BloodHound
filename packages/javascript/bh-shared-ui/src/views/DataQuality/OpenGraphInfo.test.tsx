@@ -85,15 +85,16 @@ describe('getLatestMetricStats', () => {
         expect(nodeStats[0]).toBe(newer);
     });
 
-    it('splits mixed node and relationship stats', () => {
+    it('splits mixed node stats and totals relationship stats', () => {
         const node1 = testNodeStat({ kind_id: 1, metric_name: 'User' });
         const node2 = testNodeStat({ kind_id: 2, metric_name: 'Group' });
-        const relationship = testRelationshipStat({ kind_id: 100 });
+        const relationship = testRelationshipStat({ kind_id: 100, metric_value: 50 });
+        const otherRelationship = testRelationshipStat({ kind_id: 101, metric_value: 25 });
 
-        const { nodeStats, relationshipStat } = getLatestMetricStats([node1, node2, relationship]);
+        const { nodeStats, relationshipStat } = getLatestMetricStats([node1, node2, relationship, otherRelationship]);
 
         expect(nodeStats).toEqual([node1, node2]);
-        expect(relationshipStat).toBe(relationship);
+        expect(relationshipStat?.metric_value).toBe(75);
     });
 
     it('returns undefined relationship stats when only node stats are present', () => {
@@ -201,13 +202,14 @@ describe('OpenGraphPlatformInfo', () => {
         respondWith(AGGREGATION_URL, [
             ogStat({ id: 1, kind_id: 1, metric_name: 'User', metric_value: 10 }),
             ogStat({ id: 2, kind_id: 100, metric_type: 'relationship', metric_value: 50 }),
+            ogStat({ id: 3, kind_id: 101, metric_type: 'relationship', metric_value: 25 }),
         ]);
 
         render(<OpenGraphPlatformInfo contextKindId={101} />);
 
         expect(await screen.findByText('User')).toBeInTheDocument();
         expect(screen.getByText('Relationships')).toBeInTheDocument();
-        expect(screen.getByText('50')).toBeInTheDocument();
+        expect(screen.getByText('75')).toBeInTheDocument();
     });
 
     it('calls onDataError and renders nothing when the aggregation request fails', async () => {
