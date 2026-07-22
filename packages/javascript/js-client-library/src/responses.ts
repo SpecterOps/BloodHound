@@ -352,7 +352,6 @@ export enum ManagementOperationStatus {
     FAILED = 'failed',
     CANCELED = 'canceled',
 }
-export type SupportBundleArtifactStatus = 'pending' | 'complete' | 'failed' | null;
 
 export type NullUuid = {
     uuid: string | null;
