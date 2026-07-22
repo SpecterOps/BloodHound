@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { AxiosResponse } from 'axios';
-import type { EnvironmentRequest } from './requests';
-import type {
+import { EnvironmentRequest } from './requests';
+import {
     AssetGroupTag,
     AssetGroupTagCertificationRecord,
     AssetGroupTagHistoryRecord,
@@ -45,7 +45,7 @@ import type {
     WebhookSecret,
     WebhookTest,
 } from './types';
-import type { ConfigurationPayload } from './utils/config';
+import { ConfigurationPayload } from './utils/config';
 
 export interface BasicResponse<T> {
     data: T;
@@ -350,7 +350,7 @@ export enum SupportBundleOperationStatus {
     RUNNING = 'running',
     SUCCEEDED = 'succeeded',
     FAILED = 'failed',
-    CANCELLED = 'cancelled',
+    CANCELED = 'canceled',
 }
 export type SupportBundleArtifactStatus = 'pending' | 'complete' | 'failed' | null;
 
