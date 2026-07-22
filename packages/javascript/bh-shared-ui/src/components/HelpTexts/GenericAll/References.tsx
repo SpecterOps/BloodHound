@@ -214,6 +214,13 @@ const References: FC = () => {
             <Link target='_blank' rel='noopener noreferrer' href='https://github.com/CravateRouge/bloodyAD'>
                 https://github.com/CravateRouge/bloodyAD
             </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://www.synacktiv.com/publications/site-unseen-enumerating-and-attacking-active-directory-sites'>
+                https://www.synacktiv.com/publications/site-unseen-enumerating-and-attacking-active-directory-sites
+            </Link>
         </Box>
     );
 };

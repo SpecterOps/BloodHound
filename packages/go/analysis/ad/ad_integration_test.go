@@ -752,6 +752,50 @@ func TestFetchGPOAffectedContainerPaths(t *testing.T) {
 	})
 }
 
+func TestFetchGPOAffectedSites(t *testing.T) {
+	var (
+		testContext   = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		containedSite *graph.Node
+		directSite    *graph.Node
+	)
+
+	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+		var (
+			domainSID string
+			err       error
+		)
+
+		harness.GPOEnforcement.Setup(testContext)
+
+		if domainSID, err = harness.GPOEnforcement.Domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+			return err
+		}
+
+		directSite = testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:     "Direct Site",
+			common.ObjectID: "direct-site",
+			ad.DomainSID:    domainSID,
+		}), ad.Entity, ad.Site)
+
+		containedSite = testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:     "Contained Site",
+			common.ObjectID: "contained-site",
+			ad.DomainSID:    domainSID,
+		}), ad.Entity, ad.Site)
+
+		testContext.NewRelationship(harness.GPOEnforcement.GPOEnforced, directSite, ad.GPLink, integration.DefaultRelProperties)
+		testContext.NewRelationship(harness.GPOEnforcement.Domain, containedSite, ad.Contains, integration.DefaultRelProperties)
+		return nil
+	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+		affectedSites, err := adAnalysis.FetchGPOAffectedSites(tx, harness.GPOEnforcement.GPOEnforced, 0, 0)
+
+		test.RequireNilErr(t, err)
+		require.Equal(t, 1, affectedSites.Len())
+		require.Contains(t, affectedSites.IDs(), directSite.ID)
+		require.NotContains(t, affectedSites.IDs(), containedSite.ID)
+	})
+}
+
 func TestCreateGPOAffectedIntermediariesListDelegateAffectedContainers(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
@@ -1659,16 +1703,55 @@ func TestFetchAllEnforcedGPOs(t *testing.T) {
 }
 
 func TestFetchEntityLinkedGPOList(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+	var (
+		testContext   = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		containedSite *graph.Node
+		directSite    *graph.Node
+	)
 
 	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+		var (
+			domainSID string
+			err       error
+		)
+
 		harness.GPOEnforcement.Setup(testContext)
+
+		if domainSID, err = harness.GPOEnforcement.Domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+			return err
+		}
+
+		directSite = testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:     "Direct Linked Site",
+			common.ObjectID: "direct-linked-site",
+			ad.DomainSID:    domainSID,
+		}), ad.Entity, ad.Site)
+
+		containedSite = testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:     "Contained Linked Site",
+			common.ObjectID: "contained-linked-site",
+			ad.DomainSID:    domainSID,
+		}), ad.Entity, ad.Site)
+
+		testContext.NewRelationship(harness.GPOEnforcement.GPOEnforced, directSite, ad.GPLink, integration.DefaultRelProperties)
+		testContext.NewRelationship(harness.GPOEnforcement.Domain, containedSite, ad.Contains, integration.DefaultRelProperties)
 		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 		gpos, err := adAnalysis.FetchEntityLinkedGPOList(tx, harness.GPOEnforcement.Domain, 0, 0)
 
 		test.RequireNilErr(t, err)
 		require.Equal(t, 2, gpos.Len())
+
+		gpos, err = adAnalysis.FetchEntityLinkedGPOList(tx, directSite, 0, 0)
+
+		test.RequireNilErr(t, err)
+		require.Equal(t, 1, gpos.Len())
+		require.Contains(t, gpos.IDs(), harness.GPOEnforcement.GPOEnforced.ID)
+
+		gpos, err = adAnalysis.FetchEntityLinkedGPOList(tx, containedSite, 0, 0)
+
+		test.RequireNilErr(t, err)
+		require.Equal(t, 0, gpos.Len())
 	})
 }
 

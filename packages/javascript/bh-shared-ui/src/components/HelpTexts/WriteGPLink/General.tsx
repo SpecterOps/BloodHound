@@ -23,29 +23,25 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetType, target
     return (
         <>
             <Typography variant='body2'>
-                {groupSpecialFormat(sourceType, sourceName)} has the permissions to modify the gPLink attribute of{' '}
+                {groupSpecialFormat(sourceType, sourceName)} has permission to modify the gPLink attribute of{' '}
                 {targetType} {targetName}.
             </Typography>
 
             <Typography variant='body2'>
-                The ability to alter the gPLink attribute may allow an attacker to apply a malicious Group Policy Object
-                (GPO) to all child user and computer objects (including the ones located in nested OUs). This can be
-                exploited to make said child objects execute arbitrary commands through an immediate scheduled task,
-                thus compromising them.
+                Modifying an object's gPLink attribute can allow an attacker to link a malicious Group Policy Object
+                (GPO) so it applies to affected users and computers. That GPO can force those objects to execute
+                arbitrary commands, for example through an immediate scheduled task.
             </Typography>
-
             <Typography variant='body2'>
-                Successful exploitation will require the possibility to add non-existing DNS records to the domain and
-                to create machine accounts. Alternatively, an already compromised domain-joined machine may be used to
-                perform the attack. Note that the attack vector implementation is not trivial and will require some
-                setup.
+                For domain and OU objects, affected child users and computers include those contained directly within
+                the domain or OU, as well as those in nested OUs. However, unless the GPO link is enforced, some users
+                and computers may not be affected if GPO inheritance is blocked on a containing OU.
             </Typography>
-
             <Typography variant='body2'>
-                Alternatively, the ability to modify the gPLink attribute can be exploited in conjunction with write
-                permissions on a GPO. In such a situation, an attacker could first inject a malicious scheduled task in
-                the controlled GPO, and then link the GPO to the target through its gPLink attribute, making all child
-                users and computers apply the malicious GPO and execute arbitrary commands.
+                For site objects, affected computers include the site's domain controllers, and also computers whose IP
+                addresses fall within one of the site's subnets. If the site is the default site, affected computers
+                also include computers that do not map to any other site. Affected users are those who sign in to the
+                affected computers.
             </Typography>
         </>
     );

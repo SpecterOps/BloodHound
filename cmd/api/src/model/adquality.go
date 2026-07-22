@@ -34,6 +34,9 @@ type ADDataQualityStat struct {
 	NTAuthStores           int         `json:"ntauthstores" gorm:"column:ntauthstores"`
 	CertTemplates          int         `json:"certtemplates" gorm:"column:certtemplates"`
 	IssuancePolicies       int         `json:"issuancepolicies" gorm:"column:issuancepolicies"`
+	Sites                  int         `json:"sites" gorm:"column:sites"`
+	SiteServers            int         `json:"siteservers" gorm:"column:siteservers"`
+	SiteSubnets            int         `json:"sitesubnets" gorm:"column:sitesubnets"`
 	ACLs                   int         `json:"acls" gorm:"column:acls"`
 	Sessions               int         `json:"sessions"`
 	Relationships          int         `json:"relationships"`
@@ -58,6 +61,9 @@ type ADDataQualityAggregation struct {
 	NTAuthStores           int     `json:"ntauthstores" gorm:"column:ntauthstores"`
 	CertTemplates          int     `json:"certtemplates" gorm:"column:certtemplates"`
 	IssuancePolicies       int     `json:"issuancepolicies" gorm:"column:issuancepolicies"`
+	Sites                  int     `json:"sites" gorm:"column:sites"`
+	SiteServers            int     `json:"siteservers" gorm:"column:siteservers"`
+	SiteSubnets            int     `json:"sitesubnets" gorm:"column:sitesubnets"`
 	Acls                   int     `json:"acls" gorm:"column:acls"`
 	Sessions               int     `json:"sessions"`
 	Relationships          int     `json:"relationships"`
