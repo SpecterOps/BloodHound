@@ -204,17 +204,7 @@ func deleteNodesByOperation(ctx context.Context, graphDB graph.Database, deleteR
 	})
 
 	nodeOperation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan graph.ID) error {
-		for {
-			if nextID, hasNextID := channels.Receive(ctx, inC); hasNextID {
-				if err := batch.DeleteNode(nextID); err != nil {
-					return err
-				}
-			} else {
-				break
-			}
-		}
-
-		return nil
+		return drainAndDelete(ctx, inC, batch.DeleteNode)
 	})
 
 	return nodeOperation.Done()
@@ -246,18 +236,24 @@ func deleteRelationshipsByOperation(ctx context.Context, graphDB graph.Database,
 	})
 
 	edgeOperation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan graph.ID) error {
-		for {
-			if nextID, hasNextID := channels.Receive(ctx, inC); hasNextID {
-				if err := batch.DeleteRelationship(nextID); err != nil {
-					return err
-				}
-			} else {
-				break
-			}
-		}
-
-		return nil
+		return drainAndDelete(ctx, inC, batch.DeleteRelationship)
 	})
 
 	return edgeOperation.Done()
+}
+
+// drainAndDelete receives IDs from inC until the channel is drained, invoking deleteByID for each ID and returning the
+// first error encountered. It preserves the channels.Receive termination semantics used by the operation writers.
+func drainAndDelete(ctx context.Context, inC <-chan graph.ID, deleteByID func(graph.ID) error) error {
+	for {
+		if nextID, hasNextID := channels.Receive(ctx, inC); hasNextID {
+			if err := deleteByID(nextID); err != nil {
+				return err
+			}
+		} else {
+			break
+		}
+	}
+
+	return nil
 }
