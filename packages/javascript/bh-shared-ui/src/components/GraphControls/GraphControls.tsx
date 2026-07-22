@@ -14,10 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faCropAlt } from '@fortawesome/free-solid-svg-icons';
+import {
+    faCropAlt,
+    faDiagramProject,
+    faDownload,
+    faEye,
+    faEyeSlash,
+    faMagnifyingGlass,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { MenuItem, Popper } from '@mui/material';
-import { TooltipContent, TooltipPortal, TooltipProvider, TooltipRoot, TooltipTrigger } from 'doodle-ui';
+import { MenuItem, Popper, Tooltip } from '@mui/material';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
 import { useRef, useState } from 'react';
@@ -85,34 +91,40 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         }
     };
 
+    const searchButton = (
+        <GraphButton
+            aria-label='Search'
+            onClick={() => setIsCurrentSearchOpen(true)}
+            displayText={<FontAwesomeIcon aria-hidden='true' icon={faMagnifyingGlass} />}
+            disabled={isCurrentSearchOpen}
+            data-testid='explore_graph-controls_search-current-results'
+        />
+    );
+
     return (
         <>
             <div
                 data-testid='explore_graph-controls'
                 className='flex gap-1 pointer-events-auto'
                 ref={currentSearchAnchorElement}>
-                <TooltipProvider>
-                    <TooltipRoot>
-                        <TooltipTrigger className='pointer-events-auto'>
-                            {/* tooltip won't show without this wrapper div for some reason */}
-                            <div>
-                                <GraphButton
-                                    aria-label='Reset Graph'
-                                    onClick={onReset}
-                                    displayText={<FontAwesomeIcon aria-label='reset graph view' icon={faCropAlt} />}
-                                    data-testid='explore_graph-controls_reset-button'
-                                />
-                            </div>
-                        </TooltipTrigger>
-                        <TooltipPortal>
-                            <TooltipContent className='dark:bg-neutral-dark-5 border-0'>
-                                <span>Reset Graph</span>
-                            </TooltipContent>
-                        </TooltipPortal>
-                    </TooltipRoot>
-                </TooltipProvider>
+                <Tooltip placement='top' title='Reset Graph'>
+                    <GraphButton
+                        aria-label='Reset Graph'
+                        onClick={onReset}
+                        displayText={<FontAwesomeIcon aria-hidden='true' icon={faCropAlt} />}
+                        data-testid='explore_graph-controls_reset-button'
+                    />
+                </Tooltip>
 
-                <GraphMenu label={`${!showNodeLabels || !showEdgeLabels ? 'Show' : 'Hide'} Labels`}>
+                <GraphMenu
+                    controlId='labels'
+                    displayText={
+                        <FontAwesomeIcon
+                            aria-hidden='true'
+                            icon={!showNodeLabels || !showEdgeLabels ? faEyeSlash : faEye}
+                        />
+                    }
+                    label={`${!showNodeLabels || !showEdgeLabels ? 'Show' : 'Hide'} Labels`}>
                     <MenuItem
                         aria-label={`${!showEdgeLabels ? 'Show' : 'Hide'} All Labels Toggle`}
                         data-testid='explore_graph-controls_all-labels-toggle'
@@ -133,7 +145,10 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                     </MenuItem>
                 </GraphMenu>
 
-                <GraphMenu label='Layout'>
+                <GraphMenu
+                    controlId='layout'
+                    displayText={<FontAwesomeIcon aria-hidden='true' icon={faDiagramProject} />}
+                    label='Layout'>
                     {layoutOptions.map((buttonLabel) => {
                         const tableViewIsSelected = isExploreTableSelected && searchType === 'cypher';
                         const isSelected = tableViewIsSelected
@@ -153,19 +168,18 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                     })}
                 </GraphMenu>
 
-                <GraphMenu label='Export'>
+                <GraphMenu
+                    controlId='export'
+                    displayText={<FontAwesomeIcon aria-hidden='true' icon={faDownload} />}
+                    label='Export'>
                     <MenuItem onClick={() => exportToJson(jsonData)} disabled={isEmpty(jsonData)}>
                         JSON
                     </MenuItem>
                 </GraphMenu>
 
-                <GraphButton
-                    aria-label='Search node in results'
-                    onClick={() => setIsCurrentSearchOpen(true)}
-                    displayText={'Search'}
-                    disabled={isCurrentSearchOpen}
-                    data-testid='explore_graph-controls_search-current-results'
-                />
+                <Tooltip placement='top' title='Search'>
+                    {searchButton}
+                </Tooltip>
             </div>
             <Popper
                 open={isCurrentSearchOpen}
