@@ -92,3 +92,27 @@ func BuildRoleView(role services.Role) RoleView {
 func (s RoleView) JSONView() ([]byte, error) {
 	return json.Marshal(s)
 }
+
+// RoleListView is the JSON shape returned by the identity handlers for a list of
+// roles. It wraps the roles under a "roles" key so the payload matches the
+// data.roles envelope the GET /api/v2/roles endpoint has always returned.
+type RoleListView struct {
+	Roles []RoleView `json:"roles"`
+}
+
+// BuildRoleListView projects a slice of services.Role into the list view the
+// handlers return in their JSON envelope.
+func BuildRoleListView(roles []services.Role) RoleListView {
+	var views = make([]RoleView, 0, len(roles))
+	for _, role := range roles {
+		views = append(views, BuildRoleView(role))
+	}
+
+	return RoleListView{Roles: views}
+}
+
+// JSONView marshals the view to the byte slice expected by responses.WriteBasic,
+// satisfying the responses.JSONViewer contract.
+func (s RoleListView) JSONView() ([]byte, error) {
+	return json.Marshal(s)
+}

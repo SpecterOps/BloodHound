@@ -114,22 +114,41 @@ func (s *Store) GetRole(ctx context.Context, id int32) (services.Role, error) {
 		return services.Role{}, fmt.Errorf("finding role: %s", err)
 	}
 
-	// Fetch permissions associated with this role via the join table.
-	permQuery := fmt.Sprintf(
-		"SELECT p.id, p.authority, p.name, p.created_at, p.updated_at FROM %s p JOIN %s rp ON rp.permission_id = p.id WHERE rp.role_id = $1",
-		tablePermissions,
-		tableRolesPermissions,
-	)
-	permRows, permErr := s.db.Query(ctx, permQuery, id)
-	if permErr != nil {
-		return services.Role{}, fmt.Errorf("querying permissions for role: %s", permErr)
-	}
-	permissionRows, permErr := pgx.CollectRows(permRows, pgx.RowToStructByName[permission])
-	if permErr != nil {
-		return services.Role{}, fmt.Errorf("collecting permissions for role: %s", permErr)
+	permissionRows, err := s.getRolePermissions(ctx, roleRow.ID)
+	if err != nil {
+		return services.Role{}, err
 	}
 
 	return toRole(roleRow, permissionRows), nil
+}
+
+// getRolePermissions retrieves the permissions associated with a role via the
+// join table. It is shared by GetRole and ListRoles so both issue the same
+// per-role permissions query.
+func (s *Store) getRolePermissions(ctx context.Context, roleID int32) ([]permission, error) {
+	var (
+		sb   = sqlbuilder.PostgreSQL.NewSelectBuilder()
+		rows pgx.Rows
+		err  error
+	)
+
+	sb.Select("p.id", "p.authority", "p.name", "p.created_at", "p.updated_at")
+	sb.From(tablePermissions + " p")
+	sb.Join(tableRolesPermissions+" rp", "rp.permission_id = p.id")
+	sb.Where(sb.Equal("rp.role_id", roleID))
+
+	query, args := sb.Build()
+
+	rows, err = s.db.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("querying permissions for role: %s", err)
+	}
+	permissionRows, err := pgx.CollectRows(rows, pgx.RowToStructByName[permission])
+	if err != nil {
+		return nil, fmt.Errorf("collecting permissions for role: %s", err)
+	}
+
+	return permissionRows, nil
 }
 
 // roleColumns maps the API-facing role field names to their underlying database
@@ -250,18 +269,9 @@ func (s *Store) ListRoles(ctx context.Context, queryFilters params.Filters, sort
 
 	result = make([]services.Role, 0, len(listedRoles))
 	for _, roleRow := range listedRoles {
-		permQuery := fmt.Sprintf(
-			"SELECT p.id, p.authority, p.name, p.created_at, p.updated_at FROM %s p JOIN %s rp ON rp.permission_id = p.id WHERE rp.role_id = $1",
-			tablePermissions,
-			tableRolesPermissions,
-		)
-		permRows, permErr := s.db.Query(ctx, permQuery, roleRow.ID)
-		if permErr != nil {
-			return nil, fmt.Errorf("querying permissions for role: %s", permErr)
-		}
-		permissionRows, permErr := pgx.CollectRows(permRows, pgx.RowToStructByName[permission])
-		if permErr != nil {
-			return nil, fmt.Errorf("collecting permissions for role: %s", permErr)
+		permissionRows, err := s.getRolePermissions(ctx, roleRow.ID)
+		if err != nil {
+			return nil, err
 		}
 
 		result = append(result, toRole(roleRow, permissionRows))

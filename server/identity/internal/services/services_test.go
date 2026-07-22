@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/identity/internal/services"
 	"github.com/specterops/bloodhound/server/identity/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
@@ -137,6 +138,70 @@ func TestService_GetRole(t *testing.T) {
 			databaseMock.EXPECT().GetRole(ctx, roleID).Return(tt.dbResult, tt.dbErr)
 
 			result, err := svc.GetRole(ctx, roleID)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.wantResult, result)
+			}
+		})
+	}
+}
+
+func TestService_ListRoles(t *testing.T) {
+	var (
+		ctx           = context.Background()
+		queryFilters  = params.Filters{"name": {{Operator: params.Equals, Value: "Administrator"}}}
+		sortItems     = params.SortItems{{Field: "name", Direction: params.Ascending}}
+		unexpectedErr = errors.New("connection refused")
+		expected      = []services.Role{
+			{
+				ID:          3,
+				Name:        "Administrator",
+				Description: "Can manage the application",
+				Permissions: []services.Permission{
+					{ID: 1, Authority: "app", Name: "ManageProviders"},
+				},
+				CreatedAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+				UpdatedAt: time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC),
+			},
+		}
+	)
+
+	tests := []struct {
+		name       string
+		dbResult   []services.Role
+		dbErr      error
+		wantResult []services.Role
+		wantErr    error
+	}{
+		{
+			name:       "returns the roles on success",
+			dbResult:   expected,
+			wantResult: expected,
+		},
+		{
+			name:       "returns an empty slice when no roles match",
+			dbResult:   []services.Role{},
+			wantResult: []services.Role{},
+		},
+		{
+			name:    "propagates unexpected database errors",
+			dbErr:   unexpectedErr,
+			wantErr: unexpectedErr,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				databaseMock = mocks.NewMockDatabase(t)
+				svc          = services.NewService(databaseMock)
+			)
+
+			databaseMock.EXPECT().ListRoles(ctx, queryFilters, sortItems).Return(tt.dbResult, tt.dbErr)
+
+			result, err := svc.ListRoles(ctx, queryFilters, sortItems)
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 			} else {
