@@ -16847,6 +16847,9 @@
           "403": {
             "$ref": "#/components/responses/forbidden"
           },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
           },
