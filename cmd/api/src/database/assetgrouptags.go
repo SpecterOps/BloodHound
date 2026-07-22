@@ -768,10 +768,12 @@ func (s *BloodhoundDB) InsertSelectorNodes(ctx context.Context, nodes []model.As
 
 func insertSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []model.AssetGroupSelectorNode) error {
 	var (
-		batchValues = newSelectorNodeBatchValues(nodes)
-		err         error
-		sqlArgs     []any
-		sqlQuery    string
+		batchValues    = newSelectorNodeBatchValues(nodes)
+		err            error
+		historyRecords []selectorNodeHistoryRecord
+		rows           pgx.Rows
+		sqlArgs        []any
+		sqlQuery       string
 	)
 
 	sqlQuery = fmt.Sprintf(`
@@ -807,36 +809,45 @@ func insertSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 		ON CONFLICT DO NOTHING
 		RETURNING selector_id, node_id, certified, node_name
 	)
-	INSERT INTO %s (actor, email, target, action, asset_group_tag_id, environment_id, note, created_at)
 	SELECT
-		$10::text,
-		''::text,
 		inserted.node_name,
-		CASE inserted.certified
-			WHEN $11::int THEN $12::text
-			WHEN $13::int THEN $14::text
-			WHEN $15::int THEN $16::text
-			ELSE $17::text
-		END,
-		selector.asset_group_tag_id,
-		NULL::text,
-		NULL::text,
-		current_timestamp
+		inserted.certified,
+		selector.asset_group_tag_id
 	FROM inserted
 	JOIN %s AS selector
 		ON selector.id = inserted.selector_id
-	WHERE inserted.certified <> $18::int`,
+	WHERE inserted.certified <> $10::int`,
 		model.AssetGroupSelectorNode{}.TableName(),
-		model.AssetGroupHistory{}.TableName(),
 		model.AssetGroupTagSelector{}.TableName(),
 	)
 
-	sqlArgs = append(batchValues.sqlArgs(), model.AssetGroupActorBloodHound)
-	sqlArgs = append(sqlArgs, selectorNodeCertificationHistoryActionSQLArgs()...)
+	sqlArgs = batchValues.sqlArgs()
 	sqlArgs = append(sqlArgs, int32(model.AssetGroupCertificationPending))
 
-	if _, err = transaction.Exec(ctx, sqlQuery, sqlArgs...); err != nil {
+	if rows, err = transaction.Query(ctx, sqlQuery, sqlArgs...); err != nil {
 		return fmt.Errorf("batch inserting selector nodes: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var (
+			assetGroupCertification int32
+			assetGroupTagId         int32
+			target                  string
+		)
+
+		if err = rows.Scan(&target, &assetGroupCertification, &assetGroupTagId); err != nil {
+			return fmt.Errorf("scanning inserted selector node history records: %w", err)
+		}
+
+		historyRecords = append(historyRecords, newSelectorNodeHistoryRecord(target, assetGroupCertification, assetGroupTagId))
+	}
+
+	rows.Close()
+	if err = rows.Err(); err != nil {
+		return fmt.Errorf("scanning inserted selector node history records: %w", err)
+	} else if err = insertSelectorNodeHistoryRecordsBatch(ctx, transaction, historyRecords); err != nil {
+		return fmt.Errorf("batch inserting selector node history records: %w", err)
 	}
 
 	return nil
@@ -879,10 +890,11 @@ func (s *BloodhoundDB) UpdateSelectorNodes(ctx context.Context, nodes []model.As
 
 func updateSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []model.AssetGroupSelectorNode) error {
 	var (
-		batchValues = newSelectorNodeBatchValues(nodes)
-		err         error
-		sqlArgs     []any
-		sqlQuery    string
+		batchValues    = newSelectorNodeBatchValues(nodes)
+		err            error
+		historyRecords []selectorNodeHistoryRecord
+		rows           pgx.Rows
+		sqlQuery       string
 	)
 
 	sqlQuery = fmt.Sprintf(`
@@ -931,21 +943,10 @@ func updateSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 			AND selector_node.node_id = batch.node_id
 		RETURNING selector_node.selector_id, selector_node.node_id
 	)
-	INSERT INTO %s (actor, email, target, action, asset_group_tag_id, environment_id, note, created_at)
 	SELECT
-		$10::text,
-		''::text,
 		changed_certifications.node_name,
-		CASE changed_certifications.certified
-			WHEN $11::int THEN $12::text
-			WHEN $13::int THEN $14::text
-			WHEN $15::int THEN $16::text
-			ELSE $17::text
-		END,
-		changed_certifications.asset_group_tag_id,
-		NULL::text,
-		NULL::text,
-		current_timestamp
+		changed_certifications.certified,
+		changed_certifications.asset_group_tag_id
 	FROM changed_certifications
 	JOIN updated
 		ON updated.selector_id = changed_certifications.selector_id
@@ -953,16 +954,49 @@ func updateSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 		model.AssetGroupSelectorNode{}.TableName(),
 		model.AssetGroupTagSelector{}.TableName(),
 		model.AssetGroupSelectorNode{}.TableName(),
-		model.AssetGroupHistory{}.TableName(),
 	)
-	sqlArgs = append(batchValues.sqlArgs(), model.AssetGroupActorBloodHound)
-	sqlArgs = append(sqlArgs, selectorNodeCertificationHistoryActionSQLArgs()...)
 
-	if _, err = transaction.Exec(ctx, sqlQuery, sqlArgs...); err != nil {
+	if rows, err = transaction.Query(ctx, sqlQuery, batchValues.sqlArgs()...); err != nil {
 		return fmt.Errorf("batch updating selector nodes: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var (
+			assetGroupCertification int32
+			assetGroupTagId         int32
+			target                  string
+		)
+
+		if err = rows.Scan(&target, &assetGroupCertification, &assetGroupTagId); err != nil {
+			return fmt.Errorf("scanning updated selector node history records: %w", err)
+		}
+
+		historyRecords = append(historyRecords, newSelectorNodeHistoryRecord(target, assetGroupCertification, assetGroupTagId))
+	}
+
+	rows.Close()
+	if err = rows.Err(); err != nil {
+		return fmt.Errorf("scanning updated selector node history records: %w", err)
+	} else if err = insertSelectorNodeHistoryRecordsBatch(ctx, transaction, historyRecords); err != nil {
+		return fmt.Errorf("batch inserting selector node history records: %w", err)
 	}
 
 	return nil
+}
+
+type selectorNodeHistoryRecord struct {
+	target          string
+	action          model.AssetGroupHistoryAction
+	assetGroupTagId int32
+}
+
+func newSelectorNodeHistoryRecord(target string, assetGroupCertification int32, assetGroupTagId int32) selectorNodeHistoryRecord {
+	return selectorNodeHistoryRecord{
+		target:          target,
+		action:          model.ToAssetGroupHistoryActionFromAssetGroupCertification(model.AssetGroupCertification(assetGroupCertification)),
+		assetGroupTagId: assetGroupTagId,
+	}
 }
 
 type selectorNodeBatchValues struct {
@@ -1055,16 +1089,60 @@ func (s selectorNodeKeyBatchValues) sqlArgs() []any {
 	}
 }
 
-func selectorNodeCertificationHistoryActionSQLArgs() []any {
-	return []any{
-		int32(model.AssetGroupCertificationRevoked),
-		string(model.AssetGroupHistoryActionCertifyNodeRevoked),
-		int32(model.AssetGroupCertificationManual),
-		string(model.AssetGroupHistoryActionCertifyNodeManual),
-		int32(model.AssetGroupCertificationAuto),
-		string(model.AssetGroupHistoryActionCertifyNodeAuto),
-		string(model.ToAssetGroupHistoryActionFromAssetGroupCertification(model.AssetGroupCertificationPending)),
+func insertSelectorNodeHistoryRecordsBatch(ctx context.Context, transaction pgx.Tx, historyRecords []selectorNodeHistoryRecord) error {
+	var (
+		assetGroupTagIds = make([]int32, 0, len(historyRecords))
+		actions          = make([]string, 0, len(historyRecords))
+		targets          = make([]string, 0, len(historyRecords))
+		sqlQuery         string
+		err              error
+	)
+
+	if len(historyRecords) == 0 {
+		return nil
 	}
+
+	for _, historyRecord := range historyRecords {
+		assetGroupTagIds = append(assetGroupTagIds, historyRecord.assetGroupTagId)
+		actions = append(actions, string(historyRecord.action))
+		targets = append(targets, historyRecord.target)
+	}
+
+	sqlQuery = fmt.Sprintf(`
+	WITH history AS (
+		SELECT *
+		FROM unnest(
+			$1::text[],
+			$2::text[],
+			$3::int[]
+		) AS history(target, action, asset_group_tag_id)
+	)
+	INSERT INTO %s (actor, email, target, action, asset_group_tag_id, environment_id, note, created_at)
+	SELECT
+		$4::text,
+		''::text,
+		history.target,
+		history.action,
+		history.asset_group_tag_id,
+		NULL::text,
+		NULL::text,
+		current_timestamp
+	FROM history`,
+		model.AssetGroupHistory{}.TableName(),
+	)
+
+	if _, err = transaction.Exec(
+		ctx,
+		sqlQuery,
+		pgtype.FlatArray[string](targets),
+		pgtype.FlatArray[string](actions),
+		pgtype.FlatArray[int32](assetGroupTagIds),
+		model.AssetGroupActorBloodHound,
+	); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type UpdateCertificationBySelectorNodeInput struct {
