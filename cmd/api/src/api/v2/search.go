@@ -59,11 +59,13 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid query parameter: %v", err), request), response)
 	} else if openGraphSearchFeatureFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureOpenGraphSearch); err != nil {
 		api.HandleDatabaseError(request, response, err)
+	} else if useRawObjectIDFeatureFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureUseRawObjectID); err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else if primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if searchableNodeKinds, err := getSearchableNodeKinds(openGraphSearchFeatureFlag.Enabled, primaryDisplayKinds, graph.StringsToKinds(nodeTypes)); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid type parameter", request), response)
-	} else if nodes, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, searchableNodeKinds, searchQuery, skip, limit); err != nil {
+	} else if nodes, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, searchableNodeKinds, searchQuery, skip, limit, useRawObjectIDFeatureFlag.Enabled); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error: %v", err), request), response)
 	} else {
 		result := filterAndFormatSearchResults(nodes, etacAllowedList, primaryDisplayKinds)

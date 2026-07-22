@@ -41,6 +41,29 @@ func assertExtensionDoesNotExist(t *testing.T, testSuite IntegrationTestSuite, e
 	assert.Equalf(t, 0, totalRecords, "extension should not exist: %s", extensionName)
 }
 
+// assertCustomNodeKindPresent asserts that a custom_node_kinds row exists for the given kind name.
+func assertCustomNodeKindPresent(t *testing.T, testSuite IntegrationTestSuite, kindName string) {
+	t.Helper()
+	icons, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context)
+	require.NoError(t, err)
+	for _, icon := range icons {
+		if icon.KindName == kindName {
+			return
+		}
+	}
+	assert.Failf(t, "custom node kind missing", "expected custom node kind %q to exist", kindName)
+}
+
+// assertCustomNodeKindAbsent asserts that no custom_node_kinds row exists for the given kind name.
+func assertCustomNodeKindAbsent(t *testing.T, testSuite IntegrationTestSuite, kindName string) {
+	t.Helper()
+	icons, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context)
+	require.NoError(t, err)
+	for _, icon := range icons {
+		assert.NotEqualf(t, kindName, icon.KindName, "custom node kind %q should have been removed", kindName)
+	}
+}
+
 func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 	t.Parallel()
 
@@ -302,12 +325,30 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
 				t.Helper()
 				nodeKinds := model.NodesInput{
-					{Name: "Full_NK1", DisplayName: "NK1", Description: "nk", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"},
+					{
+						Name:          "Full_NK1",
+						DisplayName:   "NK1",
+						Description:   "nk",
+						IsDisplayKind: true,
+						Icon:          "user",
+						IconColor:     "#2779F5",
+						Info: model.KindInfoInputs{
+							{InfoKey: "overview", Title: "Overview", Position: 1, Content: []byte(`{"markdown": {"content": "# Node Kind 1 Overview"}}`)},
+							{InfoKey: "details", Title: "Details", Position: 2, Content: []byte(`{"markdown": {"content": "Details about NK1"}}`)},
+						},
+					},
 					{Name: "Full_NK2", DisplayName: "NK2", Description: "nk", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"},
 					{Name: "Full_EnvKind1", DisplayName: "Env Kind 1", Description: "env", IsDisplayKind: false},
 				}
 				edgeKinds := model.RelationshipsInput{
-					{Name: "Full_RK1", Description: "rk", IsTraversable: true},
+					{
+						Name:          "Full_RK1",
+						Description:   "rk",
+						IsTraversable: true,
+						Info: model.KindInfoInputs{
+							{InfoKey: "usage", Title: "Usage", Position: 1, Content: []byte(`{"markdown": {"content": "# How to use this relationship"}}`)},
+						},
+					},
 				}
 				environments := model.EnvironmentsInput{
 					{EnvironmentKindName: "Full_EnvKind1", SourceKindName: "Full_SrcKind", PrincipalKinds: []string{"Full_NK1", "Full_NK2"}},
@@ -338,12 +379,30 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				t.Helper()
 				extensionInput := model.ExtensionInput{Name: "UpdateFullExt", DisplayName: "Update Full", Version: "1.0.0", Namespace: "UPD_FULL"}
 				existingNodeKinds := model.NodesInput{
-					{Name: "UpdFull_ExNK1", DisplayName: "ExNK1", Description: "ex", IsDisplayKind: true, Icon: "User", IconColor: "#F52735"},
+					{
+						Name:          "UpdFull_ExNK1",
+						DisplayName:   "ExNK1",
+						Description:   "ex",
+						IsDisplayKind: true,
+						Icon:          "User",
+						IconColor:     "#F52735",
+						Info: model.KindInfoInputs{
+							{InfoKey: "overview", Title: "Overview", Position: 1, Content: []byte(`{"markdown": {"content": "# Initial Overview"}}`)},
+							{InfoKey: "details", Title: "Details", Position: 2, Content: []byte(`{"markdown": {"content": "Initial details"}}`)},
+						},
+					},
 					{Name: "UpdFull_ExNK2", DisplayName: "ExNK2", Description: "ex", IsDisplayKind: true, Icon: "User", IconColor: "#F52735"},
 					{Name: "UpdFull_ExEnvKind1", DisplayName: "Ex Env 1", Description: "env", IsDisplayKind: false},
 				}
 				existingEdgeKinds := model.RelationshipsInput{
-					{Name: "UpdFull_ExRK1", Description: "ex rk", IsTraversable: true},
+					{
+						Name:          "UpdFull_ExRK1",
+						Description:   "ex rk",
+						IsTraversable: true,
+						Info: model.KindInfoInputs{
+							{InfoKey: "usage", Title: "Usage", Position: 1, Content: []byte(`{"markdown": {"content": "# Initial usage"}}`)},
+						},
+					},
 				}
 				existingEnvs := model.EnvironmentsInput{
 					{EnvironmentKindName: "UpdFull_ExEnvKind1", SourceKindName: "UpdFull_ExSrcKind", PrincipalKinds: []string{"UpdFull_ExNK1"}},
@@ -361,16 +420,35 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				require.NoError(t, err)
 
 				// Build the update input: keeps some existing, adds new, drops stale
+				// Also tests Info reconciliation: update overview, delete details, add examples
 				return testSetupData{
 					input: model.GraphExtensionInput{
 						ExtensionInput: extensionInput,
 						NodeKindsInput: model.NodesInput{
-							{Name: "UpdFull_ExNK1", DisplayName: "ExNK1 Updated", Description: "updated", IsDisplayKind: true, Icon: "User", IconColor: "#F52735"},
+							{
+								Name:          "UpdFull_ExNK1",
+								DisplayName:   "ExNK1 Updated",
+								Description:   "updated",
+								IsDisplayKind: true,
+								Icon:          "User",
+								IconColor:     "#F52735",
+								Info: model.KindInfoInputs{
+									{InfoKey: "overview", Title: "Updated Overview", Position: 1, Content: []byte(`{"markdown": {"content": "# Updated Overview"}}`)},
+									{InfoKey: "examples", Title: "Examples", Position: 3, Content: []byte(`{"markdown": {"content": "# New Examples"}}`)},
+								},
+							},
 							{Name: "UpdFull_NewNK3", DisplayName: "NewNK3", Description: "new", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"},
 							{Name: "UpdFull_ExEnvKind1", DisplayName: "Ex Env 1", Description: "env", IsDisplayKind: false},
 						},
 						RelationshipKindsInput: model.RelationshipsInput{
-							{Name: "UpdFull_ExRK1", Description: "ex rk updated", IsTraversable: true},
+							{
+								Name:          "UpdFull_ExRK1",
+								Description:   "ex rk updated",
+								IsTraversable: true,
+								Info: model.KindInfoInputs{
+									{InfoKey: "usage", Title: "Updated Usage", Position: 1, Content: []byte(`{"markdown": {"content": "# Updated usage"}}`)},
+								},
+							},
 							{Name: "UpdFull_NewRK2", Description: "new rk", IsTraversable: true},
 						},
 						EnvironmentsInput: model.EnvironmentsInput{
@@ -511,7 +589,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				require.NoError(t, err)
 				assert.True(t, updated)
 
-				icons, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context, nil)
+				icons, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context)
 				require.NoError(t, err)
 				var preserved *model.CustomNodeKind
 				for _, icon := range icons {
@@ -524,6 +602,220 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				assert.NotNil(t, preserved, "custom node kind should still exist after update without icon fields")
 				assert.Equal(t, "user", preserved.Config.Icon.Name, "icon name should be preserved from original upsert")
 				assert.Equal(t, "#2779F5", preserved.Config.Icon.Color, "icon color should be preserved from original upsert")
+			},
+		},
+		{
+			name: "error_-_node_kind_has_duplicate_info_keys",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput: model.ExtensionInput{Name: "DupInfoKeyExt", DisplayName: "Dup Info Key", Version: "1.0.0", Namespace: "DUP_IK"},
+						NodeKindsInput: model.NodesInput{{
+							Name: "DupIK_NK1", DisplayName: "NK1", IsDisplayKind: true, Icon: "user", IconColor: "#000",
+							Info: model.KindInfoInputs{
+								{InfoKey: "duplicate", Title: "First", Position: 1, Content: []byte(`{"markdown": {"content": "first"}}`)},
+								{InfoKey: "duplicate", Title: "Second", Position: 2, Content: []byte(`{"markdown": {"content": "second"}}`)},
+							},
+						}},
+					},
+					wantErrContains: "duplicate",
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				assert.Error(t, err)
+				assert.ErrorContains(t, err, setupData.wantErrContains)
+				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
+			},
+		},
+		{
+			name: "error_-_node_kind_has_duplicate_info_positions",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput: model.ExtensionInput{Name: "DupInfoPosExt", DisplayName: "Dup Info Pos", Version: "1.0.0", Namespace: "DUP_IP"},
+						NodeKindsInput: model.NodesInput{{
+							Name: "DupIP_NK1", DisplayName: "NK1", IsDisplayKind: true, Icon: "user", IconColor: "#000",
+							Info: model.KindInfoInputs{
+								{InfoKey: "first", Title: "First", Position: 1, Content: []byte(`{"markdown": {"content": "first"}}`)},
+								{InfoKey: "second", Title: "Second", Position: 1, Content: []byte(`{"markdown": {"content": "second"}}`)},
+							},
+						}},
+					},
+					wantErrContains: "duplicate",
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				assert.Error(t, err)
+				assert.ErrorContains(t, err, setupData.wantErrContains)
+				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
+			},
+		},
+		{
+			name: "success_-_update_node_kind_removes_all_infos",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				input := model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{Name: "RemoveInfoExt", DisplayName: "Remove Info", Version: "1.0.0", Namespace: "REM_INFO"},
+					NodeKindsInput: model.NodesInput{{
+						Name: "RemInfo_NK1", DisplayName: "NK1", IsDisplayKind: true, Icon: "user", IconColor: "#000",
+						Info: model.KindInfoInputs{
+							{InfoKey: "overview", Title: "Overview", Position: 1, Content: []byte(`{"markdown": {"content": "overview"}}`)},
+							{InfoKey: "details", Title: "Details", Position: 2, Content: []byte(`{"markdown": {"content": "details"}}`)},
+						},
+					}},
+				}
+				updated, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, input)
+				require.NoError(t, err)
+				require.False(t, updated)
+				return testSetupData{input: input}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				setupData.input.NodeKindsInput[0].Info = model.KindInfoInputs{}
+				updatedAgain, updateErr := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, setupData.input)
+				require.NoError(t, updateErr)
+				require.True(t, updatedAgain)
+				extensions, _, getExtErr := testSuite.BHDatabase.GetGraphSchemaExtensions(testSuite.Context, model.Filters{"name": []model.Filter{{Operator: model.Equals, Value: setupData.input.ExtensionInput.Name}}}, model.Sort{}, 0, 1)
+				require.NoError(t, getExtErr)
+				nodeKinds, getNodeErr := testSuite.BHDatabase.GetGraphSchemaNodeKindsByExtensionId(testSuite.Context, extensions[0].ID)
+				require.NoError(t, getNodeErr)
+				infos, getInfoErr := testSuite.BHDatabase.GetKindInfos(testSuite.Context, nodeKinds[0].KindId)
+				require.NoError(t, getInfoErr)
+				assert.Empty(t, infos)
+			},
+		},
+		{
+			name: "success_-_display_node_kind_flipped_to_non_display_removes_custom_node_kind",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				extensionInput := model.ExtensionInput{Name: "FlipDisplayExt", DisplayName: "Flip Display Node Kind to Non-Display NK", Version: "1.0.0", Namespace: "FLIP_DISP"}
+				_, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, model.GraphExtensionInput{
+					ExtensionInput: extensionInput,
+					NodeKindsInput: model.NodesInput{{Name: "StartedAsDispNodeKind", DisplayName: "Node Kind", Description: "test", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"}},
+				})
+				require.NoError(t, err)
+				// The custom node kind should exist before the flip.
+				assertCustomNodeKindPresent(t, testSuite, "StartedAsDispNodeKind")
+
+				// Re-upload the extension with the kind flipped to a non-display kind.
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput: extensionInput,
+						NodeKindsInput: model.NodesInput{{Name: "StartedAsDispNodeKind", DisplayName: "Node Kind", Description: "test", IsDisplayKind: false}},
+					},
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.True(t, updated)
+				assertGraphExtension(t, testSuite, setupData.input)
+				assertCustomNodeKindAbsent(t, testSuite, "StartedAsDispNodeKind")
+			},
+		},
+		{
+			name: "success_-_non_display_node_kind_flipped_to_display_creates_custom_node_kind",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				extensionInput := model.ExtensionInput{Name: "FlipToDisplayExt", DisplayName: "Flip Non-Display Node Kind to Display NK", Version: "1.0.0", Namespace: "FLIP_TO_DISP"}
+				_, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, model.GraphExtensionInput{
+					ExtensionInput: extensionInput,
+					NodeKindsInput: model.NodesInput{{Name: "StartedAsNonDispNodeKind", DisplayName: "Node Kind", Description: "test", IsDisplayKind: false}},
+				})
+				require.NoError(t, err)
+				// The custom node kind should not exist before the flip.
+				assertCustomNodeKindAbsent(t, testSuite, "StartedAsNonDispNodeKind")
+
+				// Re-upload the extension with the kind flipped to a display kind.
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput: extensionInput,
+						NodeKindsInput: model.NodesInput{{Name: "StartedAsNonDispNodeKind", DisplayName: "Node Kind", Description: "test", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"}},
+					},
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.True(t, updated)
+				assertGraphExtension(t, testSuite, setupData.input)
+				assertCustomNodeKindPresent(t, testSuite, "StartedAsNonDispNodeKind")
+			},
+		},
+		{
+			name: "success_-_dropped_non_display_node_kind_is_stubbed_into_custom_node_kinds",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				extensionInput := model.ExtensionInput{Name: "DropNonDisplayExt", DisplayName: "Drop Non-Display Kind", Version: "1.0.0", Namespace: "DROP_ND"}
+				_, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, model.GraphExtensionInput{
+					ExtensionInput: extensionInput,
+					NodeKindsInput: model.NodesInput{
+						{Name: "NonDisplayKindToKeep", DisplayName: "Non-Display Kind 1", Description: "test", IsDisplayKind: false},
+						{Name: "NonDisplayKindToDrop", DisplayName: "Non-Display Kind 2", Description: "test", IsDisplayKind: false},
+					},
+				})
+				require.NoError(t, err)
+				// Non-display kinds are not tracked in custom_node_kinds while the schema is active.
+				assertCustomNodeKindAbsent(t, testSuite, "NonDisplayKindToDrop")
+
+				// Re-upload the extension with NonDisplayKindToDrop removed, triggering a reconciliation delete.
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput: extensionInput,
+						NodeKindsInput: model.NodesInput{{Name: "NonDisplayKindToKeep", DisplayName: "Non-Display Kind 1", Description: "test", IsDisplayKind: false}},
+					},
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.True(t, updated)
+				assertGraphExtension(t, testSuite, setupData.input)
+				// The dropped non-display kind should now be stubbed into custom_node_kinds.
+				assertCustomNodeKindPresent(t, testSuite, "NonDisplayKindToDrop")
+				kind, err := testSuite.BHDatabase.GetCustomNodeKind(testSuite.Context, "NonDisplayKindToDrop")
+				require.NoError(t, err)
+				assert.Nil(t, kind.SchemaNodeKindId, "stub should not reference the (now deleted) schema_node_kind row")
+			},
+		},
+		{
+			name: "success_-_deleted_schema_node_kind_nulls_schema_node_kind_id_on_custom_node_kind",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				extensionInput := model.ExtensionInput{Name: "DropKindExt", DisplayName: "Drop Kind", Version: "1.0.0", Namespace: "DROP_KIND"}
+				_, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, model.GraphExtensionInput{
+					ExtensionInput: extensionInput,
+					NodeKindsInput: model.NodesInput{
+						{Name: "NodeKindToKeep", DisplayName: "Node Kind 1", Description: "test", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"},
+						{Name: "NodeKindToRemove", DisplayName: "Node Kind 2", Description: "test", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"},
+					},
+				})
+				require.NoError(t, err)
+				// The custom node kind should exist before the kind is removed.
+				assertCustomNodeKindPresent(t, testSuite, "NodeKindToRemove")
+
+				// Re-upload the extension with NodeKindToRemove removed entirely.
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput: extensionInput,
+						NodeKindsInput: model.NodesInput{{Name: "NodeKindToKeep", DisplayName: "Node Kind 1", Description: "test", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"}},
+					},
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.True(t, updated)
+				assertGraphExtension(t, testSuite, setupData.input)
+				// verify the schema_node_kind_id FK is nulled
+				assertCustomNodeKindPresent(t, testSuite, "NodeKindToRemove")
+				kind, err := testSuite.BHDatabase.GetCustomNodeKind(testSuite.Context, "NodeKindToRemove")
+				require.NoError(t, err)
+				assert.Nil(t, kind.SchemaNodeKindId)
 			},
 		},
 	}
@@ -580,6 +872,7 @@ func assertNodeKinds(t *testing.T, testSuite IntegrationTestSuite, extensionId i
 		wantNK, ok := wantByName[gotNK.Name]
 		assert.Truef(t, ok, "NodeKind(%v) - unexpected", gotNK.Name)
 		assert.Greaterf(t, gotNK.ID, int32(0), "NodeKind(%v) - ID invalid", gotNK.Name)
+		assert.NotZerof(t, gotNK.KindId, "NodeKind(%v) - KindId should be populated from database", gotNK.Name)
 		assert.Equalf(t, extensionId, gotNK.SchemaExtensionId, "NodeKind(%v) - SchemaExtensionId mismatch", gotNK.Name)
 		assert.Equalf(t, wantNK.DisplayName, gotNK.DisplayName, "NodeKind(%v) - display_name mismatch", gotNK.Name)
 		assert.Equalf(t, wantNK.Description, gotNK.Description, "NodeKind(%v) - description mismatch", gotNK.Name)
@@ -589,10 +882,13 @@ func assertNodeKinds(t *testing.T, testSuite IntegrationTestSuite, extensionId i
 		assert.Falsef(t, gotNK.CreatedAt.IsZero(), "NodeKind(%v) - created_at is zero", gotNK.Name)
 		assert.Falsef(t, gotNK.UpdatedAt.IsZero(), "NodeKind(%v) - updated_at is zero", gotNK.Name)
 		assert.Falsef(t, gotNK.DeletedAt.Valid, "NodeKind(%v) - deleted_at is not null", gotNK.Name)
+
+		// Assert Info entries
+		assertKindInfos(t, testSuite, gotNK.KindId, gotNK.Name, wantNK.Info)
 	}
 
 	// Custom icon assertions
-	icons, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context, nil)
+	icons, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context)
 	require.NoError(t, err)
 	iconMap := make(map[string]model.CustomNodeKind, len(icons))
 	for _, icon := range icons {
@@ -628,9 +924,13 @@ func assertRelationshipKinds(t *testing.T, testSuite IntegrationTestSuite, exten
 		wantRK, ok := wantByName[gotRK.Name]
 		assert.Truef(t, ok, "RelKind(%v) - unexpected", gotRK.Name)
 		assert.Greaterf(t, gotRK.ID, int32(0), "RelKind(%v) - ID invalid", gotRK.Name)
+		assert.NotZerof(t, gotRK.KindId, "RelKind(%v) - KindId should be populated from database", gotRK.Name)
 		assert.Equalf(t, extensionId, gotRK.SchemaExtensionId, "RelKind(%v) - SchemaExtensionId mismatch", gotRK.Name)
 		assert.Equalf(t, wantRK.Description, gotRK.Description, "RelKind(%v) - description mismatch", gotRK.Name)
 		assert.Equalf(t, wantRK.IsTraversable, gotRK.IsTraversable, "RelKind(%v) - is_traversable mismatch", gotRK.Name)
+
+		// Assert Info entries
+		assertKindInfos(t, testSuite, gotRK.KindId, gotRK.Name, wantRK.Info)
 	}
 }
 
@@ -666,6 +966,29 @@ func assertEnvironments(t *testing.T, testSuite IntegrationTestSuite, extensionI
 			require.Len(t, principalKinds, 1)
 			assert.Containsf(t, wantEnv.PrincipalKinds, principalKinds[0].Name, "Environment(%v) - PrincipalKind name mismatch", gotEnv.EnvironmentKindName)
 		}
+	}
+}
+
+func assertKindInfos(t *testing.T, testSuite IntegrationTestSuite, kindId int32, kindName string, wantInfos model.KindInfoInputs) {
+	t.Helper()
+
+	gotInfos, err := testSuite.BHDatabase.GetKindInfos(testSuite.Context, kindId)
+	require.NoError(t, err)
+	assert.Equalf(t, len(wantInfos), len(gotInfos), "Kind(%v) - info count mismatch", kindName)
+
+	wantByKey := make(map[string]model.KindInfoInput, len(wantInfos))
+	for _, wantInfo := range wantInfos {
+		wantByKey[wantInfo.InfoKey] = wantInfo
+	}
+
+	for _, gotInfo := range gotInfos {
+		wantInfo, ok := wantByKey[gotInfo.InfoKey]
+		assert.Truef(t, ok, "Kind(%v) Info(%v) - unexpected", kindName, gotInfo.InfoKey)
+		assert.Greaterf(t, gotInfo.ID, int32(0), "Kind(%v) Info(%v) - ID invalid", kindName, gotInfo.InfoKey)
+		assert.Equalf(t, kindId, gotInfo.KindID, "Kind(%v) Info(%v) - KindID mismatch", kindName, gotInfo.InfoKey)
+		assert.Equalf(t, wantInfo.Title, gotInfo.Title, "Kind(%v) Info(%v) - title mismatch", kindName, gotInfo.InfoKey)
+		assert.Equalf(t, wantInfo.Position, gotInfo.Position, "Kind(%v) Info(%v) - position mismatch", kindName, gotInfo.InfoKey)
+		assert.JSONEqf(t, string(wantInfo.Content), string(gotInfo.Content), "Kind(%v) Info(%v) - content mismatch", kindName, gotInfo.InfoKey)
 	}
 }
 

@@ -56,7 +56,7 @@ export const GraphEdgeEvents: FC<GraphEdgeEventProps> = ({ onClickEdge }) => {
                     const edge: string = edges[i];
                     const attributes = graph.getEdgeAttributes(edge);
 
-                    const edgeData = getEdgeDataFromKey(edge);
+                    const edgeData = getEdgeDataFromKey(attributes.exploreGraphId);
                     if (edgeData === null) continue;
                     const nodeDisplayData = getEdgeSourceAndTargetDisplayData(edgeData.source, edgeData.target, sigma);
                     if (nodeDisplayData === null) continue;

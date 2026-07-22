@@ -20,6 +20,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -45,9 +47,18 @@ var (
 	ErrDuplicatePrincipalKind                    = errors.New("duplicate principal kind")
 
 	// entity panel db errors
-	ErrKindInfoKindNotFound      = errors.New("kind info references a kind that does not exist")
+	ErrKindInfoKindNotFound = errors.New("kind info references a kind that does not exist")
+
+	// entity panel duplicate errors, enforced at both the model (validation) and db (uniqueness constraint) layers
 	ErrKindInfoDuplicatePosition = errors.New("kind info position already in use for this kind")
 	ErrKindInfoDuplicateInfoKey  = errors.New("kind info key already in use for this kind")
+
+	// entity panel validation errors
+	ErrInvalidKindInfoTitle    = errors.New("invalid kind info title: must not be empty or whitespace-only")
+	ErrInvalidKindInfoKey      = errors.New("invalid kind info key: must match pattern ^[a-z0-9_-]{1,128}$")
+	ErrTooManyKindInfoEntries  = errors.New("too many kind info entries: maximum 100 allowed per kind")
+	ErrInvalidKindInfoPosition = errors.New("invalid kind info position: must be >= 0")
+	ErrInvalidKindInfoContent  = errors.New("invalid kind info content: must be a JSON object of the form {\"markdown\":{\"content\":\"...\"}}")
 )
 
 func ErrIsGraphSchemaDuplicateError(err error) bool {
@@ -55,7 +66,6 @@ func ErrIsGraphSchemaDuplicateError(err error) bool {
 	case errors.Is(err, ErrDuplicateGraphSchemaExtensionName),
 		errors.Is(err, ErrDuplicateGraphSchemaExtensionNamespace),
 		errors.Is(err, ErrDuplicateSchemaNodeKindName),
-		errors.Is(err, ErrDuplicateGraphSchemaExtensionPropertyName),
 		errors.Is(err, ErrDuplicateSchemaRelationshipKindName),
 		errors.Is(err, ErrDuplicateSchemaEnvironment),
 		errors.Is(err, ErrDuplicateSchemaFindingName),
@@ -67,6 +77,9 @@ func ErrIsGraphSchemaDuplicateError(err error) bool {
 		return false
 	}
 }
+
+// kindInfoKeyPattern is the regex pattern for validating info keys
+var kindInfoKeyPattern = regexp.MustCompile(`^[a-z0-9_-]{1,128}$`)
 
 // reservedGraphKindNamespaces lists namespaces that cannot be used in custom
 // graph extensions or ingest payloads. These are owned by internal subsystems
@@ -104,6 +117,65 @@ func (s *ReservedKindError) Error() string {
 	return fmt.Sprintf("kind '%s' uses reserved namespace '%s'", s.KindName, s.Namespace)
 }
 
+// validateKindInfoContent verifies that entity panel content matches the expected
+// JSON structure: {"markdown":{"content":"..."}}. It validates structure only; it does
+// not sanitize or inspect the markdown for unsafe HTML (see BED-8764).
+func validateKindInfoContent(content json.RawMessage) error {
+	var (
+		contentWrapper struct {
+			Markdown struct {
+				Content *string `json:"content"`
+			} `json:"markdown"`
+		}
+		decoder = json.NewDecoder(strings.NewReader(string(content)))
+	)
+
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&contentWrapper); err != nil {
+		return ErrInvalidKindInfoContent
+	}
+
+	if contentWrapper.Markdown.Content == nil {
+		return ErrInvalidKindInfoContent
+	}
+
+	return nil
+}
+
+// validateKindInfo validates a map of KindInfo entries
+func validateKindInfo(kindName string, info KindInfoInputs) error {
+	if len(info) > 100 {
+		return fmt.Errorf("%w for kind %s: has %d entries", ErrTooManyKindInfoEntries, kindName, len(info))
+	}
+
+	var (
+		seenInfoKeys  = make(map[string]struct{}, len(info))
+		seenPositions = make(map[int32]struct{}, len(info))
+	)
+
+	for _, infoEntry := range info {
+		if strings.TrimSpace(infoEntry.Title) == "" {
+			return fmt.Errorf("%w for info key '%s' in kind %s", ErrInvalidKindInfoTitle, infoEntry.InfoKey, kindName)
+		} else if !kindInfoKeyPattern.MatchString(infoEntry.InfoKey) {
+			return fmt.Errorf("%w: key '%s' in kind %s", ErrInvalidKindInfoKey, infoEntry.InfoKey, kindName)
+		} else if infoEntry.Position < 0 {
+			return fmt.Errorf("%w: position %d for info key '%s' in kind %s", ErrInvalidKindInfoPosition, infoEntry.Position, infoEntry.InfoKey, kindName)
+		} else if err := validateKindInfoContent(infoEntry.Content); err != nil {
+			return fmt.Errorf("info key '%s' in kind %s: %w", infoEntry.InfoKey, kindName, err)
+		}
+
+		if _, exists := seenInfoKeys[infoEntry.InfoKey]; exists {
+			return fmt.Errorf("%w: key '%s' in kind %s", ErrKindInfoDuplicateInfoKey, infoEntry.InfoKey, kindName)
+		} else if _, exists := seenPositions[infoEntry.Position]; exists {
+			return fmt.Errorf("%w: position %d for info key '%s' in kind %s", ErrKindInfoDuplicatePosition, infoEntry.Position, infoEntry.InfoKey, kindName)
+		}
+
+		seenInfoKeys[infoEntry.InfoKey] = struct{}{}
+		seenPositions[infoEntry.Position] = struct{}{}
+	}
+	return nil
+}
+
 type GraphSchemaExtensions []GraphSchemaExtension
 
 type GraphSchemaExtension struct {
@@ -137,6 +209,7 @@ type GraphSchemaNodeKinds []GraphSchemaNodeKind
 // GraphSchemaNodeKind - represents a node kind for an extension
 type GraphSchemaNodeKind struct {
 	Serial
+	KindId            int32 // DAWGS kind table ID
 	Name              string
 	SchemaExtensionId int32  // indicates which extension this node kind belongs to
 	DisplayName       string // can be different from name but usually isn't other than Base/Entity
@@ -385,7 +458,6 @@ type GraphSchemaRelationshipKindsWithNamedSchema []GraphSchemaRelationshipKindWi
 
 type GraphExtensionInput struct {
 	ExtensionInput            ExtensionInput
-	PropertiesInput           PropertiesInput
 	RelationshipKindsInput    RelationshipsInput
 	NodeKindsInput            NodesInput
 	EnvironmentsInput         EnvironmentsInput
@@ -397,7 +469,6 @@ func (s GraphExtensionInput) Validate() error {
 	var (
 		nodeKinds         = make(map[string]any, 0)
 		relationshipKinds = make(map[string]any, 0)
-		properties        = make(map[string]any, 0)
 		environments      = make(map[string]any, 0)
 		findings          = make(map[string]any, 0)
 	)
@@ -427,6 +498,9 @@ func (s GraphExtensionInput) Validate() error {
 		if kind.IconColor != "" && !IsValidIconColor(kind.IconColor) {
 			return fmt.Errorf("invalid hex color string %s for node kind %s", kind.IconColor, kind.Name)
 		}
+		if err := validateKindInfo(kind.Name, kind.Info); err != nil {
+			return err
+		}
 		nodeKinds[kind.Name] = struct{}{}
 	}
 
@@ -442,14 +516,10 @@ func (s GraphExtensionInput) Validate() error {
 		if _, ok := nodeKinds[kind.Name]; ok {
 			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
 		}
-		relationshipKinds[kind.Name] = struct{}{}
-	}
-
-	for _, property := range s.PropertiesInput {
-		if _, ok := properties[property.Name]; ok {
-			return fmt.Errorf("duplicate graph properties: %s", property.Name)
+		if err := validateKindInfo(kind.Name, kind.Info); err != nil {
+			return err
 		}
-		properties[property.Name] = struct{}{}
+		relationshipKinds[kind.Name] = struct{}{}
 	}
 
 	for _, environment := range s.EnvironmentsInput {
@@ -537,29 +607,23 @@ func (s ExtensionInput) GetDisplayName() string {
 	return s.Name
 }
 
-type PropertiesInput []PropertyInput
-type PropertyInput struct {
-	Name        string
-	DisplayName string
-	DataType    string
-	Description string
-}
-
 type NodesInput []NodeInput
 type NodeInput struct {
 	Name          string
-	DisplayName   string // human-readable name
-	Description   string // human-readable description of the node kind
-	IsDisplayKind bool   // indicates if this kind should supersede others and be displayed
-	Icon          string // font-awesome icon for the registered node kind
-	IconColor     string // icon hex color
+	DisplayName   string         // human-readable name
+	Description   string         // human-readable description of the node kind
+	IsDisplayKind bool           // indicates if this kind should supersede others and be displayed
+	Icon          string         // font-awesome icon for the registered node kind
+	IconColor     string         // icon hex color
+	Info          KindInfoInputs // entity panel definitions for this node kind
 }
 
 type RelationshipsInput []RelationshipInput
 type RelationshipInput struct {
 	Name          string
 	Description   string
-	IsTraversable bool // indicates whether the edge-kind is a traversable path
+	IsTraversable bool           // indicates whether the edge-kind is a traversable path
+	Info          KindInfoInputs // entity panel definitions for this relationship kind
 }
 type RemediationInput struct {
 	ShortDescription string
@@ -567,6 +631,9 @@ type RemediationInput struct {
 	ShortRemediation string
 	LongRemediation  string
 }
+
+// represents a slice of entity panel definitions
+type KindInfoInputs []KindInfoInput
 
 // KindInfoInput represents one entity panel definition as provided in a user's upload JSON
 type KindInfoInput struct {
@@ -588,4 +655,187 @@ type GraphSchemaKindInfo struct {
 	Content            json.RawMessage
 	CreatedAt          null.Time
 	UpdatedAt          null.Time
+}
+
+// GraphExtensionPayload is the JSON format for graph extension upserts,
+// shared by both the HTTP upload handler (api/v2) and the filesystem-based embedded
+// extension loader. It deserializes snake_case JSON and converts into the service-layer
+// GraphExtensionInput via ToGraphExtensionInput.
+type GraphExtensionPayload struct {
+	GraphSchemaExtension         GraphSchemaExtensionPayload           `json:"schema"`
+	GraphSchemaRelationshipKinds []GraphSchemaRelationshipKindsPayload `json:"relationship_kinds"`
+	GraphSchemaNodeKinds         []GraphSchemaNodeKindsPayload         `json:"node_kinds"`
+	GraphEnvironments            []EnvironmentPayload                  `json:"environments"`
+	GraphRelationshipFindings    []RelationshipFindingsPayload         `json:"relationship_findings"`
+}
+
+type GraphSchemaExtensionPayload struct {
+	Name        string `json:"name"`
+	DisplayName string `json:"display_name"`
+	Version     string `json:"version"`
+	Namespace   string `json:"namespace"`
+}
+
+type GraphSchemaRelationshipKindsPayload struct {
+	Name          string                     `json:"name"`
+	Description   string                     `json:"description"`
+	IsTraversable bool                       `json:"is_traversable"` // indicates whether the edge-kind is a traversable path
+	Info          map[string]KindInfoPayload `json:"info"`
+}
+
+type GraphSchemaNodeKindsPayload struct {
+	Name          string                     `json:"name"`
+	DisplayName   string                     `json:"display_name"`    // can be different from name but usually isn't other than Base/Entity
+	Description   string                     `json:"description"`     // human-readable description of the node kind
+	IsDisplayKind bool                       `json:"is_display_kind"` // indicates if this kind should supersede others and be displayed
+	Icon          string                     `json:"icon"`            // font-awesome icon for the registered node kind
+	IconColor     string                     `json:"color"`           // icon hex color
+	Info          map[string]KindInfoPayload `json:"info"`
+}
+
+type KindInfoPayload struct {
+	Title    string          `json:"title"`
+	Position int             `json:"position"`
+	Markdown json.RawMessage `json:"markdown"` // Raw: {"content": "..."}
+}
+
+type EnvironmentPayload struct {
+	EnvironmentKind string   `json:"environment_kind"`
+	SourceKind      string   `json:"source_kind"`
+	PrincipalKinds  []string `json:"principal_kinds"`
+}
+
+type RelationshipFindingsPayload struct {
+	Name             string             `json:"name"`
+	DisplayName      string             `json:"display_name"`
+	RelationshipKind string             `json:"relationship_kind"`
+	EnvironmentKind  string             `json:"environment_kind"`
+	Remediation      RemediationPayload `json:"remediation"`
+}
+
+type RemediationPayload struct {
+	ShortDescription string `json:"short_description"`
+	LongDescription  string `json:"long_description"`
+	ShortRemediation string `json:"short_remediation"`
+	LongRemediation  string `json:"long_remediation"`
+}
+
+// parseInfoPayload converts the typed KindInfoPayload map to a KindInfoInputs slice
+func parseInfoPayload(infoPayload map[string]KindInfoPayload) (KindInfoInputs, error) {
+	var (
+		wrappedContent map[string]json.RawMessage
+		contentBytes   []byte
+		markdown       json.RawMessage
+		err            error
+	)
+
+	if len(infoPayload) == 0 {
+		return make(KindInfoInputs, 0), nil
+	}
+
+	result := make(KindInfoInputs, 0, len(infoPayload))
+
+	for key, payload := range infoPayload {
+		// Guard against int32 overflow before the cast below; a position outside the
+		// int32 range would silently wrap and corrupt the stored value.
+		if payload.Position > math.MaxInt32 || payload.Position < math.MinInt32 {
+			return nil, fmt.Errorf("%w: position %d for info key %q is outside the int32 range", ErrInvalidKindInfoPosition, payload.Position, key)
+		}
+
+		// Handle empty markdown by providing empty content structure
+		if len(payload.Markdown) == 0 {
+			markdown = []byte(`{"content":""}`)
+		} else {
+			markdown = payload.Markdown
+		}
+
+		wrappedContent = map[string]json.RawMessage{
+			"markdown": markdown,
+		}
+
+		if contentBytes, err = json.Marshal(wrappedContent); err != nil {
+			return nil, fmt.Errorf("failed to wrap markdown content for info key %s: %w", key, err)
+		}
+
+		result = append(result, KindInfoInput{
+			InfoKey:  key,
+			Title:    payload.Title,
+			Position: int32(payload.Position),
+			Content:  contentBytes,
+		})
+	}
+
+	return result, nil
+}
+
+// ToGraphExtensionInput converts the GraphExtensionPayload model to the service-layer GraphExtensionInput.
+func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, error) {
+	var (
+		graphExtension = GraphExtensionInput{
+			ExtensionInput: ExtensionInput{
+				Name:        s.GraphSchemaExtension.Name,
+				DisplayName: s.GraphSchemaExtension.DisplayName,
+				Version:     s.GraphSchemaExtension.Version,
+				Namespace:   s.GraphSchemaExtension.Namespace,
+			},
+			NodeKindsInput:         make(NodesInput, 0),
+			RelationshipKindsInput: make(RelationshipsInput, 0),
+			EnvironmentsInput:      make(EnvironmentsInput, 0),
+		}
+		infoInputs KindInfoInputs
+		err        error
+	)
+
+	for _, nodeKindPayload := range s.GraphSchemaNodeKinds {
+		if infoInputs, err = parseInfoPayload(nodeKindPayload.Info); err != nil {
+			return GraphExtensionInput{}, fmt.Errorf("error parsing node kind %s info: %w", nodeKindPayload.Name, err)
+		}
+
+		graphExtension.NodeKindsInput = append(graphExtension.NodeKindsInput,
+			NodeInput{
+				Name:          nodeKindPayload.Name,
+				DisplayName:   nodeKindPayload.DisplayName,
+				Description:   nodeKindPayload.Description,
+				IsDisplayKind: nodeKindPayload.IsDisplayKind,
+				Icon:          nodeKindPayload.Icon,
+				IconColor:     nodeKindPayload.IconColor,
+				Info:          infoInputs,
+			})
+	}
+	for _, edgeKindPayload := range s.GraphSchemaRelationshipKinds {
+		if infoInputs, err = parseInfoPayload(edgeKindPayload.Info); err != nil {
+			return GraphExtensionInput{}, fmt.Errorf("error parsing relationship kind %s info: %w", edgeKindPayload.Name, err)
+		}
+
+		graphExtension.RelationshipKindsInput = append(graphExtension.RelationshipKindsInput,
+			RelationshipInput{
+				Name:          edgeKindPayload.Name,
+				Description:   edgeKindPayload.Description,
+				IsTraversable: edgeKindPayload.IsTraversable,
+				Info:          infoInputs,
+			})
+	}
+	for _, environmentPayload := range s.GraphEnvironments {
+		graphExtension.EnvironmentsInput = append(graphExtension.EnvironmentsInput,
+			EnvironmentInput{
+				EnvironmentKindName: environmentPayload.EnvironmentKind,
+				SourceKindName:      environmentPayload.SourceKind,
+				PrincipalKinds:      environmentPayload.PrincipalKinds,
+			})
+	}
+	for _, findingPayload := range s.GraphRelationshipFindings {
+		graphExtension.RelationshipFindingsInput = append(graphExtension.RelationshipFindingsInput, RelationshipFindingInput{
+			Name:                 findingPayload.Name,
+			DisplayName:          findingPayload.DisplayName,
+			RelationshipKindName: findingPayload.RelationshipKind,
+			EnvironmentKindName:  findingPayload.EnvironmentKind,
+			RemediationInput: RemediationInput{
+				ShortDescription: findingPayload.Remediation.ShortDescription,
+				LongDescription:  findingPayload.Remediation.LongDescription,
+				ShortRemediation: findingPayload.Remediation.ShortRemediation,
+				LongRemediation:  findingPayload.Remediation.LongRemediation,
+			},
+		})
+	}
+	return graphExtension, nil
 }

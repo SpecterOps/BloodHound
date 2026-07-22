@@ -17,6 +17,7 @@ import { findIconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { IconName } from '@fortawesome/free-solid-svg-icons';
 import { AssetGroupTag, AssetGroupTagTypeOwned } from 'js-client-library';
 import { useEffect, useState } from 'react';
+import { TagLabelPrefix } from '../../constants';
 import {
     DEFAULT_GLYPH_BACKGROUND_COLOR,
     DEFAULT_GLYPH_COLOR,
@@ -53,11 +54,6 @@ export const glyphUtils: GlyphUtils = {
     qualifier: glyphQualifier,
     transformer: glyphTransformer,
 };
-
-// The word "Label" here is used in the sense of a cypher Label,
-// e.g., in the cypher query: `match(u:User) return u`, 'User' is a cypher Label.
-// That is to say the "Label" usage here does not reflect a type of AssetGroupTag
-export const TagLabelPrefix = 'Tag_' as const;
 
 export const createGlyphMapFromTags = (
     tags: AssetGroupTag[] | undefined,

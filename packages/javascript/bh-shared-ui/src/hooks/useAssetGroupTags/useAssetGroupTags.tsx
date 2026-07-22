@@ -19,8 +19,12 @@ import {
     AssetGroupTagTypeOwned,
     AssetGroupTagTypeZone,
     HighestPrivilegePosition,
+    NodeDetails,
+    NodeDetailsWithInfo,
     ObjectKey,
     ObjectsKey,
+    RelationshipDetails,
+    RelationshipDetailsWithInfo,
     RuleKey,
     RulesKey,
     type AssetGroupTag,
@@ -30,11 +34,12 @@ import {
     type RequestOptions,
 } from 'js-client-library';
 import { useInfiniteQuery, useQuery } from 'react-query';
+import { TagLabelPrefix } from '../../constants';
 import { SortOrderAscending, type SortOrder } from '../../types';
 import { apiClient, type GenericQueryOptions } from '../../utils';
 import { createPaginatedFetcher, type PageParam } from '../../utils/paginatedFetcher';
 import { useFeatureFlag } from '../useFeatureFlags';
-import { isNode, type ItemResponse } from '../useGraphItem';
+import { isNodeResponse } from '../useGraphItem/useGraphItem';
 
 export const privilegeZonesKeys = {
     all: ['privilege-zones'] as const,
@@ -71,21 +76,39 @@ export const privilegeZonesKeys = {
         [...privilegeZonesKeys.all, 'certifications', filters, search, ...environments] as const,
 };
 
-export const getIsOwnedTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.type === AssetGroupTagTypeOwned);
-
-export const getIsTierZeroTag = (tags: AssetGroupTag[]) =>
-    tags.find((tag) => tag.position === HighestPrivilegePosition);
-
-export const isOwnedObject = (item: ItemResponse): boolean => {
-    if (!isNode(item)) return false;
-
-    return item.isOwnedObject;
+const tagNameToKind = (tagName: string) => {
+    const underscoredTagName = tagName.split(' ').join('_');
+    return `${TagLabelPrefix}${underscoredTagName}`;
 };
 
-export const isTierZero = (item: ItemResponse): boolean => {
-    if (!isNode(item)) return false;
+export const getZoneNameFromKinds = (
+    tags: AssetGroupTag[] | undefined,
+    kinds: string[] | undefined
+): string | undefined => {
+    const kindsSet = new Set(kinds);
 
-    return item.isTierZero;
+    const match = tags?.find((tag) => {
+        if (tag.type !== AssetGroupTagTypeZone) return false;
+
+        const tagKind = tagNameToKind(tag.name);
+        return kindsSet.has(tagKind);
+    });
+
+    return match?.name;
+};
+
+export const getOwnedTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.type === AssetGroupTagTypeOwned);
+
+export const getTierZeroTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.position === HighestPrivilegePosition);
+
+export const isTaggedObject = (
+    node: NodeDetails | RelationshipDetails | RelationshipDetailsWithInfo | NodeDetailsWithInfo | undefined,
+    tag: AssetGroupTag | undefined
+): boolean => {
+    if (!node || !tag || !isNodeResponse(node)) return false;
+
+    const tagKind = tagNameToKind(tag.name);
+    return node.kinds.some((kind) => kind.name === tagKind);
 };
 
 const getAssetGroupTags = (options: RequestOptions) =>
@@ -353,14 +376,14 @@ export const useOrderedTags = () => {
 
 export const useHighestPrivilegeTag = () => {
     const { data: orderedTags, isLoading, isError } = useOrderedTags();
-    const tag = orderedTags?.find((tag) => tag.position === HighestPrivilegePosition);
+    const tag = getTierZeroTag(orderedTags ?? []);
 
     return { isLoading, isError, tag };
 };
 
 export const useHighestPrivilegeTagId = () => {
     const { data: orderedTags, isLoading, isError } = useOrderedTags();
-    const tagId = orderedTags?.find((tag) => tag.position === HighestPrivilegePosition)?.id;
+    const tagId = getTierZeroTag(orderedTags ?? [])?.id;
 
     return { isLoading, isError, tagId };
 };
@@ -374,5 +397,5 @@ export const useLabels = () => {
 
 export const useOwnedTagId = () => {
     const tagsQuery = useTagsQuery();
-    return tagsQuery.data?.find((tag) => tag.type === AssetGroupTagTypeOwned)?.id;
+    return getOwnedTag(tagsQuery.data ?? [])?.id;
 };

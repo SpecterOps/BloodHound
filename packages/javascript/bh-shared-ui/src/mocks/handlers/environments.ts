@@ -133,6 +133,7 @@ export const testEnvironments: Environment[] = [
         collected: true,
         hygiene_attack_paths: 0,
         exposures: [],
+        environment_kind_id: 101,
     },
     {
         type: 'GitHub',
@@ -142,6 +143,7 @@ export const testEnvironments: Environment[] = [
         collected: true,
         hygiene_attack_paths: 0,
         exposures: [],
+        environment_kind_id: 102,
     },
     {
         type: 'GitHub',
@@ -151,5 +153,6 @@ export const testEnvironments: Environment[] = [
         collected: false,
         hygiene_attack_paths: 0,
         exposures: [],
+        environment_kind_id: 102,
     },
 ];

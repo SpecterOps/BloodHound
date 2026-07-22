@@ -49,6 +49,7 @@ const (
 	FeatureAPIKeyExpirationSupport      = "api_key_expiration_support"
 	FeatureCollectorSupportBundle       = "collector_support_bundle"
 	FeatureVariableAnalysisMode         = "variable_analysis_mode"
+	FeatureUseRawObjectID               = "use_raw_object_id"
 )
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be
@@ -126,6 +127,11 @@ func GetTieringEnabled(ctx context.Context, service GetFlagByKeyer) bool {
 // GetOpenHoundEnabled returns true if the OpenHound Support feature flag is enabled.
 func GetOpenHoundEnabled(ctx context.Context, service GetFlagByKeyer) bool {
 	return GetFlagEnabled(ctx, service, FeatureOpenHoundSupport)
+}
+
+// GetUseRawObjectIDsEnabled returns true if the use raw object id feature flag is enabled.
+func GetUseRawObjectIDsEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+	return GetFlagEnabled(ctx, service, FeatureUseRawObjectID)
 }
 
 func GetVariableAnalysisModeEnabled(ctx context.Context, service GetFlagByKeyer) bool {

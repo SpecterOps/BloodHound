@@ -21,7 +21,7 @@ import { useMutation } from 'react-query';
 import { Link } from 'react-router-dom';
 
 import type { AssetGroupTag, CreateSelectorRequest } from 'js-client-library';
-import { useExploreSelectedItem, usePermissions, useTagsQuery, type ItemResponse } from '../../../hooks';
+import { isTaggedObject, useExploreSelectedItem, usePermissions, useTagsQuery } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { Permission, apiClient } from '../../../utils';
 
@@ -39,7 +39,7 @@ const ConfirmNodeChangesDialog: FC<{
                     <DialogTitle>Confirm Selection</DialogTitle>
                     <DialogDescription>{dialogContent}</DialogDescription>
                     <DialogActions>
-                        <Button variant='tertiary' onClick={onCancel}>
+                        <Button variant='secondary' onClick={onCancel}>
                             Cancel
                         </Button>
                         <Button variant='primary' onClick={onAccept} disabled={disableAccept}>
@@ -54,11 +54,10 @@ const ConfirmNodeChangesDialog: FC<{
 
 export const AssetGroupMenuItem: FC<{
     addNodePayload: CreateSelectorRequest;
-    isCurrentMemberFn: (node: ItemResponse) => boolean;
     removeNodePathFn: (tag: AssetGroupTag) => string;
     showConfirmationOnAdd?: boolean;
     tagIdentifierFn: (tags: AssetGroupTag[]) => AssetGroupTag | undefined;
-}> = ({ addNodePayload, isCurrentMemberFn, removeNodePathFn, showConfirmationOnAdd = false, tagIdentifierFn }) => {
+}> = ({ addNodePayload, removeNodePathFn, showConfirmationOnAdd = false, tagIdentifierFn }) => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const { addNotification } = useNotifications();
     const { selectedItemQuery } = useExploreSelectedItem();
@@ -89,7 +88,7 @@ export const AssetGroupMenuItem: FC<{
     const hasPermission = checkPermission(Permission.GRAPH_DB_WRITE);
 
     // Is the selected node already a member of tier zero or owned?
-    const isCurrentMember = isCurrentMemberFn(selectedItemQuery.data);
+    const isCurrentMember = isTaggedObject(selectedItemQuery.data, assetGroupTag);
 
     // Don't render anything if the user doesn't have permission or the asset group doesn't exist
     if (!hasPermission) {

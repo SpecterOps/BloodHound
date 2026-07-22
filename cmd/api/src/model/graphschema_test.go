@@ -17,9 +17,13 @@
 package model
 
 import (
+	"encoding/json"
 	"fmt"
+	"math"
+	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -369,14 +373,6 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_a_duplicate_graph_kind",
 						},
 					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
 				},
 			},
 			wantErr: fmt.Errorf("duplicate graph kinds: %s", "AD_a_duplicate_graph_kind"),
@@ -397,14 +393,6 @@ func Test_validateGraphExtension(t *testing.T) {
 					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
-						},
-					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
 						},
 					},
 					EnvironmentsInput: EnvironmentsInput{
@@ -436,14 +424,6 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
 					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_",
@@ -473,14 +453,6 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
 					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_environment",
@@ -508,14 +480,6 @@ func Test_validateGraphExtension(t *testing.T) {
 					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
-						},
-					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
 						},
 					},
 					EnvironmentsInput: EnvironmentsInput{
@@ -552,14 +516,6 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
 					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
@@ -587,14 +543,6 @@ func Test_validateGraphExtension(t *testing.T) {
 					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
-						},
-					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
 						},
 					},
 					EnvironmentsInput: EnvironmentsInput{
@@ -626,14 +574,6 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
 					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
@@ -661,14 +601,6 @@ func Test_validateGraphExtension(t *testing.T) {
 					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
-						},
-					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
 						},
 					},
 					EnvironmentsInput: EnvironmentsInput{
@@ -700,14 +632,6 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
 					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
@@ -737,14 +661,6 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
 					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
@@ -772,14 +688,6 @@ func Test_validateGraphExtension(t *testing.T) {
 					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
-						},
-					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
 						},
 					},
 					EnvironmentsInput: EnvironmentsInput{
@@ -816,14 +724,6 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_edge kind 1",
 						},
 					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
 					EnvironmentsInput: EnvironmentsInput{
 						{
 							EnvironmentKindName: "AD_env_kind",
@@ -856,14 +756,6 @@ func Test_validateGraphExtension(t *testing.T) {
 					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
-						},
-					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
 						},
 					},
 					EnvironmentsInput: EnvironmentsInput{
@@ -900,14 +792,6 @@ func Test_validateGraphExtension(t *testing.T) {
 					RelationshipKindsInput: RelationshipsInput{
 						{
 							Name: "AD_edge kind 1",
-						},
-					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
 						},
 					},
 					EnvironmentsInput: EnvironmentsInput{
@@ -947,14 +831,6 @@ func Test_validateGraphExtension(t *testing.T) {
 						},
 						{
 							Name: "AD_edge_kind_2",
-						},
-					},
-					PropertiesInput: PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
 						},
 					},
 					EnvironmentsInput: EnvironmentsInput{
@@ -1004,6 +880,10 @@ func Test_validateGraphExtension(t *testing.T) {
 							IsDisplayKind: true,
 							DisplayName:   "AD_node_kind_1",
 							Icon:          "person",
+							Info: KindInfoInputs{
+								{InfoKey: "overview", Title: "Overview", Position: 0, Content: json.RawMessage(`{"markdown":{"content":"# Overview\n\nThis is **bold**."}}`)},
+								{InfoKey: "security-notes", Title: "Security Notes", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"- Note 1\n- Note 2"}}`)},
+							},
 						},
 						{
 							Name: "AD_env_kind_1",
@@ -1011,6 +891,9 @@ func Test_validateGraphExtension(t *testing.T) {
 					},
 					RelationshipKindsInput: RelationshipsInput{{
 						Name: "AD_edge kind 1",
+						Info: KindInfoInputs{
+							{InfoKey: "details", Title: "Details", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"Relationship details"}}`)},
+						},
 					}},
 					EnvironmentsInput: EnvironmentsInput{
 						{
@@ -1039,6 +922,595 @@ func Test_validateGraphExtension(t *testing.T) {
 				require.ErrorContains(t, err, tt.wantErr.Error())
 			} else {
 				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestKindInfo_Validation(t *testing.T) {
+	t.Parallel()
+
+	var (
+		validContent = json.RawMessage(`{"markdown":{"content":"Valid content"}}`)
+	)
+
+	testCases := []struct {
+		name    string
+		input   GraphExtensionInput
+		wantErr error
+	}{
+		{
+			name: "success_-_valid_info",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{
+						{InfoKey: "overview", Title: "Overview", Position: 0, Content: validContent},
+						{InfoKey: "details", Title: "Details", Position: 1, Content: validContent},
+					},
+				}},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "error_-_uppercase_key",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "INVALID_KEY", Title: "Title", Position: 1, Content: validContent}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoKey,
+		},
+		{
+			name: "error_-_key_with_spaces",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "invalid key", Title: "Title", Position: 1, Content: validContent}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoKey,
+		},
+		{
+			name: "error_-_key_with_special_chars",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "invalid@key", Title: "Title", Position: 1, Content: validContent}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoKey,
+		},
+		{
+			name: "error_-_key_too_long",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: strings.Repeat("a", 129), Title: "Title", Position: 1, Content: validContent}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoKey,
+		},
+		{
+			name: "error_-_empty_key",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "", Title: "Title", Position: 1, Content: validContent}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoKey,
+		},
+		{
+			name: "error_-_empty_title",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "overview", Title: "", Position: 1, Content: validContent}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoTitle,
+		},
+		{
+			name: "error_-_whitespace_title",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "overview", Title: "   ", Position: 1, Content: validContent}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoTitle,
+		},
+		{
+			name: "error_-_too_many_entries",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: func() KindInfoInputs {
+						var entries KindInfoInputs
+						for i := 0; i < 101; i++ {
+							entries = append(entries, KindInfoInput{
+								InfoKey:  fmt.Sprintf("key%d", i),
+								Title:    "Title",
+								Position: int32(i + 1),
+								Content:  validContent,
+							})
+						}
+						return entries
+					}(),
+				}},
+			},
+			wantErr: ErrTooManyKindInfoEntries,
+		},
+		{
+			name: "error_-_invalid_position",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: -1, Content: validContent}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoPosition,
+		},
+		{
+			name: "success_-_zero_position",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 0, Content: validContent}},
+				}},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "error_-_content_empty",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(``)}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoContent,
+		},
+		{
+			name: "error_-_content_missing_markdown_key",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`{"foo":"bar"}`)}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoContent,
+		},
+		{
+			name: "error_-_content_missing_content_string",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`{"markdown":{}}`)}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoContent,
+		},
+		{
+			name: "success_-_blank_content_string",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"   "}}`)}},
+				}},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "success_-_empty_content_string",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`{"markdown":{"content":""}}`)}},
+				}},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "error_-_content_unknown_field",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"ok"},"extra":"x"}`)}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoContent,
+		},
+		{
+			name: "error_-_content_not_an_object",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`"just a string"`)}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoContent,
+		},
+		{
+			name: "error_-_duplicate_info_key",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{
+						{InfoKey: "overview", Title: "Overview", Position: 0, Content: validContent},
+						{InfoKey: "overview", Title: "Details", Position: 1, Content: validContent},
+					},
+				}},
+			},
+			wantErr: ErrKindInfoDuplicateInfoKey,
+		},
+		{
+			name: "error_-_duplicate_position",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{
+						{InfoKey: "overview", Title: "Overview", Position: 0, Content: validContent},
+						{InfoKey: "details", Title: "Details", Position: 0, Content: validContent},
+					},
+				}},
+			},
+			wantErr: ErrKindInfoDuplicatePosition,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			if err := tc.input.Validate(); tc.wantErr != nil {
+				require.ErrorIs(t, err, tc.wantErr)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func Test_GraphExtensionPayload_ToGraphExtensionInput(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		payload GraphExtensionPayload
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    GraphExtensionInput
+		wantErr bool
+	}{
+		{
+			name: "success",
+			args: args{
+				payload: GraphExtensionPayload{
+					GraphSchemaExtension: GraphSchemaExtensionPayload{
+						Name:        "Test_Extension",
+						DisplayName: "Test Extension",
+						Version:     "1.0.0",
+						Namespace:   "TEST",
+					},
+					GraphSchemaRelationshipKinds: []GraphSchemaRelationshipKindsPayload{
+						{
+							Name:          "GraphSchemaEdgeKind_1",
+							Description:   "GraphSchemaRelationshipKind 1",
+							IsTraversable: true,
+						},
+					},
+					GraphSchemaNodeKinds: []GraphSchemaNodeKindsPayload{
+						{
+							Name:          "GraphSchemaNodeKind_1",
+							DisplayName:   "GraphSchemaNodeKind 1",
+							Description:   "a graph schema node",
+							IsDisplayKind: true,
+							Icon:          "User",
+							IconColor:     "blue",
+						},
+					},
+					GraphEnvironments: []EnvironmentPayload{
+						{
+							EnvironmentKind: "EnvironmentInput",
+							SourceKind:      "Source_Kind_1",
+							PrincipalKinds:  []string{"User"},
+						},
+					},
+					GraphRelationshipFindings: []RelationshipFindingsPayload{
+						{
+							Name:             "Finding_1",
+							DisplayName:      "Finding 1",
+							RelationshipKind: "GraphSchemaEdgeKind_1",
+							EnvironmentKind:  "EnvironmentInput",
+							Remediation: RemediationPayload{
+								ShortDescription: "remediation for Finding_1",
+								LongDescription:  "a remediation for Finding 1",
+								ShortRemediation: "do x",
+								LongRemediation:  "do x but better",
+							},
+						},
+					},
+				},
+			},
+			want: GraphExtensionInput{
+				ExtensionInput: ExtensionInput{
+					Name:        "Test_Extension",
+					DisplayName: "Test Extension",
+					Version:     "1.0.0",
+					Namespace:   "TEST",
+				},
+				RelationshipKindsInput: RelationshipsInput{
+					{
+						Name:          "GraphSchemaEdgeKind_1",
+						Description:   "GraphSchemaRelationshipKind 1",
+						IsTraversable: true,
+						Info:          make(KindInfoInputs, 0),
+					},
+				},
+				NodeKindsInput: NodesInput{
+					{
+						Name:          "GraphSchemaNodeKind_1",
+						DisplayName:   "GraphSchemaNodeKind 1",
+						Description:   "a graph schema node",
+						IsDisplayKind: true,
+						Icon:          "User",
+						IconColor:     "blue",
+						Info:          make(KindInfoInputs, 0),
+					},
+				},
+				EnvironmentsInput: []EnvironmentInput{
+					{
+						EnvironmentKindName: "EnvironmentInput",
+						SourceKindName:      "Source_Kind_1",
+						PrincipalKinds:      []string{"User"},
+					},
+				},
+				RelationshipFindingsInput: []RelationshipFindingInput{
+					{
+						Name:                 "Finding_1",
+						DisplayName:          "Finding 1",
+						RelationshipKindName: "GraphSchemaEdgeKind_1",
+						EnvironmentKindName:  "EnvironmentInput",
+						RemediationInput: RemediationInput{
+							ShortDescription: "remediation for Finding_1",
+							LongDescription:  "a remediation for Finding 1",
+							ShortRemediation: "do x",
+							LongRemediation:  "do x but better",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:    "error_-_invalid_node_info_markdown",
+			wantErr: true,
+			args: args{
+				payload: GraphExtensionPayload{
+					GraphSchemaNodeKinds: []GraphSchemaNodeKindsPayload{
+						{
+							Name: "Bad_Node",
+							Info: map[string]KindInfoPayload{
+								"bad": {Title: "Bad", Position: 1, Markdown: []byte(`{invalid json`)},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := tt.args.payload.ToGraphExtensionInput()
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equalf(t, tt.want, got, "ToGraphExtensionInput(%v)", tt.args.payload)
+			}
+		})
+	}
+}
+
+func Test_parseInfoPayload(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		input   map[string]KindInfoPayload
+		want    KindInfoInputs
+		wantErr bool
+	}{
+		{
+			name:  "empty_info",
+			input: nil,
+			want:  make(KindInfoInputs, 0),
+		},
+		{
+			name: "valid_info",
+			input: map[string]KindInfoPayload{
+				"overview": {
+					Title:    "Overview",
+					Position: 1,
+					Markdown: []byte(`{"content":"# Test"}`),
+				},
+			},
+			want: KindInfoInputs{
+				{
+					InfoKey:  "overview",
+					Title:    "Overview",
+					Position: 1,
+					Content:  []byte(`{"markdown":{"content":"# Test"}}`),
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "multiple_info_entries",
+			input: map[string]KindInfoPayload{
+				"overview": {
+					Title:    "Overview",
+					Position: 0,
+					Markdown: []byte(`{"content":"# Overview"}`),
+				},
+				"details": {
+					Title:    "Details",
+					Position: 1,
+					Markdown: []byte(`{"content":"## Details"}`),
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "blank_markdown_content",
+			input: map[string]KindInfoPayload{
+				"empty": {
+					Title:    "Empty",
+					Position: 1,
+					Markdown: []byte(`{"content":""}`),
+				},
+			},
+			want: KindInfoInputs{
+				{
+					InfoKey:  "empty",
+					Title:    "Empty",
+					Position: 1,
+					Content:  []byte(`{"markdown":{"content":""}}`),
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "empty_json_rawmessage_default",
+			input: map[string]KindInfoPayload{
+				"test": {
+					Title:    "Test",
+					Position: 1,
+					Markdown: []byte{}, // Empty markdown gets default structure
+				},
+			},
+			want: KindInfoInputs{
+				{
+					InfoKey:  "test",
+					Title:    "Test",
+					Position: 1,
+					Content:  []byte(`{"markdown":{"content":""}}`), // Empty content
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "nil_json_rawmessage_default",
+			input: map[string]KindInfoPayload{
+				"test": {
+					Title:    "Test",
+					Position: 1,
+					Markdown: nil, // Nil markdown also gets default structure
+				},
+			},
+			want: KindInfoInputs{
+				{
+					InfoKey:  "test",
+					Title:    "Test",
+					Position: 1,
+					Content:  []byte(`{"markdown":{"content":""}}`), // Empty content
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "error_-_invalid_markdown_json",
+			input: map[string]KindInfoPayload{
+				"bad": {
+					Title:    "Bad",
+					Position: 1,
+					Markdown: []byte(`{invalid json`), // malformed JSON fails to wrap
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "error_-_position_exceeds_int32",
+			input: map[string]KindInfoPayload{
+				"overflow": {
+					Title:    "Overflow",
+					Position: math.MaxInt32 + 1, // would silently wrap when cast to int32
+					Markdown: []byte(`{"content":"# Test"}`),
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "error_-_position_below_int32",
+			input: map[string]KindInfoPayload{
+				"underflow": {
+					Title:    "Underflow",
+					Position: math.MinInt32 - 1, // would silently wrap when cast to int32
+					Markdown: []byte(`{"content":"# Test"}`),
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "zero_position",
+			input: map[string]KindInfoPayload{
+				"zero": {
+					Title:    "Zero",
+					Position: 0, // within int32 range; passes the overflow guard
+					Markdown: []byte(`{"content":"# Test"}`),
+				},
+			},
+			want: KindInfoInputs{
+				{
+					InfoKey:  "zero",
+					Title:    "Zero",
+					Position: 0,
+					Content:  []byte(`{"markdown":{"content":"# Test"}}`),
+				},
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := parseInfoPayload(tt.input)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				if tt.want != nil {
+					assert.Equal(t, tt.want, got)
+				} else {
+					assert.NotNil(t, got)
+				}
 			}
 		})
 	}

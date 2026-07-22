@@ -16,7 +16,7 @@
 
 import { faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { Box, Paper, Table, TableBody, TableContainer } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { AzureDataQualityStat } from 'js-client-library';
 import React, { useEffect } from 'react';
@@ -69,9 +69,8 @@ export const TenantMap = {
     tenants: { displayText: 'Tenants', kind: AzureNodeKind.Tenant },
 };
 
-export const TenantInfo: React.FC<{ contextId: string; headers?: boolean; onDataError?: () => void }> = ({
+export const TenantInfo: React.FC<{ contextId: string; onDataError?: () => void }> = ({
     contextId,
-    headers = false,
     onDataError = () => {},
 }) => {
     const { data: tenantData, isLoading, isError } = useAzureDataQualityStatsQuery(contextId);
@@ -81,7 +80,7 @@ export const TenantInfo: React.FC<{ contextId: string; headers?: boolean; onData
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout stats={null} headers={headers} loading={true} />;
+        return <Layout stats={null} isLoading={true} />;
     }
 
     if (isError || !tenantData || !tenantData.data.length) {
@@ -90,7 +89,7 @@ export const TenantInfo: React.FC<{ contextId: string; headers?: boolean; onData
 
     const stats = tenantData.data[0];
 
-    return <Layout stats={stats} headers={headers} loading={false} />;
+    return <Layout stats={stats} isLoading={false} />;
 };
 
 export const AzurePlatformInfo: React.FC<{ onDataError?: () => void }> = ({ onDataError = () => {} }) => {
@@ -101,7 +100,7 @@ export const AzurePlatformInfo: React.FC<{ onDataError?: () => void }> = ({ onDa
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout stats={null} loading={true} />;
+        return <Layout stats={null} isLoading={true} />;
     }
 
     if (isError || !platformData || !platformData.data.length) {
@@ -110,27 +109,18 @@ export const AzurePlatformInfo: React.FC<{ onDataError?: () => void }> = ({ onDa
 
     const stats = platformData.data[0];
 
-    return <Layout stats={stats} loading={false} />;
+    return <Layout stats={stats} isLoading={false} />;
 };
 
 const Layout: React.FC<{
     stats: AzureDataQualityStat | null;
-    loading: boolean;
-    headers?: boolean;
-}> = ({ stats, loading, headers }) => {
+    isLoading: boolean;
+}> = ({ stats, isLoading }) => {
     const classes = useStyles();
     return (
         <Box position='relative'>
             <TableContainer className={classes.container}>
                 <Table>
-                    {headers && (
-                        <TableHead className={classes.print}>
-                            <TableRow>
-                                <TableCell align={'left'}>Item</TableCell>
-                                <TableCell align={'right'}>Result</TableCell>
-                            </TableRow>
-                        </TableHead>
-                    )}
                     <TableBody>
                         {Object.keys(TenantMap).map((key) => {
                             if (key === 'tenants' && stats?.tenants === undefined) return null;
@@ -144,7 +134,7 @@ const Layout: React.FC<{
                                     icon={<NodeIcon nodeType={mapValue.kind} />}
                                     display={mapValue.displayText}
                                     value={value}
-                                    loading={loading}
+                                    isLoading={isLoading}
                                 />
                             );
                         })}
@@ -158,7 +148,7 @@ const Layout: React.FC<{
                             icon={<FontAwesomeIcon icon={faUsers} />}
                             display='Relationships'
                             value={stats?.relationships}
-                            loading={loading}
+                            isLoading={isLoading}
                         />
                     </TableBody>
                 </Table>

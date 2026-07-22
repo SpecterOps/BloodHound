@@ -26,41 +26,57 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             ...createCssVariables(tokens, 'dark'),
             ...createCssVariables(legacyTokens, 'dark'),
         },
-    }),
-        addUtilities({
-            '.clip-right-rounded': {
-                'clip-path': 'inset(0 0.5px 0 -100vw round 0.25rem)',
+    });
+
+    addUtilities({
+        '.focus-ring': {
+            outline: 'var(--focus-ring-width) solid var(--focus-ring)',
+            'outline-offset': 'var(--focus-ring-offset-width)',
+            '--tw-ring-offset-width': 'var(--focus-ring-offset-width)',
+            '--tw-ring-offset-color': 'var(--focus-ring-offset)',
+            '--tw-ring-color': 'var(--focus-ring)',
+            '--tw-ring-offset-shadow': '0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color)',
+            '--tw-ring-shadow':
+                '0 0 0 calc(var(--focus-ring-width) + var(--tw-ring-offset-width)) var(--tw-ring-color)',
+            'box-shadow': 'var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)',
+        },
+        '.focus-ring-inset': {
+            outline: 'none',
+            'box-shadow': 'inset 0 0 0 var(--focus-ring-width) var(--focus-ring), var(--tw-shadow, 0 0 #0000)',
+        },
+        '.clip-right-rounded': {
+            'clip-path': 'inset(0 0.5px 0 -100vw round 0.25rem)',
+        },
+        '.clip-left-rounded': {
+            'clip-path': 'inset(0 -100vw 0 0 round 0.25rem)',
+        },
+        ".TooltipContent[data-side='top']": {
+            'animation-name': 'slideUp',
+        },
+        ".TooltipContent[data-side='bottom']": {
+            'animation-name': 'slideDown',
+        },
+        '@keyframes slideDown': {
+            from: {
+                opacity: '0',
+                transform: 'translateY(-10px)',
             },
-            '.clip-left-rounded': {
-                'clip-path': 'inset(0 -100vw 0 0 round 0.25rem)',
+            to: {
+                opacity: '1',
+                transform: 'translateY(0)',
             },
-            ".TooltipContent[data-side='top']": {
-                'animation-name': 'slideUp',
+        },
+        '@keyframes slideUp': {
+            from: {
+                opacity: '0',
+                transform: 'translateY(10px)',
             },
-            ".TooltipContent[data-side='bottom']": {
-                'animation-name': 'slideDown',
+            to: {
+                opacity: '1',
+                transform: 'translateY(0)',
             },
-            '@keyframes slideDown': {
-                from: {
-                    opacity: '0',
-                    transform: 'translateY(-10px)',
-                },
-                to: {
-                    opacity: '1',
-                    transform: 'translateY(0)',
-                },
-            },
-            '@keyframes slideUp': {
-                from: {
-                    opacity: '0',
-                    transform: 'translateY(10px)',
-                },
-                to: {
-                    opacity: '1',
-                    transform: 'translateY(0)',
-                },
-            },
-        });
+        },
+    });
 };
 
 export default plugin;
