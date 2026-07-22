@@ -51,13 +51,14 @@ func TestConvertAzureRoleEligibilityScheduleInstanceToRel(t *testing.T) {
 		Id:               "lAPpYvVpN0KRkAEhdxReELKn6QMIlSROgkgWZy9fE3c-1-e",
 		RoleDefinitionId: "62e90394-69f5-4237-9190-012177145e10",
 		PrincipalId:      "03e9a7b2-9508-4e24-8248-16672f5f1377",
+		// Note that we no longer exclude items with directory scope other than "/""
 		DirectoryScopeId: "abc123",
 		StartDateTime:    "2024-01-04T01:22:36.867Z",
 		TenantId:         "6c12b0b0-b2cc-4a73-8252-0b94bfca2145",
 	}
 
 	expectedRels = ein.ConvertAzureRoleEligibilityScheduleInstanceToRel(testData)
-	require.Len(t, expectedRels, 0)
+	require.Len(t, expectedRels, 1)
 }
 
 func Test_ConvertAppFederatedIdentityCredential(t *testing.T) {
