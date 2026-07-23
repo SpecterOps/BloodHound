@@ -13,8 +13,29 @@
 # limitations under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
-
-allOf:
-  - $ref: "./model.kind-info-markdown.yaml"
-  - type: object
-    required: [markdown]
+type: object
+properties:
+  node_kind_id:
+    type: integer
+    format: int32
+    example: 42
+  name:
+    type: string
+    example: "User"
+  display_name:
+    type: string
+    example: "User"
+  description:
+    type: string
+    example: "a user node kind"
+  is_display_kind:
+    type: boolean
+    example: true
+  icon:
+    type: string
+    example: "user"
+  color:
+    type: string
+    example: "#FFFFFF"
+  info:
+    $ref: './model.graph-extension.kind-info-definition.yaml'
