@@ -769,8 +769,7 @@ func (s *BloodhoundDB) InsertSelectorNodes(ctx context.Context, nodes []model.As
 func insertSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []model.AssetGroupSelectorNode) error {
 	var (
 		err               error
-		newCertifications []certificationChanges
-		historyRecords    []selectorNodeHistoryRecord
+		newCertifications []selectorNodeCertificationChange
 		rows              pgx.Rows
 		sqlArgs           pgx.StrictNamedArgs
 		sqlQuery          string
@@ -828,15 +827,11 @@ func insertSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 		return fmt.Errorf("batch inserting selector nodes: %w", err)
 	}
 
-	if newCertifications, err = pgx.CollectRows(rows, pgx.RowToStructByName[certificationChanges]); err != nil {
+	if newCertifications, err = pgx.CollectRows(rows, pgx.RowToStructByName[selectorNodeCertificationChange]); err != nil {
 		return fmt.Errorf("scanning inserted selector node history records: %w", err)
 	}
 
-	for _, certification := range newCertifications {
-		historyRecords = append(historyRecords, newSelectorNodeHistoryRecord(certification.Target, certification.AssetGroupCertification, certification.AssetGroupTagId))
-	}
-
-	if err = insertSelectorNodeHistoryRecordsBatch(ctx, transaction, historyRecords); err != nil {
+	if err = insertSelectorNodeCertificationHistoryBatch(ctx, transaction, newCertifications); err != nil {
 		return fmt.Errorf("batch inserting selector node history records: %w", err)
 	}
 
@@ -881,8 +876,7 @@ func (s *BloodhoundDB) UpdateSelectorNodes(ctx context.Context, nodes []model.As
 func updateSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []model.AssetGroupSelectorNode) error {
 	var (
 		err                  error
-		certificationUpdates []certificationChanges
-		historyRecords       []selectorNodeHistoryRecord
+		certificationUpdates []selectorNodeCertificationChange
 		rows                 pgx.Rows
 		sqlArgs              pgx.StrictNamedArgs
 		sqlQuery             string
@@ -953,39 +947,25 @@ func updateSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 		return fmt.Errorf("batch updating selector nodes: %w", err)
 	}
 
-	if certificationUpdates, err = pgx.CollectRows(rows, pgx.RowToStructByName[certificationChanges]); err != nil {
+	if certificationUpdates, err = pgx.CollectRows(rows, pgx.RowToStructByName[selectorNodeCertificationChange]); err != nil {
 		return fmt.Errorf("scanning updated selector node history records: %w", err)
 	}
 
-	for _, certification := range certificationUpdates {
-		historyRecords = append(historyRecords, newSelectorNodeHistoryRecord(certification.Target, certification.AssetGroupCertification, certification.AssetGroupTagId))
-	}
-
-	if err = insertSelectorNodeHistoryRecordsBatch(ctx, transaction, historyRecords); err != nil {
+	if err = insertSelectorNodeCertificationHistoryBatch(ctx, transaction, certificationUpdates); err != nil {
 		return fmt.Errorf("batch inserting selector node history records: %w", err)
 	}
 
 	return nil
 }
 
-type selectorNodeHistoryRecord struct {
-	target          string
-	action          model.AssetGroupHistoryAction
-	assetGroupTagId int32
-}
-
-type certificationChanges struct {
+type selectorNodeCertificationChange struct {
 	Target                  string `db:"target"`
 	AssetGroupCertification int32  `db:"asset_group_certification"`
 	AssetGroupTagId         int32  `db:"asset_group_tag_id"`
 }
 
-func newSelectorNodeHistoryRecord(target string, assetGroupCertification int32, assetGroupTagId int32) selectorNodeHistoryRecord {
-	return selectorNodeHistoryRecord{
-		target:          target,
-		action:          model.ToAssetGroupHistoryActionFromAssetGroupCertification(model.AssetGroupCertification(assetGroupCertification)),
-		assetGroupTagId: assetGroupTagId,
-	}
+func (s selectorNodeCertificationChange) historyAction() model.AssetGroupHistoryAction {
+	return model.ToAssetGroupHistoryActionFromAssetGroupCertification(model.AssetGroupCertification(s.AssetGroupCertification))
 }
 
 func newSelectorNodeBatchSQLArgs(nodes []model.AssetGroupSelectorNode) (pgx.StrictNamedArgs, error) {
@@ -1066,28 +1046,28 @@ func newStrictNamedArrayArgs(expectedValueCount int, arguments ...arrayArgument)
 	return sqlArguments, nil
 }
 
-func insertSelectorNodeHistoryRecordsBatch(ctx context.Context, transaction pgx.Tx, historyRecords []selectorNodeHistoryRecord) error {
+func insertSelectorNodeCertificationHistoryBatch(ctx context.Context, transaction pgx.Tx, certificationChanges []selectorNodeCertificationChange) error {
 	var (
-		assetGroupTagIds = make([]int32, 0, len(historyRecords))
-		actions          = make([]string, 0, len(historyRecords))
-		targets          = make([]string, 0, len(historyRecords))
+		assetGroupTagIds = make([]int32, 0, len(certificationChanges))
+		actions          = make([]string, 0, len(certificationChanges))
+		targets          = make([]string, 0, len(certificationChanges))
 		err              error
 		sqlArgs          pgx.StrictNamedArgs
 		sqlQuery         string
 	)
 
-	if len(historyRecords) == 0 {
+	if len(certificationChanges) == 0 {
 		return nil
 	}
 
-	for _, historyRecord := range historyRecords {
-		assetGroupTagIds = append(assetGroupTagIds, historyRecord.assetGroupTagId)
-		actions = append(actions, string(historyRecord.action))
-		targets = append(targets, historyRecord.target)
+	for _, certificationChange := range certificationChanges {
+		assetGroupTagIds = append(assetGroupTagIds, certificationChange.AssetGroupTagId)
+		actions = append(actions, string(certificationChange.historyAction()))
+		targets = append(targets, certificationChange.Target)
 	}
 
 	if sqlArgs, err = newStrictNamedArrayArgs(
-		len(historyRecords),
+		len(certificationChanges),
 		newArrayArgument("actions", actions),
 		newArrayArgument("asset_group_tag_ids", assetGroupTagIds),
 		newArrayArgument("targets", targets),
