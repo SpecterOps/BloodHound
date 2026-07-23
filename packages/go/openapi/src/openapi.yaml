@@ -707,6 +707,8 @@ paths:
   # management operations
   /api/v2/clients/{client_id}/management:
     $ref: './paths/clients.clients.id.management.yaml'
+  /api/v2/clients/management/available:
+    $ref: './paths/clients.clients.management.available.yaml'
   /api/v2/clients/management/start:
     $ref: './paths/clients.clients.management.start.yaml'
   /api/v2/clients/management/end:
