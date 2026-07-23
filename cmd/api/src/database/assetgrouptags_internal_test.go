@@ -126,3 +126,50 @@ func TestSelectorNodeBatchValuesSQLArgs(t *testing.T) {
 		})
 	}
 }
+
+func TestSelectorNodeKeyBatchValuesSQLArgs(t *testing.T) {
+	t.Parallel()
+
+	t.Run("Success -- Builds strict named arguments", func(t *testing.T) {
+		t.Parallel()
+		batchValues := newSelectorNodeKeyBatchValues(make([]model.AssetGroupSelectorNode, 2))
+
+		sqlArguments, err := batchValues.sqlArgs(2)
+
+		require.NoError(t, err)
+		require.Len(t, sqlArguments, 2)
+		assert.Contains(t, sqlArguments, "selector_ids")
+		assert.Contains(t, sqlArguments, "node_ids")
+	})
+
+	for _, test := range []struct {
+		name              string
+		argumentName      string
+		removeColumnValue func(batchValues *selectorNodeKeyBatchValues)
+	}{
+		{
+			name:         "Rejects selector ID length mismatch",
+			argumentName: "selector_ids",
+			removeColumnValue: func(batchValues *selectorNodeKeyBatchValues) {
+				batchValues.selectorIds = batchValues.selectorIds[:1]
+			},
+		},
+		{
+			name:         "Rejects node ID length mismatch",
+			argumentName: "node_ids",
+			removeColumnValue: func(batchValues *selectorNodeKeyBatchValues) {
+				batchValues.nodeIds = batchValues.nodeIds[:1]
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			batchValues := newSelectorNodeKeyBatchValues(make([]model.AssetGroupSelectorNode, 2))
+			test.removeColumnValue(&batchValues)
+
+			_, err := batchValues.sqlArgs(2)
+
+			assert.EqualError(t, err, "selector node key batch argument \""+test.argumentName+"\" has 1 values; expected 2")
+		})
+	}
+}
