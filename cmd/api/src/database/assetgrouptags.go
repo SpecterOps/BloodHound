@@ -783,18 +783,16 @@ func insertSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 
 	sqlQuery = fmt.Sprintf(`
 	WITH batch AS (
-		SELECT *
-		FROM unnest(
-			@selector_ids::int[],
-			@node_ids::bigint[],
-			@certifications::int[],
-			@certified_by_values::text[],
-			@sources::int[],
-			@node_primary_kinds::text[],
-			@node_environment_ids::text[],
-			@node_object_ids::text[],
-			@node_names::text[]
-		) AS batch(selector_id, node_id, certified, certified_by, source, node_primary_kind, node_environment_id, node_object_id, node_name)
+		SELECT
+			unnest(@selector_ids::int[]) AS selector_id,
+			unnest(@node_ids::bigint[]) AS node_id,
+			unnest(@certifications::int[]) AS certified,
+			unnest(@certified_by_values::text[]) AS certified_by,
+			unnest(@sources::int[]) AS source,
+			unnest(@node_primary_kinds::text[]) AS node_primary_kind,
+			unnest(@node_environment_ids::text[]) AS node_environment_id,
+			unnest(@node_object_ids::text[]) AS node_object_id,
+			unnest(@node_names::text[]) AS node_name
 	),
 	inserted AS (
 		INSERT INTO %s (selector_id, node_id, certified, certified_by, source, node_primary_kind, node_environment_id, node_object_id, node_name, created_at, updated_at)
@@ -906,18 +904,16 @@ func updateSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 
 	sqlQuery = fmt.Sprintf(`
 	WITH batch AS (
-		SELECT *
-		FROM unnest(
-			@selector_ids::int[],
-			@node_ids::bigint[],
-			@certifications::int[],
-			@certified_by_values::text[],
-			@sources::int[],
-			@node_primary_kinds::text[],
-			@node_environment_ids::text[],
-			@node_object_ids::text[],
-			@node_names::text[]
-		) AS batch(selector_id, node_id, certified, certified_by, source, node_primary_kind, node_environment_id, node_object_id, node_name)
+		SELECT
+			unnest(@selector_ids::int[]) AS selector_id,
+			unnest(@node_ids::bigint[]) AS node_id,
+			unnest(@certifications::int[]) AS certified,
+			unnest(@certified_by_values::text[]) AS certified_by,
+			unnest(@sources::int[]) AS source,
+			unnest(@node_primary_kinds::text[]) AS node_primary_kind,
+			unnest(@node_environment_ids::text[]) AS node_environment_id,
+			unnest(@node_object_ids::text[]) AS node_object_id,
+			unnest(@node_names::text[]) AS node_name
 	),
 	changed_certifications AS (
 		SELECT
