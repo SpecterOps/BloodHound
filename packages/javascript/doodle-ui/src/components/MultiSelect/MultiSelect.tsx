@@ -42,11 +42,16 @@ const CaretDown = ({ className, size = 12 }: { className?: string; size?: number
 const MultiSelectTriggerVariants = cva(
     'flex h-10 w-full items-center justify-between rounded bg-primary px-[14px] py-2 text-base font-normal leading-6 tracking-[0.15px] text-text-contrast focus:outline-none focus-visible:focus-ring data-[state=open]:bg-primary enabled:hover:bg-secondary disabled:cursor-not-allowed disabled:border disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-text-disabled aria-[invalid=true]:[&>svg]:text-text-main aria-[invalid=true]:border aria-[invalid=true]:border-status-error-main aria-[invalid=true]:bg-select-trigger-outlined-fill aria-[invalid=true]:text-input-placeholder-text  aria-[invalid=true]:enabled:hover:border-status-error-main aria-[invalid=true]:enabled:hover:bg-select-trigger-outlined-fill aria-[invalid=true]:data-[state=open]:bg-select-trigger-outlined-fill'
 );
+
+const multiSelectEmptyTriggerStyles =
+    'ring-1 ring-input-border-default bg-select-trigger-outlined-fill text-input-placeholder-text [&>svg]:text-text-main enabled:hover:text-text-contrast [&:enabled:hover>svg]:text-text-contrast data-[state=open]:text-text-contrast [&[data-state=open]>svg]:text-text-contrast';
+
 const multiSelectRowStyles = 'flex w-full items-center gap-2 rounded-lg p-2';
 
 const multiSelectInteractiveRowStyles = 'group cursor-pointer hover:bg-secondary hover:text-text-contrast';
 
 const multiSelectCheckboxStyles = 'enabled:data-[state=unchecked]:!border-current group-hover:enabled:!border-current';
+
 interface MultiSelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     open?: boolean;
 }
@@ -294,7 +299,10 @@ const MultiSelect = ({
                     open={open}
                     disabled={disabled}
                     aria-invalid={error || undefined}
-                    className={className}>
+                    className={cn(
+                        value.length === 0 && !disabled && !error && multiSelectEmptyTriggerStyles,
+                        className
+                    )}>
                     {triggerText}
                 </MultiSelectTrigger>
             </PopoverTrigger>

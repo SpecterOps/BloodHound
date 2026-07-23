@@ -207,7 +207,6 @@ export const Loading: Story = {
         value: [],
         onValueChange: () => {},
         placeholder: 'Select Items',
-        isSearchable: true,
         isLoading: true,
         loadingText: 'Loading options',
     },
