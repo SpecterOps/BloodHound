@@ -117,6 +117,7 @@ export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
             onChange={handleChange}>
             {endpoint && (
                 <InfiniteScrollingTable
+                    key={id}
                     itemCount={count}
                     fetchDataCallback={(params: { skip: number; limit: number }) => endpoint({ id, ...params })}
                     onClick={handleClick}
