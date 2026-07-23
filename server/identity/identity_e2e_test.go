@@ -30,7 +30,10 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/peterldowns/pgtestdb"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -129,6 +132,31 @@ type permissionResponseEnvelope struct {
 // GET /api/v2/roles/{role_id} handler.
 type roleResponseEnvelope struct {
 	Data model.Role `json:"data"`
+}
+
+// listRolesResponseEnvelope is the JSON envelope shape returned by the
+// GET /api/v2/roles handler.
+type listRolesResponseEnvelope struct {
+	Data struct {
+		Roles model.Roles `json:"roles"`
+	} `json:"data"`
+}
+
+// newListRolesHandler wires the identity slice's ListRoles handler backed by
+// the given database, wrapped in the same filter and sort middleware the route
+// applies in production (see routes.Register). The middleware parses and
+// validates the query parameters into the BloodHound context, so this exercises
+// the full request path the handler relies on.
+func newListRolesHandler(db *database.BloodhoundDB) http.HandlerFunc {
+	var (
+		handlerSet = newIdentityHandlers(db)
+		roleList   = handlers.RoleListView{}
+		handler    = middleware.FilterMiddleware(roleList)(
+			middleware.SortMiddleware(roleList)(http.HandlerFunc(handlerSet.ListRoles)),
+		)
+	)
+
+	return handler.ServeHTTP
 }
 
 func TestGetPermission(t *testing.T) {
@@ -230,5 +258,117 @@ func TestGetRole(t *testing.T) {
 		recorder := httptest.NewRecorder()
 		handler(recorder, newRequest(t, "not-an-int"))
 		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+	})
+}
+
+func TestListRoles(t *testing.T) {
+	var (
+		db      = setupIdentityDB(t)
+		ctx     = context.Background()
+		handler = newListRolesHandler(db)
+		roles   model.Roles
+		err     error
+	)
+
+	roles, err = db.GetAllRoles(ctx, "name", model.SQLFilter{})
+	require.NoError(t, err)
+	require.NotEmpty(t, roles, "expected migrations to seed at least one role")
+	seededRole := roles[0]
+
+	newRequest := func(t *testing.T, query url.Values) *http.Request {
+		t.Helper()
+		reqCtx := context.WithValue(ctx, bhctx.ValueKey, &bhctx.Context{})
+		req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, "/api/v2/roles", nil)
+		require.NoError(t, err)
+		req.URL.RawQuery = query.Encode()
+		return req
+	}
+
+	t.Run("returns 200 OK with all seeded roles", func(t *testing.T) {
+		recorder := httptest.NewRecorder()
+		handler(recorder, newRequest(t, url.Values{}))
+
+		assert.Equal(t, http.StatusOK, recorder.Code)
+
+		var envelope listRolesResponseEnvelope
+		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
+		assert.Len(t, envelope.Data.Roles, len(roles))
+		assert.NotEmpty(t, envelope.Data.Roles[0].Permissions, "expected roles to preload their permissions")
+	})
+
+	t.Run("returns 200 OK with roles sorted by name ascending", func(t *testing.T) {
+		query := url.Values{}
+		query.Add("sort_by", "name")
+
+		recorder := httptest.NewRecorder()
+		handler(recorder, newRequest(t, query))
+
+		assert.Equal(t, http.StatusOK, recorder.Code)
+
+		var envelope listRolesResponseEnvelope
+		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
+		require.Len(t, envelope.Data.Roles, len(roles))
+		for i := 1; i < len(envelope.Data.Roles); i++ {
+			assert.LessOrEqual(t, envelope.Data.Roles[i-1].Name, envelope.Data.Roles[i].Name, "roles should be sorted by name ascending")
+		}
+	})
+
+	t.Run("returns 200 OK with roles filtered by name", func(t *testing.T) {
+		query := url.Values{}
+		query.Add("name", "eq:"+seededRole.Name)
+
+		recorder := httptest.NewRecorder()
+		handler(recorder, newRequest(t, query))
+
+		assert.Equal(t, http.StatusOK, recorder.Code)
+
+		var envelope listRolesResponseEnvelope
+		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
+		require.Len(t, envelope.Data.Roles, 1)
+		assert.Equal(t, seededRole.Name, envelope.Data.Roles[0].Name)
+	})
+
+	t.Run("returns 400 Bad Request for a non-sortable column", func(t *testing.T) {
+		query := url.Values{}
+		query.Add("sort_by", "invalidColumn")
+
+		recorder := httptest.NewRecorder()
+		handler(recorder, newRequest(t, query))
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.Contains(t, recorder.Body.String(), api.ErrorResponseDetailsNotSortable)
+	})
+
+	t.Run("returns 400 Bad Request for a non-filterable column", func(t *testing.T) {
+		query := url.Values{}
+		query.Add("foo", "eq:bar")
+
+		recorder := httptest.NewRecorder()
+		handler(recorder, newRequest(t, query))
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.Contains(t, recorder.Body.String(), api.ErrorResponseDetailsColumnNotFilterable)
+	})
+
+	t.Run("returns 400 Bad Request for a malformed filter predicate", func(t *testing.T) {
+		query := url.Values{}
+		query.Add("name", "invalidPredicate:foo")
+
+		recorder := httptest.NewRecorder()
+		handler(recorder, newRequest(t, query))
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.Contains(t, recorder.Body.String(), api.ErrorResponseDetailsBadQueryParameterFilters)
+	})
+
+	t.Run("returns 400 Bad Request for an unsupported filter predicate", func(t *testing.T) {
+		query := url.Values{}
+		query.Add("name", "gt:0")
+
+		recorder := httptest.NewRecorder()
+		handler(recorder, newRequest(t, query))
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.Contains(t, recorder.Body.String(), api.ErrorResponseDetailsFilterPredicateNotSupported)
 	})
 }

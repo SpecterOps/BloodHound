@@ -26,6 +26,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/packages/go/responses"
 	"github.com/specterops/bloodhound/server/identity/internal/services"
 )
@@ -34,6 +36,7 @@ import (
 type Identity interface {
 	GetRole(ctx context.Context, id int32) (services.Role, error)
 	GetPermission(ctx context.Context, id int) (services.Permission, error)
+	ListRoles(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.Role, error)
 }
 
 // Handlers is a dependency injection container for identity handlers.
@@ -90,6 +93,25 @@ func (s *Handlers) GetRole(response http.ResponseWriter, request *http.Request) 
 	}
 
 	responses.WriteBasic(ctx, BuildRoleView(role), http.StatusOK, response)
+}
+
+// ListRoles returns the roles matching the filters and ordering parsed from the
+// request query parameters. The filter and sort middleware validate the query
+// parameters against RoleListView and enrich the context before this handler
+// runs, so it reads the parsed values directly from the BloodHound context.
+func (s *Handlers) ListRoles(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx   = request.Context()
+		bhCtx = bhctx.Get(ctx)
+	)
+
+	roles, err := s.identity.ListRoles(ctx, bhCtx.Filters, bhCtx.Sort)
+	if err != nil {
+		handleIdentityError(request, response, err)
+		return
+	}
+
+	responses.WriteBasic(ctx, BuildRoleListView(roles), http.StatusOK, response)
 }
 
 func handleIdentityError(request *http.Request, response http.ResponseWriter, err error) {

@@ -25,6 +25,8 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/identity/internal/handlers"
 	"github.com/specterops/bloodhound/server/identity/internal/handlers/mocks"
 	"github.com/specterops/bloodhound/server/identity/internal/services"
@@ -189,6 +191,93 @@ func TestHandlers_GetRole(t *testing.T) {
 			}
 
 			handlerSet.GetRole(recorder, request)
+
+			assert.Equal(t, tt.wantStatus, recorder.Code)
+			if tt.assertBody != nil {
+				tt.assertBody(t, recorder.Body.Bytes())
+			}
+		})
+	}
+}
+
+func TestHandlers_ListRoles(t *testing.T) {
+	var (
+		unexpectedErr = errors.New("unexpected database failure")
+		filters       = params.Filters{
+			"name": {{Field: "name", Operator: params.Equals, Value: "Administrator", IsStringData: true}},
+		}
+		sortItems = params.SortItems{{Field: "name", Direction: params.Ascending}}
+		expected  = []services.Role{
+			{
+				ID:          3,
+				Name:        "Administrator",
+				Description: "Can manage the application",
+				Permissions: []services.Permission{{ID: 1, Authority: "app", Name: "ManageProviders"}},
+			},
+		}
+	)
+
+	tests := []struct {
+		name       string
+		expect     func(m *mocks.MockIdentity, ctx context.Context)
+		wantStatus int
+		assertBody func(t *testing.T, body []byte)
+	}{
+		{
+			name: "returns 200 with the role list view on success",
+			expect: func(m *mocks.MockIdentity, ctx context.Context) {
+				m.EXPECT().ListRoles(ctx, filters, sortItems).Return(expected, nil)
+			},
+			wantStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body []byte) {
+				var envelope struct {
+					Data handlers.RoleListView `json:"data"`
+				}
+				require.NoError(t, json.Unmarshal(body, &envelope))
+				require.Len(t, envelope.Data.Roles, 1)
+				assert.Equal(t, expected[0].ID, envelope.Data.Roles[0].ID)
+				assert.Equal(t, expected[0].Name, envelope.Data.Roles[0].Name)
+			},
+		},
+		{
+			name: "returns 200 with an empty roles array when no roles match",
+			expect: func(m *mocks.MockIdentity, ctx context.Context) {
+				m.EXPECT().ListRoles(ctx, filters, sortItems).Return([]services.Role{}, nil)
+			},
+			wantStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body []byte) {
+				var envelope struct {
+					Data handlers.RoleListView `json:"data"`
+				}
+				require.NoError(t, json.Unmarshal(body, &envelope))
+				assert.Empty(t, envelope.Data.Roles)
+			},
+		},
+		{
+			name: "returns 500 on unexpected service error",
+			expect: func(m *mocks.MockIdentity, ctx context.Context) {
+				m.EXPECT().ListRoles(ctx, filters, sortItems).Return(nil, unexpectedErr)
+			},
+			wantStatus: http.StatusInternalServerError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				identityMock = mocks.NewMockIdentity(t)
+				handlerSet   = handlers.NewHandlersContainer(identityMock)
+				recorder     = httptest.NewRecorder()
+				request      = newRequestWithVars(t, "/api/v2/roles", nil)
+			)
+
+			request = bhctx.SetRequestContext(request, &bhctx.Context{Filters: filters, Sort: sortItems})
+
+			if tt.expect != nil {
+				tt.expect(identityMock, request.Context())
+			}
+
+			handlerSet.ListRoles(recorder, request)
 
 			assert.Equal(t, tt.wantStatus, recorder.Code)
 			if tt.assertBody != nil {

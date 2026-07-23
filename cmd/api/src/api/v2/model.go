@@ -37,10 +37,6 @@ type ListPermissionsResponse struct {
 	Permissions model.Permissions `json:"permissions"`
 }
 
-type ListRolesResponse struct {
-	Roles model.Roles `json:"roles"`
-}
-
 type ListUsersResponse struct {
 	Users model.Users `json:"users"`
 }
