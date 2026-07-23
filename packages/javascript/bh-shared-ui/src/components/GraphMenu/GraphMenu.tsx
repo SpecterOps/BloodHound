@@ -14,42 +14,58 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Menu } from '@mui/material';
-import React, { Children, FC, JSXElementConstructor, ReactElement, useState } from 'react';
+import { Menu, Tooltip } from '@mui/material';
+import React, { Children, FC, ReactNode, useState } from 'react';
 import GraphButton from '../GraphButton';
 
-type RenderableChild = ReactElement<any, string | JSXElementConstructor<any>>;
 type Attributes = Partial<React.HTMLAttributes<Element>>;
 
 const GraphMenu: FC<{
+    controlId: string;
     label: string;
-    children: RenderableChild | RenderableChild[];
-}> = ({ children, label }) => {
+    displayText?: ReactNode;
+    children: ReactNode;
+}> = ({ children, controlId, displayText, label }) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     const open = Boolean(anchorEl);
+    const buttonId = `graph-${controlId}-button`;
+    const menuId = `graph-${controlId}-menu`;
 
     const handleClose = () => setAnchorEl(null);
 
+    const menuButton = (
+        <GraphButton
+            id={buttonId}
+            aria-label={label}
+            data-testid={`explore_graph-controls_${controlId}-menu`}
+            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                setAnchorEl(event.currentTarget);
+            }}
+            aria-controls={menuId}
+            aria-haspopup='menu'
+            aria-expanded={open}
+            displayText={displayText ?? label}
+        />
+    );
+
     return (
         <>
-            <GraphButton
-                aria-label={label}
-                data-testid={`explore_graph-controls_${label.toLowerCase().split(' ').join('-')}-menu`}
-                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-                    setAnchorEl(event.currentTarget);
-                }}
-                aria-controls={open ? `${label}-menu` : undefined}
-                aria-haspopup='true'
-                aria-expanded={open ? 'true' : undefined}
-                displayText={label}></GraphButton>
+            {displayText ? (
+                <Tooltip placement='top' title={label}>
+                    {menuButton}
+                </Tooltip>
+            ) : (
+                menuButton
+            )}
             <Menu
-                id={`${label}-menu`}
                 open={open}
                 anchorEl={anchorEl}
                 onClose={handleClose}
+                keepMounted
                 MenuListProps={{
-                    'aria-labelledby': `${label}-button`,
+                    id: menuId,
+                    'aria-labelledby': buttonId,
                 }}
                 anchorOrigin={{
                     vertical: 'top',
