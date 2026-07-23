@@ -280,6 +280,12 @@ func (s Resources) handleAuditLogForDatabaseWipe(ctx context.Context, auditEntry
 }
 
 func (s Resources) BuildDeleteRequest(ctx context.Context, userID string, payload DatabaseWipe) (model.AnalysisRequest, error) {
+	// DeleteAllGraph is mutually exclusive with targeted source kind or relationship deletions. Enforce this at the
+	// request-construction boundary so the invariant holds regardless of caller.
+	if payload.DeleteCollectedGraphData && (len(payload.DeleteSourceKinds) > 0 || len(payload.DeleteRelationships) > 0) {
+		return model.AnalysisRequest{}, fmt.Errorf("deleteCollectedGraphData may not be combined with deleteSourceKinds or deleteRelationships")
+	}
+
 	deleteRequest := model.AnalysisRequest{
 		RequestedBy:    userID,
 		RequestType:    model.AnalysisRequestDeletion,
