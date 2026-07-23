@@ -145,9 +145,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--input-border-default': palette.grey[700],
             // '--input-border-hover': light.secondary.main,
             '--input-border-disabled': palette.neutral.light[900],
-
-            // '--input-placeholder-text': text.placeholder,
-
             '--input-placeholder-text': text.placeholder,
 
             // // Components/Textarea
