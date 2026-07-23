@@ -768,12 +768,13 @@ func (s *BloodhoundDB) InsertSelectorNodes(ctx context.Context, nodes []model.As
 
 func insertSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []model.AssetGroupSelectorNode) error {
 	var (
-		batchValues    = newSelectorNodeBatchValues(nodes)
-		err            error
-		historyRecords []selectorNodeHistoryRecord
-		rows           pgx.Rows
-		sqlArgs        pgx.StrictNamedArgs
-		sqlQuery       string
+		batchValues       = newSelectorNodeBatchValues(nodes)
+		err               error
+		newCertifications []certificationChanges
+		historyRecords    []selectorNodeHistoryRecord
+		rows              pgx.Rows
+		sqlArgs           pgx.StrictNamedArgs
+		sqlQuery          string
 	)
 
 	if sqlArgs, err = batchValues.sqlArgs(len(nodes)); err != nil {
@@ -813,8 +814,8 @@ func insertSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 		RETURNING selector_id, node_id, certified, node_name
 	)
 	SELECT
-		inserted.node_name,
-		inserted.certified,
+		inserted.node_name AS target,
+		inserted.certified AS asset_group_certification,
 		selector.asset_group_tag_id
 	FROM inserted
 	JOIN %s AS selector
@@ -827,26 +828,16 @@ func insertSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 	if rows, err = transaction.Query(ctx, sqlQuery, sqlArgs); err != nil {
 		return fmt.Errorf("batch inserting selector nodes: %w", err)
 	}
-	defer rows.Close()
 
-	for rows.Next() {
-		var (
-			assetGroupCertification int32
-			assetGroupTagId         int32
-			target                  string
-		)
-
-		if err = rows.Scan(&target, &assetGroupCertification, &assetGroupTagId); err != nil {
-			return fmt.Errorf("scanning inserted selector node history records: %w", err)
-		}
-
-		historyRecords = append(historyRecords, newSelectorNodeHistoryRecord(target, assetGroupCertification, assetGroupTagId))
+	if newCertifications, err = pgx.CollectRows(rows, pgx.RowToStructByName[certificationChanges]); err != nil {
+		return fmt.Errorf("scanning inserted selector node history records: %w", err)
 	}
 
-	rows.Close()
-	if err = rows.Err(); err != nil {
-		return fmt.Errorf("scanning inserted selector node history records: %w", err)
-	} else if err = insertSelectorNodeHistoryRecordsBatch(ctx, transaction, historyRecords); err != nil {
+	for _, certification := range newCertifications {
+		historyRecords = append(historyRecords, newSelectorNodeHistoryRecord(certification.Target, certification.AssetGroupCertification, certification.AssetGroupTagId))
+	}
+
+	if err = insertSelectorNodeHistoryRecordsBatch(ctx, transaction, historyRecords); err != nil {
 		return fmt.Errorf("batch inserting selector node history records: %w", err)
 	}
 
@@ -890,12 +881,13 @@ func (s *BloodhoundDB) UpdateSelectorNodes(ctx context.Context, nodes []model.As
 
 func updateSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []model.AssetGroupSelectorNode) error {
 	var (
-		batchValues    = newSelectorNodeBatchValues(nodes)
-		err            error
-		historyRecords []selectorNodeHistoryRecord
-		rows           pgx.Rows
-		sqlArgs        pgx.StrictNamedArgs
-		sqlQuery       string
+		batchValues          = newSelectorNodeBatchValues(nodes)
+		err                  error
+		certificationUpdates []certificationChanges
+		historyRecords       []selectorNodeHistoryRecord
+		rows                 pgx.Rows
+		sqlArgs              pgx.StrictNamedArgs
+		sqlQuery             string
 	)
 
 	if sqlArgs, err = batchValues.sqlArgs(len(nodes)); err != nil {
@@ -947,8 +939,8 @@ func updateSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 		RETURNING selector_node.selector_id, selector_node.node_id
 	)
 	SELECT
-		changed_certifications.node_name,
-		changed_certifications.certified,
+		changed_certifications.node_name AS target,
+		changed_certifications.certified AS asset_group_certification,
 		changed_certifications.asset_group_tag_id
 	FROM changed_certifications
 	JOIN updated
@@ -962,26 +954,16 @@ func updateSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 	if rows, err = transaction.Query(ctx, sqlQuery, sqlArgs); err != nil {
 		return fmt.Errorf("batch updating selector nodes: %w", err)
 	}
-	defer rows.Close()
 
-	for rows.Next() {
-		var (
-			assetGroupCertification int32
-			assetGroupTagId         int32
-			target                  string
-		)
-
-		if err = rows.Scan(&target, &assetGroupCertification, &assetGroupTagId); err != nil {
-			return fmt.Errorf("scanning updated selector node history records: %w", err)
-		}
-
-		historyRecords = append(historyRecords, newSelectorNodeHistoryRecord(target, assetGroupCertification, assetGroupTagId))
+	if certificationUpdates, err = pgx.CollectRows(rows, pgx.RowToStructByName[certificationChanges]); err != nil {
+		return fmt.Errorf("scanning updated selector node history records: %w", err)
 	}
 
-	rows.Close()
-	if err = rows.Err(); err != nil {
-		return fmt.Errorf("scanning updated selector node history records: %w", err)
-	} else if err = insertSelectorNodeHistoryRecordsBatch(ctx, transaction, historyRecords); err != nil {
+	for _, certification := range certificationUpdates {
+		historyRecords = append(historyRecords, newSelectorNodeHistoryRecord(certification.Target, certification.AssetGroupCertification, certification.AssetGroupTagId))
+	}
+
+	if err = insertSelectorNodeHistoryRecordsBatch(ctx, transaction, historyRecords); err != nil {
 		return fmt.Errorf("batch inserting selector node history records: %w", err)
 	}
 
@@ -992,6 +974,12 @@ type selectorNodeHistoryRecord struct {
 	target          string
 	action          model.AssetGroupHistoryAction
 	assetGroupTagId int32
+}
+
+type certificationChanges struct {
+	Target                  string `db:"target"`
+	AssetGroupCertification int32  `db:"asset_group_certification"`
+	AssetGroupTagId         int32  `db:"asset_group_tag_id"`
 }
 
 func newSelectorNodeHistoryRecord(target string, assetGroupCertification int32, assetGroupTagId int32) selectorNodeHistoryRecord {
@@ -1102,11 +1090,28 @@ func (s selectorNodeBatchValues) sqlArgs(expectedValueCount int) (pgx.StrictName
 	return sqlArguments, nil
 }
 
-func (s selectorNodeKeyBatchValues) sqlArgs() []any {
-	return []any{
-		pgtype.FlatArray[int32](s.selectorIds),
-		pgtype.FlatArray[int64](s.nodeIds),
+func (s selectorNodeKeyBatchValues) sqlArgs(expectedValueCount int) (pgx.StrictNamedArgs, error) {
+	var (
+		batchArguments = []struct {
+			name       string
+			value      any
+			valueCount int
+		}{
+			{name: "selector_ids", value: pgtype.FlatArray[int32](s.selectorIds), valueCount: len(s.selectorIds)},
+			{name: "node_ids", value: pgtype.FlatArray[int64](s.nodeIds), valueCount: len(s.nodeIds)},
+		}
+		sqlArguments = make(pgx.StrictNamedArgs, len(batchArguments))
+	)
+
+	for _, batchArgument := range batchArguments {
+		if batchArgument.valueCount != expectedValueCount {
+			return nil, fmt.Errorf("selector node key batch argument %q has %d values; expected %d", batchArgument.name, batchArgument.valueCount, expectedValueCount)
+		}
+
+		sqlArguments[batchArgument.name] = batchArgument.value
 	}
+
+	return sqlArguments, nil
 }
 
 func insertSelectorNodeHistoryRecordsBatch(ctx context.Context, transaction pgx.Tx, historyRecords []selectorNodeHistoryRecord) error {
@@ -1114,8 +1119,9 @@ func insertSelectorNodeHistoryRecordsBatch(ctx context.Context, transaction pgx.
 		assetGroupTagIds = make([]int32, 0, len(historyRecords))
 		actions          = make([]string, 0, len(historyRecords))
 		targets          = make([]string, 0, len(historyRecords))
-		sqlQuery         string
 		err              error
+		sqlArgs          pgx.StrictNamedArgs
+		sqlQuery         string
 	)
 
 	if len(historyRecords) == 0 {
@@ -1128,18 +1134,23 @@ func insertSelectorNodeHistoryRecordsBatch(ctx context.Context, transaction pgx.
 		targets = append(targets, historyRecord.target)
 	}
 
+	sqlArgs = pgx.StrictNamedArgs{
+		"actions":             pgtype.FlatArray[string](actions),
+		"actor":               model.AssetGroupActorBloodHound,
+		"asset_group_tag_ids": pgtype.FlatArray[int32](assetGroupTagIds),
+		"targets":             pgtype.FlatArray[string](targets),
+	}
+
 	sqlQuery = fmt.Sprintf(`
 	WITH history AS (
-		SELECT *
-		FROM unnest(
-			$1::text[],
-			$2::text[],
-			$3::int[]
-		) AS history(target, action, asset_group_tag_id)
+		SELECT
+			unnest(@targets::text[]) AS target,
+			unnest(@actions::text[]) AS action,
+			unnest(@asset_group_tag_ids::int[]) AS asset_group_tag_id
 	)
 	INSERT INTO %s (actor, email, target, action, asset_group_tag_id, environment_id, note, created_at)
 	SELECT
-		$4::text,
+		@actor::text,
 		''::text,
 		history.target,
 		history.action,
@@ -1151,14 +1162,7 @@ func insertSelectorNodeHistoryRecordsBatch(ctx context.Context, transaction pgx.
 		model.AssetGroupHistory{}.TableName(),
 	)
 
-	if _, err = transaction.Exec(
-		ctx,
-		sqlQuery,
-		pgtype.FlatArray[string](targets),
-		pgtype.FlatArray[string](actions),
-		pgtype.FlatArray[int32](assetGroupTagIds),
-		model.AssetGroupActorBloodHound,
-	); err != nil {
+	if _, err = transaction.Exec(ctx, sqlQuery, sqlArgs); err != nil {
 		return err
 	}
 
@@ -1234,17 +1238,19 @@ func deleteSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 	var (
 		batchValues = newSelectorNodeKeyBatchValues(nodes)
 		err         error
-		sqlArgs     []any
+		sqlArgs     pgx.StrictNamedArgs
 		sqlQuery    string
 	)
 
+	if sqlArgs, err = batchValues.sqlArgs(len(nodes)); err != nil {
+		return fmt.Errorf("building selector node delete batch: %w", err)
+	}
+
 	sqlQuery = fmt.Sprintf(`
 	WITH batch AS (
-		SELECT *
-		FROM unnest(
-			$1::int[],
-			$2::bigint[]
-		) AS batch(selector_id, node_id)
+		SELECT
+			unnest(@selector_ids::int[]) AS selector_id,
+			unnest(@node_ids::bigint[]) AS node_id
 	)
 	DELETE FROM %s AS selector_node
 	USING batch
@@ -1252,9 +1258,8 @@ func deleteSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 		AND selector_node.node_id = batch.node_id`,
 		model.AssetGroupSelectorNode{}.TableName(),
 	)
-	sqlArgs = batchValues.sqlArgs()
 
-	if _, err = transaction.Exec(ctx, sqlQuery, sqlArgs...); err != nil {
+	if _, err = transaction.Exec(ctx, sqlQuery, sqlArgs); err != nil {
 		return fmt.Errorf("batch deleting selector nodes: %w", err)
 	}
 
