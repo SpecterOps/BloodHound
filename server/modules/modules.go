@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/server/analysis"
 	"github.com/specterops/bloodhound/server/featureflags"
 	"github.com/specterops/bloodhound/server/graphdb"
+	"github.com/specterops/bloodhound/server/identity"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -63,6 +64,7 @@ func Register(deps Deps) {
 	}
 
 	analysis.Register(deps.Router, deps.Pool)
+	identity.Register(deps.Router, deps.Pool)
 	featureflags.Register(deps.Router, deps.Pool)
 	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.RateLimitMiddleware, deps.DogTags)
 }

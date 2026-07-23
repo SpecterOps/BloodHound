@@ -123,6 +123,7 @@ const reducer = (state: State, action: Action): State => {
             const { checked } = action;
             return {
                 ...state,
+                deleteCollectedGraphData: checked.allGraphData,
                 deleteSourceKinds: checked.sourceKinds,
                 deleteRelationships: checked.relationships,
                 noSelectionError: false,
@@ -224,8 +225,9 @@ const useDatabaseManagement = () => {
                 deleteCollectedGraphData,
                 deleteDataQualityHistory,
                 deleteFileIngestHistory,
-                deleteRelationships,
-                deleteSourceKinds,
+                // A full graph wipe is mutually exclusive with targeted source kind and relationship deletions
+                deleteRelationships: deleteCollectedGraphData ? [] : deleteRelationships,
+                deleteSourceKinds: deleteCollectedGraphData ? [] : deleteSourceKinds,
             },
         });
     };
