@@ -124,6 +124,12 @@ const ExploreSearch: React.FC = () => {
             if (!pathfindingSearchState.destinationSelectedItem) {
                 params.secondarySearch = null;
             }
+            if (!pathfindingSearchState.nodes[2]?.selectedItem) {
+                params.tertiarySearch = null;
+            }
+            if (!pathfindingSearchState.nodes[3]?.selectedItem) {
+                params.quaternarySearch = null;
+            }
         }
         if (tab === 'cypher') {
             if (!cypherSearchState.cypherQuery) {
