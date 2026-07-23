@@ -17,11 +17,14 @@
 import { Badge, Card, Skeleton } from 'doodle-ui';
 import { FC } from 'react';
 import { NodeIcon } from '../../../components';
+import { useGraphNodeKinds } from '../../../hooks';
 import { useObjectCounts } from '../../../hooks/useAssetGroupTags/useObjectCounts';
-import { getNodeKindDisplayLabel } from '../../../utils';
+import { createNodeKindDisplayLabelMap, getNodeKindDisplayLabel } from '../../../utils';
 
 const ObjectCountPanel: FC = () => {
     const objectsCountQuery = useObjectCounts();
+    const nodeKindsQuery = useGraphNodeKinds();
+    const nodeKindDisplayLabels = createNodeKindDisplayLabelMap(nodeKindsQuery.data?.node_kinds);
 
     if (objectsCountQuery.isLoading) {
         return (
@@ -62,7 +65,11 @@ const ObjectCountPanel: FC = () => {
                     <Badge label={objectsCountQuery.data.total_count.toLocaleString()} />
                 </div>
                 {Object.entries(objectsCountQuery.data.counts)
-                    .sort(([a], [b]) => getNodeKindDisplayLabel(a).localeCompare(getNodeKindDisplayLabel(b)))
+                    .sort(([a], [b]) =>
+                        getNodeKindDisplayLabel(a, nodeKindDisplayLabels).localeCompare(
+                            getNodeKindDisplayLabel(b, nodeKindDisplayLabels)
+                        )
+                    )
                     .map(([key, value]) => {
                         return (
                             <div
@@ -70,7 +77,7 @@ const ObjectCountPanel: FC = () => {
                                 key={key}>
                                 <div className='flex gap-1'>
                                     <NodeIcon nodeType={key} />
-                                    {getNodeKindDisplayLabel(key)}
+                                    {getNodeKindDisplayLabel(key, nodeKindDisplayLabels)}
                                 </div>
                                 <Badge label={value.toLocaleString()} />
                             </div>

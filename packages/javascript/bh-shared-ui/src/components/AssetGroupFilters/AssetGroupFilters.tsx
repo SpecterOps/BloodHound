@@ -31,8 +31,9 @@ import { Button, Typography } from 'doodle-ui';
 import { AssetGroupMemberCounts } from 'js-client-library';
 import { AssetGroupMemberParams } from 'js-client-library/dist/types';
 import { FC, useState } from 'react';
+import { useGraphNodeKinds } from '../../hooks';
 import { useTheme } from '../../hooks/useTheme';
-import { cn, getNodeKindDisplayLabel } from '../../utils';
+import { cn, createNodeKindDisplayLabelMap, getNodeKindDisplayLabel } from '../../utils';
 import NodeIcon from '../NodeIcon';
 
 export const FILTERABLE_PARAMS: Array<keyof Pick<AssetGroupMemberParams, 'primary_kind' | 'custom_member'>> = [
@@ -49,6 +50,8 @@ interface Props {
 const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, memberCounts = { counts: {} } }) => {
     const [displayFilters, setDisplayFilters] = useState(false);
     const theme = useTheme();
+    const nodeKindsQuery = useGraphNodeKinds();
+    const nodeKindDisplayLabels = createNodeKindDisplayLabelMap(nodeKindsQuery.data?.node_kinds);
 
     const handleClearFilters = () => {
         for (const filter of FILTERABLE_PARAMS) {
@@ -97,7 +100,7 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, member
                                     return (
                                         <MenuItem value={`eq:${value}`} key={value}>
                                             <NodeIcon nodeType={value} />
-                                            {getNodeKindDisplayLabel(value)}
+                                            {getNodeKindDisplayLabel(value, nodeKindDisplayLabels)}
                                         </MenuItem>
                                     );
                                 })}

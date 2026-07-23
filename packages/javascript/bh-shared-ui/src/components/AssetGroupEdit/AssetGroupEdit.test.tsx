@@ -26,9 +26,13 @@ import AssetGroupEdit from './AssetGroupEdit';
 const assetGroup = createMockAssetGroup();
 const searchResults = createMockSearchResults();
 const memberCounts = createMockMemberCounts();
+const nodeKindDisplayNames = {
+    AZApp: 'Azure Application',
+    CertTemplate: 'Certificate Template',
+};
 
 const server = setupServer(
-    mockKindsHandler(),
+    mockKindsHandler(undefined, undefined, nodeKindDisplayNames),
     mockGetConfigurationHandler(),
     rest.get('/api/v2/search', (req, res, ctx) => {
         return res(

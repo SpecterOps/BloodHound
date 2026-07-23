@@ -14,46 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
+import type { GraphKindsResponse } from 'js-client-library';
 
-const NODE_KIND_DISPLAY_LABELS: Record<string, string> = {
-    [ActiveDirectoryNodeKind.Entity]: 'Entity',
-    [ActiveDirectoryNodeKind.User]: 'User',
-    [ActiveDirectoryNodeKind.Computer]: 'Computer',
-    [ActiveDirectoryNodeKind.Group]: 'Group',
-    [ActiveDirectoryNodeKind.GPO]: 'Group Policy Object',
-    [ActiveDirectoryNodeKind.OU]: 'Organizational Unit',
-    [ActiveDirectoryNodeKind.Container]: 'Container',
-    [ActiveDirectoryNodeKind.Domain]: 'Domain',
-    [ActiveDirectoryNodeKind.LocalGroup]: 'AD Local Group',
-    [ActiveDirectoryNodeKind.LocalUser]: 'AD Local User',
-    [ActiveDirectoryNodeKind.AIACA]: 'AIA Certificate Authority',
-    [ActiveDirectoryNodeKind.RootCA]: 'Root Certificate Authority',
-    [ActiveDirectoryNodeKind.EnterpriseCA]: 'Enterprise Certificate Authority',
-    [ActiveDirectoryNodeKind.NTAuthStore]: 'NTAuth Store',
-    [ActiveDirectoryNodeKind.CertTemplate]: 'Certificate Template',
-    [ActiveDirectoryNodeKind.IssuancePolicy]: 'Issuance Policy',
-    [AzureNodeKind.Entity]: 'Azure Entity',
-    [AzureNodeKind.VMScaleSet]: 'Azure VM Scale Set',
-    [AzureNodeKind.App]: 'Azure Application',
-    [AzureNodeKind.Role]: 'Azure Role',
-    [AzureNodeKind.Device]: 'Azure Device',
-    [AzureNodeKind.FunctionApp]: 'Azure Function App',
-    [AzureNodeKind.Group]: 'Azure Group',
-    [AzureNodeKind.KeyVault]: 'Azure Key Vault',
-    [AzureNodeKind.ManagementGroup]: 'Azure Management Group',
-    [AzureNodeKind.ResourceGroup]: 'Azure Resource Group',
-    [AzureNodeKind.ServicePrincipal]: 'Azure Service Principal',
-    [AzureNodeKind.Subscription]: 'Azure Subscription',
-    [AzureNodeKind.Tenant]: 'Azure Tenant',
-    [AzureNodeKind.User]: 'Azure User',
-    [AzureNodeKind.VM]: 'Azure Virtual Machine',
-    [AzureNodeKind.ManagedCluster]: 'Azure Managed Cluster',
-    [AzureNodeKind.ContainerRegistry]: 'Azure Container Registry',
-    [AzureNodeKind.WebApp]: 'Azure Web App',
-    [AzureNodeKind.LogicApp]: 'Azure Logic App',
-    [AzureNodeKind.AutomationAccount]: 'Azure Automation Account',
-    [AzureNodeKind.FederatedIdentityCredential]: 'Azure Federated Identity Credential',
+export type NodeKindDisplayLabel = NonNullable<GraphKindsResponse['data']['node_kinds']>[number];
+export type NodeKindDisplayLabelMap = Record<string, string>;
+
+export const createNodeKindDisplayLabelMap = (
+    nodeKinds: NodeKindDisplayLabel[] | undefined
+): NodeKindDisplayLabelMap => {
+    return Object.fromEntries(
+        nodeKinds?.map(({ name, display_name }) => [name, display_name || name]) ?? []
+    ) as NodeKindDisplayLabelMap;
 };
 
-export const getNodeKindDisplayLabel = (kind: string): string => NODE_KIND_DISPLAY_LABELS[kind] ?? kind;
+export const getNodeKindDisplayLabel = (kind: string, displayLabels: NodeKindDisplayLabelMap = {}): string =>
+    displayLabels[kind] ?? kind;

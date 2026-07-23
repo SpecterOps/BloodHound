@@ -15,19 +15,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from 'vitest';
-import { getNodeKindDisplayLabel } from './nodeKindDisplay';
+import { createNodeKindDisplayLabelMap, getNodeKindDisplayLabel } from './nodeKindDisplay';
 
 describe('getNodeKindDisplayLabel', () => {
-    it('returns human-readable labels for built-in node kinds', () => {
-        expect(getNodeKindDisplayLabel('AIACA')).toBe('AIA Certificate Authority');
-        expect(getNodeKindDisplayLabel('AZApp')).toBe('Azure Application');
-        expect(getNodeKindDisplayLabel('AZServicePrincipal')).toBe('Azure Service Principal');
-        expect(getNodeKindDisplayLabel('CertTemplate')).toBe('Certificate Template');
-        expect(getNodeKindDisplayLabel('EnterpriseCA')).toBe('Enterprise Certificate Authority');
-        expect(getNodeKindDisplayLabel('GPO')).toBe('Group Policy Object');
+    it('returns display labels from graph kind metadata', () => {
+        const displayLabels = createNodeKindDisplayLabelMap([
+            { name: 'AIACA', display_name: 'AIA Certificate Authority' },
+            { name: 'AZApp', display_name: 'Azure Application' },
+        ]);
+
+        expect(getNodeKindDisplayLabel('AIACA', displayLabels)).toBe('AIA Certificate Authority');
+        expect(getNodeKindDisplayLabel('AZApp', displayLabels)).toBe('Azure Application');
     });
 
     it('falls back to the raw kind for custom or unknown kinds', () => {
         expect(getNodeKindDisplayLabel('CustomNodeKind')).toBe('CustomNodeKind');
+    });
+
+    it('falls back to the raw kind when metadata has no display name', () => {
+        const displayLabels = createNodeKindDisplayLabelMap([{ name: 'CustomNodeKind' }]);
+
+        expect(getNodeKindDisplayLabel('CustomNodeKind', displayLabels)).toBe('CustomNodeKind');
     });
 });

@@ -99,7 +99,7 @@ describe('ObjectsAccordion', () => {
             />
         );
 
-        expect(screen.getByText('Azure Application')).toBeInTheDocument();
+        expect(await screen.findByText('Azure Application')).toBeInTheDocument();
         expect(screen.getByText('Azure Service Principal')).toBeInTheDocument();
         expect(screen.getByText('Certificate Template')).toBeInTheDocument();
         expect(screen.queryByText('AZApp')).not.toBeInTheDocument();

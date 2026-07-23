@@ -7052,6 +7052,21 @@
                           "items": {
                             "type": "string"
                           }
+                        },
+                        "node_kinds": {
+                          "type": "array",
+                          "description": "Canonical node kind metadata for node kinds included in the kinds array.",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "display_name": {
+                                "type": "string"
+                              }
+                            }
+                          }
                         }
                       }
                     }

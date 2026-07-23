@@ -24,9 +24,10 @@ import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../co
 import NodeIcon from '../../../components/NodeIcon';
 import { useRuleMembersInfiniteQuery, useTagMembersInfiniteQuery } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
+import { useGraphNodeKinds } from '../../../hooks/useGraphKinds';
 import { ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES } from '../../../routes';
 import { SortOrder } from '../../../types';
-import { cn, getNodeKindDisplayLabel } from '../../../utils';
+import { cn, createNodeKindDisplayLabelMap, getNodeKindDisplayLabel, NodeKindDisplayLabelMap } from '../../../utils';
 import { SelectedHighlight } from './SelectedHighlight';
 
 export interface ObjectsAccordionProps {
@@ -47,6 +48,8 @@ export const ObjectsAccordion: React.FC<ObjectsAccordionProps> = ({
     onObjectClick,
 }) => {
     const [openAccordion, setOpenAccordion] = useState('');
+    const nodeKindsQuery = useGraphNodeKinds();
+    const nodeKindDisplayLabels = createNodeKindDisplayLabelMap(nodeKindsQuery.data?.node_kinds);
 
     return (
         <div>
@@ -63,7 +66,11 @@ export const ObjectsAccordion: React.FC<ObjectsAccordionProps> = ({
                 className='w-full min-w-0 rounded-none bg-neutral-2'
                 data-testid='privilege-zones_details_objects-accordion'>
                 {Object.entries(kindCounts)
-                    .sort((a, b) => getNodeKindDisplayLabel(a[0]).localeCompare(getNodeKindDisplayLabel(b[0])))
+                    .sort((a, b) =>
+                        getNodeKindDisplayLabel(a[0], nodeKindDisplayLabels).localeCompare(
+                            getNodeKindDisplayLabel(b[0], nodeKindDisplayLabels)
+                        )
+                    )
                     .map(([kind, count]) => (
                         <ObjectAccordionItem
                             key={kind}
@@ -75,6 +82,7 @@ export const ObjectsAccordion: React.FC<ObjectsAccordionProps> = ({
                             isOpen={kind === openAccordion}
                             onOpen={setOpenAccordion}
                             onObjectClick={onObjectClick}
+                            nodeKindDisplayLabels={nodeKindDisplayLabels}
                         />
                     ))}
             </Accordion>
@@ -91,6 +99,7 @@ interface ObjectAccordionItemProps {
     objectId?: string;
     onOpen: React.Dispatch<React.SetStateAction<string>>;
     onObjectClick: (object: AssetGroupTagMemberListItem) => void;
+    nodeKindDisplayLabels: NodeKindDisplayLabelMap;
 }
 
 const LoadingRow = (_: number, style: React.CSSProperties) => (
@@ -111,9 +120,10 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
     isOpen,
     onOpen,
     onObjectClick,
+    nodeKindDisplayLabels,
 }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
-    const kindDisplayLabel = getNodeKindDisplayLabel(kind);
+    const kindDisplayLabel = getNodeKindDisplayLabel(kind, nodeKindDisplayLabels);
 
     const environments = useEnvironmentIdList(ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES, false);
 

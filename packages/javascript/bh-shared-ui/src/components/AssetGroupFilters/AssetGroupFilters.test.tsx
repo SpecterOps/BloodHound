@@ -20,14 +20,19 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import { createMockAssetGroupMemberParams, createMockMemberCounts } from '../../mocks/factories';
+import { mockKindsHandler } from '../../mocks/handlers';
 import { act, render, screen, waitFor } from '../../test-utils';
 import AssetGroupFilters, { FILTERABLE_PARAMS } from './AssetGroupFilters';
 
 const filterParams = createMockAssetGroupMemberParams();
 const memberCounts = createMockMemberCounts();
+const nodeKindDisplayNames = {
+    AZApp: 'Azure Application',
+};
 
 describe('AssetGroupEdit', () => {
     const server = setupServer(
+        mockKindsHandler(undefined, undefined, nodeKindDisplayNames),
         rest.get(`/api/v2/custom-nodes`, async (req, res, ctx) => {
             return res(
                 ctx.json({

@@ -25,9 +25,16 @@ const createNodeKinds = (): GraphKindsResponse['data']['kinds'] => {
     return faker.helpers.uniqueArray(faker.random.word, 10);
 };
 
-export const createGraphKinds = (nodeKinds?: string[], edgeKinds?: string[]): GraphKindsResponse['data'] => {
-    const node_kinds = nodeKinds ?? createNodeKinds();
+export const createGraphKinds = (
+    nodeKinds?: string[],
+    edgeKinds?: string[],
+    nodeKindDisplayNames: Record<string, string> = {}
+): GraphKindsResponse['data'] => {
+    const node_kinds = nodeKinds ?? [...Object.keys(nodeKindDisplayNames), ...createNodeKinds()];
     const edge_kinds = edgeKinds ?? createEdgeKinds();
 
-    return { kinds: [...edge_kinds, ...node_kinds] };
+    return {
+        kinds: [...edge_kinds, ...node_kinds],
+        node_kinds: node_kinds.map((name) => ({ name, display_name: nodeKindDisplayNames[name] })),
+    };
 };
