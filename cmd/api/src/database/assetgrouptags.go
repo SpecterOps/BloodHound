@@ -768,7 +768,6 @@ func (s *BloodhoundDB) InsertSelectorNodes(ctx context.Context, nodes []model.As
 
 func insertSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []model.AssetGroupSelectorNode) error {
 	var (
-		batchValues       = newSelectorNodeBatchValues(nodes)
 		err               error
 		newCertifications []certificationChanges
 		historyRecords    []selectorNodeHistoryRecord
@@ -777,7 +776,7 @@ func insertSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 		sqlQuery          string
 	)
 
-	if sqlArgs, err = batchValues.sqlArgs(len(nodes)); err != nil {
+	if sqlArgs, err = newSelectorNodeBatchSQLArgs(nodes); err != nil {
 		return fmt.Errorf("building selector node insert batch: %w", err)
 	}
 	sqlArgs["pending_certification"] = int32(model.AssetGroupCertificationPending)
@@ -881,7 +880,6 @@ func (s *BloodhoundDB) UpdateSelectorNodes(ctx context.Context, nodes []model.As
 
 func updateSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []model.AssetGroupSelectorNode) error {
 	var (
-		batchValues          = newSelectorNodeBatchValues(nodes)
 		err                  error
 		certificationUpdates []certificationChanges
 		historyRecords       []selectorNodeHistoryRecord
@@ -890,7 +888,7 @@ func updateSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 		sqlQuery             string
 	)
 
-	if sqlArgs, err = batchValues.sqlArgs(len(nodes)); err != nil {
+	if sqlArgs, err = newSelectorNodeBatchSQLArgs(nodes); err != nil {
 		return fmt.Errorf("building selector node update batch: %w", err)
 	}
 
@@ -990,125 +988,94 @@ func newSelectorNodeHistoryRecord(target string, assetGroupCertification int32, 
 	}
 }
 
-type selectorNodeBatchValues struct {
-	selectorIds        []int32
-	nodeIds            []int64
-	certifications     []int32
-	certifiedByValues  []*string
-	sources            []int32
-	nodePrimaryKinds   []string
-	nodeEnvironmentIds []string
-	nodeObjectIds      []string
-	nodeNames          []string
-}
-
-type selectorNodeKeyBatchValues struct {
-	selectorIds []int32
-	nodeIds     []int64
-}
-
-func newSelectorNodeBatchValues(nodes []model.AssetGroupSelectorNode) selectorNodeBatchValues {
+func newSelectorNodeBatchSQLArgs(nodes []model.AssetGroupSelectorNode) (pgx.StrictNamedArgs, error) {
 	var (
-		batchValues = selectorNodeBatchValues{
-			selectorIds:        make([]int32, 0, len(nodes)),
-			nodeIds:            make([]int64, 0, len(nodes)),
-			certifications:     make([]int32, 0, len(nodes)),
-			certifiedByValues:  make([]*string, 0, len(nodes)),
-			sources:            make([]int32, 0, len(nodes)),
-			nodePrimaryKinds:   make([]string, 0, len(nodes)),
-			nodeEnvironmentIds: make([]string, 0, len(nodes)),
-			nodeObjectIds:      make([]string, 0, len(nodes)),
-			nodeNames:          make([]string, 0, len(nodes)),
-		}
+		selectorIds        = make([]int32, 0, len(nodes))
+		nodeIds            = make([]int64, 0, len(nodes))
+		certifications     = make([]int32, 0, len(nodes))
+		certifiedByValues  = make([]*string, 0, len(nodes))
+		sources            = make([]int32, 0, len(nodes))
+		nodePrimaryKinds   = make([]string, 0, len(nodes))
+		nodeEnvironmentIds = make([]string, 0, len(nodes))
+		nodeObjectIds      = make([]string, 0, len(nodes))
+		nodeNames          = make([]string, 0, len(nodes))
 	)
 
 	for _, node := range nodes {
-		batchValues.selectorIds = append(batchValues.selectorIds, int32(node.SelectorId))
-		batchValues.nodeIds = append(batchValues.nodeIds, node.NodeId.Int64())
-		batchValues.certifications = append(batchValues.certifications, int32(node.Certified))
-		batchValues.sources = append(batchValues.sources, int32(node.Source))
-		batchValues.nodePrimaryKinds = append(batchValues.nodePrimaryKinds, node.NodePrimaryKind)
-		batchValues.nodeEnvironmentIds = append(batchValues.nodeEnvironmentIds, node.NodeEnvironmentId)
-		batchValues.nodeObjectIds = append(batchValues.nodeObjectIds, node.NodeObjectId)
-		batchValues.nodeNames = append(batchValues.nodeNames, node.NodeName)
+		selectorIds = append(selectorIds, int32(node.SelectorId))
+		nodeIds = append(nodeIds, node.NodeId.Int64())
+		certifications = append(certifications, int32(node.Certified))
+		sources = append(sources, int32(node.Source))
+		nodePrimaryKinds = append(nodePrimaryKinds, node.NodePrimaryKind)
+		nodeEnvironmentIds = append(nodeEnvironmentIds, node.NodeEnvironmentId)
+		nodeObjectIds = append(nodeObjectIds, node.NodeObjectId)
+		nodeNames = append(nodeNames, node.NodeName)
 
 		if node.CertifiedBy.Valid {
 			certifiedBy := node.CertifiedBy.String
-			batchValues.certifiedByValues = append(batchValues.certifiedByValues, &certifiedBy)
+			certifiedByValues = append(certifiedByValues, &certifiedBy)
 		} else {
-			batchValues.certifiedByValues = append(batchValues.certifiedByValues, nil)
+			certifiedByValues = append(certifiedByValues, nil)
 		}
 	}
 
-	return batchValues
+	return newStrictNamedArrayArgs(
+		len(nodes),
+		newArrayArgument("selector_ids", selectorIds),
+		newArrayArgument("node_ids", nodeIds),
+		newArrayArgument("certifications", certifications),
+		newArrayArgument("certified_by_values", certifiedByValues),
+		newArrayArgument("sources", sources),
+		newArrayArgument("node_primary_kinds", nodePrimaryKinds),
+		newArrayArgument("node_environment_ids", nodeEnvironmentIds),
+		newArrayArgument("node_object_ids", nodeObjectIds),
+		newArrayArgument("node_names", nodeNames),
+	)
 }
 
-func newSelectorNodeKeyBatchValues(nodes []model.AssetGroupSelectorNode) selectorNodeKeyBatchValues {
+func newSelectorNodeKeyBatchSQLArgs(nodes []model.AssetGroupSelectorNode) (pgx.StrictNamedArgs, error) {
 	var (
-		batchValues = selectorNodeKeyBatchValues{
-			selectorIds: make([]int32, 0, len(nodes)),
-			nodeIds:     make([]int64, 0, len(nodes)),
-		}
+		selectorIds = make([]int32, 0, len(nodes))
+		nodeIds     = make([]int64, 0, len(nodes))
 	)
 
 	for _, node := range nodes {
-		batchValues.selectorIds = append(batchValues.selectorIds, int32(node.SelectorId))
-		batchValues.nodeIds = append(batchValues.nodeIds, node.NodeId.Int64())
+		selectorIds = append(selectorIds, int32(node.SelectorId))
+		nodeIds = append(nodeIds, node.NodeId.Int64())
 	}
 
-	return batchValues
+	return newStrictNamedArrayArgs(
+		len(nodes),
+		newArrayArgument("selector_ids", selectorIds),
+		newArrayArgument("node_ids", nodeIds),
+	)
 }
 
-func (s selectorNodeBatchValues) sqlArgs(expectedValueCount int) (pgx.StrictNamedArgs, error) {
-	var (
-		batchArguments = []struct {
-			name       string
-			value      any
-			valueCount int
-		}{
-			{name: "selector_ids", value: pgtype.FlatArray[int32](s.selectorIds), valueCount: len(s.selectorIds)},
-			{name: "node_ids", value: pgtype.FlatArray[int64](s.nodeIds), valueCount: len(s.nodeIds)},
-			{name: "certifications", value: pgtype.FlatArray[int32](s.certifications), valueCount: len(s.certifications)},
-			{name: "certified_by_values", value: pgtype.FlatArray[*string](s.certifiedByValues), valueCount: len(s.certifiedByValues)},
-			{name: "sources", value: pgtype.FlatArray[int32](s.sources), valueCount: len(s.sources)},
-			{name: "node_primary_kinds", value: pgtype.FlatArray[string](s.nodePrimaryKinds), valueCount: len(s.nodePrimaryKinds)},
-			{name: "node_environment_ids", value: pgtype.FlatArray[string](s.nodeEnvironmentIds), valueCount: len(s.nodeEnvironmentIds)},
-			{name: "node_object_ids", value: pgtype.FlatArray[string](s.nodeObjectIds), valueCount: len(s.nodeObjectIds)},
-			{name: "node_names", value: pgtype.FlatArray[string](s.nodeNames), valueCount: len(s.nodeNames)},
-		}
-		sqlArguments = make(pgx.StrictNamedArgs, len(batchArguments))
-	)
+type strictNamedArrayArgument struct {
+	name       string
+	value      any
+	valueCount int
+}
 
-	for _, batchArgument := range batchArguments {
-		if batchArgument.valueCount != expectedValueCount {
-			return nil, fmt.Errorf("selector node batch argument %q has %d values; expected %d", batchArgument.name, batchArgument.valueCount, expectedValueCount)
-		}
-
-		sqlArguments[batchArgument.name] = batchArgument.value
+func newArrayArgument[T any](name string, values []T) strictNamedArrayArgument {
+	return strictNamedArrayArgument{
+		name:       name,
+		value:      pgtype.FlatArray[T](values),
+		valueCount: len(values),
 	}
-
-	return sqlArguments, nil
 }
 
-func (s selectorNodeKeyBatchValues) sqlArgs(expectedValueCount int) (pgx.StrictNamedArgs, error) {
+func newStrictNamedArrayArgs(expectedValueCount int, arguments ...strictNamedArrayArgument) (pgx.StrictNamedArgs, error) {
 	var (
-		batchArguments = []struct {
-			name       string
-			value      any
-			valueCount int
-		}{
-			{name: "selector_ids", value: pgtype.FlatArray[int32](s.selectorIds), valueCount: len(s.selectorIds)},
-			{name: "node_ids", value: pgtype.FlatArray[int64](s.nodeIds), valueCount: len(s.nodeIds)},
-		}
-		sqlArguments = make(pgx.StrictNamedArgs, len(batchArguments))
+		sqlArguments = make(pgx.StrictNamedArgs, len(arguments))
 	)
 
-	for _, batchArgument := range batchArguments {
-		if batchArgument.valueCount != expectedValueCount {
-			return nil, fmt.Errorf("selector node key batch argument %q has %d values; expected %d", batchArgument.name, batchArgument.valueCount, expectedValueCount)
+	for _, argument := range arguments {
+		if argument.valueCount != expectedValueCount {
+			return nil, fmt.Errorf("strict named array argument %q has %d values; expected %d", argument.name, argument.valueCount, expectedValueCount)
 		}
 
-		sqlArguments[batchArgument.name] = batchArgument.value
+		sqlArguments[argument.name] = argument.value
 	}
 
 	return sqlArguments, nil
@@ -1236,13 +1203,12 @@ func (s *BloodhoundDB) DeleteSelectorNodes(ctx context.Context, nodes []model.As
 
 func deleteSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []model.AssetGroupSelectorNode) error {
 	var (
-		batchValues = newSelectorNodeKeyBatchValues(nodes)
-		err         error
-		sqlArgs     pgx.StrictNamedArgs
-		sqlQuery    string
+		err      error
+		sqlArgs  pgx.StrictNamedArgs
+		sqlQuery string
 	)
 
-	if sqlArgs, err = batchValues.sqlArgs(len(nodes)); err != nil {
+	if sqlArgs, err = newSelectorNodeKeyBatchSQLArgs(nodes); err != nil {
 		return fmt.Errorf("building selector node delete batch: %w", err)
 	}
 
