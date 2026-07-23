@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { EnvironmentRequest } from './requests';
-import { SupportBundleSummaryStatus } from './responses';
+import type { SupportBundleSummaryStatus } from './responses';
 
 export interface Serial {
     id: number;
