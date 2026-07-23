@@ -772,23 +772,28 @@ func insertSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 		err            error
 		historyRecords []selectorNodeHistoryRecord
 		rows           pgx.Rows
-		sqlArgs        []any
+		sqlArgs        pgx.StrictNamedArgs
 		sqlQuery       string
 	)
+
+	if sqlArgs, err = batchValues.sqlArgs(len(nodes)); err != nil {
+		return fmt.Errorf("building selector node insert batch: %w", err)
+	}
+	sqlArgs["pending_certification"] = int32(model.AssetGroupCertificationPending)
 
 	sqlQuery = fmt.Sprintf(`
 	WITH batch AS (
 		SELECT *
 		FROM unnest(
-			$1::int[],
-			$2::bigint[],
-			$3::int[],
-			$4::text[],
-			$5::int[],
-			$6::text[],
-			$7::text[],
-			$8::text[],
-			$9::text[]
+			@selector_ids::int[],
+			@node_ids::bigint[],
+			@certifications::int[],
+			@certified_by_values::text[],
+			@sources::int[],
+			@node_primary_kinds::text[],
+			@node_environment_ids::text[],
+			@node_object_ids::text[],
+			@node_names::text[]
 		) AS batch(selector_id, node_id, certified, certified_by, source, node_primary_kind, node_environment_id, node_object_id, node_name)
 	),
 	inserted AS (
@@ -816,15 +821,12 @@ func insertSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 	FROM inserted
 	JOIN %s AS selector
 		ON selector.id = inserted.selector_id
-	WHERE inserted.certified <> $10::int`,
+	WHERE inserted.certified <> @pending_certification::int`,
 		model.AssetGroupSelectorNode{}.TableName(),
 		model.AssetGroupTagSelector{}.TableName(),
 	)
 
-	sqlArgs = batchValues.sqlArgs()
-	sqlArgs = append(sqlArgs, int32(model.AssetGroupCertificationPending))
-
-	if rows, err = transaction.Query(ctx, sqlQuery, sqlArgs...); err != nil {
+	if rows, err = transaction.Query(ctx, sqlQuery, sqlArgs); err != nil {
 		return fmt.Errorf("batch inserting selector nodes: %w", err)
 	}
 	defer rows.Close()
@@ -894,22 +896,27 @@ func updateSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 		err            error
 		historyRecords []selectorNodeHistoryRecord
 		rows           pgx.Rows
+		sqlArgs        pgx.StrictNamedArgs
 		sqlQuery       string
 	)
+
+	if sqlArgs, err = batchValues.sqlArgs(len(nodes)); err != nil {
+		return fmt.Errorf("building selector node update batch: %w", err)
+	}
 
 	sqlQuery = fmt.Sprintf(`
 	WITH batch AS (
 		SELECT *
 		FROM unnest(
-			$1::int[],
-			$2::bigint[],
-			$3::int[],
-			$4::text[],
-			$5::int[],
-			$6::text[],
-			$7::text[],
-			$8::text[],
-			$9::text[]
+			@selector_ids::int[],
+			@node_ids::bigint[],
+			@certifications::int[],
+			@certified_by_values::text[],
+			@sources::int[],
+			@node_primary_kinds::text[],
+			@node_environment_ids::text[],
+			@node_object_ids::text[],
+			@node_names::text[]
 		) AS batch(selector_id, node_id, certified, certified_by, source, node_primary_kind, node_environment_id, node_object_id, node_name)
 	),
 	changed_certifications AS (
@@ -956,7 +963,7 @@ func updateSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 		model.AssetGroupSelectorNode{}.TableName(),
 	)
 
-	if rows, err = transaction.Query(ctx, sqlQuery, batchValues.sqlArgs()...); err != nil {
+	if rows, err = transaction.Query(ctx, sqlQuery, sqlArgs); err != nil {
 		return fmt.Errorf("batch updating selector nodes: %w", err)
 	}
 	defer rows.Close()
@@ -1068,18 +1075,35 @@ func newSelectorNodeKeyBatchValues(nodes []model.AssetGroupSelectorNode) selecto
 	return batchValues
 }
 
-func (s selectorNodeBatchValues) sqlArgs() []any {
-	return []any{
-		pgtype.FlatArray[int32](s.selectorIds),
-		pgtype.FlatArray[int64](s.nodeIds),
-		pgtype.FlatArray[int32](s.certifications),
-		pgtype.FlatArray[*string](s.certifiedByValues),
-		pgtype.FlatArray[int32](s.sources),
-		pgtype.FlatArray[string](s.nodePrimaryKinds),
-		pgtype.FlatArray[string](s.nodeEnvironmentIds),
-		pgtype.FlatArray[string](s.nodeObjectIds),
-		pgtype.FlatArray[string](s.nodeNames),
+func (s selectorNodeBatchValues) sqlArgs(expectedValueCount int) (pgx.StrictNamedArgs, error) {
+	var (
+		batchArguments = []struct {
+			name       string
+			value      any
+			valueCount int
+		}{
+			{name: "selector_ids", value: pgtype.FlatArray[int32](s.selectorIds), valueCount: len(s.selectorIds)},
+			{name: "node_ids", value: pgtype.FlatArray[int64](s.nodeIds), valueCount: len(s.nodeIds)},
+			{name: "certifications", value: pgtype.FlatArray[int32](s.certifications), valueCount: len(s.certifications)},
+			{name: "certified_by_values", value: pgtype.FlatArray[*string](s.certifiedByValues), valueCount: len(s.certifiedByValues)},
+			{name: "sources", value: pgtype.FlatArray[int32](s.sources), valueCount: len(s.sources)},
+			{name: "node_primary_kinds", value: pgtype.FlatArray[string](s.nodePrimaryKinds), valueCount: len(s.nodePrimaryKinds)},
+			{name: "node_environment_ids", value: pgtype.FlatArray[string](s.nodeEnvironmentIds), valueCount: len(s.nodeEnvironmentIds)},
+			{name: "node_object_ids", value: pgtype.FlatArray[string](s.nodeObjectIds), valueCount: len(s.nodeObjectIds)},
+			{name: "node_names", value: pgtype.FlatArray[string](s.nodeNames), valueCount: len(s.nodeNames)},
+		}
+		sqlArguments = make(pgx.StrictNamedArgs, len(batchArguments))
+	)
+
+	for _, batchArgument := range batchArguments {
+		if batchArgument.valueCount != expectedValueCount {
+			return nil, fmt.Errorf("selector node batch argument %q has %d values; expected %d", batchArgument.name, batchArgument.valueCount, expectedValueCount)
+		}
+
+		sqlArguments[batchArgument.name] = batchArgument.value
 	}
+
+	return sqlArguments, nil
 }
 
 func (s selectorNodeKeyBatchValues) sqlArgs() []any {
