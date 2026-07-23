@@ -802,13 +802,11 @@ class BHEAPIClient {
     downloadSupportBundleArtifact = (clientId: string, artifactId: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/clients/${clientId}/artifacts/${artifactId}`,
-            Object.assign(
-                {
-                    responseType: 'blob',
-                },
-                options
-            )
+            Object.assign({ responseType: 'blob' }, options)
         );
+
+    deleteSupportBundle = (clientId: string, artifactId: string, options?: RequestOptions) =>
+        this.baseClient.delete(`/api/v2/clients/${clientId}/artifacts/${artifactId}`, options);
 
     createClient = (
         client: CreateSharpHoundClientRequest | CreateAzureHoundClientRequest | CreateOpenHoundClientRequest,
