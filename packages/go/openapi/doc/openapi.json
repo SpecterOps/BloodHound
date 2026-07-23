@@ -23779,101 +23779,11 @@
           }
         ]
       },
-      "model.client-display": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.components.uuid"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "name": {
-                "type": "string"
-              },
-              "ip_address": {
-                "type": "string",
-                "format": "ipv4"
-              },
-              "hostname": {
-                "type": "string"
-              },
-              "configured_user": {
-                "type": "string"
-              },
-              "last_checkin": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "events": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/model.client-schedule-display"
-                }
-              },
-              "token": {
-                "$ref": "#/components/schemas/model.auth-token"
-              },
-              "current_job_id": {
-                "$ref": "#/components/schemas/null.int64"
-              },
-              "current_task_id": {
-                "$ref": "#/components/schemas/null.int64"
-              },
-              "current_job": {
-                "$ref": "#/components/schemas/model.client-scheduled-job-display"
-              },
-              "current_task": {
-                "$ref": "#/components/schemas/model.client-scheduled-job-display"
-              },
-              "completed_job_count": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "completed_task_count": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "domain_controller": {
-                "$ref": "#/components/schemas/null.string"
-              },
-              "version": {
-                "type": "string"
-              },
-              "user_sid": {
-                "$ref": "#/components/schemas/null.string"
-              },
-              "type": {
-                "$ref": "#/components/schemas/enum.client-type"
-              }
-            }
-          }
-        ]
-      },
       "enum.client-management-operation-type": {
         "type": "string",
         "enum": [
           "support_bundle"
         ]
-      },
-      "model.client-management-operation-queue-request": {
-        "type": "object",
-        "required": [
-          "operation_type",
-          "execution_time"
-        ],
-        "properties": {
-          "operation_type": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/enum.client-management-operation-type"
-              }
-            ]
-          },
-          "execution_time": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
       },
       "enum.client-management-operation-status": {
         "type": "string",
@@ -24054,15 +23964,23 @@
           }
         ]
       },
-      "model.client-management-operation-start-request": {
+      "model.client-management-operation-queue-request": {
         "type": "object",
         "required": [
-          "operation_id"
+          "operation_type",
+          "execution_time"
         ],
         "properties": {
-          "operation_id": {
+          "operation_type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/enum.client-management-operation-type"
+              }
+            ]
+          },
+          "execution_time": {
             "type": "string",
-            "format": "uuid"
+            "format": "date-time"
           }
         }
       },
