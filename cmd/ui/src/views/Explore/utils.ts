@@ -138,7 +138,7 @@ export const getNodeGlyphs = (
             });
         }
 
-        if (node.kinds.includes(tagGlyphs.decoy)) {
+        if (node.kinds.includes(tagGlyphs.decoy) || node.isDecoyObject) {
             glyphs.push({
                 location: GlyphLocation.BOTTOM_LEFT,
                 image: tagGlyphs.decoyGlyph,

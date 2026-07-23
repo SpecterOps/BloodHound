@@ -304,4 +304,33 @@ describe('getNodeGlyphs', () => {
         expect(thirdNodeGlyph.color).toBe(themedOptions.glyph.colors.color);
         expect(thirdNodeGlyph.image).toBe('mask');
     });
+
+    it('uses isDecoyObject as a fallback when the decoy tag kind is absent', () => {
+        const decoyNodeWithoutTagKind = {
+            ...testNodes[3],
+            kinds: ['User'],
+        };
+
+        const glyphs = getNodeGlyphs(
+            decoyNodeWithoutTagKind,
+            {
+                theme: lightTheme,
+                hideNodes: false,
+                customIcons: {},
+                darkMode: false,
+                themedOptions,
+                tagGlyphs,
+                pzFeatureFlagEnabled: true,
+            },
+            standardGlyphs
+        );
+
+        expect(glyphs).toEqual([
+            {
+                location: GlyphLocation.BOTTOM_LEFT,
+                image: 'mask',
+                ...themedOptions.glyph.colors,
+            },
+        ]);
+    });
 });
