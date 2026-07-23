@@ -1033,39 +1033,24 @@ func newSelectorNodeBatchSQLArgs(nodes []model.AssetGroupSelectorNode) (pgx.Stri
 	)
 }
 
-func newSelectorNodeKeyBatchSQLArgs(nodes []model.AssetGroupSelectorNode) (pgx.StrictNamedArgs, error) {
-	var (
-		selectorIds = make([]int32, 0, len(nodes))
-		nodeIds     = make([]int64, 0, len(nodes))
-	)
-
-	for _, node := range nodes {
-		selectorIds = append(selectorIds, int32(node.SelectorId))
-		nodeIds = append(nodeIds, node.NodeId.Int64())
-	}
-
-	return newStrictNamedArrayArgs(
-		len(nodes),
-		newArrayArgument("selector_ids", selectorIds),
-		newArrayArgument("node_ids", nodeIds),
-	)
-}
-
-type strictNamedArrayArgument struct {
+type arrayArgument struct {
 	name       string
 	value      any
 	valueCount int
 }
 
-func newArrayArgument[T any](name string, values []T) strictNamedArrayArgument {
-	return strictNamedArrayArgument{
+func newArrayArgument[T any](name string, values []T) arrayArgument {
+	return arrayArgument{
 		name:       name,
 		value:      pgtype.FlatArray[T](values),
 		valueCount: len(values),
 	}
 }
 
-func newStrictNamedArrayArgs(expectedValueCount int, arguments ...strictNamedArrayArgument) (pgx.StrictNamedArgs, error) {
+/*
+This function verifies all array arguments used to create the argument map have the same length.
+*/
+func newStrictNamedArrayArgs(expectedValueCount int, arguments ...arrayArgument) (pgx.StrictNamedArgs, error) {
 	var (
 		sqlArguments = make(pgx.StrictNamedArgs, len(arguments))
 	)
@@ -1101,12 +1086,15 @@ func insertSelectorNodeHistoryRecordsBatch(ctx context.Context, transaction pgx.
 		targets = append(targets, historyRecord.target)
 	}
 
-	sqlArgs = pgx.StrictNamedArgs{
-		"actions":             pgtype.FlatArray[string](actions),
-		"actor":               model.AssetGroupActorBloodHound,
-		"asset_group_tag_ids": pgtype.FlatArray[int32](assetGroupTagIds),
-		"targets":             pgtype.FlatArray[string](targets),
+	if sqlArgs, err = newStrictNamedArrayArgs(
+		len(historyRecords),
+		newArrayArgument("actions", actions),
+		newArrayArgument("asset_group_tag_ids", assetGroupTagIds),
+		newArrayArgument("targets", targets),
+	); err != nil {
+		return fmt.Errorf("building selector node history batch: %w", err)
 	}
+	sqlArgs["actor"] = model.AssetGroupActorBloodHound
 
 	sqlQuery = fmt.Sprintf(`
 	WITH history AS (
@@ -1203,12 +1191,23 @@ func (s *BloodhoundDB) DeleteSelectorNodes(ctx context.Context, nodes []model.As
 
 func deleteSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []model.AssetGroupSelectorNode) error {
 	var (
-		err      error
-		sqlArgs  pgx.StrictNamedArgs
-		sqlQuery string
+		err         error
+		nodeIds     = make([]int64, 0, len(nodes))
+		selectorIds = make([]int32, 0, len(nodes))
+		sqlArgs     pgx.StrictNamedArgs
+		sqlQuery    string
 	)
 
-	if sqlArgs, err = newSelectorNodeKeyBatchSQLArgs(nodes); err != nil {
+	for _, node := range nodes {
+		selectorIds = append(selectorIds, int32(node.SelectorId))
+		nodeIds = append(nodeIds, node.NodeId.Int64())
+	}
+
+	if sqlArgs, err = newStrictNamedArrayArgs(
+		len(nodes),
+		newArrayArgument("selector_ids", selectorIds),
+		newArrayArgument("node_ids", nodeIds),
+	); err != nil {
 		return fmt.Errorf("building selector node delete batch: %w", err)
 	}
 

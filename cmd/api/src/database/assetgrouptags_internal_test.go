@@ -43,17 +43,6 @@ func TestNewSelectorNodeBatchSQLArgs(t *testing.T) {
 	assert.Contains(t, sqlArguments, "node_names")
 }
 
-func TestNewSelectorNodeKeyBatchSQLArgs(t *testing.T) {
-	t.Parallel()
-
-	sqlArguments, err := newSelectorNodeKeyBatchSQLArgs(make([]model.AssetGroupSelectorNode, 2))
-
-	require.NoError(t, err)
-	require.Len(t, sqlArguments, 2)
-	assert.Contains(t, sqlArguments, "selector_ids")
-	assert.Contains(t, sqlArguments, "node_ids")
-}
-
 func TestNewStrictNamedArrayArgs(t *testing.T) {
 	t.Parallel()
 
