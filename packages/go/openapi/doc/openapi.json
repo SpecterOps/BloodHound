@@ -21479,6 +21479,11 @@
             "readOnly": true,
             "description": "OpenGraph environment kind ID for custom environments"
           },
+          "environment_kind_name": {
+            "type": "string",
+            "readOnly": true,
+            "description": "OpenGraph environment kind name for custom environments"
+          },
           "environment_kind_display_name": {
             "type": "string",
             "readOnly": true,
@@ -22762,11 +22767,7 @@
       },
       "model.graph-extension.kind-info-definition": {
         "type": "object",
-        "description": "A map of named info panels used in extension definitions.\nEach property key is a stable panel identifier, and each property value\nmust be a valid KindInfo object with title, position, and content.\n",
-        "propertyNames": {
-          "pattern": "^[a-z0-9_-]{1,128}$",
-          "description": "Keys may only include lowercase alphanumeric characters, hyphens, and underscores"
-        },
+        "description": "A map of named info panels used in extension definitions.\nEach property key is a stable panel identifier and must match the pattern\n`^[a-z0-9_-]{1,128}$` (lowercase alphanumeric characters, hyphens, and underscores only).\nEach property value must be a valid KindInfo object with title, position, and content.\n",
         "additionalProperties": {
           "type": "object",
           "required": [
